@@ -4496,6 +4496,7 @@ main section {
 .lists .task-item .checkbox-wrapper {
   display: flex;
   align-items: center;
+  flex-grow: 2;
 }
 .lists .task-item .checkbox-wrapper span {
   -webkit-line-clamp: 3;

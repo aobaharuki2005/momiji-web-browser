@@ -30,7 +30,7 @@
   }
 
   .edit-list {
-    outline: var(--focus-outline)
+    outline: var(--focus-outline);
   }
 
   .add-task-container {
@@ -84,6 +84,7 @@
     .checkbox-wrapper {
       display: flex;
       align-items: center;
+      flex-grow: 2;
 
       span {
         -webkit-line-clamp: 3;

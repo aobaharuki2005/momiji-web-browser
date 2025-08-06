@@ -12296,6 +12296,7 @@ function CardSections({
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/Lists/Lists.jsx
+function Lists_extends() { return Lists_extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, Lists_extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -12303,26 +12304,77 @@ function CardSections({
 
 
 
-const taskType = {
+const TASK_TYPE = {
   IN_PROGRESS: "tasks",
   COMPLETED: "completed"
 };
 function Lists({
   dispatch
 }) {
-  const listsData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.ListsWidget);
   const {
     selected,
     lists
-  } = listsData;
+  } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.ListsWidget);
   const [newTask, setNewTask] = (0,external_React_namespaceObject.useState)("");
   const [isEditing, setIsEditing] = (0,external_React_namespaceObject.useState)(false);
   const [pendingNewList, setPendingNewList] = (0,external_React_namespaceObject.useState)(null);
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
   const selectRef = (0,external_React_namespaceObject.useRef)(null);
+  const reorderListRef = (0,external_React_namespaceObject.useRef)(null);
+
+  // store selectedList with useMemo so it isnt re-calculated on every re-render
+  const selectedList = (0,external_React_namespaceObject.useMemo)(() => lists[selected], [lists, selected]);
+  const isValidUrl = (0,external_React_namespaceObject.useCallback)(str => URL.canParse(str), []);
+  const reorderLists = (0,external_React_namespaceObject.useCallback)((draggedElement, targetElement, before = false) => {
+    const draggedIndex = selectedList.tasks.findIndex(({
+      id
+    }) => id === draggedElement.id);
+    const targetIndex = selectedList.tasks.findIndex(({
+      id
+    }) => id === targetElement.id);
+
+    // return early is index is not found
+    if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) {
+      return;
+    }
+    const reordered = [...selectedList.tasks];
+    const [removed] = reordered.splice(draggedIndex, 1);
+    const insertIndex = before ? targetIndex : targetIndex + 1;
+    reordered.splice(insertIndex > draggedIndex ? insertIndex - 1 : insertIndex, 0, removed);
+    const updatedLists = {
+      ...lists,
+      [selected]: {
+        ...selectedList,
+        tasks: reordered
+      }
+    };
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.WIDGETS_LISTS_UPDATE,
+      data: {
+        lists: updatedLists
+      }
+    }));
+  }, [lists, selected, selectedList, dispatch]);
+  const moveTask = (0,external_React_namespaceObject.useCallback)((task, direction) => {
+    const index = selectedList.tasks.findIndex(({
+      id
+    }) => id === task.id);
+
+    // guardrail a falsey index
+    if (index === -1) {
+      return;
+    }
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    const before = direction === "up";
+    const targetTask = selectedList.tasks[targetIndex];
+    if (targetTask) {
+      reorderLists(task, targetTask, before);
+    }
+  }, [selectedList, reorderLists]);
   (0,external_React_namespaceObject.useEffect)(() => {
-    const node = selectRef.current;
-    if (!node) {
+    const selectNode = selectRef.current;
+    const reorderNode = reorderListRef.current;
+    if (!selectNode || !reorderNode) {
       return undefined;
     }
     function handleSelectChange(e) {
@@ -12331,25 +12383,34 @@ function Lists({
         data: e.target.value
       }));
     }
-    node.addEventListener("change", handleSelectChange);
+    function handleReorder(e) {
+      const {
+        draggedElement,
+        targetElement,
+        position
+      } = e.detail;
+      reorderLists(draggedElement, targetElement, position === -1);
+    }
+    reorderNode.addEventListener("reorder", handleReorder);
+    selectNode.addEventListener("change", handleSelectChange);
     return () => {
-      node.removeEventListener("change", handleSelectChange);
+      selectNode.removeEventListener("change", handleSelectChange);
+      reorderNode.removeEventListener("reorder", handleReorder);
     };
-  }, [dispatch, isEditing]);
+  }, [dispatch, isEditing, reorderLists]);
+
+  // effect that enables editing new list name only after store has been hydrated
   (0,external_React_namespaceObject.useEffect)(() => {
     if (selected === pendingNewList) {
       setIsEditing(true);
       setPendingNewList(null);
     }
   }, [selected, pendingNewList]);
-  function isValidUrl(string) {
-    return URL.canParse(string);
-  }
   function saveTask() {
     const trimmedTask = newTask.trimEnd();
     // only add new task if it has a length, to avoid creating empty tasks
     if (trimmedTask) {
-      const taskObject = {
+      const formattedTask = {
         value: trimmedTask,
         completed: false,
         created: Date.now(),
@@ -12359,8 +12420,8 @@ function Lists({
       const updatedLists = {
         ...lists,
         [selected]: {
-          ...lists[selected],
-          tasks: [...lists[selected].tasks, taskObject]
+          ...selectedList,
+          tasks: [formattedTask, ...lists[selected].tasks]
         }
       };
       dispatch(actionCreators.AlsoToMain({
@@ -12373,18 +12434,17 @@ function Lists({
     }
   }
   function updateTask(updatedTask, type) {
-    let localUpdatedTasks;
-    const selectedList = lists[selected];
-    const isCompletedType = type === taskType.COMPLETED;
+    const isCompletedType = type === TASK_TYPE.COMPLETED;
     const isNowCompleted = updatedTask.completed;
+    let newTasks = selectedList.tasks;
+    let newCompleted = selectedList.completed;
+    let localUpdatedTasks;
 
     // If the task is in the completed array and is now unchecked
-    const shouldMoveToTasks = isCompletedType && !updatedTask.completed;
+    const shouldMoveToTasks = isCompletedType && !isNowCompleted;
 
     // If we're moving the task from tasks → completed (user checked it)
     const shouldMoveToCompleted = !isCompletedType && isNowCompleted;
-    let newTasks = selectedList.tasks;
-    let newCompleted = selectedList.completed;
 
     //  Move task from completed -> task
     if (shouldMoveToTasks) {
@@ -12422,7 +12482,9 @@ function Lists({
       [selected]: {
         ...selectedList,
         tasks: localUpdatedTasks || newTasks,
-        completed: newCompleted.filter(task => task.id !== updatedTask.id)
+        completed: newCompleted.filter(({
+          id
+        }) => id !== updatedTask.id)
       }
     };
 
@@ -12444,7 +12506,7 @@ function Lists({
     const updatedLists = {
       ...lists,
       [selected]: {
-        ...lists[selected],
+        ...selectedList,
         [type]: updatedTasks
       }
     };
@@ -12464,13 +12526,12 @@ function Lists({
     }
   }
   function handleListNameSave(newLabel) {
-    const selectedList = lists[selected];
     const trimmedLabel = newLabel.trimEnd();
     if (trimmedLabel && trimmedLabel !== selectedList?.label) {
       const updatedLists = {
         ...lists,
         [selected]: {
-          ...lists[selected],
+          ...selectedList,
           label: trimmedLabel
         }
       };
@@ -12484,10 +12545,10 @@ function Lists({
     }
   }
   function handleCreateNewList() {
-    const listUuid = crypto.randomUUID();
+    const id = crypto.randomUUID();
     const newLists = {
       ...lists,
-      [listUuid]: {
+      [id]: {
         label: "New list",
         tasks: [],
         completed: []
@@ -12502,10 +12563,10 @@ function Lists({
       }));
       dispatch(actionCreators.AlsoToMain({
         type: actionTypes.WIDGETS_LISTS_CHANGE_SELECTED,
-        data: listUuid
+        data: id
       }));
     });
-    setPendingNewList(listUuid);
+    setPendingNewList(id);
   }
   function handleDeleteList() {
     let updatedLists = {
@@ -12540,7 +12601,10 @@ function Lists({
       });
     }
   }
-  return lists ? /*#__PURE__*/external_React_default().createElement("article", {
+  if (!lists) {
+    return null;
+  }
+  return /*#__PURE__*/external_React_default().createElement("article", {
     className: "lists"
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "select-wrapper"
@@ -12597,18 +12661,23 @@ function Lists({
   })), /*#__PURE__*/external_React_default().createElement("div", {
     className: "task-list-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("moz-reorderable-list", {
-    itemSelector: "fieldset .task-item"
-  }, /*#__PURE__*/external_React_default().createElement("fieldset", null, lists[selected]?.tasks.length >= 1 ? lists[selected].tasks.map(task => /*#__PURE__*/external_React_default().createElement(ListItem, {
-    type: taskType.IN_PROGRESS,
+    ref: reorderListRef,
+    itemSelector: "fieldset .task-type-tasks",
+    dragSelector: ".checkbox-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement("fieldset", null, selectedList?.tasks.length >= 1 ? selectedList.tasks.map((task, index) => /*#__PURE__*/external_React_default().createElement(ListItem, {
+    type: TASK_TYPE.IN_PROGRESS,
     task: task,
     key: task.id,
     updateTask: updateTask,
     deleteTask: deleteTask,
-    isValidUrl: isValidUrl
+    moveTask: moveTask,
+    isValidUrl: isValidUrl,
+    isFirst: index === 0,
+    isLast: index === selectedList.tasks.length - 1
   })) : /*#__PURE__*/external_React_default().createElement("p", {
     className: "empty-list-text",
     "data-l10n-id": "newtab-widget-lists-empty-cta"
-  }), lists[selected]?.completed.length >= 1 && /*#__PURE__*/external_React_default().createElement("details", {
+  }), selectedList?.completed.length >= 1 && /*#__PURE__*/external_React_default().createElement("details", {
     className: "completed-task-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("summary", null, /*#__PURE__*/external_React_default().createElement("span", {
     "data-l10n-id": "newtab-widget-lists-completed-list",
@@ -12616,23 +12685,26 @@ function Lists({
       number: lists[selected]?.completed.length
     }),
     className: "completed-title"
-  })), lists[selected]?.completed.map(completedTask => /*#__PURE__*/external_React_default().createElement(ListItem, {
+  })), selectedList?.completed.map(completedTask => /*#__PURE__*/external_React_default().createElement(ListItem, {
     key: completedTask.id,
-    type: taskType.COMPLETED,
+    type: TASK_TYPE.COMPLETED,
     task: completedTask,
     deleteTask: deleteTask,
     updateTask: updateTask
-  }))))))) : null;
+  })))))));
 }
 function ListItem({
   task,
   updateTask,
   deleteTask,
+  moveTask,
   isValidUrl,
-  type
+  type,
+  isFirst = false,
+  isLast = false
 }) {
   const [isEditing, setIsEditing] = (0,external_React_namespaceObject.useState)(false);
-  const isCompleted = type === taskType.COMPLETED;
+  const isCompleted = type === TASK_TYPE.COMPLETED;
   function handleCheckboxChange(e) {
     const updatedTask = {
       ...task,
@@ -12666,7 +12738,9 @@ function ListItem({
     onClick: () => setIsEditing(true)
   }, task.value);
   return /*#__PURE__*/external_React_default().createElement("div", {
-    className: "task-item"
+    className: `task-item task-type-${type}`,
+    id: task.id,
+    key: task.id
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "checkbox-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("input", {
@@ -12688,11 +12762,17 @@ function ListItem({
   }, !isCompleted && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, task.isUrl && /*#__PURE__*/external_React_default().createElement("panel-item", {
     "data-l10n-id": "newtab-widget-lists-input-menu-open-link",
     onClick: () => window.open(task.value, "_blank", "noopener")
-  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+  }), /*#__PURE__*/external_React_default().createElement("panel-item", Lists_extends({}, isFirst ? {
+    disabled: true
+  } : {}, {
+    onClick: () => moveTask(task, "up"),
     "data-l10n-id": "newtab-widget-lists-input-menu-move-up"
-  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+  })), /*#__PURE__*/external_React_default().createElement("panel-item", Lists_extends({}, isLast ? {
+    disabled: true
+  } : {}, {
+    onClick: () => moveTask(task, "down"),
     "data-l10n-id": "newtab-widget-lists-input-menu-move-down"
-  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+  })), /*#__PURE__*/external_React_default().createElement("panel-item", {
     "data-l10n-id": "newtab-widget-lists-input-menu-edit",
     className: "edit-item",
     onClick: () => setIsEditing(true)

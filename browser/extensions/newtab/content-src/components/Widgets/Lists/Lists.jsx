@@ -2,29 +2,109 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import React, { useRef, useState, useEffect } from "react";
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSelector, batch } from "react-redux";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 
-const taskType = {
+const TASK_TYPE = {
   IN_PROGRESS: "tasks",
   COMPLETED: "completed",
 };
 
 function Lists({ dispatch }) {
-  const listsData = useSelector(state => state.ListsWidget);
-  const { selected, lists } = listsData;
+  const { selected, lists } = useSelector(state => state.ListsWidget);
   const [newTask, setNewTask] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [pendingNewList, setPendingNewList] = useState(null);
   const inputRef = useRef(null);
   const selectRef = useRef(null);
+  const reorderListRef = useRef(null);
+
+  // store selectedList with useMemo so it isnt re-calculated on every re-render
+  const selectedList = useMemo(() => lists[selected], [lists, selected]);
+
+  const isValidUrl = useCallback(str => URL.canParse(str), []);
+
+  const reorderLists = useCallback(
+    (draggedElement, targetElement, before = false) => {
+      const draggedIndex = selectedList.tasks.findIndex(
+        ({ id }) => id === draggedElement.id
+      );
+      const targetIndex = selectedList.tasks.findIndex(
+        ({ id }) => id === targetElement.id
+      );
+
+      // return early is index is not found
+      if (
+        draggedIndex === -1 ||
+        targetIndex === -1 ||
+        draggedIndex === targetIndex
+      ) {
+        return;
+      }
+
+      const reordered = [...selectedList.tasks];
+      const [removed] = reordered.splice(draggedIndex, 1);
+      const insertIndex = before ? targetIndex : targetIndex + 1;
+
+      reordered.splice(
+        insertIndex > draggedIndex ? insertIndex - 1 : insertIndex,
+        0,
+        removed
+      );
+
+      const updatedLists = {
+        ...lists,
+        [selected]: {
+          ...selectedList,
+          tasks: reordered,
+        },
+      };
+
+      dispatch(
+        ac.AlsoToMain({
+          type: at.WIDGETS_LISTS_UPDATE,
+          data: { lists: updatedLists },
+        })
+      );
+    },
+    [lists, selected, selectedList, dispatch]
+  );
+
+  const moveTask = useCallback(
+    (task, direction) => {
+      const index = selectedList.tasks.findIndex(({ id }) => id === task.id);
+
+      // guardrail a falsey index
+      if (index === -1) {
+        return;
+      }
+
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      const before = direction === "up";
+      const targetTask = selectedList.tasks[targetIndex];
+
+      if (targetTask) {
+        reorderLists(task, targetTask, before);
+      }
+    },
+    [selectedList, reorderLists]
+  );
 
   useEffect(() => {
-    const node = selectRef.current;
-    if (!node) {
+    const selectNode = selectRef.current;
+    const reorderNode = reorderListRef.current;
+
+    if (!selectNode || !reorderNode) {
       return undefined;
     }
+
     function handleSelectChange(e) {
       dispatch(
         ac.AlsoToMain({
@@ -33,13 +113,22 @@ function Lists({ dispatch }) {
         })
       );
     }
-    node.addEventListener("change", handleSelectChange);
+
+    function handleReorder(e) {
+      const { draggedElement, targetElement, position } = e.detail;
+      reorderLists(draggedElement, targetElement, position === -1);
+    }
+
+    reorderNode.addEventListener("reorder", handleReorder);
+    selectNode.addEventListener("change", handleSelectChange);
 
     return () => {
-      node.removeEventListener("change", handleSelectChange);
+      selectNode.removeEventListener("change", handleSelectChange);
+      reorderNode.removeEventListener("reorder", handleReorder);
     };
-  }, [dispatch, isEditing]);
+  }, [dispatch, isEditing, reorderLists]);
 
+  // effect that enables editing new list name only after store has been hydrated
   useEffect(() => {
     if (selected === pendingNewList) {
       setIsEditing(true);
@@ -47,15 +136,11 @@ function Lists({ dispatch }) {
     }
   }, [selected, pendingNewList]);
 
-  function isValidUrl(string) {
-    return URL.canParse(string);
-  }
-
   function saveTask() {
     const trimmedTask = newTask.trimEnd();
     // only add new task if it has a length, to avoid creating empty tasks
     if (trimmedTask) {
-      const taskObject = {
+      const formattedTask = {
         value: trimmedTask,
         completed: false,
         created: Date.now(),
@@ -65,8 +150,8 @@ function Lists({ dispatch }) {
       const updatedLists = {
         ...lists,
         [selected]: {
-          ...lists[selected],
-          tasks: [...lists[selected].tasks, taskObject],
+          ...selectedList,
+          tasks: [formattedTask, ...lists[selected].tasks],
         },
       };
       dispatch(
@@ -80,19 +165,18 @@ function Lists({ dispatch }) {
   }
 
   function updateTask(updatedTask, type) {
-    let localUpdatedTasks;
-    const selectedList = lists[selected];
-    const isCompletedType = type === taskType.COMPLETED;
+    const isCompletedType = type === TASK_TYPE.COMPLETED;
     const isNowCompleted = updatedTask.completed;
-
-    // If the task is in the completed array and is now unchecked
-    const shouldMoveToTasks = isCompletedType && !updatedTask.completed;
-
-    // If we're moving the task from tasks → completed (user checked it)
-    const shouldMoveToCompleted = !isCompletedType && isNowCompleted;
 
     let newTasks = selectedList.tasks;
     let newCompleted = selectedList.completed;
+    let localUpdatedTasks;
+
+    // If the task is in the completed array and is now unchecked
+    const shouldMoveToTasks = isCompletedType && !isNowCompleted;
+
+    // If we're moving the task from tasks → completed (user checked it)
+    const shouldMoveToCompleted = !isCompletedType && isNowCompleted;
 
     //  Move task from completed -> task
     if (shouldMoveToTasks) {
@@ -137,7 +221,7 @@ function Lists({ dispatch }) {
       [selected]: {
         ...selectedList,
         tasks: localUpdatedTasks || newTasks,
-        completed: newCompleted.filter(task => task.id !== updatedTask.id),
+        completed: newCompleted.filter(({ id }) => id !== updatedTask.id),
       },
     };
 
@@ -158,7 +242,7 @@ function Lists({ dispatch }) {
     const updatedLists = {
       ...lists,
       [selected]: {
-        ...lists[selected],
+        ...selectedList,
         [type]: updatedTasks,
       },
     };
@@ -183,13 +267,12 @@ function Lists({ dispatch }) {
   }
 
   function handleListNameSave(newLabel) {
-    const selectedList = lists[selected];
     const trimmedLabel = newLabel.trimEnd();
     if (trimmedLabel && trimmedLabel !== selectedList?.label) {
       const updatedLists = {
         ...lists,
         [selected]: {
-          ...lists[selected],
+          ...selectedList,
           label: trimmedLabel,
         },
       };
@@ -204,10 +287,10 @@ function Lists({ dispatch }) {
   }
 
   function handleCreateNewList() {
-    const listUuid = crypto.randomUUID();
+    const id = crypto.randomUUID();
     const newLists = {
       ...lists,
-      [listUuid]: {
+      [id]: {
         label: "New list",
         tasks: [],
         completed: [],
@@ -224,11 +307,11 @@ function Lists({ dispatch }) {
       dispatch(
         ac.AlsoToMain({
           type: at.WIDGETS_LISTS_CHANGE_SELECTED,
-          data: listUuid,
+          data: id,
         })
       );
     });
-    setPendingNewList(listUuid);
+    setPendingNewList(id);
   }
 
   function handleDeleteList() {
@@ -265,7 +348,11 @@ function Lists({ dispatch }) {
     }
   }
 
-  return lists ? (
+  if (!lists) {
+    return null;
+  }
+
+  return (
     <article className="lists">
       <div className="select-wrapper">
         <EditableText
@@ -322,17 +409,24 @@ function Lists({ dispatch }) {
         />
       </div>
       <div className="task-list-wrapper">
-        <moz-reorderable-list itemSelector="fieldset .task-item">
+        <moz-reorderable-list
+          ref={reorderListRef}
+          itemSelector="fieldset .task-type-tasks"
+          dragSelector=".checkbox-wrapper"
+        >
           <fieldset>
-            {lists[selected]?.tasks.length >= 1 ? (
-              lists[selected].tasks.map(task => (
+            {selectedList?.tasks.length >= 1 ? (
+              selectedList.tasks.map((task, index) => (
                 <ListItem
-                  type={taskType.IN_PROGRESS}
+                  type={TASK_TYPE.IN_PROGRESS}
                   task={task}
                   key={task.id}
                   updateTask={updateTask}
                   deleteTask={deleteTask}
+                  moveTask={moveTask}
                   isValidUrl={isValidUrl}
+                  isFirst={index === 0}
+                  isLast={index === selectedList.tasks.length - 1}
                 />
               ))
             ) : (
@@ -341,7 +435,7 @@ function Lists({ dispatch }) {
                 data-l10n-id="newtab-widget-lists-empty-cta"
               ></p>
             )}
-            {lists[selected]?.completed.length >= 1 && (
+            {selectedList?.completed.length >= 1 && (
               <details className="completed-task-wrapper">
                 <summary>
                   <span
@@ -352,10 +446,10 @@ function Lists({ dispatch }) {
                     className="completed-title"
                   ></span>
                 </summary>
-                {lists[selected]?.completed.map(completedTask => (
+                {selectedList?.completed.map(completedTask => (
                   <ListItem
                     key={completedTask.id}
-                    type={taskType.COMPLETED}
+                    type={TASK_TYPE.COMPLETED}
                     task={completedTask}
                     deleteTask={deleteTask}
                     updateTask={updateTask}
@@ -367,13 +461,21 @@ function Lists({ dispatch }) {
         </moz-reorderable-list>
       </div>
     </article>
-  ) : null;
+  );
 }
 
-function ListItem({ task, updateTask, deleteTask, isValidUrl, type }) {
+function ListItem({
+  task,
+  updateTask,
+  deleteTask,
+  moveTask,
+  isValidUrl,
+  type,
+  isFirst = false,
+  isLast = false,
+}) {
   const [isEditing, setIsEditing] = useState(false);
-
-  const isCompleted = type === taskType.COMPLETED;
+  const isCompleted = type === TASK_TYPE.COMPLETED;
 
   function handleCheckboxChange(e) {
     const updatedTask = { ...task, completed: e.target.checked };
@@ -416,7 +518,7 @@ function ListItem({ task, updateTask, deleteTask, isValidUrl, type }) {
   );
 
   return (
-    <div className="task-item">
+    <div className={`task-item task-type-${type}`} id={task.id} key={task.id}>
       <div className="checkbox-wrapper">
         <input
           type="checkbox"
@@ -451,8 +553,16 @@ function ListItem({ task, updateTask, deleteTask, isValidUrl, type }) {
                 onClick={() => window.open(task.value, "_blank", "noopener")}
               ></panel-item>
             )}
-            <panel-item data-l10n-id="newtab-widget-lists-input-menu-move-up"></panel-item>
-            <panel-item data-l10n-id="newtab-widget-lists-input-menu-move-down"></panel-item>
+            <panel-item
+              {...(isFirst ? { disabled: true } : {})}
+              onClick={() => moveTask(task, "up")}
+              data-l10n-id="newtab-widget-lists-input-menu-move-up"
+            ></panel-item>
+            <panel-item
+              {...(isLast ? { disabled: true } : {})}
+              onClick={() => moveTask(task, "down")}
+              data-l10n-id="newtab-widget-lists-input-menu-move-down"
+            ></panel-item>
             <panel-item
               data-l10n-id="newtab-widget-lists-input-menu-edit"
               className="edit-item"
