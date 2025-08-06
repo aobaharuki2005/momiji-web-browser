@@ -7,8 +7,11 @@
 #ifndef mozilla_dom_SapiService_h
 #define mozilla_dom_SapiService_h
 
-#include <sapi.h>
+// sapi.h's includes need windows.h on MinGW
+// clang-format off
 #include <windows.h>
+#include <sapi.h>
+// clang-format on
 
 #include "mozilla/StaticPtr.h"
 #include "nsIObserver.h"
