@@ -278,6 +278,15 @@ newtab-custom-weather-toggle =
 newtab-custom-trending-search-toggle =
   .label = Trending searches
   .description = Popular and frequently searched topics
+newtab-custom-widget-weather-toggle =
+  .label = Weather
+newtab-custom-widget-trending-search-toggle =
+  .label = Trending searches
+newtab-custom-widget-lists-toggle =
+  .label = Lists
+newtab-custom-widget-timer-toggle =
+  .label = Timer
+newtab-custom-widget-section-title = Widgets
 newtab-custom-close-button = Close
 newtab-custom-settings = Manage more settings
 
@@ -555,3 +564,51 @@ newtab-trending-searches-hide-trending =
     .title = Hide trending searches
 newtab-trending-searches-learn-more = Learn more
 newtab-trending-searches-dismiss = Hide trending searches
+
+## Strings for task / to-do list productivity widget
+
+newtab-widget-lists-default-list-title = Task list
+# The placeholder value of the name field for a newly created list
+newtab-widget-lists-default-list-new = New list
+# "Add one" means adding a new task to the list (e.g., "Walk the dog")
+newtab-widget-lists-empty-cta = The possibilities are endless. Add one.
+newtab-widget-lists-new-label = New
+# When tasks have been previous marked as complete, they will appear in their own separate list beneath incomplete items
+# Variables:
+#   $number (number) - Amount of list items marked complete
+newtab-widget-lists-completed-list = Completed ({ $number })
+newtab-widget-task-list-menu-copy = Copy
+newtab-widget-lists-menu-edit = Edit list name
+newtab-widget-lists-menu-create = Create a new list
+newtab-widget-lists-menu-delete = Delete this list
+newtab-widget-lists-menu-copy = Copy list to clipboard
+newtab-widget-lists-menu-hide = Hide all lists
+newtab-widget-lists-menu-learn-more = Learn more
+newtab-widget-lists-input-placeholder = Add an item
+newtab-widget-lists-input-error = Please include text to add an item.
+newtab-widget-lists-input-menu-open-link = Open link
+newtab-widget-lists-input-menu-move-up = Move up
+newtab-widget-lists-input-menu-move-down = Move down
+newtab-widget-lists-input-menu-delete = Delete
+newtab-widget-lists-input-menu-edit = Edit
+
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+
+newtab-widget-timer-notification-title = Timer
+newtab-widget-timer-notification-focus = Focus time is up. Nice work. Need a break?
+newtab-widget-timer-notification-break = Your break is over. Ready to focus?
+newtab-widget-timer-notification-warning = Notifications are off
+newtab-widget-timer-mode-focus =
+    .label = Focus
+newtab-widget-timer-mode-break =
+    .label = Break
+newtab-widget-timer-play =
+    .title = Play
+newtab-widget-timer-pause =
+    .title = Pause
+newtab-widget-timer-reset =
+    .title = Reset
+newtab-widget-timer-menu-notifications = Turn off notifications
+newtab-widget-timer-menu-hide = Hide timer
+newtab-widget-timer-menu-learn-more = Learn more
