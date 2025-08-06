@@ -68,11 +68,14 @@ const Preferences = (window.Preferences = (function () {
     },
 
     addSetting(settingConfig) {
-      this._settings.set(settingConfig.id, settingConfig);
+      this._settings.set(
+        settingConfig.id,
+        new Setting(settingConfig.id, settingConfig)
+      );
     },
 
     getSetting(settingId) {
-      return new Setting(settingId, this._settings.get(settingId));
+      return this._settings.get(settingId);
     },
 
     defaultBranch: Services.prefs.getDefaultBranch(""),
@@ -142,6 +145,7 @@ const Preferences = (window.Preferences = (function () {
     },
 
     onUnload() {
+      this._settings.forEach(setting => setting?.destroy?.());
       Services.prefs.removeObserver("", this);
     },
 
@@ -693,6 +697,9 @@ const Preferences = (window.Preferences = (function () {
       if (this.pref) {
         this.pref.on("change", this.onChange);
       }
+      if (typeof this.config.setup === "function") {
+        this._teardown = this.config.setup(this.onChange);
+      }
     }
 
     onChange = () => {
@@ -733,6 +740,13 @@ const Preferences = (window.Preferences = (function () {
       this.value = val;
       if (this.config.onUserChange) {
         this.config.onUserChange(val);
+      }
+    }
+
+    destroy() {
+      if (typeof this._teardown === "function") {
+        this._teardown();
+        this._teardown = null;
       }
     }
   }
