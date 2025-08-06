@@ -4858,7 +4858,7 @@ impl Renderer {
                 .external_image
                 .expect("BUG: Deferred resolves must be external images!");
             // Provide rendering information for NativeTexture external images.
-            let image = handler.lock(ext_image.id, ext_image.channel_index);
+            let image = handler.lock(ext_image.id, ext_image.channel_index, deferred_resolve.is_composited);
             let texture_target = match ext_image.image_type {
                 ExternalImageType::TextureHandle(target) => target,
                 ExternalImageType::Buffer => {
@@ -6332,7 +6332,7 @@ impl Renderer {
                 info!("\t{}", def.short_path);
                 let ExternalImageData { id, channel_index, image_type, .. } = def.external;
                 // The image rendering parameter is irrelevant because no filtering happens during capturing.
-                let ext_image = handler.lock(id, channel_index);
+                let ext_image = handler.lock(id, channel_index, false);
                 let (data, short_path) = match ext_image.source {
                     ExternalImageSource::RawData(data) => {
                         let arc_id = arc_map.len() + 1;

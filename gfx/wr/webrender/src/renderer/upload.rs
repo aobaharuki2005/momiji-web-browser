@@ -99,7 +99,7 @@ pub fn upload_to_texture_cache(
                         .as_mut()
                         .expect("Found external image, but no handler set!");
                     // The filter is only relevant for NativeTexture external images.
-                    match handler.lock(id, channel_index).source {
+                    match handler.lock(id, channel_index, false).source {
                         ExternalImageSource::RawData(data) => {
                             &data[offset as usize ..]
                         }
