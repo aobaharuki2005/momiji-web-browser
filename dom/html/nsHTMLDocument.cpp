@@ -614,7 +614,7 @@ void nsHTMLDocument::NamedGetter(JSContext* aCx, const nsAString& aName,
 #ifdef NIGHTLY_BUILD
   bool preventShadowing = false;
   if (StaticPrefs::dom_document_name_getter_prevent_shadowing_enabled()) {
-    if (HTMLDocument_Binding::InterfaceHasNonEventHandlerProperty(aName)) {
+    if (HTMLDocument_Binding::InterfaceHasProperty(aName)) {
       preventShadowing = true;
       collect = mShadowedHTMLDocumentProperties.Length() <= 10;
     }
@@ -624,7 +624,7 @@ void nsHTMLDocument::NamedGetter(JSContext* aCx, const nsAString& aName,
     // To limit the possible performance/memory impact, only collect at most 10
     // properties.
     collect = mShadowedHTMLDocumentProperties.Length() <= 10 &&
-              HTMLDocument_Binding::InterfaceHasNonEventHandlerProperty(aName);
+              HTMLDocument_Binding::InterfaceHasProperty(aName);
   }
 
   if (collect) {

@@ -1439,7 +1439,7 @@ already_AddRefed<nsISupports> HTMLFormElement::NamedGetter(
   if (nsCOMPtr<nsISupports> result = ResolveName(aName)) {
     aFound = true;
 
-    if (HTMLFormElement_Binding::InterfaceHasNonEventHandlerProperty(aName)) {
+    if (HTMLFormElement_Binding::InterfaceHasProperty(aName)) {
       OwnerDoc()->CollectShadowedHTMLFormElementProperty(aName);
     }
 
