@@ -12,6 +12,7 @@
 #include "PlatformDecoderModule.h"
 #include "PlatformEncoderModule.h"
 #include "RemoteAudioDecoder.h"
+#include "RemoteCDMChild.h"
 #include "RemoteMediaDataDecoder.h"
 #include "RemoteMediaDataEncoderChild.h"
 #include "RemoteVideoDecoder.h"
@@ -342,18 +343,16 @@ RemoteMediaManagerChild::CreateAudioDecoder(const CreateDecoderParams& aParams,
     launchPromise = LaunchUtilityProcessIfNeeded(aLocation);
   } else if (aLocation == RemoteMediaIn::UtilityProcess_MFMediaEngineCDM) {
     launchPromise = LaunchUtilityProcessIfNeeded(aLocation);
+  } else if (StaticPrefs::media_allow_audio_non_utility() || aParams.mCDM) {
+    launchPromise = LaunchRDDProcessIfNeeded();
   } else {
-    if (StaticPrefs::media_allow_audio_non_utility()) {
-      launchPromise = LaunchRDDProcessIfNeeded();
-    } else {
-      return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
-          MediaResult(
-              NS_ERROR_DOM_MEDIA_DENIED_IN_NON_UTILITY,
-              nsPrintfCString("%s is not allowed to perform audio decoding",
-                              RemoteMediaInToStr(aLocation))
-                  .get()),
-          __func__);
-    }
+    return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
+        MediaResult(
+            NS_ERROR_DOM_MEDIA_DENIED_IN_NON_UTILITY,
+            nsPrintfCString("%s is not allowed to perform audio decoding",
+                            RemoteMediaInToStr(aLocation))
+                .get()),
+        __func__);
   }
   LOG("Create audio decoder in %s", RemoteMediaInToStr(aLocation));
 
@@ -451,6 +450,39 @@ RemoteMediaManagerChild::CreateVideoDecoder(const CreateDecoderParams& aParams,
         return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
             MediaResult(aResult, "Couldn't start RDD process"), __func__);
       });
+}
+
+/* static */
+RefPtr<RemoteCDMChild> RemoteMediaManagerChild::CreateCDM(
+    RemoteMediaIn aLocation, dom::MediaKeys* aKeys, const nsAString& aKeySystem,
+    bool aDistinctiveIdentifierRequired, bool aPersistentStateRequired) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(aLocation != RemoteMediaIn::RddProcess)) {
+    MOZ_ASSERT_UNREACHABLE("Cannot use CDM outside RDD process");
+    return nullptr;
+  }
+
+  if (!StaticPrefs::media_ffvpx_hw_enabled()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
+  if (!managerThread) {
+    // We got shutdown.
+    return nullptr;
+  }
+
+  if (!GetTrackSupport(aLocation).contains(TrackSupport::DecodeVideo)) {
+    return nullptr;
+  }
+
+  RefPtr<GenericNonExclusivePromise> p = LaunchRDDProcessIfNeeded();
+  LOG("Create CDM in %s", RemoteMediaInToStr(aLocation));
+
+  return MakeRefPtr<RemoteCDMChild>(
+      std::move(managerThread), std::move(p), aLocation, aKeys, aKeySystem,
+      aDistinctiveIdentifierRequired, aPersistentStateRequired);
 }
 
 /* static */
@@ -848,8 +880,14 @@ TrackSupportSet RemoteMediaManagerChild::GetTrackSupport(
       if (StaticPrefs::media_use_remote_encoder_video()) {
         s += TrackSupport::EncodeVideo;
       }
-      // Only use RDD for audio coding if we don't have the utility process.
-      if (!StaticPrefs::media_utility_process_enabled()) {
+#ifndef ANDROID
+      // Only use RDD for audio coding if we don't have the utility process. If
+      // we have a CDM (which we can't determine here) on Android, then we want
+      // to perform both the video and audio decoding in the RDD so that they
+      // can share the CDM instance.
+      if (!StaticPrefs::media_utility_process_enabled())
+#endif
+      {
         s += TrackSupport::DecodeAudio;
         if (StaticPrefs::media_use_remote_encoder_audio()) {
           s += TrackSupport::EncodeAudio;

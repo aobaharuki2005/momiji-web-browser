@@ -19,8 +19,13 @@
 
 namespace mozilla {
 
+namespace dom {
+class MediaKeys;
+}
+
 class PMFCDMChild;
 class PMFMediaEngineChild;
+class RemoteCDMChild;
 class RemoteDecoderChild;
 class RemoteMediaDataEncoderChild;
 
@@ -68,6 +73,11 @@ class RemoteMediaManagerChild final
       const CreateDecoderParams& aParams, RemoteMediaIn aLocation);
   static RefPtr<PlatformDecoderModule::CreateDecoderPromise> CreateVideoDecoder(
       const CreateDecoderParams& aParams, RemoteMediaIn aLocation);
+  static RefPtr<RemoteCDMChild> CreateCDM(RemoteMediaIn aLocation,
+                                          dom::MediaKeys* aKeys,
+                                          const nsAString& aKeySystem,
+                                          bool aDistinctiveIdentifierRequired,
+                                          bool aPersistentStateRequired);
 
   static media::EncodeSupportSet Supports(RemoteMediaIn aLocation,
                                           CodecType aCodec);
