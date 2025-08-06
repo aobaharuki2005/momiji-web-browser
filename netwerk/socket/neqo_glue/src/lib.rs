@@ -421,7 +421,6 @@ impl NeqoHttp3Conn {
         unsafe { RefPtr::from_raw(conn).ok_or(NS_ERROR_NOT_CONNECTED) }
     }
 
-    #[cfg(not(target_os = "android"))]
     fn record_stats_in_glean(&self) {
         use firefox_on_glean::metrics::networking as glean;
         use neqo_common::Ecn;
@@ -550,12 +549,6 @@ impl NeqoHttp3Conn {
             }
         }
     }
-
-    // Noop on Android for now, due to performance regressions.
-    // - <https://bugzilla.mozilla.org/show_bug.cgi?id=1898810>
-    // - <https://bugzilla.mozilla.org/show_bug.cgi?id=1906664>
-    #[cfg(target_os = "android")]
-    fn record_stats_in_glean(&self) {}
 
     fn increment_would_block_rx(&mut self) {
         self.would_block_counter.increment_rx();
