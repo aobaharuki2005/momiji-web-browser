@@ -14,6 +14,7 @@ const STATIC_ENGINE_INFO = {
       displayName: null,
       isNewUntil: null,
       excludePartnerCodeFromTelemetry: false,
+      acceptedContentTypes: null,
     },
   },
 };

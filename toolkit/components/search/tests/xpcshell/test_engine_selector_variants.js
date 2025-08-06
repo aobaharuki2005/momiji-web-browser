@@ -15,6 +15,7 @@ const STATIC_SEARCH_URL_DATA = {
   displayName: null,
   isNewUntil: null,
   excludePartnerCodeFromTelemetry: false,
+  acceptedContentTypes: null,
 };
 
 const CONFIG = [

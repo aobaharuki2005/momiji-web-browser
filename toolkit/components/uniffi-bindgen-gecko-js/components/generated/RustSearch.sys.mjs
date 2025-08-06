@@ -481,6 +481,85 @@ export class FfiConverterOptionalMapStringString extends FfiConverterArrayBuffer
 }
 
 
+// Export the FFIConverter object to make external types work.
+export class FfiConverterSequenceString extends FfiConverterArrayBuffer {
+    static read(dataStream) {
+        const len = dataStream.readInt32();
+        const arr = [];
+        for (let i = 0; i < len; i++) {
+            arr.push(FfiConverterString.read(dataStream));
+        }
+        return arr;
+    }
+
+    static write(dataStream, value) {
+        dataStream.writeInt32(value.length);
+        value.forEach((innerValue) => {
+            FfiConverterString.write(dataStream, innerValue);
+        })
+    }
+
+    static computeSize(value) {
+        // The size of the length
+        let size = 4;
+        for (const innerValue of value) {
+            size += FfiConverterString.computeSize(innerValue);
+        }
+        return size;
+    }
+
+    static checkType(value) {
+        if (!Array.isArray(value)) {
+            throw new UniFFITypeError(`${value} is not an array`);
+        }
+        value.forEach((innerValue, idx) => {
+            try {
+                FfiConverterString.checkType(innerValue);
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart(`[${idx}]`);
+                }
+                throw e;
+            }
+        })
+    }
+}
+// Export the FFIConverter object to make external types work.
+export class FfiConverterOptionalSequenceString extends FfiConverterArrayBuffer {
+    static checkType(value) {
+        if (value !== undefined && value !== null) {
+            FfiConverterSequenceString.checkType(value)
+        }
+    }
+
+    static read(dataStream) {
+        const code = dataStream.readUint8(0);
+        switch (code) {
+            case 0:
+                return null
+            case 1:
+                return FfiConverterSequenceString.read(dataStream)
+            default:
+                throw new UniFFIError(`Unexpected code: ${code}`);
+        }
+    }
+
+    static write(dataStream, value) {
+        if (value === null || value === undefined) {
+            dataStream.writeUint8(0);
+            return;
+        }
+        dataStream.writeUint8(1);
+        FfiConverterSequenceString.write(dataStream, value)
+    }
+
+    static computeSize(value) {
+        if (value === null || value === undefined) {
+            return 1;
+        }
+        return 1 + FfiConverterSequenceString.computeSize(value)
+    }
+}
 /**
  * Defines an individual search engine URL. This is defined separately to
  * `types::SearchEngineUrl` as various fields may be optional in the supplied
@@ -495,7 +574,8 @@ export class JsonEngineUrl {
             searchTermParamName, 
             displayNameMap, 
             isNewUntil, 
-            excludePartnerCodeFromTelemetry
+            excludePartnerCodeFromTelemetry, 
+            acceptedContentTypes
         } = {
             base: undefined, 
             method: undefined, 
@@ -503,7 +583,8 @@ export class JsonEngineUrl {
             searchTermParamName: undefined, 
             displayNameMap: undefined, 
             isNewUntil: undefined, 
-            excludePartnerCodeFromTelemetry: undefined
+            excludePartnerCodeFromTelemetry: undefined, 
+            acceptedContentTypes: undefined
         }
     ) {
         try {
@@ -562,6 +643,14 @@ export class JsonEngineUrl {
             }
             throw e;
         }
+        try {
+            FfiConverterOptionalSequenceString.checkType(acceptedContentTypes)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("acceptedContentTypes");
+            }
+            throw e;
+        }
         /**
          * The PrePath and FilePath of the URL. May include variables for engines
          * which have a variable FilePath, e.g. `{searchTerms}` for when a search
@@ -601,6 +690,15 @@ export class JsonEngineUrl {
          * this URL is visited.
          */
         this.excludePartnerCodeFromTelemetry = excludePartnerCodeFromTelemetry;
+        /**
+         * If this URL performs searches only for certain MIME types, they should
+         * be listed here. If this value is `None`, then it's assumed the content
+         * type is irrelevant. This field is intended to be used for URLs like
+         * visual search, which might support certain image types and not others.
+         * Consumers can use it to determine whether search UI corresponding to the
+         * URL should be shown to the user in a given context.
+         */
+        this.acceptedContentTypes = acceptedContentTypes;
     }
 
     equals(other) {
@@ -612,6 +710,7 @@ export class JsonEngineUrl {
             && this.displayNameMap == other.displayNameMap
             && this.isNewUntil == other.isNewUntil
             && this.excludePartnerCodeFromTelemetry == other.excludePartnerCodeFromTelemetry
+            && this.acceptedContentTypes == other.acceptedContentTypes
         )
     }
 }
@@ -627,6 +726,7 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
             displayNameMap: FfiConverterOptionalMapStringString.read(dataStream),
             isNewUntil: FfiConverterOptionalString.read(dataStream),
             excludePartnerCodeFromTelemetry: FfiConverterBoolean.read(dataStream),
+            acceptedContentTypes: FfiConverterOptionalSequenceString.read(dataStream),
         });
     }
     static write(dataStream, value) {
@@ -637,6 +737,7 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
         FfiConverterOptionalMapStringString.write(dataStream, value.displayNameMap);
         FfiConverterOptionalString.write(dataStream, value.isNewUntil);
         FfiConverterBoolean.write(dataStream, value.excludePartnerCodeFromTelemetry);
+        FfiConverterOptionalSequenceString.write(dataStream, value.acceptedContentTypes);
     }
 
     static computeSize(value) {
@@ -648,6 +749,7 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
         totalSize += FfiConverterOptionalMapStringString.computeSize(value.displayNameMap);
         totalSize += FfiConverterOptionalString.computeSize(value.isNewUntil);
         totalSize += FfiConverterBoolean.computeSize(value.excludePartnerCodeFromTelemetry);
+        totalSize += FfiConverterOptionalSequenceString.computeSize(value.acceptedContentTypes);
         return totalSize
     }
 
@@ -709,6 +811,14 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".excludePartnerCodeFromTelemetry");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionalSequenceString.checkType(value.acceptedContentTypes);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".acceptedContentTypes");
             }
             throw e;
         }
@@ -918,49 +1028,6 @@ export class FfiConverterTypeJSONEngineUrls extends FfiConverterArrayBuffer {
         }
     }
 }
-// Export the FFIConverter object to make external types work.
-export class FfiConverterSequenceString extends FfiConverterArrayBuffer {
-    static read(dataStream) {
-        const len = dataStream.readInt32();
-        const arr = [];
-        for (let i = 0; i < len; i++) {
-            arr.push(FfiConverterString.read(dataStream));
-        }
-        return arr;
-    }
-
-    static write(dataStream, value) {
-        dataStream.writeInt32(value.length);
-        value.forEach((innerValue) => {
-            FfiConverterString.write(dataStream, innerValue);
-        })
-    }
-
-    static computeSize(value) {
-        // The size of the length
-        let size = 4;
-        for (const innerValue of value) {
-            size += FfiConverterString.computeSize(innerValue);
-        }
-        return size;
-    }
-
-    static checkType(value) {
-        if (!Array.isArray(value)) {
-            throw new UniFFITypeError(`${value} is not an array`);
-        }
-        value.forEach((innerValue, idx) => {
-            try {
-                FfiConverterString.checkType(innerValue);
-            } catch (e) {
-                if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart(`[${idx}]`);
-                }
-                throw e;
-            }
-        })
-    }
-}
 
 /**
  * The list of acceptable classifications for a search engine.
@@ -1029,7 +1096,8 @@ export class SearchEngineUrl {
             searchTermParamName, 
             displayName= null, 
             isNewUntil= null, 
-            excludePartnerCodeFromTelemetry= false
+            excludePartnerCodeFromTelemetry= false, 
+            acceptedContentTypes= null
         } = {
             base: undefined, 
             method: undefined, 
@@ -1037,7 +1105,8 @@ export class SearchEngineUrl {
             searchTermParamName: undefined, 
             displayName: undefined, 
             isNewUntil: undefined, 
-            excludePartnerCodeFromTelemetry: undefined
+            excludePartnerCodeFromTelemetry: undefined, 
+            acceptedContentTypes: undefined
         }
     ) {
         try {
@@ -1096,6 +1165,14 @@ export class SearchEngineUrl {
             }
             throw e;
         }
+        try {
+            FfiConverterOptionalSequenceString.checkType(acceptedContentTypes)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("acceptedContentTypes");
+            }
+            throw e;
+        }
         /**
          * The PrePath and FilePath of the URL. May include variables for engines
          * which have a variable FilePath, e.g. `{searchTerms}` for when a search
@@ -1132,6 +1209,15 @@ export class SearchEngineUrl {
          * this URL is visited.
          */
         this.excludePartnerCodeFromTelemetry = excludePartnerCodeFromTelemetry;
+        /**
+         * If this URL performs searches only for certain MIME types, they should
+         * be listed here. If `None`, it's assumed the content type is text or not
+         * relevant. This field is intended to be used for URLs like visual search,
+         * which might support certain image types and not others. Consumers can
+         * use it to determine whether search UI corresponding to the URL should be
+         * shown to the user in a given context.
+         */
+        this.acceptedContentTypes = acceptedContentTypes;
     }
 
     equals(other) {
@@ -1143,6 +1229,7 @@ export class SearchEngineUrl {
             && this.displayName == other.displayName
             && this.isNewUntil == other.isNewUntil
             && this.excludePartnerCodeFromTelemetry == other.excludePartnerCodeFromTelemetry
+            && this.acceptedContentTypes == other.acceptedContentTypes
         )
     }
 }
@@ -1158,6 +1245,7 @@ export class FfiConverterTypeSearchEngineUrl extends FfiConverterArrayBuffer {
             displayName: FfiConverterOptionalString.read(dataStream),
             isNewUntil: FfiConverterOptionalString.read(dataStream),
             excludePartnerCodeFromTelemetry: FfiConverterBoolean.read(dataStream),
+            acceptedContentTypes: FfiConverterOptionalSequenceString.read(dataStream),
         });
     }
     static write(dataStream, value) {
@@ -1168,6 +1256,7 @@ export class FfiConverterTypeSearchEngineUrl extends FfiConverterArrayBuffer {
         FfiConverterOptionalString.write(dataStream, value.displayName);
         FfiConverterOptionalString.write(dataStream, value.isNewUntil);
         FfiConverterBoolean.write(dataStream, value.excludePartnerCodeFromTelemetry);
+        FfiConverterOptionalSequenceString.write(dataStream, value.acceptedContentTypes);
     }
 
     static computeSize(value) {
@@ -1179,6 +1268,7 @@ export class FfiConverterTypeSearchEngineUrl extends FfiConverterArrayBuffer {
         totalSize += FfiConverterOptionalString.computeSize(value.displayName);
         totalSize += FfiConverterOptionalString.computeSize(value.isNewUntil);
         totalSize += FfiConverterBoolean.computeSize(value.excludePartnerCodeFromTelemetry);
+        totalSize += FfiConverterOptionalSequenceString.computeSize(value.acceptedContentTypes);
         return totalSize
     }
 
@@ -1240,6 +1330,14 @@ export class FfiConverterTypeSearchEngineUrl extends FfiConverterArrayBuffer {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".excludePartnerCodeFromTelemetry");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionalSequenceString.checkType(value.acceptedContentTypes);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".acceptedContentTypes");
             }
             throw e;
         }
