@@ -58,7 +58,7 @@ index 876e8b4c7f..0000000000
 -
 -#endif // _XRANDR_H_WRAPPER_HACK_
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index aaae7bb9a9..0cf0e2fcf0 100644
+index 14b5835f47..37f772471f 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -33,12 +33,6 @@ rtc_library("call_interfaces") {
@@ -142,10 +142,10 @@ index f6ff7f218f..0000000000
 -  #endif
 -#endif
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index f9c416bfee..e7047abc53 100644
+index 3492abcd87..84f12548d0 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
-@@ -391,6 +391,11 @@ rtc_library("desktop_capture") {
+@@ -393,6 +393,11 @@ rtc_library("desktop_capture") {
      ]
      if (build_with_mozilla) {
        libs -= [ "Xtst" ]
