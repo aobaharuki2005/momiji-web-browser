@@ -26,7 +26,7 @@
   .text-content {
     display: grid;
     place-items: center start;
-    gap: var(--space-xxsmall) var(--space-small);
+    gap: var(--space-xsmall) var(--space-small);
     grid-template-columns: var(--box-icon-size) 1fr;
     grid-template-areas: "label label";
 
@@ -55,12 +55,16 @@
     grid-area: icon;
     width: var(--box-icon-size);
     height: var(--box-icon-size);
-    -moz-context-properties: fill;
-    fill: var(--icon-color);
+    -moz-context-properties: fill, stroke;
+    fill: var(--box-icon-fill);
+    stroke: var(--box-icon-stroke);
   }
 
   .description {
     grid-area: description;
+    display: flex;
+    justify-content: center;
+    gap: var(--space-small);
   }
 }
 

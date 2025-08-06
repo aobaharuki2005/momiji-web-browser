@@ -21,89 +21,17 @@ hr {
   padding-block: var(--panel-subview-body-padding-block);
 }
 
-#status-card {
-  margin: var(--space-large);
-  background-color: initial;
-  color: initial;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-medium);
-
-  &.is-enabled {
-    background-color: var(--status-card-connected-background-color);
-    color: #fff;
-  }
-}
-
-.status-card-section {
+.vpn-status-group {
   margin: var(--space-large);
 }
 
-.status-card-section-item {
-  display: flex;
-  gap: var(--space-small);
+.is-enabled {
+  color: #fff;
+  background-color: var(--status-card-connected-background-color);
 }
 
-.status-card-section-title {
-  margin: 0;
-  margin-bottom: var(--space-small);
-}
-
-.status-card-icon {
-  background-repeat: no-repeat;
-  background-size: cover;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-.status-card-divider {
-  margin-block: var(--space-large);
-  border-block-start: 1px solid var(--border-color);
-}
-
-#connection-wrapper {
-  display: flex;
-  align-items: center;
-  gap: var(--space-large);
-}
-
-/* TODO: add animations for the icon (Bug 1976388) */
-#connection-icon {
-  width: 48px;
-  height: 48px;
-  background-image: url("chrome://browser/content/ipprotection/assets/ipprotection-connection-off.svg");
-
-  &.is-enabled {
-    background-image: url("chrome://browser/content/ipprotection/assets/ipprotection-connection-on.svg");
-  }
-}
-
-#connection-details-and-toggle {
-  display: flex;
-  align-items: center;
-  flex-grow: 1;
-  justify-content: space-between;
-}
-
-#connection-details {
-  display: flex;
-  flex-direction: column;
-}
-
-#connection-time {
-  margin: 0;
-}
-
-#location-title-icon {
-  display: flex;
-  width: var(--icon-size-small);
-  height: var(--icon-size-small);
-  background-image: url("chrome://global/skin/icons/info.svg");
-}
-
-/* TODO: add icon (Bug 1976769) */
-#location-flag {
-  width: var(--icon-size-small);
-  height: var(--icon-size-small);
+#location-wrapper {
+  --box-icon-fill: currentColor;
 }
 
 .vpn-bottom-content {

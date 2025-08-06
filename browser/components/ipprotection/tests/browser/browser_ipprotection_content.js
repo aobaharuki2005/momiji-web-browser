@@ -145,7 +145,7 @@ add_task(async function test_status_card() {
 
   Assert.ok(content.statusCardEl, "Status card should be present");
   Assert.equal(
-    content.connectionTitleEl?.getAttribute("data-l10n-id"),
+    content.statusCardEl?.getAttribute("data-l10n-id"),
     l10nIdOff,
     "Status card connection toggle data-l10n-id should be correct by default"
   );
@@ -155,7 +155,8 @@ add_task(async function test_status_card() {
   content.requestUpdate();
   await content.updateComplete;
 
-  let locationName = content.shadowRoot.getElementById("location-name");
+  let locationName =
+    content.locationEl?.shadowRoot.getElementById("location-name");
   Assert.equal(
     locationName?.textContent,
     mockLocationName,
@@ -168,7 +169,7 @@ add_task(async function test_status_card() {
   await content.updateComplete;
 
   Assert.equal(
-    content.connectionTitleEl?.getAttribute("data-l10n-id"),
+    content.statusCardEl?.getAttribute("data-l10n-id"),
     l10nIdOn,
     "Status card connection toggle data-l10n-id should be correct when protection is enabled"
   );
@@ -179,7 +180,7 @@ add_task(async function test_status_card() {
   await content.updateComplete;
 
   Assert.equal(
-    content.connectionTitleEl?.getAttribute("data-l10n-id"),
+    content.statusCardEl?.getAttribute("data-l10n-id"),
     l10nIdOff,
     "Status card connection toggle data-l10n-id should be correct when protection is disabled"
   );

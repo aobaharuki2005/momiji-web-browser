@@ -20,8 +20,8 @@ export default class IPProtectionContentElement extends MozLitElement {
     headerEl: "ipprotection-header",
     signedOutEl: "ipprotection-signedout",
     statusCardEl: "#status-card",
-    connectionTitleEl: "#connection-title",
     connectionToggleEl: "#connection-toggle",
+    locationEl: "#location-wrapper",
     upgradeEl: "#upgrade-vpn-content",
     activeSubscriptionEl: "#active-subscription-vpn-content",
     supportLinkEl: "#vpn-support-link",
@@ -128,80 +128,59 @@ export default class IPProtectionContentElement extends MozLitElement {
     }
   }
 
+  descriptionTemplate() {
+    // TODO: add icon (Bug 1976769), this is just a placeholder element
+    return html`
+      <img id="location-icon" src="chrome://global/skin/icons/folder.svg" />
+      <span id="location-name">${this.state.location}</span>
+    `;
+  }
+
   statusCardTemplate() {
-    const statusCardL10nId = this.state.isProtectionEnabled
+    let protectionEnabled = this.state.isProtectionEnabled;
+    const statusCardL10nId = protectionEnabled
       ? "ipprotection-connection-status-on"
       : "ipprotection-connection-status-off";
-    const toggleL10nId = this.state.isProtectionEnabled
+    const toggleL10nId = protectionEnabled
       ? "ipprotection-toggle-active"
       : "ipprotection-toggle-inactive";
+    const statusIcon = protectionEnabled
+      ? "chrome://browser/content/ipprotection/assets/ipprotection-connection-on.svg"
+      : "chrome://browser/content/ipprotection/assets/ipprotection-connection-off.svg";
 
     // TODO: update timer and its starting value according to the protectionEnabledSince property (Bug 1972460)
     const timeConnected = DEFAULT_TIME_CONNECTED;
 
-    return html` <div
-      id="status-card"
-      class=${classMap({
-        "is-enabled": this.state.isProtectionEnabled,
-      })}
-    >
-      <div id="connection-wrapper" class="status-card-section">
-        <span
-          id="connection-icon"
-          class=${classMap({
-            "is-enabled": this.state.isProtectionEnabled,
-            "status-card-icon": true,
-          })}
-        ></span>
-        <span id="connection-details-and-toggle">
-          <div id="connection-details">
-            <span
-              id="connection-title"
-              class="status-card-section-title heading-medium"
-              data-l10n-id=${statusCardL10nId}
-            ></span>
-            <span id="connection-time" class="text-deemphasized"
-              >${timeConnected}</span
-            >
-          </div>
-          <div>
-            <moz-toggle
-              id="connection-toggle"
-              data-l10n-id=${toggleL10nId}
-              @click=${this.handleToggleConnect}
-              ?pressed=${this.state.isProtectionEnabled}
-            ></moz-toggle>
-          </div>
-        </span>
-      </div>
-      <div class="status-card-divider"></div>
-      <div id="location-wrapper" class="status-card-section">
-        <div
-          id="location-title-wrapper"
-          class="status-card-section-title status-card-section-item"
-        >
-          <span
-            id="location-title-icon"
-            class="status-card-icon"
-            data-l10n-id="ipprotection-location-title-icon"
-          ></span>
-          <span
-            id="location-title"
-            class="heading-medium"
-            data-l10n-id="ipprotection-location-title"
-          ></span>
-        </div>
-        <div id="location-label" class="status-card-section-item">
-          <!--TODO: add location flag icon (Bug 1976769)-->
-          <span id="location-flag"></span>
-          <span
-            id="location-name"
-            class="text-deemphasized status-card-section-item"
-            >${this.state.location}</span
-          >
-        </div>
-      </div>
-    </div>`;
+    return html`<moz-box-group class="vpn-status-group">
+      <moz-box-item
+        id="status-card"
+        class=${classMap({
+          "is-enabled": this.state.isProtectionEnabled,
+        })}
+        layout="large-icon"
+        iconsrc=${statusIcon}
+        data-l10n-id=${statusCardL10nId}
+        data-l10n-args=${JSON.stringify({ time: timeConnected })}
+      >
+        <moz-toggle
+          id="connection-toggle"
+          data-l10n-id=${toggleL10nId}
+          @click=${this.handleToggleConnect}
+          ?pressed=${this.state.isProtectionEnabled}
+          slot="actions"
+        ></moz-toggle>
+      </moz-box-item>
+      <moz-box-item
+        id="location-wrapper"
+        class=${classMap({
+          "is-enabled": this.state.isProtectionEnabled,
+        })}
+        iconsrc="chrome://global/skin/icons/info.svg"
+        data-l10n-id="ipprotection-location-title"
+        .description=${this.descriptionTemplate()}
+      >
+      </moz-box-item>
+    </moz-box-group>`;
   }
 
   beforeUpgradeTemplate() {
