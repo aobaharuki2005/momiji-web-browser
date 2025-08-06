@@ -18,9 +18,8 @@
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
-#define LOG(...) DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
-#define LOGEX(_this, ...) \
-  DDMOZ_LOGEX(_this, sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
+#define LOG(...) \
+   MOZ_LOG(mozilla::sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 #define FourCC2Str(n) \
   ((char[5]){(char)(n >> 24), (char)(n >> 16), (char)(n >> 8), (char)(n), 0})
 
@@ -689,23 +688,23 @@ static void _MetadataCallback(void* aAppleATDecoder, AudioFileStreamID aStream,
   AppleATDecoder* decoder = static_cast<AppleATDecoder*>(aAppleATDecoder);
   MOZ_RELEASE_ASSERT(decoder->mThread->IsOnCurrentThread());
 
-  LOGEX(decoder, "MetadataCallback receiving: '%s'", FourCC2Str(aProperty));
+  LOG("MetadataCallback receiving: '%s'", FourCC2Str(aProperty));
   if (aProperty == kAudioFileStreamProperty_MagicCookieData) {
     UInt32 size;
     Boolean writeable;
     OSStatus rv =
         AudioFileStreamGetPropertyInfo(aStream, aProperty, &size, &writeable);
     if (rv) {
-      LOGEX(decoder, "Couldn't get property info for '%s' (%s)",
-            FourCC2Str(aProperty), FourCC2Str(rv));
+      LOG("Couldn't get property info for '%s' (%s)",
+          FourCC2Str(aProperty), FourCC2Str(rv));
       decoder->mFileStreamError = true;
       return;
     }
     auto data = MakeUnique<uint8_t[]>(size);
     rv = AudioFileStreamGetProperty(aStream, aProperty, &size, data.get());
     if (rv) {
-      LOGEX(decoder, "Couldn't get property '%s' (%s)", FourCC2Str(aProperty),
-            FourCC2Str(rv));
+      LOG("Couldn't get property '%s' (%s)", FourCC2Str(aProperty),
+          FourCC2Str(rv));
       decoder->mFileStreamError = true;
       return;
     }
@@ -775,4 +774,3 @@ nsresult AppleATDecoder::GetImplicitAACMagicCookie(MediaRawData* aSample) {
 }  // namespace mozilla
 
 #undef LOG
-#undef LOGEX
