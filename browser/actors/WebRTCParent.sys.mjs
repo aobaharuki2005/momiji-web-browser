@@ -753,6 +753,10 @@ function prompt(aActor, aBrowser, aRequest) {
         aTopic == "dismissed" ||
         aTopic == "removed"
       ) {
+        // Hide the webrtc preview section.
+        let webrtcPreviewSection = doc.getElementById("webRTC-preview-section");
+        webrtcPreviewSection.hidden = true;
+
         // Remove event listeners for camera and window selection menus.
         for (const id of [
           "webRTC-selectWindow-menupopup",
@@ -1048,8 +1052,8 @@ function prompt(aActor, aBrowser, aRequest) {
         return item;
       }
 
-      doc.getElementById("webRTC-selectCamera").hidden =
-        reqVideoInput !== "Camera";
+      let isRequestingCamera = reqVideoInput === "Camera";
+      doc.getElementById("webRTC-selectCamera").hidden = !isRequestingCamera;
       doc.getElementById("webRTC-selectWindowOrScreen").hidden =
         reqVideoInput !== "Screen";
       doc.getElementById("webRTC-selectMicrophone").hidden =
@@ -1069,43 +1073,45 @@ function prompt(aActor, aBrowser, aRequest) {
         listScreenShareDevices(windowMenupopup, videoInputDevices);
         checkDisabledWindowMenuItem();
       } else {
-        listDevices(videoInputDevices, "webRTC-selectCamera", describedByIDs);
         notificationElement.removeAttribute("invalidselection");
 
         // Make sure the screen share warning is hidden before showing the permission panel.
         let warningBox = doc.getElementById("webRTC-previewWarningBox");
         warningBox.hidden = true;
 
-        let cameraMenuPopup = doc.getElementById(
-          "webRTC-selectCamera-menupopup"
-        );
+        if (isRequestingCamera) {
+          listDevices(videoInputDevices, "webRTC-selectCamera", describedByIDs);
 
-        // Set up initial camera preview.
-        let webrtcPreview = getOrCreateWebRTCPreviewEl(doc);
-        webrtcPreview.showPreviewControlButtons = true;
-        // Apply the initial selection.
-        webrtcPreview.deviceId =
-          cameraMenuPopup.querySelector("[selected]")?.deviceId;
-        webrtcPreview.mediaSource = "camera";
-
-        // Show the preview section.
-        webrtcPreviewSection.hidden = false;
-
-        // Show preview for camera selection.
-
-        if (cameraMenuPopup) {
-          cameraMenuPopup._commandEventListener = event => {
-            let { deviceId } = event.target;
-            if (deviceId == undefined) {
-              webrtcPreviewSection.hidden = true;
-              return;
-            }
-            webrtcPreview.startPreview({ deviceId, mediaSource: "camera" });
-          };
-          cameraMenuPopup.addEventListener(
-            "command",
-            cameraMenuPopup._commandEventListener
+          let cameraMenuPopup = doc.getElementById(
+            "webRTC-selectCamera-menupopup"
           );
+
+          // Set up initial camera preview.
+          let webrtcPreview = getOrCreateWebRTCPreviewEl(doc);
+          webrtcPreview.showPreviewControlButtons = true;
+          // Apply the initial selection.
+          webrtcPreview.deviceId =
+            cameraMenuPopup.querySelector("[selected]")?.deviceId;
+          webrtcPreview.mediaSource = "camera";
+
+          // Show the preview section.
+          webrtcPreviewSection.hidden = false;
+
+          if (cameraMenuPopup) {
+            cameraMenuPopup._commandEventListener = event => {
+              let { deviceId } = event.target;
+              if (deviceId == undefined) {
+                webrtcPreviewSection.hidden = true;
+                return;
+              }
+              // Start preview on selection change.
+              webrtcPreview.startPreview({ deviceId, mediaSource: "camera" });
+            };
+            cameraMenuPopup.addEventListener(
+              "command",
+              cameraMenuPopup._commandEventListener
+            );
+          }
         }
       }
       if (!sharingAudio) {
