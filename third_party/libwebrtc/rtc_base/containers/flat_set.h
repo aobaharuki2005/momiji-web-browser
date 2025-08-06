@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "rtc_base/containers/flat_tree.h"  // IWYU pragma: export
+#include "rtc_base/containers/identity.h"  // Mozilla: remove when fixing Bug 1980501
 
 namespace webrtc {
 
