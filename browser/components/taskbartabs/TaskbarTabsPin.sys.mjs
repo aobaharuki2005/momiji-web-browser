@@ -8,6 +8,7 @@ let lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ShellService: "resource:///modules/ShellService.sys.mjs",
   TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
@@ -28,6 +29,8 @@ export const TaskbarTabsPin = {
    * @returns {Promise} Resolves once finished.
    */
   async pinTaskbarTab(aTaskbarTab, aRegistry) {
+    await new Promise(resolve => lazy.setTimeout(resolve, 50));
+
     lazy.logConsole.info("Pinning Taskbar Tab to the taskbar.");
 
     try {
