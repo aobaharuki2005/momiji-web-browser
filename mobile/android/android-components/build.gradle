@@ -301,6 +301,15 @@ detekt {
     }
 }
 
+tasks.named("detekt").configure {
+    reports {
+        custom {
+            reportId = "suppression-count"
+            outputLocation.set(file("$projectDir/build/reports/suppressions.txt"))
+        }
+    }
+}
+
 tasks.withType(Detekt).configureEach() {
     // Custom detekt rules should be built before.
     // See https://detekt.dev/docs/introduction/extensions#pitfalls
