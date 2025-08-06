@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -280,17 +281,19 @@ private fun TabContent(
                     }
                 }
 
+                val thumbnailShape = RoundedCornerShape(
+                    topStart = 4.dp,
+                    topEnd = 4.dp,
+                    bottomStart = 12.dp,
+                    bottomEnd = 12.dp,
+                )
                 Card(
-                    shape = RoundedCornerShape(
-                        topStart = 4.dp,
-                        topEnd = 4.dp,
-                        bottomStart = 12.dp,
-                        bottomEnd = 12.dp,
-                    ),
+                    shape = thumbnailShape,
                 ) {
                     Thumbnail(
                         tab = tab,
                         size = thumbnailSize,
+                        shape = thumbnailShape,
                     )
                 }
             }
@@ -322,11 +325,13 @@ private fun clickableColor() = when (isSystemInDarkTheme()) {
  *
  * @param tab Tab, containing the thumbnail to be displayed.
  * @param size Size of the thumbnail.
+ * @param shape Shape of the thumbnail card.
  */
 @Composable
 private fun Thumbnail(
     tab: TabSessionState,
     size: Int,
+    shape: Shape,
 ) {
     Box(
         modifier = Modifier
@@ -340,6 +345,7 @@ private fun Thumbnail(
             tab = tab,
             size = size,
             modifier = Modifier.fillMaxSize(),
+            shape = shape,
         )
     }
 }
