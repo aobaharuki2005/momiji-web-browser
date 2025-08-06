@@ -52,14 +52,14 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a342f5eca8622c8b9
  rtc_base/synchronization/BUILD.gn             |  4 +--
  rtc_base/system/BUILD.gn                      |  4 +--
  rtc_tools/network_tester/BUILD.gn             |  4 +--
- sdk/BUILD.gn                                  | 10 +++----
+ sdk/BUILD.gn                                  | 12 ++++----
  system_wrappers/BUILD.gn                      |  4 +--
  test/BUILD.gn                                 |  6 ++--
  test/fuzzers/BUILD.gn                         |  4 +--
  tools/grit/BUILD.gn                           |  2 +-
  tools/grit/grit_rule.gni                      | 16 +++++------
  webrtc.gni                                    | 28 +++++++++----------
- 46 files changed, 122 insertions(+), 122 deletions(-)
+ 46 files changed, 123 insertions(+), 123 deletions(-)
 
 diff --git a/.gn b/.gn
 index 940244f9af..fa6a5e85d8 100644
@@ -743,15 +743,17 @@ index 0947186878..c53c12acc1 100644
      output_extension = "so"
    }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index 185af67fa6..1a1849d772 100644
+index fc83d55a92..f6d35017bf 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
-@@ -9,11 +9,11 @@
+@@ -9,12 +9,12 @@
  import("//third_party/libaom/options.gni")
  import("../webrtc.gni")
  if (is_ios) {
+-  import("//build/config/apple/mobile_config.gni")
 -  import("//build/config/ios/ios_sdk.gni")
 -  import("//build/config/ios/rules.gni")
++  import("//chromium/build/config/apple/mobile_config.gni")
 +  import("//chromium/build/config/ios/ios_sdk.gni")
 +  import("//chromium/build/config/ios/rules.gni")
  }
@@ -761,7 +763,7 @@ index 185af67fa6..1a1849d772 100644
  }
  
  group("sdk") {
-@@ -64,7 +64,7 @@ if (is_ios || is_mac) {
+@@ -65,7 +65,7 @@ if (is_ios || is_mac) {
      ]
  
      if (use_clang_coverage) {
@@ -770,7 +772,7 @@ index 185af67fa6..1a1849d772 100644
      }
    }
  
-@@ -1245,7 +1245,7 @@ if (is_ios || is_mac) {
+@@ -1252,7 +1252,7 @@ if (is_ios || is_mac) {
            }
  
            public_deps = [
