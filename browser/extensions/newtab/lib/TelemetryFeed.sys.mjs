@@ -104,7 +104,7 @@ const ONBOARDING_ALLOWED_PAGE_VALUES = [
 
 const PREF_SURFACE_ID = "telemetry.surfaceId";
 
-const CONTENT_PING_VERSION = 1;
+const CONTENT_PING_VERSION = 2;
 
 const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
 const NEWTAB_PING_PREFS = {
@@ -363,6 +363,21 @@ export class TelemetryFeed {
       result.content_redacted = true;
       return result;
     }
+    // For spocs we need to retain the tile id.
+    if (this.redactNewTabPingEnabled && isSponsored) {
+      const {
+        // eslint-disable-next-line no-unused-vars
+        section,
+        // eslint-disable-next-line no-unused-vars
+        selected_topics,
+        // eslint-disable-next-line no-unused-vars
+        topic,
+        ...result
+      } = pingDict;
+      result.content_redacted = true;
+      return result;
+    }
+
     return pingDict; // No modification
   }
 
@@ -784,7 +799,7 @@ export class TelemetryFeed {
             newtab_visit_id: session.session_id,
           });
 
-          if (this.privatePingEnabled && !is_sponsored) {
+          if (this.privatePingEnabled) {
             this.newtabContentPing.recordEvent("click", gleanData);
           }
           if (shim) {
@@ -1780,7 +1795,6 @@ export class TelemetryFeed {
           ...this.redactNewTabPing(gleanData, is_sponsored),
           newtab_visit_id: session.session_id,
         });
-
         if (this.privatePingEnabled) {
           this.newtabContentPing.recordEvent("impression", gleanData);
         }
