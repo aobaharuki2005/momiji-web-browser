@@ -7,11 +7,13 @@
 #include "AppleATDecoder.h"
 
 #include <CoreAudioTypes/CoreAudioBaseTypes.h>
+#include <mozilla/Result.h>
 
 #include <array>
 
 #include "ADTSDemuxer.h"
 #include "Adts.h"
+#include "ByteWriter.h"
 #include "ErrorList.h"
 #include "MP4Decoder.h"
 #include "MediaInfo.h"
@@ -21,11 +23,9 @@
 #include "mozilla/UniquePtr.h"
 #include "nsDebug.h"
 #include "nsTArray.h"
-#include "ByteWriter.h"
-#include <mozilla/Result.h>
 
 #define LOG(...) \
-   MOZ_LOG(mozilla::sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+  MOZ_LOG(mozilla::sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 #define FourCC2Str(n) \
   ((char[5]){(char)(n >> 24), (char)(n >> 16), (char)(n >> 8), (char)(n), 0})
 
@@ -74,10 +74,10 @@ static mozilla::Result<nsTArray<uint8_t>, nsresult> CreateEsds(
     const nsTArray<uint8_t>& extradata) {
   nsTArray<uint8_t> esds;
   mozilla::ByteWriter<mozilla::BigEndian> writer(esds);
-#define TRY(x)                                                              \
-  if (!(x)) {                                                               \
-    LOG("CreateEsds failed at line %d: %s", __LINE__, #x);                 \
-    return mozilla::Err(nsresult::NS_ERROR_FAILURE);                       \
+#define TRY(x)                                             \
+  if (!(x)) {                                              \
+    LOG("CreateEsds failed at line %d: %s", __LINE__, #x); \
+    return mozilla::Err(nsresult::NS_ERROR_FAILURE);       \
   }
 
   // ES_Descriptor (ES_DescrTag = 0x03)
@@ -87,15 +87,14 @@ static mozilla::Result<nsTArray<uint8_t>, nsresult> CreateEsds(
   // - 13 bytes: DecoderConfigDescriptor fixed content
   // - 5 bytes: DecoderSpecificInfo tag (1) + size field (4 max)
   // - extradata.Length(): AudioSpecificConfig data
-  const uint32_t kESDescriptorHeaderSize = 3;  // ES_ID + flags
-  const uint32_t kDecoderConfigDescrTagSize = 5;  // tag + size field
+  const uint32_t kESDescriptorHeaderSize = 3;        // ES_ID + flags
+  const uint32_t kDecoderConfigDescrTagSize = 5;     // tag + size field
   const uint32_t kDecoderConfigDescrFixedSize = 13;  // fixed fields
-  const uint32_t kDecoderSpecificInfoTagSize = 5;  // tag + size field
-  const uint32_t esDescriptorSize = kESDescriptorHeaderSize +
-                                     kDecoderConfigDescrTagSize +
-                                     kDecoderConfigDescrFixedSize +
-                                     kDecoderSpecificInfoTagSize +
-                                     extradata.Length();
+  const uint32_t kDecoderSpecificInfoTagSize = 5;    // tag + size field
+  const uint32_t esDescriptorSize =
+      kESDescriptorHeaderSize + kDecoderConfigDescrTagSize +
+      kDecoderConfigDescrFixedSize + kDecoderSpecificInfoTagSize +
+      extradata.Length();
   WriteDescriptor(writer, 0x03, esDescriptorSize);
   TRY(writer.WriteU16(0x0000));  // ES_ID = 0
   TRY(writer.WriteU8(0x00));  // flags (streamDependenceFlag = 0, URL_Flag = 0,
@@ -104,8 +103,8 @@ static mozilla::Result<nsTArray<uint8_t>, nsresult> CreateEsds(
   // DecoderConfigDescriptor (DecoderConfigDescrTag = 0x04)
   // ISO/IEC 14496-1 (7.2.6.6)
   const uint32_t decoderConfigDescrSize = kDecoderConfigDescrFixedSize +
-                                           kDecoderSpecificInfoTagSize +
-                                           extradata.Length();
+                                          kDecoderSpecificInfoTagSize +
+                                          extradata.Length();
   TRY(WriteDescriptor(writer, 0x04, decoderConfigDescrSize));
   TRY(writer.WriteU8(0x40));  // objectTypeIndication = 0x40 (MPEG-4 AAC)
   TRY(writer.WriteU8(
@@ -823,8 +822,8 @@ static void _MetadataCallback(void* aAppleATDecoder, AudioFileStreamID aStream,
     OSStatus rv =
         AudioFileStreamGetPropertyInfo(aStream, aProperty, &size, &writeable);
     if (rv) {
-      LOG("Couldn't get property info for '%s' (%s)",
-          FourCC2Str(aProperty), FourCC2Str(rv));
+      LOG("Couldn't get property info for '%s' (%s)", FourCC2Str(aProperty),
+          FourCC2Str(rv));
       decoder->mFileStreamError = true;
       return;
     }
