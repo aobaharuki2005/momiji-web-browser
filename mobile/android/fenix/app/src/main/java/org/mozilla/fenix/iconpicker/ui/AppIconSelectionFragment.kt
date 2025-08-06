@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
 import androidx.navigation.fragment.findNavController
 import mozilla.components.support.base.feature.UserInteractionHandler
+import org.mozilla.fenix.GleanMetrics.AppIconSelection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -43,6 +44,14 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
                 onAppIconSelected = { selectedAppIcon ->
                     val currentAliasSuffix = appIconRepository.selectedAppIcon.aliasSuffix
                     appIconRepository.selectedAppIcon = selectedAppIcon
+
+                    AppIconSelection.appIconSelectionConfirmed.record(
+                        extra = AppIconSelection.AppIconSelectionConfirmedExtra(
+                            oldIcon = currentAliasSuffix,
+                            newIcon = selectedAppIcon.aliasSuffix,
+                        ),
+                    )
+
                     updateAppIcon(
                         currentAliasSuffix = currentAliasSuffix,
                         newAliasSuffix = selectedAppIcon.aliasSuffix,

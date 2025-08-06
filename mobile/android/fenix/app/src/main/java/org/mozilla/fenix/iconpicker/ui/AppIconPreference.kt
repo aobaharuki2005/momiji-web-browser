@@ -26,6 +26,7 @@ import androidx.navigation.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import org.mozilla.fenix.GleanMetrics.CustomizationSettings
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.iconpicker.AppIcon
@@ -61,6 +62,8 @@ class AppIconPreference @JvmOverloads constructor(
                 SelectAppIcon(
                     appIcon = appIconRepository.selectedAppIcon,
                     onClick = {
+                        CustomizationSettings.appIconSelectionTapped.record()
+
                         val navController = holder.itemView.findNavController()
                         navController.navigate(
                             CustomizationFragmentDirections.actionCustomizationFragmentAppIconSelectionFragment(),

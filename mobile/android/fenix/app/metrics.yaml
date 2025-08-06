@@ -12631,6 +12631,39 @@ customization_settings:
     metadata:
       tags:
         - Settings
+  app_icon_selection_tapped:
+    type: event
+    description: When select app icon section is tapped.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1979161
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260059
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+app_icon_selection:
+  app_icon_selection_confirmed:
+    type: event
+    description: When a new app icon was selected and user confirmed the app restart.
+    extra_keys:
+      old_icon:
+        description: The title of the previously selected app icon.
+        type: string
+      new_icon:
+        description: The title of the new selected app icon.
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1979161
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260059
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
 
 nimbus_system:
   recorded_nimbus_context:
