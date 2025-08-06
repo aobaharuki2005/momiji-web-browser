@@ -7,14 +7,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.preference.PreferenceCategory
-        android:key="@string/pref_key_site_permissions_description"
-        app:iconSpaceReserved="false"
-        android:title="@string/preferences_site_permissions_description"
-        android:singleLineTitle="false"
-        android:visible="false"
-        tools:targetApi="o" />
-
-    <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_category_no_icon_style"
         android:title="@string/preferences_category_content">
 

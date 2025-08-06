@@ -2037,17 +2037,6 @@
     </issue>
 
     <issue
-        id="SetJavaScriptEnabled"
-        message="Using `setJavaScriptEnabled` can introduce XSS vulnerabilities into your application, review carefully"
-        errorLine1="        webView.settings.javaScriptEnabled = true"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/home/mozonline/PrivacyContentDisplayActivity.kt"
-            line="34"
-            column="9"/>
-    </issue>
-
-    <issue
         id="ExportedReceiver"
         message="Exported receiver does not require permission"
         errorLine1="        &lt;receiver android:name=&quot;.onboarding.WidgetPinnedReceiver&quot;"
@@ -2947,17 +2936,6 @@
             file="src/main/res/layout/checkbox_left_sub_preference.xml"
             line="15"
             column="5"/>
-    </issue>
-
-    <issue
-        id="RtlHardcoded"
-        message="Consider replacing `android:layout_marginLeft` with `android:layout_marginStart=&quot;10dp&quot;` to better support right-to-left layouts"
-        errorLine1="                    android:layout_marginLeft=&quot;10dp&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_privacy_content_display.xml"
-            line="25"
-            column="21"/>
     </issue>
 
     <issue
