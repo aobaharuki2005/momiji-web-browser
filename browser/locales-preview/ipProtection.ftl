@@ -43,6 +43,9 @@ ipprotection-toggle-inactive =
 
 # Location refers to the VPN server geographical position.
 ipprotection-location-title = Location
+ipprotection-location-title-icon =
+  .title = Location selected based on fastest server
+
 
 upgrade-vpn-title = Get peace of mind with full-device protection
 upgrade-vpn-paragraph = Protect yourself beyond the browser with <a data-l10n-name="learn-more-vpn">{ -mozilla-vpn-brand-name }</a>. Customize your VPN location, set site-specific locations, and enjoy enhanced security whether you’re at home or on public Wi-Fi.

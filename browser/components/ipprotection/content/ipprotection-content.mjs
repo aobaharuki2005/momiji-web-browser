@@ -180,7 +180,11 @@ export default class IPProtectionContentElement extends MozLitElement {
           id="location-title-wrapper"
           class="status-card-section-title status-card-section-item"
         >
-          <span id="location-title-icon" class="status-card-icon"></span>
+          <span
+            id="location-title-icon"
+            class="status-card-icon"
+            data-l10n-id="ipprotection-location-title-icon"
+          ></span>
           <span
             id="location-title"
             class="heading-medium"
