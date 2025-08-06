@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/27c29807e6f46562d
  1 file changed, 1 insertion(+)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 1fdaa5b373..07b5b79487 100644
+index 2bee419142..462ec00ef0 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -620,6 +620,7 @@ if (!build_with_chromium) {

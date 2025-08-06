@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b050c455caa1d24a0
  2 files changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 6d75d22f19..5c48c9f144 100644
+index a1b42433b7..1f3b06d489 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -283,6 +283,7 @@ config("rtc_prod_config") {

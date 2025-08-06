@@ -14,7 +14,7 @@ Differential Revision: https://phabricator.services.mozilla.com/D224543
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a342f5eca8622c8b918d6119f74aff96cc8cf582
 ---
  .gn                                           |  4 +--
- BUILD.gn                                      | 12 ++++----
+ BUILD.gn                                      | 14 +++++-----
  api/BUILD.gn                                  |  4 +--
  api/audio/test/BUILD.gn                       |  4 +--
  api/audio_codecs/BUILD.gn                     |  4 +--
@@ -59,7 +59,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a342f5eca8622c8b9
  tools/grit/BUILD.gn                           |  2 +-
  tools/grit/grit_rule.gni                      | 16 +++++------
  webrtc.gni                                    | 28 +++++++++----------
- 46 files changed, 121 insertions(+), 121 deletions(-)
+ 46 files changed, 122 insertions(+), 122 deletions(-)
 
 diff --git a/.gn b/.gn
 index 940244f9af..fa6a5e85d8 100644
@@ -79,7 +79,7 @@ index 940244f9af..fa6a5e85d8 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index 5c48c9f144..0224dbb3cd 100644
+index 1f3b06d489..2852d18561 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -120,6 +120,15 @@ index 5c48c9f144..0224dbb3cd 100644
    defines = []
    deps = [
      "net/dcsctp/public:factory",
+@@ -882,7 +882,7 @@ group("poison_software_video_codecs") {
+ if (!build_with_chromium) {
+   # Write debug logs to gn_logs.txt.
+   # This is also required for Siso builds.
+-  import("//build/gn_logs.gni")
++  import("//chromium/build/gn_logs.gni")
+   lines = [
+             "Generated during 'gn gen' by //BUILD.gn.",
+             "",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
 index eccde8132e..1b6c29d14f 100644
 --- a/api/BUILD.gn
