@@ -28,10 +28,10 @@ Cr-Branched-From: dc428bd75f2ca847b165b2556970c9bcd5037c5b-refs/heads/main@{#444
  2 files changed, 28 insertions(+)
 
 diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index 31808c506d..2423fa8c33 100644
+index 6f19d1bee6..22da12b0c8 100644
 --- a/pc/sdp_offer_answer.cc
 +++ b/pc/sdp_offer_answer.cc
-@@ -5335,6 +5335,18 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
+@@ -5344,6 +5344,18 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
          RTC_LOG(LS_ERROR) << "ReadyToUseRemoteCandidate: Candidate not valid "
                               "because of SDP munging.";
          *valid = false;
@@ -51,7 +51,7 @@ index 31808c506d..2423fa8c33 100644
        }
      }
 diff --git a/pc/sdp_offer_answer_unittest.cc b/pc/sdp_offer_answer_unittest.cc
-index c47f086599..10fe5f17b8 100644
+index 3fe6e19799..36a6701b32 100644
 --- a/pc/sdp_offer_answer_unittest.cc
 +++ b/pc/sdp_offer_answer_unittest.cc
 @@ -18,8 +18,11 @@
