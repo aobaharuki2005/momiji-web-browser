@@ -4544,7 +4544,6 @@ main section {
   outline: var(--focus-outline);
 }
 .lists .empty-list-text {
-  padding-inline: var(--space-large);
   color: var(--text-color-deemphasized);
 }
 .lists .completed-task-wrapper summary {

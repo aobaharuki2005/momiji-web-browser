@@ -289,16 +289,22 @@ function Lists({ dispatch }) {
           type="ghost"
         />
         <panel-list id="lists-panel">
-          <panel-item onClick={() => setIsEditing(true)}>Edit name</panel-item>
-          <panel-item onClick={() => handleCreateNewList()}>
-            Create a new list
-          </panel-item>
-          <panel-item onClick={() => handleDeleteList()}>
-            Delete this list
-          </panel-item>
-          <panel-item>Hide To Do list</panel-item>
-          <panel-item>Learn more</panel-item>
-          <panel-item>Copy to clipboard</panel-item>
+          <panel-item
+            data-l10n-id="newtab-widget-lists-menu-edit"
+            onClick={() => setIsEditing(true)}
+          ></panel-item>
+          <panel-item
+            data-l10n-id="newtab-widget-lists-menu-create"
+            onClick={() => handleCreateNewList()}
+          ></panel-item>
+          <panel-item
+            data-l10n-id="newtab-widget-lists-menu-delete"
+            onClick={() => handleDeleteList()}
+          ></panel-item>
+          <hr />
+          <panel-item data-l10n-id="newtab-widget-lists-menu-copy"></panel-item>
+          <panel-item data-l10n-id="newtab-widget-lists-menu-hide"></panel-item>
+          <panel-item data-l10n-id="newtab-widget-lists-menu-learn-more"></panel-item>
         </panel-list>
       </div>
       <div className="add-task-container">
@@ -330,12 +336,21 @@ function Lists({ dispatch }) {
                 />
               ))
             ) : (
-              <p className="empty-list-text">The list is empty. For now 🦊</p>
+              <p
+                className="empty-list-text"
+                data-l10n-id="newtab-widget-lists-empty-cta"
+              ></p>
             )}
             {lists[selected]?.completed.length >= 1 && (
               <details className="completed-task-wrapper">
                 <summary>
-                  <span className="completed-title">{`Completed (${lists[selected]?.completed.length})`}</span>
+                  <span
+                    data-l10n-id="newtab-widget-lists-completed-list"
+                    data-l10n-args={JSON.stringify({
+                      number: lists[selected]?.completed.length,
+                    })}
+                    className="completed-title"
+                  ></span>
                 </summary>
                 {lists[selected]?.completed.map(completedTask => (
                   <ListItem
@@ -432,24 +447,24 @@ function ListItem({ task, updateTask, deleteTask, isValidUrl, type }) {
           <>
             {task.isUrl && (
               <panel-item
+                data-l10n-id="newtab-widget-lists-input-menu-open-link"
                 onClick={() => window.open(task.value, "_blank", "noopener")}
-              >
-                Open link
-              </panel-item>
+              ></panel-item>
             )}
-            <panel-item>Move up</panel-item>
-            <panel-item>Move down</panel-item>
+            <panel-item data-l10n-id="newtab-widget-lists-input-menu-move-up"></panel-item>
+            <panel-item data-l10n-id="newtab-widget-lists-input-menu-move-down"></panel-item>
             <panel-item
+              data-l10n-id="newtab-widget-lists-input-menu-edit"
               className="edit-item"
               onClick={() => setIsEditing(true)}
-            >
-              Edit
-            </panel-item>
+            ></panel-item>
           </>
         )}
-        <panel-item className="delete-item" onClick={handleDelete}>
-          Delete item
-        </panel-item>
+        <panel-item
+          data-l10n-id="newtab-widget-lists-input-menu-delete"
+          className="delete-item"
+          onClick={handleDelete}
+        ></panel-item>
       </panel-list>
     </div>
   );

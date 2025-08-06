@@ -12566,12 +12566,21 @@ function Lists({
   }), /*#__PURE__*/external_React_default().createElement("panel-list", {
     id: "lists-panel"
   }, /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-menu-edit",
     onClick: () => setIsEditing(true)
-  }, "Edit name"), /*#__PURE__*/external_React_default().createElement("panel-item", {
+  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-menu-create",
     onClick: () => handleCreateNewList()
-  }, "Create a new list"), /*#__PURE__*/external_React_default().createElement("panel-item", {
+  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-menu-delete",
     onClick: () => handleDeleteList()
-  }, "Delete this list"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Hide To Do list"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Learn more"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Copy to clipboard"))), /*#__PURE__*/external_React_default().createElement("div", {
+  }), /*#__PURE__*/external_React_default().createElement("hr", null), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-menu-copy"
+  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-menu-hide"
+  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-menu-learn-more"
+  }))), /*#__PURE__*/external_React_default().createElement("div", {
     className: "add-task-container"
   }, /*#__PURE__*/external_React_default().createElement("span", {
     className: "icon icon-add"
@@ -12597,12 +12606,17 @@ function Lists({
     deleteTask: deleteTask,
     isValidUrl: isValidUrl
   })) : /*#__PURE__*/external_React_default().createElement("p", {
-    className: "empty-list-text"
-  }, "The list is empty. For now \uD83E\uDD8A"), lists[selected]?.completed.length >= 1 && /*#__PURE__*/external_React_default().createElement("details", {
+    className: "empty-list-text",
+    "data-l10n-id": "newtab-widget-lists-empty-cta"
+  }), lists[selected]?.completed.length >= 1 && /*#__PURE__*/external_React_default().createElement("details", {
     className: "completed-task-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("summary", null, /*#__PURE__*/external_React_default().createElement("span", {
+    "data-l10n-id": "newtab-widget-lists-completed-list",
+    "data-l10n-args": JSON.stringify({
+      number: lists[selected]?.completed.length
+    }),
     className: "completed-title"
-  }, `Completed (${lists[selected]?.completed.length})`)), lists[selected]?.completed.map(completedTask => /*#__PURE__*/external_React_default().createElement(ListItem, {
+  })), lists[selected]?.completed.map(completedTask => /*#__PURE__*/external_React_default().createElement(ListItem, {
     key: completedTask.id,
     type: taskType.COMPLETED,
     task: completedTask,
@@ -12672,14 +12686,21 @@ function ListItem({
   }), /*#__PURE__*/external_React_default().createElement("panel-list", {
     id: `panel-task-${task.id}`
   }, !isCompleted && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, task.isUrl && /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-input-menu-open-link",
     onClick: () => window.open(task.value, "_blank", "noopener")
-  }, "Open link"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move up"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move down"), /*#__PURE__*/external_React_default().createElement("panel-item", {
+  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-input-menu-move-up"
+  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-input-menu-move-down"
+  }), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-input-menu-edit",
     className: "edit-item",
     onClick: () => setIsEditing(true)
-  }, "Edit")), /*#__PURE__*/external_React_default().createElement("panel-item", {
+  })), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    "data-l10n-id": "newtab-widget-lists-input-menu-delete",
     className: "delete-item",
     onClick: handleDelete
-  }, "Delete item")));
+  })));
 }
 function EditableText({
   value,
