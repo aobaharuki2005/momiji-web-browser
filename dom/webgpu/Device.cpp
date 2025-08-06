@@ -636,8 +636,7 @@ already_AddRefed<ShaderModule> Device::CreateShaderModule(
   return shaderModule.forget();
 }
 
-RawId CreateComputePipelineImpl(PipelineCreationContext* const aContext,
-                                WebGPUChild* aBridge,
+RawId CreateComputePipelineImpl(RawId deviceId, WebGPUChild* aBridge,
                                 const dom::GPUComputePipelineDescriptor& aDesc,
                                 bool isAsync) {
   ffi::WGPUComputePipelineDescriptor desc = {};
@@ -677,21 +676,13 @@ RawId CreateComputePipelineImpl(PipelineCreationContext* const aContext,
     desc.stage.constants = {constants.Elements(), constants.Length()};
   }
 
-  RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
-  RawId id = ffi::wgpu_client_create_compute_pipeline(
-      aBridge->GetClient(), aContext->mParentId, &desc,
-      &aContext->mImplicitPipelineLayoutId, implicit_bgl_ids, isAsync);
-
-  for (const auto& cur : implicit_bgl_ids) {
-    if (!cur) break;
-    aContext->mImplicitBindGroupLayoutIds.AppendElement(cur);
-  }
+  RawId id = ffi::wgpu_client_create_compute_pipeline(aBridge->GetClient(),
+                                                      deviceId, &desc, isAsync);
 
   return id;
 }
 
-RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
-                               WebGPUChild* aBridge,
+RawId CreateRenderPipelineImpl(RawId deviceId, WebGPUChild* aBridge,
                                const dom::GPURenderPipelineDescriptor& aDesc,
                                bool isAsync) {
   // A bunch of stack locals that we can have pointers into
@@ -846,39 +837,26 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
     desc.depth_stencil = &depthStencilState;
   }
 
-  RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
-  RawId id = ffi::wgpu_client_create_render_pipeline(
-      aBridge->GetClient(), aContext->mParentId, &desc,
-      &aContext->mImplicitPipelineLayoutId, implicit_bgl_ids, isAsync);
-
-  for (const auto& cur : implicit_bgl_ids) {
-    if (!cur) break;
-    aContext->mImplicitBindGroupLayoutIds.AppendElement(cur);
-  }
+  RawId id = ffi::wgpu_client_create_render_pipeline(aBridge->GetClient(),
+                                                     deviceId, &desc, isAsync);
 
   return id;
 }
 
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
     const dom::GPUComputePipelineDescriptor& aDesc) {
-  PipelineCreationContext context = {mId};
-  RawId id = CreateComputePipelineImpl(&context, mBridge, aDesc, false);
+  RawId pipelineId = CreateComputePipelineImpl(mId, mBridge, aDesc, false);
 
-  RefPtr<ComputePipeline> object =
-      new ComputePipeline(this, id, context.mImplicitPipelineLayoutId,
-                          std::move(context.mImplicitBindGroupLayoutIds));
+  RefPtr<ComputePipeline> object = new ComputePipeline(this, pipelineId);
   object->SetLabel(aDesc.mLabel);
   return object.forget();
 }
 
 already_AddRefed<RenderPipeline> Device::CreateRenderPipeline(
     const dom::GPURenderPipelineDescriptor& aDesc) {
-  PipelineCreationContext context = {mId};
-  RawId id = CreateRenderPipelineImpl(&context, mBridge, aDesc, false);
+  RawId pipelineId = CreateRenderPipelineImpl(mId, mBridge, aDesc, false);
 
-  RefPtr<RenderPipeline> object =
-      new RenderPipeline(this, id, context.mImplicitPipelineLayoutId,
-                         std::move(context.mImplicitBindGroupLayoutIds));
+  RefPtr<RenderPipeline> object = new RenderPipeline(this, pipelineId);
   object->SetLabel(aDesc.mLabel);
 
   return object.forget();
@@ -891,21 +869,10 @@ already_AddRefed<dom::Promise> Device::CreateComputePipelineAsync(
     return nullptr;
   }
 
-  std::shared_ptr<PipelineCreationContext> context(
-      new PipelineCreationContext());
-  context->mParentId = mId;
-
-  RawId pipelineId =
-      CreateComputePipelineImpl(context.get(), mBridge, aDesc, true);
+  RawId pipelineId = CreateComputePipelineImpl(mId, mBridge, aDesc, true);
 
   auto pending_promise = WebGPUChild::PendingCreatePipelinePromise{
-      RefPtr(promise),
-      RefPtr(this),
-      false,
-      pipelineId,
-      context->mImplicitPipelineLayoutId,
-      std::move(context->mImplicitBindGroupLayoutIds),
-      aDesc.mLabel};
+      RefPtr(promise), RefPtr(this), false, pipelineId, aDesc.mLabel};
   mBridge->mPendingCreatePipelinePromises.push_back(std::move(pending_promise));
 
   return promise.forget();
@@ -918,21 +885,10 @@ already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
     return nullptr;
   }
 
-  std::shared_ptr<PipelineCreationContext> context(
-      new PipelineCreationContext());
-  context->mParentId = mId;
-
-  RawId pipelineId =
-      CreateRenderPipelineImpl(context.get(), mBridge, aDesc, true);
+  RawId pipelineId = CreateRenderPipelineImpl(mId, mBridge, aDesc, true);
 
   auto pending_promise = WebGPUChild::PendingCreatePipelinePromise{
-      RefPtr(promise),
-      RefPtr(this),
-      true,
-      pipelineId,
-      context->mImplicitPipelineLayoutId,
-      std::move(context->mImplicitBindGroupLayoutIds),
-      aDesc.mLabel};
+      RefPtr(promise), RefPtr(this), true, pipelineId, aDesc.mLabel};
   mBridge->mPendingCreatePipelinePromises.push_back(std::move(pending_promise));
 
   return promise.forget();

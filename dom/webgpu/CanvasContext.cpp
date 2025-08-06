@@ -430,12 +430,18 @@ already_AddRefed<gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
 
   // The parent side needs to create a command encoder which will be submitted
   // and dropped right away so we create and release an encoder ID here.
-  RawId encoderId = ffi::wgpu_client_make_encoder_id(mBridge->GetClient());
-  RefPtr<gfx::DataSourceSurface> snapshot =
-      cm->GetSnapshot(cm->Id(), mBridge->Id(), mRemoteTextureOwnerId,
-                      Some(encoderId), snapshotFormat, /* aPremultiply */ false,
-                      /* aYFlip */ false);
-  ffi::wgpu_client_free_command_encoder_id(mBridge->GetClient(), encoderId);
+  RawId commandEncoderId =
+      ffi::wgpu_client_make_command_encoder_id(mBridge->GetClient());
+  RawId commandBufferId =
+      ffi::wgpu_client_make_command_buffer_id(mBridge->GetClient());
+  RefPtr<gfx::DataSourceSurface> snapshot = cm->GetSnapshot(
+      cm->Id(), mBridge->Id(), mRemoteTextureOwnerId, Some(commandEncoderId),
+      Some(commandBufferId), snapshotFormat, /* aPremultiply */ false,
+      /* aYFlip */ false);
+  ffi::wgpu_client_free_command_encoder_id(mBridge->GetClient(),
+                                           commandEncoderId);
+  ffi::wgpu_client_free_command_buffer_id(mBridge->GetClient(),
+                                          commandBufferId);
   if (!snapshot) {
     return nullptr;
   }

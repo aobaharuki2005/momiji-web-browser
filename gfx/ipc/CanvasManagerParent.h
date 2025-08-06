@@ -50,6 +50,7 @@ class CanvasManagerParent final : public PCanvasManagerParent {
       const uint32_t& aManagerId, const ActorId& aProtocolId,
       const Maybe<RemoteTextureOwnerId>& aOwnerId,
       const Maybe<RawId>& aCommandEncoderId,
+      const Maybe<RawId>& aCommandBufferId,
       webgl::FrontBufferSnapshotIpc* aResult);
 
   static mozilla::ipc::IProtocol* GetCanvasActor(

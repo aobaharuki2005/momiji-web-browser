@@ -129,12 +129,6 @@ pub struct AdapterInformation<S> {
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
-struct ImplicitLayout<'a> {
-    pipeline: id::PipelineLayoutId,
-    bind_groups: Cow<'a, [id::BindGroupLayoutId]>,
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
 #[repr(transparent)]
 pub struct SurfaceFormat(i8);
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -184,6 +178,7 @@ enum Message<'a> {
     CommandEncoderFinish(
         id::DeviceId,
         id::CommandEncoderId,
+        id::CommandBufferId,
         wgt::CommandBufferDescriptor<wgc::Label<'a>>,
     ),
     ReplayRenderPass(id::DeviceId, id::CommandEncoderId, RecordedRenderPass),
@@ -223,6 +218,7 @@ enum Message<'a> {
     SwapChainPresent {
         texture_id: id::TextureId,
         command_encoder_id: id::CommandEncoderId,
+        command_buffer_id: id::CommandBufferId,
         remote_texture_id: RemoteTextureId,
         remote_texture_owner_id: RemoteTextureOwnerId,
     },
@@ -240,20 +236,19 @@ enum Message<'a> {
     DropDevice(id::DeviceId),
     DropQueue(id::QueueId),
     DropBuffer(id::BufferId),
+    DropCommandEncoder(id::CommandEncoderId),
     DropCommandBuffer(id::CommandBufferId),
     DropRenderBundle(id::RenderBundleId),
     DropBindGroupLayout(id::BindGroupLayoutId),
     DropPipelineLayout(id::PipelineLayoutId),
     DropBindGroup(id::BindGroupId),
     DropShaderModule(id::ShaderModuleId),
-    DropComputePipeline(id::ComputePipelineId, Option<ImplicitLayout<'a>>),
-    DropRenderPipeline(id::RenderPipelineId, Option<ImplicitLayout<'a>>),
+    DropComputePipeline(id::ComputePipelineId),
+    DropRenderPipeline(id::RenderPipelineId),
     DropTexture(id::TextureId),
     DropTextureView(id::TextureViewId),
     DropSampler(id::SamplerId),
     DropQuerySet(id::QuerySetId),
-
-    DropCommandEncoder(id::CommandEncoderId),
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -284,13 +279,11 @@ enum DeviceAction<'a> {
     CreateComputePipeline(
         id::ComputePipelineId,
         wgc::pipeline::ComputePipelineDescriptor<'a>,
-        Option<ImplicitLayout<'a>>,
         bool,
     ),
     CreateRenderPipeline(
         id::RenderPipelineId,
         wgc::pipeline::RenderPipelineDescriptor<'a>,
-        Option<ImplicitLayout<'a>>,
         bool,
     ),
     CreateRenderBundle(
@@ -366,12 +359,10 @@ enum ServerMessage<'a> {
     ),
     CreateRenderPipelineResponse {
         pipeline_id: id::RenderPipelineId,
-        implicit_ids: Option<ImplicitLayout<'a>>,
         error: Option<PipelineError>,
     },
     CreateComputePipelineResponse {
         pipeline_id: id::ComputePipelineId,
-        implicit_ids: Option<ImplicitLayout<'a>>,
         error: Option<PipelineError>,
     },
     CreateShaderModuleResponse(id::ShaderModuleId, Vec<ShaderModuleCompilationMessage>),

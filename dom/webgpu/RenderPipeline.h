@@ -17,18 +17,13 @@ class BindGroupLayout;
 class Device;
 
 class RenderPipeline final : public ObjectBase, public ChildOf<Device> {
-  const RawId mImplicitPipelineLayoutId;
-  const nsTArray<RawId> mImplicitBindGroupLayoutIds;
-
  public:
   GPU_DECL_CYCLE_COLLECTION(RenderPipeline)
   GPU_DECL_JS_WRAP(RenderPipeline)
 
   const RawId mId;
 
-  RenderPipeline(Device* const aParent, RawId aId,
-                 RawId aImplicitPipelineLayoutId,
-                 nsTArray<RawId>&& aImplicitBindGroupLayoutIds);
+  RenderPipeline(Device* const aParent, RawId aId);
   already_AddRefed<BindGroupLayout> GetBindGroupLayout(uint32_t index) const;
 
  private:

@@ -63,6 +63,7 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
                              bool aUseSharedTextureInSwapChain);
 
   void SwapChainPresent(RawId aTextureId, RawId aCommandEncoderId,
+                        RawId aCommandBufferId,
                         const layers::RemoteTextureId& aRemoteTextureId,
                         const layers::RemoteTextureOwnerId& aOwnerId);
   void SwapChainDrop(const layers::RemoteTextureOwnerId& aOwnerId,
@@ -74,8 +75,8 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
 
   ipc::IPCResult GetFrontBufferSnapshot(
       IProtocol* aProtocol, const layers::RemoteTextureOwnerId& aOwnerId,
-      const RawId& aCommandEncoderId, Maybe<Shmem>& aShmem, gfx::IntSize& aSize,
-      uint32_t& aByteStride);
+      const RawId& aCommandEncoderId, const RawId& aCommandBufferId,
+      Maybe<Shmem>& aShmem, gfx::IntSize& aSize, uint32_t& aByteStride);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

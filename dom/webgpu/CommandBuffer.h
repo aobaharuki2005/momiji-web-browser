@@ -22,9 +22,8 @@ class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(CommandBuffer)
   GPU_DECL_JS_WRAP(CommandBuffer)
 
-  CommandBuffer(Device* const aParent, RawId aId,
-                nsTArray<WeakPtr<CanvasContext>>&& aPresentationContexts,
-                RefPtr<CommandEncoder>&& aEncoder);
+  CommandBuffer(Device* const aParent, WebGPUChild* const aBridge, RawId aId,
+                nsTArray<WeakPtr<CanvasContext>>&& aPresentationContexts);
 
   Maybe<RawId> Commit();
 
@@ -34,12 +33,8 @@ class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
   void Cleanup();
 
   const RawId mId;
+  RefPtr<WebGPUChild> mBridge;
   const nsTArray<WeakPtr<CanvasContext>> mPresentationContexts;
-  // Command buffers and encoders share the same identity (this is a
-  // simplifcation currently made by wgpu). To avoid dropping the same ID twice,
-  // the wgpu resource lifetime is tied to the encoder which is held alive by
-  // the command buffer.
-  RefPtr<CommandEncoder> mEncoder;
 };
 
 }  // namespace mozilla::webgpu

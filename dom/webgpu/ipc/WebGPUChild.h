@@ -35,12 +35,6 @@ using AdapterPromise =
 using PipelinePromise = MozPromise<RawId, ipc::ResponseRejectReason, true>;
 using DevicePromise = MozPromise<bool, ipc::ResponseRejectReason, true>;
 
-struct PipelineCreationContext {
-  RawId mParentId = 0;
-  RawId mImplicitPipelineLayoutId = 0;
-  nsTArray<RawId> mImplicitBindGroupLayoutIds;
-};
-
 ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x);
 
 class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
@@ -136,8 +130,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
     RefPtr<Device> device;
     bool is_render_pipeline;
     RawId pipeline_id;
-    RawId implicit_pipeline_layout_id;
-    nsTArray<RawId> implicit_bind_group_layout_ids;
     nsString label;
   };
 

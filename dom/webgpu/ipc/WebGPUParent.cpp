@@ -257,13 +257,13 @@ extern void wgpu_parent_create_swap_chain(
 extern void wgpu_parent_swap_chain_present(
     WGPUWebGPUParentPtr aParent, WGPUTextureId aTextureId,
     WGPUCommandEncoderId aCommandEncoderId,
-    WGPURemoteTextureId aRemoteTextureId,
+    WGPUCommandBufferId aCommandBufferId, WGPURemoteTextureId aRemoteTextureId,
     WGPURemoteTextureOwnerId aRemoteTextureOwnerId) {
   auto* parent = static_cast<WebGPUParent*>(aParent);
   auto remote_texture = layers::RemoteTextureId{aRemoteTextureId};
   auto owner = layers::RemoteTextureOwnerId{aRemoteTextureOwnerId};
-  parent->SwapChainPresent(aTextureId, aCommandEncoderId, remote_texture,
-                           owner);
+  parent->SwapChainPresent(aTextureId, aCommandEncoderId, aCommandBufferId,
+                           remote_texture, owner);
 }
 
 extern void wgpu_parent_swap_chain_drop(
@@ -1115,8 +1115,8 @@ static void ReadbackSnapshotCallback(uint8_t* userdata,
 
 ipc::IPCResult WebGPUParent::GetFrontBufferSnapshot(
     IProtocol* aProtocol, const layers::RemoteTextureOwnerId& aOwnerId,
-    const RawId& aCommandEncoderId, Maybe<Shmem>& aShmem, gfx::IntSize& aSize,
-    uint32_t& aByteStride) {
+    const RawId& aCommandEncoderId, const RawId& aCommandBufferId,
+    Maybe<Shmem>& aShmem, gfx::IntSize& aSize, uint32_t& aByteStride) {
   const auto& lookup = mPresentationDataMap.find(aOwnerId);
   if (lookup == mPresentationDataMap.end()) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
@@ -1234,10 +1234,11 @@ ipc::IPCResult WebGPUParent::GetFrontBufferSnapshot(
   {
     ErrorBuffer error;
     ffi::wgpu_server_encoder_finish(mContext.get(), data->mDeviceId,
-                                    aCommandEncoderId, &commandDesc,
-                                    error.ToFFI());
+                                    aCommandEncoderId, aCommandBufferId,
+                                    &commandDesc, error.ToFFI());
     if (ForwardError(error)) {
-      ffi::wgpu_server_encoder_drop(mContext.get(), aCommandEncoderId);
+      ffi::wgpu_server_command_encoder_drop(mContext.get(), aCommandEncoderId);
+      ffi::wgpu_server_command_buffer_drop(mContext.get(), aCommandBufferId);
       return IPC_OK();
     }
   }
@@ -1245,9 +1246,10 @@ ipc::IPCResult WebGPUParent::GetFrontBufferSnapshot(
   {
     ErrorBuffer error;
     ffi::wgpu_server_queue_submit(mContext.get(), data->mDeviceId,
-                                  data->mQueueId, {&aCommandEncoderId, 1},
+                                  data->mQueueId, {&aCommandBufferId, 1},
                                   error.ToFFI());
-    ffi::wgpu_server_encoder_drop(mContext.get(), aCommandEncoderId);
+    ffi::wgpu_server_command_encoder_drop(mContext.get(), aCommandEncoderId);
+    ffi::wgpu_server_command_buffer_drop(mContext.get(), aCommandBufferId);
     if (ForwardError(error)) {
       return IPC_OK();
     }
@@ -1321,7 +1323,7 @@ RefPtr<gfx::FileHandleWrapper> WebGPUParent::GetDeviceFenceHandle(
 }
 
 void WebGPUParent::SwapChainPresent(
-    RawId aTextureId, RawId aCommandEncoderId,
+    RawId aTextureId, RawId aCommandEncoderId, RawId aCommandBufferId,
     const layers::RemoteTextureId& aRemoteTextureId,
     const layers::RemoteTextureOwnerId& aOwnerId) {
   // step 0: get the data associated with the swapchain
@@ -1427,10 +1429,11 @@ void WebGPUParent::SwapChainPresent(
   {
     ErrorBuffer error;
     ffi::wgpu_server_encoder_finish(mContext.get(), data->mDeviceId,
-                                    aCommandEncoderId, &commandDesc,
-                                    error.ToFFI());
+                                    aCommandEncoderId, aCommandBufferId,
+                                    &commandDesc, error.ToFFI());
     if (ForwardError(error)) {
-      ffi::wgpu_server_encoder_drop(mContext.get(), aCommandEncoderId);
+      ffi::wgpu_server_command_encoder_drop(mContext.get(), aCommandEncoderId);
+      ffi::wgpu_server_command_buffer_drop(mContext.get(), aCommandBufferId);
       return;
     }
   }
@@ -1438,9 +1441,10 @@ void WebGPUParent::SwapChainPresent(
   {
     ErrorBuffer error;
     ffi::wgpu_server_queue_submit(mContext.get(), data->mDeviceId,
-                                  data->mQueueId, {&aCommandEncoderId, 1},
+                                  data->mQueueId, {&aCommandBufferId, 1},
                                   error.ToFFI());
-    ffi::wgpu_server_encoder_drop(mContext.get(), aCommandEncoderId);
+    ffi::wgpu_server_command_encoder_drop(mContext.get(), aCommandEncoderId);
+    ffi::wgpu_server_command_buffer_drop(mContext.get(), aCommandBufferId);
     if (ForwardError(error)) {
       return;
     }

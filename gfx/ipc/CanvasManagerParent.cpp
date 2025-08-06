@@ -180,7 +180,7 @@ CanvasManagerParent::AllocPCanvasParent() {
 mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(
     const uint32_t& aManagerId, const ActorId& aProtocolId,
     const Maybe<RemoteTextureOwnerId>& aOwnerId,
-    const Maybe<RawId>& aCommandEncoderId,
+    const Maybe<RawId>& aCommandEncoderId, const Maybe<RawId>& aCommandBufferId,
     webgl::FrontBufferSnapshotIpc* aResult) {
   if (!aManagerId) {
     return IPC_FAIL(this, "invalid id");
@@ -221,9 +221,13 @@ mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(
       if (aCommandEncoderId.isNothing()) {
         return IPC_FAIL(this, "invalid CommandEncoderId");
       }
+      if (aCommandBufferId.isNothing()) {
+        return IPC_FAIL(this, "invalid CommandBufferId");
+      }
       uint32_t stride = 0;
       mozilla::ipc::IPCResult rv = webgpu->GetFrontBufferSnapshot(
-          this, *aOwnerId, *aCommandEncoderId, buffer.shmem, size, stride);
+          this, *aOwnerId, *aCommandEncoderId, *aCommandBufferId, buffer.shmem,
+          size, stride);
       if (!rv) {
         return rv;
       }

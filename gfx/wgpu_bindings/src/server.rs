@@ -1251,6 +1251,7 @@ extern "C" {
         parent: WebGPUParentPtr,
         texture_id: id::TextureId,
         command_encoder_id: id::CommandEncoderId,
+        command_buffer_id: id::CommandBufferId,
         remote_texture_id: crate::RemoteTextureId,
         remote_texture_owner_id: crate::RemoteTextureOwnerId,
     );
@@ -1613,6 +1614,7 @@ impl Global {
             let image = image_holder.image;
 
             let hal_texture = <wgh::api::Vulkan as wgh::Api>::Device::texture_from_raw(
+                &hal_device,
                 image,
                 &hal_desc,
                 Some(Box::new(move || {
@@ -2028,15 +2030,8 @@ impl Global {
                     compilation_messages,
                 ));
             }
-            DeviceAction::CreateComputePipeline(id, desc, implicit, is_async) => {
-                let implicit_ids = implicit
-                    .as_ref()
-                    .map(|imp| wgc::device::ImplicitPipelineIds {
-                        root_id: imp.pipeline,
-                        group_ids: &imp.bind_groups,
-                    });
-                let (_, error) =
-                    self.device_create_compute_pipeline(device_id, &desc, Some(id), implicit_ids);
+            DeviceAction::CreateComputePipeline(id, desc, is_async) => {
+                let (_, error) = self.device_create_compute_pipeline(device_id, &desc, Some(id));
 
                 if is_async {
                     let error = error
@@ -2052,7 +2047,6 @@ impl Global {
                     *response_byte_buf =
                         make_byte_buf(&ServerMessage::CreateComputePipelineResponse {
                             pipeline_id: id,
-                            implicit_ids: implicit,
                             error,
                         });
                 } else {
@@ -2061,15 +2055,8 @@ impl Global {
                     }
                 }
             }
-            DeviceAction::CreateRenderPipeline(id, desc, implicit, is_async) => {
-                let implicit_ids = implicit
-                    .as_ref()
-                    .map(|imp| wgc::device::ImplicitPipelineIds {
-                        root_id: imp.pipeline,
-                        group_ids: &imp.bind_groups,
-                    });
-                let (_, error) =
-                    self.device_create_render_pipeline(device_id, &desc, Some(id), implicit_ids);
+            DeviceAction::CreateRenderPipeline(id, desc, is_async) => {
+                let (_, error) = self.device_create_render_pipeline(device_id, &desc, Some(id));
 
                 if is_async {
                     let error = error
@@ -2085,7 +2072,6 @@ impl Global {
                     *response_byte_buf =
                         make_byte_buf(&ServerMessage::CreateRenderPipelineResponse {
                             pipeline_id: id,
-                            implicit_ids: implicit,
                             error,
                         });
                 } else {
@@ -2502,8 +2488,9 @@ unsafe fn process_message(
         Message::CommandEncoder(device_id, id, action) => {
             global.command_encoder_action(device_id, id, action, error_buf)
         }
-        Message::CommandEncoderFinish(device_id, id, desc) => {
-            let (_, error) = global.command_encoder_finish(id, &desc);
+        Message::CommandEncoderFinish(device_id, command_encoder_id, command_buffer_id, desc) => {
+            let (_, error) =
+                global.command_encoder_finish(command_encoder_id, &desc, Some(command_buffer_id));
             if let Some(err) = error {
                 error_buf.init(err, device_id);
             }
@@ -2641,6 +2628,7 @@ unsafe fn process_message(
         Message::SwapChainPresent {
             texture_id,
             command_encoder_id,
+            command_buffer_id,
             remote_texture_id,
             remote_texture_owner_id,
         } => {
@@ -2648,6 +2636,7 @@ unsafe fn process_message(
                 global.owner,
                 texture_id,
                 command_encoder_id,
+                command_buffer_id,
                 remote_texture_id,
                 remote_texture_owner_id,
             );
@@ -2680,30 +2669,15 @@ unsafe fn process_message(
             wgpu_server_dealloc_buffer_shmem(global.owner, id);
             global.buffer_drop(id)
         }
+        Message::DropCommandEncoder(id) => global.command_encoder_drop(id),
         Message::DropCommandBuffer(id) => global.command_buffer_drop(id),
         Message::DropRenderBundle(id) => global.render_bundle_drop(id),
         Message::DropBindGroupLayout(id) => global.bind_group_layout_drop(id),
         Message::DropPipelineLayout(id) => global.pipeline_layout_drop(id),
         Message::DropBindGroup(id) => global.bind_group_drop(id),
         Message::DropShaderModule(id) => global.shader_module_drop(id),
-        Message::DropComputePipeline(id, implicit_layout) => {
-            global.compute_pipeline_drop(id);
-            if let Some(implicit_layout) = implicit_layout {
-                global.pipeline_layout_drop(implicit_layout.pipeline);
-                for bgl_id in implicit_layout.bind_groups.as_ref().iter() {
-                    global.bind_group_layout_drop(*bgl_id);
-                }
-            }
-        }
-        Message::DropRenderPipeline(id, implicit_layout) => {
-            global.render_pipeline_drop(id);
-            if let Some(implicit_layout) = implicit_layout {
-                global.pipeline_layout_drop(implicit_layout.pipeline);
-                for bgl_id in implicit_layout.bind_groups.as_ref().iter() {
-                    global.bind_group_layout_drop(*bgl_id);
-                }
-            }
-        }
+        Message::DropComputePipeline(id) => global.compute_pipeline_drop(id),
+        Message::DropRenderPipeline(id) => global.render_pipeline_drop(id),
         Message::DropTexture(id) => {
             wgpu_server_remove_shared_texture(global.owner, id);
             global.texture_drop(id);
@@ -2711,8 +2685,6 @@ unsafe fn process_message(
         Message::DropTextureView(id) => global.texture_view_drop(id).unwrap(),
         Message::DropSampler(id) => global.sampler_drop(id),
         Message::DropQuerySet(id) => global.query_set_drop(id),
-
-        Message::DropCommandEncoder(id) => global.command_encoder_drop(id),
     }
 
     if let Some((device_id, ty, message)) = error_buf.get_inner_data() {
@@ -2745,13 +2717,15 @@ pub extern "C" fn wgpu_server_device_create_encoder(
 pub extern "C" fn wgpu_server_encoder_finish(
     global: &Global,
     device_id: id::DeviceId,
-    self_id: id::CommandEncoderId,
+    command_encoder_id: id::CommandEncoderId,
+    command_buffer_id: id::CommandBufferId,
     desc: &wgt::CommandBufferDescriptor<Option<&nsACString>>,
     mut error_buf: ErrorBuffer,
 ) {
     let label = wgpu_string(desc.label);
     let desc = desc.map_label(|_| label);
-    let (_, error) = global.command_encoder_finish(self_id, &desc);
+    let (_, error) =
+        global.command_encoder_finish(command_encoder_id, &desc, Some(command_buffer_id));
     if let Some(err) = error {
         error_buf.init(err, device_id);
     }
@@ -2909,6 +2883,11 @@ pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_server_encoder_drop(global: &Global, self_id: id::CommandEncoderId) {
+pub extern "C" fn wgpu_server_command_encoder_drop(global: &Global, self_id: id::CommandEncoderId) {
     global.command_encoder_drop(self_id);
+}
+
+#[no_mangle]
+pub extern "C" fn wgpu_server_command_buffer_drop(global: &Global, self_id: id::CommandBufferId) {
+    global.command_buffer_drop(self_id);
 }

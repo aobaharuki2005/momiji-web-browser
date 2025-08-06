@@ -190,16 +190,12 @@ void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
   if (aError == nullptr) {
     if (pending_promise.is_render_pipeline) {
       RefPtr<RenderPipeline> object = new RenderPipeline(
-          pending_promise.device, pending_promise.pipeline_id,
-          pending_promise.implicit_pipeline_layout_id,
-          std::move(pending_promise.implicit_bind_group_layout_ids));
+          pending_promise.device, pending_promise.pipeline_id);
       object->SetLabel(pending_promise.label);
       pending_promise.promise->MaybeResolve(object);
     } else {
       RefPtr<ComputePipeline> object = new ComputePipeline(
-          pending_promise.device, pending_promise.pipeline_id,
-          pending_promise.implicit_pipeline_layout_id,
-          std::move(pending_promise.implicit_bind_group_layout_ids));
+          pending_promise.device, pending_promise.pipeline_id);
       object->SetLabel(pending_promise.label);
       pending_promise.promise->MaybeResolve(object);
     }
@@ -413,12 +409,14 @@ void WebGPUChild::SwapChainPresent(RawId aTextureId,
                                    const RemoteTextureOwnerId& aOwnerId) {
   // The parent side needs to create a command encoder which will be submitted
   // and dropped right away so we create and release an encoder ID here.
-  RawId encoderId = ffi::wgpu_client_make_encoder_id(GetClient());
-
-  ffi::wgpu_client_swap_chain_present(GetClient(), aTextureId, encoderId,
-                                      aRemoteTextureId.mId, aOwnerId.mId);
-
-  ffi::wgpu_client_free_command_encoder_id(GetClient(), encoderId);
+  RawId commandEncoderId =
+      ffi::wgpu_client_make_command_encoder_id(GetClient());
+  RawId commandBufferId = ffi::wgpu_client_make_command_buffer_id(GetClient());
+  ffi::wgpu_client_swap_chain_present(GetClient(), aTextureId, commandEncoderId,
+                                      commandBufferId, aRemoteTextureId.mId,
+                                      aOwnerId.mId);
+  ffi::wgpu_client_free_command_encoder_id(GetClient(), commandEncoderId);
+  ffi::wgpu_client_free_command_buffer_id(GetClient(), commandBufferId);
 }
 
 void WebGPUChild::RegisterDevice(Device* const aDevice) {
@@ -499,16 +497,12 @@ void WebGPUChild::ClearActorState() {
 
       if (pending_promise.is_render_pipeline) {
         RefPtr<RenderPipeline> object = new RenderPipeline(
-            pending_promise.device, pending_promise.pipeline_id,
-            pending_promise.implicit_pipeline_layout_id,
-            std::move(pending_promise.implicit_bind_group_layout_ids));
+            pending_promise.device, pending_promise.pipeline_id);
         object->SetLabel(pending_promise.label);
         pending_promise.promise->MaybeResolve(object);
       } else {
         RefPtr<ComputePipeline> object = new ComputePipeline(
-            pending_promise.device, pending_promise.pipeline_id,
-            pending_promise.implicit_pipeline_layout_id,
-            std::move(pending_promise.implicit_bind_group_layout_ids));
+            pending_promise.device, pending_promise.pipeline_id);
         object->SetLabel(pending_promise.label);
         pending_promise.promise->MaybeResolve(object);
       }

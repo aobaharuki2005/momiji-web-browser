@@ -13,23 +13,33 @@
 
 namespace mozilla::webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(CommandBuffer, mParent, mEncoder)
+GPU_IMPL_CYCLE_COLLECTION(CommandBuffer, mParent, mBridge)
 GPU_IMPL_JS_WRAP(CommandBuffer)
 
 CommandBuffer::CommandBuffer(
-    Device* const aParent, RawId aId,
-    nsTArray<WeakPtr<CanvasContext>>&& aPresentationContexts,
-    RefPtr<CommandEncoder>&& aEncoder)
+    Device* const aParent, WebGPUChild* const aBridge, RawId aId,
+    nsTArray<WeakPtr<CanvasContext>>&& aPresentationContexts)
     : ChildOf(aParent),
       mId(aId),
+      mBridge(aBridge),
       mPresentationContexts(std::move(aPresentationContexts)) {
-  mEncoder = std::move(aEncoder);
   MOZ_RELEASE_ASSERT(aId);
 }
 
 CommandBuffer::~CommandBuffer() {}
 
-void CommandBuffer::Cleanup() { mEncoder = nullptr; }
+void CommandBuffer::Cleanup() {
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  if (!mBridge) {
+    return;
+  }
+
+  ffi::wgpu_client_drop_command_buffer(mBridge->GetClient(), mId);
+}
 
 Maybe<RawId> CommandBuffer::Commit() {
   if (!mValid) {
