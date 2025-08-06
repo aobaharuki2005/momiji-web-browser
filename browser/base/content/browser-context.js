@@ -314,7 +314,7 @@ document.addEventListener(
           // attempts to generate the text fragment directive of selected text
           // Note: This is kicking off an async operation that might update
           // the context menu while it's open (enables an entry).
-          if (gContextMenu.isContentSelected) {
+          if (gContextMenu.textDirectiveTarget) {
             gContextMenu.getTextDirective();
           }
           break;

@@ -143,7 +143,8 @@ class FragmentDirective final : public nsISupports, public nsWrapperCache {
    * @return Returns the created text directive as resolved promise, or a
    *         rejected promise in case of an error.
    */
-  already_AddRefed<Promise> CreateTextDirectiveForSelection();
+  already_AddRefed<Promise> CreateTextDirectiveForRanges(
+      const Sequence<OwningNonNull<nsRange>>& aRanges);
 
  private:
   RefPtr<Document> mDocument;
