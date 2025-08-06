@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "../vendor/lit.all.mjs";
+import { html, ifDefined } from "../vendor/lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "./moz-fieldset.mjs";
 // eslint-disable-next-line import/no-unassigned-import
@@ -20,8 +20,20 @@ export default {
       options: ["", "1", "2", "3", "4", "5", "6"],
       control: { type: "select" },
     },
-    disabled: {
-      control: { type: "boolean" },
+    l10nId: {
+      options: ["moz-fieldset-label", "moz-fieldset-description"],
+      control: { type: "select" },
+    },
+    iconSrc: {
+      options: [
+        "",
+        "chrome://global/skin/icons/info.svg",
+        "chrome://global/skin/icons/highlights.svg",
+        "chrome://global/skin/icons/warning.svg",
+        "chrome://global/skin/icons/heart.svg",
+        "chrome://global/skin/icons/edit.svg",
+      ],
+      control: { type: "select" },
     },
   },
   parameters: {
@@ -44,6 +56,7 @@ const Template = ({
   hasSlottedSupportLinks,
   headingLevel,
   disabled,
+  iconSrc,
 }) => html`
   <moz-fieldset
     data-l10n-id=${l10nId}
@@ -53,6 +66,7 @@ const Template = ({
     .disabled=${disabled}
     support-page=${supportPage}
     style="width: 400px;"
+    iconsrc=${ifDefined(iconSrc)}
   >
     <moz-toggle
       pressed
@@ -89,6 +103,7 @@ Default.args = {
   l10nId: "moz-fieldset-label",
   hasSlottedSupportLinks: false,
   disabled: false,
+  iconSrc: "",
 };
 
 export const WithDescription = Template.bind({});
@@ -131,4 +146,10 @@ export const Disabled = Template.bind({});
 Disabled.args = {
   ...WithDescription.args,
   disabled: true,
+};
+
+export const WithIcon = Template.bind({});
+WithIcon.args = {
+  ...WithSupportLink.args,
+  iconSrc: "chrome://global/skin/icons/info.svg",
 };

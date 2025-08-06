@@ -78,6 +78,21 @@
           !fieldsetEl.hasAttribute("aria-describedby"),
           "aria-describedby removed when no description"
         );
+
+        // Validate that adding iconSrc displays an image
+        let icon = fieldset.shadowRoot.querySelector(".icon");
+        ok(!icon, "Icon is not rendered when iconSrc is not present.");
+
+        fieldset.iconSrc = "chrome://global/skin/icons/info.svg";
+        await fieldset.updateComplete;
+
+        icon = fieldset.shadowRoot.querySelector(".icon");
+        ok(icon, "Icon is rendered after iconSrc is supplied.");
+        is(
+          icon.src,
+          "chrome://global/skin/icons/info.svg",
+          "Icon src is set to the expected value."
+        );
       });
 
       add_task(async function testMozFieldsetSupportLink() {

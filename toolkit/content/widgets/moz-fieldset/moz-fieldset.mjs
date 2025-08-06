@@ -24,6 +24,7 @@ const HEADING_LEVEL_TEMPLATES = {
  * @property {string} supportPage - Name of the SUMO support page to link to.
  * @property {number} headingLevel - Render the legend in a heading of this level.
  * @property {boolean} disabled - Whether the fieldset and its children are disabled.
+ * @property {string} iconSrc - The src for an optional icon.
  */
 export default class MozFieldset extends MozLitElement {
   static properties = {
@@ -34,12 +35,14 @@ export default class MozFieldset extends MozLitElement {
     ariaOrientation: { type: String, mapped: true },
     headingLevel: { type: Number },
     disabled: { type: Boolean, reflect: true },
+    iconSrc: { type: String },
   };
 
   constructor() {
     super();
     this.headingLevel = -1;
     this.disabled = false;
+    this.iconSrc = "";
   }
 
   updated(changedProperties) {
@@ -91,7 +94,14 @@ export default class MozFieldset extends MozLitElement {
   legendTemplate() {
     let label =
       HEADING_LEVEL_TEMPLATES[this.headingLevel]?.(this.label) || this.label;
-    return html`<legend part="label">${label}</legend>`;
+    return html`<legend part="label">${this.iconTemplate()}${label}</legend>`;
+  }
+
+  iconTemplate() {
+    if (!this.iconSrc) {
+      return "";
+    }
+    return html`<img src=${this.iconSrc} role="presentation" class="icon" />`;
   }
 
   render() {
