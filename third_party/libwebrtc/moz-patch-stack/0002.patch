@@ -1,37 +1,97 @@
-From: Andrew Grieve <agrieve@google.com>
-Date: Mon, 5 May 2025 20:42:18 -0400
-Subject: (cherry-pick-branch-heads/7151) Fix license name in README.chromium
- for fft4g
+From: Tom Van Goethem <tov@google.com>
+Date: Mon, 12 May 2025 03:34:59 -0700
+Subject: (cherry-pick-branch-heads/7151) [M137] Add metrics for restricted
+ candidates
 
-(cherry picked from commit f844699005fefc6844bef184bcc101389951caa7)
+This adds two UMA metrics for the type of SDP munging that occurred and
+the port of the candidate that was restricted. The metrics descriptions
+are being added here: crrev.com/c/6521706.
 
-Bug: chromium:414606466
-Change-Id: I627dd5b01e157125c9811ec36086efd7e16855b1
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/389920
-Reviewed-by: Sam Zackrisson <saza@webrtc.org>
-Reviewed-by: Henrik Lundin <henrik.lundin@webrtc.org>
-Commit-Queue: Sam Zackrisson <saza@webrtc.org>
-Auto-Submit: Andrew Grieve <agrieve@google.com>
-Cr-Original-Commit-Position: refs/heads/main@{#44522}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/391000
-Commit-Queue: Henrik Lundin <henrik.lundin@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/branch-heads/7151@{#3}
+(cherry picked from commit d5b3b1ed4594821451d2ebb1d61cc1e6dab83b56)
+
+Bug: b/409713509
+Fixed: b/417142969
+Change-Id: I3232cb0cee6848074ab103f4d4edb2e080e09568
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390340
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Reviewed-by: Johannes Kron <kron@webrtc.org>
+Commit-Queue: Tom Van Goethem <tov@google.com>
+Cr-Original-Commit-Position: refs/heads/main@{#44559}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390920
+Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/7151@{#2}
 Cr-Branched-From: dc428bd75f2ca847b165b2556970c9bcd5037c5b-refs/heads/main@{#44472}
 ---
- common_audio/third_party/ooura/README.chromium | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ pc/sdp_offer_answer.cc          | 12 ++++++++++++
+ pc/sdp_offer_answer_unittest.cc | 16 ++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
-diff --git a/common_audio/third_party/ooura/README.chromium b/common_audio/third_party/ooura/README.chromium
-index 3b105fe050..f414ac28d7 100644
---- a/common_audio/third_party/ooura/README.chromium
-+++ b/common_audio/third_party/ooura/README.chromium
-@@ -3,7 +3,7 @@ Short Name: fft4g
- URL: http://www.kurims.kyoto-u.ac.jp/~ooura/fft.html
- Version: N/A
- Date: 2018-06-19
--License: Custome license
-+License: LicenseRef-takuya-ooura
- License File: LICENSE
- Security Critical: yes
- Shipped: yes
+diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
+index 6f19d1bee6..22da12b0c8 100644
+--- a/pc/sdp_offer_answer.cc
++++ b/pc/sdp_offer_answer.cc
+@@ -5344,6 +5344,18 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
+         RTC_LOG(LS_ERROR) << "ReadyToUseRemoteCandidate: Candidate not valid "
+                              "because of SDP munging.";
+         *valid = false;
++        // There might be other types of SDP munging, but here we're only
++        // interested in IceUfrag and IcePwd.
++        SdpMungingType sdp_munging_type =
++            last_sdp_munging_type_ == SdpMungingType::kIcePwd
++                ? SdpMungingType::kIcePwd
++                : SdpMungingType::kIceUfrag;
++        RTC_HISTOGRAM_ENUMERATION_SPARSE(
++            "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType",
++            sdp_munging_type, SdpMungingType::kMaxValue);
++        RTC_HISTOGRAM_ENUMERATION_SPARSE(
++            "WebRTC.PeerConnection.RestrictedCandidates.Port",
++            candidate->candidate().address().port(), 65536);
+         return false;
+       }
+     }
+diff --git a/pc/sdp_offer_answer_unittest.cc b/pc/sdp_offer_answer_unittest.cc
+index 3fe6e19799..36a6701b32 100644
+--- a/pc/sdp_offer_answer_unittest.cc
++++ b/pc/sdp_offer_answer_unittest.cc
+@@ -18,8 +18,11 @@
+ #include <vector>
+ 
+ #include "absl/strings/match.h"
++#include "absl/strings/numbers.h"
+ #include "absl/strings/str_cat.h"
+ #include "absl/strings/str_replace.h"
++#include "absl/strings/str_split.h"
++#include "absl/strings/string_view.h"
+ #include "api/audio_codecs/audio_format.h"
+ #include "api/audio_codecs/builtin_audio_decoder_factory.h"
+ #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+@@ -1984,6 +1987,7 @@ TEST_F(SdpOfferAnswerMungingTest, IceUfragRestrictedAddresses) {
+       {"127.0.1.1:23456", true},  {"8.8.8.8:3456", true},
+   };
+ 
++  int num_blocked = 0;
+   for (const auto& address_test : address_tests) {
+     std::optional<RTCError> result;
+     const std::string candidate = StringFormat(
+@@ -1999,8 +2003,20 @@ TEST_F(SdpOfferAnswerMungingTest, IceUfragRestrictedAddresses) {
+     if (address_test.second == true) {
+       EXPECT_TRUE(result.value().ok());
+     } else {
++      std::pair<absl::string_view, absl::string_view> host =
++          absl::StrSplit(address_test.first, ":");
++      int port;
++      ASSERT_TRUE(absl::SimpleAtoi(host.second, &port));
+       EXPECT_FALSE(result.value().ok());
+       EXPECT_EQ(result.value().type(), RTCErrorType::UNSUPPORTED_OPERATION);
++      num_blocked++;
++      EXPECT_THAT(
++          metrics::Samples(
++              "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType"),
++          ElementsAre(Pair(SdpMungingType::kIceUfrag, num_blocked)));
++      EXPECT_THAT(
++          metrics::Samples("WebRTC.PeerConnection.RestrictedCandidates.Port"),
++          Contains(Pair(port, 1)));
+     }
+   }
+ }
