@@ -138,8 +138,8 @@ class nsTextFrame : public nsIFrame {
       NS_ASSERTION(mLength != INT32_MAX, "Length not known");
       return mLength;
     }
-    const mozilla::dom::CharacterDataBuffer* GetFragment() const {
-      return mFrag;
+    const mozilla::dom::CharacterDataBuffer* GetCharacterDataBuffer() const {
+      return mCharacterDataBuffer;
     }
 
     gfxFontGroup* GetFontGroup() const {
@@ -177,7 +177,7 @@ class nsTextFrame : public nsIFrame {
     mutable gfxFontGroup* mFontGroup;
     mutable RefPtr<nsFontMetrics> mFontMetrics;
     const nsStyleText* mTextStyle;
-    const mozilla::dom::CharacterDataBuffer* mFrag;
+    const mozilla::dom::CharacterDataBuffer* mCharacterDataBuffer;
     const nsIFrame* mLineContainer;
     nsTextFrame* mFrame;
     gfxSkipCharsIterator mStart;  // Offset in original and transformed string
@@ -304,7 +304,7 @@ class nsTextFrame : public nsIFrame {
   // Returns this text frame's content's text fragment.
   //
   // Assertions in Init() ensure we only ever get a Text node as content.
-  const mozilla::dom::CharacterDataBuffer* TextFragment() const {
+  const mozilla::dom::CharacterDataBuffer* CharacterDataBuffer() const {
     return &mContent->AsText()->DataBuffer();
   }
 
@@ -1102,7 +1102,8 @@ class nsTextFrame : public nsIFrame {
     const uint32_t mEndOffset;
     const TextOffsetType mOffsetType;
     const TrailingWhitespace mTrimTrailingWhitespace;
-    const mozilla::dom::CharacterDataBuffer* const mTextFrag;
+    const mozilla::dom::CharacterDataBuffer* const mCharacterDataBuffer =
+        nullptr;
     // Mutable state, updated as we loop over the continuations.
     nsBlockFrame* mLineContainer = nullptr;
     uint32_t mOffsetInRenderedString = 0;
