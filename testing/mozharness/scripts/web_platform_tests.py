@@ -221,6 +221,15 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                     "help": "Sets the timeout multiplier (0.25 for `--backlog` tests by default)",
                 },
             ],
+            [
+                ["--no-update-status-on-crash"],
+                {
+                    "action": "store_false",
+                    "dest": "update_status_on_crash",
+                    "default": True,
+                    "help": "Sets whether to update the test status if a crash dump is detected",
+                },
+            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -439,6 +448,11 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd.append("--timeout-multiplier=%s" % c["timeout_multiplier"])
         elif c["backlog"]:
             cmd.append("--timeout-multiplier=0.25")
+
+        if c["update_status_on_crash"]:
+            cmd.append("--update-status-on-crash")
+        else:
+            cmd.append("--no-update-status-on-crash")
 
         test_paths = set()
         if not (self.verify_enabled or self.per_test_coverage):
