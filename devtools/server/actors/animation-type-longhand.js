@@ -337,6 +337,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "scale",
       "shape-outside",
       "stroke-dasharray",
+      "text-decoration-trim",
       "transform",
       "transform-origin",
       "translate",

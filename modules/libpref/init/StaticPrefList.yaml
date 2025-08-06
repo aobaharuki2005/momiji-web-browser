@@ -10294,6 +10294,12 @@
   value: true
   mirror: always
 
+- name: layout.css.text-decoration-trim.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Support for the css Zoom property.
 - name: layout.css.zoom.enabled
   type: RelaxedAtomicBool
