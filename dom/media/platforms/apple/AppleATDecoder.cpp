@@ -12,12 +12,9 @@
 
 #include "ADTSDemuxer.h"
 #include "Adts.h"
-#include "AppleUtils.h"
 #include "MP4Decoder.h"
 #include "MediaInfo.h"
-#include "VideoUtils.h"
 #include "mozilla/Logging.h"
-#include "mozilla/SyncRunnable.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
