@@ -11,10 +11,21 @@ import React, {
 } from "react";
 import { useSelector, batch } from "react-redux";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
+import { useIntersectionObserver } from "../../../lib/utils";
 
 const TASK_TYPE = {
   IN_PROGRESS: "tasks",
   COMPLETED: "completed",
+};
+
+const USER_ACTION_TYPES = {
+  LIST_CREATE: "list_create",
+  LIST_EDIT: "list_edit",
+  LIST_DELETE: "list_delete",
+  TASK_CREATE: "task_create",
+  TASK_EDIT: "task_edit",
+  TASK_DELETE: "task_delete",
+  TASK_COMPLETE: "task_complete",
 };
 
 function Lists({ dispatch }) {
@@ -22,6 +33,7 @@ function Lists({ dispatch }) {
   const [newTask, setNewTask] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [pendingNewList, setPendingNewList] = useState(null);
+
   const inputRef = useRef(null);
   const selectRef = useRef(null);
   const reorderListRef = useRef(null);
@@ -30,6 +42,16 @@ function Lists({ dispatch }) {
   const selectedList = useMemo(() => lists[selected], [lists, selected]);
 
   const isValidUrl = useCallback(str => URL.canParse(str), []);
+
+  const handleIntersection = useCallback(() => {
+    dispatch(
+      ac.AlsoToMain({
+        type: at.WIDGETS_LISTS_USER_IMPRESSION,
+      })
+    );
+  }, [dispatch]);
+
+  const listsRef = useIntersectionObserver(handleIntersection);
 
   const reorderLists = useCallback(
     (draggedElement, targetElement, before = false) => {
@@ -154,12 +176,20 @@ function Lists({ dispatch }) {
           tasks: [formattedTask, ...lists[selected].tasks],
         },
       };
-      dispatch(
-        ac.AlsoToMain({
-          type: at.WIDGETS_LISTS_UPDATE,
-          data: { lists: updatedLists },
-        })
-      );
+      batch(() => {
+        dispatch(
+          ac.AlsoToMain({
+            type: at.WIDGETS_LISTS_UPDATE,
+            data: { lists: updatedLists },
+          })
+        );
+        dispatch(
+          ac.OnlyToMain({
+            type: at.WIDGETS_LISTS_USER_EVENT,
+            data: { userAction: USER_ACTION_TYPES.TASK_CREATE },
+          })
+        );
+      });
       setNewTask("");
     }
   }
@@ -171,6 +201,7 @@ function Lists({ dispatch }) {
     let newTasks = selectedList.tasks;
     let newCompleted = selectedList.completed;
     let localUpdatedTasks;
+    let userAction;
 
     // If the task is in the completed array and is now unchecked
     const shouldMoveToTasks = isCompletedType && !isNowCompleted;
@@ -193,6 +224,7 @@ function Lists({ dispatch }) {
       localUpdatedTasks = selectedList.tasks.map(existingTask =>
         existingTask.id === updatedTask.id ? updatedTask : existingTask
       );
+      userAction = USER_ACTION_TYPES.TASK_COMPLETE;
     } else {
       const targetKey = isCompletedType ? "completed" : "tasks";
       const updatedArray = selectedList[targetKey].map(task =>
@@ -204,6 +236,7 @@ function Lists({ dispatch }) {
       } else {
         newCompleted = updatedArray;
       }
+      userAction = USER_ACTION_TYPES.TASK_EDIT;
     }
 
     const updatedLists = {
@@ -227,12 +260,22 @@ function Lists({ dispatch }) {
 
     // Dispatch the update to main - will sync across tabs
     // and apply local override to this tab only
-    dispatch(
-      ac.AlsoToMain({
-        type: at.WIDGETS_LISTS_UPDATE,
-        data: { lists: updatedLists, localLists },
-      })
-    );
+    batch(() => {
+      dispatch(
+        ac.AlsoToMain({
+          type: at.WIDGETS_LISTS_UPDATE,
+          data: { lists: updatedLists, localLists },
+        })
+      );
+      if (userAction) {
+        dispatch(
+          ac.AlsoToMain({
+            type: at.WIDGETS_LISTS_USER_EVENT,
+            data: { userAction },
+          })
+        );
+      }
+    });
   }
 
   function deleteTask(task, type) {
@@ -246,12 +289,20 @@ function Lists({ dispatch }) {
         [type]: updatedTasks,
       },
     };
-    dispatch(
-      ac.AlsoToMain({
-        type: at.WIDGETS_LISTS_UPDATE,
-        data: { lists: updatedLists },
-      })
-    );
+    batch(() => {
+      dispatch(
+        ac.AlsoToMain({
+          type: at.WIDGETS_LISTS_UPDATE,
+          data: { lists: updatedLists },
+        })
+      );
+      dispatch(
+        ac.OnlyToMain({
+          type: at.WIDGETS_LISTS_USER_EVENT,
+          data: { userAction: USER_ACTION_TYPES.TASK_DELETE },
+        })
+      );
+    });
   }
 
   function handleKeyDown(e) {
@@ -276,12 +327,20 @@ function Lists({ dispatch }) {
           label: trimmedLabel,
         },
       };
-      dispatch(
-        ac.AlsoToMain({
-          type: at.WIDGETS_LISTS_UPDATE,
-          data: { lists: updatedLists },
-        })
-      );
+      batch(() => {
+        dispatch(
+          ac.AlsoToMain({
+            type: at.WIDGETS_LISTS_UPDATE,
+            data: { lists: updatedLists },
+          })
+        );
+        dispatch(
+          ac.OnlyToMain({
+            type: at.WIDGETS_LISTS_USER_EVENT,
+            data: { userAction: USER_ACTION_TYPES.LIST_EDIT },
+          })
+        );
+      });
       setIsEditing(false);
     }
   }
@@ -308,6 +367,12 @@ function Lists({ dispatch }) {
         ac.AlsoToMain({
           type: at.WIDGETS_LISTS_CHANGE_SELECTED,
           data: id,
+        })
+      );
+      dispatch(
+        ac.OnlyToMain({
+          type: at.WIDGETS_LISTS_USER_EVENT,
+          data: { userAction: USER_ACTION_TYPES.LIST_CREATE },
         })
       );
     });
@@ -344,8 +409,26 @@ function Lists({ dispatch }) {
             data: key,
           })
         );
+        dispatch(
+          ac.OnlyToMain({
+            type: at.WIDGETS_LISTS_USER_EVENT,
+            data: { userAction: USER_ACTION_TYPES.LIST_DELETE },
+          })
+        );
       });
     }
+  }
+
+  function handleHideLists() {
+    dispatch(
+      ac.OnlyToMain({
+        type: at.SET_PREF,
+        data: {
+          name: "widgets.lists.enabled",
+          value: false,
+        },
+      })
+    );
   }
 
   if (!lists) {
@@ -353,7 +436,12 @@ function Lists({ dispatch }) {
   }
 
   return (
-    <article className="lists">
+    <article
+      className="lists"
+      ref={el => {
+        listsRef.current = [el];
+      }}
+    >
       <div className="select-wrapper">
         <EditableText
           value={lists[selected]?.label || ""}
@@ -390,7 +478,10 @@ function Lists({ dispatch }) {
           ></panel-item>
           <hr />
           <panel-item data-l10n-id="newtab-widget-lists-menu-copy"></panel-item>
-          <panel-item data-l10n-id="newtab-widget-lists-menu-hide"></panel-item>
+          <panel-item
+            data-l10n-id="newtab-widget-lists-menu-hide"
+            onClick={() => handleHideLists()}
+          ></panel-item>
           <panel-item data-l10n-id="newtab-widget-lists-menu-learn-more"></panel-item>
         </panel-list>
       </div>

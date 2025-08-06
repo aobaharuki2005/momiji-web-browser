@@ -107,7 +107,7 @@ describe("<Lists>", () => {
     const deleteButton = wrapper.find("panel-item.delete-item").at(0);
     deleteButton.props().onClick();
 
-    assert.ok(dispatch.calledOnce);
+    assert.ok(dispatch.calledTwice);
     const [action] = dispatch.getCall(0).args;
     assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
 
@@ -130,7 +130,7 @@ describe("<Lists>", () => {
 
     input.simulate("keyDown", { key: "Enter" });
 
-    assert.ok(dispatch.calledOnce, "Expected dispatch to be called");
+    assert.ok(dispatch.calledTwice, "Expected dispatch to be called");
 
     const [action] = dispatch.getCall(0).args;
     assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
@@ -162,7 +162,7 @@ describe("<Lists>", () => {
     const deleteList = wrapper.find("panel-item").at(2);
     deleteList.props().onClick();
 
-    assert.ok(dispatch.calledTwice);
+    assert.ok(dispatch.calledThrice);
     assert.equal(dispatch.getCall(0).args[0].type, at.WIDGETS_LISTS_UPDATE);
     assert.equal(
       dispatch.getCall(1).args[0].type,
@@ -180,7 +180,7 @@ describe("<Lists>", () => {
     editableInput.simulate("change", { target: { value: "Updated List" } });
     editableInput.simulate("keyDown", { key: "Enter" });
 
-    assert.ok(dispatch.calledOnce);
+    assert.ok(dispatch.calledTwice);
     const [action] = dispatch.getCall(0).args;
     assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
     assert.equal(action.data.lists["test-list"].label, "Updated List");
@@ -189,7 +189,7 @@ describe("<Lists>", () => {
   it("should create a new list and dispatch update and select list actions", () => {
     const createListBtn = wrapper.find("panel-item").at(1); // assumes "Create a new list" is at index 1
     createListBtn.props().onClick();
-    assert.ok(dispatch.calledTwice);
+    assert.ok(dispatch.calledThrice);
     assert.equal(dispatch.getCall(0).args[0].type, at.WIDGETS_LISTS_UPDATE);
     assert.equal(
       dispatch.getCall(1).args[0].type,

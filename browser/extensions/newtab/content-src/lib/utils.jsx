@@ -20,11 +20,16 @@ import { useEffect, useRef } from "react";
  */
 function useIntersectionObserver(callback, threshold = 0.3) {
   const elementsRef = useRef([]);
+  const triggeredElements = useRef(new WeakSet());
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
         entries.forEach(entry => {
-          if (entry.isIntersecting) {
+          if (
+            entry.isIntersecting &&
+            !triggeredElements.current.has(entry.target)
+          ) {
+            triggeredElements.current.add(entry.target);
             callback(entry.target);
             observer.unobserve(entry.target);
           }
@@ -34,7 +39,7 @@ function useIntersectionObserver(callback, threshold = 0.3) {
     );
 
     elementsRef.current.forEach(el => {
-      if (el) {
+      if (el && !triggeredElements.current.has(el)) {
         observer.observe(el);
       }
     });

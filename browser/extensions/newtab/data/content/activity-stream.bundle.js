@@ -303,10 +303,10 @@ for (const type of [
   "WEBEXT_DISMISS",
   "WIDGETS_LISTS_CHANGE_SELECTED",
   "WIDGETS_LISTS_SET",
-  "WIDGETS_LISTS_SET_LOCAL",
   "WIDGETS_LISTS_SET_SELECTED",
   "WIDGETS_LISTS_UPDATE",
-  "WIDGETS_LISTS_UPDATE_LOCAL",
+  "WIDGETS_LISTS_USER_EVENT",
+  "WIDGETS_LISTS_USER_IMPRESSION",
   "WIDGETS_TIMER_END",
   "WIDGETS_TIMER_PAUSE",
   "WIDGETS_TIMER_PLAY",
@@ -2639,10 +2639,12 @@ const DSLinkMenu = (0,external_ReactRedux_namespaceObject.connect)(state => ({
  */
 function useIntersectionObserver(callback, threshold = 0.3) {
   const elementsRef = (0,external_React_namespaceObject.useRef)([]);
+  const triggeredElements = (0,external_React_namespaceObject.useRef)(new WeakSet());
   (0,external_React_namespaceObject.useEffect)(() => {
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && !triggeredElements.current.has(entry.target)) {
+          triggeredElements.current.add(entry.target);
           callback(entry.target);
           observer.unobserve(entry.target);
         }
@@ -2651,7 +2653,7 @@ function useIntersectionObserver(callback, threshold = 0.3) {
       threshold
     });
     elementsRef.current.forEach(el => {
-      if (el) {
+      if (el && !triggeredElements.current.has(el)) {
         observer.observe(el);
       }
     });
@@ -12304,9 +12306,19 @@ function Lists_extends() { return Lists_extends = Object.assign ? Object.assign.
 
 
 
+
 const TASK_TYPE = {
   IN_PROGRESS: "tasks",
   COMPLETED: "completed"
+};
+const USER_ACTION_TYPES = {
+  LIST_CREATE: "list_create",
+  LIST_EDIT: "list_edit",
+  LIST_DELETE: "list_delete",
+  TASK_CREATE: "task_create",
+  TASK_EDIT: "task_edit",
+  TASK_DELETE: "task_delete",
+  TASK_COMPLETE: "task_complete"
 };
 function Lists({
   dispatch
@@ -12325,6 +12337,12 @@ function Lists({
   // store selectedList with useMemo so it isnt re-calculated on every re-render
   const selectedList = (0,external_React_namespaceObject.useMemo)(() => lists[selected], [lists, selected]);
   const isValidUrl = (0,external_React_namespaceObject.useCallback)(str => URL.canParse(str), []);
+  const handleIntersection = (0,external_React_namespaceObject.useCallback)(() => {
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.WIDGETS_LISTS_USER_IMPRESSION
+    }));
+  }, [dispatch]);
+  const listsRef = useIntersectionObserver(handleIntersection);
   const reorderLists = (0,external_React_namespaceObject.useCallback)((draggedElement, targetElement, before = false) => {
     const draggedIndex = selectedList.tasks.findIndex(({
       id
@@ -12424,12 +12442,20 @@ function Lists({
           tasks: [formattedTask, ...lists[selected].tasks]
         }
       };
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_LISTS_UPDATE,
-        data: {
-          lists: updatedLists
-        }
-      }));
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_LISTS_UPDATE,
+          data: {
+            lists: updatedLists
+          }
+        }));
+        dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.WIDGETS_LISTS_USER_EVENT,
+          data: {
+            userAction: USER_ACTION_TYPES.TASK_CREATE
+          }
+        }));
+      });
       setNewTask("");
     }
   }
@@ -12439,6 +12465,7 @@ function Lists({
     let newTasks = selectedList.tasks;
     let newCompleted = selectedList.completed;
     let localUpdatedTasks;
+    let userAction;
 
     // If the task is in the completed array and is now unchecked
     const shouldMoveToTasks = isCompletedType && !isNowCompleted;
@@ -12457,6 +12484,7 @@ function Lists({
 
       // Keep a local version of tasks that still includes this item (to preserve UI in this tab)
       localUpdatedTasks = selectedList.tasks.map(existingTask => existingTask.id === updatedTask.id ? updatedTask : existingTask);
+      userAction = USER_ACTION_TYPES.TASK_COMPLETE;
     } else {
       const targetKey = isCompletedType ? "completed" : "tasks";
       const updatedArray = selectedList[targetKey].map(task => task.id === updatedTask.id ? updatedTask : task);
@@ -12466,6 +12494,7 @@ function Lists({
       } else {
         newCompleted = updatedArray;
       }
+      userAction = USER_ACTION_TYPES.TASK_EDIT;
     }
     const updatedLists = {
       ...lists,
@@ -12490,13 +12519,23 @@ function Lists({
 
     // Dispatch the update to main - will sync across tabs
     // and apply local override to this tab only
-    dispatch(actionCreators.AlsoToMain({
-      type: actionTypes.WIDGETS_LISTS_UPDATE,
-      data: {
-        lists: updatedLists,
-        localLists
+    (0,external_ReactRedux_namespaceObject.batch)(() => {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_LISTS_UPDATE,
+        data: {
+          lists: updatedLists,
+          localLists
+        }
+      }));
+      if (userAction) {
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_LISTS_USER_EVENT,
+          data: {
+            userAction
+          }
+        }));
       }
-    }));
+    });
   }
   function deleteTask(task, type) {
     const selectedTasks = lists[selected][type];
@@ -12510,12 +12549,20 @@ function Lists({
         [type]: updatedTasks
       }
     };
-    dispatch(actionCreators.AlsoToMain({
-      type: actionTypes.WIDGETS_LISTS_UPDATE,
-      data: {
-        lists: updatedLists
-      }
-    }));
+    (0,external_ReactRedux_namespaceObject.batch)(() => {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_LISTS_UPDATE,
+        data: {
+          lists: updatedLists
+        }
+      }));
+      dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.WIDGETS_LISTS_USER_EVENT,
+        data: {
+          userAction: USER_ACTION_TYPES.TASK_DELETE
+        }
+      }));
+    });
   }
   function handleKeyDown(e) {
     if (e.key === "Enter" && document.activeElement === inputRef.current) {
@@ -12535,12 +12582,20 @@ function Lists({
           label: trimmedLabel
         }
       };
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_LISTS_UPDATE,
-        data: {
-          lists: updatedLists
-        }
-      }));
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_LISTS_UPDATE,
+          data: {
+            lists: updatedLists
+          }
+        }));
+        dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.WIDGETS_LISTS_USER_EVENT,
+          data: {
+            userAction: USER_ACTION_TYPES.LIST_EDIT
+          }
+        }));
+      });
       setIsEditing(false);
     }
   }
@@ -12564,6 +12619,12 @@ function Lists({
       dispatch(actionCreators.AlsoToMain({
         type: actionTypes.WIDGETS_LISTS_CHANGE_SELECTED,
         data: id
+      }));
+      dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.WIDGETS_LISTS_USER_EVENT,
+        data: {
+          userAction: USER_ACTION_TYPES.LIST_CREATE
+        }
       }));
     });
     setPendingNewList(id);
@@ -12598,14 +12659,32 @@ function Lists({
           type: actionTypes.WIDGETS_LISTS_CHANGE_SELECTED,
           data: key
         }));
+        dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.WIDGETS_LISTS_USER_EVENT,
+          data: {
+            userAction: USER_ACTION_TYPES.LIST_DELETE
+          }
+        }));
       });
     }
+  }
+  function handleHideLists() {
+    dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.SET_PREF,
+      data: {
+        name: "widgets.lists.enabled",
+        value: false
+      }
+    }));
   }
   if (!lists) {
     return null;
   }
   return /*#__PURE__*/external_React_default().createElement("article", {
-    className: "lists"
+    className: "lists",
+    ref: el => {
+      listsRef.current = [el];
+    }
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "select-wrapper"
   }, /*#__PURE__*/external_React_default().createElement(EditableText, {
@@ -12641,7 +12720,8 @@ function Lists({
   }), /*#__PURE__*/external_React_default().createElement("hr", null), /*#__PURE__*/external_React_default().createElement("panel-item", {
     "data-l10n-id": "newtab-widget-lists-menu-copy"
   }), /*#__PURE__*/external_React_default().createElement("panel-item", {
-    "data-l10n-id": "newtab-widget-lists-menu-hide"
+    "data-l10n-id": "newtab-widget-lists-menu-hide",
+    onClick: () => handleHideLists()
   }), /*#__PURE__*/external_React_default().createElement("panel-item", {
     "data-l10n-id": "newtab-widget-lists-menu-learn-more"
   }))), /*#__PURE__*/external_React_default().createElement("div", {

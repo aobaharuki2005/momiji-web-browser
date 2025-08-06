@@ -1114,6 +1114,71 @@ newtab:
     send_in_pings:
       - newtab
 
+  widgets_lists_user_event:
+    type: event
+    description: >
+      Details which user action has occurred. It can be one of
+      the following: list_create, list_edit, list_delete,
+      task_create, task_edit task_delete and task_completed
+    bugs:
+      - https://bugzil.la/1979704
+    data_reviews:
+      - https://bugzil.la/1979704
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - nbarrett@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      user_action:
+        description: >
+          user action. One of list_create, list_edit, list_delete,
+          task_create, task_edit task_delete and task_completed
+        type: string
+    send_in_pings:
+      - newtab
+
+  widgets_lists_impression:
+    type: event
+    description: >
+      Recorded when the list widget is viewable on a users screen
+    bugs:
+      - https://bugzil.la/1979704
+    data_reviews:
+      - https://bugzil.la/1979704
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - nbarrett@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
+  widgets_lists_change_display:
+    type: event
+    description: >
+      Whether the lists widget is enabled. Matches
+      the `widgets.lists.enabled` pref
+    bugs:
+      - https://bugzil.la/1979704
+    data_reviews:
+      - https://bugzil.la/1979704
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - nbarrett@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      display_status:
+        description: boolean value if the lists widget is being visible/enabled
+        type: boolean
+    send_in_pings:
+      - newtab
+
 newtab.search:
   enabled:
     lifetime: application

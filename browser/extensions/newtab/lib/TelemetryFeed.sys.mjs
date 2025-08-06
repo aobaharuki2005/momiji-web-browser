@@ -1258,6 +1258,30 @@ export class TelemetryFeed {
         if (!action.data.collapsed) {
           this.handleTrendingSearchUserEvent(action);
         }
+        break;
+      case at.WIDGETS_LISTS_USER_EVENT:
+      case at.WIDGETS_LISTS_USER_IMPRESSION:
+        this.handleWidgetsUserEvent(action);
+    }
+  }
+
+  handleWidgetsUserEvent(action) {
+    const session = this.sessions.get(au.getPortIdOfSender(action));
+    if (session) {
+      const payload = {
+        newtab_visit_id: session.visit_id,
+      };
+      switch (action.type) {
+        case "WIDGETS_LISTS_USER_EVENT":
+          Glean.newtab.widgetsListsUserEvent.record({
+            ...payload,
+            user_action: action.data.userAction,
+          });
+          break;
+        case "WIDGETS_LISTS_USER_IMPRESSION":
+          Glean.newtab.widgetsListsImpression.record(payload);
+          break;
+      }
     }
   }
 
@@ -1524,6 +1548,12 @@ export class TelemetryFeed {
             variant,
           });
         }
+        break;
+      case "widgets.lists.enabled":
+        Glean.newtab.widgetsListsChangeDisplay.record({
+          newtab_visit_id: session.session_id,
+          display_status: action.data.value,
+        });
         break;
     }
   }
