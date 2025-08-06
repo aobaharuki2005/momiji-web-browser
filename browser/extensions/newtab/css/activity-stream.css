@@ -8558,26 +8558,6 @@ main section {
   margin-inline-start: var(--space-small);
 }
 
-.wallpaper-feature-highlight .icon.icon-dismiss {
-  background: transparent url("chrome://global/skin/icons/close.svg");
-  background-size: var(--size-item-small);
-  height: var(--size-item-small);
-  width: var(--size-item-small);
-  position: absolute;
-  margin: 0;
-  inset-block-start: calc(var(--space-large) + var(--space-xxsmall));
-  inset-inline-end: calc(var(--space-large) + var(--space-xxsmall));
-}
-@media (prefers-color-scheme: dark) {
-  .wallpaper-feature-highlight .icon.icon-dismiss {
-    --dark-icon-color: var(--color-gray-70);
-    color: var(--dark-icon-color);
-  }
-}
-.wallpaper-feature-highlight .icon.icon-dismiss:hover {
-  --dark-icon-hover: var(--color-gray-60);
-  color: var(--dark-icon-hover);
-}
 .wallpaper-feature-highlight .feature-highlight .feature-highlight-modal {
   --arrow-size: 24px;
   width: auto;
@@ -8630,6 +8610,15 @@ main section {
   width: var(--arrow-size);
   box-shadow: 4px -4px 6px -2px rgba(0, 0, 0, 0.15);
   pointer-events: none;
+}
+.wallpaper-feature-highlight .feature-highlight .feature-highlight-modal > moz-button {
+  margin-inline-start: calc(-1 * var(--space-xlarge));
+}
+@media (prefers-color-scheme: dark) {
+  .wallpaper-feature-highlight .feature-highlight .feature-highlight-modal > moz-button {
+    --dark-icon-color: var(--color-gray-70);
+    background-color: var(--dark-icon-color);
+  }
 }
 
 .shortcut-feature-highlight .feature-highlight-modal {
