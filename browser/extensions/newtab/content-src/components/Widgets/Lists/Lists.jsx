@@ -431,6 +431,17 @@ function Lists({ dispatch }) {
     );
   }
 
+  function handleLearnMore() {
+    dispatch(
+      ac.OnlyToMain({
+        type: at.OPEN_LINK,
+        data: {
+          url: "https://support.mozilla.org/kb/firefox-new-tab-widgets",
+        },
+      })
+    );
+  }
+
   if (!lists) {
     return null;
   }
@@ -482,7 +493,11 @@ function Lists({ dispatch }) {
             data-l10n-id="newtab-widget-lists-menu-hide"
             onClick={() => handleHideLists()}
           ></panel-item>
-          <panel-item data-l10n-id="newtab-widget-lists-menu-learn-more"></panel-item>
+          <panel-item
+            className="learn-more"
+            data-l10n-id="newtab-widget-lists-menu-learn-more"
+            onClick={handleLearnMore}
+          ></panel-item>
         </panel-list>
       </div>
       <div className="add-task-container">

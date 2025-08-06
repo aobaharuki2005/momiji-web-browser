@@ -240,4 +240,13 @@ describe("<Lists>", () => {
     const reorderedTasks = action.data.lists["test-list"].tasks;
     assert.deepEqual(reorderedTasks, [task2, task1]);
   });
+
+  it("should dispatch OPEN_LINK when the Learn More option is clicked", () => {
+    const learnMoreItem = wrapper.find(".learn-more");
+    learnMoreItem.props().onClick();
+
+    assert.ok(dispatch.calledOnce);
+    const [action] = dispatch.getCall(0).args;
+    assert.equal(action.type, at.OPEN_LINK);
+  });
 });
