@@ -8,6 +8,10 @@
 #include "mozilla/RemoteDecodeUtils.h"
 #include "mozilla/dom/MediaKeySession.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/MediaDrmProvisioningHelper.h"
+#endif
+
 namespace mozilla {
 
 #define LOGD(msg, ...) \
@@ -35,7 +39,13 @@ mozilla::ipc::IPCResult RemoteCDMChild::RecvProvision(
     const RemoteCDMProvisionRequestIPDL& aRequest,
     ProvisionResolver&& aResolver) {
   LOGD("[{}] RemoteCDMChild::RecvProvision", fmt::ptr(this));
+#  ifdef MOZ_WIDGET_ANDROID
+  auto helper =
+      MakeRefPtr<MediaDrmProvisioningHelper>(aRequest, std::move(aResolver));
+  helper->Provision();
+#  else
   aResolver(MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR));
+#  endif
   return IPC_OK();
 }
 
