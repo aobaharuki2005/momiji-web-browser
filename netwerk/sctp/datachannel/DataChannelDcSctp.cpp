@@ -74,8 +74,7 @@ void DataChannelConnectionDcSctp::OnTransportReady() {
 }
 
 bool DataChannelConnectionDcSctp::Init(const uint16_t aLocalPort,
-                                       const uint16_t aNumStreams,
-                                       const Maybe<uint64_t>& aMaxMessageSize) {
+                                       const uint16_t aNumStreams) {
   return true;
 }
 

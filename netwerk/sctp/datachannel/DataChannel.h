@@ -167,7 +167,7 @@ class DataChannelConnection : public net::NeckoTargetHolder {
   static Maybe<RefPtr<DataChannelConnection>> Create(
       DataConnectionListener* aListener, nsISerialEventTarget* aTarget,
       MediaTransportHandler* aHandler, const uint16_t aLocalPort,
-      const uint16_t aNumStreams, const Maybe<uint64_t>& aMaxMessageSize);
+      const uint16_t aNumStreams);
 
   DataChannelConnection(const DataChannelConnection&) = delete;
   DataChannelConnection(DataChannelConnection&&) = delete;
@@ -177,8 +177,7 @@ class DataChannelConnection : public net::NeckoTargetHolder {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannelConnection)
 
   // Called immediately after construction
-  virtual bool Init(const uint16_t aLocalPort, const uint16_t aNumStreams,
-                    const Maybe<uint64_t>& aMaxMessageSize) = 0;
+  virtual bool Init(const uint16_t aLocalPort, const uint16_t aNumStreams) = 0;
   // Called when our transport is ready to send and recv
   virtual void OnTransportReady() = 0;
   // This is called after an ACK comes in, to prompt subclasses to deliver
@@ -197,7 +196,8 @@ class DataChannelConnection : public net::NeckoTargetHolder {
   // Called when the SCTP connection is being shut down
   virtual void Destroy();
 
-  void SetMaxMessageSize(bool aMaxMessageSizeSet, uint64_t aMaxMessageSize);
+  // Call only when the remote SDP has a=max-message-size
+  void SetMaxMessageSize(uint64_t aMaxMessageSize);
   double GetMaxMessageSize();
   void HandleDataMessage(IncomingMsg&& aMsg);
   void HandleDCEPMessage(IncomingMsg&& aMsg);
@@ -322,8 +322,7 @@ class DataChannelConnection : public net::NeckoTargetHolder {
   // Avoid cycles with PeerConnectionImpl
   // Use from main thread only as WeakPtr is not threadsafe
   WeakPtr<DataConnectionListener> mListener;
-  bool mMaxMessageSizeSet = false;
-  uint64_t mMaxMessageSize = 0;
+  uint64_t mMaxMessageSize = WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_REMOTE_DEFAULT;
   nsTArray<uint16_t> mStreamIds;
   Maybe<bool> mAllocateEven;
   nsCOMPtr<nsIThread> mInternalIOThread = nullptr;

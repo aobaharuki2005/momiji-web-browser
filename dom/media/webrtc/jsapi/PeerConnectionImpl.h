@@ -612,8 +612,7 @@ class PeerConnectionImpl final
   nsresult CalculateFingerprint(const nsACString& algorithm,
                                 std::vector<uint8_t>* fingerprint) const;
 
-  NS_IMETHODIMP EnsureDataConnection(uint16_t aLocalPort, uint16_t aNumstreams,
-                                     uint32_t aMaxMessageSize, bool aMMSSet);
+  NS_IMETHODIMP EnsureDataConnection(uint16_t aLocalPort, uint16_t aNumstreams);
 
   nsresult CheckApiState(bool assert_ice_ready) const;
   void StoreFinalStats(UniquePtr<dom::RTCStatsReportInternal>&& report);
@@ -632,7 +631,7 @@ class PeerConnectionImpl final
 
   nsresult GetDatachannelParameters(uint32_t* channels, uint16_t* localport,
                                     uint16_t* remoteport,
-                                    uint32_t* maxmessagesize, bool* mmsset,
+                                    uint32_t* maxmessagesize,
                                     std::string* transportId,
                                     bool* client) const;
 

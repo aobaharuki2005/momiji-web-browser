@@ -101,8 +101,7 @@ void DataChannelConnection::Destroy() {
 Maybe<RefPtr<DataChannelConnection>> DataChannelConnection::Create(
     DataChannelConnection::DataConnectionListener* aListener,
     nsISerialEventTarget* aTarget, MediaTransportHandler* aHandler,
-    const uint16_t aLocalPort, const uint16_t aNumStreams,
-    const Maybe<uint64_t>& aMaxMessageSize) {
+    const uint16_t aLocalPort, const uint16_t aNumStreams) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<DataChannelConnection> connection;
@@ -113,9 +112,8 @@ Maybe<RefPtr<DataChannelConnection>> DataChannelConnection::Create(
     connection = new DataChannelConnectionUsrsctp(
         aListener, aTarget, aHandler);  // Walks into a bar
   }
-  return connection->Init(aLocalPort, aNumStreams, aMaxMessageSize)
-             ? Some(connection)
-             : Nothing();
+  return connection->Init(aLocalPort, aNumStreams) ? Some(connection)
+                                                   : Nothing();
 }
 
 DataChannelConnection::DataChannelConnection(
@@ -140,16 +138,9 @@ DataChannelConnection::DataChannelConnection(
 }
 
 // Only called on MainThread, mMaxMessageSize is read on other threads
-void DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet,
-                                              uint64_t aMaxMessageSize) {
+void DataChannelConnection::SetMaxMessageSize(uint64_t aMaxMessageSize) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mMaxMessageSizeSet && !aMaxMessageSizeSet) {
-    // Don't overwrite already set MMS with default values
-    return;
-  }
-
-  mMaxMessageSizeSet = aMaxMessageSizeSet;
   mMaxMessageSize = aMaxMessageSize;
 
   nsresult rv;
@@ -162,7 +153,7 @@ void DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet,
       int32_t temp;
       if (!NS_FAILED(branch->GetIntPref(
               "media.peerconnection.sctp.force_maximum_message_size", &temp))) {
-        if (temp >= 0) {
+        if (temp > 0 && (uint64_t)temp < mMaxMessageSize) {
           mMaxMessageSize = (uint64_t)temp;
         }
       }
@@ -183,15 +174,14 @@ void DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet,
     mMaxMessageSize = WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_REMOTE;
   }
 
-  DC_DEBUG(("Maximum message size (outgoing data): %" PRIu64
-            " (set=%s, enforced=%s)",
-            mMaxMessageSize, mMaxMessageSizeSet ? "yes" : "no",
+  DC_DEBUG(("Maximum message size (outgoing data): %" PRIu64 " (enforced=%s)",
+            mMaxMessageSize,
             aMaxMessageSize != mMaxMessageSize ? "yes" : "no"));
 }
 
 double DataChannelConnection::GetMaxMessageSize() {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mMaxMessageSizeSet) {
+  if (mMaxMessageSize) {
     return static_cast<double>(mMaxMessageSize);
   }
 

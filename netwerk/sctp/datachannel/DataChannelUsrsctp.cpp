@@ -337,9 +337,8 @@ DataChannelConnectionUsrsctp::DataChannelConnectionUsrsctp(
     nsISerialEventTarget* aTarget, MediaTransportHandler* aHandler)
     : DataChannelConnection(aListener, aTarget, aHandler) {}
 
-bool DataChannelConnectionUsrsctp::Init(
-    const uint16_t aLocalPort, const uint16_t aNumStreams,
-    const Maybe<uint64_t>& aMaxMessageSize) {
+bool DataChannelConnectionUsrsctp::Init(const uint16_t aLocalPort,
+                                        const uint16_t aNumStreams) {
   MOZ_ASSERT(NS_IsMainThread());
 
   struct sctp_initmsg initmsg = {};
@@ -353,8 +352,6 @@ bool DataChannelConnectionUsrsctp::Init(
       SCTP_ADAPTATION_INDICATION, SCTP_PARTIAL_DELIVERY_EVENT,
       SCTP_SEND_FAILED_EVENT,     SCTP_STREAM_RESET_EVENT,
       SCTP_STREAM_CHANGE_EVENT};
-
-  SetMaxMessageSize(aMaxMessageSize.isSome(), aMaxMessageSize.valueOr(0));
 
   mId = DataChannelRegistry::Register(this);
 

@@ -656,21 +656,17 @@ void RecordCodecTelemetry() {
 // behaviour triggered by these parameters.
 NS_IMETHODIMP
 PeerConnectionImpl::EnsureDataConnection(uint16_t aLocalPort,
-                                         uint16_t aNumstreams,
-                                         uint32_t aMaxMessageSize,
-                                         bool aMMSSet) {
+                                         uint16_t aNumstreams) {
   PC_AUTO_ENTER_API_CALL(false);
 
   if (mDataConnection) {
     CSFLogDebug(LOGTAG, "%s DataConnection already connected", __FUNCTION__);
-    mDataConnection->SetMaxMessageSize(aMMSSet, aMaxMessageSize);
     return NS_OK;
   }
 
   nsCOMPtr<nsISerialEventTarget> target = GetMainThreadSerialEventTarget();
-  Maybe<uint64_t> mms = aMMSSet ? Some(aMaxMessageSize) : Nothing();
   if (auto res = DataChannelConnection::Create(this, target, mTransportHandler,
-                                               aLocalPort, aNumstreams, mms)) {
+                                               aLocalPort, aNumstreams)) {
     mDataConnection = res.value();
     CSFLogDebug(LOGTAG, "%s DataChannelConnection %p attached to %s",
                 __FUNCTION__, (void*)mDataConnection.get(), mHandle.c_str());
@@ -682,14 +678,13 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aLocalPort,
 
 nsresult PeerConnectionImpl::GetDatachannelParameters(
     uint32_t* channels, uint16_t* localport, uint16_t* remoteport,
-    uint32_t* remotemaxmessagesize, bool* mmsset, std::string* transportId,
+    uint32_t* remotemaxmessagesize, std::string* transportId,
     bool* client) const {
   // Clear, just in case we fail.
   *channels = 0;
   *localport = 0;
   *remoteport = 0;
   *remotemaxmessagesize = 0;
-  *mmsset = false;
   transportId->clear();
 
   Maybe<const JsepTransceiver> datachannelTransceiver =
@@ -748,7 +743,6 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
     *localport = appCodec->mLocalPort;
     *remoteport = appCodec->mRemotePort;
     *remotemaxmessagesize = appCodec->mRemoteMaxMessageSize;
-    *mmsset = appCodec->mRemoteMMSSet;
     MOZ_ASSERT(!datachannelTransceiver->mTransport.mTransportId.empty());
     *transportId = datachannelTransceiver->mTransport.mTransportId;
     *client = datachannelTransceiver->mTransport.mDtls->GetRole() ==
@@ -955,12 +949,11 @@ nsresult PeerConnectionImpl::MaybeInitializeDataChannel() {
   uint16_t localport = 0;
   uint16_t remoteport = 0;
   uint32_t remotemaxmessagesize = 0;
-  bool mmsset = false;
   std::string transportId;
   bool client = false;
-  nsresult rv = GetDatachannelParameters(&channels, &localport, &remoteport,
-                                         &remotemaxmessagesize, &mmsset,
-                                         &transportId, &client);
+  nsresult rv =
+      GetDatachannelParameters(&channels, &localport, &remoteport,
+                               &remotemaxmessagesize, &transportId, &client);
 
   if (NS_FAILED(rv)) {
     CSFLogDebug(LOGTAG, "%s: We did not negotiate datachannel", __FUNCTION__);
@@ -971,8 +964,9 @@ nsresult PeerConnectionImpl::MaybeInitializeDataChannel() {
     channels = MAX_NUM_STREAMS;
   }
 
-  rv = EnsureDataConnection(localport, channels, remotemaxmessagesize, mmsset);
+  rv = EnsureDataConnection(localport, channels);
   if (NS_SUCCEEDED(rv)) {
+    mDataConnection->SetMaxMessageSize(remotemaxmessagesize);
     if (mDataConnection->ConnectToTransport(transportId, client, localport,
                                             remoteport)) {
       return NS_OK;
@@ -1028,9 +1022,8 @@ PeerConnectionImpl::CreateDataChannel(
                           WEBRTC_DATACHANNEL_STREAMS_DEFAULT),
       256, 2048);
 
-  nsresult rv = EnsureDataConnection(
-      WEBRTC_DATACHANNEL_PORT_DEFAULT, maxStreams,
-      WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_REMOTE_DEFAULT, false);
+  nsresult rv =
+      EnsureDataConnection(WEBRTC_DATACHANNEL_PORT_DEFAULT, maxStreams);
   if (NS_FAILED(rv)) {
     return rv;
   }
