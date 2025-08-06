@@ -1722,7 +1722,11 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLSelectListAccessible(aContent, document);
       break;
     case eHTMLMediaType:
-      newAcc = new EnumRoleAccessible<roles::GROUPING>(aContent, document);
+      // The video Accessible can have TextLeafAccessibles as direct children;
+      // e.g. if there are captions. Therefore, it must be a
+      // HyperTextAccessible.
+      newAcc =
+          new EnumRoleHyperTextAccessible<roles::GROUPING>(aContent, document);
       break;
     case eHTMLRadioButtonType:
       newAcc = new HTMLRadioButtonAccessible(aContent, document);

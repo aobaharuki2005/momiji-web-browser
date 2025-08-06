@@ -32,6 +32,7 @@ addAccessibleTask(
     await ready;
     testAccessibleTree(videoAcc, {
       role: ROLE_GROUPING,
+      interfaces: [nsIAccessibleHyperText],
       children: [
         {
           // start/stop button
