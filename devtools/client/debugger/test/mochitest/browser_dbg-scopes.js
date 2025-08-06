@@ -55,3 +55,41 @@ add_task(async function testAnonymousScopeNodes() {
   await resume(dbg);
   await onReloaded;
 });
+
+// Test scope nodes for __proto__ arg and variable
+add_task(async function testProtoScopeNodes() {
+  const dbg = await initDebuggerWithAbsoluteURL(
+    `data:text/html;charset=utf8,<!DOCTYPE html>
+      <script>
+        function testArgName(__proto__) {
+          debugger;
+        }
+        function testVarName(name) {
+          const __proto__ = name;
+          debugger;
+        }
+      </script>`
+  );
+
+  info("Pause in testArgName");
+  invokeInTab("testArgName", "peach");
+  await waitForPaused(dbg);
+
+  is(getScopeNodeLabel(dbg, 1), "testArgName");
+  is(getScopeNodeLabel(dbg, 2), "__proto__");
+  is(getScopeNodeValue(dbg, 2), `"peach"`);
+
+  info("Resuming the thread");
+  await resume(dbg);
+
+  info("Pause in testVarName");
+  invokeInTab("testVarName", "watermelon");
+  await waitForPaused(dbg);
+
+  is(getScopeNodeLabel(dbg, 1), "testVarName");
+  is(getScopeNodeLabel(dbg, 2), "__proto__");
+  is(getScopeNodeValue(dbg, 2), `"watermelon"`);
+
+  info("Resuming the thread");
+  await resume(dbg);
+});
