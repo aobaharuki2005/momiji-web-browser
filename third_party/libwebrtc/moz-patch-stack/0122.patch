@@ -492,7 +492,7 @@ index 929b1227a9..8acb889aed 100644
  import("../webrtc.gni")
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index f8a653c291..c1202dff65 100644
+index f740b3bab6..37f6cc4115 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -797,7 +797,7 @@ index 786c469689..62e1694729 100644
  import("../webrtc.gni")
  
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 91845c7a0a..fa9ea6de97 100644
+index 298155b2fb..9c72b4c845 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -6,10 +6,10 @@

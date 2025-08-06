@@ -748,7 +748,7 @@ index 6a13b89c4e..a3fc75e091 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index d527ef6b24..f8a653c291 100644
+index 805a6ab6c3..f740b3bab6 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -783,7 +783,7 @@ index d527ef6b24..f8a653c291 100644
  
  rtc_library("audio_device_generic") {
    sources = [
-@@ -251,6 +255,7 @@ if (!build_with_chromium) {
+@@ -258,6 +262,7 @@ if (!build_with_chromium) {
  # Contains default implementations of webrtc::AudioDeviceModule for Windows,
  # Linux, Mac, iOS and Android.
  rtc_library("audio_device_impl") {
@@ -791,7 +791,7 @@ index d527ef6b24..f8a653c291 100644
    visibility = [ "*" ]
    deps = [
      ":audio_device_buffer",
-@@ -298,9 +303,9 @@ rtc_library("audio_device_impl") {
+@@ -305,9 +310,9 @@ rtc_library("audio_device_impl") {
    sources = [ "include/fake_audio_device.h" ]
  
    if (build_with_mozilla) {
@@ -804,7 +804,7 @@ index d527ef6b24..f8a653c291 100644
      ]
    }
  
-@@ -405,6 +410,7 @@ rtc_library("audio_device_impl") {
+@@ -412,6 +417,7 @@ rtc_library("audio_device_impl") {
      sources += [ "dummy/file_audio_device_factory.h" ]
    }
  }
@@ -812,7 +812,7 @@ index d527ef6b24..f8a653c291 100644
  
  if (is_mac) {
    rtc_source_set("audio_device_impl_frameworks") {
-@@ -422,6 +428,7 @@ if (is_mac) {
+@@ -429,6 +435,7 @@ if (is_mac) {
    }
  }
  
@@ -820,7 +820,7 @@ index d527ef6b24..f8a653c291 100644
  rtc_source_set("mock_audio_device") {
    visibility = [ "*" ]
    testonly = true
-@@ -439,8 +446,10 @@ rtc_source_set("mock_audio_device") {
+@@ -446,8 +453,10 @@ rtc_source_set("mock_audio_device") {
      "../../test:test_support",
    ]
  }
@@ -1211,7 +1211,7 @@ index b18114f107..3ca6994c81 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 7d106854a3..6ae15b8481 100644
+index ad3012d1dc..c47d929198 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -232,6 +232,7 @@ rtc_library("audio_test_common") {
@@ -1253,7 +1253,7 @@ index 7d106854a3..6ae15b8481 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1305,6 +1313,7 @@ if (!build_with_chromium) {
+@@ -1310,6 +1318,7 @@ if (!build_with_chromium) {
    }
  }
  
@@ -1261,7 +1261,7 @@ index 7d106854a3..6ae15b8481 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1347,6 +1356,7 @@ if (!build_with_chromium && is_android) {
+@@ -1352,6 +1361,7 @@ if (!build_with_chromium && is_android) {
      sources = [ "android/org/webrtc/native_test/NativeTestWebrtc.java" ]
    }
  }
