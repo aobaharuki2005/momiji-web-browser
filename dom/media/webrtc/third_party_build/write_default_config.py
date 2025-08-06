@@ -2,11 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import argparse
+import os
 import sys
 from string import Template
 
+from run_operations import run_shell
+
 sys.path.insert(0, "./dom/media/webrtc/third_party_build")
 import lookup_branch_head
+
+script_name = os.path.basename(__file__)
 
 text = """#!/bin/bash
 
@@ -50,14 +55,31 @@ export MOZ_LIBWEBRTC_BRANCH="mozpatches"
 """
 
 
-def build_default_config_env(prior_bug_number, bug_number, milestone, target):
+def get_prior_branch_head(milestone):
     prior_branch_head = lookup_branch_head.get_branch_head(milestone)
     if prior_branch_head is None:
-        sys.exit(f"error: chromium milestone '{milestone}' is not found.")
-    new_branch_head = lookup_branch_head.get_branch_head(milestone + 1)
-    if new_branch_head is None:
-        sys.exit(f"error: next chromium milestone '{milestone + 1}' is not found.")
+        print(f"error: chromium milestone '{milestone}' is not found.")
+        sys.exit(1)
+    return prior_branch_head
 
+
+def get_new_branch_head(next_milestone):
+    new_branch_head = lookup_branch_head.get_branch_head(next_milestone)
+    if new_branch_head is None:
+        print(
+            "\n"
+            f"Milestone {next_milestone} is not found when attempting to lookup the\n"
+            "libwebrtc branch-head used for the Chromium release.\n"
+            "This may be because Chromium has not updated the info on page\n"
+            "https://chromiumdash.appspot.com/branches"
+        )
+        sys.exit(1)
+    return new_branch_head
+
+
+def build_default_config_env(
+    prior_bug_number, bug_number, milestone, target, prior_branch_head, new_branch_head
+):
     s = Template(text)
     return s.substitute(
         priorbugnum=prior_bug_number,
@@ -71,8 +93,14 @@ def build_default_config_env(prior_bug_number, bug_number, milestone, target):
 
 
 if __name__ == "__main__":
+    default_script_dir = "dom/media/webrtc/third_party_build"
     parser = argparse.ArgumentParser(
         description="Updates the default_config_env file for new release/milestone"
+    )
+    parser.add_argument(
+        "--script-path",
+        default=default_script_dir,
+        help=f"path to script directory (defaults to {default_script_dir})",
     )
     parser.add_argument(
         "--prior-bug-number",
@@ -105,6 +133,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    prior_branch_head = get_prior_branch_head(args.milestone)
+    new_branch_head = get_new_branch_head(args.milestone + 1)
+
     with open(args.output_path, "w") as ofile:
         ofile.write(
             build_default_config_env(
@@ -112,5 +143,13 @@ if __name__ == "__main__":
                 args.bug_number,
                 args.milestone,
                 args.release_target,
+                prior_branch_head,
+                new_branch_head,
             )
         )
+
+    run_shell(
+        f'hg commit -m "Bug {args.bug_number} - '
+        f'updated default_config_env for v{args.milestone+1}"'
+        f" {args.output_path}"
+    )
