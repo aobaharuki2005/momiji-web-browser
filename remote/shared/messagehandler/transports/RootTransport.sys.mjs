@@ -42,7 +42,7 @@ export class RootTransport {
     this._messageHandler = messageHandler;
 
     // RootTransport will rely on the MessageHandlerFrame JSWindow actors.
-    // Make sure they are registered when instanciating a RootTransport.
+    // Make sure they are registered when instantiating a RootTransport.
     lazy.MessageHandlerFrameActor.register();
   }
 

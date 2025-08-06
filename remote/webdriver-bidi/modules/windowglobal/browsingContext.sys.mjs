@@ -411,7 +411,7 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
           /**
            * We check for contextCreatedHandled so we do not replay any contextCreated events we
            * have seen before. This can happen when navigating within a browser session as
-           * navigation will cause _applySessionData to be called with params.inital = false.
+           * navigation will cause _applySessionData to be called with params.initial = false.
            */
           if (!params.initial && !this.#contextCreatedHandled) {
             this.emitEvent("browsingContext.contextCreated", {
