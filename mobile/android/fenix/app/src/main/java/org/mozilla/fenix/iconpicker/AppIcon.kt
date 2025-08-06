@@ -28,97 +28,82 @@ import org.mozilla.fenix.R
  */
 enum class AppIcon(
     val aliasSuffix: String,
-    val iconForegroundId: Int,
+    @param:DrawableRes val iconForegroundId: Int = R.drawable.ic_firefox,
     val iconBackground: IconBackground = IconBackground.Color(colorResId = R.color.photonWhite),
     @param:StringRes val titleId: Int,
     @param:StringRes val subtitleId: Int? = null,
 ) {
     AppDefault(
         aliasSuffix = "App",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Color(colorResId = R.color.ic_launcher_background),
         titleId = R.string.alternative_app_icon_option_default,
     ),
     AppSolidLight(
         aliasSuffix = "AppSolidLight",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         titleId = R.string.alternative_app_icon_option_light,
     ),
     AppSolidDark(
         aliasSuffix = "AppSolidDark",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Color(colorResId = R.color.photonBlack),
         titleId = R.string.alternative_app_icon_option_dark,
     ),
     AppSolidRed(
         aliasSuffix = "AppSolidRed",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_red_background),
         titleId = R.string.alternative_app_icon_option_red,
     ),
     AppSolidGreen(
         aliasSuffix = "AppSolidGreen",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_green_background),
         titleId = R.string.alternative_app_icon_option_green,
     ),
     AppSolidBlue(
         aliasSuffix = "AppSolidBlue",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_blue_background),
         titleId = R.string.alternative_app_icon_option_blue,
     ),
     AppSolidPurple(
         aliasSuffix = "AppSolidPurple",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_purple_background),
         titleId = R.string.alternative_app_icon_option_purple,
     ),
     AppSolidPurpleDark(
         aliasSuffix = "AppSolidPurpleDark",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_purple_dark_background),
         titleId = R.string.alternative_app_icon_option_purple_dark,
     ),
     AppGradientSunrise(
         aliasSuffix = "AppGradientSunrise",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_sunrise_background),
         titleId = R.string.alternative_app_icon_option_gradient_sunrise,
     ),
     AppGradientGoldenHour(
         aliasSuffix = "AppGradientGoldenHour",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_golden_hour_background),
         titleId = R.string.alternative_app_icon_option_gradient_golden_hour,
     ),
     AppGradientSunset(
         aliasSuffix = "AppGradientSunset",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_sunset_background),
         titleId = R.string.alternative_app_icon_option_gradient_sunset,
     ),
     AppGradientBlueHour(
         aliasSuffix = "AppGradientBlueHour",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_blue_hour_background),
         titleId = R.string.alternative_app_icon_option_gradient_blue_hour,
     ),
     AppGradientTwilight(
         aliasSuffix = "AppGradientTwilight",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_twilight_background),
         titleId = R.string.alternative_app_icon_option_gradient_twilight,
     ),
     AppGradientMidnight(
         aliasSuffix = "AppGradientMidnight",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_midnight_background),
         titleId = R.string.alternative_app_icon_option_gradient_midnight,
     ),
     AppGradientNorthernLights(
         aliasSuffix = "AppGradientNorthernLights",
-        iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_northern_lights_background),
         titleId = R.string.alternative_app_icon_option_gradient_northern_lights,
     ),

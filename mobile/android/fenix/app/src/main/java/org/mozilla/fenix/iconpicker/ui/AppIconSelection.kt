@@ -52,6 +52,7 @@ import org.mozilla.fenix.utils.Settings
 
 private val ListItemHeight = 56.dp
 private val AppIconSize = 40.dp
+private val AppIconPadding = 6.dp
 private val AppIconBorderWidth = 1.dp
 private val AppIconCornerRadius = 4.dp
 private val GroupHeaderHeight = 36.dp
@@ -214,7 +215,9 @@ fun AppIcon(
         Image(
             painter = painterResource(id = appIcon.iconForegroundId),
             contentDescription = null,
-            modifier = Modifier.size(iconSize),
+            modifier = Modifier
+                .size(iconSize)
+                .padding(AppIconPadding),
         )
     }
 }
