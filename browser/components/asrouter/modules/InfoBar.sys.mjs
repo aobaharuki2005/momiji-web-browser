@@ -173,7 +173,7 @@ class InfoBarNotification {
       content.type !== TYPES.UNIVERSAL ||
       !InfoBar._universalInfobars.length
     ) {
-      this.addImpression();
+      this.addImpression(browser);
     }
 
     // Only add if the universal infobar is still active. Prevents race condition
@@ -261,11 +261,29 @@ class InfoBarNotification {
     return btnConfig;
   }
 
-  addImpression() {
+  handleImpressionAction(browser) {
+    const ALLOWED_IMPRESSION_ACTIONS = ["SET_PREF"];
+    const { type, data } = this.message.content.impression_action;
+    if (!ALLOWED_IMPRESSION_ACTIONS.includes(type)) {
+      return;
+    }
+    data.onImpression = true;
+    try {
+      lazy.SpecialMessageActions.handleAction({ type, data }, browser);
+    } catch (err) {
+      console.error(`Error handling ${type} impression action:`, err);
+    }
+  }
+
+  addImpression(browser) {
     // Record an impression in ASRouter for frequency capping
     this._dispatch({ type: "IMPRESSION", data: this.message });
     // Send a user impression telemetry ping
     this.sendUserEventTelemetry("IMPRESSION");
+    // If the message has an impression action, handle it.
+    if (this.message.content.impression_action) {
+      this.handleImpressionAction(browser);
+    }
   }
 
   /**

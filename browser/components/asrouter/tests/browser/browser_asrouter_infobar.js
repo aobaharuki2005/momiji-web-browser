@@ -808,3 +808,43 @@ add_task(async function test_infobar_css_background_fallback_var() {
     "Wait for infobar to close"
   );
 });
+
+add_task(async function test_impression_action_handling() {
+  const handleStub = sinon.stub(SpecialMessageActions, "handleAction");
+
+  let message = (await CFRMessageProvider.getMessages()).find(
+    m => m.id === "INFOBAR_ACTION_86"
+  );
+  Assert.ok(message, "Found base message");
+
+  message.content.impression_action = {
+    type: "SET_PREF",
+    data: {
+      pref: { name: "impressionActionTest", value: true },
+    },
+  };
+
+  const dispatchStub = sinon.stub();
+  await InfoBar.showInfoBarMessage(
+    BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
+    message,
+    dispatchStub
+  );
+
+  Assert.equal(
+    handleStub.callCount,
+    1,
+    "handleAction called once on impression"
+  );
+
+  const [actionArg] = handleStub.firstCall.args;
+  Assert.equal(actionArg.type, "SET_PREF", "Correct action type dispatched");
+  Assert.ok(actionArg.data.onImpression, "onImpression flag set to true");
+  Assert.deepEqual(
+    actionArg.data.pref,
+    { name: "impressionActionTest", value: true },
+    "Original pref data preserved"
+  );
+
+  handleStub.restore();
+});

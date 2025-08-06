@@ -196,8 +196,10 @@ export const SpecialMessageActions = {
    * @param {Object} pref - A pref to be updated.
    * @param {string} pref.name - The name of the pref to be updated
    * @param {string} [pref.value] - The value of the pref to be updated. If not included, the pref will be reset.
+   * @param {boolean} onImpression - Whether the setPref action was triggered on
+   * message impression and not by direct user interaction.
    */
-  setPref(pref) {
+  setPref(pref, onImpression = false) {
     // Array of prefs that are allowed to be edited by SET_PREF
     const allowedPrefs = [
       "browser.aboutwelcome.didSeeFinalScreen",
@@ -236,8 +238,19 @@ export const SpecialMessageActions = {
       "privacy.trackingprotection.allow_list.convenience.enabled",
     ];
 
+    // Array of prefs that are allowed to be edited when SET_PREF is called on
+    // message impression, rather than by an explicit user action. Currently,
+    // only prefs created on the fly are allowed. This is to ensure that adding
+    // the abililty to set any in-tree prefs with this feature undergoes code
+    // review.
+    const allowedSetOnImpressionPrefs = [];
+
+    const allowedPrefsList = onImpression
+      ? allowedSetOnImpressionPrefs
+      : allowedPrefs;
+
     if (
-      !allowedPrefs.includes(pref.name) &&
+      !allowedPrefsList.includes(pref.name) &&
       !pref.name.startsWith("messaging-system-action.")
     ) {
       pref.name = `messaging-system-action.${pref.name}`;
@@ -710,7 +723,7 @@ export const SpecialMessageActions = {
         await this.blockMessageById(action.data.id);
         break;
       case "SET_PREF":
-        this.setPref(action.data.pref);
+        this.setPref(action.data.pref, action.data.onImpression);
         break;
       case "MULTI_ACTION":
         await this.handleMultiAction(

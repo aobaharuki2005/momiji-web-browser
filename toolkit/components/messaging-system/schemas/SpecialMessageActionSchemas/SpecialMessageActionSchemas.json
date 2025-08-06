@@ -545,6 +545,10 @@
                     }
                   },
                   "description": "An object representing a pref containing a name and a value. The value can be an object with the property `timestamp` with a truthy value to set the pref to a string of the current time in ms."
+                },
+                "onImpression": {
+                  "type": "boolean",
+                  "description": "Whether SET_PREF was triggered on message impression instead of a direct user action."
                 }
               },
               "required": ["pref"],
