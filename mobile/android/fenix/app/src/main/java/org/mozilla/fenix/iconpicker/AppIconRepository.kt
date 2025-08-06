@@ -58,14 +58,5 @@ class DefaultAppIconRepository(
                 AppIcon.AppGradientMidnight,
                 AppIcon.AppGradientNorthernLights,
             ),
-            IconGroupTitle(R.string.alternative_app_icon_group_other) to listOf(
-                AppIcon.AppRetro2004,
-                AppIcon.AppRetro2017,
-                AppIcon.AppPixelated,
-                AppIcon.AppMinimal,
-                AppIcon.AppPride,
-                AppIcon.AppCute,
-                AppIcon.AppMomo,
-            ),
         )
 }
