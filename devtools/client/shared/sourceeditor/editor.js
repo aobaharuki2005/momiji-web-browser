@@ -2455,7 +2455,7 @@ class Editor extends EventEmitter {
           }
 
           if (!bindingReferences[level]) {
-            bindingReferences[level] = {};
+            bindingReferences[level] = Object.create(null);
           }
           if (!bindingReferences[level][bindingName]) {
             // Put the binding info and related references together for
