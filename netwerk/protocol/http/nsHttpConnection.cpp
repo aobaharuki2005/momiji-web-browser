@@ -1738,7 +1738,8 @@ nsresult nsHttpConnection::OnSocketWritable() {
          static_cast<uint32_t>(mSocketOutCondition), again));
 
     // XXX some streams return NS_BASE_STREAM_CLOSED to indicate EOF.
-    if (rv == NS_BASE_STREAM_CLOSED && !mTransaction->IsDone()) {
+    if (rv == NS_BASE_STREAM_CLOSED &&
+        (mTransaction && !mTransaction->IsDone())) {
       rv = NS_OK;
       transactionBytes = 0;
     }
@@ -1781,7 +1782,8 @@ nsresult nsHttpConnection::OnSocketWritable() {
       // When Spdy tunnel is used we need to explicitly set when a request is
       // done.
       if ((mState != HttpConnectionState::SETTING_UP_TUNNEL) && !mSpdySession) {
-        nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
+        nsHttpTransaction* trans =
+            mTransaction ? mTransaction->QueryHttpTransaction() : nullptr;
         // needed for websocket over h2 (direct)
         if (!trans ||
             (!trans->IsWebsocketUpgrade() && !trans->IsForWebTransport())) {
