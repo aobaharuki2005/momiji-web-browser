@@ -230,6 +230,9 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   // Resets the OCSP stapling status and SCT lists accumulated during
   // the chain building.
   void ResetAccumulatedState();
+  // Resets state related to a fully-built candidate chain that becomes invalid
+  // if that chain is found to not be acceptable.
+  void ResetCandidateBuiltChainState();
 
   CertVerifier::OCSPStaplingStatus GetOCSPStaplingStatus() const {
     return mOCSPStaplingStatus;
