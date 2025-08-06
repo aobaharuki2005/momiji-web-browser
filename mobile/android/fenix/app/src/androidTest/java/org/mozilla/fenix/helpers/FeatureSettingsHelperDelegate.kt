@@ -41,7 +41,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isLocationPermissionEnabled = getFeaturePermission(PhoneFeature.LOCATION, settings),
         isMenuRedesignEnabled = settings.enableMenuRedesign,
         isMenuRedesignCFREnabled = settings.shouldShowMenuCFR,
-        isNewBookmarksEnabled = settings.useNewBookmarks,
         isMicrosurveyEnabled = settings.microsurveyFeatureEnabled,
         shouldUseBottomToolbar = settings.shouldUseBottomToolbar,
         onboardingFeatureEnabled = settings.onboardingFeatureEnabled,
@@ -99,7 +98,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.shouldShowOpenInAppBanner = featureFlags.isOpenInAppBannerEnabled
         settings.enableMenuRedesign = featureFlags.isMenuRedesignEnabled
         settings.shouldShowMenuCFR = featureFlags.isMenuRedesignCFREnabled
-        settings.useNewBookmarks = featureFlags.isNewBookmarksEnabled
         settings.microsurveyFeatureEnabled = featureFlags.isMicrosurveyEnabled
         settings.shouldUseBottomToolbar = featureFlags.shouldUseBottomToolbar
         settings.enableUnifiedTrustPanel = featureFlags.isUnifiedTrustPanelEnabled
@@ -126,7 +124,6 @@ private data class FeatureFlags(
     var isLocationPermissionEnabled: SitePermissionsRules.Action,
     var isMenuRedesignEnabled: Boolean,
     var isMenuRedesignCFREnabled: Boolean,
-    var isNewBookmarksEnabled: Boolean,
     var isMicrosurveyEnabled: Boolean,
     var shouldUseBottomToolbar: Boolean,
     var onboardingFeatureEnabled: Boolean,

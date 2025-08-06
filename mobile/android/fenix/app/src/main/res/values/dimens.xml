@@ -74,7 +74,6 @@
 
     <!-- Bookmark Edit Fragment  -->
     <dimen name="bookmark_edit_text_height">48dp</dimen>
-    <dimen name="bookmark_select_folder_indent">10dp</dimen>
 
     <!-- Home Fragment -->
     <dimen name="home_fragment_top_toolbar_header_margin">60dp</dimen>

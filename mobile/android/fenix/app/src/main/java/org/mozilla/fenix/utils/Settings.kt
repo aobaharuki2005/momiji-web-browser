@@ -2470,15 +2470,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = 0,
     )
 
-    /**
-     * Indicates whether or not we should use the new bookmarks UI.
-     */
-    var useNewBookmarks by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_use_new_bookmarks_ui),
-        default = { true },
-        featureFlag = true,
-    )
-
     var bookmarkListSortOrder by stringPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_bookmark_list_sort_order),
         default = "",

@@ -74,11 +74,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_use_new_bookmarks_ui).apply {
-            isVisible = true
-            isChecked = context.settings().useNewBookmarks
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
         requirePreference<SwitchPreference>(R.string.pref_key_enable_address_sync).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().isAddressSyncEnabled
