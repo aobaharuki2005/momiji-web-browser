@@ -20,7 +20,7 @@
 #urlbar[usertyping] > .urlbar-input-container > #page-action-buttons > #urlbar-zoom-button,
 #urlbar:not([usertyping]) > .urlbar-input-container > .urlbar-go-button,
 #urlbar:not([focused]) > .urlbar-input-container > .urlbar-go-button,
-#urlbar-revert-button-container {
+.urlbar-revert-button-container {
   display: none;
 }
 
@@ -834,12 +834,12 @@
   }
 }
 
-#urlbar[persistsearchterms] {
-  #urlbar-revert-button-container {
+#urlbar[persistsearchterms] > .urlbar-input-container {
+  > .urlbar-revert-button-container {
     display: inherit;
   }
 
-  .urlbar-go-button {
+  > .urlbar-go-button {
     display: none;
   }
 }
