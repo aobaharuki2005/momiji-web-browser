@@ -20,6 +20,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     headerEl: "ipprotection-header",
     signedOutEl: "ipprotection-signedout",
     statusCardEl: "#status-card",
+    animationEl: "#status-card-animation",
     connectionToggleEl: "#connection-toggle",
     locationEl: "#location-wrapper",
     upgradeEl: "#upgrade-vpn-content",
@@ -30,6 +31,7 @@ export default class IPProtectionContentElement extends MozLitElement {
 
   static properties = {
     state: { type: Object },
+    showAnimation: { type: Boolean, state: true },
   };
 
   constructor() {
@@ -38,6 +40,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     this.state = {};
 
     this.keyListener = this.#keyListener.bind(this);
+    this.showAnimation = false;
   }
 
   connectedCallback() {
@@ -128,6 +131,21 @@ export default class IPProtectionContentElement extends MozLitElement {
     }
   }
 
+  updated(changedProperties) {
+    super.updated(changedProperties);
+
+    /**
+     * Don't show animations until all elements are connected and layout is fully drawn.
+     * This will allow us to best position our animation component with the globe icon
+     * based on the most up to date status card dimensions.
+     */
+    if (this.state.isProtectionEnabled) {
+      this.showAnimation = true;
+    } else {
+      this.showAnimation = false;
+    }
+  }
+
   descriptionTemplate() {
     // TODO: add icon (Bug 1976769), this is just a placeholder element
     return html`
@@ -152,6 +170,11 @@ export default class IPProtectionContentElement extends MozLitElement {
     const timeConnected = DEFAULT_TIME_CONNECTED;
 
     return html`<moz-box-group class="vpn-status-group">
+      ${this.showAnimation
+        ? html` <div id="status-card-animation">
+            <div id="animation-rings"></div>
+          </div>`
+        : null}
       <moz-box-item
         id="status-card"
         class=${classMap({

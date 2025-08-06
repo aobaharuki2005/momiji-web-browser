@@ -180,7 +180,9 @@ export class IPProtectionPanel {
    *
    * Disables updates to the panel.
    */
-  hiding() {}
+  hiding() {
+    this.destroy();
+  }
 
   /**
    * Creates a panel component in a panelView.
