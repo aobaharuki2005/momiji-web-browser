@@ -9932,7 +9932,7 @@ static int32_t FirstLetterCount(
 
 static bool NeedFirstLetterContinuation(Text* aText) {
   MOZ_ASSERT(aText, "null ptr");
-  int32_t flc = FirstLetterCount(&aText->TextFragment());
+  int32_t flc = FirstLetterCount(&aText->DataBuffer());
   int32_t tl = aText->TextDataLength();
   return flc < tl;
 }

@@ -54,8 +54,7 @@ Result<nsString, ErrorResult> TextDirectiveUtil::RangeContentAsString(
                                                       : current->Length(),
                  current->Length());
     const Text* text = Text::FromNode(current);
-    text->TextFragment().AppendTo(content, startOffset,
-                                  endOffset - startOffset);
+    text->DataBuffer().AppendTo(content, startOffset, endOffset - startOffset);
   }
   content.CompressWhitespace();
   return content;
@@ -102,14 +101,14 @@ Result<nsString, ErrorResult> TextDirectiveUtil::RangeContentAsString(
   if (!aText || aText->Length() == 0 || aPos >= aText->Length()) {
     return false;
   }
-  const CharacterDataBuffer& frag = aText->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = aText->DataBuffer();
   const char NBSP_CHAR = char(0xA0);
-  if (frag.Is2b()) {
-    const char16_t* content = frag.Get2b();
+  if (characterDataBuffer.Is2b()) {
+    const char16_t* content = characterDataBuffer.Get2b();
     return IsSpaceCharacter(content[aPos]) ||
            content[aPos] == char16_t(NBSP_CHAR);
   }
-  const char* content = frag.Get1b();
+  const char* content = characterDataBuffer.Get1b();
   return IsSpaceCharacter(content[aPos]) || content[aPos] == NBSP_CHAR;
 }
 

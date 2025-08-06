@@ -1830,7 +1830,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsIContent)
 
 //----------------------------------------------------------------------
 
-const CharacterDataBuffer* FragmentOrElement::GetCharacterDataBuffer() {
+const CharacterDataBuffer* FragmentOrElement::GetCharacterDataBuffer() const {
   return nullptr;
 }
 

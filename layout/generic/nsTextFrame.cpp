@@ -7374,7 +7374,7 @@ int16_t nsTextFrame::GetSelectionStatus(int16_t* aSelectionFlags) {
 }
 
 bool nsTextFrame::IsEntirelyWhitespace() const {
-  const CharacterDataBuffer& text = mContent->AsText()->TextFragment();
+  const CharacterDataBuffer& text = mContent->AsText()->DataBuffer();
   for (uint32_t index = 0; index < text.GetLength(); ++index) {
     const char16_t ch = text.CharAt(index);
     if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == 0xa0) {

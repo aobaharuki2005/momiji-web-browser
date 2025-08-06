@@ -4951,12 +4951,12 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangeToDeleteRangeWithTransaction(
 
   const auto ExtendRangeToSelectCharacterForward =
       [](nsRange& aRange, const EditorRawDOMPointInText& aCaretPoint) -> void {
-    const CharacterDataBuffer& textFragment =
-        aCaretPoint.ContainerAs<Text>()->TextFragment();
-    if (!textFragment.GetLength()) {
+    const CharacterDataBuffer& characterDataBuffer =
+        aCaretPoint.ContainerAs<Text>()->DataBuffer();
+    if (!characterDataBuffer.GetLength()) {
       return;
     }
-    if (textFragment.IsHighSurrogateFollowedByLowSurrogateAt(
+    if (characterDataBuffer.IsHighSurrogateFollowedByLowSurrogateAt(
             aCaretPoint.Offset())) {
       DebugOnly<nsresult> rvIgnored = aRange.SetStartAndEnd(
           aCaretPoint.ContainerAs<Text>(), aCaretPoint.Offset(),
@@ -4976,12 +4976,12 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangeToDeleteRangeWithTransaction(
     if (aCaretPoint.IsStartOfContainer()) {
       return;
     }
-    const CharacterDataBuffer& textFragment =
-        aCaretPoint.ContainerAs<Text>()->TextFragment();
-    if (!textFragment.GetLength()) {
+    const CharacterDataBuffer& characterDataBuffer =
+        aCaretPoint.ContainerAs<Text>()->DataBuffer();
+    if (!characterDataBuffer.GetLength()) {
       return;
     }
-    if (textFragment.IsLowSurrogateFollowingHighSurrogateAt(
+    if (characterDataBuffer.IsLowSurrogateFollowingHighSurrogateAt(
             aCaretPoint.Offset() - 1)) {
       DebugOnly<nsresult> rvIgnored = aRange.SetStartAndEnd(
           aCaretPoint.ContainerAs<Text>(), aCaretPoint.Offset() - 2,
@@ -6340,10 +6340,11 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::
           !HTMLEditUtils::IsSimplyEditableNode(*lastTextNode)) {
         return nullptr;
       }
-      const CharacterDataBuffer& textFragment = lastTextNode->TextFragment();
+      const CharacterDataBuffer& characterDataBuffer =
+          lastTextNode->DataBuffer();
       const char16_t lastCh =
-          textFragment.GetLength()
-              ? textFragment.CharAt(textFragment.GetLength() - 1u)
+          characterDataBuffer.GetLength()
+              ? characterDataBuffer.CharAt(characterDataBuffer.GetLength() - 1u)
               : 0;
       return lastCh == HTMLEditUtils::kNewLine &&
                      !EditorUtils::IsNewLinePreformatted(*lastTextNode)

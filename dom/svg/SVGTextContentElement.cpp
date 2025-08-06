@@ -83,15 +83,16 @@ Maybe<int32_t> SVGTextContentElement::GetNonLayoutDependentNumberOfChars() {
       return Nothing();
     }
 
-    const CharacterDataBuffer* text = &n->AsText()->TextFragment();
-    uint32_t length = text->GetLength();
+    const CharacterDataBuffer* characterDataBuffer = &n->AsText()->DataBuffer();
+    uint32_t length = characterDataBuffer->GetLength();
 
-    if (text->Is2b()) {
-      if (FragmentHasSkippableCharacter(text->Get2b(), length)) {
+    if (characterDataBuffer->Is2b()) {
+      if (FragmentHasSkippableCharacter(characterDataBuffer->Get2b(), length)) {
         return Nothing();
       }
     } else {
-      auto buffer = reinterpret_cast<const uint8_t*>(text->Get1b());
+      const auto* buffer =
+          reinterpret_cast<const uint8_t*>(characterDataBuffer->Get1b());
       if (FragmentHasSkippableCharacter(buffer, length)) {
         return Nothing();
       }

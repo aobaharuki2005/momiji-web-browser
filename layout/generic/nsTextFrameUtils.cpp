@@ -405,13 +405,15 @@ static uint32_t DoComputeApproximateLengthWithWhitespaceCompression(
 
 uint32_t nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
     Text* aText, const nsStyleText* aStyleText) {
-  const CharacterDataBuffer* frag = &aText->TextFragment();
-  if (frag->Is2b()) {
+  const CharacterDataBuffer* characterDataBuffer = &aText->DataBuffer();
+  if (characterDataBuffer->Is2b()) {
     return DoComputeApproximateLengthWithWhitespaceCompression(
-        frag->Get2b(), frag->GetLength(), aStyleText);
+        characterDataBuffer->Get2b(), characterDataBuffer->GetLength(),
+        aStyleText);
   }
   return DoComputeApproximateLengthWithWhitespaceCompression(
-      frag->Get1b(), frag->GetLength(), aStyleText);
+      characterDataBuffer->Get1b(), characterDataBuffer->GetLength(),
+      aStyleText);
 }
 
 uint32_t nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(

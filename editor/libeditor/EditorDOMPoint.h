@@ -435,7 +435,7 @@ class EditorDOMPointBase final {
   MOZ_NEVER_INLINE_DEBUG char16_t Char() const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsEndOfContainer());
-    return ContainerAs<dom::Text>()->TextFragment().CharAt(mOffset.value());
+    return ContainerAs<dom::Text>()->DataBuffer().CharAt(mOffset.value());
   }
   MOZ_NEVER_INLINE_DEBUG bool IsCharASCIISpace() const {
     return nsCRT::IsAsciiSpace(Char());
@@ -472,21 +472,21 @@ class EditorDOMPointBase final {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsEndOfContainer());
     return ContainerAs<dom::Text>()
-        ->TextFragment()
+        ->DataBuffer()
         .IsHighSurrogateFollowedByLowSurrogateAt(mOffset.value());
   }
   MOZ_NEVER_INLINE_DEBUG bool IsCharLowSurrogateFollowingHighSurrogate() const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsEndOfContainer());
     return ContainerAs<dom::Text>()
-        ->TextFragment()
+        ->DataBuffer()
         .IsLowSurrogateFollowingHighSurrogateAt(mOffset.value());
   }
 
   MOZ_NEVER_INLINE_DEBUG char16_t PreviousChar() const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsStartOfContainer());
-    return ContainerAs<dom::Text>()->TextFragment().CharAt(mOffset.value() - 1);
+    return ContainerAs<dom::Text>()->DataBuffer().CharAt(mOffset.value() - 1);
   }
   MOZ_NEVER_INLINE_DEBUG bool IsPreviousCharASCIISpace() const {
     return nsCRT::IsAsciiSpace(PreviousChar());
@@ -525,7 +525,7 @@ class EditorDOMPointBase final {
   MOZ_NEVER_INLINE_DEBUG char16_t NextChar() const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsAtLastContent() && !IsEndOfContainer());
-    return ContainerAs<dom::Text>()->TextFragment().CharAt(mOffset.value() + 1);
+    return ContainerAs<dom::Text>()->DataBuffer().CharAt(mOffset.value() + 1);
   }
   MOZ_NEVER_INLINE_DEBUG bool IsNextCharASCIISpace() const {
     return nsCRT::IsAsciiSpace(NextChar());

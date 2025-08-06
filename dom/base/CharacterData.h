@@ -115,12 +115,12 @@ class CharacterData : public nsIContent {
 
   void UnbindFromTree(UnbindContext&) override;
 
-  const CharacterDataBuffer* GetText() override {
+  const CharacterDataBuffer* GetCharacterDataBuffer() const override {
     return &mBuffer;
   }
   uint32_t TextLength() const final { return TextDataLength(); }
 
-  const CharacterDataBuffer& TextFragment() const { return mBuffer; }
+  const CharacterDataBuffer& DataBuffer() const { return mBuffer; }
   uint32_t TextDataLength() const { return mBuffer.GetLength(); }
 
   /**

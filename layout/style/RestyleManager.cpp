@@ -338,7 +338,7 @@ void RestyleManager::CharacterDataChanged(
     return;
   }
 
-  const CharacterDataBuffer* text = &aContent->AsText()->TextFragment();
+  const CharacterDataBuffer* text = &aContent->AsText()->DataBuffer();
 
   const size_t oldLength = aInfo.mChangeStart;
   const size_t newLength = text->GetLength();

@@ -205,12 +205,15 @@ static Directionality GetDirectionFromText(const char* aText,
 
 static Directionality GetDirectionFromText(const Text* aTextNode,
                                            uint32_t* aFirstStrong = nullptr) {
-  const dom::CharacterDataBuffer* frag = &aTextNode->TextFragment();
-  if (frag->Is2b()) {
-    return GetDirectionFromText(frag->Get2b(), frag->GetLength(), aFirstStrong);
+  const dom::CharacterDataBuffer* characterDataBuffer =
+      &aTextNode->DataBuffer();
+  if (characterDataBuffer->Is2b()) {
+    return GetDirectionFromText(characterDataBuffer->Get2b(),
+                                characterDataBuffer->GetLength(), aFirstStrong);
   }
 
-  return GetDirectionFromText(frag->Get1b(), frag->GetLength(), aFirstStrong);
+  return GetDirectionFromText(characterDataBuffer->Get1b(),
+                              characterDataBuffer->GetLength(), aFirstStrong);
 }
 
 /**

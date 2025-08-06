@@ -305,7 +305,7 @@ class nsTextFrame : public nsIFrame {
   //
   // Assertions in Init() ensure we only ever get a Text node as content.
   const mozilla::dom::CharacterDataBuffer* TextFragment() const {
-    return &mContent->AsText()->TextFragment();
+    return &mContent->AsText()->DataBuffer();
   }
 
   /**

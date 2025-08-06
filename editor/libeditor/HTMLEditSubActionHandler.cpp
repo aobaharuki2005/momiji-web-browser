@@ -1729,8 +1729,8 @@ HTMLEditor::NormalizeWhiteSpacesToInsertText(
   }
 
   Text* const textNode = aPointToInsert.GetContainerAs<Text>();
-  const CharacterDataBuffer* const textFragment =
-      textNode ? &textNode->TextFragment() : nullptr;
+  const CharacterDataBuffer* const characterDataBuffer =
+      textNode ? &textNode->DataBuffer() : nullptr;
   const bool isNewLineCollapsible = !EditorUtils::IsNewLinePreformatted(
       *aPointToInsert.ContainerAs<nsIContent>());
 
@@ -1758,14 +1758,14 @@ HTMLEditor::NormalizeWhiteSpacesToInsertText(
         aPointToInsert.IsEndOfContainer()) {
       return 0u;
     }
-    MOZ_ASSERT(textFragment);
+    MOZ_ASSERT(characterDataBuffer);
     const auto nonWhiteSpaceOffset =
         HTMLEditUtils::GetInclusiveNextNonCollapsibleCharOffset(
             *textNode, aPointToInsert.Offset(),
             {HTMLEditUtils::WalkTextOption::TreatNBSPsCollapsible});
-    MOZ_ASSERT(nonWhiteSpaceOffset.valueOr(textFragment->GetLength()) >=
+    MOZ_ASSERT(nonWhiteSpaceOffset.valueOr(characterDataBuffer->GetLength()) >=
                aPointToInsert.Offset());
-    return nonWhiteSpaceOffset.valueOr(textFragment->GetLength()) -
+    return nonWhiteSpaceOffset.valueOr(characterDataBuffer->GetLength()) -
            aPointToInsert.Offset();
   }();
 
@@ -1828,19 +1828,20 @@ HTMLEditor::NormalizeWhiteSpacesToInsertText(
   HTMLEditor::NormalizeAllWhiteSpaceSequences(
       result.mNormalizedString,
       CharPointData::InSameTextNode(
-          !textFragment || !result.mReplaceStartOffset ||
+          !characterDataBuffer || !result.mReplaceStartOffset ||
                   !aNormalizeSurroundingWhiteSpaces
               ? CharPointType::TextEnd
-              : (textFragment->CharAt(result.mReplaceStartOffset - 1u) ==
+              : (characterDataBuffer->CharAt(result.mReplaceStartOffset - 1u) ==
                          HTMLEditUtils::kNewLine
                      ? CharPointType::PreformattedLineBreak
                      : CharPointType::VisibleChar)),
       CharPointData::InSameTextNode(
-          !textFragment ||
-                  result.mReplaceEndOffset >= textFragment->GetLength() ||
+          !characterDataBuffer ||
+                  result.mReplaceEndOffset >=
+                      characterDataBuffer->GetLength() ||
                   !aNormalizeSurroundingWhiteSpaces
               ? CharPointType::TextEnd
-              : (textFragment->CharAt(result.mReplaceEndOffset) ==
+              : (characterDataBuffer->CharAt(result.mReplaceEndOffset) ==
                          HTMLEditUtils::kNewLine
                      ? CharPointType::PreformattedLineBreak
                      : CharPointType::VisibleChar)),
@@ -1858,7 +1859,7 @@ HTMLEditor::ReplaceWhiteSpacesData HTMLEditor::GetNormalizedStringAt(
   }
 
   const Text& textNode = *aPoint.ContainerAs<Text>();
-  const CharacterDataBuffer& textFragment = textNode.TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode.DataBuffer();
 
   // We don't want to make invisible things visible with this normalization.
   // Therefore, we need to know whether there are invisible leading and/or
@@ -1886,9 +1887,9 @@ HTMLEditor::ReplaceWhiteSpacesData HTMLEditor::GetNormalizedStringAt(
         HTMLEditUtils::GetInclusiveNextNonCollapsibleCharOffset(
             textNode, aPoint.Offset(),
             {HTMLEditUtils::WalkTextOption::TreatNBSPsCollapsible});
-    MOZ_ASSERT(nonWhiteSpaceOffset.valueOr(textFragment.GetLength()) >=
+    MOZ_ASSERT(nonWhiteSpaceOffset.valueOr(characterDataBuffer.GetLength()) >=
                aPoint.Offset());
-    return nonWhiteSpaceOffset.valueOr(textFragment.GetLength()) -
+    return nonWhiteSpaceOffset.valueOr(characterDataBuffer.GetLength()) -
            aPoint.Offset();
   }();
   if (!precedingWhiteSpaceLength && !followingWhiteSpaceLength) {
@@ -1934,14 +1935,14 @@ HTMLEditor::ReplaceWhiteSpacesData HTMLEditor::GetNormalizedStringAt(
         CharPointData::InSameTextNode(
             !result.mReplaceStartOffset
                 ? CharPointType::TextEnd
-                : (textFragment.CharAt(result.mReplaceStartOffset - 1u) ==
-                           HTMLEditUtils::kNewLine
+                : (characterDataBuffer.CharAt(result.mReplaceStartOffset -
+                                              1u) == HTMLEditUtils::kNewLine
                        ? CharPointType::PreformattedLineBreak
                        : CharPointType::VisibleChar)),
         CharPointData::InSameTextNode(
-            result.mReplaceEndOffset >= textFragment.GetLength()
+            result.mReplaceEndOffset >= characterDataBuffer.GetLength()
                 ? CharPointType::TextEnd
-                : (textFragment.CharAt(result.mReplaceEndOffset) ==
+                : (characterDataBuffer.CharAt(result.mReplaceEndOffset) ==
                            HTMLEditUtils::kNewLine
                        ? CharPointType::PreformattedLineBreak
                        : CharPointType::VisibleChar)),
@@ -2013,15 +2014,15 @@ HTMLEditor::GetFollowingNormalizedStringToSplitAt(
                                 aPointToSplit.Offset(),
                                 followingWhiteSpaceLength);
   if (!result.mNormalizedString.IsEmpty()) {
-    const CharacterDataBuffer& textFragment =
-        aPointToSplit.ContainerAs<Text>()->TextFragment();
+    const CharacterDataBuffer& characterDataBuffer =
+        aPointToSplit.ContainerAs<Text>()->DataBuffer();
     HTMLEditor::NormalizeAllWhiteSpaceSequences(
         result.mNormalizedString,
         CharPointData::InSameTextNode(CharPointType::TextEnd),
         CharPointData::InSameTextNode(
-            result.mReplaceEndOffset >= textFragment.GetLength()
+            result.mReplaceEndOffset >= characterDataBuffer.GetLength()
                 ? CharPointType::TextEnd
-                : (textFragment.CharAt(result.mReplaceEndOffset) ==
+                : (characterDataBuffer.CharAt(result.mReplaceEndOffset) ==
                            HTMLEditUtils::kNewLine
                        ? CharPointType::PreformattedLineBreak
                        : CharPointType::VisibleChar)),
@@ -2091,15 +2092,15 @@ HTMLEditor::GetPrecedingNormalizedStringToSplitAt(
       aPointToSplit.Offset() - precedingWhiteSpaceLength,
       precedingWhiteSpaceLength);
   if (!result.mNormalizedString.IsEmpty()) {
-    const CharacterDataBuffer& textFragment =
-        aPointToSplit.ContainerAs<Text>()->TextFragment();
+    const CharacterDataBuffer& characterDataBuffer =
+        aPointToSplit.ContainerAs<Text>()->DataBuffer();
     HTMLEditor::NormalizeAllWhiteSpaceSequences(
         result.mNormalizedString,
         CharPointData::InSameTextNode(
             !result.mReplaceStartOffset
                 ? CharPointType::TextEnd
-                : (textFragment.CharAt(result.mReplaceStartOffset - 1u) ==
-                           HTMLEditUtils::kNewLine
+                : (characterDataBuffer.CharAt(result.mReplaceStartOffset -
+                                              1u) == HTMLEditUtils::kNewLine
                        ? CharPointType::PreformattedLineBreak
                        : CharPointType::VisibleChar)),
         CharPointData::InSameTextNode(CharPointType::TextEnd),
@@ -2130,12 +2131,14 @@ HTMLEditor::GetSurroundingNormalizedStringToDelete(const Text& aTextNode,
   const auto IsCollapsibleCharOrNBSP = [&](char16_t aChar) {
     return aChar == HTMLEditUtils::kNBSP || IsCollapsibleChar(aChar);
   };
-  const CharacterDataBuffer& textFragment = aTextNode.TextFragment();
-  const char16_t precedingChar =
-      aOffset ? textFragment.CharAt(aOffset - 1u) : static_cast<char16_t>(0);
-  const char16_t followingChar = aOffset + aLength < textFragment.GetLength()
-                                     ? textFragment.CharAt(aOffset + aLength)
+  const CharacterDataBuffer& characterDataBuffer = aTextNode.DataBuffer();
+  const char16_t precedingChar = aOffset
+                                     ? characterDataBuffer.CharAt(aOffset - 1u)
                                      : static_cast<char16_t>(0);
+  const char16_t followingChar =
+      aOffset + aLength < characterDataBuffer.GetLength()
+          ? characterDataBuffer.CharAt(aOffset + aLength)
+          : static_cast<char16_t>(0);
   // If there is no surrounding white-spaces, we need to do nothing here.
   if (!IsCollapsibleCharOrNBSP(precedingChar) &&
       !IsCollapsibleCharOrNBSP(followingChar)) {
@@ -2161,9 +2164,9 @@ HTMLEditor::GetSurroundingNormalizedStringToDelete(const Text& aTextNode,
         HTMLEditUtils::GetInclusiveNextNonCollapsibleCharOffset(
             aTextNode, aOffset + aLength,
             {HTMLEditUtils::WalkTextOption::TreatNBSPsCollapsible});
-    MOZ_ASSERT(nonWhiteSpaceOffset.valueOr(textFragment.GetLength()) >=
+    MOZ_ASSERT(nonWhiteSpaceOffset.valueOr(characterDataBuffer.GetLength()) >=
                aOffset + aLength);
-    return nonWhiteSpaceOffset.valueOr(textFragment.GetLength()) -
+    return nonWhiteSpaceOffset.valueOr(characterDataBuffer.GetLength()) -
            (aOffset + aLength);
   }();
   if (NS_WARN_IF(!precedingWhiteSpaceLength && !followingWhiteSpaceLength)) {
@@ -2239,14 +2242,14 @@ HTMLEditor::GetSurroundingNormalizedStringToDelete(const Text& aTextNode,
         CharPointData::InSameTextNode(
             !result.mReplaceStartOffset
                 ? CharPointType::TextEnd
-                : (textFragment.CharAt(result.mReplaceStartOffset - 1u) ==
-                           HTMLEditUtils::kNewLine
+                : (characterDataBuffer.CharAt(result.mReplaceStartOffset -
+                                              1u) == HTMLEditUtils::kNewLine
                        ? CharPointType::PreformattedLineBreak
                        : CharPointType::VisibleChar)),
         CharPointData::InSameTextNode(
-            result.mReplaceEndOffset >= textFragment.GetLength()
+            result.mReplaceEndOffset >= characterDataBuffer.GetLength()
                 ? CharPointType::TextEnd
-                : (textFragment.CharAt(result.mReplaceEndOffset) ==
+                : (characterDataBuffer.CharAt(result.mReplaceEndOffset) ==
                            HTMLEditUtils::kNewLine
                        ? CharPointType::PreformattedLineBreak
                        : CharPointType::VisibleChar)),
@@ -2691,10 +2694,10 @@ HTMLEditor::JoinTextNodesWithNormalizeWhiteSpaces(Text& aLeftText,
   const auto IsCollapsibleCharOrNBSP = [&](char16_t aChar) {
     return aChar == HTMLEditUtils::kNBSP || IsCollapsibleChar(aChar);
   };
-  const char16_t lastLeftChar = aLeftText.TextFragment().SafeLastChar();
-  char16_t firstRightChar = aRightText.TextFragment().SafeFirstChar();
-  const char16_t secondRightChar = aRightText.TextFragment().GetLength() >= 2
-                                       ? aRightText.TextFragment().CharAt(1u)
+  const char16_t lastLeftChar = aLeftText.DataBuffer().SafeLastChar();
+  char16_t firstRightChar = aRightText.DataBuffer().SafeFirstChar();
+  const char16_t secondRightChar = aRightText.DataBuffer().GetLength() >= 2
+                                       ? aRightText.DataBuffer().CharAt(1u)
                                        : static_cast<char16_t>(0);
   if (IsCollapsibleCharOrNBSP(firstRightChar)) {
     // If the right Text starts only with a collapsible white-space and it'll
@@ -2732,17 +2735,16 @@ HTMLEditor::JoinTextNodesWithNormalizeWhiteSpaces(Text& aLeftText,
     }
   } else if (IsCollapsibleCharOrNBSP(lastLeftChar) &&
              lastLeftChar != HTMLEditUtils::kSpace &&
-             aLeftText.TextFragment().GetLength() >= 2u) {
+             aLeftText.DataBuffer().GetLength() >= 2u) {
     // If the last char of the left `Text` is a single white-space but not an
     // ASCII space, let's replace it with an ASCII space.
-    const char16_t secondLastChar = aLeftText.TextFragment().CharAt(
-        aLeftText.TextFragment().GetLength() - 2u);
+    const char16_t secondLastChar =
+        aLeftText.DataBuffer().CharAt(aLeftText.DataBuffer().GetLength() - 2u);
     if (!IsCollapsibleCharOrNBSP(secondLastChar) &&
         !IsCollapsibleCharOrNBSP(firstRightChar)) {
       Result<InsertTextResult, nsresult> replaceWhiteSpaceResultOrError =
-          ReplaceTextWithTransaction(aLeftText,
-                                     aLeftText.TextFragment().GetLength() - 1u,
-                                     1u, u" "_ns);
+          ReplaceTextWithTransaction(
+              aLeftText, aLeftText.DataBuffer().GetLength() - 1u, 1u, u" "_ns);
       if (MOZ_UNLIKELY(replaceWhiteSpaceResultOrError.isErr())) {
         NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
         return replaceWhiteSpaceResultOrError.propagateErr();

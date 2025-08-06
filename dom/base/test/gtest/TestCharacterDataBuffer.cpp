@@ -65,7 +65,7 @@ TEST(CharacterDataBufferTest, FindChar1b)
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestData(u"", u"a", 0, CharacterDataBuffer::kNotFound),
@@ -79,9 +79,9 @@ TEST(CharacterDataBufferTest, FindChar1b)
            TestData(u"a\u00A0b", u"\u00A0", 0, 1),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(!textFragment.Is2b());
-    const uint32_t ret =
-        textFragment.FindChar(testData.mScanData[0], testData.mStartOffset);
+    MOZ_ASSERT(!characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.FindChar(testData.mScanData[0],
+                                                      testData.mStartOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
 }
@@ -92,7 +92,7 @@ TEST(CharacterDataBufferTest, FindChar2b)
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestData(u"abc", u"a", 0, 0),
@@ -105,9 +105,9 @@ TEST(CharacterDataBufferTest, FindChar2b)
            TestData(u"a\u00A0b", u"\u00A0", 0, 1),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(textFragment.Is2b());
-    const uint32_t ret =
-        textFragment.FindChar(testData.mScanData[0], testData.mStartOffset);
+    MOZ_ASSERT(characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.FindChar(testData.mScanData[0],
+                                                      testData.mStartOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
 }
@@ -117,7 +117,7 @@ TEST(CharacterDataBufferTest, RFindChar1b)
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestData(u"", u"a", UINT32_MAX, CharacterDataBuffer::kNotFound),
@@ -131,9 +131,9 @@ TEST(CharacterDataBufferTest, RFindChar1b)
            TestData(u"a\u00A0b", u"\u00A0", UINT32_MAX, 1),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(!textFragment.Is2b());
-    const uint32_t ret =
-        textFragment.RFindChar(testData.mScanData[0], testData.mStartOffset);
+    MOZ_ASSERT(!characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.RFindChar(testData.mScanData[0],
+                                                       testData.mStartOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
 }
@@ -144,7 +144,7 @@ TEST(CharacterDataBufferTest, RFindChar2b)
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestData(u"abc", u"a", UINT32_MAX, 0),
@@ -157,9 +157,9 @@ TEST(CharacterDataBufferTest, RFindChar2b)
            TestData(u"a\u00A0b", u"\u00A0", UINT32_MAX, 1),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(textFragment.Is2b());
-    const uint32_t ret =
-        textFragment.RFindChar(testData.mScanData[0], testData.mStartOffset);
+    MOZ_ASSERT(characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.RFindChar(testData.mScanData[0],
+                                                       testData.mStartOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
 }
@@ -169,7 +169,7 @@ TEST(CharacterDataBufferTest, FindFirstDifferentCharOffsetIn1b)
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestData(u"abcdef", u"abc", 0, CharacterDataBuffer::kNotFound),
@@ -182,8 +182,8 @@ TEST(CharacterDataBufferTest, FindFirstDifferentCharOffsetIn1b)
            TestData(u"abcdef", u"deF", 3, 5),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(!textFragment.Is2b());
-    const uint32_t ret = textFragment.FindFirstDifferentCharOffset(
+    MOZ_ASSERT(!characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.FindFirstDifferentCharOffset(
         NS_ConvertUTF16toUTF8(testData.mScanData), testData.mStartOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
@@ -195,7 +195,7 @@ TEST(CharacterDataBufferTest, FindFirstDifferentCharOffsetIn2b)
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestData(u"abcdef", u"abc", 0, CharacterDataBuffer::kNotFound),
@@ -208,8 +208,8 @@ TEST(CharacterDataBufferTest, FindFirstDifferentCharOffsetIn2b)
            TestData(u"abcdef", u"deF", 3, 5),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(textFragment.Is2b());
-    const uint32_t ret = textFragment.FindFirstDifferentCharOffset(
+    MOZ_ASSERT(characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.FindFirstDifferentCharOffset(
         NS_ConvertUTF16toUTF8(testData.mScanData), testData.mStartOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
@@ -220,7 +220,7 @@ TEST(CharacterDataBufferTest, RFindFirstDifferentCharOffsetIn1b)
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestData(u"abcdef", u"abc", 3, CharacterDataBuffer::kNotFound),
@@ -233,8 +233,8 @@ TEST(CharacterDataBufferTest, RFindFirstDifferentCharOffsetIn1b)
            TestData(u"abcdef", u"deF", 6, 5),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(!textFragment.Is2b());
-    const uint32_t ret = textFragment.RFindFirstDifferentCharOffset(
+    MOZ_ASSERT(!characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.RFindFirstDifferentCharOffset(
         NS_ConvertUTF16toUTF8(testData.mScanData), testData.mStartOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
@@ -246,7 +246,7 @@ TEST(CharacterDataBufferTest, RFindFirstDifferentCharOffsetIn2b)
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestData(u"abcdef", u"abc", 3, CharacterDataBuffer::kNotFound),
@@ -259,8 +259,8 @@ TEST(CharacterDataBufferTest, RFindFirstDifferentCharOffsetIn2b)
            TestData(u"abcdef", u"deF", 6, 5),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(textFragment.Is2b());
-    const uint32_t ret = textFragment.RFindFirstDifferentCharOffset(
+    MOZ_ASSERT(characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.RFindFirstDifferentCharOffset(
         NS_ConvertUTF16toUTF8(testData.mScanData), testData.mStartOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
@@ -322,7 +322,7 @@ TEST(CharacterDataBufferTest, FindNonWhitespaceIn1b)
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestDataForFindNonWhitespace(u"", 0, {},
@@ -357,9 +357,9 @@ TEST(CharacterDataBufferTest, FindNonWhitespaceIn1b)
                CharacterDataBuffer::kNotFound),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(!textFragment.Is2b());
-    const uint32_t ret =
-        textFragment.FindNonWhitespaceChar(testData.mOptions, testData.mOffset);
+    MOZ_ASSERT(!characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.FindNonWhitespaceChar(
+        testData.mOptions, testData.mOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
 }
@@ -370,7 +370,7 @@ TEST(CharacterDataBufferTest, FindNonWhitespaceIn2b)
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestDataForFindNonWhitespace(u" ", 0, {},
@@ -403,9 +403,9 @@ TEST(CharacterDataBufferTest, FindNonWhitespaceIn2b)
                CharacterDataBuffer::kNotFound),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(textFragment.Is2b());
-    const uint32_t ret =
-        textFragment.FindNonWhitespaceChar(testData.mOptions, testData.mOffset);
+    MOZ_ASSERT(characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.FindNonWhitespaceChar(
+        testData.mOptions, testData.mOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
 }
@@ -415,7 +415,7 @@ TEST(CharacterDataBufferTest, RFindNonWhitespaceIn1b)
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestDataForFindNonWhitespace(u"", UINT32_MAX, {},
@@ -455,9 +455,9 @@ TEST(CharacterDataBufferTest, RFindNonWhitespaceIn1b)
                {WhitespaceOption::TreatNBSPAsCollapsible}, 0),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(!textFragment.Is2b());
-    const uint32_t ret = textFragment.RFindNonWhitespaceChar(testData.mOptions,
-                                                             testData.mOffset);
+    MOZ_ASSERT(!characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.RFindNonWhitespaceChar(
+        testData.mOptions, testData.mOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
 }
@@ -468,7 +468,7 @@ TEST(CharacterDataBufferTest, RFindNonWhitespaceIn2b)
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const CharacterDataBuffer& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& characterDataBuffer = textNode->DataBuffer();
 
   for (const auto& testData : {
            TestDataForFindNonWhitespace(u" ", UINT32_MAX, {},
@@ -506,9 +506,9 @@ TEST(CharacterDataBufferTest, RFindNonWhitespaceIn2b)
                {WhitespaceOption::TreatNBSPAsCollapsible}, 0),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
-    MOZ_ASSERT(textFragment.Is2b());
-    const uint32_t ret = textFragment.RFindNonWhitespaceChar(testData.mOptions,
-                                                             testData.mOffset);
+    MOZ_ASSERT(characterDataBuffer.Is2b());
+    const uint32_t ret = characterDataBuffer.RFindNonWhitespaceChar(
+        testData.mOptions, testData.mOffset);
     EXPECT_EQ(ret, testData.mExpectedOffset) << testData;
   }
 }

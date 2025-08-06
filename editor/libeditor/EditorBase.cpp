@@ -3425,26 +3425,27 @@ Result<InsertTextResult, nsresult> EditorBase::InsertTextWithTransaction(
 }
 
 static bool TextFragmentBeginsWithStringAtOffset(
-    const CharacterDataBuffer& aTextFragment, const uint32_t aOffset,
+    const CharacterDataBuffer& aCharacterDataBuffer, const uint32_t aOffset,
     const nsAString& aString) {
   const uint32_t stringLength = aString.Length();
 
-  if (aOffset + stringLength > aTextFragment.GetLength()) {
+  if (aOffset + stringLength > aCharacterDataBuffer.GetLength()) {
     return false;
   }
 
-  if (aTextFragment.Is2b()) {
-    return aString.Equals(aTextFragment.Get2b() + aOffset);
+  if (aCharacterDataBuffer.Is2b()) {
+    return aString.Equals(aCharacterDataBuffer.Get2b() + aOffset);
   }
 
-  return aString.EqualsLatin1(aTextFragment.Get1b() + aOffset, stringLength);
+  return aString.EqualsLatin1(aCharacterDataBuffer.Get1b() + aOffset,
+                              stringLength);
 }
 
 static std::tuple<EditorDOMPointInText, EditorDOMPointInText>
 AdjustTextInsertionRange(const EditorDOMPointInText& aInsertedPoint,
                          const nsAString& aInsertedString) {
   if (TextFragmentBeginsWithStringAtOffset(
-          aInsertedPoint.ContainerAs<Text>()->TextFragment(),
+          aInsertedPoint.ContainerAs<Text>()->DataBuffer(),
           aInsertedPoint.Offset(), aInsertedString)) {
     return {aInsertedPoint,
             EditorDOMPointInText(

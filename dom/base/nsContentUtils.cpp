@@ -10503,12 +10503,13 @@ static void SerializeNodeToMarkupInternal(
 
       case nsINode::TEXT_NODE:
       case nsINode::CDATA_SECTION_NODE: {
-        const CharacterDataBuffer* text = &current->AsText()->TextFragment();
+        const CharacterDataBuffer* characterDataBuffer =
+            &current->AsText()->DataBuffer();
         nsIContent* parent = current->GetParent();
         if (ShouldEscape(parent)) {
-          AppendEncodedCharacters(text, aBuilder);
+          AppendEncodedCharacters(characterDataBuffer, aBuilder);
         } else {
-          aBuilder.Append(text);
+          aBuilder.Append(characterDataBuffer);
         }
         break;
       }

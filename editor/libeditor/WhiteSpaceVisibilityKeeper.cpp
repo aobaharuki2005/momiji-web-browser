@@ -1318,7 +1318,7 @@ WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesToSplitAt(
         }
         if (aOptions.contains(
                 NormalizeOption::StopIfPrecedingWhiteSpacesEndsWithNBP) &&
-            textNode->TextFragment().SafeLastChar() == HTMLEditUtils::kNBSP) {
+            textNode->DataBuffer().SafeLastChar() == HTMLEditUtils::kNBSP) {
           break;
         }
         precedingTextNodes.AppendElement(*textNode);
@@ -1356,7 +1356,7 @@ WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesToSplitAt(
         }
         if (aOptions.contains(
                 NormalizeOption::StopIfFollowingWhiteSpacesStartsWithNBSP) &&
-            textNode->TextFragment().SafeFirstChar() == HTMLEditUtils::kNBSP) {
+            textNode->DataBuffer().SafeFirstChar() == HTMLEditUtils::kNBSP) {
           break;
         }
         followingTextNodes.AppendElement(*textNode);
@@ -2286,12 +2286,12 @@ nsresult WhiteSpaceVisibilityKeeper::
     if (!*whiteSpaceOffset) {
       return 0u;
     }
-    const uint32_t offset = textNode.TextFragment().RFindNonWhitespaceChar(
+    const uint32_t offset = textNode.DataBuffer().RFindNonWhitespaceChar(
         whitespaceOptions, *whiteSpaceOffset - 1);
     return offset == CharacterDataBuffer::kNotFound ? 0u : offset + 1u;
   }();
   const uint32_t endOffset = [&]() {
-    const uint32_t offset = textNode.TextFragment().FindNonWhitespaceChar(
+    const uint32_t offset = textNode.DataBuffer().FindNonWhitespaceChar(
         whitespaceOptions, *whiteSpaceOffset + 1);
     return offset == CharacterDataBuffer::kNotFound ? textNode.TextDataLength()
                                                     : offset;
@@ -2300,11 +2300,10 @@ nsresult WhiteSpaceVisibilityKeeper::
   nsAutoString normalizedString;
   const char16_t precedingChar =
       !firstOffset ? static_cast<char16_t>(0)
-                   : textNode.TextFragment().CharAt(firstOffset - 1u);
-  const char16_t followingChar =
-      endOffset == textNode.TextDataLength()
-          ? static_cast<char16_t>(0)
-          : textNode.TextFragment().CharAt(endOffset);
+                   : textNode.DataBuffer().CharAt(firstOffset - 1u);
+  const char16_t followingChar = endOffset == textNode.TextDataLength()
+                                     ? static_cast<char16_t>(0)
+                                     : textNode.DataBuffer().CharAt(endOffset);
   HTMLEditor::GenerateWhiteSpaceSequence(
       normalizedString, endOffset - firstOffset,
       !firstOffset ? HTMLEditor::CharPointData::InSameTextNode(

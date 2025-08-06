@@ -1448,7 +1448,7 @@ AutoClonedSelectionRangeArray::ExtendAnchorFocusRangeFor(
       }
 
       const CharacterDataBuffer* data =
-          &insertionPoint.ContainerAs<Text>()->TextFragment();
+          &insertionPoint.ContainerAs<Text>()->DataBuffer();
       uint32_t offset = insertionPoint.Offset();
       if (!(offset > 1 &&
             data->IsLowSurrogateFollowingHighSurrogateAt(offset - 1)) &&

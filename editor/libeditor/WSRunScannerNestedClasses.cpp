@@ -182,12 +182,12 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
       !EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
   const bool isNewLineLineBreak =
       EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
-  const CharacterDataBuffer& textFragment =
-      aPoint.template ContainerAs<Text>()->TextFragment();
-  for (uint32_t i = std::min(aPoint.Offset(), textFragment.GetLength()); i;
-       i--) {
+  const CharacterDataBuffer& characterDataBuffer =
+      aPoint.template ContainerAs<Text>()->DataBuffer();
+  for (uint32_t i = std::min(aPoint.Offset(), characterDataBuffer.GetLength());
+       i; i--) {
     WSType wsTypeOfNonCollapsibleChar;
-    switch (textFragment.CharAt(i - 1)) {
+    switch (characterDataBuffer.CharAt(i - 1)) {
       case HTMLEditUtils::kSpace:
       case HTMLEditUtils::kCarriageReturn:
       case HTMLEditUtils::kTab:
@@ -220,7 +220,7 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
         break;
       default:
-        MOZ_ASSERT(!nsCRT::IsAsciiSpace(textFragment.CharAt(i - 1)));
+        MOZ_ASSERT(!nsCRT::IsAsciiSpace(characterDataBuffer.CharAt(i - 1)));
         wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
         break;
     }
@@ -338,11 +338,11 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
       !EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
   const bool isNewLineLineBreak =
       EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
-  const CharacterDataBuffer& textFragment =
-      aPoint.template ContainerAs<Text>()->TextFragment();
-  for (uint32_t i = aPoint.Offset(); i < textFragment.GetLength(); i++) {
+  const CharacterDataBuffer& characterDataBuffer =
+      aPoint.template ContainerAs<Text>()->DataBuffer();
+  for (uint32_t i = aPoint.Offset(); i < characterDataBuffer.GetLength(); i++) {
     WSType wsTypeOfNonCollapsibleChar;
-    switch (textFragment.CharAt(i)) {
+    switch (characterDataBuffer.CharAt(i)) {
       case HTMLEditUtils::kSpace:
       case HTMLEditUtils::kCarriageReturn:
       case HTMLEditUtils::kTab:
@@ -374,7 +374,7 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
         break;
       default:
-        MOZ_ASSERT(!nsCRT::IsAsciiSpace(textFragment.CharAt(i)));
+        MOZ_ASSERT(!nsCRT::IsAsciiSpace(characterDataBuffer.CharAt(i)));
         wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
         break;
     }
@@ -455,7 +455,7 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
                             : WSType::SpecialContent);
   }
 
-  if (!nextLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
+  if (!nextLeafContentOrBlock->AsText()->DataBuffer().GetLength()) {
     // If it's an empty text node, keep looking for its next leaf content.
     // Note that even if the empty text node is preformatted, we should keep
     // looking for the next one.

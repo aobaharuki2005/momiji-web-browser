@@ -141,7 +141,7 @@ class EditorLineBreakBase {
   [[nodiscard]] bool CharAtOffsetIsLineBreak() const {
     MOZ_DIAGNOSTIC_ASSERT(IsPreformattedLineBreak());
     return *mOffsetInText < TextRef().TextDataLength() &&
-           TextRef().TextFragment().CharAt(*mOffsetInText) == '\n';
+           TextRef().DataBuffer().CharAt(*mOffsetInText) == '\n';
   }
 
   [[nodiscard]] bool IsDeletableFromComposedDoc() const {

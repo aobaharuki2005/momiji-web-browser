@@ -56,7 +56,7 @@ DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
 
 DocumentType::~DocumentType() = default;
 
-const CharacterDataBuffer* DocumentType::GetCharacterDataBuffer() {
+const CharacterDataBuffer* DocumentType::GetCharacterDataBuffer() const{
   return nullptr;
 }
 
