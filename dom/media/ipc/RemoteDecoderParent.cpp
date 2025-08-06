@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RemoteDecoderParent.h"
 
-#include "RemoteMediaManagerParent.h"
 #include "RemoteCDMParent.h"
+#include "RemoteMediaManagerParent.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {

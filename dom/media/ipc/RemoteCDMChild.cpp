@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemoteCDMChild.h"
+
 #include "mozilla/RemoteDecodeUtils.h"
 #include "mozilla/dom/MediaKeySession.h"
 
@@ -39,13 +40,13 @@ mozilla::ipc::IPCResult RemoteCDMChild::RecvProvision(
     const RemoteCDMProvisionRequestIPDL& aRequest,
     ProvisionResolver&& aResolver) {
   LOGD("[{}] RemoteCDMChild::RecvProvision", fmt::ptr(this));
-#  ifdef MOZ_WIDGET_ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   auto helper =
       MakeRefPtr<MediaDrmProvisioningHelper>(aRequest, std::move(aResolver));
   helper->Provision();
-#  else
+#else
   aResolver(MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR));
-#  endif
+#endif
   return IPC_OK();
 }
 

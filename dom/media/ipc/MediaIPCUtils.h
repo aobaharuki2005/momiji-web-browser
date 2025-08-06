@@ -20,8 +20,8 @@
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ParamTraits_TiedFields.h"
-#include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/MFCDMSerializers.h"
+#include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/gfx/Rect.h"
 
 namespace IPC {
