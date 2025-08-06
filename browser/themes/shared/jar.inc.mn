@@ -241,11 +241,11 @@
   skin/classic/browser/search-indicator-badge-add.svg          (../shared/search/search-indicator-badge-add.svg)
   skin/classic/browser/searchbar.css                           (../shared/search/searchbar.css)
 
-  skin/classic/browser/firefox.svg                             (../shared/sidebar/firefox.svg)
-  skin/classic/browser/foxy-dark.svg                           (../shared/sidebar/foxy-dark.svg)
-  skin/classic/browser/foxy-light.svg                          (../shared/sidebar/foxy-light.svg)
-  skin/classic/browser/gmail.svg                               (../shared/sidebar/gmail.svg)
-  skin/classic/browser/slack.svg                               (../shared/sidebar/slack.svg)
+  skin/classic/browser/sidebar/firefox.svg                     (../shared/sidebar/firefox.svg)
+  skin/classic/browser/sidebar/foxy-dark.svg                   (../shared/sidebar/foxy-dark.svg)
+  skin/classic/browser/sidebar/foxy-light.svg                  (../shared/sidebar/foxy-light.svg)
+  skin/classic/browser/sidebar/gmail.svg                       (../shared/sidebar/gmail.svg)
+  skin/classic/browser/sidebar/slack.svg                       (../shared/sidebar/slack.svg)
 
   skin/classic/browser/tabbrowser/content-area.css             (../shared/tabbrowser/content-area.css)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
