@@ -941,16 +941,25 @@ def test_info_testrun_report(command_context, output_file):
         "https://hg.mozilla.org/mozilla-central",
         "https://hg.mozilla.org/try",
     ]:
+        # keep the original format around as data store
         runcounts = ti.get_runcounts()
-        if output_file:
-            output_file = os.path.abspath(output_file)
-            output_dir = os.path.dirname(output_file)
-            if not os.path.isdir(output_dir):
-                os.makedirs(output_dir)
-            with open(output_file, "w") as f:
-                json.dump(runcounts, f)
-        else:
+        if not output_file:
             print(runcounts)
+            return
+
+        output_file = os.path.abspath(output_file)
+        output_dir = os.path.dirname(output_file)
+        if not os.path.isdir(output_dir):
+            os.makedirs(output_dir)
+        with open(output_file, "w") as f:
+            json.dump(runcounts, f)
+
+        # creating custom 1, 7, 30 day artifacts instead
+        for days in [1, 7, 30]:
+            optimized_data = ti.optimize_runcounts_data(runcounts, days)
+            new_output_file = output_file.replace(".json", f"-{days}days.json")
+            with open(new_output_file, "w") as f:
+                json.dump(optimized_data, f)
 
 
 @SubCommand(

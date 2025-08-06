@@ -459,6 +459,38 @@ class TestInfoReport(TestInfo):
 
         return testrundata
 
+    def optimize_runcounts_data(self, runcounts, num_days):
+        yesterday = datetime.date.today() - datetime.timedelta(days=1)
+        if num_days > 1:
+            startday = yesterday - datetime.timedelta(days=num_days)
+        else:
+            startday = yesterday
+
+        days = [
+            (startday + datetime.timedelta(days=i)).strftime("%Y-%m-%d")
+            for i in range(num_days)
+        ]
+
+        summary_groups = {key: runcounts[key] for key in days if key in runcounts}
+        tasks_and_count = {"manifests": []}
+        for day in days:
+            if day not in summary_groups:
+                continue
+            all_task_labels = summary_groups[day]["job_type_names"]
+            for tasks_by_manifest in summary_groups[day]["manifests"]:
+                for manifest in tasks_by_manifest:
+                    tasks_and_count.setdefault(manifest, {})
+                    for task_index, _, _, count in tasks_by_manifest[manifest]:
+                        task_label = all_task_labels[task_index]
+                        if task_label not in tasks_and_count["manifests"]:
+                            tasks_and_count["manifests"].append(task_label)
+                            new_index = len(tasks_and_count["manifests"]) - 1
+                            tasks_and_count[manifest][new_index] = 0
+                        else:
+                            new_index = tasks_and_count["manifests"].index(task_label)
+                        tasks_and_count[manifest][new_index] += count
+        return tasks_and_count
+
     def squash_runcounts(self, runcounts, days=MAX_DAYS):
         # squash all testrundata together into 1 big happy family for the last X days
         endday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
