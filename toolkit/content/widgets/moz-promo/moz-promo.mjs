@@ -45,9 +45,7 @@ export default class MozPromo extends MozLitElement {
 
   headingTemplate() {
     if (this.heading) {
-      return html`<strong class="heading heading-medium"
-        >${this.heading}</strong
-      >`;
+      return html`<h2 class="heading heading-medium">${this.heading}</h2>`;
     }
     return "";
   }
