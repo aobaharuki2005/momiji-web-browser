@@ -8,8 +8,6 @@ DIRS += [
     "sdk/src",
 ]
 
-if CONFIG["MOZ_DEBUG"]:
-    DIRS += [ "exporters/ostream" ]
 
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["exporters/memory"]
