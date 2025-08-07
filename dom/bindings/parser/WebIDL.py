@@ -2696,6 +2696,9 @@ class IDLType(IDLObject):
     def isJSString(self):
         return False
 
+    def isInteger(self):
+        return False
+
     def isUndefined(self):
         return False
 
