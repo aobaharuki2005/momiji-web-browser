@@ -4870,6 +4870,39 @@ void MacroAssembler::passABIArg(const MoveOperand& from, ABIType type) {
   propagateOOM(moveResolver_.addMove(from, to, moveType));
 }
 
+void MacroAssembler::passABIArg(Register64 reg) {
+  MOZ_ASSERT(inCall_);
+  appendSignatureType(ABIType::Int64);
+
+  ABIArg arg = abiArgs_.next(MIRType::Int64);
+  MoveOperand to(*this, arg);
+
+  auto addMove = [&](const MoveOperand& from, const MoveOperand& to) {
+    if (from == to) {
+      return;
+    }
+    if (oom()) {
+      return;
+    }
+    propagateOOM(moveResolver_.addMove(from, to, MoveOp::GENERAL));
+  };
+
+#ifdef JS_PUNBOX64
+  addMove(MoveOperand(reg.reg), to);
+#else
+  if (to.isMemory()) {
+    Address addr(to.base(), to.disp());
+    addMove(MoveOperand(reg.high), MoveOperand(HighWord(addr)));
+    addMove(MoveOperand(reg.low), MoveOperand(LowWord(addr)));
+  } else if (to.isGeneralRegPair()) {
+    addMove(MoveOperand(reg.high), MoveOperand(to.oddReg()));
+    addMove(MoveOperand(reg.low), MoveOperand(to.evenReg()));
+  } else {
+    MOZ_CRASH("Unsupported move operand");
+  }
+#endif
+}
+
 void MacroAssembler::callWithABINoProfiler(void* fun, ABIType result,
                                            CheckUnsafeCallWithABI check) {
   appendSignatureType(result);
