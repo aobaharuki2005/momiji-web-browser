@@ -4606,11 +4606,23 @@ main section {
 }
 
 .focus-timer-tabs {
+  display: flex;
   margin-block-end: var(--space-medium);
+  position: relative;
+  width: 100%;
+  padding-inline: var(--space-large);
 }
 
-.focus-timer-tabs > moz-button:first-child {
-  margin-inline-end: var(--space-small);
+.focus-timer-tabs-buttons {
+  display: flex;
+  gap: var(--space-small);
+  justify-content: center;
+  flex-grow: 1;
+  margin-inline-start: calc(var(--space-xlarge) + var(--space-small));
+}
+
+.focus-timer-context-menu {
+  margin-inline-end: auto;
 }
 
 .progress-circle-wrapper {

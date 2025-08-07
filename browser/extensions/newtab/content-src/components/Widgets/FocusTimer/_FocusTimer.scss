@@ -16,11 +16,24 @@
 }
 
 .focus-timer-tabs {
+  display: flex;
   margin-block-end: var(--space-medium);
+  position: relative;
+  width: 100%;
+  padding-inline: var(--space-large);
 }
 
-.focus-timer-tabs > moz-button:first-child {
-  margin-inline-end: var(--space-small);
+.focus-timer-tabs-buttons {
+  display: flex;
+  gap: var(--space-small);
+  justify-content: center;
+  flex-grow: 1;
+  margin-inline-start: calc(var(--space-xlarge) + var(--space-small));
+}
+
+// Align the context menu button to the right while keeping the Focus/Break button centered
+.focus-timer-context-menu {
+  margin-inline-end: auto;
 }
 
 .progress-circle-wrapper {
@@ -182,6 +195,3 @@
     padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall)); // 17px
   }
 }
-
-
-

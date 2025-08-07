@@ -6,8 +6,18 @@ import { INITIAL_STATE, reducers } from "common/Reducers.sys.mjs";
 import { actionTypes as at } from "common/Actions.mjs";
 import { FocusTimer } from "content-src/components/Widgets/FocusTimer/FocusTimer";
 
+const PREF_WIDGETS_SYSTEM_NOTIFICATIONS_ENABLED =
+  "widgets.focusTimer.showSystemNotifications";
+
 const mockState = {
   ...INITIAL_STATE,
+  Prefs: {
+    ...INITIAL_STATE.Prefs,
+    values: {
+      ...INITIAL_STATE.Prefs.values,
+      [PREF_WIDGETS_SYSTEM_NOTIFICATIONS_ENABLED]: true,
+    },
+  },
   TimerWidget: {
     timerType: "focus",
     focus: {
@@ -388,5 +398,110 @@ describe("<FocusTimer>", () => {
       initialUserDuration,
       "initialDuration should also be restored to user's initial input"
     );
+  });
+
+  describe("context menu", () => {
+    it("should render default context menu", () => {
+      assert.ok(wrapper.find(".focus-timer-context-menu-button").exists());
+      assert.ok(wrapper.find("#focus-timer-context-menu").exists());
+
+      // "Turn notifications off" option
+      assert.ok(
+        wrapper
+          .find(
+            "panel-item[data-l10n-id='newtab-widget-timer-menu-notifications']"
+          )
+          .exists()
+      );
+
+      assert.ok(
+        wrapper
+          .find("panel-item[data-l10n-id='newtab-widget-timer-menu-hide']")
+          .exists()
+      );
+
+      assert.ok(
+        wrapper
+          .find(
+            "panel-item[data-l10n-id='newtab-widget-timer-menu-learn-more']"
+          )
+          .exists()
+      );
+
+      // Make sure "Turn notifications on" is not there
+      assert.isFalse(
+        wrapper.contains(
+          "panel-item[data-l10n-id='newtab-widget-timer-menu-notifications-on']"
+        )
+      );
+    });
+
+    it("should render context menu with 'turn notifications on' if notifications are disabled", () => {
+      const noNotificationsState = {
+        ...mockState,
+        Prefs: {
+          ...INITIAL_STATE.Prefs,
+          values: {
+            ...INITIAL_STATE.Prefs.values,
+            [PREF_WIDGETS_SYSTEM_NOTIFICATIONS_ENABLED]: false,
+          },
+        },
+      };
+
+      wrapper = mount(
+        <WrapWithProvider state={noNotificationsState}>
+          <FocusTimer dispatch={dispatch} />
+        </WrapWithProvider>
+      );
+
+      // "Turn notifications on" option
+      assert.ok(
+        wrapper
+          .find(
+            "panel-item[data-l10n-id='newtab-widget-timer-menu-notifications-on']"
+          )
+          .exists()
+      );
+
+      // Make sure "Turn notifications off" is not there
+      assert.isFalse(
+        wrapper.contains(
+          "panel-item[data-l10n-id='newtab-widget-timer-menu-notifications']"
+        )
+      );
+    });
+
+    it("should turn off notifications when the 'Turn off notifications' option is clicked", () => {
+      const menuItem = wrapper.find(
+        "panel-item[data-l10n-id='newtab-widget-timer-menu-notifications']"
+      );
+      menuItem.props().onClick();
+
+      assert.ok(dispatch.calledOnce);
+      const [action] = dispatch.getCall(0).args;
+      assert.equal(action.type, at.SET_PREF);
+    });
+
+    it("should hide Focus Timer when 'Hide timer' option is clicked", () => {
+      const menuItem = wrapper.find(
+        "panel-item[data-l10n-id='newtab-widget-timer-menu-hide']"
+      );
+      menuItem.props().onClick();
+
+      assert.ok(dispatch.calledOnce);
+      const [action] = dispatch.getCall(0).args;
+      assert.equal(action.type, at.SET_PREF);
+    });
+
+    it("should dispatch OPEN_LINK when the Learn More option is clicked", () => {
+      const menuItem = wrapper.find(
+        "panel-item[data-l10n-id='newtab-widget-timer-menu-learn-more']"
+      );
+      menuItem.props().onClick();
+
+      assert.ok(dispatch.calledOnce);
+      const [action] = dispatch.getCall(0).args;
+      assert.equal(action.type, at.OPEN_LINK);
+    });
   });
 });

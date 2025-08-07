@@ -99,6 +99,10 @@ export const FocusTimer = ({ dispatch }) => {
     setProgress(0);
   }, [arcRef]);
 
+  const prefs = useSelector(state => state.Prefs.values);
+  const showSystemNotifications =
+    prefs["widgets.focusTimer.showSystemNotifications"];
+
   // If the timer is running, set the progress visibility to true
   // This helps persist progressbar visibility on refresh/opening a new tab
   useEffect(() => {
@@ -368,19 +372,77 @@ export const FocusTimer = ({ dispatch }) => {
     }
   };
 
+  function handleLearnMore() {
+    dispatch(
+      ac.OnlyToMain({
+        type: at.OPEN_LINK,
+        data: {
+          url: "https://support.mozilla.org/kb/firefox-new-tab-widgets",
+        },
+      })
+    );
+  }
+
+  function handlePrefUpdate(prefName, prefValue) {
+    dispatch(
+      ac.OnlyToMain({
+        type: at.SET_PREF,
+        data: {
+          name: prefName,
+          value: prefValue,
+        },
+      })
+    );
+  }
+
   return timerData ? (
     <article className="focus-timer">
       <div className="focus-timer-tabs">
-        <moz-button
-          type={timerType === "focus" ? "primary" : "ghost"}
-          data-l10n-id="newtab-widget-timer-mode-focus"
-          onClick={() => toggleType("focus")}
-        />
-        <moz-button
-          type={timerType === "break" ? "primary" : "ghost"}
-          data-l10n-id="newtab-widget-timer-mode-break"
-          onClick={() => toggleType("break")}
-        />
+        <div className="focus-timer-tabs-buttons">
+          <moz-button
+            type={timerType === "focus" ? "primary" : "ghost"}
+            data-l10n-id="newtab-widget-timer-mode-focus"
+            onClick={() => toggleType("focus")}
+          />
+          <moz-button
+            type={timerType === "break" ? "primary" : "ghost"}
+            data-l10n-id="newtab-widget-timer-mode-break"
+            onClick={() => toggleType("break")}
+          />
+        </div>
+        <div className="focus-timer-context-menu-wrapper">
+          <moz-button
+            className="focus-timer-context-menu-button"
+            iconSrc="chrome://global/skin/icons/more.svg"
+            menuId="focus-timer-context-menu"
+            type="ghost"
+          />
+          <panel-list id="focus-timer-context-menu">
+            <panel-item
+              data-l10n-id={
+                showSystemNotifications
+                  ? "newtab-widget-timer-menu-notifications"
+                  : "newtab-widget-timer-menu-notifications-on"
+              }
+              onClick={() => {
+                handlePrefUpdate(
+                  "widgets.focusTimer.showSystemNotifications",
+                  !showSystemNotifications
+                );
+              }}
+            />
+            <panel-item
+              data-l10n-id="newtab-widget-timer-menu-hide"
+              onClick={() => {
+                handlePrefUpdate("widgets.focusTimer.enabled", false);
+              }}
+            />
+            <panel-item
+              data-l10n-id="newtab-widget-timer-menu-learn-more"
+              onClick={handleLearnMore}
+            />
+          </panel-list>
+        </div>
       </div>
 
       <div
