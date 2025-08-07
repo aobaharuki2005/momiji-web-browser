@@ -1042,6 +1042,7 @@ class SettingsTest {
     @Test
     fun `GIVEN the address bar and the microsurvey are shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
         val settings = spyk(settings)
+        every { settings.shouldUseComposableToolbar } returns false
         every { settings.shouldShowMicrosurveyPrompt } returns true
         every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
 
@@ -1076,6 +1077,7 @@ class SettingsTest {
     @Test
     fun `GIVEN just the addressbar is shown at bottom WHEN getBottomToolbarHeight THEN returns it's height`() {
         val settings = spyk(settings)
+        every { settings.shouldUseComposableToolbar } returns false
         every { settings.shouldShowMicrosurveyPrompt } returns false
         every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
 
@@ -1110,6 +1112,7 @@ class SettingsTest {
     @Test
     fun `GIVEN the address bar, navigation bar and the microsurvey are shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
         val settings = spyk(settings)
+        every { settings.shouldUseComposableToolbar } returns false
         every { settings.shouldShowMicrosurveyPrompt } returns true
         every { settings.shouldUseExpandedToolbar } returns true
         every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
@@ -1147,6 +1150,7 @@ class SettingsTest {
     @Test
     fun `GIVEN the addressbar and navigation bar is shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
         val settings = spyk(settings)
+        every { settings.shouldUseComposableToolbar } returns false
         every { settings.shouldShowMicrosurveyPrompt } returns false
         every { settings.shouldUseExpandedToolbar } returns true
         every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM

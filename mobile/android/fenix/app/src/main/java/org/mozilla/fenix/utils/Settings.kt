@@ -2000,7 +2000,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var shouldUseComposableToolbar by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_composable_toolbar),
         default = { FxNimbus.features.composableToolbar.value().enabled },
-        featureFlag = true,
+        featureFlag = FeatureFlags.composableToolbar,
     )
 
     /**

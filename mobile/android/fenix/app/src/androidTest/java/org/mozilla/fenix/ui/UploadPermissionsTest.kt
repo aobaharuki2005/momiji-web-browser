@@ -22,9 +22,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class UploadPermissionsTest : TestSetup() {
 
     @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule(
-        isTermsOfServiceAccepted = true,
-    )
+    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @get:Rule
     val memoryLeaksRule = DetectMemoryLeaksRule()

@@ -39,6 +39,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isUnifiedTrustPanelEnabled = settings.enableUnifiedTrustPanel,
         etpPolicy = getETPPolicy(settings),
         isLocationPermissionEnabled = getFeaturePermission(PhoneFeature.LOCATION, settings),
+        isComposableToolbarEnabled = settings.shouldUseComposableToolbar,
         isMenuRedesignEnabled = settings.enableMenuRedesign,
         isMenuRedesignCFREnabled = settings.shouldShowMenuCFR,
         isMicrosurveyEnabled = settings.microsurveyFeatureEnabled,
@@ -64,6 +65,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var isUnifiedTrustPanelEnabled: Boolean by updatedFeatureFlags::isUnifiedTrustPanelEnabled
     override var etpPolicy: ETPPolicy by updatedFeatureFlags::etpPolicy
     override var isLocationPermissionEnabled: SitePermissionsRules.Action by updatedFeatureFlags::isLocationPermissionEnabled
+    override var isComposableToolbarEnabled: Boolean by updatedFeatureFlags::isComposableToolbarEnabled
     override var isMenuRedesignEnabled: Boolean by updatedFeatureFlags::isMenuRedesignEnabled
     override var isMenuRedesignCFREnabled: Boolean by updatedFeatureFlags::isMenuRedesignCFREnabled
     override var isMicrosurveyEnabled: Boolean by updatedFeatureFlags::isMicrosurveyEnabled
@@ -96,6 +98,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.showWallpaperOnboarding = featureFlags.isWallpaperOnboardingEnabled
         settings.deleteSitePermissions = featureFlags.isDeleteSitePermissionsEnabled
         settings.shouldShowOpenInAppBanner = featureFlags.isOpenInAppBannerEnabled
+        settings.shouldUseComposableToolbar = featureFlags.isComposableToolbarEnabled
         settings.enableMenuRedesign = featureFlags.isMenuRedesignEnabled
         settings.shouldShowMenuCFR = featureFlags.isMenuRedesignCFREnabled
         settings.microsurveyFeatureEnabled = featureFlags.isMicrosurveyEnabled
@@ -122,6 +125,7 @@ private data class FeatureFlags(
     var isUnifiedTrustPanelEnabled: Boolean,
     var etpPolicy: ETPPolicy,
     var isLocationPermissionEnabled: SitePermissionsRules.Action,
+    var isComposableToolbarEnabled: Boolean,
     var isMenuRedesignEnabled: Boolean,
     var isMenuRedesignCFREnabled: Boolean,
     var isMicrosurveyEnabled: Boolean,

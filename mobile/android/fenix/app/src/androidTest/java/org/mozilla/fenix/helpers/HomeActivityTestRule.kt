@@ -62,6 +62,7 @@ class HomeActivityTestRule(
         isUnifiedTrustPanelEnabled: Boolean = false,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         isLocationPermissionEnabled: SitePermissionsRules.Action = getFeaturePermission(PhoneFeature.LOCATION, settings),
+        isComposableToolbarEnabled: Boolean = false,
         isMenuRedesignEnabled: Boolean = false,
         isMenuRedesignCFREnabled: Boolean = false,
         isPageLoadTranslationsPromptEnabled: Boolean = false,
@@ -82,6 +83,7 @@ class HomeActivityTestRule(
         this.isUnifiedTrustPanelEnabled = isUnifiedTrustPanelEnabled
         this.etpPolicy = etpPolicy
         this.isLocationPermissionEnabled = isLocationPermissionEnabled
+        this.isComposableToolbarEnabled = isComposableToolbarEnabled
         this.isMenuRedesignEnabled = isMenuRedesignEnabled
         this.isMenuRedesignCFREnabled = isMenuRedesignCFREnabled
         this.enableOrDisablePageLoadTranslationsPrompt(isPageLoadTranslationsPromptEnabled)
@@ -146,6 +148,7 @@ class HomeActivityTestRule(
             isWallpaperOnboardingEnabled = false,
             isOpenInAppBannerEnabled = false,
             isMicrosurveyEnabled = false,
+            isComposableToolbarEnabled = false,
             // workaround for toolbar at top position by default
             // remove with https://bugzilla.mozilla.org/show_bug.cgi?id=1917640
             shouldUseBottomToolbar = true,
@@ -189,6 +192,7 @@ class HomeActivityIntentTestRule internal constructor(
         isUnifiedTrustPanelEnabled: Boolean = false,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         isLocationPermissionEnabled: SitePermissionsRules.Action = getFeaturePermission(PhoneFeature.LOCATION, settings),
+        isComposableToolbarEnabled: Boolean = false,
         isMenuRedesignEnabled: Boolean = false,
         isMenuRedesignCFREnabled: Boolean = false,
         isPageLoadTranslationsPromptEnabled: Boolean = false,
@@ -209,6 +213,7 @@ class HomeActivityIntentTestRule internal constructor(
         this.isUnifiedTrustPanelEnabled = isUnifiedTrustPanelEnabled
         this.etpPolicy = etpPolicy
         this.isLocationPermissionEnabled = isLocationPermissionEnabled
+        this.isComposableToolbarEnabled = isComposableToolbarEnabled
         this.isMenuRedesignEnabled = isMenuRedesignEnabled
         this.isMenuRedesignCFREnabled = isMenuRedesignCFREnabled
         this.enableOrDisablePageLoadTranslationsPrompt(isPageLoadTranslationsPromptEnabled)
@@ -283,6 +288,7 @@ class HomeActivityIntentTestRule internal constructor(
         isUnifiedTrustPanelEnabled = settings.enableUnifiedTrustPanel
         etpPolicy = getETPPolicy(settings)
         isLocationPermissionEnabled = getFeaturePermission(PhoneFeature.LOCATION, settings)
+        isComposableToolbarEnabled = settings.shouldUseComposableToolbar
         isMenuRedesignEnabled = settings.enableMenuRedesign
         isMenuRedesignCFREnabled = settings.shouldShowMenuCFR
         isMicrosurveyEnabled = settings.microsurveyFeatureEnabled
@@ -312,6 +318,7 @@ class HomeActivityIntentTestRule internal constructor(
             isWallpaperOnboardingEnabled = false,
             isOpenInAppBannerEnabled = false,
             isMicrosurveyEnabled = false,
+            isComposableToolbarEnabled = false,
             // workaround for toolbar at top position by default
             // remove with https://bugzilla.mozilla.org/show_bug.cgi?id=1917640
             shouldUseBottomToolbar = true,

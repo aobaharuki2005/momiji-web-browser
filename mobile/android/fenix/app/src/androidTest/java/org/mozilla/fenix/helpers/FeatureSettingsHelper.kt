@@ -72,6 +72,11 @@ interface FeatureSettingsHelper {
     var isLocationPermissionEnabled: SitePermissionsRules.Action
 
     /**
+     * Enable or disable the composable toolbar.
+     */
+    var isComposableToolbarEnabled: Boolean
+
+    /**
      * Enable or disable the new main menu.
      */
     var isMenuRedesignEnabled: Boolean

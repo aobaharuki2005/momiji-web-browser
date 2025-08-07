@@ -57,6 +57,11 @@ object FeatureFlags {
     val showLiveDownloads = Config.channel.isNightlyOrDebug
 
     /**
+     * Whether the composable toolbar should be allowed in the current build.
+     */
+    val composableToolbar = Config.channel.isNightlyOrDebug
+
+    /**
      * Enables the custom review pre-prompt.
      */
     const val CUSTOM_REVIEW_PROMPT_ENABLED = true
