@@ -669,34 +669,36 @@ class PageStyleActor extends Actor {
     );
     const rules = [];
 
-    if (!bindingElement || !bindingElement.style) {
+    if (!bindingElement) {
       return rules;
     }
 
-    const elementStyle = this._styleRef(
-      bindingElement,
-      // for inline style, we can't have a related pseudo element
-      null
-    );
-    const showElementStyles = !inherited && !pseudo;
-    const showInheritedStyles =
-      inherited && this._hasInheritedProps(bindingElement.style);
+    if (bindingElement.style) {
+      const elementStyle = this._styleRef(
+        bindingElement,
+        // for inline style, we can't have a related pseudo element
+        null
+      );
+      const showElementStyles = !inherited && !pseudo;
+      const showInheritedStyles =
+        inherited && this._hasInheritedProps(bindingElement.style);
 
-    const rule = this._getRuleItem(elementStyle, node.rawNode, {
-      pseudoElement: null,
-      isSystem: false,
-      inherited: false,
-    });
+      const rule = this._getRuleItem(elementStyle, node.rawNode, {
+        pseudoElement: null,
+        isSystem: false,
+        inherited: false,
+      });
 
-    // First any inline styles
-    if (showElementStyles) {
-      rules.push(rule);
-    }
+      // First any inline styles
+      if (showElementStyles) {
+        rules.push(rule);
+      }
 
-    // Now any inherited styles
-    if (showInheritedStyles) {
-      rule.inherited = inherited;
-      rules.push(rule);
+      // Now any inherited styles
+      if (showInheritedStyles) {
+        rule.inherited = inherited;
+        rules.push(rule);
+      }
     }
 
     // Add normal rules.  Typically this is passing in the node passed into the
@@ -713,46 +715,55 @@ class PageStyleActor extends Actor {
       }
     );
 
-    // Now any pseudos.
-    if (!pseudo && !options.skipPseudo) {
-      const relevantPseudoElements = [];
-      for (const readPseudo of PSEUDO_ELEMENTS) {
-        if (!this._pseudoIsRelevant(bindingElement, readPseudo, inherited)) {
-          continue;
-        }
+    // If we don't want to check pseudo elements rules, we can stop here.
+    if (options.skipPseudo) {
+      return rules;
+    }
 
-        // FIXME: Bug 1909173. Need to handle view transitions peudo-elements.
-        if (readPseudo === "::highlight") {
-          InspectorUtils.getRegisteredCssHighlights(
-            this.inspector.targetActor.window.document,
-            // only active
-            true
-          ).forEach(name => {
-            relevantPseudoElements.push(`::highlight(${name})`);
-          });
-        } else {
-          relevantPseudoElements.push(readPseudo);
-        }
+    // Now retrieve any pseudo element rules.
+    // We can have pseudo element that are children of other pseudo elements (e.g. with
+    // ::before::marker , ::marker is a child of ::before).
+    // In such case, we want to call _getElementRules with the actual pseudo element node,
+    // not its binding element.
+    const elementForPseudo = pseudo ? node.rawNode : bindingElement;
+
+    const relevantPseudoElements = [];
+    for (const readPseudo of PSEUDO_ELEMENTS) {
+      if (!this._pseudoIsRelevant(elementForPseudo, readPseudo, inherited)) {
+        continue;
       }
 
-      for (const readPseudo of relevantPseudoElements) {
-        const pseudoRules = this._getElementRules(
-          bindingElement,
-          readPseudo,
-          inherited,
-          options
-        );
-        // inherited element backed pseudo element rules (e.g. `::details-content`) should
-        // not be at the same "level" as rules inherited from the binding element (e.g. `<details>`),
-        // so we need to put them before the "regular" rules.
-        if (
-          SharedCssLogic.ELEMENT_BACKED_PSEUDO_ELEMENTS.has(readPseudo) &&
-          inherited
-        ) {
-          rules.unshift(...pseudoRules);
-        } else {
-          rules.push(...pseudoRules);
-        }
+      // FIXME: Bug 1909173. Need to handle view transitions peudo-elements.
+      if (readPseudo === "::highlight") {
+        InspectorUtils.getRegisteredCssHighlights(
+          this.inspector.targetActor.window.document,
+          // only active
+          true
+        ).forEach(name => {
+          relevantPseudoElements.push(`::highlight(${name})`);
+        });
+      } else {
+        relevantPseudoElements.push(readPseudo);
+      }
+    }
+
+    for (const readPseudo of relevantPseudoElements) {
+      const pseudoRules = this._getElementRules(
+        elementForPseudo,
+        readPseudo,
+        inherited,
+        options
+      );
+      // inherited element backed pseudo element rules (e.g. `::details-content`) should
+      // not be at the same "level" as rules inherited from the binding element (e.g. `<details>`),
+      // so we need to put them before the "regular" rules.
+      if (
+        SharedCssLogic.ELEMENT_BACKED_PSEUDO_ELEMENTS.has(readPseudo) &&
+        inherited
+      ) {
+        rules.unshift(...pseudoRules);
+      } else {
+        rules.push(...pseudoRules);
       }
     }
 
@@ -888,6 +899,10 @@ class PageStyleActor extends Actor {
    * @returns Array
    */
   _getElementRules(node, pseudo, inherited, options) {
+    if (!Element.isInstance(node)) {
+      return [];
+    }
+
     // we don't need to retrieve inherited starting style rules
     const includeStartingStyleRules = !inherited;
     const domRules = InspectorUtils.getMatchingCSSRules(
