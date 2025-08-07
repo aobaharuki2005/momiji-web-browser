@@ -8,8 +8,6 @@
 
 "use strict";
 
-const CHECK_AT_TIME = new Date("2020-01-01T00:00:00Z").getTime() / 1000;
-
 add_task(async function () {
   Services.prefs.setIntPref(
     "security.pki.crlite_mode",
@@ -20,14 +18,19 @@ add_task(async function () {
   securityStateDirectory.append("security_state");
 
   // For simplicity, re-use the filters from test_crlite_filters.js.
-  do_get_file("test_crlite_filters/20200101-0-filter").copyTo(
+  do_get_file("test_crlite_filters/20201017-0-filter").copyTo(
     securityStateDirectory,
     "crlite.filter"
   );
 
-  do_get_file("test_crlite_filters/20200101-1-filter.delta").copyTo(
+  do_get_file("test_crlite_filters/20201017-1-filter.delta").copyTo(
     securityStateDirectory,
     "20201017-1-filter.delta"
+  );
+
+  do_get_file("test_crlite_filters/20201201-3-filter.delta").copyTo(
+    securityStateDirectory,
+    "20201201-3-filter.delta"
   );
 
   let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
@@ -38,11 +41,8 @@ add_task(async function () {
     Ci.nsIX509CertDB
   );
 
-  // These need to be available for path building.
-  let ca = addCertFromFile(certdb, "test_crlite_filters/ca.pem", "C,C,");
-  ok(ca, "ca certificate should decode successfully");
-
-  let issuerCert = constructCertFromFile("test_crlite_filters/int.pem");
+  // This needs to be available for path building.
+  let issuerCert = constructCertFromFile("test_crlite_filters/issuer.pem");
   ok(issuerCert, "issuer certificate should decode successfully");
 
   // Mark CRLite filter as fresh
@@ -53,45 +53,55 @@ add_task(async function () {
     });
   });
 
-  let validCert = constructCertFromFile(
-    "test_crlite_filters/valid.example.com.pem"
-  );
+  let validCert = constructCertFromFile("test_crlite_filters/valid.pem");
   await checkCertErrorGenericAtTime(
     certdb,
     validCert,
     PRErrorCodeSuccess,
     Ci.nsIX509CertDB.verifyUsageTLSServer,
-    CHECK_AT_TIME,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
     false,
-    "valid.example.com",
+    "vpn.worldofspeed.org",
     0
   );
 
-  let revokedCert = constructCertFromFile(
-    "test_crlite_filters/revoked.example.com.pem"
-  );
+  let revokedCert = constructCertFromFile("test_crlite_filters/revoked.pem");
   await checkCertErrorGenericAtTime(
     certdb,
     revokedCert,
     SEC_ERROR_REVOKED_CERTIFICATE,
     Ci.nsIX509CertDB.verifyUsageTLSServer,
-    CHECK_AT_TIME,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
     false,
-    "revoked.example.com",
+    "us-datarecovery.com",
     0
   );
 
-  let revokedInDeltaCert = constructCertFromFile(
-    "test_crlite_filters/revoked-in-delta.example.com.pem"
+  let revokedInStashCert = constructCertFromFile(
+    "test_crlite_filters/revoked-in-stash.pem"
   );
   await checkCertErrorGenericAtTime(
     certdb,
-    revokedInDeltaCert,
+    revokedInStashCert,
     SEC_ERROR_REVOKED_CERTIFICATE,
     Ci.nsIX509CertDB.verifyUsageTLSServer,
-    CHECK_AT_TIME,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
     false,
-    "revoked-in-delta.example.com",
+    "stokedmoto.com",
+    0
+  );
+
+  let revokedInStash2Cert = constructCertFromFile(
+    "test_crlite_filters/revoked-in-stash-2.pem"
+  );
+  await checkCertErrorGenericAtTime(
+    certdb,
+    revokedInStash2Cert,
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    Ci.nsIX509CertDB.verifyUsageTLSServer,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+    false,
+    "icsreps.com",
     0
   );
 });
