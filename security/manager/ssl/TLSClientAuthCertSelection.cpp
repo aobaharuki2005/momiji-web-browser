@@ -231,12 +231,6 @@ class ClientAuthCertNonverifyingTrustDomain final : public TrustDomain {
       pkix::KeyPurposeId keyPurpose) override {
     return pkix::Success;
   }
-  virtual mozilla::pkix::Result NetscapeStepUpMatchesServerAuth(
-      pkix::Time notBefore,
-      /*out*/ bool& matches) override {
-    matches = true;
-    return pkix::Success;
-  }
   virtual void NoteAuxiliaryExtension(pkix::AuxiliaryExtension extension,
                                       pkix::Input extensionData) override {}
   virtual mozilla::pkix::Result DigestBuf(pkix::Input item,

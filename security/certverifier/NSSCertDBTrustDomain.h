@@ -35,20 +35,6 @@ enum class PKCS11DBConfig {
   LoadModules = 1,
 };
 
-// Policy options for matching id-Netscape-stepUp with id-kp-serverAuth (for CA
-// certificates only):
-// * Always match: the step-up OID is considered equivalent to serverAuth
-// * Match before 23 August 2016: the OID is considered equivalent if the
-//   certificate's notBefore is before 23 August 2016
-// * Match before 23 August 2015: similarly, but for 23 August 2015
-// * Never match: the OID is never considered equivalent to serverAuth
-enum class NetscapeStepUpPolicy : uint32_t {
-  AlwaysMatch = 0,
-  MatchBefore23August2016 = 1,
-  MatchBefore23August2015 = 2,
-  NeverMatch = 3,
-};
-
 enum class OCSPFetchStatus : uint16_t {
   NotFetched = 0,
   Fetched = 1,
@@ -150,8 +136,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       mozilla::TimeDuration ocspTimeoutSoft,
       mozilla::TimeDuration ocspTimeoutHard, uint32_t certShortLifetimeInDays,
       unsigned int minRSABits, ValidityCheckingMode validityCheckingMode,
-      NetscapeStepUpPolicy netscapeStepUpPolicy, CRLiteMode crliteMode,
-      const OriginAttributes& originAttributes,
+      CRLiteMode crliteMode, const OriginAttributes& originAttributes,
       const nsTArray<mozilla::pkix::Input>& thirdPartyRootInputs,
       const nsTArray<mozilla::pkix::Input>& thirdPartyIntermediateInputs,
       const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
@@ -206,10 +191,6 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       mozilla::pkix::Time notBefore, mozilla::pkix::Time notAfter,
       mozilla::pkix::EndEntityOrCA endEntityOrCA,
       mozilla::pkix::KeyPurposeId keyPurpose) override;
-
-  virtual Result NetscapeStepUpMatchesServerAuth(
-      mozilla::pkix::Time notBefore,
-      /*out*/ bool& matches) override;
 
   virtual Result CheckRevocation(
       mozilla::pkix::EndEntityOrCA endEntityOrCA,
@@ -310,7 +291,6 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   const uint32_t mCertShortLifetimeInDays;
   const unsigned int mMinRSABits;
   ValidityCheckingMode mValidityCheckingMode;
-  NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   CRLiteMode mCRLiteMode;
   const OriginAttributes& mOriginAttributes;
   const nsTArray<mozilla::pkix::Input>& mThirdPartyRootInputs;  // non-owning

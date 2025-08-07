@@ -16916,21 +16916,6 @@
   value: 10
   mirror: always
 
-# security.pki.netscape_step_up_policy controls how the platform handles the
-# id-Netscape-stepUp OID in extended key usage extensions of CA certificates.
-# 0: id-Netscape-stepUp is always considered equivalent to id-kp-serverAuth
-# 1: it is considered equivalent when the notBefore is before 23 August 2016
-# 2: similarly, but for 23 August 2015
-# 3: it is never considered equivalent
-- name: security.pki.netscape_step_up_policy
-  type: RelaxedAtomicUint32
-#ifdef RELEASE_OR_BETA
-  value: 1
-#else
-  value: 2
-#endif
-  mirror: always
-
 # Configures Certificate Transparency support mode:
 # 0: Fully disabled.
 # 1: Only collect telemetry. CT qualification checks are not performed.

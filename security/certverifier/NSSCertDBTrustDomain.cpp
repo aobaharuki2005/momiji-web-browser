@@ -69,8 +69,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     /*optional but shouldn't be*/ void* pinArg, TimeDuration ocspTimeoutSoft,
     TimeDuration ocspTimeoutHard, uint32_t certShortLifetimeInDays,
     unsigned int minRSABits, ValidityCheckingMode validityCheckingMode,
-    NetscapeStepUpPolicy netscapeStepUpPolicy, CRLiteMode crliteMode,
-    const OriginAttributes& originAttributes,
+    CRLiteMode crliteMode, const OriginAttributes& originAttributes,
     const nsTArray<Input>& thirdPartyRootInputs,
     const nsTArray<Input>& thirdPartyIntermediateInputs,
     const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
@@ -88,7 +87,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mCertShortLifetimeInDays(certShortLifetimeInDays),
       mMinRSABits(minRSABits),
       mValidityCheckingMode(validityCheckingMode),
-      mNetscapeStepUpPolicy(netscapeStepUpPolicy),
       mCRLiteMode(crliteMode),
       mOriginAttributes(originAttributes),
       mThirdPartyRootInputs(thirdPartyRootInputs),
@@ -1536,33 +1534,6 @@ Result NSSCertDBTrustDomain::CheckValidityIsAcceptable(
   }
 
   return Success;
-}
-
-Result NSSCertDBTrustDomain::NetscapeStepUpMatchesServerAuth(
-    Time notBefore,
-    /*out*/ bool& matches) {
-  // (new Date("2015-08-23T00:00:00Z")).getTime() / 1000
-  static const Time AUGUST_23_2015 = TimeFromEpochInSeconds(1440288000);
-  // (new Date("2016-08-23T00:00:00Z")).getTime() / 1000
-  static const Time AUGUST_23_2016 = TimeFromEpochInSeconds(1471910400);
-
-  switch (mNetscapeStepUpPolicy) {
-    case NetscapeStepUpPolicy::AlwaysMatch:
-      matches = true;
-      return Success;
-    case NetscapeStepUpPolicy::MatchBefore23August2016:
-      matches = notBefore < AUGUST_23_2016;
-      return Success;
-    case NetscapeStepUpPolicy::MatchBefore23August2015:
-      matches = notBefore < AUGUST_23_2015;
-      return Success;
-    case NetscapeStepUpPolicy::NeverMatch:
-      matches = false;
-      return Success;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unhandled NetscapeStepUpPolicy type");
-  }
-  return Result::FATAL_ERROR_LIBRARY_FAILURE;
 }
 
 void NSSCertDBTrustDomain::ResetAccumulatedState() {

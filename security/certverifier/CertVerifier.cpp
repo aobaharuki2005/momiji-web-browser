@@ -58,7 +58,6 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
                            mozilla::TimeDuration ocspTimeoutSoft,
                            mozilla::TimeDuration ocspTimeoutHard,
                            uint32_t certShortLifetimeInDays,
-                           NetscapeStepUpPolicy netscapeStepUpPolicy,
                            CertificateTransparencyConfig&& ctConfig,
                            CRLiteMode crliteMode,
                            const nsTArray<EnterpriseCert>& thirdPartyCerts)
@@ -67,7 +66,6 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
       mOCSPTimeoutSoft(ocspTimeoutSoft),
       mOCSPTimeoutHard(ocspTimeoutHard),
       mCertShortLifetimeInDays(certShortLifetimeInDays),
-      mNetscapeStepUpPolicy(netscapeStepUpPolicy),
       mCTConfig(std::move(ctConfig)),
       mCRLiteMode(crliteMode),
       mSignatureCache(
@@ -570,10 +568,9 @@ Result CertVerifier::VerifyCert(
           trustEmail, defaultOCSPFetching, mOCSPCache, mSignatureCache.get(),
           mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
           mCertShortLifetimeInDays, MIN_RSA_BITS_WEAK,
-          ValidityCheckingMode::CheckingOff, NetscapeStepUpPolicy::NeverMatch,
-          mCRLiteMode, originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
-          nullptr);
+          ValidityCheckingMode::CheckingOff, mCRLiteMode, originAttributes,
+          mThirdPartyRootInputs, mThirdPartyIntermediateInputs,
+          extraCertificates, builtChain, nullptr, nullptr);
       rv = BuildCertChain(
           trustDomain, certDER, time, EndEntityOrCA::MustBeEndEntity,
           KeyUsage::digitalSignature, KeyPurposeId::id_kp_clientAuth,
@@ -604,10 +601,9 @@ Result CertVerifier::VerifyCert(
             trustSSL, evOCSPFetching, mOCSPCache, mSignatureCache.get(),
             mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
             mCertShortLifetimeInDays, MIN_RSA_BITS,
-            ValidityCheckingMode::CheckForEV, mNetscapeStepUpPolicy,
-            mCRLiteMode, originAttributes, mThirdPartyRootInputs,
-            mThirdPartyIntermediateInputs, extraCertificates, builtChain,
-            pinningTelemetryInfo, hostname);
+            ValidityCheckingMode::CheckForEV, mCRLiteMode, originAttributes,
+            mThirdPartyRootInputs, mThirdPartyIntermediateInputs,
+            extraCertificates, builtChain, pinningTelemetryInfo, hostname);
         rv = BuildCertChainForOneKeyUsage(
             trustDomain, certDER, time,
             KeyUsage::digitalSignature,  // (EC)DHE
@@ -667,10 +663,9 @@ Result CertVerifier::VerifyCert(
             trustSSL, defaultOCSPFetching, mOCSPCache, mSignatureCache.get(),
             mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
             mCertShortLifetimeInDays, keySizeOptions[i],
-            ValidityCheckingMode::CheckingOff, mNetscapeStepUpPolicy,
-            mCRLiteMode, originAttributes, mThirdPartyRootInputs,
-            mThirdPartyIntermediateInputs, extraCertificates, builtChain,
-            pinningTelemetryInfo, hostname);
+            ValidityCheckingMode::CheckingOff, mCRLiteMode, originAttributes,
+            mThirdPartyRootInputs, mThirdPartyIntermediateInputs,
+            extraCertificates, builtChain, pinningTelemetryInfo, hostname);
         rv = BuildCertChainForOneKeyUsage(
             trustDomain, certDER, time,
             KeyUsage::digitalSignature,  //(EC)DHE
@@ -730,10 +725,9 @@ Result CertVerifier::VerifyCert(
           trustType, defaultOCSPFetching, mOCSPCache, mSignatureCache.get(),
           mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
           mCertShortLifetimeInDays, MIN_RSA_BITS_WEAK,
-          ValidityCheckingMode::CheckingOff, mNetscapeStepUpPolicy, mCRLiteMode,
-          originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
-          nullptr);
+          ValidityCheckingMode::CheckingOff, mCRLiteMode, originAttributes,
+          mThirdPartyRootInputs, mThirdPartyIntermediateInputs,
+          extraCertificates, builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time, EndEntityOrCA::MustBeCA,
                           KeyUsage::keyCertSign, purpose,
                           CertPolicyId::anyPolicy, stapledOCSPResponse);
@@ -749,10 +743,9 @@ Result CertVerifier::VerifyCert(
           trustEmail, defaultOCSPFetching, mOCSPCache, mSignatureCache.get(),
           mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
           mCertShortLifetimeInDays, MIN_RSA_BITS_WEAK,
-          ValidityCheckingMode::CheckingOff, NetscapeStepUpPolicy::NeverMatch,
-          mCRLiteMode, originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
-          nullptr);
+          ValidityCheckingMode::CheckingOff, mCRLiteMode, originAttributes,
+          mThirdPartyRootInputs, mThirdPartyIntermediateInputs,
+          extraCertificates, builtChain, nullptr, nullptr);
       rv = BuildCertChain(
           trustDomain, certDER, time, EndEntityOrCA::MustBeEndEntity,
           KeyUsage::digitalSignature, KeyPurposeId::id_kp_emailProtection,
@@ -778,10 +771,9 @@ Result CertVerifier::VerifyCert(
           trustEmail, defaultOCSPFetching, mOCSPCache, mSignatureCache.get(),
           mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
           mCertShortLifetimeInDays, MIN_RSA_BITS_WEAK,
-          ValidityCheckingMode::CheckingOff, NetscapeStepUpPolicy::NeverMatch,
-          mCRLiteMode, originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
-          nullptr);
+          ValidityCheckingMode::CheckingOff, mCRLiteMode, originAttributes,
+          mThirdPartyRootInputs, mThirdPartyIntermediateInputs,
+          extraCertificates, builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::keyEncipherment,  // RSA
