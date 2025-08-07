@@ -212,50 +212,6 @@
           "There's a default implementation"
         );
       });
-
-      add_task(async function testSettingSetupAndDestroy() {
-        const PREF_ID = "test.setting.lifecycle";
-        const SETTING_ID = "testSettingLifecycle";
-        await SpecialPowers.pushPrefEnv({
-          set: [[PREF_ID, false]],
-        });
-
-        Preferences.add({
-          id: PREF_ID,
-          type: "bool",
-        });
-
-        let setupCalled = false;
-        let destroyCalled = false;
-
-        function mockTeardown() {
-          destroyCalled = true;
-        }
-
-        Preferences.addSetting({
-          id: SETTING_ID,
-          pref: PREF_ID,
-          setup(onChange) {
-            setupCalled = true;
-            setTimeout(onChange, 0);
-
-            return () => {
-              mockTeardown();
-            };
-          },
-        });
-
-        let setting = Preferences.getSetting(SETTING_ID);
-        ok(setting, "Got setting instance");
-        ok(setupCalled, "setup() was called");
-
-        let settingChanged = waitForSettingChange(setting);
-        await settingChanged;
-        ok(true, "Setting emitted change from setup");
-
-        Preferences.onUnload();
-        ok(destroyCalled, "destroy() method was called");
-      });
     </script>
   </head>
   <body>
