@@ -18531,26 +18531,20 @@ void CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir) {
   Register temp1 = ToTempRegisterOrInvalid(lir->temp1());
   AnyRegister out = ToAnyRegister(lir->output());
 
-  const MLoadUnboxedScalar* mir = lir->mir();
-
-  Scalar::Type storageType = mir->storageType();
+  Scalar::Type storageType = lir->mir()->storageType();
 
   LiveRegisterSet volatileRegs;
   if (MacroAssembler::LoadRequiresCall(storageType)) {
     volatileRegs = liveVolatileRegs(lir);
   }
 
+  auto source = ToAddressOrBaseIndex(elements, lir->index(), storageType);
+
   Label fail;
-  if (lir->index()->isConstant()) {
-    Address source = ToAddress(elements, lir->index(), storageType);
+  source.match([&](const auto& source) {
     masm.loadFromTypedArray(storageType, source, out, temp0, temp1, &fail,
                             volatileRegs);
-  } else {
-    BaseIndex source(elements, ToRegister(lir->index()),
-                     ScaleFromScalarType(storageType));
-    masm.loadFromTypedArray(storageType, source, out, temp0, temp1, &fail,
-                            volatileRegs);
-  }
+  });
 
   if (fail.used()) {
     bailoutFrom(&fail, lir->snapshot());
@@ -18561,18 +18555,11 @@ void CodeGenerator::visitLoadUnboxedInt64(LLoadUnboxedInt64* lir) {
   Register elements = ToRegister(lir->elements());
   Register64 out = ToOutRegister64(lir);
 
-  const MLoadUnboxedScalar* mir = lir->mir();
+  Scalar::Type storageType = lir->mir()->storageType();
 
-  Scalar::Type storageType = mir->storageType();
+  auto source = ToAddressOrBaseIndex(elements, lir->index(), storageType);
 
-  if (lir->index()->isConstant()) {
-    Address source = ToAddress(elements, lir->index(), storageType);
-    masm.load64(source, out);
-  } else {
-    BaseIndex source(elements, ToRegister(lir->index()),
-                     ScaleFromScalarType(storageType));
-    masm.load64(source, out);
-  }
+  source.match([&](const auto& source) { masm.load64(source, out); });
 }
 
 void CodeGenerator::visitLoadDataViewElement(LLoadDataViewElement* lir) {
@@ -18583,8 +18570,7 @@ void CodeGenerator::visitLoadDataViewElement(LLoadDataViewElement* lir) {
   Register64 temp64 = ToTempRegister64OrInvalid(lir->temp2());
   AnyRegister out = ToAnyRegister(lir->output());
 
-  const MLoadDataViewElement* mir = lir->mir();
-  Scalar::Type storageType = mir->storageType();
+  Scalar::Type storageType = lir->mir()->storageType();
 
   LiveRegisterSet volatileRegs;
   if (MacroAssembler::LoadRequiresCall(storageType)) {
@@ -18868,23 +18854,18 @@ void CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir) {
   Register temp = ToTempRegisterOrInvalid(lir->temp0());
   const LAllocation* value = lir->value();
 
-  const MStoreUnboxedScalar* mir = lir->mir();
-
-  Scalar::Type writeType = mir->writeType();
+  Scalar::Type writeType = lir->mir()->writeType();
 
   LiveRegisterSet volatileRegs;
   if (MacroAssembler::StoreRequiresCall(writeType)) {
     volatileRegs = liveVolatileRegs(lir);
   }
 
-  if (lir->index()->isConstant()) {
-    Address dest = ToAddress(elements, lir->index(), writeType);
+  auto dest = ToAddressOrBaseIndex(elements, lir->index(), writeType);
+
+  dest.match([&](const auto& dest) {
     StoreToTypedArray(masm, writeType, value, dest, temp, volatileRegs);
-  } else {
-    BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromScalarType(writeType));
-    StoreToTypedArray(masm, writeType, value, dest, temp, volatileRegs);
-  }
+  });
 }
 
 template <typename T>
@@ -18905,14 +18886,10 @@ void CodeGenerator::visitStoreUnboxedInt64(LStoreUnboxedInt64* lir) {
   Scalar::Type writeType = lir->mir()->writeType();
   MOZ_ASSERT(Scalar::isBigIntType(writeType));
 
-  if (lir->index()->isConstant()) {
-    Address dest = ToAddress(elements, lir->index(), writeType);
-    StoreToTypedBigIntArray(masm, value, dest);
-  } else {
-    BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromScalarType(writeType));
-    StoreToTypedBigIntArray(masm, value, dest);
-  }
+  auto dest = ToAddressOrBaseIndex(elements, lir->index(), writeType);
+
+  dest.match(
+      [&](const auto& dest) { StoreToTypedBigIntArray(masm, value, dest); });
 }
 
 void CodeGenerator::visitStoreDataViewElement(LStoreDataViewElement* lir) {
