@@ -210,10 +210,10 @@ static void StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone,
   zone->addSizeOfIncludingThis(
       rtStats->mallocSizeOf_, &zStats.zoneObject, &zStats.code,
       &zStats.regexpZone, &zStats.jitZone, &zStats.cacheIRStubs,
-      &zStats.uniqueIdMap, &zStats.initialPropMapTable, &zStats.shapeTables,
-      &rtStats->runtime.atomsMarkBitmaps, &zStats.compartmentObjects,
-      &zStats.crossCompartmentWrappersTables, &zStats.compartmentsPrivateData,
-      &zStats.scriptCountsMap);
+      &zStats.objectFuses, &zStats.uniqueIdMap, &zStats.initialPropMapTable,
+      &zStats.shapeTables, &rtStats->runtime.atomsMarkBitmaps,
+      &zStats.compartmentObjects, &zStats.crossCompartmentWrappersTables,
+      &zStats.compartmentsPrivateData, &zStats.scriptCountsMap);
   zone->bufferAllocator.addSizeOfExcludingThis(&zStats.gcBuffers.usedBytes,
                                                &zStats.gcBuffers.freeBytes,
                                                &zStats.gcBuffers.adminBytes);

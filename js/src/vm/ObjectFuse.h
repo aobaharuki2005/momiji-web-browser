@@ -8,6 +8,7 @@
 #define vm_ObjectFuse_h
 
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
 #include "jit/InvalidationScriptSet.h"
@@ -237,6 +238,8 @@ class ObjectFuse {
 
   const char* getPropertyStateString(PropertyInfo prop) const;
 
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
   // We should sweep ObjectFuseMap entries based on the key (the object) but
   // never based on the ObjectFuse. We do need to trace weak pointers in the
   // DependentIonScriptSets.
@@ -268,6 +271,8 @@ class ObjectFuseMap {
 
   ObjectFuse* getOrCreate(JSContext* cx, NativeObject* obj);
   ObjectFuse* get(NativeObject* obj);
+
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 }  // namespace js

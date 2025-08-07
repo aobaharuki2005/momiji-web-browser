@@ -196,6 +196,19 @@ const char* ObjectFuse::getPropertyStateString(PropertyInfo prop) const {
   MOZ_CRASH("Unreachable");
 }
 
+size_t ObjectFuse::sizeOfIncludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  size_t result = mallocSizeOf(this);
+  if (propertyStateBits_) {
+    result += mallocSizeOf(propertyStateBits_.get());
+  }
+  result += dependencies_.shallowSizeOfExcludingThis(mallocSizeOf);
+  for (auto r = dependencies_.all(); !r.empty(); r.popFront()) {
+    result += r.front().value().sizeOfExcludingThis(mallocSizeOf);
+  }
+  return result;
+}
+
 ObjectFuse* ObjectFuseMap::getOrCreate(JSContext* cx, NativeObject* obj) {
   MOZ_ASSERT(obj->hasObjectFuse());
   auto p = objectFuses_.lookupForAdd(obj);
@@ -213,4 +226,13 @@ ObjectFuse* ObjectFuseMap::get(NativeObject* obj) {
   MOZ_ASSERT(obj->hasObjectFuse());
   auto p = objectFuses_.lookup(obj);
   return p ? p->value().get() : nullptr;
+}
+
+size_t ObjectFuseMap::sizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  size_t result = objectFuses_.sizeOfExcludingThis(mallocSizeOf);
+  for (auto r = objectFuses_.all(); !r.empty(); r.popFront()) {
+    result += r.front().value()->sizeOfIncludingThis(mallocSizeOf);
+  }
+  return result;
 }

@@ -538,7 +538,7 @@ class WeakCache<
   bool has(const Lookup& l) const { return lookup(l).found(); }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-    return map.sizeOfExcludingThis(mallocSizeOf);
+    return map.shallowSizeOfExcludingThis(mallocSizeOf);
   }
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) + map.shallowSizeOfExcludingThis(mallocSizeOf);

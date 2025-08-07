@@ -629,8 +629,8 @@ void Zone::purgeAtomCache() {
 void Zone::addSizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf, size_t* zoneObject, JS::CodeSizes* code,
     size_t* regexpZone, size_t* jitZone, size_t* cacheIRStubs,
-    size_t* uniqueIdMap, size_t* initialPropMapTable, size_t* shapeTables,
-    size_t* atomsMarkBitmaps, size_t* compartmentObjects,
+    size_t* objectFusesArg, size_t* uniqueIdMap, size_t* initialPropMapTable,
+    size_t* shapeTables, size_t* atomsMarkBitmaps, size_t* compartmentObjects,
     size_t* crossCompartmentWrappersTables, size_t* compartmentsPrivateData,
     size_t* scriptCountsMapArg) {
   *zoneObject += mallocSizeOf(this);
@@ -638,6 +638,7 @@ void Zone::addSizeOfIncludingThis(
   if (jitZone_) {
     jitZone_->addSizeOfIncludingThis(mallocSizeOf, code, jitZone, cacheIRStubs);
   }
+  *objectFusesArg += objectFuses.sizeOfExcludingThis(mallocSizeOf);
   *uniqueIdMap += uniqueIds().shallowSizeOfExcludingThis(mallocSizeOf);
   shapeZone().addSizeOfExcludingThis(mallocSizeOf, initialPropMapTable,
                                      shapeTables);
