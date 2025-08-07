@@ -723,7 +723,7 @@ export class RemoteSettingsExperimentLoader {
     // The callbacks will be called soon after the timer is registered
     lazy.timerManager.registerTimer(
       TIMER_NAME,
-      () => this.updateRecipes("timer", { forceSync: true }),
+      () => this.updateRecipes("timer"),
       this.intervalInSeconds
     );
     lazy.log.debug("Registered update timer");
