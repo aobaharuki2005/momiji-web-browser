@@ -228,6 +228,12 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   static RegisterOrInt32 ToRegisterOrInt32(const LAllocation* allocation);
 
+  using AddressOrBaseIndex = mozilla::Variant<Address, BaseIndex>;
+
+  static AddressOrBaseIndex ToAddressOrBaseIndex(Register elements,
+                                                 const LAllocation* index,
+                                                 Scalar::Type type);
+
 #ifdef DEBUG
   void emitAssertArgumentsSliceBounds(const RegisterOrInt32& begin,
                                       const RegisterOrInt32& count,
@@ -294,14 +300,14 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   IonScriptCounts* maybeCreateScriptCounts();
 
-  template <typename InstructionWithMaybeTrapSite, class AddressOrBaseIndex>
+  template <typename InstructionWithMaybeTrapSite, class AddressOrBaseIndexT>
   void emitWasmValueLoad(InstructionWithMaybeTrapSite* ins, MIRType type,
-                         MWideningOp wideningOp, AddressOrBaseIndex addr,
+                         MWideningOp wideningOp, AddressOrBaseIndexT addr,
                          AnyRegister dst);
-  template <typename InstructionWithMaybeTrapSite, class AddressOrBaseIndex>
+  template <typename InstructionWithMaybeTrapSite, class AddressOrBaseIndexT>
   void emitWasmValueStore(InstructionWithMaybeTrapSite* ins, MIRType type,
                           MNarrowingOp narrowingOp, AnyRegister src,
-                          AddressOrBaseIndex addr);
+                          AddressOrBaseIndexT addr);
 
   void testValueTruthyForType(JSValueType type, ScratchTagScope& tag,
                               const ValueOperand& value, Register tempToUnbox,
