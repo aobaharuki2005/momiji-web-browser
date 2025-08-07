@@ -29,6 +29,7 @@ struct CompilationDependency : public TempObject {
     StringPrototypeSymbols,
     EmulatesUndefined,
     ArrayExceedsInt32Length,
+    ObjectFuseProperty,
     Limit
   };
 

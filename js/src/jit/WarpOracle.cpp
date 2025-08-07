@@ -874,6 +874,48 @@ bool WarpOracle::addFuseDependency(RealmFuses::FuseIndex fuseIndex,
   }
 }
 
+class ObjectPropertyFuseDependency final : public CompilationDependency {
+  ObjectFuse* fuse_;
+  uint32_t expectedGeneration_;
+  uint32_t propSlot_;
+
+ public:
+  ObjectPropertyFuseDependency(ObjectFuse* fuse, uint32_t expectedGeneration,
+                               uint32_t propSlot)
+      : CompilationDependency(CompilationDependency::Type::ObjectFuseProperty),
+        fuse_(fuse),
+        expectedGeneration_(expectedGeneration),
+        propSlot_(propSlot) {}
+
+  virtual bool registerDependency(JSContext* cx,
+                                  const IonScriptKey& ionScript) override {
+    MOZ_ASSERT(checkDependency(cx));
+    return fuse_->addDependency(propSlot_, ionScript);
+  }
+
+  virtual CompilationDependency* clone(TempAllocator& alloc) const override {
+    return new (alloc.fallible())
+        ObjectPropertyFuseDependency(fuse_, expectedGeneration_, propSlot_);
+  }
+
+  virtual bool checkDependency(JSContext* cx) const override {
+    return fuse_->checkPropertyIsConstant(expectedGeneration_, propSlot_);
+  }
+
+  virtual HashNumber hash() const override {
+    return mozilla::HashGeneric(type, fuse_, expectedGeneration_, propSlot_);
+  }
+  virtual bool operator==(const CompilationDependency& dep) const override {
+    if (dep.type != type) {
+      return false;
+    }
+    auto& other = static_cast<const ObjectPropertyFuseDependency&>(dep);
+    return fuse_ == other.fuse_ &&
+           expectedGeneration_ == other.expectedGeneration_ &&
+           propSlot_ == other.propSlot_;
+  }
+};
+
 AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
                                                   BytecodeLocation loc) {
   // Do one of the following:
@@ -1060,6 +1102,28 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
           return abort(AbortReason::Alloc);
         }
         if (!stillValid) {
+          hasInvalidFuseGuard = true;
+        }
+        break;
+      }
+      case CacheOp::GuardObjectFuseProperty: {
+        auto args = reader.argsForGuardObjectFuseProperty();
+        ObjectFuse* fuse = reinterpret_cast<ObjectFuse*>(
+            stubInfo->getStubRawWord(stubData, args.objFuseOffset));
+        uint32_t generation =
+            stubInfo->getStubRawInt32(stubData, args.expectedGenerationOffset);
+        uint32_t propIndex =
+            stubInfo->getStubRawInt32(stubData, args.propIndexOffset);
+        uint32_t propMask =
+            stubInfo->getStubRawInt32(stubData, args.propMaskOffset);
+        uint32_t propSlot =
+            ObjectFuse::propertySlotFromIndexAndMask(propIndex, propMask);
+        ObjectPropertyFuseDependency dep(fuse, generation, propSlot);
+        if (dep.checkDependency(cx_)) {
+          if (!oracle_->mirGen().tracker.addDependency(alloc_, dep)) {
+            return abort(AbortReason::Alloc);
+          }
+        } else {
           hasInvalidFuseGuard = true;
         }
         break;

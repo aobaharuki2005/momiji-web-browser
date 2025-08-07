@@ -282,7 +282,7 @@
 
 - name: GuardObjectFuseProperty
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     # These two fields are used in debug builds to check the object matches

@@ -26,6 +26,7 @@
 #include "jit/WarpSnapshot.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/BytecodeLocation.h"
+#include "vm/ObjectFuse.h"
 #include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #include "wasm/WasmCode.h"
 
@@ -168,6 +169,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   }
   size_t* fuseStubField(uint32_t offset) {
     return reinterpret_cast<size_t*>(readStubWord(offset));
+  }
+  ObjectFuse* objectFuseStubField(uint32_t offset) {
+    return reinterpret_cast<ObjectFuse*>(readStubWord(offset));
   }
   gc::Heap allocSiteInitialHeapField(uint32_t offset) {
     uintptr_t word = readStubWord(offset);
@@ -485,6 +489,14 @@ bool WarpCacheIRTranspiler::emitGuardFuse(RealmFuses::FuseIndex fuseIndex) {
       add(ins);
       return true;
   }
+}
+
+bool WarpCacheIRTranspiler::emitGuardObjectFuseProperty(
+    ObjOperandId objId, uint32_t objFuseOwnerOffset, uint32_t objFuseOffset,
+    uint32_t expectedGenerationOffset, uint32_t propIndexOffset,
+    uint32_t propMaskOffset, bool canUseFastPath) {
+  // A compilation dependency was added by WarpOracle.
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitGuardMultipleShapes(ObjOperandId objId,
