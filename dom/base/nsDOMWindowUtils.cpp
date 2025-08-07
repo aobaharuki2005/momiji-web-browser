@@ -18,6 +18,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/InputTaskManager.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -149,6 +150,10 @@ using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla::gfx;
+
+static LazyLogModule sApzZoomToFocusedInputLog("apz.zoomtofocusedinput");
+#define APZZTFI_LOG(...) \
+  MOZ_LOG(sApzZoomToFocusedInputLog, LogLevel::Debug, (__VA_ARGS__))
 
 class gfxContext;
 
@@ -3181,6 +3186,7 @@ static CaretInfo GetCaretContentAndBounds(
 NS_IMETHODIMP
 nsDOMWindowUtils::ZoomToFocusedInput() {
   if (!Preferences::GetBool("apz.zoom-to-focused-input.enabled")) {
+    APZZTFI_LOG("disabled by pref");
     return NS_OK;
   }
 
@@ -3199,6 +3205,7 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
 
   const RefPtr<Element> element = nsFocusManager::GetFocusedElementStatic();
   if (!element) {
+    APZZTFI_LOG("no focused element");
     return NS_OK;
   }
 
@@ -3211,6 +3218,9 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
   ScrollContainerFrame* rootScrollContainerFrame =
       presShell->GetRootScrollContainerFrame();
   auto caretInfo = GetCaretContentAndBounds(rootScrollContainerFrame, element);
+  APZZTFI_LOG("calculated rect %s (caret rect %s)",
+              ToString(caretInfo.textFrameBoundsRelativeToRootScroller).c_str(),
+              ToString(caretInfo.caretRectRelativeToTextFrame).c_str());
 
   // Hold a strong reference of the target content.
   RefPtr<nsIContent> refContent = caretInfo.textContent;
@@ -3268,6 +3278,9 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
       break;
     }
   }
+  APZZTFI_LOG("zooming to rect %s with flags %d, waitForRefresh=%d",
+              ToString(caretInfo.textFrameBoundsRelativeToRootScroller).c_str(),
+              flags, waitForRefresh);
   if (waitForRefresh) {
     waitForRefresh = false;
     if (nsPresContext* presContext = presShell->GetPresContext()) {
