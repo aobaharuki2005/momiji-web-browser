@@ -1270,7 +1270,7 @@ class nsGenericHTMLFormControlElementWithState
   /**
    * https://html.spec.whatwg.org/#popover-target-attribute-activation-behavior
    */
-  MOZ_CAN_RUN_SCRIPT void HandlePopoverTargetAction();
+  MOZ_CAN_RUN_SCRIPT void HandlePopoverTargetAction(mozilla::dom::Element*);
 
   /**
    * Get the presentation state for a piece of content, or create it if it does

@@ -2823,12 +2823,34 @@ void nsGenericHTMLFormControlElementWithState::SetPopoverTargetElement(
   ExplicitlySetAttrElement(nsGkAtoms::popovertarget, aElement);
 }
 
-void nsGenericHTMLFormControlElementWithState::HandlePopoverTargetAction() {
-  RefPtr<nsGenericHTMLElement> target = GetEffectivePopoverTargetElement();
-  if (!target) {
+// https://html.spec.whatwg.org/multipage/#popover-target-attribute-activation-behavior
+void nsGenericHTMLFormControlElementWithState::HandlePopoverTargetAction(
+    mozilla::dom::Element* aEventTarget) {
+  // 1. Let popover be node's popover target element.
+  RefPtr<nsGenericHTMLElement> popover = GetEffectivePopoverTargetElement();
+
+  // 2. If popover is null, then return.
+  if (!popover) {
     return;
   }
 
+  // 3. If eventTarget is a shadow-including inclusive descendant of popover and
+  // popover is a shadow-including descendant of node, then return.
+  if (aEventTarget &&
+      aEventTarget->IsShadowIncludingInclusiveDescendantOf(popover) &&
+      popover->IsShadowIncludingDescendantOf(this)) {
+    return;
+  }
+
+  // 4. If node's popovertargetaction attribute is in the show state and
+  // popover's popover visibility state is showing, then return.
+  // 5. If node's popovertargetaction attribute is in the hide state and
+  // popover's popover visibility state is hidden, then return.
+  // 6. If popover's popover visibility state is showing, then run the hide
+  // popover algorithm given popover, true, true, false, and node.
+  // 7. Otherwise, if popover's popover visibility state is hidden and the
+  // result of running check popover validity given popover, false, false, and
+  // null is true, then run show popover given popover, false, and node.
   auto action = PopoverTargetAction::Toggle;
   if (const nsAttrValue* value =
           GetParsedAttr(nsGkAtoms::popovertargetaction)) {
@@ -2838,15 +2860,15 @@ void nsGenericHTMLFormControlElementWithState::HandlePopoverTargetAction() {
 
   bool canHide = action == PopoverTargetAction::Hide ||
                  action == PopoverTargetAction::Toggle;
-  bool shouldHide = canHide && target->IsPopoverOpen();
+  bool shouldHide = canHide && popover->IsPopoverOpen();
   bool canShow = action == PopoverTargetAction::Show ||
                  action == PopoverTargetAction::Toggle;
-  bool shouldShow = canShow && !target->IsPopoverOpen();
+  bool shouldShow = canShow && !popover->IsPopoverOpen();
 
   if (shouldHide) {
-    target->HidePopover(IgnoreErrors());
+    popover->HidePopover(IgnoreErrors());
   } else if (shouldShow) {
-    target->ShowPopoverInternal(this, IgnoreErrors());
+    popover->ShowPopoverInternal(this, IgnoreErrors());
   }
 }
 
