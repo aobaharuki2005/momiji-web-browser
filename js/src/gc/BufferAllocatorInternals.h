@@ -209,6 +209,7 @@ struct AllocSpace {
   static constexpr size_t SizeBytes = Size;
   static constexpr size_t GranularityBytes = Granularity;
 
+  static constexpr uintptr_t AddressMask = SizeBytes - 1;
   static constexpr size_t MaxAllocCount = SizeBytes / GranularityBytes;
 
   using PerAllocBitmap = mozilla::BitSet<MaxAllocCount>;
@@ -231,6 +232,105 @@ struct AllocSpace {
   static constexpr uintptr_t firstAllocOffset() {
     return RoundUp(sizeof(Derived), GranularityBytes);
   }
+
+  void setAllocated(void* alloc, size_t bytes, bool allocated);
+  void updateEndOffset(void* alloc, size_t oldBytes, size_t newBytes);
+
+  bool isAllocated(const void* alloc) const {
+    size_t bit = ptrToIndex(alloc);
+    return allocStartBitmap.ref()[bit];
+  }
+
+  bool isAllocated(uintptr_t offset) const {
+    size_t bit = offsetToIndex(offset);
+    return allocStartBitmap.ref()[bit];
+  }
+
+  size_t allocBytes(const void* alloc) const;
+
+  void setNurseryOwned(void* alloc, bool nurseryOwned) {
+    MOZ_ASSERT(isAllocated(alloc));
+    size_t bit = ptrToIndex(alloc);
+    nurseryOwnedBitmap.ref()[bit] = nurseryOwned;
+  }
+
+  bool isNurseryOwned(const void* alloc) const {
+    MOZ_ASSERT(isAllocated(alloc));
+    size_t bit = ptrToIndex(alloc);
+    return nurseryOwnedBitmap.ref()[bit];
+  }
+
+  bool setMarked(void* alloc);
+
+  void setUnmarked(void* alloc) {
+    MOZ_ASSERT(isAllocated(alloc));
+    size_t bit = ptrToIndex(alloc);
+    markBits.ref().setBit(bit, false);
+  }
+
+  bool isMarked(const void* alloc) const {
+    MOZ_ASSERT(isAllocated(alloc));
+    size_t bit = ptrToIndex(alloc);
+    return markBits.ref().getBit(bit);
+  }
+
+  // Find next/previous allocations from |offset|. Return SizeBytes on failure.
+  size_t findNextAllocated(uintptr_t offset) const;
+  size_t findPrevAllocated(uintptr_t offset) const;
+
+  // Find next/previous free region from a start/end address.
+  using FreeRegion = BufferAllocator::FreeRegion;
+  FreeRegion* findFollowingFreeRegion(uintptr_t startAddr);
+  FreeRegion* findPrecedingFreeRegion(uintptr_t endAddr);
+
+ protected:
+  AllocSpace() {
+    MOZ_ASSERT(allocStartBitmap.ref().IsEmpty());
+    MOZ_ASSERT(allocEndBitmap.ref().IsEmpty());
+    MOZ_ASSERT(nurseryOwnedBitmap.ref().IsEmpty());
+  }
+
+  uintptr_t startAddress() const {
+    return uintptr_t(static_cast<const Derived*>(this));
+  }
+
+  template <size_t Divisor = GranularityBytes, size_t Align = Divisor>
+  size_t ptrToIndex(const void* alloc) const {
+    MOZ_ASSERT((uintptr_t(alloc) & ~AddressMask) == startAddress());
+    uintptr_t offset = uintptr_t(alloc) & AddressMask;
+    return offsetToIndex<Divisor, Align>(offset);
+  }
+
+  template <size_t Divisor = GranularityBytes, size_t Align = Divisor>
+  static size_t offsetToIndex(uintptr_t offset) {
+    MOZ_ASSERT(isValidOffset(offset));
+    MOZ_ASSERT(offset % Align == 0);
+    return offset / Divisor;
+  }
+
+  const void* ptrFromOffset(uintptr_t offset) const {
+    MOZ_ASSERT(isValidOffset(offset));
+    MOZ_ASSERT(offset % GranularityBytes == 0);
+    return reinterpret_cast<void*>(startAddress() + offset);
+  }
+
+  size_t findEndBit(size_t startIndex) const {
+    MOZ_ASSERT(startIndex < MaxAllocCount);
+    if (startIndex + 1 == MaxAllocCount) {
+      return MaxAllocCount;
+    }
+    size_t endIndex = allocEndBitmap.ref().FindNext(startIndex + 1);
+    if (endIndex == SIZE_MAX) {
+      return MaxAllocCount;
+    }
+    return endIndex;
+  }
+
+#ifdef DEBUG
+  static bool isValidOffset(uintptr_t offset) {
+    return offset >= firstAllocOffset() && offset < SizeBytes;
+  }
+#endif
 };
 
 // A chunk containing medium buffer allocations for a single zone. Unlike
@@ -284,82 +384,15 @@ struct BufferChunk
   explicit BufferChunk(Zone* zone);
   ~BufferChunk();
 
-  void setAllocated(void* alloc, size_t bytes, bool allocated);
-  bool isAllocated(const void* alloc) const;
-  bool isAllocated(uintptr_t offset) const;
-  void updateEndOffset(void* alloc, size_t oldBytes, size_t newBytes);
-
-  void setNurseryOwned(void* alloc, bool nurseryOwned);
-  bool isNurseryOwned(const void* alloc) const;
-
   void setSmallBufferRegion(void* alloc, bool smallAlloc);
   bool isSmallBufferRegion(const void* alloc) const;
-
-  size_t allocBytes(const void* alloc) const;
-
-  bool setMarked(void* alloc);
-  void setUnmarked(void* alloc);
-  bool isMarked(const void* alloc) const;
-
-  // Find next/previous allocations from |offset|. Return ChunkSize on failure.
-  size_t findNextAllocated(uintptr_t offset) const;
-  size_t findPrevAllocated(uintptr_t offset) const;
-
-  // Find next/previous free region from a start/end address.
-  using FreeRegion = BufferAllocator::FreeRegion;
-  FreeRegion* findFollowingFreeRegion(uintptr_t startAddr);
-  FreeRegion* findPrecedingFreeRegion(uintptr_t endAddr);
 
   size_t sizeClassForAvailableLists() const;
 
   bool isPointerWithinAllocation(void* ptr) const;
-
- private:
-  template <size_t Divisor = MinMediumAllocSize, size_t Align = Divisor>
-  size_t ptrToIndex(const void* alloc) const {
-    MOZ_ASSERT((uintptr_t(alloc) & ~ChunkMask) == uintptr_t(this));
-    uintptr_t offset = uintptr_t(alloc) & ChunkMask;
-    return offsetToIndex<Divisor, Align>(offset);
-  }
-
-  template <size_t Divisor = MinMediumAllocSize, size_t Align = Divisor>
-  static size_t offsetToIndex(uintptr_t offset) {
-    MOZ_ASSERT(isValidOffset(offset));
-    MOZ_ASSERT(offset % Align == 0);
-    return offset / Divisor;
-  }
-
-  const void* ptrFromOffset(uintptr_t offset) const {
-    MOZ_ASSERT(isValidOffset(offset));
-    MOZ_ASSERT(offset % MediumAllocGranularity == 0);
-    return reinterpret_cast<void*>(uintptr_t(this) + offset);
-  }
-
-  size_t findEndBit(size_t startIndex) const {
-    MOZ_ASSERT(startIndex < MaxAllocCount);
-    if (startIndex + 1 == MaxAllocCount) {
-      return MaxAllocCount;
-    }
-    size_t endIndex = allocEndBitmap.ref().FindNext(startIndex + 1);
-    if (endIndex == SIZE_MAX) {
-      return MaxAllocCount;
-    }
-    return endIndex;
-  }
-
-#ifdef DEBUG
-  static bool isValidOffset(uintptr_t offset);
-#endif
 };
 
 constexpr size_t FirstMediumAllocOffset = BufferChunk::firstAllocOffset();
-
-#ifdef DEBUG
-/* static */
-inline bool BufferChunk::isValidOffset(uintptr_t offset) {
-  return offset >= FirstMediumAllocOffset && offset < ChunkSize;
-}
-#endif
 
 // A sub-region backed by a medium allocation which contains small buffer
 // allocations.
@@ -382,46 +415,10 @@ struct SmallBufferRegion : public AllocSpace<SmallBufferRegion, SmallRegionSize,
     return region;
   }
 
-  SmallBufferRegion();
-
-  const void* ptrFromOffset(uintptr_t offset) const;
-
-  void setAllocated(void* alloc, size_t bytes, bool allocated);
-  bool isAllocated(const void* alloc) const;
-  bool isAllocated(uintptr_t offset) const;
-
-  void setNurseryOwned(void* alloc, bool nurseryOwned);
-  bool isNurseryOwned(const void* alloc) const;
-
   void setHasNurseryOwnedAllocs(bool value);
   bool hasNurseryOwnedAllocs() const;
 
-  size_t allocBytes(const void* alloc) const;
-
-  bool setMarked(void* alloc);
-  void setUnmarked(void* alloc);
-  bool isMarked(const void* alloc) const;
-
-  size_t findNextAllocated(uintptr_t offset) const;
-  size_t findPrevAllocated(uintptr_t offset) const;
-
   bool isPointerWithinAllocation(void* ptr) const;
-
- private:
-  size_t ptrToIndex(const void* alloc) const;
-  size_t offsetToIndex(uintptr_t offset) const;
-
-  size_t findEndBit(size_t startIndex) const {
-    MOZ_ASSERT(startIndex < MaxAllocCount);
-    if (startIndex + 1 == MaxAllocCount) {
-      return MaxAllocCount;
-    }
-    size_t endIndex = allocEndBitmap.ref().FindNext(startIndex + 1);
-    if (endIndex == SIZE_MAX) {
-      return MaxAllocCount;
-    }
-    return endIndex;
-  }
 };
 
 constexpr size_t FirstSmallAllocOffset = SmallBufferRegion::firstAllocOffset();

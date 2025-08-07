@@ -235,6 +235,9 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   using MaybeLock = mozilla::Maybe<AutoLock>;
 
  private:
+  template <typename Derived, size_t SizeBytes, size_t GranularityBytes>
+  friend struct AllocSpace;
+
   using BufferChunkList = SlimLinkedList<BufferChunk>;
 
   struct FreeRegion;
