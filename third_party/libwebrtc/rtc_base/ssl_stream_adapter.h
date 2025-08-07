@@ -245,11 +245,12 @@ class SSLStreamAdapter : public StreamInterface {
   static bool IsAcceptableCipher(int cipher, KeyType key_type);
   static bool IsAcceptableCipher(absl::string_view cipher, KeyType key_type);
 
-  static std::set<uint16_t> GetSupportedEphemeralKeyExchangeCipherGroups();
+  static std::set<uint16_t> GetSupportedEphemeralKeyExchangeCipherGroups()
+      { return {}; }
   static std::optional<std::string> GetEphemeralKeyExchangeCipherGroupName(
       uint16_t);
   static std::vector<uint16_t> GetDefaultEphemeralKeyExchangeCipherGroups(
-      const FieldTrialsView* field_trials);
+      const FieldTrialsView* field_trials) { return {}; }
 
   ////////////////////////////////////////////////////////////////////////////
   // Testing only member functions
