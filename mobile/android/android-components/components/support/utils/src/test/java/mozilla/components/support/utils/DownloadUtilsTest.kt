@@ -87,6 +87,8 @@ class DownloadUtilsTest {
 
             assertContentDisposition("success.html", "$contentDisposition; filename*=utf-8''success.html; foo")
             assertContentDisposition("success.html", "$contentDisposition; filename*=utf-8''success.html")
+            assertContentDisposition("Firefox v9.apk", "$contentDisposition; filename=\"Firefox v9.apk\"; filename*=utf-8''Firefox v9.apk")
+            assertContentDisposition("Firefox (v9).apk", "$contentDisposition; filename=\"Firefox (v9).apk\"; filename*=utf-8''Firefox%20%28v9%29.apk")
         }
     }
 
