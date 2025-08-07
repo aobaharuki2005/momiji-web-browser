@@ -16,9 +16,16 @@
   position: relative;
   container-type: inline-size;
   margin: var(--space-small) var(--space-small) 0;
-  background-color: light-dark(var(--promo-light-background), var(--promo-dark-background));
-  color: light-dark(var(--promo-light-text), var(--promo-dark-text));
   outline: 1px dashed light-dark(var(--promo-light-icon-border), var(--promo-dark-icon-border));
+
+  @media not (prefers-contrast) {
+    background-color: light-dark(var(--promo-light-background), var(--promo-dark-background));
+    color: light-dark(var(--promo-light-text), var(--promo-dark-text));
+  }
+
+  @media (prefers-contrast) {
+    outline-color: var(--border-color);
+  }
 
   &[dragactive] {
     outline-style: solid;
@@ -52,6 +59,10 @@
   border: var(--border-width) dashed light-dark(var(--promo-light-icon-border), var(--promo-dark-icon-border));
   border-radius: var(--border-radius-medium);
 
+  @media (prefers-contrast) {
+    border-color: var(--border-color);
+  }
+
   &.foxylight {
     display: flex;
 
@@ -71,6 +82,10 @@
   > img {
     -moz-context-properties: fill;
     fill: light-dark(#9059ff, #f4f0ff);
+
+    @media (prefers-contrast) {
+      fill: currentColor;
+    }
   }
 }
 
@@ -79,5 +94,8 @@
   position: absolute;
   inset-block-start: var(--space-medium);
   inset-inline-end: var(--space-medium);
-  color: light-dark(var(--promo-light-text), var(--promo-dark-text));
+
+  @media not (prefers-contrast) {
+    color: light-dark(var(--promo-light-text), var(--promo-dark-text));
+  }
 }
