@@ -12419,6 +12419,7 @@ const TASK_TYPE = {
   COMPLETED: "completed"
 };
 const USER_ACTION_TYPES = {
+  LIST_COPY: "list_copy",
   LIST_CREATE: "list_create",
   LIST_EDIT: "list_edit",
   LIST_DELETE: "list_delete",
@@ -12784,6 +12785,33 @@ function Lists({
       }
     }));
   }
+  function handleCopyListToClipboard() {
+    const currentList = lists[selected];
+    if (!currentList) {
+      return;
+    }
+    const {
+      label,
+      tasks = [],
+      completed = []
+    } = currentList;
+    const uncompleted = tasks.filter(task => !task.completed);
+    const currentCompleted = tasks.filter(task => task.completed);
+
+    // In order in include all items, we need to iterate through both current and completed tasks list and mark format all completed tasks accordingly.
+    const formatted = [`List: ${label}`, `---`, ...uncompleted.map(task => `- [ ] ${task.value}`), ...currentCompleted.map(task => `- [x] ${task.value}`), ...completed.map(task => `- [x] ${task.value}`)].join("\n");
+    try {
+      navigator.clipboard.writeText(formatted);
+    } catch (err) {
+      console.error("Copy failed", err);
+    }
+    dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.WIDGETS_LISTS_USER_EVENT,
+      data: {
+        userAction: USER_ACTION_TYPES.LIST_COPY
+      }
+    }));
+  }
   function handleLearnMore() {
     dispatch(actionCreators.OnlyToMain({
       type: actionTypes.OPEN_LINK,
@@ -12833,7 +12861,8 @@ function Lists({
     "data-l10n-id": "newtab-widget-lists-menu-delete",
     onClick: () => handleDeleteList()
   }), /*#__PURE__*/external_React_default().createElement("hr", null), /*#__PURE__*/external_React_default().createElement("panel-item", {
-    "data-l10n-id": "newtab-widget-lists-menu-copy"
+    "data-l10n-id": "newtab-widget-lists-menu-copy",
+    onClick: () => handleCopyListToClipboard()
   }), /*#__PURE__*/external_React_default().createElement("panel-item", {
     "data-l10n-id": "newtab-widget-lists-menu-hide",
     onClick: () => handleHideLists()

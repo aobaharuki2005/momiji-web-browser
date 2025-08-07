@@ -1118,7 +1118,7 @@ newtab:
     type: event
     description: >
       Details which user action has occurred. It can be one of
-      the following: list_create, list_edit, list_delete,
+      the following: list_copy, list_create, list_edit, list_delete,
       task_create, task_edit task_delete and task_completed
     bugs:
       - https://bugzil.la/1979704
@@ -1133,7 +1133,7 @@ newtab:
       newtab_visit_id: *newtab_visit_id
       user_action:
         description: >
-          user action. One of list_create, list_edit, list_delete,
+          user action. One of list_copy, list_create, list_edit, list_delete,
           task_create, task_edit task_delete and task_completed
         type: string
     send_in_pings:

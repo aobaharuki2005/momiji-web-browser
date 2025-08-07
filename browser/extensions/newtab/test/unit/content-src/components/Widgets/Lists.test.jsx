@@ -197,6 +197,62 @@ describe("<Lists>", () => {
     );
   });
 
+  it("should copy the current list to clipboard with correct formatting", () => {
+    // Set up task list with additional "completed" task
+    const task1 = {
+      id: "1",
+      value: "task 1",
+      completed: false,
+      isUrl: false,
+    };
+    const task2 = {
+      id: "2",
+      value: "task 2",
+      completed: true,
+      isUrl: false,
+    };
+
+    mockState.ListsWidget.lists["test-list"].tasks = [task1, task2];
+
+    wrapper = mount(
+      <WrapWithProvider state={mockState}>
+        <Lists dispatch={dispatch} />
+      </WrapWithProvider>
+    );
+
+    const clipboardWriteTextStub = sinon.stub(navigator.clipboard, "writeText");
+
+    // Grab panel-item for copying a list
+    const copyList = wrapper.find("panel-item").at(3);
+    copyList.props().onClick();
+
+    assert.ok(
+      clipboardWriteTextStub.calledOnce,
+      "Expected clipboard.writeText to be called"
+    );
+
+    const [copiedText] = clipboardWriteTextStub.firstCall.args;
+    assert.include(
+      copiedText,
+      "List: test",
+      "Expected list title in copied text"
+    );
+    assert.include(
+      copiedText,
+      "- [ ] task 1",
+      "- [x] task 2",
+      "Expected uncompleted and completed tasks in copied text"
+    );
+
+    // Confirm WIDGETS_LISTS_USER_EVENT telemetry `list_copy` event
+    assert.ok(dispatch.calledOnce);
+    const [copyEvent] = dispatch.lastCall.args;
+    assert.equal(copyEvent.type, at.WIDGETS_LISTS_USER_EVENT);
+    assert.equal(copyEvent.data.userAction, "list_copy");
+
+    clipboardWriteTextStub.restore();
+  });
+
   it("should reorder tasks via reorder event", () => {
     const task1 = {
       id: "1",
