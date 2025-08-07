@@ -8,7 +8,7 @@ let { MockRegistrar } = ChromeUtils.importESModule(
 );
 
 let { DownloadsTaskbar } = ChromeUtils.importESModule(
-  "resource:///modules/DownloadsTaskbar.sys.mjs"
+  "moz-src:///browser/components/downloads/DownloadsTaskbar.sys.mjs"
 );
 
 let gProgress = {};

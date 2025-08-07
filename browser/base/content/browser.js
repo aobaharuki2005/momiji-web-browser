@@ -34,7 +34,8 @@ ChromeUtils.defineESModuleGetters(this, {
   DevToolsSocketStatus:
     "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs",
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
-  DownloadsCommon: "resource:///modules/DownloadsCommon.sys.mjs",
+  DownloadsCommon:
+    "moz-src:///browser/components/downloads/DownloadsCommon.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   ExtensionsUI: "resource:///modules/ExtensionsUI.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",

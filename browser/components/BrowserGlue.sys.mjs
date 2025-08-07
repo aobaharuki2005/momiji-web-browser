@@ -34,7 +34,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Discovery: "resource:///modules/Discovery.sys.mjs",
   DistributionManagement: "resource:///modules/distribution.sys.mjs",
   DownloadsViewableInternally:
-    "resource:///modules/DownloadsViewableInternally.sys.mjs",
+    "moz-src:///browser/components/downloads/DownloadsViewableInternally.sys.mjs",
   ExtensionsUI: "resource:///modules/ExtensionsUI.sys.mjs",
   // FilePickerCrashed is used by the `listeners` object below.
   // eslint-disable-next-line mozilla/valid-lazy

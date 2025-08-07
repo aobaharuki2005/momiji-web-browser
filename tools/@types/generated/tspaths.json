@@ -899,24 +899,6 @@
       "resource:///modules/Discovery.sys.mjs": [
         "browser/modules/Discovery.sys.mjs"
       ],
-      "resource:///modules/DownloadSpamProtection.sys.mjs": [
-        "browser/components/downloads/DownloadSpamProtection.sys.mjs"
-      ],
-      "resource:///modules/DownloadsCommon.sys.mjs": [
-        "browser/components/downloads/DownloadsCommon.sys.mjs"
-      ],
-      "resource:///modules/DownloadsMacFinderProgress.sys.mjs": [
-        "browser/components/downloads/DownloadsMacFinderProgress.sys.mjs"
-      ],
-      "resource:///modules/DownloadsTaskbar.sys.mjs": [
-        "browser/components/downloads/DownloadsTaskbar.sys.mjs"
-      ],
-      "resource:///modules/DownloadsViewUI.sys.mjs": [
-        "browser/components/downloads/DownloadsViewUI.sys.mjs"
-      ],
-      "resource:///modules/DownloadsViewableInternally.sys.mjs": [
-        "browser/components/downloads/DownloadsViewableInternally.sys.mjs"
-      ],
       "resource:///modules/ESEDBReader.sys.mjs": [
         "browser/components/migration/ESEDBReader.sys.mjs"
       ],
