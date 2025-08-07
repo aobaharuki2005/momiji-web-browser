@@ -228,6 +228,12 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   static RegisterOrInt32 ToRegisterOrInt32(const LAllocation* allocation);
 
+  using AddressOrBaseIndex = mozilla::Variant<Address, BaseIndex>;
+
+  static AddressOrBaseIndex ToAddressOrBaseIndex(Register elements,
+                                                 const LAllocation* index,
+                                                 Scalar::Type type);
+
 #ifdef DEBUG
   void emitAssertArgumentsSliceBounds(const RegisterOrInt32& begin,
                                       const RegisterOrInt32& count,

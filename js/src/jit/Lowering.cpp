@@ -5012,9 +5012,9 @@ void LIRGenerator::visitLoadDataViewElement(MLoadDataViewElement* ins) {
 
   MOZ_ASSERT(IsNumberType(ins->type()));
 
-  const LUse elements = useRegister(ins->elements());
-  const LUse index = useRegister(ins->index());
-  const LAllocation littleEndian = useRegisterOrConstant(ins->littleEndian());
+  LUse elements = useRegister(ins->elements());
+  LAllocation index = useRegisterOrIndexConstant(ins->index(), Scalar::Uint8);
+  LAllocation littleEndian = useRegisterOrConstant(ins->littleEndian());
 
   if (Scalar::isBigIntType(ins->storageType())) {
     auto* lir =
@@ -5224,7 +5224,7 @@ void LIRGenerator::visitStoreDataViewElement(MStoreDataViewElement* ins) {
   }
 
   LUse elements = useRegister(ins->elements());
-  LUse index = useRegister(ins->index());
+  LAllocation index = useRegisterOrIndexConstant(ins->index(), Scalar::Uint8);
   LAllocation littleEndian = useRegisterOrConstant(ins->littleEndian());
 
   if (ins->isBigIntWrite()) {
