@@ -34,7 +34,7 @@ Upstream commit: https://webrtc.googlesource.com/src/+/b65c6012cf0512e4713fe4c9c
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 3ebd8ee8e8..b5b06b590f 100644
+index 4c0fc4a8e7..958330219b 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -551,7 +551,6 @@ if (!build_with_chromium) {
