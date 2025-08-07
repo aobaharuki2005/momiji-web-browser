@@ -137,11 +137,11 @@ browser {
         z-index: 1;
       }
       &::after {
-        background: linear-gradient(transparent, var(--in-content-page-background));
+        background: linear-gradient(transparent, var(--background-color-canvas));
         bottom: 0;
       }
       &::before {
-        background: linear-gradient(var(--in-content-page-background), transparent);
+        background: linear-gradient(var(--background-color-canvas), transparent);
         top: 0;
       }
     }

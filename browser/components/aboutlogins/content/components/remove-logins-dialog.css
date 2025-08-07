@@ -21,7 +21,7 @@
   max-width: 660px;
   min-height: 200px;
   margin: auto;
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
   color: var(--text-color);
   box-shadow: var(--logins-dialog-shadow);
   border: var(--logins-dialog-border);

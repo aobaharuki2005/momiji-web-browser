@@ -5,7 +5,7 @@
 @import url("chrome://global/skin/in-content/common.css");
 
 html {
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
 }
 body {
   overflow-x: hidden;

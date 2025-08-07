@@ -17,7 +17,6 @@
    *    browser.display.background_color.dark
    */
 
-  --in-content-page-background: var(--background-color-canvas);
   --in-content-box-border-color: color-mix(in srgb, currentColor 41%, transparent);
   --in-content-box-info-background: light-dark(#f0f0f4, rgba(249, 249, 250, 0.15));
 
@@ -70,7 +69,7 @@
    * this in forced colors mode, as we should be using system colours then.
    */
   :root[dialogroot] {
-    --in-content-page-background: #42414d;
+    --background-color-canvas: #42414d;
   }
 }
 
@@ -102,7 +101,7 @@
 
 :root {
   appearance: none;
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
   color: var(--text-color);
 }
 
@@ -668,7 +667,7 @@ html|*#categories > html|*.category:dir(rtl) {
     transition: none;
     /* We need a true transparent but in HCM this would compute to an actual color,
      * so select the page's background color instead: */
-    border-color: var(--in-content-page-background);
+    border-color: var(--background-color-canvas);
   }
 
   #categories > .category[selected],
@@ -1051,7 +1050,7 @@ input[type="text"][warning]:enabled:not(:focus) {
   .sidebar-footer-link {
     /* We need a true transparent but in HCM this would compute to an actual color,
      * so select the page's background color instead: */
-    border-color: var(--in-content-page-background);
+    border-color: var(--background-color-canvas);
   }
 }
 

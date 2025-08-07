@@ -730,7 +730,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
   static constexpr nscolor kWindowBackground = NS_RGB(28, 27, 34);
   static constexpr nscolor kWindowText = NS_RGB(251, 251, 254);
   switch (aID) {
-    case ColorID::Window:  // --in-content-page-background
+    case ColorID::Window:  // --background-color-canvas
     case ColorID::Background:
     case ColorID::Appworkspace:
     case ColorID::Scrollbar:

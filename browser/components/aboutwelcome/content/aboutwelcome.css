@@ -1085,7 +1085,7 @@ html {
   .onboardingContainer {
     --mr-screen-background-color: buttontext;
     --mr-screen-heading-color: buttonface;
-    background-color: var(--in-content-page-background);
+    background-color: var(--background-color-canvas);
   }
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -1124,7 +1124,7 @@ html {
   position: relative;
 }
 .onboardingContainer .main-content {
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
   border-radius: 20px;
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   display: flex;
@@ -1276,7 +1276,7 @@ html {
   height: 550px;
 }
 .onboardingContainer .screen[pos=center].addons-picker .main-content {
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
   border-radius: 8px;
   box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
   overflow: hidden;
@@ -1713,7 +1713,7 @@ html {
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar {
     border-top: 1px solid var(--text-color);
-    background-color: var(--in-content-page-background);
+    background-color: var(--background-color-canvas);
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator {
     background-color: var(--color-accent-primary);
@@ -2934,7 +2934,7 @@ html {
 @media (prefers-contrast: no-preference) {
   .onboardingContainer #content-tiles-container button.tile-header,
   .onboardingContainer button.content-tiles-header {
-    background-color: var(--in-content-page-background);
+    background-color: var(--background-color-canvas);
     border-color: var(--in-content-border-color);
   }
 }
@@ -3141,7 +3141,7 @@ html {
   right: auto;
 }
 .onboardingContainer .dismiss-button.with-background {
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
 }
 .onboardingContainer .dismiss-button.with-background:hover {
   background-color: var(--button-background-color-hover);
@@ -3350,7 +3350,7 @@ html {
 .onboardingContainer .solid-L {
   background-image: url("chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg");
   -moz-context-properties: fill;
-  fill: var(--in-content-page-background);
+  fill: var(--background-color-canvas);
   display: none;
 }
 .onboardingContainer .purple-C {

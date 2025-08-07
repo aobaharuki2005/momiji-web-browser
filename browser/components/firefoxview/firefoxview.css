@@ -5,9 +5,9 @@
 @import url("chrome://global/skin/in-content/common.css");
 
 :root {
-  /* override --in-content-page-background from common-shared.css */
+  /* override --background-color-canvas from tokens-shared.css */
   background-color: transparent;
-  --fxview-background-color: var(--newtab-background-color, var(--in-content-page-background));
+  --fxview-background-color: var(--newtab-background-color, var(--background-color-canvas));
   --fxview-background-color-secondary: var(--newtab-background-color-secondary, light-dark(#ffffff, #42414d));
   --fxview-element-background-hover: light-dark(
     color-mix(in srgb, var(--fxview-background-color) 90%, currentColor),

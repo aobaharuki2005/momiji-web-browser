@@ -139,7 +139,7 @@ html {
     --mr-screen-background-color: buttontext;
     --mr-screen-heading-color: buttonface;
 
-    background-color: var(--in-content-page-background);
+    background-color: var(--background-color-canvas);
   }
 
   // Transition all of these and reduced motion effectively only does opacity.
@@ -188,7 +188,7 @@ html {
   }
 
   .main-content {
-    background-color: var(--in-content-page-background);
+    background-color: var(--background-color-canvas);
     border-radius: 20px;
     box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 20%);
     display: flex;
@@ -399,7 +399,7 @@ html {
         }
 
         .main-content {
-          background-color: var(--in-content-page-background);
+          background-color: var(--background-color-canvas);
           border-radius: 8px;
           box-shadow: 0 2px 14px rgba(58, 57, 68, 20%);
           overflow: hidden;
@@ -845,7 +845,7 @@ html {
 
             .steps.progress-bar {
               border-top: 1px solid var(--text-color);
-              background-color: var(--in-content-page-background);
+              background-color: var(--background-color-canvas);
 
               .indicator {
                 background-color: var(--color-accent-primary);
@@ -2087,7 +2087,7 @@ html {
     border-radius: 0;
 
     @media (prefers-contrast: no-preference) {
-      background-color: var(--in-content-page-background);
+      background-color: var(--background-color-canvas);
       border-color: var(--in-content-border-color);
     }
 
@@ -2340,7 +2340,7 @@ html {
     }
 
     &.with-background {
-      background-color: var(--in-content-page-background);
+      background-color: var(--background-color-canvas);
 
       &:hover {
         background-color: var(--button-background-color-hover);
@@ -2580,7 +2580,7 @@ html {
   .solid-L {
     background-image: url('chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg');
     -moz-context-properties: fill;
-    fill: var(--in-content-page-background);
+    fill: var(--background-color-canvas);
     display: none;
   }
 

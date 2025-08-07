@@ -125,7 +125,7 @@ h2 {
 }
 
 .sticky-container {
-  background: var(--in-content-page-background);
+  background: var(--background-color-canvas);
   width: 100%;
   position: sticky;
   top: 0;
@@ -133,7 +133,7 @@ h2 {
 }
 
 .main-search {
-  background: var(--in-content-page-background);
+  background: var(--background-color-canvas);
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -160,7 +160,7 @@ search-addons {
 }
 
 .main-heading {
-  background: var(--in-content-page-background);
+  background: var(--background-color-canvas);
   display: flex;
   margin-inline-start: var(--main-margin-start);
   padding-bottom: 16px;

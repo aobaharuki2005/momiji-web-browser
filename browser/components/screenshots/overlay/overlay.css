@@ -69,7 +69,7 @@
 #selection-size,
 #buttons-container {
   padding: 4px;
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
   color: var(--text-color);
   border-radius: 4px;
 }

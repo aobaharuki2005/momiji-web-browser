@@ -626,7 +626,7 @@ html|dialog,
 }
 
 .dialogBox {
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
   background-clip: content-box;
   color: var(--text-color);
   /* `transparent` will use the dialogText color in high-contrast themes and
@@ -641,7 +641,7 @@ html|dialog,
   @media not (forced-colors) {
     html|dialog,
     .dialogBox {
-      --in-content-page-background: #42414d;
+      --background-color-canvas: #42414d;
     }
   }
 }
@@ -1014,7 +1014,7 @@ dialog > .sync-engines-list + hbox {
 
 .sticky-container {
   position: sticky;
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
   top: 0;
   z-index: 1;
   /* The sticky-container should have the capability to cover all spotlight area. */

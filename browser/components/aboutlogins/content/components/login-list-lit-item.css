@@ -28,7 +28,7 @@
 
 .list-item.selected {
   border-inline-start-color: var(--color-accent-primary);
-  background-color: var(--in-content-page-background);
+  background-color: var(--background-color-canvas);
 }
 
 .list-item.selected .title {
