@@ -6,7 +6,13 @@
 
 include("/third_party/opentelemetry-cpp/opentelemetry-config.mozbuild")
 
-EXPORTS.mozilla += ["GeckoTrace.h"]
+GeneratedFile(
+    "GeckoTraceEvents.h",
+    script="scripts/codegen.py",
+    entry_point="generate_cpp_events",
+)
+
+EXPORTS.mozilla += ["!GeckoTraceEvents.h", "GeckoTrace.h"]
 EXPORTS.mozilla.gecko_trace += ["SpanEvent.h"]
 
 if CONFIG["GECKO_TRACE_ENABLE"]:

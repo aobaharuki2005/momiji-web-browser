@@ -2,32 +2,12 @@
 
 #include "gtest/gtest.h"
 
-#include "opentelemetry/exporters/memory/in_memory_span_exporter.h"
-#include "opentelemetry/sdk/trace/simple_processor.h"
-#include "opentelemetry/sdk/trace/tracer_provider_factory.h"
-#include "opentelemetry/trace/provider.h"
-
+#include "Common.h"
 #include "mozilla/GeckoTrace.h"
-
-namespace otel = opentelemetry;
 
 namespace mozilla::gecko_trace::tests {
 
-class GeckoTraceAPITest : public ::testing::Test {
- protected:
-  void SetUp() override {
-    auto exporter =
-        std::make_unique<otel::exporter::memory::InMemorySpanExporter>();
-    mSpanData = exporter->GetData();
-    auto processor = std::make_unique<otel::sdk::trace::SimpleSpanProcessor>(
-        std::move(exporter));
-    auto provider =
-        otel::sdk::trace::TracerProviderFactory::Create(std::move(processor));
-
-    otel::trace::Provider::SetTracerProvider(std::move(provider));
-  }
-  std::shared_ptr<otel::exporter::memory::InMemorySpanData> mSpanData;
-};
+class GeckoTraceAPITest : public TestWithInMemorySpanExporter {};
 
 class TestEvent : public mozilla::gecko_trace::SpanEvent {
  public:
