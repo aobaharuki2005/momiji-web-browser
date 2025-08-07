@@ -12,19 +12,21 @@ $tags:
   - 'Toolkit :: Telemetry'
 
 fog:
-  initialization:
-    type: timespan
+  initializations:
+    type: timing_distribution
     time_unit: nanosecond
     description: |
-      Time the FOG initialization takes.
+      Time the FOG initializations take.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1662123
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797619
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1662123#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797619
     data_sensitivity:
       - technical
     notification_emails:
-      - jrediger@mozilla.com
+      - chumphreys@mozilla.com
       - glean-team@mozilla.com
     expires: never
 

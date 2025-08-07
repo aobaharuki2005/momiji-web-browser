@@ -93,7 +93,7 @@ fn fog_init_internal(
     uploader: Option<Box<dyn glean::net::PingUploader>>,
     enable_internal_pings: bool,
 ) -> Result<(), nsresult> {
-    metrics::fog::initialization.start();
+    let timer_id = metrics::fog::initializations.start();
 
     log::debug!("Initializing FOG.");
 
@@ -122,7 +122,7 @@ fn fog_init_internal(
 
     glean::initialize(conf, client_info);
 
-    metrics::fog::initialization.stop();
+    metrics::fog::initializations.stop_and_accumulate(timer_id);
 
     Ok(())
 }
