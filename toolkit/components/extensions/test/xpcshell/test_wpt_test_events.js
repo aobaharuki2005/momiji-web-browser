@@ -54,8 +54,19 @@ async function runTestExt() {
             throw new Error("Wrong!");
           });
           browser.test.assertTrue(false, "Actually false.");
+
+          // Thrown errors interrupt only the current task.
+          throw new Error("Interrupted!");
         },
         function still_runs_despite_previous_tast_failed() {
+          // Assert without a message.
+          browser.test.fail();
+
+          // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=1981876
+          // Once failed assertions start throwing, this will be unreachable.
+          browser.test.assertTrue(true, "Assertions don't throw (yet).");
+        },
+        function subTest4() {
           browser.test.assertEq(true, "true", "No type coercion.");
         },
       ]);
@@ -99,7 +110,12 @@ function checkEvents(events, info) {
       },
       {
         event: "onTestFinished",
-        data: { remainingTests: 2 },
+        data: {
+          remainingTests: 3,
+          testName: "unnamed_test_1",
+          result: true,
+          assertionDescription: "unnamed_test_1 PASS",
+        },
       },
       {
         event: "onTestStarted",
@@ -119,11 +135,37 @@ function checkEvents(events, info) {
       },
       {
         event: "onTestFinished",
-        data: { remainingTests: 1 },
+        data: {
+          remainingTests: 2,
+          testName: "subTest2",
+          result: false,
+          assertionDescription: "Exception running subTest2: Interrupted!",
+        },
       },
       {
         event: "onTestStarted",
         data: { testName: "still_runs_despite_previous_tast_failed" },
+      },
+      {
+        event: "onAssert",
+        data: { result: false, message: "Assertion FAIL" },
+      },
+      {
+        event: "onAssert",
+        data: { result: true, message: "Assertions don't throw (yet)." },
+      },
+      {
+        event: "onTestFinished",
+        data: {
+          remainingTests: 1,
+          testName: "still_runs_despite_previous_tast_failed",
+          result: false,
+          assertionDescription: "Assertion FAIL",
+        },
+      },
+      {
+        event: "onTestStarted",
+        data: { testName: "subTest4" },
       },
       {
         event: "onAssertEquality",
@@ -136,7 +178,13 @@ function checkEvents(events, info) {
       },
       {
         event: "onTestFinished",
-        data: { remainingTests: 0 },
+        data: {
+          remainingTests: 0,
+          testName: "subTest4",
+          result: false,
+          assertionDescription:
+            "No type coercion. - Expected: true, Actual: true (different)",
+        },
       },
     ],
     `Expected events - ${info}`

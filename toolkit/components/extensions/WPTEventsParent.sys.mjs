@@ -14,7 +14,8 @@ const lazy = XPCOMUtils.declareLazy({
 // Map events with positional params to WPT messages with named properties.
 const EVENTS = {
   "test-task-start": "onTestStarted testName",
-  "test-task-done": "onTestFinished remainingTests",
+  "test-task-done":
+    "onTestFinished remainingTests testName result assertionDescription",
   "test-eq": "onAssertEquality result message expectedValue actualValue",
   "test-result": "onAssert result message",
 };
