@@ -773,7 +773,8 @@
         <!-- https://dev.adjust.com/en/sdk/android/setup/preinstalled#system-installer-receiver-->
         <receiver
             android:name="com.adjust.sdk.AdjustPreinstallReferrerReceiver"
-            android:exported="true">
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
             <intent-filter>
                 <action android:name="com.attribution.SYSTEM_INSTALLER_REFERRER" />
             </intent-filter>
