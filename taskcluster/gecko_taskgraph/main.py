@@ -145,7 +145,7 @@ FORMAT_METHODS["yaml"] = format_taskgraph_yaml
     "--tasks-regex",
     "--tasks",
     default=None,
-    help="only return tasks with labels matching this regular " "expression.",
+    help="only return tasks with labels matching this regular expression.",
 )
 @argument(
     "--exclude-key",
@@ -375,8 +375,7 @@ def show_taskgraph(options):
 
         if options["format"] != "json":
             print(
-                "If you were expecting differences in task bodies "
-                'you should pass "-J"\n',
+                'If you were expecting differences in task bodies you should pass "-J"\n',
                 file=sys.stderr,
             )
 
@@ -411,8 +410,7 @@ def build_image(args):
 )
 @argument(
     "--task-id",
-    help="Load the image at public/image.tar.zst in this task, "
-    "rather than searching the index",
+    help="Load the image at public/image.tar.zst in this task, rather than searching the index",
 )
 @argument(
     "-t",
@@ -449,8 +447,7 @@ def load_image(args):
 @command("image-digest", help="Print the digest of a docker image.")
 @argument(
     "image_name",
-    help="Print the digest of the image of this name based on the current "
-    "contents of the tree.",
+    help="Print the digest of the image of this name based on the current contents of the tree.",
 )
 def image_digest(args):
     from taskgraph.docker import get_image_digest
@@ -568,7 +565,7 @@ def action_callback(options):
     "--parameters",
     "-p",
     default="",
-    help="parameters file (.yml or .json; see " "`taskcluster/docs/parameters.rst`)`",
+    help="parameters file (.yml or .json; see `taskcluster/docs/parameters.rst`)`",
 )
 @argument("--task-id", default=None, help="TaskId to which the action applies")
 @argument(
