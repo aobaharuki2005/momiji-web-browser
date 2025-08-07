@@ -12,7 +12,11 @@ const { ExtensionPermissions } = ChromeUtils.importESModule(
 const lazy = {};
 ChromeUtils.defineLazyGetter(lazy, "l10n", function () {
   return new Localization(
-    ["browser/addonNotifications.ftl", "branding/brand.ftl"],
+    [
+      "browser/addonNotifications.ftl",
+      "branding/brand.ftl",
+      "toolkit/global/extensions.ftl",
+    ],
     true
   );
 });
@@ -975,6 +979,51 @@ describe("Add-on installation doorhangers", function () {
     PermissionTestUtils.remove("http://example.com/", "install");
     await removeTabAndWaitForNotificationClose();
   });
+
+  it.skipIf(
+    "should show a warning in the installation dialog when the add-on is not signed",
+    () => AppConstants.MOZ_REQUIRE_SIGNING,
+    async function test_unsigned() {
+      let progressPromise = waitForProgressNotification();
+      let notificationPromise = waitForNotification("addon-install-blocked");
+      let xpiURL = TESTROOT + "unsigned.xpi";
+      BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        TESTROOT + "navigate.html?" + xpiURL
+      );
+      await progressPromise;
+      let panel = await notificationPromise;
+
+      let notification = panel.childNodes[0];
+      let message = panel.ownerDocument.getElementById(
+        "addon-install-blocked-message"
+      );
+      is(
+        message.textContent,
+        "You are attempting to install an add-on from example.com. Make sure you trust this site before continuing.",
+        "Should have seen the right message"
+      );
+
+      let dialogPromise = waitForInstallDialog();
+      // Click on Allow
+      EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+
+      let installDialog = await dialogPromise;
+      message = lazy.l10n.formatValueSync(`webext-perms-list-intro-unsigned`);
+      is(
+        installDialog.introEl.textContent,
+        message,
+        "Should have seen the right message"
+      );
+      is(
+        installDialog.getAttribute("icon"),
+        "chrome://global/skin/icons/warning.svg",
+        "Expect panel icon to be set to the warning icon"
+      );
+
+      await removeTabAndWaitForNotificationClose();
+    }
+  );
 
   it("should show the appropriate blocklist notification for hard-blocked and soft-blocked add-ons", async function test_blocklisted() {
     let addonName = "XPI Test";
