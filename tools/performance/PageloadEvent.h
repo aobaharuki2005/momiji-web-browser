@@ -48,7 +48,8 @@ struct PageLoadDomainExtra;
   _(trrDomain, nsCString)           \
   _(userFeatures, uint32_t)         \
   _(usingWebdriver, bool)           \
-  _(cacheDisposition, uint32_t)
+  _(cacheDisposition, uint32_t)     \
+  _(networkType, uint32_t)
 
 namespace mozilla::performance::pageload_event {
 /*

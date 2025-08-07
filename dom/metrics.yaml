@@ -161,6 +161,17 @@ perf:
           "cache disposition for the top level document"
         type: quantity
         unit: integer
+      network_type:
+        description:
+          "Network link type from nsINetworkLinkService, only available on android. Values as:
+	     - 0 unknown
+	     - 1 ethernet
+	     - 2 usb
+	     - 3 wifi
+	     - 4 wifimax
+	     - 9 mobile"
+        type: quantity
+        unit: integer
     send_in_pings:
       - pageload
   page_load_domain:

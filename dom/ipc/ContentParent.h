@@ -1425,7 +1425,7 @@ class ContentParent final : public PContentParent,
     return mBrowsingContextFieldEpoch;
   }
 
-  void UpdateNetworkLinkType();
+  uint32_t UpdateNetworkLinkType();
 
   already_AddRefed<JSActor> InitJSActor(JS::Handle<JSObject*> aMaybeActor,
                                         const nsACString& aName,
