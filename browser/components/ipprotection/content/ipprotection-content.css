@@ -6,6 +6,9 @@
 
 :host {
   --status-card-connected-background-color: var(--color-violet-90);
+  --connection-shield-color: var(--panel-background);
+  --connection-shield-off-background-color: var(--icon-color-critical);
+  --connection-shield-on-background-color: var(--color-accent-primary);
 }
 
 hr {
@@ -30,6 +33,19 @@ hr {
 .is-enabled {
   color: #fff;
   background-color: var(--status-card-connected-background-color);
+}
+
+#status-card {
+  --shield-bgcolor: var(--connection-shield-off-background-color);
+  --box-icon-fill: var(--connection-shield-color);
+  --box-icon-stroke: var(--shield-bgcolor);
+  -moz-context-properties: fill, stroke;
+  fill: var(--connection-shield-color);
+  stroke: var(--shield-bgcolor);
+
+  &.is-enabled {
+    --shield-bgcolor: var(--connection-shield-on-background-color);
+  }
 }
 
 #status-card-animation {
