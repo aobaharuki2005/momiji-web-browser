@@ -15,7 +15,8 @@ import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
+import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
 
 /**
  * An interface that handles the view manipulation of the recent tabs in the Home screen.
@@ -44,13 +45,13 @@ interface RecentTabController {
  * @param selectTabUseCase [SelectTabUseCase] used selecting a tab.
  * @param navController [NavController] used for navigation.
  * @param appStore The [AppStore] that holds the state of the [HomeFragment].
- * @param settings [Settings] object used to obtain the tab manager feature flag.
+ * @param tabManagementFeatureHelper Feature flag helper for the tab management UI.
  */
 class DefaultRecentTabsController(
     private val selectTabUseCase: SelectTabUseCase,
     private val navController: NavController,
     private val appStore: AppStore,
-    private val settings: Settings,
+    private val tabManagementFeatureHelper: TabManagementFeatureHelper = DefaultTabManagementFeatureHelper,
 ) : RecentTabController {
 
     override fun handleRecentTabClicked(tabId: String) {
@@ -62,7 +63,7 @@ class DefaultRecentTabsController(
 
     override fun handleRecentTabShowAllClicked() {
         RecentTabs.showAllClicked.record(NoExtras())
-        if (settings.tabManagerEnhancementsEnabled) {
+        if (tabManagementFeatureHelper.enhancementsEnabled) {
             navController.navigate(HomeFragmentDirections.actionGlobalTabManagementFragment())
         } else {
             navController.navigate(HomeFragmentDirections.actionGlobalTabsTrayFragment())

@@ -39,7 +39,7 @@ interface TabManagementFeatureHelper {
 data object DefaultTabManagementFeatureHelper : TabManagementFeatureHelper {
 
     override val enhancementsEnabledNightly: Boolean
-        get() = false
+        get() = true
 
     override val enhancementsEnabledBeta: Boolean
         get() = false

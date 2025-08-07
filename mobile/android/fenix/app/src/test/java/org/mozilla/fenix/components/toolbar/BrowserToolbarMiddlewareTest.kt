@@ -14,6 +14,7 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
+import androidx.navigation.NavOptions
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.Runs
 import io.mockk.every
@@ -163,6 +164,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.tabstray.Page
+import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
@@ -2541,6 +2543,16 @@ class BrowserToolbarMiddlewareTest {
         cookieBannersStorage = cookieBannersStorage,
         trackingProtectionUseCases = trackingProtectionUseCases,
         sessionUseCases = sessionUseCases,
+        tabManagementFeatureHelper = object : TabManagementFeatureHelper {
+            override val enhancementsEnabledNightly: Boolean
+                get() = false
+            override val enhancementsEnabledBeta: Boolean
+                get() = false
+            override val enhancementsEnabledRelease: Boolean
+                get() = false
+            override val enhancementsEnabled: Boolean
+                get() = false
+        },
         bookmarksStorage = bookmarksStorage,
     )
 

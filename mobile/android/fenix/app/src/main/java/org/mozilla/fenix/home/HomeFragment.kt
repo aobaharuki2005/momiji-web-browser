@@ -157,6 +157,7 @@ import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
 import org.mozilla.fenix.snackbar.SnackbarBinding
+import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.termsofuse.shouldShowTermsOfUsePrompt
@@ -513,7 +514,6 @@ class HomeFragment : Fragment() {
                 selectTabUseCase = components.useCases.tabsUseCases.selectTab,
                 navController = findNavController(),
                 appStore = components.appStore,
-                settings = components.settings,
             ),
             recentSyncedTabController = DefaultRecentSyncedTabController(
                 fenixBrowserUseCases = requireComponents.useCases.fenixBrowserUseCases,
@@ -1234,7 +1234,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun openTabsTray() {
-        if (requireContext().settings().tabManagerEnhancementsEnabled) {
+        if (DefaultTabManagementFeatureHelper.enhancementsEnabled) {
             findNavController().nav(
                 R.id.homeFragment,
                 HomeFragmentDirections.actionGlobalTabManagementFragment(

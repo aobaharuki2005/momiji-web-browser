@@ -123,6 +123,7 @@ import org.mozilla.fenix.search.SearchFragmentAction.SuggestionClicked
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionSelected
 import org.mozilla.fenix.search.SearchFragmentStore
 import org.mozilla.fenix.search.createInitialSearchFragmentState
+import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.GleanMetrics.History as GleanHistory
@@ -532,7 +533,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     }
 
     private fun showTabTray(openInPrivate: Boolean = false) {
-        if (requireContext().settings().tabManagerEnhancementsEnabled) {
+        if (DefaultTabManagementFeatureHelper.enhancementsEnabled) {
             findNavController().nav(
                 R.id.historyFragment,
                 HistoryFragmentDirections.actionGlobalTabManagementFragment(

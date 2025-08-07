@@ -254,7 +254,7 @@ private fun TabPageBanner(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TabRow(
-                selectedTabIndex = Page.pageToPosition(page = selectedPage, enhancementsEnabled = false),
+                selectedTabIndex = Page.pageToPosition(selectedPage),
                 modifier = Modifier
                     .fillMaxWidth(MAX_WIDTH_TAB_ROW_PERCENT)
                     .fillMaxHeight(),
