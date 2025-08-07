@@ -593,40 +593,6 @@ class NetworkModule extends RootBiDiModule {
   }
 
   /**
-   * Removes a data collector.
-   *
-   * @param {object=} options
-   * @param {string} options.collector
-   *     The id of the collector to remove.
-   *
-   * @throws {InvalidArgumentError}
-   *     Raised if an argument is of an invalid type or value.
-   * @throws {NoSuchNetworkCollectorError}
-   *     Raised if the collector id could not be found in the internal collectors
-   *     map.
-   */
-  removeDataCollector(options = {}) {
-    const { collector } = options;
-
-    lazy.assert.string(
-      collector,
-      lazy.pprint`Expected "collector" to be a string, got ${collector}`
-    );
-
-    if (!this.#networkCollectors.has(collector)) {
-      throw new lazy.error.NoSuchNetworkCollectorError(
-        `Network data collector with id ${collector} not found`
-      );
-    }
-
-    this.#networkCollectors.delete(collector);
-
-    for (const [, collectedData] of this.#collectedNetworkData) {
-      this.#removeCollectorFromData(collectedData, collector);
-    }
-  }
-
-  /**
    * Adds a network intercept, which allows to intercept and modify network
    * requests and responses.
    *
@@ -1320,6 +1286,40 @@ class NetworkModule extends RootBiDiModule {
     }
 
     resolveBlockedEvent();
+  }
+
+  /**
+   * Removes a data collector.
+   *
+   * @param {object=} options
+   * @param {string} options.collector
+   *     The id of the collector to remove.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchNetworkCollectorError}
+   *     Raised if the collector id could not be found in the internal collectors
+   *     map.
+   */
+  removeDataCollector(options = {}) {
+    const { collector } = options;
+
+    lazy.assert.string(
+      collector,
+      lazy.pprint`Expected "collector" to be a string, got ${collector}`
+    );
+
+    if (!this.#networkCollectors.has(collector)) {
+      throw new lazy.error.NoSuchNetworkCollectorError(
+        `Network data collector with id ${collector} not found`
+      );
+    }
+
+    this.#networkCollectors.delete(collector);
+
+    for (const [, collectedData] of this.#collectedNetworkData) {
+      this.#removeCollectorFromData(collectedData, collector);
+    }
   }
 
   /**
