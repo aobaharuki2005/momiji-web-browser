@@ -1250,7 +1250,11 @@ export class _ASRouter {
     }
   }
 
-  async _updateMultiprofileData() {
+  async _updateMultiprofileData(aSubject, aTopic, aSource) {
+    // Return early if sharedDb update event source is from the local profile
+    if (aSource === "local" && aTopic === MULTIPROFILE_DATA_UPDATED) {
+      return;
+    }
     // wait to ensure storage has been initialized before accessing _storage
     if (!this.initialized) {
       await this.waitForInitialized;

@@ -3026,7 +3026,7 @@ describe("ASRouter", () => {
 
   describe("multiprofile messages", () => {
     describe("#_updateMultiprofileData", () => {
-      it("should update multiprofile data from storage", async () => {
+      it("should update multiprofile data state from storage with event source remote", async () => {
         const testImpressions = { test_msg: [111, 222] };
         const testBlocklist = ["blocked_msg"];
 
@@ -3037,10 +3037,45 @@ describe("ASRouter", () => {
           .stub()
           .resolves(testBlocklist);
 
-        await Router._updateMultiprofileData();
+        await Router._updateMultiprofileData(
+          null,
+          "sps-profiles-updated",
+          "remote"
+        );
 
         assert.calledOnce(Router._storage.getSharedMessageImpressions);
         assert.calledOnce(Router._storage.getSharedMessageBlocklist);
+        assert.deepEqual(
+          Router.state.multiProfileMessageImpressions,
+          testImpressions
+        );
+        assert.deepEqual(
+          Router.state.multiProfileMessageBlocklist,
+          testBlocklist
+        );
+      });
+      it("should not update multiprofile data from storage with event source local", async () => {
+        const testImpressions = { test_msg: [111, 222] };
+        const testBlocklist = ["blocked_msg"];
+
+        await Router.setState(() => {
+          return {
+            multiProfileMessageBlocklist: testBlocklist,
+            multiProfileMessageImpressions: testImpressions,
+          };
+        });
+
+        Router._storage.getSharedMessageImpressions = sandbox.stub();
+        Router._storage.getSharedMessageBlocklist = sandbox.stub();
+
+        await Router._updateMultiprofileData(
+          null,
+          "sps-profiles-updated",
+          "local"
+        );
+
+        assert.notCalled(Router._storage.getSharedMessageImpressions);
+        assert.notCalled(Router._storage.getSharedMessageBlocklist);
         assert.deepEqual(
           Router.state.multiProfileMessageImpressions,
           testImpressions
