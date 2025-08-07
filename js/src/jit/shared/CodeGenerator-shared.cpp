@@ -1066,18 +1066,11 @@ bool CodeGeneratorShared::omitOverRecursedCheck() const {
          !gen->needsOverrecursedCheck();
 }
 
-void CodeGeneratorShared::emitPreBarrier(Register elements,
-                                         const LAllocation* index) {
-  if (index->isConstant()) {
-    Address address(elements, ToInt32(index) * sizeof(Value));
-    masm.guardedCallPreBarrier(address, MIRType::Value);
-  } else {
-    BaseObjectElementIndex address(elements, ToRegister(index));
-    masm.guardedCallPreBarrier(address, MIRType::Value);
-  }
+void CodeGeneratorShared::emitPreBarrier(Address address) {
+  masm.guardedCallPreBarrier(address, MIRType::Value);
 }
 
-void CodeGeneratorShared::emitPreBarrier(Address address) {
+void CodeGeneratorShared::emitPreBarrier(BaseObjectElementIndex address) {
   masm.guardedCallPreBarrier(address, MIRType::Value);
 }
 
