@@ -38,11 +38,13 @@
 #include "nsContentUtils.h"
 #include "nsDeviceContext.h"
 #include "nsDisplayList.h"
+#include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIContent.h"
 #include "nsIScrollbarMediator.h"
 #include "nsISupportsImpl.h"
 #include "nsLayoutUtils.h"
+#include "nsNameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"  // for nsAPostRefreshObserver
 #include "nsRepeatService.h"
@@ -78,6 +80,7 @@ nsSliderFrame::nsSliderFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       mRatio(0.0f),
       mDragStart(0),
       mThumbStart(0),
+      mCurPos(0),
       mRepeatDirection(0),
       mUserChanged(false),
       mScrollingWithAPZ(false),
@@ -103,6 +106,8 @@ void nsSliderFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
     gMiddlePref = Preferences::GetBool("middlemouse.scrollbarPosition");
   }
+
+  mCurPos = GetCurrentPosition();
 }
 
 void nsSliderFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
@@ -133,6 +138,39 @@ void nsSliderFrame::AppendFrames(ChildListID aListID,
   if (wasEmpty) {
     AddListener();
   }
+}
+
+int32_t nsSliderFrame::GetCurrentPosition() const {
+  return GetIntegerAttribute(Scrollbar()->GetContent(), nsGkAtoms::curpos, 0);
+}
+
+int32_t nsSliderFrame::GetMinPosition() const {
+  return GetIntegerAttribute(Scrollbar()->GetContent(), nsGkAtoms::minpos, 0);
+}
+
+int32_t nsSliderFrame::GetMaxPosition() const {
+  return GetIntegerAttribute(Scrollbar()->GetContent(), nsGkAtoms::maxpos, 100);
+}
+
+int32_t nsSliderFrame::GetPageIncrement() const {
+  return GetIntegerAttribute(Scrollbar()->GetContent(),
+                             nsGkAtoms::pageincrement, 10);
+}
+
+int32_t nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsAtom* atom,
+                                           int32_t defaultValue) {
+  nsAutoString value;
+  if (content->IsElement()) {
+    content->AsElement()->GetAttr(atom, value);
+  }
+  if (!value.IsEmpty()) {
+    nsresult error;
+
+    // convert it to an integer
+    defaultValue = value.ToInteger(&error);
+  }
+
+  return defaultValue;
 }
 
 namespace mozilla {
@@ -191,7 +229,8 @@ void nsDisplaySliderMarks::PaintMarks(nsDisplayListBuilder* aDisplayListBuilder,
   }
 
   auto* sliderFrame = static_cast<nsSliderFrame*>(mFrame);
-  int32_t maxPos = sliderFrame->Scrollbar()->GetMaxPos();
+  int32_t minPos = sliderFrame->GetMinPosition();
+  int32_t maxPos = sliderFrame->GetMaxPosition();
 
   // Use the text highlight color for the tick marks.
   nscolor highlightColor =
@@ -224,15 +263,20 @@ void nsDisplaySliderMarks::PaintMarks(nsDisplayListBuilder* aDisplayListBuilder,
     if (markValue > (uint32_t)maxPos) {
       markValue = maxPos;
     }
+    if (markValue < (uint32_t)minPos) {
+      markValue = minPos;
+    }
 
     // The values in the marks array range up to the window's
     // scrollMax{X,Y} - scrollMin{X,Y} (the same as the slider's maxpos).
     // Scale the values to fit within the slider's width or height.
     nsRect markRect(refPoint, initialSize);
     if (isHorizontal) {
-      markRect.x += (nscoord)((double)markValue / maxPos * sliderRect.width);
+      markRect.x +=
+          (nscoord)((double)markValue / (maxPos - minPos) * sliderRect.width);
     } else {
-      markRect.y += (nscoord)((double)markValue / maxPos * sliderRect.height);
+      markRect.y +=
+          (nscoord)((double)markValue / (maxPos - minPos) * sliderRect.height);
     }
 
     if (drawTarget) {
@@ -470,11 +514,13 @@ void nsSliderFrame::Reflow(nsPresContext* aPresContext,
     thumbSize.width = availSize.width;
   }
 
-  int32_t curPos = Scrollbar()->GetCurPos();
-  int32_t maxPos = Scrollbar()->GetMaxPos();
-  int32_t pageIncrement = Scrollbar()->GetPageIncrement();
+  int32_t curPos = GetCurrentPosition();
+  int32_t minPos = GetMinPosition();
+  int32_t maxPos = GetMaxPosition();
+  int32_t pageIncrement = GetPageIncrement();
 
-  curPos = std::min(curPos, maxPos);
+  maxPos = std::max(minPos, maxPos);
+  curPos = std::clamp(curPos, minPos, maxPos);
 
   // If modifying the logic here, be sure to modify the corresponding
   // compositor-side calculation in ScrollThumbUtils::ApplyTransformForAxis().
@@ -482,8 +528,8 @@ void nsSliderFrame::Reflow(nsPresContext* aPresContext,
   nscoord& thumbLength = horizontal ? thumbSize.width : thumbSize.height;
   mThumbMinLength = thumbLength;
 
-  if (pageIncrement + maxPos > 0) {
-    float ratio = float(pageIncrement) / float(maxPos + pageIncrement);
+  if ((pageIncrement + maxPos - minPos) > 0) {
+    float ratio = float(pageIncrement) / float(maxPos - minPos + pageIncrement);
     thumbLength =
         std::max(thumbLength, NSToCoordRound(availableLength * ratio));
   }
@@ -494,14 +540,18 @@ void nsSliderFrame::Reflow(nsPresContext* aPresContext,
       presContext->AppUnitsToDevPixels(thumbLength));
 
   // mRatio translates the thumb position in app units to the value.
-  mRatio = maxPos ? float(availableLength - thumbLength) / float(maxPos) : 1;
+  mRatio = (minPos != maxPos)
+               ? float(availableLength - thumbLength) / float(maxPos - minPos)
+               : 1;
+
+  nscoord pos = curPos - minPos;
 
   // set the thumb's coord to be the current pos * the ratio.
   nsPoint thumbPos;
   if (horizontal) {
-    thumbPos.x = NSToCoordRound(curPos * mRatio);
+    thumbPos.x = NSToCoordRound(pos * mRatio);
   } else {
-    thumbPos.y = NSToCoordRound(curPos * mRatio);
+    thumbPos.y = NSToCoordRound(pos * mRatio);
   }
 
   // Same to `snappedThumbLocation` in `nsSliderFrame::CurrentPositionChanged`,
@@ -560,6 +610,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   nsScrollbarFrame* scrollbarBox = Scrollbar();
+  nsCOMPtr<nsIContent> scrollbar = scrollbarBox->GetContent();
   bool isHorizontal = scrollbarBox->IsHorizontal();
 
   if (IsDraggingThumb()) {
@@ -621,12 +672,12 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
           *aEventStatus = nsEventStatus_eConsumeNoDefault;
         }
         if (isMouseOutsideThumb) {
-          SetCurrentThumbPosition(mThumbStart);
+          SetCurrentThumbPosition(scrollbar, mThumbStart, false);
           return NS_OK;
         }
 
         // set it
-        SetCurrentThumbPosition(pos);
+        SetCurrentThumbPosition(scrollbar, pos, false);
       } break;
 
       case eTouchEnd:
@@ -664,7 +715,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
     // set it
     AutoWeakFrame weakFrame(this);
-    SetCurrentThumbPosition(pos - thumbLength / 2);
+    SetCurrentThumbPosition(scrollbar, pos - thumbLength / 2, false);
     NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
 
     DragThumb(true);
@@ -722,11 +773,19 @@ nsScrollbarFrame* nsSliderFrame::Scrollbar() const {
 // location
 void nsSliderFrame::CurrentPositionChanged() {
   // get the current position
-  // get our current min and max position from our content node
-  int32_t curPos = Scrollbar()->GetCurPos();
-  int32_t maxPos = Scrollbar()->GetMaxPos();
+  int32_t curPos = GetCurrentPosition();
 
-  curPos = std::min(curPos, maxPos);
+  // do nothing if the position did not change
+  if (mCurPos == curPos) {
+    return;
+  }
+
+  // get our current min and max position from our content node
+  int32_t minPos = GetMinPosition();
+  int32_t maxPos = GetMaxPosition();
+
+  maxPos = std::max(minPos, maxPos);
+  curPos = std::clamp(curPos, minPos, maxPos);
 
   // get the thumb's rect
   nsIFrame* thumbFrame = mFrames.FirstChild();
@@ -734,15 +793,16 @@ void nsSliderFrame::CurrentPositionChanged() {
     return;
   }
 
+  nscoord pos = curPos - minPos;
   const bool horizontal = Scrollbar()->IsHorizontal();
 
   // figure out the new rect
   nsRect thumbRect = thumbFrame->GetRect();
   nsRect newThumbRect(thumbRect);
   if (horizontal) {
-    newThumbRect.x = NSToCoordRound(curPos * mRatio);
+    newThumbRect.x = NSToCoordRound(pos * mRatio);
   } else {
-    newThumbRect.y = NSToCoordRound(curPos * mRatio);
+    newThumbRect.y = NSToCoordRound(pos * mRatio);
   }
 
   // avoid putting the scroll thumb at subpixel positions which cause needless
@@ -773,36 +833,68 @@ void nsSliderFrame::CurrentPositionChanged() {
   if (!mediator || !mediator->ShouldSuppressScrollbarRepaints()) {
     SchedulePaint();
   }
+
+  mCurPos = curPos;
+}
+
+static void UpdateAttribute(dom::Element* aScrollbar, nscoord aNewPos,
+                            bool aNotify, bool aIsSmooth) {
+  nsAutoString str;
+  str.AppendInt(aNewPos);
+
+  if (aIsSmooth) {
+    aScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::smooth, u"true"_ns,
+                        false);
+  }
+  aScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, str, aNotify);
+  if (aIsSmooth) {
+    aScrollbar->UnsetAttr(kNameSpaceID_None, nsGkAtoms::smooth, false);
+  }
 }
 
 // Use this function when you want to set the scroll position via the position
 // of the scrollbar thumb, e.g. when dragging the slider. This function scrolls
 // the content in such a way that thumbRect.x/.y becomes aNewThumbPos.
-void nsSliderFrame::SetCurrentThumbPosition(nscoord aNewPos) {
-  nsScrollbarFrame* sb = Scrollbar();
-  int32_t newPos = NSToIntRound(aNewPos / mRatio);
+void nsSliderFrame::SetCurrentThumbPosition(nsIContent* aScrollbar,
+                                            nscoord aNewThumbPos,
+                                            bool aIsSmooth) {
+  int32_t newPos = NSToIntRound(aNewThumbPos / mRatio);
   // get min and max position from our content node
-  int32_t maxpos = sb->GetMaxPos();
+  int32_t minpos = GetMinPosition();
+  int32_t maxpos = GetMaxPosition();
+
+  newPos += minpos;
 
   // get the new position and make sure it is in bounds
-  if (newPos < 0) {
-    newPos = 0;
+  if (newPos < minpos || maxpos < minpos) {
+    newPos = minpos;
   } else if (newPos > maxpos) {
     newPos = maxpos;
   }
+  SetCurrentPositionInternal(aScrollbar, newPos, aIsSmooth);
+}
+
+void nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar,
+                                               int32_t aNewPos,
+                                               bool aIsSmooth) {
+  nsCOMPtr<nsIContent> scrollbar = aScrollbar;
+  nsScrollbarFrame* scrollbarBox = Scrollbar();
   AutoWeakFrame weakFrame(this);
 
-  nsIScrollbarMediator* mediator = sb->GetScrollbarMediator();
+  nsIScrollbarMediator* mediator = scrollbarBox->GetScrollbarMediator();
   if (!mediator) {
     return;
   }
   mUserChanged = true;
-  mediator->ThumbMoved(sb, CSSPixel::ToAppUnits(sb->GetCurPos()),
-                       CSSPixel::ToAppUnits(newPos));
+  nscoord oldPos = nsPresContext::CSSPixelsToAppUnits(GetCurrentPosition());
+  nscoord newPos = nsPresContext::CSSPixelsToAppUnits(aNewPos);
+  mediator->ThumbMoved(scrollbarBox, oldPos, newPos);
   if (!weakFrame.IsAlive()) {
     return;
   }
-  sb->SetCurPos(newPos);
+  UpdateAttribute(scrollbar->AsElement(), aNewPos, /* aNotify */ false,
+                  aIsSmooth);
+  CurrentPositionChanged();
   mUserChanged = false;
 }
 
@@ -935,7 +1027,7 @@ nsresult nsSliderFrame::StartDrag(Event* aEvent) {
 #ifdef DEBUG_SLIDER
   printf("Begin dragging\n");
 #endif
-  if (Scrollbar()->IsDisabled()) {
+  if (Scrollbar()->GetContent()->AsElement()->HasAttr(nsGkAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -954,6 +1046,7 @@ nsresult nsSliderFrame::StartDrag(Event* aEvent) {
 
   // If we should scroll-to-click, first place the middle of the slider thumb
   // under the mouse.
+  nsCOMPtr<nsIContent> scrollbar;
   nscoord newpos = pos;
   bool scrollToClick = ShouldScrollToClickForEvent(event);
   if (scrollToClick) {
@@ -966,12 +1059,15 @@ nsresult nsSliderFrame::StartDrag(Event* aEvent) {
     nscoord thumbLength = isHorizontal ? thumbSize.width : thumbSize.height;
 
     newpos -= (thumbLength / 2);
+
+    scrollbar = Scrollbar()->GetContent();
   }
 
   DragThumb(true);
 
   if (scrollToClick) {
-    SetCurrentThumbPosition(newpos);
+    // should aMaySnap be true here?
+    SetCurrentThumbPosition(scrollbar, newpos, false);
   }
 
   nsIFrame* thumbFrame = mFrames.FirstChild();
@@ -1145,7 +1241,7 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     return NS_OK;
   }
 
-  if (Scrollbar()->IsDisabled()) {
+  if (Scrollbar()->GetContent()->AsElement()->HasAttr(nsGkAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -1289,7 +1385,7 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
     // Convert distance along scrollbar track to amount of scrolled content.
     nscoord maxDistanceToScroll = maxDistanceAlongTrack / GetThumbRatio();
 
-    const CSSIntCoord pageLength = Scrollbar()->GetPageIncrement();
+    const CSSIntCoord pageLength = GetPageIncrement();
 
     nsPoint pos = sf->GetScrollPosition();
 

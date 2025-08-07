@@ -104,6 +104,13 @@ class nsSliderFrame final : public nsContainerFrame {
 
   void StartAPZDrag(mozilla::WidgetGUIEvent* aEvent);
 
+  int32_t GetCurrentPosition() const;
+  int32_t GetMinPosition() const;
+  int32_t GetMaxPosition() const;
+  int32_t GetPageIncrement() const;
+  static int32_t GetIntegerAttribute(nsIContent* content, nsAtom* atom,
+                                     int32_t defaultValue);
+
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus) override;
@@ -154,7 +161,10 @@ class nsSliderFrame final : public nsContainerFrame {
   bool ShouldScrollToClickForEvent(mozilla::WidgetGUIEvent* aEvent);
   bool IsEventOverThumb(mozilla::WidgetGUIEvent* aEvent);
 
-  void SetCurrentThumbPosition(nscoord aNewPos);
+  void SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewPos,
+                               bool aIsSmooth);
+  void SetCurrentPositionInternal(nsIContent* aScrollbar, int32_t pos,
+                                  bool aIsSmooth);
 
   void DragThumb(bool aGrabMouseEvents);
   void AddListener();
@@ -192,6 +202,9 @@ class nsSliderFrame final : public nsContainerFrame {
 
   nscoord mDragStart;
   nscoord mThumbStart;
+
+  int32_t mCurPos;
+
   nscoord mRepeatDirection;
 
   bool mDragInProgress = false;

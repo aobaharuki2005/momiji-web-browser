@@ -172,10 +172,4 @@ interface XULTreeElement : XULElement
    */
   [Throws]
   undefined removeImageCacheEntry(long row, TreeColumn col);
-
-  /** The current position of the scrollbar in CSS pixels */
-  readonly attribute long scrollbarPosition;
-
-  /** The current max position of the scrollbar in CSS pixels */
-  readonly attribute long scrollbarMaxPosition;
 };

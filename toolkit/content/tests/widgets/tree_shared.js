@@ -1864,6 +1864,9 @@ async function doScrollInSameSeries({
   // event fired as the same series.
   Services.prefs.setIntPref("mousewheel.scroll_series_timeout", 1000);
 
+  const scrollbar = tree.shadowRoot.querySelector(
+    "scrollbar[orient='vertical']"
+  );
   const parent = tree.parentElement;
 
   tree.scrollToRow(initialTreeScrollRow);
@@ -1872,10 +1875,10 @@ async function doScrollInSameSeries({
   // Scroll until the scrollbar was moved to the specified amount.
   await SimpleTest.promiseWaitForCondition(async () => {
     await nativeScroll(tree, 10, 10, scrollDelta);
-    const curpos = tree.scrollbarPosition;
+    const curpos = scrollbar.getAttribute("curpos");
     return (
       (scrollDelta < 0 && curpos == 0) ||
-      (scrollDelta > 0 && curpos == tree.scrollbarMaxPosition)
+      (scrollDelta > 0 && curpos == scrollbar.getAttribute("maxpos"))
     );
   });
 
@@ -1900,13 +1903,16 @@ async function doScrollWhileScrollingParent(tree) {
   // event fired as the same series.
   Services.prefs.setIntPref("mousewheel.scroll_series_timeout", 1000);
 
+  const scrollbar = tree.shadowRoot.querySelector(
+    "scrollbar[orient='vertical']"
+  );
   const parent = tree.parentElement;
 
   // Set initial scroll amount.
   tree.scrollToRow(0);
   parent.scrollTop = 0;
 
-  const scrollAmount = tree.scrollbarPosition;
+  const scrollAmount = scrollbar.getAttribute("curpos");
 
   // Scroll parent from top to bottom.
   await SimpleTest.promiseWaitForCondition(async () => {
@@ -1914,7 +1920,11 @@ async function doScrollWhileScrollingParent(tree) {
     return parent.scrollTop === parent.scrollTopMax;
   });
 
-  is(scrollAmount, tree.scrollbarPosition, "The tree should not be scrolled");
+  is(
+    scrollAmount,
+    scrollbar.getAttribute("curpos"),
+    "The tree should not be scrolled"
+  );
 
   const utils = SpecialPowers.getDOMWindowUtils(window);
   await SimpleTest.promiseWaitForCondition(() => !utils.getWheelScrollTarget());
@@ -1928,26 +1938,29 @@ async function doScrollTest({
   scrollDelta,
   isTreeScrollExpected,
 }) {
+  const scrollbar = tree.shadowRoot.querySelector(
+    "scrollbar[orient='vertical']"
+  );
   const container = tree.parentElement;
 
   // Set initial scroll amount.
   tree.scrollToRow(initialTreeScrollRow);
   container.scrollTop = initialContainerScrollTop;
 
-  const treeScrollAmount = tree.scrollbarPosition;
+  const treeScrollAmount = scrollbar.getAttribute("curpos");
   const containerScrollAmount = container.scrollTop;
 
   // Wait until changing either scroll.
   await SimpleTest.promiseWaitForCondition(async () => {
     await nativeScroll(tree, 10, 10, scrollDelta);
     return (
-      treeScrollAmount !== tree.scrollbarPosition ||
+      treeScrollAmount !== scrollbar.getAttribute("curpos") ||
       containerScrollAmount !== container.scrollTop
     );
   });
 
   is(
-    treeScrollAmount !== tree.scrollbarPosition,
+    treeScrollAmount !== scrollbar.getAttribute("curpos"),
     isTreeScrollExpected,
     "Scroll of tree is expected"
   );

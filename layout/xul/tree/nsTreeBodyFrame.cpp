@@ -778,16 +778,19 @@ nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts() {
 }
 
 void nsTreeBodyFrame::UpdateScrollbars(const ScrollParts& aParts) {
-  if (!aParts.mVScrollbar) {
-    return;
+  nscoord rowHeightAsPixels = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
+
+  AutoWeakFrame weakFrame(this);
+
+  if (aParts.mVScrollbar) {
+    nsAutoString curPos;
+    curPos.AppendInt(mTopRowIndex * rowHeightAsPixels);
+    aParts.mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos,
+                                       curPos, true);
+    // 'this' might be deleted here
   }
-  CSSIntCoord rowHeightAsPixels =
-      nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
-  CSSIntCoord pos = mTopRowIndex * rowHeightAsPixels;
-  if (!aParts.mVScrollbar->SetCurPos(pos)) {
-    return;
-  }
-  if (mScrollbarActivity) {
+
+  if (weakFrame.IsAlive() && mScrollbarActivity) {
     mScrollbarActivity->ActivityOccurred();
   }
 }
@@ -837,17 +840,35 @@ void nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts) {
 }
 
 void nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts) {
-  if (mUpdateBatchNest || !mView || !aParts.mVScrollbar) {
+  if (mUpdateBatchNest || !mView) {
     return;
   }
-  nscoord rowHeightAsPixels = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
-  CSSIntCoord size = rowHeightAsPixels *
-                     (mRowCount > mPageLength ? mRowCount - mPageLength : 0);
-  CSSIntCoord pageincrement = mPageLength * rowHeightAsPixels;
-  bool changed = false;
-  changed |= aParts.mVScrollbar->SetMaxPos(size);
-  changed |= aParts.mVScrollbar->SetPageIncrement(pageincrement);
-  if (changed && mScrollbarActivity) {
+  AutoWeakFrame weakFrame(this);
+
+  if (aParts.mVScrollbar) {
+    // Do Vertical Scrollbar
+    nsAutoString maxposStr;
+
+    nscoord rowHeightAsPixels =
+        nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
+
+    int32_t size = rowHeightAsPixels *
+                   (mRowCount > mPageLength ? mRowCount - mPageLength : 0);
+    maxposStr.AppendInt(size);
+    aParts.mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::maxpos,
+                                       maxposStr, true);
+    NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
+
+    // Also set our page increment and decrement.
+    nscoord pageincrement = mPageLength * rowHeightAsPixels;
+    nsAutoString pageStr;
+    pageStr.AppendInt(pageincrement);
+    aParts.mVScrollbarContent->SetAttr(kNameSpaceID_None,
+                                       nsGkAtoms::pageincrement, pageStr, true);
+    NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
+  }
+
+  if (weakFrame.IsAlive() && mScrollbarActivity) {
     mScrollbarActivity->ActivityOccurred();
   }
 }
