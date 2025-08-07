@@ -1385,16 +1385,12 @@ void CodeGenerator::visitCompareExchangeTypedArrayElement(
 
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  if (lir->index()->isConstant()) {
-    Address dest = ToAddress(elements, lir->index(), arrayType);
+  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
+
+  dest.match([&](const auto& dest) {
     masm.compareExchangeJS(arrayType, Synchronization::Full(), dest, oldval,
                            newval, temp, output);
-  } else {
-    BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromScalarType(arrayType));
-    masm.compareExchangeJS(arrayType, Synchronization::Full(), dest, oldval,
-                           newval, temp, output);
-  }
+  });
 }
 
 void CodeGenerator::visitAtomicExchangeTypedArrayElement(
@@ -1407,16 +1403,12 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement(
 
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  if (lir->index()->isConstant()) {
-    Address dest = ToAddress(elements, lir->index(), arrayType);
+  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
+
+  dest.match([&](const auto& dest) {
     masm.atomicExchangeJS(arrayType, Synchronization::Full(), dest, value, temp,
                           output);
-  } else {
-    BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromScalarType(arrayType));
-    masm.atomicExchangeJS(arrayType, Synchronization::Full(), dest, value, temp,
-                          output);
-  }
+  });
 }
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop(
@@ -1431,18 +1423,13 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop(
 
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  if (lir->index()->isConstant()) {
-    Address mem = ToAddress(elements, lir->index(), arrayType);
+  auto mem = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
+
+  mem.match([&](const auto& mem) {
     masm.atomicFetchOpJS(arrayType, Synchronization::Full(),
                          lir->mir()->operation(), value, mem, flagTemp, outTemp,
                          output);
-  } else {
-    BaseIndex mem(elements, ToRegister(lir->index()),
-                  ScaleFromScalarType(arrayType));
-    masm.atomicFetchOpJS(arrayType, Synchronization::Full(),
-                         lir->mir()->operation(), value, mem, flagTemp, outTemp,
-                         output);
-  }
+  });
 }
 
 void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect(
@@ -1454,34 +1441,25 @@ void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect(
   Register value = ToRegister(lir->value());
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  if (lir->index()->isConstant()) {
-    Address mem = ToAddress(elements, lir->index(), arrayType);
+  auto mem = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
+
+  mem.match([&](const auto& mem) {
     masm.atomicEffectOpJS(arrayType, Synchronization::Full(),
                           lir->mir()->operation(), value, mem, flagTemp);
-  } else {
-    BaseIndex mem(elements, ToRegister(lir->index()),
-                  ScaleFromScalarType(arrayType));
-    masm.atomicEffectOpJS(arrayType, Synchronization::Full(),
-                          lir->mir()->operation(), value, mem, flagTemp);
-  }
+  });
 }
 
 void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) {
   Register elements = ToRegister(lir->elements());
   Register64 out = ToOutRegister64(lir);
 
-  const MLoadUnboxedScalar* mir = lir->mir();
+  Scalar::Type storageType = lir->mir()->storageType();
 
-  Scalar::Type storageType = mir->storageType();
+  auto source = ToAddressOrBaseIndex(elements, lir->index(), storageType);
 
-  if (lir->index()->isConstant()) {
-    Address source = ToAddress(elements, lir->index(), storageType);
+  source.match([&](const auto& source) {
     masm.atomicLoad64(Synchronization::Load(), source, out);
-  } else {
-    BaseIndex source(elements, ToRegister(lir->index()),
-                     ScaleFromScalarType(storageType));
-    masm.atomicLoad64(Synchronization::Load(), source, out);
-  }
+  });
 }
 
 void CodeGenerator::visitAtomicStore64(LAtomicStore64* lir) {
@@ -1491,14 +1469,11 @@ void CodeGenerator::visitAtomicStore64(LAtomicStore64* lir) {
 
   Scalar::Type writeType = lir->mir()->writeType();
 
-  if (lir->index()->isConstant()) {
-    Address dest = ToAddress(elements, lir->index(), writeType);
+  auto dest = ToAddressOrBaseIndex(elements, lir->index(), writeType);
+
+  dest.match([&](const auto& dest) {
     masm.atomicStore64(Synchronization::Store(), dest, value, temp);
-  } else {
-    BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromScalarType(writeType));
-    masm.atomicStore64(Synchronization::Store(), dest, value, temp);
-  }
+  });
 }
 
 void CodeGenerator::visitCompareExchangeTypedArrayElement64(
@@ -1510,14 +1485,11 @@ void CodeGenerator::visitCompareExchangeTypedArrayElement64(
 
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  if (lir->index()->isConstant()) {
-    Address dest = ToAddress(elements, lir->index(), arrayType);
+  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
+
+  dest.match([&](const auto& dest) {
     masm.compareExchange64(Synchronization::Full(), dest, oldval, newval, out);
-  } else {
-    BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromScalarType(arrayType));
-    masm.compareExchange64(Synchronization::Full(), dest, oldval, newval, out);
-  }
+  });
 }
 
 void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
@@ -1528,14 +1500,11 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
 
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  if (lir->index()->isConstant()) {
-    Address dest = ToAddress(elements, lir->index(), arrayType);
+  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
+
+  dest.match([&](const auto& dest) {
     masm.atomicExchange64(Synchronization::Full(), dest, value, out);
-  } else {
-    BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromScalarType(arrayType));
-    masm.atomicExchange64(Synchronization::Full(), dest, value, out);
-  }
+  });
 }
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop64(
@@ -1550,16 +1519,12 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop64(
   Scalar::Type arrayType = lir->mir()->arrayType();
   AtomicOp atomicOp = lir->mir()->operation();
 
-  if (lir->index()->isConstant()) {
-    Address dest = ToAddress(elements, lir->index(), arrayType);
+  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
+
+  dest.match([&](const auto& dest) {
     masm.atomicFetchOp64(Synchronization::Full(), atomicOp, value, dest, temp,
                          out);
-  } else {
-    BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromScalarType(arrayType));
-    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, value, dest, temp,
-                         out);
-  }
+  });
 }
 
 void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
@@ -1573,14 +1538,11 @@ void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
   Scalar::Type arrayType = lir->mir()->arrayType();
   AtomicOp atomicOp = lir->mir()->operation();
 
-  if (lir->index()->isConstant()) {
-    Address dest = ToAddress(elements, lir->index(), arrayType);
+  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
+
+  dest.match([&](const auto& dest) {
     masm.atomicEffectOp64(Synchronization::Full(), atomicOp, value, dest, temp);
-  } else {
-    BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromScalarType(arrayType));
-    masm.atomicEffectOp64(Synchronization::Full(), atomicOp, value, dest, temp);
-  }
+  });
 }
 
 void CodeGenerator::visitWasmSelect(LWasmSelect* ins) {
