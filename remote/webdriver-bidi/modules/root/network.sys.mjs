@@ -1068,6 +1068,124 @@ class NetworkModule extends RootBiDiModule {
   }
 
   /**
+   * An object that holds information about a network data content.
+   *
+   * @typedef NetworkGetDataResult
+   *
+   * @property {BytesValue} bytes
+   *     The network data content as BytesValue.
+   */
+
+  /**
+   * Retrieve a network data if available.
+   *
+   * @param {object} options
+   * @param {string=} options.collector
+   *     Optional id of a collector. If provided, data will only be returned if
+   *     the collector is in the network data collectors.
+   * @param {DataType} options.dataType
+   *     The type of the data to retrieve.
+   * @param {boolean=} options.disown
+   *     Optional. If set to true, the collector parameter is mandatory and the
+   *     collector will be removed from the network data collectors. Defaults to
+   *     false.
+   * @param {string} options.request
+   *     The id of the request of the data to retrieve.
+   *
+   * @returns {NetworkGetDataResult}
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchNetworkDataError}
+   *     If the network data could not be found for the provided parameters.
+   * @throws {UnavailableNetworkDataError}
+   *     If the network data content is no longer available because it was
+   *     evicted.
+   */
+  async getData(options = {}) {
+    const {
+      collector = null,
+      dataType,
+      disown = null,
+      request: requestId,
+    } = options;
+
+    lazy.assert.string(
+      requestId,
+      lazy.pprint`Expected "request" to be a string, got ${requestId}`
+    );
+
+    const supportedDataTypes = Object.values(DataType);
+    if (!supportedDataTypes.includes(dataType)) {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected "dataType" to be one of ${supportedDataTypes},` +
+          lazy.pprint` got ${dataType}`
+      );
+    }
+
+    if (collector !== null) {
+      lazy.assert.string(
+        collector,
+        lazy.pprint`Expected "collector" to be a string, got ${collector}`
+      );
+
+      if (!this.#networkCollectors.has(collector)) {
+        throw new lazy.error.NoSuchNetworkCollectorError(
+          `Network data collector with id ${collector} not found`
+        );
+      }
+    }
+
+    if (disown !== null) {
+      lazy.assert.boolean(
+        disown,
+        lazy.pprint`Expected "disown" to be a boolean, got ${disown}`
+      );
+
+      if (disown && collector === null) {
+        throw new lazy.error.InvalidArgumentError(
+          `Expected "collector" to be provided when using "disown"=true`
+        );
+      }
+    }
+
+    const collectedData = this.#getCollectedData(requestId, dataType);
+    if (!collectedData) {
+      throw new lazy.error.NoSuchNetworkDataError(
+        `Network data for request id ${requestId} and DataType ${dataType} not found`
+      );
+    }
+
+    if (collectedData.pending) {
+      await collectedData.networkDataCollected.promise;
+    }
+
+    if (collector !== null && !collectedData.collectors.has(collector)) {
+      throw new lazy.error.NoSuchNetworkDataError(
+        `Network data for request id ${requestId} and DataType ${dataType} does not match collector ${collector}`
+      );
+    }
+
+    if (collectedData.bytes === null) {
+      throw new lazy.error.UnavailableNetworkDataError(
+        `Network data content for request id ${requestId} and DataType ${dataType} is unavailable`
+      );
+    }
+
+    const value = await collectedData.bytes.getDecodedResponseBody();
+    const type =
+      collectedData.bytes.encoding === "base64"
+        ? BytesValueType.Base64
+        : BytesValueType.String;
+
+    if (disown) {
+      this.#removeCollectorFromData(collectedData, collector);
+    }
+
+    return { bytes: this.#serializeAsBytesValue(value, type) };
+  }
+
+  /**
    * Fails a request that is blocked by a network intercept.
    *
    * @param {object=} options
@@ -2353,7 +2471,10 @@ class NetworkModule extends RootBiDiModule {
   #serializeHeader(name, value) {
     return {
       name,
-      value: this.#serializeStringAsBytesValue(value),
+      // TODO: For now, we handle all headers and cookies with the "string" type.
+      // See Bug 1835216 to add support for "base64" type and handle non-utf8
+      // values.
+      value: this.#serializeAsBytesValue(value, BytesValueType.String),
     };
   }
 
@@ -2397,7 +2518,7 @@ class NetworkModule extends RootBiDiModule {
   }
 
   /**
-   * Serialize a string value as BytesValue.
+   * Serialize a value as BytesValue.
    *
    * Note: This does not attempt to fully implement serialize protocol bytes
    * (https://w3c.github.io/webdriver-bidi/#serialize-protocol-bytes) as the
@@ -2407,12 +2528,9 @@ class NetworkModule extends RootBiDiModule {
    * @param {string} value
    *     The value to serialize.
    */
-  #serializeStringAsBytesValue(value) {
-    // TODO: For now, we handle all headers and cookies with the "string" type.
-    // See Bug 1835216 to add support for "base64" type and handle non-utf8
-    // values.
+  #serializeAsBytesValue(value, type) {
     return {
-      type: BytesValueType.String,
+      type,
       value,
     };
   }
