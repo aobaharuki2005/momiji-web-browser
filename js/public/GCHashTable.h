@@ -89,7 +89,7 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
   }
 
   void traceWeakEntries(JSTracer* trc, typename Base::Enum& e) {
-    for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
+    for (; !e.empty(); e.popFront()) {
       if (!MapEntryGCPolicy::traceWeak(trc, &e.front().mutableKey(),
                                        &e.front().value())) {
         e.removeFront();
