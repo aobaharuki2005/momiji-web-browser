@@ -294,12 +294,14 @@ class BrowserToolbarSearchMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN default engine selected WHEN entering in edit mode THEN set autocomplete providers`() {
+    fun `GIVEN default engine selected WHEN entering in edit mode THEN set autocomplete providers and page end buttons`() {
         every { settings.shouldAutocompleteInAwesomebar } returns true
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowBookmarkSuggestions } returns true
+        val middleware = spyk(buildMiddleware(appStore = appStore))
+        every { middleware.isSpeechRecognitionAvailable() } returns true
         configureAutocompleteProvidersInComponents()
-        val (_, store) = buildMiddlewareAndAddToStore()
+        val store = buildStore(middleware)
 
         store.dispatch(ToggleEditMode(true))
 
@@ -311,6 +313,9 @@ class BrowserToolbarSearchMiddlewareTest {
             ),
             store.state.editState.autocompleteProviders,
         )
+        assertEquals(2, store.state.editState.editActionsEnd.size)
+        assertEquals(expectedVoiceSearchButton, store.state.editState.editActionsEnd.first())
+        assertEquals(expectedQrButton, store.state.editState.editActionsEnd.last())
     }
 
     @Test
@@ -368,13 +373,15 @@ class BrowserToolbarSearchMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN tabs engine selected WHEN entering in edit mode THEN set autocomplete providers`() {
+    fun `GIVEN tabs engine selected WHEN entering in edit mode THEN set autocomplete providers and page end buttons`() {
         every { settings.shouldAutocompleteInAwesomebar } returns true
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowBookmarkSuggestions } returns true
-        configureAutocompleteProvidersInComponents()
         val appStore = AppStore()
-        val (_, store) = buildMiddlewareAndAddToStore(appStore = appStore)
+        val middleware = spyk(buildMiddleware(appStore = appStore))
+        every { middleware.isSpeechRecognitionAvailable() } returns true
+        configureAutocompleteProvidersInComponents()
+        val store = buildStore(middleware)
 
         store.dispatch(
             SearchSelectorItemClicked(
@@ -389,6 +396,8 @@ class BrowserToolbarSearchMiddlewareTest {
             ),
             store.state.editState.autocompleteProviders,
         )
+        assertEquals(1, store.state.editState.editActionsEnd.size)
+        assertEquals(expectedVoiceSearchButton, store.state.editState.editActionsEnd.first())
     }
 
     @Test
@@ -396,9 +405,11 @@ class BrowserToolbarSearchMiddlewareTest {
         every { settings.shouldAutocompleteInAwesomebar } returns true
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowBookmarkSuggestions } returns true
-        configureAutocompleteProvidersInComponents()
         val appStore = AppStore()
-        val (_, store) = buildMiddlewareAndAddToStore(appStore = appStore)
+        val middleware = spyk(buildMiddleware(appStore = appStore))
+        every { middleware.isSpeechRecognitionAvailable() } returns true
+        configureAutocompleteProvidersInComponents()
+        val store = buildStore(middleware)
 
         store.dispatch(
             SearchSelectorItemClicked(
@@ -410,6 +421,8 @@ class BrowserToolbarSearchMiddlewareTest {
             listOf(components.core.bookmarksStorage),
             store.state.editState.autocompleteProviders,
         )
+        assertEquals(1, store.state.editState.editActionsEnd.size)
+        assertEquals(expectedVoiceSearchButton, store.state.editState.editActionsEnd.first())
     }
 
     @Test
@@ -417,9 +430,11 @@ class BrowserToolbarSearchMiddlewareTest {
         every { settings.shouldAutocompleteInAwesomebar } returns true
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowBookmarkSuggestions } returns true
-        configureAutocompleteProvidersInComponents()
         val appStore = AppStore()
-        val (_, store) = buildMiddlewareAndAddToStore(appStore = appStore)
+        val middleware = spyk(buildMiddleware(appStore = appStore))
+        every { middleware.isSpeechRecognitionAvailable() } returns true
+        configureAutocompleteProvidersInComponents()
+        val store = buildStore(middleware)
 
         store.dispatch(
             SearchSelectorItemClicked(
@@ -431,13 +446,17 @@ class BrowserToolbarSearchMiddlewareTest {
             listOf(components.core.historyStorage),
             store.state.editState.autocompleteProviders,
         )
+        assertEquals(1, store.state.editState.editActionsEnd.size)
+        assertEquals(expectedVoiceSearchButton, store.state.editState.editActionsEnd.first())
     }
 
     @Test
     fun `GIVEN other search engine selected WHEN entering in edit mode THEN set autocomplete providers`() {
         every { settings.shouldAutocompleteInAwesomebar } returns true
+        val middleware = spyk(buildMiddleware(appStore = appStore))
+        every { middleware.isSpeechRecognitionAvailable() } returns true
         configureAutocompleteProvidersInComponents()
-        val (_, store) = buildMiddlewareAndAddToStore()
+        val store = buildStore(middleware)
 
         store.dispatch(SearchSelectorItemClicked(mockk(relaxed = true))).joinBlocking()
         store.dispatch(ToggleEditMode(true))
@@ -446,6 +465,8 @@ class BrowserToolbarSearchMiddlewareTest {
             emptyList<AutocompleteProvider>(),
             store.state.editState.autocompleteProviders,
         )
+        assertEquals(1, store.state.editState.editActionsEnd.size)
+        assertEquals(expectedVoiceSearchButton, store.state.editState.editActionsEnd.first())
     }
 
     @Test

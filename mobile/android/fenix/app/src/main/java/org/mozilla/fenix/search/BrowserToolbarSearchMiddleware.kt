@@ -214,6 +214,7 @@ class BrowserToolbarSearchMiddleware(
                 appStore.dispatch(SearchEngineSelected(action.searchEngine, true))
                 appStore.dispatch(SearchStarted())
                 refreshConfigurationAfterSearchEngineChange(context, action.searchEngine)
+                updateSearchEndPageActions(context) // to update the visibility of the qr scanner button
             }
 
             is UrlSuggestionAutocompleted -> {
@@ -497,7 +498,6 @@ class BrowserToolbarSearchMiddleware(
                     if (it.qrScannerState.lastScanData?.isNotEmpty() == true) {
                         appStore.dispatch(AppAction.QrScannerAction.QrScannerInputConsumed)
                         context.dispatch(SearchQueryUpdated(it.qrScannerState.lastScanData))
-                        context.dispatch(SearchQueryUpdated(it.qrScannerState.lastScanData, false))
                         components.useCases.fenixBrowserUseCases.loadUrlOrSearch(
                             searchTermOrURL = it.qrScannerState.lastScanData,
                             newTab = appStore.state.searchState.sourceTabId == null,
