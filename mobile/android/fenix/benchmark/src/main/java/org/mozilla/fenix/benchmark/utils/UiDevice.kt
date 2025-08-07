@@ -68,9 +68,9 @@ fun UiDevice.waitUntilPageLoaded() {
     refresh.waitForExists(WAITING_TIME_MS)
 }
 
-fun UiDevice.openTabsTray(packageName: String) {
+fun UiDevice.openTabsTray(useNewToolbar: Boolean) {
     val tabsTrayButton = findObject(
-        UiSelector().resourceId("$packageName:id/counter_box")
+        UiSelector().resourceId(getTabCounterId(useNewToolbar))
     )
     tabsTrayButton.waitForExists(WAITING_TIME_MS)
     tabsTrayButton.click()
@@ -157,17 +157,19 @@ fun UiDevice.closeAllTabs() {
     closeAllTabsButton.click()
 }
 
-fun UiDevice.loadSite(packageName: String, url: String) {
+fun UiDevice.enterSearchMode(useNewToolbar: Boolean) {
     val urlBar = findObject(
-        UiSelector().resourceId("$packageName:id/toolbar")
+        UiSelector().resourceId(getUrlBarId(useNewToolbar))
     )
     urlBar.waitForExists(WAITING_TIME_MS)
     urlBar.click()
+}
 
-    val awesomeBar = findObject(
-        UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+fun UiDevice.loadSite(url: String, useNewToolbar: Boolean) {
+    val urlBarEditField = findObject(
+        UiSelector().resourceId(getUrlBarEditField(useNewToolbar))
     )
-    awesomeBar.setText(url)
+    urlBarEditField.setText(url)
     pressEnter()
 
     waitUntilPageLoaded()
@@ -185,4 +187,19 @@ fun UiDevice.flingToBeginning(scrollableId: String, maxSwipes: Int) {
     val scrollable = UiScrollable(UiSelector().resourceId(scrollableId))
     scrollable.waitForExists(WAITING_TIME_MS)
     scrollable.flingToBeginning(maxSwipes)
+}
+
+private fun getUrlBarId(useNewToolbar: Boolean) = when (useNewToolbar) {
+    true -> "ADDRESSBAR_URL"
+    false -> "$TARGET_PACKAGE:id/toolbar"
+}
+
+private fun getUrlBarEditField(useNewToolbar: Boolean) = when (useNewToolbar) {
+    true -> "$TARGET_PACKAGE:id/mozac_addressbar_search_query_input"
+    false -> "$TARGET_PACKAGE:id/mozac_browser_toolbar_edit_url_view"
+}
+
+private fun getTabCounterId(useNewToolbar: Boolean) = when (useNewToolbar) {
+    true -> "TabCounterTestTags.tabCounter"
+    false -> "$TARGET_PACKAGE:id/counter_box"
 }

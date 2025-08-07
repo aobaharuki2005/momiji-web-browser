@@ -13,12 +13,15 @@ import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.mozilla.fenix.benchmark.utils.EXTRA_COMPOSABLE_TOOLBAR
+import org.mozilla.fenix.benchmark.utils.ParameterizedToolbarsTest
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
 import org.mozilla.fenix.benchmark.utils.dismissWallpaperOnboarding
+import org.mozilla.fenix.benchmark.utils.enterSearchMode
 import org.mozilla.fenix.benchmark.utils.isWallpaperOnboardingShown
 import org.mozilla.fenix.benchmark.utils.loadSite
 import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
@@ -49,10 +52,12 @@ import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
  * For more information, see the [Macrobenchmark documentation](https://d.android.com/macrobenchmark#create-macrobenchmark)
  * and the [instrumentation arguments documentation](https://d.android.com/topic/performance/benchmarking/macrobenchmark-instrumentation-args).
  **/
-@RunWith(AndroidJUnit4::class)
+@RunWith(Parameterized::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @BaselineProfileMacrobenchmark
-class BaselineProfilesNormalBrowsingBenchmark {
+class BaselineProfilesNormalBrowsingBenchmark(
+    private val useComposableToolbar: Boolean,
+): ParameterizedToolbarsTest() {
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
 
@@ -77,6 +82,7 @@ class BaselineProfilesNormalBrowsingBenchmark {
             },
         ) {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("fenix-nightly://home"))
+                .putExtra(EXTRA_COMPOSABLE_TOOLBAR, useComposableToolbar)
 
             startActivityAndWait(intent = intent)
 
@@ -84,7 +90,8 @@ class BaselineProfilesNormalBrowsingBenchmark {
                 device.dismissWallpaperOnboarding()
             }
 
-            device.loadSite(packageName = packageName, url = "example.com")
+            device.enterSearchMode(useComposableToolbar)
+            device.loadSite(url = "example.com", useComposableToolbar)
 
             killProcess()
         }

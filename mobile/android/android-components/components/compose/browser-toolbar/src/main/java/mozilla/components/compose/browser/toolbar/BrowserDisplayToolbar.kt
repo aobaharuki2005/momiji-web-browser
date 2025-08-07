@@ -15,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -27,6 +30,7 @@ import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.ContentDescription.StringResContentDescription
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.Icon.DrawableResIcon
+import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_URL_BOX
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.ProgressBarConfig
@@ -87,7 +91,9 @@ fun BrowserDisplayToolbar(
     Box(
         modifier = Modifier
             .background(color = AcornTheme.colors.layer1)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .semantics { testTagsAsResourceId = true },
+
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -144,7 +150,8 @@ fun BrowserDisplayToolbar(
                     hint = pageOrigin.hint,
                     modifier = Modifier
                         .height(56.dp)
-                        .weight(1f),
+                        .weight(1f)
+                        .testTag(ADDRESSBAR_URL_BOX),
                     url = pageOrigin.url,
                     title = pageOrigin.title,
                     textGravity = pageOrigin.textGravity,

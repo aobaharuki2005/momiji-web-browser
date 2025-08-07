@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -89,7 +91,8 @@ fun BrowserEditToolbar(
     Box(
         modifier = Modifier
             .background(color = AcornTheme.colors.layer1)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .semantics { testTagsAsResourceId = true },
     ) {
         Row(
             modifier = Modifier

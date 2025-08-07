@@ -9,12 +9,15 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.benchmark.macro.junit4.BaselineProfileRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.mozilla.fenix.benchmark.utils.EXTRA_COMPOSABLE_TOOLBAR
+import org.mozilla.fenix.benchmark.utils.ParameterizedToolbarsTest
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
 import org.mozilla.fenix.benchmark.utils.closeAllTabs
+import org.mozilla.fenix.benchmark.utils.enterSearchMode
 import org.mozilla.fenix.benchmark.utils.loadSite
 import org.mozilla.fenix.benchmark.utils.openNewTabOnTabsTray
 import org.mozilla.fenix.benchmark.utils.openTabsTray
@@ -46,9 +49,11 @@ import org.mozilla.fenix.benchmark.utils.switchTabs
  * When using this class to generate a baseline profile, only API 33+ or rooted API 28+ are supported.
  */
 @RequiresApi(Build.VERSION_CODES.P)
-@RunWith(AndroidJUnit4::class)
+@RunWith(Parameterized::class)
 @BaselineProfileGenerator
-class SwitchTabsBaselineProfileGenerator {
+class SwitchTabsBaselineProfileGenerator(
+    private val useComposableToolbar: Boolean,
+): ParameterizedToolbarsTest() {
 
     @get:Rule
     val rule = BaselineProfileRule()
@@ -58,20 +63,23 @@ class SwitchTabsBaselineProfileGenerator {
         rule.collect(
             packageName = TARGET_PACKAGE,
         ) {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse("http://example.com")
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("fenix-nightly://home"))
+                .putExtra(EXTRA_COMPOSABLE_TOOLBAR, useComposableToolbar)
             intent.setPackage(packageName)
 
             startActivityAndWait(intent = intent)
 
-            device.openTabsTray(packageName = packageName)
-            device.openNewTabOnTabsTray()
-            device.loadSite(packageName = TARGET_PACKAGE, url = "https://www.mozilla.org/credits/")
+            device.enterSearchMode(useComposableToolbar)
+            device.loadSite(url = "example.com", useComposableToolbar)
 
-            device.openTabsTray(packageName = packageName)
+            device.openTabsTray(useComposableToolbar)
+            device.openNewTabOnTabsTray()
+            device.loadSite(url = "https://www.mozilla.org/credits/", useComposableToolbar)
+
+            device.openTabsTray(useComposableToolbar)
             device.switchTabs(siteName = "Example Domain", newTabUrl = "http://example.com")
 
-            device.openTabsTray(packageName = packageName)
+            device.openTabsTray(useComposableToolbar)
             device.closeAllTabs()
         }
     }
