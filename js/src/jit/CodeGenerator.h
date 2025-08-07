@@ -234,6 +234,12 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                                                  const LAllocation* index,
                                                  Scalar::Type type);
 
+  using AddressOrBaseObjectElementIndex =
+      mozilla::Variant<Address, BaseObjectElementIndex>;
+
+  static AddressOrBaseObjectElementIndex ToAddressOrBaseObjectElementIndex(
+      Register elements, const LAllocation* index);
+
 #ifdef DEBUG
   void emitAssertArgumentsSliceBounds(const RegisterOrInt32& begin,
                                       const RegisterOrInt32& count,
@@ -353,12 +359,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                                    Label* ifDoesntEmulateUndefined,
                                    Register scratch, OutOfLineTestObject* ool);
 
-  void emitStoreElementTyped(const LAllocation* value, MIRType valueType,
-                             Register elements, const LAllocation* index);
-
   // Bailout if an element about to be written to is a hole.
-  void emitStoreHoleCheck(Register elements, const LAllocation* index,
-                          LSnapshot* snapshot);
+  void emitStoreHoleCheck(Address dest, LSnapshot* snapshot);
+  void emitStoreHoleCheck(BaseObjectElementIndex dest, LSnapshot* snapshot);
 
   void emitAssertRangeI(MIRType type, const Range* r, Register input);
   void emitAssertRangeD(const Range* r, FloatRegister input,

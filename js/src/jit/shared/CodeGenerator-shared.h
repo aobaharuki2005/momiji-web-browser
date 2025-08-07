@@ -242,8 +242,8 @@ class CodeGeneratorShared : public LElementVisitor {
   void emitTruncateDouble(FloatRegister src, Register dest, MInstruction* mir);
   void emitTruncateFloat32(FloatRegister src, Register dest, MInstruction* mir);
 
-  void emitPreBarrier(Register elements, const LAllocation* index);
   void emitPreBarrier(Address address);
+  void emitPreBarrier(BaseObjectElementIndex address);
 
   // We don't emit code for trivial blocks, so if we want to branch to the
   // given block, and it's trivial, return the ultimate block we should

@@ -15262,48 +15262,53 @@ void CodeGenerator::visitSpectreMaskIndex(LSpectreMaskIndex* lir) {
   }
 }
 
-void CodeGenerator::emitStoreHoleCheck(Register elements,
-                                       const LAllocation* index,
-                                       LSnapshot* snapshot) {
-  Label bail;
+CodeGenerator::AddressOrBaseObjectElementIndex
+CodeGenerator::ToAddressOrBaseObjectElementIndex(Register elements,
+                                                 const LAllocation* index) {
   if (index->isConstant()) {
-    Address dest(elements, ToInt32(index) * sizeof(js::Value));
-    masm.branchTestMagic(Assembler::Equal, dest, &bail);
-  } else {
-    BaseObjectElementIndex dest(elements, ToRegister(index));
-    masm.branchTestMagic(Assembler::Equal, dest, &bail);
+    NativeObject::elementsSizeMustNotOverflow();
+    return AddressOrBaseObjectElementIndex(
+        Address(elements, ToInt32(index) * sizeof(JS::Value)));
   }
+  return AddressOrBaseObjectElementIndex(
+      BaseObjectElementIndex(elements, ToRegister(index)));
+}
+
+void CodeGenerator::emitStoreHoleCheck(Address dest, LSnapshot* snapshot) {
+  Label bail;
+  masm.branchTestMagic(Assembler::Equal, dest, &bail);
   bailoutFrom(&bail, snapshot);
 }
 
-void CodeGenerator::emitStoreElementTyped(const LAllocation* value,
-                                          MIRType valueType, Register elements,
-                                          const LAllocation* index) {
-  MOZ_ASSERT(valueType != MIRType::MagicHole);
-  ConstantOrRegister v = ToConstantOrRegister(value, valueType);
-  if (index->isConstant()) {
-    Address dest(elements, ToInt32(index) * sizeof(js::Value));
-    masm.storeUnboxedValue(v, valueType, dest);
-  } else {
-    BaseObjectElementIndex dest(elements, ToRegister(index));
-    masm.storeUnboxedValue(v, valueType, dest);
-  }
+void CodeGenerator::emitStoreHoleCheck(BaseObjectElementIndex dest,
+                                       LSnapshot* snapshot) {
+  Label bail;
+  masm.branchTestMagic(Assembler::Equal, dest, &bail);
+  bailoutFrom(&bail, snapshot);
 }
 
 void CodeGenerator::visitStoreElementT(LStoreElementT* store) {
   Register elements = ToRegister(store->elements());
   const LAllocation* index = store->index();
 
-  if (store->mir()->needsBarrier()) {
-    emitPreBarrier(elements, index);
-  }
+  MIRType valueType = store->mir()->value()->type();
+  MOZ_ASSERT(valueType != MIRType::MagicHole);
 
-  if (store->mir()->needsHoleCheck()) {
-    emitStoreHoleCheck(elements, index, store->snapshot());
-  }
+  ConstantOrRegister value = ToConstantOrRegister(store->value(), valueType);
 
-  emitStoreElementTyped(store->value(), store->mir()->value()->type(), elements,
-                        index);
+  auto dest = ToAddressOrBaseObjectElementIndex(elements, index);
+
+  dest.match([&](const auto& dest) {
+    if (store->mir()->needsBarrier()) {
+      emitPreBarrier(dest);
+    }
+
+    if (store->mir()->needsHoleCheck()) {
+      emitStoreHoleCheck(dest, store->snapshot());
+    }
+
+    masm.storeUnboxedValue(value, valueType, dest);
+  });
 }
 
 void CodeGenerator::visitStoreElementV(LStoreElementV* lir) {
@@ -15311,21 +15316,19 @@ void CodeGenerator::visitStoreElementV(LStoreElementV* lir) {
   Register elements = ToRegister(lir->elements());
   const LAllocation* index = lir->index();
 
-  if (lir->mir()->needsBarrier()) {
-    emitPreBarrier(elements, index);
-  }
+  auto dest = ToAddressOrBaseObjectElementIndex(elements, index);
 
-  if (lir->mir()->needsHoleCheck()) {
-    emitStoreHoleCheck(elements, index, lir->snapshot());
-  }
+  dest.match([&](const auto& dest) {
+    if (lir->mir()->needsBarrier()) {
+      emitPreBarrier(dest);
+    }
 
-  if (lir->index()->isConstant()) {
-    Address dest(elements, ToInt32(lir->index()) * sizeof(js::Value));
+    if (lir->mir()->needsHoleCheck()) {
+      emitStoreHoleCheck(dest, lir->snapshot());
+    }
+
     masm.storeValue(value, dest);
-  } else {
-    BaseObjectElementIndex dest(elements, ToRegister(lir->index()));
-    masm.storeValue(value, dest);
-  }
+  });
 }
 
 void CodeGenerator::visitStoreHoleValueElement(LStoreHoleValueElement* lir) {
@@ -15360,16 +15363,19 @@ void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, initLength, temp, ool->entry());
 
-  emitPreBarrier(elements, lir->index());
+  emitPreBarrier(BaseObjectElementIndex(elements, index));
 
   masm.bind(ool->rejoin());
-  emitStoreElementTyped(lir->value(), lir->mir()->value()->type(), elements,
-                        lir->index());
+
+  MIRType valueType = lir->mir()->value()->type();
+  MOZ_ASSERT(valueType != MIRType::MagicHole);
+
+  ConstantOrRegister val = ToConstantOrRegister(lir->value(), valueType);
+  masm.storeUnboxedValue(val, valueType,
+                         BaseObjectElementIndex(elements, index));
 
   if (ValueNeedsPostBarrier(lir->mir()->value())) {
     LiveRegisterSet regs = liveVolatileRegs(lir);
-    ConstantOrRegister val =
-        ToConstantOrRegister(lir->value(), lir->mir()->value()->type());
     emitElementPostWriteBarrier(lir->mir(), regs, obj, index, temp, val);
   }
 }
@@ -15396,7 +15402,7 @@ void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, initLength, temp, ool->entry());
 
-  emitPreBarrier(elements, lir->index());
+  emitPreBarrier(BaseObjectElementIndex(elements, index));
 
   masm.bind(ool->rejoin());
   masm.storeValue(value, BaseObjectElementIndex(elements, index));
@@ -17407,16 +17413,12 @@ void CodeGenerator::visitLoadElementAndUnbox(LLoadElementAndUnbox* ins) {
   Register elements = ToRegister(ins->elements());
   AnyRegister result = ToAnyRegister(ins->output());
 
+  auto source = ToAddressOrBaseObjectElementIndex(elements, ins->index());
+
   Label bail;
-  if (ins->index()->isConstant()) {
-    NativeObject::elementsSizeMustNotOverflow();
-    int32_t offset = ToInt32(ins->index()) * sizeof(Value);
-    Address address(elements, offset);
-    EmitLoadAndUnbox(masm, address, type, mir->fallible(), result, &bail);
-  } else {
-    BaseObjectElementIndex address(elements, ToRegister(ins->index()));
-    EmitLoadAndUnbox(masm, address, type, mir->fallible(), result, &bail);
-  }
+  source.match([&](const auto& source) {
+    EmitLoadAndUnbox(masm, source, type, mir->fallible(), result, &bail);
+  });
 
   if (mir->fallible()) {
     bailoutFrom(&bail, ins->snapshot());
@@ -18446,14 +18448,9 @@ void CodeGenerator::visitLoadElementV(LLoadElementV* load) {
   Register elements = ToRegister(load->elements());
   const ValueOperand out = ToOutValue(load);
 
-  if (load->index()->isConstant()) {
-    NativeObject::elementsSizeMustNotOverflow();
-    int32_t offset = ToInt32(load->index()) * sizeof(Value);
-    masm.loadValue(Address(elements, offset), out);
-  } else {
-    masm.loadValue(BaseObjectElementIndex(elements, ToRegister(load->index())),
-                   out);
-  }
+  auto source = ToAddressOrBaseObjectElementIndex(elements, load->index());
+
+  source.match([&](auto const& source) { masm.loadValue(source, out); });
 
   if (load->mir()->needsHoleCheck()) {
     Label testMagic;
@@ -19242,14 +19239,12 @@ void CodeGenerator::visitGuardElementNotHole(LGuardElementNotHole* lir) {
   Register elements = ToRegister(lir->elements());
   const LAllocation* index = lir->index();
 
+  auto source = ToAddressOrBaseObjectElementIndex(elements, index);
+
   Label testMagic;
-  if (index->isConstant()) {
-    Address address(elements, ToInt32(index) * sizeof(js::Value));
-    masm.branchTestMagic(Assembler::Equal, address, &testMagic);
-  } else {
-    BaseObjectElementIndex address(elements, ToRegister(index));
-    masm.branchTestMagic(Assembler::Equal, address, &testMagic);
-  }
+  source.match([&](const auto& source) {
+    masm.branchTestMagic(Assembler::Equal, source, &testMagic);
+  });
   bailoutFrom(&testMagic, lir->snapshot());
 }
 
