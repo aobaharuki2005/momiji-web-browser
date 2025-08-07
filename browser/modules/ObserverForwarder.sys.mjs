@@ -12,6 +12,8 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 /* eslint-disable mozilla/valid-lazy */
 let lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  CanvasPermissionPromptHelper:
+    "moz-src:///browser/modules/CanvasPermissionPromptHelper.sys.mjs",
   FilePickerCrashed: "resource:///modules/FilePickerCrashed.sys.mjs",
   PluginManager: "resource:///actors/PluginParent.sys.mjs",
 });
@@ -20,6 +22,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 // method should be called when the topic is fired. The exported objects
 // are expected to be defined in the modules imported above.
 let gObservers = {
+  "canvas-permissions-prompt": ["CanvasPermissionPromptHelper"],
+  "canvas-permissions-prompt-hide-doorhanger": ["CanvasPermissionPromptHelper"],
+
   "file-picker-crashed": ["FilePickerCrashed"],
   "gmp-plugin-crash": ["PluginManager"],
   "plugin-crashed": ["PluginManager"],

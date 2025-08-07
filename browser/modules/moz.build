@@ -147,6 +147,7 @@ EXTRA_JS_MODULES += [
 ]
 
 MOZ_SRC_FILES += [
+    "CanvasPermissionPromptHelper.sys.mjs",
     "ContextId.sys.mjs",
     "ObserverForwarder.sys.mjs",
 ]

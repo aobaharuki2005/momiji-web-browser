@@ -396,7 +396,6 @@ var gBrowserInit = {
     Services.obs.addObserver(gLocaleChangeObserver, "intl:app-locales-changed");
 
     BrowserOffline.init();
-    CanvasPermissionPromptHelper.init();
     WebAuthnPromptHelper.init();
 
     BrowserUtils.callModulesFromCategory(
@@ -1127,7 +1126,6 @@ var gBrowserInit = {
       );
 
       BrowserOffline.uninit();
-      CanvasPermissionPromptHelper.uninit();
       WebAuthnPromptHelper.uninit();
       PanelUI.uninit();
     }

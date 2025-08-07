@@ -67,7 +67,6 @@
   "handleDroppedLink",
   "ToolbarContextMenu",
   "BrowserOffline",
-  "CanvasPermissionPromptHelper",
   "WebAuthnPromptHelper",
   "CanCloseWindow",
   "WindowIsClosing",
