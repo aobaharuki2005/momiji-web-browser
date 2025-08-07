@@ -10707,6 +10707,13 @@
   value: false
   mirror: always
 
+# Whether :-moz-broken is supported in content.
+- name: layout.css.moz-broken.content.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether the modern ::slider-* pseudos are enabled.
 - name: layout.css.modern-range-pseudos.enabled
   type: RelaxedAtomicBool
