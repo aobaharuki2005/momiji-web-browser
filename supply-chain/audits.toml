@@ -4454,6 +4454,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.4 -> 0.1.5"
 
+[[audits.pkcs11-bindings]]
+who = "John M. Schanck <jschanck@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.5 -> 0.1.7"
+
 [[audits.pkg-config]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
