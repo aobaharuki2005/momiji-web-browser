@@ -35,6 +35,21 @@ private const val UNSUPPORTED_ERROR = "Browser preferences support is not availa
         ): Unit = onError(UnsupportedOperationException(UNSUPPORTED_ERROR))
 
         /**
+         * Gets value and basic information about a list of pref.
+         *
+         * @param prefs The list of preferences to find information on.
+         * @param onSuccess Callback invoked when the preference was valid and information could be
+         * obtained on it.
+         * @param onError Callback invoked when an issue occurs.
+         */
+        @ExperimentalAndroidComponentsApi
+        fun getBrowserPrefs(
+            prefs: List<String>,
+            onSuccess: (List<BrowserPreference<*>>) -> Unit,
+            onError: (Throwable) -> Unit,
+        ): Unit = onError(UnsupportedOperationException(UNSUPPORTED_ERROR))
+
+        /**
          * Set a browser preference to a given value on a given branch.
          *
          * @param pref The preference to set.
@@ -91,6 +106,20 @@ private const val UNSUPPORTED_ERROR = "Browser preferences support is not availa
             value: Int,
             branch: Branch,
             onSuccess: () -> Unit,
+            onError: (Throwable) -> Unit,
+        ): Unit = onError(UnsupportedOperationException(UNSUPPORTED_ERROR))
+
+        /**
+         * Set a list of browser preferences to a given value on a given branch.
+         *
+         * @param prefs List of prefs and values to set.
+         * @param onSuccess Callback invoked when the preference sets.
+         * @param onError Callback invoked when an issue occurs.
+         */
+        @ExperimentalAndroidComponentsApi
+        fun setBrowserPrefs(
+            prefs: List<SetBrowserPreference<*>>,
+            onSuccess: (Map<String, Boolean>) -> Unit,
             onError: (Throwable) -> Unit,
         ): Unit = onError(UnsupportedOperationException(UNSUPPORTED_ERROR))
 

@@ -7,6 +7,8 @@ permalink: /changelog/
 # 143.0 (In Development)
 * **feature-downloads**:
   * `AbstractFetchDownloadService.onDestroy` will now cancel all non-completed downloads. [Bug 1977393](https://bugzilla.mozilla.org/show_bug.cgi?id=1977393)
+* **concept-engine** and **browser-engine-gecko**
+  * Added methods to get and set multiple browser preferences. [Bug 1974800](https://bugzilla.mozilla.org/show_bug.cgi?id=1974800)
 
 # 142.0
 * **feature-tabs**:

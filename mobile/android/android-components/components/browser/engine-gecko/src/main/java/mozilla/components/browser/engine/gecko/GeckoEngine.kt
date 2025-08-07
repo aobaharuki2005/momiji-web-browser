@@ -25,6 +25,7 @@ import mozilla.components.browser.engine.gecko.preferences.DefaultGeckoPreferenc
 import mozilla.components.browser.engine.gecko.preferences.GeckoPreferenceAccessor
 import mozilla.components.browser.engine.gecko.preferences.GeckoPreferencesUtils.intoBrowserPreference
 import mozilla.components.browser.engine.gecko.preferences.GeckoPreferencesUtils.intoGeckoBranch
+import mozilla.components.browser.engine.gecko.preferences.GeckoPreferencesUtils.intoSetGeckoPreference
 import mozilla.components.browser.engine.gecko.profiler.Profiler
 import mozilla.components.browser.engine.gecko.serviceworker.GeckoServiceWorkerDelegate
 import mozilla.components.browser.engine.gecko.translate.DefaultRuntimeTranslationAccessor
@@ -55,6 +56,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.preferences.Branch
 import mozilla.components.concept.engine.preferences.BrowserPreference
 import mozilla.components.concept.engine.preferences.BrowserPreferencesRuntime
+import mozilla.components.concept.engine.preferences.SetBrowserPreference
 import mozilla.components.concept.engine.serviceworker.ServiceWorkerDelegate
 import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.LanguageSetting
@@ -1002,6 +1004,34 @@ class GeckoEngine(
      * See [Engine.setBrowserPref].
      */
     @ExperimentalAndroidComponentsApi
+    @OptIn(ExperimentalGeckoViewApi::class)
+    override fun getBrowserPrefs(
+        prefs: List<String>,
+        onSuccess: (List<BrowserPreference<*>>) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        geckoPreferenceAccessor.getGeckoPrefs(prefs).then(
+            { geckoPrefsResult ->
+                if (geckoPrefsResult != null) {
+                    onSuccess(
+                        geckoPrefsResult.map { pref -> pref.intoBrowserPreference() },
+                    )
+                } else {
+                    onError(Throwable("The browser preferences list was unexpectedly null!"))
+                }
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
+        )
+    }
+
+    /**
+     * See [Engine.setBrowserPref].
+     */
+    @ExperimentalAndroidComponentsApi
     override fun setBrowserPref(
         pref: String,
         value: String,
@@ -1065,6 +1095,40 @@ class GeckoEngine(
                 GeckoResult<Void>()
             },
         )
+    }
+
+    /**
+     * See [Engine.setBrowserPref].
+     */
+    @ExperimentalAndroidComponentsApi
+    @OptIn(ExperimentalGeckoViewApi::class)
+    @Suppress("TooGenericExceptionCaught")
+    override fun setBrowserPrefs(
+        prefs: List<SetBrowserPreference<*>>,
+        onSuccess: (Map<String, Boolean>) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        try {
+            val geckoPrefs = prefs.map { pref -> pref.intoSetGeckoPreference() }
+            geckoPreferenceAccessor.setGeckoPrefs(geckoPrefs).then(
+                { geckoPrefsResult ->
+                    if (geckoPrefsResult != null) {
+                        onSuccess(
+                            geckoPrefsResult,
+                        )
+                    } else {
+                        onError(Throwable("The browser preferences map was unexpectedly null!"))
+                    }
+                    GeckoResult<Void>()
+                },
+                { throwable ->
+                    onError(throwable)
+                    GeckoResult<Void>()
+                },
+            )
+        } catch (throwable: Throwable) {
+            onError(throwable)
+        }
     }
 
     /**
