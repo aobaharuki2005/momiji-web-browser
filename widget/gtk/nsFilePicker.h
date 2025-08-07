@@ -48,14 +48,23 @@ class nsFilePicker final : public nsBaseFilePicker {
   virtual ~nsFilePicker();
 
   bool WarnForNonReadableFile();
+  already_AddRefed<nsIFile> GetDefaultPath();
 
-  void ReadPortalUriList(GVariant* aUriList);
-  void ReadValuesFromNonPortalFileChooser(GtkFileChooser* file_chooser);
   static void OnNonPortalResponse(GtkWidget* file_chooser, gint response_id,
                                   gpointer user_data);
   static void OnNonPortalDestroy(GtkWidget* file_chooser, gpointer user_data);
+  void ReadValuesFromNonPortalFileChooser(GtkFileChooser* file_chooser);
+  void OpenNonPortal();
   void DoneNonPortal(GtkWidget* file_chooser, gint response_id);
+
+#ifdef MOZ_ENABLE_DBUS
+  void ReadPortalUriList(GVariant* aUriList);
+  void TryOpenPortal();
+  void FinishOpeningPortal();
+  void FinishOpeningPortalWithParent(const nsCString& aHandle);
   void DonePortal(GVariant*);
+  void ClearPortalState();
+#endif
 
   void DoneCommon(ResultCode);
 
@@ -73,22 +82,14 @@ class nsFilePicker final : public nsBaseFilePicker {
   nsTArray<nsCString> mFilters;
   nsTArray<nsCString> mFilterNames;
 
- private:
-  already_AddRefed<nsIFile> GetDefaultPath();
-
-  void OpenNonPortal();
-
-  void TryOpenPortal();
-  void FinishOpeningPortal();
-  void FinishOpeningPortalWithParent(const nsCString& aHandle);
-  void ClearPortalState();
-
+#ifdef MOZ_ENABLE_DBUS
   RefPtr<GDBusProxy> mPortalProxy;
+  const bool mPreferPortal;
+  bool mExportedParent = false;
+#endif
 
   GtkFileChooser* mFileChooser = nullptr;
   GtkFileChooserWidget* mFileChooserDelegate = nullptr;
-  const bool mPreferPortal;
-  bool mExportedParent = false;
   bool mIsOpen = false;
 };
 

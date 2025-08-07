@@ -54,12 +54,14 @@ static nsIFile* sPrevDisplayDirectory = nullptr;
 
 void nsFilePicker::Shutdown() { NS_IF_RELEASE(sPrevDisplayDirectory); }
 
+#ifdef MOZ_ENABLE_DBUS
 static RefPtr<widget::DBusProxyPromise> CreatePickerPortalPromise() {
   return widget::CreateDBusProxyForBus(
       G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
       /* aInterfaceInfo = */ nullptr, "org.freedesktop.portal.Desktop",
       "/org/freedesktop/portal/desktop", "org.freedesktop.portal.FileChooser");
 }
+#endif
 
 static GtkFileChooserAction GetGtkFileChooserAction(nsIFilePicker::Mode aMode) {
   GtkFileChooserAction action;
@@ -179,11 +181,15 @@ static nsAutoCString MakeCaseInsensitiveShellGlob(const char* aPattern) {
 NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 
 nsFilePicker::nsFilePicker()
-    : mPreferPortal(widget::ShouldUsePortal(widget::PortalKind::FilePicker)) {}
+#ifdef MOZ_ENABLE_DBUS
+    : mPreferPortal(widget::ShouldUsePortal(widget::PortalKind::FilePicker))
+#endif
+{
+}
 
 nsFilePicker::~nsFilePicker() = default;
 
-void ReadMultipleFiles(gpointer filename, gpointer array) {
+static void ReadMultipleFiles(gpointer filename, gpointer array) {
   nsCOMPtr<nsIFile> localfile;
   nsresult rv =
       NS_NewNativeLocalFile(nsDependentCString(static_cast<char*>(filename)),
@@ -399,15 +405,40 @@ nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
   mIsOpen = true;
   mCallback = aCallback;
 
+#ifdef MOZ_ENABLE_DBUS
   if (mPreferPortal) {
     TryOpenPortal();
     return NS_OK;
   }
+#endif
 
   OpenNonPortal();
   return NS_OK;
 }
 
+static GtkFileFilter* NewFilter(const nsCString& aFilter,
+                                const nsCString& aName) {
+  // This is fun... the GTK file picker does not accept a list of filters
+  // so we need to split out each string, and add it manually.
+  char** patterns = g_strsplit(aFilter.get(), ";", -1);
+  if (!patterns) {
+    return nullptr;
+  }
+  GtkFileFilter* filter = gtk_file_filter_new();
+  for (int j = 0; patterns[j] != nullptr; ++j) {
+    nsAutoCString caseInsensitiveFilter =
+        MakeCaseInsensitiveShellGlob(g_strstrip(patterns[j]));
+    gtk_file_filter_add_pattern(filter, caseInsensitiveFilter.get());
+  }
+  g_strfreev(patterns);
+  // If we have a name for our filter, let's use that, otherwise let's use the
+  // pattern.
+  gtk_file_filter_set_name(filter,
+                           aName.IsEmpty() ? aFilter.get() : aName.get());
+  return filter;
+}
+
+#ifdef MOZ_ENABLE_DBUS
 void nsFilePicker::TryOpenPortal() {
   MOZ_DIAGNOSTIC_ASSERT(!mPortalProxy);
   CreatePickerPortalPromise()->Then(
@@ -441,28 +472,6 @@ void nsFilePicker::FinishOpeningPortal() {
   } else {
     FinishOpeningPortalWithParent(""_ns);
   }
-}
-
-static GtkFileFilter* NewFilter(const nsCString& aFilter,
-                                const nsCString& aName) {
-  // This is fun... the GTK file picker does not accept a list of filters
-  // so we need to split out each string, and add it manually.
-  char** patterns = g_strsplit(aFilter.get(), ";", -1);
-  if (!patterns) {
-    return nullptr;
-  }
-  GtkFileFilter* filter = gtk_file_filter_new();
-  for (int j = 0; patterns[j] != nullptr; ++j) {
-    nsAutoCString caseInsensitiveFilter =
-        MakeCaseInsensitiveShellGlob(g_strstrip(patterns[j]));
-    gtk_file_filter_add_pattern(filter, caseInsensitiveFilter.get());
-  }
-  g_strfreev(patterns);
-  // If we have a name for our filter, let's use that, otherwise let's use the
-  // pattern.
-  gtk_file_filter_set_name(filter,
-                           aName.IsEmpty() ? aFilter.get() : aName.get());
-  return filter;
 }
 
 void nsFilePicker::FinishOpeningPortalWithParent(const nsCString& aHandle) {
@@ -577,6 +586,81 @@ void nsFilePicker::FinishOpeningPortalWithParent(const nsCString& aHandle) {
             self->OpenNonPortal();
           });
 }
+
+void nsFilePicker::ReadPortalUriList(GVariant* aUriList) {
+  GVariantIter iter;
+  g_variant_iter_init(&iter, aUriList);
+  gchar* uriString;
+  while (g_variant_iter_loop(&iter, "s", &uriString)) {
+    LOG("nsFilePickerReadPortalUriList(%s)\n", uriString);
+    if (mFileURL.IsEmpty()) {
+      mFileURL.Assign(uriString);
+    }
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), uriString);
+    if (nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(uri)) {
+      nsCOMPtr<nsIFile> file;
+      fileUrl->GetFile(getter_AddRefs(file));
+      mFiles.AppendElement(file);
+    }
+  }
+}
+
+void nsFilePicker::ClearPortalState() {
+  if (mExportedParent) {
+    static_cast<nsWindow*>(mParentWidget.get())->UnexportHandle();
+    mExportedParent = false;
+  }
+  mPortalProxy = nullptr;
+}
+
+void nsFilePicker::DonePortal(GVariant* aResult) {
+  LOG("nsFilePicker::DonePortal(%s)\n",
+      GUniquePtr<char>(g_variant_print(aResult, TRUE)).get());
+  ResultCode result = [&] {
+    RefPtr<GVariant> resultCode =
+        dont_AddRef(g_variant_get_child_value(aResult, 0));
+    switch (g_variant_get_uint32(resultCode)) {
+      case 0:
+        return ResultCode::returnOK;
+      case 1:
+      default:
+        return ResultCode::returnCancel;
+    }
+  }();
+
+  if (result == returnOK) {
+    RefPtr<GVariant> results =
+        dont_AddRef(g_variant_get_child_value(aResult, 1));
+    GVariantIter iter;
+    GVariant* value;
+    gchar* key;
+    g_variant_iter_init(&iter, results);
+    while (g_variant_iter_loop(&iter, "{sv}", &key, &value)) {
+      LOG("FilePicker portal got %s: %s\n", key,
+          GUniquePtr<char>(g_variant_print(value, TRUE)).get());
+      if (!strcmp(key, "current_filter")) {
+        RefPtr<GVariant> name =
+            dont_AddRef(g_variant_get_child_value(value, 0));
+        nsDependentCString filterName(g_variant_get_string(name, nullptr));
+        auto index = mFilterNames.IndexOf(filterName);
+        if (index == mFilterNames.NoIndex) {
+          index = mFilters.IndexOf(filterName);
+        }
+        if (index != mFilterNames.NoIndex) {
+          mSelectedType = index;
+        }
+      }
+      if (!strcmp(key, "uris")) {
+        ReadPortalUriList(value);
+      }
+    }
+  }
+
+  ClearPortalState();
+  DoneCommon(result);
+}
+#endif
 
 void nsFilePicker::OpenNonPortal() {
   NS_ConvertUTF16toUTF8 title(mTitle);
@@ -827,80 +911,6 @@ void nsFilePicker::DoneNonPortal(GtkWidget* file_chooser, gint response) {
 
   DoneCommon(result);
   NS_RELEASE_THIS();
-}
-
-void nsFilePicker::ReadPortalUriList(GVariant* aUriList) {
-  GVariantIter iter;
-  g_variant_iter_init(&iter, aUriList);
-  gchar* uriString;
-  while (g_variant_iter_loop(&iter, "s", &uriString)) {
-    LOG("nsFilePickerReadPortalUriList(%s)\n", uriString);
-    if (mFileURL.IsEmpty()) {
-      mFileURL.Assign(uriString);
-    }
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), uriString);
-    if (nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(uri)) {
-      nsCOMPtr<nsIFile> file;
-      fileUrl->GetFile(getter_AddRefs(file));
-      mFiles.AppendElement(file);
-    }
-  }
-}
-
-void nsFilePicker::ClearPortalState() {
-  if (mExportedParent) {
-    static_cast<nsWindow*>(mParentWidget.get())->UnexportHandle();
-    mExportedParent = false;
-  }
-  mPortalProxy = nullptr;
-}
-
-void nsFilePicker::DonePortal(GVariant* aResult) {
-  LOG("nsFilePicker::DonePortal(%s)\n",
-      GUniquePtr<char>(g_variant_print(aResult, TRUE)).get());
-  ResultCode result = [&] {
-    RefPtr<GVariant> resultCode =
-        dont_AddRef(g_variant_get_child_value(aResult, 0));
-    switch (g_variant_get_uint32(resultCode)) {
-      case 0:
-        return ResultCode::returnOK;
-      case 1:
-      default:
-        return ResultCode::returnCancel;
-    }
-  }();
-
-  if (result == returnOK) {
-    RefPtr<GVariant> results =
-        dont_AddRef(g_variant_get_child_value(aResult, 1));
-    GVariantIter iter;
-    GVariant* value;
-    gchar* key;
-    g_variant_iter_init(&iter, results);
-    while (g_variant_iter_loop(&iter, "{sv}", &key, &value)) {
-      LOG("FilePicker portal got %s: %s\n", key,
-          GUniquePtr<char>(g_variant_print(value, TRUE)).get());
-      if (!strcmp(key, "current_filter")) {
-        RefPtr<GVariant> name =
-            dont_AddRef(g_variant_get_child_value(value, 0));
-        nsDependentCString filterName(g_variant_get_string(name, nullptr));
-        auto index = mFilterNames.IndexOf(filterName);
-        if (index == mFilterNames.NoIndex) {
-          index = mFilters.IndexOf(filterName);
-        }
-        if (index != mFilterNames.NoIndex) {
-          mSelectedType = index;
-        }
-      }
-      if (!strcmp(key, "uris")) {
-        ReadPortalUriList(value);
-      }
-    }
-  }
-
-  ClearPortalState();
-  DoneCommon(result);
 }
 
 void nsFilePicker::DoneCommon(ResultCode aResult) {
