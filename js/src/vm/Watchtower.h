@@ -36,7 +36,7 @@ class Watchtower {
   static bool watchPropertyAddSlow(JSContext* cx, Handle<NativeObject*> obj,
                                    HandleId id);
   static bool watchPropertyRemoveSlow(JSContext* cx, Handle<NativeObject*> obj,
-                                      HandleId id);
+                                      HandleId id, PropertyInfo propInfo);
   static bool watchPropertyFlagsChangeSlow(JSContext* cx,
                                            Handle<NativeObject*> obj,
                                            HandleId id, PropertyInfo propInfo,
@@ -97,11 +97,11 @@ class Watchtower {
     return watchPropertyAddSlow(cx, obj, id);
   }
   static bool watchPropertyRemove(JSContext* cx, Handle<NativeObject*> obj,
-                                  HandleId id) {
+                                  HandleId id, PropertyInfo propInfo) {
     if (MOZ_LIKELY(!watchesPropertyRemove(obj))) {
       return true;
     }
-    return watchPropertyRemoveSlow(cx, obj, id);
+    return watchPropertyRemoveSlow(cx, obj, id, propInfo);
   }
   static bool watchPropertyFlagsChange(JSContext* cx, Handle<NativeObject*> obj,
                                        HandleId id, PropertyInfo propInfo,

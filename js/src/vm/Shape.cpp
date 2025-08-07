@@ -858,11 +858,10 @@ bool NativeObject::removeProperty(JSContext* cx, Handle<NativeObject*> obj,
     return true;
   }
 
-  if (!Watchtower::watchPropertyRemove(cx, obj, id)) {
+  PropertyInfo prop = propMap->getPropertyInfo(propIndex);
+  if (!Watchtower::watchPropertyRemove(cx, obj, id, prop)) {
     return false;
   }
-
-  PropertyInfo prop = propMap->getPropertyInfo(propIndex);
 
   // If we're removing an accessor property, ensure the HadGetterSetterChange
   // object flag is set. This is necessary because the slot holding the
