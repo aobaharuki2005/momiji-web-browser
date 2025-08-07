@@ -239,7 +239,7 @@
     },
     skipIf: {
       configurable: false,
-      get: MochiaImpl.skipIf,
+      value: MochiaImpl.skipIf,
     },
   });
 
