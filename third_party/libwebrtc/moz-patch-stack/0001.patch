@@ -1,97 +1,75 @@
-From: Tom Van Goethem <tov@google.com>
-Date: Mon, 12 May 2025 03:34:59 -0700
-Subject: (cherry-pick-branch-heads/7151) [M137] Add metrics for restricted
- candidates
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 7 Aug 2025 12:07:35 -0500
+Subject: (tmp-cherry-pick) Revert "IWYU: fix generated protobuf include"
+ (ae1af451b5)
 
-This adds two UMA metrics for the type of SDP munging that occurred and
-the port of the candidate that was restricted. The metrics descriptions
-are being added here: crrev.com/c/6521706.
+This reverts commit 8ae8263ecc04b6fd78886e9906194e71a574f88c.
 
-(cherry picked from commit d5b3b1ed4594821451d2ebb1d61cc1e6dab83b56)
+Reason for revert: Breaks downstream project
 
-Bug: b/409713509
-Fixed: b/417142969
-Change-Id: I3232cb0cee6848074ab103f4d4edb2e080e09568
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390340
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Reviewed-by: Johannes Kron <kron@webrtc.org>
-Commit-Queue: Tom Van Goethem <tov@google.com>
-Cr-Original-Commit-Position: refs/heads/main@{#44559}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390920
-Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
-Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/7151@{#2}
-Cr-Branched-From: dc428bd75f2ca847b165b2556970c9bcd5037c5b-refs/heads/main@{#44472}
+Original change's description:
+> IWYU: fix generated protobuf include
+>
+> as shown by
+>   modules/audio_processing/aec_dump/capture_stream_info.h
+>
+> Follow-up to forward fix in
+>   https://webrtc-review.googlesource.com/c/src/+/386860
+>
+> BUG=webrtc:42226242
+>
+> Change-Id: Iac11f9f679bb694dd4c25c1b87f498a5adef1a0d
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/387700
+> Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+> Reviewed-by: Artem Titov <titovartem@webrtc.org>
+> Commit-Queue: Philipp Hancke <phancke@meta.com>
+> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#44540}
+
+Bug: webrtc:42226242
+Change-Id: Ie13034442c16f6539aef71206584a649d31efeb7
+No-Iwyu: Breaks downstream project
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390380
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Fredrik Solenberg <solenberg@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#44544}
 ---
- pc/sdp_munging_detector_unittest.cc | 16 ++++++++++++++++
- pc/sdp_offer_answer.cc              | 12 ++++++++++++
- 2 files changed, 28 insertions(+)
+ api/DEPS                                                  | 4 ----
+ .../chrome_perf_dashboard_metrics_exporter_test.cc        | 8 --------
+ 2 files changed, 12 deletions(-)
 
-diff --git a/pc/sdp_munging_detector_unittest.cc b/pc/sdp_munging_detector_unittest.cc
-index a06735b6f8..88fa93e0f2 100644
---- a/pc/sdp_munging_detector_unittest.cc
-+++ b/pc/sdp_munging_detector_unittest.cc
-@@ -17,8 +17,11 @@
- #include <utility>
- #include <vector>
+diff --git a/api/DEPS b/api/DEPS
+index c909547c93..0efc076c3e 100644
+--- a/api/DEPS
++++ b/api/DEPS
+@@ -257,10 +257,6 @@ specific_include_rules = {
+     "+p2p/base/port_allocator.h",
+   ],
  
-+#include "absl/strings/numbers.h"
- #include "absl/strings/str_cat.h"
- #include "absl/strings/str_replace.h"
-+#include "absl/strings/str_split.h"
-+#include "absl/strings/string_view.h"
- #include "api/audio_codecs/audio_format.h"
- #include "api/audio_codecs/builtin_audio_decoder_factory.h"
- #include "api/audio_codecs/builtin_audio_encoder_factory.h"
-@@ -375,6 +378,7 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
-       {"127.0.1.1:23456", true},  {"8.8.8.8:3456", true},
-   };
+-  "chrome_perf_dashboard_metrics_exporter_test.cc": [
+-    "+external/webrtc/webrtc",  # Android platform build.
+-  ],
+-
+   # .cc files in api/ should not be restricted in what they can #include,
+   # so we re-add all the top-level directories here. (That's because .h
+   # files leak their #includes to whoever's #including them, but .cc files
+diff --git a/api/test/metrics/chrome_perf_dashboard_metrics_exporter_test.cc b/api/test/metrics/chrome_perf_dashboard_metrics_exporter_test.cc
+index f420b7a3d5..ae1ab84b30 100644
+--- a/api/test/metrics/chrome_perf_dashboard_metrics_exporter_test.cc
++++ b/api/test/metrics/chrome_perf_dashboard_metrics_exporter_test.cc
+@@ -22,14 +22,6 @@
+ #include "test/gtest.h"
+ #include "test/testsupport/file_utils.h"
+ #include "third_party/catapult/tracing/tracing/value/histogram.h"
+-// Files generated at build-time by the protobuf compiler.
+-#ifdef WEBRTC_ENABLE_PROTOBUF
+-#ifdef WEBRTC_ANDROID_PLATFORM_BUILD
+-#include "external/webrtc/webrtc/tracing/tracing/proto/histogram.pb.h"
+-#else
+-#include "tracing/tracing/proto/histogram.pb.h"
+-#endif
+-#endif
  
-+  int num_blocked = 0;
-   for (const auto& address_test : address_tests) {
-     std::optional<RTCError> result;
-     const std::string candidate = StringFormat(
-@@ -390,8 +394,20 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
-     if (address_test.second == true) {
-       EXPECT_TRUE(result.value().ok());
-     } else {
-+      std::pair<absl::string_view, absl::string_view> host =
-+          absl::StrSplit(address_test.first, ":");
-+      int port;
-+      ASSERT_TRUE(absl::SimpleAtoi(host.second, &port));
-       EXPECT_FALSE(result.value().ok());
-       EXPECT_EQ(result.value().type(), RTCErrorType::UNSUPPORTED_OPERATION);
-+      num_blocked++;
-+      EXPECT_THAT(
-+          metrics::Samples(
-+              "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType"),
-+          ElementsAre(Pair(SdpMungingType::kIceUfrag, num_blocked)));
-+      EXPECT_THAT(
-+          metrics::Samples("WebRTC.PeerConnection.RestrictedCandidates.Port"),
-+          Contains(Pair(port, 1)));
-     }
-   }
- }
-diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index 6f19d1bee6..22da12b0c8 100644
---- a/pc/sdp_offer_answer.cc
-+++ b/pc/sdp_offer_answer.cc
-@@ -5344,6 +5344,18 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
-         RTC_LOG(LS_ERROR) << "ReadyToUseRemoteCandidate: Candidate not valid "
-                              "because of SDP munging.";
-         *valid = false;
-+        // There might be other types of SDP munging, but here we're only
-+        // interested in IceUfrag and IcePwd.
-+        SdpMungingType sdp_munging_type =
-+            last_sdp_munging_type_ == SdpMungingType::kIcePwd
-+                ? SdpMungingType::kIcePwd
-+                : SdpMungingType::kIceUfrag;
-+        RTC_HISTOGRAM_ENUMERATION_SPARSE(
-+            "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType",
-+            sdp_munging_type, SdpMungingType::kMaxValue);
-+        RTC_HISTOGRAM_ENUMERATION_SPARSE(
-+            "WebRTC.PeerConnection.RestrictedCandidates.Port",
-+            candidate->candidate().address().port(), 65536);
-         return false;
-       }
-     }
+ namespace webrtc {
+ namespace test {
