@@ -29,6 +29,7 @@ gecko_metrics = [
     "dom/canvas/metrics.yaml",
     "dom/crypto/metrics.yaml",
     "dom/geolocation/metrics.yaml",
+    "dom/indexedDB/metrics.yaml",
     "dom/localstorage/metrics.yaml",
     "dom/media/eme/metrics.yaml",
     "dom/media/hls/metrics.yaml",

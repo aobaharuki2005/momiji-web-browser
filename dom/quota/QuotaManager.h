@@ -304,6 +304,9 @@ class QuotaManager final : public BackgroundThreadObject {
   Result<FullOriginMetadata, nsresult> LoadFullOriginMetadataWithRestore(
       nsIFile* aDirectory);
 
+  Result<std::pair<FullOriginMetadata, bool /* restore status */>, nsresult>
+  LoadFullOriginMetadataWithRestoreAndStatus(nsIFile* aDirectory);
+
   Result<OriginMetadata, nsresult> GetOriginMetadata(nsIFile* aDirectory);
 
   Result<Ok, nsresult> RemoveOriginDirectory(nsIFile& aDirectory);

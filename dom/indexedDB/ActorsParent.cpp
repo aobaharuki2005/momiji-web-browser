@@ -148,6 +148,7 @@
 #include "mozilla/dom/quota/UniversalDirectoryLock.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/fallible.h"
+#include "mozilla/glean/DomIndexedDBMetrics.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/InputStreamParams.h"
@@ -13199,7 +13200,7 @@ RefPtr<UniversalDirectoryLockPromise> Maintenance::OpenStorageDirectory(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  // Return a shared lock for <profile>/storage/*/*/idb
+  // Return a shared lock for <profile>/storage/repo(aPersistenceScope)/*/idb
   return quotaManager->OpenStorageDirectory(
       aPersistenceScope, OriginScope::FromNull(),
       ClientStorageScope::CreateFromClient(Client::IDB),
@@ -13363,6 +13364,11 @@ nsresult Maintenance::DirectoryWork() {
       continue;
     }
 
+    // For all non-persistent types, temporary storage must already be
+    // initialized
+    MOZ_DIAGNOSTIC_ASSERT(
+        persistent || quotaManager->IsTemporaryStorageInitializedInternal());
+
     // XXX persistenceType == PERSISTENCE_TYPE_PERSISTENT shouldn't be a special
     // case...
     const auto persistenceTypeString =
@@ -13418,6 +13424,8 @@ nsresult Maintenance::DirectoryWork() {
               if (!persistent &&
                   !quotaManager->IsTemporaryOriginInitializedInternal(
                       metadata)) {
+                glean::idb_maintenance::fallback_fullrestore_metadata.Add();
+
                 // XXX GetOriginMetadata, which skips loading the metadata file
                 // and instead relies on parsing the origin directory name and
                 // reconstructing the principal, may produce a different origin
@@ -13430,10 +13438,26 @@ nsresult Maintenance::DirectoryWork() {
                 // In the future, it would be useful to report anonymized
                 // origin strings via telemetry to help investigate and
                 // eventually fix this mismatch.
-                QM_TRY_UNWRAP(
-                    metadata,
-                    quotaManager->LoadFullOriginMetadataWithRestore(originDir),
+
+                QM_TRY_INSPECT(
+                    const auto& fullmetadataAndStatus,
+                    quotaManager->LoadFullOriginMetadataWithRestoreAndStatus(
+                        originDir),
                     Ok{});
+
+                metadata = fullmetadataAndStatus.first;
+                if (fullmetadataAndStatus.second) {
+                  /* metadata was restored */
+                  glean::idb_maintenance::metadata_restored.Add();
+                }
+
+                QM_TRY(OkIf(quotaManager->IsTemporaryOriginInitializedInternal(
+                           metadata)),
+                       /* unexpected but still fine to just skip it */ Ok{},
+                       /* increment telemetry in case of failure */
+                       [](const auto&) {
+                         glean::idb_maintenance::unknown_metadata.Add();
+                       });
               }
 
               // We now use a dedicated repository for private browsing
@@ -13508,7 +13532,6 @@ nsresult Maintenance::DirectoryWork() {
                 if (!persistent) {
                   auto maybeOriginStateMetadata =
                       quotaManager->GetOriginStateMetadata(metadata);
-
                   auto originStateMetadata = maybeOriginStateMetadata.extract();
 
                   // Skip origin maintenance if the origin hasn't been accessed
