@@ -318,15 +318,15 @@ void BufferChunk::setAllocated(void* alloc, size_t bytes, bool allocated) {
   size_t startBit = ptrToIndex(alloc);
   MOZ_ASSERT(bytes % MediumAllocGranularity == 0);
   size_t endBit = startBit + bytes / MediumAllocGranularity;
-  MOZ_ASSERT(endBit <= MaxAllocsPerChunk);
+  MOZ_ASSERT(endBit <= MaxAllocCount);
   MOZ_ASSERT(allocStartBitmap.ref()[startBit] != allocated);
-  MOZ_ASSERT_IF(endBit != MaxAllocsPerChunk, allocStartBitmap.ref()[startBit] ==
-                                                 allocEndBitmap.ref()[endBit]);
-  MOZ_ASSERT_IF(startBit + 1 < MaxAllocsPerChunk,
+  MOZ_ASSERT_IF(endBit != MaxAllocCount, allocStartBitmap.ref()[startBit] ==
+                                             allocEndBitmap.ref()[endBit]);
+  MOZ_ASSERT_IF(startBit + 1 < MaxAllocCount,
                 allocStartBitmap.ref().FindNext(startBit + 1) >= endBit);
   MOZ_ASSERT(findEndBit(startBit) >= endBit);
   allocStartBitmap.ref()[startBit] = allocated;
-  if (endBit != MaxAllocsPerChunk) {
+  if (endBit != MaxAllocCount) {
     allocEndBitmap.ref()[endBit] = allocated;
   }
 }
@@ -349,18 +349,18 @@ void BufferChunk::updateEndOffset(void* alloc, size_t oldBytes,
 
   size_t startBit = ptrToIndex(alloc);
   size_t oldEndBit = startBit + oldBytes / MediumAllocGranularity;
-  MOZ_ASSERT(oldEndBit <= MaxAllocsPerChunk);
-  if (oldEndBit != MaxAllocsPerChunk) {
+  MOZ_ASSERT(oldEndBit <= MaxAllocCount);
+  if (oldEndBit != MaxAllocCount) {
     MOZ_ASSERT(allocEndBitmap.ref()[oldEndBit]);
     allocEndBitmap.ref()[oldEndBit] = false;
   }
 
   size_t newEndBit = startBit + newBytes / MediumAllocGranularity;
-  MOZ_ASSERT(newEndBit <= MaxAllocsPerChunk);
-  MOZ_ASSERT_IF(startBit + 1 < MaxAllocsPerChunk,
+  MOZ_ASSERT(newEndBit <= MaxAllocCount);
+  MOZ_ASSERT_IF(startBit + 1 < MaxAllocCount,
                 allocStartBitmap.ref().FindNext(startBit + 1) >= newEndBit);
   MOZ_ASSERT(findEndBit(startBit) >= newEndBit);
-  if (newEndBit != MaxAllocsPerChunk) {
+  if (newEndBit != MaxAllocCount) {
     allocEndBitmap.ref()[newEndBit] = true;
   }
 }
@@ -414,7 +414,7 @@ size_t BufferChunk::allocBytes(const void* alloc) const {
   size_t startBit = ptrToIndex(alloc);
   size_t endBit = findEndBit(startBit);
   MOZ_ASSERT(endBit > startBit);
-  MOZ_ASSERT(endBit <= MaxAllocsPerChunk);
+  MOZ_ASSERT(endBit <= MaxAllocCount);
   return (endBit - startBit) * MediumAllocGranularity;
 }
 
@@ -500,16 +500,15 @@ void SmallBufferRegion::setAllocated(void* alloc, size_t bytes,
   size_t startBit = ptrToIndex(alloc);
   MOZ_ASSERT(bytes % SmallAllocGranularity == 0);
   size_t endBit = startBit + bytes / SmallAllocGranularity;
-  MOZ_ASSERT(endBit <= MaxAllocsPerRegion);
+  MOZ_ASSERT(endBit <= MaxAllocCount);
   MOZ_ASSERT(allocStartBitmap.ref()[startBit] != allocated);
-  MOZ_ASSERT_IF(
-      endBit != MaxAllocsPerRegion,
-      allocStartBitmap.ref()[startBit] == allocEndBitmap.ref()[endBit]);
-  MOZ_ASSERT_IF(startBit + 1 < MaxAllocsPerRegion,
+  MOZ_ASSERT_IF(endBit != MaxAllocCount, allocStartBitmap.ref()[startBit] ==
+                                             allocEndBitmap.ref()[endBit]);
+  MOZ_ASSERT_IF(startBit + 1 < MaxAllocCount,
                 allocStartBitmap.ref().FindNext(startBit + 1) >= endBit);
   MOZ_ASSERT(findEndBit(startBit) >= endBit);
   allocStartBitmap.ref()[startBit] = allocated;
-  if (endBit != MaxAllocsPerRegion) {
+  if (endBit != MaxAllocCount) {
     allocEndBitmap.ref()[endBit] = allocated;
   }
 }
@@ -548,7 +547,7 @@ size_t SmallBufferRegion::allocBytes(const void* alloc) const {
   size_t startBit = ptrToIndex(alloc);
   size_t endBit = findEndBit(startBit);
   MOZ_ASSERT(endBit >= startBit);
-  MOZ_ASSERT(endBit <= MaxAllocsPerRegion);
+  MOZ_ASSERT(endBit <= MaxAllocCount);
   return (endBit - startBit) * SmallAllocGranularity;
 }
 

@@ -9,6 +9,8 @@
 #ifndef gc_BufferAllocatorInternals_h
 #define gc_BufferAllocatorInternals_h
 
+#include "mozilla/MathAlgorithms.h"
+
 #include "ds/SlimLinkedList.h"
 
 #include "gc/BufferAllocator.h"
@@ -199,10 +201,44 @@ class BufferAllocator::ChunkLists::ChunkIter
   size_t getSizeClass() const { return iterA().getSizeClass(); }
 };
 
+template <typename Derived, size_t Size, size_t Granularity>
+struct AllocSpace {
+  static_assert(Size > Granularity);
+  static_assert(mozilla::IsPowerOfTwo(Size));
+  static_assert(mozilla::IsPowerOfTwo(Granularity));
+  static constexpr size_t SizeBytes = Size;
+  static constexpr size_t GranularityBytes = Granularity;
+
+  static constexpr size_t MaxAllocCount = SizeBytes / GranularityBytes;
+
+  using PerAllocBitmap = mozilla::BitSet<MaxAllocCount>;
+  using AtomicPerAllocBitmap =
+      mozilla::BitSet<MaxAllocCount, mozilla::Atomic<size_t, mozilla::Relaxed>>;
+
+  // Mark bitmap: one bit minimum per allocation, no gray bits.
+  MainThreadOrGCTaskData<AtomicBitmap<MaxAllocCount>> markBits;
+
+  // Allocation start and end bitmaps: these have a bit set corresponding to the
+  // start of the allocation and to the byte after the end of allocation (except
+  // for the end of the chunk).
+  MainThreadOrGCTaskData<PerAllocBitmap> allocStartBitmap;
+  MainThreadOrGCTaskData<AtomicPerAllocBitmap> allocEndBitmap;
+
+  // A bitmap indicating whether an allocation is owned by a nursery or a
+  // tenured GC thing.
+  MainThreadOrGCTaskData<PerAllocBitmap> nurseryOwnedBitmap;
+
+  static constexpr uintptr_t firstAllocOffset() {
+    return RoundUp(sizeof(Derived), GranularityBytes);
+  }
+};
+
 // A chunk containing medium buffer allocations for a single zone. Unlike
 // ArenaChunk, allocations from different zones do not share chunks.
-struct BufferChunk : public ChunkBase,
-                     public SlimLinkedListElement<BufferChunk> {
+struct BufferChunk
+    : public ChunkBase,
+      public SlimLinkedListElement<BufferChunk>,
+      public AllocSpace<BufferChunk, ChunkSize, MediumAllocGranularity> {
 #ifdef DEBUG
   MainThreadOrGCTaskData<Zone*> zone;
 #endif
@@ -211,25 +247,7 @@ struct BufferChunk : public ChunkBase,
   MainThreadData<bool> hasNurseryOwnedAllocs;
   MainThreadOrGCTaskData<bool> hasNurseryOwnedAllocsAfterSweep;
 
-  static constexpr size_t MaxAllocsPerChunk =
-      ChunkSize / MediumAllocGranularity;
-
-  // Mark bitmap: one bit minimum per allocation, no gray bits.
-  MainThreadOrGCTaskData<AtomicBitmap<MaxAllocsPerChunk>> markBits;
-
-  // Allocation start and end bitmaps: these have a bit set corresponding to the
-  // start of the allocation and to the byte after the end of allocation (except
-  // for the end of the chunk).
-  using PerAllocBitmap = mozilla::BitSet<MaxAllocsPerChunk>;
-  using AtomicPerAllocBitmap =
-      mozilla::BitSet<MaxAllocsPerChunk,
-                      mozilla::Atomic<size_t, mozilla::Relaxed>>;
-  MainThreadOrGCTaskData<PerAllocBitmap> allocStartBitmap;
-  MainThreadOrGCTaskData<AtomicPerAllocBitmap> allocEndBitmap;
-
-  // A bitmap indicating whether an allocation is owned by a nursery or a
-  // tenured GC thing.
-  MainThreadOrGCTaskData<PerAllocBitmap> nurseryOwnedBitmap;
+  static constexpr size_t MaxAllocsPerChunk = MaxAllocCount;  // todo remove
 
   static constexpr size_t PagesPerChunk = ChunkSize / PageSize;
   using PerPageBitmap = mozilla::BitSet<PagesPerChunk, uint32_t>;
@@ -247,7 +265,7 @@ struct BufferChunk : public ChunkBase,
   MainThreadOrGCTaskData<bool> ownsFreeLists;
 
   using AllocIter =
-      BitmapToBlockIter<BitSetIter<MaxAllocsPerChunk>, MediumAllocGranularity>;
+      BitmapToBlockIter<BitSetIter<MaxAllocCount>, MediumAllocGranularity>;
   AllocIter allocIter() { return {this, allocStartBitmap.ref()}; }
 
   using SmallRegionIter = BitmapToBlockIter<SmallRegionBitmap::Iter,
@@ -318,13 +336,13 @@ struct BufferChunk : public ChunkBase,
   }
 
   size_t findEndBit(size_t startIndex) const {
-    MOZ_ASSERT(startIndex < MaxAllocsPerChunk);
-    if (startIndex + 1 == MaxAllocsPerChunk) {
-      return MaxAllocsPerChunk;
+    MOZ_ASSERT(startIndex < MaxAllocCount);
+    if (startIndex + 1 == MaxAllocCount) {
+      return MaxAllocCount;
     }
     size_t endIndex = allocEndBitmap.ref().FindNext(startIndex + 1);
     if (endIndex == SIZE_MAX) {
-      return MaxAllocsPerChunk;
+      return MaxAllocCount;
     }
     return endIndex;
   }
@@ -334,9 +352,7 @@ struct BufferChunk : public ChunkBase,
 #endif
 };
 
-constexpr size_t FirstMediumAllocOffset =
-    RoundUp(sizeof(BufferChunk), MediumAllocGranularity);
-static_assert(FirstMediumAllocOffset + MaxMediumAllocSize <= ChunkSize);
+constexpr size_t FirstMediumAllocOffset = BufferChunk::firstAllocOffset();
 
 #ifdef DEBUG
 /* static */
@@ -347,25 +363,12 @@ inline bool BufferChunk::isValidOffset(uintptr_t offset) {
 
 // A sub-region backed by a medium allocation which contains small buffer
 // allocations.
-struct SmallBufferRegion {
-  static constexpr size_t MaxAllocsPerRegion =
-      SmallRegionSize / SmallAllocGranularity;
-
-  // Mark bitmap: one bit minimum per allocation, no gray bits.
-  MainThreadOrGCTaskData<AtomicBitmap<MaxAllocsPerRegion>> markBits;
-
-  using PerAllocBitmap = mozilla::BitSet<MaxAllocsPerRegion>;
-  using AtomicPerAllocBitmap =
-      mozilla::BitSet<MaxAllocsPerRegion,
-                      mozilla::Atomic<size_t, mozilla::Relaxed>>;
-  MainThreadOrGCTaskData<PerAllocBitmap> allocStartBitmap;
-  MainThreadOrGCTaskData<AtomicPerAllocBitmap> allocEndBitmap;
-  MainThreadOrGCTaskData<PerAllocBitmap> nurseryOwnedBitmap;
-
+struct SmallBufferRegion : public AllocSpace<SmallBufferRegion, SmallRegionSize,
+                                             SmallAllocGranularity> {
   MainThreadOrGCTaskData<bool> hasNurseryOwnedAllocs_;
 
   using AllocIter =
-      BitmapToBlockIter<BitSetIter<MaxAllocsPerRegion>, SmallAllocGranularity>;
+      BitmapToBlockIter<BitSetIter<MaxAllocCount>, SmallAllocGranularity>;
   AllocIter allocIter() { return {this, allocStartBitmap.ref()}; }
 
   static SmallBufferRegion* from(void* alloc) {
@@ -409,20 +412,19 @@ struct SmallBufferRegion {
   size_t offsetToIndex(uintptr_t offset) const;
 
   size_t findEndBit(size_t startIndex) const {
-    MOZ_ASSERT(startIndex < MaxAllocsPerRegion);
-    if (startIndex + 1 == MaxAllocsPerRegion) {
-      return MaxAllocsPerRegion;
+    MOZ_ASSERT(startIndex < MaxAllocCount);
+    if (startIndex + 1 == MaxAllocCount) {
+      return MaxAllocCount;
     }
     size_t endIndex = allocEndBitmap.ref().FindNext(startIndex + 1);
     if (endIndex == SIZE_MAX) {
-      return MaxAllocsPerRegion;
+      return MaxAllocCount;
     }
     return endIndex;
   }
 };
 
-static constexpr size_t FirstSmallAllocOffset =
-    RoundUp(sizeof(SmallBufferRegion), SmallAllocGranularity);
+constexpr size_t FirstSmallAllocOffset = SmallBufferRegion::firstAllocOffset();
 static_assert(FirstSmallAllocOffset < SmallRegionSize);
 
 // Describes a free region in a buffer chunk. This structure is stored at the
