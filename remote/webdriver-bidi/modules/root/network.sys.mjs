@@ -2356,6 +2356,10 @@ class NetworkModule extends RootBiDiModule {
         ? "network.responseStarted"
         : "network.responseCompleted";
 
+    if (protocolEventName === "network.responseStarted") {
+      this.#cloneNetworkResponseBody(request);
+    }
+
     const isListening = this._hasListener(protocolEventName, {
       contextId: browsingContext.id,
     });
@@ -2365,9 +2369,7 @@ class NetworkModule extends RootBiDiModule {
       return;
     }
 
-    if (protocolEventName === "network.responseStarted") {
-      this.#cloneNetworkResponseBody(request);
-    } else {
+    if (protocolEventName === "network.responseCompleted") {
       this.#maybeCollectNetworkResponseBody(request, response);
     }
 
