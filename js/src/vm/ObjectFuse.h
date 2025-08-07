@@ -214,6 +214,11 @@ class ObjectFuse {
     return slot;
   }
 
+  // We can only optimize SetProp operations for non-constant properties.
+  bool canOptimizeSetSlot(PropertyInfo prop) const {
+    return getPropertyState(prop) == PropertyState::NotConstant;
+  }
+
   void handlePropertyValueChange(JSContext* cx, PropertyInfo prop);
   void handlePropertyRemove(JSContext* cx, PropertyInfo prop);
   void handleTeleportingShadowedProperty(JSContext* cx, PropertyInfo prop);

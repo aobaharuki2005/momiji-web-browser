@@ -700,6 +700,10 @@ void Watchtower::watchPropertyValueChangeSlow(
   // accessor property or when redefining a data property as an accessor
   // property and vice versa.
 
+  // Handle object fuses before the check for no-op changes below. We don't
+  // attach SetProp stubs for constant properties, so if a constant property is
+  // overwritten with the same value, we want to mark it non-constant.
+  // See Watchtower::canOptimizeSetSlotSlow.
   if (obj->hasObjectFuse()) {
     if (auto* objFuse = cx->zone()->objectFuses.get(obj)) {
       objFuse->handlePropertyValueChange(cx, propInfo);
@@ -741,6 +745,30 @@ template void Watchtower::watchPropertyValueChangeSlow<AllowGC::NoGC>(
     typename MaybeRooted<PropertyKey, AllowGC::NoGC>::HandleType id,
     typename MaybeRooted<Value, AllowGC::NoGC>::HandleType value,
     PropertyInfo propInfo);
+
+// static
+SetSlotOptimizable Watchtower::canOptimizeSetSlotSlow(JSContext* cx,
+                                                      NativeObject* obj,
+                                                      PropertyInfo prop) {
+  MOZ_ASSERT(obj->hasObjectFuse());
+
+  ObjectFuse* objFuse = cx->zone()->objectFuses.getOrCreate(cx, obj);
+  if (!objFuse) {
+    cx->recoverFromOutOfMemory();
+    return SetSlotOptimizable::No;
+  }
+
+  if (objFuse->canOptimizeSetSlot(prop)) {
+    return SetSlotOptimizable::Yes;
+  }
+
+  // If a property is constant, there's no point in attaching a SetProp IC stub.
+  // The next time we set this property, we have to call into the VM to mark
+  // it NotConstant and potentially pop fuses. After that, we can attach a
+  // regular SetProp IC stub. If we never set this property again, there's no
+  // need to optimize this SetProp.
+  return SetSlotOptimizable::NotYet;
+}
 
 // static
 bool Watchtower::watchFreezeOrSealSlow(JSContext* cx, Handle<NativeObject*> obj,

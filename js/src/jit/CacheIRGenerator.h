@@ -41,6 +41,7 @@ class ObjectFuse;
 class PropertyResult;
 class ProxyObject;
 enum class UnaryMathFunction : uint8_t;
+enum class SetSlotOptimizable;
 
 namespace jit {
 
@@ -344,6 +345,9 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   // If this is a SetElem cache, emit instructions to guard the incoming Value
   // matches |id|.
   void maybeEmitIdGuard(jsid id);
+
+  SetSlotOptimizable canAttachNativeSetSlot(JSObject* obj, PropertyKey id,
+                                            mozilla::Maybe<PropertyInfo>* prop);
 
   AttachDecision tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
                                         HandleId id, ValOperandId rhsId);

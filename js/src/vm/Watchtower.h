@@ -12,6 +12,8 @@
 
 namespace js {
 
+enum class SetSlotOptimizable { Yes, No, NotYet };
+
 // [SMDOC] Watchtower
 //
 // Watchtower is a framework to hook into changes to certain objects. This gives
@@ -53,6 +55,9 @@ class Watchtower {
   static bool watchProtoChangeSlow(JSContext* cx, HandleObject obj);
   static bool watchObjectSwapSlow(JSContext* cx, HandleObject a,
                                   HandleObject b);
+  static SetSlotOptimizable canOptimizeSetSlotSlow(JSContext* cx,
+                                                   NativeObject* obj,
+                                                   PropertyInfo prop);
 
  public:
   static bool watchesPropertyAdd(NativeObject* obj) {
@@ -90,6 +95,17 @@ class Watchtower {
                               ObjectFlag::HasObjectFuse});
     };
     return watches(a) || watches(b);
+  }
+  static SetSlotOptimizable canOptimizeSetSlot(JSContext* cx, NativeObject* obj,
+                                               PropertyInfo prop) {
+    if (obj->hasAnyFlag({ObjectFlag::HasRealmFuseProperty,
+                         ObjectFlag::UseWatchtowerTestingLog})) {
+      return SetSlotOptimizable::No;
+    }
+    if (!obj->hasObjectFuse()) {
+      return SetSlotOptimizable::Yes;
+    }
+    return canOptimizeSetSlotSlow(cx, obj, prop);
   }
 
   static bool watchPropertyAdd(JSContext* cx, Handle<NativeObject*> obj,

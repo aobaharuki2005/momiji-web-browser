@@ -4691,18 +4691,18 @@ static Maybe<PropertyInfo> LookupShapeForSetSlot(JSOp op, NativeObject* obj,
   return prop;
 }
 
-static bool CanAttachNativeSetSlot(JSOp op, JSObject* obj, PropertyKey id,
-                                   Maybe<PropertyInfo>* prop) {
+SetSlotOptimizable SetPropIRGenerator::canAttachNativeSetSlot(
+    JSObject* obj, PropertyKey id, Maybe<PropertyInfo>* prop) {
   if (!obj->is<NativeObject>()) {
-    return false;
+    return SetSlotOptimizable::No;
   }
 
-  if (Watchtower::watchesPropertyValueChange(&obj->as<NativeObject>())) {
-    return false;
+  *prop = LookupShapeForSetSlot(JSOp(*pc_), &obj->as<NativeObject>(), id);
+  if (!prop->isSome()) {
+    return SetSlotOptimizable::No;
   }
 
-  *prop = LookupShapeForSetSlot(op, &obj->as<NativeObject>(), id);
-  return prop->isSome();
+  return Watchtower::canOptimizeSetSlot(cx_, &obj->as<NativeObject>(), **prop);
 }
 
 // There is no need to guard on the shape. Global lexical bindings are
@@ -4730,8 +4730,14 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
                                                           HandleId id,
                                                           ValOperandId rhsId) {
   Maybe<PropertyInfo> prop;
-  if (!CanAttachNativeSetSlot(JSOp(*pc_), obj, id, &prop)) {
-    return AttachDecision::NoAction;
+  SetSlotOptimizable optimizable = canAttachNativeSetSlot(obj, id, &prop);
+  switch (optimizable) {
+    case SetSlotOptimizable::No:
+      return AttachDecision::NoAction;
+    case SetSlotOptimizable::NotYet:
+      return AttachDecision::TemporarilyUnoptimizable;
+    case SetSlotOptimizable::Yes:
+      break;
   }
 
   if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp &&
@@ -4743,6 +4749,12 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
 
   NativeObject* nobj = &obj->as<NativeObject>();
   if (!IsGlobalLexicalSetGName(JSOp(*pc_), nobj, *prop)) {
+    // If the object has an ObjectFuse, we can only optimize for this specific
+    // object so we have to emit GuardSpecificObject. We don't need to do this
+    // for the global object because there's only one object with that shape.
+    if (nobj->hasObjectFuse() && !nobj->is<GlobalObject>()) {
+      writer.guardSpecificObject(objId, nobj);
+    }
     TestMatchingNativeReceiver(writer, nobj, objId);
   }
   EmitStoreSlotAndReturn(writer, objId, nobj, *prop, rhsId);
@@ -5488,8 +5500,11 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
   }
 
   Maybe<PropertyInfo> prop;
-  if (CanAttachNativeSetSlot(JSOp(*pc_), expandoObj, id, &prop)) {
+  SetSlotOptimizable optimizable =
+      canAttachNativeSetSlot(expandoObj, id, &prop);
+  if (optimizable == SetSlotOptimizable::Yes) {
     auto* nativeExpandoObj = &expandoObj->as<NativeObject>();
+    MOZ_ASSERT(!nativeExpandoObj->hasObjectFuse());
 
     maybeEmitIdGuard(id);
     ObjOperandId expandoObjId = guardDOMProxyExpandoObjectAndShape(
@@ -5500,6 +5515,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     trackAttached("SetProp.DOMProxyExpandoSlot");
     return AttachDecision::Attach;
   }
+  MOZ_ASSERT(optimizable == SetSlotOptimizable::No);
 
   NativeObject* holder = nullptr;
   if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, &prop)) {
@@ -5640,12 +5656,20 @@ AttachDecision SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
   GlobalObject* windowObj = cx_->global();
 
   Maybe<PropertyInfo> prop;
-  if (!CanAttachNativeSetSlot(JSOp(*pc_), windowObj, id, &prop)) {
-    return AttachDecision::NoAction;
+  SetSlotOptimizable optimizable = canAttachNativeSetSlot(windowObj, id, &prop);
+  switch (optimizable) {
+    case SetSlotOptimizable::No:
+      return AttachDecision::NoAction;
+    case SetSlotOptimizable::NotYet:
+      return AttachDecision::TemporarilyUnoptimizable;
+    case SetSlotOptimizable::Yes:
+      break;
   }
 
   maybeEmitIdGuard(id);
 
+  // Note: we don't need to GuardSpecificObject here for the ObjectFuse,
+  // because this GlobalObject is the only object with this shape.
   ObjOperandId windowObjId =
       GuardAndLoadWindowProxyWindow(writer, objId, windowObj);
   writer.guardShape(windowObjId, windowObj->shape());
