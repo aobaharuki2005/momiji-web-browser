@@ -13,7 +13,7 @@
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on another site".
   -->
-  <string name="mozac_feature_addons_permissions_one_extra_site_description_2">Достъпва данните ви от друга страница</string>
+  <string name="mozac_feature_addons_permissions_one_extra_site_description_2">Достъп до вашите данни на друга страница</string>
   <!--
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
@@ -24,7 +24,7 @@
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on other sites".
   -->
-  <string name="mozac_feature_addons_permissions_extra_sites_description_2">Достъпва данните ви от други страници</string>
+  <string name="mozac_feature_addons_permissions_extra_sites_description_2">Достъп до вашите данни на други страници</string>
   <!--
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain.
@@ -115,7 +115,7 @@
   <!-- Description for the "bookmarks" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_bookmarks_description_for_update">Четене и промяна на отметки.</string>
   <!-- Description for the "browserSettings" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">Четене и промяна на настройките на браузъра.</string>
+  <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">Четене и промяна на настройките на четеца.</string>
   <!-- Description for the "browsingData" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_browsing_data_description_for_update">Изчистване на скорошна история на сърфиране, бисквитки и свързани данни.</string>
   <!-- Description for the "clipboardRead" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
@@ -129,7 +129,7 @@
   <!-- Description for the "downloads" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_downloads_description_for_update">Изтегляне на файлове и четене и промяна на историята на изтеглянията на браузъра.</string>
   <!-- Description for the "downloads.open" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_downloads_open_description_for_update">Отваря изтеглените на устройството файлове.</string>
+  <string name="mozac_feature_addons_permissions_downloads_open_description_for_update">Отваряне на изтеглените на устройството файлове.</string>
   <!-- Description for the "find" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_find_description_for_update">Прочита текста на всички отворени раздели.</string>
   <!-- Description for the "geolocation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
@@ -139,25 +139,25 @@
   <!-- Description for the "management" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_management_description_for_update">Следене използването на разширения и управление на теми.</string>
   <!-- Description for the "nativeMessaging" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_native_messaging_description_for_update">Обменяйте съобщения с приложения различни от това.</string>
+  <string name="mozac_feature_addons_permissions_native_messaging_description_for_update">Обменяне на съобщения с приложения различни от това.</string>
   <!-- Description for the "notifications" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_notifications_description_for_update">Показване на известия.</string>
   <!-- Description for the "pkcs11" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_pkcs11_description_for_update">Предоставяне на криптографски услуги за удостоверяване.</string>
   <!-- Description for the "proxy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_proxy_description_for_update">Контролирайте настройките на прокси на браузъра.</string>
+  <string name="mozac_feature_addons_permissions_proxy_description_for_update">Контролиране на настройките на прокси на четеца.</string>
   <!-- Description for the "sessions" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_sessions_description_for_update">Достъп до наскоро затворени раздели.</string>
   <!-- Description for the "tabHide" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_tab_hide_description_for_update">Скрива и показва разделите на браузъра.</string>
+  <string name="mozac_feature_addons_permissions_tab_hide_description_for_update">Скриване и показване на разделите на четеца.</string>
   <!-- Description for the "topSites" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_top_sites_description_for_update">Достъп до историята на сърфирането.</string>
   <!-- Description for the "trialML" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_trial_ml_description_for_update">Изтеглете и стартирайте AI модели на вашето устройство.</string>
+  <string name="mozac_feature_addons_permissions_trial_ml_description_for_update">Изтегляне и стартиране на модели за ИИ на вашето устройство.</string>
   <!-- Description for the "userScripts" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_user_scripts_description_for_update">Разрешаване на непроверени скриптове от трети страни да имат достъп до вашите данни.</string>
   <!-- Description for the "devtools" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_devtools_description_for_update">Разширете инструментите за разработчици с достъп до данните ви от отворени раздели.</string>
+  <string name="mozac_feature_addons_permissions_devtools_description_for_update">Разрешаване на инструментите за разработчици да достъпват данните ви от отворените раздели.</string>
   <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
   <string name="mozac_feature_addons_permissions_one_site_description_for_update">Достъпва данните ви от %1$s.</string>
   <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
@@ -211,7 +211,7 @@
   <!-- Short description for the personalCommunications data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_personalCommunications_short_description">лични комуникации</string>
   <!-- Short description for the personallyIdentifyingInfo data collection permission -->
-  <string name="mozac_feature_addons_permissions_data_collection_personallyIdentifyingInfo_short_description">лична информация</string>
+  <string name="mozac_feature_addons_permissions_data_collection_personallyIdentifyingInfo_short_description">информация за възможно идентифициране</string>
   <!-- Short description for the searchTerms data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_searchTerms_short_description">думи за търсене</string>
   <!-- Short description for the technicalAndInteraction data collection permission -->
@@ -229,21 +229,21 @@
   <!-- Long description for the financialAndPaymentInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_financialAndPaymentInfo_long_description">Споделяне на финансова и платежна информация с разработчика на разширението</string>
   <!-- Long description for the healthInfo data collection permission -->
-  <string name="mozac_feature_addons_permissions_data_collection_healthInfo_long_description">Споделяне на здравна информация с разработчика на разширението</string>
+  <string name="mozac_feature_addons_permissions_data_collection_healthInfo_long_description">Споделяне на информация за състоянието с разработчика на разширението</string>
   <!-- Long description for the locationInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_locationInfo_long_description">Споделяне на информация за местоположението с разработчика на разширението</string>
   <!-- Long description for the personalCommunications data collection permission -->
-  <string name="mozac_feature_addons_permissions_data_collection_personalCommunications_long_description">Споделяне на лична комуникация с разработчика на разширението</string>
+  <string name="mozac_feature_addons_permissions_data_collection_personalCommunications_long_description">Споделяне на личната комуникация с разработчика на разширението</string>
   <!-- Long description for the personallyIdentifyingInfo data collection permission -->
-  <string name="mozac_feature_addons_permissions_data_collection_personallyIdentifyingInfo_long_description">Споделяне на лична информация с разработчика на разширението</string>
+  <string name="mozac_feature_addons_permissions_data_collection_personallyIdentifyingInfo_long_description">Споделяне на лична, идентифицираща информация с разработчика на разширението</string>
   <!-- Long description for the searchTerms data collection permission -->
-  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_long_description">Споделете думи за търсене с разработчика на разширението</string>
+  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_long_description">Споделяне на думите за търсене с разработчика на разширението</string>
   <!-- Long description for the technicalAndInteraction data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_technicalAndInteraction_long_description">Споделяне на технически данни и данни за взаимодействие с разработчика на разширението</string>
   <!-- Long description for the websiteActivity data collection permission -->
-  <string name="mozac_feature_addons_permissions_data_collection_websiteActivity_long_description">Споделяне на активност в уебсайта с разработчика на разширения</string>
+  <string name="mozac_feature_addons_permissions_data_collection_websiteActivity_long_description">Споделяне на активност на уеб сайта с разработчика на разширения</string>
   <!-- Long description for the websiteContent data collection permission -->
-  <string name="mozac_feature_addons_permissions_data_collection_websiteContent_long_description">Споделяйте съдържание на уебсайта с разработчика на разширения</string>
+  <string name="mozac_feature_addons_permissions_data_collection_websiteContent_long_description">Споделяне на съдържание на уеб сайта с разработчика на разширения</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">Издание</string>
   <!-- The author of an add-on. -->
@@ -307,7 +307,7 @@
   <!-- Heading for the data collection permissions section in the add-on install dialog. -->
   <string name="mozac_feature_addons_permissions_dialog_heading_required_data_collection">Необходимо събиране на данни:</string>
   <!-- Heading for the optional settings section in the add-on install dialog. -->
-  <string name="mozac_feature_addons_permissions_dialog_heading_optional_settings">Незадължителни настройки:</string>
+  <string name="mozac_feature_addons_permissions_dialog_heading_optional_settings">Настройки по избор:</string>
   <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
   <string name="mozac_feature_addons_optional_permissions_dialog_subtitle" moz:removedIn="142" tools:ignore="UnusedResources">Иска права за:</string>
   <!-- Heading for the permissions section in the optional permissions request dialog. -->
@@ -451,13 +451,13 @@
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
   <string name="mozac_feature_addons_installed_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">Добавката „%1$s“ е добавена към %2$s</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_installed_dialog_title_2">Добавката „%1$s“ беше добавена</string>
+  <string name="mozac_feature_addons_installed_dialog_title_2">\u0020„%1$s“ беше добавено</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
   <string name="mozac_feature_addons_installed_dialog_description_2" moz:removedIn="142" tools:ignore="UnusedResources">Отворете %1$s от менюто на %2$s.</string>
   <!-- Used as text for the link in the description of the post-installation dialog. -->
-  <string name="mozac_feature_addons_installed_dialog_description_link_text">настройките на разширението</string>
+  <string name="mozac_feature_addons_installed_dialog_description_link_text">настройки на разширението</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is replaced by an active link, using mozac_feature_addons_installed_dialog_description_link_text as text ("extension settings"). -->
-  <string name="mozac_feature_addons_installed_dialog_description_3">Актуализирайте разрешенията и предпочитанията за данни по всяко време в %1$s.</string>
+  <string name="mozac_feature_addons_installed_dialog_description_3">Актуализиране на разрешенията и предпочитанията за данни по всяко време в %1$s.</string>
   <!-- Confirmation button text for the dialog when add-on installation is completed. -->
   <string name="mozac_feature_addons_installed_dialog_okay_button_2">Добре</string>
   <!-- "Learn more" link displayed below an add-on status message. -->
