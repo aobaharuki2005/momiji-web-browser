@@ -760,13 +760,12 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozDialog:  // --background-color-box
       color = NS_RGB(35, 34, 43);
       break;
-    case ColorID::Windowtext:  // --in-content-page-color
+    case ColorID::Windowtext:  // --text-color
     case ColorID::MozDialogtext:
     case ColorID::MozSidebartext:
     case ColorID::Fieldtext:
     case ColorID::Infotext:
-    case ColorID::Buttontext:  // --button-text-color (via
-                               // --in-content-page-color)
+    case ColorID::Buttontext:  // --button-text-color
     case ColorID::MozComboboxtext:
     case ColorID::MozButtonhovertext:
     case ColorID::MozButtonactivetext:

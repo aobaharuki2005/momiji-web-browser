@@ -17,7 +17,7 @@
     color-mix(in srgb, var(--fxview-background-color) 80%, currentColor),
     color-mix(in srgb, var(--fxview-background-color) 60%, white)
   );
-  --fxview-text-primary-color: var(--newtab-text-primary-color, var(--in-content-page-color));
+  --fxview-text-primary-color: var(--newtab-text-primary-color, var(--text-color));
   --fxview-text-secondary-color: color-mix(in srgb, currentColor 70%, transparent);
   --fxview-text-color-hover: var(--newtab-text-primary-color);
   --fxview-primary-action-background: var(--newtab-primary-action-background, light-dark(#0061e0, #00ddff));

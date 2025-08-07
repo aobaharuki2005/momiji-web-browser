@@ -25,7 +25,7 @@
   padding: 50px 50px 20px;
   margin: auto;
   background-color: var(--in-content-page-background);
-  color: var(--in-content-page-color);
+  color: var(--text-color);
   box-shadow: var(--logins-dialog-shadow);
   border: var(--logins-dialog-border);
   border-radius: var(--logins-dialog-border-radius);

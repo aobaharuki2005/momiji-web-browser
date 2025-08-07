@@ -16,15 +16,16 @@
    *  * The default value of browser.display.foreground_color.dark and
    *    browser.display.background_color.dark
    */
-  --in-content-page-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
+
   --in-content-page-background: var(--background-color-canvas);
-  --in-content-text-color: var(--in-content-page-color);
   --in-content-box-border-color: color-mix(in srgb, currentColor 41%, transparent);
   --in-content-box-info-background: light-dark(#f0f0f4, rgba(249, 249, 250, 0.15));
+
   --in-content-item-hover: color-mix(in srgb, var(--button-background-color-primary) 20%, transparent);
-  --in-content-item-hover-text: var(--in-content-page-color);
+  --in-content-item-hover-text: var(--text-color);
   --in-content-item-selected: var(--button-background-color-primary);
   --in-content-item-selected-text: var(--button-text-color-primary);
+
   --in-content-border-invalid: light-dark(var(--red-50), rgb(255, 132, 139));
   --in-content-border-color: light-dark(#d7d7db, rgba(249, 249, 250, 0.2));
 
@@ -76,8 +77,6 @@
 @media (forced-colors) {
   :host(.anonymous-content-host),
   :root {
-    --in-content-page-color: CanvasText;
-
     --in-content-box-border-color: -moz-DialogText;
     --in-content-box-info-background: var(--background-color-box);
 
@@ -104,7 +103,7 @@
 :root {
   appearance: none;
   background-color: var(--in-content-page-background);
-  color: var(--in-content-page-color);
+  color: var(--text-color);
 }
 
 :root:not(.system-font-size) {
@@ -270,7 +269,7 @@ html|select:not([size], [multiple]):dir(rtl) {
 
 html|select:not([size], [multiple]) > html|option {
   background-color: var(--background-color-box);
-  color: var(--in-content-text-color);
+  color: var(--text-color);
 }
 
 html|button:enabled:hover,
@@ -398,7 +397,7 @@ xul|menulist > xul|menupopup {
   --panel-border-color: var(--in-content-box-border-color);
   --panel-border-radius: 2px;
   --panel-background: var(--background-color-box);
-  --panel-color: var(--in-content-text-color);
+  --panel-color: var(--text-color);
   --panel-padding: 0;
 }
 
@@ -769,7 +768,7 @@ xul|richlistbox {
   background-color: var(--background-color-box);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 4px;
-  color: var(--in-content-text-color);
+  color: var(--text-color);
 }
 
 xul|listheader {
@@ -839,7 +838,7 @@ xul|richlistitem[selected] xul|menulist:focus-visible {
 xul|panel[type="autocomplete-richlistbox"] {
   background-color: var(--background-color-box);
   border: 1px solid var(--in-content-box-border-color);
-  color: var(--in-content-text-color);
+  color: var(--text-color);
 }
 
 /* Trees */

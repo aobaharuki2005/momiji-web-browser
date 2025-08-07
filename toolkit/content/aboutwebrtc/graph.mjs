@@ -39,7 +39,7 @@ class GraphImpl {
   // The color to use for the min value
   minColor = () => "grey";
   // Title color
-  titleColor = () => compStyle("--in-content-page-color");
+  titleColor = () => compStyle("--text-color");
   // The color to use for a data point at a time.
   // The destination x coordinate and graph width are also provided.
   datumColor = () => "red";

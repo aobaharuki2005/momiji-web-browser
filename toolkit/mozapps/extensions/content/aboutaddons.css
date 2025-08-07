@@ -332,7 +332,7 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 
 .addon-name-link,
 .addon-name-link:hover {
-  color: var(--in-content-text-color);
+  color: var(--text-color);
   text-decoration: none;
 }
 
@@ -571,7 +571,7 @@ button.addon-detail-description-toggle {
   border-top: 1px solid var(--in-content-border-color);
   margin: 0 calc(var(--card-padding) * -1);
   padding: var(--card-padding);
-  color: var(--in-content-text-color);
+  color: var(--text-color);
 }
 
 .addon-detail-row.addon-detail-help-row {

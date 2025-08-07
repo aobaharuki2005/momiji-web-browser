@@ -628,7 +628,7 @@ html|dialog,
 .dialogBox {
   background-color: var(--in-content-page-background);
   background-clip: content-box;
-  color: var(--in-content-page-color);
+  color: var(--text-color);
   /* `transparent` will use the dialogText color in high-contrast themes and
      when page colors are disabled */
   display: flex;
@@ -1406,7 +1406,7 @@ richlistitem .text-link:hover {
   width: 100%;
   border: 1px solid var(--in-content-box-border-color);
   background-color: var(--background-color-box);
-  color: var(--in-content-text-color);
+  color: var(--text-color);
   border-radius: 4px;
   overflow: clip;
 }

@@ -196,7 +196,7 @@ browser {
     &.chatgpt {
       background-image: url(assets/brands/chatgpt.svg);
       -moz-context-properties: fill;
-      fill: var(--in-content-page-color);
+      fill: var(--text-color);
     }
     &.copilot {
       background-image: url(assets/brands/copilot.svg);

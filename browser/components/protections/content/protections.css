@@ -308,8 +308,8 @@ a.hidden,
 
 #protection-settings:hover:active {
   text-decoration: none;
-  color: var(--in-content-text-color);
-  fill: var(--in-content-text-color);
+  color: var(--text-color);
+  fill: var(--text-color);
 }
 
 #protection-settings:-moz-focusring {

@@ -5,7 +5,7 @@
 :root {
   /* Provide defaults for when this page is viewed in "toolkit". */
   background-color: var(--in-content-page-background, #fff);
-  color: var(--in-content-page-color, #15141a);
+  color: var(--text-color, #15141a);
 
   /* Provide backup values for some of the variables used in "browser" so that the styles
      look nice by default in "toolkit". */

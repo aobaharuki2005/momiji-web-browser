@@ -100,7 +100,7 @@ html {
 .onboardingContainer {
   --grey-subtitle-1: light-dark(#696977, #FFF);
   --mr-welcome-background-color: light-dark(#F8F6F4, #333336);
-  --mr-screen-heading-color: var(--in-content-text-color);
+  --mr-screen-heading-color: var(--text-color);
   --mr-welcome-background-gradient: linear-gradient(
     0deg,
     light-dark(rgba(144, 89, 255, 20%), rgba(144, 89, 255, 30%)) 0%,
@@ -200,7 +200,7 @@ html {
     box-sizing: border-box;
 
     @media (prefers-contrast){
-      border: 1px solid var(--in-content-page-color)
+      border: 1px solid var(--text-color)
     }
 
     &.no-steps {
@@ -296,17 +296,17 @@ html {
     overflow: hidden;
 
     &.light-text {
-      --in-content-page-color: rgb(251, 251, 254);
+      --text-color: rgb(251, 251, 254);
       --button-text-color-primary: rgb(43, 42, 51);
       --button-text-color-primary-hover: rgb(43, 42, 51);
       --button-background-color-primary: rgb(0, 221, 255);
       --button-background-color-primary-hover: rgb(128, 235, 255);
       --button-background-color-primary-active: rgb(170, 242, 255);
-      --button-text-color: var(--in-content-page-color);
+      --button-text-color: var(--text-color);
     }
 
     &.dark-text {
-      --in-content-page-color: rgb(21,  20,  26);
+      --text-color: rgb(21,  20,  26);
       --button-text-color-primary: rgb(251, 251, 254);
       --button-text-color-primary-hover: rgb(251, 251, 254);
       --button-background-color-primary: #0061E0;
@@ -314,7 +314,7 @@ html {
       --button-background-color-primary-active: #053E94;
       --button-border-color-primary: transparent;
       --button-border-color-primary-hover: transparent;
-      --button-text-color: var(--in-content-page-color);
+      --button-text-color: var(--text-color);
     }
 
     &:dir(rtl) {
@@ -841,10 +841,10 @@ html {
           }
 
           @media (prefers-contrast) {
-            border: 1px solid var(--in-content-page-color);
+            border: 1px solid var(--text-color);
 
             .steps.progress-bar {
-              border-top: 1px solid var(--in-content-page-color);
+              border-top: 1px solid var(--text-color);
               background-color: var(--in-content-page-background);
 
               .indicator {
@@ -1644,7 +1644,7 @@ html {
 
     h1,
     h2 {
-      color: var(--in-content-page-color);
+      color: var(--text-color);
       line-height: 1.5;
     }
 
@@ -1931,7 +1931,7 @@ html {
 
       .text {
         display: flex;
-        color: var(--in-content-page-color);
+        color: var(--text-color);
         font-size: 14px;
         font-weight: normal;
         line-height: 20px;
@@ -1977,7 +1977,7 @@ html {
     text-align: initial;
     transition: var(--transition);
     z-index: 1;
-    color: var(--in-content-page-color);
+    color: var(--text-color);
 
     @media not (prefers-contrast) {
       color: light-dark(#5B5B66, #CFCFD8);
@@ -1985,7 +1985,7 @@ html {
 
     #multi-stage-multi-select-label {
       // These styles are based on .welcome-text>h2 (subtitle).
-      color: var(--in-content-page-color);
+      color: var(--text-color);
       line-height: 1.5;
       font-size: 16px;
       font-weight: normal;
@@ -2125,7 +2125,7 @@ html {
     }
 
     @media (prefers-contrast) {
-      color: var(--in-content-page-color);
+      color: var(--text-color);
     }
 
     .arrow-icon {

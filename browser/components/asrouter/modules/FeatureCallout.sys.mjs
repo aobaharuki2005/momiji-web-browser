@@ -2273,21 +2273,20 @@ export class FeatureCallout {
       all: {
         background:
           "var(--newtab-background-color, var(--in-content-page-background)) linear-gradient(var(--newtab-background-color-secondary), var(--newtab-background-color-secondary))",
-        color: "var(--newtab-text-primary-color, var(--in-content-page-color))",
+        color: "var(--newtab-text-primary-color, var(--text-color))",
         border:
           "color-mix(in srgb, var(--newtab-background-color-secondary) 80%, #000)",
         "accent-color": "var(--button-background-color-primary)",
         "button-background": "color-mix(in srgb, transparent 93%, #000)",
-        "button-color":
-          "var(--newtab-text-primary-color, var(--in-content-page-color))",
+        "button-color": "var(--newtab-text-primary-color, var(--text-color))",
         "button-border": "transparent",
         "button-background-hover": "color-mix(in srgb, transparent 88%, #000)",
         "button-color-hover":
-          "var(--newtab-text-primary-color, var(--in-content-page-color))",
+          "var(--newtab-text-primary-color, var(--text-color))",
         "button-border-hover": "transparent",
         "button-background-active": "color-mix(in srgb, transparent 80%, #000)",
         "button-color-active":
-          "var(--newtab-text-primary-color, var(--in-content-page-color))",
+          "var(--newtab-text-primary-color, var(--text-color))",
         "button-border-active": "transparent",
         "primary-button-background": "var(--button-background-color-primary)",
         "primary-button-color": "var(--button-text-color-primary)",
