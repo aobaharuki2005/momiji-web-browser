@@ -212,6 +212,39 @@
           "There's a default implementation"
         );
       });
+
+      add_task(async function testDepsChange() {
+        const DEP_PREF_ID = "test.depsChange.dep";
+        const DEP_SETTING_ID = "testDepsChangeDep";
+        await SpecialPowers.pushPrefEnv({
+          set: [[DEP_PREF_ID, true]],
+        });
+        Preferences.add({ id: DEP_PREF_ID, type: "bool" });
+        Preferences.addSetting({
+          id: DEP_SETTING_ID,
+          pref: DEP_PREF_ID,
+        });
+
+        const PARENT_SETTING_ID = "testDepsChangeParent";
+        Preferences.addSetting({
+          id: PARENT_SETTING_ID,
+          deps: [DEP_SETTING_ID],
+          visible: deps => deps[DEP_SETTING_ID].value,
+        });
+
+        const parentSetting = Preferences.getSetting(PARENT_SETTING_ID);
+
+        ok(parentSetting.visible, "Parent setting is visible initially");
+
+        let settingChanged = waitForSettingChange(parentSetting);
+        Services.prefs.setBoolPref(DEP_PREF_ID, false);
+        await settingChanged;
+
+        ok(
+          !parentSetting.visible,
+          "Parent setting is not visible based on dep"
+        );
+      });
     </script>
   </head>
   <body>

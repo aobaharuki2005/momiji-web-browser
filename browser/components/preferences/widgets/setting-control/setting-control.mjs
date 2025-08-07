@@ -136,15 +136,21 @@ export class SettingControl extends MozLitElement {
     return result;
   }
 
+  onSettingChange = () => {
+    this.setValue();
+    this.requestUpdate();
+  };
+
   willUpdate(changedProperties) {
     if (changedProperties.has("setting")) {
       if (this.#lastSetting) {
-        this.#lastSetting.off("change", this.setValue);
+        this.#lastSetting.off("change", this.onSettingChange);
       }
       this.#lastSetting = this.setting;
       this.setValue();
-      this.setting.on("change", this.setValue);
+      this.setting.on("change", this.onSettingChange);
     }
+    this.hidden = !this.setting.visible;
   }
 
   /**
@@ -198,7 +204,6 @@ export class SettingControl extends MozLitElement {
   // Called by our parent when our input changed.
   onChange(el) {
     this.setting.userChange(this.controlValue(el));
-    this.setValue();
   }
 
   render() {
@@ -208,12 +213,10 @@ export class SettingControl extends MozLitElement {
 
     // Prepare nested item config and settings.
     let itemArgs =
-      config.items
-        ?.map(i => ({
-          config: i,
-          setting: this.getSetting(i.id),
-        }))
-        .filter(i => i.setting.visible) || [];
+      config.items?.map(i => ({
+        config: i,
+        setting: this.getSetting(i.id),
+      })) || [];
     let nestedSettings = itemArgs.map(
       opts =>
         html`<setting-control
