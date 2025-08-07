@@ -4,15 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    "sdk/src",
+include("/third_party/opentelemetry-cpp/opentelemetry-config.mozbuild")
+
+UNIFIED_SOURCES += [
+    "src/in_memory_span_exporter_factory.cc",
 ]
 
-if CONFIG["MOZ_DEBUG"]:
-    DIRS += [ "exporters/ostream" ]
-
-if CONFIG["ENABLE_TESTS"]:
-    DIRS += ["exporters/memory"]
-
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Gecko Trace")
+FINAL_LIBRARY = "xul"
