@@ -611,6 +611,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   void HandleLoadError(ScriptLoadRequest* aRequest, nsresult aResult);
 
+  void HandleLoadErrorAndProcessPendingRequests(ScriptLoadRequest* aRequest,
+                                                nsresult aResult);
+
   /**
    * Process any pending requests asynchronously (i.e. off an event) if there
    * are any. Note that this is a no-op if there aren't any currently pending

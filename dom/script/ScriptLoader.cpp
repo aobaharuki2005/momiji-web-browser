@@ -1376,16 +1376,32 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     if (NS_FAILED(rv)) {
       ReportErrorToConsole(request, rv);
 
+      // If this is a script element that with an https URL scheme would block
+      // the parser, we need to block the parser.
+      bool block = !(request->GetScriptLoadContext()->IsAsyncScript() ||
+                     !aElement->GetParserCreated() ||
+                     request->GetScriptLoadContext()->IsDeferredScript());
+
       // Asynchronously report the load failure
-      nsCOMPtr<nsIRunnable> runnable =
-          NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
-                            &nsIScriptElement::FireErrorEvent);
+      nsCOMPtr<nsIRunnable> runnable;
+      if (block) {
+        mParserBlockingRequest = request;
+        runnable = NewRunnableMethod<RefPtr<ScriptLoadRequest>, nsresult>(
+            "ScriptLoader::HandleLoadErrorAndProcessPendingRequests", this,
+            &ScriptLoader::HandleLoadErrorAndProcessPendingRequests, request,
+            rv);
+      } else {
+        runnable =
+            NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
+                              &nsIScriptElement::FireErrorEvent);
+      }
+
       if (mDocument) {
         mDocument->Dispatch(runnable.forget());
       } else {
         NS_DispatchToCurrentThread(runnable.forget());
       }
-      return false;
+      return block;
     }
 
     if (request->IsStencil()) {
@@ -4197,6 +4213,13 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
                aRequest->GetScriptLoadContext()->IsLinkPreloadScript());
     MOZ_ASSERT(!aRequest->isInList());
   }
+}
+
+void ScriptLoader::HandleLoadErrorAndProcessPendingRequests(
+    ScriptLoadRequest* aRequest, nsresult aResult) {
+  HandleLoadError(aRequest, aResult);
+  // Process in case some other requests have finished meanwhile.
+  ProcessPendingRequests();
 }
 
 void ScriptLoader::UnblockParser(ScriptLoadRequest* aParserBlockingRequest) {
