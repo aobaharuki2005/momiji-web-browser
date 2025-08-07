@@ -302,6 +302,7 @@ include = [
   "SVGWidth",
   "TextAlign",
   "TextAlignLast",
+  "TextAutospace",
   "FontSizeKeyword",
   "AspectRatio",
   "DefaultFontSizes",

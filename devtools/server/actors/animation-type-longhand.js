@@ -165,6 +165,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "text-align",
       "text-align-last",
       "text-anchor",
+      "text-autospace",
       "text-combine-upright",
       "text-decoration-line",
       "text-decoration-skip-ink",

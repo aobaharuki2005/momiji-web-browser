@@ -10286,6 +10286,13 @@
   value: false
   mirror: always
 
+# Is support for CSS text-autospace property enabled?
+# https://drafts.csswg.org/css-text-4/#text-autospace-property
+- name: layout.css.text-autospace.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Maximum number of lines to try balancing.
 - name: layout.css.text-wrap-balance.limit
   type: int32_t
