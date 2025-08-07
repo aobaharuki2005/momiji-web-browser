@@ -2187,7 +2187,6 @@ JS_PUBLIC_API void JS_SetReservedSlot(JSObject* obj, uint32_t index,
   // objects. See NativeObject::getReservedSlotRef comment.
   NativeObject& nobj = obj->as<NativeObject>();
   MOZ_ASSERT(index < JSCLASS_RESERVED_SLOTS(obj->getClass()));
-  MOZ_ASSERT(!Watchtower::watchesPropertyValueChange(&nobj));
   nobj.setSlot(index, value);
 }
 
