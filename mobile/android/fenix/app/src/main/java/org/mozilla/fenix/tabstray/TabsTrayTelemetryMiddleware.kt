@@ -9,6 +9,8 @@ import mozilla.components.lib.state.MiddlewareContext
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.TabsTray
+import org.mozilla.fenix.components.metrics.MetricsUtils
+import org.mozilla.fenix.components.metrics.MetricsUtils.BookmarkAction.Source
 
 /**
  * Middleware that records telemetry events for the Tabs Tray feature.
@@ -53,6 +55,12 @@ class TabsTrayTelemetryMiddleware : Middleware<TabsTrayState, TabsTrayAction> {
             }
             is TabsTrayAction.CloseAllPrivateTabs -> {
                 TabsTray.closeAllTabs.record(NoExtras())
+            }
+            is TabsTrayAction.BookmarkSelectedTabs -> {
+                TabsTray.bookmarkSelectedTabs.record(TabsTray.BookmarkSelectedTabsExtra(tabCount = action.tabCount))
+                repeat(action.tabCount) {
+                    MetricsUtils.recordBookmarkMetrics(MetricsUtils.BookmarkAction.ADD, Source.TABS_TRAY)
+                }
             }
             else -> {
                 // no-op

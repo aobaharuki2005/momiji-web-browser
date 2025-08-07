@@ -349,10 +349,12 @@ sealed class AppAction : Action {
          *
          * @property guidToEdit The guid of the newly added bookmark or null.
          * @property parentNode The [BookmarkNode] representing the folder the bookmark was added to, if any.
+         * @property source Describes where the action was called from.
          */
         data class BookmarkAdded(
             val guidToEdit: String?,
             val parentNode: BookmarkNode?,
+            val source: MetricsUtils.BookmarkAction.Source,
         ) : BookmarkAction()
 
         /**

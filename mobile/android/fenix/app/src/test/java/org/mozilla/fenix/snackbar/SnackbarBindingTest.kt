@@ -70,6 +70,7 @@ import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.SiteDataClea
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.TranslationInProgress
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.UserAccountAuthenticated
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.WebCompatReportSent
+import org.mozilla.fenix.components.metrics.MetricsUtils.BookmarkAction.Source
 import org.mozilla.fenix.ext.tabClosedUndoMessage
 
 @RunWith(AndroidJUnit4::class)
@@ -160,6 +161,7 @@ class SnackbarBindingTest {
             BookmarkAction.BookmarkAdded(
                 guidToEdit = "1",
                 parentNode = parent,
+                source = Source.TEST,
             ),
         )
         waitForStoreToSettle()
@@ -188,6 +190,7 @@ class SnackbarBindingTest {
             BookmarkAction.BookmarkAdded(
                 guidToEdit = "1",
                 parentNode = parent,
+                source = Source.TEST,
             ),
         )
 
@@ -217,7 +220,7 @@ class SnackbarBindingTest {
         binding.start()
 
         appStore.dispatch(
-            BookmarkAction.BookmarkAdded(guidToEdit = null, parent),
+            BookmarkAction.BookmarkAdded(guidToEdit = null, parentNode = parent, source = Source.TEST),
         )
 
         // Wait for BookmarkAction.BookmarkAdded(guidToEdit = null),
@@ -238,7 +241,7 @@ class SnackbarBindingTest {
         binding.start()
 
         appStore.dispatch(
-            BookmarkAction.BookmarkAdded(guidToEdit = "guid", parentNode = null),
+            BookmarkAction.BookmarkAdded(guidToEdit = "guid", parentNode = null, source = Source.TEST),
         )
         waitForStoreToSettle()
 

@@ -10,8 +10,8 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.components.metrics.MetricsUtils
 
-private const val EDIT_SCREEN_METRIC_SOURCE = "bookmark_edit_page"
-private const val LIST_SCREEN_METRIC_SOURCE = "bookmark_panel"
+private val EDIT_SCREEN_METRIC_SOURCE = MetricsUtils.BookmarkAction.Source.BOOKMARK_EDIT_PAGE
+private val LIST_SCREEN_METRIC_SOURCE = MetricsUtils.BookmarkAction.Source.BOOKMARK_PANEL
 
 internal class BookmarksTelemetryMiddleware : Middleware<BookmarksState, BookmarksAction> {
 

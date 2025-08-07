@@ -310,7 +310,7 @@ class MenuDialogMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN the last added bookmark does not belongs to a folder WHEN bookmark is added THEN bookmark is added to mobile root`() = runTestOnMain {
+    fun `GIVEN the last added bookmark does not belong to a folder WHEN bookmark is added THEN bookmark is added to mobile root`() = runTestOnMain {
         val url = "https://www.mozilla.org"
         val title = "Mozilla"
 

@@ -122,4 +122,32 @@ class TabsTrayTelemetryMiddlewareTest {
 
         assertNotNull(TabsTray.closeAllTabs.testGetValue())
     }
+
+    @Test
+    fun `GIVEN one tab selected WHEN the bookmark selected tabs button is clicked THEN the metric is reported`() {
+        assertNull(TabsTray.bookmarkSelectedTabs.testGetValue())
+
+        store.dispatch(TabsTrayAction.BookmarkSelectedTabs(1))
+        store.waitUntilIdle()
+
+        assertNotNull(TabsTray.bookmarkSelectedTabs.testGetValue())
+        val snapshot = TabsTray.bookmarkSelectedTabs.testGetValue()!!
+        assertEquals(1, snapshot.size)
+        assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
+        assertEquals(1, Metrics.bookmarksAdd["tabs_tray"].testGetValue())
+    }
+
+    @Test
+    fun `GIVEN multiple tabs selected WHEN the bookmark selected tabs button is clicked THEN the metric is reported`() {
+        assertNull(TabsTray.bookmarkSelectedTabs.testGetValue())
+
+        store.dispatch(TabsTrayAction.BookmarkSelectedTabs(2))
+        store.waitUntilIdle()
+
+        assertNotNull(TabsTray.bookmarkSelectedTabs.testGetValue())
+        val snapshot = TabsTray.bookmarkSelectedTabs.testGetValue()!!
+        assertEquals(1, snapshot.size)
+        assertEquals("2", snapshot.single().extra?.getValue("tab_count"))
+        assertEquals(2, Metrics.bookmarksAdd["tabs_tray"].testGetValue())
+    }
 }

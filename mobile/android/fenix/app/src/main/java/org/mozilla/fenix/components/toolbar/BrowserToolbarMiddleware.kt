@@ -83,7 +83,6 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Normal
@@ -93,7 +92,6 @@ import org.mozilla.fenix.browser.store.BrowserScreenStore
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.UseCases
-import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.BookmarkAction
 import org.mozilla.fenix.components.appstate.AppAction.CurrentTabClosed
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
@@ -523,6 +521,7 @@ class BrowserToolbarMiddleware(
                             BookmarkAction.BookmarkAdded(
                                 guidToEdit = guidToEdit,
                                 parentNode = parentNode,
+                                source = action.source.toMetricSource(),
                             ),
                         )
                     }
@@ -1182,5 +1181,10 @@ class BrowserToolbarMiddleware(
             contentDescription = R.string.browser_menu_share,
             onClick = ShareClicked(source),
         )
+    }
+
+    private fun Source.toMetricSource() = when (this) {
+        Source.AddressBar -> MetricsUtils.BookmarkAction.Source.BROWSER_TOOLBAR
+        Source.NavigationBar -> MetricsUtils.BookmarkAction.Source.BROWSER_NAVBAR
     }
 }

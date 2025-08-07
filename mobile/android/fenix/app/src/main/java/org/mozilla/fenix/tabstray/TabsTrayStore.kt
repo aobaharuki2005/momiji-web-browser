@@ -224,6 +224,11 @@ sealed class TabsTrayAction : Action {
      * [TabsTrayAction] fired when the user requests to close all private tabs.
      */
     object CloseAllPrivateTabs : TabsTrayAction()
+
+    /**
+     * [TabsTrayAction] fired when the user requests to bookmark selected tabs.
+     */
+    data class BookmarkSelectedTabs(val tabCount: Int) : TabsTrayAction()
 }
 
 /**
@@ -271,6 +276,7 @@ internal object TabsTrayReducer {
             is TabsTrayAction.ShareAllPrivateTabs -> state
             is TabsTrayAction.CloseAllNormalTabs -> state
             is TabsTrayAction.CloseAllPrivateTabs -> state
+            is TabsTrayAction.BookmarkSelectedTabs -> state
         }
     }
 }

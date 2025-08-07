@@ -93,13 +93,13 @@ object MetricsUtils {
      */
     fun recordBookmarkMetrics(
         action: BookmarkAction,
-        source: String,
+        source: BookmarkAction.Source,
     ) {
         when (action) {
-            BookmarkAction.ADD -> Metrics.bookmarksAdd[source].add()
-            BookmarkAction.EDIT -> Metrics.bookmarksEdit[source].add()
-            BookmarkAction.DELETE -> Metrics.bookmarksDelete[source].add()
-            BookmarkAction.OPEN -> Metrics.bookmarksOpen[source].add()
+            BookmarkAction.ADD -> Metrics.bookmarksAdd[source.label()].add()
+            BookmarkAction.EDIT -> Metrics.bookmarksEdit[source.label()].add()
+            BookmarkAction.DELETE -> Metrics.bookmarksDelete[source.label()].add()
+            BookmarkAction.OPEN -> Metrics.bookmarksOpen[source.label()].add()
         }
     }
 
@@ -107,8 +107,25 @@ object MetricsUtils {
      * Describes which bookmark action is being recorded.
      */
     enum class BookmarkAction {
-        ADD, EDIT, DELETE, OPEN
+        ADD, EDIT, DELETE, OPEN;
+
+        /**
+         * Possible sources for a bookmark action.
+         */
+        enum class Source {
+            ADD_BOOKMARK_TOAST,
+            BOOKMARK_EDIT_PAGE,
+            BOOKMARK_PANEL,
+            BROWSER_NAVBAR,
+            BROWSER_TOOLBAR,
+            MENU_DIALOG,
+            PAGE_ACTION_MENU,
+            TABS_TRAY,
+            TEST,
+        }
     }
+
+    private fun BookmarkAction.Source.label() = name.lowercase()
 
     /**
      * Get the default salt to use for hashing. This is a convenience

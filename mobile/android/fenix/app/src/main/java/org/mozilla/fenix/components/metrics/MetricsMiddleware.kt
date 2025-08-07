@@ -32,6 +32,11 @@ class MetricsMiddleware(
             metrics.track(Event.GrowthData.UsageThreshold)
             metrics.track(Event.GrowthData.UserActivated(fromSearch = false))
         }
+
+        is AppAction.BookmarkAction.BookmarkAdded -> {
+            MetricsUtils.recordBookmarkMetrics(MetricsUtils.BookmarkAction.ADD, action.source)
+        }
+
         else -> Unit
     }
 }
