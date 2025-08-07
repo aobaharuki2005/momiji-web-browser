@@ -34,7 +34,6 @@
 //! * `sched` - Manipulate process's scheduling
 //! * `socket` - Sockets, whether for networking or local use
 //! * `signal` - Send and receive signals to processes
-//! * `syslog` - System logging
 //! * `term` - Terminal control APIs
 //! * `time` - Query the operating system's clocks
 //! * `ucontext` - User thread context
@@ -44,12 +43,9 @@
 #![crate_name = "nix"]
 #![cfg(unix)]
 #![allow(non_camel_case_types)]
-// A clear document is a good document no matter if it has a summary in its
-// first paragraph or not.
-#![allow(clippy::too_long_first_doc_paragraph)]
+#![cfg_attr(test, deny(warnings))]
 #![recursion_limit = "500"]
 #![deny(unused)]
-#![deny(unexpected_cfgs)]
 #![allow(unused_macros)]
 #![cfg_attr(
     not(all(
@@ -80,7 +76,6 @@
         feature = "sched",
         feature = "socket",
         feature = "signal",
-        feature = "syslog",
         feature = "term",
         feature = "time",
         feature = "ucontext",
@@ -97,11 +92,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![deny(clippy::cast_ptr_alignment)]
 #![deny(unsafe_op_in_unsafe_fn)]
-// I found the change suggested by this rules could hurt code readability. I cannot
-// remeber every type's default value, in such cases, it forces me to open
-// the std doc to insepct the Default value, which is unnecessary with
-// `.unwrap_or(value)`.
-#![allow(clippy::unwrap_or_default)]
 
 // Re-exported external crates
 pub use libc;
@@ -150,11 +140,7 @@ feature! {
     #![feature = "mount"]
     pub mod mount;
 }
-#[cfg(any(
-    freebsdlike,
-    all(target_os = "linux", not(target_env = "ohos")),
-    target_os = "netbsd"
-))]
+#[cfg(any(freebsdlike, target_os = "linux", target_os = "netbsd"))]
 feature! {
     #![feature = "mqueue"]
     pub mod mqueue;
@@ -199,23 +185,6 @@ pub mod unistd;
 #[cfg(any(feature = "poll", feature = "event"))]
 mod poll_timeout;
 
-#[cfg(any(
-    target_os = "freebsd",
-    target_os = "haiku",
-    target_os = "linux",
-    target_os = "netbsd",
-    apple_targets
-))]
-feature! {
-    #![feature = "process"]
-    pub mod spawn;
-}
-
-feature! {
-    #![feature = "syslog"]
-    pub mod syslog;
-}
-
 use std::ffi::{CStr, CString, OsStr};
 use std::mem::MaybeUninit;
 use std::os::unix::ffi::OsStrExt;
@@ -236,7 +205,7 @@ pub type Result<T> = result::Result<T, Errno>;
 /// * `Eq`
 /// * Small size
 /// * Represents all of the system's errnos, instead of just the most common
-///   ones.
+/// ones.
 pub type Error = Errno;
 
 /// Common trait used to represent file system paths by many Nix functions.
@@ -320,7 +289,7 @@ impl NixPath for [u8] {
         F: FnOnce(&CStr) -> T,
     {
         // The real PATH_MAX is typically 4096, but it's statistically unlikely to have a path
-        // longer than ~300 bytes. See the PR description to get stats for your own machine.
+        // longer than ~300 bytes. See the the PR description to get stats for your own machine.
         // https://github.com/nix-rust/nix/pull/1656
         //
         // By being smaller than a memory page, we also avoid the compiler inserting a probe frame:

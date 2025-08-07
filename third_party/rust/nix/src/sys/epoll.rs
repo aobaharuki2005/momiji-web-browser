@@ -1,6 +1,5 @@
 use crate::errno::Errno;
 pub use crate::poll_timeout::PollTimeout as EpollTimeout;
-pub use crate::poll_timeout::PollTimeoutTryFromError as EpollTimeoutTryFromError;
 use crate::Result;
 use libc::{self, c_int};
 use std::mem;
@@ -89,7 +88,7 @@ impl EpollEvent {
 /// epoll.add(&eventfd, EpollEvent::new(EpollFlags::EPOLLIN,DATA))?;
 ///
 /// // Arm eventfd & Time wait
-/// eventfd.write(1)?;
+/// eventfd.arm()?;
 /// let now = Instant::now();
 ///
 /// // Wait on event
@@ -206,10 +205,7 @@ pub fn epoll_create1(flags: EpollCreateFlags) -> Result<RawFd> {
     Errno::result(res)
 }
 
-#[deprecated(
-    since = "0.27.0",
-    note = "Use corresponding Epoll methods instead"
-)]
+#[deprecated(since = "0.27.0", note = "Use Epoll::epoll_ctl() instead")]
 #[inline]
 pub fn epoll_ctl<'a, T>(
     epfd: RawFd,

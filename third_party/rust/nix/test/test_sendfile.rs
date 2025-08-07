@@ -7,12 +7,10 @@ use tempfile::tempfile;
 cfg_if! {
     if #[cfg(linux_android)] {
         use nix::unistd::{pipe, read};
-    } else if #[cfg(any(freebsdlike, apple_targets))] {
+        use std::os::unix::io::AsRawFd;
+    } else if #[cfg(any(freebsdlike, apple_targets, solarish))] {
         use std::net::Shutdown;
         use std::os::unix::net::UnixStream;
-    } else if #[cfg(solarish)] {
-        use std::net::Shutdown;
-        use std::net::{TcpListener, TcpStream};
     }
 }
 
@@ -30,7 +28,7 @@ fn test_sendfile_linux() {
     assert_eq!(2, res);
 
     let mut buf = [0u8; 1024];
-    assert_eq!(2, read(&rd, &mut buf).unwrap());
+    assert_eq!(2, read(rd.as_raw_fd(), &mut buf).unwrap());
     assert_eq!(b"f1", &buf[0..2]);
     assert_eq!(7, offset);
 }
@@ -49,7 +47,7 @@ fn test_sendfile64_linux() {
     assert_eq!(2, res);
 
     let mut buf = [0u8; 1024];
-    assert_eq!(2, read(&rd, &mut buf).unwrap());
+    assert_eq!(2, read(rd.as_raw_fd(), &mut buf).unwrap());
     assert_eq!(b"f1", &buf[0..2]);
     assert_eq!(7, offset);
 }
@@ -97,7 +95,7 @@ fn test_sendfile_freebsd() {
         + &trailer_strings.concat();
 
     // Verify the message that was sent
-    assert_eq!(bytes_written as usize, expected_string.len());
+    assert_eq!(bytes_written as usize, expected_string.as_bytes().len());
 
     let mut read_string = String::new();
     let bytes_read = rd.read_to_string(&mut read_string).unwrap();
@@ -146,7 +144,7 @@ fn test_sendfile_dragonfly() {
         + &trailer_strings.concat();
 
     // Verify the message that was sent
-    assert_eq!(bytes_written as usize, expected_string.len());
+    assert_eq!(bytes_written as usize, expected_string.as_bytes().len());
 
     let mut read_string = String::new();
     let bytes_read = rd.read_to_string(&mut read_string).unwrap();
@@ -225,11 +223,7 @@ fn test_sendfilev() {
     trailer_data
         .write_all(trailer_strings.concat().as_bytes())
         .unwrap();
-    // Create a TCP socket pair (listener and client)
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let addr = listener.local_addr().unwrap();
-    let mut rd = TcpStream::connect(addr).unwrap();
-    let (wr, _) = listener.accept().unwrap();
+    let (mut rd, wr) = UnixStream::pair().unwrap();
     let vec: &[SendfileVec] = &[
         SendfileVec::new(
             header_data.as_fd(),
@@ -250,7 +244,7 @@ fn test_sendfilev() {
 
     let (res, bytes_written) = sendfilev(&wr, vec);
     assert!(res.is_ok());
-    wr.shutdown(Shutdown::Write).unwrap();
+    wr.shutdown(Shutdown::Both).unwrap();
 
     // Prepare the expected result
     let expected_string = header_strings.concat()

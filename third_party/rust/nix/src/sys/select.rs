@@ -115,7 +115,7 @@ impl<'fd> FdSet<'fd> {
     }
 }
 
-impl Default for FdSet<'_> {
+impl<'fd> Default for FdSet<'fd> {
     fn default() -> Self {
         Self::new()
     }
@@ -128,7 +128,7 @@ pub struct Fds<'a, 'fd> {
     range: Range<usize>,
 }
 
-impl<'fd> Iterator for Fds<'_, 'fd> {
+impl<'a, 'fd> Iterator for Fds<'a, 'fd> {
     type Item = BorrowedFd<'fd>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -148,7 +148,7 @@ impl<'fd> Iterator for Fds<'_, 'fd> {
     }
 }
 
-impl<'fd> DoubleEndedIterator for Fds<'_, 'fd> {
+impl<'a, 'fd> DoubleEndedIterator for Fds<'a, 'fd> {
     #[inline]
     fn next_back(&mut self) -> Option<BorrowedFd<'fd>> {
         while let Some(i) = self.range.next_back() {
@@ -161,7 +161,7 @@ impl<'fd> DoubleEndedIterator for Fds<'_, 'fd> {
     }
 }
 
-impl FusedIterator for Fds<'_, '_> {}
+impl<'a, 'fd> FusedIterator for Fds<'a, 'fd> {}
 
 /// Monitors file descriptors for readiness
 ///

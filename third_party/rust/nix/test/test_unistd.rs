@@ -26,6 +26,7 @@ use std::ffi::CString;
 use std::fs::DirBuilder;
 use std::fs::{self, File};
 use std::io::Write;
+use std::os::unix::prelude::*;
 #[cfg(not(any(
     target_os = "fuchsia",
     target_os = "redox",
@@ -120,7 +121,8 @@ fn test_mkstemp() {
 
     let result = mkstemp(&path);
     match result {
-        Ok((_, path)) => {
+        Ok((fd, path)) => {
+            close(fd).unwrap();
             unlink(path.as_path()).unwrap();
         }
         Err(e) => panic!("mkstemp failed: {e}"),
@@ -161,14 +163,12 @@ fn test_mkfifo_directory() {
     target_os = "haiku"
 )))]
 fn test_mkfifoat_none() {
-    use nix::fcntl::AT_FDCWD;
-
     let _m = crate::CWD_LOCK.read();
 
     let tempdir = tempdir().unwrap();
     let mkfifoat_fifo = tempdir.path().join("mkfifoat_fifo");
 
-    mkfifoat(AT_FDCWD, &mkfifoat_fifo, Mode::S_IRUSR).unwrap();
+    mkfifoat(None, &mkfifoat_fifo, Mode::S_IRUSR).unwrap();
 
     let stats = stat::stat(&mkfifoat_fifo).unwrap();
     let typ = stat::SFlag::from_bits_truncate(stats.st_mode);
@@ -189,10 +189,11 @@ fn test_mkfifoat() {
     let dirfd = open(tempdir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let mkfifoat_name = "mkfifoat_name";
 
-    mkfifoat(&dirfd, mkfifoat_name, Mode::S_IRUSR).unwrap();
+    mkfifoat(Some(dirfd), mkfifoat_name, Mode::S_IRUSR).unwrap();
 
     let stats =
-        stat::fstatat(&dirfd, mkfifoat_name, fcntl::AtFlags::empty()).unwrap();
+        stat::fstatat(Some(dirfd), mkfifoat_name, fcntl::AtFlags::empty())
+            .unwrap();
     let typ = stat::SFlag::from_bits_truncate(stats.st_mode);
     assert_eq!(typ, SFlag::S_IFIFO);
 }
@@ -205,12 +206,10 @@ fn test_mkfifoat() {
     target_os = "haiku"
 )))]
 fn test_mkfifoat_directory_none() {
-    use nix::fcntl::AT_FDCWD;
-
     let _m = crate::CWD_LOCK.read();
 
     // mkfifoat should fail if a directory is given
-    mkfifoat(AT_FDCWD, &env::temp_dir(), Mode::S_IRUSR)
+    mkfifoat(None, &env::temp_dir(), Mode::S_IRUSR)
         .expect_err("assertion failed");
 }
 
@@ -226,9 +225,9 @@ fn test_mkfifoat_directory() {
     let tempdir = tempdir().unwrap();
     let dirfd = open(tempdir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let mkfifoat_dir = "mkfifoat_dir";
-    stat::mkdirat(&dirfd, mkfifoat_dir, Mode::S_IRUSR).unwrap();
+    stat::mkdirat(Some(dirfd), mkfifoat_dir, Mode::S_IRUSR).unwrap();
 
-    mkfifoat(&dirfd, mkfifoat_dir, Mode::S_IRUSR)
+    mkfifoat(Some(dirfd), mkfifoat_dir, Mode::S_IRUSR)
         .expect_err("assertion failed");
 }
 
@@ -386,7 +385,7 @@ macro_rules! execve_test_factory (
         match unsafe{fork()}.unwrap() {
             Child => {
                 // Make `writer` be the stdout of the new process.
-                nix::unistd::dup2_stdout(&writer).unwrap();
+                dup2(writer.as_raw_fd(), 1).unwrap();
                 let r = syscall();
                 let _ = std::io::stderr()
                     .write_all(format!("{:?}", r).as_bytes());
@@ -400,7 +399,7 @@ macro_rules! execve_test_factory (
                 assert_eq!(ws, Ok(WaitStatus::Exited(child, 0)));
                 // Read 1024 bytes.
                 let mut buf = [0u8; 1024];
-                read(&reader, &mut buf).unwrap();
+                read(reader.as_raw_fd(), &mut buf).unwrap();
                 // It should contain the things we printed using `/bin/sh`.
                 let string = String::from_utf8_lossy(&buf);
                 assert!(string.contains("nix!!!"));
@@ -433,12 +432,12 @@ macro_rules! execve_test_factory (
 cfg_if! {
     if #[cfg(target_os = "android")] {
         execve_test_factory!(test_execve, execve, CString::new("/system/bin/sh").unwrap().as_c_str());
-        execve_test_factory!(test_fexecve, fexecve, &File::open("/system/bin/sh").unwrap());
+        execve_test_factory!(test_fexecve, fexecve, File::open("/system/bin/sh").unwrap().into_raw_fd());
     } else if #[cfg(any(freebsdlike, target_os = "linux", target_os = "hurd"))] {
         // These tests frequently fail on musl, probably due to
         // https://github.com/nix-rust/nix/issues/555
         execve_test_factory!(test_execve, execve, CString::new("/bin/sh").unwrap().as_c_str());
-        execve_test_factory!(test_fexecve, fexecve, &File::open("/bin/sh").unwrap());
+        execve_test_factory!(test_fexecve, fexecve, File::open("/bin/sh").unwrap().into_raw_fd());
     } else if #[cfg(any(solarish, apple_targets, netbsdlike))] {
         execve_test_factory!(test_execve, execve, CString::new("/bin/sh").unwrap().as_c_str());
         // No fexecve() on ios, macos, NetBSD, OpenBSD.
@@ -457,21 +456,21 @@ cfg_if! {
     if #[cfg(target_os = "android")] {
         use nix::fcntl::AtFlags;
         execve_test_factory!(test_execveat_empty, execveat,
-                             &File::open("/system/bin/sh").unwrap(),
+                             Some(File::open("/system/bin/sh").unwrap().into_raw_fd()),
                              "", AtFlags::AT_EMPTY_PATH);
         execve_test_factory!(test_execveat_relative, execveat,
-                             &File::open("/system/bin/").unwrap(),
+                             Some(File::open("/system/bin/").unwrap().into_raw_fd()),
                              "./sh", AtFlags::empty());
         execve_test_factory!(test_execveat_absolute, execveat,
-                             &File::open("/").unwrap(),
+                             Some(File::open("/").unwrap().into_raw_fd()),
                              "/system/bin/sh", AtFlags::empty());
     } else if #[cfg(all(target_os = "linux", any(target_arch ="x86_64", target_arch ="x86")))] {
         use nix::fcntl::AtFlags;
-        execve_test_factory!(test_execveat_empty, execveat, &File::open("/bin/sh").unwrap(),
+        execve_test_factory!(test_execveat_empty, execveat, Some(File::open("/bin/sh").unwrap().into_raw_fd()),
                              "", AtFlags::AT_EMPTY_PATH);
-        execve_test_factory!(test_execveat_relative, execveat, &File::open("/bin/").unwrap(),
+        execve_test_factory!(test_execveat_relative, execveat, Some(File::open("/bin/").unwrap().into_raw_fd()),
                              "./sh", AtFlags::empty());
-        execve_test_factory!(test_execveat_absolute, execveat, &File::open("/").unwrap(),
+        execve_test_factory!(test_execveat_absolute, execveat, Some(File::open("/").unwrap().into_raw_fd()),
                              "/bin/sh", AtFlags::empty());
     }
 }
@@ -484,10 +483,12 @@ fn test_fchdir() {
 
     let tmpdir = tempdir().unwrap();
     let tmpdir_path = tmpdir.path().canonicalize().unwrap();
-    let tmpdir_fd = File::open(&tmpdir_path).unwrap();
+    let tmpdir_fd = File::open(&tmpdir_path).unwrap().into_raw_fd();
 
-    fchdir(&tmpdir_fd).expect("assertion failed");
+    fchdir(tmpdir_fd).expect("assertion failed");
     assert_eq!(getcwd().unwrap(), tmpdir_path);
+
+    close(tmpdir_fd).expect("assertion failed");
 }
 
 #[test]
@@ -541,18 +542,19 @@ fn test_fchown() {
     let uid = Some(getuid());
     let gid = Some(getgid());
 
-    let file = tempfile().unwrap();
+    let path = tempfile().unwrap();
+    let fd = path.as_raw_fd();
 
-    fchown(&file, uid, gid).unwrap();
-    fchown(&file, uid, None).unwrap();
-    fchown(&file, None, gid).unwrap();
+    fchown(fd, uid, gid).unwrap();
+    fchown(fd, uid, None).unwrap();
+    fchown(fd, None, gid).unwrap();
+    fchown(999999999, uid, gid).unwrap_err();
 }
 
 #[test]
 #[cfg(not(target_os = "redox"))]
 fn test_fchownat() {
     use nix::fcntl::AtFlags;
-    use nix::fcntl::AT_FDCWD;
 
     let _dr = crate::DirRestore::new();
     // Testing for anything other than our own UID/GID is hard.
@@ -567,13 +569,13 @@ fn test_fchownat() {
 
     let dirfd = open(tempdir.path(), OFlag::empty(), Mode::empty()).unwrap();
 
-    fchownat(&dirfd, "file", uid, gid, AtFlags::empty()).unwrap();
+    fchownat(Some(dirfd), "file", uid, gid, AtFlags::empty()).unwrap();
 
     chdir(tempdir.path()).unwrap();
-    fchownat(AT_FDCWD, "file", uid, gid, AtFlags::empty()).unwrap();
+    fchownat(None, "file", uid, gid, AtFlags::empty()).unwrap();
 
     fs::remove_file(&path).unwrap();
-    fchownat(AT_FDCWD, "file", uid, gid, AtFlags::empty()).unwrap_err();
+    fchownat(None, "file", uid, gid, AtFlags::empty()).unwrap_err();
 }
 
 #[test]
@@ -583,7 +585,7 @@ fn test_lseek() {
     tmp.write_all(CONTENTS).unwrap();
 
     let offset: off_t = 5;
-    lseek(&tmp, offset, Whence::SeekSet).unwrap();
+    lseek(tmp.as_raw_fd(), offset, Whence::SeekSet).unwrap();
 
     let mut buf = [0u8; 7];
     crate::read_exact(&tmp, &mut buf);
@@ -597,7 +599,7 @@ fn test_lseek64() {
     let mut tmp = tempfile().unwrap();
     tmp.write_all(CONTENTS).unwrap();
 
-    lseek64(&tmp, 5, Whence::SeekSet).unwrap();
+    lseek64(tmp.as_raw_fd(), 5, Whence::SeekSet).unwrap();
 
     let mut buf = [0u8; 7];
     crate::read_exact(&tmp, &mut buf);
@@ -631,8 +633,7 @@ cfg_if! {
 #[cfg(not(any(
     target_os = "redox",
     target_os = "fuchsia",
-    target_os = "haiku",
-    target_os = "cygwin"
+    target_os = "haiku"
 )))]
 fn test_acct() {
     use std::process::Command;
@@ -732,12 +733,12 @@ fn test_getresgid() {
 fn test_pipe() {
     let (fd0, fd1) = pipe().unwrap();
     let m0 = stat::SFlag::from_bits_truncate(
-        stat::fstat(&fd0).unwrap().st_mode as mode_t,
+        stat::fstat(fd0.as_raw_fd()).unwrap().st_mode as mode_t,
     );
     // S_IFIFO means it's a pipe
     assert_eq!(m0, SFlag::S_IFIFO);
     let m1 = stat::SFlag::from_bits_truncate(
-        stat::fstat(&fd1).unwrap().st_mode as mode_t,
+        stat::fstat(fd1.as_raw_fd()).unwrap().st_mode as mode_t,
     );
     assert_eq!(m1, SFlag::S_IFIFO);
 }
@@ -757,11 +758,13 @@ fn test_pipe2() {
     use nix::fcntl::{fcntl, FcntlArg, FdFlag};
 
     let (fd0, fd1) = pipe2(OFlag::O_CLOEXEC).unwrap();
-    let f0 =
-        FdFlag::from_bits_truncate(fcntl(&fd0, FcntlArg::F_GETFD).unwrap());
+    let f0 = FdFlag::from_bits_truncate(
+        fcntl(fd0.as_raw_fd(), FcntlArg::F_GETFD).unwrap(),
+    );
     assert!(f0.contains(FdFlag::FD_CLOEXEC));
-    let f1 =
-        FdFlag::from_bits_truncate(fcntl(&fd1, FcntlArg::F_GETFD).unwrap());
+    let f1 = FdFlag::from_bits_truncate(
+        fcntl(fd1.as_raw_fd(), FcntlArg::F_GETFD).unwrap(),
+    );
     assert!(f1.contains(FdFlag::FD_CLOEXEC));
 }
 
@@ -869,15 +872,13 @@ fn test_canceling_alarm() {
 #[test]
 #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
 fn test_symlinkat() {
-    use nix::fcntl::AT_FDCWD;
-
     let _m = crate::CWD_LOCK.read();
 
     let tempdir = tempdir().unwrap();
 
     let target = tempdir.path().join("a");
     let linkpath = tempdir.path().join("b");
-    symlinkat(&target, AT_FDCWD, &linkpath).unwrap();
+    symlinkat(&target, None, &linkpath).unwrap();
     assert_eq!(
         readlink(&linkpath).unwrap().to_str().unwrap(),
         target.to_str().unwrap()
@@ -886,7 +887,7 @@ fn test_symlinkat() {
     let dirfd = open(tempdir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let target = "c";
     let linkpath = "d";
-    symlinkat(target, &dirfd, linkpath).unwrap();
+    symlinkat(target, Some(dirfd), linkpath).unwrap();
     assert_eq!(
         readlink(&tempdir.path().join(linkpath))
             .unwrap()
@@ -918,43 +919,9 @@ fn test_linkat_file() {
 
     // Attempt hard link file at relative path
     linkat(
-        &dirfd,
+        Some(dirfd),
         oldfilename,
-        &dirfd,
-        newfilename,
-        AtFlags::AT_SYMLINK_FOLLOW,
-    )
-    .unwrap();
-    assert!(newfilepath.exists());
-}
-
-#[test]
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
-/// This test is the same as [test_linkat_file], but ensures that two different types can be used
-/// as the path arguments.
-fn test_linkat_pathtypes() {
-    use nix::fcntl::AtFlags;
-
-    let tempdir = tempdir().unwrap();
-    let oldfilename = "foo.txt";
-    let oldfilepath = tempdir.path().join(oldfilename);
-
-    let newfilename = "bar.txt";
-    let newfilepath = tempdir.path().join(newfilename);
-
-    // Create file
-    File::create(oldfilepath).unwrap();
-
-    // Get file descriptor for base directory
-    let dirfd =
-        fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty())
-            .unwrap();
-
-    // Attempt hard link file at relative path
-    linkat(
-        &dirfd,
-        PathBuf::from(oldfilename).as_path(),
-        &dirfd,
+        Some(dirfd),
         newfilename,
         AtFlags::AT_SYMLINK_FOLLOW,
     )
@@ -966,7 +933,6 @@ fn test_linkat_pathtypes() {
 #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
 fn test_linkat_olddirfd_none() {
     use nix::fcntl::AtFlags;
-    use nix::fcntl::AT_FDCWD;
 
     let _dr = crate::DirRestore::new();
 
@@ -992,9 +958,9 @@ fn test_linkat_olddirfd_none() {
     // Attempt hard link file using curent working directory as relative path for old file path
     chdir(tempdir_oldfile.path()).unwrap();
     linkat(
-        AT_FDCWD,
+        None,
         oldfilename,
-        &dirfd,
+        Some(dirfd),
         newfilename,
         AtFlags::AT_SYMLINK_FOLLOW,
     )
@@ -1006,7 +972,6 @@ fn test_linkat_olddirfd_none() {
 #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
 fn test_linkat_newdirfd_none() {
     use nix::fcntl::AtFlags;
-    use nix::fcntl::AT_FDCWD;
 
     let _dr = crate::DirRestore::new();
 
@@ -1032,9 +997,9 @@ fn test_linkat_newdirfd_none() {
     // Attempt hard link file using current working directory as relative path for new file path
     chdir(tempdir_newfile.path()).unwrap();
     linkat(
-        &dirfd,
+        Some(dirfd),
         oldfilename,
-        AT_FDCWD,
+        None,
         newfilename,
         AtFlags::AT_SYMLINK_FOLLOW,
     )
@@ -1046,7 +1011,6 @@ fn test_linkat_newdirfd_none() {
 #[cfg(not(any(apple_targets, target_os = "redox", target_os = "haiku")))]
 fn test_linkat_no_follow_symlink() {
     use nix::fcntl::AtFlags;
-    use nix::fcntl::AT_FDCWD;
 
     let _m = crate::CWD_LOCK.read();
 
@@ -1064,7 +1028,7 @@ fn test_linkat_no_follow_symlink() {
     File::create(&oldfilepath).unwrap();
 
     // Create symlink to file
-    symlinkat(&oldfilepath, AT_FDCWD, &symoldfilepath).unwrap();
+    symlinkat(&oldfilepath, None, &symoldfilepath).unwrap();
 
     // Get file descriptor for base directory
     let dirfd =
@@ -1073,9 +1037,9 @@ fn test_linkat_no_follow_symlink() {
 
     // Attempt link symlink of file at relative path
     linkat(
-        &dirfd,
+        Some(dirfd),
         symoldfilename,
-        &dirfd,
+        Some(dirfd),
         newfilename,
         AtFlags::empty(),
     )
@@ -1092,7 +1056,6 @@ fn test_linkat_no_follow_symlink() {
 #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
 fn test_linkat_follow_symlink() {
     use nix::fcntl::AtFlags;
-    use nix::fcntl::AT_FDCWD;
 
     let _m = crate::CWD_LOCK.read();
 
@@ -1110,7 +1073,7 @@ fn test_linkat_follow_symlink() {
     File::create(&oldfilepath).unwrap();
 
     // Create symlink to file
-    symlinkat(&oldfilepath, AT_FDCWD, &symoldfilepath).unwrap();
+    symlinkat(&oldfilepath, None, &symoldfilepath).unwrap();
 
     // Get file descriptor for base directory
     let dirfd =
@@ -1119,9 +1082,9 @@ fn test_linkat_follow_symlink() {
 
     // Attempt link target of symlink of file at relative path
     linkat(
-        &dirfd,
+        Some(dirfd),
         symoldfilename,
-        &dirfd,
+        Some(dirfd),
         newfilename,
         AtFlags::AT_SYMLINK_FOLLOW,
     )
@@ -1157,7 +1120,7 @@ fn test_unlinkat_dir_noremovedir() {
 
     // Attempt unlink dir at relative path without proper flag
     let err_result =
-        unlinkat(&dirfd, dirname, UnlinkatFlags::NoRemoveDir).unwrap_err();
+        unlinkat(Some(dirfd), dirname, UnlinkatFlags::NoRemoveDir).unwrap_err();
     assert!(err_result == Errno::EISDIR || err_result == Errno::EPERM);
 }
 
@@ -1177,7 +1140,7 @@ fn test_unlinkat_dir_removedir() {
             .unwrap();
 
     // Attempt unlink dir at relative path with proper flag
-    unlinkat(&dirfd, dirname, UnlinkatFlags::RemoveDir).unwrap();
+    unlinkat(Some(dirfd), dirname, UnlinkatFlags::RemoveDir).unwrap();
     assert!(!dirpath.exists());
 }
 
@@ -1197,7 +1160,7 @@ fn test_unlinkat_file() {
             .unwrap();
 
     // Attempt unlink file at relative path
-    unlinkat(&dirfd, filename, UnlinkatFlags::NoRemoveDir).unwrap();
+    unlinkat(Some(dirfd), filename, UnlinkatFlags::NoRemoveDir).unwrap();
     assert!(!filepath.exists());
 }
 
@@ -1223,16 +1186,12 @@ fn test_access_file_exists() {
 #[cfg(not(target_os = "redox"))]
 #[test]
 fn test_user_into_passwd() {
-    let test_username = if cfg!(target_os = "haiku") {
-        // "nobody" unavailable on haiku
-        "user"
-    } else if cfg!(target_os = "cygwin") {
-        // the Windows admin user
-        "Administrator"
-    } else {
-        // get the UID of the "nobody" user
-        "nobody"
-    };
+    // get the UID of the "nobody" user
+    #[cfg(not(target_os = "haiku"))]
+    let test_username = "nobody";
+    // "nobody" unavailable on haiku
+    #[cfg(target_os = "haiku")]
+    let test_username = "user";
 
     let nobody = User::from_name(test_username).unwrap().unwrap();
     let pwd: libc::passwd = nobody.into();
@@ -1284,8 +1243,6 @@ fn test_setfsuid() {
     target_os = "haiku"
 )))]
 fn test_ttyname() {
-    use std::os::fd::AsRawFd;
-
     let fd = posix_openpt(OFlag::O_RDWR).expect("posix_openpt failed");
     assert!(fd.as_raw_fd() > 0);
 
@@ -1334,12 +1291,10 @@ fn test_getpeereid() {
 #[cfg(not(target_os = "redox"))]
 fn test_faccessat_none_not_existing() {
     use nix::fcntl::AtFlags;
-    use nix::fcntl::AT_FDCWD;
-
     let tempdir = tempfile::tempdir().unwrap();
     let dir = tempdir.path().join("does_not_exist.txt");
     assert_eq!(
-        faccessat(AT_FDCWD, &dir, AccessFlags::F_OK, AtFlags::empty())
+        faccessat(None, &dir, AccessFlags::F_OK, AtFlags::empty())
             .err()
             .unwrap(),
         Errno::ENOENT
@@ -1350,14 +1305,18 @@ fn test_faccessat_none_not_existing() {
 #[cfg(not(target_os = "redox"))]
 fn test_faccessat_not_existing() {
     use nix::fcntl::AtFlags;
-
     let tempdir = tempfile::tempdir().unwrap();
     let dirfd = open(tempdir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let not_exist_file = "does_not_exist.txt";
     assert_eq!(
-        faccessat(&dirfd, not_exist_file, AccessFlags::F_OK, AtFlags::empty(),)
-            .err()
-            .unwrap(),
+        faccessat(
+            Some(dirfd),
+            not_exist_file,
+            AccessFlags::F_OK,
+            AtFlags::empty(),
+        )
+        .err()
+        .unwrap(),
         Errno::ENOENT
     );
 }
@@ -1366,13 +1325,11 @@ fn test_faccessat_not_existing() {
 #[cfg(not(target_os = "redox"))]
 fn test_faccessat_none_file_exists() {
     use nix::fcntl::AtFlags;
-    use nix::fcntl::AT_FDCWD;
-
     let tempdir = tempfile::tempdir().unwrap();
     let path = tempdir.path().join("does_exist.txt");
     let _file = File::create(path.clone()).unwrap();
     assert!(faccessat(
-        AT_FDCWD,
+        None,
         &path,
         AccessFlags::R_OK | AccessFlags::W_OK,
         AtFlags::empty(),
@@ -1384,14 +1341,13 @@ fn test_faccessat_none_file_exists() {
 #[cfg(not(target_os = "redox"))]
 fn test_faccessat_file_exists() {
     use nix::fcntl::AtFlags;
-
     let tempdir = tempfile::tempdir().unwrap();
     let dirfd = open(tempdir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let exist_file = "does_exist.txt";
     let path = tempdir.path().join(exist_file);
     let _file = File::create(path.clone()).unwrap();
     assert!(faccessat(
-        &dirfd,
+        Some(dirfd),
         &path,
         AccessFlags::R_OK | AccessFlags::W_OK,
         AtFlags::empty(),

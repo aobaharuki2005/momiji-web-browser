@@ -11,7 +11,7 @@
 //! [fanotify(7)](https://man7.org/linux/man-pages/man7/fanotify.7.html).
 
 use crate::errno::Errno;
-use crate::fcntl::OFlag;
+use crate::fcntl::{at_rawfd, OFlag};
 use crate::unistd::{close, read, write};
 use crate::{NixPath, Result};
 use std::marker::PhantomData;
@@ -20,8 +20,8 @@ use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, OwnedFd, RawFd};
 use std::ptr;
 
 libc_bitflags! {
-    /// Mask for defining which events shall be listened with [`Fanotify::mark()`]
-    /// and for querying notifications.
+    /// Mask for defining which events shall be listened with
+    /// [`fanotify_mark`](fn.fanotify_mark.html) and for querying notifications.
     pub struct MaskFlags: u64 {
         /// File was accessed.
         FAN_ACCESS;
@@ -80,7 +80,7 @@ libc_bitflags! {
 }
 
 libc_bitflags! {
-    /// Configuration options for [`Fanotify::init()`].
+    /// Configuration options for [`fanotify_init`](fn.fanotify_init.html).
     pub struct InitFlags: libc::c_uint {
         /// Close-on-exec flag set on the file descriptor.
         FAN_CLOEXEC;
@@ -162,7 +162,7 @@ impl From<EventFFlags> for OFlag {
 }
 
 libc_bitflags! {
-    /// Configuration options for [`Fanotify::mark()`].
+    /// Configuration options for [`fanotify_mark`](fn.fanotify_mark.html).
     pub struct MarkFlags: libc::c_uint {
         /// Add the events to the marks.
         FAN_MARK_ADD;
@@ -198,8 +198,8 @@ libc_bitflags! {
 /// Compile version number of fanotify API.
 pub const FANOTIFY_METADATA_VERSION: u8 = libc::FANOTIFY_METADATA_VERSION;
 
-/// Abstract over [`libc::fanotify_event_metadata`], which represents an event
-/// received via [`Fanotify::read_events`].
+/// Abstract over `libc::fanotify_event_metadata`, which represents an event
+/// received via `Fanotify::read_events`.
 // Is not Clone due to fd field, to avoid use-after-close scenarios.
 #[derive(Debug, Eq, Hash, PartialEq)]
 #[repr(transparent)]
@@ -281,7 +281,7 @@ impl<'a> FanotifyResponse<'a> {
 }
 
 libc_bitflags! {
-    /// Response to be wrapped in [`FanotifyResponse`] and sent to the [`Fanotify`]
+    /// Response to be wrapped in `FanotifyResponse` and sent to the `Fanotify`
     /// group to allow or deny an event.
     pub struct Response: u32 {
         /// Allow the event.
@@ -317,15 +317,16 @@ impl Fanotify {
     }
 
     /// Add, remove, or modify an fanotify mark on a filesystem object.
+    /// If `dirfd` is `None`, `AT_FDCWD` is used.
     ///
     /// Returns a Result containing either `()` on success or errno otherwise.
     ///
     /// For more information, see [fanotify_mark(2)](https://man7.org/linux/man-pages/man7/fanotify_mark.2.html).
-    pub fn mark<Fd: std::os::fd::AsFd, P: ?Sized + NixPath>(
+    pub fn mark<P: ?Sized + NixPath>(
         &self,
         flags: MarkFlags,
         mask: MaskFlags,
-        dirfd: Fd,
+        dirfd: Option<RawFd>,
         path: Option<&P>,
     ) -> Result<()> {
         let res = crate::with_opt_nix_path(path, |p| unsafe {
@@ -333,7 +334,7 @@ impl Fanotify {
                 self.fd.as_raw_fd(),
                 flags.bits(),
                 mask.bits(),
-                dirfd.as_fd().as_raw_fd(),
+                at_rawfd(dirfd),
                 p,
             )
         })?;
@@ -361,7 +362,7 @@ impl Fanotify {
         let mut events = Vec::new();
         let mut offset = 0;
 
-        let nread = read(&self.fd, &mut buffer)?;
+        let nread = read(self.fd.as_raw_fd(), &mut buffer)?;
 
         while (nread - offset) >= metadata_size {
             let metadata = unsafe {
@@ -416,31 +417,5 @@ impl FromRawFd for Fanotify {
 impl AsFd for Fanotify {
     fn as_fd(&'_ self) -> BorrowedFd<'_> {
         self.fd.as_fd()
-    }
-}
-
-impl AsRawFd for Fanotify {
-    fn as_raw_fd(&self) -> RawFd
-    {
-        self.fd.as_raw_fd()
-    }
-}
-
-impl From<Fanotify> for OwnedFd {
-    fn from(value: Fanotify) -> Self {
-        value.fd
-    }
-}
-
-impl Fanotify {
-    /// Constructs a `Fanotify` wrapping an existing `OwnedFd`.
-    ///
-    /// # Safety
-    ///
-    /// `OwnedFd` is a valid `Fanotify`.
-    pub unsafe fn from_owned_fd(fd: OwnedFd) -> Self {
-        Self {
-            fd
-        }
     }
 }

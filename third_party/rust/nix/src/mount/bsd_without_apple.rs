@@ -387,7 +387,7 @@ impl<'a> Nmount<'a> {
 }
 
 #[cfg(target_os = "freebsd")]
-impl Drop for Nmount<'_> {
+impl<'a> Drop for Nmount<'a> {
     fn drop(&mut self) {
         for (iov, is_owned) in self.iov.iter().zip(self.is_owned.iter()) {
             if *is_owned {

@@ -14,10 +14,11 @@ pub type AddressType = *mut ::libc::c_void;
     target_os = "linux",
     any(
         all(
-            any(target_arch = "x86_64", target_arch = "aarch64"),
+            target_arch = "x86_64",
             any(target_env = "gnu", target_env = "musl")
         ),
         all(target_arch = "x86", target_env = "gnu"),
+        all(target_arch = "aarch64", target_env = "gnu"),
         all(target_arch = "riscv64", target_env = "gnu"),
     ),
 ))]
@@ -36,8 +37,8 @@ cfg_if! {
 }
 
 libc_enum! {
-    #[cfg_attr(not(any(target_env = "musl", target_env = "uclibc", target_os = "android", target_env = "ohos")), repr(u32))]
-    #[cfg_attr(any(target_env = "musl", target_env = "uclibc", target_os = "android", target_env = "ohos"), repr(i32))]
+    #[cfg_attr(not(any(target_env = "musl", target_env = "uclibc", target_os = "android")), repr(u32))]
+    #[cfg_attr(any(target_env = "musl", target_env = "uclibc", target_os = "android"), repr(i32))]
     /// Ptrace Request enum defining the action to be taken.
     #[non_exhaustive]
     pub enum Request {
@@ -53,7 +54,6 @@ libc_enum! {
         PTRACE_SINGLESTEP,
         #[cfg(any(all(target_os = "android", target_pointer_width = "32"),
                   all(target_os = "linux", any(target_env = "musl",
-                                               target_env = "ohos",
                                                target_arch = "mips",
                                                target_arch = "mips32r6",
                                                target_arch = "mips64",
@@ -63,7 +63,6 @@ libc_enum! {
         PTRACE_GETREGS,
         #[cfg(any(all(target_os = "android", target_pointer_width = "32"),
                   all(target_os = "linux", any(target_env = "musl",
-                                               target_env = "ohos",
                                                target_arch = "mips",
                                                target_arch = "mips32r6",
                                                target_arch = "mips64",
@@ -73,7 +72,6 @@ libc_enum! {
         PTRACE_SETREGS,
         #[cfg(any(all(target_os = "android", target_pointer_width = "32"),
                   all(target_os = "linux", any(target_env = "musl",
-                                               target_env = "ohos",
                                                target_arch = "mips",
                                                target_arch = "mips32r6",
                                                target_arch = "mips64",
@@ -83,7 +81,6 @@ libc_enum! {
         PTRACE_GETFPREGS,
         #[cfg(any(all(target_os = "android", target_pointer_width = "32"),
                   all(target_os = "linux", any(target_env = "musl",
-                                               target_env = "ohos",
                                                target_arch = "mips",
                                                target_arch = "mips32r6",
                                                target_arch = "mips64",
@@ -94,7 +91,6 @@ libc_enum! {
         PTRACE_ATTACH,
         PTRACE_DETACH,
         #[cfg(all(target_os = "linux", any(target_env = "musl",
-                                           target_env = "ohos",
                                            target_arch = "mips",
                                            target_arch = "mips32r6",
                                            target_arch = "mips64",
@@ -103,7 +99,6 @@ libc_enum! {
                                            target_arch = "x86_64")))]
         PTRACE_GETFPXREGS,
         #[cfg(all(target_os = "linux", any(target_env = "musl",
-                                           target_env = "ohos",
                                            target_arch = "mips",
                                            target_arch = "mips32r6",
                                            target_arch = "mips64",
@@ -146,8 +141,6 @@ libc_enum! {
         #[cfg(all(target_os = "linux", target_env = "gnu",
                   any(target_arch = "x86", target_arch = "x86_64")))]
         PTRACE_SYSEMU_SINGLESTEP,
-        #[cfg(all(target_os = "linux", target_env = "gnu"))]
-        PTRACE_GET_SYSCALL_INFO,
     }
 }
 
@@ -181,21 +174,13 @@ libc_enum! {
 
 #[cfg(all(
     target_os = "linux",
+    target_env = "gnu",
     any(
-        all(
-            target_env = "gnu",
-            any(
-                target_arch = "x86_64",
-                target_arch = "x86",
-                target_arch = "aarch64",
-                target_arch = "riscv64",
-            )
-        ),
-        all(
-            target_env = "musl",
-            target_arch = "aarch64",
-        )
-    ),
+        target_arch = "x86_64",
+        target_arch = "x86",
+        target_arch = "aarch64",
+        target_arch = "riscv64",
+    )
 ))]
 libc_enum! {
     #[repr(i32)]
@@ -212,21 +197,13 @@ libc_enum! {
 
 #[cfg(all(
     target_os = "linux",
+    target_env = "gnu",
     any(
-        all(
-            target_env = "gnu",
-            any(
-                target_arch = "x86_64",
-                target_arch = "x86",
-                target_arch = "aarch64",
-                target_arch = "riscv64",
-            )
-        ),
-        all(
-            target_env = "musl",
-            target_arch = "aarch64",
-        )
-    ),
+        target_arch = "x86_64",
+        target_arch = "x86",
+        target_arch = "aarch64",
+        target_arch = "riscv64",
+    )
 ))]
 /// Represents register set areas, such as general-purpose registers or
 /// floating-point registers.
@@ -243,24 +220,15 @@ pub unsafe trait RegisterSet {
     type Regs;
 }
 
-
 #[cfg(all(
     target_os = "linux",
+    target_env = "gnu",
     any(
-        all(
-            target_env = "gnu",
-            any(
-                target_arch = "x86_64",
-                target_arch = "x86",
-                target_arch = "aarch64",
-                target_arch = "riscv64",
-            )
-        ),
-        all(
-            target_env = "musl",
-            target_arch = "aarch64",
-        )
-    ),
+        target_arch = "x86_64",
+        target_arch = "x86",
+        target_arch = "aarch64",
+        target_arch = "riscv64",
+    )
 ))]
 /// Register sets used in [`getregset`] and [`setregset`]
 pub mod regset {
@@ -366,13 +334,8 @@ pub fn getregs(pid: Pid) -> Result<user_regs_struct> {
 /// [ptrace(2)]: https://www.man7.org/linux/man-pages/man2/ptrace.2.html
 #[cfg(all(
     target_os = "linux",
-    any(
-        all(
-            target_arch = "aarch64",
-            any(target_env = "gnu", target_env = "musl")
-        ),
-        all(target_arch = "riscv64", target_env = "gnu")
-    )
+    target_env = "gnu",
+    any(target_arch = "aarch64", target_arch = "riscv64")
 ))]
 pub fn getregs(pid: Pid) -> Result<user_regs_struct> {
     getregset::<regset::NT_PRSTATUS>(pid)
@@ -381,17 +344,12 @@ pub fn getregs(pid: Pid) -> Result<user_regs_struct> {
 /// Get a particular set of user registers, as with `ptrace(PTRACE_GETREGSET, ...)`
 #[cfg(all(
     target_os = "linux",
+    target_env = "gnu",
     any(
-        all(
-            target_env = "gnu",
-            any(
-                target_arch = "x86_64",
-                target_arch = "x86",
-                target_arch = "aarch64",
-                target_arch = "riscv64"
-            )
-        ),
-        all(target_env = "musl", target_arch = "aarch64")
+        target_arch = "x86_64",
+        target_arch = "x86",
+        target_arch = "aarch64",
+        target_arch = "riscv64",
     )
 ))]
 pub fn getregset<S: RegisterSet>(pid: Pid) -> Result<S::Regs> {
@@ -450,13 +408,8 @@ pub fn setregs(pid: Pid, regs: user_regs_struct) -> Result<()> {
 /// [ptrace(2)]: https://www.man7.org/linux/man-pages/man2/ptrace.2.html
 #[cfg(all(
     target_os = "linux",
-    any(
-        all(
-            target_env = "gnu",
-            any(target_arch = "aarch64", target_arch = "riscv64")
-        ),
-        all(target_env = "musl", target_arch = "aarch64")
-    )
+    target_env = "gnu",
+    any(target_arch = "aarch64", target_arch = "riscv64")
 ))]
 pub fn setregs(pid: Pid, regs: user_regs_struct) -> Result<()> {
     setregset::<regset::NT_PRSTATUS>(pid, regs)
@@ -465,17 +418,12 @@ pub fn setregs(pid: Pid, regs: user_regs_struct) -> Result<()> {
 /// Set a particular set of user registers, as with `ptrace(PTRACE_SETREGSET, ...)`
 #[cfg(all(
     target_os = "linux",
+    target_env = "gnu",
     any(
-        all(
-            target_env = "gnu",
-            any(
-                target_arch = "x86_64",
-                target_arch = "x86",
-                target_arch = "aarch64",
-                target_arch = "riscv64"
-            )
-        ),
-        all(target_env = "musl", target_arch = "aarch64")
+        target_arch = "x86_64",
+        target_arch = "x86",
+        target_arch = "aarch64",
+        target_arch = "riscv64",
     )
 ))]
 pub fn setregset<S: RegisterSet>(pid: Pid, mut regs: S::Regs) -> Result<()> {
@@ -567,13 +515,6 @@ pub fn setsiginfo(pid: Pid, sig: &siginfo_t) -> Result<()> {
         Ok(_) => Ok(()),
         Err(e) => Err(e),
     }
-}
-
-/// Get the informations of the syscall that caused the stop, as with
-/// `ptrace(PTRACE_GET_SYSCALL_INFO, ...`.
-#[cfg(all(target_os = "linux", target_env = "gnu"))]
-pub fn syscall_info(pid: Pid) -> Result<libc::ptrace_syscall_info> {
-    ptrace_get_data::<libc::ptrace_syscall_info>(Request::PTRACE_GET_SYSCALL_INFO, pid)
 }
 
 /// Sets the process as traceable, as with `ptrace(PTRACE_TRACEME, ...)`

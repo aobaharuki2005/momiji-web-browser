@@ -173,7 +173,7 @@ libc_bitflags! {
     /// Event flags.  See the man page for details.
     // There's no useful documentation we can write for the individual flags
     // that wouldn't simply be repeating the man page.
-    pub struct EvFlags: type_of_event_flag {
+    pub struct EventFlag: type_of_event_flag {
         #[allow(missing_docs)]
         EV_ADD;
         #[allow(missing_docs)]
@@ -215,10 +215,6 @@ libc_bitflags! {
         EV_RECEIPT;
     }
 }
-
-#[deprecated(since = "0.30.0", note = "Use `EvFlags instead`")]
-/// The deprecated EventFlag type alias
-pub type EventFlag = EvFlags;
 
 libc_bitflags!(
     /// Filter-specific flags.  See the man page for details.
@@ -351,7 +347,7 @@ impl KEvent {
     pub fn new(
         ident: uintptr_t,
         filter: EventFilter,
-        flags: EvFlags,
+        flags: EventFlag,
         fflags: FilterFlag,
         data: intptr_t,
         udata: intptr_t,
@@ -386,8 +382,8 @@ impl KEvent {
 
     /// Flags control what the kernel will do when this event is added with
     /// [`Kqueue::kevent`].
-    pub fn flags(&self) -> EvFlags {
-        EvFlags::from_bits(self.kevent.flags).unwrap()
+    pub fn flags(&self) -> EventFlag {
+        EventFlag::from_bits(self.kevent.flags).unwrap()
     }
 
     /// Filter-specific flags.
@@ -447,7 +443,7 @@ pub fn ev_set(
     ev: &mut KEvent,
     ident: usize,
     filter: EventFilter,
-    flags: EvFlags,
+    flags: EventFlag,
     fflags: FilterFlag,
     udata: intptr_t,
 ) {

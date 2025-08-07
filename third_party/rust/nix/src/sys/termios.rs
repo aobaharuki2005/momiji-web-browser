@@ -418,7 +418,7 @@ libc_enum! {
         VEOL,
         VEOL2,
         VERASE,
-        #[cfg(any(freebsdlike, target_os = "illumos"))]
+        #[cfg(any(freebsdlike, solarish))]
         VERASE2,
         VINTR,
         VKILL,
@@ -431,7 +431,7 @@ libc_enum! {
         #[cfg(not(target_os = "haiku"))]
         VREPRINT,
         VSTART,
-        #[cfg(any(bsd, target_os = "illumos"))]
+        #[cfg(any(bsd, solarish))]
         VSTATUS,
         VSTOP,
         VSUSP,
@@ -461,7 +461,7 @@ impl SpecialCharacterIndices {
 }
 
 pub use libc::NCCS;
-#[cfg(any(bsd, linux_android, target_os = "aix", target_os = "solaris"))]
+#[cfg(any(linux_android, target_os = "aix", bsd))]
 pub use libc::_POSIX_VDISABLE;
 
 libc_bitflags! {
@@ -667,7 +667,7 @@ libc_bitflags! {
         ECHOK;
         ECHO;
         ECHONL;
-        #[cfg(not(any(target_os = "redox", target_os = "cygwin")))]
+        #[cfg(not(target_os = "redox"))]
         ECHOPRT;
         #[cfg(not(target_os = "redox"))]
         ECHOCTL;
@@ -676,14 +676,14 @@ libc_bitflags! {
         #[cfg(bsd)]
         ALTWERASE;
         IEXTEN;
-        #[cfg(not(any(target_os = "redox", target_os = "haiku", target_os = "aix", target_os = "cygwin")))]
+        #[cfg(not(any(target_os = "redox", target_os = "haiku", target_os = "aix")))]
         EXTPROC;
         TOSTOP;
         #[cfg(not(target_os = "redox"))]
         FLUSHO;
         #[cfg(bsd)]
         NOKERNINFO;
-        #[cfg(not(any(target_os = "redox", target_os = "cygwin")))]
+        #[cfg(not(target_os = "redox"))]
         PENDIN;
         NOFLSH;
     }

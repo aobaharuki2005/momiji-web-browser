@@ -6,7 +6,6 @@
 #[cfg(all(
     not(target_env = "musl"),
     not(target_env = "uclibc"),
-    not(target_env = "ohos"),
     any(
         target_os = "linux",
         apple_targets,
