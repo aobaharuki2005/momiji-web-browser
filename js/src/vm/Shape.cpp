@@ -1328,8 +1328,8 @@ void ForEachObjectFlag(ObjectFlags flags, KnownF known, UnknownF unknown) {
       case ObjectFlag::NeedsProxyGetSetResultValidation:
         known("NeedsProxyGetSetResultValidation");
         break;
-      case ObjectFlag::HasFuseProperty:
-        known("HasFuseProperty");
+      case ObjectFlag::HasRealmFuseProperty:
+        known("HasRealmFuseProperty");
         break;
       case ObjectFlag::HasPreservedWrapperDummy:
         known("HasPreservedWrapperDummy");

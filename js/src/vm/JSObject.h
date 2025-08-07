@@ -203,11 +203,11 @@ class JSObject
     return hasFlag(js::ObjectFlag::GenerationCountedGlobal);
   }
 
-  bool hasFuseProperty() const {
-    return hasFlag(js::ObjectFlag::HasFuseProperty);
+  bool hasRealmFuseProperty() const {
+    return hasFlag(js::ObjectFlag::HasRealmFuseProperty);
   }
-  static bool setHasFuseProperty(JSContext* cx, JS::HandleObject obj) {
-    return setFlag(cx, obj, js::ObjectFlag::HasFuseProperty);
+  static bool setHasRealmFuseProperty(JSContext* cx, JS::HandleObject obj) {
+    return setFlag(cx, obj, js::ObjectFlag::HasRealmFuseProperty);
   }
 
   bool hasNonFunctionAccessor() const {

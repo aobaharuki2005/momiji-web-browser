@@ -60,9 +60,10 @@ class Watchtower {
         {ObjectFlag::IsUsedAsPrototype, ObjectFlag::UseWatchtowerTestingLog});
   }
   static bool watchesPropertyRemove(NativeObject* obj) {
-    return obj->hasAnyFlag(
-        {ObjectFlag::IsUsedAsPrototype, ObjectFlag::GenerationCountedGlobal,
-         ObjectFlag::UseWatchtowerTestingLog, ObjectFlag::HasFuseProperty});
+    return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
+                            ObjectFlag::GenerationCountedGlobal,
+                            ObjectFlag::UseWatchtowerTestingLog,
+                            ObjectFlag::HasRealmFuseProperty});
   }
   static bool watchesPropertyFlagsChange(NativeObject* obj) {
     return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
@@ -70,8 +71,8 @@ class Watchtower {
                             ObjectFlag::UseWatchtowerTestingLog});
   }
   static bool watchesPropertyValueChange(NativeObject* obj) {
-    return obj->hasAnyFlag(
-        {ObjectFlag::HasFuseProperty, ObjectFlag::UseWatchtowerTestingLog});
+    return obj->hasAnyFlag({ObjectFlag::HasRealmFuseProperty,
+                            ObjectFlag::UseWatchtowerTestingLog});
   }
   static bool watchesFreezeOrSeal(NativeObject* obj) {
     return obj->hasAnyFlag(

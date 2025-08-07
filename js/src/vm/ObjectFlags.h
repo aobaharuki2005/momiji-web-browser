@@ -83,8 +83,9 @@ enum class ObjectFlag : uint32_t {
   NeedsProxyGetSetResultValidation = 1 << 13,
 
   // There exists a property on this object which has fuse semantics associated
-  // with it, and thus we must trap on changes to said property.
-  HasFuseProperty = 1 << 14,
+  // with it, and thus we must trap on changes to said property and pop a
+  // RealmFuse if needed.
+  HasRealmFuseProperty = 1 << 14,
 
   // This is just holding the place of the flag for bug 1844878 which was
   // temporarily backed out in bug 1980081.

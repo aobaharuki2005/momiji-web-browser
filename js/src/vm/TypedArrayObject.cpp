@@ -5298,7 +5298,7 @@ static const ClassSpec TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
     TypedArrayObject::staticProperties,
     TypedArrayObject::protoFunctions,
     TypedArrayObject::protoAccessors,
-    GenericFinishInit<WhichHasFuseProperty::ProtoAndCtor>,
+    GenericFinishInit<WhichHasRealmFuseProperty::ProtoAndCtor>,
     ClassSpec::DontDefineConstructor,
 };
 
@@ -5627,7 +5627,7 @@ static const ClassSpec
       static_prototype_properties[Scalar::Type::Name],              \
       TypedArrayMethods(Scalar::Type::Name),                        \
       static_prototype_properties[Scalar::Type::Name],              \
-      GenericFinishInit<WhichHasFuseProperty::Proto>,               \
+      GenericFinishInit<WhichHasRealmFuseProperty::Proto>,          \
       JSProto_TypedArray,                                           \
   },
 

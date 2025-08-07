@@ -432,7 +432,7 @@ const ClassSpec WeakMapObject::classSpec_ = {
     nullptr,
     WeakMapObject::methods,
     WeakMapObject::properties,
-    GenericFinishInit<WhichHasFuseProperty::Proto>,
+    GenericFinishInit<WhichHasRealmFuseProperty::Proto>,
 };
 
 const JSClass WeakMapObject::class_ = {
