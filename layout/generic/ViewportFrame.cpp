@@ -211,6 +211,10 @@ nsDisplayWrapList* ViewportFrame::MaybeWrapTopLayerList(
 
 nsDisplayWrapList* ViewportFrame::BuildDisplayListForContentTopLayer(
     nsDisplayListBuilder* aBuilder, bool* aIsOpaque) {
+  if (aBuilder->AvoidBuildingDuplicateOofs()) {
+    return nullptr;
+  }
+
   nsDisplayList topLayerList(aBuilder);
   auto* doc = PresContext()->Document();
 
@@ -281,6 +285,10 @@ nsDisplayWrapList* ViewportFrame::BuildDisplayListForContentTopLayer(
 nsDisplayWrapList*
 ViewportFrame::BuildDisplayListForViewTransitionsAndNACTopLayer(
     nsDisplayListBuilder* aBuilder) {
+  if (aBuilder->AvoidBuildingDuplicateOofs()) {
+    return nullptr;
+  }
+
   nsDisplayList topLayerList(aBuilder);
   auto* doc = PresContext()->Document();
   if (dom::ViewTransition* vt = doc->GetActiveViewTransition()) {
