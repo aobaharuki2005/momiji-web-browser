@@ -6,6 +6,7 @@
 
 #include "SandboxFilter.h"
 
+#include <asm/termbits.h>  // For termios2 / TCGETS2
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/ioctl.h>
@@ -1354,7 +1355,8 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         // musl uses TIOCGWINSZ.
         //
         // This is required by ffmpeg
-        return If(AnyOf(request == TCGETS, request == TIOCGWINSZ),
+        return If(AnyOf(request == TCGETS, request == TIOCGWINSZ,
+                        request == TCGETS2),
                   Error(ENOTTY))
 #ifdef MOZ_ASAN
             // ASAN's error reporter wants to know if stderr is a tty.
