@@ -31,7 +31,7 @@ class ReviewPromptMiddlewareTest {
         middlewares = listOf(
             ReviewPromptMiddleware(
                 settings = settings,
-                {
+                createJexlHelper = {
                     object : NimbusMessagingHelperInterface {
                         override fun evalJexl(expression: String) = assertUnused()
                         override fun getUuid(template: String) = assertUnused()
@@ -205,6 +205,24 @@ class ReviewPromptMiddlewareTest {
             AppState(reviewPrompt = ReviewPromptState.Eligible(Type.PlayStore)),
             store.state,
         )
+    }
+
+    @Test
+    fun `WHEN evalJexl returns false THEN createdAtLeastOneBookmark returns false`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(false)
+
+        val result = createdAtLeastOneBookmark(jexlHelper)
+
+        assertEquals(jexlHelper.evalJexlValue, result)
+    }
+
+    @Test
+    fun `WHEN evalJexl returns true THEN createdAtLeastOneBookmark returns true`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(true)
+
+        val result = createdAtLeastOneBookmark(jexlHelper)
+
+        assertEquals(jexlHelper.evalJexlValue, result)
     }
 
     @Test

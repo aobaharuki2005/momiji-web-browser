@@ -53,6 +53,7 @@ class ReviewPromptMiddleware(
         fun subCriteria(settings: Settings): (NimbusMessagingHelperInterface) -> Sequence<Boolean> = {
             sequence {
                 yield(legacyReviewPromptTrigger(settings))
+                yield(createdAtLeastOneBookmark(it))
                 yield(isDefaultBrowserTrigger(it))
             }
         }
@@ -134,6 +135,16 @@ internal fun legacyReviewPromptTrigger(settings: Settings): Boolean {
     val hasOpenedAtLeastFiveTimes =
         settings.numberOfAppLaunches >= NUMBER_OF_LAUNCHES_REQUIRED
     return settings.isDefaultBrowser && hasOpenedAtLeastFiveTimes
+}
+
+/**
+ * Evaluates whether the user has created at least one bookmark.
+ *
+ * Note: Because Nimbus limits data to 4 calendar years, this will ignore bookmarks created before then.
+ */
+@VisibleForTesting
+internal fun createdAtLeastOneBookmark(jexlHelper: NimbusMessagingHelperInterface): Boolean {
+    return jexlHelper.evalJexlSafe("'bookmark_added'|eventSum('Years', 4) >= 1")
 }
 
 /**
