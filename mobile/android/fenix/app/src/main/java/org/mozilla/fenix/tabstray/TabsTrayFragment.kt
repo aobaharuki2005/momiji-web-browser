@@ -171,7 +171,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                     selectedTabId = requireComponents.core.store.state.selectedTabId,
                 ),
                 middlewares = listOf(
-                    TabsTrayTelemetryMiddleware(),
+                    TabsTrayTelemetryMiddleware(requireComponents.nimbus.events),
                 ),
             )
         }

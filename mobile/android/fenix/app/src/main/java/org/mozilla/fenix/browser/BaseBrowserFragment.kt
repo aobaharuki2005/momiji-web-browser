@@ -2092,7 +2092,7 @@ abstract class BaseBrowserFragment :
                     position = null,
                 )
 
-                MetricsUtils.recordBookmarkMetrics(MetricsUtils.BookmarkAction.ADD, Source.PAGE_ACTION_MENU)
+                MetricsUtils.recordBookmarkAddMetric(Source.PAGE_ACTION_MENU, requireComponents.nimbus.events)
                 showBookmarkSavedSnackbar(
                     message = getString(
                         R.string.bookmark_saved_in_folder_snackbar,

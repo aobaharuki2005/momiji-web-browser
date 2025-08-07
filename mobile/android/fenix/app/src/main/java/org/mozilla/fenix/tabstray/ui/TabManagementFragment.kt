@@ -153,7 +153,7 @@ class TabManagementFragment : ComposeFragment() {
                     selectedTabId = requireComponents.core.store.state.selectedTabId,
                 ),
                 middlewares = listOf(
-                    TabsTrayTelemetryMiddleware(),
+                    TabsTrayTelemetryMiddleware(requireComponents.nimbus.events),
                 ),
             )
         }
