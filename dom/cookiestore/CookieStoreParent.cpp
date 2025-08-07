@@ -10,7 +10,6 @@
 #include "CookieStoreSubscriptionService.h"
 #include "mozilla/Components.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/URIUtils.h"  // for IPDLParamTraits<nsIURI*>
@@ -129,34 +128,19 @@ mozilla::ipc::IPCResult CookieStoreParent::RecvSetRequest(
        aDomain, aOriginAttributes, aThirdPartyContext, aPartitionForeign,
        aUsingStorageAccess, aIsOn3PCBExceptionList, aName, aValue, aSession,
        aExpires, aPath, aSameSite, aPartitioned, aOperationID]() {
-        bool waitForNotification = false;
-        SetReturnType ret = self->SetRequestOnMainThread(
+        bool waitForNotification = self->SetRequestOnMainThread(
             parent, uri, aDomain, aOriginAttributes, aThirdPartyContext,
             aPartitionForeign, aUsingStorageAccess, aIsOn3PCBExceptionList,
             aName, aValue, aSession, aExpires, aPath, aSameSite, aPartitioned,
-            aOperationID, waitForNotification);
-
-        switch (ret) {
-          case eFailure:
-            return SetDeleteRequestPromise::CreateAndReject(false, __func__);
-
-          case eSilentFailure:
-            return SetDeleteRequestPromise::CreateAndResolve(false, __func__);
-
-          case eSuccess:
-            return SetDeleteRequestPromise::CreateAndResolve(
-                waitForNotification, __func__);
-        }
+            aOperationID);
+        return SetDeleteRequestPromise::CreateAndResolve(waitForNotification,
+                                                         __func__);
       })
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [aResolver = std::move(aResolver)](
                  const SetDeleteRequestPromise::ResolveOrRejectValue& aResult) {
-               if (aResult.IsResolve()) {
-                 aResolver(CookieStoreResult(true, aResult.ResolveValue()));
-                 return;
-               }
-
-               aResolver(CookieStoreResult(false, false));
+               MOZ_ASSERT(aResult.IsResolve());
+               aResolver(aResult.ResolveValue());
              });
 
   return IPC_OK();
@@ -358,19 +342,16 @@ void CookieStoreParent::GetRequestOnMainThread(
   aResults.SwapElements(list);
 }
 
-CookieStoreParent::SetReturnType CookieStoreParent::SetRequestOnMainThread(
+bool CookieStoreParent::SetRequestOnMainThread(
     ThreadsafeContentParentHandle* aParent, const RefPtr<nsIURI> aCookieURI,
     const nsAString& aDomain, const OriginAttributes& aOriginAttributes,
     bool aThirdPartyContext, bool aPartitionForeign, bool aUsingStorageAccess,
     bool aIsOn3PCBExceptionList, const nsAString& aName,
     const nsAString& aValue, bool aSession, int64_t aExpires,
     const nsAString& aPath, int32_t aSameSite, bool aPartitioned,
-    const nsID& aOperationID, bool& aWaitForNotification) {
+    const nsID& aOperationID) {
   AssertIsOnMainThread();
   nsresult rv;
-
-  // By default, no notification should be expected.
-  aWaitForNotification = false;
 
   NS_ConvertUTF16toUTF8 domain(aDomain);
   nsAutoCString domainWithDot;
@@ -378,12 +359,12 @@ CookieStoreParent::SetReturnType CookieStoreParent::SetRequestOnMainThread(
   if (CookiePrefixes::Has(CookiePrefixes::eHttp, aName) ||
       CookiePrefixes::Has(CookiePrefixes::eHostHttp, aName)) {
     MOZ_DIAGNOSTIC_CRASH("This should not be allowed by CookieStore");
-    return eSilentFailure;
+    return false;
   }
 
   if (CookiePrefixes::Has(CookiePrefixes::eHost, aName) && !domain.IsEmpty()) {
     MOZ_DIAGNOSTIC_CRASH("This should not be allowed by CookieStore");
-    return eSilentFailure;
+    return false;
   }
 
   // If aDomain is `domain.com` then domainWithDot will be `.domain.com`
@@ -396,13 +377,13 @@ CookieStoreParent::SetReturnType CookieStoreParent::SetRequestOnMainThread(
     domain.Truncate();
     rv = nsContentUtils::GetHostOrIPv6WithBrackets(aCookieURI, domain);
     if (NS_FAILED(rv)) {
-      return eSilentFailure;
+      return false;
     }
   }
   domainWithDot.Append(domain);
 
   if (!CheckContentProcessSecurity(aParent, domain, aOriginAttributes)) {
-    return eSilentFailure;
+    return false;
   }
 
   if (aThirdPartyContext &&
@@ -411,28 +392,25 @@ CookieStoreParent::SetReturnType CookieStoreParent::SetRequestOnMainThread(
           aPartitioned && !aOriginAttributes.mPartitionKey.IsEmpty(),
           aPartitionForeign, aOriginAttributes.IsPrivateBrowsing(),
           aUsingStorageAccess, aIsOn3PCBExceptionList)) {
-    return eSilentFailure;
+    return false;
   }
 
   nsCOMPtr<nsICookieManager> service =
       do_GetService(NS_COOKIEMANAGER_CONTRACTID);
   if (!service) {
-    return eSilentFailure;
+    return false;
   }
 
-  bool notified = eSilentFailure;
+  bool notified = false;
   auto notificationCb = [&]() { notified = true; };
 
   CookieStoreNotificationWatcher* notificationWatcher =
       GetOrCreateNotificationWatcherOnMainThread(aOriginAttributes);
   if (!notificationWatcher) {
-    return eSilentFailure;
+    return false;
   }
 
   notificationWatcher->CallbackWhenNotified(aOperationID, notificationCb);
-
-  auto cleanupNotificationWatcher = MakeScopeExit(
-      [&]() { notificationWatcher->ForgetOperationID(aOperationID); });
 
   OriginAttributes attrs(aOriginAttributes);
 
@@ -449,14 +427,20 @@ CookieStoreParent::SetReturnType CookieStoreParent::SetRequestOnMainThread(
     if (rv == NS_ERROR_ILLEGAL_VALUE && validation &&
         CookieValidation::Cast(validation)->Result() !=
             nsICookieValidation::eOK) {
-      return eFailure;
+      RefPtr<ContentParent> contentParent = aParent->GetContentParent();
+      if (contentParent) {
+        contentParent->KillHard(
+            "CookieStore does not accept invalid cookies in the parent "
+            "process");
+      }
     }
 
-    return eSilentFailure;
+    return false;
   }
 
-  aWaitForNotification = notified;
-  return eSuccess;
+  notificationWatcher->ForgetOperationID(aOperationID);
+
+  return notified;
 }
 
 bool CookieStoreParent::DeleteRequestOnMainThread(
@@ -544,15 +528,14 @@ bool CookieStoreParent::DeleteRequestOnMainThread(
 
     notificationWatcher->CallbackWhenNotified(aOperationID, notificationCb);
 
-    auto cleanupNotificationWatcher = MakeScopeExit(
-        [&]() { notificationWatcher->ForgetOperationID(aOperationID); });
-
     rv = cookieManager->RemoveNative(cookie->Host(), matchName, cookie->Path(),
                                      &attrs, /* from http: */ false,
                                      &aOperationID);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }
+
+    notificationWatcher->ForgetOperationID(aOperationID);
 
     return notified;
   }
