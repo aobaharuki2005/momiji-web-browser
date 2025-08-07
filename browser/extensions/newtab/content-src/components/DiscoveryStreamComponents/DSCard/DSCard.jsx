@@ -20,6 +20,16 @@ import { connect } from "react-redux";
 import { LinkMenuOptions } from "content-src/lib/link-menu-options";
 const READING_WPM = 220;
 
+const PREF_OHTTP_MERINO = "discoverystream.merino-provider.ohttp.enabled";
+const PREF_OHTTP_UNIFIED_ADS = "unifiedAds.ohttp.enabled";
+const PREF_CONTEXTUAL_ADS = "discoverystream.sections.contextualAds.enabled";
+const PREF_INFERRED_PERSONALIZATION_SYSTEM =
+  "discoverystream.sections.personalization.inferred.enabled";
+const PREF_INFERRED_PERSONALIZATION_USER =
+  "discoverystream.sections.personalization.inferred.user.enabled";
+const PREF_SECTIONS_ENABLED = "discoverystream.sections.enabled";
+const PREF_FAVICONS_ENABLED = "discoverystream.publisherFavicon.enabled";
+
 /**
  * READ TIME FROM WORD COUNT
  * @param {int} wordCount number of words in an article
@@ -655,12 +665,19 @@ export class _DSCard extends React.PureComponent {
 
   onIdleCallback() {
     if (!this.state.isSeen) {
-      if (this.observer && this.placeholderElement) {
-        this.observer.unobserve(this.placeholderElement);
+      // To improve responsiveness without impacting performance,
+      // we start rendering stories on idle.
+      // To reduce the number of requests for secure OHTTP images,
+      // we skip idle-time loading.
+      if (!this.secureImage) {
+        if (this.observer && this.placeholderElement) {
+          this.observer.unobserve(this.placeholderElement);
+        }
+
+        this.setState({
+          isSeen: true,
+        });
       }
-      this.setState({
-        isSeen: true,
-      });
     }
   }
 
@@ -682,6 +699,79 @@ export class _DSCard extends React.PureComponent {
     if (this.idleCallbackId) {
       this.props.windowObj.cancelIdleCallback(this.idleCallbackId);
     }
+  }
+
+  // Wraps the image URL with the moz-cached-ohttp:// protocol.
+  // This enables Firefox to load resources over Oblivious HTTP (OHTTP),
+  // providing privacy-preserving resource loading.
+  // Applied only when inferred personalization is enabled.
+  // See: https://firefox-source-docs.mozilla.org/browser/components/mozcachedohttp/docs/index.html
+  secureImageURL(url) {
+    return `moz-cached-ohttp://newtab-image/?url=${encodeURIComponent(url)}`;
+  }
+
+  getRawImageSrc() {
+    let rawImageSrc = "";
+    // There is no point in fetching images for startup cache.
+    if (!this.props.App.isForStartupCache.App) {
+      rawImageSrc = this.props.raw_image_src;
+    }
+    return rawImageSrc;
+  }
+
+  getFaviconSrc() {
+    let faviconSrc = "";
+    const faviconEnabled = this.props.Prefs.values[PREF_FAVICONS_ENABLED];
+    // There is no point in fetching favicons for startup cache.
+    if (
+      !this.props.App.isForStartupCache.App &&
+      faviconEnabled &&
+      this.props.icon_src
+    ) {
+      faviconSrc = this.props.icon_src;
+      if (this.secureImage) {
+        faviconSrc = this.secureImageURL(this.props.icon_src);
+      }
+    }
+    return faviconSrc;
+  }
+
+  get secureImage() {
+    const { Prefs, flightId } = this.props;
+
+    let ohttpEnabled = false;
+    if (flightId) {
+      ohttpEnabled =
+        Prefs.values[PREF_CONTEXTUAL_ADS] &&
+        Prefs.values[PREF_OHTTP_UNIFIED_ADS];
+    } else {
+      ohttpEnabled = Prefs.values[PREF_OHTTP_MERINO];
+    }
+
+    const inferredPersonalizationUser =
+      Prefs.values[PREF_INFERRED_PERSONALIZATION_USER];
+    const inferredPersonalizationSystem =
+      Prefs.values[PREF_INFERRED_PERSONALIZATION_SYSTEM];
+    const inferredPersonalization =
+      inferredPersonalizationSystem && inferredPersonalizationUser;
+    const ohttpImagesEnabled = Prefs.values.ohttpImagesConfig?.enabled;
+    const includeTopStoriesSection =
+      Prefs.values.ohttpImagesConfig?.includeTopStoriesSection;
+
+    const sectionsEnabled = Prefs.values[PREF_SECTIONS_ENABLED];
+    const nonPersonalizedSections = ["top_stories_section"];
+    const sectionPersonalized =
+      !nonPersonalizedSections.includes(this.props.section) ||
+      includeTopStoriesSection;
+
+    const secureImage =
+      sectionsEnabled &&
+      ohttpImagesEnabled &&
+      ohttpEnabled &&
+      sectionPersonalized &&
+      inferredPersonalization;
+
+    return secureImage;
   }
 
   render() {
@@ -751,11 +841,9 @@ export class _DSCard extends React.PureComponent {
       readTime: displayReadTime,
     } = DiscoveryStream;
 
-    const sectionsEnabled = Prefs.values["discoverystream.sections.enabled"];
+    const sectionsEnabled = Prefs.values[PREF_SECTIONS_ENABLED];
 
     const smartCrop = Prefs.values["images.smart"];
-    const faviconEnabled =
-      Prefs.values["discoverystream.publisherFavicon.enabled"];
     // Refined cards have their own excerpt hiding logic.
     // We can ignore hideDescriptions if we are in sections and refined cards.
     const excerpt =
@@ -794,6 +882,9 @@ export class _DSCard extends React.PureComponent {
     const descLinesClassName = `ds-card-desc-lines-${descLines}`;
     const isMediumRectangle = format === "rectangle";
     const spocFormatClassName = isMediumRectangle ? `ds-spoc-rectangle` : ``;
+
+    const rawImageSrc = this.getRawImageSrc();
+    const faviconSrc = this.getFaviconSrc();
 
     let sizes = [];
     if (!isMediumRectangle) {
@@ -843,13 +934,14 @@ export class _DSCard extends React.PureComponent {
             <DSImage
               extraClassNames="img"
               source={this.props.image_src}
-              rawSource={this.props.raw_image_src}
+              rawSource={rawImageSrc}
               sizes={sizes}
               url={this.props.url}
               title={this.props.title}
               isRecentSave={isRecentSave}
               alt_text={alt_text}
               smartCrop={smartCrop}
+              secureImage={this.secureImage}
             />
           </div>
           <ImpressionStats
@@ -930,7 +1022,7 @@ export class _DSCard extends React.PureComponent {
               }
               format={format}
               topic={this.props.topic}
-              icon_src={faviconEnabled && this.props.icon_src}
+              icon_src={faviconSrc}
               refinedCardsLayout={refinedCardsLayout}
             />
           )}

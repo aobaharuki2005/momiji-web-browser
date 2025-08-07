@@ -36,6 +36,7 @@ export class PrefsFeed {
     this.onSmartShortcutsExperimentUpdated =
       this.onSmartShortcutsExperimentUpdated.bind(this);
     this.onWidgetsUpdated = this.onWidgetsUpdated.bind(this);
+    this.onOhttpImagesUpdated = this.onOhttpImagesUpdated.bind(this);
   }
 
   onPrefChanged(name, value) {
@@ -150,6 +151,22 @@ export class PrefsFeed {
     );
   }
 
+  /**
+   * Handler for when OHTTP images experiment data updates.
+   */
+  onOhttpImagesUpdated() {
+    const value = lazy.NimbusFeatures.newtabOhttpImages.getAllVariables() || {};
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: {
+          name: "ohttpImagesConfig",
+          value,
+        },
+      })
+    );
+  }
+
   init() {
     this._prefs.observeBranch(this);
     lazy.NimbusFeatures.newtab.onUpdate(this.onExperimentUpdated);
@@ -158,6 +175,7 @@ export class PrefsFeed {
       this.onSmartShortcutsExperimentUpdated
     );
     lazy.NimbusFeatures.newtabWidgets.onUpdate(this.onWidgetsUpdated);
+    lazy.NimbusFeatures.newtabOhttpImages.onUpdate(this.onOhttpImagesUpdated);
 
     // Get the initial value of each activity stream pref
     const values = {};
@@ -274,6 +292,7 @@ export class PrefsFeed {
       this.onSmartShortcutsExperimentUpdated
     );
     lazy.NimbusFeatures.newtabWidgets.offUpdate(this.onWidgetsUpdated);
+    lazy.NimbusFeatures.newtabOhttpImages.offUpdate(this.onOhttpImagesUpdated);
     if (this.geo === "") {
       Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
     }

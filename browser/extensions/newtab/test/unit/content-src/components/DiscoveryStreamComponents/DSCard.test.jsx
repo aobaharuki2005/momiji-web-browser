@@ -25,6 +25,8 @@ import { combineReducers, createStore } from "redux";
 const DEFAULT_PROPS = {
   url: "about:robots",
   title: "title",
+  raw_image_src: "https://picsum.photos/200",
+  icon_src: "https://picsum.photos/200",
   App: {
     isForStartupCache: false,
   },
@@ -788,6 +790,136 @@ describe("<DSCard>", () => {
       wrapper.setProps({ format: "rectangle" });
       const image = wrapper.find(DSImage);
       assert.deepEqual(image.props().sizes, []);
+    });
+  });
+
+  describe("OHTTP images", () => {
+    function mountWithOptions({ prefs, props } = {}) {
+      const store = createStore(combineReducers(reducers), INITIAL_STATE);
+      const prefsState = {
+        ...INITIAL_STATE.Prefs,
+        values: {
+          ...INITIAL_STATE.Prefs.values,
+          "discoverystream.sections.enabled": true,
+          "unifiedAds.ohttp.enabled": true,
+          ohttpImagesConfig: { enabled: true, includeTopStoriesSection: false },
+          "discoverystream.merino-provider.ohttp.enabled": true,
+          "discoverystream.sections.contextualAds.enabled": true,
+          "discoverystream.sections.personalization.inferred.user.enabled": true,
+          "discoverystream.sections.personalization.inferred.enabled": true,
+          "discoverystream.publisherFavicon.enabled": true,
+          ...prefs,
+        },
+      };
+
+      wrapper = mount(
+        <Provider store={store}>
+          <DSCard
+            {...{
+              ...DEFAULT_PROPS,
+              sectionsCardImageSizes: {
+                1: "medium",
+                2: "medium",
+                3: "medium",
+                4: "medium",
+              },
+            }}
+            {...props}
+            Prefs={prefsState}
+          />
+        </Provider>
+      );
+      return wrapper;
+    }
+
+    function setWrapperIsSeen() {
+      const dsCardInstance = wrapper.find(DSCard).instance();
+      dsCardInstance.setState({ isSeen: true });
+      wrapper.update();
+    }
+
+    it("should set secureImage and faviconSrc for Merino", async () => {
+      wrapper = mountWithOptions();
+      setWrapperIsSeen();
+
+      const image = wrapper.find(DSImage);
+      assert.deepEqual(image.props().secureImage, true);
+
+      const defaultMeta = wrapper.find(DefaultMeta);
+      assert.equal(
+        defaultMeta.props().icon_src,
+        `moz-cached-ohttp://newtab-image/?url=${encodeURIComponent(DEFAULT_PROPS.icon_src)}`
+      );
+    });
+
+    it("should set secureImage for unified ads", async () => {
+      wrapper = mountWithOptions({
+        props: {
+          flightId: "flightId",
+        },
+        prefs: {
+          "unifiedAds.ohttp.enabled": false,
+        },
+      });
+      setWrapperIsSeen();
+
+      let image = wrapper.find(DSImage);
+      assert.deepEqual(image.props().secureImage, false);
+
+      wrapper = mountWithOptions({
+        props: {
+          flightId: "flightId",
+        },
+        prefs: {
+          "unifiedAds.ohttp.enabled": true,
+        },
+      });
+      setWrapperIsSeen();
+
+      image = wrapper.find(DSImage);
+      assert.deepEqual(image.props().secureImage, true);
+    });
+
+    it("should not set secureImage or icon_src for top stories", async () => {
+      wrapper = mountWithOptions({
+        props: {
+          section: "top_stories_section",
+        },
+      });
+      setWrapperIsSeen();
+
+      let image = wrapper.find(DSImage);
+      assert.deepEqual(image.props().secureImage, false);
+
+      let defaultMeta = wrapper.find(DefaultMeta);
+      assert.equal(defaultMeta.props().icon_src, DEFAULT_PROPS.icon_src);
+
+      wrapper = mountWithOptions({
+        props: {
+          section: "top_stories_section",
+        },
+        prefs: {
+          ohttpImagesConfig: { enabled: true, includeTopStoriesSection: true },
+        },
+      });
+      setWrapperIsSeen();
+
+      image = wrapper.find(DSImage);
+      assert.deepEqual(image.props().secureImage, true);
+
+      defaultMeta = wrapper.find(DefaultMeta);
+      assert.equal(
+        defaultMeta.props().icon_src,
+        `moz-cached-ohttp://newtab-image/?url=${encodeURIComponent(DEFAULT_PROPS.icon_src)}`
+      );
+    });
+
+    it("should not be seen on idle callback", async () => {
+      wrapper = mountWithOptions();
+      const dsCardInstance = wrapper.find(DSCard).instance();
+      dsCardInstance.onIdleCallback();
+      wrapper.update();
+      assert.equal(dsCardInstance.state.isSeen, false);
     });
   });
 });
