@@ -4,6 +4,11 @@ support-files = [
   "!/accessible/tests/mochitest/moz.png",
   "!/dom/media/test/bug461281.ogg",
   "!/dom/security/test/csp/dummy.pdf"]
+prefs = [
+  # This pref has to be set before test_HTMLSpec.html runs
+  # (which means we have to set it for the whole directory).
+  "layout.css.details-content.enabled=true",
+]
   
 ["test_HTMLSpec.html"]
 
