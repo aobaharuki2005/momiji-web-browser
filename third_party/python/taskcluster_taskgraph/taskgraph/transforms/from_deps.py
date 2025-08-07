@@ -14,7 +14,7 @@ after each build task, whatever builds may exist.
 from copy import deepcopy
 from textwrap import dedent
 
-from voluptuous import Any, Extra, Optional, Required
+from voluptuous import ALLOW_EXTRA, Any, Optional, Required
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.run import fetches_schema
@@ -23,6 +23,7 @@ from taskgraph.util.dependencies import GROUP_BY_MAP, get_dependencies
 from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.set_name import SET_NAME_MAP
 
+#: Schema for from_deps transforms
 FROM_DEPS_SCHEMA = Schema(
     {
         Required("from-deps"): {
@@ -38,7 +39,7 @@ FROM_DEPS_SCHEMA = Schema(
                 and copy attributes (if `copy-attributes` is True).
                 """.lstrip()
                 ),
-            ): list,
+            ): [str],
             Optional(
                 "set-name",
                 description=dedent(
@@ -108,10 +109,9 @@ FROM_DEPS_SCHEMA = Schema(
                 ),
             ): {str: [fetches_schema]},
         },
-        Extra: object,
     },
+    extra=ALLOW_EXTRA,
 )
-"""Schema for from_deps transforms."""
 
 transforms = TransformSequence()
 transforms.add_validate(FROM_DEPS_SCHEMA)

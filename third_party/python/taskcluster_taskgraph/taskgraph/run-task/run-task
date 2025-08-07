@@ -327,9 +327,9 @@ def get_posix_user_group(user, group):
 
 
 def write_audit_entry(path, msg):
-    now = datetime.datetime.utcnow().isoformat().encode("utf-8")
+    now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat().encode("utf-8")
     with open(path, "ab") as fh:
-        fh.write(b"[%sZ %s] %s\n" % (now, os.environb.get(b"TASK_ID", b"UNKNOWN"), msg))
+        fh.write(b"[%s %s] %s\n" % (now, os.environb.get(b"TASK_ID", b"UNKNOWN"), msg))
 
 
 WANTED_DIR_MODE = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
