@@ -3444,6 +3444,7 @@ GeckoDriver.prototype.setupReftest = async function (cmd) {
     urlCount = {},
     screenshot = "unexpected",
     isPrint = false,
+    cacheScreenshots = true,
   } = cmd.parameters;
   if (!["always", "fail", "unexpected"].includes(screenshot)) {
     throw new lazy.error.InvalidArgumentError(
@@ -3452,7 +3453,7 @@ GeckoDriver.prototype.setupReftest = async function (cmd) {
   }
 
   this._reftest = new lazy.reftest.Runner(this);
-  this._reftest.setup(urlCount, screenshot, isPrint);
+  this._reftest.setup(urlCount, screenshot, isPrint, cacheScreenshots);
 };
 
 /** Run a reftest. */
