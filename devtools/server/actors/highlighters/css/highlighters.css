@@ -665,13 +665,8 @@
 
 .paused-dbg-root {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  width: 100vw;
-  height: 100vh;
+  /* Don't set explicit height/width as those might cause issues when resizing the page (see Bug 1865312) */
+  inset: 0;
 
   display: flex;
   align-items: center;
