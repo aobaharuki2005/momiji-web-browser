@@ -8,6 +8,11 @@
 
 "use strict";
 
+const { AppProvidedConfigEngine, UserInstalledConfigEngine } =
+  ChromeUtils.importESModule(
+    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs"
+  );
+
 const CONFIG = [
   { identifier: "default" },
   {
@@ -20,10 +25,12 @@ const CONFIG = [
           searchTermParamName: "q",
         },
       },
+      partnerCode: "old_partner_code",
     },
     variants: [
       {
-        environment: { locales: ["de"] },
+        environment: { regions: ["de"] },
+        partnerCode: "regional_partner_code",
       },
     ],
   },
@@ -34,8 +41,13 @@ async function assertEngines(expectedNumber, message) {
   Assert.equal(engines.length, expectedNumber, message);
 }
 
+async function restartSearchService() {
+  await Services.search.wrappedJSObject.reset();
+  await Services.search.init(true);
+}
+
 add_setup(async function () {
-  SearchTestUtils.updateRemoteSettingsConfig(CONFIG);
+  SearchTestUtils.setRemoteSettingsConfig(CONFIG);
   await Services.search.init();
 });
 
@@ -60,12 +72,49 @@ add_task(async function update() {
     "The engines details are updated when configuration changes"
   );
 
-  let settingsFileWritten = promiseAfterSettings();
-  await Services.search.wrappedJSObject.reset();
-  await Services.search.init(true);
-  await settingsFileWritten;
-
+  await restartSearchService();
   await assertEngines(2, "Engine is persisted after restart");
+});
+
+add_task(async function switchRegion() {
+  let engine = Services.search.getEngineById("additional").wrappedJSObject;
+  Assert.ok(
+    engine instanceof UserInstalledConfigEngine,
+    "Starts as a UserInstalledConfigEngine"
+  );
+  Assert.equal(engine.partnerCode, "old_partner_code");
+
+  // Switch to a region where the engine is app provided.
+  await promiseSetHomeRegion("de");
+  Assert.ok(
+    engine instanceof AppProvidedConfigEngine,
+    "Upgraded to AppProvidedConfigEngine"
+  );
+  Assert.equal(engine.partnerCode, "regional_partner_code");
+
+  await restartSearchService();
+  engine = Services.search.getEngineById("additional").wrappedJSObject;
+  Assert.ok(
+    engine instanceof AppProvidedConfigEngine,
+    "Still is AppProvidedConfigEngine"
+  );
+  Assert.equal(engine.partnerCode, "regional_partner_code");
+
+  // Switch back to a region where the engine isn't app provided.
+  await promiseSetHomeRegion("unknown");
+  Assert.ok(
+    engine instanceof UserInstalledConfigEngine,
+    "Downgraded to UserInstalledConfigEngine"
+  );
+  Assert.equal(engine.partnerCode, "old_partner_code");
+
+  await restartSearchService();
+  engine = Services.search.getEngineById("additional").wrappedJSObject;
+  Assert.ok(
+    engine instanceof UserInstalledConfigEngine,
+    "Still is UserInstalledConfigEngine"
+  );
+  Assert.equal(engine.partnerCode, "old_partner_code");
 });
 
 add_task(async function remove() {
@@ -82,8 +131,7 @@ add_task(async function remove() {
   await settingsFileWritten;
   await assertEngines(1, "Engine was removed");
 
-  await Services.search.wrappedJSObject.reset();
-  await Services.search.init(true);
+  await restartSearchService();
   await assertEngines(1, "Engine stays removed after restart");
 
   Services.search.restoreDefaultEngines();

@@ -835,6 +835,19 @@ export class AppProvidedConfigEngine extends ConfigSearchEngine {
   get isAppProvided() {
     return true;
   }
+
+  /**
+   * Converts this engine into a UserInstalledConfigEngine.
+   *
+   * This can be called when the search service reloads and this engine is no
+   * longer available in the user's region but it has a "user-installed" attribute.
+   */
+  downgrade() {
+    if (!this.getAttr("user-installed")) {
+      throw new Error("Cannot downgrade without user-installed attribute.");
+    }
+    Object.setPrototypeOf(this, UserInstalledConfigEngine.prototype);
+  }
 }
 
 /**
@@ -853,5 +866,15 @@ export class UserInstalledConfigEngine extends ConfigSearchEngine {
   constructor(options) {
     super(options);
     this.setAttr("user-installed", true);
+  }
+
+  /**
+   * Converts this engine into a AppProvidedSearchEngine.
+   *
+   * This can be called when the search service reloads and this engine
+   * is now available in the user's region.
+   */
+  upgrade() {
+    Object.setPrototypeOf(this, AppProvidedConfigEngine.prototype);
   }
 }

@@ -1775,8 +1775,10 @@ export class SearchService {
     // `loadEnginesFromSettings` loads the engines and their settings together.
     // If loading the settings caused the default engine to change because of an
     // override, then we don't want to show the notification box.
-    let skipDefaultChangedNotification =
-      await this.#loadEnginesFromSettings(settings);
+    let skipDefaultChangedNotification = await this.#loadEnginesFromSettings(
+      settings,
+      refinedConfig.engines
+    );
 
     // If #loadEnginesFromSettings changed the default engine, then we don't
     // need to call #checkOpenSearchOverrides as we know that the overrides have
@@ -2137,9 +2139,9 @@ export class SearchService {
       let index = availableConfigEngines.findIndex(
         e => e.identifier == engine.id
       );
-      let configuration = availableConfigEngines?.[index];
+      let configuration = availableConfigEngines[index];
 
-      if (!configuration && engine instanceof lazy.UserInstalledConfigEngine) {
+      if (!configuration && engine.getAttr("user-installed")) {
         configuration =
           await this.#engineSelector.findContextualSearchEngineById(engine.id);
       }
@@ -2151,6 +2153,21 @@ export class SearchService {
         // This is an existing engine that we should update. (However
         // notification will happen only if the configuration for this engine
         // has changed).
+
+        // Check if a config engine should get converted.
+        let willBeAppProvided = index != -1;
+        if (
+          willBeAppProvided &&
+          engine instanceof lazy.UserInstalledConfigEngine
+        ) {
+          engine.upgrade();
+        } else if (
+          !willBeAppProvided &&
+          engine instanceof lazy.AppProvidedConfigEngine
+        ) {
+          engine.downgrade();
+        }
+
         engine.update({ configuration });
       }
 
@@ -2497,10 +2514,12 @@ export class SearchService {
    *
    * @param {object} [settings]
    *   The saved settings for the user.
+   * @param {SearchEngineDefinition[]} [engines]
+   *   The saved settings for the user.
    * @returns {Promise<boolean>}
    *   Returns true if the default engine was changed.
    */
-  async #loadEnginesFromSettings(settings) {
+  async #loadEnginesFromSettings(settings, engines) {
     if (!settings.engines) {
       return false;
     }
@@ -2513,9 +2532,15 @@ export class SearchService {
 
     let defaultEngineChanged = false;
     let skippedEngines = 0;
+    let appProvidedEngineIds = new Set(engines.map(e => e.identifier));
     for (let engineJSON of settings.engines) {
-      let userInstalled = !!engineJSON._metaData?.["user-installed"];
-      if (engineJSON._isConfigEngine && !userInstalled) {
+      let willBeUserInstalled =
+        !!engineJSON._metaData?.["user-installed"] &&
+        // A config engine with user-installed attribute still counts as
+        // app-provided if it's also app-provided.
+        // In that case, it's installed by #loadEnginesFromConfig.
+        !appProvidedEngineIds.has(engineJSON.id);
+      if (engineJSON._isConfigEngine && !willBeUserInstalled) {
         ++skippedEngines;
         continue;
       }
@@ -2570,7 +2595,7 @@ export class SearchService {
           engine = new lazy.AddonSearchEngine({
             json: engineJSON,
           });
-        } else if (engineJSON._isConfigEngine && userInstalled) {
+        } else if (engineJSON._isConfigEngine && willBeUserInstalled) {
           let config =
             await this.#engineSelector.findContextualSearchEngineById(
               engineJSON.id
