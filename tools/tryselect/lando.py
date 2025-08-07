@@ -430,10 +430,8 @@ def push_to_lando_try(
         raise ValueError(f"Try push via Lando is not supported for `{vcs.name}`.")
 
     # Use LANDO_TRY_CONFIG so select which configuration section from .lando.ini to use.
-    # Default to using Lando Prod unless the `LANDO_TRY_USE_DEV` environment variable is defined.
-    lando_config_section = os.getenv("LANDO_TRY_CONFIG") or (
-        "lando-prod" if not os.getenv("LANDO_TRY_USE_DEV") else "lando-dev"
-    )
+    # Default to using `lando-prod`.
+    lando_config_section = os.getenv("LANDO_TRY_CONFIG", "lando-prod")
 
     # Load Auth0 config from `.lando.ini`.
     lando_ini_path = Path(vcs.path) / ".lando.ini"
