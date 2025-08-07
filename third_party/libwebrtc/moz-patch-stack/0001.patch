@@ -1,330 +1,97 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 6 Aug 2025 21:08:31 -0500
-Subject: (tmp-cherry-pick) Revert "IWYU modules/video_coding/codecs/h264"
- (50db72355a)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Tom Van Goethem <tov@google.com>
+Date: Mon, 12 May 2025 03:34:59 -0700
+Subject: (cherry-pick-branch-heads/7151) [M137] Add metrics for restricted
+ candidates
 
-This reverts commit d66b2f9f60329e08046c0c9e021f0bc967e9a3bd.
+This adds two UMA metrics for the type of SDP munging that occurred and
+the port of the candidate that was restricted. The metrics descriptions
+are being added here: crrev.com/c/6521706.
 
-Reason for revert: Breaks import
+(cherry picked from commit d5b3b1ed4594821451d2ebb1d61cc1e6dab83b56)
 
-Original change's description:
-> IWYU modules/video_coding/codecs/h264
->
-> using
->   find modules/video_coding/codecs/h264 -name "*.h" -o -name "*.cc" | | xargs tools_webrtc/iwyu/apply-include-cleaner
-> followed by
->   tools_webrtc/gn_check_autofix.py -C out/Default/
-> and git cl format
->
-> Manual changes to move the includes inside the RTC_USE_H264 define
-> and wrap libavcodec/libavformat inside extern "C".
-> Some RTC_USE_H264 includes no longer need to be guarded as the files which are included are fully guarded by that define.
->
-> BUG=webrtc:42226242
->
-> Change-Id: I3f49028be95e984526d96372acffa3ef21127333
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/385820
-> Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
-> Commit-Queue: Philipp Hancke <phancke@meta.com>
-> Reviewed-by: Erik Språng <sprang@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#44526}
-
-Bug: webrtc:42226242
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Change-Id: I60f5df9ba6cb3f5754737febd11221af0d33f4d4
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390280
-Reviewed-by: Fredrik Solenberg <solenberg@webrtc.org>
-Commit-Queue: Jonas Oreland <jonaso@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#44533}
+Bug: b/409713509
+Fixed: b/417142969
+Change-Id: I3232cb0cee6848074ab103f4d4edb2e080e09568
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390340
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Reviewed-by: Johannes Kron <kron@webrtc.org>
+Commit-Queue: Tom Van Goethem <tov@google.com>
+Cr-Original-Commit-Position: refs/heads/main@{#44559}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390920
+Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/7151@{#2}
+Cr-Branched-From: dc428bd75f2ca847b165b2556970c9bcd5037c5b-refs/heads/main@{#44472}
 ---
- modules/video_coding/codecs/h264/h264.cc      | 13 ++++------
- .../codecs/h264/h264_color_space.cc           |  7 -----
- .../codecs/h264/h264_decoder_impl.cc          | 23 ----------------
- .../codecs/h264/h264_decoder_impl.h           |  4 ---
- .../codecs/h264/h264_encoder_impl.cc          | 26 +++----------------
- .../codecs/h264/h264_encoder_impl.h           | 12 ++-------
- .../codecs/h264/h264_encoder_impl_unittest.cc |  3 ---
- .../codecs/h264/h264_simulcast_unittest.cc    |  5 ----
- .../codecs/h264/include/h264_globals.h        |  3 ++-
- .../codecs/h264/test/h264_impl_unittest.cc    |  4 +--
- 10 files changed, 15 insertions(+), 85 deletions(-)
+ pc/sdp_munging_detector_unittest.cc | 16 ++++++++++++++++
+ pc/sdp_offer_answer.cc              | 12 ++++++++++++
+ 2 files changed, 28 insertions(+)
 
-diff --git a/modules/video_coding/codecs/h264/h264.cc b/modules/video_coding/codecs/h264/h264.cc
-index 396c6847f4..ffee2af7f5 100644
---- a/modules/video_coding/codecs/h264/h264.cc
-+++ b/modules/video_coding/codecs/h264/h264.cc
-@@ -14,22 +14,19 @@
- #include <memory>
- #include <optional>
- #include <string>
--#include <vector>
- 
--#include "absl/base/nullability.h"
- #include "absl/container/inlined_vector.h"
--#include "api/environment/environment.h"
--#include "api/video_codecs/h264_profile_level_id.h"
--#include "api/video_codecs/scalability_mode.h"
- #include "api/video_codecs/sdp_video_format.h"
--#include "api/video_codecs/video_encoder.h"
- #include "media/base/media_constants.h"
-+#include "rtc_base/trace_event.h"
-+
-+#if defined(WEBRTC_USE_H264)
- #include "modules/video_coding/codecs/h264/h264_decoder_impl.h"
- #include "modules/video_coding/codecs/h264/h264_encoder_impl.h"
--#include "modules/video_coding/codecs/h264/include/h264_globals.h"
-+#endif
-+
- #include "rtc_base/checks.h"
- #include "rtc_base/logging.h"
--#include "rtc_base/trace_event.h"
- 
- namespace webrtc {
- 
-diff --git a/modules/video_coding/codecs/h264/h264_color_space.cc b/modules/video_coding/codecs/h264/h264_color_space.cc
-index a93e5e3800..59921263e3 100644
---- a/modules/video_coding/codecs/h264/h264_color_space.cc
-+++ b/modules/video_coding/codecs/h264/h264_color_space.cc
-@@ -15,13 +15,6 @@
- 
- #include "modules/video_coding/codecs/h264/h264_color_space.h"
- 
--extern "C" {
--#include <libavcodec/avcodec.h>
--#include <libavutil/pixfmt.h>
--}
--
--#include "api/video/color_space.h"
--
- namespace webrtc {
- 
- ColorSpace ExtractH264ColorSpace(AVCodecContext* codec) {
-diff --git a/modules/video_coding/codecs/h264/h264_decoder_impl.cc b/modules/video_coding/codecs/h264/h264_decoder_impl.cc
-index b9f81e5a67..f3737a1edd 100644
---- a/modules/video_coding/codecs/h264/h264_decoder_impl.cc
-+++ b/modules/video_coding/codecs/h264/h264_decoder_impl.cc
-@@ -18,40 +18,17 @@
- 
- extern "C" {
- #include <libavcodec/avcodec.h>
--#include <libavcodec/codec.h>
--#include <libavcodec/codec_id.h>
--#include <libavcodec/packet.h>
- #include <libavformat/avformat.h>
--#include <libavutil/avutil.h>
--#include <libavutil/buffer.h>
--#include <libavutil/frame.h>
- #include <libavutil/imgutils.h>
--#include <libavutil/pixfmt.h>
- }  // extern "C"
- 
- #include <algorithm>
--#include <array>
--#include <cstddef>
--#include <cstdint>
- #include <limits>
- #include <memory>
--#include <optional>
- 
--#include "api/scoped_refptr.h"
- #include "api/video/color_space.h"
--#include "api/video/encoded_image.h"
- #include "api/video/i010_buffer.h"
--#include "api/video/i210_buffer.h"
--#include "api/video/i410_buffer.h"
- #include "api/video/i420_buffer.h"
--#include "api/video/i422_buffer.h"
--#include "api/video/i444_buffer.h"
--#include "api/video/render_resolution.h"
--#include "api/video/video_codec_type.h"
--#include "api/video/video_frame.h"
--#include "api/video/video_frame_buffer.h"
--#include "api/video/video_rotation.h"
--#include "api/video_codecs/video_decoder.h"
- #include "common_video/include/video_frame_buffer.h"
- #include "modules/video_coding/codecs/h264/h264_color_space.h"
- #include "modules/video_coding/include/video_error_codes.h"
-diff --git a/modules/video_coding/codecs/h264/h264_decoder_impl.h b/modules/video_coding/codecs/h264/h264_decoder_impl.h
-index 7446d8fe00..e9da6a7a0d 100644
---- a/modules/video_coding/codecs/h264/h264_decoder_impl.h
-+++ b/modules/video_coding/codecs/h264/h264_decoder_impl.h
-@@ -37,14 +37,10 @@
- 
- extern "C" {
- #include <libavcodec/avcodec.h>
--#include <libavutil/frame.h>
- }  // extern "C"
- 
--#include <cstdint>
- #include <memory>
- 
--#include "api/video/encoded_image.h"
--#include "api/video_codecs/video_decoder.h"
- #include "common_video/h264/h264_bitstream_parser.h"
- #include "common_video/include/video_frame_buffer_pool.h"
- #include "modules/video_coding/codecs/h264/include/h264.h"
-diff --git a/modules/video_coding/codecs/h264/h264_encoder_impl.cc b/modules/video_coding/codecs/h264/h264_encoder_impl.cc
-index 19d00a3372..7792d53e32 100644
---- a/modules/video_coding/codecs/h264/h264_encoder_impl.cc
-+++ b/modules/video_coding/codecs/h264/h264_encoder_impl.cc
-@@ -17,42 +17,24 @@
- #include "modules/video_coding/codecs/h264/h264_encoder_impl.h"
- 
- #include <algorithm>
--#include <cstddef>
--#include <cstdint>
--#include <cstring>
- #include <limits>
- #include <optional>
- #include <string>
--#include <vector>
--
--#include "api/environment/environment.h"
--#include "api/scoped_refptr.h"
--#include "api/units/data_rate.h"
--#include "api/video/encoded_image.h"
--#include "api/video/i420_buffer.h"
--#include "api/video/video_bitrate_allocation.h"
--#include "api/video/video_bitrate_allocator.h"
-+
-+#include "absl/strings/match.h"
- #include "api/video/video_codec_constants.h"
--#include "api/video/video_codec_type.h"
--#include "api/video/video_frame.h"
--#include "api/video/video_frame_buffer.h"
--#include "api/video/video_frame_type.h"
- #include "api/video_codecs/scalability_mode.h"
--#include "api/video_codecs/video_codec.h"
--#include "api/video_codecs/video_encoder.h"
- #include "common_video/libyuv/include/webrtc_libyuv.h"
--#include "modules/video_coding/codecs/h264/include/h264.h"
--#include "modules/video_coding/codecs/h264/include/h264_globals.h"
--#include "modules/video_coding/codecs/interface/common_constants.h"
- #include "modules/video_coding/include/video_codec_interface.h"
- #include "modules/video_coding/include/video_error_codes.h"
- #include "modules/video_coding/svc/create_scalability_structure.h"
--#include "modules/video_coding/svc/scalable_video_controller.h"
- #include "modules/video_coding/utility/simulcast_rate_allocator.h"
- #include "modules/video_coding/utility/simulcast_utility.h"
- #include "rtc_base/checks.h"
- #include "rtc_base/logging.h"
-+#include "rtc_base/time_utils.h"
- #include "system_wrappers/include/metrics.h"
-+#include "third_party/libyuv/include/libyuv/convert.h"
- #include "third_party/libyuv/include/libyuv/scale.h"
- #include "third_party/openh264/src/codec/api/wels/codec_api.h"
- #include "third_party/openh264/src/codec/api/wels/codec_app_def.h"
-diff --git a/modules/video_coding/codecs/h264/h264_encoder_impl.h b/modules/video_coding/codecs/h264/h264_encoder_impl.h
-index ea5feb75e1..2d4a95311d 100644
---- a/modules/video_coding/codecs/h264/h264_encoder_impl.h
-+++ b/modules/video_coding/codecs/h264/h264_encoder_impl.h
-@@ -21,27 +21,19 @@
- #error "See: bugs.webrtc.org/9213#c13."
- #endif
- 
--#include <cstddef>
--#include <cstdint>
- #include <memory>
--#include <optional>
+diff --git a/pc/sdp_munging_detector_unittest.cc b/pc/sdp_munging_detector_unittest.cc
+index a06735b6f8..88fa93e0f2 100644
+--- a/pc/sdp_munging_detector_unittest.cc
++++ b/pc/sdp_munging_detector_unittest.cc
+@@ -17,8 +17,11 @@
+ #include <utility>
  #include <vector>
  
- #include "absl/container/inlined_vector.h"
--#include "api/environment/environment.h"
--#include "api/scoped_refptr.h"
--#include "api/video/encoded_image.h"
-+#include "api/transport/rtp/dependency_descriptor.h"
- #include "api/video/i420_buffer.h"
- #include "api/video/video_codec_constants.h"
--#include "api/video/video_frame.h"
--#include "api/video/video_frame_type.h"
- #include "api/video_codecs/scalability_mode.h"
--#include "api/video_codecs/video_codec.h"
- #include "api/video_codecs/video_encoder.h"
- #include "common_video/h264/h264_bitstream_parser.h"
- #include "modules/video_coding/codecs/h264/include/h264.h"
--#include "modules/video_coding/codecs/h264/include/h264_globals.h"
- #include "modules/video_coding/svc/scalable_video_controller.h"
-+#include "modules/video_coding/utility/quality_scaler.h"
- #include "third_party/openh264/src/codec/api/wels/codec_app_def.h"
++#include "absl/strings/numbers.h"
+ #include "absl/strings/str_cat.h"
+ #include "absl/strings/str_replace.h"
++#include "absl/strings/str_split.h"
++#include "absl/strings/string_view.h"
+ #include "api/audio_codecs/audio_format.h"
+ #include "api/audio_codecs/builtin_audio_decoder_factory.h"
+ #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+@@ -375,6 +378,7 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
+       {"127.0.1.1:23456", true},  {"8.8.8.8:3456", true},
+   };
  
- class ISVCEncoder;
-diff --git a/modules/video_coding/codecs/h264/h264_encoder_impl_unittest.cc b/modules/video_coding/codecs/h264/h264_encoder_impl_unittest.cc
-index 2f3dfaf1a6..e714e277e8 100644
---- a/modules/video_coding/codecs/h264/h264_encoder_impl_unittest.cc
-+++ b/modules/video_coding/codecs/h264/h264_encoder_impl_unittest.cc
-@@ -12,10 +12,7 @@
- #include "modules/video_coding/codecs/h264/h264_encoder_impl.h"
- 
- #include "api/environment/environment_factory.h"
--#include "api/video/video_codec_type.h"
--#include "api/video_codecs/video_codec.h"
- #include "api/video_codecs/video_encoder.h"
--#include "modules/video_coding/codecs/h264/include/h264_globals.h"
- #include "modules/video_coding/include/video_error_codes.h"
- #include "test/gtest.h"
- 
-diff --git a/modules/video_coding/codecs/h264/h264_simulcast_unittest.cc b/modules/video_coding/codecs/h264/h264_simulcast_unittest.cc
-index 39443fcdcc..b9ea324ca2 100644
---- a/modules/video_coding/codecs/h264/h264_simulcast_unittest.cc
-+++ b/modules/video_coding/codecs/h264/h264_simulcast_unittest.cc
-@@ -9,16 +9,11 @@
-  */
- 
- #include <memory>
--#include <utility>
- 
--#include "api/environment/environment.h"
- #include "api/test/create_simulcast_test_fixture.h"
- #include "api/test/simulcast_test_fixture.h"
- #include "api/test/video/function_video_decoder_factory.h"
- #include "api/test/video/function_video_encoder_factory.h"
--#include "api/video_codecs/sdp_video_format.h"
--#include "api/video_codecs/video_decoder_factory.h"
--#include "api/video_codecs/video_encoder_factory.h"
- #include "modules/video_coding/codecs/h264/include/h264.h"
- #include "test/gtest.h"
- 
-diff --git a/modules/video_coding/codecs/h264/include/h264_globals.h b/modules/video_coding/codecs/h264/include/h264_globals.h
-index 9b0b7b6b9e..dac36dd734 100644
---- a/modules/video_coding/codecs/h264/include/h264_globals.h
-+++ b/modules/video_coding/codecs/h264/include/h264_globals.h
-@@ -14,10 +14,11 @@
- #ifndef MODULES_VIDEO_CODING_CODECS_H264_INCLUDE_H264_GLOBALS_H_
- #define MODULES_VIDEO_CODING_CODECS_H264_INCLUDE_H264_GLOBALS_H_
- 
--#include <cstdint>
-+#include <algorithm>
- #include <string>
- #include <vector>
- 
-+#include "modules/video_coding/codecs/interface/common_constants.h"
- #include "rtc_base/checks.h"
- 
- namespace webrtc {
-diff --git a/modules/video_coding/codecs/h264/test/h264_impl_unittest.cc b/modules/video_coding/codecs/h264/test/h264_impl_unittest.cc
-index 239aae6548..985224d07e 100644
---- a/modules/video_coding/codecs/h264/test/h264_impl_unittest.cc
-+++ b/modules/video_coding/codecs/h264/test/h264_impl_unittest.cc
-@@ -15,13 +15,13 @@
- 
- #include "api/video/color_space.h"
- #include "api/video/encoded_image.h"
--#include "api/video/video_codec_type.h"
- #include "api/video/video_frame.h"
--#include "api/video/video_frame_type.h"
- #include "api/video_codecs/video_codec.h"
- #include "api/video_codecs/video_decoder.h"
- #include "api/video_codecs/video_encoder.h"
- #include "common_video/libyuv/include/webrtc_libyuv.h"
-+#include "media/base/codec.h"
-+#include "media/base/media_constants.h"
- #include "modules/video_coding/codecs/h264/include/h264.h"
- #include "modules/video_coding/codecs/test/video_codec_unittest.h"
- #include "modules/video_coding/include/video_codec_interface.h"
++  int num_blocked = 0;
+   for (const auto& address_test : address_tests) {
+     std::optional<RTCError> result;
+     const std::string candidate = StringFormat(
+@@ -390,8 +394,20 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
+     if (address_test.second == true) {
+       EXPECT_TRUE(result.value().ok());
+     } else {
++      std::pair<absl::string_view, absl::string_view> host =
++          absl::StrSplit(address_test.first, ":");
++      int port;
++      ASSERT_TRUE(absl::SimpleAtoi(host.second, &port));
+       EXPECT_FALSE(result.value().ok());
+       EXPECT_EQ(result.value().type(), RTCErrorType::UNSUPPORTED_OPERATION);
++      num_blocked++;
++      EXPECT_THAT(
++          metrics::Samples(
++              "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType"),
++          ElementsAre(Pair(SdpMungingType::kIceUfrag, num_blocked)));
++      EXPECT_THAT(
++          metrics::Samples("WebRTC.PeerConnection.RestrictedCandidates.Port"),
++          Contains(Pair(port, 1)));
+     }
+   }
+ }
+diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
+index 6f19d1bee6..22da12b0c8 100644
+--- a/pc/sdp_offer_answer.cc
++++ b/pc/sdp_offer_answer.cc
+@@ -5344,6 +5344,18 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
+         RTC_LOG(LS_ERROR) << "ReadyToUseRemoteCandidate: Candidate not valid "
+                              "because of SDP munging.";
+         *valid = false;
++        // There might be other types of SDP munging, but here we're only
++        // interested in IceUfrag and IcePwd.
++        SdpMungingType sdp_munging_type =
++            last_sdp_munging_type_ == SdpMungingType::kIcePwd
++                ? SdpMungingType::kIcePwd
++                : SdpMungingType::kIceUfrag;
++        RTC_HISTOGRAM_ENUMERATION_SPARSE(
++            "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType",
++            sdp_munging_type, SdpMungingType::kMaxValue);
++        RTC_HISTOGRAM_ENUMERATION_SPARSE(
++            "WebRTC.PeerConnection.RestrictedCandidates.Port",
++            candidate->candidate().address().port(), 65536);
+         return false;
+       }
+     }
