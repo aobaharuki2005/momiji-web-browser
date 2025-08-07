@@ -67,6 +67,8 @@ import org.mozilla.fenix.settings.logins.SortingStrategy
 import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_AUDIBLE
+import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
+import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.security.InvalidParameterException
 import java.util.UUID
@@ -2640,6 +2642,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var selectedAppIcon by stringPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_selected_app_icon),
         default = AppIcon.AppDefault.aliasSuffix,
+    )
+
+    /**
+     * Whether the Tab Manager enhancements are enabled.
+     */
+    var tabManagerEnhancementsEnabled by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_tab_manager_enhancements),
+        default = DefaultTabManagementFeatureHelper.enhancementsEnabled,
     )
 
     /**

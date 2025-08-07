@@ -246,6 +246,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().crashPullNeverShowAgain
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_tab_manager_enhancements).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().tabManagerEnhancementsEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
