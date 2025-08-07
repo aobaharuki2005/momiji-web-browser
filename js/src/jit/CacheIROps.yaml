@@ -280,6 +280,23 @@
   args:
     fuseWord: RealmFuseIndexImm
 
+- name: GuardObjectFuseProperty
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    # These two fields are used in debug builds to check the object matches
+    # objFuseOwner. It also ensures the ObjectFuse outlives this IC stub.
+    obj: ObjId
+    objFuseOwner: WeakObjectField
+    # The ObjectFuse* and data used for the IC guard.
+    objFuse: RawPointerField
+    expectedGeneration: RawInt32Field
+    propIndex: RawInt32Field
+    propMask: RawInt32Field
+    # Whether IC code can use a fast path based on invalidatedConstantProperty_.
+    canUseFastPath: BoolImm
+
 # Guard on an arbitrary JSClass.
 - name: GuardAnyClass
   shared: false

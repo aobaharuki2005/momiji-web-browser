@@ -50,6 +50,7 @@
 #include "vm/JitActivation.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
+#include "vm/ObjectFuse.h"
 #include "vm/Opcodes.h"
 #include "vm/PlainObject.h"
 #include "vm/Shape.h"
@@ -593,6 +594,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
     DECLARE_CACHEOP_CASE(GuardNonDoubleType);
     DECLARE_CACHEOP_CASE(GuardShape);
     DECLARE_CACHEOP_CASE(GuardFuse);
+    DECLARE_CACHEOP_CASE(GuardObjectFuseProperty);
     DECLARE_CACHEOP_CASE(GuardProto);
     DECLARE_CACHEOP_CASE(GuardNullProto);
     DECLARE_CACHEOP_CASE(GuardClass);
@@ -1154,6 +1156,30 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
                  ->realm()
                  ->realmFuses.getFuseByIndex(fuseIndex)
                  ->intact()) {
+          FAIL_IC();
+        }
+        DISPATCH_CACHEOP();
+      }
+
+      CACHEOP_CASE(GuardObjectFuseProperty) {
+        auto args = cacheIRReader.argsForGuardObjectFuseProperty();
+#ifdef DEBUG
+        JSObject* obj = reinterpret_cast<JSObject*>(READ_REG(args.objId.id()));
+        uintptr_t objFuseOwner =
+            stubInfo->getStubRawWord(cstub, args.objFuseOwnerOffset);
+        MOZ_ASSERT(uintptr_t(obj) == objFuseOwner);
+#endif
+        auto* objFuse = reinterpret_cast<ObjectFuse*>(
+            stubInfo->getStubRawWord(cstub, args.objFuseOffset));
+        uint32_t generation =
+            stubInfo->getStubRawInt32(cstub, args.expectedGenerationOffset);
+        uint32_t propIndex =
+            stubInfo->getStubRawInt32(cstub, args.propIndexOffset);
+        uint32_t propMask =
+            stubInfo->getStubRawInt32(cstub, args.propMaskOffset);
+        uint32_t propSlot =
+            ObjectFuse::propertySlotFromIndexAndMask(propIndex, propMask);
+        if (!objFuse->checkPropertyIsConstant(generation, propSlot)) {
           FAIL_IC();
         }
         DISPATCH_CACHEOP();

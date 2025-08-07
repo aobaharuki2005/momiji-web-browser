@@ -45,6 +45,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GetterSetter.h"
 #include "vm/Interpreter.h"
+#include "vm/ObjectFuse.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #include "vm/Uint8Clamped.h"
@@ -9203,6 +9204,9 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val,
     case StubField::Type::JSObject:
       masm.movePtr(ImmGCPtr(objectStubField(val.getOffset())), dest);
       break;
+    case StubField::Type::WeakObject:
+      masm.movePtr(ImmGCPtr(weakObjectStubField(val.getOffset())), dest);
+      break;
     case StubField::Type::RawPointer:
       masm.movePtr(ImmPtr(pointerStubField(val.getOffset())), dest);
       break;
@@ -9236,6 +9240,7 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
       case StubField::Type::RawPointer:
       case StubField::Type::Shape:
       case StubField::Type::JSObject:
+      case StubField::Type::WeakObject:
       case StubField::Type::Symbol:
       case StubField::Type::String:
       case StubField::Type::Id:
@@ -11340,6 +11345,73 @@ bool CacheIRCompiler::emitGuardFuse(RealmFuses::FuseIndex fuseIndex) {
   masm.loadRealmFuse(fuseIndex, scratch);
   masm.branchPtr(Assembler::NotEqual, scratch, ImmPtr(nullptr),
                  failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardObjectFuseProperty(
+    ObjOperandId objId, uint32_t objFuseOwnerOffset, uint32_t objFuseOffset,
+    uint32_t expectedGenerationOffset, uint32_t propIndexOffset,
+    uint32_t propMaskOffset, bool canUseFastPath) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+#ifdef DEBUG
+  {
+    Label ok;
+    StubFieldOffset fuseOwner(objFuseOwnerOffset, StubField::Type::WeakObject);
+    emitLoadStubField(fuseOwner, scratch1);
+    masm.branchPtr(Assembler::Equal, obj, scratch1, &ok);
+    masm.assumeUnreachable("Object doesn't match fuse!");
+    masm.bind(&ok);
+  }
+#else
+  (void)obj;
+#endif
+
+  StubFieldOffset objFuse(objFuseOffset, StubField::Type::RawPointer);
+  emitLoadStubField(objFuse, scratch1);
+
+  // Fast path for the case where no property has been invalidated. This is
+  // very common, especially for prototype objects.
+  Label done;
+  if (canUseFastPath) {
+    masm.branch32(
+        Assembler::Equal,
+        Address(scratch1, ObjectFuse::offsetOfInvalidatedConstantProperty()),
+        Imm32(0), &done);
+  }
+
+  // Guard on the generation field.
+  StubFieldOffset expectedGeneration(expectedGenerationOffset,
+                                     StubField::Type::RawInt32);
+  emitLoadStubField(expectedGeneration, scratch2);
+  masm.branch32(Assembler::NotEqual,
+                Address(scratch1, ObjectFuse::offsetOfGeneration()), scratch2,
+                failure->label());
+
+  // Load the uint32_t from the properties array. After the generation check,
+  // the property must be marked either Constant or NotConstant so we don't have
+  // to bounds check the index.
+  StubFieldOffset propIndex(propIndexOffset, StubField::Type::RawInt32);
+  emitLoadStubField(propIndex, scratch2);
+  masm.loadPtr(Address(scratch1, ObjectFuse::offsetOfPropertyStateBits()),
+               scratch1);
+  masm.load32(BaseIndex(scratch1, scratch2, TimesFour), scratch1);
+
+  // Use the mask to guard the property is still marked Constant.
+  StubFieldOffset propMask(propMaskOffset, StubField::Type::RawInt32);
+  emitLoadStubField(propMask, scratch2);
+  masm.branchTest32(Assembler::NonZero, scratch1, scratch2, failure->label());
+
+  masm.bind(&done);
   return true;
 }
 

@@ -2189,6 +2189,60 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
   }
 }
 
+bool IRGenerator::canOptimizeConstantDataProperty(NativeObject* holder,
+                                                  PropertyInfo prop,
+                                                  ObjectFuse** objFuse) {
+  MOZ_ASSERT(prop.isDataProperty());
+
+  if (mode_ != ICState::Mode::Specialized || !holder->hasObjectFuse()) {
+    return false;
+  }
+
+  *objFuse = cx_->zone()->objectFuses.getOrCreate(cx_, holder);
+  if (!*objFuse) {
+    cx_->recoverFromOutOfMemory();
+    return false;
+  }
+
+  // Warp supports nursery objects and nursery strings (all strings are
+  // atomized) but not nursery BigInts. This is very uncommon so we currently
+  // don't optimize such properties.
+  Value result = holder->getSlot(prop.slot());
+  if (result.isGCThing() && !result.toGCThing()->isTenured() &&
+      !result.isObject() && !result.isString()) {
+    MOZ_ASSERT(result.isBigInt());
+    return false;
+  }
+
+  return (*objFuse)->tryOptimizeConstantProperty(prop);
+}
+
+void IRGenerator::emitConstantDataPropertyResult(NativeObject* holder,
+                                                 ObjOperandId holderId,
+                                                 PropertyKey key,
+                                                 PropertyInfo prop,
+                                                 ObjectFuse* objFuse) {
+  MOZ_ASSERT(prop.isDataProperty());
+
+  auto data = objFuse->getConstantPropertyGuardData(prop);
+  bool canUseFastPath = !objFuse->hasInvalidatedConstantProperty();
+  writer.guardObjectFuseProperty(holderId, holder, objFuse, data.generation,
+                                 data.propIndex, data.propMask, canUseFastPath);
+#ifdef DEBUG
+  writer.assertPropertyLookup(holderId, key, prop.slot());
+#endif
+
+  // Use LoadObjectResult if the value is an object to support nursery objects
+  // in Warp.
+  Value result = holder->getSlot(prop.slot());
+  if (result.isObject()) {
+    ObjOperandId resObjId = writer.loadObject(&result.toObject());
+    writer.loadObjectResult(resObjId);
+  } else {
+    writer.loadValueResult(result);
+  }
+}
+
 static void AssertArgumentsCustomDataProp(ArgumentsObject* obj,
                                           PropertyKey key) {
 #ifdef DEBUG
@@ -3596,14 +3650,20 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     writer.loadDynamicSlotResult(objId, dynamicSlotOffset);
   } else if (holder == &globalLexical->global()) {
     MOZ_ASSERT(globalLexical->global().isGenerationCountedGlobal());
-    writer.guardGlobalGeneration(
-        globalLexical->global().generationCount(),
-        globalLexical->global().addressOfGenerationCount());
-    ObjOperandId holderId = writer.loadObject(holder);
+    ObjectFuse* objFuse = nullptr;
+    if (canOptimizeConstantDataProperty(holder, *prop, &objFuse)) {
+      ObjOperandId holderId = writer.loadObject(holder);
+      emitConstantDataPropertyResult(holder, holderId, id, *prop, objFuse);
+    } else {
+      writer.guardGlobalGeneration(
+          globalLexical->global().generationCount(),
+          globalLexical->global().addressOfGenerationCount());
+      ObjOperandId holderId = writer.loadObject(holder);
 #ifdef DEBUG
-    writer.assertPropertyLookup(holderId, id, prop->slot());
+      writer.assertPropertyLookup(holderId, id, prop->slot());
 #endif
-    EmitLoadSlotResult(writer, holderId, holder, *prop);
+      EmitLoadSlotResult(writer, holderId, holder, *prop);
+    }
   } else {
     // Check the prototype chain from the global to the holder
     // prototype. Ignore the global lexical scope as it doesn't figure
