@@ -16308,7 +16308,8 @@ void CodeGenerator::visitRest(LRest* lir) {
     Register end = temp0;
     Register args = temp1;
     Register scratch = temp2;
-    masm.computeEffectiveAddress(BaseValueIndex(elements, lengthReg), end);
+    masm.computeEffectiveAddress(BaseObjectElementIndex(elements, lengthReg),
+                                 end);
 
     Label loop;
     masm.bind(&loop);
@@ -21453,7 +21454,7 @@ void CodeGenerator::visitGuardIndexIsNotDenseElement(
   Address capacity(temp, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, capacity, spectreTemp, &notDense);
 
-  BaseValueIndex element(temp, index);
+  BaseObjectElementIndex element(temp, index);
   masm.branchTestMagic(Assembler::Equal, element, &notDense);
 
   bailout(lir->snapshot());
