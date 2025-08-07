@@ -243,6 +243,24 @@ class ReviewPromptMiddlewareTest {
         assertTrue(result)
     }
 
+    @Test
+    fun `WHEN evalJexl returns false THEN usedAppOnAtLeastFourOfLastSevenDaysTrigger returns false`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(false)
+
+        val result = usedAppOnAtLeastFourOfLastSevenDaysTrigger(jexlHelper)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `WHEN evalJexl returns true THEN usedAppOnAtLeastFourOfLastSevenDaysTrigger returns true`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(true)
+
+        val result = usedAppOnAtLeastFourOfLastSevenDaysTrigger(jexlHelper)
+
+        assertTrue(result)
+    }
+
     private fun assertNoOp(action: ReviewPromptAction) {
         val withoutMiddleware = AppStore()
         withoutMiddleware.dispatch(action).joinBlocking()
@@ -256,7 +274,8 @@ class ReviewPromptMiddlewareTest {
         )
     }
 
-    private fun assertUnused(): Nothing = throw AssertionError("Expected unused function, but was called here ")
+    private fun assertUnused(): Nothing =
+        throw AssertionError("Expected unused function, but was called here ")
 
     private companion object {
         const val TEST_TIME_NOW = 1598416882805L
