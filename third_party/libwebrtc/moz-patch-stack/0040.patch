@@ -237,7 +237,7 @@ index 754b807879..14b75f1229 100644
        suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
        cflags = [ "-mfpu=neon" ]
 diff --git a/modules/audio_processing/agc2/rnn_vad/BUILD.gn b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
-index a23a7c15ce..2b265650a0 100644
+index 154ac79205..fd03ebc283 100644
 --- a/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 +++ b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 @@ -18,7 +18,7 @@ rtc_library("rnn_vad") {
@@ -250,7 +250,7 @@ index a23a7c15ce..2b265650a0 100644
      cflags = [ "-mfpu=neon" ]
    }
 diff --git a/modules/audio_processing/ns/BUILD.gn b/modules/audio_processing/ns/BUILD.gn
-index 31ad61156d..6587fd14f3 100644
+index 90aedfabdb..1cef533634 100644
 --- a/modules/audio_processing/ns/BUILD.gn
 +++ b/modules/audio_processing/ns/BUILD.gn
 @@ -43,7 +43,7 @@ rtc_static_library("ns") {
@@ -276,7 +276,7 @@ index cc2a1a2302..8178c3bc6c 100644
  config("x11_config") {
    if (rtc_use_x11_extensions) {
 diff --git a/webrtc.gni b/webrtc.gni
-index c7d0befb56..e2830f07a3 100644
+index cd4274f290..7472c0fc7d 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -169,13 +169,13 @@ declare_args() {

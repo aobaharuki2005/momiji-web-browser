@@ -49,7 +49,7 @@ index 72972d18e1..70b4739ad0 100644
    }
  }
 diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index b7acd84839..8a54710d0a 100644
+index b3f5371324..54cf5ccb9f 100644
 --- a/modules/video_capture/BUILD.gn
 +++ b/modules/video_capture/BUILD.gn
 @@ -111,7 +111,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {

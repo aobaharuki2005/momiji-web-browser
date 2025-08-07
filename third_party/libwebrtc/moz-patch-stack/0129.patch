@@ -11,9 +11,9 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4527c41ef71d7683c
 ---
  BUILD.gn          |  4 ++++
  media/BUILD.gn    | 24 ++++++++++++++----------
- rtc_base/BUILD.gn | 44 ++++++++++++++++++++++++--------------------
+ rtc_base/BUILD.gn | 16 ++++++++++------
  webrtc.gni        |  4 ++--
- 4 files changed, 44 insertions(+), 32 deletions(-)
+ 4 files changed, 30 insertions(+), 18 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
 index 188a6d0dbd..593a78cc9d 100644
@@ -116,48 +116,27 @@ index 8acb889aed..5ffe827398 100644
    public_configs = []
    if (!build_with_chromium) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 5d7a7861f2..b990348f47 100644
+index 2c022ad7ec..0053330920 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -1500,29 +1500,32 @@ rtc_source_set("ssl_header") {
+@@ -1500,6 +1500,7 @@ rtc_source_set("ssl_header") {
  }
  
- rtc_source_set("digest") {
--  visibility = [ "*" ]
--  sources = [
--    "message_digest.cc",
--    "message_digest.h",
--    "openssl_digest.cc",
--    "openssl_digest.h",
--  ]
--  deps = [
--    ":checks",
--    ":ssl_header",
--    ":stringutils",
--    "//third_party/abseil-cpp/absl/strings:string_view",
--  ]
--
+ rtc_library("digest") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "message_digest.cc",
+@@ -1514,15 +1515,17 @@ rtc_library("digest") {
+     "//third_party/abseil-cpp/absl/strings:string_view",
+   ]
+ 
 -  # If we are building the SSL library ourselves, we know it's BoringSSL.
 -  if (rtc_build_ssl) {
 -    deps += [ "//third_party/boringssl" ]
 -  } else {
 -    configs += [ "..:external_ssl_library" ]
 -  }
-+if (!build_with_mozilla) {
-+   visibility = [ "*" ]
-+   sources = [
-+     "message_digest.cc",
-+     "message_digest.h",
-+     "openssl_digest.cc",
-+     "openssl_digest.h",
-+   ]
-+   deps = [
-+     ":checks",
-+     ":ssl_header",
-+     ":stringutils",
-+     "//third_party/abseil-cpp/absl/strings:string_view",
-+   ]
-+
 +   # If we are building the SSL library ourselves, we know it's BoringSSL.
 +   if (rtc_build_ssl) {
 +     deps += [ "//third_party/boringssl" ]
@@ -181,7 +160,7 @@ index 5d7a7861f2..b990348f47 100644
  rtc_library("ssl") {
  if (!build_with_mozilla) {
 diff --git a/webrtc.gni b/webrtc.gni
-index e533341b0f..7c0e9d6dfc 100644
+index 2c19b91487..767e59046b 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -125,7 +125,7 @@ declare_args() {

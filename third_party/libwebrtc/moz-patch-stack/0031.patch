@@ -206,10 +206,10 @@ index 2d84f3cae7..4f51d4bcc7 100644
      }
  
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 3e4bd7762c..4a72e7d432 100644
+index 125941ac45..f655784d99 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
-@@ -44,6 +44,9 @@ rtc_source_set("enable_media") {
+@@ -44,6 +44,9 @@ rtc_library("enable_media") {
      "environment",
      "//third_party/abseil-cpp/absl/base:nullability",
    ]
@@ -218,8 +218,8 @@ index 3e4bd7762c..4a72e7d432 100644
 +  }
  }
  
- rtc_source_set("enable_media_with_defaults") {
-@@ -70,7 +73,7 @@ rtc_source_set("enable_media_with_defaults") {
+ rtc_library("enable_media_with_defaults") {
+@@ -70,7 +73,7 @@ rtc_library("enable_media_with_defaults") {
    ]
  }
  
@@ -296,7 +296,7 @@ index 3e4bd7762c..4a72e7d432 100644
  }
 +}
  
- rtc_source_set("frame_transformer_interface") {
+ rtc_library("frame_transformer_interface") {
    visibility = [ "*" ]
 @@ -609,6 +638,7 @@ rtc_source_set("peer_network_dependencies") {
  }
@@ -312,7 +312,7 @@ index 3e4bd7762c..4a72e7d432 100644
  }
 +}
  
- rtc_source_set("frame_generator_api") {
+ rtc_library("frame_generator_api") {
    visibility = [ "*" ]
 @@ -775,6 +806,7 @@ rtc_library("create_frame_generator") {
    ]
@@ -456,18 +456,18 @@ index 9f10f0afc6..c1c917abb2 100644
  rtc_library("default_task_queue_factory") {
    visibility = [ "*" ]
 diff --git a/api/transport/BUILD.gn b/api/transport/BUILD.gn
-index 81ff330104..66fe20e7fd 100644
+index 1dfce618d6..72be32f564 100644
 --- a/api/transport/BUILD.gn
 +++ b/api/transport/BUILD.gn
 @@ -107,6 +107,7 @@ rtc_source_set("sctp_transport_factory_interface") {
  }
  
- rtc_source_set("stun_types") {
+ rtc_library("stun_types") {
 +if (!build_with_mozilla) {
    visibility = [ "*" ]
    sources = [
      "stun.cc",
-@@ -129,6 +130,7 @@ rtc_source_set("stun_types") {
+@@ -129,6 +130,7 @@ rtc_library("stun_types") {
      "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  }
@@ -748,7 +748,7 @@ index 6a13b89c4e..a3fc75e091 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 805a6ab6c3..f740b3bab6 100644
+index 6ddd196126..ea7d8c3831 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -870,7 +870,7 @@ index 9f720a5abf..75d94dd704 100644
  #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
  #include "rtc_base/checks.h"
 diff --git a/modules/audio_processing/agc2/rnn_vad/BUILD.gn b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
-index 025794d262..a23a7c15ce 100644
+index ddec89972d..154ac79205 100644
 --- a/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 +++ b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 @@ -121,7 +121,7 @@ rtc_source_set("vector_math") {
@@ -984,10 +984,10 @@ index de8a81be55..e8367393a3 100644
  }
 +
 diff --git a/modules/utility/BUILD.gn b/modules/utility/BUILD.gn
-index 8cefe5653c..b8d75865f7 100644
+index b30cb0c6d4..b59f8b5b2c 100644
 --- a/modules/utility/BUILD.gn
 +++ b/modules/utility/BUILD.gn
-@@ -25,5 +25,9 @@ rtc_source_set("utility") {
+@@ -25,5 +25,9 @@ rtc_library("utility") {
        "../../rtc_base:platform_thread",
        "../../rtc_base/system:arch",
      ]
@@ -998,7 +998,7 @@ index 8cefe5653c..b8d75865f7 100644
    }
  }
 diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index 22f5ff2acc..a88e742c88 100644
+index e5e74c9fc3..5a0b7024b0 100644
 --- a/modules/video_capture/BUILD.gn
 +++ b/modules/video_capture/BUILD.gn
 @@ -130,21 +130,12 @@ if (!build_with_chromium || is_linux || is_chromeos) {
@@ -1025,7 +1025,7 @@ index 22f5ff2acc..a88e742c88 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 89dca8eb8d..bc9c45a7d8 100644
+index 918dec9aa7..22bbfb6cc4 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -312,6 +312,7 @@ rtc_library("sample_counter") {
@@ -1198,11 +1198,11 @@ index 89dca8eb8d..bc9c45a7d8 100644
      visibility = [ "*" ]
      sources = [
 diff --git a/rtc_base/system/BUILD.gn b/rtc_base/system/BUILD.gn
-index b18114f107..3ca6994c81 100644
+index c1181618e9..4a772795ed 100644
 --- a/rtc_base/system/BUILD.gn
 +++ b/rtc_base/system/BUILD.gn
 @@ -101,7 +101,7 @@ if (is_mac || is_ios) {
- rtc_source_set("warn_current_thread_is_deadlocked") {
+ rtc_library("warn_current_thread_is_deadlocked") {
    sources = [ "warn_current_thread_is_deadlocked.h" ]
    deps = []
 -  if (is_android && !build_with_chromium) {
@@ -1292,7 +1292,7 @@ index 548442e193..3080b36b9f 100644
      "../api:sequence_checker",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/webrtc.gni b/webrtc.gni
-index 35c9768a1a..c7d0befb56 100644
+index 6449d045e0..cd4274f290 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1392,7 +1392,7 @@ index 35c9768a1a..c7d0befb56 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1210,7 +1220,7 @@ if (is_mac || is_ios) {
+@@ -1216,7 +1226,7 @@ if (is_mac || is_ios) {
    }
  }
  

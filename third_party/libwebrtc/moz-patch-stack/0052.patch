@@ -32,7 +32,7 @@ index 703f9f13f5..b58a8127ac 100644
      defines += [ "WEBRTC_MAC" ]
    }
 diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index a88e742c88..f36b3e28c3 100644
+index 5a0b7024b0..8458b19958 100644
 --- a/modules/video_capture/BUILD.gn
 +++ b/modules/video_capture/BUILD.gn
 @@ -73,7 +73,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {
@@ -74,7 +74,7 @@ index 9b6e7a13d8..712ae2c785 100644
  #endif  // defined(WEBRTC_POSIX)
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index e2830f07a3..bd9af56292 100644
+index 7472c0fc7d..6c0843b358 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -361,7 +361,7 @@ rtc_opus_dir = "//third_party/opus"

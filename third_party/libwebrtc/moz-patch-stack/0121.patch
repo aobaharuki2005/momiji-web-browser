@@ -130,7 +130,7 @@ index a7b7bac153..4715e7d7d0 100644
              "Generated during 'gn gen' by //BUILD.gn.",
              "",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 4a72e7d432..0bdf38e6d0 100644
+index f655784d99..f5daa68b21 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -250,7 +250,7 @@ index 40714b196e..2c6b39f59e 100644
  
  if (rtc_include_tests) {
 diff --git a/api/video/BUILD.gn b/api/video/BUILD.gn
-index 98591e6050..7468539145 100644
+index d0af76a6a0..40d3be5e30 100644
 --- a/api/video/BUILD.gn
 +++ b/api/video/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -265,7 +265,7 @@ index 98591e6050..7468539145 100644
  
  rtc_library("video_rtp_headers") {
 diff --git a/api/video_codecs/BUILD.gn b/api/video_codecs/BUILD.gn
-index 8351ae424b..5e8259826f 100644
+index 3732e6021f..f86e596c10 100644
 --- a/api/video_codecs/BUILD.gn
 +++ b/api/video_codecs/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -278,7 +278,7 @@ index 8351ae424b..5e8259826f 100644
 +  import("//chromium/build/config/android/rules.gni")
  }
  
- rtc_source_set("scalability_mode") {
+ rtc_library("scalability_mode") {
 diff --git a/audio/BUILD.gn b/audio/BUILD.gn
 index 0492dd24e5..be9eac131d 100644
 --- a/audio/BUILD.gn
@@ -492,7 +492,7 @@ index 929b1227a9..8acb889aed 100644
  import("../webrtc.gni")
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index f740b3bab6..37f6cc4115 100644
+index ea7d8c3831..9ee0fe3ddd 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -559,7 +559,7 @@ index 3808a92ca2..1d887efc22 100644
    }
  
 diff --git a/modules/audio_processing/agc2/rnn_vad/BUILD.gn b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
-index 2b265650a0..fd69ef810e 100644
+index fd03ebc283..ac1620c8f4 100644
 --- a/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 +++ b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 @@ -19,7 +19,7 @@ rtc_library("rnn_vad") {
@@ -571,7 +571,7 @@ index 2b265650a0..fd69ef810e 100644
      cflags = [ "-mfpu=neon" ]
    }
  
-@@ -87,7 +87,7 @@ rtc_source_set("rnn_vad_layers") {
+@@ -87,7 +87,7 @@ rtc_library("rnn_vad_layers") {
  
    defines = []
    if (rtc_build_with_neon && current_cpu != "arm64") {
@@ -599,7 +599,7 @@ index 2b265650a0..fd69ef810e 100644
      }
  
 diff --git a/modules/audio_processing/ns/BUILD.gn b/modules/audio_processing/ns/BUILD.gn
-index 6587fd14f3..a3b3be86b6 100644
+index 1cef533634..7888ff39f1 100644
 --- a/modules/audio_processing/ns/BUILD.gn
 +++ b/modules/audio_processing/ns/BUILD.gn
 @@ -44,7 +44,7 @@ rtc_static_library("ns") {
@@ -640,7 +640,7 @@ index a693604389..72972d18e1 100644
  import("../../webrtc.gni")
  
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index 522db89170..4e04e4e98c 100644
+index f6ade85ea5..4919ca4b77 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
 @@ -6,7 +6,7 @@
@@ -653,7 +653,7 @@ index 522db89170..4e04e4e98c 100644
  import("../../webrtc.gni")
  
 diff --git a/pc/BUILD.gn b/pc/BUILD.gn
-index 14e96b7541..30c8f96b3a 100644
+index 6d5d0ca9da..9f0bf72686 100644
 --- a/pc/BUILD.gn
 +++ b/pc/BUILD.gn
 @@ -30,8 +30,8 @@
@@ -668,7 +668,7 @@ index 14e96b7541..30c8f96b3a 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 8daf49e2dd..5d7a7861f2 100644
+index dc0c168a35..2c022ad7ec 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -713,7 +713,7 @@ index 6b05f5ce1d..e6dca83a70 100644
  
  rtc_library("yield") {
 diff --git a/rtc_base/system/BUILD.gn b/rtc_base/system/BUILD.gn
-index 3ca6994c81..f248ce40da 100644
+index 4a772795ed..de27f01bb0 100644
 --- a/rtc_base/system/BUILD.gn
 +++ b/rtc_base/system/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -885,7 +885,7 @@ index fb107ef1a3..b718fa583d 100644
  
  declare_args() {
 diff --git a/webrtc.gni b/webrtc.gni
-index 3cc7d4777a..62faaeb211 100644
+index 858c84a6e7..2f24f07e88 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -5,12 +5,12 @@

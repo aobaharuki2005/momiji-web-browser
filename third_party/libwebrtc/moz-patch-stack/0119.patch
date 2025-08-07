@@ -48,7 +48,7 @@ index 01625d78d9..929b1227a9 100644
  
  group("media") {
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index d308040153..522db89170 100644
+index 63661464a0..f6ade85ea5 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
 @@ -7,7 +7,7 @@
@@ -61,7 +61,7 @@ index d308040153..522db89170 100644
  
  rtc_library("encoded_frame") {
 diff --git a/webrtc.gni b/webrtc.gni
-index 75a9f406f8..ffecd38d5a 100644
+index e95cdbc084..58543e8fad 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -11,7 +11,7 @@ import("//build/config/mips.gni")
