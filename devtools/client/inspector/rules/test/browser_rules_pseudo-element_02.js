@@ -152,7 +152,7 @@ add_task(async function () {
     {
       selector: `body`,
       ancestorRulesData: null,
-      declarations: [{ name: "color", value: "#333" }],
+      declarations: [{ name: "color", value: "#333", overridden: true }],
     },
   ]);
 
@@ -190,7 +190,7 @@ add_task(async function () {
     {
       selector: `body`,
       ancestorRulesData: null,
-      declarations: [{ name: "color", value: "#333" }],
+      declarations: [{ name: "color", value: "#333", overridden: true }],
     },
   ]);
 
@@ -232,87 +232,3 @@ add_task(async function () {
     },
   ]);
 });
-
-/**
- * Check that the rule view has the expected content
- *
- * @param {RuleView} view
- * @param {Object[]} expectedElements
- * @param {String} expectedElements[].selector - The expected selector of the rule
- * @param {String[]|null} expectedElements[].ancestorRulesData - An array of the parent
- *        selectors of the rule. Pass `null` if the rule doesn't have a parent rule
- * @param {Object[]} expectedElements[].declarations - The expected declarations of the rule
- * @param {Object[]} expectedElements[].declarations[].name - The name of the declaration
- * @param {Object[]} expectedElements[].declarations[].value - The value of the declaration
- * @param {String} expectedElements[].header - If we're expecting a header (Inherited from,
- *        Pseudo-elements, …), the text of said header
- */
-function checkRuleViewContent(view, expectedElements) {
-  const elements = Array.from(view.element.children);
-  is(
-    elements.length,
-    expectedElements.length,
-    "All expected elements are displayed"
-  );
-
-  for (let i = 0; i < expectedElements.length; i++) {
-    const expectedElement = expectedElements[i];
-    info(`Checking element #${i}: ${expectedElement.selector}`);
-
-    const element = elements[i];
-
-    if (element.matches(".ruleview-header")) {
-      is(
-        element.textContent,
-        expectedElement.header,
-        `Expected header text for element #${i}`
-      );
-      continue;
-    }
-
-    const selector = element.querySelector(
-      ".ruleview-selectors-container"
-    ).innerText;
-    is(selector, expectedElement.selector, `Expected selector for ${selector}`);
-
-    const ancestorData = element.querySelector(`.ruleview-rule-ancestor-data`);
-    if (expectedElement.ancestorRulesData == null) {
-      is(
-        ancestorData,
-        null,
-        `No ancestor rules data displayed for ${selector}`
-      );
-    } else {
-      is(
-        ancestorData.innerText,
-        expectedElement.ancestorRulesData.join("\n"),
-        `Expected ancestor rules data displayed for ${selector}`
-      );
-    }
-
-    const declarations = element.querySelectorAll(".ruleview-property");
-    is(
-      declarations.length,
-      expectedElement.declarations.length,
-      "Got the expected number of declarations"
-    );
-    for (let j = 0; j < declarations.length; j++) {
-      const expectedDeclaration = expectedElement.declarations[j];
-      const [propName, propValue] = Array.from(
-        declarations[j].querySelectorAll(
-          ".ruleview-propertyname, .ruleview-propertyvalue"
-        )
-      );
-      is(
-        propName.innerText,
-        expectedDeclaration?.name,
-        "Got expected property name"
-      );
-      is(
-        propValue.innerText,
-        expectedDeclaration?.value,
-        "Got expected property value"
-      );
-    }
-  }
-}
