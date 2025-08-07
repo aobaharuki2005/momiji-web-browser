@@ -59,6 +59,16 @@ add_task(async function test_distrust_after() {
 
   let int_cert = addCertFromFile(gCertDb, "test_trust_anchors/int.pem", ",,");
   notEqual(int_cert, null, "Intermediate cert should have successfully loaded");
+  let int_cert_by_ca2 = addCertFromFile(
+    gCertDb,
+    "test_trust_anchors/int-by-ca2.pem",
+    ",,"
+  );
+  notEqual(
+    int_cert_by_ca2,
+    null,
+    "Intermediate cert issued by ca2 should have successfully loaded"
+  );
 
   // A certificate with a notBefore before the distrustAfter date
   // should verify.
