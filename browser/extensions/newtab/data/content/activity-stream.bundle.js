@@ -5087,6 +5087,7 @@ const PromoCard = () => {
 
 
 const PREF_TRENDING_VARIANT = "trendingSearch.variant";
+const PREF_REFINED_CARDS_LAYOUT = "discoverystream.refinedCardsLayout.enabled";
 function TrendingSearches() {
   const [showContextMenu, setShowContextMenu] = (0,external_React_namespaceObject.useState)(false);
   // The keyboard access parameter is passed down to LinkMenu component
@@ -5105,6 +5106,7 @@ function TrendingSearches() {
     collapsed
   } = TrendingSearch;
   const variant = prefs[PREF_TRENDING_VARIANT];
+  const refinedCards = prefs[PREF_REFINED_CARDS_LAYOUT];
   let resultRef = (0,external_React_namespaceObject.useRef)([]);
   let contextMenuHost = (0,external_React_namespaceObject.useRef)(null);
   const TRENDING_SEARCH_CONTEXT_MENU_OPTIONS = ["TrendingSearchDismiss", "TrendingSearchLearnMore"];
@@ -5278,7 +5280,7 @@ function TrendingSearches() {
     }, suggestions.slice(0, 6).map((result, index) => {
       return /*#__PURE__*/external_React_default().createElement("li", {
         key: result.suggestion,
-        className: "trending-searches-list-item",
+        className: `trending-searches-list-item ${refinedCards ? "compact" : ""}`,
         onKeyDown: e => handleResultKeyDown(e, index)
       }, /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
         url: result.searchUrl,
