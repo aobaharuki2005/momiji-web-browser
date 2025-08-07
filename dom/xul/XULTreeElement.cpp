@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsITreeSelection.h"
+#include "nsScrollbarFrame.h"
 #include "nsTreeBodyFrame.h"
 #include "nsTreeContentView.h"
 
@@ -399,6 +400,33 @@ void XULTreeElement::RemoveImageCacheEntry(int32_t aRowIndex,
   if (body) {
     body->RemoveImageCacheEntry(aRowIndex, &aCol);
   }
+}
+
+nsScrollbarFrame* FindScrollbar(const XULTreeElement* aTree) {
+  auto* shadow = aTree->GetShadowRoot();
+  if (!shadow) {
+    return nullptr;
+  }
+  for (nsINode* cur = shadow; cur; cur = cur->GetNextNode(shadow)) {
+    if (cur->IsXULElement(nsGkAtoms::scrollbar)) {
+      return do_QueryFrame(cur->AsElement()->GetPrimaryFrame());
+    }
+  }
+  return nullptr;
+}
+
+int32_t XULTreeElement::ScrollbarPosition() const {
+  if (auto* sb = FindScrollbar(this)) {
+    return sb->GetCurPos();
+  }
+  return 0;
+}
+
+int32_t XULTreeElement::ScrollbarMaxPosition() const {
+  if (auto* sb = FindScrollbar(this)) {
+    return sb->GetMaxPos();
+  }
+  return 0;
 }
 
 }  // namespace mozilla::dom
