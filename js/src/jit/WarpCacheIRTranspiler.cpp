@@ -1681,6 +1681,14 @@ bool WarpCacheIRTranspiler::emitLoadBooleanResult(bool val) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadValueResult(uint32_t valOffset) {
+  // This op is currently not used for nursery-allocated values.
+  ValueOrNurseryValueIndex val = valueStubField(valOffset);
+  MOZ_RELEASE_ASSERT(val.isValue(), "Unexpected nursery Value");
+  pushResult(constant(val.toValue()));
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadInt32Constant(uint32_t valOffset,
                                                   Int32OperandId resultId) {
   int32_t val = int32StubField(valOffset);

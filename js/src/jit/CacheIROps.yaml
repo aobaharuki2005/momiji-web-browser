@@ -3273,7 +3273,7 @@
 
 - name: LoadValueResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     val: ValueField
