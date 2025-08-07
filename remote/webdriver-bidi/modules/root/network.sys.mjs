@@ -538,7 +538,14 @@ class NetworkModule extends RootBiDiModule {
           contextId,
           lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
         );
-        navigables.add(this.#getBrowsingContext(contextId));
+        const context = this.#getBrowsingContext(contextId);
+
+        lazy.assert.topLevel(
+          context,
+          lazy.pprint`Browsing context with id ${contextId} is not top-level`
+        );
+
+        navigables.add(contextId);
       }
     }
 
@@ -563,7 +570,7 @@ class NetworkModule extends RootBiDiModule {
           );
         }
 
-        userContexts.add(internalId);
+        userContexts.add(userContextId);
       }
     }
 
@@ -2035,22 +2042,15 @@ class NetworkModule extends RootBiDiModule {
    *     otherwise.
    */
   #matchCollectorForNavigable(collector, navigable) {
-    // If collector’s contexts is not empty:
-    if (collector.contexts.length) {
+    if (collector.contexts.size) {
       const navigableId = lazy.TabManager.getIdForBrowsingContext(navigable);
-      //     If collector’s contexts contains navigable’s navigable id, return true.
-      //     Otherwise, return false.
-      return collector.contexts.includes(navigableId);
+      return collector.contexts.has(navigableId);
     }
 
-    // If collector’s user contexts is not empty:
-    if (collector.userContexts.length) {
-      //     Let user context be navigable’s associated user context.
-      //     If collector’s user contexts contains user context’s user context id, return true.
-      //     Otherwise, return false.
+    if (collector.userContexts.size) {
       const userContext =
         lazy.UserContextManager.getIdByBrowsingContext(navigable);
-      return collector.userContexts.includes(userContext);
+      return collector.userContexts.has(userContext);
     }
 
     // Return true.
