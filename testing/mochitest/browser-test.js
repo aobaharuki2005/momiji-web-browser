@@ -1293,22 +1293,35 @@ Tester.prototype = {
     // Allow for a task to be skipped; we need only use the structured logger
     // for this, whilst deactivating log buffering to ensure that messages
     // are always printed to stdout.
-    let skipTask = task => {
+    let skipTask = (task, reason) => {
       let logger = this.structuredLogger;
       logger.deactivateBuffering();
       logger.testStatus(this.currentTest.path, task.name, "SKIP");
-      logger.warning("Skipping test " + task.name);
+      let message = "Skipping test " + task.name;
+      if (reason) {
+        message += ` because the following conditions were met: (${reason})`;
+      }
+      logger.warning(message);
       logger.activateBuffering();
     };
 
     let task;
     while ((task = currentScope.__tasks.shift())) {
+      let reason;
+      let shouldSkip = false;
       if (
         task.__skipMe ||
         (currentScope.__runOnlyThisTask &&
           task != currentScope.__runOnlyThisTask)
       ) {
-        skipTask(task);
+        shouldSkip = true;
+      } else if (typeof task.__skip_if === "function" && task.__skip_if()) {
+        shouldSkip = true;
+        reason = task.__skip_if.toSource().replace(/\(\)\s*=>\s*/, "");
+      }
+
+      if (shouldSkip) {
+        skipTask(task, reason);
         continue;
       }
       await this.handleTask(task, currentTest, this.PromiseTestUtils);
@@ -1991,13 +2004,29 @@ testScope.prototype = {
    *
    *   is(result, "foo");
    * });
+   *
+   * add_task({
+   *   skip_if: () => !AppConstants.DEBUG,
+   * },
+   * async function test_debug_only() {
+   *   ok(true, "Test ran in a debug build");
+   * });
    */
-  add_task(aFunction) {
+  add_task(properties, func = properties) {
     if (!this.__tasks) {
       this.waitForExplicitFinish();
       this.__tasks = [];
     }
-    let bound = decorateTaskFn.call(this, aFunction);
+
+    let bound = decorateTaskFn.call(this, func);
+
+    if (
+      typeof properties === "object" &&
+      typeof properties.skip_if === "function"
+    ) {
+      bound.__skip_if = properties.skip_if;
+    }
+
     this.__tasks.push(bound);
     return bound;
   },
