@@ -1,450 +1,97 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 6 Aug 2025 16:35:57 -0500
-Subject: (tmp-cherry-pick) Revert "[android] Allow to configure field trials
- per PeerConnectionFactory" (c75b14092e)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Tom Van Goethem <tov@google.com>
+Date: Mon, 12 May 2025 03:34:59 -0700
+Subject: (cherry-pick-branch-heads/7151) [M137] Add metrics for restricted
+ candidates
 
-This reverts commit 799d64b003ef0e23814efb0f09d15e0fabdf89f6.
+This adds two UMA metrics for the type of SDP munging that occurred and
+the port of the candidate that was restricted. The metrics descriptions
+are being added here: crrev.com/c/6521706.
 
-Reason for revert: fallback to global field trials probably is incorrect, causing PeerConnectionFactory be misconfigured.
+(cherry picked from commit d5b3b1ed4594821451d2ebb1d61cc1e6dab83b56)
 
-Bug: webrtc:369904700, webrtc:413413572
-Original change's description:
-> [android] Allow to configure field trials per PeerConnectionFactory
->
-> Provide webrtc::Environment to create AudioProcessing and
-> AudioDeviceModule through java layer
->
-> Bug: webrtc:369904700, webrtc:413413572
-> Change-Id: I79454ceb9706fb9c79c995dc7ce8d65924ff84d0
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/388620
-> Reviewed-by: Zoé Lepaul <xalep@webrtc.org>
-> Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#44520}
-
-Bug: webrtc:369904700, webrtc:413413572
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Change-Id: I69beefb2af090d026ad4e75fa025754d9a2cda81
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390100
-Owners-Override: Danil Chapovalov <danilchap@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#44525}
+Bug: b/409713509
+Fixed: b/417142969
+Change-Id: I3232cb0cee6848074ab103f4d4edb2e080e09568
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390340
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Reviewed-by: Johannes Kron <kron@webrtc.org>
+Commit-Queue: Tom Van Goethem <tov@google.com>
+Cr-Original-Commit-Position: refs/heads/main@{#44559}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390920
+Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/7151@{#2}
+Cr-Branched-From: dc428bd75f2ca847b165b2556970c9bcd5037c5b-refs/heads/main@{#44472}
 ---
- sdk/android/BUILD.gn                          | 30 -----------
- .../org/webrtc/AudioProcessingFactory.java    | 11 +---
- sdk/android/api/org/webrtc/Environment.java   | 53 -------------------
- .../api/org/webrtc/PeerConnectionFactory.java | 51 ++++++++----------
- .../org/webrtc/audio/AudioDeviceModule.java   |  9 +---
- .../org/webrtc/PeerConnectionFactoryTest.java | 27 ----------
- sdk/android/src/jni/environment.cc            | 40 --------------
- .../src/jni/pc/peer_connection_factory.cc     | 11 ++--
- 8 files changed, 26 insertions(+), 206 deletions(-)
- delete mode 100644 sdk/android/api/org/webrtc/Environment.java
- delete mode 100644 sdk/android/src/jni/environment.cc
+ pc/sdp_munging_detector_unittest.cc | 16 ++++++++++++++++
+ pc/sdp_offer_answer.cc              | 12 ++++++++++++
+ 2 files changed, 28 insertions(+)
 
-diff --git a/sdk/android/BUILD.gn b/sdk/android/BUILD.gn
-index 0d0f973218..d9ca1e008b 100644
---- a/sdk/android/BUILD.gn
-+++ b/sdk/android/BUILD.gn
-@@ -117,7 +117,6 @@ if (is_android) {
-       ":base_jni",
-       ":builtin_audio_codecs_jni",
-       ":default_video_codec_factory_jni",
--      ":environment_jni",
-       ":java_audio_device_module_jni",
-       ":peerconnection_jni",
-       ":video_jni",
-@@ -183,15 +182,6 @@ if (is_android) {
-     ]
-   }
+diff --git a/pc/sdp_munging_detector_unittest.cc b/pc/sdp_munging_detector_unittest.cc
+index a06735b6f8..88fa93e0f2 100644
+--- a/pc/sdp_munging_detector_unittest.cc
++++ b/pc/sdp_munging_detector_unittest.cc
+@@ -17,8 +17,11 @@
+ #include <utility>
+ #include <vector>
  
--  rtc_android_library("environment_java") {
--    visibility = [ "*" ]
--    sources = [ "api/org/webrtc/Environment.java" ]
--    deps = [
--      ":generated_environment_jni_java",
--      "//third_party/androidx:androidx_annotation_annotation_java",
--    ]
--  }
--
-   rtc_android_library("audio_api_java") {
-     visibility = [ "*" ]
-     sources = [
-@@ -340,7 +330,6 @@ if (is_android) {
-       ":base_java",
-       ":builtin_audio_codecs_java",
-       ":default_video_codec_factory_java",
--      ":environment_java",
-       ":generated_base_jni_java",
-       ":generated_peerconnection_jni_java",
++#include "absl/strings/numbers.h"
+ #include "absl/strings/str_cat.h"
+ #include "absl/strings/str_replace.h"
++#include "absl/strings/str_split.h"
++#include "absl/strings/string_view.h"
+ #include "api/audio_codecs/audio_format.h"
+ #include "api/audio_codecs/builtin_audio_decoder_factory.h"
+ #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+@@ -375,6 +378,7 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
+       {"127.0.1.1:23456", true},  {"8.8.8.8:3456", true},
+   };
  
-@@ -627,18 +616,6 @@ if (current_os == "linux" || is_android) {
-     ]
-   }
- 
--  rtc_library("environment_jni") {
--    sources = [ "src/jni/environment.cc" ]
--    deps = [
--      ":generated_environment_jni",
--      ":native_api_jni",
--      "../../api:field_trials",
--      "../../api/environment",
--      "../../api/environment:environment_factory",
--      "//third_party/jni_zero",
--    ]
--  }
--
-   rtc_library("builtin_audio_codecs_jni") {
-     visibility = [ "*" ]
-     allow_poison = [ "audio_codecs" ]
-@@ -828,7 +805,6 @@ if (current_os == "linux" || is_android) {
-       "../../api/audio:builtin_audio_processing_builder",
-       "../../api/audio_codecs:audio_codecs_api",
-       "../../api/crypto:options",
--      "../../api/environment",
-       "../../api/neteq:neteq_api",
-       "../../api/rtc_event_log:rtc_event_log_factory",
-       "../../api/task_queue:default_task_queue_factory",
-@@ -1343,12 +1319,6 @@ if (current_os == "linux" || is_android) {
-     jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
--  generate_jni("generated_environment_jni") {
--    sources = [ "api/org/webrtc/Environment.java" ]
--    namespace = "webrtc::jni"
--    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
--  }
--
-   generate_jni("generated_metrics_jni") {
-     sources = [ "api/org/webrtc/Metrics.java" ]
-     namespace = "webrtc::jni"
-diff --git a/sdk/android/api/org/webrtc/AudioProcessingFactory.java b/sdk/android/api/org/webrtc/AudioProcessingFactory.java
-index e0aa25b87f..bd8fdb8989 100644
---- a/sdk/android/api/org/webrtc/AudioProcessingFactory.java
-+++ b/sdk/android/api/org/webrtc/AudioProcessingFactory.java
-@@ -16,14 +16,5 @@ public interface AudioProcessingFactory {
-    * Dynamically allocates a webrtc::AudioProcessing instance and returns a pointer to it.
-    * The caller takes ownership of the object.
-    */
--  // TODO: bugs.webrtc.org/369904700 - Remove when implementations switch to
--  // another variant.
--  @Deprecated
--  public default long createNative() {
--    return 0;
--  }
--
--  public default long createNative(long webrtcEnvRef) {
--    return createNative();
--  }
-+  public long createNative();
- }
-diff --git a/sdk/android/api/org/webrtc/Environment.java b/sdk/android/api/org/webrtc/Environment.java
-deleted file mode 100644
-index 88cef4f6da..0000000000
---- a/sdk/android/api/org/webrtc/Environment.java
-+++ /dev/null
-@@ -1,53 +0,0 @@
--/*
-- *  Copyright 2025 The WebRTC project authors. All Rights Reserved.
-- *
-- *  Use of this source code is governed by a BSD-style license
-- *  that can be found in the LICENSE file in the root of the source
-- *  tree. An additional intellectual property rights grant can be found
-- *  in the file PATENTS.  All contributing project authors may
-- *  be found in the AUTHORS file in the root of the source tree.
-- */
--
--package org.webrtc;
--
--import androidx.annotation.Nullable;
--
--/** Wrapper for the webrtc::Environment native class. */
--public final class Environment implements AutoCloseable {
--  private final long webrtcEnv;
--
--  public static class Builder {
--    Builder setFieldTrials(String fieldTrials) {
--      this.fieldTrials = fieldTrials;
--      return this;
--    }
--
--    Environment build() {
--      return new Environment(this.fieldTrials);
--    }
--
--    private @Nullable String fieldTrials;
--  }
--
--  public static Builder builder() {
--    return new Builder();
--  }
--
--  /** Returns non-owning non-null native pointer to the webrtc::Environment */
--  public long ref() {
--    return webrtcEnv;
--  }
--
--  @Override
--  public void close() {
--    nativeFree(webrtcEnv);
--  }
--
--  private Environment(@Nullable String fieldTrials) {
--    this.webrtcEnv = nativeCreate(fieldTrials);
--  }
--
--  private static native long nativeCreate(@Nullable String fieldTrials);
--
--  private static native void nativeFree(long webrtcEnv);
--}
-diff --git a/sdk/android/api/org/webrtc/PeerConnectionFactory.java b/sdk/android/api/org/webrtc/PeerConnectionFactory.java
-index eac3bb02a0..2b2ea155c1 100644
---- a/sdk/android/api/org/webrtc/PeerConnectionFactory.java
-+++ b/sdk/android/api/org/webrtc/PeerConnectionFactory.java
-@@ -15,6 +15,9 @@ import android.os.Process;
- import androidx.annotation.Nullable;
- import java.util.List;
- import org.webrtc.Logging.Severity;
-+import org.webrtc.MediaStreamTrack;
-+import org.webrtc.PeerConnection;
-+import org.webrtc.RtpCapabilities;
- import org.webrtc.audio.AudioDeviceModule;
- import org.webrtc.audio.JavaAudioDeviceModule;
- 
-@@ -163,7 +166,6 @@ public class PeerConnectionFactory {
- 
-   public static class Builder {
-     @Nullable private Options options;
--    private Environment.Builder envBuilder = Environment.builder();
-     @Nullable private AudioDeviceModule audioDeviceModule;
-     private AudioEncoderFactoryFactory audioEncoderFactoryFactory =
-         new BuiltinAudioEncoderFactoryFactory();
-@@ -184,11 +186,6 @@ public class PeerConnectionFactory {
-       return this;
++  int num_blocked = 0;
+   for (const auto& address_test : address_tests) {
+     std::optional<RTCError> result;
+     const std::string candidate = StringFormat(
+@@ -390,8 +394,20 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
+     if (address_test.second == true) {
+       EXPECT_TRUE(result.value().ok());
+     } else {
++      std::pair<absl::string_view, absl::string_view> host =
++          absl::StrSplit(address_test.first, ":");
++      int port;
++      ASSERT_TRUE(absl::SimpleAtoi(host.second, &port));
+       EXPECT_FALSE(result.value().ok());
+       EXPECT_EQ(result.value().type(), RTCErrorType::UNSUPPORTED_OPERATION);
++      num_blocked++;
++      EXPECT_THAT(
++          metrics::Samples(
++              "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType"),
++          ElementsAre(Pair(SdpMungingType::kIceUfrag, num_blocked)));
++      EXPECT_THAT(
++          metrics::Samples("WebRTC.PeerConnection.RestrictedCandidates.Port"),
++          Contains(Pair(port, 1)));
      }
- 
--    public Builder setFieldTrials(String fieldTrials) {
--      envBuilder.setFieldTrials(fieldTrials);
--      return this;
--    }
--
-     public Builder setAudioDeviceModule(AudioDeviceModule audioDeviceModule) {
-       this.audioDeviceModule = audioDeviceModule;
-       return this;
-@@ -264,30 +261,24 @@ public class PeerConnectionFactory {
- 
-     public PeerConnectionFactory createPeerConnectionFactory() {
-       checkInitializeHasBeenCalled();
--      try (Environment env = envBuilder.build()) {
--        if (audioDeviceModule == null) {
--          audioDeviceModule = JavaAudioDeviceModule.builder(ContextUtils.getApplicationContext())
--                                  .createAudioDeviceModule();
--        }
--        return nativeCreatePeerConnectionFactory(
--            ContextUtils.getApplicationContext(),
--            options,
--            env.ref(),
--            audioDeviceModule.getNative(env.ref()),
--            audioEncoderFactoryFactory.createNativeAudioEncoderFactory(),
--            audioDecoderFactoryFactory.createNativeAudioDecoderFactory(),
--            videoEncoderFactory,
--            videoDecoderFactory,
--            audioProcessingFactory == null ? 0 : audioProcessingFactory.createNative(env.ref()),
--            fecControllerFactoryFactory == null ? 0 : fecControllerFactoryFactory.createNative(),
--            networkControllerFactoryFactory == null
--                ? 0
--                : networkControllerFactoryFactory.createNativeNetworkControllerFactory(),
--            networkStatePredictorFactoryFactory == null
--                ? 0
--                : networkStatePredictorFactoryFactory.createNativeNetworkStatePredictorFactory(),
--            neteqFactoryFactory == null ? 0 : neteqFactoryFactory.createNativeNetEqFactory());
-+      if (audioDeviceModule == null) {
-+        audioDeviceModule = JavaAudioDeviceModule.builder(ContextUtils.getApplicationContext())
-+                                .createAudioDeviceModule();
+   }
+ }
+diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
+index 6f19d1bee6..22da12b0c8 100644
+--- a/pc/sdp_offer_answer.cc
++++ b/pc/sdp_offer_answer.cc
+@@ -5344,6 +5344,18 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
+         RTC_LOG(LS_ERROR) << "ReadyToUseRemoteCandidate: Candidate not valid "
+                              "because of SDP munging.";
+         *valid = false;
++        // There might be other types of SDP munging, but here we're only
++        // interested in IceUfrag and IcePwd.
++        SdpMungingType sdp_munging_type =
++            last_sdp_munging_type_ == SdpMungingType::kIcePwd
++                ? SdpMungingType::kIcePwd
++                : SdpMungingType::kIceUfrag;
++        RTC_HISTOGRAM_ENUMERATION_SPARSE(
++            "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType",
++            sdp_munging_type, SdpMungingType::kMaxValue);
++        RTC_HISTOGRAM_ENUMERATION_SPARSE(
++            "WebRTC.PeerConnection.RestrictedCandidates.Port",
++            candidate->candidate().address().port(), 65536);
+         return false;
        }
-+      return nativeCreatePeerConnectionFactory(ContextUtils.getApplicationContext(), options,
-+          audioDeviceModule.getNativeAudioDeviceModulePointer(),
-+          audioEncoderFactoryFactory.createNativeAudioEncoderFactory(),
-+          audioDecoderFactoryFactory.createNativeAudioDecoderFactory(), videoEncoderFactory,
-+          videoDecoderFactory,
-+          audioProcessingFactory == null ? 0 : audioProcessingFactory.createNative(),
-+          fecControllerFactoryFactory == null ? 0 : fecControllerFactoryFactory.createNative(),
-+          networkControllerFactoryFactory == null
-+              ? 0
-+              : networkControllerFactoryFactory.createNativeNetworkControllerFactory(),
-+          networkStatePredictorFactoryFactory == null
-+              ? 0
-+              : networkStatePredictorFactoryFactory.createNativeNetworkStatePredictorFactory(),
-+          neteqFactoryFactory == null ? 0 : neteqFactoryFactory.createNativeNetEqFactory());
      }
-   }
- 
-@@ -613,7 +604,7 @@ public class PeerConnectionFactory {
-   private static native void nativeStopInternalTracingCapture();
- 
-   private static native PeerConnectionFactory nativeCreatePeerConnectionFactory(Context context,
--      Options options, long webrtcEnvRef, long nativeAudioDeviceModule, long audioEncoderFactory,
-+      Options options, long nativeAudioDeviceModule, long audioEncoderFactory,
-       long audioDecoderFactory, VideoEncoderFactory encoderFactory,
-       VideoDecoderFactory decoderFactory, long nativeAudioProcessor,
-       long nativeFecControllerFactory, long nativeNetworkControllerFactory,
-diff --git a/sdk/android/api/org/webrtc/audio/AudioDeviceModule.java b/sdk/android/api/org/webrtc/audio/AudioDeviceModule.java
-index ba5097d6c8..5a0bf5c74d 100644
---- a/sdk/android/api/org/webrtc/audio/AudioDeviceModule.java
-+++ b/sdk/android/api/org/webrtc/audio/AudioDeviceModule.java
-@@ -22,14 +22,7 @@ public interface AudioDeviceModule {
-    * Returns a C++ pointer to a webrtc::AudioDeviceModule. Caller does _not_ take ownership and
-    * lifetime is handled through the release() call.
-    */
--  @Deprecated
--  default long getNativeAudioDeviceModulePointer() {
--    return 0;
--  }
--
--  public default long getNative(long webrtcEnvRef) {
--    return getNativeAudioDeviceModulePointer();
--  }
-+  long getNativeAudioDeviceModulePointer();
- 
-   /**
-    * Release resources for this AudioDeviceModule, including native resources. The object should not
-diff --git a/sdk/android/instrumentationtests/src/org/webrtc/PeerConnectionFactoryTest.java b/sdk/android/instrumentationtests/src/org/webrtc/PeerConnectionFactoryTest.java
-index 1e36fef760..a28b9c25ff 100644
---- a/sdk/android/instrumentationtests/src/org/webrtc/PeerConnectionFactoryTest.java
-+++ b/sdk/android/instrumentationtests/src/org/webrtc/PeerConnectionFactoryTest.java
-@@ -62,31 +62,4 @@ public class PeerConnectionFactoryTest {
-                                          .createInitializationOptions());
-     PeerConnectionFactory.shutdownInternalTracer();
-   }
--
--  // Tests that the JNI glue between Java and C++ does not crash when creating a
--  // PeerConnectionFactory.
--  @Test
--  @SmallTest
--  public void testCreation() throws Exception {
--    PeerConnectionFactory.initialize(
--        PeerConnectionFactory.InitializationOptions.builder(
--                InstrumentationRegistry.getTargetContext())
--            .setNativeLibraryName(TestConstants.NATIVE_LIBRARY)
--            .createInitializationOptions());
--
--    PeerConnectionFactory factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
--  }
--
--  @Test
--  @SmallTest
--  public void testCreationWithFieldTrials() throws Exception {
--    PeerConnectionFactory.initialize(
--        PeerConnectionFactory.InitializationOptions.builder(
--                InstrumentationRegistry.getTargetContext())
--            .setNativeLibraryName(TestConstants.NATIVE_LIBRARY)
--            .createInitializationOptions());
--
--    PeerConnectionFactory factory =
--        PeerConnectionFactory.builder().setFieldTrials("").createPeerConnectionFactory();
--  }
- }
-diff --git a/sdk/android/src/jni/environment.cc b/sdk/android/src/jni/environment.cc
-deleted file mode 100644
-index adf5fbca20..0000000000
---- a/sdk/android/src/jni/environment.cc
-+++ /dev/null
-@@ -1,40 +0,0 @@
--/*
-- *  Copyright 2025 The WebRTC project authors. All Rights Reserved.
-- *
-- *  Use of this source code is governed by a BSD-style license
-- *  that can be found in the LICENSE file in the root of the source
-- *  tree. An additional intellectual property rights grant can be found
-- *  in the file PATENTS.  All contributing project authors may
-- *  be found in the AUTHORS file in the root of the source tree.
-- */
--#include "api/environment/environment.h"
--
--#include <string>
--
--#include "api/environment/environment_factory.h"
--#include "api/field_trials.h"
--#include "sdk/android/generated_environment_jni/Environment_jni.h"
--#include "sdk/android/native_api/jni/java_types.h"
--#include "third_party/jni_zero/jni_zero.h"
--
--namespace webrtc {
--namespace jni {
--
--void JNI_Environment_Free(JNIEnv* /*env*/, jlong webrtc_env) {
--  delete reinterpret_cast<Environment*>(webrtc_env);
--}
--
--jlong JNI_Environment_Create(
--    JNIEnv* jni,
--    const jni_zero::JavaParamRef<jstring>& j_field_trials) {
--  std::unique_ptr<FieldTrialsView> field_trials;
--  if (!j_field_trials.is_null()) {
--    field_trials =
--        FieldTrials::CreateNoGlobal(JavaToNativeString(jni, j_field_trials));
--  }
--  return NativeToJavaPointer(
--      new Environment(CreateEnvironment(std::move(field_trials))));
--}
--
--}  // namespace jni
--}  // namespace webrtc
-diff --git a/sdk/android/src/jni/pc/peer_connection_factory.cc b/sdk/android/src/jni/pc/peer_connection_factory.cc
-index 80b92046c4..f05259b478 100644
---- a/sdk/android/src/jni/pc/peer_connection_factory.cc
-+++ b/sdk/android/src/jni/pc/peer_connection_factory.cc
-@@ -29,7 +29,6 @@
- #include "api/audio_codecs/audio_encoder_factory.h"
- #include "api/audio_options.h"
- #include "api/enable_media.h"
--#include "api/environment/environment.h"
- #include "api/fec_controller.h"
- #include "api/media_stream_interface.h"
- #include "api/neteq/neteq_factory.h"
-@@ -257,7 +256,6 @@ ScopedJavaLocalRef<jobject> CreatePeerConnectionFactoryForJava(
-     JNIEnv* jni,
-     const jni_zero::JavaParamRef<jobject>& jcontext,
-     const jni_zero::JavaParamRef<jobject>& joptions,
--    const Environment& env,
-     scoped_refptr<AudioDeviceModule> audio_device_module,
-     scoped_refptr<AudioEncoderFactory> audio_encoder_factory,
-     scoped_refptr<AudioDecoderFactory> audio_decoder_factory,
-@@ -294,8 +292,8 @@ ScopedJavaLocalRef<jobject> CreatePeerConnectionFactoryForJava(
-       JavaToNativePeerConnectionFactoryOptions(jni, joptions);
- 
-   PeerConnectionFactoryDependencies dependencies;
--  dependencies.env = env;
--  dependencies.socket_factory = socket_server.get();
-+  // TODO(bugs.webrtc.org/13145): Also add socket_server.get() to the
-+  // dependencies.
-   dependencies.network_thread = network_thread.get();
-   dependencies.worker_thread = worker_thread.get();
-   dependencies.signaling_thread = signaling_thread.get();
-@@ -349,7 +347,6 @@ JNI_PeerConnectionFactory_CreatePeerConnectionFactory(
-     JNIEnv* jni,
-     const jni_zero::JavaParamRef<jobject>& jcontext,
-     const jni_zero::JavaParamRef<jobject>& joptions,
--    jlong webrtc_env_ref,
-     jlong native_audio_device_module,
-     jlong native_audio_encoder_factory,
-     jlong native_audio_decoder_factory,
-@@ -360,12 +357,10 @@ JNI_PeerConnectionFactory_CreatePeerConnectionFactory(
-     jlong native_network_controller_factory,
-     jlong native_network_state_predictor_factory,
-     jlong native_neteq_factory) {
--  const Environment* env = reinterpret_cast<Environment*>(webrtc_env_ref);
--  RTC_CHECK(env != nullptr);
-   scoped_refptr<AudioProcessing> audio_processor(
-       reinterpret_cast<AudioProcessing*>(native_audio_processor));
-   return CreatePeerConnectionFactoryForJava(
--      jni, jcontext, joptions, *env,
-+      jni, jcontext, joptions,
-       scoped_refptr<AudioDeviceModule>(
-           reinterpret_cast<AudioDeviceModule*>(native_audio_device_module)),
-       TakeOwnershipOfRefPtr<AudioEncoderFactory>(native_audio_encoder_factory),
