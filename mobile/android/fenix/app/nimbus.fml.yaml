@@ -886,6 +886,9 @@ features:
       - channel: developer
         value:
           enabled: true
+      - channel: nightly
+        value:
+          enabled: true
 
   toolbar-redesign-option:
     description: Control the visibility of toolbar redesign option in settings.
