@@ -5597,7 +5597,7 @@ static bool ValueNeedsPostBarrier(MDefinition* def) {
 
 void CodeGenerator::emitElementPostWriteBarrier(
     MInstruction* mir, const LiveRegisterSet& liveVolatileRegs, Register obj,
-    const LAllocation* index, Register scratch, const ConstantOrRegister& val,
+    Register index, Register scratch, const ConstantOrRegister& val,
     int32_t indexDiff) {
   if (val.constant()) {
     MOZ_ASSERT_IF(val.value().isGCThing(),
@@ -5613,33 +5613,21 @@ void CodeGenerator::emitElementPostWriteBarrier(
   auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
     masm.PushRegsInMask(liveVolatileRegs);
 
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
-    regs.takeUnchecked(obj);
-    regs.takeUnchecked(scratch);
-
-    Register indexReg;
-    if (index->isConstant()) {
-      indexReg = regs.takeAny();
-      masm.move32(Imm32(ToInt32(index) + indexDiff), indexReg);
-    } else {
-      indexReg = ToRegister(index);
-      regs.takeUnchecked(indexReg);
-      if (indexDiff != 0) {
-        masm.add32(Imm32(indexDiff), indexReg);
-      }
+    if (indexDiff != 0) {
+      masm.add32(Imm32(indexDiff), index);
     }
 
     masm.setupUnalignedABICall(scratch);
     masm.movePtr(ImmPtr(gen->runtime), scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(obj);
-    masm.passABIArg(indexReg);
+    masm.passABIArg(index);
     using Fn = void (*)(JSRuntime* rt, JSObject* obj, int32_t index);
     masm.callWithABI<Fn, PostWriteElementBarrier>();
 
-    // We don't need a sub32 here because indexReg must be in liveVolatileRegs
+    // We don't need a sub32 here because index must be in liveVolatileRegs
     // if indexDiff is not zero, so it will be restored below.
-    MOZ_ASSERT_IF(indexDiff != 0, liveVolatileRegs.has(indexReg));
+    MOZ_ASSERT_IF(indexDiff != 0, liveVolatileRegs.has(index));
 
     masm.PopRegsInMask(liveVolatileRegs);
 
@@ -15382,7 +15370,7 @@ void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
     LiveRegisterSet regs = liveVolatileRegs(lir);
     ConstantOrRegister val =
         ToConstantOrRegister(lir->value(), lir->mir()->value()->type());
-    emitElementPostWriteBarrier(lir->mir(), regs, obj, lir->index(), temp, val);
+    emitElementPostWriteBarrier(lir->mir(), regs, obj, index, temp, val);
   }
 }
 
@@ -15415,7 +15403,7 @@ void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
 
   if (ValueNeedsPostBarrier(lir->mir()->value())) {
     LiveRegisterSet regs = liveVolatileRegs(lir);
-    emitElementPostWriteBarrier(lir->mir(), regs, obj, lir->index(), temp,
+    emitElementPostWriteBarrier(lir->mir(), regs, obj, index, temp,
                                 ConstantOrRegister(value));
   }
 }
@@ -15502,8 +15490,8 @@ void CodeGenerator::visitArrayPush(LArrayPush* lir) {
   if (ValueNeedsPostBarrier(lir->mir()->value())) {
     LiveRegisterSet regs = liveVolatileRegs(lir);
     regs.addUnchecked(length);
-    emitElementPostWriteBarrier(lir->mir(), regs, obj, lir->output()->output(),
-                                elementsTemp, ConstantOrRegister(value),
+    emitElementPostWriteBarrier(lir->mir(), regs, obj, length, elementsTemp,
+                                ConstantOrRegister(value),
                                 /* indexDiff = */ -1);
   }
 }
