@@ -637,9 +637,13 @@ export class RemoteSettingsClient extends EventEmitter {
 
     // Filter the records based on `this.filterFunc` results.
     const final = await this._filterEntries(data);
-    lazy.console.debug(
-      `${this.identifier} ${final.length}/${data.length} records after filtering.`
-    );
+    if (final.length != data.length) {
+      lazy.console.debug(
+        `${this.identifier} ${final.length}/${data.length} records after filtering.`
+      );
+    } else {
+      lazy.console.debug(`${this.identifier} ${data.length} records.`);
+    }
     return final;
   }
 
@@ -904,9 +908,19 @@ export class RemoteSettingsClient extends EventEmitter {
             throw e;
           }
         } else {
-          lazy.console.info(
-            `All changes are filtered by JEXL expressions for ${this.identifier}`
-          );
+          // Check if `syncResult` had changes before filtering to adjust logging message.
+          const wasFiltered =
+            syncResult.created.length +
+              syncResult.updated.length +
+              syncResult.deleted.length >
+            0;
+          if (wasFiltered) {
+            lazy.console.info(
+              `${this.identifier} All sync changes are filtered by JEXL expressions`
+            );
+          } else {
+            lazy.console.info(`${this.identifier} No changes during sync`);
+          }
         }
       }
     } catch (e) {
