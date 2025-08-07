@@ -186,6 +186,7 @@ def taskgraph_decision(options, parameters=None):
         parameters=parameters,
         decision_task_id=decision_task_id,
         write_artifacts=True,
+        enable_verifications=options.get("verify", True),
     )
 
     if not create.testing:
