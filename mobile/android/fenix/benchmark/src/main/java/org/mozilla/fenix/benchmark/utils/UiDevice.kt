@@ -78,7 +78,7 @@ fun UiDevice.openTabsTray(useNewToolbar: Boolean) {
 
 fun UiDevice.openNewPrivateTabOnTabsTray() {
     val pbmButton = findObject(
-        UiSelector().text("Private")
+        UiSelector().descriptionStartsWith("Private Tabs Open:")
     )
     pbmButton.waitForExists(WAITING_TIME_MS)
     pbmButton.click()

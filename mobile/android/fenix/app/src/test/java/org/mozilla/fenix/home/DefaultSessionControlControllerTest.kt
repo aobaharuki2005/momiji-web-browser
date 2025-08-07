@@ -71,7 +71,6 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlControllerCallback
 import org.mozilla.fenix.messaging.MessageController
 import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.THUMBNAILS_SELECTION_COUNT
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperState
@@ -1562,16 +1561,6 @@ class DefaultSessionControlControllerTest {
             appStore = appStore,
             navControllerRef = WeakReference(navController),
             viewLifecycleScope = scope,
-            tabManagementFeatureHelper = object : TabManagementFeatureHelper {
-                override val enhancementsEnabledNightly: Boolean
-                    get() = false
-                override val enhancementsEnabledBeta: Boolean
-                    get() = false
-                override val enhancementsEnabledRelease: Boolean
-                    get() = false
-                override val enhancementsEnabled: Boolean
-                    get() = false
-            },
             showAddSearchWidgetPrompt = { showAddSearchWidgetPromptCalled = true },
         ).apply {
             registerCallback(object : SessionControlControllerCallback {

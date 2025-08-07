@@ -27,9 +27,9 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.settings.biometric.DefaultBiometricUtils
-import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -118,7 +118,7 @@ class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler {
 
                 val hasNormalTabs = requireComponents.core.store.state.normalTabs.isNotEmpty()
                 if (hasNormalTabs) {
-                    if (DefaultTabManagementFeatureHelper.enhancementsEnabled) {
+                    if (requireContext().settings().tabManagerEnhancementsEnabled) {
                         findNavController().navigate(
                             HomeFragmentDirections.actionGlobalTabManagementFragment(
                                 page = Page.NormalTabs,
@@ -139,7 +139,7 @@ class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler {
             NavigationOrigin.TABS_TRAY -> {
                 findNavController().popBackStack()
 
-                if (DefaultTabManagementFeatureHelper.enhancementsEnabled) {
+                if (requireContext().settings().tabManagerEnhancementsEnabled) {
                     findNavController().navigate(
                         HomeFragmentDirections.actionGlobalTabManagementFragment(
                             page = Page.NormalTabs,
@@ -167,7 +167,7 @@ class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler {
         findNavController().popBackStack()
 
         if (navigationOrigin == NavigationOrigin.TABS_TRAY) {
-            if (DefaultTabManagementFeatureHelper.enhancementsEnabled) {
+            if (requireContext().settings().tabManagerEnhancementsEnabled) {
                 findNavController().navigate(
                     HomeFragmentDirections.actionGlobalTabManagementFragment(
                         page = Page.PrivateTabs,

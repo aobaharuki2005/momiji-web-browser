@@ -50,7 +50,6 @@ import org.mozilla.fenix.search.SearchFragmentAction
 import org.mozilla.fenix.search.SearchFragmentState
 import org.mozilla.fenix.search.SearchFragmentStore
 import org.mozilla.fenix.search.createInitialSearchFragmentState
-import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.lastSavedFolderCache
@@ -287,7 +286,7 @@ class BookmarkFragment : Fragment() {
     }
 
     private fun showTabTray(openInPrivate: Boolean = false) {
-        val directions = if (DefaultTabManagementFeatureHelper.enhancementsEnabled) {
+        val directions = if (requireContext().settings().tabManagerEnhancementsEnabled) {
             BookmarkFragmentDirections.actionGlobalTabManagementFragment(
                 page = if (openInPrivate) {
                     Page.PrivateTabs
