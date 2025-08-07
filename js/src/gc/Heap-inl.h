@@ -241,57 +241,6 @@ bool js::gc::AtomicBitmap<N>::isEmpty() const {
   return true;
 }
 
-template <size_t N>
-class js::gc::AtomicBitmap<N>::Iter {
-  const AtomicBitmap& bitmap;
-  size_t bit = 0;
-
- public:
-  explicit Iter(AtomicBitmap& bitmap) : bitmap(bitmap) {
-    if (!bitmap.getBit(bit)) {
-      next();
-    }
-  }
-
-  bool done() const {
-    MOZ_ASSERT(bit <= N);
-    return bit == N;
-  }
-
-  void next() {
-    MOZ_ASSERT(!done());
-
-    bit++;
-    if (bit == N) {
-      return;
-    }
-
-    static constexpr size_t bitsPerWord = sizeof(Word) * CHAR_BIT;
-    size_t wordIndex = bit / bitsPerWord;
-    size_t bitIndex = bit % bitsPerWord;
-
-    uintptr_t word = bitmap.getWord(wordIndex);
-    // Mask word containing |bit|.
-    word &= (uintptr_t(-1) << bitIndex);
-    while (word == 0) {
-      wordIndex++;
-      if (wordIndex == WordCount) {
-        bit = N;
-        return;
-      }
-      word = bitmap.getWord(wordIndex);
-    }
-
-    bitIndex = mozilla::CountTrailingZeroes(word);
-    bit = wordIndex * bitsPerWord + bitIndex;
-  }
-
-  size_t get() const {
-    MOZ_ASSERT(!done());
-    return bit;
-  }
-};
-
 bool js::gc::TenuredCell::markIfUnmarked(MarkColor color /* = Black */) const {
   return chunk()->markBits.markIfUnmarked(this, color);
 }

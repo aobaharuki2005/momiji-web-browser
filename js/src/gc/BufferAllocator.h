@@ -641,13 +641,29 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 #endif
 };
 
-// Internal data structures defined here so that users can get their size.
+static constexpr size_t SmallAllocGranularityShift =
+    BufferAllocator::MinSmallAllocShift;
+static constexpr size_t MediumAllocGranularityShift =
+    BufferAllocator::MinMediumAllocShift;
 
-#ifdef DEBUG
-// Magic check values used debug builds.
-static constexpr uint32_t LargeBufferCheckValue = 0xBFA110C2;
-static constexpr uint32_t FreeRegionCheckValue = 0xBFA110C3;
-#endif
+static constexpr size_t SmallAllocGranularity = 1 << SmallAllocGranularityShift;
+static constexpr size_t MediumAllocGranularity = 1
+                                                 << MediumAllocGranularityShift;
+
+static constexpr size_t MinSmallAllocSize =
+    1 << BufferAllocator::MinSmallAllocShift;
+static constexpr size_t MinMediumAllocSize =
+    1 << BufferAllocator::MinMediumAllocShift;
+static constexpr size_t MinLargeAllocSize =
+    1 << BufferAllocator::MinLargeAllocShift;
+
+static constexpr size_t MinAllocSize = MinSmallAllocSize;
+
+static constexpr size_t MaxSmallAllocSize =
+    MinMediumAllocSize - SmallAllocGranularity;
+static constexpr size_t MaxMediumAllocSize =
+    MinLargeAllocSize - MediumAllocGranularity;
+static constexpr size_t MaxAlignedAllocSize = MinLargeAllocSize / 4;
 
 }  // namespace gc
 }  // namespace js
