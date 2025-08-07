@@ -176,7 +176,7 @@ bool test(JSContext* cx) {
   JS::SetGCZeal(cx, 0, 0);
   JS_GC(cx);
   CHECK_EQUAL(cache.count(), size_t(2));
-#endif // JS_GC_ZEAL
+#endif  // JS_GC_ZEAL
 
   return true;
 }
