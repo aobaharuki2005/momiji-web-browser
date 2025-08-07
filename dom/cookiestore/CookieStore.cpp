@@ -10,6 +10,7 @@
 #include "CookieStoreNotificationWatcherWrapper.h"
 #include "CookieStoreNotifier.h"
 #include "ThirdPartyUtil.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Promise.h"
@@ -491,10 +492,27 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
              operationID](
                 const CookieStoreChild::SetRequestPromise::ResolveOrRejectValue&
                     aResult) {
-              if (!aResult.IsResolve() || !aResult.ResolveValue()) {
+              auto cleanupNotificationWatcher = MakeScopeExit([&]() {
                 self->mNotificationWatcher->ForgetOperationID(operationID);
+              });
+
+              if (!aResult.IsResolve()) {
                 promise->MaybeResolveWithUndefined();
+                return;
               }
+
+              const CookieStoreResult& result = aResult.ResolveValue();
+              if (!result.success()) {
+                promise->MaybeRejectWithTypeError("Invalid cookie");
+                return;
+              }
+
+              if (!result.waitForNotification()) {
+                promise->MaybeResolveWithUndefined();
+                return;
+              }
+
+              cleanupNotificationWatcher.release();
             });
       }));
 
