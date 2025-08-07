@@ -671,8 +671,7 @@ nsWindow::nsWindow()
       mMicaBackdrop(false),
       mLastPaintEndTime(TimeStamp::Now()),
       mCachedHitTestTime(TimeStamp::Now()),
-      mSizeConstraintsScale(GetDefaultScale().scale),
-      mDesktopId("DesktopIdMutex") {
+      mSizeConstraintsScale(GetDefaultScale().scale) {
   if (!gInitializedVirtualDesktopManager) {
     TaskController::Get()->AddTask(
         MakeAndAddRef<InitializeVirtualDesktopManagerTask>());
@@ -2084,81 +2083,67 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
 
 nsSizeMode nsWindow::SizeMode() { return mFrameState->GetSizeMode(); }
 
-void DoGetWorkspaceID(HWND aWnd, nsAString* aWorkspaceID) {
+nsString DoGetWorkspaceID(HWND aWnd) {
+  nsString ret;
   RefPtr<IVirtualDesktopManager> desktopManager = gVirtualDesktopManager;
   if (!desktopManager || !aWnd) {
-    return;
+    return ret;
   }
 
   GUID desktop;
   HRESULT hr = desktopManager->GetWindowDesktopId(aWnd, &desktop);
   if (FAILED(hr)) {
-    return;
+    return ret;
   }
 
   RPC_WSTR workspaceIDStr = nullptr;
   if (UuidToStringW(&desktop, &workspaceIDStr) == RPC_S_OK) {
-    aWorkspaceID->Assign((wchar_t*)workspaceIDStr);
+    ret.Assign((wchar_t*)workspaceIDStr);
     RpcStringFreeW(&workspaceIDStr);
   }
+  return ret;
 }
 
 void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
   // If we have a value cached, use that, but also make sure it is
   // scheduled to be updated.  If we don't yet have a value, get
   // one synchronously.
-  auto desktop = mDesktopId.Lock();
-  if (desktop->mID.IsEmpty()) {
-    DoGetWorkspaceID(mWnd, &desktop->mID);
-    desktop->mUpdateIsQueued = false;
+  AssertIsOnMainThread();
+  if (mDesktopId.IsEmpty()) {
+    mDesktopId = DoGetWorkspaceID(mWnd);
   } else {
-    AsyncUpdateWorkspaceID(*desktop);
+    AsyncUpdateWorkspaceID();
   }
-
-  workspaceID = desktop->mID;
+  workspaceID = mDesktopId;
 }
 
-void nsWindow::AsyncUpdateWorkspaceID(Desktop& aDesktop) {
-  struct UpdateWorkspaceIdTask : public Task {
-    explicit UpdateWorkspaceIdTask(nsWindow* aSelf)
-        : Task(Kind::OffMainThreadOnly, EventQueuePriority::Normal),
-          mSelf(aSelf) {}
-
-    TaskResult Run() override {
-      RefPtr<nsWindow> self(mSelf);
-      // If the window is not alive anymore, no need to do anything
-      if (!self) {
-        return TaskResult::Complete;
-      }
-      auto desktop = self->mDesktopId.Lock();
-      if (desktop->mUpdateIsQueued) {
-        DoGetWorkspaceID(self->mWnd, &desktop->mID);
-        desktop->mUpdateIsQueued = false;
-      }
-      return TaskResult::Complete;
-    }
-
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-    bool GetName(nsACString& aName) override {
-      aName.AssignLiteral("UpdateWorkspaceIdTask");
-      return true;
-    }
-#endif
-
-    // Only hold a weak pointer so this structure can't keep the window alive
-    // and possibly Release() it on the wrong thread (bug 1824697)
-    ThreadSafeWeakPtr<nsWindow> mSelf;
-  };
-
-  if (aDesktop.mUpdateIsQueued) {
-    return;
-  }
-
-  aDesktop.mUpdateIsQueued = true;
-  TaskController::Get()->AddTask(MakeAndAddRef<UpdateWorkspaceIdTask>(this));
+void nsWindow::AsyncUpdateWorkspaceID() {
+  nsWeakPtr weakSelf = do_GetWeakReference(this);
+  // Wrap weak reference in nsMainThreadPtrHandle to resist attempts to
+  // Release() the weak reference off-main-thread (it's not thread safe)
+  // in case of failed task dispatch.
+  nsMainThreadPtrHandle<nsIWeakReference> weakSelfHandle(
+      new nsMainThreadPtrHolder("AsyncUpdateWorkspaceID", weakSelf.forget()));
+  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+      "BackgroundUpdateWorkspaceID",
+      [hwnd = mWnd, weakSelfHandle = std::move(weakSelfHandle)]() mutable {
+        auto id = DoGetWorkspaceID(hwnd);
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "MainUpdateWorkspaceID",
+            [id = std::move(id),
+             weakSelfHandle = std::move(weakSelfHandle)]() mutable {
+              AssertIsOnMainThread();
+              nsCOMPtr<nsIWidget> widgetSelf = do_QueryReferent(weakSelfHandle);
+              auto* self = static_cast<nsWindow*>(widgetSelf.get());
+              if (self) {
+                self->mDesktopId = id;
+              }
+            }));
+      }));
 }
 
 void nsWindow::MoveToWorkspace(const nsAString& workspaceID) {
+  AssertIsOnMainThread();
   RefPtr<IVirtualDesktopManager> desktopManager = gVirtualDesktopManager;
   if (!desktopManager) {
     return;
@@ -2169,8 +2154,7 @@ void nsWindow::MoveToWorkspace(const nsAString& workspaceID) {
   RPC_WSTR workspaceIDStr = reinterpret_cast<RPC_WSTR>((wchar_t*)flat.get());
   if (UuidFromStringW(workspaceIDStr, &desktop) == RPC_S_OK) {
     if (SUCCEEDED(desktopManager->MoveWindowToDesktop(mWnd, desktop))) {
-      auto desktop = mDesktopId.Lock();
-      desktop->mID = workspaceID;
+      mDesktopId = workspaceID;
     }
   }
 }
