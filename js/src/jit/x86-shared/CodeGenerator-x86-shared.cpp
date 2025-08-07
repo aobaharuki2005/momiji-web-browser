@@ -1863,12 +1863,16 @@ void CodeGenerator::visitCompareExchangeTypedArrayElement(
 
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
-
-  dest.match([&](const auto& dest) {
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
     masm.compareExchangeJS(arrayType, Synchronization::Full(), dest, oldval,
                            newval, temp, output);
-  });
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.compareExchangeJS(arrayType, Synchronization::Full(), dest, oldval,
+                           newval, temp, output);
+  }
 }
 
 void CodeGenerator::visitAtomicExchangeTypedArrayElement(
@@ -1881,12 +1885,31 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement(
 
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
-
-  dest.match([&](const auto& dest) {
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
     masm.atomicExchangeJS(arrayType, Synchronization::Full(), dest, value, temp,
                           output);
-  });
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.atomicExchangeJS(arrayType, Synchronization::Full(), dest, value, temp,
+                          output);
+  }
+}
+
+template <typename T>
+static inline void AtomicBinopToTypedArray(MacroAssembler& masm, AtomicOp op,
+                                           Scalar::Type arrayType,
+                                           const LAllocation* value,
+                                           const T& mem, Register temp1,
+                                           Register temp2, AnyRegister output) {
+  if (value->isConstant()) {
+    masm.atomicFetchOpJS(arrayType, Synchronization::Full(), op,
+                         Imm32(ToInt32(value)), mem, temp1, temp2, output);
+  } else {
+    masm.atomicFetchOpJS(arrayType, Synchronization::Full(), op,
+                         ToRegister(value), mem, temp1, temp2, output);
+  }
 }
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop(
@@ -1900,19 +1923,31 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop(
   const LAllocation* value = lir->value();
 
   Scalar::Type arrayType = lir->mir()->arrayType();
-  AtomicOp atomicOp = lir->mir()->operation();
 
-  auto mem = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
+  if (lir->index()->isConstant()) {
+    Address mem = ToAddress(elements, lir->index(), arrayType);
+    AtomicBinopToTypedArray(masm, lir->mir()->operation(), arrayType, value,
+                            mem, temp1, temp2, output);
+  } else {
+    BaseIndex mem(elements, ToRegister(lir->index()),
+                  ScaleFromScalarType(arrayType));
+    AtomicBinopToTypedArray(masm, lir->mir()->operation(), arrayType, value,
+                            mem, temp1, temp2, output);
+  }
+}
 
-  mem.match([&](const auto& mem) {
-    if (value->isConstant()) {
-      masm.atomicFetchOpJS(arrayType, Synchronization::Full(), atomicOp,
-                           Imm32(ToInt32(value)), mem, temp1, temp2, output);
-    } else {
-      masm.atomicFetchOpJS(arrayType, Synchronization::Full(), atomicOp,
-                           ToRegister(value), mem, temp1, temp2, output);
-    }
-  });
+template <typename T>
+static inline void AtomicBinopToTypedArray(MacroAssembler& masm,
+                                           Scalar::Type arrayType, AtomicOp op,
+                                           const LAllocation* value,
+                                           const T& mem) {
+  if (value->isConstant()) {
+    masm.atomicEffectOpJS(arrayType, Synchronization::Full(), op,
+                          Imm32(ToInt32(value)), mem, InvalidReg);
+  } else {
+    masm.atomicEffectOpJS(arrayType, Synchronization::Full(), op,
+                          ToRegister(value), mem, InvalidReg);
+  }
 }
 
 void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect(
@@ -1922,19 +1957,17 @@ void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect(
   Register elements = ToRegister(lir->elements());
   const LAllocation* value = lir->value();
   Scalar::Type arrayType = lir->mir()->arrayType();
-  AtomicOp atomicOp = lir->mir()->operation();
 
-  auto mem = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
-
-  mem.match([&](const auto& mem) {
-    if (value->isConstant()) {
-      masm.atomicEffectOpJS(arrayType, Synchronization::Full(), atomicOp,
-                            Imm32(ToInt32(value)), mem, InvalidReg);
-    } else {
-      masm.atomicEffectOpJS(arrayType, Synchronization::Full(), atomicOp,
-                            ToRegister(value), mem, InvalidReg);
-    }
-  });
+  if (lir->index()->isConstant()) {
+    Address mem = ToAddress(elements, lir->index(), arrayType);
+    AtomicBinopToTypedArray(masm, arrayType, lir->mir()->operation(), value,
+                            mem);
+  } else {
+    BaseIndex mem(elements, ToRegister(lir->index()),
+                  ScaleFromScalarType(arrayType));
+    AtomicBinopToTypedArray(masm, arrayType, lir->mir()->operation(), value,
+                            mem);
+  }
 }
 
 void CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(

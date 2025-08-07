@@ -5597,7 +5597,7 @@ static bool ValueNeedsPostBarrier(MDefinition* def) {
 
 void CodeGenerator::emitElementPostWriteBarrier(
     MInstruction* mir, const LiveRegisterSet& liveVolatileRegs, Register obj,
-    Register index, Register scratch, const ConstantOrRegister& val,
+    const LAllocation* index, Register scratch, const ConstantOrRegister& val,
     int32_t indexDiff) {
   if (val.constant()) {
     MOZ_ASSERT_IF(val.value().isGCThing(),
@@ -5613,21 +5613,33 @@ void CodeGenerator::emitElementPostWriteBarrier(
   auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
     masm.PushRegsInMask(liveVolatileRegs);
 
-    if (indexDiff != 0) {
-      masm.add32(Imm32(indexDiff), index);
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
+    regs.takeUnchecked(obj);
+    regs.takeUnchecked(scratch);
+
+    Register indexReg;
+    if (index->isConstant()) {
+      indexReg = regs.takeAny();
+      masm.move32(Imm32(ToInt32(index) + indexDiff), indexReg);
+    } else {
+      indexReg = ToRegister(index);
+      regs.takeUnchecked(indexReg);
+      if (indexDiff != 0) {
+        masm.add32(Imm32(indexDiff), indexReg);
+      }
     }
 
     masm.setupUnalignedABICall(scratch);
     masm.movePtr(ImmPtr(gen->runtime), scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(obj);
-    masm.passABIArg(index);
+    masm.passABIArg(indexReg);
     using Fn = void (*)(JSRuntime* rt, JSObject* obj, int32_t index);
     masm.callWithABI<Fn, PostWriteElementBarrier>();
 
-    // We don't need a sub32 here because index must be in liveVolatileRegs
+    // We don't need a sub32 here because indexReg must be in liveVolatileRegs
     // if indexDiff is not zero, so it will be restored below.
-    MOZ_ASSERT_IF(indexDiff != 0, liveVolatileRegs.has(index));
+    MOZ_ASSERT_IF(indexDiff != 0, liveVolatileRegs.has(indexReg));
 
     masm.PopRegsInMask(liveVolatileRegs);
 
@@ -15262,53 +15274,48 @@ void CodeGenerator::visitSpectreMaskIndex(LSpectreMaskIndex* lir) {
   }
 }
 
-CodeGenerator::AddressOrBaseObjectElementIndex
-CodeGenerator::ToAddressOrBaseObjectElementIndex(Register elements,
-                                                 const LAllocation* index) {
-  if (index->isConstant()) {
-    NativeObject::elementsSizeMustNotOverflow();
-    return AddressOrBaseObjectElementIndex(
-        Address(elements, ToInt32(index) * sizeof(JS::Value)));
-  }
-  return AddressOrBaseObjectElementIndex(
-      BaseObjectElementIndex(elements, ToRegister(index)));
-}
-
-void CodeGenerator::emitStoreHoleCheck(Address dest, LSnapshot* snapshot) {
-  Label bail;
-  masm.branchTestMagic(Assembler::Equal, dest, &bail);
-  bailoutFrom(&bail, snapshot);
-}
-
-void CodeGenerator::emitStoreHoleCheck(BaseObjectElementIndex dest,
+void CodeGenerator::emitStoreHoleCheck(Register elements,
+                                       const LAllocation* index,
                                        LSnapshot* snapshot) {
   Label bail;
-  masm.branchTestMagic(Assembler::Equal, dest, &bail);
+  if (index->isConstant()) {
+    Address dest(elements, ToInt32(index) * sizeof(js::Value));
+    masm.branchTestMagic(Assembler::Equal, dest, &bail);
+  } else {
+    BaseObjectElementIndex dest(elements, ToRegister(index));
+    masm.branchTestMagic(Assembler::Equal, dest, &bail);
+  }
   bailoutFrom(&bail, snapshot);
+}
+
+void CodeGenerator::emitStoreElementTyped(const LAllocation* value,
+                                          MIRType valueType, Register elements,
+                                          const LAllocation* index) {
+  MOZ_ASSERT(valueType != MIRType::MagicHole);
+  ConstantOrRegister v = ToConstantOrRegister(value, valueType);
+  if (index->isConstant()) {
+    Address dest(elements, ToInt32(index) * sizeof(js::Value));
+    masm.storeUnboxedValue(v, valueType, dest);
+  } else {
+    BaseObjectElementIndex dest(elements, ToRegister(index));
+    masm.storeUnboxedValue(v, valueType, dest);
+  }
 }
 
 void CodeGenerator::visitStoreElementT(LStoreElementT* store) {
   Register elements = ToRegister(store->elements());
   const LAllocation* index = store->index();
 
-  MIRType valueType = store->mir()->value()->type();
-  MOZ_ASSERT(valueType != MIRType::MagicHole);
+  if (store->mir()->needsBarrier()) {
+    emitPreBarrier(elements, index);
+  }
 
-  ConstantOrRegister value = ToConstantOrRegister(store->value(), valueType);
+  if (store->mir()->needsHoleCheck()) {
+    emitStoreHoleCheck(elements, index, store->snapshot());
+  }
 
-  auto dest = ToAddressOrBaseObjectElementIndex(elements, index);
-
-  dest.match([&](const auto& dest) {
-    if (store->mir()->needsBarrier()) {
-      emitPreBarrier(dest);
-    }
-
-    if (store->mir()->needsHoleCheck()) {
-      emitStoreHoleCheck(dest, store->snapshot());
-    }
-
-    masm.storeUnboxedValue(value, valueType, dest);
-  });
+  emitStoreElementTyped(store->value(), store->mir()->value()->type(), elements,
+                        index);
 }
 
 void CodeGenerator::visitStoreElementV(LStoreElementV* lir) {
@@ -15316,19 +15323,21 @@ void CodeGenerator::visitStoreElementV(LStoreElementV* lir) {
   Register elements = ToRegister(lir->elements());
   const LAllocation* index = lir->index();
 
-  auto dest = ToAddressOrBaseObjectElementIndex(elements, index);
+  if (lir->mir()->needsBarrier()) {
+    emitPreBarrier(elements, index);
+  }
 
-  dest.match([&](const auto& dest) {
-    if (lir->mir()->needsBarrier()) {
-      emitPreBarrier(dest);
-    }
+  if (lir->mir()->needsHoleCheck()) {
+    emitStoreHoleCheck(elements, index, lir->snapshot());
+  }
 
-    if (lir->mir()->needsHoleCheck()) {
-      emitStoreHoleCheck(dest, lir->snapshot());
-    }
-
+  if (lir->index()->isConstant()) {
+    Address dest(elements, ToInt32(lir->index()) * sizeof(js::Value));
     masm.storeValue(value, dest);
-  });
+  } else {
+    BaseObjectElementIndex dest(elements, ToRegister(lir->index()));
+    masm.storeValue(value, dest);
+  }
 }
 
 void CodeGenerator::visitStoreHoleValueElement(LStoreHoleValueElement* lir) {
@@ -15363,20 +15372,17 @@ void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, initLength, temp, ool->entry());
 
-  emitPreBarrier(BaseObjectElementIndex(elements, index));
+  emitPreBarrier(elements, lir->index());
 
   masm.bind(ool->rejoin());
-
-  MIRType valueType = lir->mir()->value()->type();
-  MOZ_ASSERT(valueType != MIRType::MagicHole);
-
-  ConstantOrRegister val = ToConstantOrRegister(lir->value(), valueType);
-  masm.storeUnboxedValue(val, valueType,
-                         BaseObjectElementIndex(elements, index));
+  emitStoreElementTyped(lir->value(), lir->mir()->value()->type(), elements,
+                        lir->index());
 
   if (ValueNeedsPostBarrier(lir->mir()->value())) {
     LiveRegisterSet regs = liveVolatileRegs(lir);
-    emitElementPostWriteBarrier(lir->mir(), regs, obj, index, temp, val);
+    ConstantOrRegister val =
+        ToConstantOrRegister(lir->value(), lir->mir()->value()->type());
+    emitElementPostWriteBarrier(lir->mir(), regs, obj, lir->index(), temp, val);
   }
 }
 
@@ -15402,14 +15408,14 @@ void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, initLength, temp, ool->entry());
 
-  emitPreBarrier(BaseObjectElementIndex(elements, index));
+  emitPreBarrier(elements, lir->index());
 
   masm.bind(ool->rejoin());
   masm.storeValue(value, BaseObjectElementIndex(elements, index));
 
   if (ValueNeedsPostBarrier(lir->mir()->value())) {
     LiveRegisterSet regs = liveVolatileRegs(lir);
-    emitElementPostWriteBarrier(lir->mir(), regs, obj, index, temp,
+    emitElementPostWriteBarrier(lir->mir(), regs, obj, lir->index(), temp,
                                 ConstantOrRegister(value));
   }
 }
@@ -15496,8 +15502,8 @@ void CodeGenerator::visitArrayPush(LArrayPush* lir) {
   if (ValueNeedsPostBarrier(lir->mir()->value())) {
     LiveRegisterSet regs = liveVolatileRegs(lir);
     regs.addUnchecked(length);
-    emitElementPostWriteBarrier(lir->mir(), regs, obj, length, elementsTemp,
-                                ConstantOrRegister(value),
+    emitElementPostWriteBarrier(lir->mir(), regs, obj, lir->output()->output(),
+                                elementsTemp, ConstantOrRegister(value),
                                 /* indexDiff = */ -1);
   }
 }
@@ -16308,8 +16314,7 @@ void CodeGenerator::visitRest(LRest* lir) {
     Register end = temp0;
     Register args = temp1;
     Register scratch = temp2;
-    masm.computeEffectiveAddress(BaseObjectElementIndex(elements, lengthReg),
-                                 end);
+    masm.computeEffectiveAddress(BaseValueIndex(elements, lengthReg), end);
 
     Label loop;
     masm.bind(&loop);
@@ -17414,12 +17419,16 @@ void CodeGenerator::visitLoadElementAndUnbox(LLoadElementAndUnbox* ins) {
   Register elements = ToRegister(ins->elements());
   AnyRegister result = ToAnyRegister(ins->output());
 
-  auto source = ToAddressOrBaseObjectElementIndex(elements, ins->index());
-
   Label bail;
-  source.match([&](const auto& source) {
-    EmitLoadAndUnbox(masm, source, type, mir->fallible(), result, &bail);
-  });
+  if (ins->index()->isConstant()) {
+    NativeObject::elementsSizeMustNotOverflow();
+    int32_t offset = ToInt32(ins->index()) * sizeof(Value);
+    Address address(elements, offset);
+    EmitLoadAndUnbox(masm, address, type, mir->fallible(), result, &bail);
+  } else {
+    BaseObjectElementIndex address(elements, ToRegister(ins->index()));
+    EmitLoadAndUnbox(masm, address, type, mir->fallible(), result, &bail);
+  }
 
   if (mir->fallible()) {
     bailoutFrom(&bail, ins->snapshot());
@@ -18449,9 +18458,14 @@ void CodeGenerator::visitLoadElementV(LLoadElementV* load) {
   Register elements = ToRegister(load->elements());
   const ValueOperand out = ToOutValue(load);
 
-  auto source = ToAddressOrBaseObjectElementIndex(elements, load->index());
-
-  source.match([&](auto const& source) { masm.loadValue(source, out); });
+  if (load->index()->isConstant()) {
+    NativeObject::elementsSizeMustNotOverflow();
+    int32_t offset = ToInt32(load->index()) * sizeof(Value);
+    masm.loadValue(Address(elements, offset), out);
+  } else {
+    masm.loadValue(BaseObjectElementIndex(elements, ToRegister(load->index())),
+                   out);
+  }
 
   if (load->mir()->needsHoleCheck()) {
     Label testMagic;
@@ -18502,35 +18516,32 @@ void CodeGenerator::visitLoadElementHole(LLoadElementHole* lir) {
   masm.bind(&done);
 }
 
-CodeGenerator::AddressOrBaseIndex CodeGenerator::ToAddressOrBaseIndex(
-    Register elements, const LAllocation* index, Scalar::Type type) {
-  if (index->isConstant()) {
-    return AddressOrBaseIndex(ToAddress(elements, index, type));
-  }
-  return AddressOrBaseIndex(
-      BaseIndex(elements, ToRegister(index), ScaleFromScalarType(type)));
-}
-
 void CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir) {
   Register elements = ToRegister(lir->elements());
   Register temp0 = ToTempRegisterOrInvalid(lir->temp0());
   Register temp1 = ToTempRegisterOrInvalid(lir->temp1());
   AnyRegister out = ToAnyRegister(lir->output());
 
-  Scalar::Type storageType = lir->mir()->storageType();
+  const MLoadUnboxedScalar* mir = lir->mir();
+
+  Scalar::Type storageType = mir->storageType();
 
   LiveRegisterSet volatileRegs;
   if (MacroAssembler::LoadRequiresCall(storageType)) {
     volatileRegs = liveVolatileRegs(lir);
   }
 
-  auto source = ToAddressOrBaseIndex(elements, lir->index(), storageType);
-
   Label fail;
-  source.match([&](const auto& source) {
+  if (lir->index()->isConstant()) {
+    Address source = ToAddress(elements, lir->index(), storageType);
     masm.loadFromTypedArray(storageType, source, out, temp0, temp1, &fail,
                             volatileRegs);
-  });
+  } else {
+    BaseIndex source(elements, ToRegister(lir->index()),
+                     ScaleFromScalarType(storageType));
+    masm.loadFromTypedArray(storageType, source, out, temp0, temp1, &fail,
+                            volatileRegs);
+  }
 
   if (fail.used()) {
     bailoutFrom(&fail, lir->snapshot());
@@ -18541,11 +18552,18 @@ void CodeGenerator::visitLoadUnboxedInt64(LLoadUnboxedInt64* lir) {
   Register elements = ToRegister(lir->elements());
   Register64 out = ToOutRegister64(lir);
 
-  Scalar::Type storageType = lir->mir()->storageType();
+  const MLoadUnboxedScalar* mir = lir->mir();
 
-  auto source = ToAddressOrBaseIndex(elements, lir->index(), storageType);
+  Scalar::Type storageType = mir->storageType();
 
-  source.match([&](const auto& source) { masm.load64(source, out); });
+  if (lir->index()->isConstant()) {
+    Address source = ToAddress(elements, lir->index(), storageType);
+    masm.load64(source, out);
+  } else {
+    BaseIndex source(elements, ToRegister(lir->index()),
+                     ScaleFromScalarType(storageType));
+    masm.load64(source, out);
+  }
 }
 
 void CodeGenerator::visitLoadDataViewElement(LLoadDataViewElement* lir) {
@@ -18556,14 +18574,15 @@ void CodeGenerator::visitLoadDataViewElement(LLoadDataViewElement* lir) {
   Register64 temp64 = ToTempRegister64OrInvalid(lir->temp2());
   AnyRegister out = ToAnyRegister(lir->output());
 
-  Scalar::Type storageType = lir->mir()->storageType();
+  const MLoadDataViewElement* mir = lir->mir();
+  Scalar::Type storageType = mir->storageType();
 
   LiveRegisterSet volatileRegs;
   if (MacroAssembler::LoadRequiresCall(storageType)) {
     volatileRegs = liveVolatileRegs(lir);
   }
 
-  auto source = ToAddressOrBaseIndex(elements, lir->index(), Scalar::Uint8);
+  BaseIndex source(elements, ToRegister(lir->index()), TimesOne);
 
   bool noSwap = littleEndian->isConstant() &&
                 ToBoolean(littleEndian) == MOZ_LITTLE_ENDIAN();
@@ -18573,10 +18592,8 @@ void CodeGenerator::visitLoadDataViewElement(LLoadDataViewElement* lir) {
   if (noSwap && (!Scalar::isFloatingType(storageType) ||
                  MacroAssembler::SupportsFastUnalignedFPAccesses())) {
     Label fail;
-    source.match([&](const auto& source) {
-      masm.loadFromTypedArray(storageType, source, out, temp1, temp2, &fail,
-                              volatileRegs);
-    });
+    masm.loadFromTypedArray(storageType, source, out, temp1, temp2, &fail,
+                            volatileRegs);
 
     if (fail.used()) {
       bailoutFrom(&fail, lir->snapshot());
@@ -18585,38 +18602,36 @@ void CodeGenerator::visitLoadDataViewElement(LLoadDataViewElement* lir) {
   }
 
   // Load the value into a gpr register.
-  source.match([&](const auto& source) {
-    switch (storageType) {
-      case Scalar::Int16:
-        masm.load16UnalignedSignExtend(source, out.gpr());
-        break;
-      case Scalar::Uint16:
-        masm.load16UnalignedZeroExtend(source, out.gpr());
-        break;
-      case Scalar::Int32:
-        masm.load32Unaligned(source, out.gpr());
-        break;
-      case Scalar::Uint32:
-        masm.load32Unaligned(source, out.isFloat() ? temp1 : out.gpr());
-        break;
-      case Scalar::Float16:
-        masm.load16UnalignedZeroExtend(source, temp1);
-        break;
-      case Scalar::Float32:
-        masm.load32Unaligned(source, temp1);
-        break;
-      case Scalar::Float64:
-        masm.load64Unaligned(source, temp64);
-        break;
-      case Scalar::Int8:
-      case Scalar::Uint8:
-      case Scalar::Uint8Clamped:
-      case Scalar::BigInt64:
-      case Scalar::BigUint64:
-      default:
-        MOZ_CRASH("Invalid typed array type");
-    }
-  });
+  switch (storageType) {
+    case Scalar::Int16:
+      masm.load16UnalignedSignExtend(source, out.gpr());
+      break;
+    case Scalar::Uint16:
+      masm.load16UnalignedZeroExtend(source, out.gpr());
+      break;
+    case Scalar::Int32:
+      masm.load32Unaligned(source, out.gpr());
+      break;
+    case Scalar::Uint32:
+      masm.load32Unaligned(source, out.isFloat() ? temp1 : out.gpr());
+      break;
+    case Scalar::Float16:
+      masm.load16UnalignedZeroExtend(source, temp1);
+      break;
+    case Scalar::Float32:
+      masm.load32Unaligned(source, temp1);
+      break;
+    case Scalar::Float64:
+      masm.load64Unaligned(source, temp64);
+      break;
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Uint8Clamped:
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+    default:
+      MOZ_CRASH("Invalid typed array type");
+  }
 
   if (!noSwap) {
     // Swap the bytes in the loaded value.
@@ -18708,13 +18723,13 @@ void CodeGenerator::visitLoadDataViewElement64(LLoadDataViewElement64* lir) {
 
   MOZ_ASSERT(Scalar::isBigIntType(lir->mir()->storageType()));
 
-  auto source = ToAddressOrBaseIndex(elements, lir->index(), Scalar::Uint8);
+  BaseIndex source(elements, ToRegister(lir->index()), TimesOne);
 
   bool noSwap = littleEndian->isConstant() &&
                 ToBoolean(littleEndian) == MOZ_LITTLE_ENDIAN();
 
   // Load the value into a register.
-  source.match([&](const auto& source) { masm.load64Unaligned(source, out); });
+  masm.load64Unaligned(source, out);
 
   if (!noSwap) {
     // Swap the bytes in the loaded value.
@@ -18840,18 +18855,23 @@ void CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir) {
   Register temp = ToTempRegisterOrInvalid(lir->temp0());
   const LAllocation* value = lir->value();
 
-  Scalar::Type writeType = lir->mir()->writeType();
+  const MStoreUnboxedScalar* mir = lir->mir();
+
+  Scalar::Type writeType = mir->writeType();
 
   LiveRegisterSet volatileRegs;
   if (MacroAssembler::StoreRequiresCall(writeType)) {
     volatileRegs = liveVolatileRegs(lir);
   }
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), writeType);
-
-  dest.match([&](const auto& dest) {
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), writeType);
     StoreToTypedArray(masm, writeType, value, dest, temp, volatileRegs);
-  });
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(writeType));
+    StoreToTypedArray(masm, writeType, value, dest, temp, volatileRegs);
+  }
 }
 
 template <typename T>
@@ -18872,10 +18892,14 @@ void CodeGenerator::visitStoreUnboxedInt64(LStoreUnboxedInt64* lir) {
   Scalar::Type writeType = lir->mir()->writeType();
   MOZ_ASSERT(Scalar::isBigIntType(writeType));
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), writeType);
-
-  dest.match(
-      [&](const auto& dest) { StoreToTypedBigIntArray(masm, value, dest); });
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), writeType);
+    StoreToTypedBigIntArray(masm, value, dest);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(writeType));
+    StoreToTypedBigIntArray(masm, value, dest);
+  }
 }
 
 void CodeGenerator::visitStoreDataViewElement(LStoreDataViewElement* lir) {
@@ -18892,7 +18916,7 @@ void CodeGenerator::visitStoreDataViewElement(LStoreDataViewElement* lir) {
     volatileRegs = liveVolatileRegs(lir);
   }
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), Scalar::Uint8);
+  BaseIndex dest(elements, ToRegister(lir->index()), TimesOne);
 
   bool noSwap = littleEndian->isConstant() &&
                 ToBoolean(littleEndian) == MOZ_LITTLE_ENDIAN();
@@ -18902,9 +18926,7 @@ void CodeGenerator::visitStoreDataViewElement(LStoreDataViewElement* lir) {
   // types.)
   if (noSwap && (!Scalar::isFloatingType(writeType) ||
                  MacroAssembler::SupportsFastUnalignedFPAccesses())) {
-    dest.match([&](const auto& dest) {
-      StoreToTypedArray(masm, writeType, value, dest, temp, volatileRegs);
-    });
+    StoreToTypedArray(masm, writeType, value, dest, temp, volatileRegs);
     return;
   }
 
@@ -18984,30 +19006,28 @@ void CodeGenerator::visitStoreDataViewElement(LStoreDataViewElement* lir) {
   }
 
   // Store the value into the destination.
-  dest.match([&](const auto& dest) {
-    switch (writeType) {
-      case Scalar::Int16:
-      case Scalar::Uint16:
-      case Scalar::Float16:
-        masm.store16Unaligned(temp, dest);
-        break;
-      case Scalar::Int32:
-      case Scalar::Uint32:
-      case Scalar::Float32:
-        masm.store32Unaligned(temp, dest);
-        break;
-      case Scalar::Float64:
-        masm.store64Unaligned(temp64, dest);
-        break;
-      case Scalar::Int8:
-      case Scalar::Uint8:
-      case Scalar::Uint8Clamped:
-      case Scalar::BigInt64:
-      case Scalar::BigUint64:
-      default:
-        MOZ_CRASH("Invalid typed array type");
-    }
-  });
+  switch (writeType) {
+    case Scalar::Int16:
+    case Scalar::Uint16:
+    case Scalar::Float16:
+      masm.store16Unaligned(temp, dest);
+      break;
+    case Scalar::Int32:
+    case Scalar::Uint32:
+    case Scalar::Float32:
+      masm.store32Unaligned(temp, dest);
+      break;
+    case Scalar::Float64:
+      masm.store64Unaligned(temp64, dest);
+      break;
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Uint8Clamped:
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+    default:
+      MOZ_CRASH("Invalid typed array type");
+  }
 }
 
 void CodeGenerator::visitStoreDataViewElement64(LStoreDataViewElement64* lir) {
@@ -19018,7 +19038,7 @@ void CodeGenerator::visitStoreDataViewElement64(LStoreDataViewElement64* lir) {
 
   MOZ_ASSERT(Scalar::isBigIntType(lir->mir()->writeType()));
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), Scalar::Uint8);
+  BaseIndex dest(elements, ToRegister(lir->index()), TimesOne);
 
   bool noSwap = littleEndian->isConstant() &&
                 ToBoolean(littleEndian) == MOZ_LITTLE_ENDIAN();
@@ -19027,8 +19047,7 @@ void CodeGenerator::visitStoreDataViewElement64(LStoreDataViewElement64* lir) {
   // unaligned accesses for the access.  (Such support is assumed for integer
   // types.)
   if (noSwap) {
-    dest.match(
-        [&](const auto& dest) { StoreToTypedBigIntArray(masm, value, dest); });
+    StoreToTypedBigIntArray(masm, value, dest);
     return;
   }
 
@@ -19062,7 +19081,7 @@ void CodeGenerator::visitStoreDataViewElement64(LStoreDataViewElement64* lir) {
   }
 
   // Store the value into the destination.
-  dest.match([&](const auto& dest) { masm.store64Unaligned(temp, dest); });
+  masm.store64Unaligned(temp, dest);
 
   // Restore |value| if it was modified.
   if (valueReg == temp) {
@@ -19240,12 +19259,14 @@ void CodeGenerator::visitGuardElementNotHole(LGuardElementNotHole* lir) {
   Register elements = ToRegister(lir->elements());
   const LAllocation* index = lir->index();
 
-  auto source = ToAddressOrBaseObjectElementIndex(elements, index);
-
   Label testMagic;
-  source.match([&](const auto& source) {
-    masm.branchTestMagic(Assembler::Equal, source, &testMagic);
-  });
+  if (index->isConstant()) {
+    Address address(elements, ToInt32(index) * sizeof(js::Value));
+    masm.branchTestMagic(Assembler::Equal, address, &testMagic);
+  } else {
+    BaseObjectElementIndex address(elements, ToRegister(index));
+    masm.branchTestMagic(Assembler::Equal, address, &testMagic);
+  }
   bailoutFrom(&testMagic, lir->snapshot());
 }
 
@@ -21454,7 +21475,7 @@ void CodeGenerator::visitGuardIndexIsNotDenseElement(
   Address capacity(temp, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, capacity, spectreTemp, &notDense);
 
-  BaseObjectElementIndex element(temp, index);
+  BaseValueIndex element(temp, index);
   masm.branchTestMagic(Assembler::Equal, element, &notDense);
 
   bailout(lir->snapshot());

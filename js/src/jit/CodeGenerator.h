@@ -160,7 +160,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void emitElementPostWriteBarrier(MInstruction* mir,
                                    const LiveRegisterSet& liveVolatileRegs,
-                                   Register obj, Register index,
+                                   Register obj, const LAllocation* index,
                                    Register scratch,
                                    const ConstantOrRegister& val,
                                    int32_t indexDiff = 0);
@@ -227,18 +227,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   using RegisterOrInt32 = mozilla::Variant<Register, int32_t>;
 
   static RegisterOrInt32 ToRegisterOrInt32(const LAllocation* allocation);
-
-  using AddressOrBaseIndex = mozilla::Variant<Address, BaseIndex>;
-
-  static AddressOrBaseIndex ToAddressOrBaseIndex(Register elements,
-                                                 const LAllocation* index,
-                                                 Scalar::Type type);
-
-  using AddressOrBaseObjectElementIndex =
-      mozilla::Variant<Address, BaseObjectElementIndex>;
-
-  static AddressOrBaseObjectElementIndex ToAddressOrBaseObjectElementIndex(
-      Register elements, const LAllocation* index);
 
 #ifdef DEBUG
   void emitAssertArgumentsSliceBounds(const RegisterOrInt32& begin,
@@ -359,9 +347,12 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                                    Label* ifDoesntEmulateUndefined,
                                    Register scratch, OutOfLineTestObject* ool);
 
+  void emitStoreElementTyped(const LAllocation* value, MIRType valueType,
+                             Register elements, const LAllocation* index);
+
   // Bailout if an element about to be written to is a hole.
-  void emitStoreHoleCheck(Address dest, LSnapshot* snapshot);
-  void emitStoreHoleCheck(BaseObjectElementIndex dest, LSnapshot* snapshot);
+  void emitStoreHoleCheck(Register elements, const LAllocation* index,
+                          LSnapshot* snapshot);
 
   void emitAssertRangeI(MIRType type, const Range* r, Register input);
   void emitAssertRangeD(const Range* r, FloatRegister input,

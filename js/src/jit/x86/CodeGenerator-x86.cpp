@@ -98,14 +98,20 @@ void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) {
   MOZ_ASSERT(ToOutRegister64(lir) == Register64(edx, eax));
   MOZ_ASSERT(ToRegister64(lir->temp0()) == Register64(ecx, ebx));
 
-  Scalar::Type storageType = lir->mir()->storageType();
+  const MLoadUnboxedScalar* mir = lir->mir();
 
-  auto source = ToAddressOrBaseIndex(elements, lir->index(), storageType);
+  Scalar::Type storageType = mir->storageType();
 
-  source.match([&](const auto& source) {
+  if (lir->index()->isConstant()) {
+    Address source = ToAddress(elements, lir->index(), storageType);
     masm.atomicLoad64(Synchronization::Load(), source, Register64(ecx, ebx),
                       Register64(edx, eax));
-  });
+  } else {
+    BaseIndex source(elements, ToRegister(lir->index()),
+                     ScaleFromScalarType(storageType));
+    masm.atomicLoad64(Synchronization::Load(), source, Register64(ecx, ebx),
+                      Register64(edx, eax));
+  }
 }
 
 void CodeGenerator::visitAtomicStore64(LAtomicStore64* lir) {
@@ -118,11 +124,14 @@ void CodeGenerator::visitAtomicStore64(LAtomicStore64* lir) {
 
   Scalar::Type writeType = lir->mir()->writeType();
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), writeType);
-
-  dest.match([&](const auto& dest) {
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), writeType);
     masm.atomicStore64(Synchronization::Store(), dest, value, temp);
-  });
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(writeType));
+    masm.atomicStore64(Synchronization::Store(), dest, value, temp);
+  }
 }
 
 void CodeGenerator::visitCompareExchangeTypedArrayElement64(
@@ -138,11 +147,14 @@ void CodeGenerator::visitCompareExchangeTypedArrayElement64(
 
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
-
-  dest.match([&](const auto& dest) {
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
     masm.compareExchange64(Synchronization::Full(), dest, oldval, newval, out);
-  });
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.compareExchange64(Synchronization::Full(), dest, oldval, newval, out);
+  }
 }
 
 void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
@@ -156,11 +168,14 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
 
   Scalar::Type arrayType = lir->mir()->arrayType();
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
-
-  dest.match([&](const auto& dest) {
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
     masm.atomicExchange64(Synchronization::Full(), dest, value, out);
-  });
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.atomicExchange64(Synchronization::Full(), dest, value, out);
+  }
 }
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop64(
@@ -177,17 +192,21 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop64(
   Scalar::Type arrayType = lir->mir()->arrayType();
   AtomicOp atomicOp = lir->mir()->operation();
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
-
   // Save |value| before it's clobbered below.
   masm.push64(value);
 
   Address addr(masm.getStackPointer(), 0);
 
-  dest.match([&](const auto& dest) {
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
     masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, value,
                          out);
-  });
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, value,
+                         out);
+  }
 
   masm.pop64(value);
 }
@@ -206,17 +225,21 @@ void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
   Scalar::Type arrayType = lir->mir()->arrayType();
   AtomicOp atomicOp = lir->mir()->operation();
 
-  auto dest = ToAddressOrBaseIndex(elements, lir->index(), arrayType);
-
   // Save |value| before it's clobbered below.
   masm.push64(value);
 
   Address addr(masm.getStackPointer(), 0);
 
-  dest.match([&](const auto& dest) {
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
     masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, value,
                          temp);
-  });
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, value,
+                         temp);
+  }
 
   masm.pop64(value);
 }
