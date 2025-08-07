@@ -429,8 +429,9 @@ def push_to_lando_try(
         # Other VCS types (namely `src`) are unsupported.
         raise ValueError(f"Try push via Lando is not supported for `{vcs.name}`.")
 
-    # Use Lando Prod unless the `LANDO_TRY_USE_DEV` environment variable is defined.
-    lando_config_section = (
+    # Use LANDO_TRY_CONFIG so select which configuration section from .lando.ini to use.
+    # Default to using Lando Prod unless the `LANDO_TRY_USE_DEV` environment variable is defined.
+    lando_config_section = os.getenv("LANDO_TRY_CONFIG") or (
         "lando-prod" if not os.getenv("LANDO_TRY_USE_DEV") else "lando-dev"
     )
 
