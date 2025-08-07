@@ -950,6 +950,10 @@ class NativeObject : public JSObject {
     return hasFlag(ObjectFlag::HadGetterSetterChange);
   }
 
+  static bool setHasObjectFuse(JSContext* cx, Handle<NativeObject*> obj) {
+    return setFlag(cx, obj, js::ObjectFlag::HasObjectFuse);
+  }
+
   bool allocateInitialSlots(JSContext* cx, uint32_t capacity);
 
   /*

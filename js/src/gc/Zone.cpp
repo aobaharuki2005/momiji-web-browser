@@ -175,7 +175,8 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       keepPropMapTables_(false),
       wasCollected_(false),
       listNext_(NotOnList),
-      keptObjects(this) {
+      keptObjects(this),
+      objectFuses(rt) {
   /* Ensure that there are no vtables to mess us up here. */
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
              static_cast<JS::shadow::Zone*>(this));

@@ -8689,6 +8689,14 @@
   mirror: always
   do_not_use_directly: true
 
+# Whether object fuses are used to optimize constant properties on the global
+# object.
+- name: javascript.options.objectfuse_for_global
+  type: bool
+  value: true
+  mirror: always
+  set_spidermonkey_pref: startup
+
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true

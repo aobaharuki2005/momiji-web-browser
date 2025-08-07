@@ -81,7 +81,15 @@ static bool ReshapeForShadowedProp(JSContext* cx, Handle<NativeObject*> obj,
     if (!proto->is<NativeObject>()) {
       break;
     }
-    if (proto->as<NativeObject>().contains(cx, id)) {
+
+    Handle<NativeObject*> nproto = proto.as<NativeObject>();
+
+    if (mozilla::Maybe<PropertyInfo> propInfo = nproto->lookup(cx, id)) {
+      if (proto->hasObjectFuse()) {
+        if (auto* objFuse = cx->zone()->objectFuses.get(nproto)) {
+          objFuse->handleTeleportingShadowedProperty(cx, *propInfo);
+        }
+      }
       if (useDictionaryTeleporting) {
         JS_LOG(teleporting, Debug,
                "Shadowed Prop: Dictionary Reshape for Teleporting");
@@ -225,6 +233,12 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
       cx->zone()->shapeZone().useDictionaryModeTeleportation();
 
   while (pobj && pobj->is<NativeObject>()) {
+    if (pobj->hasObjectFuse()) {
+      if (auto* objFuse =
+              cx->zone()->objectFuses.get(pobj.as<NativeObject>())) {
+        objFuse->handleTeleportingProtoMutation(cx);
+      }
+    }
     if (useDictionaryTeleporting) {
       MOZ_ASSERT(!pobj->hasInvalidatedTeleporting(),
                  "Once we start using invalidation shouldn't do any more "
@@ -622,6 +636,11 @@ bool Watchtower::watchPropertyRemoveSlow(JSContext* cx,
   if (MOZ_UNLIKELY(obj->hasRealmFuseProperty())) {
     MaybePopRealmFuses(cx, obj, id);
   }
+  if (obj->hasObjectFuse()) {
+    if (auto* objFuse = cx->zone()->objectFuses.get(obj)) {
+      objFuse->handlePropertyRemove(cx, propInfo);
+    }
+  }
 
   if (MOZ_UNLIKELY(obj->useWatchtowerTestingLog())) {
     RootedValue val(cx, IdToValue(id));
@@ -680,6 +699,12 @@ void Watchtower::watchPropertyValueChangeSlow(
   // Note: this is also called when changing the GetterSetter value of an
   // accessor property or when redefining a data property as an accessor
   // property and vice versa.
+
+  if (obj->hasObjectFuse()) {
+    if (auto* objFuse = cx->zone()->objectFuses.get(obj)) {
+      objFuse->handlePropertyValueChange(cx, propInfo);
+    }
+  }
 
   if (propInfo.hasSlot() && obj->getSlot(propInfo.slot()) == value) {
     // We're not actually changing the property's value.
@@ -752,6 +777,17 @@ bool Watchtower::watchObjectSwapSlow(JSContext* cx, HandleObject a,
   }
   if (!WatchProtoChangeImpl(cx, b)) {
     return false;
+  }
+
+  if (a->hasObjectFuse()) {
+    if (auto* objFuse = cx->zone()->objectFuses.get(a.as<NativeObject>())) {
+      objFuse->handleObjectSwap(cx);
+    }
+  }
+  if (b->hasObjectFuse()) {
+    if (auto* objFuse = cx->zone()->objectFuses.get(b.as<NativeObject>())) {
+      objFuse->handleObjectSwap(cx);
+    }
   }
 
   // Note: we don't invoke the testing callback for swap because the objects may

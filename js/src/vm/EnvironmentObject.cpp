@@ -3771,7 +3771,16 @@ static void ReportRuntimeRedeclaration(JSContext* cx,
   if (shadowedExistingProp && varObj->is<GlobalObject>()) {
     // Shadowing a configurable global property with a new lexical is one
     // of the rare ways to invalidate a GetGName stub.
-    varObj->as<GlobalObject>().bumpGenerationCount();
+    auto* global = &varObj->as<GlobalObject>();
+    global->bumpGenerationCount();
+
+    // Also invalidate GetGName stubs and Ion code relying on an object fuse
+    // guard to bake in the property's value.
+    if (global->hasObjectFuse()) {
+      if (auto* objFuse = cx->zone()->objectFuses.get(global)) {
+        objFuse->handleShadowedGlobalProperty(cx, *shadowedExistingProp);
+      }
+    }
   }
 
   return true;
