@@ -1615,7 +1615,7 @@
 # See bug 1790641
 - name: browser.download.enableDeletePrivate
   type: bool
-  value: false
+  value: true
   mirror: always
 
 - name: browser.download.deletePrivate
