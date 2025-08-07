@@ -4228,3 +4228,14 @@ with only_when(artifact_builds):
             return onnxruntime_task_name in onnx_tasks
 
     set_define("ONNX_RUNTIME", is_onnxruntime_supported_by_taskcluster)
+
+set_config(
+    "GECKO_TRACE_ENABLE",
+    True,
+    when=moz_debug | milestone.is_early_beta_or_earlier,
+)
+set_define(
+    "GECKO_TRACE_ENABLE",
+    True,
+    when=moz_debug | milestone.is_early_beta_or_earlier,
+)

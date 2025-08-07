@@ -1,0 +1,12 @@
+include("/third_party/opentelemetry-cpp/opentelemetry-config.mozbuild")
+
+UNIFIED_SOURCES += [
+    "TestGeckoTraceAPI.cpp",
+]
+
+if not CONFIG["GECKO_TRACE_ENABLE"]:
+    DIRS += [
+        "/third_party/opentelemetry-cpp",
+    ]
+
+FINAL_LIBRARY = "xul-gtest"
