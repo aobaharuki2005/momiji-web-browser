@@ -2103,6 +2103,9 @@ class NetworkModule extends RootBiDiModule {
     );
     if (!browsingContext) {
       collectedData.pending = false;
+      this.#collectedNetworkData.delete(
+        `${collectedData.request}-${collectedData.type}`
+      );
       collectedData.networkDataCollected.resolve();
       return;
     }
@@ -2120,6 +2123,9 @@ class NetworkModule extends RootBiDiModule {
 
     if (!collectors.length) {
       collectedData.pending = false;
+      this.#collectedNetworkData.delete(
+        `${collectedData.request}-${collectedData.type}`
+      );
       collectedData.networkDataCollected.resolve();
       return;
     }
@@ -2159,6 +2165,11 @@ class NetworkModule extends RootBiDiModule {
     // `collectedData.pending` is only flipped before returning here - and in
     // early returns above.
     collectedData.pending = false;
+    if (!collectedData.collectors.size) {
+      this.#collectedNetworkData.delete(
+        `${collectedData.request}-${collectedData.type}`
+      );
+    }
     collectedData.networkDataCollected.resolve();
   }
 
