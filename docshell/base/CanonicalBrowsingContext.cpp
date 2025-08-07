@@ -487,29 +487,42 @@ bool CanonicalBrowsingContext::HasHistoryEntry(nsISHEntry* aEntry) {
 void CanonicalBrowsingContext::SwapHistoryEntries(nsISHEntry* aOldEntry,
                                                   nsISHEntry* aNewEntry) {
   // XXX Should we check also loading entries?
-  if (mActiveEntry == aOldEntry) {
-    nsCOMPtr<SessionHistoryEntry> newEntry = do_QueryInterface(aNewEntry);
-    MOZ_LOG(gSHLog, LogLevel::Verbose,
-            ("Swapping History Entries: mActiveEntry=%p, aNewEntry=%p\n"
-             "Is in list: mActiveEntry %d, aNewEntry %d",
-             mActiveEntry.get(), aNewEntry,
-             mActiveEntry ? mActiveEntry->isInList() : false,
-             newEntry ? newEntry->isInList() : false));
-    if (!newEntry) {
-      mActiveEntryList.clear();
-      mActiveEntry = nullptr;
-      return;
-    }
-    if (Navigation::IsAPIEnabled() && mActiveEntry->isInList()) {
-      RefPtr beforeOldEntry = mActiveEntry->removeAndGetPrevious();
+  if (mActiveEntry != aOldEntry) {
+    return;
+  }
+
+  nsCOMPtr<SessionHistoryEntry> newEntry = do_QueryInterface(aNewEntry);
+  MOZ_LOG(gSHLog, LogLevel::Verbose,
+          ("Swapping History Entries: mActiveEntry=%p, aNewEntry=%p. "
+           "Is in list? mActiveEntry %s, aNewEntry %s. "
+           "Is aNewEntry in current mActiveEntryList? %s.",
+           mActiveEntry.get(), aNewEntry,
+           mActiveEntry && mActiveEntry->isInList() ? "yes" : "no",
+           newEntry && newEntry->isInList() ? "yes" : "no",
+           mActiveEntryList.contains(newEntry) ? "yes" : "no"));
+  if (!newEntry) {
+    mActiveEntryList.clear();
+    mActiveEntry = nullptr;
+    return;
+  }
+  if (Navigation::IsAPIEnabled() && mActiveEntry->isInList()) {
+    RefPtr beforeOldEntry = mActiveEntry->removeAndGetPrevious();
+    if (beforeOldEntry != newEntry) {
+      if (newEntry->isInList()) {
+        newEntry->setNext(mActiveEntry);
+        newEntry->remove();
+      }
+
       if (beforeOldEntry) {
         beforeOldEntry->setNext(newEntry);
       } else {
         mActiveEntryList.insertFront(newEntry);
       }
+    } else {
+      newEntry->setPrevious(mActiveEntry);
     }
-    mActiveEntry = newEntry.forget();
   }
+  mActiveEntry = newEntry.forget();
 }
 
 void CanonicalBrowsingContext::AddLoadingSessionHistoryEntry(
