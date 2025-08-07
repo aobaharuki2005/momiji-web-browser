@@ -2,17 +2,6 @@
 <issues format="6" by="lint 8.12.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.12.0)" variant="all" version="8.12.0">
 
     <issue
-        id="CommitTransaction"
-        message="This transaction should be completed with a `commit()` call"
-        errorLine1="            .beginTransaction()"
-        errorLine2="             ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/navigation/MainActivityNavigation.kt"
-            line="260"
-            column="14"/>
-    </issue>
-
-    <issue
         id="DefaultLocale"
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
         errorLine1="        binding.trackersCount.text = String.format(&quot;%,d&quot;, blockedTrackersCount)"
