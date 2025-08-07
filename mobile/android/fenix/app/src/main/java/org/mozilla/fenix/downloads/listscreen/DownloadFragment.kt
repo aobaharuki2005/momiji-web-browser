@@ -61,6 +61,7 @@ class DownloadFragment : ComposeFragment() {
         context?.let {
             val canOpenFile = AbstractFetchDownloadService.openFile(
                 applicationContext = it.applicationContext,
+                packageName = it.applicationContext.packageName,
                 downloadFileName = item.fileName,
                 downloadFilePath = item.filePath,
                 downloadContentType = item.contentType,

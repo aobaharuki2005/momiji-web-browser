@@ -783,6 +783,7 @@ class BrowserFragment :
         snackbar.setAction(getString(R.string.download_snackbar_open)) { context ->
             val opened = AbstractFetchDownloadService.openFile(
                 applicationContext = context.applicationContext,
+                packageName = context.applicationContext.packageName,
                 downloadFileName = state.fileName,
                 downloadFilePath = state.filePath,
                 downloadContentType = state.contentType,

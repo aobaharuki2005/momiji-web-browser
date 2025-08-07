@@ -323,6 +323,7 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
             if (downloadState.openInApp && downloadJobStatus == Status.COMPLETED) {
                 val fileWasOpened = AbstractFetchDownloadService.openFile(
                     applicationContext = safeContext.applicationContext,
+                    packageName = safeContext.applicationContext.packageName,
                     downloadFileName = downloadState.fileName,
                     downloadFilePath = downloadState.filePath,
                     downloadContentType = downloadState.contentType,

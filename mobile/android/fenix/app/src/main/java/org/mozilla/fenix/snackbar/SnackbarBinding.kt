@@ -332,6 +332,7 @@ class SnackbarBinding(
                         ) {
                             val fileWasOpened = AbstractFetchDownloadService.openFile(
                                 applicationContext = context.applicationContext,
+                                packageName = context.applicationContext.packageName,
                                 downloadFileName = state.downloadState.fileName,
                                 downloadFilePath = state.downloadState.filePath,
                                 downloadContentType = state.downloadState.contentType,

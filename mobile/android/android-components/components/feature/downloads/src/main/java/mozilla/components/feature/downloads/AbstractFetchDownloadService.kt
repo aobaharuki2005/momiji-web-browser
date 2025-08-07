@@ -93,6 +93,9 @@ import kotlin.random.Random
 @Suppress("TooManyFunctions", "LargeClass", "ComplexMethod")
 abstract class AbstractFetchDownloadService : Service() {
     protected abstract val store: BrowserStore
+
+    protected abstract val packageNameProvider: PackageNameProvider
+
     protected abstract val notificationsDelegate: NotificationsDelegate
 
     private val notificationUpdateScope = MainScope()
@@ -102,7 +105,7 @@ abstract class AbstractFetchDownloadService : Service() {
     protected open val style: Style = Style()
 
     @VisibleForTesting
-    internal val context: Context get() = this
+    internal open val context: Context get() = this
 
     @VisibleForTesting
     internal var compatForegroundNotificationId: Int = COMPAT_DEFAULT_FOREGROUND_ID
@@ -229,6 +232,7 @@ abstract class AbstractFetchDownloadService : Service() {
                     ACTION_OPEN -> {
                         if (!openFile(
                                 applicationContext = context,
+                                packageName = packageNameProvider.packageName,
                                 downloadFileName = currentDownloadJobState.state.fileName,
                                 downloadFilePath = currentDownloadJobState.state.filePath,
                                 downloadContentType = currentDownloadJobState.state.contentType,
@@ -526,7 +530,12 @@ abstract class AbstractFetchDownloadService : Service() {
                     title = fileName,
                     description = fileName,
                     isMediaScannerScannable = true,
-                    mimeType = getSafeContentType(context, download.filePath, download.contentType),
+                    mimeType = getSafeContentType(
+                        context,
+                        packageNameProvider.packageName,
+                        download.filePath,
+                        download.contentType,
+                    ),
                     path = file.absolutePath,
                     length = download.contentLength ?: file.length(),
                     // Only show notifications if our channel is blocked
@@ -904,9 +913,9 @@ abstract class AbstractFetchDownloadService : Service() {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, getDownloadJobStatus(downloadState))
         intent.putExtra(EXTRA_DOWNLOAD_ID, downloadState.state.id)
-        intent.setPackage(context.packageName)
+        intent.setPackage(packageNameProvider.packageName)
 
-        context.sendBroadcast(intent, "${context.packageName}.permission.RECEIVE_DOWNLOAD_BROADCAST")
+        context.sendBroadcast(intent, "${packageNameProvider.packageName}.permission.RECEIVE_DOWNLOAD_BROADCAST")
     }
 
     /**
@@ -1010,16 +1019,16 @@ abstract class AbstractFetchDownloadService : Service() {
             put(MediaStore.Downloads.DISPLAY_NAME, download.fileName)
             put(
                 MediaStore.Downloads.MIME_TYPE,
-                getSafeContentType(context, download.filePath, download.contentType),
+                getSafeContentType(context, packageNameProvider.packageName, download.filePath, download.contentType),
             )
             put(MediaStore.Downloads.SIZE, download.contentLength)
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
 
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        val resolver = applicationContext.contentResolver
+        val resolver = context.contentResolver
         val downloadUri =
-            queryDownloadMediaStore(applicationContext, download.fileName, true) ?: resolver.insert(
+            queryDownloadMediaStore(resolver, download.fileName, true) ?: resolver.insert(
                 collection,
                 values,
             )
@@ -1062,12 +1071,14 @@ abstract class AbstractFetchDownloadService : Service() {
          */
         fun openFile(
             applicationContext: Context,
+            packageName: String,
             downloadFileName: String?,
             downloadFilePath: String,
             downloadContentType: String?,
         ): Boolean {
             val newIntent = createOpenFileIntent(
                 context = applicationContext,
+                packageName = packageName,
                 downloadFileName = downloadFileName,
                 downloadFilePath = downloadFilePath,
                 downloadContentType = downloadContentType,
@@ -1091,6 +1102,7 @@ abstract class AbstractFetchDownloadService : Service() {
          */
         fun createOpenFileIntent(
             context: Context,
+            packageName: String,
             downloadFileName: String?,
             downloadFilePath: String,
             downloadContentType: String?,
@@ -1099,12 +1111,12 @@ abstract class AbstractFetchDownloadService : Service() {
             // media store otherwise we have to construct the uri based on the file path.
             val fileUri: Uri =
                 if (SDK_INT >= Build.VERSION_CODES.Q) {
-                    queryDownloadMediaStore(context, downloadFileName)
-                        ?: getFilePathUri(context, downloadFilePath)
+                    queryDownloadMediaStore(context.contentResolver, downloadFileName)
+                        ?: getFilePathUri(context, packageName, downloadFilePath)
                 } else {
                     // Create a new file with the location of the saved file to extract the correct path
                     // `file` has the wrong path, so we must construct it based on the `fileName` and `dir.path`s
-                    getFilePathUri(context, downloadFilePath)
+                    getFilePathUri(context, packageName, downloadFilePath)
                 }
 
             val newIntent =
@@ -1122,11 +1134,10 @@ abstract class AbstractFetchDownloadService : Service() {
         @RequiresApi(Build.VERSION_CODES.Q)
         @VisibleForTesting
         internal fun queryDownloadMediaStore(
-            applicationContext: Context,
+            contentResolver: ContentResolver,
             downloadFileName: String?,
             limitToDownloadsFolder: Boolean = false,
         ): Uri? {
-            val resolver = applicationContext.contentResolver
             val queryProjection = arrayOf(MediaStore.Downloads._ID, MediaStore.MediaColumns.RELATIVE_PATH)
             val querySelection = "${MediaStore.Downloads.DISPLAY_NAME} = ?"
             val querySelectionArgs = arrayOf(downloadFileName)
@@ -1152,7 +1163,7 @@ abstract class AbstractFetchDownloadService : Service() {
                     setIncludePending(collection)
                 }
 
-            resolver.query(
+            contentResolver.query(
                 queryCollection,
                 queryProjection,
                 queryBundle,
@@ -1186,18 +1197,24 @@ abstract class AbstractFetchDownloadService : Service() {
         }
 
         @VisibleForTesting
-        internal fun getSafeContentType(context: Context, filePath: String, contentType: String?): String {
-            return getSafeContentType(context, getFilePathUri(context, filePath), contentType)
-        }
+        internal fun getSafeContentType(
+            context: Context,
+            packageName: String,
+            filePath: String,
+            contentType: String?,
+        ) = getSafeContentType(
+            context,
+            getFilePathUri(context, packageName, filePath),
+            contentType,
+        )
 
         @VisibleForTesting
-        internal fun getFilePathUri(context: Context, filePath: String): Uri {
-            return FileProvider.getUriForFile(
+        internal fun getFilePathUri(context: Context, packageName: String, filePath: String): Uri =
+            FileProvider.getUriForFile(
                 context,
-                context.packageName + FILE_PROVIDER_EXTENSION,
+                packageName + FILE_PROVIDER_EXTENSION,
                 File(filePath),
             )
-        }
 
         private const val FILE_PROVIDER_EXTENSION = ".feature.downloads.fileprovider"
         private const val CHUNK_SIZE = 32 * 1024
