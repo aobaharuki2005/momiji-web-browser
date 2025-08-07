@@ -53,12 +53,12 @@ export class MigrationWizard extends HTMLElement {
             <h1 class="migration-wizard-header" data-l10n-id="migration-wizard-selection-header" part="header"></h1>
             <p class="migration-wizard-subheader" part="subheader" hidden=""></p>
             <button id="browser-profile-selector" aria-haspopup="menu" aria-labelledby="migrator-name profile-name">
-              <span class="migrator-icon" role="img"></span>
+              <span class="migrator-icon" role="presentation"></span>
               <div class="migrator-description" role="presentation">
                 <div id="migrator-name">&nbsp;</div>
                 <div id="profile-name" class="text-deemphasized"></div>
               </div>
-              <span class="dropdown-icon" role="img"></span>
+              <span class="dropdown-icon" role="presentation"></span>
             </button>
             <div class="no-resources-found error-message">
               <span class="error-icon" role="img"></span>
