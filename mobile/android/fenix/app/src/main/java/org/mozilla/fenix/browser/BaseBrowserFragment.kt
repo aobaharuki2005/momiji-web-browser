@@ -223,7 +223,6 @@ import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
 import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
 import org.mozilla.fenix.snackbar.SnackbarBinding
-import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -1574,7 +1573,7 @@ abstract class BaseBrowserFragment :
 
     private fun onTabCounterClicked(browsingMode: BrowsingMode) {
         thumbnailsFeature.get()?.requestScreenshot()
-        if (DefaultTabManagementFeatureHelper.enhancementsEnabled) {
+        if (requireContext().settings().tabManagerEnhancementsEnabled) {
             findNavController().nav(
                 R.id.browserFragment,
                 BrowserFragmentDirections.actionGlobalTabManagementFragment(

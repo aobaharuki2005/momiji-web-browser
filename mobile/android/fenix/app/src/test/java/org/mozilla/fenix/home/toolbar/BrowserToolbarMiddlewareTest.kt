@@ -14,7 +14,6 @@ import androidx.navigation.NavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.android.asCoroutineDispatcher
@@ -83,7 +82,6 @@ import org.mozilla.fenix.components.appstate.search.SearchState
 import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
-import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
@@ -98,7 +96,6 @@ import org.mozilla.fenix.home.toolbar.TabCounterInteractions.TabCounterLongClick
 import org.mozilla.fenix.search.fixtures.assertSearchSelectorEquals
 import org.mozilla.fenix.search.fixtures.buildExpectedSearchSelector
 import org.mozilla.fenix.tabstray.Page
-import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
 import org.robolectric.Shadows.shadowOf
 import mozilla.components.ui.icons.R as iconsR
 
@@ -121,6 +118,7 @@ class BrowserToolbarMiddlewareTest {
     fun setup() = runTestOnMain {
         every { testContext.settings().shouldUseExpandedToolbar } returns false
         every { testContext.settings().isTabStripEnabled } returns false
+        every { testContext.settings().tabManagerEnhancementsEnabled } returns false
     }
 
     @Test
@@ -130,16 +128,6 @@ class BrowserToolbarMiddlewareTest {
             browserStore,
             mockk(),
             mockk(),
-            tabManagementFeatureHelper = object : TabManagementFeatureHelper {
-                override val enhancementsEnabledNightly: Boolean
-                    get() = false
-                override val enhancementsEnabledBeta: Boolean
-                    get() = false
-                override val enhancementsEnabledRelease: Boolean
-                    get() = false
-                override val enhancementsEnabled: Boolean
-                    get() = false
-            },
         )
 
         val toolbarStore = buildStore(middleware)
@@ -494,7 +482,7 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN in normal browsing mode WHEN the page origin is clicked THEN start the search UX for normal browsing`() {
         val browsingModeManager = SimpleBrowsingModeManager(Normal)
         val navController: NavController = mockk(relaxed = true)
-        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk(), mockk())
+        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
         val toolbarStore = buildStore(
             middleware = middleware,
             navController = navController,
@@ -510,7 +498,7 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN in private browsing mode WHEN the page origin is clicked THEN start the search UX for private browsing`() {
         val browsingModeManager = SimpleBrowsingModeManager(Private)
         val navController: NavController = mockk(relaxed = true)
-        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk(), mockk())
+        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
         val toolbarStore = buildStore(
             middleware = middleware,
             navController = navController,
@@ -605,7 +593,7 @@ class BrowserToolbarMiddlewareTest {
                 ),
             ),
         )
-        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk(), mockk())
+        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
         val toolbarStore = buildStore(middleware)
 
         browserStore.dispatch(ApplicationSearchEnginesLoaded(listOf(otherSearchEngine))).joinBlocking()
