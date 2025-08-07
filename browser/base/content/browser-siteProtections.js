@@ -339,6 +339,7 @@ let Fingerprinting =
         "not-blocking": "protections-not-blocking-fingerprinters",
       },
     };
+    #isInitialized = false;
 
     constructor() {
       super(
@@ -366,15 +367,24 @@ let Fingerprinting =
     init() {
       this.updateEnabled();
 
-      Services.prefs.addObserver(this.prefEnabled, this);
-      Services.prefs.addObserver(this.prefFPPEnabled, this);
-      Services.prefs.addObserver(this.prefFPPEnabledInPrivateWindows, this);
+      if (!this.#isInitialized) {
+        Services.prefs.addObserver(this.prefEnabled, this);
+        Services.prefs.addObserver(this.prefFPPEnabled, this);
+        Services.prefs.addObserver(this.prefFPPEnabledInPrivateWindows, this);
+        this.#isInitialized = true;
+      }
     }
 
     uninit() {
-      Services.prefs.removeObserver(this.prefEnabled, this);
-      Services.prefs.removeObserver(this.prefFPPEnabled, this);
-      Services.prefs.removeObserver(this.prefFPPEnabledInPrivateWindows, this);
+      if (this.#isInitialized) {
+        Services.prefs.removeObserver(this.prefEnabled, this);
+        Services.prefs.removeObserver(this.prefFPPEnabled, this);
+        Services.prefs.removeObserver(
+          this.prefFPPEnabledInPrivateWindows,
+          this
+        );
+        this.#isInitialized = false;
+      }
     }
 
     updateEnabled() {
@@ -450,6 +460,7 @@ let TrackingProtection =
         "not-blocking": "protections-not-blocking-tracking-content",
       },
     };
+    #isInitialized = false;
 
     constructor() {
       super(
@@ -506,26 +517,35 @@ let TrackingProtection =
     init() {
       this.updateEnabled();
 
-      Services.prefs.addObserver(this.prefEnabled, this);
-      Services.prefs.addObserver(this.prefEnabledInPrivateWindows, this);
-      Services.prefs.addObserver(this.prefEmailTrackingProtectionEnabled, this);
-      Services.prefs.addObserver(
-        this.prefEmailTrackingProtectionEnabledInPrivateWindows,
-        this
-      );
+      if (!this.#isInitialized) {
+        Services.prefs.addObserver(this.prefEnabled, this);
+        Services.prefs.addObserver(this.prefEnabledInPrivateWindows, this);
+        Services.prefs.addObserver(
+          this.prefEmailTrackingProtectionEnabled,
+          this
+        );
+        Services.prefs.addObserver(
+          this.prefEmailTrackingProtectionEnabledInPrivateWindows,
+          this
+        );
+        this.#isInitialized = true;
+      }
     }
 
     uninit() {
-      Services.prefs.removeObserver(this.prefEnabled, this);
-      Services.prefs.removeObserver(this.prefEnabledInPrivateWindows, this);
-      Services.prefs.removeObserver(
-        this.prefEmailTrackingProtectionEnabled,
-        this
-      );
-      Services.prefs.removeObserver(
-        this.prefEmailTrackingProtectionEnabledInPrivateWindows,
-        this
-      );
+      if (this.#isInitialized) {
+        Services.prefs.removeObserver(this.prefEnabled, this);
+        Services.prefs.removeObserver(this.prefEnabledInPrivateWindows, this);
+        Services.prefs.removeObserver(
+          this.prefEmailTrackingProtectionEnabled,
+          this
+        );
+        Services.prefs.removeObserver(
+          this.prefEmailTrackingProtectionEnabledInPrivateWindows,
+          this
+        );
+        this.#isInitialized = false;
+      }
     }
 
     observe() {
