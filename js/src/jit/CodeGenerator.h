@@ -160,7 +160,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void emitElementPostWriteBarrier(MInstruction* mir,
                                    const LiveRegisterSet& liveVolatileRegs,
-                                   Register obj, const LAllocation* index,
+                                   Register obj, Register index,
                                    Register scratch,
                                    const ConstantOrRegister& val,
                                    int32_t indexDiff = 0);
