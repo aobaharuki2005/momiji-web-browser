@@ -14376,7 +14376,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-decoration-trim.enabled")) {
       applies_to_first_line: true,
       applies_to_placeholder: true,
       applies_to_cue: true,
-      initial_values: ["auto"],
+      initial_values: ["0"],
       other_values: [
         "0",
         "-14px",
