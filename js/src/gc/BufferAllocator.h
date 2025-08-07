@@ -340,11 +340,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 
   enum class SizeKind : uint8_t { Small, Medium };
 
-  enum class SweepKind : uint8_t {
-    SweepTenured = 0,
-    SweepNursery,
-    RebuildFreeLists
-  };
+  enum class SweepKind : uint8_t { Tenured = 0, Nursery };
 
   // The zone this allocator is associated with.
   MainThreadOrGCTaskData<JS::Zone*> zone;
