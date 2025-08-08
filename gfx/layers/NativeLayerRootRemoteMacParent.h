@@ -18,7 +18,8 @@ namespace layers {
 // process.
 class NativeLayerRootRemoteMacParent final : public NativeLayerRemoteParent {
  public:
-  NS_INLINE_DECL_REFCOUNTING(NativeLayerRootRemoteMacParent, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NativeLayerRootRemoteMacParent,
+                                        override)
 
   explicit NativeLayerRootRemoteMacParent(
       RefPtr<NativeLayerRootCA> aRealNativeLayerRoot);

@@ -25,6 +25,7 @@
 #include "mozilla/layers/NativeLayerCA.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/TextEventDispatcher.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/SurfacePool.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
@@ -875,20 +876,10 @@ void nsCocoaWindow::HandleMainThreadCATransaction() {
 }
 
 void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
-  // Eventually, we're going to call nsBaseWidget::CreateCompositor to do the
-  // real work. Before we do that, we need to prepare some internal state if
-  // we have a GPU process, and we think that we will be creating a remote
-  // compositor that will run in that process.
-
-  // Because there are some early exit failure cases, we use a MakeScopeExit
-  // to do the actual call to nsBaseWidget::CreateCompositor, which has to
-  // come last.
-  auto finishCompositorCreation =
-      MakeScopeExit([&] { nsBaseWidget::CreateCompositor(aWidth, aHeight); });
+  MOZ_ASSERT(!mNativeLayerRootRemoteMacParent);
 
   // Create NativeLayerRemoteMac endpoints, if there's a GPU process.
-
-  // Bug 1978432: We want this to run on something other than the main process.
+  // The actual call to Bind will happen later, on the compositor thread.
   auto* pm = mozilla::gfx::GPUProcessManager::Get();
   mozilla::ipc::EndpointProcInfo gpuProcessInfo =
       (pm ? pm->GPUEndpointProcInfo()
@@ -902,33 +893,48 @@ void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
   mozilla::ipc::Endpoint<PNativeLayerRemoteParent> parentEndpoint;
   auto rv = PNativeLayerRemote::CreateEndpoints(
       mozilla::ipc::EndpointProcInfo::Current(), childProcessInfo,
-      &parentEndpoint, &mChildEndpoint);
-  if (NS_FAILED(rv)) {
-    return;
+      &mParentEndpoint, &mChildEndpoint);
+
+  if (NS_SUCCEEDED(rv)) {
+    // Create our mNativeLayerRootRemoteMacParent.
+    mNativeLayerRootRemoteMacParent =
+        new NativeLayerRootRemoteMacParent(mNativeLayerRoot);
+
+    // We want the rest to run on the compositor thread.
+    MOZ_ASSERT(CompositorThread());
+    CompositorThread()->Dispatch(NewRunnableMethod<int, int>(
+        "nsCocoaWindow::FinishCreateCompositor", this,
+        &nsCocoaWindow::FinishCreateCompositor, aWidth, aHeight));
   }
 
-  // Create our mNativeLayerRootRemoteMacParent, and bind it to the parent side
-  // of the endpoint.
-  mNativeLayerRootRemoteMacParent =
-      new NativeLayerRootRemoteMacParent(mNativeLayerRoot);
-  MOZ_ALWAYS_TRUE(parentEndpoint.Bind(mNativeLayerRootRemoteMacParent));
-  // If this Bind fails, there's not much we can do, except signal somehow that
-  // we want to retry with an in-process compositor.
+  nsBaseWidget::CreateCompositor(aWidth, aHeight);
+}
 
-  // If everything has gone well, the mChildPipe will be used in
-  // GetCompositorWidgetInitData, to send the endpoint to the compositor widget.
-  // Later, the render thread will bind a NativeLayerRemoteMacChild to the child
-  // side of the endpoint. Once that is done, the compositor widget child actor
-  // can send messages to our parent actor, and we can update the real
-  // mNativeLayerRoot with the GPU surfaces.
+void nsCocoaWindow::FinishCreateCompositor(int aWidth, int aHeight) {
+  MOZ_ASSERT(mNativeLayerRootRemoteMacParent);
+  MOZ_ALWAYS_TRUE(mParentEndpoint.Bind(mNativeLayerRootRemoteMacParent));
+  // If this Bind fails, there's not much we can do, except signal somehow
+  // that we want to retry with an in-process compositor.
 
-  // There's nothing left to do but fall out of scope and finish the compositor
-  // creation.
+  // If everything has gone well, the mChildEndpoint will be used in
+  // GetCompositorWidgetInitData, to send the endpoint to the compositor
+  // widget. Later, the render thread will bind a NativeLayerRemoteMacChild
+  // to the child side of the endpoint. Once that is done, the compositor
+  // widget child actor can send messages to our parent actor, and we can
+  // update the real mNativeLayerRoot with the GPU surfaces.
 }
 
 void nsCocoaWindow::DestroyCompositor() {
-  if (mNativeLayerRootRemoteMacParent) {
-    mNativeLayerRootRemoteMacParent->Close();
+  // The main work here is to close the mNativeLayerRootRemoteMacParent.
+  // The call to Bind was done on the compositor thread, so we need to
+  // dispatch to that thread. Move the existing
+  // mNativeLayerRootRemoteMacParent out, leaving it null.
+  if (RefPtr<NativeLayerRootRemoteMacParent> actor =
+          std::move(mNativeLayerRootRemoteMacParent)) {
+    MOZ_ASSERT(CompositorThread());
+    CompositorThread()->Dispatch(
+        NewRunnableMethod("NativeLayerRootRemoteMacParent::Close", actor,
+                          &NativeLayerRootRemoteMacParent::Close));
   }
 
   nsBaseWidget::DestroyCompositor();
@@ -948,6 +954,7 @@ void nsCocoaWindow::SetCompositorWidgetDelegate(
 
 void nsCocoaWindow::GetCompositorWidgetInitData(
     mozilla::widget::CompositorWidgetInitData* aInitData) {
+  MOZ_ASSERT(mChildEndpoint.IsValid());
   auto deviceIntRect = GetBounds();
   *aInitData = mozilla::widget::CocoaCompositorWidgetInitData(
       deviceIntRect.Size(), std::move(mChildEndpoint));
@@ -4599,8 +4606,6 @@ nsCocoaWindow::~nsCocoaWindow() {
   if (mNativeLayerRoot) {
     mNativeLayerRoot->SetLayers({});
   }
-
-  DestroyCompositor();
 
   // An nsCocoaWindow object that was in use can be destroyed without Destroy()
   // ever being called on it.  So we also need to do a quick, safe cleanup
