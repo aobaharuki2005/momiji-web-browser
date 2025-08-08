@@ -211,10 +211,8 @@ internal sealed class HomepageState {
 @Composable
 private fun getBottomSpace(): Dp {
     val toolbarHeight = LocalContext.current.settings().getBottomToolbarContainerHeight().dp
-    // We need this 88 dp because of this bug: https://github.com/mozilla-mobile/fenix/issues/20833
-    val extraSpace = 88.dp
 
-    return toolbarHeight + extraSpace + HOME_APP_BAR_HEIGHT
+    return toolbarHeight + HOME_APP_BAR_HEIGHT + 12.dp
 }
 
 /**

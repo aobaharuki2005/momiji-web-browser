@@ -138,6 +138,7 @@ import org.mozilla.fenix.home.topsites.TopSitesConfigConstants.AMAZON_SPONSORED_
 import org.mozilla.fenix.home.topsites.TopSitesConfigConstants.EBAY_SPONSORED_TITLE
 import org.mozilla.fenix.home.topsites.getTopSitesConfig
 import org.mozilla.fenix.home.ui.Homepage
+import org.mozilla.fenix.home.ui.MiddleSearchHomepage
 import org.mozilla.fenix.lifecycle.observePrivateModeLock
 import org.mozilla.fenix.messaging.DefaultMessageController
 import org.mozilla.fenix.messaging.FenixMessageSurfaceId
@@ -969,22 +970,36 @@ class HomeFragment : Fragment() {
                         }.collectAsState(state)
                     }
 
-                    Homepage(
-                        state = HomepageState.build(
-                            appState = appState.value,
-                            settings = settings,
-                            browsingModeManager = browsingModeManager,
-                        ),
-                        interactor = sessionControlInteractor,
-                        onMiddleSearchBarVisibilityChanged = { isVisible ->
-                            // Hide the main address bar in the toolbar when the middle search is
-                            // visible (and vice versa)
-                            toolbarView.updateAddressBarVisibility(!isVisible)
-                        },
-                        onTopSitesItemBound = {
-                            StartupTimeline.onTopSitesItemBound(activity = (requireActivity() as HomeActivity))
-                        },
-                    )
+                    if (settings.enableHomepageSearchBar) {
+                        MiddleSearchHomepage(
+                            state = HomepageState.build(
+                                appState = appState.value,
+                                settings = settings,
+                                browsingModeManager = browsingModeManager,
+                            ),
+                            interactor = sessionControlInteractor,
+                            onMiddleSearchBarVisibilityChanged = { isVisible ->
+                                // Hide the main address bar in the toolbar when the middle search is
+                                // visible (and vice versa)
+                                toolbarView.updateAddressBarVisibility(!isVisible)
+                            },
+                            onTopSitesItemBound = {
+                                StartupTimeline.onTopSitesItemBound(activity = (requireActivity() as HomeActivity))
+                            },
+                        )
+                    } else {
+                        Homepage(
+                            state = HomepageState.build(
+                                appState = appState.value,
+                                settings = settings,
+                                browsingModeManager = browsingModeManager,
+                            ),
+                            interactor = sessionControlInteractor,
+                            onTopSitesItemBound = {
+                                StartupTimeline.onTopSitesItemBound(activity = (requireActivity() as HomeActivity))
+                            },
+                        )
+                    }
 
                     LaunchedEffect(Unit) {
                         onFirstHomepageFrameDrawn()
