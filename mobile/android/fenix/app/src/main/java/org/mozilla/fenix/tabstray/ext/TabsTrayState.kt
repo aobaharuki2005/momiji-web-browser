@@ -8,7 +8,6 @@ import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.text.Text
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.Page
-import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayState.Mode
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 
@@ -22,18 +21,17 @@ fun Mode.isSelect() = this is Mode.Select
  *
  * @param shouldShowInactiveButton Whether or not to show the inactive tabs menu item.
  * @param selectedPage The currently selected page.
- * @param normalTabCount The number of normal tabs.
- * @param privateTabCount The number of private tabs.
- * @param onBookmarkSelectedTabsClick Invoked when the user clicks the menu item to bookmark the selected tabs.
- * @param onCloseSelectedTabsClick Invoked when the user clicks the menu item to close the selected tabs.
- * @param onMakeSelectedTabsInactive Invoked when the user clicks the menu item to force the selected
- * tabs as inactive.
- * @param onTabSettingsClick Invoked when the user clicks the menu item to navigate to tab settings.
- * @param onRecentlyClosedClick Invoked when the user clicks the menu item to navigate to their recently closed tabs.
- * @param onEnterMultiselectModeClick Invoked when the user the menu item to enter multiselect mode.
- * @param onShareAllTabsClick Invoked when the user clicks the menu item to share all of their tabs.
- * @param onDeleteAllTabsClick Invoked when user clicks the menu item to delete all of their tabs.
- * @param onAccountSettingsClick Invoked when user clicks the menu item to navigate to account settings.
+ * @param normalTabCount The normal tabs number.
+ * @param privateTabCount The private tabs number.
+ * @param onBookmarkSelectedTabsClick Invoked when user interacts with the bookmark menu item.
+ * @param onCloseSelectedTabsClick Invoked when user interacts with the close menu item.
+ * @param onMakeSelectedTabsInactive Invoked when user interacts with the make inactive menu item.
+ * @param onTabSettingsClick Invoked when user interacts with the tab settings menu.
+ * @param onRecentlyClosedClick Invoked when user interacts with the recently closed menu item.
+ * @param onEnterMultiselectModeClick Invoked when user enters the multiselect mode.
+ * @param onShareAllTabsClick Invoked when user interacts with the share all menu item.
+ * @param onDeleteAllTabsClick Invoked when user interacts with the delete all menu item.
+ * @param onAccountSettingsClick Invoked when user interacts with the account settings.
  */
 @Suppress("LongParameterList")
 fun Mode.getMenuItems(
@@ -74,15 +72,9 @@ fun Mode.getMenuItems(
 }
 
 /**
- *  Builds the menu items list when in [Mode.Select].
- *
- * @param shouldShowInactiveButton Whether or not to show the inactive tabs menu item.
- * @param onBookmarkSelectedTabsClick Invoked when the user clicks the menu item to bookmark the selected tabs.
- * @param onCloseSelectedTabsClick Invoked when the user clicks the menu item to close the selected tabs.
- * @param onMakeSelectedTabsInactive Invoked when the user clicks the menu item to force the selected
- * tabs as inactive.
+ *  Builds the menu items list when in multiselect mode
  */
-internal fun generateMultiSelectBannerMenuItems(
+private fun generateMultiSelectBannerMenuItems(
     shouldShowInactiveButton: Boolean,
     onBookmarkSelectedTabsClick: () -> Unit,
     onCloseSelectedTabsClick: () -> Unit,
@@ -110,17 +102,7 @@ internal fun generateMultiSelectBannerMenuItems(
 }
 
 /**
- *  Builds the menu items list when in [Mode.Normal].
- *
- * @param selectedPage The currently selected page.
- * @param normalTabCount The number of normal tabs.
- * @param privateTabCount The number of private tabs.
- * @param onTabSettingsClick Invoked when the user clicks the menu item to navigate to tab settings.
- * @param onRecentlyClosedClick Invoked when the user clicks the menu item to navigate to their recently closed tabs.
- * @param onEnterMultiselectModeClick Invoked when the user the menu item to enter multiselect mode.
- * @param onShareAllTabsClick Invoked when the user clicks the menu item to share all of their tabs.
- * @param onDeleteAllTabsClick Invoked when user clicks the menu item to delete all of their tabs.
- * @param onAccountSettingsClick Invoked when user clicks the menu item to navigate to account settings.
+ *  Builds the menu items list when in normal mode
  */
 @Suppress("LongParameterList")
 private fun generateTabPageBannerMenuItems(
@@ -193,32 +175,3 @@ private fun generateTabPageBannerMenuItems(
         else -> emptyList()
     }
 }
-
-/**
- * Builds the menu items list when in [Mode.Normal].
- *
- * @param onTabSettingsClick Invoked when the user clicks the menu item to navigate to tab settings.
- * @param onRecentlyClosedClick Invoked when the user clicks the menu item to navigate to their recently closed tabs.
- * @param onEnterMultiselectModeClick Invoked when the user the menu item to enter multiselect mode.
- * @param onShareAllTabsClick Invoked when the user clicks the menu item to share all of their tabs.
- * @param onDeleteAllTabsClick Invoked when user clicks the menu item to delete all of their tabs.
- * @param onAccountSettingsClick Invoked when user clicks the menu item to navigate to account settings.
- */
-internal fun TabsTrayState.generateMenuItems(
-    onTabSettingsClick: () -> Unit,
-    onRecentlyClosedClick: () -> Unit,
-    onEnterMultiselectModeClick: () -> Unit,
-    onShareAllTabsClick: () -> Unit,
-    onDeleteAllTabsClick: () -> Unit,
-    onAccountSettingsClick: () -> Unit,
-) = generateTabPageBannerMenuItems(
-    selectedPage = selectedPage,
-    normalTabCount = normalTabs.size,
-    privateTabCount = privateTabs.size,
-    onTabSettingsClick = onTabSettingsClick,
-    onRecentlyClosedClick = onRecentlyClosedClick,
-    onEnterMultiselectModeClick = onEnterMultiselectModeClick,
-    onShareAllTabsClick = onShareAllTabsClick,
-    onDeleteAllTabsClick = onDeleteAllTabsClick,
-    onAccountSettingsClick = onAccountSettingsClick,
-)
