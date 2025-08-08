@@ -14,18 +14,18 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8b5653392e88ccd0c
  2 files changed, 5 insertions(+)
 
 diff --git a/video/config/video_encoder_config.h b/video/config/video_encoder_config.h
-index adb78c7706..11e7999057 100644
+index 7fda03ffa8..8ca8462dd0 100644
 --- a/video/config/video_encoder_config.h
 +++ b/video/config/video_encoder_config.h
-@@ -23,6 +23,7 @@
- #include "api/video_codecs/scalability_mode.h"
+@@ -26,6 +26,7 @@
  #include "api/video_codecs/sdp_video_format.h"
+ #include "api/video_codecs/spatial_layer.h"
  #include "api/video_codecs/video_codec.h"
 +#include "api/video_codecs/video_encoder.h"
- #include "rtc_base/ref_count.h"
  
  namespace webrtc {
-@@ -151,6 +152,9 @@ class VideoEncoderConfig {
+ 
+@@ -153,6 +154,9 @@ class VideoEncoderConfig {
          int frame_height,
          const VideoEncoderConfig& encoder_config) = 0;
  

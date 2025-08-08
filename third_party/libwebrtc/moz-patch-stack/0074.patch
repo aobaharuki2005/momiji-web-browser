@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
-index 624f8abf4a..dcc83d4a8b 100644
+index 569e1c62fc..8473f9291e 100644
 --- a/video/task_queue_frame_decode_scheduler.cc
 +++ b/video/task_queue_frame_decode_scheduler.cc
-@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
+@@ -43,7 +43,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
      uint32_t rtp,
      FrameDecodeTiming::FrameSchedule schedule,
      FrameReleaseCallback cb) {
