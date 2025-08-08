@@ -394,6 +394,9 @@ void DataChannelConnection::TransportStateChange(
 void DataChannelConnection::ProcessQueuedOpens() {
   MOZ_ASSERT(mSTS->IsOnCurrentThread());
   std::set<RefPtr<DataChannel>> temp(std::move(mPending));
+  // Technically in an unspecified state, although no reasonable impl will leave
+  // anything in here.
+  mPending.clear();
   for (auto channel : temp) {
     DC_DEBUG(("Processing queued open for %p (%u)", channel.get(),
               channel->mStream));
@@ -1367,7 +1370,6 @@ void DataChannelConnection::CloseAll() {
   MOZ_ASSERT(NS_IsMainThread());
   DC_DEBUG(("Closing all channels (connection %p)", (void*)this));
 
-  // Make sure no more channels will be opened
   // Close current channels
   // If there are runnables, they hold a strong ref and keep the channel
   // and/or connection alive (even if in a CLOSED state)
@@ -1389,7 +1391,11 @@ void DataChannelConnection::CloseAll() {
         }
 
         // Clean up any pending opens for channels
-        for (const auto& channel : mPending) {
+        std::set<RefPtr<DataChannel>> temp(std::move(mPending));
+        // Technically in an unspecified state, although no reasonable impl will
+        // leave anything in here.
+        mPending.clear();
+        for (const auto& channel : temp) {
           DC_DEBUG(("closing pending channel %p, stream %u", channel.get(),
                     channel->mStream));
           FinishClose_s(
