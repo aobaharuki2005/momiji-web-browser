@@ -8,6 +8,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   IPProtectionWidget: "resource:///modules/ipprotection/IPProtection.sys.mjs",
+  IPProtectionService:
+    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
 });
 
 /**
@@ -40,4 +42,43 @@ add_task(async function toolbar_added_and_removed() {
     BrowserTestUtils.isVisible(widget),
     "IP Protection widget should be added back to the navbar"
   );
+});
+
+/**
+ * Tests that the toolbar icon state updates when the connection status changes
+ */
+
+add_task(async function toolbar_icon_status() {
+  let content = await openPanel({ isSignedIn: true });
+  lazy.IPProtectionService.isSignedIn = true;
+
+  Assert.ok(content, "Panel content should be present");
+  let toggle = content.connectionToggleEl;
+  Assert.ok(toggle, "Status card connection toggle should be present");
+
+  let vpnOnPromise = BrowserTestUtils.waitForEvent(
+    lazy.IPProtectionService,
+    "IPProtectionService:Started"
+  );
+  // Toggle the VPN on
+  toggle.click();
+  await vpnOnPromise;
+  let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  Assert.ok(
+    button.classList.contains("ipprotection-on"),
+    "Toolbar icon should now show connected status"
+  );
+  let vpnOffPromise = BrowserTestUtils.waitForEvent(
+    lazy.IPProtectionService,
+    "IPProtectionService:Stopped"
+  );
+  // Toggle the VPN off
+  toggle.click();
+  await vpnOffPromise;
+  Assert.ok(
+    !button.classList.contains("ipprotection-on"),
+    "Toolbar icon should now show disconnected status"
+  );
+
+  await closePanel();
 });
