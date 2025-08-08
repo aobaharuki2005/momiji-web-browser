@@ -925,3 +925,60 @@ void CodeGenerator::visitBitNotI64(LBitNotI64* ins) {
   MOZ_ASSERT(inputR == ToOutRegister64(ins));
   masm.notq(inputR.reg);
 }
+
+void CodeGenerator::visitAddIntPtr(LAddIntPtr* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  MOZ_ASSERT(ToRegister(ins->output()) == lhs);
+
+  if (ins->rhs()->isConstant()) {
+    masm.addPtr(ImmWord(ToIntPtr(ins->rhs())), lhs);
+  } else {
+    masm.addq(ToOperand(ins->rhs()), lhs);
+  }
+}
+
+void CodeGenerator::visitSubIntPtr(LSubIntPtr* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  MOZ_ASSERT(ToRegister(ins->output()) == lhs);
+
+  if (ins->rhs()->isConstant()) {
+    masm.subPtr(ImmWord(ToIntPtr(ins->rhs())), lhs);
+  } else {
+    masm.subq(ToOperand(ins->rhs()), lhs);
+  }
+}
+
+void CodeGenerator::visitMulIntPtr(LMulIntPtr* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  MOZ_ASSERT(ToRegister(ins->output()) == lhs);
+  const LAllocation* rhs = ins->rhs();
+
+  if (rhs->isConstant()) {
+    intptr_t constant = ToIntPtr(rhs);
+
+    switch (constant) {
+      case -1:
+        masm.negPtr(lhs);
+        return;
+      case 0:
+        masm.xorPtr(lhs, lhs);
+        return;
+      case 1:
+        return;
+      case 2:
+        masm.addPtr(lhs, lhs);
+        return;
+    }
+
+    // Use shift if constant is a power of 2.
+    if (constant > 0 && mozilla::IsPowerOfTwo(uintptr_t(constant))) {
+      uint32_t shift = mozilla::FloorLog2(constant);
+      masm.lshiftPtr(Imm32(shift), lhs);
+      return;
+    }
+
+    masm.mulPtr(ImmWord(constant), lhs);
+  } else {
+    masm.imulq(ToOperand(rhs), lhs);
+  }
+}

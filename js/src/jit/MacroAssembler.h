@@ -1152,7 +1152,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void subPtr(Register src, Register dest) PER_ARCH;
   inline void subPtr(Register src, const Address& dest) PER_ARCH;
   inline void subPtr(Imm32 imm, Register dest) PER_ARCH;
-  inline void subPtr(ImmWord imm, Register dest) DEFINED_ON(x64);
+  inline void subPtr(ImmWord imm, Register dest) DEFINED_ON(x86, x64);
   inline void subPtr(const Address& addr, Register dest) PER_ARCH;
 
   inline void sub64(Register64 src, Register64 dest) PER_ARCH;
@@ -1175,6 +1175,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                 Register dest) PER_ARCH;
 
   inline void mulPtr(Register rhs, Register srcDest) PER_ARCH;
+  inline void mulPtr(ImmWord rhs, Register srcDest) DEFINED_ON(x86, x64);
 
   inline void mul64(const Operand& src, const Register64& dest) DEFINED_ON(x64);
   inline void mul64(const Operand& src, const Register64& dest,

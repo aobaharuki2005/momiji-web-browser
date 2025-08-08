@@ -108,13 +108,15 @@ bool BoxInputsPolicy::staticAdjustInputs(TempAllocator& alloc,
 bool ArithPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   MOZ_ASSERT(IsNumberType(ins->type()));
   MOZ_ASSERT(ins->type() == MIRType::Double || ins->type() == MIRType::Int32 ||
-             ins->type() == MIRType::Float32);
+             ins->type() == MIRType::Float32 || ins->type() == MIRType::IntPtr);
 
   for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
     MDefinition* in = ins->getOperand(i);
     if (in->type() == ins->type()) {
       continue;
     }
+    MOZ_ASSERT(ins->type() != MIRType::IntPtr,
+               "conversion to IntPtr not supported");
 
     MInstruction* replace;
 

@@ -1277,6 +1277,13 @@
     rhs: Int64
   defer_init: true
 
+- name: AddIntPtr
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  defer_init: true
+
 - name: SubI
   gen_boilerplate: false
 
@@ -1287,12 +1294,26 @@
     rhs: Int64
   defer_init: true
 
+- name: SubIntPtr
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  defer_init: true
+
 - name: MulI64
   result_type: Int64
   operands:
     lhs: Int64
     rhs: Int64
   num_temps: 1
+  defer_init: true
+
+- name: MulIntPtr
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+    rhs: WordSized
   defer_init: true
 
 # Performs an add, sub, mul, or div on two double values.

@@ -2218,6 +2218,15 @@ void LIRGenerator::visitAdd(MAdd* ins) {
     return;
   }
 
+  if (ins->type() == MIRType::IntPtr) {
+    MOZ_ASSERT(lhs->type() == MIRType::IntPtr);
+    ReorderCommutative(&lhs, &rhs, ins);
+
+    auto* lir = new (alloc()) LAddIntPtr;
+    lowerForALU(lir, ins, lhs, rhs);
+    return;
+  }
+
   if (ins->type() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
     ReorderCommutative(&lhs, &rhs, ins);
@@ -2277,6 +2286,14 @@ void LIRGenerator::visitSub(MSub* ins) {
     return;
   }
 
+  if (ins->type() == MIRType::IntPtr) {
+    MOZ_ASSERT(lhs->type() == MIRType::IntPtr);
+
+    auto* lir = new (alloc()) LSubIntPtr;
+    lowerForALU(lir, ins, lhs, rhs);
+    return;
+  }
+
   if (ins->type() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
     lowerForFPU(new (alloc()) LMathD(JSOp::Sub), ins, lhs, rhs);
@@ -2326,6 +2343,15 @@ void LIRGenerator::visitMul(MMul* ins) {
 
     LMulI64* lir = new (alloc()) LMulI64;
     lowerForMulInt64(lir, ins, lhs, rhs);
+    return;
+  }
+
+  if (ins->type() == MIRType::IntPtr) {
+    MOZ_ASSERT(lhs->type() == MIRType::IntPtr);
+    ReorderCommutative(&lhs, &rhs, ins);
+
+    auto* lir = new (alloc()) LMulIntPtr;
+    lowerForALU(lir, ins, lhs, rhs);
     return;
   }
 

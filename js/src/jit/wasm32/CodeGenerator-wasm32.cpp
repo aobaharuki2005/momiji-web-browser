@@ -39,10 +39,11 @@ void CodeGenerator::visitNegF(LNegF* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitCopySignD(LCopySignD* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitCopySignF(LCopySignF* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitAddI(LAddI* ins) { MOZ_CRASH(); }
+void CodeGenerator::visitAddIntPtr(LAddIntPtr* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitAddI64(LAddI64* lir) { MOZ_CRASH(); }
 void CodeGenerator::visitSubI(LSubI* ins) { MOZ_CRASH(); }
+void CodeGenerator::visitSubIntPtr(LSubIntPtr* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitSubI64(LSubI64* lir) { MOZ_CRASH(); }
-void CodeGenerator::visitMulI64(LMulI64* lir) { MOZ_CRASH(); }
 void CodeGenerator::visitMathD(LMathD* math) { MOZ_CRASH(); }
 void CodeGenerator::visitMathF(LMathF* math) { MOZ_CRASH(); }
 void CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins) {
@@ -217,4 +218,6 @@ void CodeGenerator::visitModI(LModI* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitModPowTwoI(LModPowTwoI* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitMulI(LMulI* ins) { MOZ_CRASH(); }
+void CodeGenerator::visitMulIntPtr(LMulIntPtr* ins) { MOZ_CRASH(); }
+void CodeGenerator::visitMulI64(LMulI64* lir) { MOZ_CRASH(); }
 void CodeGenerator::visitBox(LBox* box) { MOZ_CRASH(); }
