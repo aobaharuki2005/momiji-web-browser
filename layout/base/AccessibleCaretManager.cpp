@@ -314,8 +314,7 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
   nsIFrame* endFrame = GetFrameForFirstRangeStartOrLastRangeEnd(
       eDirPrevious, &endOffset, getter_AddRefs(endContent));
 
-  if (!startFrame || !endFrame ||
-      !CompareTreePosition(startContent, endContent)) {
+  if (!CompareTreePosition(startFrame, endFrame, startContent, endContent)) {
     // XXX: Do we really have to hide carets if this condition isn't satisfied?
     HideCaretsAndDispatchCaretStateChangedEvent();
     return;
@@ -1219,9 +1218,10 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
 }
 
 bool AccessibleCaretManager::CompareTreePosition(
+    const nsIFrame* aStartFrame, const nsIFrame* aEndFrame,
     const nsIContent* aStartContent, const nsIContent* aEndContent) const {
   // nsContentUtils::CompareTreePosition expects non-null content pointers.
-  return aStartContent && aEndContent &&
+  return aStartFrame && aEndFrame && aStartContent && aEndContent &&
          nsContentUtils::CompareTreePosition<TreeKind::DOM>(
              aStartContent, aEndContent, nullptr) <= 0;
 }
