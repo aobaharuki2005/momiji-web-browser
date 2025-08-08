@@ -56,9 +56,6 @@ class OnboardingBaselineProfileGenerator {
             device.clearPackageData(packageName = packageName)
             startActivityAndWait()
             device.completeOnboarding()
-
-            pressHome()
-            device.clearPackageData(packageName = packageName)
         }
     }
 }
