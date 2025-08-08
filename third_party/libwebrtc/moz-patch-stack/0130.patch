@@ -116,7 +116,7 @@ index 8acb889aed..5ffe827398 100644
    public_configs = []
    if (!build_with_chromium) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 2c022ad7ec..0053330920 100644
+index 9c554b0ef3..a2308ccd31 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -1500,6 +1500,7 @@ rtc_source_set("ssl_header") {
@@ -160,7 +160,7 @@ index 2c022ad7ec..0053330920 100644
  rtc_library("ssl") {
  if (!build_with_mozilla) {
 diff --git a/webrtc.gni b/webrtc.gni
-index 2c19b91487..767e59046b 100644
+index aab6b9e272..20736a5abe 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -125,7 +125,7 @@ declare_args() {
@@ -172,7 +172,7 @@ index 2c19b91487..767e59046b 100644
  
    # Enable when an external authentication mechanism is used for performing
    # packet authentication for RTP packets instead of libsrtp.
-@@ -352,7 +352,7 @@ declare_args() {
+@@ -355,7 +355,7 @@ declare_args() {
  }
  
  # Enable liboam only on non-mozilla builds.

@@ -47,7 +47,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a342f5eca8622c8b9
  modules/portal/BUILD.gn                       |  2 +-
  modules/video_coding/BUILD.gn                 |  2 +-
  pc/BUILD.gn                                   |  4 +--
- rtc_base/BUILD.gn                             |  4 +--
+ rtc_base/BUILD.gn                             |  8 +++---
  rtc_base/memory/BUILD.gn                      |  4 +--
  rtc_base/synchronization/BUILD.gn             |  4 +--
  rtc_base/system/BUILD.gn                      |  4 +--
@@ -59,7 +59,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a342f5eca8622c8b9
  tools/grit/BUILD.gn                           |  2 +-
  tools/grit/grit_rule.gni                      | 16 +++++------
  webrtc.gni                                    | 28 +++++++++----------
- 46 files changed, 123 insertions(+), 123 deletions(-)
+ 46 files changed, 125 insertions(+), 125 deletions(-)
 
 diff --git a/.gn b/.gn
 index d07211b9cf..eaa799dbc9 100644
@@ -668,7 +668,7 @@ index 6d5d0ca9da..9f0bf72686 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index dc0c168a35..2c022ad7ec 100644
+index af786a0643..9c554b0ef3 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -682,6 +682,17 @@ index dc0c168a35..2c022ad7ec 100644
  }
  
  rtc_source_set("protobuf_utils") {
+@@ -1838,8 +1838,8 @@ rtc_library("base64") {
+ }
+ 
+ if (rtc_rusty_base64) {
+-  import("//build/config/rust.gni")
+-  import("//build/rust/rust_static_library.gni")
++  import("//chromium/build/config/rust.gni")
++  import("//chromium/build/rust/rust_static_library.gni")
+ 
+   rtc_source_set("base64_header") {
+     sources = [ "base64.h" ]
 diff --git a/rtc_base/memory/BUILD.gn b/rtc_base/memory/BUILD.gn
 index 9a55af3ea9..3d272ba975 100644
 --- a/rtc_base/memory/BUILD.gn
@@ -885,7 +896,7 @@ index fb107ef1a3..b718fa583d 100644
  
  declare_args() {
 diff --git a/webrtc.gni b/webrtc.gni
-index 858c84a6e7..2f24f07e88 100644
+index 224295cbe7..609c9b28d3 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -5,12 +5,12 @@
@@ -933,7 +944,7 @@ index 858c84a6e7..2f24f07e88 100644
  }
  
  if (build_with_chromium) {
-@@ -384,8 +384,8 @@ rtc_common_configs = [ webrtc_root + ":common_config" ]
+@@ -387,8 +387,8 @@ rtc_common_configs = [ webrtc_root + ":common_config" ]
  
  if (is_mac || is_ios) {
    if (filter_include(default_compiler_configs,
@@ -944,7 +955,7 @@ index 858c84a6e7..2f24f07e88 100644
    }
  }
  
-@@ -403,7 +403,7 @@ rtc_common_inherited_config = webrtc_root + ":common_inherited_config"
+@@ -406,7 +406,7 @@ rtc_common_inherited_config = webrtc_root + ":common_inherited_config"
  # Common configs to remove or add in all rtc targets.
  rtc_remove_configs = []
  if (!build_with_chromium && is_clang) {

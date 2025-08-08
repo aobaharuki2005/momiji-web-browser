@@ -1025,7 +1025,7 @@ index e5e74c9fc3..5a0b7024b0 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 918dec9aa7..22bbfb6cc4 100644
+index ed5aa5cfa1..ed12e5c8fc 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -312,6 +312,7 @@ rtc_library("sample_counter") {
@@ -1188,7 +1188,7 @@ index 918dec9aa7..22bbfb6cc4 100644
  
  rtc_library("ssl_adapter") {
    visibility = [ "*" ]
-@@ -2234,7 +2258,7 @@ if (rtc_include_tests) {
+@@ -2294,7 +2318,7 @@ if (rtc_include_tests) {
    }
  }
  
@@ -1292,7 +1292,7 @@ index 04ae5c23de..a75d992348 100644
      "../api:sequence_checker",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/webrtc.gni b/webrtc.gni
-index 6449d045e0..cd4274f290 100644
+index bab740f91b..47078bf271 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1382,7 +1382,7 @@ index 6449d045e0..cd4274f290 100644
  
    # Set this to true to enable the avx2 support in webrtc.
    # TODO: Make sure that AVX2 works also for non-clang compilers.
-@@ -344,6 +351,9 @@ declare_args() {
+@@ -347,6 +354,9 @@ declare_args() {
    rtc_enable_grpc = rtc_enable_protobuf && (is_linux || is_mac)
  }
  
@@ -1392,7 +1392,7 @@ index 6449d045e0..cd4274f290 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1216,7 +1226,7 @@ if (is_mac || is_ios) {
+@@ -1219,7 +1229,7 @@ if (is_mac || is_ios) {
    }
  }
  
