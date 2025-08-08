@@ -28,7 +28,7 @@ Cr-Branched-From: dc428bd75f2ca847b165b2556970c9bcd5037c5b-refs/heads/main@{#444
  2 files changed, 28 insertions(+)
 
 diff --git a/pc/sdp_munging_detector_unittest.cc b/pc/sdp_munging_detector_unittest.cc
-index a06735b6f8..88fa93e0f2 100644
+index ea2ac1ecbd..340021ebfb 100644
 --- a/pc/sdp_munging_detector_unittest.cc
 +++ b/pc/sdp_munging_detector_unittest.cc
 @@ -17,8 +17,11 @@
@@ -43,7 +43,7 @@ index a06735b6f8..88fa93e0f2 100644
  #include "api/audio_codecs/audio_format.h"
  #include "api/audio_codecs/builtin_audio_decoder_factory.h"
  #include "api/audio_codecs/builtin_audio_encoder_factory.h"
-@@ -375,6 +378,7 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
+@@ -399,6 +402,7 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
        {"127.0.1.1:23456", true},  {"8.8.8.8:3456", true},
    };
  
@@ -51,7 +51,7 @@ index a06735b6f8..88fa93e0f2 100644
    for (const auto& address_test : address_tests) {
      std::optional<RTCError> result;
      const std::string candidate = StringFormat(
-@@ -390,8 +394,20 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
+@@ -414,8 +418,20 @@ TEST_F(SdpMungingTest, IceUfragRestrictedAddresses) {
      if (address_test.second == true) {
        EXPECT_TRUE(result.value().ok());
      } else {
@@ -73,10 +73,10 @@ index a06735b6f8..88fa93e0f2 100644
    }
  }
 diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index 6f19d1bee6..22da12b0c8 100644
+index ecb4e8b836..5d4ce93856 100644
 --- a/pc/sdp_offer_answer.cc
 +++ b/pc/sdp_offer_answer.cc
-@@ -5344,6 +5344,18 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
+@@ -5357,6 +5357,18 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
          RTC_LOG(LS_ERROR) << "ReadyToUseRemoteCandidate: Candidate not valid "
                               "because of SDP munging.";
          *valid = false;
