@@ -476,7 +476,7 @@ index 1dfce618d6..72be32f564 100644
  if (rtc_include_tests) {
    rtc_source_set("test_feedback_generator_interface") {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 38e61ef56f..37f772471f 100644
+index a70f751d71..0cf0e2fcf0 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -48,7 +48,7 @@ rtc_library("call_interfaces") {
@@ -1025,7 +1025,7 @@ index c3e0e5af71..1f17788573 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index ed5aa5cfa1..ed12e5c8fc 100644
+index e18918a401..6c082214b4 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -312,6 +312,7 @@ rtc_library("sample_counter") {
@@ -1188,7 +1188,7 @@ index ed5aa5cfa1..ed12e5c8fc 100644
  
  rtc_library("ssl_adapter") {
    visibility = [ "*" ]
-@@ -2294,7 +2318,7 @@ if (rtc_include_tests) {
+@@ -2306,7 +2330,7 @@ if (rtc_include_tests) {
    }
  }
  
@@ -1270,7 +1270,7 @@ index eb8bd0ddf5..ad4661bd82 100644
  rtc_library("call_config_utils") {
    testonly = true
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 04ae5c23de..a75d992348 100644
+index 26be31300f..c68874f3fe 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {

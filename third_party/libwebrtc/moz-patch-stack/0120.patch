@@ -640,7 +640,7 @@ index a693604389..72972d18e1 100644
  import("../../webrtc.gni")
  
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index f6ade85ea5..4919ca4b77 100644
+index d7dc1d4d83..de6d50468d 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
 @@ -6,7 +6,7 @@
@@ -668,7 +668,7 @@ index 6d5d0ca9da..9f0bf72686 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index af786a0643..9c554b0ef3 100644
+index 8faec3ad82..66e908e3ae 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -793,7 +793,7 @@ index 0e3b56163b..25dbdc8c5b 100644
            ]
          }
 diff --git a/system_wrappers/BUILD.gn b/system_wrappers/BUILD.gn
-index 786c469689..62e1694729 100644
+index bb22946ffd..c09605ae7f 100644
 --- a/system_wrappers/BUILD.gn
 +++ b/system_wrappers/BUILD.gn
 @@ -7,8 +7,8 @@
