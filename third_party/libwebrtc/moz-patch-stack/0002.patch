@@ -401,16 +401,16 @@ index 6ba3292fca..5d3a731864 100644
    RTPHeader();
    RTPHeader(const RTPHeader& other);
 diff --git a/api/rtp_parameters.cc b/api/rtp_parameters.cc
-index bb2f500fd4..98a53578d7 100644
+index c6560d4bb0..5285bbd6b3 100644
 --- a/api/rtp_parameters.cc
 +++ b/api/rtp_parameters.cc
-@@ -173,7 +173,8 @@ bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
-          uri == webrtc::RtpExtension::kTransportSequenceNumberV2Uri ||
-          uri == webrtc::RtpExtension::kMidUri ||
-          uri == webrtc::RtpExtension::kRidUri ||
--         uri == webrtc::RtpExtension::kRepairedRidUri;
-+         uri == webrtc::RtpExtension::kRepairedRidUri ||
-+         uri == webrtc::RtpExtension::kCsrcAudioLevelsUri;
+@@ -172,7 +172,8 @@ bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
+          uri == RtpExtension::kTransportSequenceNumberUri ||
+          uri == RtpExtension::kTransportSequenceNumberV2Uri ||
+          uri == RtpExtension::kMidUri || uri == RtpExtension::kRidUri ||
+-         uri == RtpExtension::kRepairedRidUri;
++         uri == RtpExtension::kRepairedRidUri ||
++         uri == RtpExtension::kCsrcAudioLevelsUri;
  }
  
  bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
