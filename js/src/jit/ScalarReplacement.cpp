@@ -3072,6 +3072,7 @@ class SubarrayReplacer : public MDefinitionVisitorDefaultNoop {
   void visitGuardShape(MGuardShape* ins);
   void visitTypedArrayElementSize(MTypedArrayElementSize* ins);
   void visitTypedArrayFill(MTypedArrayFill* ins);
+  void visitTypedArraySet(MTypedArraySet* ins);
   void visitUnbox(MUnbox* ins);
 
   // New instructions created in SubarrayReplacer.
@@ -3093,6 +3094,14 @@ class SubarrayReplacer : public MDefinitionVisitorDefaultNoop {
     }
 
     return false;
+  }
+
+  MDefinition* toSubarrayObject(MDefinition* ins) const {
+    MOZ_ASSERT(isSubarrayOrGuard(ins));
+    if (ins == subarray_) {
+      return subarray()->object();
+    }
+    return ins;
   }
 
   auto* templateObject() const {
@@ -3320,6 +3329,64 @@ void SubarrayReplacer::visitTypedArrayFill(MTypedArrayFill* ins) {
   ins->block()->discard(ins);
 }
 
+void SubarrayReplacer::visitTypedArraySet(MTypedArraySet* ins) {
+  // Skip other typed array objects.
+  if (!isSubarrayOrGuard(ins->target()) && !isSubarrayOrGuard(ins->source())) {
+    return;
+  }
+
+  // The replaced |subarray| instruction can be the target, source, or both
+  // operands of MTypedArraySet:
+  //
+  // - Target operand: `ta.subarray(...).set(...)`
+  // - Source operand: `ta.set(src.subarray(...), ...)`
+  // - Both operands: `sub = src.subarray(...); sub.set(sub, ...)`.
+  //
+  // When |subarray| is the target operand, |subarray->start| needs to be added
+  // to |ins->offset|.
+  //
+  // When |subarray| is the source operand, MTypedArraySet is replaced with
+  // MTypedArraySetFromSubarray to pass through |subarray->start| and
+  // |subarray->length|.
+  //
+  // When |subarray| is both the target and the source operand, the call is
+  // either a no-op instruction, or bails out and then throws an exception.
+
+  MInstruction* replacement;
+  if (isSubarrayOrGuard(ins->target()) && isSubarrayOrGuard(ins->source())) {
+    // Either a no-op when the offset is zero. Or bails out when the offset is
+    // non-zero. (Bail-out happens through MGuardTypedArraySetOffset.)
+    replacement = MNop::New(alloc());
+  } else if (isSubarrayOrGuard(ins->target())) {
+    auto* target = toSubarrayObject(ins->target());
+
+    // Addition can't overflow because preceding guards ensure:
+    // 1. |ins->offset()| and |subarray->start()| are both non-negative.
+    // 2. |ins->offset()| is a valid index into |subarray|.
+    // 3. |subarray->start()| is a valid index |subarray->object()|.
+    auto* newOffset =
+        MAdd::New(alloc(), ins->offset(), subarray()->start(), MIRType::IntPtr);
+    ins->block()->insertBefore(ins, newOffset);
+
+    replacement = MTypedArraySet::New(alloc(), target, ins->source(), newOffset,
+                                      ins->canUseBitwiseCopy());
+  } else {
+    auto* source = toSubarrayObject(ins->source());
+
+    replacement = MTypedArraySetFromSubarray::New(
+        alloc(), ins->target(), source, ins->offset(), subarray()->start(),
+        subarray()->length(), ins->canUseBitwiseCopy());
+  }
+  replacement->stealResumePoint(ins);
+  ins->block()->insertBefore(ins, replacement);
+
+  // Replace the set.
+  ins->replaceAllUsesWith(replacement);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
 // Returns false if the subarray typed array object does not escape.
 bool SubarrayReplacer::escapes(MInstruction* ins) const {
   MOZ_ASSERT(ins->type() == MIRType::Object);
@@ -3384,6 +3451,7 @@ bool SubarrayReplacer::escapes(MInstruction* ins) const {
       case MDefinition::Opcode::ArrayBufferViewLength:
       case MDefinition::Opcode::TypedArrayElementSize:
       case MDefinition::Opcode::TypedArrayFill:
+      case MDefinition::Opcode::TypedArraySet:
         break;
 
       // This instruction is a no-op used to test that scalar replacement is

@@ -361,6 +361,15 @@ bool TypedArraySet(JSContext* cx, TypedArrayObject* target,
 void TypedArraySetInfallible(TypedArrayObject* target, TypedArrayObject* source,
                              intptr_t offset);
 
+bool TypedArraySetFromSubarray(JSContext* cx, TypedArrayObject* target,
+                               TypedArrayObject* source, intptr_t offset,
+                               intptr_t sourceOffset, intptr_t sourceLength);
+
+void TypedArraySetFromSubarrayInfallible(TypedArrayObject* target,
+                                         TypedArrayObject* source,
+                                         intptr_t offset, intptr_t sourceOffset,
+                                         intptr_t sourceLength);
+
 TypedArrayObject* TypedArraySubarray(JSContext* cx,
                                      Handle<TypedArrayObject*> obj,
                                      intptr_t start, intptr_t end);

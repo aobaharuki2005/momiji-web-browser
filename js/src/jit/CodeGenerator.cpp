@@ -11267,6 +11267,40 @@ void CodeGenerator::visitTypedArraySet(LTypedArraySet* lir) {
   }
 }
 
+void CodeGenerator::visitTypedArraySetFromSubarray(
+    LTypedArraySetFromSubarray* lir) {
+  Register target = ToRegister(lir->target());
+  Register source = ToRegister(lir->source());
+  Register offset = ToRegister(lir->offset());
+  Register sourceOffset = ToRegister(lir->sourceOffset());
+  Register sourceLength = ToRegister(lir->sourceLength());
+
+  // Bit-wise copying is infallible because it doesn't need to allocate any
+  // temporary memory, even if the underlying buffers are the same.
+  if (lir->mir()->canUseBitwiseCopy()) {
+    masm.setupAlignedABICall();
+    masm.passABIArg(target);
+    masm.passABIArg(source);
+    masm.passABIArg(offset);
+    masm.passABIArg(sourceOffset);
+    masm.passABIArg(sourceLength);
+
+    using Fn = void (*)(TypedArrayObject*, TypedArrayObject*, intptr_t,
+                        intptr_t, intptr_t);
+    masm.callWithABI<Fn, js::TypedArraySetFromSubarrayInfallible>();
+  } else {
+    pushArg(sourceLength);
+    pushArg(sourceOffset);
+    pushArg(offset);
+    pushArg(source);
+    pushArg(target);
+
+    using Fn = bool (*)(JSContext*, TypedArrayObject*, TypedArrayObject*,
+                        intptr_t, intptr_t, intptr_t);
+    callVM<Fn, js::TypedArraySetFromSubarray>(lir);
+  }
+}
+
 void CodeGenerator::visitTypedArraySubarray(LTypedArraySubarray* lir) {
   pushArg(ToRegister(lir->length()));
   pushArg(ToRegister(lir->start()));

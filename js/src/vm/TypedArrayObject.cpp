@@ -1830,16 +1830,17 @@ template <typename T>
 static inline bool SetFromTypedArray(TypedArrayObject* target,
                                      size_t targetLength,
                                      TypedArrayObject* source,
-                                     size_t sourceLength, size_t offset) {
+                                     size_t sourceLength, size_t offset,
+                                     size_t sourceOffset = 0) {
   // WARNING: |source| may be an unwrapped typed array from a different
   // compartment. Proceed with caution!
 
   if (target->isSharedMemory() || source->isSharedMemory()) {
     return ElementSpecific<T, SharedOps>::setFromTypedArray(
-        target, targetLength, source, sourceLength, offset);
+        target, targetLength, source, sourceLength, offset, sourceOffset);
   }
   return ElementSpecific<T, UnsharedOps>::setFromTypedArray(
-      target, targetLength, source, sourceLength, offset);
+      target, targetLength, source, sourceLength, offset, sourceOffset);
 }
 
 template <typename T>
@@ -2093,6 +2094,53 @@ void js::TypedArraySetInfallible(TypedArrayObject* target,
   AutoUnsafeCallWithABI unsafe;
 
   MOZ_ALWAYS_TRUE(::TypedArraySet(target, source, offset));
+}
+
+static bool TypedArraySetFromSubarray(TypedArrayObject* target,
+                                      TypedArrayObject* source, intptr_t offset,
+                                      intptr_t sourceOffset,
+                                      intptr_t sourceLength) {
+  MOZ_ASSERT(offset >= 0);
+  MOZ_ASSERT(sourceOffset >= 0);
+  MOZ_ASSERT(sourceLength >= 0);
+
+  size_t targetLength = target->length().valueOr(0);
+
+  switch (target->type()) {
+#define SET_FROM_TYPED_ARRAY(_, T, N)                                 \
+  case Scalar::N:                                                     \
+    return SetFromTypedArray<T>(target, targetLength, source,         \
+                                size_t(sourceLength), size_t(offset), \
+                                size_t(sourceOffset));
+    JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
+#undef SET_FROM_TYPED_ARRAY
+    default:
+      break;
+  }
+  MOZ_CRASH("Unsupported TypedArray type");
+}
+
+bool js::TypedArraySetFromSubarray(JSContext* cx, TypedArrayObject* target,
+                                   TypedArrayObject* source, intptr_t offset,
+                                   intptr_t sourceOffset,
+                                   intptr_t sourceLength) {
+  if (!::TypedArraySetFromSubarray(target, source, offset, sourceOffset,
+                                   sourceLength)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
+}
+
+void js::TypedArraySetFromSubarrayInfallible(TypedArrayObject* target,
+                                             TypedArrayObject* source,
+                                             intptr_t offset,
+                                             intptr_t sourceOffset,
+                                             intptr_t sourceLength) {
+  AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ALWAYS_TRUE(::TypedArraySetFromSubarray(target, source, offset,
+                                              sourceOffset, sourceLength));
 }
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9

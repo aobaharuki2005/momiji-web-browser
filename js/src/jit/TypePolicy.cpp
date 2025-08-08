@@ -1085,6 +1085,8 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   _(MixPolicy<ObjectPolicy<0>, CacheIdPolicy<1>, NoFloatPolicy<2>>)           \
   _(MixPolicy<ObjectPolicy<0>, BoxExceptPolicy<1, MIRType::Object>,           \
               CacheIdPolicy<2>>)                                              \
+  _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, IntPtrPolicy<2>,              \
+              IntPtrPolicy<3>, IntPtrPolicy<4>>)                              \
   _(MixPolicy<BoxPolicy<0>, ObjectPolicy<1>>)                                 \
   _(MixPolicy<ConvertToStringPolicy<0>, ConvertToStringPolicy<1>>)            \
   _(MixPolicy<ConvertToStringPolicy<0>, ObjectPolicy<1>>)                     \

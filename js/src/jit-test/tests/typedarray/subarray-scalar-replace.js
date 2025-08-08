@@ -166,3 +166,70 @@ function testFill() {
 }
 testFill();
 
+// Test |set| with scalar replaced |subarray| as source works.
+function testSetSource() {
+  var i8 = new Int8Array(10);
+  var i32 = new Int32Array(10);
+  var i64 = new BigInt64Array(10);
+
+  var i8_source = new Int8Array(10).map((v, k) => k);
+  var i32_source = new Int32Array(10).map((v, k) => k * 1000);
+  var i64_source = new BigInt64Array(10).map((v, k) => BigInt(k) * 1_000_000_000_000n);
+
+  for (var i = 0; i < 100; ++i) {
+    i8.fill(0);
+    i32.fill(0);
+    i64.fill(0n);
+
+    var sub_i8 = i8_source.subarray();
+    i8.set(sub_i8);
+    assertRecoveredOnBailout(sub_i8, true);
+
+    var sub_i32 = i32_source.subarray(-8, -2);
+    i32.set(sub_i32, 3);
+    assertRecoveredOnBailout(sub_i32, true);
+
+    var sub_i64 = i64_source.subarray(5, 7);
+    i64.set(sub_i64, 5);
+    assertRecoveredOnBailout(sub_i64, true);
+
+    assertEqArray(i8, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    assertEqArray(i32, [0, 0, 0, 2000, 3000, 4000, 5000, 6000, 7000, 0]);
+    assertEqArray(i64, [0n, 0n, 0n, 0n, 0n, 5000000000000n, 6000000000000n, 0n, 0n, 0n]);
+  }
+}
+testSetSource();
+
+// Test |set| with scalar replaced |subarray| as target works.
+function testSetTarget() {
+  var i8 = new Int8Array(10);
+  var i32 = new Int32Array(10);
+  var i64 = new BigInt64Array(10);
+
+  var i8_source = new Int8Array(10).map((v, k) => k);
+  var i32_source = new Int32Array(2).map((v, k) => (k + 1) * 1000);
+  var i64_source = new BigInt64Array(4).map((v, k) => BigInt(k + 1) * 0x1111_1111n);
+
+  for (var i = 0; i < 100; ++i) {
+    i8.fill(0);
+    i32.fill(0);
+    i64.fill(0n);
+
+    var sub_i8 = i8.subarray();
+    sub_i8.set(i8_source);
+    assertRecoveredOnBailout(sub_i8, true);
+
+    var sub_i32 = i32.subarray(-8, -3);
+    sub_i32.set(i32_source, 3);
+    assertRecoveredOnBailout(sub_i32, true);
+
+    var sub_i64 = i64.subarray(2, 8);
+    sub_i64.set(i64_source, 1);
+    assertRecoveredOnBailout(sub_i64, true);
+
+    assertEqArray(i8, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    assertEqArray(i32, [0, 0, 0, 0, 0, 1000, 2000, 0, 0, 0]);
+    assertEqArray(i64, [0n, 0n, 0n, 0x1111_1111n, 0x2222_2222n, 0x3333_3333n, 0x4444_4444n, 0n, 0n, 0n]);
+  }
+}
+testSetTarget();
