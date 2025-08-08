@@ -2756,6 +2756,10 @@ MDefinition* MBinaryBitwiseInstruction::foldsTo(TempAllocator& alloc) {
     if (MDefinition* folded = EvaluateInt64ConstantOperands(alloc, this)) {
       return folded;
     }
+  } else if (type() == MIRType::IntPtr) {
+    if (MDefinition* folded = EvaluateIntPtrConstantOperands(alloc, this)) {
+      return folded;
+    }
   }
 
   return this;

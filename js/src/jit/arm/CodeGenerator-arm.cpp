@@ -1022,6 +1022,60 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
   }
 }
 
+void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  const LAllocation* rhs = ins->rhs();
+  Register dest = ToRegister(ins->output());
+
+  if (rhs->isConstant()) {
+    int32_t shift = ToIntPtr(rhs) & 0x1F;
+    switch (ins->bitop()) {
+      case JSOp::Lsh:
+        if (shift) {
+          masm.ma_lsl(Imm32(shift), lhs, dest);
+        } else {
+          masm.ma_mov(lhs, dest);
+        }
+        break;
+      case JSOp::Rsh:
+        if (shift) {
+          masm.ma_asr(Imm32(shift), lhs, dest);
+        } else {
+          masm.ma_mov(lhs, dest);
+        }
+        break;
+      case JSOp::Ursh:
+        if (shift) {
+          masm.ma_lsr(Imm32(shift), lhs, dest);
+        } else {
+          masm.ma_mov(lhs, dest);
+        }
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+  } else {
+    // The shift amounts should be AND'ed into the 0-31 range since arm
+    // shifts by the lower byte of the register (it will attempt to shift by
+    // 250 if you ask it to).
+    masm.as_and(dest, ToRegister(rhs), Imm8(0x1F));
+
+    switch (ins->bitop()) {
+      case JSOp::Lsh:
+        masm.ma_lsl(dest, lhs, dest);
+        break;
+      case JSOp::Rsh:
+        masm.ma_asr(dest, lhs, dest);
+        break;
+      case JSOp::Ursh:
+        masm.ma_lsr(dest, lhs, dest);
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+  }
+}
+
 void CodeGenerator::visitUrshD(LUrshD* ins) {
   Register lhs = ToRegister(ins->lhs());
   Register temp = ToRegister(ins->temp0());

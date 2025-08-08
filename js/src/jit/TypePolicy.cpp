@@ -316,7 +316,18 @@ bool TestPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
 
 bool BitwisePolicy::adjustInputs(TempAllocator& alloc,
                                  MInstruction* ins) const {
-  MOZ_ASSERT(ins->type() == MIRType::Int32 || ins->type() == MIRType::Double);
+  MOZ_ASSERT(ins->type() == MIRType::Int32 || ins->type() == MIRType::Double ||
+             ins->type() == MIRType::IntPtr);
+
+  // No type conversion needed when using IntPtr.
+  if (ins->type() == MIRType::IntPtr) {
+#ifdef DEBUG
+    for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
+      MOZ_ASSERT(ins->getOperand(i)->type() == MIRType::IntPtr);
+    }
+#endif
+    return true;
+  }
 
   // This policy works for both unary and binary bitwise operations.
   for (size_t i = 0, e = ins->numOperands(); i < e; i++) {

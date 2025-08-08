@@ -1559,6 +1559,50 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
   }
 }
 
+void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  const LAllocation* rhs = ins->rhs();
+
+  if (rhs->isConstant()) {
+    constexpr intptr_t mask = (sizeof(intptr_t) * CHAR_BIT) - 1;
+    int32_t shift = ToIntPtr(rhs) & mask;
+    switch (ins->bitop()) {
+      case JSOp::Lsh:
+        if (shift) {
+          masm.lshiftPtr(Imm32(shift), lhs);
+        }
+        break;
+      case JSOp::Rsh:
+        if (shift) {
+          masm.rshiftPtrArithmetic(Imm32(shift), lhs);
+        }
+        break;
+      case JSOp::Ursh:
+        if (shift) {
+          masm.rshiftPtr(Imm32(shift), lhs);
+        }
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+  } else {
+    Register shift = ToRegister(rhs);
+    switch (ins->bitop()) {
+      case JSOp::Lsh:
+        masm.lshiftPtr(shift, lhs);
+        break;
+      case JSOp::Rsh:
+        masm.rshiftPtrArithmetic(shift, lhs);
+        break;
+      case JSOp::Ursh:
+        masm.rshiftPtr(shift, lhs);
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+  }
+}
+
 void CodeGenerator::visitShiftI64(LShiftI64* lir) {
   LInt64Allocation lhs = lir->lhs();
   const LAllocation* rhs = lir->rhs();

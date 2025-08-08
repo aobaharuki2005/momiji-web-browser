@@ -1781,6 +1781,13 @@ void LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins) {
     return;
   }
 
+  if (ins->type() == MIRType::IntPtr) {
+    MOZ_ASSERT(lhs->type() == MIRType::IntPtr);
+    MOZ_ASSERT(rhs->type() == MIRType::IntPtr);
+    lowerForShift(new (alloc()) LShiftIntPtr(op), ins, lhs, rhs);
+    return;
+  }
+
   MOZ_CRASH("Unhandled integer specialization");
 }
 

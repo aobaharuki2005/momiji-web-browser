@@ -990,6 +990,17 @@
   extra_name: true
   defer_init: true
 
+- name: ShiftIntPtr
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  arguments:
+    bitop: JSOp
+  mir_op: Instruction
+  extra_name: true
+  defer_init: true
+
 - name: ShiftI64
   result_type: Int64
   operands:

@@ -27,6 +27,7 @@ void CodeGenerator::visitBitNotI64(LBitNotI64* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitBitOpI(LBitOpI* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitBitOpI64(LBitOpI64* lir) { MOZ_CRASH(); }
 void CodeGenerator::visitShiftI(LShiftI* ins) { MOZ_CRASH(); }
+void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitShiftI64(LShiftI64* lir) { MOZ_CRASH(); }
 void CodeGenerator::visitSignExtendInt64(LSignExtendInt64* lir) { MOZ_CRASH(); }
 void CodeGenerator::visitUrshD(LUrshD* ins) { MOZ_CRASH(); }

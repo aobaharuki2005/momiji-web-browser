@@ -925,6 +925,44 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
   }
 }
 
+void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) {
+  ARMRegister lhs = toXRegister(ins->lhs());
+  const LAllocation* rhs = ins->rhs();
+  ARMRegister dest = toXRegister(ins->output());
+
+  if (rhs->isConstant()) {
+    int32_t shift = ToIntPtr(rhs) & 0x3F;
+    switch (ins->bitop()) {
+      case JSOp::Lsh:
+        masm.Lsl(dest, lhs, shift);
+        break;
+      case JSOp::Rsh:
+        masm.Asr(dest, lhs, shift);
+        break;
+      case JSOp::Ursh:
+        masm.Lsr(dest, lhs, shift);
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+  } else {
+    ARMRegister rhsreg = toXRegister(rhs);
+    switch (ins->bitop()) {
+      case JSOp::Lsh:
+        masm.Lsl(dest, lhs, rhsreg);
+        break;
+      case JSOp::Rsh:
+        masm.Asr(dest, lhs, rhsreg);
+        break;
+      case JSOp::Ursh:
+        masm.Lsr(dest, lhs, rhsreg);
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+  }
+}
+
 void CodeGenerator::visitUrshD(LUrshD* ins) {
   const ARMRegister lhs = toWRegister(ins->lhs());
   const LAllocation* rhs = ins->rhs();

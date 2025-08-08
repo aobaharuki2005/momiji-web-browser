@@ -4220,8 +4220,7 @@ class MBinaryBitwiseInstruction : public MBinaryInstruction,
       : MBinaryInstruction(op, left, right),
         maskMatchesLeftRange(false),
         maskMatchesRightRange(false) {
-    MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64 ||
-               (isUrsh() && type == MIRType::Double));
+    MOZ_ASSERT(IsIntType(type) || (isUrsh() && type == MIRType::Double));
     setResultType(type);
     setMovable();
   }
@@ -4361,7 +4360,9 @@ class MLsh : public MShiftInstruction {
   void computeRange(TempAllocator& alloc) override;
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return type() != MIRType::Int64; }
+  bool canRecoverOnBailout() const override {
+    return IsTypeRepresentableAsDouble(type());
+  }
 
   ALLOW_CLONE(MLsh)
 };
@@ -4383,7 +4384,9 @@ class MRsh : public MShiftInstruction {
 
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return type() != MIRType::Int64; }
+  bool canRecoverOnBailout() const override {
+    return IsTypeRepresentableAsDouble(type());
+  }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
@@ -4422,7 +4425,9 @@ class MUrsh : public MShiftInstruction {
 
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return type() != MIRType::Int64; }
+  bool canRecoverOnBailout() const override {
+    return IsTypeRepresentableAsDouble(type());
+  }
 
   ALLOW_CLONE(MUrsh)
 };
