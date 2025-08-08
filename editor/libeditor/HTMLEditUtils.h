@@ -329,7 +329,7 @@ class HTMLEditUtils final {
   static bool IsTable(const nsINode* aNode);
   static bool IsTableRow(nsINode* aNode);
   static bool IsAnyTableElement(const nsINode* aNode);
-  static bool IsAnyTableElementButNotTable(nsINode* aNode);
+  static bool IsAnyTableElementButNotTable(const nsINode* aNode);
   static bool IsTableCell(const nsINode* aNode);
   static bool IsTableCellOrCaption(nsINode& aNode);
   static bool IsAnyListElement(const nsINode* aNode);

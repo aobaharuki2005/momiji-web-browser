@@ -7664,10 +7664,15 @@ HTMLEditor::WrapContentsInBlockquoteElementsWithTransaction(
   nsCOMPtr<nsINode> prevParent;
 
   EditorDOMPoint pointToPutCaret;
-  for (auto& content : aArrayOfContents) {
-    // If the node is a table element or list item, dive inside
-    if (HTMLEditUtils::IsAnyTableElementButNotTable(content) ||
-        HTMLEditUtils::IsListItem(content)) {
+  for (size_t i = 0; i < aArrayOfContents.Length(); i++) {
+    const OwningNonNull<nsIContent>& content = aArrayOfContents[i];
+
+    const auto IsNewBlockRequired = [](const nsIContent& aContent) {
+      return HTMLEditUtils::IsAnyTableElementButNotTable(&aContent) ||
+             HTMLEditUtils::IsListItem(&aContent);
+    };
+
+    if (IsNewBlockRequired(content)) {
       // Forget any previous block
       curBlock = nullptr;
       // Recursion time
@@ -7727,11 +7732,25 @@ HTMLEditor::WrapContentsInBlockquoteElementsWithTransaction(
       curBlock = unwrappedCreateNewBlockquoteElementResult.UnwrapNewNode();
     }
 
+    const OwningNonNull<nsIContent> lastContent = [&]() {
+      nsIContent* lastContent = content;
+      for (; i + 1 < aArrayOfContents.Length(); i++) {
+        const OwningNonNull<nsIContent>& nextContent = aArrayOfContents[i + 1];
+        if (lastContent->GetNextSibling() == nextContent ||
+            !IsNewBlockRequired(nextContent)) {
+          break;
+        }
+        lastContent = nextContent;
+      }
+      return OwningNonNull<nsIContent>(*lastContent);
+    }();
+
     // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to/ keep it alive.
     Result<MoveNodeResult, nsresult> moveNodeResult =
-        MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *curBlock);
+        MoveSiblingsToEndWithTransaction(MOZ_KnownLive(content), lastContent,
+                                         *curBlock);
     if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
-      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveSiblingsToEndWithTransaction() failed");
       return moveNodeResult.propagateErr();
     }
     MoveNodeResult unwrappedMoveNodeResult = moveNodeResult.unwrap();
