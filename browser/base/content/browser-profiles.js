@@ -183,13 +183,13 @@ var gProfiles = {
     SelectableProfileService.createNewProfile();
   },
 
-  async updateView(target) {
-    await this.populateSubView();
+  updateView(target) {
+    this.populateSubView();
     PanelUI.showSubView("PanelUI-profiles", target);
   },
 
-  async updateFxAView(target) {
-    await this.populateSubView();
+  updateFxAView(target) {
+    this.populateSubView();
     PanelUI.showSubView("PanelUI-profiles", target);
   },
 
