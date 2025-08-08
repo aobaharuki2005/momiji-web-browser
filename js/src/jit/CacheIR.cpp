@@ -11478,7 +11478,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArraySubarray() {
     return AttachDecision::NoAction;
   }
 
-  auto* tarr = &thisval_.toObject().as<TypedArrayObject>();
+  Rooted<TypedArrayObject*> tarr(cx_,
+                                 &thisval_.toObject().as<TypedArrayObject>());
 
   // Detached buffer throws.
   if (tarr->hasDetachedBuffer()) {
@@ -11504,6 +11505,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArraySubarray() {
 
   // Ensure no own "constructor" property.
   if (tarr->containsPure(cx_->names().constructor)) {
+    return AttachDecision::NoAction;
+  }
+
+  Rooted<TypedArrayObject*> templateObj(
+      cx_, TypedArrayObject::GetTemplateObjectForBufferView(cx_, tarr));
+  if (!templateObj) {
+    cx_->recoverFromOutOfMemory();
     return AttachDecision::NoAction;
   }
 
@@ -11551,7 +11559,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArraySubarray() {
     intPtrEndId = writer.loadArrayBufferViewLength(objId);
   }
 
-  writer.typedArraySubarrayResult(objId, intPtrStartId, intPtrEndId);
+  writer.typedArraySubarrayResult(templateObj, objId, intPtrStartId,
+                                  intPtrEndId);
   writer.returnFromIC();
 
   trackAttached("TypedArraySubarray");

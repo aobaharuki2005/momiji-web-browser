@@ -6107,9 +6107,9 @@ bool CacheIRCompiler::emitTypedArraySetResult(ObjOperandId targetId,
   return true;
 }
 
-bool CacheIRCompiler::emitTypedArraySubarrayResult(ObjOperandId objId,
-                                                   IntPtrOperandId startId,
-                                                   IntPtrOperandId endId) {
+bool CacheIRCompiler::emitTypedArraySubarrayResult(
+    uint32_t templateObjectOffset, ObjOperandId objId, IntPtrOperandId startId,
+    IntPtrOperandId endId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoCallVM callvm(masm, this, allocator);
