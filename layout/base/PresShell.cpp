@@ -6134,11 +6134,15 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
   NS_ASSERTION(IsRoot(), "Only a root pres shell should be here");
 
 #ifdef DEBUG
-  if (aMoveMessage == eMouseMove) {
-    MOZ_LOG(PointerEventHandler::MouseLocationLogRef(), LogLevel::Info,
-            ("[ps=%p]synthesizing %s to (%d,%d)\n", this, ToChar(aMoveMessage),
-             aPointerInfo.mLastRefPointInRootDoc.x,
-             aPointerInfo.mLastRefPointInRootDoc.y));
+  if (aMoveMessage == eMouseMove || aMoveMessage == ePointerMove) {
+    MOZ_LOG(aMoveMessage == eMouseMove
+                ? PointerEventHandler::MouseLocationLogRef()
+                : PointerEventHandler::PointerLocationLogRef(),
+            LogLevel::Info,
+            ("[ps=%p]synthesizing %s to (%d,%d) (pointerId=%u, source=%s)\n",
+             this, ToChar(aMoveMessage), aPointerInfo.mLastRefPointInRootDoc.x,
+             aPointerInfo.mLastRefPointInRootDoc.y, aPointerId,
+             InputSourceToString(aPointerInfo.mInputSource).get()));
   }
 #endif
 
