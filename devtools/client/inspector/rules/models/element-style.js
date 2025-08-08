@@ -490,7 +490,7 @@ class ElementStyle {
 
       // For each editor show or hide the inactive CSS icon as needed.
       if (textProp.editor && this.unusedCssEnabled) {
-        textProp.editor.updatePropertyState();
+        textProp.editor.updateUI();
       }
     }
   }
