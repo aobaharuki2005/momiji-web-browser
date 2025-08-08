@@ -508,8 +508,6 @@ CanvasFrameAnonymousContentHelper.prototype = {
    * @param {Object} Options for the node include:
    * - nodeType: the type of node, defaults to "box".
    * - attributes: a {name:value} object to be used as attributes for the node.
-   * - prefix: a string that will be used to prefix the values of the id and class
-   *   attributes.
    * - parent: if provided, the newly created element will be appended to this
    *   node.
    */
@@ -529,8 +527,6 @@ CanvasFrameAnonymousContentHelper.prototype = {
    * - nodeType: the type of node, defaults to "div".
    * - namespace: the namespace to use to create the node, defaults to XHTML namespace.
    * - attributes: a {name:value} object to be used as attributes for the node.
-   * - prefix: a string that will be used to prefix the values of the id and class
-   *   attributes.
    * - parent: if provided, the newly created element will be appended to this
    *   node.
    * - text: if provided, set the text content of the element.
@@ -543,11 +539,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     const node = doc.createElementNS(namespace, type);
 
     for (const name in options.attributes || {}) {
-      let value = options.attributes[name];
-      if (options.prefix && (name === "class" || name === "id")) {
-        value = options.prefix + value;
-      }
-      node.setAttribute(name, value);
+      node.setAttribute(name, options.attributes[name]);
     }
 
     if (options.parent) {
@@ -555,7 +547,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     }
 
     if (options.text) {
-      node.appendChild(doc.createTextNode(options.text));
+      node.append(options.text);
     }
 
     return node;

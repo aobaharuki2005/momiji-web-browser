@@ -79,8 +79,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
     super(highlighterEnv);
 
-    this.ID_CLASS_PREFIX = "flexbox-";
-
     this.markup = new CanvasFrameAnonymousContentHelper(
       this.highlighterEnv,
       this._buildMarkup.bind(this)
@@ -116,33 +114,31 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   _buildMarkup() {
     const container = this.markup.createNode({
       attributes: {
-        class: "highlighter-container",
+        class: "flexbox-highlighter-container",
       },
     });
 
-    const root = this.markup.createNode({
+    this.rootEl = this.markup.createNode({
       parent: container,
       attributes: {
-        id: "root",
-        class: "root",
+        id: "flexbox-root",
+        class: "flexbox-root",
       },
-      prefix: this.ID_CLASS_PREFIX,
     });
 
     // We use a <canvas> element because there is an arbitrary number of items and texts
     // to draw which wouldn't be possible with HTML or SVG without having to insert and
     // remove the whole markup on every update.
     this.markup.createNode({
-      parent: root,
+      parent: this.rootEl,
       nodeType: "canvas",
       attributes: {
-        id: "canvas",
-        class: "canvas",
+        id: "flexbox-canvas",
+        class: "flexbox-canvas",
         hidden: "true",
         width: CANVAS_SIZE,
         height: CANVAS_SIZE,
       },
-      prefix: this.ID_CLASS_PREFIX,
     });
 
     return container;
@@ -163,6 +159,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     this.markup.destroy();
+    this.rootEl = null;
 
     // Clear the pattern cache to avoid dead object exceptions (Bug 1342051).
     this.clearCache();
@@ -187,7 +184,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   }
 
   get canvas() {
-    return this.getElement("canvas");
+    return this.getElement("flexbox-canvas");
   }
 
   get color() {
@@ -203,7 +200,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   }
 
   getElement(id) {
-    return this.markup.getElement(this.ID_CLASS_PREFIX + id);
+    return this.markup.getElement(id);
   }
 
   /**
@@ -303,7 +300,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   }
 
   getNode(id) {
-    return this.markup.content.root.getElementById(this.ID_CLASS_PREFIX + id);
+    return this.markup.content.root.getElementById(id);
   }
 
   /**
@@ -382,7 +379,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   }
 
   _hideFlexbox() {
-    this.getElement("canvas").setAttribute("hidden", "true");
+    this.getElement("flexbox-canvas").setAttribute("hidden", "true");
   }
 
   /**
@@ -408,7 +405,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   }
 
   _showFlexbox() {
-    this.getElement("canvas").removeAttribute("hidden");
+    this.getElement("flexbox-canvas").removeAttribute("hidden");
   }
 
   /**
@@ -868,7 +865,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this._showFlexbox();
     this.prevColor = this.color;
 
-    const root = this.getNode("root");
+    const root = this.getNode("flexbox-root");
     root.style.setProperty("width", `${width}px`);
     root.style.setProperty("height", `${height}px`);
 

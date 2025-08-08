@@ -70,8 +70,6 @@ class EyeDropper {
     );
   }
 
-  ID_CLASS_PREFIX = "eye-dropper-";
-
   get win() {
     return this.highlighterEnv.window;
   }
@@ -86,11 +84,10 @@ class EyeDropper {
     const wrapper = this.markup.createNode({
       parent: container,
       attributes: {
-        id: "root",
-        class: "root",
+        id: "eye-dropper-root",
+        class: "eye-dropper-root",
         hidden: "true",
       },
-      prefix: this.ID_CLASS_PREFIX,
     });
 
     // The magnifier canvas element.
@@ -98,31 +95,33 @@ class EyeDropper {
       parent: wrapper,
       nodeType: "canvas",
       attributes: {
-        id: "canvas",
-        class: "canvas",
+        id: "eye-dropper-canvas",
+        class: "eye-dropper-canvas",
         width: MAGNIFIER_WIDTH,
         height: MAGNIFIER_HEIGHT,
       },
-      prefix: this.ID_CLASS_PREFIX,
     });
 
     // The color label element.
     const colorLabelContainer = this.markup.createNode({
       parent: wrapper,
-      attributes: { class: "color-container" },
-      prefix: this.ID_CLASS_PREFIX,
+      attributes: { class: "eye-dropper-color-container" },
     });
     this.markup.createNode({
       nodeType: "div",
       parent: colorLabelContainer,
-      attributes: { id: "color-preview", class: "color-preview" },
-      prefix: this.ID_CLASS_PREFIX,
+      attributes: {
+        id: "eye-dropper-color-preview",
+        class: "eye-dropper-color-preview",
+      },
     });
     this.markup.createNode({
       nodeType: "div",
       parent: colorLabelContainer,
-      attributes: { id: "color-value", class: "color-value" },
-      prefix: this.ID_CLASS_PREFIX,
+      attributes: {
+        id: "eye-dropper-color-value",
+        class: "eye-dropper-color-value",
+      },
     });
 
     return container;
@@ -134,7 +133,7 @@ class EyeDropper {
   }
 
   getElement(id) {
-    return this.markup.getElement(this.ID_CLASS_PREFIX + id);
+    return this.markup.getElement(id);
   }
 
   /**
@@ -176,7 +175,7 @@ class EyeDropper {
     pageListenerTarget.addEventListener("resize", this, { signal });
 
     // Prepare the canvas context on which we're drawing the magnified page portion.
-    this.ctx = this.getElement("canvas").getCanvasContext();
+    this.ctx = this.getElement("eye-dropper-canvas").getCanvasContext();
     this.ctx.imageSmoothingEnabled = false;
 
     this.magnifiedArea = {
@@ -208,7 +207,7 @@ class EyeDropper {
       this.#pageEventListenersAbortController.abort();
       this.#pageEventListenersAbortController = null;
 
-      const rootElement = this.getElement("root");
+      const rootElement = this.getElement("eye-dropper-root");
       rootElement.setAttribute("hidden", "true");
       rootElement.removeAttribute("drawn");
 
@@ -244,7 +243,7 @@ class EyeDropper {
    *                       (⚠️ but it won't handle remote frames).
    */
   async updateScreenshot(screenshot) {
-    const rootElement = this.getElement("root");
+    const rootElement = this.getElement("eye-dropper-root");
 
     let imageSource;
     if (screenshot) {
@@ -336,11 +335,11 @@ class EyeDropper {
 
     // Update the color preview and value.
     const rgb = this.centerColor;
-    this.getElement("color-preview").setAttribute(
+    this.getElement("eye-dropper-color-preview").setAttribute(
       "style",
       `background-color:${toColorString(rgb, "rgb")};`
     );
-    this.getElement("color-value").setTextContent(
+    this.getElement("eye-dropper-color-value").setTextContent(
       toColorString(rgb, this.format)
     );
   }
@@ -423,14 +422,14 @@ class EyeDropper {
         this.show();
         break;
       case "resize":
-        this.getElement("root").removeAttribute("drawn");
+        this.getElement("eye-dropper-root").removeAttribute("drawn");
         this.#debouncedUpdateScreenshot();
         break;
     }
   }
 
   moveTo(x, y) {
-    const root = this.getElement("root");
+    const root = this.getElement("eye-dropper-root");
     root.setAttribute("style", `top:${y}px;left:${x}px;`);
 
     // Move the label container to the top if the magnifier is close to the bottom edge.
@@ -544,7 +543,7 @@ class EyeDropper {
     clipboardHelper.copyString(color);
 
     // Provide some feedback.
-    this.getElement("color-value").setTextContent(
+    this.getElement("eye-dropper-color-value").setTextContent(
       "✓ " + l10n.GetStringFromName("colorValue.copied")
     );
 

@@ -66,7 +66,7 @@ async function moveMouse(ui, x, y) {
 
 async function checkEyeDropperPosition(highlighterTestFront, x, y) {
   const style = await highlighterTestFront.getEyeDropperElementAttribute(
-    "root",
+    "eye-dropper-root",
     "style"
   );
   is(
