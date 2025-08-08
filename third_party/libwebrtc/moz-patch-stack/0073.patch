@@ -17,10 +17,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a3447f709befd84a2
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index e38b33d4ff..38870cec30 100644
+index cbc5eeec08..c1c5079753 100644
 --- a/rtc_base/physical_socket_server.cc
 +++ b/rtc_base/physical_socket_server.cc
-@@ -532,7 +532,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
+@@ -531,7 +531,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
  #if defined(WEBRTC_POSIX)
    int received = 0;
    iovec iov = {.iov_base = buffer, .iov_len = length};
