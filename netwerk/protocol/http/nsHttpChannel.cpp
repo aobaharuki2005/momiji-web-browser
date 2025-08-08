@@ -8172,6 +8172,12 @@ nsHttpChannel::GetEssentialDomainCategory(nsCString& domain) {
 }
 
 nsresult nsHttpChannel::ProcessLNAActions() {
+  if (!mTransaction) {
+    // this could happen with rcwn enabled.
+    // We have hit network and have detected LNA, meanwhile cache won and reset
+    // the transaction in ReadFromCache
+    return NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED;
+  }
   // Suspend to block any notification to the channel.
   // This will get resumed in
   // nsHttpChannel::OnPermissionPromptResult
