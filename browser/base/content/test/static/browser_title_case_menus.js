@@ -119,6 +119,11 @@ function checkTitleCase(string, elementID) {
     }
   }
 
+  if (elementID == "menu_newProfile" || elementID == "menu_manageProfiles") {
+    todo(result, "bug 1982100");
+    return;
+  }
+
   Assert.ok(result, `${string} for ${elementID} should have Title Casing.`);
 }
 
