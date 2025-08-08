@@ -29,10 +29,10 @@ index cc811cae3a..46d80e424a 100644
  };
  #endif
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index eef2302589..e2022fe378 100644
+index 05d5a3de32..48d9b6ed26 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
-@@ -120,7 +120,7 @@ class VideoCaptureModule : public RefCountInterface {
+@@ -124,7 +124,7 @@ class VideoCaptureModule : public RefCountInterface {
  
    //  Remove capture data callback
    virtual void DeRegisterCaptureDataCallback(
@@ -42,10 +42,10 @@ index eef2302589..e2022fe378 100644
    // Start capture device
    virtual int32_t StartCapture(const VideoCaptureCapability& capability) = 0;
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index d265101f32..7d9f32c4e9 100644
+index 6053981caa..2732dc7637 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
-@@ -109,7 +109,7 @@ void VideoCaptureImpl::RegisterCaptureDataCallback(
+@@ -120,7 +120,7 @@ void VideoCaptureImpl::RegisterCaptureDataCallback(
  }
  
  void VideoCaptureImpl::DeRegisterCaptureDataCallback(
@@ -55,10 +55,10 @@ index d265101f32..7d9f32c4e9 100644
    auto it = _dataCallBacks.find(dataCallBack);
    if (it != _dataCallBacks.end()) {
 diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index 627a2cf05d..d26362ecd0 100644
+index f9bf4f97db..c177744e3d 100644
 --- a/modules/video_capture/video_capture_impl.h
 +++ b/modules/video_capture/video_capture_impl.h
-@@ -65,7 +65,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+@@ -67,7 +67,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
    virtual void RegisterCaptureDataCallback(
        RawVideoSinkInterface* dataCallback) override;
    void DeRegisterCaptureDataCallback(
