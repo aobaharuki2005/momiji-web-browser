@@ -3293,9 +3293,12 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
         break;
       }
 
-      if (auto* folded = foldConstants(x, y, isMax())) {
-        block()->insertBefore(this, folded);
-        return MMinMax::New(alloc, folded, z, type(), left->isMax());
+      if (auto* foldedCst = foldConstants(x, y, isMax())) {
+        if (auto* folded = foldLength(z, foldedCst, left->isMax())) {
+          return folded;
+        }
+        block()->insertBefore(this, foldedCst);
+        return MMinMax::New(alloc, foldedCst, z, type(), left->isMax());
       }
     } while (false);
   }
@@ -3391,6 +3394,9 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
         // Fold min(x, min(y, z)) to min(min(x, y), z) with constant min(x, y).
         // Fold max(x, max(y, z)) to max(max(x, y), z) with constant max(x, y).
         if (auto* left = foldConstants(constant, otherConstant, isMax())) {
+          if (auto* folded = foldLength(otherOperand, left, isMax())) {
+            return folded;
+          }
           block()->insertBefore(this, left);
           return MMinMax::New(alloc, left, otherOperand, type(), isMax());
         }
