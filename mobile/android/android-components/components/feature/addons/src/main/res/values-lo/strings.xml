@@ -116,6 +116,10 @@
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">ສະຄຣິບທີ່ບໍ່ໄດ້ຮັບການຢືນຢັນສາມາດສ້າງຄວາມສ່ຽງດ້ານຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ. ແລ່ນສະຄຣິບຈາກສ່ວນຂະຫຍາຍ ຫຼື ແຫຼ່ງທີ່ທ່ານເຊື່ອຖືເທົ່ານັ້ນ.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
   <string name="mozac_feature_addons_permissions_required_data_collection_description" moz:removedIn="141" tools:ignore="UnusedResources">ນັກພັດທະນາເວົ້າວ່າສ່ວນຂະຫຍາຍນີ້ລວບລວມ: %1$s.</string>
+  <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
+  <string name="mozac_feature_addons_permissions_required_data_collection_description_2">ນັກພັດທະນາເວົ້າວ່າສ່ວນຂະຫຍາຍນີ້ລວບລວມ: %1$s</string>
+  <!-- The sentence used when the developer of an extension has explicitly stated that they do not collect any data collection. -->
+  <string name="mozac_feature_addons_permissions_none_required_data_collection_description">ນັກພັດທະນາເວົ້າວ່າສ່ວນຂະຫຍາຍນີ້ບໍ່ຕ້ອງການການເກັບກໍາຂໍ້ມູນ.</string>
   <!-- Description for text button that expands the list of domain permissions -->
   <string name="mozac_feature_addons_permissions_show_all_sites">ສະແດງທຸກເວັບໄຊ</string>
   <!-- Description for text button that hides the majority of the list of domain permissions -->
@@ -128,8 +132,12 @@
   <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_short_description">ກິດ​ຈະ​ກໍາ​ການ​ຊອກ​ຫາ​</string>
   <!-- Short description for the locationInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_locationInfo_short_description">ຕຳແຫນ່ງທີ່ຕັ້ງ</string>
+  <!-- Short description for the searchTerms data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_short_description">ເງື່ອນໄຂການຄົ້ນຫາ</string>
   <!-- Short description for the websiteContent data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_websiteContent_short_description">ເນື້ອຫາເວັບໄຊທ໌</string>
+  <!-- Long description for the searchTerms data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_long_description">ແບ່ງປັນຄໍາຄົ້ນຫາກັບຜູ້ພັດທະນາການຂະຫຍາຍ</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">ເວີຊັນ</string>
   <!-- The author of an add-on. -->
