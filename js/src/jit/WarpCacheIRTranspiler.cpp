@@ -2495,7 +2495,23 @@ bool WarpCacheIRTranspiler::emitTypedArraySubarrayResult(
   MDefinition* start = getOperand(startId);
   MDefinition* end = getOperand(endId);
 
-  auto* ins = MTypedArraySubarray::New(alloc(), obj, start, end);
+  auto* srcLength = MArrayBufferViewLength::New(alloc(), obj);
+  add(srcLength);
+
+  auto* actualStart = MToIntegerIndex::New(alloc(), start, srcLength);
+  add(actualStart);
+
+  auto* actualEnd = MToIntegerIndex::New(alloc(), end, srcLength);
+  add(actualEnd);
+
+  auto* minStart =
+      MMinMax::NewMin(alloc(), actualStart, actualEnd, MIRType::IntPtr);
+  add(minStart);
+
+  auto* length = MSub::New(alloc(), actualEnd, minStart, MIRType::IntPtr);
+  add(length);
+
+  auto* ins = MTypedArraySubarray::New(alloc(), obj, actualStart, length);
   add(ins);
 
   pushResult(ins);

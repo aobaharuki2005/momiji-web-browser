@@ -4141,12 +4141,6 @@ TypedArrayObject* js::TypedArraySubarray(JSContext* cx,
                                          intptr_t start, intptr_t end) {
   MOZ_ASSERT(!obj->hasDetachedBuffer());
   MOZ_ASSERT(!obj->is<ResizableTypedArrayObject>());
-  MOZ_ASSERT(HasBuiltinTypedArraySpecies(obj, cx));
-
-  if (!TypedArrayObject::ensureHasBuffer(cx, obj)) {
-    return nullptr;
-  }
-  Rooted<ArrayBufferObjectMaybeShared*> buffer(cx, obj->bufferEither());
 
   size_t srcLength = obj->length().valueOr(0);
 
@@ -4155,12 +4149,30 @@ TypedArrayObject* js::TypedArraySubarray(JSContext* cx,
 
   size_t newLength = endIndex >= startIndex ? endIndex - startIndex : 0;
 
+  return TypedArraySubarrayWithLength(cx, obj, startIndex, newLength);
+}
+
+TypedArrayObject* js::TypedArraySubarrayWithLength(
+    JSContext* cx, Handle<TypedArrayObject*> obj, intptr_t start,
+    intptr_t length) {
+  MOZ_ASSERT(!obj->hasDetachedBuffer());
+  MOZ_ASSERT(!obj->is<ResizableTypedArrayObject>());
+  MOZ_ASSERT(HasBuiltinTypedArraySpecies(obj, cx));
+  MOZ_ASSERT(start >= 0);
+  MOZ_ASSERT(length >= 0);
+  MOZ_ASSERT(size_t(start + length) <= obj->length().valueOr(0));
+
+  if (!TypedArrayObject::ensureHasBuffer(cx, obj)) {
+    return nullptr;
+  }
+  Rooted<ArrayBufferObjectMaybeShared*> buffer(cx, obj->bufferEither());
+
   size_t srcByteOffset = obj->byteOffset().valueOr(0);
   size_t elementSize = TypedArrayElemSize(obj->type());
-  size_t beginByteOffset = srcByteOffset + (startIndex * elementSize);
+  size_t beginByteOffset = srcByteOffset + (start * elementSize);
 
   auto* result =
-      TypedArrayCreateSameType(cx, obj, buffer, beginByteOffset, newLength);
+      TypedArrayCreateSameType(cx, obj, buffer, beginByteOffset, length);
 
   // Other exceptions aren't allowed, because TypedArraySubarray is a
   // recoverable operation.
@@ -4189,16 +4201,19 @@ static auto* TypedArrayFromDetachedBuffer(JSContext* cx,
 
 TypedArrayObject* js::TypedArraySubarrayRecover(JSContext* cx,
                                                 Handle<TypedArrayObject*> obj,
-                                                intptr_t start, intptr_t end) {
+                                                intptr_t start,
+                                                intptr_t length) {
   MOZ_ASSERT(!obj->is<ResizableTypedArrayObject>());
   MOZ_ASSERT(HasBuiltinTypedArraySpecies(obj, cx));
+  MOZ_ASSERT(start >= 0);
+  MOZ_ASSERT(length >= 0);
 
   // Special case: The buffer was detached after calling `subarray`. This case
   // can only happen when recovering a TypedArraySubarray allocation.
   if (obj->hasDetachedBuffer()) {
     return TypedArrayFromDetachedBuffer(cx, obj);
   }
-  return TypedArraySubarray(cx, obj, start, end);
+  return TypedArraySubarrayWithLength(cx, obj, start, length);
 }
 
 // Byte vector with large enough inline storage to allow constructing small

@@ -4555,7 +4555,7 @@ void LIRGenerator::visitTypedArraySet(MTypedArraySet* ins) {
 void LIRGenerator::visitTypedArraySubarray(MTypedArraySubarray* ins) {
   auto* lir = new (alloc()) LTypedArraySubarray(
       useRegisterAtStart(ins->object()), useRegisterAtStart(ins->start()),
-      useRegisterAtStart(ins->end()));
+      useRegisterAtStart(ins->length()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

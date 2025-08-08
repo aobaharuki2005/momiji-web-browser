@@ -11248,13 +11248,13 @@ void CodeGenerator::visitTypedArraySet(LTypedArraySet* lir) {
 }
 
 void CodeGenerator::visitTypedArraySubarray(LTypedArraySubarray* lir) {
-  pushArg(ToRegister(lir->end()));
+  pushArg(ToRegister(lir->length()));
   pushArg(ToRegister(lir->start()));
   pushArg(ToRegister(lir->object()));
 
   using Fn = TypedArrayObject* (*)(JSContext*, Handle<TypedArrayObject*>,
                                    intptr_t, intptr_t);
-  callVM<Fn, js::TypedArraySubarray>(lir);
+  callVM<Fn, js::TypedArraySubarrayWithLength>(lir);
 }
 
 void CodeGenerator::visitToIntegerIndex(LToIntegerIndex* lir) {
