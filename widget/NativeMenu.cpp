@@ -18,18 +18,20 @@ NativeMenuIcon NativeMenu::GetIcon(dom::Element& aElement) {
   if (!img) {
     return {};
   }
+  // We need the style for context paint, even if we end up using the image
+  // attribute.
+  RefPtr<const ComputedStyle> style = nsComputedDOMStyle::GetComputedStyle(img);
   if (RefPtr uri = img->GetCurrentURI()) {
-    return {std::move(uri), nullptr};
+    return {std::move(uri), std::move(style)};
   }
   // Try to take the selected image from the image selector. This works even if
   // the image hasn't loaded yet (due to loading=lazy or such).
   if (auto* selector = img->GetResponsiveImageSelector()) {
     if (RefPtr uri = selector->GetSelectedImageURL()) {
-      return {std::move(uri), nullptr};
+      return {std::move(uri), std::move(style)};
     }
   }
   // Otherwise look for the icon's content property.
-  RefPtr<const ComputedStyle> style = nsComputedDOMStyle::GetComputedStyle(img);
   if (!style) {
     return {};
   }
