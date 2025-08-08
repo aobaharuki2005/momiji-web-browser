@@ -33,7 +33,10 @@ class RulersHighlighter {
     this.env = highlighterEnv;
     this.markup = new CanvasFrameAnonymousContentHelper(
       highlighterEnv,
-      this._buildMarkup.bind(this)
+      this._buildMarkup.bind(this),
+      {
+        contentRootHostClassName: "devtools-highlighter-rulers",
+      }
     );
     this.isReady = this.markup.initialize();
 

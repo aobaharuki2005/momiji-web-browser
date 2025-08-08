@@ -229,7 +229,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     this.markup = new CanvasFrameAnonymousContentHelper(
       this.highlighterEnv,
-      this._buildMarkup.bind(this)
+      this._buildMarkup.bind(this),
+      {
+        contentRootHostClassName: "devtools-highlighter-css-grid",
+      }
     );
     this.isReady = this.markup.initialize();
 

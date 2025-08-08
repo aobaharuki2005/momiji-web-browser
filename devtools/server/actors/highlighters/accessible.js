@@ -76,7 +76,10 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
 
     this.markup = new CanvasFrameAnonymousContentHelper(
       this.highlighterEnv,
-      this._buildMarkup.bind(this)
+      this._buildMarkup.bind(this),
+      {
+        contentRootHostClassName: "devtools-highlighter-accessible",
+      }
     );
     this.isReady = this.markup.initialize();
 

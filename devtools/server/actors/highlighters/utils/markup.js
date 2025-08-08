@@ -106,6 +106,8 @@ class CanvasFrameAnonymousContentHelper {
    *        A function that, when executed, returns a DOM node to be inserted into
    *        the canvasFrame.
    * @param {Object} options
+   * @param {String|undefined} options.contentRootHostClassName
+   *        An optional class to add to the AnonymousContent root's host.
    * @param {Boolean} options.waitForDocumentToLoad
    *        Set to false to try to insert the anonymous content even if the document
    *        isn't loaded yet. Defaults to true.
@@ -113,11 +115,12 @@ class CanvasFrameAnonymousContentHelper {
   constructor(
     highlighterEnv,
     nodeBuilder,
-    { waitForDocumentToLoad = true } = {}
+    { contentRootHostClassName, waitForDocumentToLoad = true } = {}
   ) {
     this.#highlighterEnv = highlighterEnv;
     this.#nodeBuilder = nodeBuilder;
     this.#waitForDocumentToLoad = !!waitForDocumentToLoad;
+    this.#contentRootHostClassName = contentRootHostClassName;
 
     this.#highlighterEnv.on("window-ready", this.#onWindowReady);
   }
@@ -127,6 +130,7 @@ class CanvasFrameAnonymousContentHelper {
   #highlighterEnv;
   #nodeBuilder;
   #waitForDocumentToLoad;
+  #contentRootHostClassName;
   #listeners = new Map();
   #elements = new Map();
 
@@ -219,6 +223,10 @@ class CanvasFrameAnonymousContentHelper {
     link.rel = "stylesheet";
     this.#content.root.appendChild(link);
     this.#content.root.appendChild(this.#nodeBuilder());
+
+    if (this.#contentRootHostClassName) {
+      this.#content.root.host.classList.add(this.#contentRootHostClassName);
+    }
 
     this.#initialized();
   }

@@ -56,7 +56,10 @@ class MeasuringToolHighlighter {
     this.env = highlighterEnv;
     this.markup = new CanvasFrameAnonymousContentHelper(
       highlighterEnv,
-      this._buildMarkup.bind(this)
+      this._buildMarkup.bind(this),
+      {
+        contentRootHostClassName: "devtools-highlighter-measuring-tool",
+      }
     );
     this.isReady = this.markup.initialize();
 

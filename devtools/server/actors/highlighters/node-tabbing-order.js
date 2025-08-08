@@ -45,7 +45,10 @@ class NodeTabbingOrderHighlighter extends AutoRefreshHighlighter {
     this._doNotStartRefreshLoop = true;
     this.markup = new CanvasFrameAnonymousContentHelper(
       this.highlighterEnv,
-      this._buildMarkup.bind(this)
+      this._buildMarkup.bind(this),
+      {
+        contentRootHostClassName: "devtools-highlighter-tabbing-order",
+      }
     );
     this.isReady = this.markup.initialize();
   }

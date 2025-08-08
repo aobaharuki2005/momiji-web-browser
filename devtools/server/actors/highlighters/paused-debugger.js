@@ -33,7 +33,10 @@ class PausedDebuggerOverlay {
     this.markup = new CanvasFrameAnonymousContentHelper(
       highlighterEnv,
       this._buildMarkup.bind(this),
-      { waitForDocumentToLoad: false }
+      {
+        contentRootHostClassName: "devtools-highlighter-paused-debugger",
+        waitForDocumentToLoad: false,
+      }
     );
     this.isReady = this.markup.initialize();
   }

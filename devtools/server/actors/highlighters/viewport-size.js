@@ -41,6 +41,7 @@ class ViewportSizeHighlighter {
       highlighterEnv,
       this._buildMarkup.bind(this),
       {
+        contentRootHostClassName: "devtools-highlighter-viewport-size",
         waitForDocumentToLoad: options?.waitForDocumentToLoad ?? true,
       }
     );
