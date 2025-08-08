@@ -116,7 +116,7 @@ class TextPropertyEditor {
 
     this.#onValidate = this.ruleView.debounce(this.#previewValue, 10, this);
 
-    this.#create();
+    this.#createUI();
     this.update();
   }
 
@@ -165,7 +165,7 @@ class TextPropertyEditor {
   /**
    * Create the property editor's DOM.
    */
-  #create() {
+  #createUI() {
     const win = this.doc.defaultView;
     this.abortController = new win.AbortController();
 
@@ -207,16 +207,9 @@ class TextPropertyEditor {
 
     appendText(this.nameContainer, ": ");
 
-    // Click to expand the computed properties of the text property.
-    this.expander = createChild(this.container, "button", {
-      "aria-expanded": "false",
-      class: "ruleview-expander theme-twisty",
-      title: SHORTHAND_EXPANDER_TOOLTIP,
-    });
-    this.expander.addEventListener("click", this.#onExpandClicked, {
-      capture: true,
-      signal: this.abortController.signal,
-    });
+    if (this.#shouldShowComputedExpander) {
+      this.#createComputedExpander();
+    }
 
     // Create a span that will hold the property and semicolon.
     // Use this span to create a slightly larger click target
@@ -240,59 +233,21 @@ class TextPropertyEditor {
 
     appendText(this.valueContainer, ";");
 
-    this.warning = createChild(this.container, "div", {
-      class: "ruleview-warning",
-      hidden: "",
-      title: l10n("rule.warning.title"),
-    });
+    if (this.#shouldShowWarning) {
+      this.#createWarningIcon();
+    }
 
-    this.invalidAtComputedValueTimeWarning = createChild(
-      this.container,
-      "div",
-      {
-        class: "ruleview-invalid-at-computed-value-time-warning",
-        hidden: "",
-      }
-    );
+    if (this.#isInvalidAtComputedValueTime()) {
+      this.#createInvalidAtComputedValueTimeIcon();
+    }
 
-    this.unusedState = createChild(this.container, "div", {
-      class: "ruleview-unused-warning",
-      hidden: "",
-    });
+    if (this.#shouldShowUnusedState) {
+      this.#createUnusedWarningIcon();
+    }
 
-    this.compatibilityState = createChild(this.container, "div", {
-      class: "ruleview-compatibility-warning",
-      hidden: "",
-    });
-
-    // Filter button that filters for the current property name and is
-    // displayed when the property is overridden by another rule.
-    this.filterProperty = createChild(this.container, "button", {
-      class: "ruleview-overridden-rule-filter",
-      hidden: "",
-      title: l10n("rule.filterProperty.title"),
-    });
-
-    this.filterProperty.addEventListener(
-      "click",
-      event => {
-        this.ruleEditor.ruleView.setFilterStyles("`" + this.prop.name + "`");
-        event.stopPropagation();
-      },
-      { signal: this.abortController.signal }
-    );
-
-    // Holds the viewers for the computed properties.
-    // will be populated in |_updateComputed|.
-    this.computed = createChild(this.element, "ul", {
-      class: "ruleview-computedlist",
-    });
-
-    // Holds the viewers for the overridden shorthand properties.
-    // will be populated in |_updateShorthandOverridden|.
-    this.shorthandOverridden = createChild(this.element, "ul", {
-      class: "ruleview-overridden-items",
-    });
+    if (this.#shouldShowFilterProperty) {
+      this.#createFilterPropertyButton();
+    }
 
     // Only bind event handlers if the rule is editable.
     if (this.ruleEditor.isEditable) {
@@ -326,7 +281,7 @@ class TextPropertyEditor {
         start: this.#onStartEditing,
         element: this.nameSpan,
         done: this.#onNameDone,
-        destroy: this.updatePropertyState,
+        destroy: this.updateUI,
         advanceChars: ":",
         contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
         popup: this.popup,
@@ -564,7 +519,7 @@ class TextPropertyEditor {
       return;
     }
 
-    this.updatePropertyState();
+    this.updateUI();
 
     const name = this.prop.name;
     this.nameSpan.textContent = name;
@@ -869,12 +824,20 @@ class TextPropertyEditor {
 
   #onStartEditing = () => {
     this.element.classList.remove("ruleview-overridden");
-    this.filterProperty.hidden = true;
     this.enable.style.visibility = "hidden";
-    this.expander.style.display = "none";
+    if (this.filterProperty) {
+      this.filterProperty.hidden = true;
+    }
+    if (this.expander) {
+      this.expander.style.display = "none";
+    }
   };
 
   get #shouldShowComputedExpander() {
+    if (this.prop.name.startsWith("--")) {
+      return false;
+    }
+
     // Only show the expander to reveal computed properties if:
     // - the computed properties are actually different from the current property (i.e
     //   these are longhands while the current property is the shorthand)
@@ -887,11 +850,141 @@ class TextPropertyEditor {
     );
   }
 
+  get #shouldShowWarning() {
+    if (this.prop.name.startsWith("--")) {
+      return false;
+    }
+
+    return !this.editing && !this.isValid();
+  }
+
+  get #shouldShowUnusedState() {
+    const { used } = this.prop.isUsed();
+    return !this.editing && !this.prop.overridden && this.prop.enabled && !used;
+  }
+
+  get #shouldShowFilterProperty() {
+    return (
+      !this.editing &&
+      this.isValid() &&
+      this.prop.overridden &&
+      !this.ruleEditor.rule.isUnmatched
+    );
+  }
+
+  #createComputedExpander() {
+    if (this.expander) {
+      return;
+    }
+
+    // Click to expand the computed properties of the text property.
+    this.expander = this.doc.createElementNS(HTML_NS, "button");
+    this.expander.ariaExpanded = false;
+    this.expander.classList.add("ruleview-expander", "theme-twisty");
+    this.expander.title = SHORTHAND_EXPANDER_TOOLTIP;
+
+    this.expander.addEventListener("click", this.#onExpandClicked, {
+      capture: true,
+      signal: this.abortController.signal,
+    });
+
+    this.container.insertBefore(this.expander, this.valueContainer);
+  }
+
+  #createComputedList() {
+    if (this.computed) {
+      return;
+    }
+    this.computed = this.doc.createElementNS(HTML_NS, "ul");
+    this.computed.classList.add("ruleview-computedlist");
+    this.element.insertBefore(this.computed, this.shorthandOverridden);
+  }
+
+  #createWarningIcon() {
+    if (this.warning) {
+      return;
+    }
+
+    this.warning = this.doc.createElementNS(HTML_NS, "div");
+    this.warning.classList.add("ruleview-warning");
+    this.warning.title = l10n("rule.warning.title");
+    this.container.insertBefore(
+      this.warning,
+      this.invalidAtComputedValueTimeWarning ||
+        this.unusedState ||
+        this.compatibilityState ||
+        this.filterProperty
+    );
+  }
+
+  #createInvalidAtComputedValueTimeIcon() {
+    if (this.invalidAtComputedValueTimeWarning) {
+      return;
+    }
+
+    this.invalidAtComputedValueTimeWarning = this.doc.createElementNS(
+      HTML_NS,
+      "div"
+    );
+    this.invalidAtComputedValueTimeWarning.classList.add(
+      "ruleview-invalid-at-computed-value-time-warning"
+    );
+    this.container.insertBefore(
+      this.invalidAtComputedValueTimeWarning,
+      this.unusedState || this.compatibilityState || this.filterProperty
+    );
+  }
+
+  #createUnusedWarningIcon() {
+    if (this.unusedState) {
+      return;
+    }
+
+    this.unusedState = this.doc.createElementNS(HTML_NS, "div");
+    this.unusedState.classList.add("ruleview-unused-warning");
+    this.container.insertBefore(
+      this.unusedState,
+      this.compatibilityState || this.filterProperty
+    );
+  }
+
+  #createCompatibilityWarningIcon() {
+    if (this.compatibilityState) {
+      return;
+    }
+
+    this.compatibilityState = this.doc.createElementNS(HTML_NS, "div");
+    this.compatibilityState.classList.add("ruleview-compatibility-warning");
+    this.container.insertBefore(this.compatibilityState, this.filterProperty);
+  }
+
+  #createFilterPropertyButton() {
+    if (this.filterProperty) {
+      return;
+    }
+
+    // Filter button that filters for the current property name and is
+    // displayed when the property is overridden by another rule.
+    this.filterProperty = this.doc.createElementNS(HTML_NS, "button");
+    this.filterProperty.classList.add("ruleview-overridden-rule-filter");
+    this.filterProperty.title = l10n("rule.filterProperty.title");
+    this.container.append(this.filterProperty);
+
+    this.filterProperty.addEventListener(
+      "click",
+      event => {
+        this.ruleEditor.ruleView.setFilterStyles("`" + this.prop.name + "`");
+        event.stopPropagation();
+      },
+      { signal: this.abortController.signal }
+    );
+  }
+
   /**
    * Update the visibility of the enable checkbox, the warning indicator, the used
    * indicator and the filter property, as well as the overridden state of the property.
    */
-  updatePropertyState = () => {
+  updateUI = () => {
     if (this.prop.enabled) {
       this.enable.style.removeProperty("visibility");
     } else {
@@ -900,31 +993,44 @@ class TextPropertyEditor {
 
     this.enable.checked = this.prop.enabled;
 
-    this.warning.title = !this.#isNameValid()
-      ? l10n("rule.warningName.title")
-      : l10n("rule.warning.title");
-
-    this.warning.hidden = this.editing || this.isValid();
+    if (this.#shouldShowWarning) {
+      if (!this.warning) {
+        this.#createWarningIcon();
+      } else {
+        this.warning.hidden = false;
+      }
+      this.warning.title = !this.#isNameValid()
+        ? l10n("rule.warningName.title")
+        : l10n("rule.warning.title");
+    } else if (this.warning) {
+      this.warning.hidden = true;
+    }
 
     if (!this.editing && this.#isInvalidAtComputedValueTime()) {
+      if (!this.invalidAtComputedValueTimeWarning) {
+        this.#createInvalidAtComputedValueTimeIcon();
+      }
       this.invalidAtComputedValueTimeWarning.title = l10nFormatStr(
         "rule.warningInvalidAtComputedValueTime.title",
         `"${this.prop.getExpectedSyntax()}"`
       );
       this.invalidAtComputedValueTimeWarning.hidden = false;
-    } else {
+    } else if (this.invalidAtComputedValueTimeWarning) {
       this.invalidAtComputedValueTimeWarning.hidden = true;
     }
 
-    this.filterProperty.hidden =
-      this.editing ||
-      !this.isValid() ||
-      !this.prop.overridden ||
-      this.ruleEditor.rule.isUnmatched;
+    if (this.#shouldShowFilterProperty) {
+      this.#createFilterPropertyButton();
+    } else if (this.filterProperty) {
+      this.filterProperty.hidden = true;
+    }
 
-    this.expander.style.display = this.#shouldShowComputedExpander
-      ? "inline-block"
-      : "none";
+    if (this.#shouldShowComputedExpander && !this.expander) {
+      this.#createComputedExpander();
+    } else if (!this.#shouldShowComputedExpander && this.expander) {
+      this.expander.remove();
+      this.expander = null;
+    }
 
     if (
       !this.editing &&
@@ -944,10 +1050,14 @@ class TextPropertyEditor {
 
     if (this.editing || this.prop.overridden || !this.prop.enabled || used) {
       this.element.classList.remove("unused");
-      this.unusedState.hidden = true;
+      if (this.unusedState) {
+        this.unusedState.hidden = true;
+      }
     } else {
       this.element.classList.add("unused");
-      this.unusedState.hidden = false;
+      if (!this.unusedState) {
+        this.#createUnusedWarningIcon();
+      }
     }
   }
 
@@ -955,8 +1065,13 @@ class TextPropertyEditor {
     const { isCompatible } = await this.prop.isCompatible();
 
     if (this.editing || isCompatible) {
-      this.compatibilityState.hidden = true;
+      if (this.compatibilityState) {
+        this.compatibilityState.hidden = true;
+      }
     } else {
+      if (!this.compatibilityState) {
+        this.#createCompatibilityWarningIcon();
+      }
       this.compatibilityState.hidden = false;
     }
   }
@@ -966,15 +1081,25 @@ class TextPropertyEditor {
    * are populated on demand, when they become visible.
    */
   #updateComputed() {
-    this.computed.innerHTML = "";
+    if (this.computed) {
+      this.computed.replaceChildren();
+    }
 
-    this.expander.style.display =
-      !this.editing && this.#shouldShowComputedExpander
-        ? "inline-block"
-        : "none";
+    if (!this.editing && this.#shouldShowComputedExpander && !this.expander) {
+      this.#createComputedExpander();
+    } else if (
+      this.expander &&
+      !this.editing &&
+      !this.#shouldShowComputedExpander
+    ) {
+      this.expander.hidden = true;
+    }
 
     this.#populatedComputed = false;
-    if (this.expander.getAttribute("aria-expanded" === "true")) {
+    if (
+      this.expander &&
+      this.expander.getAttribute("aria-expanded" === "true")
+    ) {
       this.populateComputed();
     }
   }
@@ -995,8 +1120,11 @@ class TextPropertyEditor {
         continue;
       }
 
-      // Store the computed style element for easy access when highlighting
-      // styles
+      if (!this.computed) {
+        this.#createComputedList();
+      }
+
+      // Store the computed style element for easy access when highlighting styles
       computed.element = this.#createComputedListItem(
         this.computed,
         computed,
@@ -1011,7 +1139,9 @@ class TextPropertyEditor {
    * become visible.
    */
   #updateShorthandOverridden() {
-    this.shorthandOverridden.innerHTML = "";
+    if (this.shorthandOverridden) {
+      this.shorthandOverridden.replaceChildren();
+    }
 
     this.#populatedShorthandOverridden = false;
     this.#populateShorthandOverridden();
@@ -1029,6 +1159,14 @@ class TextPropertyEditor {
       return;
     }
     this.#populatedShorthandOverridden = true;
+
+    // Holds the viewers for the overridden shorthand properties.
+    // will be populated in |#updateShorthandOverridden|.
+    if (!this.shorthandOverridden) {
+      this.shorthandOverridden = this.doc.createElementNS(HTML_NS, "ul");
+      this.shorthandOverridden.classList.add("ruleview-overridden-items");
+      this.element.append(this.shorthandOverridden);
+    }
 
     for (const computed of this.prop.computed) {
       // Don't display duplicate information or show properties
@@ -1127,6 +1265,11 @@ class TextPropertyEditor {
    * expanded by manually by the user.
    */
   #onExpandClicked = event => {
+    if (!this.computed) {
+      // Holds the viewers for the computed properties.
+      // will be populated in |#updateComputed|.
+      this.#createComputedList();
+    }
     const isOpened =
       this.computed.hasAttribute("filter-open") ||
       this.computed.hasAttribute("user-open");
@@ -1135,11 +1278,15 @@ class TextPropertyEditor {
     if (isOpened) {
       this.computed.removeAttribute("filter-open");
       this.computed.removeAttribute("user-open");
-      this.shorthandOverridden.hidden = false;
+      if (this.shorthandOverridden) {
+        this.shorthandOverridden.hidden = false;
+      }
       this.#populateShorthandOverridden();
     } else {
       this.computed.setAttribute("user-open", "");
-      this.shorthandOverridden.hidden = true;
+      if (this.shorthandOverridden) {
+        this.shorthandOverridden.hidden = true;
+      }
       this.populateComputed();
     }
 
@@ -1152,8 +1299,15 @@ class TextPropertyEditor {
    * computed list was toggled opened by the filter.
    */
   expandForFilter() {
-    if (!this.computed.hasAttribute("user-open")) {
+    if (!this.computed || !this.computed.hasAttribute("user-open")) {
+      if (!this.expander) {
+        this.#createComputedExpander();
+      }
       this.expander.setAttribute("aria-expanded", "true");
+
+      if (!this.computed) {
+        this.#createComputedList();
+      }
       this.computed.setAttribute("filter-open", "");
       this.populateComputed();
     }
@@ -1165,7 +1319,7 @@ class TextPropertyEditor {
   collapseForFilter() {
     this.computed.removeAttribute("filter-open");
 
-    if (!this.computed.hasAttribute("user-open")) {
+    if (!this.computed.hasAttribute("user-open") && this.expander) {
       this.expander.setAttribute("aria-expanded", "false");
     }
   }
