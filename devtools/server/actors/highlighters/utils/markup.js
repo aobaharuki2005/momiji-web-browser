@@ -96,39 +96,36 @@ exports.isNodeValid = isNodeValid;
  * Since this container gets cleared when the document navigates, highlighters
  * should use this helper to have their markup content automatically re-inserted
  * in the new document.
- *
- * Since the markup content is inserted in the canvasFrame using
- * insertAnonymousContent, this means that it can be modified using the API
- * described in AnonymousContent.webidl.
  * To retrieve the AnonymousContent instance, use the content getter.
- *
- * @param {HighlighterEnv} highlighterEnv
- *        The environemnt which windows will be used to insert the node.
- * @param {Function} nodeBuilder
- *        A function that, when executed, returns a DOM node to be inserted into
- *        the canvasFrame.
- * @param {Object} options
- * @param {Boolean} options.waitForDocumentToLoad
- *        Set to false to try to insert the anonymous content even if the document
- *        isn't loaded yet. Defaults to true.
  */
-function CanvasFrameAnonymousContentHelper(
-  highlighterEnv,
-  nodeBuilder,
-  { waitForDocumentToLoad = true } = {}
-) {
-  this.highlighterEnv = highlighterEnv;
-  this.nodeBuilder = nodeBuilder;
-  this.waitForDocumentToLoad = !!waitForDocumentToLoad;
+class CanvasFrameAnonymousContentHelper {
+  /**
+   * @param {HighlighterEnv} highlighterEnv
+   *        The environemnt which windows will be used to insert the node.
+   * @param {Function} nodeBuilder
+   *        A function that, when executed, returns a DOM node to be inserted into
+   *        the canvasFrame.
+   * @param {Object} options
+   * @param {Boolean} options.waitForDocumentToLoad
+   *        Set to false to try to insert the anonymous content even if the document
+   *        isn't loaded yet. Defaults to true.
+   */
+  constructor(
+    highlighterEnv,
+    nodeBuilder,
+    { waitForDocumentToLoad = true } = {}
+  ) {
+    this.highlighterEnv = highlighterEnv;
+    this.nodeBuilder = nodeBuilder;
+    this.waitForDocumentToLoad = !!waitForDocumentToLoad;
 
-  this._onWindowReady = this._onWindowReady.bind(this);
-  this.highlighterEnv.on("window-ready", this._onWindowReady);
+    this._onWindowReady = this._onWindowReady.bind(this);
+    this.highlighterEnv.on("window-ready", this._onWindowReady);
 
-  this.listeners = new Map();
-  this.elements = new Map();
-}
+    this.listeners = new Map();
+    this.elements = new Map();
+  }
 
-CanvasFrameAnonymousContentHelper.prototype = {
   initialize() {
     // _insert will resolve this promise once the markup is displayed
     const onInitialized = new Promise(resolve => {
@@ -146,7 +143,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     }
 
     return onInitialized;
-  },
+  }
 
   destroy() {
     this._remove();
@@ -159,7 +156,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
     this._removeAllListeners();
     this.elements.clear();
-  },
+  }
 
   async _insert() {
     if (this.waitForDocumentToLoad) {
@@ -220,7 +217,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     this._content.root.appendChild(this.nodeBuilder());
 
     this._initialized();
-  },
+  }
 
   _remove() {
     try {
@@ -229,7 +226,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
       // If the current window isn't the one the content was inserted into, this
       // will fail, but that's fine.
     }
-  },
+  }
 
   /**
    * The "window-ready" event can be triggered when:
@@ -244,11 +241,11 @@ CanvasFrameAnonymousContentHelper.prototype = {
       this.elements.clear();
       this._insert();
     }
-  },
+  }
 
   _getNodeById(id) {
     return this.content?.root.getElementById(id);
-  },
+  }
 
   getBoundingClientRect(id) {
     const node = this._getNodeById(id);
@@ -256,7 +253,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
       return null;
     }
     return node.getBoundingClientRect();
-  },
+  }
 
   getComputedStylePropertyValue(id, property) {
     const node = this._getNodeById(id);
@@ -266,11 +263,11 @@ CanvasFrameAnonymousContentHelper.prototype = {
     return this.anonymousContentWindow
       .getComputedStyle(node)
       .getPropertyValue(property);
-  },
+  }
 
   getTextContentForElement(id) {
     return this._getNodeById(id)?.textContent;
-  },
+  }
 
   setTextContentForElement(id, text) {
     const node = this._getNodeById(id);
@@ -278,27 +275,27 @@ CanvasFrameAnonymousContentHelper.prototype = {
       return;
     }
     node.textContent = text;
-  },
+  }
 
   setAttributeForElement(id, name, value) {
     this._getNodeById(id)?.setAttribute(name, value);
-  },
+  }
 
   getAttributeForElement(id, name) {
     return this._getNodeById(id)?.getAttribute(name);
-  },
+  }
 
   removeAttributeForElement(id, name) {
     this._getNodeById(id)?.removeAttribute(name);
-  },
+  }
 
   hasAttributeForElement(id, name) {
     return typeof this.getAttributeForElement(id, name) === "string";
-  },
+  }
 
   getCanvasContext(id, type = "2d") {
     return this._getNodeById(id)?.getContext(type);
-  },
+  }
 
   /**
    * Add an event listener to one of the elements inserted in the canvasFrame
@@ -353,7 +350,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
     const listeners = this.listeners.get(type);
     listeners.set(id, handler);
-  },
+  }
 
   /**
    * Remove an event listener from one of the elements inserted in the
@@ -373,7 +370,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
       const target = this.pageListenerTarget;
       target.removeEventListener(type, this, true);
     }
-  },
+  }
 
   handleEvent(event) {
     const listeners = this.listeners.get(event.type);
@@ -410,7 +407,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
       }
       node = node.parentNode;
     }
-  },
+  }
 
   _removeAllListeners() {
     if (this.pageListenerTarget) {
@@ -420,7 +417,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
       }
     }
     this.listeners.clear();
-  },
+  }
 
   getElement(id) {
     if (this.elements.has(id)) {
@@ -451,14 +448,14 @@ CanvasFrameAnonymousContentHelper.prototype = {
     this.elements.set(id, element);
 
     return element;
-  },
+  }
 
   get content() {
     if (!this._content || Cu.isDeadWrapper(this._content)) {
       return null;
     }
     return this._content;
-  },
+  }
 
   /**
    * The canvasFrame anonymous content container gets zoomed in/out with the
@@ -501,7 +498,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
     value += `position:absolute; width:${width}px;height:${height}px; overflow:hidden;`;
     root.style = value;
-  },
+  }
 
   /**
    * Helper function that creates SVG DOM nodes.
@@ -519,7 +516,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     options.namespace = SVG_NS;
 
     return this.createNode(options);
-  },
+  }
 
   /**
    * Helper function that creates DOM nodes.
@@ -551,8 +548,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
     }
 
     return node;
-  },
-};
+  }
+}
+
 exports.CanvasFrameAnonymousContentHelper = CanvasFrameAnonymousContentHelper;
 
 /**
