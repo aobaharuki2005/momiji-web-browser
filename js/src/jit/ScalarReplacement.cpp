@@ -3073,6 +3073,7 @@ class SubarrayReplacer : public MDefinitionVisitorDefaultNoop {
   void visitTypedArrayElementSize(MTypedArrayElementSize* ins);
   void visitTypedArrayFill(MTypedArrayFill* ins);
   void visitTypedArraySet(MTypedArraySet* ins);
+  void visitTypedArraySubarray(MTypedArraySubarray* ins);
   void visitUnbox(MUnbox* ins);
 
   // New instructions created in SubarrayReplacer.
@@ -3387,6 +3388,29 @@ void SubarrayReplacer::visitTypedArraySet(MTypedArraySet* ins) {
   ins->block()->discard(ins);
 }
 
+void SubarrayReplacer::visitTypedArraySubarray(MTypedArraySubarray* ins) {
+  // Skip other typed array objects.
+  if (!isSubarrayOrGuard(ins->object())) {
+    return;
+  }
+
+  // Add both |start| operands to get the adjusted start index.
+  auto* newStart =
+      MAdd::New(alloc(), subarray()->start(), ins->start(), MIRType::IntPtr);
+  ins->block()->insertBefore(ins, newStart);
+
+  auto* replacement = MTypedArraySubarray::New(
+      alloc(), subarray()->object(), newStart, ins->length(),
+      ins->templateObject(), ins->initialHeap());
+  ins->block()->insertBefore(ins, replacement);
+
+  // Replace the subarray.
+  ins->replaceAllUsesWith(replacement);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
 // Returns false if the subarray typed array object does not escape.
 bool SubarrayReplacer::escapes(MInstruction* ins) const {
   MOZ_ASSERT(ins->type() == MIRType::Object);
@@ -3452,6 +3476,7 @@ bool SubarrayReplacer::escapes(MInstruction* ins) const {
       case MDefinition::Opcode::TypedArrayElementSize:
       case MDefinition::Opcode::TypedArrayFill:
       case MDefinition::Opcode::TypedArraySet:
+      case MDefinition::Opcode::TypedArraySubarray:
         break;
 
       // This instruction is a no-op used to test that scalar replacement is

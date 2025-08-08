@@ -233,3 +233,148 @@ function testSetTarget() {
   }
 }
 testSetTarget();
+
+// Test |subarray| of scalar replaced |subarray| works.
+function testSubarray() {
+  var i8 = new Int8Array(10);
+  var i32 = new Int32Array(10);
+  var i64 = new BigInt64Array(10);
+
+  var i64_one = new BigInt64Array([1n, 1n]);
+
+  for (var i = 0; i < 100; ++i) {
+    i8.fill(0);
+    i32.fill(0);
+    i64.fill(0n);
+
+    var sub_i8_1 = i8.subarray(1);
+    var sub_i8_2 = sub_i8_1.subarray(2);
+    assertEq(sub_i8_1.length, 10 - 1);
+    assertEq(sub_i8_2.length, 10 - 1 - 2);
+
+    sub_i8_1[2] = 10;
+    assertEq(sub_i8_2[0], 10);
+
+    sub_i8_2[1] = 20;
+    assertEq(sub_i8_1[3], 20);
+
+    assertRecoveredOnBailout(sub_i8_1, true);
+    assertRecoveredOnBailout(sub_i8_2, true);
+
+
+    var sub_i32_1 = i32.subarray(2);
+    var sub_i32_2 = sub_i32_1.subarray(2, -3);
+    assertEq(sub_i32_1.length, 10 - 2);
+    assertEq(sub_i32_2.length, 10 - 2 - 2 - 3);
+
+    sub_i32_2.fill(100);
+
+    assertRecoveredOnBailout(sub_i32_1, true);
+    assertRecoveredOnBailout(sub_i32_2, true);
+
+
+    var sub_i64_1 = i64.subarray(2, 8);
+    var sub_i64_2 = sub_i64_1.subarray(2);
+    assertEq(sub_i64_1.length, 10 - 4);
+    assertEq(sub_i64_2.length, 10 - 4 - 2);
+
+    sub_i64_2.set(i64_one, 2);
+
+    assertRecoveredOnBailout(sub_i64_1, true);
+    assertRecoveredOnBailout(sub_i64_2, true);
+
+    assertEqArray(i8, [0, 0, 0, 10, 20, 0, 0, 0, 0, 0]);
+    assertEqArray(i32, [0, 0, 0, 0, 100, 100, 100, 0, 0, 0]);
+    assertEqArray(i64, [0n, 0n, 0n, 0n, 0n, 0n, 1n, 1n, 0n, 0n]);
+  }
+}
+testSubarray();
+
+// Test |subarray| of scalar replaced |subarray| works.
+function testSubarrayChain4() {
+  var i8 = new Int8Array(10);
+  var i32 = new Int32Array(10);
+  var i64 = new BigInt64Array(10);
+
+  var i64_one = new BigInt64Array([1n, 1n]);
+  var i64_two = new BigInt64Array([2n]);
+
+  for (var i = 0; i < 100; ++i) {
+    i8.fill(0);
+    i32.fill(0);
+    i64.fill(0n);
+
+    var sub_i8_1 = i8.subarray(1);
+    var sub_i8_2 = sub_i8_1.subarray(2);
+    var sub_i8_3 = sub_i8_2.subarray(0);
+    var sub_i8_4 = sub_i8_3.subarray(3);
+    assertEq(sub_i8_1.length, 10 - 1);
+    assertEq(sub_i8_2.length, 10 - 1 - 2);
+    assertEq(sub_i8_3.length, 10 - 1 - 2 - 0);
+    assertEq(sub_i8_4.length, 10 - 1 - 2 - 0 - 3);
+
+    sub_i8_1[5] = 10;
+    assertEq(sub_i8_2[3], 10);
+    assertEq(sub_i8_3[3], 10);
+    assertEq(sub_i8_4[0], 10);
+
+    sub_i8_2[4] = 20;
+    assertEq(sub_i8_1[6], 20);
+    assertEq(sub_i8_3[4], 20);
+    assertEq(sub_i8_4[1], 20);
+
+    sub_i8_3[5] = 30;
+    assertEq(sub_i8_1[7], 30);
+    assertEq(sub_i8_3[5], 30);
+    assertEq(sub_i8_4[2], 30);
+
+    sub_i8_4[3] = 40;
+    assertEq(sub_i8_1[8], 40);
+    assertEq(sub_i8_2[6], 40);
+    assertEq(sub_i8_3[6], 40);
+
+    assertRecoveredOnBailout(sub_i8_1, true);
+    assertRecoveredOnBailout(sub_i8_2, true);
+    assertRecoveredOnBailout(sub_i8_3, true);
+    assertRecoveredOnBailout(sub_i8_4, true);
+
+    var sub_i32_1 = i32.subarray(2);
+    var sub_i32_2 = sub_i32_1.subarray(2, -3);
+    var sub_i32_3 = sub_i32_2.subarray();
+    var sub_i32_4 = sub_i32_3.subarray(2);
+    assertEq(sub_i32_1.length, 10 - 2);
+    assertEq(sub_i32_2.length, 10 - 2 - 2 - 3);
+    assertEq(sub_i32_3.length, 10 - 2 - 2 - 3);
+    assertEq(sub_i32_4.length, 10 - 2 - 2 - 3 - 2);
+
+    sub_i32_2.fill(100);
+    sub_i32_4.fill(200);
+
+    assertRecoveredOnBailout(sub_i32_1, true);
+    assertRecoveredOnBailout(sub_i32_2, true);
+    assertRecoveredOnBailout(sub_i32_3, true);
+    assertRecoveredOnBailout(sub_i32_4, true);
+
+    var sub_i64_1 = i64.subarray(2, 8);
+    var sub_i64_2 = sub_i64_1.subarray(2);
+    var sub_i64_3 = sub_i64_2.subarray(1);
+    var sub_i64_4 = sub_i64_3.subarray();
+    assertEq(sub_i64_1.length, 10 - 4);
+    assertEq(sub_i64_2.length, 10 - 4 - 2);
+    assertEq(sub_i64_3.length, 10 - 4 - 2 - 1);
+    assertEq(sub_i64_4.length, 10 - 4 - 2 - 1);
+
+    sub_i64_2.set(i64_one, 2);
+    sub_i64_4.set(i64_two);
+
+    assertRecoveredOnBailout(sub_i64_1, true);
+    assertRecoveredOnBailout(sub_i64_2, true);
+    assertRecoveredOnBailout(sub_i64_3, true);
+    assertRecoveredOnBailout(sub_i64_4, true);
+
+    assertEqArray(i8, [0, 0, 0, 0, 0, 0, 10, 20, 30, 40]);
+    assertEqArray(i32, [0, 0, 0, 0, 100, 100, 200, 0, 0, 0]);
+    assertEqArray(i64, [0n, 0n, 0n, 0n, 0n, 2n, 1n, 1n, 0n, 0n]);
+  }
+}
+testSubarrayChain4();
