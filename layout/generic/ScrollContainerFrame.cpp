@@ -5767,6 +5767,14 @@ void ScrollContainerFrame::RemoveObservers() {
   }
 }
 
+void ScrollContainerFrame::ActivityOccurred() {
+  if (mScrollbarActivity &&
+      (mHasHorizontalScrollbar || mHasVerticalScrollbar)) {
+    RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
+    scrollbarActivity->ActivityOccurred();
+  }
+}
+
 /**
  * Called when we want to update the scrollbar position, either because
  * scrolling happened or the user moved the scrollbar position and we need to
@@ -5775,7 +5783,6 @@ void ScrollContainerFrame::RemoveObservers() {
  * start of the smooth sequence).
  */
 void ScrollContainerFrame::UpdateScrollbarPosition() {
-  AutoWeakFrame weakFrame(this);
   mFrameIsUpdatingScrollbar = true;
 
   nsPoint pt = GetScrollPosition();
@@ -5786,32 +5793,19 @@ void ScrollContainerFrame::UpdateScrollbarPosition() {
     scrollRange = GetScrollRangeForUserInputEvents();
   }
 
-  if (mVScrollbarBox) {
-    SetCoordAttribute(mVScrollbarBox->GetContent()->AsElement(),
-                      nsGkAtoms::curpos, pt.y - scrollRange.y);
-    if (!weakFrame.IsAlive()) {
-      return;
-    }
+  if (mVScrollbarBox && mVScrollbarBox->SetCurPos(CSSPixel::FromAppUnitsRounded(
+                            pt.y - scrollRange.y))) {
+    ActivityOccurred();
   }
-  if (mHScrollbarBox) {
-    SetCoordAttribute(mHScrollbarBox->GetContent()->AsElement(),
-                      nsGkAtoms::curpos, pt.x - scrollRange.x);
-    if (!weakFrame.IsAlive()) {
-      return;
-    }
+  if (mHScrollbarBox && mHScrollbarBox->SetCurPos(CSSPixel::FromAppUnitsRounded(
+                            pt.x - scrollRange.x))) {
+    ActivityOccurred();
   }
 
   mFrameIsUpdatingScrollbar = false;
 }
 
-void ScrollContainerFrame::CurPosAttributeChangedInternal(nsIContent* aContent,
-                                                          bool aDoScroll) {
-  NS_ASSERTION(aContent, "aContent must not be null");
-  NS_ASSERTION((mHScrollbarBox && mHScrollbarBox->GetContent() == aContent) ||
-                   (mVScrollbarBox && mVScrollbarBox->GetContent() == aContent),
-               "unexpected child");
-  MOZ_ASSERT(aContent->IsElement());
-
+void ScrollContainerFrame::ScrollbarCurPosChanged(bool aDoScroll) {
   // Attribute changes on the scrollbars happen in one of three ways:
   // 1) The scrollbar changed the attribute in response to some user event
   // 2) We changed the attribute in response to a ScrollPositionDidChange
@@ -5826,20 +5820,34 @@ void ScrollContainerFrame::CurPosAttributeChangedInternal(nsIContent* aContent,
   }
 
   nsRect scrollRange = GetVisualScrollRange();
-
   nsPoint current = GetScrollPosition() - scrollRange.TopLeft();
-
   if (gfxPlatform::UseDesktopZoomingScrollbars()) {
     scrollRange = GetScrollRangeForUserInputEvents();
     current = GetVisualViewportOffset() - scrollRange.TopLeft();
   }
 
-  nsPoint dest;
-  nsRect allowedRange;
-  dest.x = GetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos, current.x,
-                             &allowedRange.x, &allowedRange.width);
-  dest.y = GetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos, current.y,
-                             &allowedRange.y, &allowedRange.height);
+  nsPoint dest = current;
+  nsRect allowedRange(current, nsSize());
+  if (mHScrollbarBox) {
+    dest.x = CSSPixel::ToAppUnits(mHScrollbarBox->GetCurPos());
+    if (dest.x) {
+      const nscoord halfPixel = AppUnitsPerCSSPixel() / 2;
+      // Any nscoord value that would round to the attribute value when
+      // converted to CSS pixels is allowed.
+      allowedRange.x = dest.x - halfPixel;
+      allowedRange.width = halfPixel * 2 - 1;
+    }
+  }
+  if (mVScrollbarBox) {
+    dest.y = CSSPixel::ToAppUnits(mVScrollbarBox->GetCurPos());
+    if (dest.y) {
+      const nscoord halfPixel = AppUnitsPerCSSPixel() / 2;
+      // Any nscoord value that would round to the attribute value when
+      // converted to CSS pixels is allowed.
+      allowedRange.y = dest.y - halfPixel;
+      allowedRange.height = halfPixel * 2 - 1;
+    }
+  }
   current += scrollRange.TopLeft();
   dest += scrollRange.TopLeft();
   allowedRange += scrollRange.TopLeft();
@@ -5851,30 +5859,10 @@ void ScrollContainerFrame::CurPosAttributeChangedInternal(nsIContent* aContent,
     return;
   }
 
-  if (mScrollbarActivity &&
-      (mHasHorizontalScrollbar || mHasVerticalScrollbar)) {
-    RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
-    scrollbarActivity->ActivityOccurred();
-  }
-
-  const bool isSmooth = aContent->AsElement()->HasAttr(nsGkAtoms::smooth);
-  if (isSmooth) {
-    // Make sure an attribute-setting callback occurs even if the view
-    // didn't actually move yet.  We need to make sure other listeners
-    // see that the scroll position is not (yet) what they thought it
-    // was.
-    AutoWeakFrame weakFrame(this);
-    UpdateScrollbarPosition();
-    if (!weakFrame.IsAlive()) {
-      return;
-    }
-  }
-
   if (aDoScroll) {
-    ScrollToWithOrigin(dest, &allowedRange,
-                       ScrollOperationParams{
-                           isSmooth ? ScrollMode::Smooth : ScrollMode::Instant,
-                           ScrollOrigin::Scrollbars});
+    ScrollToWithOrigin(
+        dest, &allowedRange,
+        ScrollOperationParams{ScrollMode::Instant, ScrollOrigin::Scrollbars});
   }
   // 'this' might be destroyed here
 }
@@ -6055,14 +6043,20 @@ bool ScrollContainerFrame::IsScrollingActive() const {
 }
 
 void ScrollContainerFrame::FinishReflowForScrollbar(
-    Element* aElement, nscoord aMinXY, nscoord aMaxXY, nscoord aCurPosXY,
-    nscoord aPageIncrement, nscoord aIncrement) {
+    nsScrollbarFrame* aScrollbar, nscoord aMinXY, nscoord aMaxXY,
+    nscoord aCurPosXY, nscoord aPageIncrement) {
   // Scrollbars assume zero is the minimum position, so translate for them.
-  SetCoordAttribute(aElement, nsGkAtoms::curpos, aCurPosXY - aMinXY);
-  SetScrollbarEnabled(aElement, aMaxXY - aMinXY);
-  SetCoordAttribute(aElement, nsGkAtoms::maxpos, aMaxXY - aMinXY);
-  SetCoordAttribute(aElement, nsGkAtoms::pageincrement, aPageIncrement);
-  SetCoordAttribute(aElement, nsGkAtoms::increment, aIncrement);
+  bool changed = false;
+  changed |=
+      aScrollbar->SetCurPos(CSSPixel::FromAppUnitsRounded(aCurPosXY - aMinXY));
+  changed |= aScrollbar->SetEnabled(aMaxXY != aMinXY);
+  changed |=
+      aScrollbar->SetMaxPos(CSSPixel::FromAppUnitsRounded(aMaxXY - aMinXY));
+  changed |= aScrollbar->SetPageIncrement(
+      CSSPixel::FromAppUnitsRounded(aPageIncrement));
+  if (changed) {
+    ActivityOccurred();
+  }
 }
 
 class MOZ_RAII ScrollContainerFrame::AutoMinimumScaleSizeChangeDetector final {
@@ -6314,16 +6308,10 @@ bool ScrollContainerFrame::ReflowFinished() {
   NS_ASSERTION(!mFrameIsUpdatingScrollbar, "We shouldn't be reentering here");
   mFrameIsUpdatingScrollbar = true;
 
-  // FIXME(emilio): Why this instead of mHScrollbarContent / mVScrollbarContent?
-  RefPtr<Element> vScroll =
-      mVScrollbarBox ? mVScrollbarBox->GetContent()->AsElement() : nullptr;
-  RefPtr<Element> hScroll =
-      mHScrollbarBox ? mHScrollbarBox->GetContent()->AsElement() : nullptr;
-
   // Note, in some cases this may get deleted while finishing reflow
   // for scrollbars. XXXmats is this still true now that we have a script
   // blocker in this scope? (if not, remove the weak frame checks below).
-  if (vScroll || hScroll) {
+  if (mVScrollbarBox || mHScrollbarBox) {
     nsSize visualViewportSize = GetVisualViewportSize();
     nsRect scrollRange = GetVisualScrollRange();
     nsPoint scrollPos = GetScrollPosition();
@@ -6337,7 +6325,7 @@ bool ScrollContainerFrame::ReflowFinished() {
     // If modifying the logic here, be sure to modify the corresponding
     // compositor-side calculation in ScrollThumbUtils::ApplyTransformForAxis().
     AutoWeakFrame weakFrame(this);
-    if (vScroll) {
+    if (mVScrollbarBox) {
       const double kScrollMultiplier =
           StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
       nscoord increment = lineScrollAmount.height * kScrollMultiplier;
@@ -6351,17 +6339,14 @@ bool ScrollContainerFrame::ReflowFinished() {
       nscoord pageincrement = nscoord(visualViewportSize.height - increment);
       nscoord pageincrementMin =
           nscoord(float(visualViewportSize.height) * 0.8);
-      FinishReflowForScrollbar(
-          vScroll, scrollRange.y, scrollRange.YMost(), scrollPos.y,
-          std::max(pageincrement, pageincrementMin), increment);
+      FinishReflowForScrollbar(mVScrollbarBox, scrollRange.y,
+                               scrollRange.YMost(), scrollPos.y,
+                               std::max(pageincrement, pageincrementMin));
     }
-    if (hScroll) {
-      const double kScrollMultiplier =
-          StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
-      nscoord increment = lineScrollAmount.width * kScrollMultiplier;
-      FinishReflowForScrollbar(
-          hScroll, scrollRange.x, scrollRange.XMost(), scrollPos.x,
-          nscoord(float(visualViewportSize.width) * 0.8), increment);
+    if (mHScrollbarBox) {
+      FinishReflowForScrollbar(mHScrollbarBox, scrollRange.x,
+                               scrollRange.XMost(), scrollPos.x,
+                               nscoord(float(visualViewportSize.width) * 0.8));
     }
     NS_ENSURE_TRUE(weakFrame.IsAlive(), false);
   }
@@ -6381,10 +6366,7 @@ bool ScrollContainerFrame::ReflowFinished() {
   if (!mHScrollbarBox && !mVScrollbarBox) {
     return false;
   }
-  CurPosAttributeChangedInternal(
-      mVScrollbarBox ? mVScrollbarBox->GetContent()->AsElement()
-                     : mHScrollbarBox->GetContent()->AsElement(),
-      doScroll);
+  ScrollbarCurPosChanged(doScroll);
   return doScroll;
 }
 
@@ -6733,58 +6715,6 @@ void ScrollContainerFrame::LayoutScrollbars(ScrollReflowInput& aState,
   }
 }
 
-#if DEBUG
-static bool ShellIsAlive(nsWeakPtr& aWeakPtr) {
-  RefPtr<PresShell> presShell = do_QueryReferent(aWeakPtr);
-  return !!presShell;
-}
-#endif
-
-void ScrollContainerFrame::SetScrollbarEnabled(Element* aElement,
-                                               nscoord aMaxPos) {
-#ifdef DEBUG
-  nsWeakPtr weakShell(do_GetWeakReference(PresShell()));
-#endif
-  if (aMaxPos) {
-    aElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
-  } else {
-    aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, u"true"_ns, true);
-  }
-  MOZ_ASSERT(ShellIsAlive(weakShell), "pres shell was destroyed by scrolling");
-}
-
-void ScrollContainerFrame::SetCoordAttribute(Element* aElement, nsAtom* aAtom,
-                                             nscoord aSize) {
-#ifdef DEBUG
-  nsWeakPtr weakShell(do_GetWeakReference(PresShell()));
-#endif
-  // convert to pixels
-  int32_t pixelSize = nsPresContext::AppUnitsToIntCSSPixels(aSize);
-
-  // only set the attribute if it changed.
-
-  nsAutoString newValue;
-  newValue.AppendInt(pixelSize);
-
-  if (aElement->AttrValueIs(kNameSpaceID_None, aAtom, newValue, eCaseMatters)) {
-    return;
-  }
-
-  AutoWeakFrame weakFrame(this);
-  RefPtr<Element> kungFuDeathGrip = aElement;
-  aElement->SetAttr(kNameSpaceID_None, aAtom, newValue, true);
-  MOZ_ASSERT(ShellIsAlive(weakShell), "pres shell was destroyed by scrolling");
-  if (!weakFrame.IsAlive()) {
-    return;
-  }
-
-  if (mScrollbarActivity &&
-      (mHasHorizontalScrollbar || mHasVerticalScrollbar)) {
-    RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
-    scrollbarActivity->ActivityOccurred();
-  }
-}
-
 static void ReduceRadii(nscoord aXBorder, nscoord aYBorder, nscoord& aXRadius,
                         nscoord& aYRadius) {
   // In order to ensure that the inside edge of the border has no
@@ -7097,37 +7027,6 @@ void ScrollContainerFrame::SetScrollbarVisibility(nsIFrame* aScrollbar,
       mediator->VisibilityChanged(aVisible);
     }
   }
-}
-
-nscoord ScrollContainerFrame::GetCoordAttribute(nsIFrame* aBox, nsAtom* aAtom,
-                                                nscoord aDefaultValue,
-                                                nscoord* aRangeStart,
-                                                nscoord* aRangeLength) {
-  if (aBox) {
-    nsIContent* content = aBox->GetContent();
-
-    nsAutoString value;
-    if (content->IsElement()) {
-      content->AsElement()->GetAttr(aAtom, value);
-    }
-    if (!value.IsEmpty()) {
-      nsresult error;
-      // convert it to appunits
-      nscoord result =
-          nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
-      nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
-      // Any nscoord value that would round to the attribute value when
-      // converted to CSS pixels is allowed.
-      *aRangeStart = result - halfPixel;
-      *aRangeLength = halfPixel * 2 - 1;
-      return result;
-    }
-  }
-
-  // Only this exact default value is allowed.
-  *aRangeStart = aDefaultValue;
-  *aRangeLength = 0;
-  return aDefaultValue;
 }
 
 bool ScrollContainerFrame::IsLastScrollUpdateAnimating() const {

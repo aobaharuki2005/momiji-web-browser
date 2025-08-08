@@ -136,7 +136,7 @@ thumb[orient="vertical"] {
   -moz-default-appearance: scrollbarthumb-vertical;
 }
 
-scrollbar[disabled] thumb {
+scrollbar:disabled thumb {
   visibility: hidden;
 }
 
@@ -171,7 +171,7 @@ scrollbar[root] {
     transition-duration: env(-moz-overlay-scrollbar-fade-duration);
   }
   scrollbar:not([active]),
-  scrollbar[disabled] {
+  scrollbar:disabled {
     pointer-events: none;
     opacity: 0;
   }

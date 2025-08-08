@@ -205,34 +205,56 @@ void nsScrollbarFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 }
 
-nsresult nsScrollbarFrame::AttributeChanged(int32_t aNameSpaceID,
-                                            nsAtom* aAttribute,
-                                            int32_t aModType) {
-  MOZ_TRY(
-      nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType));
-
-  // if the current position changes, notify any ScrollContainerFrame
-  // parent we may have
-  if (aAttribute == nsGkAtoms::curpos) {
-    if (ScrollContainerFrame* scrollContainerFrame =
-            do_QueryFrame(GetParent())) {
-      nsCOMPtr<nsIContent> content(mContent);
-      scrollContainerFrame->CurPosAttributeChanged(content);
-    }
-    if (nsSliderFrame* slider = do_QueryFrame(mSlider->GetPrimaryFrame())) {
-      slider->CurrentPositionChanged();
-    }
-  } else if (aAttribute == nsGkAtoms::minpos ||
-             aAttribute == nsGkAtoms::maxpos ||
-             aAttribute == nsGkAtoms::pageincrement ||
-             aAttribute == nsGkAtoms::increment) {
-    // These affect the slider.
-    if (nsSliderFrame* slider = do_QueryFrame(mSlider->GetPrimaryFrame())) {
-      PresShell()->FrameNeedsReflow(slider, IntrinsicDirty::None,
-                                    NS_FRAME_IS_DIRTY);
-    }
+bool nsScrollbarFrame::SetCurPos(CSSIntCoord aCurPos) {
+  if (mCurPos == aCurPos) {
+    return false;
   }
-  return NS_OK;
+  mCurPos = aCurPos;
+  if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(GetParent())) {
+    scrollContainerFrame->ScrollbarCurPosChanged();
+  }
+  if (nsSliderFrame* slider = do_QueryFrame(mSlider->GetPrimaryFrame())) {
+    slider->CurrentPositionChanged();
+  }
+  return true;
+}
+
+void nsScrollbarFrame::RequestSliderReflow() {
+  // These affect the slider.
+  if (nsSliderFrame* slider = do_QueryFrame(mSlider->GetPrimaryFrame())) {
+    PresShell()->FrameNeedsReflow(slider, IntrinsicDirty::None,
+                                  NS_FRAME_IS_DIRTY);
+  }
+}
+
+bool nsScrollbarFrame::SetMaxPos(CSSIntCoord aMaxPos) {
+  if (mMaxPos == aMaxPos) {
+    return false;
+  }
+  RequestSliderReflow();
+  mMaxPos = aMaxPos;
+  return true;
+}
+
+bool nsScrollbarFrame::SetPageIncrement(CSSIntCoord aPageIncrement) {
+  if (mPageIncrement == aPageIncrement) {
+    return false;
+  }
+  RequestSliderReflow();
+  mPageIncrement = aPageIncrement;
+  return true;
+}
+
+bool nsScrollbarFrame::IsEnabled() const {
+  return !mContent->AsElement()->State().HasState(dom::ElementState::DISABLED);
+}
+
+bool nsScrollbarFrame::SetEnabled(bool aEnabled) {
+  if (IsEnabled() == aEnabled) {
+    return false;
+  }
+  mContent->AsElement()->SetStates(dom::ElementState::DISABLED, !aEnabled);
+  return true;
 }
 
 NS_IMETHODIMP

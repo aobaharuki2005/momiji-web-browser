@@ -31,6 +31,7 @@ nsIFrame* NS_NewScrollbarFrame(mozilla::PresShell* aPresShell,
 class nsScrollbarFrame final : public nsContainerFrame,
                                public nsIAnonymousContentCreator {
   using Element = mozilla::dom::Element;
+  using CSSIntCoord = mozilla::CSSIntCoord;
 
  public:
   explicit nsScrollbarFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
@@ -46,9 +47,6 @@ class nsScrollbarFrame final : public nsContainerFrame,
 #endif
 
   // nsIFrame overrides
-  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                            int32_t aModType) override;
-
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus) override;
@@ -105,8 +103,27 @@ class nsScrollbarFrame final : public nsContainerFrame,
   nsScrollbarFrame* GetOppositeScrollbar() const;
   void ActivityChanged(bool aIsNowActive);
 
+  // Sets the current scrollbar position. Returns true if the value changed.
+  bool SetCurPos(CSSIntCoord);
+  CSSIntCoord GetCurPos() const { return mCurPos; }
+  bool SetMaxPos(CSSIntCoord);
+  CSSIntCoord GetMaxPos() const { return mMaxPos; }
+  bool SetPageIncrement(CSSIntCoord);
+  CSSIntCoord GetPageIncrement() const { return mPageIncrement; }
+
+  bool SetEnabled(bool);
+  bool IsEnabled() const;
+  bool IsDisabled() const { return !IsEnabled(); }
+
  protected:
   void InvalidateForHoverChange(bool aIsNowHovered);
+  void RequestSliderReflow();
+
+  // TODO(emilio): These probably shouldn't be CSSIntCoords (could just be
+  // nscoords).
+  CSSIntCoord mCurPos = 0;
+  CSSIntCoord mMaxPos = 0;
+  CSSIntCoord mPageIncrement = 0;
 
   // Direction and unit that our button scrolled us to.
   // TODO(emilio): Find a better place to store this?
