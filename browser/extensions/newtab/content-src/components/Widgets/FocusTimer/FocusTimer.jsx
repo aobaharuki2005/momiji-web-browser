@@ -78,14 +78,13 @@ export const FocusTimer = ({ dispatch }) => {
   const [progress, setProgress] = useState(0);
   const [progressVisible, setProgressVisible] = useState(false);
 
-  const timerType = useSelector(state => state.TimerWidget.timerType);
   const activeMinutesRef = useRef(null);
   const activeSecondsRef = useRef(null);
   const idleMinutesRef = useRef(null);
   const idleSecondsRef = useRef(null);
-
   const arcRef = useRef(null);
 
+  const timerType = useSelector(state => state.TimerWidget.timerType);
   const timerData = useSelector(state => state.TimerWidget);
   const { duration, initialDuration, startTime, isRunning } =
     timerData[timerType];
@@ -518,6 +517,12 @@ export const FocusTimer = ({ dispatch }) => {
           />
         </div>
       </div>
+      {!showSystemNotifications && (
+        <p
+          className="timer-notification-status"
+          data-l10n-id="newtab-widget-timer-notification-warning"
+        ></p>
+      )}
     </article>
   ) : null;
 };
