@@ -494,7 +494,7 @@ index f9d9dbd2c4..67149bfcb9 100644
  }
  
 diff --git a/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc b/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
-index d9c7635c1d..d4b85af6bd 100644
+index 064b98fa15..37fe7e168c 100644
 --- a/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
 +++ b/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
 @@ -38,6 +38,7 @@ namespace {
@@ -523,7 +523,7 @@ index d9c7635c1d..d4b85af6bd 100644
      x_display_->AddEventHandler(xfixes_event_base_ + XFixesCursorNotify, this);
  
 diff --git a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-index 0702c755a1..fb2b63adb7 100644
+index 0384a0373b..db0826b42b 100644
 --- a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
 +++ b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
 @@ -302,7 +302,7 @@ bool ScreenCapturerX11::GetSourceList(SourceList* sources) {

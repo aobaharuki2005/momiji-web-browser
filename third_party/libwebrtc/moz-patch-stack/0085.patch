@@ -25,7 +25,7 @@ index 8178c3bc6c..9754cccab1 100644
  
    if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire &&
 diff --git a/modules/desktop_capture/linux/x11/shared_x_display.cc b/modules/desktop_capture/linux/x11/shared_x_display.cc
-index aee9183c53..8de02c892a 100644
+index 60101b9aa4..44d34b7e03 100644
 --- a/modules/desktop_capture/linux/x11/shared_x_display.cc
 +++ b/modules/desktop_capture/linux/x11/shared_x_display.cc
 @@ -11,7 +11,9 @@
