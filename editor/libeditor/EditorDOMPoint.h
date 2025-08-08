@@ -1468,10 +1468,27 @@ class EditorDOMRangeBase final {
     MOZ_ASSERT_IF(mStart.IsSet() && mEnd.IsSet(),
                   mStart.EqualsOrIsBefore(mEnd));
   }
-  explicit EditorDOMRangeBase(EditorDOMPointType&& aStart,
-                              EditorDOMPointType&& aEnd)
-      : mStart(std::forward<EditorDOMPointType>(aStart)),
-        mEnd(std::forward<EditorDOMPointType>(aEnd)) {
+  template <typename EndPointType>
+  explicit EditorDOMRangeBase(PointType&& aStart, EndPointType& aEnd)
+      : mStart(std::forward<PointType>(aStart)),
+        mEnd(aEnd.template RefOrTo<PointType>()) {
+    MOZ_ASSERT_IF(mStart.IsSet(), mStart.IsSetAndValid());
+    MOZ_ASSERT_IF(mEnd.IsSet(), mEnd.IsSetAndValid());
+    MOZ_ASSERT_IF(mStart.IsSet() && mEnd.IsSet(),
+                  mStart.EqualsOrIsBefore(mEnd));
+  }
+  template <typename StartPointType>
+  explicit EditorDOMRangeBase(StartPointType& aStart, PointType&& aEnd)
+      : mStart(aStart.template RefOrTo<PointType>()),
+        mEnd(std::forward<PointType>(aEnd)) {
+    MOZ_ASSERT_IF(mStart.IsSet(), mStart.IsSetAndValid());
+    MOZ_ASSERT_IF(mEnd.IsSet(), mEnd.IsSetAndValid());
+    MOZ_ASSERT_IF(mStart.IsSet() && mEnd.IsSet(),
+                  mStart.EqualsOrIsBefore(mEnd));
+  }
+  explicit EditorDOMRangeBase(PointType&& aStart, PointType&& aEnd)
+      : mStart(std::forward<PointType>(aStart)),
+        mEnd(std::forward<PointType>(aEnd)) {
     MOZ_ASSERT_IF(mStart.IsSet(), mStart.IsSetAndValid());
     MOZ_ASSERT_IF(mEnd.IsSet(), mEnd.IsSetAndValid());
     MOZ_ASSERT_IF(mStart.IsSet() && mEnd.IsSet(),

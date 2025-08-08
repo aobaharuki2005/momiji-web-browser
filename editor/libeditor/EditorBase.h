@@ -3073,12 +3073,13 @@ class EditorBase : public nsIEditor,
                                                // ToGenericNSResult
   friend class ListItemElementSelectionState;  // AutoEditActionDataSetter,
                                                // ToGenericNSResult
-  friend class MoveNodeTransaction;            // ToGenericNSResult
-  friend class ParagraphStateAtSelection;      // AutoEditActionDataSetter,
-                                               // ToGenericNSResult
-  friend class PendingStyles;                  // GetEditAction,
-                                               // GetFirstSelectionStartPoint,
-                                               // SelectionRef
+  friend class MoveNodeTransaction;      // MarkElementDirty, ToGenericNSResult
+  friend class MoveSiblingsTransaction;  // MarkElementDirty, ToGenericNSResult
+  friend class ParagraphStateAtSelection;  // AutoEditActionDataSetter,
+                                           // ToGenericNSResult
+  friend class PendingStyles;              // GetEditAction,
+                                           // GetFirstSelectionStartPoint,
+                                           // SelectionRef
   friend class ReplaceTextTransaction;  // AllowsTransactionsToChangeSelection,
                                         // CollapseSelectionTo, DoReplaceText,
                                         // RangeUpdaterRef

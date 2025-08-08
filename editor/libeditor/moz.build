@@ -74,6 +74,7 @@ UNIFIED_SOURCES += [
     "InternetCiter.cpp",
     "JoinNodesTransaction.cpp",
     "MoveNodeTransaction.cpp",
+    "MoveSiblingsTransaction.cpp",
     "PendingStyles.cpp",
     "PlaceholderTransaction.cpp",
     "ReplaceTextTransaction.cpp",

@@ -23,64 +23,88 @@ namespace mozilla {
 
 using namespace dom;
 
-template already_AddRefed<MoveNodeTransaction> MoveNodeTransaction::MaybeCreate(
-    HTMLEditor& aHTMLEditor, nsIContent& aContentToMove,
-    const EditorDOMPoint& aPointToInsert);
-template already_AddRefed<MoveNodeTransaction> MoveNodeTransaction::MaybeCreate(
-    HTMLEditor& aHTMLEditor, nsIContent& aContentToMove,
-    const EditorRawDOMPoint& aPointToInsert);
+template already_AddRefed<MoveSiblingsTransaction>
+MoveSiblingsTransaction::MaybeCreate(HTMLEditor& aHTMLEditor,
+                                     nsIContent& aFirstContentToMove,
+                                     nsIContent& aLastContentToMove,
+                                     const EditorDOMPoint& aPointToInsert);
+template already_AddRefed<MoveSiblingsTransaction>
+MoveSiblingsTransaction::MaybeCreate(HTMLEditor& aHTMLEditor,
+                                     nsIContent& aFirstContentToMove,
+                                     nsIContent& aLastContentToMove,
+                                     const EditorRawDOMPoint& aPointToInsert);
 
 // static
 template <typename PT, typename CT>
-already_AddRefed<MoveNodeTransaction> MoveNodeTransaction::MaybeCreate(
-    HTMLEditor& aHTMLEditor, nsIContent& aContentToMove,
+already_AddRefed<MoveSiblingsTransaction> MoveSiblingsTransaction::MaybeCreate(
+    HTMLEditor& aHTMLEditor, nsIContent& aFirstContentToMove,
+    nsIContent& aLastContentToMove,
     const EditorDOMPointBase<PT, CT>& aPointToInsert) {
-  if (NS_WARN_IF(!aContentToMove.GetParentNode()) ||
+  if (NS_WARN_IF(!aFirstContentToMove.GetParentNode()) ||
+      NS_WARN_IF(&aFirstContentToMove == &aLastContentToMove) ||
+      NS_WARN_IF(aFirstContentToMove.GetParentNode() !=
+                 aLastContentToMove.GetParentNode()) ||
       NS_WARN_IF(!aPointToInsert.IsSet())) {
     return nullptr;
   }
-  // TODO: We should not allow to move a node to improper container element.
-  //       However, this is currently used to move invalid parent while
-  //       processing the nodes.  Therefore, treating the case as error breaks
-  //       a lot.
-  if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(aContentToMove)) ||
-      // The destination should be editable, but it may be in an orphan node or
-      // sub-tree to reduce number of DOM mutation events.  In such case, we're
-      // okay to move a node into the non-editable content because we can assume
-      // that the caller will insert it into an editable element.
-      NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(
-                     *aPointToInsert.GetContainer()) &&
-                 aPointToInsert.GetContainer()->IsInComposedDoc())) {
+
+  // The destination should be editable, but it may be in an orphan node
+  // or sub-tree to reduce number of DOM mutation events.  In such case,
+  // we're okay to move a node into the non-editable content because we
+  // can assume that the caller will insert it into an editable element.
+  if (NS_WARN_IF(aPointToInsert.IsInComposedDoc() &&
+                 !HTMLEditUtils::IsSimplyEditableNode(
+                     *aPointToInsert.GetContainer()))) {
     return nullptr;
   }
-  RefPtr<MoveNodeTransaction> transaction =
-      new MoveNodeTransaction(aHTMLEditor, aContentToMove, aPointToInsert);
+  const uint32_t numberOfSiblings = [&]() -> uint32_t {
+    uint32_t num = 1;
+    for (nsIContent* content = aFirstContentToMove.GetNextSibling(); content;
+         content = content->GetNextSibling()) {
+      // TODO: We should not allow to move a node to improper container element.
+      //       However, this is currently used to move invalid parent while
+      //       processing the nodes.  Therefore, treating the case as error
+      //       breaks a lot.
+      if (NS_WARN_IF(content->IsInComposedDoc() &&
+                     !HTMLEditUtils::IsRemovableNode(*content))) {
+        return 0;
+      }
+      num++;
+      if (content == &aLastContentToMove) {
+        return num;
+      }
+    }
+    return 0;
+  }();
+  if (NS_WARN_IF(!numberOfSiblings)) {
+    return nullptr;
+  }
+  RefPtr<MoveSiblingsTransaction> transaction = new MoveSiblingsTransaction(
+      aHTMLEditor, aFirstContentToMove, aLastContentToMove, numberOfSiblings,
+      aPointToInsert);
   return transaction.forget();
 }
 
 template <typename PT, typename CT>
-MoveNodeTransaction::MoveNodeTransaction(
-    HTMLEditor& aHTMLEditor, nsIContent& aContentToMove,
+MoveSiblingsTransaction::MoveSiblingsTransaction(
+    HTMLEditor& aHTMLEditor, nsIContent& aFirstContentToMove,
+    nsIContent& aLastContentToMove, uint32_t aNumberOfSiblings,
     const EditorDOMPointBase<PT, CT>& aPointToInsert)
-    : mContentToMove(&aContentToMove),
-      mContainer(aPointToInsert.GetContainer()),
-      mReference(aPointToInsert.GetChild()),
-      mOldContainer(aContentToMove.GetParentNode()),
-      mOldNextSibling(aContentToMove.GetNextSibling()),
-      mHTMLEditor(&aHTMLEditor) {
-  MOZ_ASSERT(mContainer);
-  MOZ_ASSERT(mOldContainer);
-  MOZ_ASSERT_IF(mReference, mReference->GetParentNode() == mContainer);
-  MOZ_ASSERT_IF(mOldNextSibling,
-                mOldNextSibling->GetParentNode() == mOldContainer);
-  // printf("MoveNodeTransaction size: %zu\n", sizeof(MoveNodeTransaction));
-  static_assert(sizeof(MoveNodeTransaction) <= 72,
-                "Transaction classes may be created a lot and may be alive "
-                "long so that keep the foot print smaller as far as possible");
+    : MoveNodeTransactionBase(aHTMLEditor, aLastContentToMove,
+                              aPointToInsert.template To<EditorRawDOMPoint>()) {
+  mSiblingsToMove.SetCapacity(aNumberOfSiblings);
+  for (nsIContent* content = &aFirstContentToMove; content;
+       content = content->GetNextSibling()) {
+    mSiblingsToMove.AppendElement(*content);
+    if (content == &aLastContentToMove) {
+      break;
+    }
+  }
+  MOZ_ASSERT(mSiblingsToMove.Length() == aNumberOfSiblings);
 }
 
 std::ostream& operator<<(std::ostream& aStream,
-                         const MoveNodeTransaction& aTransaction) {
+                         const MoveSiblingsTransaction& aTransaction) {
   auto DumpNodeDetails = [&](const nsINode* aNode) {
     if (aNode) {
       if (aNode->IsText()) {
@@ -92,8 +116,11 @@ std::ostream& operator<<(std::ostream& aStream,
       }
     }
   };
-  aStream << "{ mContentToMove=" << aTransaction.mContentToMove.get();
-  DumpNodeDetails(aTransaction.mContentToMove);
+  aStream << "{ mSiblingsToMove[0]=" << aTransaction.mSiblingsToMove[0].get();
+  DumpNodeDetails(aTransaction.mSiblingsToMove[0]);
+  aStream << ", mSiblingsToMove[" << aTransaction.mSiblingsToMove.Length() - 1
+          << aTransaction.mSiblingsToMove.LastElement().get();
+  DumpNodeDetails(aTransaction.mSiblingsToMove.LastElement());
   aStream << ", mContainer=" << aTransaction.mContainer.get();
   DumpNodeDetails(aTransaction.mContainer);
   aStream << ", mReference=" << aTransaction.mReference.get();
@@ -106,78 +133,115 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(MoveNodeTransaction, EditTransactionBase,
-                                   mHTMLEditor, mContentToMove, mContainer,
-                                   mReference, mOldContainer, mOldNextSibling)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MoveSiblingsTransaction, EditTransactionBase,
+                                   mSiblingsToMove)
 
-NS_IMPL_ADDREF_INHERITED(MoveNodeTransaction, EditTransactionBase)
-NS_IMPL_RELEASE_INHERITED(MoveNodeTransaction, EditTransactionBase)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MoveNodeTransaction)
+NS_IMPL_ADDREF_INHERITED(MoveSiblingsTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(MoveSiblingsTransaction, EditTransactionBase)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MoveSiblingsTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-NS_IMETHODIMP MoveNodeTransaction::DoTransaction() {
+NS_IMETHODIMP MoveSiblingsTransaction::DoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
-          ("%p MoveNodeTransaction::%s this=%s", this, __FUNCTION__,
+          ("%p MoveSiblingsTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
+  mDone = true;
   return DoTransactionInternal();
 }
 
-nsresult MoveNodeTransaction::DoTransactionInternal() {
+nsresult MoveSiblingsTransaction::DoTransactionInternal() {
   MOZ_DIAGNOSTIC_ASSERT(mHTMLEditor);
-  MOZ_DIAGNOSTIC_ASSERT(mContentToMove);
+  MOZ_DIAGNOSTIC_ASSERT(!mSiblingsToMove.IsEmpty());
   MOZ_DIAGNOSTIC_ASSERT(mContainer);
   MOZ_DIAGNOSTIC_ASSERT(mOldContainer);
 
   OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  OwningNonNull<nsIContent> contentToMove = *mContentToMove;
-  OwningNonNull<nsINode> container = *mContainer;
+  OwningNonNull<nsINode> newContainer = *mContainer;
   nsCOMPtr<nsIContent> newNextSibling = mReference;
-  if (contentToMove->IsElement()) {
-    nsresult rv = htmlEditor->MarkElementDirty(
-        MOZ_KnownLive(*contentToMove->AsElement()));
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return EditorBase::ToGenericNSResult(rv);
-    }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::MarkElementDirty() failed, but ignored");
-  }
-
   {
-    AutoMoveNodeSelNotify notifyStoredRanges(
-        htmlEditor->RangeUpdaterRef(), EditorRawDOMPoint(contentToMove),
-        newNextSibling ? EditorRawDOMPoint(newNextSibling)
-                       : EditorRawDOMPoint::AtEndOf(container));
-    IgnoredErrorResult error;
-    container->InsertBefore(contentToMove, newNextSibling, error);
-    // InsertBefore() may call MightThrowJSException() even if there is no
-    // error. We don't need the flag here.
-    error.WouldReportJSException();
-    if (error.Failed()) {
-      NS_WARNING("nsINode::InsertBefore() failed");
-      return error.StealNSResult();
+    Maybe<uint32_t> srcIndex = mSiblingsToMove[0]->ComputeIndexInParentNode();
+    Maybe<uint32_t> destIndex;
+    if (newNextSibling) {
+      destIndex = newNextSibling->ComputeIndexInParentNode();
+    }
+    uint32_t i = 0;
+    const CopyableAutoTArray<OwningNonNull<nsIContent>, 64> siblingsToMove(
+        mSiblingsToMove);
+    for (const OwningNonNull<nsIContent>& contentToMove : siblingsToMove) {
+      if (MOZ_UNLIKELY(contentToMove->IsInComposedDoc() &&
+                       !HTMLEditUtils::IsRemovableNode(*contentToMove))) {
+        continue;
+      }
+      if (contentToMove->IsElement() &&
+          !contentToMove->AsElement()->HasAttr(nsGkAtoms::mozdirty)) {
+        nsresult rv = htmlEditor->MarkElementDirty(
+            MOZ_KnownLive(*contentToMove->AsElement()));
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "EditorBase::MarkElementDirty() failed, but ignored");
+        Unused << rv;
+      }
+
+      {
+        const EditorRawDOMPoint atMovingContent =
+            srcIndex ? EditorRawDOMPoint(contentToMove->GetParentNode(),
+                                         contentToMove, *srcIndex)
+                     : EditorRawDOMPoint(contentToMove);
+        // Store the next index if and only if we'll move nextSibling at next
+        // time to save the cost of computing the index.
+        if (i + 1 < siblingsToMove.Length() &&
+            contentToMove->GetNextSibling() == siblingsToMove[i + 1]) {
+          srcIndex = Some(atMovingContent.Offset());
+        } else {
+          srcIndex.reset();
+        }
+        const EditorRawDOMPoint moveTo =
+            !newNextSibling
+                ? EditorRawDOMPoint::AtEndOf(newContainer)
+                : EditorRawDOMPoint(newNextSibling->GetParentNode(),
+                                    newNextSibling, destIndex.ref()++);
+        // FIXME: I think we can improve the performance of
+        // AutoMoveNodeSelNotify with handling all children move once.
+        AutoMoveNodeSelNotify notifyStoredRanges(htmlEditor->RangeUpdaterRef(),
+                                                 atMovingContent, moveTo);
+        IgnoredErrorResult error;
+        newContainer->InsertBefore(*contentToMove, newNextSibling, error);
+        // InsertBefore() may call MightThrowJSException() even if there is no
+        // error. We don't need the flag here.
+        error.WouldReportJSException();
+        if (MOZ_UNLIKELY(error.Failed())) {
+          NS_WARNING(nsPrintfCString("nsINode::InsertBefore() failed (%s)",
+                                     ToString(contentToMove.ref()).c_str())
+                         .get());
+          return Err(error.StealNSResult());
+        }
+      }
+      i++;
     }
   }
-
-  return NS_OK;
+  return NS_WARN_IF(mHTMLEditor->Destroyed()) ? NS_ERROR_EDITOR_DESTROYED
+                                              : NS_OK;
 }
 
-NS_IMETHODIMP MoveNodeTransaction::UndoTransaction() {
+NS_IMETHODIMP MoveSiblingsTransaction::UndoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
-          ("%p MoveNodeTransaction::%s this=%s", this, __FUNCTION__,
+          ("%p MoveSiblingsTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mContentToMove) ||
-      NS_WARN_IF(!mOldContainer)) {
+  mDone = false;
+
+  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(mSiblingsToMove.IsEmpty()) ||
+      NS_WARN_IF(!IsSiblingsToMoveValid()) || NS_WARN_IF(!mOldContainer)) {
     // Perhaps, nulled-out by the cycle collector.
     return NS_ERROR_FAILURE;
   }
 
   // If the original point has been changed, refer mOldNextSibling if it's
-  // renasonable.  Otherwise, use end of the old container.
+  // reasonable.  Otherwise, use end of the old container.
   if (mOldNextSibling && mOldContainer != mOldNextSibling->GetParentNode()) {
     // TODO: Check whether the new container is proper one for containing
-    //       mContentToMove.  However, there are few testcases so that we
-    //       shouldn't change here without creating a lot of undo tests.
+    //       content in mSiblingsToMove.  However, there are few testcases so
+    //       that we shouldn't change here without creating a lot of undo tests.
     if (mOldNextSibling->GetParentNode() &&
         (mOldNextSibling->IsInComposedDoc() ||
          !mOldContainer->IsInComposedDoc())) {
@@ -187,69 +251,97 @@ NS_IMETHODIMP MoveNodeTransaction::UndoTransaction() {
     }
   }
 
-  if (MOZ_UNLIKELY(!HTMLEditUtils::IsRemovableNode(*mContentToMove))) {
+  if (MOZ_UNLIKELY(mOldContainer->IsInComposedDoc() &&
+                   !HTMLEditUtils::IsSimplyEditableNode(*mOldContainer))) {
     NS_WARNING(
-        "MoveNodeTransaction::UndoTransaction() couldn't move the "
-        "content due to not removable from its current container");
-    return NS_ERROR_FAILURE;
-  }
-  if (MOZ_UNLIKELY(!HTMLEditUtils::IsSimplyEditableNode(*mOldContainer))) {
-    NS_WARNING(
-        "MoveNodeTransaction::UndoTransaction() couldn't move the "
+        "MoveSiblingsTransaction::UndoTransaction() couldn't move the "
         "content into the old container due to non-editable one");
     return NS_ERROR_FAILURE;
   }
 
   // And store the latest node which should be referred at redoing.
-  mContainer = mContentToMove->GetParentNode();
-  mReference = mContentToMove->GetNextSibling();
+  mContainer = mSiblingsToMove.LastElement()->GetParentNode();
+  mReference = mSiblingsToMove.LastElement()->GetNextSibling();
 
   OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   OwningNonNull<nsINode> oldContainer = *mOldContainer;
-  OwningNonNull<nsIContent> contentToMove = *mContentToMove;
   nsCOMPtr<nsIContent> oldNextSibling = mOldNextSibling;
-  if (contentToMove->IsElement()) {
-    nsresult rv = htmlEditor->MarkElementDirty(
-        MOZ_KnownLive(*contentToMove->AsElement()));
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return EditorBase::ToGenericNSResult(rv);
-    }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::MarkElementDirty() failed, but ignored");
-  }
-
   {
-    AutoMoveNodeSelNotify notifyStoredRanges(
-        htmlEditor->RangeUpdaterRef(), EditorRawDOMPoint(contentToMove),
-        oldNextSibling ? EditorRawDOMPoint(oldNextSibling)
-                       : EditorRawDOMPoint::AtEndOf(oldContainer));
-    IgnoredErrorResult error;
-    oldContainer->InsertBefore(contentToMove, oldNextSibling, error);
-    // InsertBefore() may call MightThrowJSException() even if there is no
-    // error. We don't need the flag here.
-    error.WouldReportJSException();
-    if (error.Failed()) {
-      NS_WARNING("nsINode::InsertBefore() failed");
-      return error.StealNSResult();
+    Maybe<uint32_t> srcIndex = mSiblingsToMove[0]->ComputeIndexInParentNode();
+    Maybe<uint32_t> destIndex;
+    if (oldNextSibling) {
+      destIndex = oldNextSibling->ComputeIndexInParentNode();
+    }
+    uint32_t i = 0;
+    const CopyableAutoTArray<OwningNonNull<nsIContent>, 64> siblingsToMove(
+        mSiblingsToMove);
+    for (const OwningNonNull<nsIContent>& contentToMove : siblingsToMove) {
+      if (MOZ_UNLIKELY(contentToMove->IsInComposedDoc() &&
+                       !HTMLEditUtils::IsRemovableNode(*contentToMove))) {
+        continue;
+      }
+      if (contentToMove->IsElement() &&
+          !contentToMove->AsElement()->HasAttr(nsGkAtoms::mozdirty)) {
+        nsresult rv = htmlEditor->MarkElementDirty(
+            MOZ_KnownLive(*contentToMove->AsElement()));
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "EditorBase::MarkElementDirty() failed, but ignored");
+        Unused << rv;
+      }
+
+      {
+        const EditorRawDOMPoint atMovingContent =
+            srcIndex ? EditorRawDOMPoint(contentToMove->GetParentNode(),
+                                         contentToMove, *srcIndex)
+                     : EditorRawDOMPoint(contentToMove);
+        // Store the next index if and only if we'll move nextSibling at next
+        // time to save the cost of computing the index.
+        if (i + 1 < siblingsToMove.Length() &&
+            contentToMove->GetNextSibling() == siblingsToMove[i + 1]) {
+          srcIndex = Some(atMovingContent.Offset());
+        } else {
+          srcIndex.reset();
+        }
+        const EditorRawDOMPoint moveTo =
+            !oldNextSibling ? EditorRawDOMPoint::AtEndOf(oldContainer)
+                            : EditorRawDOMPoint(oldContainer, oldNextSibling,
+                                                destIndex.ref()++);
+        AutoMoveNodeSelNotify notifyStoredRanges(htmlEditor->RangeUpdaterRef(),
+                                                 atMovingContent, moveTo);
+        IgnoredErrorResult error;
+        oldContainer->InsertBefore(*contentToMove, oldNextSibling, error);
+        // InsertBefore() may call MightThrowJSException() even if there is no
+        // error. We don't need the flag here.
+        error.WouldReportJSException();
+        if (error.Failed()) {
+          NS_WARNING("nsINode::InsertBefore() failed");
+          return error.StealNSResult();
+        }
+      }
+      i++;
     }
   }
 
-  return NS_OK;
+  return NS_WARN_IF(mHTMLEditor->Destroyed()) ? NS_ERROR_EDITOR_DESTROYED
+                                              : NS_OK;
 }
 
-NS_IMETHODIMP MoveNodeTransaction::RedoTransaction() {
+NS_IMETHODIMP MoveSiblingsTransaction::RedoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
-          ("%p MoveNodeTransaction::%s this=%s", this, __FUNCTION__,
+          ("%p MoveSiblingsTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mContentToMove) ||
-      NS_WARN_IF(!mContainer)) {
+  mDone = true;
+
+  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(mSiblingsToMove.IsEmpty()) ||
+      NS_WARN_IF(!IsSiblingsToMoveValid()) || NS_WARN_IF(!mContainer)) {
     // Perhaps, nulled-out by the cycle collector.
     return NS_ERROR_FAILURE;
   }
 
   // If the inserting point has been changed, refer mReference if it's
-  // renasonable.  Otherwise, use end of the container.
+  // reasonable.  Otherwise, use end of the container.
   if (mReference && mContainer != mReference->GetParentNode()) {
     // TODO: Check whether the new container is proper one for containing
     //       mContentToMove.  However, there are few testcases so that we
@@ -262,39 +354,44 @@ NS_IMETHODIMP MoveNodeTransaction::RedoTransaction() {
     }
   }
 
-  if (MOZ_UNLIKELY(!HTMLEditUtils::IsRemovableNode(*mContentToMove))) {
+  if (MOZ_UNLIKELY(mContainer->IsInComposedDoc() &&
+                   !HTMLEditUtils::IsSimplyEditableNode(*mContainer))) {
     NS_WARNING(
-        "MoveNodeTransaction::RedoTransaction() couldn't move the "
-        "content due to not removable from its current container");
-    return NS_ERROR_FAILURE;
-  }
-  if (MOZ_UNLIKELY(!HTMLEditUtils::IsSimplyEditableNode(*mContainer))) {
-    NS_WARNING(
-        "MoveNodeTransaction::RedoTransaction() couldn't move the "
+        "MoveSiblingsTransaction::RedoTransaction() couldn't move the "
         "content into the new container due to non-editable one");
     return NS_ERROR_FAILURE;
   }
 
   // And store the latest node which should be back.
-  mOldContainer = mContentToMove->GetParentNode();
-  mOldNextSibling = mContentToMove->GetNextSibling();
+  mOldContainer = mSiblingsToMove.LastElement()->GetParentNode();
+  mOldNextSibling = mSiblingsToMove.LastElement()->GetNextSibling();
 
   nsresult rv = DoTransactionInternal();
   if (NS_FAILED(rv)) {
-    NS_WARNING("MoveNodeTransaction::DoTransactionInternal() failed");
+    NS_WARNING("MoveSiblingsTransaction::DoTransactionInternal() failed");
     return rv;
   }
-
-  if (!mHTMLEditor->AllowsTransactionsToChangeSelection()) {
-    return NS_OK;
-  }
-
-  OwningNonNull<HTMLEditor> htmlEditor(*mHTMLEditor);
-  rv = htmlEditor->CollapseSelectionTo(
-      SuggestPointToPutCaret<EditorRawDOMPoint>());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed, but ignored");
   return NS_OK;
+}
+
+nsIContent* MoveSiblingsTransaction::GetFirstMovedContent() const {
+  nsINode* const expectedContainer = mDone ? mContainer : mOldContainer;
+  for (const OwningNonNull<nsIContent>& content : mSiblingsToMove) {
+    if (MOZ_LIKELY(content->GetParentNode() == expectedContainer)) {
+      return content;
+    }
+  }
+  return nullptr;
+}
+
+nsIContent* MoveSiblingsTransaction::GetLastMovedContent() const {
+  nsINode* const expectedContainer = mDone ? mContainer : mOldContainer;
+  for (const OwningNonNull<nsIContent>& content : Reversed(mSiblingsToMove)) {
+    if (MOZ_LIKELY(content->GetParentNode() == expectedContainer)) {
+      return content;
+    }
+  }
+  return nullptr;
 }
 
 }  // namespace mozilla
