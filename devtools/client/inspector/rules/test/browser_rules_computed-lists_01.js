@@ -31,15 +31,30 @@ function testExpandersShown(inspector, view) {
   is(rule.textProps[1].name, "top", "Second property is top.");
 
   info("Check that the expanders are shown correctly");
-  ok(rule.textProps[0].editor.expander, "margin expander is displayed.");
-  ok(!rule.textProps[1].editor.expander, "top expander is hidden.");
+  is(
+    rule.textProps[0].editor.expander.style.display,
+    "inline-block",
+    "margin expander is displayed."
+  );
+  is(
+    rule.textProps[1].editor.expander.style.display,
+    "none",
+    "top expander is hidden."
+  );
   ok(
     !rule.textProps[0].editor.expander.hasAttribute("open"),
     "margin computed list is closed."
   );
   ok(
-    !rule.textProps[0].editor.computed,
-    "margin computed list does not exist before opening."
+    !rule.textProps[1].editor.expander.hasAttribute("open"),
+    "top computed list is closed."
   );
-  ok(!rule.textProps[1].editor.computed, "top computed list is not rendered.");
+  ok(
+    !rule.textProps[0].editor.computed.hasChildNodes(),
+    "margin computed list is empty before opening."
+  );
+  ok(
+    !rule.textProps[1].editor.computed.hasChildNodes(),
+    "top computed list is empty."
+  );
 }
