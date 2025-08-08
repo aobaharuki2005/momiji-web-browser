@@ -8,7 +8,6 @@
 
 #include "base/message_loop.h"
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/StaticPrefs_dom.h"
 
 #ifdef XP_WIN
 #  include "chrome/common/ipc_channel_win.h"
@@ -50,20 +49,6 @@ already_AddRefed<Channel> Channel::Create(ChannelHandle pipe, Mode mode,
 #endif
   MOZ_ASSERT_UNREACHABLE("unhandled pipe type");
   return nullptr;
-}
-
-bool Channel::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-#ifdef XP_WIN
-  return ChannelWin::CreateRawPipe(server, client);
-#else
-#  ifdef XP_DARWIN
-  if (mozilla::StaticPrefs::dom_ipc_backend_mach_AtStartup()) {
-    return ChannelMach::CreateRawPipe(server, client);
-  }
-#  endif
-  return ChannelPosix::CreateRawPipe(server, client);
-#endif
 }
 
 }  // namespace IPC

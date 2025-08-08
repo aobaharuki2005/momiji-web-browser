@@ -50,10 +50,16 @@ class ChannelPosix final : public Channel, public MessageLoopForIO::Watcher {
   void SetOtherMachTask(task_t task) MOZ_EXCLUDES(SendMutex()) override;
 #endif
 
-  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
+  const ChannelKind* GetKind() const override { return &sKind; }
+
+  static const ChannelKind sKind;
 
  private:
   ~ChannelPosix() { Close(); }
+
+  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
+  static uint32_t NumRelayedAttachments(const IPC::Message& message);
+  static bool IsValidHandle(const ChannelHandle& handle);
 
   void Init(Mode mode) MOZ_REQUIRES(SendMutex(), IOThread());
   void SetPipe(int fd) MOZ_REQUIRES(SendMutex(), IOThread());

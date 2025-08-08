@@ -43,14 +43,18 @@ class ChannelMach final : public Channel,
   // These are only relevant to ChannelPosix, so we ignore them.
   void SetOtherMachTask(task_t) override {}
 
-  // Create a new pair of pipe endpoints which can be used to establish a
-  // native IPC::Channel connection.
-  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
-  static bool CreateRawPipe(mozilla::UniqueMachReceiveRight* server,
-                            mozilla::UniqueMachSendRight* client);
+  const ChannelKind* GetKind() const override { return &sKind; }
+
+  static const ChannelKind sKind;
 
  private:
   ~ChannelMach() { Close(); }
+
+  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
+  static bool CreateRawPipe(mozilla::UniqueMachReceiveRight* server,
+                            mozilla::UniqueMachSendRight* client);
+  static uint32_t NumRelayedAttachments(const Message& message);
+  static bool IsValidHandle(const ChannelHandle& handle);
 
   bool EnqueueHelloMessage() MOZ_REQUIRES(SendMutex(), IOThread());
   bool ContinueConnect(mozilla::UniqueMachSendRight send_port)

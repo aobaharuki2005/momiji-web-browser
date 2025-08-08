@@ -103,6 +103,12 @@ static inline ssize_t corrected_sendmsg(int socket,
 }  // namespace
 //------------------------------------------------------------------------------
 
+const Channel::ChannelKind ChannelPosix::sKind{
+    .create_raw_pipe = &ChannelPosix::CreateRawPipe,
+    .num_relayed_attachments = &ChannelPosix::NumRelayedAttachments,
+    .is_valid_handle = &ChannelPosix::IsValidHandle,
+};
+
 ChannelPosix::ChannelPosix(mozilla::UniqueFileHandle pipe, Mode mode,
                            base::ProcessId other_pid)
     : other_pid_(other_pid) {
@@ -1175,6 +1181,21 @@ bool ChannelPosix::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
   server->emplace<mozilla::UniqueFileHandle>(fds[0]);
   client->emplace<mozilla::UniqueFileHandle>(fds[1]);
   return true;
+}
+
+// static
+uint32_t ChannelPosix::NumRelayedAttachments(const Message& message) {
+#ifdef XP_DARWIN
+  return message.num_send_rights();
+#else
+  return 0;
+#endif
+}
+
+// static
+bool ChannelPosix::IsValidHandle(const ChannelHandle& handle) {
+  const auto* fileHandle = std::get_if<mozilla::UniqueFileHandle>(&handle);
+  return fileHandle && *fileHandle;
 }
 
 }  // namespace IPC

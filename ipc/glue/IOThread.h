@@ -63,6 +63,8 @@ class IOThreadParent : public IOThread {
 
   IOThreadParent();
   ~IOThreadParent();
+
+  const IPC::Channel::ChannelKind* mChannelKind;
 };
 
 // Background I/O thread used by the child process.

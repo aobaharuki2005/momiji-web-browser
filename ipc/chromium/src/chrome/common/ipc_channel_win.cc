@@ -71,6 +71,12 @@ ChannelWin::State::~State() {
 
 //------------------------------------------------------------------------------
 
+const Channel::ChannelKind ChannelWin::sKind{
+    .create_raw_pipe = &ChannelWin::CreateRawPipe,
+    .num_relayed_attachments = &ChannelWin::NumRelayedAttachments,
+    .is_valid_handle = &ChannelWin::IsValidHandle,
+};
+
 ChannelWin::ChannelWin(mozilla::UniqueFileHandle pipe, Mode mode,
                        base::ProcessId other_pid)
     : input_state_(this), output_state_(this), other_pid_(other_pid) {
@@ -778,6 +784,17 @@ bool ChannelWin::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
     return false;
   }
   return true;
+}
+
+// static
+uint32_t ChannelWin::NumRelayedAttachments(const Message& message) {
+  return message.num_handles();
+}
+
+// static
+bool ChannelWin::IsValidHandle(const ChannelHandle& handle) {
+  const auto* fileHandle = std::get_if<mozilla::UniqueFileHandle>(&handle);
+  return fileHandle && *fileHandle;
 }
 
 }  // namespace IPC

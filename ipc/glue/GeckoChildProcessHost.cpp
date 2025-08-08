@@ -893,21 +893,21 @@ bool GeckoChildProcessHost::LaunchAndWaitForProcessHandle(
   return WaitForProcessHandle();
 }
 
-void GeckoChildProcessHost::InitializeChannel(
-    IPC::Channel::ChannelHandle&& aServerHandle) {
-  // Create the IPC channel which will be used for communication with this
-  // process.
-  RefPtr<IPC::Channel> channel = IPC::Channel::Create(
-      std::move(aServerHandle), IPC::Channel::MODE_BROKER_SERVER,
-      base::kInvalidProcessId);
-
+bool GeckoChildProcessHost::InitializeChannel(
+    IPC::Channel::ChannelHandle* aClientHandle) {
   mNodeController = NodeController::GetSingleton();
-  std::tie(mInitialPort, mNodeChannel) =
-      mNodeController->InviteChildProcess(channel, this);
+  if (!mNodeController->InviteChildProcess(this, aClientHandle, &mInitialPort,
+                                           getter_AddRefs(mNodeChannel))) {
+    return false;
+  }
+
+  MOZ_ASSERT(mInitialPort.IsValid());
+  MOZ_ASSERT(mNodeChannel);
 
   MonitorAutoLock lock(mMonitor);
   mProcessState = CHANNEL_INITIALIZED;
   lock.Notify();
+  return true;
 }
 
 void GeckoChildProcessHost::SetAlreadyDead() {
@@ -1885,13 +1885,11 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
   // The ForkServer doesn't use IPC::Channel for communication, so we can skip
   // initializing it.
   if (mProcessType != GeckoProcessType_ForkServer) {
-    IPC::Channel::ChannelHandle serverHandle;
     IPC::Channel::ChannelHandle clientHandle;
-    if (!IPC::Channel::CreateRawPipe(&serverHandle, &clientHandle)) {
-      return ProcessLaunchPromise::CreateAndReject(LaunchError("CreateRawPipe"),
-                                                   __func__);
+    if (!aHost->InitializeChannel(&clientHandle)) {
+      return ProcessLaunchPromise::CreateAndReject(
+          LaunchError("InitializeChannel"), __func__);
     }
-    aHost->InitializeChannel(std::move(serverHandle));
 
     if (auto* handle = std::get_if<UniqueFileHandle>(&clientHandle)) {
       geckoargs::sIPCHandle.Put(std::move(*handle), mChildArgs);

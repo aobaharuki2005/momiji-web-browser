@@ -6,9 +6,19 @@
 
 #include "mozilla/ipc/IOThread.h"
 #include "mozilla/ipc/NodeController.h"
+#include "mozilla/Preferences.h"
 
 #if defined(XP_WIN)
 #  include <objbase.h>
+#endif
+
+#if defined(XP_WIN)
+#  include "chrome/common/ipc_channel_win.h"
+#else
+#  if defined(XP_DARWIN)
+#    include "chrome/common/ipc_channel_mach.h"
+#  endif
+#  include "chrome/common/ipc_channel_posix.h"
 #endif
 
 namespace mozilla {
@@ -66,7 +76,25 @@ void IOThread::StopThread() {
 // IOThreadParent
 //
 
-IOThreadParent::IOThreadParent() : IOThread("IPC I/O Parent") { StartThread(); }
+IOThreadParent::IOThreadParent() : IOThread("IPC I/O Parent") {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+
+  // Select which type of channel will be used for IPC.
+  mChannelKind = [] {
+#if defined(XP_WIN)
+    return &IPC::ChannelWin::sKind;
+#else
+#  if defined(XP_DARWIN)
+    if (Preferences::GetBool("dom.ipc.backend.mach")) {
+      return &IPC::ChannelMach::sKind;
+    }
+#  endif
+    return &IPC::ChannelPosix::sKind;
+#endif
+  }();
+
+  StartThread();
+}
 
 IOThreadParent::~IOThreadParent() { StopThread(); }
 
@@ -77,7 +105,7 @@ void IOThreadParent::Init() {
 #endif
 
   // Initialize the ports library in the current thread.
-  NodeController::InitBrokerProcess();
+  NodeController::InitBrokerProcess(mChannelKind);
 }
 
 void IOThreadParent::CleanUp() {
@@ -105,10 +133,8 @@ IOThreadChild::IOThreadChild(IPC::Channel::ChannelHandle aClientHandle,
 IOThreadChild::~IOThreadChild() { StopThread(); }
 
 void IOThreadChild::Init() {
-  RefPtr<IPC::Channel> channel = IPC::Channel::Create(
-      std::move(mClientHandle), IPC::Channel::MODE_BROKER_CLIENT, mParentPid);
-
-  mInitialPort = NodeController::InitChildProcess(channel, mParentPid);
+  mInitialPort =
+      NodeController::InitChildProcess(std::move(mClientHandle), mParentPid);
 }
 
 void IOThreadChild::CleanUp() { NodeController::CleanUp(); }

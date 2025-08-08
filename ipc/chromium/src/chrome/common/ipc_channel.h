@@ -83,6 +83,21 @@ class Channel {
     kReadBufferSize = 4 * 1024,
   };
 
+  // Each channel implementation has a static ChannelKind vtable which can be
+  // used to access "static" methods, not associated with a Channel instance.
+  struct ChannelKind {
+    // Create a new pair of pipe endpoints which can be used to establish a
+    // native IPC::Channel connection.
+    bool (*create_raw_pipe)(ChannelHandle* server, ChannelHandle* client);
+
+    // The number of attachments in |message| which will need to be relayed via.
+    // the broker channel, rather than being sent directly to a non-broker peer.
+    uint32_t (*num_relayed_attachments)(const IPC::Message& message);
+
+    // Check if |handle| is a valid handle for creating a channel of this kind.
+    bool (*is_valid_handle)(const ChannelHandle& handle);
+  };
+
   // Initialize a Channel.
   //
   // |pipe| identifies the pipe which will be used. It should have been created
@@ -140,9 +155,8 @@ class Channel {
   virtual void SetOtherMachTask(task_t task) MOZ_EXCLUDES(SendMutex()) = 0;
 #endif
 
-  // Create a new pair of pipe endpoints which can be used to establish a
-  // native IPC::Channel connection.
-  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
+  // Get the static ChannelKind vtable for this Channel's implementation.
+  virtual const ChannelKind* GetKind() const = 0;
 
  protected:
   Channel();
