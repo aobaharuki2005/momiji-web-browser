@@ -167,6 +167,11 @@
   padding: 3px;
   margin-inline-start: -3px;
   border-radius: 3px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: calc(3lh + 3px);
+  -webkit-line-clamp: 3;
 }
 
 .font-name:hover {
