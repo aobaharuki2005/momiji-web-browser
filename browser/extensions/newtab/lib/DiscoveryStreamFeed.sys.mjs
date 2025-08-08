@@ -76,6 +76,7 @@ const PREF_UNIFIED_ADS_BLOCKED_LIST = "unifiedAds.blockedAds";
 const PREF_UNIFIED_ADS_SPOCS_ENABLED = "unifiedAds.spocs.enabled";
 const PREF_UNIFIED_ADS_ADSFEED_ENABLED = "unifiedAds.adsFeed.enabled";
 const PREF_UNIFIED_ADS_ENDPOINT = "unifiedAds.endpoint";
+const PREF_UNIFIED_ADS_OHTTP = "unifiedAds.ohttp.enabled";
 const PREF_USER_TOPSITES = "feeds.topsites";
 const PREF_SPOCS_CLEAR_ENDPOINT = "discoverystream.endpointSpocsClear";
 const PREF_SHOW_SPONSORED = "showSponsored";
@@ -117,6 +118,7 @@ const PREF_USER_INFERRED_PERSONALIZATION =
   "discoverystream.sections.personalization.inferred.user.enabled";
 const PREF_SYSTEM_INFERRED_PERSONALIZATION =
   "discoverystream.sections.personalization.inferred.enabled";
+const PREF_MERINO_OHTTP = "discoverystream.merino-provider.ohttp.enabled";
 const PREF_BILLBOARD_ENABLED = "newtabAdSize.billboard";
 const PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
 const PREF_LEADERBOARD_POSITION = "newtabAdSize.leaderboard.position";
@@ -220,10 +222,7 @@ export class DiscoveryStreamFeed {
       // We care about if the contextual ads pref is on, if contextual is supported,
       // and if inferred is on, but OHTTP is off.
       const state = this.store.getState();
-      const marsOhttpEnabled = Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.unifiedAds.ohttp.enabled",
-        false
-      );
+      const marsOhttpEnabled = state.Prefs.values[PREF_UNIFIED_ADS_OHTTP];
       const contextualAds = state.Prefs.values[PREF_CONTEXTUAL_ADS];
       const inferredPersonalization =
         state.Prefs.values[PREF_USER_INFERRED_PERSONALIZATION] &&
@@ -1438,7 +1437,7 @@ export class DiscoveryStreamFeed {
           endpoint = `${endpointBaseUrl}v1/ads`;
           unifiedAdsPlacements = this.getAdsPlacements();
           const blockedSponsors =
-            this.store.getState().Prefs.values[PREF_UNIFIED_ADS_BLOCKED_LIST];
+            state.Prefs.values[PREF_UNIFIED_ADS_BLOCKED_LIST];
 
           body = {
             context_id: await lazy.ContextId.request(),
@@ -1448,10 +1447,7 @@ export class DiscoveryStreamFeed {
         }
 
         const headers = new Headers();
-        const marsOhttpEnabled = Services.prefs.getBoolPref(
-          "browser.newtabpage.activity-stream.unifiedAds.ohttp.enabled",
-          false
-        );
+        const marsOhttpEnabled = state.Prefs.values[PREF_UNIFIED_ADS_OHTTP];
         headers.append("content-type", "application/json");
 
         let spocsResponse;
@@ -1676,10 +1672,7 @@ export class DiscoveryStreamFeed {
     }
     const headers = new Headers();
     headers.append("content-type", "application/json");
-    const marsOhttpEnabled = Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.unifiedAds.ohttp.enabled",
-      false
-    );
+    const marsOhttpEnabled = state.Prefs.values[PREF_UNIFIED_ADS_OHTTP];
 
     await this.fetchFromEndpoint(
       endpoint,
@@ -1939,10 +1932,7 @@ export class DiscoveryStreamFeed {
     let isFakespot;
     const selectedFeedPref = prefs[PREF_CONTEXTUAL_CONTENT_SELECTED_FEED];
     // Should we fetch /curated-recommendations over OHTTP
-    const merinoOhttpEnabled = Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.discoverystream.merino-provider.ohttp.enabled",
-      false
-    );
+    const merinoOhttpEnabled = prefs[PREF_MERINO_OHTTP];
     let sections = [];
     const { feeds } = cachedData;
 
@@ -2198,10 +2188,7 @@ export class DiscoveryStreamFeed {
     const inferredPersonalization =
       prefs[PREF_USER_INFERRED_PERSONALIZATION] &&
       prefs[PREF_SYSTEM_INFERRED_PERSONALIZATION];
-    const merinoOhttpEnabled = Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.discoverystream.merino-provider.ohttp.enabled",
-      false
-    );
+    const merinoOhttpEnabled = prefs[PREF_MERINO_OHTTP];
     const headers = new Headers();
     if (this.isMerino) {
       const topicSelectionEnabled = prefs[PREF_TOPIC_SELECTION_ENABLED];

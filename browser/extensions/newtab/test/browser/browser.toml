@@ -70,6 +70,8 @@ skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && d
 
 ["browser_newtab_trigger.js"]
 
+["browser_ohttpImages.js"]
+
 ["browser_open_tab_focus.js"]
 run-if = [
   "os == 'win'", # Test setup only implemented for OSX and Windows

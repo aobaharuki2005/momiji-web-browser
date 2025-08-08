@@ -1160,6 +1160,20 @@ newtabMerinoOhttp:
       description: >-
         Enables using OHTTP for merino content requests
 
+newtabOhttpImages:
+  description: Sending request to MARS over OHTTP in newtab
+  owner: nbarrett@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      type: boolean
+      description: >-
+        Enables using OHTTP for images
+    includeTopStoriesSection:
+      type: boolean
+      description: >-
+        Enables using OHTTP for top stories section if enabled for images
+
 newtabMobileDownloadPromotion:
   description: Cross-sell promotion to download Firefox for mobile
   owner: mcrawford@mozilla.com
