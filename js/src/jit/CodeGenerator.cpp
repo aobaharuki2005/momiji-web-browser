@@ -11087,6 +11087,26 @@ void CodeGenerator::visitArrayBufferViewElements(
   masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), out);
 }
 
+void CodeGenerator::visitArrayBufferViewElementsWithOffset(
+    LArrayBufferViewElementsWithOffset* lir) {
+  Register object = ToRegister(lir->object());
+  Register out = ToRegister(lir->output());
+  Scalar::Type elementType = lir->mir()->elementType();
+
+  masm.loadPtr(Address(object, ArrayBufferViewObject::dataOffset()), out);
+
+  if (lir->offset()->isConstant()) {
+    Address source = ToAddress(out, lir->offset(), elementType);
+    if (source.offset != 0) {
+      masm.computeEffectiveAddress(source, out);
+    }
+  } else {
+    BaseIndex source(out, ToRegister(lir->offset()),
+                     ScaleFromScalarType(elementType));
+    masm.computeEffectiveAddress(source, out);
+  }
+}
+
 void CodeGenerator::visitTypedArrayElementSize(LTypedArrayElementSize* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());

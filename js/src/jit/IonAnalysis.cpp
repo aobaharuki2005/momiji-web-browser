@@ -4477,6 +4477,10 @@ bool jit::AddKeepAliveInstructions(MIRGraph& graph) {
           MOZ_ASSERT(ins->numOperands() == 1);
           ownerObject = ins->getOperand(0);
           break;
+        case MDefinition::Opcode::ArrayBufferViewElementsWithOffset:
+          MOZ_ASSERT(ins->numOperands() == 2);
+          ownerObject = ins->getOperand(0);
+          break;
         case MDefinition::Opcode::Slots:
           ownerObject = ins->toSlots()->object();
           break;
