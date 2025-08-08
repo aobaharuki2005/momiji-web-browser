@@ -116,10 +116,10 @@ index b1d4569fef..4e8407e933 100644
    public_configs = []
    if (!build_with_chromium) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index d02fda6ac9..f0ceabaf03 100644
+index 40ce109f80..2532f68623 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -1498,6 +1498,7 @@ rtc_source_set("ssl_header") {
+@@ -1511,6 +1511,7 @@ rtc_source_set("ssl_header") {
  }
  
  rtc_library("digest") {
@@ -127,7 +127,7 @@ index d02fda6ac9..f0ceabaf03 100644
    visibility = [ "*" ]
    sources = [
      "message_digest.cc",
-@@ -1512,15 +1513,17 @@ rtc_library("digest") {
+@@ -1525,15 +1526,17 @@ rtc_library("digest") {
      "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  
@@ -151,7 +151,7 @@ index d02fda6ac9..f0ceabaf03 100644
    visibility = [ "*" ]
    sources = [
      "crypto_random.cc",
-@@ -1541,6 +1544,7 @@ rtc_library("crypto_random") {
+@@ -1554,6 +1557,7 @@ rtc_library("crypto_random") {
      configs += [ "..:external_ssl_library" ]
    }
  }
