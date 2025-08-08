@@ -160,7 +160,7 @@ index b1060faae3..c567b6b0f3 100644
  
  if (rtc_include_tests) {
 diff --git a/api/audio_codecs/BUILD.gn b/api/audio_codecs/BUILD.gn
-index 492a44aa2f..3b41660148 100644
+index 25ea12557b..aca296a06c 100644
 --- a/api/audio_codecs/BUILD.gn
 +++ b/api/audio_codecs/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -220,7 +220,7 @@ index a3ee0d4e0c..322c52ac64 100644
  
  rtc_source_set("audio_encoder_g722_config") {
 diff --git a/api/audio_codecs/opus/BUILD.gn b/api/audio_codecs/opus/BUILD.gn
-index 2035a791be..c5936ac39f 100644
+index c24e3d779b..af7b2bc3ec 100644
 --- a/api/audio_codecs/opus/BUILD.gn
 +++ b/api/audio_codecs/opus/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -653,7 +653,7 @@ index c91b9a0b60..cc75594d8e 100644
  import("../../webrtc.gni")
  
 diff --git a/pc/BUILD.gn b/pc/BUILD.gn
-index cc366601e5..617de28bee 100644
+index 704aa2ad87..1147706e87 100644
 --- a/pc/BUILD.gn
 +++ b/pc/BUILD.gn
 @@ -30,8 +30,8 @@
