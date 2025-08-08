@@ -207,7 +207,6 @@ add_setup(async function init() {
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
-  UrlbarPrefs.set("scotchBonnet.enableOverride", false);
   UrlbarPrefs.set("quicksuggest.ampTopPickCharThreshold", 0);
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit();
@@ -1393,6 +1392,7 @@ add_task(async function tabToSearch() {
   // have the same behavior.
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await QuickSuggestTestUtils.forceSync();
+  UrlbarPrefs.set("suggest.quickactions", false);
 
   Services.prefs.setBoolPref(
     "browser.urlbar.quicksuggest.sponsoredPriority",
@@ -1459,6 +1459,90 @@ add_task(async function tabToSearch() {
   await extension.unload();
 
   UrlbarPrefs.clear("tabToSearch.onboard.interactionsLeft");
+  UrlbarPrefs.clear("suggest.quickactions");
+  Services.prefs.clearUserPref("browser.search.suggest.enabled");
+  Services.prefs.clearUserPref("browser.urlbar.quicksuggest.sponsoredPriority");
+});
+
+// When a Suggest best match and a global action are shown in the same
+// search, both will have a `suggestedIndex` value of 1. The global action should
+// appear first.
+add_task(async function globalAction() {
+  // We'll use a sponsored priority result as the best match result. Different
+  // types of Suggest results can appear as best matches, and they all should
+  // have the same behavior.
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  await QuickSuggestTestUtils.forceSync();
+
+  Services.prefs.setBoolPref(
+    "browser.urlbar.quicksuggest.sponsoredPriority",
+    true
+  );
+
+  // Disable search suggestions so we don't need to expect them below.
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
+
+  // Set prefs to prevent quick actions onboarding label from showing.
+  UrlbarPrefs.set("quickactions.timesToShowOnboardingLabel", 3);
+  UrlbarPrefs.set("quickactions.timesShownOnboardingLabel", 3);
+
+  let engineURL = `https://example.com/`;
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "Amp",
+      search_url: engineURL,
+    },
+    { skipUnload: true }
+  );
+  let engine = Services.search.getEngineByName("Amp");
+
+  await PlacesTestUtils.addVisits(engineURL);
+
+  let context = createContext(SPONSORED_SEARCH_STRING, {
+    isPrivate: false,
+  });
+
+  await check_results({
+    context,
+    matches: [
+      // search heuristic
+      makeSearchResult(context, {
+        engineName: Services.search.defaultEngine.name,
+        engineIconUri: await Services.search.defaultEngine.getIconURL(),
+        heuristic: true,
+      }),
+
+      // "Search with engine" global action.
+      makeGlobalActionsResult({
+        actionsResults: [
+          {
+            providerName: "ActionsProviderContextualSearch",
+          },
+        ],
+        providesSearchMode: true,
+        engine: engine.name,
+        query: "",
+        input: "",
+        inputLength: context.searchString.length,
+        showOnboardingLabel: false,
+      }),
+
+      // Suggest best match
+      expectedSponsoredPriorityResult(),
+
+      // visit
+      makeVisitResult(context, {
+        uri: engineURL,
+        title: `test visit for ${engineURL}`,
+      }),
+    ],
+  });
+
+  await cleanupPlaces();
+  await extension.unload();
+
+  UrlbarPrefs.clear("quickactions.timesToShowOnboardingLabel");
+  UrlbarPrefs.clear("quickactions.timesShownOnboardingLabel");
   Services.prefs.clearUserPref("browser.search.suggest.enabled");
   Services.prefs.clearUserPref("browser.urlbar.quicksuggest.sponsoredPriority");
 });
