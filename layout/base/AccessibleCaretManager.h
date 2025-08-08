@@ -278,7 +278,9 @@ class AccessibleCaretManager {
   virtual CaretMode GetCaretMode() const;
 
   // @return true if aStartContent comes before aEndContent.
-  virtual bool CompareTreePosition(const nsIContent* aStartContent,
+  virtual bool CompareTreePosition(const nsIFrame* aStartFrame,
+                                   const nsIFrame* aEndFrame,
+                                   const nsIContent* aStartContent,
                                    const nsIContent* aEndContent) const;
 
   // Check if the two carets is overlapping to become tilt.
