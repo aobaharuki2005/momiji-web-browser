@@ -80,7 +80,7 @@
         });
         let itemConfig = { l10nId: LABEL_L10N_ID, id: SETTING };
         let setting = Preferences.getSetting(SETTING);
-        let control = await renderTemplate(itemConfig, setting);
+        let control = await renderTemplate(itemConfig);
         is(
           control.controlEl.localName,
           "moz-checkbox",
@@ -345,6 +345,26 @@
 
         ok(!setting.visible, "Setting is not visible based on dep");
         ok(control.hidden, "The control is now hidden");
+      });
+
+      add_task(async function testSettingDisabled() {
+        const SETTING = "setting-control-disabled";
+        let settingDisabled = false;
+        Preferences.addSetting({
+          id: SETTING,
+          disabled: () => settingDisabled,
+        });
+        let itemConfig = { l10nId: LABEL_L10N_ID, id: SETTING };
+        let setting = Preferences.getSetting(SETTING);
+        let control = await renderTemplate(itemConfig, setting);
+        ok(!control.controlEl.disabled, "Setting is enabled");
+
+        // Fake that something changed and the setting should be disabled
+        settingDisabled = true;
+        setting.emit("change");
+        await control.updateComplete;
+
+        ok(control.controlEl.disabled, "Setting is disabled after change");
       });
     </script>
   </head>

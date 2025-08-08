@@ -171,7 +171,7 @@ export class SettingControl extends MozLitElement {
       ".parentDisabled": this.parentDisabled,
       ".control": this,
       "data-subcategory": config.subcategory,
-      "?disabled": this.setting.locked,
+      "?disabled": this.setting.disabled || this.setting.locked,
       ...config.controlAttrs,
     };
 

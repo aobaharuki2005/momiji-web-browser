@@ -781,6 +781,10 @@ const Preferences = (window.Preferences = (function () {
       return this.config.visible ? this.config.visible(this.deps) : true;
     }
 
+    get disabled() {
+      return this.config.disabled ? this.config.disabled(this.deps) : false;
+    }
+
     getControlConfig(config) {
       if (this.config.getControlConfig) {
         return this.config.getControlConfig(config);

@@ -146,6 +146,24 @@
         is(setting.visible, false, "Setting is not visible");
       });
 
+      add_task(async function testPrefSettingDisabled() {
+        const DEFAULT_SETTING_ID = "testSettingDisabledDefault";
+        const DISABLED_SETTING_ID = "testSettingDisabled";
+        Preferences.addSetting({
+          id: DEFAULT_SETTING_ID,
+        });
+        Preferences.addSetting({
+          id: DISABLED_SETTING_ID,
+          disabled: () => true,
+        });
+
+        let defaultSetting = Preferences.getSetting(DEFAULT_SETTING_ID);
+        ok(!defaultSetting.disabled, "Setting is not disabled by default");
+
+        let disabledSetting = Preferences.getSetting(DISABLED_SETTING_ID);
+        ok(disabledSetting.disabled, "Setting disabled is called");
+      });
+
       add_task(async function testPrefIsLocked() {
         const PREF_ID = "test.setting.locked";
         const SETTING_ID = "testSettingLocked";
