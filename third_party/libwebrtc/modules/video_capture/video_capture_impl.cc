@@ -84,11 +84,11 @@ int32_t VideoCaptureImpl::RotationInDegrees(VideoRotation rotation,
 }
 
 VideoCaptureImpl::VideoCaptureImpl()
-    : _deviceUniqueId(NULL),
+    : _deviceUniqueId(nullptr),
       _requestedCapability(),
       _lastProcessTimeNanos(TimeNanos()),
       _lastFrameRateCallbackTimeNanos(TimeNanos()),
-      _rawDataCallBack(NULL),
+      _rawDataCallBack(nullptr),
       _lastProcessFrameTimeNanos(TimeNanos()),
       _rotateFrame(kVideoRotation_0),
       apply_rotation_(false) {
@@ -126,7 +126,7 @@ void VideoCaptureImpl::DeRegisterCaptureDataCallback(
   if (it != _dataCallBacks.end()) {
     _dataCallBacks.erase(it);
   }
-  _rawDataCallBack = NULL;
+  _rawDataCallBack = nullptr;
 }
 
 int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {

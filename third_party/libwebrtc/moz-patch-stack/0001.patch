@@ -932,7 +932,7 @@ index 888e601e7f..d59b67c090 100644
    RTC_CHECK_NOTREACHED();
  }
 diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
-index dc49d8abb9..ba69a46334 100644
+index 1d3e3ee89e..97039646f7 100644
 --- a/modules/video_capture/device_info_impl.cc
 +++ b/modules/video_capture/device_info_impl.cc
 @@ -72,7 +72,7 @@ int32_t DeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
@@ -1318,15 +1318,15 @@ index d7fa0fa26e..bb45a88f0e 100644
  
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index eace423634..d2cf053aa9 100644
+index 6e205a215f..98bf0c78cf 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
 @@ -88,7 +88,6 @@ VideoCaptureImpl::VideoCaptureImpl()
        _requestedCapability(),
        _lastProcessTimeNanos(TimeNanos()),
        _lastFrameRateCallbackTimeNanos(TimeNanos()),
--      _dataCallBack(NULL),
-       _rawDataCallBack(NULL),
+-      _dataCallBack(nullptr),
+       _rawDataCallBack(nullptr),
        _lastProcessFrameTimeNanos(TimeNanos()),
        _rotateFrame(kVideoRotation_0),
 @@ -102,7 +101,6 @@ VideoCaptureImpl::VideoCaptureImpl()
@@ -1357,12 +1357,12 @@ index eace423634..d2cf053aa9 100644
 +void VideoCaptureImpl::DeRegisterCaptureDataCallback(
 +    rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
    MutexLock lock(&api_lock_);
--  _dataCallBack = NULL;
+-  _dataCallBack = nullptr;
 +  auto it = _dataCallBacks.find(dataCallBack);
 +  if (it != _dataCallBacks.end()) {
 +    _dataCallBacks.erase(it);
 +  }
-   _rawDataCallBack = NULL;
+   _rawDataCallBack = nullptr;
  }
 +
 +int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {

@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ed6737b8214bf664
  1 file changed, 11 insertions(+), 8 deletions(-)
 
 diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index 6b9da40aa3..e3c52ba2c7 100644
+index 4c128cc7be..6b2ae72ce7 100644
 --- a/modules/video_capture/linux/video_capture_v4l2.cc
 +++ b/modules/video_capture/linux/video_capture_v4l2.cc
 @@ -301,15 +301,18 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
