@@ -7032,10 +7032,16 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AlignBlockContentsWithDivElement(
     Element& aBlockElement, const nsAString& aAlignType) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
+  // XXX Chrome wraps text into a <div> only when the container has different
+  // blocks.  At that time, Chrome seems treating non-editable nodes as a line
+  // break.  So, their behavior is also odd so that it does not make sense to
+  // follow their behavior when there is non-editable content.
+
   // XXX I don't understand why we should NOT align non-editable children
   //     with modifying EDITABLE `<div>` element.
-  nsCOMPtr<nsIContent> firstEditableContent = HTMLEditUtils::GetFirstChild(
-      aBlockElement, {WalkTreeOption::IgnoreNonEditableNode});
+  const nsCOMPtr<nsIContent> firstEditableContent =
+      HTMLEditUtils::GetFirstChild(aBlockElement,
+                                   {WalkTreeOption::IgnoreNonEditableNode});
   if (!firstEditableContent) {
     // This block has no editable content, nothing to align.
     return EditorDOMPoint();
@@ -7043,10 +7049,14 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AlignBlockContentsWithDivElement(
 
   // If there is only one editable content and it's a `<div>` element,
   // just set `align` attribute of it.
-  nsCOMPtr<nsIContent> lastEditableContent = HTMLEditUtils::GetLastChild(
+  const nsCOMPtr<nsIContent> lastEditableContent = HTMLEditUtils::GetLastChild(
       aBlockElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (firstEditableContent == lastEditableContent &&
       firstEditableContent->IsHTMLElement(nsGkAtoms::div)) {
+    // XXX Chrome uses `style="text-align: foo"` instead of the legacy `align`
+    // attribute.  That does not allow to align the child blocks center and they
+    // put the style to every blocks in the selection range. So, it requires a
+    // complicated change to follow their behavior.
     nsresult rv = SetAttributeOrEquivalent(
         MOZ_KnownLive(firstEditableContent->AsElement()), nsGkAtoms::align,
         aAlignType, false);
@@ -7065,57 +7075,50 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AlignBlockContentsWithDivElement(
   }
 
   // Otherwise, we need to insert a `<div>` element to set `align` attribute.
-  // XXX Don't insert the new `<div>` element until we set `align` attribute
-  //     for avoiding running mutation event listeners.
-  Result<CreateElementResult, nsresult> createNewDivElementResult =
+  Result<CreateElementResult, nsresult> createNewDivElementResultOrError =
       CreateAndInsertElement(
           WithTransaction::Yes, *nsGkAtoms::div,
           EditorDOMPoint(&aBlockElement, 0u),
           // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-          [&aAlignType](HTMLEditor& aHTMLEditor, Element& aDivElement,
-                        const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+          [&](HTMLEditor& aHTMLEditor, Element& aDivElement,
+              const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             MOZ_ASSERT(!aDivElement.IsInComposedDoc());
             // If aDivElement has not been connected yet, we do not need
             // transaction of setting align attribute here.
             nsresult rv = aHTMLEditor.SetAttributeOrEquivalent(
                 &aDivElement, nsGkAtoms::align, aAlignType, false);
-            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                                 "EditorBase::SetAttributeOrEquivalent("
-                                 "nsGkAtoms::align, \"...\", false) failed");
-            return rv;
+            if (NS_FAILED(rv)) {
+              NS_WARNING(
+                  "EditorBase::SetAttributeOrEquivalent(nsGkAtoms::align, "
+                  "\"...\", false) failed");
+              return rv;
+            }
+            if (!aBlockElement.HasChildren()) {
+              return NS_OK;
+            }
+            // FIXME: This will move non-editable children between
+            // firstEditableContent and lastEditableContent.  So, the design of
+            // this method is odd.
+            Result<MoveNodeResult, nsresult> moveChildrenResultOrError =
+                aHTMLEditor.MoveSiblingsWithTransaction(
+                    *firstEditableContent, *lastEditableContent,
+                    EditorDOMPoint(&aDivElement, 0));
+            if (MOZ_UNLIKELY(moveChildrenResultOrError.isErr())) {
+              NS_WARNING_ASSERTION(
+                  moveChildrenResultOrError.isOk(),
+                  "HTMLEditor::MoveSiblingsWithTransaction() failed");
+              return moveChildrenResultOrError.unwrapErr();
+            }
+            moveChildrenResultOrError.unwrap().IgnoreCaretPointSuggestion();
+            return NS_OK;
           });
-  if (MOZ_UNLIKELY(createNewDivElementResult.isErr())) {
+  if (MOZ_UNLIKELY(createNewDivElementResultOrError.isErr())) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes, "
         "nsGkAtoms::div) failed");
-    return createNewDivElementResult.propagateErr();
+    return createNewDivElementResultOrError.propagateErr();
   }
-  CreateElementResult unwrappedCreateNewDivElementResult =
-      createNewDivElementResult.unwrap();
-  EditorDOMPoint pointToPutCaret =
-      unwrappedCreateNewDivElementResult.UnwrapCaretPoint();
-  RefPtr<Element> newDivElement =
-      unwrappedCreateNewDivElementResult.UnwrapNewNode();
-  MOZ_ASSERT(newDivElement);
-  // XXX This is tricky and does not work with mutation event listeners.
-  //     But I'm not sure what we should do if new content is inserted.
-  //     Anyway, I don't think that we should move editable contents
-  //     over non-editable contents.  Chrome does no do that.
-  while (lastEditableContent && (lastEditableContent != newDivElement)) {
-    Result<MoveNodeResult, nsresult> moveNodeResult = MoveNodeWithTransaction(
-        *lastEditableContent, EditorDOMPoint(newDivElement, 0u));
-    if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
-      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-      return moveNodeResult.propagateErr();
-    }
-    MoveNodeResult unwrappedMoveNodeResult = moveNodeResult.unwrap();
-    if (unwrappedMoveNodeResult.HasCaretPointSuggestion()) {
-      pointToPutCaret = unwrappedMoveNodeResult.UnwrapCaretPoint();
-    }
-    lastEditableContent = HTMLEditUtils::GetLastChild(
-        aBlockElement, {WalkTreeOption::IgnoreNonEditableNode});
-  }
-  return pointToPutCaret;
+  return createNewDivElementResultOrError.unwrap().UnwrapCaretPoint();
 }
 
 Result<EditorRawDOMRange, nsresult>
