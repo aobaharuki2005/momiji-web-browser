@@ -1139,6 +1139,8 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         // We should synthetize corresponding pointer events
         GeneratePointerEnterExit(ePointerLeave, mouseEvent);
         GenerateMouseEnterExit(mouseEvent);
+        // Remove the pointer from the active pointerId table.
+        PointerEventHandler::UpdatePointerActiveState(mouseEvent);
         // This is really an exit and should stop here
         aEvent->mMessage = eVoidEvent;
         break;
@@ -4632,7 +4634,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       break;
 
     case eMouseExitFromWidget:
-      PointerEventHandler::UpdatePointerActiveState(aEvent->AsMouseEvent());
+      MOZ_ASSERT_UNREACHABLE(
+          "Should've already been handled in PreHandleEvent()");
       break;
 
 #ifdef XP_MACOSX
