@@ -1482,27 +1482,12 @@ class DSImage extends (external_React_default()).PureComponent {
       });
     }
   }
-
-  // Wraps the image url with the Pocket proxy to both resize and crop the image.
   reformatImageURL(url, width, height) {
     const smart = this.props.smartCrop ? "smart/" : "";
     // Change the image URL to request a size tailored for the parent container width
     // Also: force JPEG, quality 60, no upscaling, no EXIF data
     // Uses Thumbor: https://thumbor.readthedocs.io/en/latest/usage.html
-    const formattedUrl = `https://img-getpocket.cdn.mozilla.net/${width}x${height}/${smart}filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(url)}`;
-    return this.secureImageURL(formattedUrl);
-  }
-
-  // Wraps the image URL with the moz-cached-ohttp:// protocol.
-  // This enables Firefox to load resources over Oblivious HTTP (OHTTP),
-  // providing privacy-preserving resource loading.
-  // Applied only when inferred personalization is enabled.
-  // See: https://firefox-source-docs.mozilla.org/browser/components/mozcachedohttp/docs/index.html
-  secureImageURL(url) {
-    if (!this.props.secureImage) {
-      return url;
-    }
-    return `moz-cached-ohttp://newtab-image/?url=${encodeURIComponent(url)}`;
+    return `https://img-getpocket.cdn.mozilla.net/${width}x${height}/${smart}filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(url)}`;
   }
   componentDidMount() {
     this.idleCallbackId = this.props.windowObj.requestIdleCallback(this.onIdleCallback.bind(this));
@@ -1521,12 +1506,7 @@ class DSImage extends (external_React_default()).PureComponent {
     let img;
     if (this.state) {
       if (this.props.optimize && this.props.rawSource && !this.state.optimizedImageFailed) {
-        const baseSource = this.props.rawSource;
-
-        // We don't care about securing this.props.source, as this exclusivly
-        // comes from an older service that is not personalized.
-        // This can also return a non secure url if this functionality is not enabled.
-        const securedSource = this.secureImageURL(baseSource);
+        let baseSource = this.props.rawSource;
         let sizeRules = [];
         let srcSetRules = [];
         for (let rule of this.props.sizes) {
@@ -1554,7 +1534,7 @@ class DSImage extends (external_React_default()).PureComponent {
           onLoad: this.onLoad,
           onError: this.onOptimizedImageError,
           sizes: sizeRules.join(","),
-          src: securedSource,
+          src: baseSource,
           srcSet: srcSetRules.join(",")
         });
       } else if (this.props.source && !this.state.nonOptimizedImageFailed) {
@@ -3527,13 +3507,6 @@ function DSThumbsUpDownButtons({
 
 
 const READING_WPM = 220;
-const PREF_OHTTP_MERINO = "discoverystream.merino-provider.ohttp.enabled";
-const PREF_OHTTP_UNIFIED_ADS = "unifiedAds.ohttp.enabled";
-const PREF_CONTEXTUAL_ADS = "discoverystream.sections.contextualAds.enabled";
-const PREF_INFERRED_PERSONALIZATION_SYSTEM = "discoverystream.sections.personalization.inferred.enabled";
-const PREF_INFERRED_PERSONALIZATION_USER = "discoverystream.sections.personalization.inferred.user.enabled";
-const DSCard_PREF_SECTIONS_ENABLED = "discoverystream.sections.enabled";
-const PREF_FAVICONS_ENABLED = "discoverystream.publisherFavicon.enabled";
 
 /**
  * READ TIME FROM WORD COUNT
@@ -4036,18 +4009,12 @@ class _DSCard extends (external_React_default()).PureComponent {
   }
   onIdleCallback() {
     if (!this.state.isSeen) {
-      // To improve responsiveness without impacting performance,
-      // we start rendering stories on idle.
-      // To reduce the number of requests for secure OHTTP images,
-      // we skip idle-time loading.
-      if (!this.secureImage) {
-        if (this.observer && this.placeholderElement) {
-          this.observer.unobserve(this.placeholderElement);
-        }
-        this.setState({
-          isSeen: true
-        });
+      if (this.observer && this.placeholderElement) {
+        this.observer.unobserve(this.placeholderElement);
       }
+      this.setState({
+        isSeen: true
+      });
     }
   }
   componentDidMount() {
@@ -4065,57 +4032,6 @@ class _DSCard extends (external_React_default()).PureComponent {
     if (this.idleCallbackId) {
       this.props.windowObj.cancelIdleCallback(this.idleCallbackId);
     }
-  }
-
-  // Wraps the image URL with the moz-cached-ohttp:// protocol.
-  // This enables Firefox to load resources over Oblivious HTTP (OHTTP),
-  // providing privacy-preserving resource loading.
-  // Applied only when inferred personalization is enabled.
-  // See: https://firefox-source-docs.mozilla.org/browser/components/mozcachedohttp/docs/index.html
-  secureImageURL(url) {
-    return `moz-cached-ohttp://newtab-image/?url=${encodeURIComponent(url)}`;
-  }
-  getRawImageSrc() {
-    let rawImageSrc = "";
-    // There is no point in fetching images for startup cache.
-    if (!this.props.App.isForStartupCache.App) {
-      rawImageSrc = this.props.raw_image_src;
-    }
-    return rawImageSrc;
-  }
-  getFaviconSrc() {
-    let faviconSrc = "";
-    const faviconEnabled = this.props.Prefs.values[PREF_FAVICONS_ENABLED];
-    // There is no point in fetching favicons for startup cache.
-    if (!this.props.App.isForStartupCache.App && faviconEnabled && this.props.icon_src) {
-      faviconSrc = this.props.icon_src;
-      if (this.secureImage) {
-        faviconSrc = this.secureImageURL(this.props.icon_src);
-      }
-    }
-    return faviconSrc;
-  }
-  get secureImage() {
-    const {
-      Prefs,
-      flightId
-    } = this.props;
-    let ohttpEnabled = false;
-    if (flightId) {
-      ohttpEnabled = Prefs.values[PREF_CONTEXTUAL_ADS] && Prefs.values[PREF_OHTTP_UNIFIED_ADS];
-    } else {
-      ohttpEnabled = Prefs.values[PREF_OHTTP_MERINO];
-    }
-    const inferredPersonalizationUser = Prefs.values[PREF_INFERRED_PERSONALIZATION_USER];
-    const inferredPersonalizationSystem = Prefs.values[PREF_INFERRED_PERSONALIZATION_SYSTEM];
-    const inferredPersonalization = inferredPersonalizationSystem && inferredPersonalizationUser;
-    const ohttpImagesEnabled = Prefs.values.ohttpImagesConfig?.enabled;
-    const includeTopStoriesSection = Prefs.values.ohttpImagesConfig?.includeTopStoriesSection;
-    const sectionsEnabled = Prefs.values[DSCard_PREF_SECTIONS_ENABLED];
-    const nonPersonalizedSections = ["top_stories_section"];
-    const sectionPersonalized = !nonPersonalizedSections.includes(this.props.section) || includeTopStoriesSection;
-    const secureImage = sectionsEnabled && ohttpImagesEnabled && ohttpEnabled && sectionPersonalized && inferredPersonalization;
-    return secureImage;
   }
   render() {
     const {
@@ -4172,8 +4088,9 @@ class _DSCard extends (external_React_default()).PureComponent {
       descLines = 3,
       readTime: displayReadTime
     } = DiscoveryStream;
-    const sectionsEnabled = Prefs.values[DSCard_PREF_SECTIONS_ENABLED];
+    const sectionsEnabled = Prefs.values["discoverystream.sections.enabled"];
     const smartCrop = Prefs.values["images.smart"];
+    const faviconEnabled = Prefs.values["discoverystream.publisherFavicon.enabled"];
     // Refined cards have their own excerpt hiding logic.
     // We can ignore hideDescriptions if we are in sections and refined cards.
     const excerpt = !hideDescriptions || sectionsEnabled && refinedCardsLayout ? this.props.excerpt : "";
@@ -4198,8 +4115,6 @@ class _DSCard extends (external_React_default()).PureComponent {
     const descLinesClassName = `ds-card-desc-lines-${descLines}`;
     const isMediumRectangle = format === "rectangle";
     const spocFormatClassName = isMediumRectangle ? `ds-spoc-rectangle` : ``;
-    const rawImageSrc = this.getRawImageSrc();
-    const faviconSrc = this.getFaviconSrc();
     let sizes = [];
     if (!isMediumRectangle) {
       sizes = this.dsImageSizes;
@@ -4233,14 +4148,13 @@ class _DSCard extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement(DSImage, {
       extraClassNames: "img",
       source: this.props.image_src,
-      rawSource: rawImageSrc,
+      rawSource: this.props.raw_image_src,
       sizes: sizes,
       url: this.props.url,
       title: this.props.title,
       isRecentSave: isRecentSave,
       alt_text: alt_text,
-      smartCrop: smartCrop,
-      secureImage: this.secureImage
+      smartCrop: smartCrop
     })), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
       flightId: this.props.flightId,
       rows: [{
@@ -4310,7 +4224,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       isSectionsCard: this.props.mayHaveSectionsCards && this.props.topic && !isListCard,
       format: format,
       topic: this.props.topic,
-      icon_src: faviconSrc,
+      icon_src: faviconEnabled && this.props.icon_src,
       refinedCardsLayout: refinedCardsLayout
     })), /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-hover-background"
@@ -4903,12 +4817,6 @@ function AdBannerContextMenu({
 
 
 
-const AdBanner_PREF_SECTIONS_ENABLED = "discoverystream.sections.enabled";
-const AdBanner_PREF_OHTTP_UNIFIED_ADS = "unifiedAds.ohttp.enabled";
-const AdBanner_PREF_CONTEXTUAL_ADS = "discoverystream.sections.contextualAds.enabled";
-const PREF_USER_INFERRED_PERSONALIZATION = "discoverystream.sections.personalization.inferred.user.enabled";
-const PREF_SYSTEM_INFERRED_PERSONALIZATION = "discoverystream.sections.personalization.inferred.enabled";
-const PREF_REPORT_ADS_ENABLED = "discoverystream.reportAds.enabled";
 
 /**
  * A new banner ad that appears between rows of stories: leaderboard or billboard size.
@@ -4949,12 +4857,8 @@ const AdBanner = ({
       height: undefined
     };
   };
-  const sectionsEnabled = prefs[AdBanner_PREF_SECTIONS_ENABLED];
-  const ohttpEnabled = prefs[AdBanner_PREF_OHTTP_UNIFIED_ADS];
-  const contextualAds = prefs[AdBanner_PREF_CONTEXTUAL_ADS];
-  const inferredPersonalization = prefs[PREF_USER_INFERRED_PERSONALIZATION] && prefs[PREF_SYSTEM_INFERRED_PERSONALIZATION];
-  const showAdReporting = prefs[PREF_REPORT_ADS_ENABLED];
-  const ohttpImagesEnabled = prefs.ohttpImagesConfig?.enabled;
+  const sectionsEnabled = prefs["discoverystream.sections.enabled"];
+  const showAdReporting = prefs["discoverystream.reportAds.enabled"];
   const [menuActive, setMenuActive] = (0,external_React_namespaceObject.useState)(false);
   const adBannerWrapperClassName = `ad-banner-wrapper ${menuActive ? "active" : ""}`;
   const {
@@ -4990,17 +4894,6 @@ const AdBanner = ({
   // in the default card grid 1 would come before the 1st row of cards and 9 comes after the last row
   // using clamp to make sure its between valid values (1-9)
   const clampedRow = Math.max(1, Math.min(9, row));
-  const secureImage = ohttpImagesEnabled && ohttpEnabled && contextualAds && inferredPersonalization && sectionsEnabled;
-  let rawImageSrc = spoc.raw_image_src;
-
-  // Wraps the image URL with the moz-cached-ohttp:// protocol.
-  // This enables Firefox to load resources over Oblivious HTTP (OHTTP),
-  // providing privacy-preserving resource loading.
-  // Applied only when inferred personalization is enabled.
-  // See: https://firefox-source-docs.mozilla.org/browser/components/mozcachedohttp/docs/index.html
-  if (secureImage) {
-    rawImageSrc = `moz-cached-ohttp://newtab-image/?url=${encodeURIComponent(spoc.raw_image_src)}`;
-  }
   return /*#__PURE__*/external_React_default().createElement("aside", {
     className: adBannerWrapperClassName,
     style: {
@@ -5032,7 +4925,7 @@ const AdBanner = ({
   }), /*#__PURE__*/external_React_default().createElement("div", {
     className: "ad-banner-content"
   }, /*#__PURE__*/external_React_default().createElement("img", {
-    src: rawImageSrc,
+    src: spoc.raw_image_src,
     alt: spoc.alt_text,
     loading: "eager",
     width: imgWidth,
@@ -11969,7 +11862,7 @@ const CardSections_PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
 const CardSections_PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
 const CardSections_PREF_LEADERBOARD_POSITION = "newtabAdSize.leaderboard.position";
 const PREF_REFINED_CARDS_ENABLED = "discoverystream.refinedCardsLayout.enabled";
-const CardSections_PREF_INFERRED_PERSONALIZATION_USER = "discoverystream.sections.personalization.inferred.user.enabled";
+const PREF_INFERRED_PERSONALIZATION_USER = "discoverystream.sections.personalization.inferred.user.enabled";
 const CardSections_PREF_TRENDING_SEARCH = "trendingSearch.enabled";
 const CardSections_PREF_TRENDING_SEARCH_SYSTEM = "system.trendingSearch.enabled";
 const CardSections_PREF_SEARCH_ENGINE = "trendingSearch.defaultSearchEngine";
@@ -12380,7 +12273,7 @@ function CardSections({
   }
   function displayP13nCard() {
     if (messageData && Object.keys(messageData).length >= 1) {
-      if (shouldShowOMCHighlight(messageData, "PersonalizedCard") && prefs[CardSections_PREF_INFERRED_PERSONALIZATION_USER]) {
+      if (shouldShowOMCHighlight(messageData, "PersonalizedCard") && prefs[PREF_INFERRED_PERSONALIZATION_USER]) {
         const row = messageData.content.position;
         sectionsToRender.splice(row, 0, /*#__PURE__*/external_React_default().createElement(MessageWrapper, {
           dispatch: dispatch,
@@ -16313,7 +16206,7 @@ function Base_extends() { return Base_extends = Object.assign ? Object.assign.bi
 
 const Base_VISIBLE = "visible";
 const Base_VISIBILITY_CHANGE_EVENT = "visibilitychange";
-const Base_PREF_INFERRED_PERSONALIZATION_SYSTEM = "discoverystream.sections.personalization.inferred.enabled";
+const PREF_INFERRED_PERSONALIZATION_SYSTEM = "discoverystream.sections.personalization.inferred.enabled";
 const Base_PREF_INFERRED_PERSONALIZATION_USER = "discoverystream.sections.personalization.inferred.user.enabled";
 
 // Returns a function will not be continuously triggered when called. The
@@ -16792,7 +16685,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     };
     const pocketRegion = prefs["feeds.system.topstories"];
     const mayHaveSponsoredStories = prefs["system.showSponsored"];
-    const mayHaveInferredPersonalization = prefs[Base_PREF_INFERRED_PERSONALIZATION_SYSTEM];
+    const mayHaveInferredPersonalization = prefs[PREF_INFERRED_PERSONALIZATION_SYSTEM];
     const mayHaveWeather = prefs["system.showWeather"];
     const {
       mayHaveSponsoredTopSites

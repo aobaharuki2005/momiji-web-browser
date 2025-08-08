@@ -303,20 +303,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "discoverystream.merino-provider.ohttp.enabled",
-    {
-      title: "Enables the Merino requests and images sent over OHTTP",
-      value: false,
-    },
-  ],
-  [
-    "unifiedAds.ohttp.enabled",
-    {
-      title: "Enables the MARS requests and images sent over OHTTP",
-      value: false,
-    },
-  ],
-  [
     "unifiedAds.adsFeed.enabled",
     {
       title:
