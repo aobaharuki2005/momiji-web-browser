@@ -15115,6 +15115,14 @@
   mirror: always
   rust: true
 
+# Whether to enable Zstd for H3/QUIC certificate compression.
+# Has no effect unless security.tls.enable_certificate_compression_zstd is true.
+- name: network.http.http3.enable_certificate_compression_zstd
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # When true, skip alt-svc validation when the connection is made using HTTPS RR.
 - name: network.http.skip_alt_svc_validation_on_https_rr
   type: RelaxedAtomicBool
