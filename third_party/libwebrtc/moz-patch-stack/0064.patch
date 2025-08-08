@@ -26,10 +26,10 @@ index 32ab46b1d4..7969817eb5 100644
        deps += [ "logging:rtc_event_log_proto" ]
      }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index c0c8eb4796..73639fa40b 100644
+index c443527044..c16348a547 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
-@@ -546,6 +546,7 @@ if (is_ios || is_mac) {
+@@ -553,6 +553,7 @@ if (is_ios || is_mac) {
        }
      }
  
@@ -37,7 +37,7 @@ index c0c8eb4796..73639fa40b 100644
      rtc_library("videosource_objc") {
        sources = [
          "objc/api/peerconnection/RTCVideoSource+Private.h",
-@@ -575,6 +576,7 @@ if (is_ios || is_mac) {
+@@ -582,6 +583,7 @@ if (is_ios || is_mac) {
          ":used_from_extension",
        ]
      }
@@ -45,7 +45,7 @@ index c0c8eb4796..73639fa40b 100644
  
      rtc_library("videoframebuffer_objc") {
        visibility = [ "*" ]
-@@ -607,6 +609,7 @@ if (is_ios || is_mac) {
+@@ -614,6 +616,7 @@ if (is_ios || is_mac) {
        ]
      }
  
@@ -53,7 +53,7 @@ index c0c8eb4796..73639fa40b 100644
      rtc_library("metal_objc") {
        visibility = [ "*" ]
        allow_poison = [
-@@ -668,6 +671,7 @@ if (is_ios || is_mac) {
+@@ -675,6 +678,7 @@ if (is_ios || is_mac) {
          ":videoframebuffer_objc",
        ]
      }
@@ -61,7 +61,7 @@ index c0c8eb4796..73639fa40b 100644
  
      rtc_library("videocapture_objc") {
        visibility = [ "*" ]
-@@ -696,6 +700,7 @@ if (is_ios || is_mac) {
+@@ -703,6 +707,7 @@ if (is_ios || is_mac) {
        ]
      }
  
@@ -69,7 +69,7 @@ index c0c8eb4796..73639fa40b 100644
      rtc_library("videocodec_objc") {
        visibility = [ "*" ]
        configs += [ "..:no_global_constructors" ]
-@@ -1789,5 +1794,6 @@ if (is_ios || is_mac) {
+@@ -1797,5 +1802,6 @@ if (is_ios || is_mac) {
          "VideoToolbox.framework",
        ]
      }
