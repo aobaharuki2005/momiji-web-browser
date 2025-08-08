@@ -1280,6 +1280,8 @@ export class TelemetryFeed {
         break;
       case at.WIDGETS_LISTS_USER_EVENT:
       case at.WIDGETS_LISTS_USER_IMPRESSION:
+      case at.WIDGETS_TIMER_USER_EVENT:
+      case at.WIDGETS_TIMER_USER_IMPRESSION:
         this.handleWidgetsUserEvent(action);
     }
   }
@@ -1299,6 +1301,15 @@ export class TelemetryFeed {
           break;
         case "WIDGETS_LISTS_USER_IMPRESSION":
           Glean.newtab.widgetsListsImpression.record(payload);
+          break;
+        case "WIDGETS_TIMER_USER_EVENT":
+          Glean.newtab.widgetsTimerUserEvent.record({
+            ...payload,
+            user_action: action.data.userAction,
+          });
+          break;
+        case "WIDGETS_TIMER_USER_IMPRESSION":
+          Glean.newtab.widgetsTimerImpression.record(payload);
           break;
       }
     }
@@ -1570,6 +1581,12 @@ export class TelemetryFeed {
         break;
       case "widgets.lists.enabled":
         Glean.newtab.widgetsListsChangeDisplay.record({
+          newtab_visit_id: session.session_id,
+          display_status: action.data.value,
+        });
+        break;
+      case "widgets.focusTimer.enabled":
+        Glean.newtab.widgetsTimerChangeDisplay.record({
           newtab_visit_id: session.session_id,
           display_status: action.data.value,
         });

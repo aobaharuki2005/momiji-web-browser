@@ -314,6 +314,8 @@ for (const type of [
   "WIDGETS_TIMER_SET",
   "WIDGETS_TIMER_SET_DURATION",
   "WIDGETS_TIMER_SET_TYPE",
+  "WIDGETS_TIMER_USER_EVENT",
+  "WIDGETS_TIMER_USER_IMPRESSION",
 ]) {
   actionTypes[type] = type;
 }
@@ -13091,6 +13093,16 @@ function EditableText({
 
 
 
+const FocusTimer_USER_ACTION_TYPES = {
+  TIMER_SET: "timer_set",
+  TIMER_PLAY: "timer_play",
+  TIMER_PAUSE: "timer_pause",
+  TIMER_RESET: "timer_reset",
+  TIMER_END: "timer_end",
+  TIMER_TOGGLE_FOCUS: "timer_toggle_focus",
+  TIMER_TOGGLE_BREAK: "timer_toggle_break"
+};
+
 /**
  * Calculates the remaining time (in seconds) by subtracting elapsed time from the original duration
  *
@@ -13173,6 +13185,12 @@ const FocusTimer = ({
     isRunning
   } = timerData[timerType];
   const initialTimerDuration = timerData[timerType].initialDuration;
+  const handleIntersection = (0,external_React_namespaceObject.useCallback)(() => {
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.WIDGETS_TIMER_USER_IMPRESSION
+    }));
+  }, [dispatch]);
+  const timerRef = useIntersectionObserver(handleIntersection);
   const resetProgressCircle = (0,external_React_namespaceObject.useCallback)(() => {
     if (arcRef?.current) {
       arcRef.current.style.clipPath = "polygon(50% 50%)";
@@ -13198,14 +13216,22 @@ const FocusTimer = ({
         const remaining = calculateTimeRemaining(duration, startTime);
         if (remaining <= 0) {
           clearInterval(interval);
-          dispatch(actionCreators.AlsoToMain({
-            type: actionTypes.WIDGETS_TIMER_END,
-            data: {
-              timerType,
-              duration: initialTimerDuration,
-              initialDuration: initialTimerDuration
-            }
-          }));
+          (0,external_ReactRedux_namespaceObject.batch)(() => {
+            dispatch(actionCreators.AlsoToMain({
+              type: actionTypes.WIDGETS_TIMER_END,
+              data: {
+                timerType,
+                duration: initialTimerDuration,
+                initialDuration: initialTimerDuration
+              }
+            }));
+            dispatch(actionCreators.OnlyToMain({
+              type: actionTypes.WIDGETS_TIMER_USER_EVENT,
+              data: {
+                userAction: FocusTimer_USER_ACTION_TYPES.TIMER_END
+              }
+            }));
+          });
 
           // animate the progress circle to turn solid green
           setProgress(1);
@@ -13221,12 +13247,21 @@ const FocusTimer = ({
               setProgressVisible(false);
 
               // switch over to the other timer type
-              dispatch(actionCreators.AlsoToMain({
-                type: actionTypes.WIDGETS_TIMER_SET_TYPE,
-                data: {
-                  timerType: timerType === "focus" ? "break" : "focus"
-                }
-              }));
+              // eslint-disable-next-line max-nested-callbacks
+              (0,external_ReactRedux_namespaceObject.batch)(() => {
+                dispatch(actionCreators.AlsoToMain({
+                  type: actionTypes.WIDGETS_TIMER_SET_TYPE,
+                  data: {
+                    timerType: timerType === "focus" ? "break" : "focus"
+                  }
+                }));
+                dispatch(actionCreators.OnlyToMain({
+                  type: actionTypes.WIDGETS_TIMER_USER_EVENT,
+                  data: {
+                    userAction: timerType === "focus" ? FocusTimer_USER_ACTION_TYPES.TIMER_TOGGLE_BREAK : FocusTimer_USER_ACTION_TYPES.TIMER_TOGGLE_FOCUS
+                  }
+                }));
+              });
             }, 1500);
           }, 1500);
         }
@@ -13265,13 +13300,21 @@ const FocusTimer = ({
     seconds = Math.min(seconds, 59);
     const totalSeconds = minutes * 60 + seconds;
     if (!Number.isNaN(totalSeconds) && totalSeconds > 0 && totalSeconds !== duration) {
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_TIMER_SET_DURATION,
-        data: {
-          timerType,
-          duration: totalSeconds
-        }
-      }));
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_TIMER_SET_DURATION,
+          data: {
+            timerType,
+            duration: totalSeconds
+          }
+        }));
+        dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.WIDGETS_TIMER_USER_EVENT,
+          data: {
+            userAction: FocusTimer_USER_ACTION_TYPES.TIMER_SET
+          }
+        }));
+      });
     }
   };
 
@@ -13279,33 +13322,57 @@ const FocusTimer = ({
   const toggleTimer = () => {
     if (!isRunning && duration > 0) {
       setProgressVisible(true);
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_TIMER_PLAY,
-        data: {
-          timerType
-        }
-      }));
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_TIMER_PLAY,
+          data: {
+            timerType
+          }
+        }));
+        dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.WIDGETS_TIMER_USER_EVENT,
+          data: {
+            userAction: FocusTimer_USER_ACTION_TYPES.TIMER_PLAY
+          }
+        }));
+      });
     } else if (isRunning) {
       // calculated to get the new baseline of the timer when it starts or resumes
       const remaining = calculateTimeRemaining(duration, startTime);
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_TIMER_PAUSE,
-        data: {
-          timerType,
-          duration: remaining
-        }
-      }));
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_TIMER_PAUSE,
+          data: {
+            timerType,
+            duration: remaining
+          }
+        }));
+        dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.WIDGETS_TIMER_USER_EVENT,
+          data: {
+            userAction: FocusTimer_USER_ACTION_TYPES.TIMER_PAUSE
+          }
+        }));
+      });
     }
   };
 
   // reset timer function
   const resetTimer = () => {
-    dispatch(actionCreators.AlsoToMain({
-      type: actionTypes.WIDGETS_TIMER_RESET,
-      data: {
-        timerType
-      }
-    }));
+    (0,external_ReactRedux_namespaceObject.batch)(() => {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_TIMER_RESET,
+        data: {
+          timerType
+        }
+      }));
+      dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.WIDGETS_TIMER_USER_EVENT,
+        data: {
+          userAction: FocusTimer_USER_ACTION_TYPES.TIMER_RESET
+        }
+      }));
+    });
 
     // Reset progress value and gradient arc on the progress circle
     resetProgressCircle();
@@ -13328,12 +13395,24 @@ const FocusTimer = ({
           duration: oldTypeRemaining
         }
       }));
+      dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.WIDGETS_TIMER_USER_EVENT,
+        data: {
+          userAction: FocusTimer_USER_ACTION_TYPES.TIMER_PAUSE
+        }
+      }));
 
       // Sets the current timer type so it persists when opening a new tab
       dispatch(actionCreators.AlsoToMain({
         type: actionTypes.WIDGETS_TIMER_SET_TYPE,
         data: {
           timerType: type
+        }
+      }));
+      dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.WIDGETS_TIMER_USER_EVENT,
+        data: {
+          userAction: type === "focus" ? FocusTimer_USER_ACTION_TYPES.TIMER_TOGGLE_FOCUS : FocusTimer_USER_ACTION_TYPES.TIMER_TOGGLE_BREAK
         }
       }));
     });
@@ -13382,13 +13461,21 @@ const FocusTimer = ({
     if (isRunning) {
       // calculated to get the new baseline of the timer when it starts or resumes
       const remaining = calculateTimeRemaining(duration, startTime);
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_TIMER_PAUSE,
-        data: {
-          timerType,
-          duration: remaining
-        }
-      }));
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_TIMER_PAUSE,
+          data: {
+            timerType,
+            duration: remaining
+          }
+        }));
+        dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.WIDGETS_TIMER_USER_EVENT,
+          data: {
+            userAction: FocusTimer_USER_ACTION_TYPES.TIMER_PAUSE
+          }
+        }));
+      });
     }
 
     // highlight entire text when focused on the time.
@@ -13420,7 +13507,10 @@ const FocusTimer = ({
     }));
   }
   return timerData ? /*#__PURE__*/external_React_default().createElement("article", {
-    className: "focus-timer"
+    className: "focus-timer",
+    ref: el => {
+      timerRef.current = [el];
+    }
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "focus-timer-tabs"
   }, /*#__PURE__*/external_React_default().createElement("div", {

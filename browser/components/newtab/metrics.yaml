@@ -1179,6 +1179,71 @@ newtab:
     send_in_pings:
       - newtab
 
+  widgets_timer_user_event:
+    type: event
+    description: >
+      Details which user action has occurred. It can be one of
+      the following: timer_set, timer_play, timer_pause, timer_reset,
+      timer_toggle_focus, timer_toggle_break, timer_end
+    bugs:
+      - https://bugzil.la/1977301
+    data_reviews:
+      - https://bugzil.la/1977301
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - rhamoui@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      user_action:
+        description: >
+          user action. timer_set, timer_play, timer_pause, timer_reset,
+          timer_toggle_focus, timer_toggle_break, timer_end
+        type: string
+    send_in_pings:
+      - newtab
+
+  widgets_timer_impression:
+    type: event
+    description: >
+      Recorded when the timer widget is viewable on a users screen
+    bugs:
+      - https://bugzil.la/1977301
+    data_reviews:
+      - https://bugzil.la/1977301
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - rhamoui@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
+  widgets_timer_change_display:
+    type: event
+    description: >
+      Whether the timer widget is enabled. Matches
+      the `widgets.focusTimer.enabled` pref
+    bugs:
+      - https://bugzil.la/1977301
+    data_reviews:
+      - https://bugzil.la/1977301
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - rhamoui@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      display_status:
+        description: boolean value if the timer widget is being visible/enabled
+        type: boolean
+    send_in_pings:
+      - newtab
+
 newtab.search:
   enabled:
     lifetime: application
