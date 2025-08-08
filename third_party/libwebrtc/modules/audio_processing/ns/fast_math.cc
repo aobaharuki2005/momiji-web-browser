@@ -13,8 +13,6 @@
 #include <math.h>
 #include <stdint.h>
 
-#include <numbers>
-
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -55,7 +53,7 @@ float PowApproximation(float x, float p) {
 }
 
 float LogApproximation(float x) {
-  constexpr float kLogOf2 = std::numbers::ln2_v<float>;
+  constexpr float kLogOf2 = 0.69314718056f;
   return FastLog2f(x) * kLogOf2;
 }
 
@@ -66,7 +64,7 @@ void LogApproximation(ArrayView<const float> x, ArrayView<float> y) {
 }
 
 float ExpApproximation(float x) {
-  constexpr float kLog10Ofe = std::numbers::log10e_v<float>;
+  constexpr float kLog10Ofe = 0.4342944819f;
   return PowApproximation(10.f, x * kLog10Ofe);
 }
 

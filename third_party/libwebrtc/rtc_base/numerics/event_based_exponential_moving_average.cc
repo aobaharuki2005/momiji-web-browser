@@ -13,7 +13,6 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
-#include <numbers>
 
 #include "rtc_base/checks.h"
 
@@ -36,7 +35,7 @@ EventBasedExponentialMovingAverage::EventBasedExponentialMovingAverage(
 }
 
 void EventBasedExponentialMovingAverage::SetHalfTime(int half_time) {
-  tau_ = static_cast<double>(half_time) / std::numbers::ln2;
+  tau_ = static_cast<double>(half_time) / log(2);
   Reset();
 }
 
