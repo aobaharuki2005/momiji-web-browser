@@ -1183,7 +1183,11 @@ static MOZ_ALWAYS_INLINE bool CallAddPropertyHook(JSContext* cx,
     }
   }
   if (MOZ_UNLIKELY(obj->hasUnpreservedWrapper())) {
-    MaybePreserveDOMWrapper(cx, obj);
+    if (JS::GetReservedSlot(obj, JS_OBJECT_WRAPPER_SLOT).isUndefined()) {
+      return true;
+    }
+
+    MOZ_ALWAYS_TRUE(MaybePreserveDOMWrapper(cx, obj));
     return JSObject::setFlag(cx, obj, ObjectFlag::HasPreservedWrapper);
   }
   return true;
@@ -1212,7 +1216,11 @@ static MOZ_ALWAYS_INLINE bool CallAddPropertyHookDense(
   }
 
   if (MOZ_UNLIKELY(obj->hasUnpreservedWrapper())) {
-    MaybePreserveDOMWrapper(cx, obj);
+    if (JS::GetReservedSlot(obj, JS_OBJECT_WRAPPER_SLOT).isUndefined()) {
+      return true;
+    }
+
+    MOZ_ALWAYS_TRUE(MaybePreserveDOMWrapper(cx, obj));
     return JSObject::setFlag(cx, obj, ObjectFlag::HasPreservedWrapper);
   }
   return true;

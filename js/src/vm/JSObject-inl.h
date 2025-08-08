@@ -553,9 +553,6 @@ static inline bool MaybePreserveDOMWrapper(JSContext* cx, HandleObject obj) {
   if (!clasp->isDOMClass()) {
     return true;
   }
-  if (JS::GetReservedSlot(obj, JS_OBJECT_WRAPPER_SLOT).isUndefined()) {
-    return true;
-  }
 
   MOZ_ASSERT(cx->runtime()->preserveWrapperCallback);
   return cx->runtime()->preserveWrapperCallback(cx, obj);
