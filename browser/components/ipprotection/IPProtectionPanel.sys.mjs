@@ -9,6 +9,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
 });
 
+import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
+
 /**
  * Manages updates for a IP Protection panelView in a given browser window.
  */
@@ -20,9 +22,6 @@ export class IPProtectionPanel {
   static PANEL_ID = "PanelUI-ipprotection";
   static TITLE_L10N_ID = "ipprotection-title";
 
-  // TODO: this is temporary URL. Update it once finalized (Bug 1972462).
-  static HELP_PAGE_URL =
-    "https://support.mozilla.org/en-US/products/firefox-private-network-vpn";
   /**
    * Loads the ipprotection custom element script
    * into a given window.
@@ -152,7 +151,7 @@ export class IPProtectionPanel {
   showHelpPage() {
     let win = this.panel.ownerGlobal;
     if (win && !Cu.isInAutomation) {
-      win.openWebLinkIn(IPProtectionPanel.HELP_PAGE_URL, "tab");
+      win.openWebLinkIn(LINKS.SUPPORT_URL, "tab");
       this.close();
     }
   }

@@ -4,8 +4,12 @@
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 export default class IPProtectionSignedOutContentElement extends MozLitElement {
+  static queries = {
+    learnMoreLinkEl: "#learn-more-vpn-signed-out",
+  };
   static shadowRootOptions = {
     ...MozLitElement.shadowRootOptions,
     delegatesFocus: true,
@@ -25,6 +29,17 @@ export default class IPProtectionSignedOutContentElement extends MozLitElement {
     );
   }
 
+  handleClickLearnMore(event) {
+    const win = event.target.ownerGlobal;
+
+    if (event.target === this.learnMoreLinkEl) {
+      win.openWebLinkIn(LINKS.SUPPORT_URL, "tab");
+      this.dispatchEvent(
+        new CustomEvent("IPProtection:Close", { bubbles: true, composed: true })
+      );
+    }
+  }
+
   render() {
     return html`
       <link
@@ -38,11 +53,15 @@ export default class IPProtectionSignedOutContentElement extends MozLitElement {
           alt=""
         />
         <h2 id="signed-out-vpn-title" data-l10n-id="signed-out-vpn-title"></h2>
-        <p id="signed-out-vpn-message" data-l10n-id="signed-out-vpn-message">
+        <p
+          id="signed-out-vpn-message"
+          data-l10n-id="signed-out-vpn-message"
+          @click=${this.handleClickLearnMore}
+        >
           <a
+            id="learn-more-vpn-signed-out"
             data-l10n-name="learn-more-vpn-signed-out"
-            is="moz-support-link"
-            support-page="test"
+            href=${LINKS.SUPPORT_URL}
           >
           </a>
         </p>
