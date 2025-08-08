@@ -2,15 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package org.mozilla.fenix.tabstray.ui.tabstray
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -36,6 +34,7 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ext.isNormalTab
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 import org.mozilla.fenix.tabstray.ui.banner.TabsTrayBanner
+import org.mozilla.fenix.tabstray.ui.bottomappbar.TabManagerBottomAppBar
 import org.mozilla.fenix.tabstray.ui.fab.TabsTrayFab
 import org.mozilla.fenix.tabstray.ui.tabpage.NormalTabsPage
 import org.mozilla.fenix.tabstray.ui.tabpage.PrivateTabsPage
@@ -164,7 +163,7 @@ fun TabsTray(
     }
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(TabsTrayTestTag.TABS_TRAY),
         topBar = {
             TabsTrayBanner(
                 selectedPage = tabsTrayState.selectedPage,
@@ -191,6 +190,16 @@ fun TabsTray(
                 },
             )
         },
+        bottomBar = {
+            TabManagerBottomAppBar(
+                tabsTrayStore = tabsTrayStore,
+                onShareAllTabsClick = onShareAllTabsClick,
+                onTabSettingsClick = onTabSettingsClick,
+                onRecentlyClosedClick = onRecentlyClosedClick,
+                onAccountSettingsClick = onAccountSettingsClick,
+                onDeleteAllTabsClick = onDeleteAllTabsClick,
+            )
+        },
         floatingActionButton = {
             TabsTrayFab(
                 tabsTrayStore = tabsTrayStore,
@@ -201,6 +210,7 @@ fun TabsTray(
                 onSyncedTabsFabClicked = onSyncedTabsFabClicked,
             )
         },
+        floatingActionButtonPosition = FabPosition.EndOverlay,
         containerColor = MaterialTheme.colorScheme.surface,
     ) { paddingValues ->
         HorizontalPager(
