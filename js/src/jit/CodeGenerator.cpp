@@ -11257,6 +11257,27 @@ void CodeGenerator::visitTypedArraySubarray(LTypedArraySubarray* lir) {
   callVM<Fn, js::TypedArraySubarray>(lir);
 }
 
+void CodeGenerator::visitToIntegerIndex(LToIntegerIndex* lir) {
+  Register index = ToRegister(lir->index());
+  Register length = ToRegister(lir->length());
+  Register output = ToRegister(lir->output());
+
+  masm.movePtr(index, output);
+
+  Label done, notNegative;
+  masm.branchPtr(Assembler::NotSigned, index, index, &notNegative);
+  {
+    masm.branchAddPtr(Assembler::NotSigned, length, output, &done);
+    masm.movePtr(ImmWord(0), output);
+    masm.jump(&done);
+  }
+  masm.bind(&notNegative);
+  {
+    masm.cmpPtrMovePtr(Assembler::GreaterThan, index, length, length, output);
+  }
+  masm.bind(&done);
+}
+
 void CodeGenerator::visitGuardNumberToIntPtrIndex(
     LGuardNumberToIntPtrIndex* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
