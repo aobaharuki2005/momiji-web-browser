@@ -956,6 +956,7 @@
   align-items: center;
   justify-content: center;
   color: var(--toolbarbutton-icon-fill-attention);
+  outline: 1px dashed currentColor;
 
   @media not (prefers-reduced-motion) {
     transition-duration: 0.25s;
@@ -977,7 +978,7 @@
   }
 
   &[interactive] {
-    outline: 1px solid currentColor;
+    outline-style: solid;
   }
 }
 
