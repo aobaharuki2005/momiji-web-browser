@@ -4750,12 +4750,6 @@ main section {
   padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall));
 }
 
-.timer-notification-status {
-  color: var(--text-color-deemphasized);
-  font-size: var(--font-size-small);
-  margin-block: var(--space-xsmall) 0;
-}
-
 .ds-onboarding-container,
 .ds-card-grid .ds-card {
   background: var(--newtab-background-color-secondary);

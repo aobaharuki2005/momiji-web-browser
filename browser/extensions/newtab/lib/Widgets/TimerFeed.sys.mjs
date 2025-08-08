@@ -7,10 +7,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PersistentCache: "resource://newtab/lib/PersistentCache.sys.mjs",
 });
 
-ChromeUtils.defineLazyGetter(lazy, "gNewTabStrings", () => {
-  return new Localization(["browser/newtab/newtab.ftl"], true);
-});
-
 import {
   actionTypes as at,
   actionCreators as ac,
@@ -30,16 +26,10 @@ export class TimerFeed {
   constructor() {
     this.initialized = false;
     this.cache = this.PersistentCache(CACHE_KEY, true);
-    this.notifiedThisCycle = false;
-  }
-
-  resetNotificationFlag() {
-    this.notifiedThisCycle = false;
   }
 
   async showSystemNotification(title, body) {
     const prefs = this.store.getState()?.Prefs.values;
-
     if (!prefs[PREF_TIMER_SHOW_NOTIFICATIONS]) {
       return;
     }
@@ -114,40 +104,20 @@ export class TimerFeed {
           const prevState = this.store.getState().TimerWidget;
           await this.cache.set("timer", { ...prevState, ...action.data });
           this.update({ ...prevState, ...action.data });
-          const { timerType } = action.data;
-
-          const l10nId =
-            timerType === "break"
-              ? "newtab-widget-timer-notification-break"
-              : "newtab-widget-timer-notification-focus";
-          const [titleMessage, bodyMessage] =
-            await lazy.gNewTabStrings.formatMessages([
-              { id: "newtab-widget-timer-notification-title" },
-              { id: l10nId },
-            ]);
-          const title = titleMessage?.value || "Timer";
-          const body = bodyMessage?.value || "Timer ended";
-
-          if (!this.notifiedThisCycle) {
-            this.notifiedThisCycle = true;
-            this.showSystemNotification(title, body);
-          }
+          // TODO: Replace with l10n messages
+          // TODO: May need logic to show different msg based on focus/break timer
+          this.showSystemNotification(
+            "Timer Finished",
+            "Time's up! Take a break."
+          );
         }
         break;
       case at.WIDGETS_TIMER_SET_TYPE:
       case at.WIDGETS_TIMER_SET_DURATION:
-      case at.WIDGETS_TIMER_PAUSE:
       case at.WIDGETS_TIMER_PLAY:
-        {
-          this.resetNotificationFlag();
-          const prevState = this.store.getState().TimerWidget;
-          await this.cache.set("timer", { ...prevState, ...action.data });
-          this.update({ ...prevState, ...action.data });
-        }
-        break;
+      case at.WIDGETS_TIMER_PAUSE:
       case at.WIDGETS_TIMER_RESET:
         {
-          this.resetNotificationFlag();
           const prevState = this.store.getState().TimerWidget;
           await this.cache.set("timer", { ...prevState, ...action.data });
           this.update({ ...prevState, ...action.data });
