@@ -177,22 +177,14 @@ fun TabsTray(
                 onTabPageIndicatorClicked = onTabPageClick,
                 onSaveToCollectionClick = onSaveToCollectionClick,
                 onShareSelectedTabsClick = onShareSelectedTabsClick,
-                onShareAllTabsClick = onShareAllTabsClick,
-                onTabSettingsClick = onTabSettingsClick,
-                onRecentlyClosedClick = onRecentlyClosedClick,
-                onAccountSettingsClick = onAccountSettingsClick,
-                onDeleteAllTabsClick = onDeleteAllTabsClick,
-                onBookmarkSelectedTabsClick = onBookmarkSelectedTabsClick,
                 onDeleteSelectedTabsClick = onDeleteSelectedTabsClick,
+                onBookmarkSelectedTabsClick = onBookmarkSelectedTabsClick,
                 onForceSelectedTabsAsInactiveClick = onForceSelectedTabsAsInactiveClick,
                 onTabAutoCloseBannerViewOptionsClick = onTabAutoCloseBannerViewOptionsClick,
                 onTabsTrayPbmLockedClick = onTabsTrayPbmLockedClick,
                 onTabsTrayPbmLockedDismiss = onTabsTrayPbmLockedDismiss,
                 onTabAutoCloseBannerDismiss = onTabAutoCloseBannerDismiss,
                 onTabAutoCloseBannerShown = onTabAutoCloseBannerShown,
-                onEnterMultiselectModeClick = {
-                    tabsTrayStore.dispatch(TabsTrayAction.EnterSelectMode)
-                },
                 onExitSelectModeClick = {
                     tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
                 },
