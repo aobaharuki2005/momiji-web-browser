@@ -93,9 +93,9 @@ enum class ObjectFlag : uint32_t {
   // objects.
   HasObjectFuse = 1 << 15,
 
-  // This is just holding the place of the flag for bug 1844878 which was
-  // temporarily backed out in bug 1980081.
-  HasPreservedWrapperDummy = 1 << 16,
+  // If set, we have already called the preserveWrapper hook for this object.
+  // This should only be set if `obj->getClass()->preservesWrapper()` is true.
+  HasPreservedWrapper = 1 << 16,
 
   // If set, the object may have an accessor property where the getter or setter
   // is a non-JSFunction callable object.
