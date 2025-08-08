@@ -1818,8 +1818,25 @@ class PresShell final : public nsStubDocumentObserver,
    */
   static Modifiers GetCurrentModifiers() { return sCurrentModifiers; }
 
+  /**
+   * Inserts mLazyAnchorPosAnchorChanges into mAnchorPosAnchors. Because the
+   * anchor lookup uses tree-ordered sorting, we're implicitly assuming
+   * that when AddAnchorPosAnchor and RemoveAnchorPosAnchor are called,
+   * the frame tree structure is valid globally.
+   *
+   * This assumption does not always hold - e.g. when the initial construction
+   * frame tree is deferred: the frame tree can may be in an indeterminate state
+   * where a frame has a parent but the parent does not have that frame as its
+   * child. Therefore, the defer tree position comparison may be deferred to a
+   * point where we know the frame tree is stable.
+   */
+  void MergeAnchorPosAnchorChanges();
+
  private:
   ~PresShell();
+
+  template <bool AreWeMerging>
+  void AddAnchorPosAnchorImpl(const nsAtom* aName, nsIFrame* aFrame);
 
   void SetIsActive(bool aIsActive);
   bool ComputeActiveness() const;
@@ -3204,6 +3221,15 @@ class PresShell final : public nsStubDocumentObserver,
 
   // A hash table of heap allocated weak frames.
   nsTHashSet<WeakFrame*> mWeakFrames;
+
+  struct AnchorPosAnchorChange {
+    RefPtr<const nsAtom> mName;
+    nsIFrame* mFrame;
+  };
+  // Holds deferred anchor changes. These changes should be deferred when
+  // the frame tree is under construction and the tree position of an anchor
+  // cannot be determined.
+  nsTArray<AnchorPosAnchorChange> mLazyAnchorPosAnchorChanges;
 
   nsTHashMap<RefPtr<const nsAtom>, nsTArray<nsIFrame*>> mAnchorPosAnchors;
   nsTArray<nsIFrame*> mAnchorPosPositioned;
