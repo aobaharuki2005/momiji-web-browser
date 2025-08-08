@@ -735,7 +735,7 @@ index b88007703c..a33efe7f8d 100644
      : content_hint(VideoTrackInterface::ContentHint::kNone) {}
  VideoOptions::~VideoOptions() = default;
 diff --git a/modules/audio_coding/BUILD.gn b/modules/audio_coding/BUILD.gn
-index d27943394a..eaf7eb8409 100644
+index dd4500f744..7a753c00f5 100644
 --- a/modules/audio_coding/BUILD.gn
 +++ b/modules/audio_coding/BUILD.gn
 @@ -364,7 +364,7 @@ rtc_library("webrtc_opus_wrapper") {
