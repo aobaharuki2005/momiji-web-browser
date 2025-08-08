@@ -71,7 +71,18 @@ const SESSION_STORE_SAVED_TAB_GROUPS_TOPIC =
 export const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
 
 // The elements we consider to be interactive.
-const UI_TARGET_ELEMENTS = [
+const UI_TARGET_CHANGE_ELEMENTS = new Set([
+  "moz-checkbox",
+  "moz-select",
+  "moz-radio",
+  "moz-toggle",
+  "moz-input-folder",
+  "moz-input-password",
+  "moz-input-search",
+  "moz-input-text",
+  "moz-visual-picker-item",
+]);
+const UI_TARGET_COMMAND_ELEMENTS = new Set([
   "menuitem",
   "toolbarbutton",
   "key",
@@ -82,9 +93,16 @@ const UI_TARGET_ELEMENTS = [
   "image",
   "radio",
   "richlistitem",
-  "moz-checkbox",
-];
-const UI_TARGET_COMPOSED_ELEMENTS_MAP = new Map([["moz-checkbox", "input"]]);
+  "moz-button",
+  "moz-box-button",
+  "moz-box-link",
+  "dialog-button",
+]);
+const UI_TARGET_ELEMENTS = new Map([
+  ["change", UI_TARGET_CHANGE_ELEMENTS],
+  ["click", UI_TARGET_COMMAND_ELEMENTS],
+  ["command", UI_TARGET_COMMAND_ELEMENTS],
+]);
 
 // The containers of interactive elements that we care about and their pretty
 // names. These should be listed in order of most-specific to least-specific,
@@ -965,8 +983,10 @@ export let BrowserUsageTelemetry = {
     const isAboutPreferences =
       node.ownerDocument.URL.startsWith("about:preferences") ||
       node.ownerDocument.URL.startsWith("about:settings");
+    let targetElements = UI_TARGET_ELEMENTS.get(event.type);
+
     while (
-      !UI_TARGET_ELEMENTS.includes(node.localName) &&
+      !targetElements.has(node.localName) &&
       !node.classList?.contains("wants-telemetry") &&
       // We are interested in links on about:preferences as well.
       !(
@@ -980,20 +1000,6 @@ export let BrowserUsageTelemetry = {
         // not interested in.
         return;
       }
-    }
-
-    // When the expected target is a Custom Element with a Shadow Root, there
-    // may be a specific part of the component that click events correspond to
-    // changes. Ignore any other events if requested.
-    let expectedEventTarget = UI_TARGET_COMPOSED_ELEMENTS_MAP.get(
-      node.localName
-    );
-    if (
-      event.type == "click" &&
-      expectedEventTarget &&
-      expectedEventTarget != event.composedTarget?.localName
-    ) {
-      return;
     }
 
     if (sourceEvent.type === "command") {
@@ -1076,9 +1082,10 @@ export let BrowserUsageTelemetry = {
    * Listens for UI interactions in the window.
    */
   _addUsageListeners(win) {
-    // Listen for command events from the UI.
-    win.addEventListener("command", event => this._recordCommand(event), true);
-    win.addEventListener("click", event => this._recordCommand(event), true);
+    // Listen for events that UI_TARGET_ELEMENTS expect from the UI.
+    UI_TARGET_ELEMENTS.keys().forEach(type =>
+      win.addEventListener(type, event => this._recordCommand(event), true)
+    );
   },
 
   /**
