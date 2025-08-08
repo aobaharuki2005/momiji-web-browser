@@ -40,6 +40,8 @@ LazyLogModule gLogMouseLocation("MouseLocation");
 // Note that this is actually available only on debug builds for saving the
 // runtime cost on opt builds.
 LazyLogModule gLogPointerLocation("PointerLocation");
+// Log the updates of sActivePointersIds.
+LazyLogModule gLogActivePointers("ActivePointers");
 
 using namespace dom;
 
@@ -56,6 +58,46 @@ static nsClassHashtable<nsUint32HashKey, PointerCaptureInfo>*
 // Keeps information about pointers such as pointerId, activeState, pointerType,
 // primaryState
 static nsClassHashtable<nsUint32HashKey, PointerInfo>* sActivePointersIds;
+
+const UniquePtr<PointerInfo>& InsertOrUpdateActivePointer(
+    uint32_t aPointerId, UniquePtr<PointerInfo>&& aNewPointerInfo,
+    EventMessage aEventMessage, const char* aCallerName) {
+  const bool logIt = [&]() {
+    if (MOZ_LIKELY(!MOZ_LOG_TEST(gLogActivePointers, LogLevel::Info))) {
+      return false;
+    }
+    const PointerInfo* prevPointerInfo = sActivePointersIds->Get(aPointerId);
+    return !prevPointerInfo ||
+           !prevPointerInfo->EqualsBasicPointerData(*aNewPointerInfo);
+  }();
+
+  const UniquePtr<PointerInfo>& pointerInfo =
+      sActivePointersIds->InsertOrUpdate(
+          aPointerId, std::forward<UniquePtr<PointerInfo>>(aNewPointerInfo));
+  if (MOZ_UNLIKELY(logIt)) {
+    MOZ_LOG(
+        gLogActivePointers, LogLevel::Info,
+        ("InsertOrUpdate: { pointerId=%u, active: %s, inputSource: %s, "
+         "primary: %s, fromTouchEvent: %s, synthesizedForTests: %s }, %s in "
+         "%s",
+         aPointerId, pointerInfo->mIsActive ? "Yes" : "No",
+         InputSourceToString(pointerInfo->mInputSource).get(),
+         pointerInfo->mIsPrimary ? "Yes" : "No",
+         pointerInfo->mFromTouchEvent ? "Yes" : "No",
+         pointerInfo->mIsSynthesizedForTests ? "Yes" : "No",
+         ToChar(aEventMessage), aCallerName));
+  }
+  return pointerInfo;
+}
+
+void RemoveActivePointer(uint32_t aPointerId, EventMessage aEventMessage,
+                         const char* aCallerName) {
+  sActivePointersIds->Remove(aPointerId);
+  MOZ_LOG(
+      gLogActivePointers, LogLevel::Info,
+      ("Remove: { pointerId=%u }, %s in %s, remaining %u pointers", aPointerId,
+       ToChar(aEventMessage), aCallerName, sActivePointersIds->Count()));
+}
 
 // Keeps track of which BrowserParent requested pointer capture for a pointer
 // id.
@@ -146,15 +188,15 @@ void PointerEventHandler::RecordPointerState(
     }
     // If there is no PointerInfo, we need to add an inactive PointeInfo to
     // store the state.
-    pointerInfo = sActivePointersIds
-                      ->InsertOrUpdate(
-                          aMouseEvent.pointerId,
-                          MakeUnique<PointerInfo>(
-                              PointerInfo::Active::No, aMouseEvent.mInputSource,
-                              PointerInfo::Primary::Yes,
-                              PointerInfo::FromTouchEvent::No, nullptr, nullptr,
-                              static_cast<PointerInfo::SynthesizeForTests>(
-                                  aMouseEvent.mFlags.mIsSynthesizedForTests)))
+    pointerInfo = InsertOrUpdateActivePointer(
+                      aMouseEvent.pointerId,
+                      MakeUnique<PointerInfo>(
+                          PointerInfo::Active::No, aMouseEvent.mInputSource,
+                          PointerInfo::Primary::Yes,
+                          PointerInfo::FromTouchEvent::No, nullptr, nullptr,
+                          static_cast<PointerInfo::SynthesizeForTests>(
+                              aMouseEvent.mFlags.mIsSynthesizedForTests)),
+                      aMouseEvent.mMessage, __func__)
                       .get();
   }
   // If the input source is a stationary device and the point is defined, we may
@@ -302,15 +344,15 @@ void PointerEventHandler::UpdatePointerActiveState(WidgetMouseEvent* aEvent,
         }
       }
       // In this case we have to know information about available mouse pointers
-      sActivePointersIds->InsertOrUpdate(
+      InsertOrUpdateActivePointer(
           aEvent->pointerId,
           MakeUnique<PointerInfo>(PointerInfo::Active::No, aEvent->mInputSource,
                                   PointerInfo::Primary::Yes,
                                   PointerInfo::FromTouchEvent::No, nullptr,
                                   pointerInfo,
                                   static_cast<PointerInfo::SynthesizeForTests>(
-                                      aEvent->mFlags.mIsSynthesizedForTests)));
-
+                                      aEvent->mFlags.mIsSynthesizedForTests)),
+          aEvent->mMessage, __func__);
       MaybeCacheSpoofedPointerID(aEvent->mInputSource, aEvent->pointerId);
       break;
     }
@@ -325,12 +367,13 @@ void PointerEventHandler::UpdatePointerActiveState(WidgetMouseEvent* aEvent,
       if (pointerInfo) {
         return;
       }
-      sActivePointersIds->InsertOrUpdate(
+      InsertOrUpdateActivePointer(
           aEvent->pointerId,
           MakeUnique<PointerInfo>(
               PointerInfo::Active::No, MouseEvent_Binding::MOZ_SOURCE_MOUSE,
               PointerInfo::Primary::Yes, PointerInfo::FromTouchEvent::No,
-              nullptr, pointerInfo, PointerInfo::SynthesizeForTests::Yes));
+              nullptr, pointerInfo, PointerInfo::SynthesizeForTests::Yes),
+          aEvent->mMessage, __func__);
       return;
     }
     case ePointerDown:
@@ -340,12 +383,13 @@ void PointerEventHandler::UpdatePointerActiveState(WidgetMouseEvent* aEvent,
         // XXXedgar, test could possibly synthesize a mousedown event on a
         // coordinate outside the browser window and cause aTargetContent to be
         // nullptr, not sure if this also happens on real usage.
-        sActivePointersIds->InsertOrUpdate(
+        InsertOrUpdateActivePointer(
             pointerEvent->pointerId,
             MakeUnique<PointerInfo>(
                 PointerInfo::Active::Yes, *pointerEvent,
                 aTargetContent ? aTargetContent->OwnerDoc() : nullptr,
-                GetPointerInfo(aEvent->pointerId)));
+                GetPointerInfo(aEvent->pointerId)),
+            pointerEvent->mMessage, __func__);
         MaybeCacheSpoofedPointerID(pointerEvent->mInputSource,
                                    pointerEvent->pointerId);
       }
@@ -360,18 +404,19 @@ void PointerEventHandler::UpdatePointerActiveState(WidgetMouseEvent* aEvent,
       if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
         if (pointerEvent->mInputSource !=
             MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
-          sActivePointersIds->InsertOrUpdate(
+          InsertOrUpdateActivePointer(
               pointerEvent->pointerId,
               MakeUnique<PointerInfo>(PointerInfo::Active::No, *pointerEvent,
                                       nullptr,
-                                      GetPointerInfo(aEvent->pointerId)));
+                                      GetPointerInfo(aEvent->pointerId)),
+              pointerEvent->mMessage, __func__);
         } else {
           // XXX If the PointerInfo is registered with same pointerId as actual
           // pointer and the event is synthesized for tests, we unregister the
           // pointer unexpectedly here.  However, it should be rare and
           // currently, we use only pointerId for the key.  Therefore, we cannot
           // do nothing without changing the key.
-          sActivePointersIds->Remove(pointerEvent->pointerId);
+          RemoveActivePointer(aEvent->pointerId, aEvent->mMessage, __func__);
         }
       }
       break;
@@ -387,7 +432,7 @@ void PointerEventHandler::UpdatePointerActiveState(WidgetMouseEvent* aEvent,
       }
       // In this case we have to remove information about disappeared mouse
       // pointers
-      sActivePointersIds->Remove(aEvent->pointerId);
+      RemoveActivePointer(aEvent->pointerId, aEvent->mMessage, __func__);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("event has invalid type");
