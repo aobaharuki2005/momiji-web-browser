@@ -954,6 +954,31 @@ class FixedLengthTypedArrayObjectTemplate
     return tarray;
   }
 
+  static FixedLengthTypedArrayObject* fromDetachedBuffer(
+      JSContext* cx, Handle<ArrayBufferObject*> buffer,
+      gc::Heap heap = gc::Heap::Default) {
+    MOZ_ASSERT(buffer->isDetached());
+
+    gc::AllocKind allocKind = gc::GetGCObjectKind(instanceClass());
+
+    AutoSetNewObjectMetadata metadata(cx);
+    auto* obj = newBuiltinClassInstance(cx, allocKind, heap);
+    if (!obj) {
+      return nullptr;
+    }
+
+    // Normal construction doesn't allow creating a new TypedArray with an
+    // already detached ArrayBuffer. Initialize all slots as if a TypedArrray
+    // had been created with a non-detached buffer and the buffer was detached
+    // later.
+    obj->initFixedSlot(BUFFER_SLOT, ObjectValue(*buffer));
+    obj->initFixedSlot(LENGTH_SLOT, PrivateValue(size_t(0)));
+    obj->initFixedSlot(BYTEOFFSET_SLOT, PrivateValue(size_t(0)));
+    obj->initFixedSlot(DATA_SLOT, UndefinedValue());
+
+    return obj;
+  }
+
   static void initTypedArraySlots(FixedLengthTypedArrayObject* tarray,
                                   int32_t len) {
     MOZ_ASSERT(len >= 0);
@@ -4134,7 +4159,46 @@ TypedArrayObject* js::TypedArraySubarray(JSContext* cx,
   size_t elementSize = TypedArrayElemSize(obj->type());
   size_t beginByteOffset = srcByteOffset + (startIndex * elementSize);
 
-  return TypedArrayCreateSameType(cx, obj, buffer, beginByteOffset, newLength);
+  auto* result =
+      TypedArrayCreateSameType(cx, obj, buffer, beginByteOffset, newLength);
+
+  // Other exceptions aren't allowed, because TypedArraySubarray is a
+  // recoverable operation.
+  MOZ_ASSERT_IF(!result, cx->isThrowingOutOfMemory());
+
+  return result;
+}
+
+static auto* TypedArrayFromDetachedBuffer(JSContext* cx,
+                                          Handle<TypedArrayObject*> obj) {
+  MOZ_ASSERT(obj->hasDetachedBuffer());
+
+  Rooted<ArrayBufferObject*> buffer(cx, obj->bufferUnshared());
+
+  switch (obj->type()) {
+#define TYPED_ARRAY_CREATE(_, NativeType, Name) \
+  case Scalar::Name:                            \
+    return FixedLengthTypedArrayObjectTemplate< \
+        NativeType>::fromDetachedBuffer(cx, buffer);
+    JS_FOR_EACH_TYPED_ARRAY(TYPED_ARRAY_CREATE)
+#undef TYPED_ARRAY_CREATE
+    default:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+}
+
+TypedArrayObject* js::TypedArraySubarrayRecover(JSContext* cx,
+                                                Handle<TypedArrayObject*> obj,
+                                                intptr_t start, intptr_t end) {
+  MOZ_ASSERT(!obj->is<ResizableTypedArrayObject>());
+  MOZ_ASSERT(HasBuiltinTypedArraySpecies(obj, cx));
+
+  // Special case: The buffer was detached after calling `subarray`. This case
+  // can only happen when recovering a TypedArraySubarray allocation.
+  if (obj->hasDetachedBuffer()) {
+    return TypedArrayFromDetachedBuffer(cx, obj);
+  }
+  return TypedArraySubarray(cx, obj, start, end);
 }
 
 // Byte vector with large enough inline storage to allow constructing small

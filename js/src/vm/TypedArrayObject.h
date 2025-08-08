@@ -362,6 +362,10 @@ TypedArrayObject* TypedArraySubarray(JSContext* cx,
                                      Handle<TypedArrayObject*> obj,
                                      intptr_t start, intptr_t end);
 
+TypedArrayObject* TypedArraySubarrayRecover(JSContext* cx,
+                                            Handle<TypedArrayObject*> obj,
+                                            intptr_t start, intptr_t end);
+
 static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
   switch (viewType) {
     case Scalar::Int8:
