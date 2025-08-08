@@ -160,6 +160,9 @@ backtrace = { path = "build/rust/backtrace" }
 # and for bug 1945218
 bindgen = { path = "third_party/rust/bindgen" }
 
+# Patch nix 0.29 to 0.30+
+nix = { path = "build/rust/nix" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
