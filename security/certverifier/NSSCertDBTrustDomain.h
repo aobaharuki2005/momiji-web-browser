@@ -20,11 +20,6 @@
 namespace mozilla {
 namespace psm {
 
-enum class ValidityCheckingMode {
-  CheckingOff = 0,
-  CheckForEV = 1,
-};
-
 enum class NSSDBConfig {
   ReadWrite = 0,
   ReadOnly = 1,
@@ -135,8 +130,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       TrustCache* trustCache, void* pinArg,
       mozilla::TimeDuration ocspTimeoutSoft,
       mozilla::TimeDuration ocspTimeoutHard, uint32_t certShortLifetimeInDays,
-      unsigned int minRSABits, ValidityCheckingMode validityCheckingMode,
-      CRLiteMode crliteMode, const OriginAttributes& originAttributes,
+      unsigned int minRSABits, CRLiteMode crliteMode,
+      const OriginAttributes& originAttributes,
       const nsTArray<mozilla::pkix::Input>& thirdPartyRootInputs,
       const nsTArray<mozilla::pkix::Input>& thirdPartyIntermediateInputs,
       const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
@@ -290,7 +285,6 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   const mozilla::TimeDuration mOCSPTimeoutHard;
   const uint32_t mCertShortLifetimeInDays;
   const unsigned int mMinRSABits;
-  ValidityCheckingMode mValidityCheckingMode;
   CRLiteMode mCRLiteMode;
   const OriginAttributes& mOriginAttributes;
   const nsTArray<mozilla::pkix::Input>& mThirdPartyRootInputs;  // non-owning

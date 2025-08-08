@@ -42,7 +42,6 @@ support-files = [
   "test_self_signed_certs/**",
   "test_signed_apps/**",
   "test_trust_anchors/**",
-  "test_validity/**",
   "tlsserver/**",
 ]
 
@@ -338,8 +337,5 @@ skip-if = [
 ["test_sts_preloadlist_selfdestruct.js"]
 
 ["test_trust_anchors.js"]
-
-["test_validity.js"]
-run-sequentially = "hardcoded ports"
 
 ["test_x509.js"]

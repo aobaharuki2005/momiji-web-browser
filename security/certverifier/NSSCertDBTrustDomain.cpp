@@ -65,10 +65,9 @@ namespace psm {
 NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     SECTrustType certDBTrustType, OCSPFetching ocspFetching,
     OCSPCache& ocspCache, SignatureCache* signatureCache,
-    TrustCache* trustCache,
-    /*optional but shouldn't be*/ void* pinArg, TimeDuration ocspTimeoutSoft,
-    TimeDuration ocspTimeoutHard, uint32_t certShortLifetimeInDays,
-    unsigned int minRSABits, ValidityCheckingMode validityCheckingMode,
+    TrustCache* trustCache, /*optional but shouldn't be*/ void* pinArg,
+    TimeDuration ocspTimeoutSoft, TimeDuration ocspTimeoutHard,
+    uint32_t certShortLifetimeInDays, unsigned int minRSABits,
     CRLiteMode crliteMode, const OriginAttributes& originAttributes,
     const nsTArray<Input>& thirdPartyRootInputs,
     const nsTArray<Input>& thirdPartyIntermediateInputs,
@@ -86,7 +85,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mOCSPTimeoutHard(ocspTimeoutHard),
       mCertShortLifetimeInDays(certShortLifetimeInDays),
       mMinRSABits(minRSABits),
-      mValidityCheckingMode(validityCheckingMode),
       mCRLiteMode(crliteMode),
       mOriginAttributes(originAttributes),
       mThirdPartyRootInputs(thirdPartyRootInputs),
@@ -1504,35 +1502,6 @@ Result NSSCertDBTrustDomain::VerifyECDSASignedData(
 Result NSSCertDBTrustDomain::CheckValidityIsAcceptable(
     Time notBefore, Time notAfter, EndEntityOrCA endEntityOrCA,
     KeyPurposeId keyPurpose) {
-  if (endEntityOrCA != EndEntityOrCA::MustBeEndEntity) {
-    return Success;
-  }
-  if (keyPurpose == KeyPurposeId::id_kp_OCSPSigning) {
-    return Success;
-  }
-
-  Duration DURATION_27_MONTHS_PLUS_SLOP((2 * 365 + 3 * 31 + 7) *
-                                        Time::ONE_DAY_IN_SECONDS);
-  Duration maxValidityDuration(UINT64_MAX);
-  Duration validityDuration(notBefore, notAfter);
-
-  switch (mValidityCheckingMode) {
-    case ValidityCheckingMode::CheckingOff:
-      return Success;
-    case ValidityCheckingMode::CheckForEV:
-      // The EV Guidelines say the maximum is 27 months, but we use a slightly
-      // higher limit here to (hopefully) minimize compatibility breakage.
-      maxValidityDuration = DURATION_27_MONTHS_PLUS_SLOP;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE(
-          "We're not handling every ValidityCheckingMode type");
-  }
-
-  if (validityDuration > maxValidityDuration) {
-    return Result::ERROR_VALIDITY_TOO_LONG;
-  }
-
   return Success;
 }
 
