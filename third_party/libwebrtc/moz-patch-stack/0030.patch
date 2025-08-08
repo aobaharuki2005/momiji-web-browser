@@ -735,7 +735,7 @@ index b88007703c..a33efe7f8d 100644
      : content_hint(VideoTrackInterface::ContentHint::kNone) {}
  VideoOptions::~VideoOptions() = default;
 diff --git a/modules/audio_coding/BUILD.gn b/modules/audio_coding/BUILD.gn
-index dd4500f744..7a753c00f5 100644
+index 46c659c928..b7387c5a00 100644
 --- a/modules/audio_coding/BUILD.gn
 +++ b/modules/audio_coding/BUILD.gn
 @@ -364,7 +364,7 @@ rtc_library("webrtc_opus_wrapper") {
@@ -748,7 +748,7 @@ index dd4500f744..7a753c00f5 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 1bae2579b7..ff84af4f34 100644
+index 9bf81c315f..782bd7c99f 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -883,10 +883,10 @@ index ddec89972d..154ac79205 100644
      } else {
        cflags = [
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 4b004c6527..cc2a1a2302 100644
+index f00de0c3cb..511ab2588a 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
-@@ -347,37 +347,12 @@ rtc_library("desktop_capture") {
+@@ -344,37 +344,12 @@ rtc_library("desktop_capture") {
      ]
      deps += [ ":desktop_capture_objc" ]
    }
@@ -924,7 +924,7 @@ index 4b004c6527..cc2a1a2302 100644
    }
  
    if (rtc_use_x11_extensions) {
-@@ -539,9 +514,7 @@ rtc_library("desktop_capture") {
+@@ -537,9 +512,7 @@ rtc_library("desktop_capture") {
      deps += [ "../../rtc_base:sanitizer" ]
    }
  
@@ -1025,7 +1025,7 @@ index c3e0e5af71..1f17788573 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 51882c5159..0af99a997a 100644
+index 41732ae0a8..75b39021f8 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -325,6 +325,7 @@ rtc_library("sample_counter") {
@@ -1211,7 +1211,7 @@ index c1181618e9..4a772795ed 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index eb8bd0ddf5..ad4661bd82 100644
+index 85e65b3785..6173ab3fc5 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -232,6 +232,7 @@ rtc_library("audio_test_common") {
@@ -1253,7 +1253,7 @@ index eb8bd0ddf5..ad4661bd82 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1312,6 +1320,7 @@ if (!build_with_chromium) {
+@@ -1313,6 +1321,7 @@ if (!build_with_chromium) {
    }
  }
  
@@ -1261,7 +1261,7 @@ index eb8bd0ddf5..ad4661bd82 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1354,6 +1363,7 @@ if (!build_with_chromium && is_android) {
+@@ -1355,6 +1364,7 @@ if (!build_with_chromium && is_android) {
      sources = [ "android/org/webrtc/native_test/NativeTestWebrtc.java" ]
    }
  }

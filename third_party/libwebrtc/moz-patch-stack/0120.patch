@@ -492,7 +492,7 @@ index 9781d4ec6a..b8d9061a71 100644
  import("../webrtc.gni")
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index ff84af4f34..954e4642da 100644
+index 782bd7c99f..313e5c82de 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -612,7 +612,7 @@ index 0e96125f40..c72b3714c4 100644
    }
  
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 9754cccab1..4e63bd2371 100644
+index 5b6cbd2525..7bb3c68952 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
 @@ -6,8 +6,8 @@
@@ -640,7 +640,7 @@ index a693604389..72972d18e1 100644
  import("../../webrtc.gni")
  
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index d7dc1d4d83..de6d50468d 100644
+index c91b9a0b60..cc75594d8e 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
 @@ -6,7 +6,7 @@
@@ -668,7 +668,7 @@ index cc366601e5..617de28bee 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index cdc2c6af93..40ce109f80 100644
+index 54be1f99e4..0d77bbe04d 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -793,7 +793,7 @@ index 8be2817955..8b83c1bac5 100644
            ]
          }
 diff --git a/system_wrappers/BUILD.gn b/system_wrappers/BUILD.gn
-index 318bbaff90..e7ceb1b029 100644
+index a36adfa47b..3764e6682d 100644
 --- a/system_wrappers/BUILD.gn
 +++ b/system_wrappers/BUILD.gn
 @@ -7,8 +7,8 @@
@@ -808,7 +808,7 @@ index 318bbaff90..e7ceb1b029 100644
  import("../webrtc.gni")
  
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 08efaed8e9..dfea5f820f 100644
+index a780734386..1d1ffb7189 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -6,10 +6,10 @@
