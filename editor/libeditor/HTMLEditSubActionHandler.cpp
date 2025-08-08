@@ -394,12 +394,9 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
                        "HTMLEditor::EnsureSelectionInBodyOrDocumentElement() "
                        "failed, but ignored");
 
-  switch (GetTopLevelEditSubAction()) {
-    case EditSubAction::eReplaceHeadWithHTMLSource:
-    case EditSubAction::eCreatePaddingBRElementForEmptyEditor:
-      return NS_OK;
-    default:
-      break;
+  if (GetTopLevelEditSubAction() ==
+      EditSubAction::eCreatePaddingBRElementForEmptyEditor) {
+    return NS_OK;
   }
 
   if (TopLevelEditSubActionDataRef().mChangedRange->IsPositioned() &&

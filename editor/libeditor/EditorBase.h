@@ -1289,7 +1289,6 @@ class EditorBase : public nsIEditor,
         case EditSubAction::eCreatePaddingBRElementForEmptyEditor:
         case EditSubAction::eMaintainWhiteSpaceVisibility:
         case EditSubAction::eNone:
-        case EditSubAction::eReplaceHeadWithHTMLSource:
           MOZ_ASSERT(aDirection == eNone);
           mDirectionOfTopLevelEditSubAction = eNone;
           break;

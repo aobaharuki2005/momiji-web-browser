@@ -3445,16 +3445,6 @@ class HTMLEditor final : public EditorBase,
       const EditorInlineStyle& aStyleToRemove,
       nsTArray<EditorInlineStyle>& aStylesToRemove) const;
 
-  /**
-   * ReplaceHeadContentsWithSourceWithTransaction() replaces all children of
-   * <head> element with given source code.  This is undoable.
-   *
-   * @param aSourceToInsert     HTML source fragment to replace the children
-   *                            of <head> element.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult ReplaceHeadContentsWithSourceWithTransaction(
-      const nsAString& aSourceToInsert);
-
   enum class RetrievingBackgroundColorOption {
     // Ignore inline styles, i.e., return only background color of ancestor
     // blocks.
