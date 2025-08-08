@@ -12,6 +12,8 @@
 [context_id.async_wrappers]
 ContextIDComponent = "AsyncWrapped"
 "ContextIDComponent.new" = "Sync"
+"ContextIdCallback.persist" = "FireAndForget"
+"ContextIdCallback.rotated" = "FireAndForget"
 
 [filter_adult.async_wrappers]
 "FilterAdultComponent.new" = "Sync"
@@ -58,8 +60,8 @@ RemoteSettingsClient = "AsyncWrapped"
 [error_support.async_wrappers]
 "set_application_error_reporter" = "AsyncWrapped"
 "unset_application_error_reporter" = "AsyncWrapped"
-"ApplicationErrorReporter.report_error" = "AsyncWrapped"
-"ApplicationErrorReporter.report_breadcrumb" = "AsyncWrapped"
+"ApplicationErrorReporter.report_error" = "FireAndForget"
+"ApplicationErrorReporter.report_breadcrumb" = "FireAndForget"
 
 [tabs.async_wrappers]
 RemoteCommandStore = "AsyncWrapped"
@@ -127,13 +129,12 @@ WebExtStorageStore = "AsyncWrapped"
 "ComplexMethods.new" = "Sync"
 "ComplexMethods.method_with_default" = "Sync"
 "ComplexMethods.method_with_multi_word_arg" = "Sync"
-"TestTraitInterface.noop" = "Sync"
-"TestTraitInterface.get_value" = "Sync"
-"TestTraitInterface.set_value" = "Sync"
-"TestTraitInterface.throw_if_equal" = "Sync"
+TestCallbackInterface = "FireAndForget"
+TestTraitInterface = "Sync"
 
 [uniffi_bindings_tests_collision.async_wrappers]
 "invoke_collision_callback" = "Sync"
+TestCallbackInterface = "FireAndForget"
 
 [uniffi_bindings_tests_external_types.async_wrappers]
 "roundtrip_ext_custom_type" = "Sync"
