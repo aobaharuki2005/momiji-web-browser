@@ -8,10 +8,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/43c2cad5c4e576f3b
  1 file changed, 5 insertions(+)
 
 diff --git a/api/crypto/crypto_options.cc b/api/crypto/crypto_options.cc
-index 249bc34105..3f84a42f5e 100644
+index e939f390e5..0f1e3683ef 100644
 --- a/api/crypto/crypto_options.cc
 +++ b/api/crypto/crypto_options.cc
-@@ -105,7 +105,12 @@ CryptoOptions::EphemeralKeyExchangeCipherGroups::GetSupported() {
+@@ -106,7 +106,12 @@ CryptoOptions::EphemeralKeyExchangeCipherGroups::GetSupported() {
  }
  
  void CryptoOptions::EphemeralKeyExchangeCipherGroups::AddFirst(uint16_t group) {
