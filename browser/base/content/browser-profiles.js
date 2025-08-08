@@ -117,7 +117,9 @@ var gProfiles = {
     let profiles = await SelectableProfileService.getAllProfiles();
     let currentProfile = SelectableProfileService.currentProfile;
     let insertionPoint = document.getElementById("menu_newProfile");
-    let existingItems = [...menuPopup.querySelectorAll(":scope > menuitem[profileid]")];
+    let existingItems = [
+      ...menuPopup.querySelectorAll(":scope > menuitem[profileid]"),
+    ];
     for (let profile of profiles) {
       let menuitem = existingItems.shift();
       let isNewItem = !menuitem;
