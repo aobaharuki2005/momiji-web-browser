@@ -103,7 +103,7 @@ static inline ssize_t corrected_sendmsg(int socket,
 }  // namespace
 //------------------------------------------------------------------------------
 
-ChannelPosix::ChannelPosix(ChannelHandle pipe, Mode mode,
+ChannelPosix::ChannelPosix(mozilla::UniqueFileHandle pipe, Mode mode,
                            base::ProcessId other_pid)
     : other_pid_(other_pid) {
   Init(mode);
@@ -1090,6 +1090,12 @@ bool ChannelPosix::AcceptMachPorts(Message& msg) {
 // required information for AcceptMachPorts to the message footer. See comment
 // above for details.
 bool ChannelPosix::TransferMachPorts(Message& msg) {
+  uint32_t num_receive_rights = msg.num_receive_rights();
+  if (num_receive_rights != 0) {
+    CHROMIUM_LOG(ERROR) << "ChannelPosix does not support receive rights";
+    return false;
+  }
+
   uint32_t num_send_rights = msg.num_send_rights();
   if (num_send_rights == 0) {
     return true;
@@ -1173,8 +1179,8 @@ bool ChannelPosix::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
     return false;
   }
 
-  server->reset(fds[0]);
-  client->reset(fds[1]);
+  server->emplace<mozilla::UniqueFileHandle>(fds[0]);
+  client->emplace<mozilla::UniqueFileHandle>(fds[1]);
   return true;
 }
 

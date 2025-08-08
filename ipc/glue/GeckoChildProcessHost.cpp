@@ -1897,7 +1897,22 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
                                                    __func__);
     }
     aHost->InitializeChannel(std::move(serverHandle));
-    geckoargs::sIPCHandle.Put(std::move(clientHandle), mChildArgs);
+
+    if (auto* handle = std::get_if<UniqueFileHandle>(&clientHandle)) {
+      geckoargs::sIPCHandle.Put(std::move(*handle), mChildArgs);
+    }
+#ifdef XP_DARWIN
+    // NOTE: We don't support passing UniqueMachReceiveRight instances on the
+    // command line, so clientHandle must be a send right.
+    else if (auto* port = std::get_if<UniqueMachSendRight>(&clientHandle)) {
+      geckoargs::sIPCPort.Put(std::move(*port), mChildArgs);
+    }
+#endif
+    else {
+      MOZ_ASSERT_UNREACHABLE();
+      return ProcessLaunchPromise::CreateAndReject(LaunchError("BadPipeType"),
+                                                   __func__);
+    }
   }
 
   return InvokeAsync(mLaunchThread, this, __func__,

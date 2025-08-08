@@ -29,7 +29,8 @@ namespace IPC {
 
 class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
  public:
-  ChannelWin(ChannelHandle pipe, Mode mode, base::ProcessId other_pid);
+  ChannelWin(mozilla::UniqueFileHandle pipe, Mode mode,
+             base::ProcessId other_pid);
 
   bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex()) override;
   void Close() MOZ_EXCLUDES(SendMutex()) override;
@@ -39,6 +40,8 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
       MOZ_EXCLUDES(SendMutex()) override;
 
   void SetOtherPid(base::ProcessId other_pid) override;
+
+  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
 
  private:
   ~ChannelWin() {
@@ -78,12 +81,12 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
   Mode mode_ MOZ_GUARDED_BY(IOThread());
 
   struct State {
-    explicit State(ChannelImpl* channel);
+    explicit State(ChannelWin* channel);
     ~State();
     MessageLoopForIO::IOContext context;
     // When there is pending I/O, this holds a strong reference to the
-    // ChannelImpl to prevent it from going away.
-    RefPtr<ChannelImpl> is_pending;
+    // ChannelWin to prevent it from going away.
+    RefPtr<ChannelWin> is_pending;
   };
 
   State input_state_ MOZ_GUARDED_BY(IOThread());
