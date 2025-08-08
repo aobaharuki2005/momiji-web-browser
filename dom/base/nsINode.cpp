@@ -4129,62 +4129,89 @@ ShadowRoot* nsINode::GetShadowRootForSelection() const {
   return shadowRoot;
 }
 
-// https://html.spec.whatwg.org/#ancestor-hidden-until-found-revealing-algorithm
-void nsINode::RevealAncestorHiddenUntilFoundAndFireBeforematchEvent(
-    ErrorResult& aRv) {
-  if (!StaticPrefs::dom_hidden_until_found_enabled()) {
-    return;
-  }
-  // 1. While currentNode has a parent node within the flat tree:
-  auto* currentNode = this;
-  while (RefPtr parentNode = currentNode->GetFlattenedTreeParentNode()) {
-    // 1.1. If currentNode has the hidden attribute in the hidden until found
-    //      state, then:
-    if (RefPtr currentAsElement = Element::FromNode(currentNode);
+enum class RevealType : uint8_t {
+  UntilFound,
+  Details,
+};
+// https://html.spec.whatwg.org/#ancestor-revealing-algorithm
+void nsINode::AncestorRevealingAlgorithm(ErrorResult& aRv) {
+  // 1. Let ancestorsToReveal be an empty list.
+  AutoTArray<std::pair<RefPtr<nsINode>, RevealType>, 16> ancestorsToReveal;
+  // 2. Let ancestor be target.
+  // 3. While ancestor has a parent node within the flat tree:
+  for (nsINode* ancestor : InclusiveFlatTreeAncestors(*this)) {
+    // 3.1 If ancestor has a hidden attribute in the hidden until found state,
+    //     then append (ancestor, "until-found") to ancestorsToReveal.
+    if (Element* currentAsElement = Element::FromNode(ancestor);
         currentAsElement &&
         currentAsElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
                                       nsGkAtoms::untilFound, eIgnoreCase)) {
-      // 1.1.1 Fire an event named beforematch at currentNode.
-      currentAsElement->FireBeforematchEvent(aRv);
+      ancestorsToReveal.AppendElement(
+          std::make_pair(ancestor, RevealType::UntilFound));
+    }
+
+    // 3.2 If ancestor is slotted into the second slot of a details element
+    //     which does not have an open attribute, then append (ancestor's
+    //     parent node, "details") to ancestorsToReveal.
+    if (HTMLSlotElement* slot = HTMLSlotElement::FromNode(ancestor)) {
+      // Note: There are two slots in the details element. Gecko names the
+      //       summary, and leaves the content slot unnamed.
+      if (HTMLDetailsElement* details = HTMLDetailsElement::FromNodeOrNull(
+              slot->GetContainingShadowHost());
+          details && !details->Open() && !slot->HasName()) {
+        ancestorsToReveal.AppendElement(
+            std::make_pair(details, RevealType::Details));
+      }
+    }
+
+    // 3.3 Set ancestor to ancestor's parent node within the flat tree.
+  }
+
+  // 4. For each (ancestor, type) in ancestorsToReveal:
+  for (const auto& [ancestor, revealType] : ancestorsToReveal) {
+    // 4.1 If ancestorToReveal is not connected, then return.
+    if (!ancestor->IsInComposedDoc()) {
+      return;
+    }
+
+    // 4.2 If type is "until-found", then:
+    if (revealType == RevealType::UntilFound) {
+      // 4.2.1 If ancestorToReveal's hidden attribute is not in the Hidden Until
+      //       Found state, then return.
+      RefPtr ancestorAsElement = Element::FromNode(ancestor);
+      if (!ancestorAsElement ||
+          !ancestorAsElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                                          nsGkAtoms::untilFound, eIgnoreCase)) {
+        return;
+      }
+      // 4.2.2 Fire an event named beforematch at ancestorToReveal with the
+      //       bubbles attribute initialized to true.
+      ancestorAsElement->FireBeforematchEvent(aRv);
       if (MOZ_UNLIKELY(aRv.Failed())) {
         return;
       }
-
-      // 1.1.2 Remove the hidden attribute from currentNode.
-      currentAsElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::hidden,
-                                  /*aNotify=*/true);
+      // 4.2.3 If ancestorToReveal is not connected, then return.
+      if (!ancestor->IsInComposedDoc()) {
+        return;
+      }
+      // 4.2.4 Remove the hidden attribute from ancestorToReveal.
+      ancestorAsElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::hidden,
+                                   /*aNotify=*/true);
+    } else {  // 4.3 Otherwise
+      // 4.3.1 Assert: revealType is "details".
+      MOZ_ASSERT(revealType == RevealType::Details);
+      // 4.3.2 If ancestorToReveal has an open attribute, then return.
+      RefPtr details = HTMLDetailsElement::FromNode(ancestor);
+      MOZ_ASSERT(details);
+      if (details->Open()) {
+        return;
+      }
+      // 4.3.3 Set the open attribute on ancestorToReveal to the empty string.
+      details->SetOpen(true, aRv);
+      if (MOZ_UNLIKELY(aRv.Failed())) {
+        return;
+      }
     }
-    // 1.2 Set currentNode to the parent node of currentNode within the flat
-    //     tree.
-    currentNode = parentNode;
-  }
-}
-
-// https://html.spec.whatwg.org/#ancestor-details-revealing-algorithm
-void nsINode::RevealAncestorClosedDetails() {
-  AutoTArray<RefPtr<HTMLDetailsElement>, 16> detailsElements;
-  // 1. While currentNode has a parent node within the flat tree:
-  for (auto* currentNode : InclusiveFlatTreeAncestors(*this)) {
-    // 1.1 If currentNode is slotted into the second slot of a details element:
-    auto* slot = HTMLSlotElement::FromNode(currentNode);
-    if (!slot) {
-      continue;
-    }
-    // Note: There are two slots in the details element. Gecko names the
-    //       summary, and leaves the content slot unnamed.
-    if (auto* details =
-            HTMLDetailsElement::FromNodeOrNull(slot->GetContainingShadowHost());
-        details && !details->Open() && !slot->HasName()) {
-      detailsElements.AppendElement(details);
-      // 1.1.1 Set currentNode to the details element which currentNode is
-      //       slotted into.
-      // Note: This step is omitted because we use the custom iterator.
-    }
-  }
-  // 1.1.2 If the open attribute is not set on currentNode, then set the
-  //       open attribute on currentNode to the empty string.
-  for (auto& details : detailsElements) {
-    details->SetOpen(true, IgnoreErrors());
   }
 }
 
