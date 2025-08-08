@@ -12,7 +12,6 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsILocalFileMac.h"
 #include "CocoaCompositorWidget.h"
-#include "CompositorWidgetChild.h"
 #include "GLContextCGL.h"
 #include "MacThemeGeometryType.h"
 #include "NativeMenuSupport.h"
@@ -930,13 +929,6 @@ void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
 void nsCocoaWindow::DestroyCompositor() {
   if (mNativeLayerRootRemoteMacParent) {
     mNativeLayerRootRemoteMacParent->Close();
-  }
-
-  if (mCompositorWidgetDelegate) {
-    auto* compositorWidgetChild =
-        static_cast<CompositorWidgetChild*>(mCompositorWidgetDelegate);
-    compositorWidgetChild->Shutdown();
-    mCompositorWidgetDelegate = nullptr;
   }
 
   nsBaseWidget::DestroyCompositor();
