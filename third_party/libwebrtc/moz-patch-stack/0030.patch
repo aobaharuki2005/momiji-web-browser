@@ -1025,7 +1025,7 @@ index c3e0e5af71..1f17788573 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 49c4f50620..a7ce225a44 100644
+index ad5055994d..d94e0b097a 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -312,6 +312,7 @@ rtc_library("sample_counter") {
@@ -1188,7 +1188,7 @@ index 49c4f50620..a7ce225a44 100644
  
  rtc_library("ssl_adapter") {
    visibility = [ "*" ]
-@@ -2304,7 +2328,7 @@ if (rtc_include_tests) {
+@@ -2323,7 +2347,7 @@ if (rtc_include_tests) {
    }
  }
  
@@ -1270,7 +1270,7 @@ index eb8bd0ddf5..ad4661bd82 100644
  rtc_library("call_config_utils") {
    testonly = true
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index dec17dde3d..b996351c36 100644
+index bf77b139ca..32200bb360 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
@@ -1282,7 +1282,7 @@ index dec17dde3d..b996351c36 100644
      "../api:scoped_refptr",
      "../api/adaptation:resource_adaptation_api",
      "../api/units:data_rate",
-@@ -442,7 +442,7 @@ rtc_library("video_stream_encoder_impl") {
+@@ -443,7 +443,7 @@ rtc_library("video_stream_encoder_impl") {
      "../api:rtc_error",
      "../api:rtp_packet_info",
      "../api:rtp_parameters",
