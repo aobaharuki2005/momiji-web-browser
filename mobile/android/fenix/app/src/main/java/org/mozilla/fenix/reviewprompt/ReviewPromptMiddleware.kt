@@ -37,7 +37,7 @@ class ReviewPromptMiddleware(
     private val buildTriggerMainCriteria: (NimbusMessagingHelperInterface) -> Sequence<Boolean> =
         TiggerBuilder.mainCriteria(settings, timeNowInMillis),
     private val buildTriggerSubCriteria: (NimbusMessagingHelperInterface) -> Sequence<Boolean> =
-        TiggerBuilder.subCriteria(settings),
+        TiggerBuilder::subCriteria,
 ) : Middleware<AppState, AppAction> {
 
     private object TiggerBuilder {
@@ -51,11 +51,10 @@ class ReviewPromptMiddleware(
             }
         }
 
-        fun subCriteria(settings: Settings): (NimbusMessagingHelperInterface) -> Sequence<Boolean> = {
-            sequence {
-                yield(legacyReviewPromptTrigger(settings))
-                yield(createdAtLeastOneBookmark(it))
-                yield(isDefaultBrowserTrigger(it))
+        fun subCriteria(jexlHelper: NimbusMessagingHelperInterface): Sequence<Boolean> {
+            return sequence {
+                yield(createdAtLeastOneBookmark(jexlHelper))
+                yield(isDefaultBrowserTrigger(jexlHelper))
             }
         }
     }
@@ -108,7 +107,6 @@ class ReviewPromptMiddleware(
     }
 }
 
-private const val NUMBER_OF_LAUNCHES_REQUIRED = 5
 private const val APPRX_MONTH_IN_MILLIS: Long = 1000L * 60L * 60L * 24L * 30L
 private const val NUMBER_OF_MONTHS_TO_PASS = 4
 
@@ -125,17 +123,6 @@ fun hasNotBeenPromptedLastFourMonths(settings: Settings, timeNowInMillis: () -> 
     val approximatelyFourMonthsAgo =
         timeNowInMillis() - (APPRX_MONTH_IN_MILLIS * NUMBER_OF_MONTHS_TO_PASS)
     return settings.lastReviewPromptTimeInMillis <= approximatelyFourMonthsAgo
-}
-
-/**
- * Matches logic from ReviewPromptController.shouldShowPrompt, which has been deleted.
- * Kept for parity. To be replaced by a set of new triggers.
- */
-@VisibleForTesting
-internal fun legacyReviewPromptTrigger(settings: Settings): Boolean {
-    val hasOpenedAtLeastFiveTimes =
-        settings.numberOfAppLaunches >= NUMBER_OF_LAUNCHES_REQUIRED
-    return settings.isDefaultBrowser && hasOpenedAtLeastFiveTimes
 }
 
 /**
