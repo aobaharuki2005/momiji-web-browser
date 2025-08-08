@@ -136,3 +136,33 @@ function testSetElement() {
 }
 testSetElement();
 
+// Test |fill| with scalar replaced |subarray| works.
+function testFill() {
+  var i8 = new Int8Array(10);
+  var i32 = new Int32Array(10);
+  var i64 = new BigInt64Array(10);
+
+  for (var i = 0; i < 100; ++i) {
+    i8.fill(0);
+    i32.fill(0);
+    i64.fill(0n);
+
+    var sub_i8 = i8.subarray();
+    sub_i8.fill(1);
+    assertRecoveredOnBailout(sub_i8, true);
+
+    var sub_i32 = i32.subarray(1);
+    sub_i32.fill(1234, 0, -5);
+    assertRecoveredOnBailout(sub_i32, true);
+
+    var sub_i64 = i64.subarray(2, 4);
+    sub_i64.fill(0x123456789abcdefn, 1);
+    assertRecoveredOnBailout(sub_i64, true);
+
+    assertEqArray(i8, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    assertEqArray(i32, [0, 1234, 1234, 1234, 1234, 0, 0, 0, 0, 0]);
+    assertEqArray(i64, [0n, 0n, 0n, 0x123456789abcdefn, 0n, 0n, 0n, 0n, 0n, 0n]);
+  }
+}
+testFill();
+
