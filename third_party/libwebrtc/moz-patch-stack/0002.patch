@@ -1636,7 +1636,7 @@ index 2b9c95a5b7..0048dab074 100644
      }
    }
 diff --git a/test/vcm_capturer.cc b/test/vcm_capturer.cc
-index 0a9226ef6f..620c1c02f3 100644
+index bc022c1a80..fd1f627a44 100644
 --- a/test/vcm_capturer.cc
 +++ b/test/vcm_capturer.cc
 @@ -83,7 +83,7 @@ void VcmCapturer::Destroy() {
