@@ -16,8 +16,6 @@ from taskgraph.util.schema import Schema
 
 transforms = TransformSequence()
 
-
-#: Schema for run.using index-search
 run_task_schema = Schema(
     {
         Required("using"): "index-search",

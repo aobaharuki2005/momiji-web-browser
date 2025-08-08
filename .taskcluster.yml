@@ -241,11 +241,7 @@ tasks:
                       - bash
                       - -cx
                       - $let:
-                            extraArgs:
-                                $switch:
-                                    'tasks_for == "cron"': '${cron.quoted_args}'
-                                    'repository.project in ["autoland", "try"]': '--no-verify'
-                                    $default: ''
+                            extraArgs: {$if: 'tasks_for == "cron"', then: '${cron.quoted_args}', else: ''}
                         in:
                             $if: 'tasks_for == "action"'
                             then: >

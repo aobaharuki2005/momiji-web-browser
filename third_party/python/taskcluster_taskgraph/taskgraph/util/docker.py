@@ -206,34 +206,28 @@ def stream_context_tar(topsrcdir, context_dir, out_file, args=None):
 
 
 @functools.lru_cache(maxsize=None)
-def image_paths(graph_config):
+def image_paths():
     """Return a map of image name to paths containing their Dockerfile."""
-
-    config = load_yaml(
-        graph_config.kinds_dir,
-        graph_config.get("docker-image-kind", "docker-image"),
-        "kind.yml",
-    )
-
+    config = load_yaml("taskcluster", "kinds", "docker-image", "kind.yml")
     return {
-        k: os.path.join(graph_config.docker_dir, v.get("definition", k))
+        k: os.path.join(IMAGE_DIR, v.get("definition", k))
         for k, v in config["tasks"].items()
     }
 
 
-def image_path(name, graph_config):
-    paths = image_paths(graph_config)
+def image_path(name):
+    paths = image_paths()
     if name in paths:
         return paths[name]
-    return os.path.join(graph_config.docker_dir, name)
+    return os.path.join(IMAGE_DIR, name)
 
 
 @functools.lru_cache(maxsize=None)
-def parse_volumes(image, graph_config):
+def parse_volumes(image):
     """Parse VOLUME entries from a Dockerfile for an image."""
     volumes = set()
 
-    path = image_path(image, graph_config)
+    path = image_path(image)
 
     with open(os.path.join(path, "Dockerfile"), "rb") as fh:
         for line in fh:

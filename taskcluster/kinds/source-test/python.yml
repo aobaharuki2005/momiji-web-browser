@@ -39,23 +39,6 @@ task-defaults:
             - 'config/mozunit/**'
             - 'python/mach_commands.py'
 
-verify-decision:
-    description: verifications on Decision task output
-    python-version: [3]
-    run-on-projects: ["autoland"]
-    treeherder:
-        platform: gecko-decision/opt
-        symbol: verify
-    run:
-        using: python-test
-        subsuite: decision
-    when:
-        files-changed:
-            - .cron.yml
-            - .taskcluster.yml
-            - 'taskcluster/**'
-            - 'third_party/python/taskcluster_taskgraph/**'
-
 firefox-ci:
     description: taskcluster/gecko_taskgraph unit tests
     always-target: false

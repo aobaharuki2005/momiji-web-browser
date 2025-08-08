@@ -123,7 +123,6 @@ class TaskGraphGenerator:
         parameters: Union[Parameters, Callable[[GraphConfig], Parameters]],
         decision_task_id: str = "DECISION-TASK",
         write_artifacts: bool = False,
-        enable_verifications: bool = True,
     ):
         """
         @param root_dir: root directory containing the Taskgraph config.yml file
@@ -137,7 +136,6 @@ class TaskGraphGenerator:
         self._parameters = parameters
         self._decision_task_id = decision_task_id
         self._write_artifacts = write_artifacts
-        self._enable_verifications = enable_verifications
 
         # start the generator
         self._run = self._run()  # type: ignore
@@ -260,7 +258,7 @@ class TaskGraphGenerator:
         graph_config.register()
 
         # Initial verifications that don't depend on any generation state.
-        self.verify("initial")
+        verifications("initial")
 
         if callable(self._parameters):
             parameters = self._parameters(graph_config)
@@ -291,7 +289,7 @@ class TaskGraphGenerator:
         kinds = {
             kind.name: kind for kind in self._load_kinds(graph_config, target_kinds)
         }
-        self.verify("kinds", kinds)
+        verifications("kinds", kinds)
 
         edges = set()
         for kind in kinds.values():
@@ -308,14 +306,7 @@ class TaskGraphGenerator:
         all_tasks = {}
         for kind_name in kind_graph.visit_postorder():
             logger.debug(f"Loading tasks for kind {kind_name}")
-
-            kind = kinds.get(kind_name)
-            if not kind:
-                message = f'Could not find the kind "{kind_name}"\nAvailable kinds:\n'
-                for k in sorted(kinds):
-                    message += f' - "{k}"\n'
-                raise Exception(message)
-
+            kind = kinds[kind_name]
             try:
                 new_tasks = kind.load_tasks(
                     parameters,
@@ -439,11 +430,9 @@ class TaskGraphGenerator:
             self._run_results[k] = v
         return self._run_results[name]
 
-    def verify(self, name, *args, **kwargs):
-        if self._enable_verifications:
-            verifications(name, *args, **kwargs)
-        if args:
-            return name, args[0]
+    def verify(self, name, obj, *args, **kwargs):
+        verifications(name, obj, *args, **kwargs)
+        return name, obj
 
 
 def load_tasks_for_kind(parameters, kind, root_dir=None):

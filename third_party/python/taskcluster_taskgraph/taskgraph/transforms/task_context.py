@@ -7,7 +7,6 @@ from taskgraph.util.schema import Schema
 from taskgraph.util.templates import deep_get, substitute_task_fields
 from taskgraph.util.yaml import load_yaml
 
-#: Schema for the task_context transforms
 SCHEMA = Schema(
     {
         Optional("name"): str,
