@@ -136,7 +136,7 @@ class NodeTabbingOrderHighlighter extends AutoRefreshHighlighter {
    */
   updateFocus(focused) {
     const root = this.getElement("root");
-    root.classList.toggle("focused", focused);
+    root.classList?.toggle("focused", focused);
   }
 
   /**

@@ -443,7 +443,7 @@ class ContrastRatio extends AuditReport {
   _fillAndStyleContrastValue(el, { value, className, color, backgroundColor }) {
     value = value.toFixed(2);
     this.setTextContent(el, value);
-    el.classList.add(className);
+    el.classList?.add(className);
     el.setAttribute(
       "style",
       `--accessibility-highlighter-contrast-ratio-color: rgba(${color});` +
@@ -466,7 +466,7 @@ class ContrastRatio extends AuditReport {
       const el = (els[key] = this.getElement(`contrast-ratio-${key}`));
       if (["min", "max"].includes(key)) {
         Object.values(SCORES).forEach(className =>
-          el.classList.remove(className)
+          el.classList?.remove(className)
         );
         this.setTextContent(el, "");
       }
@@ -577,7 +577,7 @@ class Keyboard extends AuditReport {
   update(audit) {
     const el = this.getElement("keyboard");
     el.setAttribute("hidden", true);
-    Object.values(SCORES).forEach(className => el.classList.remove(className));
+    Object.values(SCORES).forEach(className => el.classList?.remove(className));
 
     if (!audit) {
       return false;
@@ -593,7 +593,7 @@ class Keyboard extends AuditReport {
       el,
       L10N.getStr(Keyboard.ISSUE_TO_INFOBAR_LABEL_MAP[issue])
     );
-    el.classList.add(score);
+    el.classList?.add(score);
     el.removeAttribute("hidden");
 
     return true;
@@ -656,7 +656,7 @@ class TextLabel extends AuditReport {
   update(audit) {
     const el = this.getElement("text-label");
     el.setAttribute("hidden", true);
-    Object.values(SCORES).forEach(className => el.classList.remove(className));
+    Object.values(SCORES).forEach(className => el.classList?.remove(className));
 
     if (!audit) {
       return false;
@@ -672,7 +672,7 @@ class TextLabel extends AuditReport {
       el,
       L10N.getStr(TextLabel.ISSUE_TO_INFOBAR_LABEL_MAP[issue])
     );
-    el.classList.add(score);
+    el.classList?.add(score);
     el.removeAttribute("hidden");
 
     return true;

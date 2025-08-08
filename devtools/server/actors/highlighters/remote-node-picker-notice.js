@@ -148,9 +148,9 @@ class RemoteNodePickerNotice {
     }
 
     if (targetId === this.hideButtonId) {
-      hideButton.classList.add("hover");
+      hideButton.classList?.add("hover");
     } else {
-      hideButton.classList.remove("hover");
+      hideButton.classList?.remove("hover");
     }
     this.#previousHoveredElement = target;
   }

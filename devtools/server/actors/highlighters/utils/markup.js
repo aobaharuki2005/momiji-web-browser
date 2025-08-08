@@ -9,7 +9,6 @@ const {
   getWindowDimensions,
   getViewportDimensions,
 } = require("resource://devtools/shared/layout/utils.js");
-const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const lazyContainer = {};
 
@@ -46,67 +45,6 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STYLESHEET_URI =
   "resource://devtools-highlighter-styles/highlighters.css";
-
-const _tokens = Symbol("classList/tokens");
-
-/**
- * Shims the element's `classList` for anonymous content elements; used
- * internally by `CanvasFrameAnonymousContentHelper.getElement()` method.
- */
-function ClassList(className) {
-  const trimmed = (className || "").trim();
-  this[_tokens] = trimmed ? trimmed.split(/\s+/) : [];
-}
-
-ClassList.prototype = {
-  item(index) {
-    return this[_tokens][index];
-  },
-  contains(token) {
-    return this[_tokens].includes(token);
-  },
-  add(token) {
-    if (!this.contains(token)) {
-      this[_tokens].push(token);
-    }
-    EventEmitter.emit(this, "update");
-  },
-  remove(token) {
-    const index = this[_tokens].indexOf(token);
-
-    if (index > -1) {
-      this[_tokens].splice(index, 1);
-    }
-    EventEmitter.emit(this, "update");
-  },
-  toggle(token, force) {
-    // If force parameter undefined retain the toggle behavior
-    if (force === undefined) {
-      if (this.contains(token)) {
-        this.remove(token);
-      } else {
-        this.add(token);
-      }
-    } else if (force) {
-      // If force is true, enforce token addition
-      this.add(token);
-    } else {
-      // If force is falsy value, enforce token removal
-      this.remove(token);
-    }
-  },
-  get length() {
-    return this[_tokens].length;
-  },
-  *[Symbol.iterator]() {
-    for (let i = 0; i < this.tokens.length; i++) {
-      yield this[_tokens][i];
-    }
-  },
-  toString() {
-    return this[_tokens].join(" ");
-  },
-};
 
 /**
  * Is this content window a XUL window?
@@ -489,12 +427,6 @@ CanvasFrameAnonymousContentHelper.prototype = {
       return this.elements.get(id);
     }
 
-    const classList = new ClassList(this.getAttributeForElement(id, "class"));
-
-    EventEmitter.on(classList, "update", () => {
-      this.setAttributeForElement(id, "class", classList.toString());
-    });
-
     const element = {
       getTextContent: () => this.getTextContentForElement(id),
       setTextContent: text => this.setTextContentForElement(id, text),
@@ -513,7 +445,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
         getPropertyValue: property =>
           this.getComputedStylePropertyValue(id, property),
       },
-      classList,
+      classList: this._getNodeById(id)?.classList,
     };
 
     this.elements.set(id, element);

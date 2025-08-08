@@ -456,7 +456,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
             inc: ratio * dir,
           };
 
-          this.getElement("handler-" + side).classList.add("dragging");
+          this.getElement("handler-" + side)?.classList.add("dragging");
         }
 
         this.getElement("root").setAttribute("dragging", "true");
@@ -466,7 +466,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         if (this[_dragging]) {
           const { side } = this[_dragging];
           this.getElement("root").removeAttribute("dragging");
-          this.getElement("handler-" + side).classList.remove("dragging");
+          this.getElement("handler-" + side)?.classList.remove("dragging");
           this[_dragging] = null;
         }
         break;

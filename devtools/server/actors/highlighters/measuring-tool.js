@@ -619,7 +619,7 @@ class MeasuringToolHighlighter {
       }
       case "keyup": {
         if (MeasuringToolHighlighter.#isResizeModifierPressed(event)) {
-          this.getElement("handler-topleft").classList.remove(
+          this.getElement("handler-topleft")?.classList.remove(
             HIGHLIGHTED_HANDLER_CLASSNAME
           );
         }
@@ -635,7 +635,7 @@ class MeasuringToolHighlighter {
 
     setIgnoreLayoutChanges(true);
 
-    this.markup.getElement(elementId).classList.add("dragging");
+    this.markup.getElement(elementId)?.classList.add("dragging");
 
     this.hideAll();
 
@@ -678,7 +678,7 @@ class MeasuringToolHighlighter {
   handleMouseUpEvent() {
     setIgnoreLayoutChanges(true);
 
-    this.getElement("tool").classList.remove("dragging");
+    this.getElement("tool")?.classList.remove("dragging");
 
     this.showGuidesAndHandlers();
 
@@ -694,7 +694,7 @@ class MeasuringToolHighlighter {
 
     setIgnoreLayoutChanges(true);
 
-    this.markup.getElement(originalTarget.id).classList.add("dragging");
+    this.markup.getElement(originalTarget.id)?.classList.add("dragging");
 
     this.hideAll();
     this.showHandler(handler);
@@ -774,7 +774,7 @@ class MeasuringToolHighlighter {
 
     setIgnoreLayoutChanges(true);
 
-    this.getElement(`handler-${handler}`).classList.remove("dragging");
+    this.getElement(`handler-${handler}`)?.classList.remove("dragging");
     this.showHandlers();
 
     this.showGuidesAndHandlers();
@@ -785,7 +785,7 @@ class MeasuringToolHighlighter {
 
   handleKeyDown(event) {
     if (MeasuringToolHighlighter.#isResizeModifierPressed(event)) {
-      this.getElement("handler-topleft").classList.add(
+      this.getElement("handler-topleft")?.classList.add(
         HIGHLIGHTED_HANDLER_CLASSNAME
       );
     }

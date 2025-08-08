@@ -348,7 +348,7 @@ class AutoRefreshHighlighter extends EventEmitter {
 
     // Add/remove the `user-simple-highlighters` class based on the current
     // toolbox configuration.
-    root.classList.toggle(
+    root.classList?.toggle(
       "use-simple-highlighters",
       this.highlighterEnv.useSimpleHighlightersForReducedMotion
     );
