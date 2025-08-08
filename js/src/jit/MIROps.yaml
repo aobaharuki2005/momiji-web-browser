@@ -1767,24 +1767,10 @@
   compute_range: custom
   generate_lir: true
 
-# Read the elements of an array buffer view.
+# Read the length of an array buffer view.
 - name: ArrayBufferViewElements
   operands:
     object: Object
-  result_type: Elements
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: custom
-  clone: true
-  generate_lir: true
-
-# Read the elements of an array buffer view and adjust it with the given offset.
-- name: ArrayBufferViewElementsWithOffset
-  operands:
-    object: Object
-    offset: IntPtr
-  arguments:
-    elementType: Scalar::Type
   result_type: Elements
   movable: true
   congruent_to: if_operands_equal
@@ -1888,19 +1874,6 @@
   possibly_calls: true
   generate_lir: true
 
-- name: TypedArraySetFromSubarray
-  operands:
-    target: Object
-    source: Object
-    offset: IntPtr
-    sourceOffset: IntPtr
-    sourceLength: IntPtr
-  arguments:
-    canUseBitwiseCopy: bool
-  alias_set: custom
-  possibly_calls: true
-  generate_lir: true
-
 - name: GuardTypedArraySetOffset
   operands:
     offset: IntPtr
@@ -1919,23 +1892,9 @@
   operands:
     object: Object
     start: IntPtr
-    length: IntPtr
-  arguments:
-    templateObject: JSObject*
-    initialHeap: gc::Heap
+    end: IntPtr
   result_type: Object
-  alias_set: none
-  can_recover: true
   possibly_calls: true
-  generate_lir: true
-
-- name: ToIntegerIndex
-  operands:
-    index: IntPtr
-    length: IntPtr
-  result_type: IntPtr
-  alias_set: none
-  folds_to: custom
   generate_lir: true
 
 - name: GuardNumberToIntPtrIndex

@@ -11087,26 +11087,6 @@ void CodeGenerator::visitArrayBufferViewElements(
   masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), out);
 }
 
-void CodeGenerator::visitArrayBufferViewElementsWithOffset(
-    LArrayBufferViewElementsWithOffset* lir) {
-  Register object = ToRegister(lir->object());
-  Register out = ToRegister(lir->output());
-  Scalar::Type elementType = lir->mir()->elementType();
-
-  masm.loadPtr(Address(object, ArrayBufferViewObject::dataOffset()), out);
-
-  if (lir->offset()->isConstant()) {
-    Address source = ToAddress(out, lir->offset(), elementType);
-    if (source.offset != 0) {
-      masm.computeEffectiveAddress(source, out);
-    }
-  } else {
-    BaseIndex source(out, ToRegister(lir->offset()),
-                     ScaleFromScalarType(elementType));
-    masm.computeEffectiveAddress(source, out);
-  }
-}
-
 void CodeGenerator::visitTypedArrayElementSize(LTypedArrayElementSize* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
@@ -11267,69 +11247,14 @@ void CodeGenerator::visitTypedArraySet(LTypedArraySet* lir) {
   }
 }
 
-void CodeGenerator::visitTypedArraySetFromSubarray(
-    LTypedArraySetFromSubarray* lir) {
-  Register target = ToRegister(lir->target());
-  Register source = ToRegister(lir->source());
-  Register offset = ToRegister(lir->offset());
-  Register sourceOffset = ToRegister(lir->sourceOffset());
-  Register sourceLength = ToRegister(lir->sourceLength());
-
-  // Bit-wise copying is infallible because it doesn't need to allocate any
-  // temporary memory, even if the underlying buffers are the same.
-  if (lir->mir()->canUseBitwiseCopy()) {
-    masm.setupAlignedABICall();
-    masm.passABIArg(target);
-    masm.passABIArg(source);
-    masm.passABIArg(offset);
-    masm.passABIArg(sourceOffset);
-    masm.passABIArg(sourceLength);
-
-    using Fn = void (*)(TypedArrayObject*, TypedArrayObject*, intptr_t,
-                        intptr_t, intptr_t);
-    masm.callWithABI<Fn, js::TypedArraySetFromSubarrayInfallible>();
-  } else {
-    pushArg(sourceLength);
-    pushArg(sourceOffset);
-    pushArg(offset);
-    pushArg(source);
-    pushArg(target);
-
-    using Fn = bool (*)(JSContext*, TypedArrayObject*, TypedArrayObject*,
-                        intptr_t, intptr_t, intptr_t);
-    callVM<Fn, js::TypedArraySetFromSubarray>(lir);
-  }
-}
-
 void CodeGenerator::visitTypedArraySubarray(LTypedArraySubarray* lir) {
-  pushArg(ToRegister(lir->length()));
+  pushArg(ToRegister(lir->end()));
   pushArg(ToRegister(lir->start()));
   pushArg(ToRegister(lir->object()));
 
   using Fn = TypedArrayObject* (*)(JSContext*, Handle<TypedArrayObject*>,
                                    intptr_t, intptr_t);
-  callVM<Fn, js::TypedArraySubarrayWithLength>(lir);
-}
-
-void CodeGenerator::visitToIntegerIndex(LToIntegerIndex* lir) {
-  Register index = ToRegister(lir->index());
-  Register length = ToRegister(lir->length());
-  Register output = ToRegister(lir->output());
-
-  masm.movePtr(index, output);
-
-  Label done, notNegative;
-  masm.branchPtr(Assembler::NotSigned, index, index, &notNegative);
-  {
-    masm.branchAddPtr(Assembler::NotSigned, length, output, &done);
-    masm.movePtr(ImmWord(0), output);
-    masm.jump(&done);
-  }
-  masm.bind(&notNegative);
-  {
-    masm.cmpPtrMovePtr(Assembler::GreaterThan, index, length, length, output);
-  }
-  masm.bind(&done);
+  callVM<Fn, js::TypedArraySubarray>(lir);
 }
 
 void CodeGenerator::visitGuardNumberToIntPtrIndex(

@@ -270,8 +270,8 @@ class ElementSpecific {
 
   template <typename From, typename LoadOps = Ops>
   static typename std::enable_if_t<!canCopyBitwise<From>> store(
-      SharedMem<T*> dest, SharedMem<void*> data, size_t count, size_t offset) {
-    SharedMem<From*> src = data.cast<From*>() + offset;
+      SharedMem<T*> dest, SharedMem<void*> data, size_t count) {
+    SharedMem<From*> src = data.cast<From*>();
     for (size_t i = 0; i < count; ++i) {
       Ops::store(dest++, ConvertNumber<T>(LoadOps::load(src++)));
     }
@@ -279,7 +279,7 @@ class ElementSpecific {
 
   template <typename From, typename LoadOps = Ops>
   static typename std::enable_if_t<canCopyBitwise<From>> store(
-      SharedMem<T*> dest, SharedMem<void*> data, size_t count, size_t offset) {
+      SharedMem<T*> dest, SharedMem<void*> data, size_t count) {
     MOZ_ASSERT_UNREACHABLE("caller handles bitwise copies");
   }
 
@@ -287,45 +287,45 @@ class ElementSpecific {
   static typename std::enable_if_t<!std::is_same_v<U, int64_t> &&
                                    !std::is_same_v<U, uint64_t>>
   storeTo(SharedMem<T*> dest, Scalar::Type type, SharedMem<void*> data,
-          size_t count, size_t offset) {
+          size_t count) {
     static_assert(std::is_same_v<T, U>,
                   "template parameter U only used to disable this declaration");
     switch (type) {
       case Scalar::Int8: {
-        store<int8_t, LoadOps>(dest, data, count, offset);
+        store<int8_t, LoadOps>(dest, data, count);
         break;
       }
       case Scalar::Uint8:
       case Scalar::Uint8Clamped: {
-        store<uint8_t, LoadOps>(dest, data, count, offset);
+        store<uint8_t, LoadOps>(dest, data, count);
         break;
       }
       case Scalar::Int16: {
-        store<int16_t, LoadOps>(dest, data, count, offset);
+        store<int16_t, LoadOps>(dest, data, count);
         break;
       }
       case Scalar::Uint16: {
-        store<uint16_t, LoadOps>(dest, data, count, offset);
+        store<uint16_t, LoadOps>(dest, data, count);
         break;
       }
       case Scalar::Int32: {
-        store<int32_t, LoadOps>(dest, data, count, offset);
+        store<int32_t, LoadOps>(dest, data, count);
         break;
       }
       case Scalar::Uint32: {
-        store<uint32_t, LoadOps>(dest, data, count, offset);
+        store<uint32_t, LoadOps>(dest, data, count);
         break;
       }
       case Scalar::Float16: {
-        store<float16, LoadOps>(dest, data, count, offset);
+        store<float16, LoadOps>(dest, data, count);
         break;
       }
       case Scalar::Float32: {
-        store<float, LoadOps>(dest, data, count, offset);
+        store<float, LoadOps>(dest, data, count);
         break;
       }
       case Scalar::Float64: {
-        store<double, LoadOps>(dest, data, count, offset);
+        store<double, LoadOps>(dest, data, count);
         break;
       }
       case Scalar::BigInt64:
@@ -340,7 +340,7 @@ class ElementSpecific {
   static typename std::enable_if_t<std::is_same_v<U, int64_t> ||
                                    std::is_same_v<U, uint64_t>>
   storeTo(SharedMem<T*> dest, Scalar::Type type, SharedMem<void*> data,
-          size_t count, size_t offset) {
+          size_t count) {
     static_assert(std::is_same_v<T, U>,
                   "template parameter U only used to disable this declaration");
     MOZ_ASSERT_UNREACHABLE("caller handles int64<>uint64 bitwise copies");
@@ -348,15 +348,13 @@ class ElementSpecific {
 
  public:
   /*
-   * Copy |source|'s elements into |target|, starting at |target[offset]| from
-   * |source[sourceOffset]|.
-   *
+   * Copy |source|'s elements into |target|, starting at |target[offset]|.
    * Act as if the assignments occurred from a fresh copy of |source|, in
    * case the two memory ranges overlap.
    */
   static bool setFromTypedArray(TypedArrayObject* target, size_t targetLength,
                                 TypedArrayObject* source, size_t sourceLength,
-                                size_t offset, size_t sourceOffset = 0) {
+                                size_t offset) {
     // WARNING: |source| may be an unwrapped typed array from a different
     // compartment. Proceed with caution!
 
@@ -370,8 +368,7 @@ class ElementSpecific {
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");
     MOZ_ASSERT(!source->hasDetachedBuffer(), "source isn't detached");
     MOZ_ASSERT(*target->length() >= targetLength, "target isn't shrunk");
-    MOZ_ASSERT(*source->length() >= sourceOffset + sourceLength,
-               "source isn't shrunk");
+    MOZ_ASSERT(*source->length() >= sourceLength, "source isn't shrunk");
 
     MOZ_ASSERT(offset <= targetLength);
     MOZ_ASSERT(sourceLength <= targetLength - offset);
@@ -387,7 +384,7 @@ class ElementSpecific {
 
     if (TypedArrayObject::sameBuffer(target, source)) {
       return setFromOverlappingTypedArray(target, targetLength, source,
-                                          sourceLength, offset, sourceOffset);
+                                          sourceLength, offset);
     }
 
     // `malloc` returns memory at least as strictly aligned as for max_align_t
@@ -399,9 +396,9 @@ class ElementSpecific {
     SharedMem<void*> data = Ops::extract(source);
 
     if (canUseBitwiseCopy(source->type())) {
-      Ops::podCopy(dest, data.template cast<T*>() + sourceOffset, sourceLength);
+      Ops::podCopy(dest, data.template cast<T*>(), sourceLength);
     } else {
-      storeTo(dest, source->type(), data, sourceLength, sourceOffset);
+      storeTo(dest, source->type(), data, sourceLength);
     }
 
     return true;
@@ -551,8 +548,7 @@ class ElementSpecific {
   static bool setFromOverlappingTypedArray(TypedArrayObject* target,
                                            size_t targetLength,
                                            TypedArrayObject* source,
-                                           size_t sourceLength, size_t offset,
-                                           size_t sourceOffset) {
+                                           size_t sourceLength, size_t offset) {
     // WARNING: |source| may be an unwrapped typed array from a different
     // compartment. Proceed with caution!
 
@@ -564,8 +560,7 @@ class ElementSpecific {
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");
     MOZ_ASSERT(!source->hasDetachedBuffer(), "source isn't detached");
     MOZ_ASSERT(*target->length() >= targetLength, "target isn't shrunk");
-    MOZ_ASSERT(*source->length() >= sourceOffset + sourceLength,
-               "source isn't shrunk");
+    MOZ_ASSERT(*source->length() >= sourceLength, "source isn't shrunk");
     MOZ_ASSERT(TypedArrayObject::sameBuffer(target, source),
                "the provided arrays don't actually overlap, so it's "
                "undesirable to use this method");
@@ -577,26 +572,22 @@ class ElementSpecific {
     size_t len = sourceLength;
 
     if (canUseBitwiseCopy(source->type())) {
-      SharedMem<T*> src =
-          Ops::extract(source).template cast<T*>() + sourceOffset;
+      SharedMem<T*> src = Ops::extract(source).template cast<T*>();
       Ops::podMove(dest, src, len);
       return true;
     }
 
     // Copy |source| because it overlaps the target elements being set.
-    size_t bytesPerElement = source->bytesPerElement();
-    size_t sourceByteLen = len * bytesPerElement;
+    size_t sourceByteLen = len * source->bytesPerElement();
     auto temp = target->zone()->template make_pod_array<uint8_t>(sourceByteLen);
     if (!temp) {
       return false;
     }
 
-    size_t sourceByteOffset = sourceOffset * bytesPerElement;
     auto data = SharedMem<void*>::unshared(temp.get());
-    Ops::memcpy(data, Ops::extract(source).addBytes(sourceByteOffset),
-                sourceByteLen);
+    Ops::memcpy(data, Ops::extract(source), sourceByteLen);
 
-    storeTo<UnsharedOps>(dest, source->type(), data, len, 0);
+    storeTo<UnsharedOps>(dest, source->type(), data, len);
 
     return true;
   }

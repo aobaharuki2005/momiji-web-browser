@@ -127,9 +127,6 @@ class TypedArrayObject : public ArrayBufferViewObject {
       JSContext* cx, Scalar::Type type,
       Handle<ArrayBufferObjectMaybeShared*> buffer);
 
-  static TypedArrayObject* GetTemplateObjectForBufferView(
-      JSContext* cx, Handle<TypedArrayObject*> bufferView);
-
   static TypedArrayObject* GetTemplateObjectForArrayLike(
       JSContext* cx, Scalar::Type type, Handle<JSObject*> arrayLike);
 
@@ -361,26 +358,9 @@ bool TypedArraySet(JSContext* cx, TypedArrayObject* target,
 void TypedArraySetInfallible(TypedArrayObject* target, TypedArrayObject* source,
                              intptr_t offset);
 
-bool TypedArraySetFromSubarray(JSContext* cx, TypedArrayObject* target,
-                               TypedArrayObject* source, intptr_t offset,
-                               intptr_t sourceOffset, intptr_t sourceLength);
-
-void TypedArraySetFromSubarrayInfallible(TypedArrayObject* target,
-                                         TypedArrayObject* source,
-                                         intptr_t offset, intptr_t sourceOffset,
-                                         intptr_t sourceLength);
-
 TypedArrayObject* TypedArraySubarray(JSContext* cx,
                                      Handle<TypedArrayObject*> obj,
                                      intptr_t start, intptr_t end);
-
-TypedArrayObject* TypedArraySubarrayWithLength(JSContext* cx,
-                                               Handle<TypedArrayObject*> obj,
-                                               intptr_t start, intptr_t length);
-
-TypedArrayObject* TypedArraySubarrayRecover(JSContext* cx,
-                                            Handle<TypedArrayObject*> obj,
-                                            intptr_t start, intptr_t length);
 
 static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
   switch (viewType) {

@@ -539,20 +539,6 @@ HashNumber MQuaternaryInstruction::valueHash() const {
   return hash;
 }
 
-HashNumber MQuinaryInstruction::valueHash() const {
-  HashNumber hash = HashNumber(op());
-  hash = addU32ToHash(hash, getOperand(0)->id());
-  hash = addU32ToHash(hash, getOperand(1)->id());
-  hash = addU32ToHash(hash, getOperand(2)->id());
-  hash = addU32ToHash(hash, getOperand(3)->id());
-  hash = addU32ToHash(hash, getOperand(4)->id());
-  if (MDefinition* dep = dependency()) {
-    hash = addU32ToHash(hash, dep->id());
-  }
-  MOZ_ASSERT(hash == MDefinition::valueHash());
-  return hash;
-}
-
 const MDefinition* MDefinition::skipObjectGuards() const {
   const MDefinition* result = this;
   // These instructions don't modify the object and just guard specific
@@ -6815,10 +6801,6 @@ AliasSet MArrayBufferViewElements::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
-AliasSet MArrayBufferViewElementsWithOffset::getAliasSet() const {
-  return AliasSet::Load(AliasSet::ObjectFields);
-}
-
 AliasSet MGuardHasAttachedArrayBuffer::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot);
 }
@@ -6892,18 +6874,6 @@ AliasSet MGuardResizableArrayBufferViewInBoundsOrDetached::getAliasSet() const {
 }
 
 AliasSet MTypedArraySet::getAliasSet() const {
-  // Loads typed array length and elements.
-  constexpr auto load =
-      AliasSet::Load(AliasSet::ArrayBufferViewLengthOrOffset |
-                     AliasSet::ObjectFields | AliasSet::UnboxedElement);
-
-  // Stores into typed array elements.
-  constexpr auto store = AliasSet::Store(AliasSet::UnboxedElement);
-
-  return load | store;
-}
-
-AliasSet MTypedArraySetFromSubarray::getAliasSet() const {
   // Loads typed array length and elements.
   constexpr auto load =
       AliasSet::Load(AliasSet::ArrayBufferViewLengthOrOffset |
@@ -8191,42 +8161,6 @@ MDefinition* MNormalizeSliceTerm::foldsTo(TempAllocator& alloc) {
   // Normalizing MArgumentsLength is a no-op.
   if (value->isArgumentsLength()) {
     return value;
-  }
-
-  return this;
-}
-
-MDefinition* MToIntegerIndex::foldsTo(TempAllocator& alloc) {
-  // |length| is guaranteed to be a non-negative value.
-
-  auto* index = this->index();
-  auto* length = this->length();
-
-  if (index == length) {
-    return index;
-  }
-
-  if (index->isConstant()) {
-    intptr_t indexConst = index->toConstant()->toIntPtr();
-
-    // Minimum of |index| and |length|.
-    if (indexConst > 0) {
-      return MMinMax::NewMin(alloc, index, length, MIRType::IntPtr);
-    }
-
-    // Maximum of |value + length| and zero.
-    if (indexConst < 0) {
-      auto* add = MAdd::New(alloc, index, length, MIRType::IntPtr);
-      block()->insertBefore(this, add);
-
-      auto* zero = MConstant::NewIntPtr(alloc, 0);
-      block()->insertBefore(this, zero);
-
-      return MMinMax::NewMax(alloc, add, zero, MIRType::IntPtr);
-    }
-
-    // Directly return the index when it's zero.
-    return index;
   }
 
   return this;

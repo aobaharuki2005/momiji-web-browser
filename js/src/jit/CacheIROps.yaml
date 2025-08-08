@@ -1390,7 +1390,6 @@
   transpile: true
   cost_estimate: 5
   args:
-    templateObject: ObjectField
     obj: ObjId
     start: IntPtrId
     end: IntPtrId

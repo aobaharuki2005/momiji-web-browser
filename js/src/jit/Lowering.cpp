@@ -4445,17 +4445,6 @@ void LIRGenerator::visitArrayBufferViewElements(MArrayBufferViewElements* ins) {
          ins);
 }
 
-void LIRGenerator::visitArrayBufferViewElementsWithOffset(
-    MArrayBufferViewElementsWithOffset* ins) {
-  MOZ_ASSERT(ins->offset()->type() == MIRType::IntPtr);
-  MOZ_ASSERT(ins->type() == MIRType::Elements);
-
-  define(new (alloc()) LArrayBufferViewElementsWithOffset(
-             useRegister(ins->object()),
-             useRegisterOrIndexConstant(ins->offset(), ins->elementType())),
-         ins);
-}
-
 void LIRGenerator::visitTypedArrayElementSize(MTypedArrayElementSize* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   define(new (alloc())
@@ -4563,34 +4552,12 @@ void LIRGenerator::visitTypedArraySet(MTypedArraySet* ins) {
   }
 }
 
-void LIRGenerator::visitTypedArraySetFromSubarray(
-    MTypedArraySetFromSubarray* ins) {
-  auto* lir = new (alloc()) LTypedArraySetFromSubarray(
-      useRegisterAtStart(ins->target()), useRegisterAtStart(ins->source()),
-      useRegisterAtStart(ins->offset()),
-      useRegisterAtStart(ins->sourceOffset()),
-      useRegisterAtStart(ins->sourceLength()));
-  add(lir, ins);
-  if (!ins->canUseBitwiseCopy()) {
-    assignSafepoint(lir, ins);
-  }
-}
-
 void LIRGenerator::visitTypedArraySubarray(MTypedArraySubarray* ins) {
   auto* lir = new (alloc()) LTypedArraySubarray(
       useRegisterAtStart(ins->object()), useRegisterAtStart(ins->start()),
-      useRegisterAtStart(ins->length()));
+      useRegisterAtStart(ins->end()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitToIntegerIndex(MToIntegerIndex* ins) {
-  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
-  MOZ_ASSERT(ins->length()->type() == MIRType::IntPtr);
-
-  auto* lir = new (alloc())
-      LToIntegerIndex(useRegister(ins->index()), useRegister(ins->length()));
-  define(lir, ins);
 }
 
 void LIRGenerator::visitGuardNumberToIntPtrIndex(
