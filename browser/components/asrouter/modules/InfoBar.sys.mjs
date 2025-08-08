@@ -6,6 +6,7 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   RemoteL10n: "resource:///modules/asrouter/RemoteL10n.sys.mjs",
   SpecialMessageActions:
@@ -263,27 +264,45 @@ class InfoBarNotification {
 
   handleImpressionAction(browser) {
     const ALLOWED_IMPRESSION_ACTIONS = ["SET_PREF"];
-    const { type, data } = this.message.content.impression_action;
-    if (!ALLOWED_IMPRESSION_ACTIONS.includes(type)) {
-      return;
-    }
-    data.onImpression = true;
-    try {
-      lazy.SpecialMessageActions.handleAction({ type, data }, browser);
-    } catch (err) {
-      console.error(`Error handling ${type} impression action:`, err);
-    }
+    const impressionAction = this.message.content.impression_action;
+    const actions =
+      impressionAction.type === "MULTI_ACTION"
+        ? impressionAction.data.actions
+        : [impressionAction];
+
+    actions.forEach(({ type, data, once }) => {
+      if (!ALLOWED_IMPRESSION_ACTIONS.includes(type)) {
+        return;
+      }
+
+      let { messageImpressions } = lazy.ASRouter.state;
+      // If we only want to perform the action on first impression, ensure no
+      // impressions exist for this message.
+      if (once && messageImpressions[this.message.id]?.length) {
+        return;
+      }
+
+      data.onImpression = true;
+      try {
+        lazy.SpecialMessageActions.handleAction({ type, data }, browser);
+      } catch (err) {
+        console.error(`Error handling ${type} impression action:`, err);
+      }
+    });
   }
 
   addImpression(browser) {
+    // If the message has an impression action, handle it before dispatching the
+    // impression. `this._dispatch` may be async and we want to ensure we have a
+    // consistent impression count when handling impression actions that should
+    // only occur once.
+    if (this.message.content.impression_action) {
+      this.handleImpressionAction(browser);
+    }
     // Record an impression in ASRouter for frequency capping
     this._dispatch({ type: "IMPRESSION", data: this.message });
     // Send a user impression telemetry ping
     this.sendUserEventTelemetry("IMPRESSION");
-    // If the message has an impression action, handle it.
-    if (this.message.content.impression_action) {
-      this.handleImpressionAction(browser);
-    }
   }
 
   /**
