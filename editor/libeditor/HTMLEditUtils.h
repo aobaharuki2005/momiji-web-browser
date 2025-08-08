@@ -1805,11 +1805,10 @@ class HTMLEditUtils final {
       const nsIContent& aContent);
 
   /**
-   * GetClosestAncestorListItemElement() returns a list item element if
-   * aContent or its ancestor in editing host is one.  However, this won't
-   * cross table related element.
+   * Return a list item element if aContent or its ancestor in editing host is
+   * one.  However, this won't cross table related element.
    */
-  static Element* GetClosestAncestorListItemElement(
+  static Element* GetClosestInclusiveAncestorListItemElement(
       const nsIContent& aContent, const Element* aAncestorLimit = nullptr) {
     MOZ_ASSERT_IF(aAncestorLimit,
                   aContent.IsInclusiveDescendantOf(aAncestorLimit));

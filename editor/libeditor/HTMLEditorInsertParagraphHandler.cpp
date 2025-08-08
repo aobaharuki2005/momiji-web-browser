@@ -331,8 +331,8 @@ HTMLEditor::AutoInsertParagraphHandler::Run() {
   }
 
   RefPtr<Element> maybeNonEditableListItem =
-      HTMLEditUtils::GetClosestAncestorListItemElement(*editableBlockElement,
-                                                       &mEditingHost);
+      HTMLEditUtils::GetClosestInclusiveAncestorListItemElement(
+          *editableBlockElement, &mEditingHost);
   if (maybeNonEditableListItem &&
       HTMLEditUtils::IsSplittableNode(*maybeNonEditableListItem)) {
     Result<InsertParagraphResult, nsresult> insertParagraphInListItemResult =
