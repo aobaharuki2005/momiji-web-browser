@@ -74,6 +74,8 @@ import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_OFF
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_ON
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.EXTENSIONS
+import org.mozilla.fenix.components.menu.MenuDialogTestTag.EXTENSIONS_OPTION_CHEVRON
+import org.mozilla.fenix.components.menu.MenuDialogTestTag.MORE_OPTION_CHEVRON
 import org.mozilla.fenix.components.menu.compose.header.MenuNavHeader
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -386,6 +388,11 @@ private fun ExtensionsMenuItem(
                     },
                     contentDescription = null,
                     tint = FirefoxTheme.colors.iconPrimary,
+                    modifier = Modifier.semantics {
+                        testTagsAsResourceId = true
+                        testTag = EXTENSIONS_OPTION_CHEVRON
+                    },
+
                 )
             }
         }
@@ -597,6 +604,10 @@ private fun MoreMenuButtonGroup(
                 },
                 contentDescription = null,
                 tint = FirefoxTheme.colors.iconPrimary,
+                modifier = Modifier.semantics {
+                    testTagsAsResourceId = true
+                    testTag = MORE_OPTION_CHEVRON
+                },
             )
         }
     }
