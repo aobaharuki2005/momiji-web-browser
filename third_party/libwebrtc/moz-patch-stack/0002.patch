@@ -450,10 +450,10 @@ index e7c6c85db7..b1a99c5519 100644
        LntfConfig lntf;
  
 diff --git a/modules/audio_coding/neteq/dtmf_buffer.cc b/modules/audio_coding/neteq/dtmf_buffer.cc
-index 9f78aca6e2..115bfcf97b 100644
+index 5813f6df9a..db99e227e9 100644
 --- a/modules/audio_coding/neteq/dtmf_buffer.cc
 +++ b/modules/audio_coding/neteq/dtmf_buffer.cc
-@@ -193,7 +193,11 @@ bool DtmfBuffer::Empty() const {
+@@ -195,7 +195,11 @@ bool DtmfBuffer::Empty() const {
  }
  
  int DtmfBuffer::SetSampleRate(int fs_hz) {
