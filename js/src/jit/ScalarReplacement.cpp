@@ -15,6 +15,7 @@
 #include "jit/WarpBuilderShared.h"
 #include "js/Vector.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/TypedArrayObject.h"
 
 #include "gc/ObjectKind-inl.h"
 
@@ -3048,6 +3049,170 @@ void RestReplacer::visitConstructArray(MConstructArray* ins) {
   discardInstruction(ins, elements);
 }
 
+static inline bool IsOptimizableSubarrayInstruction(MInstruction* ins) {
+  return ins->isTypedArraySubarray();
+}
+
+class SubarrayReplacer : public MDefinitionVisitorDefaultNoop {
+ private:
+  const MIRGenerator* mir_;
+  MIRGraph& graph_;
+  MInstruction* subarray_;
+  uint32_t initialNumInstrIds_;
+
+  TempAllocator& alloc() { return graph_.alloc(); }
+  MTypedArraySubarray* subarray() const {
+    return subarray_->toTypedArraySubarray();
+  }
+
+  void visitGuardShape(MGuardShape* ins);
+  void visitUnbox(MUnbox* ins);
+ public:
+  SubarrayReplacer(const MIRGenerator* mir, MIRGraph& graph,
+                   MInstruction* subarray)
+      : mir_(mir),
+        graph_(graph),
+        subarray_(subarray),
+        initialNumInstrIds_(graph.getNumInstructionIds()) {
+    MOZ_ASSERT(IsOptimizableSubarrayInstruction(subarray_));
+  }
+
+  bool escapes(MInstruction* ins) const;
+  bool run();
+  void assertSuccess() const;
+};
+
+void SubarrayReplacer::visitUnbox(MUnbox* ins) {
+  // Skip unbox on other objects.
+  if (ins->input() != subarray_) {
+    return;
+  }
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  // Replace the unbox with the subarray object.
+  ins->replaceAllUsesWith(subarray_);
+
+  // Remove the unbox.
+  ins->block()->discard(ins);
+}
+
+void SubarrayReplacer::visitGuardShape(MGuardShape* ins) {
+  // Skip guards on other objects.
+  if (ins->object() != subarray_) {
+    return;
+  }
+
+  // Replace the guard with the subarray object.
+  ins->replaceAllUsesWith(subarray_);
+
+  // Remove the guard.
+  ins->block()->discard(ins);
+}
+
+// Returns false if the subarray typed array object does not escape.
+bool SubarrayReplacer::escapes(MInstruction* ins) const {
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  JitSpewDef(JitSpew_Escape, "Check subarray typed array\n", ins);
+  JitSpewIndent spewIndent(JitSpew_Escape);
+
+  // Check all uses to see whether they can be supported without allocating an
+  // TypedArrayObject for the `%TypedArray%.prototype.subarray` call.
+  for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
+    MNode* consumer = (*i)->consumer();
+
+    // If a resume point can observe this instruction, we can only optimize if
+    // it is recoverable.
+    if (consumer->isResumePoint()) {
+      if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
+        JitSpew(JitSpew_Escape, "Observable subarray cannot be recovered");
+        return true;
+      }
+      continue;
+    }
+
+    MDefinition* def = consumer->toDefinition();
+    switch (def->op()) {
+      case MDefinition::Opcode::GuardShape: {
+        auto* guard = def->toGuardShape();
+        if (templateObject()->shape() != guard->shape()) {
+          JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", def);
+          return true;
+        }
+        if (escapes(guard)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::Unbox: {
+        if (def->type() != MIRType::Object) {
+          JitSpewDef(JitSpew_Escape, "has an invalid unbox\n", def);
+          return true;
+        }
+        if (escapes(def->toInstruction())) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      // This instruction is a no-op used to test that scalar replacement is
+      // working as expected.
+      case MDefinition::Opcode::AssertRecoveredOnBailout:
+        break;
+
+      default:
+        JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
+        return true;
+    }
+  }
+
+  JitSpew(JitSpew_Escape, "Subarray typed array object is not escaped");
+  return false;
+}
+
+bool SubarrayReplacer::run() {
+  MBasicBlock* startBlock = subarray_->block();
+
+  // Iterate over each basic block.
+  for (ReversePostorderIterator block = graph_.rpoBegin(startBlock);
+       block != graph_.rpoEnd(); block++) {
+    if (mir_->shouldCancel("Scalar replacement of subarray object")) {
+      return false;
+    }
+
+    // Iterates over phis and instructions.
+    // We do not have to visit resume points. Any resume points that capture the
+    // subarray typed array object will be handled by the Sink pass.
+    for (MDefinitionIterator iter(*block); iter;) {
+      // Increment the iterator before visiting the instruction, as the visit
+      // function might discard itself from the basic block.
+      MDefinition* def = *iter++;
+      switch (def->op()) {
+#define MIR_OP(op)              \
+  case MDefinition::Opcode::op: \
+    visit##op(def->to##op());   \
+    break;
+        MIR_OPCODE_LIST(MIR_OP)
+#undef MIR_OP
+      }
+      if (!graph_.alloc().ensureBallast()) {
+        return false;
+      }
+    }
+  }
+
+  assertSuccess();
+  return true;
+}
+
+void SubarrayReplacer::assertSuccess() const {
+  MOZ_ASSERT(subarray_->canRecoverOnBailout());
+  MOZ_ASSERT(!subarray_->hasLiveDefUses());
+}
+
 // WebAssembly only supports scalar replacement of structs with only inline
 // data for now.
 static inline bool IsOptimizableWasmStructInstruction(MInstruction* ins) {
@@ -3459,6 +3624,17 @@ bool ScalarReplacement(const MIRGenerator* mir, MIRGraph& graph) {
 
       if (IsOptimizableRestInstruction(*ins)) {
         RestReplacer replacer(mir, graph, *ins);
+        if (replacer.escapes(*ins)) {
+          continue;
+        }
+        if (!replacer.run()) {
+          return false;
+        }
+        continue;
+      }
+
+      if (IsOptimizableSubarrayInstruction(*ins)) {
+        SubarrayReplacer replacer(mir, graph, *ins);
         if (replacer.escapes(*ins)) {
           continue;
         }
