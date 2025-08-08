@@ -25,14 +25,12 @@ struct IPC::ParamTraits<mozilla::ipc::NodeChannel::Introduction> {
   static void Write(MessageWriter* aWriter, paramType&& aParam) {
     WriteParam(aWriter, aParam.mName);
     WriteParam(aWriter, std::move(aParam.mHandle));
-    WriteParam(aWriter, aParam.mMode);
     WriteParam(aWriter, aParam.mMyPid);
     WriteParam(aWriter, aParam.mOtherPid);
   }
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mName) &&
            ReadParam(aReader, &aResult->mHandle) &&
-           ReadParam(aReader, &aResult->mMode) &&
            ReadParam(aReader, &aResult->mMyPid) &&
            ReadParam(aReader, &aResult->mOtherPid);
   }

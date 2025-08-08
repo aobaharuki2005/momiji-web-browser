@@ -48,8 +48,6 @@ class ChannelPosix final : public Channel, public MessageLoopForIO::Watcher {
 
 #if defined(XP_DARWIN)
   void SetOtherMachTask(task_t task) MOZ_EXCLUDES(SendMutex()) override;
-
-  void StartAcceptingMachPorts(Mode mode) MOZ_EXCLUDES(SendMutex()) override;
 #endif
 
   static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
@@ -86,7 +84,7 @@ class ChannelPosix final : public Channel, public MessageLoopForIO::Watcher {
       MOZ_REQUIRES(SendMutex());
   void OutputQueuePop() MOZ_REQUIRES(SendMutex());
 
-  Mode mode_ MOZ_GUARDED_BY(IOThread());
+  Mode mode_ MOZ_GUARDED_BY(chan_cap_);
 
   // After accepting one client connection on our server socket we want to
   // stop listening.
@@ -166,13 +164,8 @@ class ChannelPosix final : public Channel, public MessageLoopForIO::Watcher {
   // A generation ID for RECEIVED_FD messages.
   uint32_t last_pending_fd_id_ MOZ_GUARDED_BY(SendMutex()) = 0;
 
-  // Whether or not to accept mach ports from a remote process, and whether this
-  // process is the privileged side of a IPC::Channel which can transfer mach
-  // ports.
-  bool accept_mach_ports_ MOZ_GUARDED_BY(chan_cap_) = false;
-  bool privileged_ MOZ_GUARDED_BY(chan_cap_) = false;
-
   // If available, the task port for the remote process.
+  // Only used if mode_ == MODE_BROKER_SERVER.
   mozilla::UniqueMachSendRight other_task_ MOZ_GUARDED_BY(chan_cap_);
 #endif
 };

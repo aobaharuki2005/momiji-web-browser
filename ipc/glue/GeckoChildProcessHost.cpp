@@ -897,14 +897,9 @@ void GeckoChildProcessHost::InitializeChannel(
     IPC::Channel::ChannelHandle&& aServerHandle) {
   // Create the IPC channel which will be used for communication with this
   // process.
-  RefPtr<IPC::Channel> channel =
-      IPC::Channel::Create(std::move(aServerHandle), IPC::Channel::MODE_SERVER,
-                           base::kInvalidProcessId);
-#if defined(XP_WIN)
-  channel->StartAcceptingHandles(IPC::Channel::MODE_SERVER);
-#elif defined(XP_DARWIN)
-  channel->StartAcceptingMachPorts(IPC::Channel::MODE_SERVER);
-#endif
+  RefPtr<IPC::Channel> channel = IPC::Channel::Create(
+      std::move(aServerHandle), IPC::Channel::MODE_BROKER_SERVER,
+      base::kInvalidProcessId);
 
   mNodeController = NodeController::GetSingleton();
   std::tie(mInitialPort, mNodeChannel) =

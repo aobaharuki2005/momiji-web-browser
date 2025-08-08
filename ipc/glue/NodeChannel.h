@@ -47,7 +47,6 @@ class NodeChannel final : public IPC::Channel::Listener {
   struct Introduction {
     NodeName mName;
     IPC::Channel::ChannelHandle mHandle;
-    IPC::Channel::Mode mMode;
     base::ProcessId mMyPid = base::kInvalidProcessId;
     base::ProcessId mOtherPid = base::kInvalidProcessId;
   };

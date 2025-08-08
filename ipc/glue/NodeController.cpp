@@ -636,7 +636,7 @@ void NodeController::OnIntroduce(const NodeName& aFromNode,
 
   RefPtr<IPC::Channel> channel =
       IPC::Channel::Create(std::move(aIntroduction.mHandle),
-                           aIntroduction.mMode, aIntroduction.mOtherPid);
+                           IPC::Channel::MODE_PEER, aIntroduction.mOtherPid);
   auto nodeChannel = MakeRefPtr<NodeChannel>(aIntroduction.mName, channel, this,
                                              aIntroduction.mOtherPid);
 
@@ -703,18 +703,15 @@ void NodeController::OnRequestIntroduction(const NodeName& aFromNode,
     // an invalid introduction to content to clean up any pending outbound
     // messages.
     NodeChannel::Introduction intro{aName, IPC::Channel::ChannelHandle{},
-                                    IPC::Channel::MODE_SERVER,
                                     peerA->OtherPid(), base::kInvalidProcessId};
     peerA->Introduce(std::move(intro));
     return;
   }
 
-  NodeChannel::Introduction introA{aName, std::move(handleA),
-                                   IPC::Channel::MODE_SERVER, peerA->OtherPid(),
+  NodeChannel::Introduction introA{aName, std::move(handleA), peerA->OtherPid(),
                                    peerB->OtherPid()};
   NodeChannel::Introduction introB{aFromNode, std::move(handleB),
-                                   IPC::Channel::MODE_CLIENT, peerB->OtherPid(),
-                                   peerA->OtherPid()};
+                                   peerB->OtherPid(), peerA->OtherPid()};
   peerA->Introduce(std::move(introA));
   peerB->Introduce(std::move(introB));
 }

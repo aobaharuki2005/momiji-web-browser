@@ -42,7 +42,6 @@ class ChannelMach final : public Channel,
 
   // These are only relevant to ChannelPosix, so we ignore them.
   void SetOtherMachTask(task_t) override {}
-  void StartAcceptingMachPorts(Mode) override {}
 
   // Create a new pair of pipe endpoints which can be used to establish a
   // native IPC::Channel connection.

@@ -195,7 +195,7 @@ bool ChannelPosix::ContinueConnect() {
 #if defined(XP_DARWIN)
   // If we're still waiting for our peer task to be provided, don't start
   // listening yet. We'll start receiving messages once the task_t is set.
-  if (accept_mach_ports_ && privileged_ && !other_task_) {
+  if (mode_ == MODE_BROKER_SERVER && !other_task_) {
     MOZ_ASSERT(waiting_connect_);
     return true;
   }
@@ -873,23 +873,10 @@ void ChannelPosix::SetOtherMachTask(task_t task) {
     return;
   }
 
-  MOZ_ASSERT(accept_mach_ports_ && privileged_ && waiting_connect_);
+  MOZ_ASSERT(mode_ == MODE_BROKER_SERVER && waiting_connect_);
   other_task_ = mozilla::RetainMachSendRight(task);
   // Now that `other_task_` is provided, we can continue connecting.
   ContinueConnect();
-}
-
-void ChannelPosix::StartAcceptingMachPorts(Mode mode) {
-  IOThread().AssertOnCurrentThread();
-  mozilla::MutexAutoLock lock(SendMutex());
-  chan_cap_.NoteExclusiveAccess();
-
-  if (accept_mach_ports_) {
-    MOZ_ASSERT(privileged_ == (MODE_SERVER == mode));
-    return;
-  }
-  accept_mach_ports_ = true;
-  privileged_ = MODE_SERVER == mode;
 }
 
 //------------------------------------------------------------------------------
@@ -1039,12 +1026,6 @@ bool ChannelPosix::AcceptMachPorts(Message& msg) {
     return true;
   }
 
-  if (!accept_mach_ports_) {
-    CHROMIUM_LOG(ERROR) << "invalid message: " << msg.name()
-                        << ". channel is not configured to accept mach ports";
-    return false;
-  }
-
   // Read in the payload from the footer, truncating the message.
   nsTArray<uint32_t> payload;
   payload.AppendElements(num_send_rights);
@@ -1059,20 +1040,29 @@ bool ChannelPosix::AcceptMachPorts(Message& msg) {
   nsTArray<mozilla::UniqueMachSendRight> rights(num_send_rights);
   for (uint32_t name : payload) {
     mozilla::UniqueMachSendRight right;
-    if (privileged_) {
-      if (!other_task_) {
-        CHROMIUM_LOG(ERROR) << "other_task_ is invalid in AcceptMachPorts";
-        return false;
+    switch (mode_) {
+      case MODE_BROKER_SERVER:
+        if (!other_task_) {
+          CHROMIUM_LOG(ERROR) << "other_task_ is invalid in AcceptMachPorts";
+          return false;
+        }
+        right = BrokerExtractSendRight(other_task_.get(), name);
+        break;
+      case MODE_BROKER_CLIENT: {
+        kern_return_t kr = MachReceivePortSendRight(
+            mozilla::UniqueMachReceiveRight(name), mozilla::Some(0), &right);
+        if (kr != KERN_SUCCESS) {
+          CHROMIUM_LOG(ERROR)
+              << "failed to receive mach send right. " << mach_error_string(kr);
+          return false;
+        }
+        break;
       }
-      right = BrokerExtractSendRight(other_task_.get(), name);
-    } else {
-      kern_return_t kr = MachReceivePortSendRight(
-          mozilla::UniqueMachReceiveRight(name), mozilla::Some(0), &right);
-      if (kr != KERN_SUCCESS) {
+      default:
         CHROMIUM_LOG(ERROR)
-            << "failed to receive mach send right. " << mach_error_string(kr);
+            << "invalid message: " << msg.name()
+            << ". channel is not configured to accept mach ports";
         return false;
-      }
     }
     if (!right) {
       return false;
@@ -1101,31 +1091,34 @@ bool ChannelPosix::TransferMachPorts(Message& msg) {
     return true;
   }
 
-  if (!accept_mach_ports_) {
-    CHROMIUM_LOG(ERROR) << "cannot send message: " << msg.name()
-                        << ". channel is not configured to accept mach ports";
-    return false;
-  }
-
 #  ifdef DEBUG
   uint32_t rights_offset = msg.header()->payload_size;
 #  endif
 
   nsTArray<uint32_t> payload(num_send_rights);
   for (auto& port_to_send : msg.attached_send_rights_) {
-    if (privileged_) {
-      if (!other_task_) {
-        CHROMIUM_LOG(ERROR) << "other_task_ is invalid in TransferMachPorts";
-        return false;
+    switch (mode_) {
+      case MODE_BROKER_SERVER: {
+        if (!other_task_) {
+          CHROMIUM_LOG(ERROR) << "other_task_ is invalid in TransferMachPorts";
+          return false;
+        }
+        mozilla::Maybe<mach_port_name_t> endpoint =
+            BrokerTransferSendRight(other_task_.get(), std::move(port_to_send));
+        if (!endpoint) {
+          return false;
+        }
+        payload.AppendElement(*endpoint);
+        break;
       }
-      mozilla::Maybe<mach_port_name_t> endpoint =
-          BrokerTransferSendRight(other_task_.get(), std::move(port_to_send));
-      if (!endpoint) {
+      case MODE_BROKER_CLIENT:
+        payload.AppendElement(port_to_send.release());
+        break;
+      default:
+        CHROMIUM_LOG(ERROR)
+            << "cannot send message: " << msg.name()
+            << ". channel is not configured to accept mach ports";
         return false;
-      }
-      payload.AppendElement(*endpoint);
-    } else {
-      payload.AppendElement(port_to_send.release());
     }
   }
   msg.attached_send_rights_.Clear();
