@@ -3065,9 +3065,47 @@ class SubarrayReplacer : public MDefinitionVisitorDefaultNoop {
     return subarray_->toTypedArraySubarray();
   }
 
+  void visitArrayBufferViewByteOffset(MArrayBufferViewByteOffset* ins);
+  void visitArrayBufferViewElements(MArrayBufferViewElements* ins);
+  void visitArrayBufferViewLength(MArrayBufferViewLength* ins);
   void visitGuardHasAttachedArrayBuffer(MGuardHasAttachedArrayBuffer* ins);
   void visitGuardShape(MGuardShape* ins);
+  void visitTypedArrayElementSize(MTypedArrayElementSize* ins);
   void visitUnbox(MUnbox* ins);
+
+  // New instructions created in SubarrayReplacer.
+  bool isNewInstruction(MDefinition* ins) const {
+    return ins->id() >= initialNumInstrIds_;
+  }
+
+  bool isSubarrayOrGuard(MDefinition* ins) const {
+    if (ins == subarray_) {
+      return true;
+    }
+
+    // GuardHasAttachedArrayBuffer is replaced with a guard on the subarray's
+    // object.
+    if (ins->isGuardHasAttachedArrayBuffer() && isNewInstruction(ins)) {
+      MOZ_ASSERT(ins->toGuardHasAttachedArrayBuffer()->object() ==
+                 subarray()->object());
+      return true;
+    }
+
+    return false;
+  }
+
+  auto* templateObject() const {
+    JSObject* obj = subarray()->templateObject();
+    MOZ_ASSERT(obj, "missing template object");
+    return &obj->as<TypedArrayObject>();
+  }
+
+  auto elementType() const { return templateObject()->type(); }
+
+  bool isImmutable() const {
+    return templateObject()->is<ImmutableTypedArrayObject>();
+  }
+
  public:
   SubarrayReplacer(const MIRGenerator* mir, MIRGraph& graph,
                    MInstruction* subarray)
@@ -3130,6 +3168,117 @@ void SubarrayReplacer::visitGuardHasAttachedArrayBuffer(
   ins->block()->discard(ins);
 }
 
+void SubarrayReplacer::visitArrayBufferViewLength(MArrayBufferViewLength* ins) {
+  // Skip other typed array objects.
+  if (!isSubarrayOrGuard(ins->object())) {
+    return;
+  }
+
+  MDefinition* replacement;
+  if (!isImmutable()) {
+    // Get length of |subarray->object()|.
+    auto* length = MArrayBufferViewLength::New(alloc(), subarray()->object());
+    ins->block()->insertBefore(ins, length);
+
+    // Minimum to zero the length if the underlying buffer is now detached.
+    auto* minmax =
+        MMinMax::NewMin(alloc(), subarray()->length(), length, MIRType::IntPtr);
+    ins->block()->insertBefore(ins, minmax);
+
+    replacement = minmax;
+  } else {
+    replacement = subarray()->length();
+  }
+
+  // Replace the instruction.
+  ins->replaceAllUsesWith(replacement);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void SubarrayReplacer::visitArrayBufferViewByteOffset(
+    MArrayBufferViewByteOffset* ins) {
+  // Skip other typed array objects.
+  if (!isSubarrayOrGuard(ins->object())) {
+    return;
+  }
+
+  auto* shift = MConstant::NewIntPtr(alloc(), TypedArrayShift(elementType()));
+  ins->block()->insertBefore(ins, shift);
+
+  MDefinition* start;
+  if (!isImmutable()) {
+    // Get length of |subarray->object()|.
+    auto* length = MArrayBufferViewLength::New(alloc(), subarray()->object());
+    ins->block()->insertBefore(ins, length);
+
+    // Minimum to zero |start| if the underlying buffer is now detached.
+    auto* minmax =
+        MMinMax::NewMin(alloc(), subarray()->start(), length, MIRType::IntPtr);
+    ins->block()->insertBefore(ins, minmax);
+
+    start = minmax;
+  } else {
+    start = subarray()->start();
+  }
+
+  // Shift to convert start index to start byte-offset.
+  auto* adjustment = MLsh::New(alloc(), start, shift, MIRType::IntPtr);
+  ins->block()->insertBefore(ins, adjustment);
+
+  // Byte-offset of |subarray->object()|.
+  auto* byteOffset =
+      MArrayBufferViewByteOffset::New(alloc(), subarray()->object());
+  ins->block()->insertBefore(ins, byteOffset);
+
+  // Actual byte-offset into the array buffer.
+  auto* replacement =
+      MAdd::New(alloc(), byteOffset, adjustment, MIRType::IntPtr);
+  ins->block()->insertBefore(ins, replacement);
+
+  // Replace the byte-offset.
+  ins->replaceAllUsesWith(replacement);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void SubarrayReplacer::visitArrayBufferViewElements(
+    MArrayBufferViewElements* ins) {
+  // Skip other typed array objects.
+  if (!isSubarrayOrGuard(ins->object())) {
+    return;
+  }
+
+  auto* replacement = MArrayBufferViewElementsWithOffset::New(
+      alloc(), subarray()->object(), subarray()->start(), elementType());
+  ins->block()->insertBefore(ins, replacement);
+
+  // Replace the elements.
+  ins->replaceAllUsesWith(replacement);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void SubarrayReplacer::visitTypedArrayElementSize(MTypedArrayElementSize* ins) {
+  // Skip other typed array objects.
+  if (!isSubarrayOrGuard(ins->object())) {
+    return;
+  }
+
+  int32_t bytesPerElement = TypedArrayElemSize(elementType());
+  auto* replacement = MConstant::NewInt32(alloc(), bytesPerElement);
+  ins->block()->insertBefore(ins, replacement);
+
+  // Replace the element-size.
+  ins->replaceAllUsesWith(replacement);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
 // Returns false if the subarray typed array object does not escape.
 bool SubarrayReplacer::escapes(MInstruction* ins) const {
   MOZ_ASSERT(ins->type() == MIRType::Object);
@@ -3187,6 +3336,13 @@ bool SubarrayReplacer::escapes(MInstruction* ins) const {
         }
         break;
       }
+
+      // Replacable instructions.
+      case MDefinition::Opcode::ArrayBufferViewByteOffset:
+      case MDefinition::Opcode::ArrayBufferViewElements:
+      case MDefinition::Opcode::ArrayBufferViewLength:
+      case MDefinition::Opcode::TypedArrayElementSize:
+        break;
 
       // This instruction is a no-op used to test that scalar replacement is
       // working as expected.
