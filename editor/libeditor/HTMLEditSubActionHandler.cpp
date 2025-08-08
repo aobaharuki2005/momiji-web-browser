@@ -10465,7 +10465,9 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
   // If we handle a parent list item element, this is set to it.  In such case,
   // we should handle its children again.
   RefPtr<Element> handledListItemElement;
-  for (OwningNonNull<nsIContent>& content : arrayOfContents) {
+  for (size_t i = 0; i < arrayOfContents.Length(); i++) {
+    const OwningNonNull<nsIContent>& content = arrayOfContents[i];
+
     // Here's where we actually figure out what to do.
     EditorDOMPoint atContent(content);
     if (NS_WARN_IF(!atContent.IsSet())) {
@@ -10728,11 +10730,27 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       targetDivElement = createNewDivElementResult.unwrap().UnwrapNewNode();
     }
 
+    const OwningNonNull<nsIContent> lastContent = [&]() {
+      nsIContent* lastContent = content;
+      for (; i + 1 < arrayOfContents.Length(); i++) {
+        const OwningNonNull<nsIContent>& nextContent = arrayOfContents[i + 1];
+        if (lastContent->GetNextSibling() == nextContent ||
+            HTMLEditUtils::IsAnyListElement(nextContent) ||
+            HTMLEditUtils::IsListItem(nextContent) ||
+            !EditorUtils::IsEditableContent(content, EditorType::HTML)) {
+          break;
+        }
+        lastContent = nextContent;
+      }
+      return OwningNonNull<nsIContent>(*lastContent);
+    }();
+
     // MOZ_KnownLive because 'arrayOfContents' is guaranteed to keep it alive.
     Result<MoveNodeResult, nsresult> moveNodeResult =
-        MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *targetDivElement);
+        MoveSiblingsToEndWithTransaction(MOZ_KnownLive(content), lastContent,
+                                         *targetDivElement);
     if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
-      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveSiblingsToEndWithTransaction() failed");
       return moveNodeResult.unwrapErr();
     }
     nsresult rv = moveNodeResult.inspect().SuggestCaretPointTo(
