@@ -129,6 +129,7 @@ run-sequentially = "hardcoded ports"
 ["test_content_signing.js"]
 
 ["test_crlite_filters.js"]
+run-sequentially = "hardcoded ports"
 tags = "remote-settings psm"
 
 ["test_crlite_preexisting.js"]

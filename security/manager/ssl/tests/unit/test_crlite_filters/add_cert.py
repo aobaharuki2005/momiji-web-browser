@@ -5,12 +5,15 @@
 # the Issuer's SubjectPublicKeyInfo, and the ascii hex encoding
 # of the Subscriber's serial number.
 
+import os
 import sys
 import base64
 
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
+
+from pathlib import Path
 
 
 def uint_to_serial_bytes(a):
@@ -32,14 +35,28 @@ def uint_to_serial_bytes(a):
     return a.to_bytes(byte_len, byteorder="big", signed=False)
 
 
-if len(sys.argv) != 3:
-    print(f"Usage: {sys.argv[0]} <path to issuer cert> <path to subscriber cert>")
+if len(sys.argv) != 5:
+    print(
+        f"Usage: {sys.argv[0]} <out dir> <'revoked' or 'known'> <path to issuer cert> <path to subscriber cert>"
+    )
     sys.exit(1)
 
-with open(sys.argv[1], "r") as f:
+try:
+    outdir = Path(sys.argv[1])
+    os.makedirs(outdir / "known", exist_ok=True)
+    os.makedirs(outdir / "revoked", exist_ok=True)
+except:
+    print("Could not create output directories.")
+    sys.exit(1)
+
+if sys.argv[2] not in ["known", "revoked"]:
+    print("Second argument must either be 'known' or 'revoked'")
+    sys.exit(1)
+
+with open(sys.argv[3], "r") as f:
     issuer = x509.load_pem_x509_certificate(f.read().encode("utf-8"), backend=None)
 
-with open(sys.argv[2], "r") as f:
+with open(sys.argv[4], "r") as f:
     subscriber = x509.load_pem_x509_certificate(f.read().encode("utf-8"), backend=None)
 
 assert issuer.subject.public_bytes() == subscriber.issuer.public_bytes()
@@ -52,7 +69,12 @@ hasher = hashes.Hash(hashes.SHA256(), backend=None)
 hasher.update(issuer_spki)
 issuer_spki_hash = hasher.finalize()
 
-subscriber_serial = uint_to_serial_bytes(int(subscriber.serial_number))
+subscriber_serial = uint_to_serial_bytes(int(subscriber.serial_number)).hex()
+issuer_key = base64.urlsafe_b64encode(issuer_spki_hash).decode("utf-8")
 
-print(base64.urlsafe_b64encode(issuer_spki_hash).decode("utf-8"))
-print(subscriber_serial.hex())
+with open(outdir / "known" / issuer_key, "a") as f:
+    f.write(subscriber_serial + "\n")
+
+if sys.argv[2] == "revoked":
+    with open(outdir / "revoked" / issuer_key, "a") as f:
+        f.write("00" + subscriber_serial + "\n")
