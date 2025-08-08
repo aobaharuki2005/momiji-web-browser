@@ -60,25 +60,19 @@ inline bool DuplicateRealHandle(HANDLE source_process, HANDLE source_handle,
 namespace IPC {
 //------------------------------------------------------------------------------
 
-Channel::ChannelImpl::State::State(ChannelImpl* channel) {
+ChannelWin::State::State(ChannelImpl* channel) {
   memset(&context.overlapped, 0, sizeof(context.overlapped));
   context.handler = channel;
 }
 
-Channel::ChannelImpl::State::~State() {
-  COMPILE_ASSERT(!offsetof(Channel::ChannelImpl::State, context),
-                 starts_with_io_context);
+ChannelWin::State::~State() {
+  COMPILE_ASSERT(!offsetof(ChannelWin::State, context), starts_with_io_context);
 }
 
 //------------------------------------------------------------------------------
 
-Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
-                                  base::ProcessId other_pid)
-    : chan_cap_("ChannelImpl::SendMutex",
-                MessageLoopForIO::current()->SerialEventTarget()),
-      input_state_(this),
-      output_state_(this),
-      other_pid_(other_pid) {
+ChannelWin::ChannelWin(ChannelHandle pipe, Mode mode, base::ProcessId other_pid)
+    : input_state_(this), output_state_(this), other_pid_(other_pid) {
   Init(mode);
 
   if (!pipe) {
@@ -89,7 +83,7 @@ Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
   EnqueueHelloMessage();
 }
 
-void Channel::ChannelImpl::Init(Mode mode) {
+void ChannelWin::Init(Mode mode) {
   // Verify that we fit in a "quantum-spaced" jemalloc bucket.
   static_assert(sizeof(*this) <= 512, "Exceeded expected size class");
 
@@ -106,7 +100,7 @@ void Channel::ChannelImpl::Init(Mode mode) {
   other_process_ = INVALID_HANDLE_VALUE;
 }
 
-void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
+void ChannelWin::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
   chan_cap_.NoteLockHeld();
 
   mozilla::LogIPCMessage::LogDispatchWithPid(msg.get(), other_pid_);
@@ -114,17 +108,17 @@ void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
   output_queue_.Push(std::move(msg));
 }
 
-void Channel::ChannelImpl::OutputQueuePop() {
+void ChannelWin::OutputQueuePop() {
   mozilla::UniquePtr<Message> message = output_queue_.Pop();
 }
 
-void Channel::ChannelImpl::Close() {
+void ChannelWin::Close() {
   IOThread().AssertOnCurrentThread();
   mozilla::MutexAutoLock lock(SendMutex());
   CloseLocked();
 }
 
-void Channel::ChannelImpl::CloseLocked() {
+void ChannelWin::CloseLocked() {
   chan_cap_.NoteExclusiveAccess();
 
   // If we still have pending I/O, cancel it. The references inside
@@ -163,7 +157,7 @@ void Channel::ChannelImpl::CloseLocked() {
   }
 }
 
-bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
+bool ChannelWin::Send(mozilla::UniquePtr<Message> message) {
   mozilla::MutexAutoLock lock(SendMutex());
   chan_cap_.NoteLockHeld();
 
@@ -195,7 +189,7 @@ bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
   return true;
 }
 
-bool Channel::ChannelImpl::EnqueueHelloMessage() {
+bool ChannelWin::EnqueueHelloMessage() {
   chan_cap_.NoteExclusiveAccess();
 
   auto m = mozilla::MakeUnique<Message>(MSG_ROUTING_NONE, HELLO_MESSAGE_TYPE);
@@ -211,7 +205,7 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
   return true;
 }
 
-bool Channel::ChannelImpl::Connect(Listener* listener) {
+bool ChannelWin::Connect(Listener* listener) {
   IOThread().AssertOnCurrentThread();
   mozilla::MutexAutoLock lock(SendMutex());
   chan_cap_.NoteExclusiveAccess();
@@ -231,7 +225,7 @@ bool Channel::ChannelImpl::Connect(Listener* listener) {
   // `RunnableMethod`.
   IOThread().Dispatch(
       mozilla::NewRunnableMethod<MessageLoopForIO::IOContext*, DWORD, DWORD>(
-          "ContinueConnect", this, &ChannelImpl::OnIOCompleted,
+          "ContinueConnect", this, &ChannelWin::OnIOCompleted,
           &input_state_.context, 0, 0));
 
   DCHECK(!output_state_.is_pending);
@@ -239,7 +233,7 @@ bool Channel::ChannelImpl::Connect(Listener* listener) {
   return true;
 }
 
-void Channel::ChannelImpl::SetOtherPid(base::ProcessId other_pid) {
+void ChannelWin::SetOtherPid(base::ProcessId other_pid) {
   IOThread().AssertOnCurrentThread();
   mozilla::MutexAutoLock lock(SendMutex());
   chan_cap_.NoteExclusiveAccess();
@@ -260,8 +254,8 @@ void Channel::ChannelImpl::SetOtherPid(base::ProcessId other_pid) {
   }
 }
 
-bool Channel::ChannelImpl::ProcessIncomingMessages(
-    MessageLoopForIO::IOContext* context, DWORD bytes_read, bool was_pending) {
+bool ChannelWin::ProcessIncomingMessages(MessageLoopForIO::IOContext* context,
+                                         DWORD bytes_read, bool was_pending) {
   chan_cap_.NoteOnTarget();
 
   DCHECK(!input_state_.is_pending);
@@ -402,9 +396,9 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
   }
 }
 
-bool Channel::ChannelImpl::ProcessOutgoingMessages(
-    MessageLoopForIO::IOContext* context, DWORD bytes_written,
-    bool was_pending) {
+bool ChannelWin::ProcessOutgoingMessages(MessageLoopForIO::IOContext* context,
+                                         DWORD bytes_written,
+                                         bool was_pending) {
   chan_cap_.NoteLockHeld();
 
   DCHECK(!output_state_.is_pending);
@@ -493,11 +487,11 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
   return true;
 }
 
-void Channel::ChannelImpl::OnIOCompleted(MessageLoopForIO::IOContext* context,
-                                         DWORD bytes_transfered, DWORD error) {
+void ChannelWin::OnIOCompleted(MessageLoopForIO::IOContext* context,
+                               DWORD bytes_transfered, DWORD error) {
   // NOTE: In case the pending reference was the last reference, release it
   // outside of the lock.
-  RefPtr<ChannelImpl> was_pending;
+  RefPtr<ChannelWin> was_pending;
 
   IOThread().AssertOnCurrentThread();
   chan_cap_.NoteOnTarget();
@@ -523,7 +517,7 @@ void Channel::ChannelImpl::OnIOCompleted(MessageLoopForIO::IOContext* context,
   }
 }
 
-void Channel::ChannelImpl::StartAcceptingHandles(Mode mode) {
+void ChannelWin::StartAcceptingHandles(Mode mode) {
   IOThread().AssertOnCurrentThread();
   mozilla::MutexAutoLock lock(SendMutex());
   chan_cap_.NoteExclusiveAccess();
@@ -592,7 +586,7 @@ static HANDLE Uint32ToHandle(uint32_t h) {
       static_cast<uintptr_t>(static_cast<int32_t>(h)));
 }
 
-bool Channel::ChannelImpl::AcceptHandles(Message& msg) {
+bool ChannelWin::AcceptHandles(Message& msg) {
   chan_cap_.NoteOnTarget();
 
   MOZ_ASSERT(msg.num_handles() == 0);
@@ -673,7 +667,7 @@ bool Channel::ChannelImpl::AcceptHandles(Message& msg) {
   return true;
 }
 
-bool Channel::ChannelImpl::TransferHandles(Message& msg) {
+bool ChannelWin::TransferHandles(Message& msg) {
   chan_cap_.NoteLockHeld();
 
   MOZ_ASSERT(msg.header()->num_handles == 0);
@@ -754,37 +748,8 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
   return true;
 }
 
-//------------------------------------------------------------------------------
-// Channel's methods simply call through to ChannelImpl.
-Channel::Channel(ChannelHandle pipe, Mode mode, base::ProcessId other_pid)
-    : channel_impl_(new ChannelImpl(std::move(pipe), mode, other_pid)) {
-  MOZ_COUNT_CTOR(IPC::Channel);
-}
-
-Channel::~Channel() { MOZ_COUNT_DTOR(IPC::Channel); }
-
-bool Channel::Connect(Listener* listener) {
-  return channel_impl_->Connect(listener);
-}
-
-void Channel::Close() { channel_impl_->Close(); }
-
-void Channel::StartAcceptingHandles(Mode mode) {
-  channel_impl_->StartAcceptingHandles(mode);
-}
-
-bool Channel::Send(mozilla::UniquePtr<Message> message) {
-  return channel_impl_->Send(std::move(message));
-}
-
-void Channel::SetOtherPid(base::ProcessId other_pid) {
-  channel_impl_->SetOtherPid(other_pid);
-}
-
-bool Channel::IsClosed() const { return channel_impl_->IsClosed(); }
-
 // static
-bool Channel::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
+bool ChannelWin::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
   std::wstring pipe_name =
       StringPrintf(L"\\\\.\\pipe\\gecko.%lu.%lu.%I64u", ::GetCurrentProcessId(),
                    ::GetCurrentThreadId(), mozilla::RandomUint64OrDie());

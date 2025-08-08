@@ -897,9 +897,9 @@ void GeckoChildProcessHost::InitializeChannel(
     IPC::Channel::ChannelHandle&& aServerHandle) {
   // Create the IPC channel which will be used for communication with this
   // process.
-  mozilla::UniquePtr<IPC::Channel> channel = MakeUnique<IPC::Channel>(
-      std::move(aServerHandle), IPC::Channel::MODE_SERVER,
-      base::kInvalidProcessId);
+  RefPtr<IPC::Channel> channel =
+      IPC::Channel::Create(std::move(aServerHandle), IPC::Channel::MODE_SERVER,
+                           base::kInvalidProcessId);
 #if defined(XP_WIN)
   channel->StartAcceptingHandles(IPC::Channel::MODE_SERVER);
 #elif defined(XP_DARWIN)
@@ -908,7 +908,7 @@ void GeckoChildProcessHost::InitializeChannel(
 
   mNodeController = NodeController::GetSingleton();
   std::tie(mInitialPort, mNodeChannel) =
-      mNodeController->InviteChildProcess(std::move(channel), this);
+      mNodeController->InviteChildProcess(channel, this);
 
   MonitorAutoLock lock(mMonitor);
   mProcessState = CHANNEL_INITIALIZED;

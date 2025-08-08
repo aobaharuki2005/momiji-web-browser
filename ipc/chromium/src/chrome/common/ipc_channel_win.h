@@ -27,33 +27,21 @@
 
 namespace IPC {
 
-class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
+class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
-      ChannelImpl, IOThread().GetEventTarget());
+  ChannelWin(ChannelHandle pipe, Mode mode, base::ProcessId other_pid);
 
-  using ChannelHandle = Channel::ChannelHandle;
-
-  // Mirror methods of Channel, see ipc_channel.h for description.
-  ChannelImpl(ChannelHandle pipe, Mode mode, base::ProcessId other_pid);
-  bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex());
-  void Close() MOZ_EXCLUDES(SendMutex());
-  void StartAcceptingHandles(Mode mode) MOZ_EXCLUDES(SendMutex());
+  bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex()) override;
+  void Close() MOZ_EXCLUDES(SendMutex()) override;
+  void StartAcceptingHandles(Mode mode) MOZ_EXCLUDES(SendMutex()) override;
   // NOTE: `Send` may be called on threads other than the I/O thread.
-  bool Send(mozilla::UniquePtr<Message> message) MOZ_EXCLUDES(SendMutex());
+  bool Send(mozilla::UniquePtr<Message> message)
+      MOZ_EXCLUDES(SendMutex()) override;
 
-  void SetOtherPid(base::ProcessId other_pid);
-
-  // See the comment in ipc_channel.h for info on IsClosed()
-  // NOTE: `IsClosed` may be called on threads other than the I/O thread.
-  bool IsClosed() MOZ_EXCLUDES(SendMutex()) {
-    mozilla::MutexAutoLock lock(SendMutex());
-    chan_cap_.NoteLockHeld();
-    return pipe_ == INVALID_HANDLE_VALUE;
-  }
+  void SetOtherPid(base::ProcessId other_pid) override;
 
  private:
-  ~ChannelImpl() {
+  ~ChannelWin() {
     IOThread().AssertOnCurrentThread();
     if (pipe_ != INVALID_HANDLE_VALUE ||
         other_process_ != INVALID_HANDLE_VALUE) {
@@ -86,20 +74,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   virtual void OnIOCompleted(MessageLoopForIO::IOContext* context,
                              DWORD bytes_transfered, DWORD error);
 
-  const mozilla::EventTargetCapability<nsISerialEventTarget>& IOThread() const
-      MOZ_RETURN_CAPABILITY(chan_cap_.Target()) {
-    return chan_cap_.Target();
-  }
-
-  mozilla::Mutex& SendMutex() MOZ_RETURN_CAPABILITY(chan_cap_.Lock()) {
-    return chan_cap_.Lock();
-  }
-
  private:
-  // Compound capability of the IO thread and a Mutex.
-  mozilla::EventTargetAndLockCapability<nsISerialEventTarget, mozilla::Mutex>
-      chan_cap_;
-
   Mode mode_ MOZ_GUARDED_BY(IOThread());
 
   struct State {
@@ -158,8 +133,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // A privileged process handle used to transfer HANDLEs to and from the remote
   // process. This will only be used if `privileged_` is set.
   HANDLE other_process_ MOZ_GUARDED_BY(chan_cap_) = INVALID_HANDLE_VALUE;
-
-  DISALLOW_COPY_AND_ASSIGN(ChannelImpl);
 };
 
 }  // namespace IPC

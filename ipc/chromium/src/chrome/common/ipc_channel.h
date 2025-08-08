@@ -11,6 +11,7 @@
 #include <queue>
 #include "base/basictypes.h"
 #include "base/process.h"
+#include "mozilla/EventTargetAndLockCapability.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WeakPtr.h"
@@ -29,10 +30,10 @@ class MessageWriter;
 //------------------------------------------------------------------------------
 
 class Channel {
-  // Security tests need access to the pipe handle.
-  friend class ChannelTest;
-
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
+      Channel, IOThread().GetEventTarget());
+
   // For channels which are created after initialization, handles to the pipe
   // endpoints may be passed around directly using IPC messages.
   using ChannelHandle = mozilla::UniqueFileHandle;
@@ -89,9 +90,11 @@ class Channel {
   // The Channel must be created and destroyed on the IO thread, and all
   // methods, unless otherwise noted, are only safe to call on the I/O thread.
   //
-  Channel(ChannelHandle pipe, Mode mode, base::ProcessId other_pid);
+  static already_AddRefed<Channel> Create(ChannelHandle pipe, Mode mode,
+                                          base::ProcessId other_pid);
 
-  ~Channel();
+  Channel(const Channel&) = delete;
+  Channel& operator=(const Channel&) = delete;
 
   // Connect the pipe.  On the server side, this will initiate
   // waiting for connections.  On the client, it attempts to
@@ -101,10 +104,10 @@ class Channel {
   //
   // |listener| will receive a callback on the current thread for each newly
   // received message.
-  bool Connect(Listener* listener);
+  virtual bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex()) = 0;
 
   // Close this Channel explicitly.  May be called multiple times.
-  void Close();
+  virtual void Close() MOZ_EXCLUDES(SendMutex()) = 0;
 
   // Send a message over the Channel to the listener on the other end.
   //
@@ -113,7 +116,8 @@ class Channel {
   //
   // If you Send() a message on a Close()'d channel, we delete the message
   // immediately.
-  bool Send(mozilla::UniquePtr<Message> message);
+  virtual bool Send(mozilla::UniquePtr<Message> message)
+      MOZ_EXCLUDES(SendMutex()) = 0;
 
   // Explicitly set the pid expected for the other side of this channel. This
   // will be used for logging, and on Windows may be used for transferring
@@ -121,35 +125,51 @@ class Channel {
   //
   // If it is set this way, the "hello" message will be checked to ensure that
   // the same pid is reported.
-  void SetOtherPid(base::ProcessId other_pid);
-
-  // IsClosed() is safe to call from any thread, but the value returned may
-  // be out of date.
-  bool IsClosed() const;
+  virtual void SetOtherPid(base::ProcessId other_pid)
+      MOZ_EXCLUDES(SendMutex()) = 0;
 
 #if defined(XP_DARWIN)
   // Configure the mach task_t for the peer task.
-  void SetOtherMachTask(task_t task);
+  virtual void SetOtherMachTask(task_t task) MOZ_EXCLUDES(SendMutex()) = 0;
 
   // Tell this pipe to accept mach ports. Exactly one side of the IPC connection
   // must be set as `MODE_SERVER` and that side will be responsible for
   // transferring the rights between processes.
-  void StartAcceptingMachPorts(Mode mode);
+  virtual void StartAcceptingMachPorts(Mode mode) MOZ_EXCLUDES(SendMutex()) = 0;
 #elif defined(XP_WIN)
   // Tell this pipe to accept handles. Exactly one side of the IPC connection
   // must be set as `MODE_SERVER`, and that side will be responsible for calling
   // `DuplicateHandle` to transfer the handle between processes.
-  void StartAcceptingHandles(Mode mode);
+  virtual void StartAcceptingHandles(Mode mode) MOZ_EXCLUDES(SendMutex()) = 0;
 #endif
 
   // Create a new pair of pipe endpoints which can be used to establish a
   // native IPC::Channel connection.
   static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
 
- private:
-  // PIMPL to which all channel calls are delegated.
-  class ChannelImpl;
-  RefPtr<ChannelImpl> channel_impl_;
+ protected:
+  Channel();
+  virtual ~Channel();
+
+  // Capability for members which may only be used on the IO thread. Generally
+  // used for state related to receiving IPC messages.
+  const mozilla::EventTargetCapability<nsISerialEventTarget>& IOThread() const
+      MOZ_RETURN_CAPABILITY(chan_cap_.Target()) {
+    return chan_cap_.Target();
+  }
+
+  // Capability for members which may only be used with the send mutex held.
+  // Generally used for state related to sending IPC messages.
+  mozilla::Mutex& SendMutex() MOZ_RETURN_CAPABILITY(chan_cap_.Lock()) {
+    return chan_cap_.Lock();
+  }
+
+  // Compound capability of the IO thread and a Mutex. This can be used for
+  // members which may be used immutably either on the IO thread or with the
+  // send mutex held, but may only be modified if both on the IO thread, and
+  // holding the send mutex.
+  mozilla::EventTargetAndLockCapability<nsISerialEventTarget, mozilla::Mutex>
+      chan_cap_;
 
   enum {
 #if defined(XP_DARWIN)

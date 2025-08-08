@@ -92,14 +92,13 @@ class NodeController final : public mojo::core::ports::NodeDelegate,
   // reference to the `NodeChannel` created for the new process. The port can
   // immediately have messages sent to it.
   std::tuple<ScopedPort, RefPtr<NodeChannel>> InviteChildProcess(
-      UniquePtr<IPC::Channel> aChannel,
-      GeckoChildProcessHost* aChildProcessHost);
+      IPC::Channel* aChannel, GeckoChildProcessHost* aChildProcessHost);
 
   // Called as the IO thread is started in the parent process.
   static void InitBrokerProcess();
 
   // Called as the IO thread is started in a child process.
-  static ScopedPort InitChildProcess(UniquePtr<IPC::Channel> aChannel,
+  static ScopedPort InitChildProcess(IPC::Channel* aChannel,
                                      base::ProcessId aParentPid);
 
   // Called when the IO thread is torn down.
