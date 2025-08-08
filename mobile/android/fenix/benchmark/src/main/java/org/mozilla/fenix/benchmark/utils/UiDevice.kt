@@ -12,6 +12,9 @@ const val WAITING_TIME_MS = 1000L
 
 fun UiDevice.clearPackageData(packageName: String) {
     executeShellCommand("pm clear $packageName")
+}
+
+fun UiDevice.revokeNotificationPermission(packageName: String) {
     executeShellCommand("pm revoke $packageName android.permission.POST_NOTIFICATIONS")
 }
 

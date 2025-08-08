@@ -14,6 +14,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
 import org.mozilla.fenix.benchmark.utils.clearPackageData
 import org.mozilla.fenix.benchmark.utils.completeOnboarding
+import org.mozilla.fenix.benchmark.utils.revokeNotificationPermission
 
 /**
  * This test class generates a baseline profile on a critical user journey, that goes through
@@ -54,6 +55,7 @@ class OnboardingBaselineProfileGenerator {
             packageName = TARGET_PACKAGE,
         ) {
             device.clearPackageData(packageName = packageName)
+            device.revokeNotificationPermission(packageName = packageName)
             startActivityAndWait()
             device.completeOnboarding()
         }
