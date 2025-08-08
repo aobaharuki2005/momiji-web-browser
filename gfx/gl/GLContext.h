@@ -1402,7 +1402,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   }
 
   GLint fGetUniformLocation(GLuint programObj, const GLchar* name) {
-    GLint retval = 0;
+    GLint retval = -1;
     BEFORE_GL_CALL;
     retval = mSymbols.fGetUniformLocation(programObj, name);
     OnSyncCall();
