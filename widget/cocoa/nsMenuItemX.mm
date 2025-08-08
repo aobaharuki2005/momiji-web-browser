@@ -450,6 +450,10 @@ void nsMenuItemX::ObserveContentInserted(dom::Document* aDocument,
   if (IsMenuStructureElement(aChild)) {
     mMenuParent->SetRebuild(true);
   }
+
+  if (aChild->IsHTMLElement(nsGkAtoms::img)) {
+    SetupIcon();
+  }
 }
 
 void nsMenuItemX::SetupIcon() {

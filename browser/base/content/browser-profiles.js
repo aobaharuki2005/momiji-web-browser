@@ -114,6 +114,8 @@ var gProfiles = {
    */
   async onPopupShowing() {
     let menuPopup = document.getElementById("menu_ProfilesPopup");
+    // TODO(emilio, bug 1977041): Rebuilding this from scratch every time is
+    // rather inefficient and interacts poorly with the Linux native menubar.
     while (menuPopup.hasChildNodes()) {
       menuPopup.firstChild.remove();
     }
