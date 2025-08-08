@@ -337,7 +337,7 @@ class HTMLEditUtils final {
   static bool IsImage(nsINode* aNode);
   static bool IsLink(const nsINode* aNode);
   static bool IsNamedAnchor(const nsINode* aNode);
-  static bool IsMozDiv(nsINode* aNode);
+  static bool IsMozDiv(const nsINode* aNode);
   static bool IsMailCite(const Element& aElement);
   static bool IsFormWidget(const nsINode* aNode);
   static bool SupportsAlignAttr(nsINode& aNode);

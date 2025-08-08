@@ -1925,6 +1925,15 @@ class HTMLEditor final : public EditorBase,
                                nsINode& aNewContainer);
 
   /**
+   * Moves all siblings from aFirstContentToMove to aLastContentToMove to the
+   * end of aNewContainer with a transaction.
+   */
+  [[nodiscard]] inline MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
+  MoveSiblingsToEndWithTransaction(nsIContent& aFirstContentToMove,
+                                   nsIContent& aLastContentToMove,
+                                   nsINode& aNewContainer);
+
+  /**
    * MoveNodeOrChildrenWithTransaction() moves aContent to aPointToInsert.  If
    * cannot insert aContent due to invalid relation, moves only its children
    * recursively and removes aContent from the DOM tree.
