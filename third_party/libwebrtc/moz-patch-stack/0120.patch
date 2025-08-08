@@ -130,7 +130,7 @@ index 9f4af73c6f..655f9c0e22 100644
              "Generated during 'gn gen' by //BUILD.gn.",
              "",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 5048a231d1..c9f083a564 100644
+index af6b22c906..6d8dab8acc 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -479,7 +479,7 @@ index a56f9266e4..ab017ce9db 100644
  
  group("logging") {
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 929b1227a9..8acb889aed 100644
+index 8864419a78..b1d4569fef 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -6,7 +6,7 @@
@@ -492,7 +492,7 @@ index 929b1227a9..8acb889aed 100644
  import("../webrtc.gni")
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index e62c2bde6d..ad55adc642 100644
+index ff84af4f34..954e4642da 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -533,10 +533,10 @@ index a77f04aba5..b0e089d378 100644
      }
    }
 diff --git a/modules/audio_processing/agc/BUILD.gn b/modules/audio_processing/agc/BUILD.gn
-index 14b75f1229..626997322e 100644
+index f794b07bcb..a6d5cfb73b 100644
 --- a/modules/audio_processing/agc/BUILD.gn
 +++ b/modules/audio_processing/agc/BUILD.gn
-@@ -86,7 +86,7 @@ rtc_library("legacy_agc") {
+@@ -85,7 +85,7 @@ rtc_library("legacy_agc") {
    if (rtc_build_with_neon) {
      if (target_cpu != "arm64") {
        # Enable compilation for the NEON instruction set.
@@ -546,10 +546,10 @@ index 14b75f1229..626997322e 100644
      }
    }
 diff --git a/modules/audio_processing/agc2/BUILD.gn b/modules/audio_processing/agc2/BUILD.gn
-index 3808a92ca2..1d887efc22 100644
+index 86609504b3..73150bd93e 100644
 --- a/modules/audio_processing/agc2/BUILD.gn
 +++ b/modules/audio_processing/agc2/BUILD.gn
-@@ -255,7 +255,7 @@ rtc_library("vad_wrapper") {
+@@ -254,7 +254,7 @@ rtc_library("vad_wrapper") {
  
    defines = []
    if (rtc_build_with_neon && current_cpu != "arm64") {
@@ -599,7 +599,7 @@ index fd03ebc283..ac1620c8f4 100644
      }
  
 diff --git a/modules/audio_processing/ns/BUILD.gn b/modules/audio_processing/ns/BUILD.gn
-index 1cef533634..7888ff39f1 100644
+index 0e96125f40..c72b3714c4 100644
 --- a/modules/audio_processing/ns/BUILD.gn
 +++ b/modules/audio_processing/ns/BUILD.gn
 @@ -44,7 +44,7 @@ rtc_static_library("ns") {
@@ -668,7 +668,7 @@ index 6d5d0ca9da..9f0bf72686 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 8faec3ad82..66e908e3ae 100644
+index 37b93e6615..6cd9ad10d2 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -682,7 +682,7 @@ index 8faec3ad82..66e908e3ae 100644
  }
  
  rtc_source_set("protobuf_utils") {
-@@ -1838,8 +1838,8 @@ rtc_library("base64") {
+@@ -1836,8 +1836,8 @@ rtc_library("base64") {
  }
  
  if (rtc_rusty_base64) {
@@ -754,7 +754,7 @@ index 0947186878..c53c12acc1 100644
      output_extension = "so"
    }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index 0e3b56163b..25dbdc8c5b 100644
+index 8be2817955..8b83c1bac5 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
 @@ -9,12 +9,12 @@
@@ -783,7 +783,7 @@ index 0e3b56163b..25dbdc8c5b 100644
      }
    }
  
-@@ -1261,7 +1261,7 @@ if (is_ios || is_mac) {
+@@ -1260,7 +1260,7 @@ if (is_ios || is_mac) {
            }
  
            public_deps = [
@@ -793,7 +793,7 @@ index 0e3b56163b..25dbdc8c5b 100644
            ]
          }
 diff --git a/system_wrappers/BUILD.gn b/system_wrappers/BUILD.gn
-index bb22946ffd..c09605ae7f 100644
+index c708f81a73..ce666ca76e 100644
 --- a/system_wrappers/BUILD.gn
 +++ b/system_wrappers/BUILD.gn
 @@ -7,8 +7,8 @@

@@ -224,10 +224,10 @@ index 80f2901049..a77f04aba5 100644
    } else {
      sources += [ "aecm_core_c.cc" ]
 diff --git a/modules/audio_processing/agc/BUILD.gn b/modules/audio_processing/agc/BUILD.gn
-index 754b807879..14b75f1229 100644
+index 61a450922f..f794b07bcb 100644
 --- a/modules/audio_processing/agc/BUILD.gn
 +++ b/modules/audio_processing/agc/BUILD.gn
-@@ -84,7 +84,7 @@ rtc_library("legacy_agc") {
+@@ -83,7 +83,7 @@ rtc_library("legacy_agc") {
    ]
  
    if (rtc_build_with_neon) {
@@ -250,7 +250,7 @@ index 154ac79205..fd03ebc283 100644
      cflags = [ "-mfpu=neon" ]
    }
 diff --git a/modules/audio_processing/ns/BUILD.gn b/modules/audio_processing/ns/BUILD.gn
-index 90aedfabdb..1cef533634 100644
+index e90ef0e06a..0e96125f40 100644
 --- a/modules/audio_processing/ns/BUILD.gn
 +++ b/modules/audio_processing/ns/BUILD.gn
 @@ -43,7 +43,7 @@ rtc_static_library("ns") {

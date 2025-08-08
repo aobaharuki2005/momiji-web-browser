@@ -347,7 +347,6 @@ if (!build_with_mozilla) {
     ":data_channel_event_observer_interface",
     ":dtls_transport_interface",
     ":fec_controller_api",
-    ":field_trials",
     ":field_trials_view",
     ":frame_transformer_interface",
     ":ice_transport_interface",
