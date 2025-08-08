@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56fbf0469e25fa0d5
  2 files changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index 4d9174b0d7..8f17cfee41 100644
+index e35f8babb1..7bb737f239 100644
 --- a/video/receive_statistics_proxy.cc
 +++ b/video/receive_statistics_proxy.cc
 @@ -819,8 +819,13 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
@@ -30,7 +30,7 @@ index 4d9174b0d7..8f17cfee41 100644
  
  void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index f0fe21a638..7282d46e51 100644
+index b260e3df0e..ca47dbc320 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -1400,7 +1400,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {

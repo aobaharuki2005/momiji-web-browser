@@ -116,7 +116,7 @@ index 251b464f37..90fbb7780f 100644
    num_discarded_packets_ += num_discarded_packets;
  }
 diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index 8f17cfee41..5bb5dc6557 100644
+index 7bb737f239..5c97607c6d 100644
 --- a/video/receive_statistics_proxy.cc
 +++ b/video/receive_statistics_proxy.cc
 @@ -39,6 +39,7 @@
@@ -166,7 +166,7 @@ index 8f17cfee41..5bb5dc6557 100644
  }
  
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 7282d46e51..8f7ce1d716 100644
+index ca47dbc320..0af2758533 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -91,6 +91,7 @@
