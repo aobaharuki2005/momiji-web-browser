@@ -308,7 +308,6 @@ export class DynamicSuggestions extends SuggestProvider {
       ),
       {
         isBestMatch: true,
-        showFeedbackMenu: true,
         hideRowLabel: true,
         richSuggestionIconSize: 24,
       }
