@@ -4625,6 +4625,13 @@ certCompression:
         pref: security.tls.enable_certificate_compression_zstd
       description: >-
         Whether to enable Zstd for TLS certificate compression.
+    h3EnableZstd:
+      type: boolean
+      setPref:
+        branch: default
+        pref: network.http.http3.enable_certificate_compression_zstd
+      description: >-
+        Whether to enable Zstd for H3/QUIC certificate compression.
 
 bounceTrackingProtection:
   description: Controls the Bounce Tracking Protection feature.
