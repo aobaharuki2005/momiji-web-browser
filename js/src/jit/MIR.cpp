@@ -6412,7 +6412,7 @@ static bool AddIsANonZeroAdditionOf(MAdd* add, MDefinition* ins) {
     return false;
   }
   MDefinition* other = (add->lhs() == ins) ? add->rhs() : add->lhs();
-  if (!IsNumberType(other->type())) {
+  if (!IsTypeRepresentableAsDouble(other->type())) {
     return false;
   }
   if (!other->isConstant()) {

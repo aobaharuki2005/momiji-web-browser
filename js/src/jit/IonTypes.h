@@ -674,12 +674,14 @@ static inline const char* StringFromMIRType(MIRType type) {
 }
 
 static inline bool IsIntType(MIRType type) {
-  return type == MIRType::Int32 || type == MIRType::Int64;
+  return type == MIRType::Int32 || type == MIRType::Int64 ||
+         type == MIRType::IntPtr;
 }
 
 static inline bool IsNumberType(MIRType type) {
   return type == MIRType::Int32 || type == MIRType::Double ||
-         type == MIRType::Float32 || type == MIRType::Int64;
+         type == MIRType::Float32 || type == MIRType::Int64 ||
+         type == MIRType::IntPtr;
 }
 
 static inline bool IsTypeRepresentableAsDouble(MIRType type) {
