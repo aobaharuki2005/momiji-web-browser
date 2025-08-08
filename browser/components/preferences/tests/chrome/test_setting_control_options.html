@@ -107,7 +107,7 @@
           ],
         };
         let setting = Preferences.getSetting(SETTING);
-        let control = await renderTemplate(itemConfig, setting);
+        let control = await renderTemplate(itemConfig);
 
         is(
           control.controlEl.localName,
@@ -145,6 +145,117 @@
 
         is(Services.prefs.getIntPref(PREF), 2, "pref is 2");
         is(setting.value, 2, "setting is 2");
+      });
+
+      add_task(async function testConfigBasedRadio() {
+        const PREF = "test.setting-control-radio.one";
+        const SETTING = "setting-control-radio-one";
+        await SpecialPowers.pushPrefEnv({
+          set: [[PREF, 1]],
+        });
+        Preferences.addAll([{ id: PREF, type: "int" }]);
+        Preferences.addSetting({
+          id: SETTING,
+          pref: PREF,
+        });
+        let itemConfig = {
+          control: "moz-radio-group",
+          l10nId: LABEL_L10N_ID,
+          id: SETTING,
+          options: [
+            {
+              l10nId: LABEL_L10N_ID,
+              value: 0,
+            },
+            {
+              l10nId: LABEL_L10N_ID,
+              value: 1,
+            },
+            {
+              l10nId: LABEL_L10N_ID,
+              value: 2,
+            },
+          ],
+        };
+        let setting = Preferences.getSetting(SETTING);
+        let control = await renderTemplate(itemConfig);
+
+        is(
+          control.controlEl.localName,
+          "moz-radio-group",
+          "The control rendered a moz-radio-group"
+        );
+        is(control.controlEl.dataset.l10nId, LABEL_L10N_ID, "Label is set");
+        is(control.controlEl.value, 1, "select value is correct");
+        is(control.controlEl.disabled, false, "select is enabled");
+        is(setting.value, 1, "setting is 1");
+        is(Services.prefs.getIntPref(PREF), 1, "pref is 1");
+
+        let radios = [...control.controlEl.children];
+        is(radios.length, 3, "There are 3 radios");
+        ok(
+          radios.every(opt => opt.localName == "moz-radio"),
+          "All children are radios"
+        );
+        radios.forEach((option, i) => {
+          is(option.value, i, `Radio ${i} value is correct`);
+          is(option.checked, i == 1, `Radio ${i} checked is correct`);
+        });
+
+        let settingChanged = waitForSettingChange(setting);
+        let radioZero = control.querySelector("moz-radio");
+        is(radioZero.value, 0, "0 radio is first");
+        control.querySelector("moz-radio[checked]").focus();
+        synthesizeKey("KEY_ArrowUp");
+        await settingChanged;
+
+        is(Services.prefs.getIntPref(PREF), 0, "pref is 0");
+        is(setting.value, 0, "setting is 0");
+      });
+
+      add_task(async function testConfigBasedCustomOptions() {
+        const PREF = "test.setting-control-custom.one";
+        const SETTING = "setting-control-custom-one";
+        await SpecialPowers.pushPrefEnv({
+          set: [[PREF, 1]],
+        });
+        Preferences.addAll([{ id: PREF, type: "int" }]);
+        Preferences.addSetting({
+          id: SETTING,
+          pref: PREF,
+        });
+
+        let itemConfig = {
+          control: "moz-button-group",
+          id: SETTING,
+          options: [
+            {
+              l10nId: LABEL_L10N_ID,
+              control: "moz-button",
+            },
+            {
+              l10nId: LABEL_L10N_ID,
+              control: "moz-button",
+            },
+          ],
+        };
+        let control = await renderTemplate(itemConfig);
+
+        is(
+          control.controlEl.localName,
+          "moz-button-group",
+          "The control rendered a moz-button-group"
+        );
+        let buttons = [...control.controlEl.children];
+        is(buttons.length, 2, "There are two buttons");
+        ok(
+          buttons.every(btn => btn.localName == "moz-button"),
+          "The buttons are moz-buttons"
+        );
+        ok(
+          buttons.every(btn => !btn.slot),
+          "The buttons are not in a slot"
+        );
       });
     </script>
   </head>
