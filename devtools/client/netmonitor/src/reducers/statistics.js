@@ -12,6 +12,7 @@ const {
 } = require("resource://devtools/client/netmonitor/src/utils/filter-predicates.js");
 const {
   processNetworkUpdates,
+  responseIsFresh,
 } = require("resource://devtools/client/netmonitor/src/utils/request-utils.js");
 const {
   ADD_REQUEST,
@@ -161,44 +162,6 @@ function setData(cacheData, request, dataType, emptyCache) {
   }
   cacheData[dataType].count++;
   return cacheData;
-}
-
-/**
- * Checks if the "Expiration Calculations" defined in section 13.2.4 of the
- * "HTTP/1.1: Caching in HTTP" spec holds true for a collection of headers.
- *
- * @param object
- *        An object containing the { responseHeaders, status } properties.
- * @return boolean
- *         True if the response is fresh and loaded from cache.
- */
-function responseIsFresh({ responseHeaders, status }) {
-  // Check for a "304 Not Modified" status and response headers availability.
-  if (status != 304 || !responseHeaders) {
-    return false;
-  }
-
-  const list = responseHeaders.headers;
-  const cacheControl = list.find(e => e.name.toLowerCase() === "cache-control");
-  const expires = list.find(e => e.name.toLowerCase() === "expires");
-
-  // Check the "Cache-Control" header for a maximum age value.
-  if (cacheControl) {
-    const maxAgeMatch =
-      cacheControl.value.match(/s-maxage\s*=\s*(\d+)/) ||
-      cacheControl.value.match(/max-age\s*=\s*(\d+)/);
-
-    if (maxAgeMatch && maxAgeMatch.pop() > 0) {
-      return true;
-    }
-  }
-
-  // Check the "Expires" header for a valid date.
-  if (expires && Date.parse(expires.value)) {
-    return true;
-  }
-
-  return false;
 }
 
 module.exports = {
