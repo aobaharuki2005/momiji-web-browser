@@ -34,6 +34,7 @@ const PREF_VISIBLE_SECTIONS =
 const PREF_BILLBOARD_ENABLED = "newtabAdSize.billboard";
 const PREF_BILLBOARD_POSITION = "newtabAdSize.billboard.position";
 const PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
+const PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
 const PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
 const PREF_LEADERBOARD_POSITION = "newtabAdSize.leaderboard.position";
 const PREF_REFINED_CARDS_ENABLED = "discoverystream.refinedCardsLayout.enabled";
@@ -488,7 +489,8 @@ function CardSections({
   // Add a billboard/leaderboard IAB ad to the sectionsToRender array (if enabled/possible).
   const billboardEnabled = prefs[PREF_BILLBOARD_ENABLED];
   const leaderboardEnabled = prefs[PREF_LEADERBOARD_ENABLED];
-  const promoCardEnabled = prefs[PREF_PROMOCARD_ENABLED];
+  const promoCardEnabled =
+    prefs[PREF_PROMOCARD_ENABLED] && prefs[PREF_PROMOCARD_VISIBLE];
 
   if (
     (billboardEnabled || leaderboardEnabled) &&
@@ -512,24 +514,19 @@ function CardSections({
         // Math.min is used here to ensure the given row stays within the bounds of the sectionsToRender array.
         Math.min(sectionsToRender.length - 1, row),
         0,
-        <AdBanner
-          spoc={spocToRender}
-          key={`dscard-${spocToRender.id}`}
-          dispatch={dispatch}
-          type={type}
-          firstVisibleTimestamp={firstVisibleTimestamp}
-          row={row}
-          prefs={prefs}
-        />
+        <div className="ad-banner-container">
+          <AdBanner
+            spoc={spocToRender}
+            key={`dscard-${spocToRender.id}`}
+            dispatch={dispatch}
+            type={type}
+            firstVisibleTimestamp={firstVisibleTimestamp}
+            row={row}
+            prefs={prefs}
+          />
+          {promoCardEnabled && <PromoCard />}
+        </div>
       );
-
-      if (promoCardEnabled) {
-        sectionsToRender.splice(
-          Math.min(sectionsToRender.length + 1, row),
-          0,
-          <PromoCard />
-        );
-      }
     }
   }
 

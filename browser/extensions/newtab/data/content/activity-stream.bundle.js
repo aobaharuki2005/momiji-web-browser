@@ -5060,20 +5060,48 @@ const AdBanner = ({
 
 
 
+
+const PREF_PROMO_CARD_DISMISSED = "discoverystream.promoCard.visible";
+
 /**
  * The PromoCard component displays a promotional message.
  * It is used next to the AdBanner component in a four-column layout.
  */
 
 const PromoCard = () => {
+  const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
+  const onDismissClick = (0,external_React_namespaceObject.useCallback)(() => {
+    dispatch(actionCreators.SetPref(PREF_PROMO_CARD_DISMISSED, false));
+  }, [dispatch]);
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "promo-card-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "promo-card-dismiss-button"
+  }, /*#__PURE__*/external_React_default().createElement("moz-button", {
+    type: "icon ghost",
+    size: "small",
+    "data-l10n-id": "promo-card-dismiss-button",
+    iconsrc: "chrome://global/skin/icons/close.svg",
+    onClick: onDismissClick,
+    onKeyDown: onDismissClick
+  })), /*#__PURE__*/external_React_default().createElement("div", {
     className: "promo-card-inner"
-  }, /*#__PURE__*/external_React_default().createElement("span", {
-    className: "promo-card-label",
-    "data-l10n-id": "promo-card-default-title"
-  })));
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "img-wrapper"
+  }), /*#__PURE__*/external_React_default().createElement("span", {
+    className: "promo-card-title",
+    "data-l10n-id": "newtab-promo-card-title"
+  }), /*#__PURE__*/external_React_default().createElement("span", {
+    className: "promo-card-body",
+    "data-l10n-id": "newtab-promo-card-body"
+  }), /*#__PURE__*/external_React_default().createElement("span", {
+    className: "promo-card-cta-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement("a", {
+    href: "https://support.mozilla.org/kb/sponsor-privacy",
+    "data-l10n-id": "newtab-promo-card-cta",
+    target: "_blank",
+    rel: "noreferrer"
+  }))));
 };
 
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/TrendingSearches/TrendingSearches.jsx
@@ -5334,6 +5362,7 @@ const PREF_FAKESPOT_ENABLED = "discoverystream.contextualContent.fakespot.enable
 const PREF_BILLBOARD_ENABLED = "newtabAdSize.billboard";
 const PREF_BILLBOARD_POSITION = "newtabAdSize.billboard.position";
 const PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
+const PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
 const PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
 const PREF_LEADERBOARD_POSITION = "newtabAdSize.leaderboard.position";
 const PREF_TRENDING_SEARCH = "trendingSearch.enabled";
@@ -5622,7 +5651,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const listFeedEnabled = prefs[PREF_LIST_FEED_ENABLED];
     const listFeedSelectedFeed = prefs[PREF_LIST_FEED_SELECTED_FEED];
     const billboardEnabled = prefs[PREF_BILLBOARD_ENABLED];
-    const promoCardEnabled = prefs[PREF_PROMOCARD_ENABLED];
+    const promoCardEnabled = prefs[PREF_PROMOCARD_ENABLED] && prefs[PREF_PROMOCARD_VISIBLE];
     const leaderboardEnabled = prefs[PREF_LEADERBOARD_ENABLED];
     const trendingEnabled = prefs[PREF_TRENDING_SEARCH] && prefs[PREF_TRENDING_SEARCH_SYSTEM] && prefs[PREF_SEARCH_ENGINE]?.toLowerCase() === "google";
     const trendingVariant = prefs[PREF_TRENDING_SEARCH_VARIANT];
@@ -11966,6 +11995,7 @@ const CardSections_PREF_VISIBLE_SECTIONS = "discoverystream.sections.interestPic
 const CardSections_PREF_BILLBOARD_ENABLED = "newtabAdSize.billboard";
 const CardSections_PREF_BILLBOARD_POSITION = "newtabAdSize.billboard.position";
 const CardSections_PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
+const CardSections_PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
 const CardSections_PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
 const CardSections_PREF_LEADERBOARD_POSITION = "newtabAdSize.leaderboard.position";
 const PREF_REFINED_CARDS_ENABLED = "discoverystream.refinedCardsLayout.enabled";
@@ -12340,7 +12370,7 @@ function CardSections({
   // Add a billboard/leaderboard IAB ad to the sectionsToRender array (if enabled/possible).
   const billboardEnabled = prefs[CardSections_PREF_BILLBOARD_ENABLED];
   const leaderboardEnabled = prefs[CardSections_PREF_LEADERBOARD_ENABLED];
-  const promoCardEnabled = prefs[CardSections_PREF_PROMOCARD_ENABLED];
+  const promoCardEnabled = prefs[CardSections_PREF_PROMOCARD_ENABLED] && prefs[CardSections_PREF_PROMOCARD_VISIBLE];
   if ((billboardEnabled || leaderboardEnabled) && spocs?.data?.newtab_spocs?.items) {
     const spocToRender = spocs.data.newtab_spocs.items.find(({
       format
@@ -12351,7 +12381,9 @@ function CardSections({
       const row = spocToRender.format === "leaderboard" ? prefs[CardSections_PREF_LEADERBOARD_POSITION] : prefs[CardSections_PREF_BILLBOARD_POSITION];
       sectionsToRender.splice(
       // Math.min is used here to ensure the given row stays within the bounds of the sectionsToRender array.
-      Math.min(sectionsToRender.length - 1, row), 0, /*#__PURE__*/external_React_default().createElement(AdBanner, {
+      Math.min(sectionsToRender.length - 1, row), 0, /*#__PURE__*/external_React_default().createElement("div", {
+        className: "ad-banner-container"
+      }, /*#__PURE__*/external_React_default().createElement(AdBanner, {
         spoc: spocToRender,
         key: `dscard-${spocToRender.id}`,
         dispatch: dispatch,
@@ -12359,10 +12391,7 @@ function CardSections({
         firstVisibleTimestamp: firstVisibleTimestamp,
         row: row,
         prefs: prefs
-      }));
-      if (promoCardEnabled) {
-        sectionsToRender.splice(Math.min(sectionsToRender.length + 1, row), 0, /*#__PURE__*/external_React_default().createElement(PromoCard, null));
-      }
+      }), promoCardEnabled && /*#__PURE__*/external_React_default().createElement(PromoCard, null)));
     }
   }
 

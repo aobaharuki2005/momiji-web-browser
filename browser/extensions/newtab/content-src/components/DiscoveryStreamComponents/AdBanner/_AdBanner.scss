@@ -1,3 +1,22 @@
+// in a 4-column layout, the promo card fills remaining space
+@media (min-width: $break-point-sections-variant) {
+  .ad-banner-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    margin-block: var(--space-medium) var(--space-xlarge);
+
+    .ad-banner-wrapper {
+      width: unset;
+      display: inline-block;
+      inset-inline-start: unset;
+      transform: unset;
+      margin-block: unset;
+    }
+  }
+}
+
 .ad-banner-wrapper {
   --banner-padding: var(--space-large);
   --billboard-width: 970px;

@@ -625,6 +625,13 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "discoverystream.promoCard.visible",
+    {
+      title: "Boolean flag whether the promo card is visible or not",
+      value: false,
+    },
+  ],
+  [
     "discoverystream.sections.enabled",
     {
       title: "Boolean flag to enable section layout UI in recommended stories",
