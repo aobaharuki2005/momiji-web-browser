@@ -449,7 +449,7 @@ index 7211192206..b0c5178da4 100644
      deps = [
        ":generated_jni",
 diff --git a/examples/androidvoip/BUILD.gn b/examples/androidvoip/BUILD.gn
-index 05bccd7f77..4292004919 100644
+index 4c8af525ec..240e762ae8 100644
 --- a/examples/androidvoip/BUILD.gn
 +++ b/examples/androidvoip/BUILD.gn
 @@ -51,8 +51,8 @@ if (is_android) {
@@ -492,7 +492,7 @@ index 929b1227a9..8acb889aed 100644
  import("../webrtc.gni")
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index ea7d8c3831..9ee0fe3ddd 100644
+index e62c2bde6d..ad55adc642 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -9,8 +9,8 @@
