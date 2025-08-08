@@ -1075,6 +1075,68 @@ class NetworkModule extends RootBiDiModule {
   }
 
   /**
+   * Releases a collected network data for a given collector and data type.
+   *
+   * @param {object=} options
+   * @param {string} options.collector
+   *     The collector from which the data should be disowned.
+   * @param {string} options.dataType
+   *     The data type of the data to disown.
+   * @param {string} options.request
+   *     The id of the request for which data should be disowned.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchNetworkCollectorError}
+   *     Raised if the collector id could not be found in the internal collectors
+   *     map.
+   * @throws {NoSuchNetworkDataError}
+   *     If the network data could not be found for the provided parameters.
+   */
+  async disownData(options = {}) {
+    const { collector, dataType, request: requestId } = options;
+
+    lazy.assert.string(
+      requestId,
+      lazy.pprint`Expected "request" to be a string, got ${requestId}`
+    );
+
+    const supportedDataTypes = Object.values(DataType);
+    if (!supportedDataTypes.includes(dataType)) {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected "dataType" to be one of ${supportedDataTypes},` +
+          lazy.pprint` got ${dataType}`
+      );
+    }
+
+    lazy.assert.string(
+      collector,
+      lazy.pprint`Expected "collector" to be a string, got ${collector}`
+    );
+
+    if (!this.#networkCollectors.has(collector)) {
+      throw new lazy.error.NoSuchNetworkCollectorError(
+        `Network data collector with id ${collector} not found`
+      );
+    }
+
+    const collectedData = this.#getCollectedData(requestId, dataType);
+    if (!collectedData) {
+      throw new lazy.error.NoSuchNetworkDataError(
+        `Network data for request id ${requestId} and DataType ${dataType} not found`
+      );
+    }
+
+    if (!collectedData.collectors.has(collector)) {
+      throw new lazy.error.NoSuchNetworkDataError(
+        `Network data for request id ${requestId} and DataType ${dataType} does not match collector ${collector}`
+      );
+    }
+
+    this.#removeCollectorFromData(collectedData, collector);
+  }
+
+  /**
    * An object that holds information about a network data content.
    *
    * @typedef NetworkGetDataResult
@@ -1103,6 +1165,9 @@ class NetworkModule extends RootBiDiModule {
    *
    * @throws {InvalidArgumentError}
    *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchNetworkCollectorError}
+   *     Raised if the collector id could not be found in the internal collectors
+   *     map.
    * @throws {NoSuchNetworkDataError}
    *     If the network data could not be found for the provided parameters.
    * @throws {UnavailableNetworkDataError}
