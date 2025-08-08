@@ -12,10 +12,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/14ee98c4832a55bf3
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/.gn b/.gn
-index eeb8c820a0..1d1e002ef8 100644
+index f8c9cee6fd..edb29f2f89 100644
 --- a/.gn
 +++ b/.gn
-@@ -91,7 +91,7 @@ default_args = {
+@@ -90,7 +90,7 @@ default_args = {
    use_fuzztest_wrapper = false
  
    # Enable Rust in WebRTC

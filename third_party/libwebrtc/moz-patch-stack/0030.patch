@@ -105,10 +105,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b86cb7278bc4e5571
  create mode 100644 common_audio/intrin.h
 
 diff --git a/.gn b/.gn
-index 5f2f67fbef..1b2d1a83b8 100644
+index d29e7e3ced..7a29809c83 100644
 --- a/.gn
 +++ b/.gn
-@@ -72,6 +72,8 @@ default_args = {
+@@ -71,6 +71,8 @@ default_args = {
    # Prevent jsoncpp to pass -Wno-deprecated-declarations to users
    jsoncpp_no_deprecated_declarations = false
  
