@@ -727,9 +727,9 @@ class nsWindow final : public nsBaseWidget {
   static HWND sRollupMsgWnd;
   static UINT sHookTimerId;
 
-  // Used to prevent dispatching mouse events that do not originate from user
-  // input.
-  static POINT sLastMouseMovePoint;
+  // Handle the last mouse point and the last non-mouse pointer point to stop
+  // dispatching redundant eMouseMove events.
+  class LastMouseMoveData;
 
   nsClassHashtable<nsUint32HashKey, PointerInfo> mActivePointers;
 
