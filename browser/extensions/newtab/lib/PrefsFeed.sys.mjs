@@ -37,6 +37,8 @@ export class PrefsFeed {
       this.onSmartShortcutsExperimentUpdated.bind(this);
     this.onWidgetsUpdated = this.onWidgetsUpdated.bind(this);
     this.onOhttpImagesUpdated = this.onOhttpImagesUpdated.bind(this);
+    this.onInferredPersonalizationExperimentUpdated =
+      this.onInferredPersonalizationExperimentUpdated.bind(this);
   }
 
   onPrefChanged(name, value) {
@@ -136,6 +138,23 @@ export class PrefsFeed {
   }
 
   /**
+   * Handler for when inferred personalization experiment config values update.
+   */
+  onInferredPersonalizationExperimentUpdated() {
+    const value =
+      lazy.NimbusFeatures.newtabInferredPersonalization.getAllVariables() || {};
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: {
+          name: "inferredPersonalizationConfig",
+          value,
+        },
+      })
+    );
+  }
+
+  /**
    * Handler for when widget experiment data updates.
    */
   onWidgetsUpdated() {
@@ -173,6 +192,9 @@ export class PrefsFeed {
     lazy.NimbusFeatures.pocketNewtab.onUpdate(this.onPocketExperimentUpdated);
     lazy.NimbusFeatures.newtabSmartShortcuts.onUpdate(
       this.onSmartShortcutsExperimentUpdated
+    );
+    lazy.NimbusFeatures.newtabInferredPersonalization.onUpdate(
+      this.onInferredPersonalizationExperimentUpdated
     );
     lazy.NimbusFeatures.newtabWidgets.onUpdate(this.onWidgetsUpdated);
     lazy.NimbusFeatures.newtabOhttpImages.onUpdate(this.onOhttpImagesUpdated);

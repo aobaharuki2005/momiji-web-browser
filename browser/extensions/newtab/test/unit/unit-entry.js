@@ -501,6 +501,7 @@ const TEST_GLOBAL = {
     "newtab",
     "pocketNewtab",
     "newtabSmartShortcuts",
+    "newtabInferredPersonalization",
     "newtabWidgets",
     "newtabOhttpImages",
     "cookieBannerHandling",
