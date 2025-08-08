@@ -348,8 +348,8 @@ class TabManagementFragment : ComposeFragment() {
                         System.currentTimeMillis()
                     TabsTray.inactiveTabsCfrDismissed.record(NoExtras())
                 },
-                onNormalTabsFabClicked = tabManagerInteractor::onNormalTabsFabClicked,
-                onPrivateTabsFabClicked = tabManagerInteractor::onPrivateTabsFabClicked,
+                onOpenNewNormalTabClicked = tabManagerInteractor::onNormalTabsFabClicked,
+                onOpenNewPrivateTabClicked = tabManagerInteractor::onPrivateTabsFabClicked,
                 onSyncedTabsFabClicked = tabManagerInteractor::onSyncedTabsFabClicked,
             )
         }

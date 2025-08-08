@@ -53,7 +53,7 @@ import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabCloseClick as OnSyncedTabCl
  * @param isInDebugMode True for debug variant or if secret menu is enabled for this session.
  * @param shouldShowTabAutoCloseBanner Whether the tab auto closer banner should be displayed.
  * @param shouldShowLockPbmBanner Whether the lock private browsing banner should be displayed.
- * @param isSignedIn Used to determine whether to show the SYNC FAB when [Page.SyncedTabs] is displayed.
+ * @param isSignedIn Whether the user is signed into their Firefox account.
  * @param modifier The [Modifier] used to style the container of the the Tabs Tray UI.
  * @param shouldShowInactiveTabsAutoCloseDialog Whether the inactive tabs auto close dialog should be displayed.
  * @param onTabPageClick Invoked when the user clicks on the Normal, Private, or Synced tabs page button.
@@ -95,8 +95,8 @@ import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabCloseClick as OnSyncedTabCl
  * @param onInactiveTabsCFRShown Invoked when the inactive tabs CFR is displayed.
  * @param onInactiveTabsCFRClick Invoked when the inactive tabs CFR is clicked.
  * @param onInactiveTabsCFRDismiss Invoked when the inactive tabs CFR is dismissed.
- * @param onNormalTabsFabClicked Invoked when the fab is clicked in [Page.NormalTabs].
- * @param onPrivateTabsFabClicked Invoked when the fab is clicked in [Page.PrivateTabs].
+ * @param onOpenNewNormalTabClicked Invoked when the fab is clicked in [Page.NormalTabs].
+ * @param onOpenNewPrivateTabClicked Invoked when the fab is clicked in [Page.PrivateTabs].
  * @param onSyncedTabsFabClicked Invoked when the fab is clicked in [Page.SyncedTabs].
  */
 @Suppress("LongMethod", "LongParameterList", "ComplexMethod")
@@ -143,8 +143,8 @@ fun TabsTray(
     onInactiveTabsCFRShown: () -> Unit,
     onInactiveTabsCFRClick: () -> Unit,
     onInactiveTabsCFRDismiss: () -> Unit,
-    onNormalTabsFabClicked: () -> Unit,
-    onPrivateTabsFabClicked: () -> Unit,
+    onOpenNewNormalTabClicked: () -> Unit,
+    onOpenNewPrivateTabClicked: () -> Unit,
     onSyncedTabsFabClicked: () -> Unit,
 ) {
     val tabsTrayState by tabsTrayStore.observeAsState(initialValue = tabsTrayStore.state) { it }
@@ -193,9 +193,10 @@ fun TabsTray(
         floatingActionButton = {
             TabsTrayFab(
                 tabsTrayStore = tabsTrayStore,
+                expanded = true, // handled in bug 1976331
                 isSignedIn = isSignedIn,
-                onNormalTabsFabClicked = onNormalTabsFabClicked,
-                onPrivateTabsFabClicked = onPrivateTabsFabClicked,
+                onOpenNewNormalTabClicked = onOpenNewNormalTabClicked,
+                onOpenNewPrivateTabClicked = onOpenNewPrivateTabClicked,
                 onSyncedTabsFabClicked = onSyncedTabsFabClicked,
             )
         },
@@ -204,8 +205,7 @@ fun TabsTray(
         HorizontalPager(
             modifier = Modifier
                 .padding(paddingValues)
-                .fillMaxSize()
-                .testTag(TabsTrayTestTag.TABS_TRAY),
+                .fillMaxSize(),
             state = pagerState,
             beyondViewportPageCount = 2,
             userScrollEnabled = false,
@@ -372,9 +372,9 @@ private fun TabsTrayPreviewRoot(
             tabsTrayStore = tabsTrayStore,
             displayTabsInGrid = displayTabsInGrid,
             isInDebugMode = false,
+            isSignedIn = isSignedIn,
             shouldShowInactiveTabsAutoCloseDialog = { true },
             shouldShowTabAutoCloseBanner = showTabAutoCloseBanner,
-            isSignedIn = isSignedIn,
             onTabPageClick = { page ->
                 tabsTrayStore.dispatch(TabsTrayAction.PageSelected(page))
             },
@@ -446,7 +446,7 @@ private fun TabsTrayPreviewRoot(
             onInactiveTabsCFRClick = {},
             onInactiveTabsCFRDismiss = {},
             shouldShowLockPbmBanner = false,
-            onNormalTabsFabClicked = {
+            onOpenNewNormalTabClicked = {
                 val newTab = createTab(
                     url = "www.mozilla.com",
                     private = false,
@@ -454,7 +454,7 @@ private fun TabsTrayPreviewRoot(
                 val allTabs = tabsTrayStore.state.normalTabs + newTab
                 tabsTrayStore.dispatch(TabsTrayAction.UpdateNormalTabs(allTabs))
             },
-            onPrivateTabsFabClicked = {
+            onOpenNewPrivateTabClicked = {
                 val newTab = createTab(
                     url = "www.mozilla.com",
                     private = true,
