@@ -6235,24 +6235,16 @@ nsresult Document::TurnEditingOff() {
     return NS_ERROR_FAILURE;
   }
 
-  nsIDocShell* docshell = window->GetDocShell();
-  if (!docshell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool isBeingDestroyed = false;
-  docshell->IsBeingDestroyed(&isBeingDestroyed);
-  if (isBeingDestroyed) {
+  nsIDocShell* docshell = GetDocShell();
+  if (!docshell || docshell->IsBeingDestroyed()) {
     return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIEditingSession> editSession;
-  nsresult rv = docshell->GetEditingSession(getter_AddRefs(editSession));
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(docshell->GetEditingSession(getter_AddRefs(editSession)));
 
   // turn editing off
-  rv = editSession->TearDownEditorOnWindow(window);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(editSession->TearDownEditorOnWindow(window));
 
   mEditingState = EditingState::eOff;
 
@@ -6267,14 +6259,6 @@ nsresult Document::TurnEditingOff() {
   }
 
   return NS_OK;
-}
-
-static bool HasPresShell(nsPIDOMWindowOuter* aWindow) {
-  nsIDocShell* docShell = aWindow->GetDocShell();
-  if (!docShell) {
-    return false;
-  }
-  return docShell->GetPresShell() != nullptr;
 }
 
 HTMLEditor* Document::GetHTMLEditor() const {
@@ -6360,24 +6344,15 @@ nsresult Document::EditingStateChanged() {
     return NS_ERROR_FAILURE;
   }
 
-  nsIDocShell* docshell = window->GetDocShell();
-  if (!docshell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // FlushPendingNotifications might destroy our docshell.
-  bool isBeingDestroyed = false;
-  docshell->IsBeingDestroyed(&isBeingDestroyed);
-  if (isBeingDestroyed) {
+  nsIDocShell* docshell = GetDocShell();
+  if (!docshell || docshell->IsBeingDestroyed()) {
     return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIEditingSession> editSession;
-  nsresult rv = docshell->GetEditingSession(getter_AddRefs(editSession));
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(docshell->GetEditingSession(getter_AddRefs(editSession)));
 
-  RefPtr<HTMLEditor> htmlEditor = editSession->GetHTMLEditorForWindow(window);
-  if (htmlEditor) {
+  if (RefPtr<HTMLEditor> htmlEditor = docshell->GetHTMLEditor()) {
     // We might already have an editor if it was set up for mail, let's see
     // if this is actually the case.
     uint32_t flags = 0;
@@ -6389,7 +6364,8 @@ nsresult Document::EditingStateChanged() {
     }
   }
 
-  if (!HasPresShell(window)) {
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (!presShell) {
     // We should not make the window editable or setup its editor.
     // It's probably style=display:none.
     return NS_OK;
@@ -6398,13 +6374,10 @@ nsresult Document::EditingStateChanged() {
   bool makeWindowEditable = mEditingState == EditingState::eOff;
   bool spellRecheckAll = false;
   bool putOffToRemoveScriptBlockerUntilModifyingEditingState = false;
-  htmlEditor = nullptr;
 
+  RefPtr<HTMLEditor> htmlEditor;
   {
     nsAutoEditingState push(this, EditingState::eSettingUp);
-
-    RefPtr<PresShell> presShell = GetPresShell();
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
     // If we're entering the design mode from non-editable state, put the
     // selection at the beginning of the document for compatibility reasons.
@@ -6464,8 +6437,7 @@ nsresult Document::EditingStateChanged() {
       // Turn on editor.
       // XXX This can cause flushing which can change the editing state, so make
       //     sure to avoid recursing.
-      rv = editSession->MakeWindowEditable(window, "html", false, false, true);
-      NS_ENSURE_SUCCESS(rv, rv);
+      MOZ_TRY(editSession->MakeWindowEditable(window, "html", false, false, true));
     }
 
     // XXX Need to call TearDownEditorOnWindow for all failures.
