@@ -1556,11 +1556,11 @@ class TestNamedDeleterWithRetvalInterface : public nsISupports,
   // We need a GetParentObject to make binding codegen happy
   virtual nsISupports* GetParentObject();
 
-  bool NamedDeleter(const nsAString&, bool&);
-  bool NamedDeleter(const nsAString&) = delete;
+  void NamedDeleter(const nsAString&, bool&);
+  void NamedDeleter(const nsAString&) = delete;
   long NamedGetter(const nsAString&, bool&);
-  bool DelNamedItem(const nsAString&);
-  bool DelNamedItem(const nsAString&, bool&) = delete;
+  void DelNamedItem(const nsAString&);
+  void DelNamedItem(const nsAString&, bool&) = delete;
   void GetSupportedNames(nsTArray<nsString>&);
 };
 

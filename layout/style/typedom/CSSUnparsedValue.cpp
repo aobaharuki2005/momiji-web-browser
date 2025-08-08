@@ -39,7 +39,7 @@ void CSSUnparsedValue::IndexedGetter(
 
 void CSSUnparsedValue::IndexedSetter(
     uint32_t aIndex, const UTF8StringOrCSSVariableReferenceValue& aVal,
-    OwningUTF8StringOrCSSVariableReferenceValue& aRetVal, ErrorResult& aRv) {
+    ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 

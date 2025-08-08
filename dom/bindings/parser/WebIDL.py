@@ -6537,6 +6537,13 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 [location],
             )
 
+        # See https://github.com/whatwg/webidl/issues/1516
+        if (setter or deleter) and not returnType.isUndefined():
+            raise WebIDLError(
+                "The return type of a setter or deleter operation must be 'undefined'",
+                [location],
+            )
+
         self.assertSignatureConstraints()
 
     def __str__(self):
