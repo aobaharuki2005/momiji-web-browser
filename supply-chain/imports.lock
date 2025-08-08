@@ -103,6 +103,13 @@ user-id = 3788
 user-login = "emilio"
 user-name = "Emilio Cobos Álvarez"
 
+[[publisher.chardetng]]
+version = "0.1.17"
+when = "2021-12-23"
+user-id = 4484
+user-login = "hsivonen"
+user-name = "Henri Sivonen"
+
 [[publisher.clap]]
 version = "4.5.16"
 when = "2024-08-15"
