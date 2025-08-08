@@ -6437,7 +6437,8 @@ nsresult Document::EditingStateChanged() {
       // Turn on editor.
       // XXX This can cause flushing which can change the editing state, so make
       //     sure to avoid recursing.
-      MOZ_TRY(editSession->MakeWindowEditable(window, "html", false, false, true));
+      MOZ_TRY(
+          editSession->MakeWindowEditable(window, "html", false, false, true));
     }
 
     // XXX Need to call TearDownEditorOnWindow for all failures.
