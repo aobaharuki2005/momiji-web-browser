@@ -681,7 +681,7 @@ void nsFilePicker::OpenNonPortal() {
 
   GtkFileChooser* file_chooser = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(
       title.get(), parent_widget, action, g_dgettext("gtk30", "_Cancel"),
-      accept_button, nullptr));
+      GTK_RESPONSE_CANCEL, accept_button, GTK_RESPONSE_ACCEPT, nullptr));
 
   // If we have --enable-proxy-bypass-protection, then don't allow
   // remote URLs to be used.
@@ -780,6 +780,7 @@ void nsFilePicker::OpenNonPortal() {
                                                  TRUE);
 
   mFileChooser = file_chooser;
+  NS_ADDREF_THIS();  // Balanced by the NS_RELEASE_THIS in DoneNonPortal.
   g_signal_connect(file_chooser, "response", G_CALLBACK(OnNonPortalResponse),
                    this);
   g_signal_connect(file_chooser, "destroy", G_CALLBACK(OnNonPortalDestroy),
