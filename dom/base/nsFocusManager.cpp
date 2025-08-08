@@ -4066,10 +4066,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
       }
 
       int32_t tabIndex = 0;
-      if (iterContent->IsInNativeAnonymousSubtree() &&
-          iterContent->GetPrimaryFrame()) {
-        tabIndex = iterContent->GetPrimaryFrame()->IsFocusable().mTabIndex;
-      } else if (IsHostOrSlot(iterContent)) {
+      if (IsHostOrSlot(iterContent)) {
         tabIndex = HostOrSlotTabIndexValue(iterContent);
       } else {
         nsIFrame* frame = iterContent->GetPrimaryFrame();
