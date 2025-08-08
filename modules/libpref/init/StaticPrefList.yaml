@@ -14166,7 +14166,7 @@
 # a revalidation in the background.
 - name: network.dnsCacheExpirationGracePeriod
   type: RelaxedAtomicUint32
-  value: 60
+  value: 600
   mirror: always
 
 # This preference can be used to turn off DNS prefetch.
