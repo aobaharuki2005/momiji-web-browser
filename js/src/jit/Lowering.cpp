@@ -1925,6 +1925,10 @@ void LIRGenerator::visitMinMax(MMinMax* ins) {
       lir = new (alloc())
           LMinMaxI(useRegisterAtStart(first), useRegisterOrConstant(second));
       break;
+    case MIRType::IntPtr:
+      lir = new (alloc()) LMinMaxIntPtr(useRegisterAtStart(first),
+                                        useRegisterOrConstant(second));
+      break;
     case MIRType::Float32:
       lir = new (alloc())
           LMinMaxF(useRegisterAtStart(first), useRegister(second));

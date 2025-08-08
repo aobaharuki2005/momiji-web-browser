@@ -3157,7 +3157,7 @@ void MBinaryArithInstruction::trySpecializeFloat32(TempAllocator& alloc) {
 }
 
 void MMinMax::trySpecializeFloat32(TempAllocator& alloc) {
-  if (type() == MIRType::Int32) {
+  if (!IsFloatingPointType(type())) {
     return;
   }
 
@@ -3174,6 +3174,51 @@ void MMinMax::trySpecializeFloat32(TempAllocator& alloc) {
   }
 }
 
+template <MIRType Type>
+static MConstant* EvaluateMinMaxInt(TempAllocator& alloc, MConstant* lhs,
+                                    MConstant* rhs, bool isMax) {
+  auto lnum = ToIntConstant<Type>(lhs);
+  auto rnum = ToIntConstant<Type>(rhs);
+  auto result = isMax ? std::max(lnum, rnum) : std::min(lnum, rnum);
+  return NewIntConstant<Type>(alloc, result);
+}
+
+static MConstant* EvaluateMinMax(TempAllocator& alloc, MConstant* lhs,
+                                 MConstant* rhs, bool isMax) {
+  MOZ_ASSERT(lhs->type() == rhs->type());
+  MOZ_ASSERT(IsNumberType(lhs->type()));
+
+  // The folded MConstant should maintain the same MIRType with the original
+  // inputs.
+  switch (lhs->type()) {
+    case MIRType::Int32:
+      return EvaluateMinMaxInt<MIRType::Int32>(alloc, lhs, rhs, isMax);
+    case MIRType::Int64:
+      return EvaluateMinMaxInt<MIRType::Int64>(alloc, lhs, rhs, isMax);
+    case MIRType::IntPtr:
+      return EvaluateMinMaxInt<MIRType::IntPtr>(alloc, lhs, rhs, isMax);
+    case MIRType::Float32:
+    case MIRType::Double: {
+      double lnum = lhs->numberToDouble();
+      double rnum = rhs->numberToDouble();
+
+      double result;
+      if (isMax) {
+        result = js::math_max_impl(lnum, rnum);
+      } else {
+        result = js::math_min_impl(lnum, rnum);
+      }
+
+      if (lhs->type() == MIRType::Float32) {
+        return MConstant::NewFloat32(alloc, result);
+      }
+      return MConstant::NewDouble(alloc, result);
+    }
+    default:
+      MOZ_CRASH("not a number type");
+  }
+}
+
 MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
   MOZ_ASSERT(lhs()->type() == type());
   MOZ_ASSERT(rhs()->type() == type());
@@ -3184,34 +3229,35 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
 
   auto foldConstants = [&alloc](MDefinition* lhs, MDefinition* rhs,
                                 bool isMax) -> MConstant* {
-    MOZ_ASSERT(lhs->type() == rhs->type());
-    MOZ_ASSERT(lhs->toConstant()->isTypeRepresentableAsDouble());
-    MOZ_ASSERT(rhs->toConstant()->isTypeRepresentableAsDouble());
+    return EvaluateMinMax(alloc, lhs->toConstant(), rhs->toConstant(), isMax);
+  };
 
-    double lnum = lhs->toConstant()->numberToDouble();
-    double rnum = rhs->toConstant()->numberToDouble();
-
-    double result;
-    if (isMax) {
-      result = js::math_max_impl(lnum, rnum);
-    } else {
-      result = js::math_min_impl(lnum, rnum);
-    }
-
-    // The folded MConstant should maintain the same MIRType with the original
-    // inputs.
-    if (lhs->type() == MIRType::Int32) {
-      int32_t cast;
-      if (mozilla::NumberEqualsInt32(result, &cast)) {
-        return MConstant::NewInt32(alloc, cast);
+  auto foldLength = [](MDefinition* operand, MConstant* constant,
+                       bool isMax) -> MDefinition* {
+    if (operand->isArrayLength() || operand->isArrayBufferViewLength() ||
+        operand->isArgumentsLength() || operand->isStringLength() ||
+        operand->isNonNegativeIntPtrToInt32()) {
+      bool isZeroOrNegative;
+      switch (constant->type()) {
+        case MIRType::Int32:
+          isZeroOrNegative = constant->toInt32() <= 0;
+          break;
+        case MIRType::IntPtr:
+          isZeroOrNegative = constant->toIntPtr() <= 0;
+          break;
+        default:
+          isZeroOrNegative = false;
+          break;
       }
-      return nullptr;
+
+      // (Array|ArrayBufferView|Arguments|String)Length is always >= 0.
+      // max(array.length, cte <= 0) = array.length
+      // min(array.length, cte <= 0) = cte
+      if (isZeroOrNegative) {
+        return isMax ? operand : constant;
+      }
     }
-    if (lhs->type() == MIRType::Float32) {
-      return MConstant::NewFloat32(alloc, result);
-    }
-    MOZ_ASSERT(lhs->type() == MIRType::Double);
-    return MConstant::NewDouble(alloc, result);
+    return nullptr;
   };
 
   // Try to fold the following patterns when |x| and |y| are constants.
@@ -3243,8 +3289,7 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
         break;
       }
 
-      if (!x->isConstant() || !x->toConstant()->isTypeRepresentableAsDouble() ||
-          !y->isConstant() || !y->toConstant()->isTypeRepresentableAsDouble()) {
+      if (!x->isConstant() || !y->isConstant()) {
         break;
       }
 
@@ -3288,11 +3333,6 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
   // Directly apply math utility to compare the rhs() and lhs() when
   // they are both constants.
   if (lhs()->isConstant() && rhs()->isConstant()) {
-    if (!lhs()->toConstant()->isTypeRepresentableAsDouble() ||
-        !rhs()->toConstant()->isTypeRepresentableAsDouble()) {
-      return this;
-    }
-
     if (auto* folded = foldConstants(lhs(), rhs(), isMax())) {
       return folded;
     }
@@ -3304,9 +3344,10 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
 
   if (operand->isToDouble() &&
       operand->getOperand(0)->type() == MIRType::Int32) {
+    MOZ_ASSERT(constant->type() == MIRType::Double);
+
     // min(int32, cte >= INT32_MAX) = int32
-    if (!isMax() && constant->isTypeRepresentableAsDouble() &&
-        constant->numberToDouble() >= INT32_MAX) {
+    if (!isMax() && constant->toDouble() >= INT32_MAX) {
       MLimitedTruncate* limit = MLimitedTruncate::New(
           alloc, operand->getOperand(0), TruncateKind::NoTruncate);
       block()->insertBefore(this, limit);
@@ -3315,8 +3356,7 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
     }
 
     // max(int32, cte <= INT32_MIN) = int32
-    if (isMax() && constant->isTypeRepresentableAsDouble() &&
-        constant->numberToDouble() <= INT32_MIN) {
+    if (isMax() && constant->toDouble() <= INT32_MIN) {
       MLimitedTruncate* limit = MLimitedTruncate::New(
           alloc, operand->getOperand(0), TruncateKind::NoTruncate);
       block()->insertBefore(this, limit);
@@ -3324,21 +3364,6 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
       return toDouble;
     }
   }
-
-  auto foldLength = [](MDefinition* operand, MConstant* constant,
-                       bool isMax) -> MDefinition* {
-    if ((operand->isArrayLength() || operand->isArrayBufferViewLength() ||
-         operand->isArgumentsLength() || operand->isStringLength()) &&
-        constant->type() == MIRType::Int32) {
-      // (Array|ArrayBufferView|Arguments|String)Length is always >= 0.
-      // max(array.length, cte <= 0) = array.length
-      // min(array.length, cte <= 0) = cte
-      if (constant->toInt32() <= 0) {
-        return isMax ? operand : constant;
-      }
-    }
-    return nullptr;
-  };
 
   if (auto* folded = foldLength(operand, constant, isMax())) {
     return folded;
@@ -3361,8 +3386,7 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
       otherOperand = other->lhs();
     }
 
-    if (otherConstant && constant->isTypeRepresentableAsDouble() &&
-        otherConstant->isTypeRepresentableAsDouble()) {
+    if (otherConstant) {
       if (isMax() == other->isMax()) {
         // Fold min(x, min(y, z)) to min(min(x, y), z) with constant min(x, y).
         // Fold max(x, max(y, z)) to max(max(x, y), z) with constant max(x, y).

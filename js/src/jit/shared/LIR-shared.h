@@ -1094,6 +1094,10 @@ const char* LMinMaxI::extraName() const {
   return mir()->isMax() ? "Max" : "Min";
 }
 
+const char* LMinMaxIntPtr::extraName() const {
+  return mir()->isMax() ? "Max" : "Min";
+}
+
 const char* LMinMaxD::extraName() const {
   return mir()->isMax() ? "Max" : "Min";
 }

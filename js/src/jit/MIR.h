@@ -4641,7 +4641,9 @@ class MMinMax : public MBinaryInstruction, public ArithPolicy::Data {
   void computeRange(TempAllocator& alloc) override;
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
+  bool canRecoverOnBailout() const override {
+    return IsTypeRepresentableAsDouble(type());
+  }
 
   bool isFloat32Commutative() const override { return true; }
   void trySpecializeFloat32(TempAllocator& alloc) override;

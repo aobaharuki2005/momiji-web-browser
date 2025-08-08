@@ -1048,6 +1048,14 @@
   mir_op: MinMax
   extra_name: true
 
+- name: MinMaxIntPtr
+  result_type: WordSized
+  operands:
+    first: WordSized
+    second: WordSized
+  mir_op: MinMax
+  extra_name: true
+
 - name: MinMaxD
   result_type: WordSized
   operands:

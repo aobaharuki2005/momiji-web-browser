@@ -11297,13 +11297,37 @@ void CodeGenerator::visitMinMaxI(LMinMaxI* ins) {
       ins->mir()->isMax() ? Assembler::GreaterThan : Assembler::LessThan;
 
   if (ins->second()->isConstant()) {
+    auto second = Imm32(ToInt32(ins->second()));
+
     Label done;
-    masm.branch32(cond, first, Imm32(ToInt32(ins->second())), &done);
-    masm.move32(Imm32(ToInt32(ins->second())), output);
+    masm.branch32(cond, first, second, &done);
+    masm.move32(second, output);
     masm.bind(&done);
   } else {
     Register second = ToRegister(ins->second());
     masm.cmp32Move32(cond, second, first, second, output);
+  }
+}
+
+void CodeGenerator::visitMinMaxIntPtr(LMinMaxIntPtr* ins) {
+  Register first = ToRegister(ins->first());
+  Register output = ToRegister(ins->output());
+
+  MOZ_ASSERT(first == output);
+
+  Assembler::Condition cond =
+      ins->mir()->isMax() ? Assembler::GreaterThan : Assembler::LessThan;
+
+  if (ins->second()->isConstant()) {
+    auto second = ImmWord(ToIntPtr(ins->second()));
+
+    Label done;
+    masm.branchPtr(cond, first, second, &done);
+    masm.movePtr(second, output);
+    masm.bind(&done);
+  } else {
+    Register second = ToRegister(ins->second());
+    masm.cmpPtrMovePtr(cond, second, first, second, output);
   }
 }
 
