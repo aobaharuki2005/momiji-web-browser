@@ -459,7 +459,6 @@ rtc_library("rtc_error") {
   deps = [
     "../rtc_base:checks",
     "../rtc_base:logging",
-    "../rtc_base:macromagic",
     "../rtc_base/system:rtc_export",
     "//third_party/abseil-cpp/absl/meta:type_traits",
     "//third_party/abseil-cpp/absl/strings",
@@ -921,7 +920,6 @@ rtc_source_set("simulated_network_api") {
   visibility = [ "*" ]
   sources = [ "test/simulated_network.h" ]
   deps = [
-    "../rtc_base:macromagic",
     "../rtc_base:random",
     "transport:ecn_marking",
     "units:data_rate",
@@ -1009,7 +1007,6 @@ rtc_source_set("refcountedbase") {
   sources = [ "ref_counted_base.h" ]
   deps = [
     ":ref_count",
-    "../rtc_base:macromagic",
     "../rtc_base:refcount",
   ]
 }

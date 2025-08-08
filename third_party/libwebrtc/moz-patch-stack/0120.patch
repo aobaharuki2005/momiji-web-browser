@@ -130,7 +130,7 @@ index 9f4af73c6f..655f9c0e22 100644
              "Generated during 'gn gen' by //BUILD.gn.",
              "",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index af6b22c906..6d8dab8acc 100644
+index 39f545ff1d..4488af9b1f 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -265,7 +265,7 @@ index d0af76a6a0..40d3be5e30 100644
  
  rtc_library("video_rtp_headers") {
 diff --git a/api/video_codecs/BUILD.gn b/api/video_codecs/BUILD.gn
-index 3732e6021f..f86e596c10 100644
+index 802f8cc436..eb4fbcad65 100644
 --- a/api/video_codecs/BUILD.gn
 +++ b/api/video_codecs/BUILD.gn
 @@ -8,8 +8,8 @@
