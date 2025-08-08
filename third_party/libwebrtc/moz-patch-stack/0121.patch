@@ -79,7 +79,7 @@ index d07211b9cf..eaa799dbc9 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index a7b7bac153..4715e7d7d0 100644
+index 9f4af73c6f..655f9c0e22 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -102,7 +102,7 @@ index a7b7bac153..4715e7d7d0 100644
    import("//third_party/jni_zero/jni_zero.gni")
  }
  
-@@ -539,7 +539,7 @@ if (!build_with_chromium) {
+@@ -538,7 +538,7 @@ if (!build_with_chromium) {
  
      sources = []
      complete_static_lib = true
@@ -111,7 +111,7 @@ index a7b7bac153..4715e7d7d0 100644
      defines = []
  
      deps = [
-@@ -849,7 +849,7 @@ rtc_static_library("dcsctp") {
+@@ -848,7 +848,7 @@ rtc_static_library("dcsctp") {
    visibility = [ "//:default" ]
    sources = []
    complete_static_lib = true
@@ -120,7 +120,7 @@ index a7b7bac153..4715e7d7d0 100644
    defines = []
    deps = [
      "net/dcsctp/public:factory",
-@@ -884,7 +884,7 @@ group("poison_software_video_codecs") {
+@@ -883,7 +883,7 @@ group("poison_software_video_codecs") {
  if (!build_with_chromium) {
    # Write debug logs to gn_logs.txt.
    # This is also required for Siso builds.

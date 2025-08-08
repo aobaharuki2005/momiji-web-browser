@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/90a33b06e51017d25
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 4715e7d7d0..188a6d0dbd 100644
+index 655f9c0e22..e1acb941cc 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -569,6 +569,7 @@ if (!build_with_chromium) {
+@@ -568,6 +568,7 @@ if (!build_with_chromium) {
        "call",
        "common_audio",
        "common_video",
@@ -20,7 +20,7 @@ index 4715e7d7d0..188a6d0dbd 100644
        "logging:rtc_event_log_api",
        "media",
        "modules",
-@@ -846,7 +847,7 @@ if (rtc_include_tests && !build_with_chromium) {
+@@ -845,7 +846,7 @@ if (rtc_include_tests && !build_with_chromium) {
  # Build target for standalone dcsctp
  rtc_static_library("dcsctp") {
    # Only the root target should depend on this.

@@ -34,10 +34,10 @@ Upstream commit: https://webrtc.googlesource.com/src/+/b65c6012cf0512e4713fe4c9c
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 4c0fc4a8e7..958330219b 100644
+index 4cefd5bb47..1651f5ca4f 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -551,7 +551,6 @@ if (!build_with_chromium) {
+@@ -550,7 +550,6 @@ if (!build_with_chromium) {
        "api:libjingle_peerconnection_api",
        "api:rtc_error",
        "api:transport_api",
@@ -45,7 +45,7 @@ index 4c0fc4a8e7..958330219b 100644
        "api/audio_codecs:opus_audio_decoder_factory",
        "api/crypto",
        "api/rtc_event_log:rtc_event_log_factory",
-@@ -645,6 +644,10 @@ if (!build_with_chromium) {
+@@ -644,6 +643,10 @@ if (!build_with_chromium) {
      if (rtc_enable_protobuf) {
        deps += [ "logging:rtc_event_log_proto" ]
      }
