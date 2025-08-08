@@ -6835,9 +6835,8 @@ Result<CreateElementResult, nsresult> HTMLEditor::AlignNodesAndDescendants(
 
   RefPtr<Element> createdDivElement;
   const bool useCSS = IsCSSEnabled();
-  int32_t indexOfTransitionList = -1;
-  for (OwningNonNull<nsIContent>& content : aArrayOfContents) {
-    ++indexOfTransitionList;
+  for (size_t i = 0; i < aArrayOfContents.Length(); i++) {
+    const OwningNonNull<nsIContent>& content = aArrayOfContents[i];
 
     // Ignore all non-editable nodes.  Leave them be.
     if (!EditorUtils::IsEditableContent(content, EditorType::HTML)) {
@@ -6967,7 +6966,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::AlignNodesAndDescendants(
 
     // Need to make a div to put things in if we haven't already, or if this
     // node doesn't go in div we used earlier.
-    if (!createdDivElement || transitionList[indexOfTransitionList]) {
+    if (!createdDivElement || transitionList[i]) {
       // First, check that our element can contain a div.
       if (!HTMLEditUtils::CanNodeContain(*atContent.GetContainer(),
                                          *nsGkAtoms::div)) {
@@ -7016,14 +7015,43 @@ Result<CreateElementResult, nsresult> HTMLEditor::AlignNodesAndDescendants(
       latestCreatedDivElement = createdDivElement;
     }
 
+    const OwningNonNull<nsIContent> lastContent = [&]() {
+      nsIContent* lastContent = content;
+      for (; i + 1 < aArrayOfContents.Length(); i++) {
+        const OwningNonNull<nsIContent>& nextContent = aArrayOfContents[i + 1];
+        if (lastContent->GetNextSibling() != nextContent ||
+            !EditorUtils::IsEditableContent(content, EditorType::HTML) ||
+            !HTMLEditUtils::SupportsAlignAttr(nextContent) ||
+            // If we meets an invisible `Text` in table or list, we don't move
+            // it to avoid to handle ancestors for them.  However, ignoring the
+            // empty `Text` nodes is more expensive than moving them here.
+            // Therefore, here does not check whether the following sibling of
+            // `content` is an empty `Text`.
+
+            // In some cases, we reach here even if `content` is a list or a
+            // list item.  However, anyway we need to run a preparation for such
+            // element.  Therefore, we cannot move such type of elements with
+            // `content` here.
+            HTMLEditUtils::IsListItem(nextContent) ||
+            HTMLEditUtils::IsAnyListElement(nextContent) ||
+            // Similarly, if the sibling is in the transitionList, we need to
+            // handle it separately.
+            transitionList[i + 1]) {
+          break;
+        }
+        lastContent = nextContent;
+      }
+      return OwningNonNull<nsIContent>(*lastContent);
+    }();
+
     // Tuck the node into the end of the active div
     //
     // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it alive.
     Result<MoveNodeResult, nsresult> moveNodeResult =
-        MoveNodeToEndWithTransaction(MOZ_KnownLive(content),
-                                     *createdDivElement);
+        MoveSiblingsToEndWithTransaction(MOZ_KnownLive(content), lastContent,
+                                         *createdDivElement);
     if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
-      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveSiblingsToEndWithTransaction() failed");
       return moveNodeResult.propagateErr();
     }
     MoveNodeResult unwrappedMoveNodeResult = moveNodeResult.unwrap();
