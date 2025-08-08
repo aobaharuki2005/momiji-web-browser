@@ -106,7 +106,7 @@ var gProfiles = {
     );
     let avatarURL =
       await SelectableProfileService.currentProfile.getAvatarURL(16);
-    profilesButton.setAttribute("image", `${avatarURL}`);
+    profilesButton.setAttribute("image", avatarURL);
   },
 
   /**
@@ -128,12 +128,9 @@ var gProfiles = {
       }
       let { themeBg, themeFg } = profile.theme;
       menuitem.setAttribute("profileid", profile.id);
+      menuitem.setAttribute("image", await profile.getAvatarURL(48));
       menuitem.style.setProperty("--menu-profiles-theme-bg", themeBg);
       menuitem.style.setProperty("--menu-profiles-theme-fg", themeFg);
-      menuitem.style.setProperty(
-        "--menuitem-icon",
-        `url(${await profile.getAvatarURL(48)})`
-      );
 
       if (profile.id === currentProfile.id) {
         menuitem.classList.add("current");
@@ -342,7 +339,7 @@ var gProfiles = {
       let { themeFg, themeBg } = profile.theme;
       button.style.setProperty("--appmenu-profiles-theme-bg", themeBg);
       button.style.setProperty("--appmenu-profiles-theme-fg", themeFg);
-      button.setAttribute("image", `${await profile.getAvatarURL(16)}`);
+      button.setAttribute("image", await profile.getAvatarURL(16));
 
       profilesList.appendChild(button);
     }
