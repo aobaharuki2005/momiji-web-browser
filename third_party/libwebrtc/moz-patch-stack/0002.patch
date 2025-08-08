@@ -731,7 +731,7 @@ index 1f21ab969c..df7e86bf03 100644
  
  }  // namespace webrtc
 diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 30120db3f4..082807f4f5 100644
+index 8ac8bfcd0c..4f6922f22c 100644
 --- a/modules/desktop_capture/win/screen_capture_utils.cc
 +++ b/modules/desktop_capture/win/screen_capture_utils.cc
 @@ -52,7 +52,7 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
