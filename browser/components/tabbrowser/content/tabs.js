@@ -324,7 +324,15 @@
       if (!this._showTabHoverPreview) {
         return;
       }
-      this.ensureTabPreviewPanelLoaded();
+      if (!this.previewPanel) {
+        // load the tab preview component
+        const TabHoverPreviewPanel = ChromeUtils.importESModule(
+          "chrome://browser/content/tabbrowser/tab-hover-preview.mjs"
+        ).default;
+        this.previewPanel = new TabHoverPreviewPanel(
+          document.getElementById("tab-preview-panel")
+        );
+      }
       this.previewPanel.activate(event.target);
     }
 
@@ -336,21 +344,24 @@
       if (!this._showTabGroupHoverPreview) {
         return;
       }
-      this.ensureTabPreviewPanelLoaded();
-      this.previewPanel.activate(event.target.group);
+
+      if (!this.tabGroupPreviewPanel) {
+        const TabGroupHoverPreviewPanel = ChromeUtils.importESModule(
+          "chrome://browser/content/tabbrowser/tabgroup-hover-preview.mjs"
+        ).default;
+        this.tabGroupPreviewPanel = new TabGroupHoverPreviewPanel(
+          document.getElementById("tabgroup-preview-panel")
+        );
+      }
+      this.tabGroupPreviewPanel.activate(event.target);
     }
 
     on_TabGroupLabelHoverEnd(event) {
-      this.previewPanel?.deactivate(event.target.group);
-    }
-
-    ensureTabPreviewPanelLoaded() {
-      if (!this.previewPanel) {
-        const TabHoverPanelSet = ChromeUtils.importESModule(
-          "chrome://browser/content/tabbrowser/tab-hover-preview.mjs"
-        ).default;
-        this.previewPanel = new TabHoverPanelSet(window);
-      }
+      // TODO bug1971237: determine a more appropriate value for this delay
+      // and consider making it adjustable
+      setTimeout(() => {
+        this.tabGroupPreviewPanel?.deactivate(event.target);
+      }, 50);
     }
 
     on_TabGroupExpand() {
@@ -752,7 +763,7 @@
         return;
       }
 
-      this.previewPanel?.deactivate(null, { force: true });
+      this.previewPanel?.deactivate();
       this.startTabDrag(event, tab);
     }
 
