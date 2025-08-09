@@ -286,38 +286,38 @@ urlbar-search-mode-actions-en = Actions
 
 # Shows the number of days until an event.
 # Variables:
+#   $name (string) - The name of the event.
 #   $daysUntilStart (integer) - The number of days until the event starts.
 urlbar-result-dates-countdown =
     { $daysUntilStart ->
-        [one] In { $daysUntilStart } day
-        *[other] In { $daysUntilStart } days
+        [one] { $name } · In { $daysUntilStart } day
+        *[other] { $name } · In { $daysUntilStart } days
     }
 
 # Shows the number of days until a multiple day long event starts.
 # Variables:
+#   $name (string) - The name of the event.
 #   $daysUntilStart (integer) - The number of days until the event starts.
 urlbar-result-dates-countdown-range =
     { $daysUntilStart ->
-        [one] Starts in { $daysUntilStart } day
-        *[other] Starts in { $daysUntilStart } days
+        [one] { $name } · Starts in { $daysUntilStart } day
+        *[other] { $name } · Starts in { $daysUntilStart } days
     }
 
 # Shows the number of days until a multiple day long event ends.
 # Variables:
+#   $name (string) - The name of the event.
 #   $daysUntilEnd (integer) - The number of days until the event ends.
 urlbar-result-dates-ongoing =
     { $daysUntilEnd ->
-        [one] Now, { $daysUntilEnd } day left
-        *[other] Now, { $daysUntilEnd } days left
+        [one] { $name } · Ends in { $daysUntilEnd } day
+        *[other] { $name } · Ends in { $daysUntilEnd } days
     }
 
 # Shows that an event happens today.
-urlbar-result-dates-today = Today
+#   $name (string) - The name of the event.
+urlbar-result-dates-today = { $name } · Today
 
 # Shows that a multiple day long event ends today.
-urlbar-result-dates-ends-today = Now, ends today
-
-# The title of a urlbar result of an event.
-#   $date (string) - The formatted date of the event.
 #   $name (string) - The name of the event.
-urlbar-result-dates-title = <b>{ $date }</b> · { $name }
+urlbar-result-dates-ends-today = { $name } · Ends today

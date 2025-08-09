@@ -63,10 +63,9 @@ add_task(async function fourDaysBefore() {
   let query = "event 1";
   let expected = makeExpectedResult({
     date: "Wednesday, March 5, 2025",
-    name: "Event 1",
     descriptionL10n: {
       id: "urlbar-result-dates-countdown",
-      args: { daysUntilStart: 4 },
+      args: { name: "Event 1", daysUntilStart: 4 },
     },
   });
 
@@ -79,8 +78,10 @@ add_task(async function onDayOfEvent() {
   let query = "event 1";
   let expected = makeExpectedResult({
     date: "Wednesday, March 5, 2025",
-    name: "Event 1",
-    descriptionL10n: { id: "urlbar-result-dates-today" },
+    descriptionL10n: {
+      id: "urlbar-result-dates-today",
+      args: { name: "Event 1" },
+    },
   });
 
   await checkDatesResults(query, expected);
@@ -93,10 +94,9 @@ add_task(async function oneDayAfter() {
   let expected = makeExpectedResult({
     // Should select the event in the next year.
     date: "Wednesday, February 18, 2026",
-    name: "Event 1",
-    // Since the event is over SHOW_COUNTDOWN_THRESHOLD_DAYS days away,
-    // it should display the formula instead of the countdown.
-    description: "Always the first Monday in January.",
+    // Since the event is over SHOW_COUNTDOWN_THRESHOLD_DAYS
+    // days away, it should not display the countdown.
+    description: "Event 1",
   });
 
   await checkDatesResults(query, expected);
@@ -117,10 +117,9 @@ add_task(async function beforeMultiDay() {
   let query = "multi day event";
   let expected = makeExpectedResult({
     date: "June 10 – 20, 2025",
-    name: "Multi Day Event",
     descriptionL10n: {
       id: "urlbar-result-dates-countdown-range",
-      args: { daysUntilStart: 1 },
+      args: { name: "Multi Day Event", daysUntilStart: 1 },
     },
   });
 
@@ -133,10 +132,9 @@ add_task(async function duringMultiDay() {
   let query = "multi day event";
   let expected = makeExpectedResult({
     date: "June 10 – 20, 2025",
-    name: "Multi Day Event",
     descriptionL10n: {
       id: "urlbar-result-dates-ongoing",
-      args: { daysUntilEnd: 1 },
+      args: { name: "Multi Day Event", daysUntilEnd: 1 },
     },
   });
 
@@ -149,8 +147,10 @@ add_task(async function lastDayDuringMultiDay() {
   let query = "multi day event";
   let expected = makeExpectedResult({
     date: "June 10 – 20, 2025",
-    name: "Multi Day Event",
-    descriptionL10n: { id: "urlbar-result-dates-ends-today" },
+    descriptionL10n: {
+      id: "urlbar-result-dates-ends-today",
+      args: { name: "Multi Day Event" },
+    },
   });
 
   await checkDatesResults(query, expected);
@@ -199,13 +199,13 @@ async function checkDatesResults(query, expected) {
 
 function makeExpectedResult({
   date,
-  name,
   description,
   descriptionL10n,
   isSponsored = false,
   isBestMatch = true,
   isRichSuggestion = undefined,
 }) {
+  let name = description ?? descriptionL10n.args.name;
   return {
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -213,13 +213,7 @@ function makeExpectedResult({
     isBestMatch,
     isRichSuggestion,
     payload: {
-      titleL10n: {
-        id: "urlbar-result-dates-title",
-        args: { date, name },
-        parseMarkup: true,
-        cacheable: true,
-        excludeArgsFromCacheKey: true,
-      },
+      title: date,
       url: Services.search.defaultEngine.getSubmission(name).uri.spec,
       description,
       descriptionL10n: descriptionL10n
