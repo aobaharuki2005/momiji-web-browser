@@ -10,6 +10,7 @@
 
 #ifdef MOZ_LOGGING
 #  undef LOG
+#  undef LOGVERBOSE
 #  include "mozilla/Logging.h"
 #  include "nsTArray.h"
 #  include "Units.h"
@@ -17,8 +18,12 @@ extern mozilla::LazyLogModule gWidgetCompositorLog;
 #  define LOG(str, ...)                                     \
     MOZ_LOG(gWidgetCompositorLog, mozilla::LogLevel::Debug, \
             (str, ##__VA_ARGS__))
+#  define LOGVERBOSE(str, ...)                                \
+    MOZ_LOG(gWidgetCompositorLog, mozilla::LogLevel::Verbose, \
+            (str, ##__VA_ARGS__))
 #else
 #  define LOG(args)
+#  define LOGVERBOSE(args)
 #endif /* MOZ_LOGGING */
 
 namespace mozilla::layers {
@@ -92,6 +97,10 @@ RefPtr<WaylandBuffer> SurfacePoolWayland::ObtainBufferFromPool(
     RefPtr<WaylandBuffer> buffer = iterToRecycle->mWaylandBuffer;
     mInUseEntries.insert({buffer.get(), std::move(*iterToRecycle)});
     mAvailableEntries.RemoveElementAt(iterToRecycle);
+    LOGVERBOSE(
+        "SurfacePoolWayland::ObtainBufferFromPool() recycled [%p] inUse [%zu] "
+        "available [%zu]",
+        buffer.get(), mInUseEntries.size(), mAvailableEntries.Length());
     return buffer;
   }
 
@@ -107,6 +116,8 @@ RefPtr<WaylandBuffer> SurfacePoolWayland::ObtainBufferFromPool(
     mInUseEntries.insert({buffer.get(), SurfacePoolEntry{aSize, buffer, {}}});
   }
 
+  LOGVERBOSE("SurfacePoolWayland::ObtainBufferFromPool() created [%p]",
+             buffer.get());
   return buffer;
 }
 
@@ -119,11 +130,16 @@ void SurfacePoolWayland::ReturnBufferToPool(
 
   if (aBuffer->IsAttached()) {
     mPendingEntries.AppendElement(std::move(inUseEntryIter->second));
-    mInUseEntries.erase(inUseEntryIter);
   } else {
     mAvailableEntries.AppendElement(std::move(inUseEntryIter->second));
-    mInUseEntries.erase(inUseEntryIter);
   }
+  mInUseEntries.erase(inUseEntryIter);
+
+  LOGVERBOSE(
+      "SurfacePoolWayland::ReturnBufferToPool() buffer [%p] inUse [%d] pending "
+      "[%d] available [%d]",
+      aBuffer.get(), (int)mInUseEntries.size(), (int)mPendingEntries.Length(),
+      (int)mAvailableEntries.Length());
 }
 
 void SurfacePoolWayland::EnforcePoolSizeLimit() {
@@ -150,6 +166,9 @@ void SurfacePoolWayland::EnforcePoolSizeLimit() {
 void SurfacePoolWayland::CollectPendingSurfaces() {
   MutexAutoLock lock(mMutex);
   mPendingEntries.RemoveElementsBy([&](auto& entry) {
+    LOGVERBOSE(
+        "SurfacePoolWayland::CollectPendingSurfaces() [%p] attached [%d]",
+        entry.mWaylandBuffer.get(), entry.mWaylandBuffer->IsAttached());
     if (!entry.mWaylandBuffer->IsAttached()) {
       mAvailableEntries.AppendElement(std::move(entry));
       return true;
