@@ -33,11 +33,7 @@ OffscreenCanvasDisplayHelper::OffscreenCanvasDisplayHelper(
   mData.mSize.height = aHeight;
 }
 
-OffscreenCanvasDisplayHelper::~OffscreenCanvasDisplayHelper() {
-  MutexAutoLock lock(mMutex);
-  NS_ReleaseOnMainThread("OffscreenCanvas::mExpandedReader",
-                         mExpandedReader.forget());
-}
+OffscreenCanvasDisplayHelper::~OffscreenCanvasDisplayHelper() = default;
 
 void OffscreenCanvasDisplayHelper::DestroyElement() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -64,32 +60,6 @@ void OffscreenCanvasDisplayHelper::DestroyCanvas() {
   mFrontBufferSurface = nullptr;
   mOffscreenCanvas = nullptr;
   mWorkerRef = nullptr;
-}
-
-void OffscreenCanvasDisplayHelper::SetWriteOnly(nsIPrincipal* aExpandedReader) {
-  MutexAutoLock lock(mMutex);
-  NS_ReleaseOnMainThread("OffscreenCanvasDisplayHelper::mExpandedReader",
-                         mExpandedReader.forget());
-  mExpandedReader = aExpandedReader;
-  mIsWriteOnly = true;
-}
-
-bool OffscreenCanvasDisplayHelper::CallerCanRead(
-    nsIPrincipal& aPrincipal) const {
-  MutexAutoLock lock(mMutex);
-  if (!mIsWriteOnly) {
-    return true;
-  }
-
-  // If mExpandedReader is set, this canvas was tainted only by
-  // mExpandedReader's resources. So allow reading if the subject
-  // principal subsumes mExpandedReader.
-  if (mExpandedReader && aPrincipal.Subsumes(mExpandedReader)) {
-    return true;
-  }
-
-  return nsContentUtils::PrincipalHasPermission(aPrincipal,
-                                                nsGkAtoms::all_urlsPermission);
 }
 
 bool OffscreenCanvasDisplayHelper::CanElementCaptureStream() const {

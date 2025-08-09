@@ -767,26 +767,16 @@ void HTMLCanvasElement::ToDataURL(JSContext* aCx, const nsAString& aType,
                                   nsAString& aDataURL,
                                   nsIPrincipal& aSubjectPrincipal,
                                   ErrorResult& aRv) {
-  bool recheckCanRead = mOffscreenDisplay && mOffscreenDisplay->HasWorkerRef();
-
-  if (!CallerCanRead(aSubjectPrincipal)) {
+  // mWriteOnly check is redundant, but optimizes for the common case.
+  if (mWriteOnly && !CallerCanRead(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
 
-  nsString dataURL;
-  nsresult rv = ToDataURLImpl(aCx, aSubjectPrincipal, aType, aParams, dataURL);
-  if (recheckCanRead && !CallerCanRead(aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
+  nsresult rv = ToDataURLImpl(aCx, aSubjectPrincipal, aType, aParams, aDataURL);
   if (NS_FAILED(rv)) {
-    aDataURL.Assign(u"data:,"_ns);
-    return;
+    aDataURL.AssignLiteral("data:,");
   }
-
-  aDataURL = std::move(dataURL);
 }
 
 void HTMLCanvasElement::SetMozPrintCallback(PrintCallback* aCallback) {
@@ -1007,9 +997,8 @@ void HTMLCanvasElement::ToBlob(JSContext* aCx, BlobCallback& aCallback,
                                JS::Handle<JS::Value> aParams,
                                nsIPrincipal& aSubjectPrincipal,
                                ErrorResult& aRv) {
-  bool recheckCanRead = mOffscreenDisplay && mOffscreenDisplay->HasWorkerRef();
-
-  if (!CallerCanRead(aSubjectPrincipal)) {
+  // mWriteOnly check is redundant, but optimizes for the common case.
+  if (mWriteOnly && !CallerCanRead(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -1034,59 +1023,7 @@ void HTMLCanvasElement::ToBlob(JSContext* aCx, BlobCallback& aCallback,
   // If no permission, return all-white, opaque image data.
   bool usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(
       OwnerDoc(), aCx, aSubjectPrincipal);
-
-  // Encoder callback when encoding is complete.
-  class EncodeCallback : public EncodeCompleteCallback {
-   public:
-    EncodeCallback(nsIGlobalObject* aGlobal, BlobCallback* aCallback,
-                   OffscreenCanvasDisplayHelper* aOffscreenDisplay,
-                   nsIPrincipal* aSubjectPrincipal)
-        : mGlobal(aGlobal),
-          mBlobCallback(aCallback),
-          mOffscreenDisplay(aOffscreenDisplay),
-          mSubjectPrincipal(aSubjectPrincipal) {}
-
-    // This is called on main thread.
-    MOZ_CAN_RUN_SCRIPT
-    nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) override {
-      MOZ_ASSERT(NS_IsMainThread());
-
-      RefPtr<BlobImpl> blobImpl = aBlobImpl;
-
-      RefPtr<Blob> blob;
-
-      if (blobImpl && (!mOffscreenDisplay ||
-                       mOffscreenDisplay->CallerCanRead(*mSubjectPrincipal))) {
-        blob = Blob::Create(mGlobal, blobImpl);
-      }
-
-      RefPtr<BlobCallback> callback(std::move(mBlobCallback));
-      ErrorResult rv;
-
-      callback->Call(blob, rv);
-
-      mGlobal = nullptr;
-      MOZ_ASSERT(!mBlobCallback);
-
-      return rv.StealNSResult();
-    }
-
-    bool CanBeDeletedOnAnyThread() override {
-      // EncodeCallback is used from the main thread only.
-      return false;
-    }
-
-    nsCOMPtr<nsIGlobalObject> mGlobal;
-    RefPtr<BlobCallback> mBlobCallback;
-    RefPtr<OffscreenCanvasDisplayHelper> mOffscreenDisplay;
-    RefPtr<nsIPrincipal> mSubjectPrincipal;
-  };
-
-  RefPtr<EncodeCompleteCallback> callback = new EncodeCallback(
-      global, &aCallback, recheckCanRead ? mOffscreenDisplay.get() : nullptr,
-      recheckCanRead ? &aSubjectPrincipal : nullptr);
-
-  CanvasRenderingContextHelper::ToBlob(aCx, callback, aType, aParams,
+  CanvasRenderingContextHelper::ToBlob(aCx, global, aCallback, aType, aParams,
                                        usePlaceholder, aRv);
 }
 
@@ -1154,12 +1091,7 @@ already_AddRefed<nsISupports> HTMLCanvasElement::GetContext(
 
 CSSIntSize HTMLCanvasElement::GetSize() { return GetWidthHeight(); }
 
-bool HTMLCanvasElement::IsWriteOnly() const {
-  if (mOffscreenDisplay && mOffscreenDisplay->IsWriteOnly()) {
-    return true;
-  }
-  return mWriteOnly;
-}
+bool HTMLCanvasElement::IsWriteOnly() const { return mWriteOnly; }
 
 void HTMLCanvasElement::SetWriteOnly(
     nsIPrincipal* aExpandedReader /* = nullptr */) {
@@ -1171,10 +1103,6 @@ void HTMLCanvasElement::SetWriteOnly(
 }
 
 bool HTMLCanvasElement::CallerCanRead(nsIPrincipal& aPrincipal) const {
-  if (mOffscreenDisplay && !mOffscreenDisplay->CallerCanRead(aPrincipal)) {
-    return false;
-  }
-
   if (!mWriteOnly) {
     return true;
   }
