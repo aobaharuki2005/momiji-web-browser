@@ -25,7 +25,6 @@ struct GPUExtent3DDict;
 
 struct GPUBufferDescriptor;
 struct GPUTextureDescriptor;
-struct GPUExternalTextureDescriptor;
 struct GPUSamplerDescriptor;
 struct GPUBindGroupLayoutDescriptor;
 struct GPUPipelineLayoutDescriptor;
@@ -67,7 +66,6 @@ class BindGroupLayout;
 class Buffer;
 class CommandEncoder;
 class ComputePipeline;
-class ExternalTexture;
 class Fence;
 class InputState;
 class PipelineLayout;
@@ -157,8 +155,6 @@ class Device final : public DOMEventTargetHelper {
   already_AddRefed<Texture> CreateTexture(
       const dom::GPUTextureDescriptor& aDesc,
       Maybe<layers::RemoteTextureOwnerId> aOwnerId);
-  already_AddRefed<ExternalTexture> ImportExternalTexture(
-      const dom::GPUExternalTextureDescriptor& aDesc, ErrorResult& aRv);
   already_AddRefed<Sampler> CreateSampler(
       const dom::GPUSamplerDescriptor& aDesc);
 

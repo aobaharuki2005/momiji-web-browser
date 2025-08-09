@@ -171,8 +171,6 @@ interface GPUDevice : EventTarget {
     [Throws]
     GPUBuffer createBuffer(GPUBufferDescriptor descriptor);
     GPUTexture createTexture(GPUTextureDescriptor descriptor);
-    [Throws]
-    GPUExternalTexture importExternalTexture(GPUExternalTextureDescriptor descriptor);
     GPUSampler createSampler(optional GPUSamplerDescriptor descriptor = {});
 
     GPUBindGroupLayout createBindGroupLayout(GPUBindGroupLayoutDescriptor descriptor);

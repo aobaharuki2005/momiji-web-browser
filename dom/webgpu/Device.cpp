@@ -12,7 +12,6 @@
 #include "CompilationInfo.h"
 #include "ComputePipeline.h"
 #include "DeviceLostInfo.h"
-#include "ExternalTexture.h"
 #include "InternalError.h"
 #include "OutOfMemoryError.h"
 #include "PipelineLayout.h"
@@ -194,14 +193,6 @@ already_AddRefed<Texture> Device::CreateTexture(
   RefPtr<Texture> texture = new Texture(this, id, aDesc);
   texture->SetLabel(aDesc.mLabel);
   return texture.forget();
-}
-
-already_AddRefed<ExternalTexture> Device::ImportExternalTexture(
-    const dom::GPUExternalTextureDescriptor& aDesc, ErrorResult& aRv) {
-  RefPtr<ExternalTextureSourceClient> source =
-      ExternalTextureSourceClient::Create(this, aDesc.mSource, aRv);
-
-  return ExternalTexture::Create(this, aDesc.mLabel, source, aDesc.mColorSpace);
 }
 
 already_AddRefed<Sampler> Device::CreateSampler(

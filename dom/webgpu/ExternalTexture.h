@@ -12,15 +12,13 @@
 #include "mozilla/Span.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
 #include "nsIGlobalObject.h"
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
 namespace dom {
 class OwningHTMLVideoElementOrVideoFrame;
-enum class PredefinedColorSpace : uint8_t;
-}  // namespace dom
+}
 namespace layers {
 class BufferDescriptor;
 class Image;
@@ -29,51 +27,24 @@ class Image;
 namespace webgpu {
 
 class Device;
-class ExternalTextureSourceClient;
 class WebGPUParent;
 
-// Implementation of WebGPU's GPUExternalTexture [1].
-//
-// A GPUExternalTexture is a sampleable 2D texture wrapping an external video
-// frame. It is an immutable snapshot; its contents may not change over time,
-// either from inside WebGPU (it is only sampleable) or from outside WebGPU
-// (e.g. due to video frame advancement).
-//
-// External textures can be imported from either a HTMLVideoElement or a
-// VideoFrame, and they can be bound to bind groups. They can be used in WGSL
-// shaders via the `texture_external` type.
-//
-// Our implementation differentiates between the imported snapshot of
-// the video frame (see `ExternalTextureSourceClient`) and the external texture
-// itself (this class). This allows us to efficiently create multiple
-// `ExternalTexture`s from the same source.
-//
-// The external texture holds a strong reference to its external texture
-// source, ensuring the source's resources remain alive as long as required
-// by any external textures.
-//
-// [1] https://www.w3.org/TR/webgpu/#gpuexternaltexture
-class ExternalTexture : public ObjectBase, public ChildOf<Device> {
+// NOTE: Incomplete. Follow-up to complete implementation is at
+// <https://bugzilla.mozilla.org/show_bug.cgi?id=1827116>.
+class ExternalTexture : public ObjectBase {
  public:
   GPU_DECL_CYCLE_COLLECTION(ExternalTexture)
   GPU_DECL_JS_WRAP(ExternalTexture)
 
-  static already_AddRefed<ExternalTexture> Create(
-      Device* const aParent, const nsString& aLabel,
-      const RefPtr<ExternalTextureSourceClient>& aSource,
-      dom::PredefinedColorSpace aColorSpace);
+  explicit ExternalTexture(nsIGlobalObject* const aGlobal) : mGlobal(aGlobal) {}
 
-  const RawId mId;
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
  private:
-  explicit ExternalTexture(Device* const aParent, RawId aId,
-                           RefPtr<ExternalTextureSourceClient> aSource);
-  virtual ~ExternalTexture();
-  void Cleanup();
+  nsCOMPtr<nsIGlobalObject> mGlobal;
 
-  // Hold a strong reference to the source to ensure it stays alive as long as
-  // the external texture may still be used.
-  RefPtr<ExternalTextureSourceClient> mSource;
+  ~ExternalTexture() = default;
+  void Cleanup() {}
 };
 
 // The client side of an imported external texture source. This gets imported
@@ -133,11 +104,6 @@ class ExternalTextureSourceHost {
   Span<const RawId> TextureIds() const { return mTextureIds; }
   Span<const RawId> ViewIds() const { return mViewIds; }
 
-  // Returns information required to create the wgpu::ExternalTexture that is
-  // only available to the host side.
-  ffi::WGPUExternalTextureDescriptorFromSource GetExternalTextureDescriptor(
-      ffi::WGPUPredefinedColorSpace aDestColorSpace) const;
-
  private:
   ExternalTextureSourceHost(Span<const RawId> aTextureIds,
                             Span<const RawId> aViewIds, gfx::IntSize aSize,
@@ -164,10 +130,10 @@ class ExternalTextureSourceHost {
   AutoTArray<RawId, 3> mTextureIds;
   AutoTArray<RawId, 3> mViewIds;
   const gfx::IntSize mSize;
-  const gfx::SurfaceFormat mFormat;
-  const gfx::YUVRangedColorSpace mColorSpace;
-  const std::array<float, 6> mSampleTransform;
-  const std::array<float, 6> mLoadTransform;
+  MOZ_MAYBE_UNUSED const gfx::SurfaceFormat mFormat;
+  MOZ_MAYBE_UNUSED const gfx::YUVRangedColorSpace mColorSpace;
+  MOZ_MAYBE_UNUSED const std::array<float, 6> mSampleTransform;
+  MOZ_MAYBE_UNUSED const std::array<float, 6> mLoadTransform;
 };
 
 }  // namespace webgpu

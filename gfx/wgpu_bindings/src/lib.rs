@@ -147,54 +147,6 @@ pub enum ExternalTextureSource {}
 impl id::Marker for ExternalTextureSource {}
 pub type ExternalTextureSourceId = id::Id<ExternalTextureSource>;
 
-#[repr(C)]
-#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
-pub enum PredefinedColorSpace {
-    Srgb,
-    DisplayP3,
-}
-
-// Descriptor for creating an external texture as used by the client side.
-// Contains the fields of dom::GPUExternalTextureDescriptor, but with the
-// source encoded as an ID.
-#[repr(C)]
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct ExternalTextureDescriptor<L> {
-    label: L,
-    source: Option<crate::ExternalTextureSourceId>,
-    color_space: PredefinedColorSpace,
-}
-
-impl<L> ExternalTextureDescriptor<L> {
-    #[must_use]
-    pub fn map_label<K>(&self, fun: impl FnOnce(&L) -> K) -> ExternalTextureDescriptor<K> {
-        ExternalTextureDescriptor {
-            label: fun(&self.label),
-            source: self.source,
-            color_space: self.color_space,
-        }
-    }
-}
-
-// Descriptor for creating an external texture as used by the server side. This
-// contains information that can only be provided from the server side via the
-// `ExternalTextureSourceHost`. It will be combined with the
-// `ExternalTextureDescriptor` provided by the client in order to create the
-// descriptor that will be passed to wgpu.
-#[repr(C)]
-struct ExternalTextureDescriptorFromSource<'a> {
-    planes: FfiSlice<'a, id::TextureViewId>,
-    width: u32,
-    height: u32,
-    format: wgt::ExternalTextureFormat,
-    yuv_conversion_matrix: [f32; 16],
-    gamut_conversion_matrix: [f32; 9],
-    src_transfer_function: wgt::ExternalTextureTransferFunction,
-    dst_transfer_function: wgt::ExternalTextureTransferFunction,
-    sample_transform: [f32; 6],
-    load_transform: [f32; 6],
-}
-
 #[derive(serde::Serialize, serde::Deserialize)]
 #[repr(transparent)]
 pub struct SurfaceFormat(i8);
@@ -315,7 +267,6 @@ enum Message<'a> {
     DropRenderPipeline(id::RenderPipelineId),
     DropTexture(id::TextureId),
     DropTextureView(id::TextureViewId),
-    DropExternalTexture(id::ExternalTextureId),
     DropExternalTextureSource(crate::ExternalTextureSourceId),
     DropSampler(id::SamplerId),
     DropQuerySet(id::QuerySetId),
@@ -332,10 +283,6 @@ enum DeviceAction<'a> {
         id::TextureId,
         wgc::resource::TextureDescriptor<'a>,
         Option<SwapChainId>,
-    ),
-    CreateExternalTexture(
-        id::ExternalTextureId,
-        crate::ExternalTextureDescriptor<wgc::Label<'a>>,
     ),
     CreateSampler(id::SamplerId, wgc::resource::SamplerDescriptor<'a>),
     CreateBindGroupLayout(
