@@ -7,7 +7,6 @@
 
 #include <unordered_set>
 
-#include "ExternalTexture.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/WebGPUBinding.h"
@@ -170,18 +169,6 @@ extern void wgpu_server_remove_shared_texture(WGPUWebGPUParentPtr aParent,
                                               WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParent);
   parent->RemoveSharedTexture(aId);
-}
-
-extern void wgpu_parent_destroy_external_texture_source(
-    WGPUWebGPUParentPtr aParent, WGPUExternalTextureSourceId aId) {
-  auto* const parent = static_cast<WebGPUParent*>(aParent);
-  parent->DestroyExternalTextureSource(aId);
-}
-
-extern void wgpu_parent_drop_external_texture_source(
-    WGPUWebGPUParentPtr aParent, WGPUExternalTextureSourceId aId) {
-  auto* const parent = static_cast<WebGPUParent*>(aParent);
-  parent->DropExternalTextureSource(aId);
 }
 
 extern void wgpu_server_dealloc_buffer_shmem(WGPUWebGPUParentPtr aParent,
@@ -371,60 +358,95 @@ extern void wgpu_parent_send_server_message(WGPUWebGPUParentPtr aParent,
 
 }  // namespace ffi
 
-ErrorBuffer::ErrorBuffer() { mMessageUtf8[0] = 0; }
+// A fixed-capacity buffer for receiving textual error messages from
+// `wgpu_bindings`.
+//
+// The `ToFFI` method returns an `ffi::WGPUErrorBuffer` pointing to our
+// buffer, for you to pass to fallible FFI-visible `wgpu_bindings`
+// functions. These indicate failure by storing an error message in the
+// buffer, which you can retrieve by calling `GetError`.
+//
+// If you call `ToFFI` on this type, you must also call `GetError` to check for
+// an error. Otherwise, the destructor asserts.
+//
+// TODO: refactor this to avoid stack-allocating the buffer all the time.
+class ErrorBuffer {
+  // if the message doesn't fit, it will be truncated
+  static constexpr unsigned BUFFER_SIZE = 512;
+  ffi::WGPUErrorBufferType mType = ffi::WGPUErrorBufferType_None;
+  char mMessageUtf8[BUFFER_SIZE] = {};
+  bool mAwaitingGetError = false;
+  RawId mDeviceId = 0;
 
-ErrorBuffer::~ErrorBuffer() { MOZ_ASSERT(!mAwaitingGetError); }
+ public:
+  ErrorBuffer() { mMessageUtf8[0] = 0; }
+  ErrorBuffer(const ErrorBuffer&) = delete;
+  ~ErrorBuffer() { MOZ_ASSERT(!mAwaitingGetError); }
 
-ffi::WGPUErrorBuffer ErrorBuffer::ToFFI() {
-  mAwaitingGetError = true;
-  ffi::WGPUErrorBuffer errorBuf = {&mType, mMessageUtf8, BUFFER_SIZE,
-                                   &mDeviceId};
-  return errorBuf;
-}
+  ffi::WGPUErrorBuffer ToFFI() {
+    mAwaitingGetError = true;
+    ffi::WGPUErrorBuffer errorBuf = {&mType, mMessageUtf8, BUFFER_SIZE,
+                                     &mDeviceId};
+    return errorBuf;
+  }
 
-ffi::WGPUErrorBufferType ErrorBuffer::GetType() { return mType; }
+  ffi::WGPUErrorBufferType GetType() { return mType; }
 
-Maybe<dom::GPUErrorFilter> ErrorBuffer::ErrorTypeToFilterType(
-    ffi::WGPUErrorBufferType aType) {
-  switch (aType) {
-    case ffi::WGPUErrorBufferType_None:
-    case ffi::WGPUErrorBufferType_DeviceLost:
+  static Maybe<dom::GPUErrorFilter> ErrorTypeToFilterType(
+      ffi::WGPUErrorBufferType aType) {
+    switch (aType) {
+      case ffi::WGPUErrorBufferType_None:
+      case ffi::WGPUErrorBufferType_DeviceLost:
+        return {};
+      case ffi::WGPUErrorBufferType_Internal:
+        return Some(dom::GPUErrorFilter::Internal);
+      case ffi::WGPUErrorBufferType_Validation:
+        return Some(dom::GPUErrorFilter::Validation);
+      case ffi::WGPUErrorBufferType_OutOfMemory:
+        return Some(dom::GPUErrorFilter::Out_of_memory);
+      case ffi::WGPUErrorBufferType_Sentinel:
+        break;
+    }
+
+    MOZ_CRASH("invalid `ErrorBufferType`");
+  }
+
+  struct Error {
+    dom::GPUErrorFilter type;
+    bool isDeviceLost;
+    nsCString message;
+    RawId deviceId;
+  };
+
+  // Retrieve the error message was stored in this buffer. Asserts that
+  // this instance actually contains an error (viz., that `GetType() !=
+  // ffi::WGPUErrorBufferType_None`).
+  //
+  // Mark this `ErrorBuffer` as having been handled, so its destructor
+  // won't assert.
+  Maybe<Error> GetError() {
+    mAwaitingGetError = false;
+    if (mType == ffi::WGPUErrorBufferType_DeviceLost) {
+      // This error is for a lost device, so we return an Error struct
+      // with the isDeviceLost bool set to true. It doesn't matter what
+      // GPUErrorFilter type we use, so we just use Validation. The error
+      // will not be reported.
+      return Some(Error{dom::GPUErrorFilter::Validation, true,
+                        nsCString{mMessageUtf8}, mDeviceId});
+    }
+    auto filterType = ErrorTypeToFilterType(mType);
+    if (!filterType) {
       return {};
-    case ffi::WGPUErrorBufferType_Internal:
-      return Some(dom::GPUErrorFilter::Internal);
-    case ffi::WGPUErrorBufferType_Validation:
-      return Some(dom::GPUErrorFilter::Validation);
-    case ffi::WGPUErrorBufferType_OutOfMemory:
-      return Some(dom::GPUErrorFilter::Out_of_memory);
-    case ffi::WGPUErrorBufferType_Sentinel:
-      break;
+    }
+    return Some(Error{*filterType, false, nsCString{mMessageUtf8}, mDeviceId});
   }
 
-  MOZ_CRASH("invalid `ErrorBufferType`");
-}
-
-Maybe<ErrorBuffer::Error> ErrorBuffer::GetError() {
-  mAwaitingGetError = false;
-  if (mType == ffi::WGPUErrorBufferType_DeviceLost) {
-    // This error is for a lost device, so we return an Error struct
-    // with the isDeviceLost bool set to true. It doesn't matter what
-    // GPUErrorFilter type we use, so we just use Validation. The error
-    // will not be reported.
-    return Some(Error{dom::GPUErrorFilter::Validation, true,
-                      nsCString{mMessageUtf8}, mDeviceId});
+  void CoerceValidationToInternal() {
+    if (mType == ffi::WGPUErrorBufferType_Validation) {
+      mType = ffi::WGPUErrorBufferType_Internal;
+    }
   }
-  auto filterType = ErrorTypeToFilterType(mType);
-  if (!filterType) {
-    return {};
-  }
-  return Some(Error{*filterType, false, nsCString{mMessageUtf8}, mDeviceId});
-}
-
-void ErrorBuffer::CoerceValidationToInternal() {
-  if (mType == ffi::WGPUErrorBufferType_Validation) {
-    mType = ffi::WGPUErrorBufferType_Internal;
-  }
-}
+};
 
 struct PendingSwapChainDrop {
   layers::RemoteTextureTxnType mTxnType;
@@ -789,28 +811,6 @@ void WebGPUParent::RemoveSharedTexture(RawId aTextureId) {
   auto it = mSharedTextures.find(aTextureId);
   if (it != mSharedTextures.end()) {
     mSharedTextures.erase(it);
-  }
-}
-
-void WebGPUParent::DestroyExternalTextureSource(RawId aSourceId) {
-  auto it = mExternalTextureSources.find(aSourceId);
-  if (it != mExternalTextureSources.end()) {
-    for (const auto textureId : it->second.TextureIds()) {
-      ffi::wgpu_server_texture_destroy(mContext.get(), textureId);
-    }
-  }
-}
-
-void WebGPUParent::DropExternalTextureSource(RawId aSourceId) {
-  auto it = mExternalTextureSources.find(aSourceId);
-  if (it != mExternalTextureSources.end()) {
-    for (const auto viewId : it->second.ViewIds()) {
-      ffi::wgpu_server_texture_view_drop(mContext.get(), viewId);
-    }
-    for (const auto textureId : it->second.TextureIds()) {
-      ffi::wgpu_server_texture_drop(mContext.get(), textureId);
-    }
-    mExternalTextureSources.erase(it);
   }
 }
 
@@ -1560,18 +1560,6 @@ ipc::IPCResult WebGPUParent::RecvMessages(
                             shmem_mapping_slices);
 
   mTempMappings.Clear();
-
-  return IPC_OK();
-}
-
-ipc::IPCResult WebGPUParent::RecvCreateExternalTextureSource(
-    RawId aDeviceId, RawId aQueueId, RawId aExternalTextureSourceId,
-    const ExternalTextureSourceDescriptor& aDesc) {
-  MOZ_RELEASE_ASSERT(mExternalTextureSources.find(aExternalTextureSourceId) ==
-                     mExternalTextureSources.end());
-  mExternalTextureSources.emplace(
-      aExternalTextureSourceId,
-      ExternalTextureSourceHost::Create(this, aDeviceId, aQueueId, aDesc));
 
   return IPC_OK();
 }
