@@ -318,6 +318,8 @@
   <string name="browser_menu_sign_back_in_to_sync">Kirjaudu takaisin sisään synkronointia varten</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">Synkronointi keskeytetty</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">Valitse varmuuskopioitavat ja synkronoitavat asiat</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">Uusi yksityinen välilehti</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -415,6 +417,8 @@
   <string name="browser_menu_default_banner_title">Aseta %1$s oletukseksi</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Vie vain muutaman sekunnin. Vaihda milloin tahansa.</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">Nopea, yksityinen ja sinua varten tehty.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Hylkää</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
@@ -628,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Kun kerrot kuinka löysit Firefoxin ja miten käytät sitä, autat meitä esittelemään selaimemme entistä useammalle ihmiselle.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Jaa mahdollisimman vähän tietoa Mozillan markkinointiteknologiakumppaneiden kanssa. Näitä tietoja ei koskaan myydä tai käytetä mainosten esittämiseen sinulle.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Jaa tietoa Mozillan markkinointiteknologiakumppaneiden kanssa. Näitä tietoja ei koskaan myydä tai käytetä mainosten esittämiseen sinulle.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Kuinka käytämme tietoja</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1081,6 +1087,14 @@
   <string name="alternative_app_icon_group_gradients">Liukuvärit</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">Muu</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Vaihdetaanko sovelluksen kuvake?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">Kuvakkeen vaihtaminen vaatii sovelluksen uudelleenkäynnistyksen.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Käynnistä uudelleen</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Peruuta</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1770,6 +1784,8 @@
   <string name="tab_crash_restore">Palauta välilehti</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s oli käynnistettävä uudelleen</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s kaatui. Lähetetäänkö raportti?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Sinulla on lähettämätön kaatumisraportti, joka liittyy tutkittaviin kaatumisiin. Sen lähettäminen auttaa meitä parantamaan %1$sia. Tämän ilmoituksen sulkeminen ohittaa kyseisen raportin.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1778,10 +1794,15 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Lähetä kaatumisilmoitukset automaattisesti</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Sulje</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">SULJE</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Älä näytä enää koskaan</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">LÄHETÄ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Lähetä kaatumisilmoitus</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Lue lisää</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Lue lisää</string>
   <!--
@@ -3803,4 +3824,10 @@
   <string name="review_prompt_feedback_header">Ikävä kuulla, että olet kohdannut ongelmia. Kerro meille, miten voimme parantaa %1$sia.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Anna palautetta</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Lue lisää</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Hyväksy</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Muistuta myöhemmin</string>
 </resources>

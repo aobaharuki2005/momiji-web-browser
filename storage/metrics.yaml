@@ -18,12 +18,15 @@ sqlite_store:
 
       This metric was generated to correspond to the Legacy Telemetry
       categorical histogram SQLITE_STORE_OPEN.
+
+      Initially this metric also recorded the "success" category, but due
+      to the high volume of recording those, only failure categories are
+      now tracked.
     dual_labels:
       key:
         description: No static keys unfortunately.
       category:
         labels:
-          - success
           - failure
           - access
           - diskio
@@ -35,6 +38,7 @@ sqlite_store:
           SQLITE_STORE_OPEN.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1635489
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1977614
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1635489
     notification_emails:
@@ -50,12 +54,15 @@ sqlite_store:
 
       This metric was generated to correspond to the Legacy Telemetry
       categorical histogram SQLITE_STORE_QUERY.
+
+      Initially this metric also recorded the "success" category, but due
+      to the high volume of recording those, only failure categories are
+      now tracked.
     dual_labels:
       key:
         description: No static keys unfortunately.
       category:
         labels:
-          - success
           - failure
           - access
           - diskio
@@ -67,6 +74,7 @@ sqlite_store:
           SQLITE_STORE_QUERY.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1635489
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1977614
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1635489
     notification_emails:

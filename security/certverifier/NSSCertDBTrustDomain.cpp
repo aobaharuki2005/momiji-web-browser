@@ -190,6 +190,8 @@ Result NSSCertDBTrustDomain::CheckCandidates(
       mIssuerSources += candidate.mIssuerSource;
       return Success;
     }
+
+    ResetCandidateBuiltChainState();
   }
 
   return Success;
@@ -1571,8 +1573,12 @@ void NSSCertDBTrustDomain::ResetAccumulatedState() {
   mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   mSCTListFromOCSPStapling = nullptr;
   mSCTListFromCertificate = nullptr;
-  mIsBuiltChainRootBuiltInRoot = false;
   mIssuerSources.clear();
+  ResetCandidateBuiltChainState();
+}
+
+void NSSCertDBTrustDomain::ResetCandidateBuiltChainState() {
+  mIsBuiltChainRootBuiltInRoot = false;
   mDistrustAfterTime.reset();
 }
 

@@ -63,6 +63,13 @@ abstract class TemporaryDownloadFeature(
 
     val logger = Logger("TemporaryDownloadFeature")
 
+    /**
+     * At most time to allow for the file to be downloaded and action to be performed.
+     *
+     * This is used in the subclasses when implementing timeout
+     */
+    protected val operationTimeoutMs: Long = 20 * 1000L
+
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     var scope: CoroutineScope? = null
 

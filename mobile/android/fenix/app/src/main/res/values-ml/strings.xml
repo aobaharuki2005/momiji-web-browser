@@ -415,6 +415,8 @@
   <string name="browser_menu_default_banner_title">%1$s-നെ തനിമട്ടാക്കുക</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">ഞൊടികൾ മാത്രമെടുക്കും. എപ്പോഴെങ്കിലും മാറ്റാം.</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">ഉടൻ, സ്വകാര്യം, താങ്ങൾക്കുവേണ്ടി\u0020</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">കളയുക</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
@@ -1028,6 +1030,8 @@
   <string name="alternative_app_icon_group_gradients">നിറച്ചരുമാനം</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">മറ്റുള്ളവ</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">റദ്ദാക്കുക</string>
   <!--
     Add-ons general availability nimbus message
 

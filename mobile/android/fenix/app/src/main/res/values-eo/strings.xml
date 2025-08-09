@@ -3096,7 +3096,7 @@
 
     Title for the translation dialog that allows a user to translate the webpage.
   -->
-  <string name="translations_bottom_sheet_title">Ĉu traduki ĉi tiun paĝon?</string>
+  <string name="translations_bottom_sheet_title">Ĉu traduki tiun ĉi paĝon?</string>
   <!--
     Title for the translation dialog after a translation was completed successfully.
     %1$s is the name of the language that the page was translated from, for example, "French".

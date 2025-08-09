@@ -3532,9 +3532,11 @@ var SessionStoreInternal = {
   saveClosedTabData(winData, closedTabs, tabData, saveAction = true) {
     // Find the index of the first tab in the list
     // of closed tabs that was closed before our tab.
-    let index = closedTabs.findIndex(tab => {
-      return tab.closedAt < tabData.closedAt;
-    });
+    let index = tabData.closedInTabGroupId
+      ? closedTabs.length
+      : closedTabs.findIndex(tab => {
+          return tab.closedAt < tabData.closedAt;
+        });
 
     // If we found no tab closed before our
     // tab then just append it to the list.

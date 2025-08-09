@@ -2417,7 +2417,7 @@
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
   <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptomineros</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
-  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Detectores de huellas digitales conocidas</string>
+  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Sistemas identificadores conocidos</string>
   <!-- Button label for navigating to the Enhanced Tracking Protection details -->
   <string name="enhanced_tracking_protection_details">Detalles</string>
   <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
@@ -2469,11 +2469,11 @@
   <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_redirect_trackers_description">Borra las cookies establecidas por redireccionamientos a sitios web de rastreo conocidos.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
-  <string name="etp_suspected_fingerprinters_title">Presuntos detectores de huellas digitales</string>
+  <string name="etp_suspected_fingerprinters_title">Presuntos sistemas identificadores</string>
   <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
-  <string name="etp_suspected_fingerprinters_description">Habilita la protección de huellas digitales para detener a los detectores de huellas digitales sospechosos.</string>
+  <string name="etp_suspected_fingerprinters_description">Habilita la protección de identificadores para frenar a los sistemas identificadores sospechosos.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_known_fingerprinters_title">Detectores de huellas digitales conocidas</string>
+  <string name="etp_known_fingerprinters_title">Sistemas identificadores conocidos</string>
   <!--
     Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
     as we use it on the UI to indicate which trackers have been partially unblocked.
@@ -3832,4 +3832,32 @@
   <string name="review_prompt_feedback_header">Lamentamos que estés teniendo problemas. Hacenos saber cómo podemos mejorar %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Dejar opinión</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Tenemos una actualización</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Introdujimos una %1$s %2$s y actualizamos nuestra %3$s.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Tómese un momento para revisar y aceptar. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Términos de uso</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Nota de privacidad</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Conocer más</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Aceptar</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Recordarme más tarde</string>
 </resources>

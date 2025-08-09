@@ -947,7 +947,6 @@ void Connection::RecordOpenStatus(nsresult rv) {
   }
 
   if (NS_SUCCEEDED(rv)) {
-    mozilla::glean::sqlite_store::open.Get(histogramKey, "success"_ns).Add();
     return;
   }
 
@@ -988,7 +987,6 @@ void Connection::RecordQueryStatus(int srv) {
     // they aren't indicating a failure.
     case SQLITE_ABORT:
     case SQLITE_INTERRUPT:
-      mozilla::glean::sqlite_store::query.Get(histogramKey, "success"_ns).Add();
       break;
     case SQLITE_CORRUPT:
     case SQLITE_NOTADB:

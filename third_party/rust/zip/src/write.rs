@@ -13,7 +13,7 @@ use crate::types::{
     ZipRawValues, MIN_VERSION,
 };
 use crate::write::ffi::S_IFLNK;
-#[cfg(any(feature = "_deflate-any", feature = "bzip2", feature = "zstd",))]
+#[cfg(all(feature = "_deflate-any", feature = "deflate-zopfli",))]
 use core::num::NonZeroU64;
 use crc32fast::Hasher;
 use indexmap::IndexMap;

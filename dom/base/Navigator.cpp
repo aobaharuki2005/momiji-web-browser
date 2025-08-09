@@ -887,7 +887,7 @@ uint32_t Navigator::MaxTouchPoints(CallerType aCallerType) {
   // we will spoof it into 0 if fingerprinting resistance is on.
   if (aCallerType != CallerType::System &&
       nsContentUtils::ShouldResistFingerprinting(GetDocShell(),
-                                                 RFPTarget::PointerEvents)) {
+                                                 RFPTarget::MaxTouchPoints)) {
     return SPOOFED_MAX_TOUCH_POINTS;
   }
 
@@ -895,7 +895,14 @@ uint32_t Navigator::MaxTouchPoints(CallerType aCallerType) {
       widget::WidgetUtils::DOMWindowToWidget(mWindow->GetOuterWindow());
 
   NS_ENSURE_TRUE(widget, 0);
-  return widget->GetMaxTouchPoints();
+  uint32_t maxTouchPoints = widget->GetMaxTouchPoints();
+
+  if (aCallerType != CallerType::System &&
+      nsContentUtils::ShouldResistFingerprinting(
+          GetDocShell(), RFPTarget::MaxTouchPointsCollapse)) {
+    return nsRFPService::CollapseMaxTouchPoints(maxTouchPoints);
+  }
+  return maxTouchPoints;
 }
 
 //*****************************************************************************

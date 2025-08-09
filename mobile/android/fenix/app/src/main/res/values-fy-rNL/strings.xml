@@ -1722,6 +1722,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Help %1$s foar elkenien better te meitsjen. Mozilla-meiwurkers brûke de ynformaasje dy’t jo ferstjoere om websiteproblemen op te lossen.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Jo rapport helpt ús problemen yn %1$s te begripen en op te lossen, om it foar elkenien te ferbetterjen. Mear ynfo</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Jo rapport helpt ús problemen yn %1$s te begripen en op te lossen, om it foar elkenien te ferbetterjen. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Mear ynfo</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3764,6 +3766,8 @@
   <string name="setup_checklist_task_explore_extensions">Utwreidingen ferkenne</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Sykwidget ynstallearje</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Sykwidget ferkenne</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3828,4 +3832,32 @@
   <string name="review_prompt_feedback_header">It spyt ús dat jo problemen hawwe. Lit ús witte hoe’t wy %1$s ferbetterje kinne.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Kommentaar efterlitte</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Wy hawwe in update</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Wy hawwe in %1$s-%2$s yntrodusearre en ús %3$s bywurke.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Nim efkes de tiid om it te besjen en te akseptearjen. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Brûkersbetingsten</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Privacyferklearring</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Mear ynfo</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Akseptearje</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Letter werinnerje</string>
 </resources>

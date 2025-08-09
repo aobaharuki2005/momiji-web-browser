@@ -685,9 +685,6 @@ export const GenAI = {
       lazy.chatMenu &&
       (!lazy.sidebarRevamp || lazy.sidebarTools.includes("aichat"));
 
-    if (!selectionInfo && !browser.browsingContext) {
-      return;
-    }
     let canShow = false;
     switch (source) {
       case "page":
@@ -739,8 +736,14 @@ export const GenAI = {
       browser,
       context,
       promptObj => {
+        const { contentType, selection } = context;
         const item = addItem();
         item.setAttribute("label", promptObj.label);
+
+        // Disabled menu if page is invalid
+        if (contentType === "page" && !selection) {
+          item.disabled = true;
+        }
         if (promptObj.badge && lazy.chatPageMenuBadge) {
           item.setAttribute("badge", promptObj.badge);
         }
@@ -989,7 +992,7 @@ export const GenAI = {
     try {
       Object.assign(
         context,
-        await browser.browsingContext.currentWindowContext
+        await browser?.browsingContext?.currentWindowContext
           .getActor("GenAI")
           .sendQuery("GetReadableText")
       );

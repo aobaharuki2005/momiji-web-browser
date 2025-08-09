@@ -35,7 +35,7 @@
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d избрани</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
-  <string name="tab_tray_multi_select_title_empty">Избиране на раздели</string>
+  <string name="tab_tray_multi_select_title_empty">Избор на раздели</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Създаване на списък</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -371,7 +371,7 @@
   <!-- Browser menu description that describes the various save related menu items inside of the save sub-menu -->
   <string name="browser_menu_save_description" moz:removedIn="141" tools:ignore="UnusedResources">Добавяне на отметка, пряк път, начална страница, списък, PDF</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
-  <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">Отбележете тази страница</string>
+  <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">Oтметнете тази страница</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
   <string name="browser_menu_bookmark_this_page_2">Отмятане на страницата</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
@@ -383,7 +383,7 @@
   <!-- Browser menu label for turning ON reader view of the current visited page -->
   <string name="browser_menu_turn_on_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">Включване на изгледа за четене</string>
   <!-- Browser menu label for turning OFF reader view of the current visited page -->
-  <string name="browser_menu_turn_off_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">Изключете изгледа за четене</string>
+  <string name="browser_menu_turn_off_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">Изключване на изгледа за четене</string>
   <!-- Browser menu button that reopens a private tab as a regular tab -->
   <string name="browser_menu_open_in_normal_tab" moz:removedIn="141" tools:ignore="UnusedResources">Преместване в не-поверителен раздел</string>
   <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
@@ -398,7 +398,7 @@
     Browser menu label that is displayed when the current page has been translated by the translation feature.
     %1$s is the name of the language that page was translated to (e.g. English).
   -->
-  <string name="browser_menu_translated_to" moz:removedIn="141" tools:ignore="UnusedResources">Преведено на %1$s</string>
+  <string name="browser_menu_translated_to" moz:removedIn="141" tools:ignore="UnusedResources">Преведено към %1$s</string>
   <!-- Browser menu label that is displayed when the current page has been translated by the translation feature. -->
   <string name="browser_menu_translated">Преведено</string>
   <!-- Browser menu label for the print feature -->
@@ -422,7 +422,7 @@
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Прекратяване</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
-  <string name="browser_menu_default_banner_dismiss_promotion">Отхвърляне на повишението</string>
+  <string name="browser_menu_default_banner_dismiss_promotion">Отхвърляне на промоцията</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
   <string name="browser_menu_recommended_extensions_content_description">Повече информация</string>
   <!--
@@ -543,9 +543,9 @@
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Безопасно сърфиране с повече възможности за избор</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_3">Нашият браузър с нестопанска цел помага да спрете компаниите да ви следват тайно в мрежата.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_3">Нашият четец с нестопанска цел помага да спрете компаниите да ви следят тайно в мрежата.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Повече от 100 милиона души защитават поверителността си, като избират браузър, поддържан от организация с нестопанска цел.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Повече от 100 милиона души защитават поверителността си, като избират четец, поддържан от организация с нестопанска цел.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Известни проследяващи скриптове? Автоматично забранени. Разширения? Изпробвайте всичките 700. Четене на PDF? С вградения четец ги управлявате лесно.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
@@ -599,11 +599,11 @@
   <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_title">Автоматично изпращане на доклади за срив</string>
   <!-- Description for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
-  <string name="onboarding_preferences_dialog_crash_reporting_description">Докладите за сривове ни позволяват да откриваме и отстраняваме проблеми с браузъра. Докладите може да включват лични или чувствителни данни.</string>
+  <string name="onboarding_preferences_dialog_crash_reporting_description">Докладите за сривове ни позволяват да откриваме и отстраняваме проблеми с четеца. Докладите може да включват лични или чувствителни данни.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Научете повече</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
-  <string name="onboarding_preferences_dialog_usage_data_title">Изпраща технически данни и данни за взаимодействие към Mozilla</string>
+  <string name="onboarding_preferences_dialog_usage_data_title">Изпращане на технически данни и данни за взаимодействие към Mozilla</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Данните за вашето устройство, хардуерна конфигурация и използване на Firefox помагат за подобряване на функциите, производителността и стабилността за всички.</string>
   <string name="onboarding_preferences_dialog_usage_data_learn_more_2">Научете повече</string>
   <!-- Positive button label for the privacy preferences dialog shown during onboarding. -->
@@ -913,7 +913,7 @@
   <!-- Preference for open download with an external download manager app -->
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">Външно приложение за изтегляния</string>
   <!-- Preference title for choosing an app to handle downloads -->
-  <string name="preferences_choose_app_for_downloads">Управлявайте изтеглянията с друго приложение</string>
+  <string name="preferences_choose_app_for_downloads">Управляване на изтеглянията с друго приложение</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_downloads_settings_clean_up_files_title">Изтриване от %s и устройството</string>
   <!-- Summary for the setting to automatically clean up downloaded files -->
@@ -3832,4 +3832,32 @@
   <string name="review_prompt_feedback_header">Съжаляваме, че имате проблеми. Кажете ни как можем да подобрим %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Оставете обратна връзка</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Имаме актуализация</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Въведохме %1$s %2$s и актуализирахме нашия %3$s.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Моля, отделете време за преглед и прием. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Условия за ползване</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Политика на поверителност</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Научете повече</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Приемане</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Напомни ми по-късно</string>
 </resources>

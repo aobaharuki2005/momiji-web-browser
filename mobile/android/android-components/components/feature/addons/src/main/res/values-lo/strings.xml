@@ -31,11 +31,21 @@
   -->
   <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານໃນອີກ 1 ໂດເມນ</string>
   <!--
+    When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+    then we will show another collapsed entry saying "Access your data on another domain.
+  -->
+  <string name="mozac_feature_addons_permissions_one_extra_domain_description_2">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານໃນໂດເມນອື່ນ</string>
+  <!--
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission.
   -->
   <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານໃນອີກ %1$d ໂດເມນ</string>
+  <!--
+    When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+    then we will show another collapsed entry saying "Access your data on other domains".
+  -->
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_2">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານໃນໂດເມນອື່ນໆ</string>
   <!-- When an add-on requires access to domains, this entry is used to describe the total number of domains. Underneath it will be the list of all the domains. %1$d is the number of all the domains that will be shown to the user as required. -->
   <string name="mozac_feature_addons_permissions_all_domain_count_description" tools:ignore="PluralsCandidate">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານສຳລັບເວັບໄຊໃນ %1$d ໂດເມນ</string>
   <!-- Content description for a permission item, for an installed add-on details page. %1$s will be replaced with the permission text name, %2$d will be replaced with the permission position in the list and %3$d will be replaced with the total number of permissions in the list.Taking as an example "Read and modify privacy settings" the whole text will read Read and modify privacy settings, 2 of 6. -->
@@ -98,8 +108,18 @@
   <string name="mozac_feature_addons_permissions_all_urls_description_for_update">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານສໍາລັບເວັບໄຊທ໌ທັງຫມົດ.</string>
   <!-- Description for the "tabs" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_tabs_description_for_update">ເຂົ້າເຖິງແຖບຂອງຕົວທ່ອງເວັບ.</string>
+  <!-- Description for the "browserSettings" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">ອ່ານ ແລະ ແກ້ໄຂການຕັ້ງຄ່າຂອງຕົວທ່ອງເວັບ.</string>
+  <!-- Description for the "topSites" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_top_sites_description_for_update">ເຂົ້າເຖິງປະຫວັດການທ່ອງເວັບ.</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">ສະຄຣິບທີ່ບໍ່ໄດ້ຮັບການຢືນຢັນສາມາດສ້າງຄວາມສ່ຽງດ້ານຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ. ແລ່ນສະຄຣິບຈາກສ່ວນຂະຫຍາຍ ຫຼື ແຫຼ່ງທີ່ທ່ານເຊື່ອຖືເທົ່ານັ້ນ.</string>
+  <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
+  <string name="mozac_feature_addons_permissions_required_data_collection_description" moz:removedIn="141" tools:ignore="UnusedResources">ນັກພັດທະນາເວົ້າວ່າສ່ວນຂະຫຍາຍນີ້ລວບລວມ: %1$s.</string>
+  <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
+  <string name="mozac_feature_addons_permissions_required_data_collection_description_2">ນັກພັດທະນາເວົ້າວ່າສ່ວນຂະຫຍາຍນີ້ລວບລວມ: %1$s</string>
+  <!-- The sentence used when the developer of an extension has explicitly stated that they do not collect any data collection. -->
+  <string name="mozac_feature_addons_permissions_none_required_data_collection_description">ນັກພັດທະນາເວົ້າວ່າສ່ວນຂະຫຍາຍນີ້ບໍ່ຕ້ອງການການເກັບກໍາຂໍ້ມູນ.</string>
   <!-- Description for text button that expands the list of domain permissions -->
   <string name="mozac_feature_addons_permissions_show_all_sites">ສະແດງທຸກເວັບໄຊ</string>
   <!-- Description for text button that hides the majority of the list of domain permissions -->
@@ -112,6 +132,12 @@
   <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_short_description">ກິດ​ຈະ​ກໍາ​ການ​ຊອກ​ຫາ​</string>
   <!-- Short description for the locationInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_locationInfo_short_description">ຕຳແຫນ່ງທີ່ຕັ້ງ</string>
+  <!-- Short description for the searchTerms data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_short_description">ເງື່ອນໄຂການຄົ້ນຫາ</string>
+  <!-- Short description for the websiteContent data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_websiteContent_short_description">ເນື້ອຫາເວັບໄຊທ໌</string>
+  <!-- Long description for the searchTerms data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_long_description">ແບ່ງປັນຄໍາຄົ້ນຫາກັບຜູ້ພັດທະນາການຂະຫຍາຍ</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">ເວີຊັນ</string>
   <!-- The author of an add-on. -->
