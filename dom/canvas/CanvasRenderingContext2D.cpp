@@ -5937,6 +5937,13 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     return;
   }
 
+  if (static_cast<float>(aSw) <= 0.0 || static_cast<float>(aSh) <= 0.0 ||
+      static_cast<float>(aDw) <= 0.0 || static_cast<float>(aDh) <= 0.0) {
+    // When we actually draw we convert to float, so also check the values as
+    // floats.
+    return;
+  }
+
   // Per spec, the smoothing setting applies only to scaling up a bitmap image.
   // When down-scaling the user agent is free to choose whether or not to smooth
   // the image. Nearest sampling when down-scaling is rarely desirable and
