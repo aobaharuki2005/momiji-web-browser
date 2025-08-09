@@ -128,6 +128,25 @@ pub struct AdapterInformation<S> {
     support_use_shared_texture_in_swap_chain: bool,
 }
 
+#[repr(C)]
+pub struct TextureViewDescriptor<'a> {
+    label: Option<&'a nsACString>,
+    format: Option<&'a wgt::TextureFormat>,
+    dimension: Option<&'a wgt::TextureViewDimension>,
+    aspect: wgt::TextureAspect,
+    base_mip_level: u32,
+    mip_level_count: Option<&'a u32>,
+    base_array_layer: u32,
+    array_layer_count: Option<&'a u32>,
+}
+
+// Declare an ID type for referring to external texture sources, and allow
+// them to be managed by IdentityHub just like built-in wgpu resource types.
+#[derive(Debug)]
+pub enum ExternalTextureSource {}
+impl id::Marker for ExternalTextureSource {}
+pub type ExternalTextureSourceId = id::Id<ExternalTextureSource>;
+
 #[derive(serde::Serialize, serde::Deserialize)]
 #[repr(transparent)]
 pub struct SurfaceFormat(i8);
@@ -230,6 +249,7 @@ enum Message<'a> {
 
     DestroyBuffer(id::BufferId),
     DestroyTexture(id::TextureId),
+    DestroyExternalTextureSource(crate::ExternalTextureSourceId),
     DestroyDevice(id::DeviceId),
 
     DropAdapter(id::AdapterId),
@@ -247,6 +267,7 @@ enum Message<'a> {
     DropRenderPipeline(id::RenderPipelineId),
     DropTexture(id::TextureId),
     DropTextureView(id::TextureViewId),
+    DropExternalTextureSource(crate::ExternalTextureSourceId),
     DropSampler(id::SamplerId),
     DropQuerySet(id::QuerySetId),
 }
