@@ -322,7 +322,6 @@
       for (const tab of this.tabs) {
         this.#updateTabAriaHidden(tab);
       }
-      gBrowser.tabContainer.previewPanel?.deactivate(this, { force: true });
       const eventName = val ? "TabGroupCollapse" : "TabGroupExpand";
       this.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
     }
