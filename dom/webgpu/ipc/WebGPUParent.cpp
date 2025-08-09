@@ -172,6 +172,15 @@ extern void wgpu_server_remove_shared_texture(WGPUWebGPUParentPtr aParent,
   parent->RemoveSharedTexture(aId);
 }
 
+extern ffi::WGPUExternalTextureDescriptorFromSource
+wgpu_parent_external_texture_source_get_external_texture_descriptor(
+    void* aParent, WGPUExternalTextureSourceId aId,
+    ffi::WGPUPredefinedColorSpace aDestColorSpace) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
+  const auto& source = parent->GetExternalTextureSource(aId);
+  return source.GetExternalTextureDescriptor(aDestColorSpace);
+}
+
 extern void wgpu_parent_destroy_external_texture_source(
     WGPUWebGPUParentPtr aParent, WGPUExternalTextureSourceId aId) {
   auto* const parent = static_cast<WebGPUParent*>(aParent);
@@ -790,6 +799,11 @@ void WebGPUParent::RemoveSharedTexture(RawId aTextureId) {
   if (it != mSharedTextures.end()) {
     mSharedTextures.erase(it);
   }
+}
+
+const ExternalTextureSourceHost& WebGPUParent::GetExternalTextureSource(
+    ffi::WGPUExternalTextureSourceId aId) const {
+  return mExternalTextureSources.at(aId);
 }
 
 void WebGPUParent::DestroyExternalTextureSource(RawId aSourceId) {

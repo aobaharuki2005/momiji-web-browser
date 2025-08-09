@@ -616,6 +616,16 @@ ffi::WGPUDepthStencilState ConvertDepthStencilState(
   return desc;
 }
 
+ffi::WGPUPredefinedColorSpace ConvertPredefinedColorSpace(
+    const dom::PredefinedColorSpace& aColorSpace) {
+  switch (aColorSpace) {
+    case dom::PredefinedColorSpace::Srgb:
+      return ffi::WGPUPredefinedColorSpace_Srgb;
+    case dom::PredefinedColorSpace::Display_p3:
+      return ffi::WGPUPredefinedColorSpace_DisplayP3;
+  }
+}
+
 // Extract a list of dynamic offsets from a larger JS-supplied buffer.
 // Used by implementions of the `setBindGroup` method of the spec's
 // `GPUBindingCommandsMixin`.
