@@ -1078,7 +1078,7 @@
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Gamoj</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other">Aliaj</string>
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Aliaj</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1779,11 +1779,11 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Ĉu vi certe volas forigi tiun ĉi dosierujon?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Ĉu vi certe volas forigi tiun ĉi dosierujon?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">Ĉu vi certe volas forigi la elektita(j)n elemento(j)n?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s forigos la elektitajn elementojn.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s forigos la elektitajn elementojn.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Nuligi</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1813,7 +1813,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Forigi</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">Konservi</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Konservi</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Ordigi laŭ personecigita ordo</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1834,7 +1834,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Redakti dosierujon</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Komencu seancon por vidi spegulitajn legosignojn</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Komencu seancon por vidi spegulitajn legosignojn</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">RETADRESO</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1846,24 +1846,24 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Nomo</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Aldoni dosierujon</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Aldoni dosierujon</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Elekti dosierujon</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">Titolo postulata</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Titolo postulata</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">Nevalida retadreso</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Neniu legosigno estas ĉi tie</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Neniu legosigno estas ĉi tie</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">%1$s forigita</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">Legosignoj forigitaj</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Legosignoj forigitaj</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">Elektitaj dosierujoj forigataj</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Elektitaj dosierujoj forigataj</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">MALFARI</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
@@ -1871,7 +1871,7 @@
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">Forigitaj elementoj: %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">Tajpu serĉan tekston</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Tajpu serĉan tekston</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Iri reen</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -2199,7 +2199,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Ĉu vi certe volas forigi %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Forigi</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Forigi</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Retadreso kopiita</string>
   <!-- Sample text for accessibility font size -->
@@ -2870,7 +2870,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Sen esceptoj por retejo</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">Ĉu vi certe volas forigi tiun ĉi legosignon?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Ĉu vi certe volas forigi tiun ĉi legosignon?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Aldoni al ŝparvojoj</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -3040,7 +3040,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Iri supren</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">Fermi</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Fermi</string>
   <!--
     Pocket recommended stories
 

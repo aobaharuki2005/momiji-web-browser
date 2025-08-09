@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s vám dává kontrolu.</p> <p>Používejte ho jako soukromý prohlížeč: <ul> <li>Vyhledávejte a prohlížejte přímo v aplikaci</li> <li>Blokujte sledovací prvky (nebo aktualizujte nastavení pro povolení sledovacích prvků)</li> <li>Tlačítkem smažte cookies a historii vyhledávání a prohlížení</li> </ul> </p> <p>%1$s je vyvíjen Mozillou. Naší misí je podporovat zdravý a otevřený internet.<br/> <a href=\"%2$s\">Zjistěte více</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">Zjistit více</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Soukromí a zabezpečení</string>
   <!-- Preference summary for settings related to privacy and security -->

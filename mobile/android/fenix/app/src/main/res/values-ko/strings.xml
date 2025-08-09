@@ -1086,7 +1086,7 @@
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">그라데이션</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other">기타</string>
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">기타</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">앱 아이콘을 변경하시겠습니까?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
@@ -1816,11 +1816,11 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">이 폴더를 삭제하시겠습니까?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">이 폴더를 삭제하시겠습니까?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">선택한 항목을 삭제하시겠습니까?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s가 선택된 항목들을 삭제합니다.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s가 선택된 항목들을 삭제합니다.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">취소</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1850,7 +1850,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">삭제</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">저장</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">저장</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">사용자 지정 순으로 정렬</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1871,7 +1871,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">폴더 편집</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">동기화된 북마크를 보시려면 로그인하세요</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">동기화된 북마크를 보시려면 로그인하세요</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1883,24 +1883,24 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">이름</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">폴더 추가</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">폴더 추가</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">폴더 선택</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">제목이 있어야 합니다</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">제목이 있어야 합니다</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">URL이 잘못되었습니다</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">여기에 북마크가 없습니다</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">여기에 북마크가 없습니다</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">%1$s 삭제됨</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">북마크 삭제됨</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">북마크 삭제됨</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">선택한 폴더 삭제 중</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">선택한 폴더 삭제 중</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">실행 취소</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
@@ -1908,7 +1908,7 @@
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">삭제된 항목: %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">검색어 입력</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">검색어 입력</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">뒤로</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -2236,7 +2236,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">%1$s 파일을 삭제하시겠습니까?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">삭제</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">삭제</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL 복사됨</string>
   <!-- Sample text for accessibility font size -->
@@ -2911,7 +2911,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">사이트 예외 없음</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">이 북마크를 삭제하시겠습니까?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">이 북마크를 삭제하시겠습니까?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">바로 가기에 추가</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -3081,7 +3081,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">위로</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">닫기</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">닫기</string>
   <!--
     Pocket recommended stories
 

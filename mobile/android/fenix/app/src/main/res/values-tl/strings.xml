@@ -1529,11 +1529,11 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Sigurado ka bang gusto mong burahin ang folder na ito?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Sigurado ka bang gusto mong burahin ang folder na ito?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">Sigurado ka bang gusto mong burahin ang mga napili?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">Buburahin ng %s ang mga napiling item.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Buburahin ng %s ang mga napiling item.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Ikansela</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1561,7 +1561,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Burahin</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">I-save</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">I-save</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Pasadyang pagkakasunud-sunod</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1582,7 +1582,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Baguhin ang folder</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Mag-sign in para makita ang mga naka-sync na bookmark</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Mag-sign in para makita ang mga naka-sync na bookmark</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1594,24 +1594,24 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Pangalan</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Magdagdag ng folder</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Magdagdag ng folder</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Pumili ng folder</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">Kailangang may pamagat</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Kailangang may pamagat</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">Di-wastong URL</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Walang mga bookmark dito</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Walang mga bookmark dito</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Binura na ang %1$s</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">Nabura na ang mga bookmark</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Nabura na ang mga bookmark</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">Binubura ang mga napiling folder</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Binubura ang mga napiling folder</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">I-UNDO</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
@@ -1619,7 +1619,7 @@
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">Mga nabura: %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">Ipasok ang mga search term</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Ipasok ang mga search term</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Bumalik</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -1943,7 +1943,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Sigurado ka bang gusto mong burahin ang %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Burahin</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Burahin</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Kopyahin ang URL</string>
   <!-- Sample text for accessibility font size -->
@@ -2588,7 +2588,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Walang mga site exception</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">Sigurado ka bang gusto mong burahin itong bookmark?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Sigurado ka bang gusto mong burahin itong bookmark?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Idagdag sa mga shortcut</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -2752,7 +2752,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Mag-navigate pataas</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">Isara</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Isara</string>
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">Mga kwento ayon sa paksa</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->

@@ -1047,9 +1047,9 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">¿A mana kuvinu xitanu carpeta ya´a?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">¿A mana kuvinu xitanu carpeta ya´a?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s xita da elementos nkaji.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s xita da elementos nkaji.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Nkuvi-ka</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1073,7 +1073,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Xita</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">Chuva´a</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Chuva´a</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -1084,7 +1084,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Natee carpeta</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Kajie´e sesión sa kune\'yanu a ta´a ini noo´o sincronizados</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Kajie´e sesión sa kune\'yanu a ta´a ini noo´o sincronizados</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1092,28 +1092,28 @@
   <!-- Bookmark NAME editing field label -->
   <string name="bookmark_name_label">Sivɨ</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Tee carpeta</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Tee carpeta</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Kaji carpeta</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">Nejika kumiji iin título</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Nejika kumiji iin título</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">URL ntu vatu</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Na íyo a ta´a ini noo´o ya\'a</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Na íyo a ta´a ini noo´o ya\'a</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Nxita %1$s</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">A ta´a ini noo´o nxita</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">A ta´a ini noo´o nxita</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">Xita carpetas sincronizadas</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Xita carpetas sincronizadas</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">DESHACER</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">Tee tu\'un nánukunu</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Tee tu\'un nánukunu</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Niko yata</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -1404,7 +1404,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">¿A mana kuvinu xitanu %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Xita</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Xita</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL ntɨɨn</string>
   <!-- Sample text for accessibility font size -->
@@ -1917,7 +1917,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Sin excepciones de sitio</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">¿A mana kuvinu xitanu a ta\'a ininu?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">¿A mana kuvinu xitanu a ta\'a ininu?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Tee daa acceso ñama</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -2060,7 +2060,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Kaka íchi sikɨ</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">Nakasɨ</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Nakasɨ</string>
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">Daa tu\'un por tema</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->

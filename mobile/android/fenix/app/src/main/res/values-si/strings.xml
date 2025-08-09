@@ -1226,11 +1226,11 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">ඔබට මෙම බහාලුම ඉවත් කිරීමට වුවමනා ද?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">ඔබට මෙම බහාලුම ඉවත් කිරීමට වුවමනා ද?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">ඔබට තේරූ අථක මැකීමට වුවමනාද?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s තෝරාගත් අථක මකා දමනු ඇත.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s තෝරාගත් අථක මකා දමනු ඇත.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">අවලංගු</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1258,7 +1258,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">මකන්න</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">සුරකින්න</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">සුරකින්න</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -1269,7 +1269,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">බහාලුම සංස්කරණය</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">සමමුහූර්ත පොත්යොමු දැකීමට පිවිසෙන්න</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">සමමුහූර්ත පොත්යොමු දැකීමට පිවිසෙන්න</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">ඒ.ස.නි.</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1281,24 +1281,24 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">නම</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">බහාලුමක් යොදන්න</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">බහාලුමක් යොදන්න</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">බහාලුම තෝරන්න</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">සිරැසියක් අවශ්‍යයි</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">සිරැසියක් අවශ්‍යයි</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">වැරදි ඒ.ස.නි.</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">මෙහි පොත්යොමු නැත</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">මෙහි පොත්යොමු නැත</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">%1$s මැකිණි</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">පොත්යොමුව මැකිණි</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">පොත්යොමුව මැකිණි</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">තේරූ බහාලුම් මැකෙමින්</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">තේරූ බහාලුම් මැකෙමින්</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">පෙරසේ</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
@@ -1306,7 +1306,7 @@
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">මකන ලද අථක: %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">සෙවුම් පද යොදන්න</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">සෙවුම් පද යොදන්න</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">ආපසු යාත්‍රණය</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -1620,7 +1620,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">%1$s මකා දැමීමට වුවමනා ද?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">මකන්න</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">මකන්න</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">ඒ.ස.නි. පිටපත් විය</string>
   <!-- Sample text for accessibility font size -->
@@ -2149,7 +2149,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">අඩවි හැරදැමීම් නැත</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">මෙම පොත්යොමුව මකා දැමීමට වුවමනා ද?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">මෙම පොත්යොමුව මකා දැමීමට වුවමනා ද?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">කෙටිමං වෙත දමන්න</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -2298,7 +2298,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">ඉහළට යාත්‍රණය</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">වසන්න</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">වසන්න</string>
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">මාතෘකාව අනුව කතා</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
