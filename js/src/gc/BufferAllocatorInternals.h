@@ -227,7 +227,7 @@ struct AllocSpace {
 
   // A bitmap indicating whether an allocation is owned by a nursery or a
   // tenured GC thing.
-  MainThreadOrGCTaskData<PerAllocBitmap> nurseryOwnedBitmap;
+  MainThreadOrGCTaskData<AtomicPerAllocBitmap> nurseryOwnedBitmap;
 
   static constexpr uintptr_t firstAllocOffset() {
     return RoundUp(sizeof(Derived), GranularityBytes);
