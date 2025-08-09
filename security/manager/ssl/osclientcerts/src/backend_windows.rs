@@ -716,6 +716,12 @@ impl Backend {
     }
 }
 
+const SLOT_DESCRIPTION_BYTES: &[u8; 64] =
+    b"OS Client Cert Slot                                             ";
+const TOKEN_LABEL_BYTES: &[u8; 32] = b"OS Client Cert Token            ";
+const TOKEN_MODEL_BYTES: &[u8; 16] = b"osclientcerts   ";
+const TOKEN_SERIAL_NUMBER_BYTES: &[u8; 16] = b"0000000000000000";
+
 impl ClientCertsBackend for Backend {
     type Key = Key;
 
@@ -736,6 +742,29 @@ impl ClientCertsBackend for Backend {
         let result = futures_executor::block_on(task);
         self.last_scan_finished = Some(Instant::now());
         result
+    }
+
+    fn get_slot_info(&self) -> CK_SLOT_INFO {
+        CK_SLOT_INFO {
+            slotDescription: *SLOT_DESCRIPTION_BYTES,
+            manufacturerID: *crate::MANUFACTURER_ID_BYTES,
+            flags: CKF_TOKEN_PRESENT,
+            ..Default::default()
+        }
+    }
+
+    fn get_token_info(&self) -> CK_TOKEN_INFO {
+        CK_TOKEN_INFO {
+            label: *TOKEN_LABEL_BYTES,
+            manufacturerID: *crate::MANUFACTURER_ID_BYTES,
+            model: *TOKEN_MODEL_BYTES,
+            serialNumber: *TOKEN_SERIAL_NUMBER_BYTES,
+            ..Default::default()
+        }
+    }
+
+    fn get_mechanism_list(&self) -> Vec<CK_MECHANISM_TYPE> {
+        vec![CKM_ECDSA, CKM_RSA_PKCS, CKM_RSA_PKCS_PSS]
     }
 }
 
