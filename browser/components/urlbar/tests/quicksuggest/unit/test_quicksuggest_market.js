@@ -170,7 +170,8 @@ function marketResult() {
   return {
     type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    isBestMatch: false,
+    isBestMatch: true,
+    hideRowLabel: true,
     rowIndex: -1,
     heuristic: false,
     exposureTelemetry: 0,

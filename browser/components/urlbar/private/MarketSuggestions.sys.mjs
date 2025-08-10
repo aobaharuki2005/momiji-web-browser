@@ -163,12 +163,18 @@ export class MarketSuggestions extends SuggestProvider {
       return null;
     }
 
-    return new lazy.UrlbarResult(
-      lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
-      lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
+          ...suggestion.custom_details,
+          dynamicType: "market",
+        }
+      ),
       {
-        ...suggestion.custom_details,
-        dynamicType: "market",
+        isBestMatch: true,
+        hideRowLabel: true,
       }
     );
   }
