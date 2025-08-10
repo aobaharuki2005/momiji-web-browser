@@ -74,7 +74,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.biometricauthentication.AuthenticationStatus
 import org.mozilla.fenix.biometricauthentication.BiometricAuthenticationManager
-import org.mozilla.fenix.biometricauthentication.NavigationOrigin
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.tabstrip.TabStrip
@@ -147,6 +146,7 @@ import org.mozilla.fenix.microsurvey.ui.ext.MicrosurveyUIData
 import org.mozilla.fenix.microsurvey.ui.ext.toMicrosurveyUIData
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver
+import org.mozilla.fenix.pbmlock.NavigationOrigin
 import org.mozilla.fenix.pbmlock.observePrivateModeLock
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.StartupTimeline
