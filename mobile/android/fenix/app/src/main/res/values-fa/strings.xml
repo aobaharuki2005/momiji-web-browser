@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">زبانه‌های خصوصی شما در اینجا نشان داده می‌شوند.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d زبانه انتخاب شد</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">انتخاب زبانه‌ها</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">افزودن مجموعه جدید</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -64,6 +66,8 @@
   -->
   <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">%1$s جست‌وجوها و تاریخچهٔ مرور شما را هنگام خروج از برنامه یا بستن زبانه‌های خصوصی پاک می‌کند. در حالی که این کار شما را برای وبگاه‌ها یا فراهم‌کنندگان اینترنت ناشناس نمی‌کند، این کار مخفی کردن فعالیت‌های برخط شما را برای هرکس دیگری که از این افزاره استفاده می‌کند را ساده‌تر می‌کند.</string>
   <string name="private_browsing_common_myths">باورهای غلط و رایج در مورد مرور خصوصی</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">نشست مرور ناشناس</string>
   <!--
     True Private Browsing Mode
 
@@ -329,6 +333,8 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">بازگشت به منوی اصلی</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">بستن برگه منوی اصلی</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">بستن منو</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">راهنما</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -1161,6 +1167,8 @@
   <string name="preference_top_toolbar">بالا</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">پایین</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">ساده</string>
   <!--
     Theme Preferences
 
@@ -1331,6 +1339,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">زبانه‌های همگام‌سازی‌شده باز: %1$s. برای جابجایی زبانه‌ها ضربه بزنید.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">خصوصی</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">زبانه‌ها</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">همگام‌سازی</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">افزودن زبانه</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1469,6 +1483,12 @@
   <string name="download_navigate_back_description">بازگشت به عقب</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">بازگشت و بستن جستجو</string>
+  <!--
+    Content description for the search bar clear text button on the downloads screen
+
+    Content description for pause action button on the downloads screen
+  -->
+  <string name="download_pause_action">مکث</string>
   <string name="download_clear_search_description">پاک کردن</string>
   <!-- Text for the button to share the download URL -->
   <string name="download_share_url">هم‌رسانی نشانی</string>
@@ -1597,6 +1617,8 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">به‌صورت خودکار گزارشات خرابی ارسال کنید</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">بستن</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">بستن</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">ارسال گزارش خرابی</string>
   <!--
@@ -2458,6 +2480,12 @@
   <string name="saved_login_clear_username">پاک کردن نام‌کاربری</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">پاک کردن نام‌ میزبان</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">ویرایش</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">حذف</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">بازگشت به عقب</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">گشودن پایگاه در مرورگر</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
