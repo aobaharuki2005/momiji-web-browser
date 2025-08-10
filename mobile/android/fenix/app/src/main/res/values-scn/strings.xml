@@ -1086,7 +1086,7 @@
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Sfumaturi</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other">Autru</string>
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Autru</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Vo’ canciari a cona di l\'app?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
@@ -1816,11 +1816,11 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Scancillari sta carpetta?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Scancillari sta carpetta?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">Scancillari l’elimenti scartati?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s scancella l’elimenti scartati.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s scancella l’elimenti scartati.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Sfai</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1850,7 +1850,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Scancella</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">Sarba</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Sarba</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Arringu pirsunalizzatu</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1871,7 +1871,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Cancia carpetta</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Trasi pi vìdiri i nzingalibbra sincrunizzati</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Trasi pi vìdiri i nzingalibbra sincrunizzati</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">NNIRIZZU</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1883,24 +1883,24 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Nomu</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Junci na carpetta</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Junci na carpetta</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Scarta na carpetta</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">È nicissariu un tìtulu</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">È nicissariu un tìtulu</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">Nnirizzu nun vàlitu</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Nun cc’è nuḍḍu nzingalibbru cca</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Nun cc’è nuḍḍu nzingalibbru cca</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Scancillasti %1$s</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">Scancillasti i nzingalibbra</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Scancillasti i nzingalibbra</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">Staju scancillannu i carpetti chi scartasti</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Staju scancillannu i carpetti chi scartasti</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">SFAI</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
@@ -1908,7 +1908,7 @@
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">Elimenti scancillati: %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">Scrivi i tèrmini dâ risciduta</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Scrivi i tèrmini dâ risciduta</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Torna nn’arrè</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -2236,7 +2236,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Scancillari %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Scancella</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Scancella</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL cupiatu</string>
   <!-- Sample text for accessibility font size -->
@@ -2911,7 +2911,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Nuḍḍa eccizzioni pî siti</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">Scancillari stu nzingalibbru?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Scancillari stu nzingalibbru?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Junci a l’accurzi</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -3081,7 +3081,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Nàvica supra</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">Chiuji</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Chiuji</string>
   <!--
     Pocket recommended stories
 
@@ -3832,4 +3832,32 @@
   <string name="review_prompt_feedback_header">Ni dispiaci chi stai avennu mpidugghi. Fanni sapiri comu putemu fari megghiu %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Lassa un cummentu</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Cc’è n’attualizzu</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Cci sunnu %2$s novi e n’%3$s attualizzatu pi %1$s.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Pi favuri pìgghiati quarchi minutu pi liggìrili. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Tèrmini di sirbizzu</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Abbisu di privatizza</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Cchiù nfurmazzioni</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Accetta</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Ricurdamillu cchiù tardu</string>
 </resources>

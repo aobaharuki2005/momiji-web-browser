@@ -1086,7 +1086,7 @@
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Սահանցումներ</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other">Այլ</string>
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Այլ</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Փոխե՞լ հավելվածի պատկերակը։</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
@@ -1816,11 +1816,11 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել այս պանակը:</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել այս պանակը:</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">Ցանկանո՞ւմ եք ջնջել ընտրված միույթները։</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s-ը կջնջի ընտրված միույթները:</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s-ը կջնջի ընտրված միույթները:</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Չեղարկել</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1850,7 +1850,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Ջնջել</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">Պահպանել</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Պահպանել</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Տեսակավորել ըստ հարմարեցված կարգի</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1871,7 +1871,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Խմբագրել պանակը</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Մուտք գործեք՝ համաժամեցված էջանիշերը տեսնելու համար</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Մուտք գործեք՝ համաժամեցված էջանիշերը տեսնելու համար</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1883,24 +1883,24 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Անուն</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Ավելացնել պանակ</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Ավելացնել պանակ</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Ընտրել պանակ</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">Պետք է անվանում ունենա</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Պետք է անվանում ունենա</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">Անվավեր URL</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Այստեղ ոչ մի էջանիշ չկա</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Այստեղ ոչ մի էջանիշ չկա</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Ջնջվել է %1$s-ը</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">Էջանիշը ջնջվեց</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Էջանիշը ջնջվեց</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">Ընտրված պանակների ջնջում</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Ընտրված պանակների ջնջում</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">ՀԵՏԱՐԿԵԼ</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
@@ -1908,7 +1908,7 @@
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">Ջնջված միույթներ՝ %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">Մուտքագրեք որոնման եզրույթներ</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Մուտքագրեք որոնման եզրույթներ</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Նավարկել հետ</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -2236,7 +2236,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել %1$s-ը։</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Ջնջել</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Ջնջել</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL-ն պատճենվել է</string>
   <!-- Sample text for accessibility font size -->
@@ -2911,7 +2911,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Բացառություններ չկան</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել այս էջանիշը:</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել այս էջանիշը:</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Հավելել դյուրանցումներին</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -3081,7 +3081,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Նավարկել վերև</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">Փակել</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Փակել</string>
   <!--
     Pocket recommended stories
 

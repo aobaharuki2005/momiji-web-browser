@@ -581,7 +581,7 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Aɗa yenanaa yiɗde momtude ndee runngere?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Aɗa yenanaa yiɗde momtude ndee runngere?</string>
   <!-- Screen title for adding a bookmarks folder -->
   <string name="bookmark_add_folder">Ɓeydu runngere</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -601,7 +601,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Momtu</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">Danndu</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Danndu</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -612,7 +612,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Taƴto runngere</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Seŋo ngam yiyde maantore jahdinaaɗe</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Seŋo ngam yiyde maantore jahdinaaɗe</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -620,22 +620,22 @@
   <!-- Bookmark NAME editing field label -->
   <string name="bookmark_name_label">INNDE</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Ɓeydu runngere</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Ɓeydu runngere</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Suɓo runngere</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">Ina foti jogaade tiitoonde</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Ina foti jogaade tiitoonde</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">URL o moƴƴaani</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Ɗoo alaa maantore</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Ɗoo alaa maantore</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Momtaama %1$s</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">Maantore momtaama</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Maantore momtaama</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">FIRTU</string>
   <!--
@@ -801,7 +801,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Aɗa yenanaa yiɗde momtude %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Momtu</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Momtu</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Ñiiɓirde geese nattaama</string>
   <!-- Sample text for accessibility font size -->

@@ -1086,7 +1086,7 @@
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Graddiannau</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other">Arall</string>
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Arall</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Newid eicon yr ap?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
@@ -1816,11 +1816,11 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Ydych chi’n siŵr eich bod am ddileu’r ffolder yma?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Ydych chi’n siŵr eich bod am ddileu’r ffolder yma?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">Ydych chi\'n siŵr eich bod am ddileu\'r eitemau a ddewiswyd?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">Bydd %s yn dileu’r eitemau hyn.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Bydd %s yn dileu’r eitemau hyn.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Na</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1850,7 +1850,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Dileu</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">Cadw</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Cadw</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Trefnu yn ôl y drefn gyfaddas</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1871,7 +1871,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Golygu ffolder</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Mewngofnodi i weld nodau tudalennau wedi’u cydweddu</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Mewngofnodi i weld nodau tudalennau wedi’u cydweddu</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1883,24 +1883,24 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Enw</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Ychwanegu ffolder</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Ychwanegu ffolder</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Dewis ffolder</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">Rhaid cael teitl</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Rhaid cael teitl</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">URL annilys</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Dim nodau tudalen yma</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Dim nodau tudalen yma</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Wedi dileu %1$s</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">Wedi dileu Nodau Tudalen</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Wedi dileu Nodau Tudalen</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">Yn dileu’r nodau tudalen hyn</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Yn dileu’r nodau tudalen hyn</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">DADWNEUD</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
@@ -1908,7 +1908,7 @@
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">Eitemau dilëwyd: %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">Rhowch air chwilio</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Rhowch air chwilio</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Symud nôl</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -2236,7 +2236,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Ydych chi’n siŵr eich bod am ddileu %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Dileu</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Dileu</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL wedi’i gopïo</string>
   <!-- Sample text for accessibility font size -->
@@ -2911,7 +2911,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Dim eithriadau i wefannau</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">Ydych chi’n siŵr eich bod am ddileu’r nod tudalen yma?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Ydych chi’n siŵr eich bod am ddileu’r nod tudalen yma?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Ychwanegu at y llwybrau byr</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -3081,7 +3081,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Llywio i fyny</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">Cau</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Cau</string>
   <!--
     Pocket recommended stories
 

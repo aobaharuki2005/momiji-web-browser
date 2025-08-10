@@ -888,7 +888,7 @@
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Градыенты</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other">Іншыя</string>
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Іншыя</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Скасаваць</string>
   <!--
@@ -1398,9 +1398,9 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Вы ўпэўнены, што жадаеце выдаліць гэту папку?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Вы ўпэўнены, што жадаеце выдаліць гэту папку?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s выдаліць вылучаныя элементы.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s выдаліць вылучаныя элементы.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Адмяніць</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1430,7 +1430,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Выдаліць</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">Захаваць</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Захаваць</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -1441,7 +1441,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Рэдагаваць папку</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Увайдзіце, каб убачыць сінхранізаваныя закладкі</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Увайдзіце, каб убачыць сінхранізаваныя закладкі</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1451,30 +1451,30 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Назва</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Дадаць папку</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Дадаць папку</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Выбраць папку</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">Павінна мець загаловак</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Павінна мець загаловак</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">Несапраўдны URL</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Няма закладак</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Няма закладак</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">%1$s выдалена</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">Закладкі выдалены</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Закладкі выдалены</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">Выдаленне абраных папак</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Выдаленне абраных папак</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">АДМЯНІЦЬ</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
   <string name="bookmark_delete_single_item">Закладка %s выдалена</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">Увядзіце пошукавыя запыты</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Увядзіце пошукавыя запыты</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Перайсці назад</string>
   <!-- Content description for the bookmark screen delete bookmark navigation bar button -->
@@ -1775,7 +1775,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Вы ўпэўнены, што хочаце выдаліць %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Выдаліць</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Выдаліць</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL скапіраваны</string>
   <!-- Sample text for accessibility font size -->
@@ -2320,7 +2320,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Няма выняткаў для сайта</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">Ці ўпэўнены Вы, што хочаце выдаліць гэту закладку?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Ці ўпэўнены Вы, што хочаце выдаліць гэту закладку?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Дадаць у цэтлікі</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -2467,7 +2467,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Перайсці ўверх</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">Закрыць</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Закрыць</string>
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">Гісторыі па тэмах</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->

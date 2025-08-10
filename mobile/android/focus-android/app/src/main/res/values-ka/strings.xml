@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s სრულად გიბრუნებთ მართვის სადავეებს.</p> <p>გამოიყენეთ პირად ბრაუზერად: <ul> <li>მოძებნეთ და დაათვალიერეთ გვერდები პროგრამაშივე</li> <li>შეზღუდეთ მეთვალყურეები (პარამეტრებიდან დაშვებაც შეიძლება)</li> <li>გაასუფთავეთ და წაშალეთ ფუნთუშები, ძიებისა და თვალიერების ისტორია</li> </ul> </p> <p>%1$s შექმნილია Mozilla-ს მიერ. ჩვენი მიზანი, ჯანსაღ და ღია ინტერნეტზე ზრუნვაა.<br/> <a href=\"%2$s\">ვრცლად</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">ვრცლად</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">პირადულობა და უსაფრთხოება</string>
   <!-- Preference summary for settings related to privacy and security -->
