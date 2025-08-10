@@ -2981,7 +2981,7 @@ async function waitForSourcesInSourceTree(
     );
   } catch (e) {
     // Craft a custom error message to help understand what's wrong with the Source Tree content
-    const displayedSources = getDisplayedSources();
+    const displayedSources = getDisplayedSources(dbg);
     let msg = "Invalid Source Tree Content.\n";
     const missingElements = [];
     for (const source of sources) {
