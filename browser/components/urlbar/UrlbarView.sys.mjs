@@ -2356,13 +2356,7 @@ export class UrlbarView {
    *   an l10n object for the label's l10n string: `{ id, args }`
    */
   #updateRowLabel(item, isVisible, currentLabel) {
-    let label;
-    if (isVisible) {
-      label = this.#rowLabel(item, currentLabel);
-      if (label && lazy.ObjectUtils.deepEqual(label, currentLabel)) {
-        label = null;
-      }
-    }
+    let label = isVisible ? this.#rowLabel(item, currentLabel) : null;
 
     // When the row-inner is selected, screen readers won't naturally read the
     // label because it's a pseudo-element of the row, not the row-inner. To
@@ -2371,13 +2365,17 @@ export class UrlbarView {
     // have this element.
     let groupAriaLabel = item._elements.get("groupAriaLabel");
 
-    if (!label) {
+    if (
+      !label ||
+      item.result.hideRowLabel ||
+      lazy.ObjectUtils.deepEqual(label, currentLabel)
+    ) {
       this.#l10nCache.removeElementL10n(item, { attribute: "label" });
       if (groupAriaLabel) {
         groupAriaLabel.remove();
         item._elements.delete("groupAriaLabel");
       }
-      return null;
+      return label;
     }
 
     this.#l10nCache.setElementL10n(item, {
@@ -2417,10 +2415,7 @@ export class UrlbarView {
    *   returns an l10n object for the label's l10n string: `{ id, args }`
    */
   #rowLabel(row, currentLabel) {
-    if (
-      !lazy.UrlbarPrefs.get("groupLabels.enabled") ||
-      row.result.hideRowLabel
-    ) {
+    if (!lazy.UrlbarPrefs.get("groupLabels.enabled")) {
       return null;
     }
 
