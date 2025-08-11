@@ -1050,7 +1050,7 @@ function getDisplayHostForStream(stream) {
 }
 
 function onTabSharingMenuPopupShowing(e) {
-  const streams = webrtcUI.getActiveStreams(true, true, true, true);
+  const streams = webrtcUI.getActiveStreams(true, true, true, true, true);
   for (let streamInfo of streams) {
     const names = streamInfo.devices.map(({ mediaSource }) => {
       const l10nId = MEDIA_SOURCE_L10NID_BY_TYPE.get(mediaSource);
