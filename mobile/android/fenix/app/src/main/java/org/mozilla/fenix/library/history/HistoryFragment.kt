@@ -459,27 +459,29 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                                         )
                                     },
                             ) {
-                                AwesomeBar(
-                                    text = searchState.query,
-                                    providers = searchState.searchSuggestionsProviders,
-                                    orientation = AwesomeBarOrientation.TOP,
-                                    colors = AwesomeBarDefaults.colors(
-                                        background = Color.Transparent,
-                                        title = FirefoxTheme.colors.textPrimary,
-                                        description = FirefoxTheme.colors.textSecondary,
-                                        autocompleteIcon = FirefoxTheme.colors.textSecondary,
-                                        groupTitle = FirefoxTheme.colors.textSecondary,
-                                    ),
-                                    onSuggestionClicked = { suggestion ->
-                                        searchStore.dispatch(SuggestionClicked(suggestion))
-                                    },
-                                    onAutoComplete = { suggestion ->
-                                        searchStore.dispatch(SuggestionSelected(suggestion))
-                                    },
-                                    onVisibilityStateUpdated = {},
-                                    onScroll = { view.hideKeyboard() },
-                                    profiler = requireComponents.core.engine.profiler,
-                                )
+                                if (searchState.shouldShowSearchSuggestions) {
+                                    AwesomeBar(
+                                        text = searchState.query,
+                                        providers = searchState.searchSuggestionsProviders,
+                                        orientation = AwesomeBarOrientation.TOP,
+                                        colors = AwesomeBarDefaults.colors(
+                                            background = Color.Transparent,
+                                            title = FirefoxTheme.colors.textPrimary,
+                                            description = FirefoxTheme.colors.textSecondary,
+                                            autocompleteIcon = FirefoxTheme.colors.textSecondary,
+                                            groupTitle = FirefoxTheme.colors.textSecondary,
+                                        ),
+                                        onSuggestionClicked = { suggestion ->
+                                            searchStore.dispatch(SuggestionClicked(suggestion))
+                                        },
+                                        onAutoComplete = { suggestion ->
+                                            searchStore.dispatch(SuggestionSelected(suggestion))
+                                        },
+                                        onVisibilityStateUpdated = {},
+                                        onScroll = { view.hideKeyboard() },
+                                        profiler = requireComponents.core.engine.profiler,
+                                    )
+                                }
                             }
                         }
                     }
