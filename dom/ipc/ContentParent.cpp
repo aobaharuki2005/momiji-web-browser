@@ -7700,19 +7700,6 @@ ContentParent::RecvGetLoadingSessionHistoryInfoFromParent(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvGetContiguousSessionHistoryInfos(
-    const MaybeDiscarded<BrowsingContext>& aContext,
-    GetContiguousSessionHistoryInfosResolver&& aResolver) {
-  if (aContext.IsNullOrDiscarded()) {
-    aResolver({});
-    return IPC_OK();
-  }
-
-  aResolver(aContext.get_canonical()->GetContiguousSessionHistoryInfos());
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvRemoveFromBFCache(
     const MaybeDiscarded<BrowsingContext>& aContext) {
   if (aContext.IsNullOrDiscarded()) {

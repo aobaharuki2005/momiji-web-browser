@@ -254,6 +254,9 @@ struct LoadingSessionHistoryInfo {
 
   SessionHistoryInfo mInfo;
 
+  // The same origin (to mInfo) preceeding entries.
+  CopyableTArray<SessionHistoryInfo> mContiguousEntries;
+
   uint64_t mLoadId = 0;
 
   // The following three member variables are used to inform about a load from

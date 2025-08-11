@@ -1346,10 +1346,6 @@ class ContentParent final : public PContentParent,
       const MaybeDiscarded<BrowsingContext>& aContext,
       GetLoadingSessionHistoryInfoFromParentResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvGetContiguousSessionHistoryInfos(
-      const MaybeDiscarded<BrowsingContext>& aContext,
-      GetContiguousSessionHistoryInfosResolver&& aResolver);
-
   mozilla::ipc::IPCResult RecvRemoveFromBFCache(
       const MaybeDiscarded<BrowsingContext>& aContext);
 

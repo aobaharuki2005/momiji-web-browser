@@ -1007,9 +1007,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void LocationCreated(dom::Location* aLocation);
   void ClearCachedValuesOfLocations();
 
-  void GetContiguousHistoryEntries(SessionHistoryInfo& aActiveEntry,
-                                   Navigation* aNavigation);
-
   void ConsumeHistoryActivation();
 
  protected:
