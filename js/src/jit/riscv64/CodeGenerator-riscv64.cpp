@@ -700,7 +700,17 @@ void CodeGenerator::visitAddI(LAddI* ins) {
   bailoutFrom(&overflow, ins->snapshot());
 }
 
-void CodeGenerator::visitAddIntPtr(LAddIntPtr* ins) { MOZ_CRASH(); }
+void CodeGenerator::visitAddIntPtr(LAddIntPtr* ins) {
+  const LAllocation* lhs = ins->lhs();
+  const LAllocation* rhs = ins->rhs();
+  const LDefinition* dest = ins->output();
+
+  if (rhs->isConstant()) {
+    masm.ma_add64(ToRegister(dest), ToRegister(lhs), Operand(ToIntPtr(rhs)));
+  } else {
+    masm.ma_add64(ToRegister(dest), ToRegister(lhs), ToOperand(rhs));
+  }
+}
 
 void CodeGenerator::visitAddI64(LAddI64* lir) {
   LInt64Allocation lhs = lir->lhs();
@@ -746,7 +756,17 @@ void CodeGenerator::visitSubI(LSubI* ins) {
   bailoutFrom(&overflow, ins->snapshot());
 }
 
-void CodeGenerator::visitSubIntPtr(LSubIntPtr* ins) { MOZ_CRASH(); }
+void CodeGenerator::visitSubIntPtr(LSubIntPtr* ins) {
+  const LAllocation* lhs = ins->lhs();
+  const LAllocation* rhs = ins->rhs();
+  const LDefinition* dest = ins->output();
+
+  if (rhs->isConstant()) {
+    masm.ma_sub64(ToRegister(dest), ToRegister(lhs), Operand(ToIntPtr(rhs)));
+  } else {
+    masm.ma_sub64(ToRegister(dest), ToRegister(lhs), ToOperand(rhs));
+  }
+}
 
 void CodeGenerator::visitSubI64(LSubI64* lir) {
   LInt64Allocation lhs = lir->lhs();
@@ -891,7 +911,71 @@ void CodeGenerator::visitMulI(LMulI* ins) {
   }
 }
 
-void CodeGenerator::visitMulIntPtr(LMulIntPtr* ins) { MOZ_CRASH(); }
+void CodeGenerator::visitMulIntPtr(LMulIntPtr* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  const LAllocation* rhs = ins->rhs();
+  Register dest = ToRegister(ins->output());
+
+  if (rhs->isConstant()) {
+    intptr_t constant = ToIntPtr(rhs);
+
+    switch (constant) {
+      case -1:
+        masm.neg(dest, lhs);
+        return;
+      case 0:
+        masm.movePtr(zero, dest);
+        return;
+      case 1:
+        if (dest != lhs) {
+          masm.movePtr(lhs, dest);
+        }
+        return;
+      case 2:
+        masm.add(dest, lhs, lhs);
+        return;
+    }
+
+    if (constant > 0) {
+      if (mozilla::IsPowerOfTwo(static_cast<uint64_t>(constant + 1))) {
+        if (dest != lhs) {
+          masm.slli(dest, lhs, FloorLog2(constant + 1));
+          masm.sub(dest, dest, lhs);
+        } else {
+          ScratchRegisterScope scratch(masm);
+          masm.mv(scratch, lhs);
+          masm.slli(dest, lhs, FloorLog2(constant + 1));
+          masm.sub(dest, dest, scratch);
+        }
+        return;
+      }
+      if (mozilla::IsPowerOfTwo(static_cast<uint64_t>(constant - 1))) {
+        if (dest != lhs) {
+          masm.slli(dest, lhs, FloorLog2(constant - 1));
+          masm.add(dest, dest, lhs);
+        } else {
+          ScratchRegisterScope scratch(masm);
+          masm.mv(scratch, lhs);
+          masm.slli(dest, lhs, FloorLog2(constant - 1));
+          masm.add(dest, dest, scratch);
+        }
+        return;
+      }
+      // Use shift if constant is power of 2.
+      uint8_t shamt = mozilla::FloorLog2(constant);
+      if (int64_t(1) << shamt == constant) {
+        masm.slli(dest, lhs, shamt);
+        return;
+      }
+    }
+
+    ScratchRegisterScope scratch(masm);
+    masm.ma_li(scratch, Imm64(constant));
+    masm.mul(dest, lhs, scratch);
+  } else {
+    masm.mul(dest, lhs, ToRegister(rhs));
+  }
+}
 
 void CodeGenerator::visitMulI64(LMulI64* lir) {
   LInt64Allocation lhs = lir->lhs();
@@ -1358,7 +1442,46 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
   }
 }
 
-void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) { MOZ_CRASH(); }
+void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  const LAllocation* rhs = ins->rhs();
+  Register dest = ToRegister(ins->output());
+
+  if (rhs->isConstant()) {
+    auto shamt = ToIntPtr(rhs) & 0x3F;
+    if (shamt) {
+      switch (ins->bitop()) {
+        case JSOp::Lsh:
+          masm.slli(dest, lhs, shamt);
+          break;
+        case JSOp::Rsh:
+          masm.srai(dest, lhs, shamt);
+          break;
+        case JSOp::Ursh:
+          masm.srli(dest, lhs, shamt);
+          break;
+        default:
+          MOZ_CRASH("Unexpected shift op");
+      }
+    } else {
+      masm.movePtr(lhs, dest);
+    }
+  } else {
+    switch (ins->bitop()) {
+      case JSOp::Lsh:
+        masm.sll(dest, lhs, ToRegister(rhs));
+        break;
+      case JSOp::Rsh:
+        masm.sra(dest, lhs, ToRegister(rhs));
+        break;
+      case JSOp::Ursh:
+        masm.srl(dest, lhs, ToRegister(rhs));
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+  }
+}
 
 void CodeGenerator::visitShiftI64(LShiftI64* lir) {
   LInt64Allocation lhs = lir->lhs();
