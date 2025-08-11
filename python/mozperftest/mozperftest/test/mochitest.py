@@ -246,7 +246,7 @@ class Mochitest(Layer):
 
         manifest_path = Path(test.parent, manifest_name)
         manifest = TestManifest([str(manifest_path)], strict=False)
-        test_list = manifest.active_tests(paths=[str(test)])
+        test_list = manifest.active_tests(paths=(str(test),))
 
         subsuite = None
         for parsed_test in test_list or []:
