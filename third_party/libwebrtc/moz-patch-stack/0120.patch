@@ -145,7 +145,7 @@ index b76d8cc965..784d0665e6 100644
  
  group("api") {
 diff --git a/api/audio/test/BUILD.gn b/api/audio/test/BUILD.gn
-index b1060faae3..c567b6b0f3 100644
+index 73762fc54a..839d46f7d6 100644
 --- a/api/audio/test/BUILD.gn
 +++ b/api/audio/test/BUILD.gn
 @@ -8,8 +8,8 @@
