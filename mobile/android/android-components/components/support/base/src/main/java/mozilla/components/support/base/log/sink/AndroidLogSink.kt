@@ -4,8 +4,11 @@
 
 package mozilla.components.support.base.log.sink
 
+import android.os.Build
 import mozilla.components.support.base.ext.getStacktraceAsString
 import mozilla.components.support.base.log.Log
+
+private const val MAX_TAG_LENGTH = 23
 
 /**
  * <code>LogSink</code> implementation that writes to Android's log.
@@ -30,5 +33,11 @@ class AndroidLogSink(
         android.util.Log.println(priority.value, logTag, logMessage)
     }
 
-    private fun tag(candidate: String?): String = candidate ?: defaultTag
+    private fun tag(candidate: String?): String {
+        val tag = candidate ?: defaultTag
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N && tag.length > MAX_TAG_LENGTH) {
+            return tag.substring(0, MAX_TAG_LENGTH)
+        }
+        return tag
+    }
 }

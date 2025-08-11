@@ -42,6 +42,7 @@ import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PW
 import mozilla.components.feature.pwa.ext.hasLargeIcons
 import mozilla.components.feature.pwa.ext.installableManifest
 import mozilla.components.support.images.decoder.AndroidImageDecoder
+import mozilla.components.support.utils.PendingIntentUtils
 import java.util.UUID
 
 private val pwaIconMemoryCache = IconMemoryCache()
@@ -96,7 +97,7 @@ class WebAppShortcutManager(
                     context,
                     0,
                     intent,
-                    PendingIntent.FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT,
+                    PendingIntentUtils.defaultFlags or FLAG_UPDATE_CURRENT,
                 )
                 val intentSender = pendingIntent.intentSender
 
@@ -112,9 +113,11 @@ class WebAppShortcutManager(
      * so this method will do nothing.
      */
     suspend fun updateShortcuts(context: Context, manifests: List<WebAppManifest>) {
-        context.getSystemService<ShortcutManager>()?.apply {
-            val shortcuts = manifests.mapNotNull { buildWebAppShortcut(context, it)?.toShortcutInfo() }
-            updateShortcuts(shortcuts)
+        if (SDK_INT >= VERSION_CODES.N_MR1) {
+            context.getSystemService<ShortcutManager>()?.apply {
+                val shortcuts = manifests.mapNotNull { buildWebAppShortcut(context, it)?.toShortcutInfo() }
+                updateShortcuts(shortcuts)
+            }
         }
     }
 
@@ -198,7 +201,11 @@ class WebAppShortcutManager(
      * This method can be used to check if a web app was added to the homescreen.
      */
     fun findShortcut(context: Context, startUrl: String) =
-        context.getSystemService<ShortcutManager>()?.pinnedShortcuts?.find { it.id == startUrl }
+        if (SDK_INT >= VERSION_CODES.N_MR1) {
+            context.getSystemService<ShortcutManager>()?.pinnedShortcuts?.find { it.id == startUrl }
+        } else {
+            null
+        }
 
     /**
      * Checks if there is a currently installed web app to which this URL belongs.

@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Build
 import android.util.AttributeSet
 import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
@@ -63,7 +64,9 @@ class GeckoEngineView @JvmOverloads constructor(
     }.apply {
         // Explicitly mark this view as important for autofill. The default "auto" doesn't seem to trigger any
         // autofill behavior for us here.
-        ViewCompat.setImportantForAutofill(this, IMPORTANT_FOR_AUTOFILL_YES)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ViewCompat.setImportantForAutofill(this, IMPORTANT_FOR_AUTOFILL_YES)
+        }
     }
 
     internal fun setColorScheme(preferredColorScheme: PreferredColorScheme) {

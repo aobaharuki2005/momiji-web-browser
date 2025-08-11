@@ -15,6 +15,7 @@ import android.os.Bundle
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import mozilla.components.support.utils.PendingIntentUtils
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.focus.GleanMetrics.SearchWidget
 import org.mozilla.focus.activity.MainActivity
@@ -32,7 +33,7 @@ object SearchWidgetUtils {
                     activity,
                     0,
                     pinnedWidgetCallbackIntent,
-                    PendingIntent.FLAG_IMMUTABLE or
+                    PendingIntentUtils.defaultFlags or
                         PendingIntent.FLAG_UPDATE_CURRENT,
                 )
                 appWidgetManager.requestPinAppWidget(searchWidgetProvider, Bundle(), successCallback)

@@ -4,8 +4,11 @@
 
 package mozilla.components.feature.autofill.structure
 
+import android.os.Build
 import android.view.View
+import androidx.annotation.RequiresApi
 
+@RequiresApi(Build.VERSION_CODES.O)
 internal class ParsedStructureBuilder<ViewNode, AutofillId>(
     private val navigator: AutofillNodeNavigator<ViewNode, AutofillId>,
 ) {

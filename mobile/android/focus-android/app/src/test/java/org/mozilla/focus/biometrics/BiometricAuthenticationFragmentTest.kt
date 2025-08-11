@@ -53,6 +53,14 @@ class BiometricAuthenticationFragmentTest {
         )
     }
 
+    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
+    @Test
+    fun `GIVEN biometric authentication fragment WHEN show biometric prompt is called and can use feature returns false THEN request authentication is not called`() {
+        fragment.showBiometricPrompt(biometricPromptAuth, "title", "subtitle")
+
+        verify(biometricPromptAuth, never()).requestAuthentication("title", "subtitle")
+    }
+
     @Test
     fun `GIVEN biometric authentication fragment WHEN on Auth Error is  called THEN biometricErrorText should be updated`() {
         fragment.onAuthError("Fingerprint operation canceled by user.")

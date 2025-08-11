@@ -4,6 +4,7 @@
 
 package mozilla.components.support.base.ext
 
+import android.os.Build
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationManagerCompat
 
@@ -15,7 +16,7 @@ import androidx.core.app.NotificationManagerCompat
 fun NotificationManagerCompat.areNotificationsEnabledSafe(): Boolean {
     return try {
         areNotificationsEnabled()
-    } catch (_: Exception) {
+    } catch (e: Exception) {
         false
     }
 }
@@ -24,16 +25,21 @@ fun NotificationManagerCompat.areNotificationsEnabledSafe(): Boolean {
  * If the channel does not exist or is null, this returns false.
  * If the channel exists with importance more than [NotificationManagerCompat.IMPORTANCE_NONE] and
  * notifications are enabled for the app, this returns true.
+ * On <= SDK 26, this checks if notifications are enabled for the app.
  *
  * @param channelId the id of the notification channel to check.
  * @return true if the channel is enabled, false otherwise.
  */
 fun NotificationManagerCompat.isNotificationChannelEnabled(channelId: String): Boolean {
-    val channel = getNotificationChannelSafe(channelId)
-    return if (channel == null) {
-        false
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = getNotificationChannelSafe(channelId)
+        if (channel == null) {
+            false
+        } else {
+            areNotificationsEnabledSafe() && channel.importance != NotificationManagerCompat.IMPORTANCE_NONE
+        }
     } else {
-        areNotificationsEnabledSafe() && channel.importance != NotificationManagerCompat.IMPORTANCE_NONE
+        areNotificationsEnabledSafe()
     }
 }
 
@@ -48,7 +54,7 @@ fun NotificationManagerCompat.isNotificationChannelEnabled(channelId: String): B
 private fun NotificationManagerCompat.getNotificationChannelSafe(channelId: String): NotificationChannelCompat? {
     return try {
         getNotificationChannelCompat(channelId)
-    } catch (_: Exception) {
+    } catch (e: Exception) {
         null
     }
 }

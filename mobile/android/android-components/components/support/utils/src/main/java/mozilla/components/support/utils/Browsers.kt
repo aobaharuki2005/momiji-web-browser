@@ -11,11 +11,13 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
+import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import mozilla.components.support.utils.ext.getPackageInfoCompat
 import mozilla.components.support.utils.ext.queryIntentActivitiesCompat
 import mozilla.components.support.utils.ext.resolveActivityCompat
+import java.util.HashMap
 
 /**
  * Helpful tools for dealing with other browsers on this device.
@@ -371,7 +373,11 @@ class Browsers private constructor(
             val httpIntent = Intent.parseUri(SAMPLE_BROWSER_HTTP_URL, Intent.URI_INTENT_SCHEME)
             val httpsIntent = Intent.parseUri(SAMPLE_BROWSER_HTTPS_URL, Intent.URI_INTENT_SCHEME)
 
-            val flag = PackageManager.MATCH_ALL
+            val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PackageManager.MATCH_ALL
+            } else {
+                PackageManager.MATCH_DEFAULT_ONLY
+            }
 
             val httpResults = packageManager.queryIntentActivitiesCompat(httpIntent, flag)
                 .filter {
@@ -407,9 +413,13 @@ class Browsers private constructor(
                 addCategory(Intent.CATEGORY_BROWSABLE)
             }
 
-            val flag = PackageManager.MATCH_ALL
-
+            val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PackageManager.MATCH_ALL
+            } else {
+                PackageManager.MATCH_DEFAULT_ONLY
+            }
             return packageManager.queryIntentActivitiesCompat(intent, flag)
+                .orEmpty()
                 .filter {
                     it.activityInfo.exported && (
                         includeThisApp ||

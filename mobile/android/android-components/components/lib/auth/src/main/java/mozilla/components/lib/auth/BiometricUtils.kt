@@ -5,6 +5,7 @@
 package mozilla.components.lib.auth
 
 import android.content.Context
+import android.os.Build
 import androidx.biometric.BiometricManager
 
 /**
@@ -12,8 +13,12 @@ import androidx.biometric.BiometricManager
  */
 
 fun Context.canUseBiometricFeature(): Boolean {
-    val manager = BiometricManager.from(this)
-    return BiometricUtils.canUseFeature(manager)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val manager = BiometricManager.from(this)
+        return BiometricUtils.canUseFeature(manager)
+    } else {
+        false
+    }
 }
 
 internal object BiometricUtils {

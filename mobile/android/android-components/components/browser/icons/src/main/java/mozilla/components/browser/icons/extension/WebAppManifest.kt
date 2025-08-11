@@ -5,8 +5,11 @@
 package mozilla.components.browser.icons.extension
 
 import android.graphics.Color
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.icons.IconRequest.Resource.Type.MANIFEST_ICON
+import mozilla.components.browser.icons.IconRequest.Size.LAUNCHER
 import mozilla.components.browser.icons.IconRequest.Size.LAUNCHER_ADAPTIVE
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifest.Icon.Purpose
@@ -16,7 +19,7 @@ import mozilla.components.concept.engine.manifest.WebAppManifest.Icon.Purpose
  */
 fun WebAppManifest.toIconRequest() = IconRequest(
     url = startUrl,
-    size = LAUNCHER_ADAPTIVE,
+    size = if (SDK_INT >= Build.VERSION_CODES.O) LAUNCHER_ADAPTIVE else LAUNCHER,
     resources = icons
         .filter { Purpose.MASKABLE in it.purpose || Purpose.ANY in it.purpose }
         .map { it.toIconResource() },

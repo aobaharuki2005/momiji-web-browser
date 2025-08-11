@@ -27,6 +27,23 @@ class SplashScreenManagerTest {
     }
 
     @Test
+    fun `GIVEN a device that does not support a splash screen WHEN maybeShowSplashScreen is called THEN we should get a did not show the splash screen result`() {
+        var splashScreenShown = false
+        var result: SplashScreenManagerResult? = null
+        val splashScreenManager = buildSplashScreen(
+            showSplashScreen = { _ -> splashScreenShown = true },
+            isDeviceSupported = { false },
+            onSplashScreenFinished = { result = it },
+        )
+
+        Assert.assertNull(result)
+        splashScreenManager.showSplashScreen()
+
+        Assert.assertFalse(splashScreenShown)
+        Assert.assertEquals(SplashScreenManagerResult.DidNotPresentSplashScreen, result)
+    }
+
+    @Test
     fun `WHEN a user has already seen the splash screen THEN do not show splash screen`() {
         val storage = object : SplashScreenStorage {
             override var isFirstSplashScreenShown = true
@@ -44,7 +61,7 @@ class SplashScreenManagerTest {
     }
 
     @Test
-    fun `WHEN the splash screen has not been shown yet THEN show the splash screen`() {
+    fun `WHEN a device is supported and the splash screen has not been shown yet THEN show the splash screen`() {
         var splashScreenShown = false
         val splashScreenManager = buildSplashScreen(
             showSplashScreen = { _ -> splashScreenShown = true },
@@ -147,6 +164,7 @@ class SplashScreenManagerTest {
         storage: SplashScreenStorage = object : SplashScreenStorage {
             override var isFirstSplashScreenShown = false
         },
+        isDeviceSupported: () -> Boolean = { true },
     ): SplashScreenManager {
         return SplashScreenManager(
             splashScreenTimeout = splashScreenTimeout,
@@ -154,6 +172,7 @@ class SplashScreenManagerTest {
             showSplashScreen = showSplashScreen,
             onSplashScreenFinished = onSplashScreenFinished,
             storage = storage,
+            isDeviceSupported = isDeviceSupported,
             scope = coroutineScope,
         )
     }

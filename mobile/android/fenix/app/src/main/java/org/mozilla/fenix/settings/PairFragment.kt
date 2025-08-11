@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -22,6 +23,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
@@ -58,12 +60,17 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                         setOf(SCOPE_SYNC, SCOPE_PROFILE, SCOPE_SESSION),
                     )
                     val vibrator = requireContext().getSystemService<Vibrator>()!!
-                    vibrator.vibrate(
-                        VibrationEffect.createOneShot(
-                            VIBRATE_LENGTH,
-                            VibrationEffect.DEFAULT_AMPLITUDE,
-                        ),
-                    )
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(
+                            VibrationEffect.createOneShot(
+                                VIBRATE_LENGTH,
+                                VibrationEffect.DEFAULT_AMPLITUDE,
+                            ),
+                        )
+                    } else {
+                        @Suppress("Deprecation")
+                        vibrator.vibrate(VIBRATE_LENGTH)
+                    }
                     findNavController().popBackStack(
                         R.id.turnOnSyncFragment,
                         false,

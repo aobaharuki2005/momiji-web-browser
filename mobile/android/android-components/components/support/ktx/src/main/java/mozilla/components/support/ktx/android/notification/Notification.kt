@@ -28,15 +28,17 @@ fun ensureNotificationChannelExists(
     onSetupChannel: NotificationChannel.() -> Unit = {},
     onCreateChannel: NotificationManager.() -> Unit = {},
 ): String {
-    val notificationManager = requireNotNull(context.getSystemService<NotificationManager>())
-    val channel = NotificationChannel(
-        channelDate.id,
-        context.getString(channelDate.name),
-        channelDate.importance,
-    )
-    onSetupChannel(channel)
-    notificationManager.createNotificationChannel(channel)
-    onCreateChannel(notificationManager)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val notificationManager = requireNotNull(context.getSystemService<NotificationManager>())
+        val channel = NotificationChannel(
+            channelDate.id,
+            context.getString(channelDate.name),
+            channelDate.importance,
+        )
+        onSetupChannel(channel)
+        notificationManager.createNotificationChannel(channel)
+        onCreateChannel(notificationManager)
+    }
 
     return channelDate.id
 }

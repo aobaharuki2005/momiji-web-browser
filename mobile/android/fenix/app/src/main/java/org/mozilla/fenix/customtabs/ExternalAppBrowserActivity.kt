@@ -5,8 +5,10 @@
 package org.mozilla.fenix.customtabs
 
 import android.app.assist.AssistContent
+import android.os.Build
 import android.os.Bundle
 import android.view.MotionEvent
+import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import mozilla.components.browser.state.selector.findCustomTab
@@ -70,6 +72,7 @@ open class ExternalAppBrowserActivity : HomeActivity() {
         return getIntentSessionId(SafeIntent(intent))
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onProvideAssistContent(outContent: AssistContent?) {
         super.onProvideAssistContent(outContent)
         val currentTabUrl = getExternalTab()?.content?.url

@@ -5,6 +5,8 @@
 package mozilla.components.browser.domains
 
 import android.content.Context
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES
 import android.os.LocaleList
 import android.text.TextUtils
 import java.io.IOException
@@ -68,9 +70,13 @@ object Domains {
         val countries = java.util.LinkedHashSet<String>()
         val addIfNotEmpty = { c: String -> if (!TextUtils.isEmpty(c)) countries.add(c.lowercase(Locale.US)) }
 
-        val list = LocaleList.getDefault()
-        for (i in 0 until list.size()) {
-            addIfNotEmpty(list.get(i).country)
+        if (SDK_INT >= VERSION_CODES.N) {
+            val list = LocaleList.getDefault()
+            for (i in 0 until list.size()) {
+                addIfNotEmpty(list.get(i).country)
+            }
+        } else {
+            addIfNotEmpty(Locale.getDefault().country)
         }
 
         return countries

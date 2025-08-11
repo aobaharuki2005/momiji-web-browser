@@ -124,7 +124,9 @@ open class StrictModeManager(
             .detectFileUriExposure()
             .penaltyLog()
 
-        builder.detectContentUriWithoutPermission()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.detectContentUriWithoutPermission()
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             builder.detectNonSdkApiUsage()
         }

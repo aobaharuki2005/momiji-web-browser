@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.logins.ui
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.os.Build
 import android.os.PersistableBundle
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineDispatcher
@@ -151,9 +152,11 @@ internal class LoginsMiddleware(
     private fun handleUsernameClicked(username: String) {
         val usernameClipData = ClipData.newPlainText(username, username)
 
-        usernameClipData.apply {
-            description.extras = PersistableBundle().apply {
-                putBoolean("android.content.extra.IS_SENSITIVE", false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            usernameClipData.apply {
+                description.extras = PersistableBundle().apply {
+                    putBoolean("android.content.extra.IS_SENSITIVE", false)
+                }
             }
         }
         clipboardManager?.setPrimaryClip(usernameClipData)
@@ -162,9 +165,11 @@ internal class LoginsMiddleware(
     private fun handlePasswordClicked(password: String) {
         val passwordClipData = ClipData.newPlainText(password, password)
 
-        passwordClipData.apply {
-            description.extras = PersistableBundle().apply {
-                putBoolean("android.content.extra.IS_SENSITIVE", true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            passwordClipData.apply {
+                description.extras = PersistableBundle().apply {
+                    putBoolean("android.content.extra.IS_SENSITIVE", true)
+                }
             }
         }
         clipboardManager?.setPrimaryClip(passwordClipData)

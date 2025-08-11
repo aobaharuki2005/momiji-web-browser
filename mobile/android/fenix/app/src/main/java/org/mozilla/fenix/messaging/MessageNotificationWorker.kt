@@ -146,7 +146,7 @@ class MessageNotificationWorker(
             context,
             SharedIdsHelper.getNextIdForTag(context, NOTIFICATION_PENDING_INTENT_TAG),
             intent,
-            IntentUtils.DEFAULT_PENDING_INTENT_FLAGS,
+            IntentUtils.defaultIntentPendingFlags,
         )
     }
 
@@ -162,7 +162,7 @@ class MessageNotificationWorker(
             context,
             SharedIdsHelper.getNextIdForTag(context, NOTIFICATION_PENDING_INTENT_TAG),
             intent,
-            IntentUtils.DEFAULT_PENDING_INTENT_FLAGS,
+            IntentUtils.defaultIntentPendingFlags,
         )
     }
 

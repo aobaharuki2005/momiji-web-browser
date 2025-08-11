@@ -6,10 +6,12 @@ package mozilla.components.feature.autofill.ui
 
 import android.app.assist.AssistStructure
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.autofill.AutofillManager
 import android.widget.EditText
 import android.widget.inline.InlinePresentationSpec
+import androidx.annotation.RequiresApi
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -40,6 +42,7 @@ import mozilla.components.support.utils.ext.getParcelableExtraCompat
  * Activity responsible for letting the user manually search and pick credentials for auto-filling a
  * third-party app.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 abstract class AbstractAutofillSearchActivity : FragmentActivity() {
     abstract val configuration: AutofillConfiguration
 

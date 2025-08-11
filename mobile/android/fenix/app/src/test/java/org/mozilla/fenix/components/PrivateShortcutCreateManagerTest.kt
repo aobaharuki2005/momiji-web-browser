@@ -60,7 +60,7 @@ class PrivateShortcutCreateManagerTest {
 
         PrivateShortcutCreateManager.createPrivateShortcut(testContext)
 
-        verify { PendingIntent.getActivity(testContext, 0, capture(intent), IntentUtils.DEFAULT_PENDING_INTENT_FLAGS or PendingIntent.FLAG_UPDATE_CURRENT) }
+        verify { PendingIntent.getActivity(testContext, 0, capture(intent), IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT) }
         verify { ShortcutManagerCompat.requestPinShortcut(testContext, capture(shortcut), capture(intentSender)) }
         `assert shortcutInfoCompat is build correctly`(shortcut.captured)
         `assert homeScreenIntent is built correctly`(intent.captured)
