@@ -2891,17 +2891,15 @@ static bool BuilderHasScrolledClip(nsDisplayListBuilder* aBuilder) {
 
 class AutoTrackStackingContextBits {
   nsDisplayListBuilder& mBuilder;
-  StackingContextBits mBitsToSet;
+  StackingContextBits mSavedBits;
 
  public:
   explicit AutoTrackStackingContextBits(nsDisplayListBuilder& aBuilder)
-      : mBuilder(aBuilder), mBitsToSet(aBuilder.GetStackingContextBits()) {}
+      : mBuilder(aBuilder), mSavedBits(aBuilder.GetStackingContextBits()) {}
 
   ~AutoTrackStackingContextBits() {
-    mBuilder.SetStackingContextBits(mBitsToSet);
+    mBuilder.SetStackingContextBits(mSavedBits);
   }
-
-  void AddToParent(StackingContextBits aBits) { mBitsToSet |= aBits; }
 };
 
 static bool IsFrameOrAncestorApzAware(nsIFrame* aFrame) {
@@ -3212,9 +3210,12 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // Elements with a view-transition name also form a backdrop-root.
   // See https://www.w3.org/TR/css-view-transitions-1/#named-and-transitioning
   // and https://github.com/w3c/csswg-drafts/issues/11772
-  const bool hasViewTransitionName =
-      style.StyleUIReset()->HasViewTransitionName() &&
-      !style.IsRootElementStyle();
+  bool hasViewTransitionName = style.StyleUIReset()->HasViewTransitionName() &&
+                               !style.IsRootElementStyle();
+
+  bool addBackdropRoot =
+      (disp->mWillChange.bits & StyleWillChangeBits::BACKDROP_ROOT) ||
+      hasViewTransitionName;
 
   if (aBuilder->IsForPainting() && disp->mWillChange.bits) {
     aBuilder->AddToWillChangeBudget(this, GetSize());
@@ -3263,7 +3264,23 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
   }
 
-  AutoTrackStackingContextBits stackingContextTracker(*aBuilder);
+  const bool useBlendMode = effects->mMixBlendMode != StyleBlend::Normal;
+  if (useBlendMode) {
+    aBuilder->AddStackingContextBits(StackingContextBits::ContainsMixBlendMode);
+  }
+
+  // NOTE: When changing this condition make sure to tweak ScrollContainerFrame
+  // as well.
+  const bool usingBackdropFilter = effects->HasBackdropFilters() &&
+                                   IsVisibleForPainting() &&
+                                   !style.IsRootElementStyle();
+
+  if (usingBackdropFilter) {
+    aBuilder->AddStackingContextBits(
+        StackingContextBits::ContainsBackdropFilter);
+  }
+
+  AutoTrackStackingContextBits autoRestoreStackingContextBits(*aBuilder);
   aBuilder->ClearStackingContextBits();
 
   nsRect visibleRectOutsideTransform = visibleRect;
@@ -3599,33 +3616,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
   const ActiveScrolledRoot* containerItemASR = contASRTracker.GetContainerASR();
 
   bool createdContainer = false;
-  const StackingContextBits localIsolationReasons = [&] {
-    auto reasons = StackingContextBits::None;
-    if ((disp->mWillChange.bits & StyleWillChangeBits::BACKDROP_ROOT) ||
-        hasViewTransitionName) {
-      reasons |= StackingContextBits::ContainsBackdropFilter;
-    }
-    if (!combines3DTransformWithAncestors) {
-      reasons |= StackingContextBits::MayContainNonIsolated3DTransform;
-    }
-    return reasons;
-  }();
-
-  StackingContextBits currentIsolationReasons =
-      localIsolationReasons & aBuilder->GetStackingContextBits();
-  bool isolated = false;
-  auto MarkAsIsolated = [&] {
-    isolated = true;
-    currentIsolationReasons = StackingContextBits::None;
-  };
-  auto ShouldForceIsolation = [&] {
-    if (localIsolationReasons == StackingContextBits::None) {
-      return false;
-    }
-    bool force = currentIsolationReasons != StackingContextBits::None;
-    MarkAsIsolated();
-    return force;
-  };
 
   // If adding both a nsDisplayBlendContainer and a nsDisplayBlendMode to the
   // same list, the nsDisplayBlendContainer should be added first. This only
@@ -3637,23 +3627,16 @@ void nsIFrame::BuildDisplayListForStackingContext(
     resultList.AppendToTop(nsDisplayBlendContainer::CreateForMixBlendMode(
         aBuilder, this, &resultList, containerItemASR));
     createdContainer = true;
-    MarkAsIsolated();
+    addBackdropRoot = false;
   }
 
-  // NOTE: When changing this condition make sure to tweak ScrollContainerFrame
-  // as well.
-  const bool usingBackdropFilter = effects->HasBackdropFilters() &&
-                                   IsVisibleForPainting() &&
-                                   !style.IsRootElementStyle();
   if (usingBackdropFilter) {
-    stackingContextTracker.AddToParent(
-        StackingContextBits::ContainsBackdropFilter);
     nsRect backdropRect =
         GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
     resultList.AppendNewToTop<nsDisplayBackdropFilters>(
         aBuilder, this, &resultList, backdropRect, this);
     createdContainer = true;
-    MarkAsIsolated();
+    addBackdropRoot = false;
   }
 
   // If there are any SVG effects, wrap the list up in an SVG effects item
@@ -3695,7 +3678,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
       resultList.AppendNewToTop<nsDisplayMasksAndClipPaths>(
           aBuilder, this, &resultList, maskASR, usingBackdropFilter);
       createdContainer = true;
-      MarkAsIsolated();
+      addBackdropRoot = false;
     }
 
     // TODO(miko): We could probably create a wraplist here and avoid creating
@@ -3715,8 +3698,10 @@ void nsIFrame::BuildDisplayListForStackingContext(
         nsDisplayOpacity::NeedsActiveLayer(aBuilder, this);
     resultList.AppendNewToTop<nsDisplayOpacity>(
         aBuilder, this, &resultList, containerItemASR, opacityItemForEventsOnly,
-        needsActiveOpacityLayer, usingBackdropFilter, ShouldForceIsolation());
+        needsActiveOpacityLayer, usingBackdropFilter,
+        addBackdropRoot && aBuilder->ContainsBackdropFilter());
     createdContainer = true;
+    addBackdropRoot = false;
   }
 
   // If we're going to apply a transformation and don't have preserve-3d set,
@@ -3768,7 +3753,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
       if (separator) {
         createdContainer = true;
-        MarkAsIsolated();
+        addBackdropRoot = false;
       }
 
       resultList.AppendToTop(&participants);
@@ -3814,7 +3799,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     nsDisplayTransform* transformItem = MakeDisplayItem<nsDisplayTransform>(
         aBuilder, this, &resultList, visibleRect, prerenderInfo.mDecision,
-        usingBackdropFilter, ShouldForceIsolation());
+        usingBackdropFilter);
     if (transformItem) {
       resultList.AppendToTop(transformItem);
       createdContainer = true;
@@ -3833,14 +3818,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
         resultList.AppendNewToTop<nsDisplayPerspective>(aBuilder, this,
                                                         &resultList);
         createdContainer = true;
-      }
-
-      const bool hasMaybe3dTransform = hasPerspective ||
-                                       !transformItem->GetTransform().Is2D() ||
-                                       prerenderInfo.mHasAnimations;
-      if (hasMaybe3dTransform) {
-        stackingContextTracker.AddToParent(
-            StackingContextBits::MayContainNonIsolated3DTransform);
       }
     }
     if (clipCapturedBy ==
@@ -3916,21 +3893,19 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // If there's blending, wrap up the list in a blend-mode item. Note that
   // opacity can be applied before blending as the blend color is not affected
   // by foreground opacity (only background alpha).
-  if (effects->mMixBlendMode != StyleBlend::Normal) {
-    stackingContextTracker.AddToParent(
-        StackingContextBits::ContainsMixBlendMode);
+  if (useBlendMode) {
+    DisplayListClipState::AutoSaveRestore blendModeClipState(aBuilder);
     resultList.AppendNewToTop<nsDisplayBlendMode>(aBuilder, this, &resultList,
                                                   effects->mMixBlendMode,
                                                   containerItemASR, false);
     createdContainer = true;
-    MarkAsIsolated();
   }
 
   if (capturedByViewTransition) {
     resultList.AppendNewToTop<nsDisplayViewTransitionCapture>(
         aBuilder, this, &resultList, nullptr, /* aIsRoot = */ false);
     createdContainer = true;
-    MarkAsIsolated();
+    addBackdropRoot = false;
     // We don't want the capture to be clipped, so we do this _after_ building
     // the wrapping item.
     if (clipCapturedBy == ContainerItemType::ViewTransitionCapture) {
@@ -3938,15 +3913,11 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
   }
 
-  if (!isolated && localIsolationReasons != StackingContextBits::None) {
-    resultList.AppendToTop(nsDisplayBlendContainer::CreateForIsolation(
-        aBuilder, this, &resultList, containerItemASR, ShouldForceIsolation()));
+  if (addBackdropRoot) {
+    resultList.AppendToTop(nsDisplayBlendContainer::CreateForBackdropRoot(
+        aBuilder, this, &resultList, containerItemASR,
+        /* aNeedsBackdropRoot = */ aBuilder->ContainsBackdropFilter()));
     createdContainer = true;
-  }
-
-  if (!isolated && aBuilder->MayContainNonIsolated3DTransform()) {
-    stackingContextTracker.AddToParent(
-        StackingContextBits::MayContainNonIsolated3DTransform);
   }
 
   if (aBuilder->IsReusingStackingContextItems()) {

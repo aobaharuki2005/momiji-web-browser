@@ -278,17 +278,12 @@ class RetainedDisplayList;
 
 // Bits to track the state of items inside a single stacking context.
 enum class StackingContextBits : uint8_t {
-  // Empty bitfield.
-  None = 0,
   // True if we processed a display item that has a blend mode attached.
   // We do this so we can insert a nsDisplayBlendContainer in the parent
   // stacking context.
   ContainsMixBlendMode = 1 << 0,
   // Similar, but for backdrop-filter.
   ContainsBackdropFilter = 1 << 1,
-  // Whether we can contain a non-isolated 3d or perspective transform that
-  // might need explicit flattening.
-  MayContainNonIsolated3DTransform = 1 << 2,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StackingContextBits);
 
@@ -1537,10 +1532,6 @@ class nsDisplayListBuilder {
   bool ContainsBlendMode() const {
     return bool(mStackingContextBits &
                 StackingContextBits::ContainsMixBlendMode);
-  }
-  bool MayContainNonIsolated3DTransform() const {
-    return bool(mStackingContextBits &
-                StackingContextBits::MayContainNonIsolated3DTransform);
   }
   bool ContainsBackdropFilter() const {
     return bool(mStackingContextBits &
@@ -5146,7 +5137,7 @@ class nsDisplayOpacity final : public nsDisplayWrapList {
                    nsDisplayList* aList,
                    const ActiveScrolledRoot* aActiveScrolledRoot,
                    bool aForEventsOnly, bool aNeedsActiveLayer,
-                   bool aWrapsBackdropFilter, bool aForceIsolation);
+                   bool aWrapsBackdropFilter, bool aForceBackdropRoot);
 
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                    const nsDisplayOpacity& aOther)
@@ -5156,7 +5147,7 @@ class nsDisplayOpacity final : public nsDisplayWrapList {
         mNeedsActiveLayer(aOther.mNeedsActiveLayer),
         mChildOpacityState(ChildOpacityState::Unknown),
         mWrapsBackdropFilter(aOther.mWrapsBackdropFilter),
-        mForceIsolation(aOther.mForceIsolation) {
+        mForceBackdropRoot(aOther.mForceBackdropRoot) {
     MOZ_COUNT_CTOR(nsDisplayOpacity);
     // We should not try to merge flattened opacities.
     MOZ_ASSERT(aOther.mChildOpacityState != ChildOpacityState::Applied);
@@ -5265,8 +5256,8 @@ class nsDisplayOpacity final : public nsDisplayWrapList {
 #else
   ChildOpacityState mChildOpacityState;
 #endif
-  bool mWrapsBackdropFilter : 1;
-  bool mForceIsolation : 1;
+  bool mWrapsBackdropFilter;
+  bool mForceBackdropRoot;
 };
 
 class nsDisplayBlendMode : public nsDisplayWrapList {
@@ -5376,9 +5367,9 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
       nsIFrame* aSecondaryFrame, nsDisplayList* aList,
       const ActiveScrolledRoot* aActiveScrolledRoot);
 
-  static nsDisplayBlendContainer* CreateForIsolation(
+  static nsDisplayBlendContainer* CreateForBackdropRoot(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
-      const ActiveScrolledRoot* aActiveScrolledRoot, bool aNeedsIsolation);
+      const ActiveScrolledRoot* aActiveScrolledRoot, bool aNeedsBackdropRoot);
 
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayBlendContainer)
 
@@ -5392,7 +5383,10 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   bool CanMerge(const nsDisplayItem* aItem) const override {
-    return nsDisplayWrapList::CanMerge(aItem) &&
+    // Items for the same content element should be merged into a single
+    // compositing group.
+    return HasDifferentFrame(aItem) && HasSameTypeAndClip(aItem) &&
+           HasSameContent(aItem) &&
            mBlendContainerType ==
                static_cast<const nsDisplayBlendContainer*>(aItem)
                    ->mBlendContainerType;
@@ -5403,7 +5397,7 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
   }
 
   bool CreatesStackingContextHelper() override {
-    return mBlendContainerType != BlendContainerType::NeedsIsolationNothing;
+    return mBlendContainerType != BlendContainerType::BackdropRootNothing;
   }
 
  protected:
@@ -5415,9 +5409,9 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
     // doesn't create a stacking context helper, just flattens away (necessary
     // because we need to create a display item of same display item type and
     // toggle between these last two types without invalidating the frame)
-    NeedsIsolationNothing,
+    BackdropRootNothing,
     // creates stacking context helper for backdrop root
-    NeedsIsolationNeedsContainer,
+    BackdropRootNeedsContainer,
   };
 
   nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -6260,7 +6254,7 @@ class nsDisplayTransform final : public nsPaintedDisplayItem {
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
                      PrerenderDecision aPrerenderDecision,
-                     bool aWrapsBackdropFilter, bool aForceIsolation);
+                     bool aWrapsBackdropFilter);
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
@@ -6619,7 +6613,6 @@ class nsDisplayTransform final : public nsPaintedDisplayItem {
   bool mHasAssociatedPerspective : 1;
   bool mContainsASRs : 1;
   bool mWrapsBackdropFilter : 1;
-  bool mForceIsolation : 1;
 };
 
 /* A display item that applies a perspective transformation to a single

@@ -4727,14 +4727,14 @@ nsresult nsDisplayItemWrapper::WrapListsInPlace(
 nsDisplayOpacity::nsDisplayOpacity(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot, bool aForEventsOnly,
-    bool aNeedsActiveLayer, bool aWrapsBackdropFilter, bool aForceIsolation)
+    bool aNeedsActiveLayer, bool aWrapsBackdropFilter, bool aForceBackdropRoot)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot, true),
       mOpacity(aFrame->StyleEffects()->mOpacity),
       mForEventsOnly(aForEventsOnly),
       mNeedsActiveLayer(aNeedsActiveLayer),
       mChildOpacityState(ChildOpacityState::Unknown),
       mWrapsBackdropFilter(aWrapsBackdropFilter),
-      mForceIsolation(aForceIsolation) {
+      mForceBackdropRoot(aForceBackdropRoot) {
   MOZ_COUNT_CTOR(nsDisplayOpacity);
 }
 
@@ -5023,8 +5023,8 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
   if (mWrapsBackdropFilter) {
     params.flags |= wr::StackingContextFlags::WRAPS_BACKDROP_FILTER;
   }
-  if (mForceIsolation) {
-    params.flags |= wr::StackingContextFlags::FORCED_ISOLATION;
+  if (mForceBackdropRoot) {
+    params.flags |= wr::StackingContextFlags::IS_BACKDROP_ROOT;
   }
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
@@ -5129,9 +5129,9 @@ bool nsDisplayBlendMode::CanMerge(const nsDisplayItem* aItem) const {
 nsDisplayBlendContainer* nsDisplayBlendContainer::CreateForMixBlendMode(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot) {
-  return MakeDisplayItemWithIndex<nsDisplayBlendContainer>(
-      aBuilder, aFrame, uint16_t(BlendContainerType::MixBlendMode), aList,
-      aActiveScrolledRoot, BlendContainerType::MixBlendMode);
+  return MakeDisplayItem<nsDisplayBlendContainer>(
+      aBuilder, aFrame, aList, aActiveScrolledRoot,
+      BlendContainerType::MixBlendMode);
 }
 
 /* static */
@@ -5148,19 +5148,18 @@ nsDisplayBlendContainer* nsDisplayBlendContainer::CreateForBackgroundBlendMode(
   }
 
   return MakeDisplayItemWithIndex<nsDisplayBlendContainer>(
-      aBuilder, aFrame, uint16_t(BlendContainerType::BackgroundBlendMode),
-      aList, aActiveScrolledRoot, BlendContainerType::BackgroundBlendMode);
+      aBuilder, aFrame, 1, aList, aActiveScrolledRoot,
+      BlendContainerType::BackgroundBlendMode);
 }
 
 /* static */
-nsDisplayBlendContainer* nsDisplayBlendContainer::CreateForIsolation(
+nsDisplayBlendContainer* nsDisplayBlendContainer::CreateForBackdropRoot(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
-    const ActiveScrolledRoot* aActiveScrolledRoot, bool aNeedsIsolation) {
-  auto type = aNeedsIsolation ? BlendContainerType::NeedsIsolationNeedsContainer
-                              : BlendContainerType::NeedsIsolationNothing;
-  return MakeDisplayItemWithIndex<nsDisplayBlendContainer>(
-      aBuilder, aFrame, uint16_t(BlendContainerType::NeedsIsolationNothing),
-      aList, aActiveScrolledRoot, type);
+    const ActiveScrolledRoot* aActiveScrolledRoot, bool aNeedsBackdropRoot) {
+  return MakeDisplayItem<nsDisplayBlendContainer>(
+      aBuilder, aFrame, aList, aActiveScrolledRoot,
+      aNeedsBackdropRoot ? BlendContainerType::BackdropRootNeedsContainer
+                         : BlendContainerType::BackdropRootNothing);
 }
 
 nsDisplayBlendContainer::nsDisplayBlendContainer(
@@ -6096,8 +6095,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
       mHasTransformGetter(false),
       mHasAssociatedPerspective(false),
       mContainsASRs(false),
-      mWrapsBackdropFilter(false),
-      mForceIsolation(false) {
+      mWrapsBackdropFilter(false) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
   Init(aBuilder, aList);
@@ -6107,8 +6105,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        nsIFrame* aFrame, nsDisplayList* aList,
                                        const nsRect& aChildrenBuildingRect,
                                        PrerenderDecision aPrerenderDecision,
-                                       bool aWrapsBackdropFilter,
-                                       bool aForceIsolation)
+                                       bool aWrapsBackdropFilter)
     : nsPaintedDisplayItem(aBuilder, aFrame),
       mChildren(aBuilder),
       mChildrenBuildingRect(aChildrenBuildingRect),
@@ -6117,8 +6114,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
       mHasTransformGetter(false),
       mHasAssociatedPerspective(false),
       mContainsASRs(false),
-      mWrapsBackdropFilter(aWrapsBackdropFilter),
-      mForceIsolation(aForceIsolation) {
+      mWrapsBackdropFilter(aWrapsBackdropFilter) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
@@ -6137,8 +6133,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
       mHasTransformGetter(true),
       mHasAssociatedPerspective(false),
       mContainsASRs(false),
-      mWrapsBackdropFilter(false),
-      mForceIsolation(false) {
+      mWrapsBackdropFilter(false) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
   MOZ_ASSERT(aFrame->GetTransformGetter());
@@ -6810,9 +6805,6 @@ bool nsDisplayTransform::CreateWebRenderCommands(
 
   if (mWrapsBackdropFilter) {
     params.flags |= wr::StackingContextFlags::WRAPS_BACKDROP_FILTER;
-  }
-  if (mForceIsolation) {
-    params.flags |= wr::StackingContextFlags::FORCED_ISOLATION;
   }
 
   wr::WrTransformInfo transform_info;
@@ -8481,7 +8473,7 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
   wr::StackingContextParams params;
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
-  params.flags = wr::StackingContextFlags::FORCED_ISOLATION;
+  params.flags = wr::StackingContextFlags::IS_BACKDROP_ROOT;
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
 
