@@ -1392,21 +1392,21 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
     switch (ins->bitop()) {
       case JSOp::Lsh:
         if (shift) {
-          masm.slliw(dest, lhs, shift % 32);
+          masm.slliw(dest, lhs, shift);
         } else {
           masm.move32(lhs, dest);
         }
         break;
       case JSOp::Rsh:
         if (shift) {
-          masm.sraiw(dest, lhs, shift % 32);
+          masm.sraiw(dest, lhs, shift);
         } else {
           masm.move32(lhs, dest);
         }
         break;
       case JSOp::Ursh:
         if (shift) {
-          masm.srliw(dest, lhs, shift % 32);
+          masm.srliw(dest, lhs, shift);
         } else {
           // x >>> 0 can overflow.
           if (ins->mir()->toUrsh()->fallible()) {
