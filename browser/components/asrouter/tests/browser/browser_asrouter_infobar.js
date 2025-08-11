@@ -32,6 +32,7 @@ function recordImpression(action) {
 // Clean up any prefs written via SET_PREF actions
 registerCleanupFunction(() => {
   const prefsToClear = [
+    "messaging-system-action.embedded-link-sma",
     "messaging-system-action.impressionActionTest",
     "messaging-system-action.onceTest",
     "messaging-system-action.multi.once",
@@ -694,6 +695,82 @@ add_task(async function test_buildMessageFragment_withoutInlineAnchors() {
   await BrowserTestUtils.waitForCondition(() => !InfoBar._activeInfobar);
   sinon.restore();
 });
+
+add_task(
+  async function test_buildMessageFragment_withInlineAnchor_openUrlAndSMA() {
+    const win = BrowserWindowTracker.getTopWindow();
+    const browser = win.gBrowser.selectedBrowser;
+
+    const { RemoteL10n } = ChromeUtils.importESModule(
+      "resource:///modules/asrouter/RemoteL10n.sys.mjs"
+    );
+    sinon
+      .stub(RemoteL10n, "formatLocalizableText")
+      .resolves('<a data-l10n-name="foo">Click Me</a>');
+
+    const handleStub = sinon.stub(SpecialMessageActions, "handleAction");
+
+    const testUrl = "https://example.com/";
+    const customAction = {
+      type: "SET_PREF",
+      data: { pref: { name: "embedded-link-sma", value: true } },
+    };
+    const message = {
+      id: "TEST_INLINE_OPEN_URL_AND_ACTION",
+      content: {
+        type: "global",
+        priority: win.gNotificationBox.PRIORITY_INFO_LOW,
+        text: { string_id: "test" },
+        linkUrls: { foo: testUrl },
+        linkActions: { foo: customAction },
+        buttons: [{ label: "Close", action: { type: "CANCEL" } }],
+      },
+    };
+
+    const dispatchStub = sinon.stub();
+    const infobar = await InfoBar.showInfoBarMessage(
+      browser,
+      message,
+      dispatchStub
+    );
+
+    const rendered = infobar.notification.messageText.querySelector(
+      'a[data-l10n-name="foo"]'
+    );
+    Assert.ok(rendered, "Rendered inline anchor present");
+    Assert.equal(rendered.href, testUrl, "Rendered href is correct");
+
+    EventUtils.synthesizeMouseAtCenter(rendered, {}, browser.ownerGlobal);
+
+    Assert.equal(handleStub.callCount, 2, "handleAction called twice");
+
+    const [openUrlAction, openUrlBrowser] = handleStub.firstCall.args;
+    Assert.deepEqual(
+      openUrlAction,
+      { type: "OPEN_URL", data: { args: testUrl, where: "tab" } },
+      "First call opens the URL"
+    );
+    Assert.equal(openUrlBrowser, browser, "OPEN_URL got the correct browser");
+
+    const [customArg, customBrowser] = handleStub.secondCall.args;
+    Assert.deepEqual(
+      customArg,
+      customAction,
+      "Second call invokes the custom action"
+    );
+    Assert.equal(
+      customBrowser,
+      browser,
+      "Custom action got the correct browser"
+    );
+
+    // Cleanup
+    RemoteL10n.formatLocalizableText.restore();
+    handleStub.restore();
+    infobar.notification.closeButton.click();
+    await BrowserTestUtils.waitForCondition(() => !InfoBar._activeInfobar);
+  }
+);
 
 add_task(async function test_configurable_background_color() {
   const win = BrowserWindowTracker.getTopWindow();

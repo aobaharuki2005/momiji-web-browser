@@ -105,6 +105,8 @@ class InfoBarNotification {
         }
         anchors.push(...importedNode.querySelectorAll("a[data-l10n-name]"));
 
+        const linkActions = this.message.content.linkActions || {};
+
         for (const a of anchors) {
           const name = a.dataset.l10nName;
           const template = doc
@@ -116,13 +118,32 @@ class InfoBarNotification {
           a.href = template.href;
           a.addEventListener("click", e => {
             e.preventDefault();
-            lazy.SpecialMessageActions.handleAction(
-              {
-                type: "OPEN_URL",
-                data: { args: a.href, where: args?.where || "tab" },
-              },
-              browser
-            );
+            // Open link URL
+            try {
+              lazy.SpecialMessageActions.handleAction(
+                {
+                  type: "OPEN_URL",
+                  data: { args: a.href, where: args?.where || "tab" },
+                },
+                browser
+              );
+            } catch (err) {
+              console.error(`Error handling OPEN_URL action:`, err);
+            }
+            // Then fire the defined actions for that link, if applicable
+            if (linkActions[name]) {
+              try {
+                lazy.SpecialMessageActions.handleAction(
+                  linkActions[name],
+                  browser
+                );
+              } catch (err) {
+                console.error(
+                  `Error handling ${linkActions[name]} action:`,
+                  err
+                );
+              }
+            }
           });
         }
       }
