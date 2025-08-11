@@ -246,6 +246,7 @@ def jit_default(target, enable_portable_baseline_interp):
         "aarch64",
         "mips64",
         "loongarch64",
+        "riscv64",
     ):
         return True
     return False
