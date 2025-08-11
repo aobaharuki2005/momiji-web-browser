@@ -3,32 +3,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import sys
-from pathlib import Path
 
 from mach.decorators import Command, CommandArgument
 
 
-@Command("xpcshell", category="misc", description="Run the xpcshell binary")
-@CommandArgument(
-    "args", nargs=argparse.REMAINDER, help="Arguments to provide to xpcshell"
+@Command(
+    "xpcshell",
+    category="misc",
+    description="Run the xpcshell binary",
 )
-def xpcshell(command_context, args):
-    dist_bin = Path(command_context.topobjdir, "dist", "bin")
-    browser_dir = dist_bin / "browser"
+@CommandArgument(
+    "--app",
+    help="The path to the Firefox binary (default: the binary in $TOPOBJDIR)",
+    dest="firefox_bin",
+)
+@CommandArgument(
+    "args",
+    nargs=argparse.REMAINDER,
+    help="Arguments to provide to xpcshell",
+)
+def xpcshell(command_context, *, firefox_bin, args):
+    if not firefox_bin:
+        firefox_bin = command_context.get_binary_path("app")
 
-    if sys.platform == "win32":
-        xpcshell = dist_bin / "xpcshell.exe"
-    else:
-        xpcshell = dist_bin / "xpcshell"
-
-    command = [
-        str(xpcshell),
-        "-g",
-        str(dist_bin),
-        "-a",
-        str(browser_dir),
-    ]
+    command = [str(firefox_bin), "-xpcshell"]
 
     # Disable the socket process (see https://bugzilla.mozilla.org/show_bug.cgi?id=1903631).
     env = {
