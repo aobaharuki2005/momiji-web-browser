@@ -24,6 +24,7 @@ use firefox_on_glean::{
     metrics::networking,
     private::{LocalCustomDistribution, LocalMemoryDistribution},
 };
+use libc::{c_uchar, size_t};
 #[cfg(not(windows))]
 use libc::{c_int, AF_INET, AF_INET6};
 use neqo_common::{
@@ -249,6 +250,65 @@ fn enable_zstd_decoder(c: &mut Connection) -> neqo_transport::Res<()> {
     c.set_certificate_compression::<ZstdCertDecoder>()
 }
 
+#[repr(C)]
+#[derive(Debug, PartialEq)]
+pub enum BrotliDecoderResult {
+    Error = 0,
+    Success = 1,
+    NeedsMoreInput = 2,
+    NeedsMoreOutput = 3,
+}
+
+extern "C" {
+    pub fn BrotliDecoderDecompress(
+        encoded_size: size_t,
+        encoded_buffer: *const c_uchar,
+        decoded_size: *mut size_t,
+        decoded_buffer: *mut c_uchar,
+    ) -> BrotliDecoderResult;
+}
+
+fn enable_brotli_decoder(c: &mut Connection) -> neqo_transport::Res<()> {
+    struct BrotliCertDecoder {}
+
+    impl CertificateCompressor for BrotliCertDecoder {
+        // RFC 8879
+        const ID: u16 = 0x2;
+        const NAME: &std::ffi::CStr = c"brotli";
+
+        fn decode(input: &[u8], output: &mut [u8]) -> neqo_crypto::Res<()> {
+            if input.is_empty() {
+                return Err(neqo_crypto::Error::CertificateDecoding);
+            }
+            if output.is_empty() {
+                return Err(neqo_crypto::Error::CertificateDecoding);
+            }
+
+            let mut uncompressed_size = output.len();
+            let result = unsafe {
+                BrotliDecoderDecompress(
+                    input.len(),
+                    input.as_ptr(),
+                    &mut uncompressed_size as *mut usize,
+                    output.as_mut_ptr(),
+                )
+            };
+
+            if result != BrotliDecoderResult::Success {
+                return Err(neqo_crypto::Error::CertificateDecoding);
+            }
+
+            if uncompressed_size != output.len() {
+                return Err(neqo_crypto::Error::CertificateDecoding);
+            }
+
+            Ok(())
+        }
+    }
+
+    c.set_certificate_compression::<BrotliCertDecoder>()
+}
+
 type SendFunc = extern "C" fn(
     context: *mut c_void,
     addr_family: u16,
@@ -439,6 +499,12 @@ impl NeqoHttp3Conn {
             && static_prefs::pref!("network.http.http3.enable_certificate_compression_zstd")
         {
             enable_zstd_decoder(&mut conn).map_err(|_| NS_ERROR_UNEXPECTED)?;
+        }
+
+        if static_prefs::pref!("security.tls.enable_certificate_compression_brotli")
+            && static_prefs::pref!("network.http.http3.enable_certificate_compression_brotli")
+        {
+            enable_brotli_decoder(&mut conn).map_err(|_| NS_ERROR_UNEXPECTED)?;
         }
 
         let mut conn = Http3Client::new_with_conn(conn, http3_settings);
