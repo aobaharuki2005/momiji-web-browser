@@ -746,10 +746,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
 
   if (parent && parent->mNativeView) {
     [parent->mNativeView addSubview:mNativeView];
-  } else if (nsAppShell::gWindow) {
-    [nsAppShell::gWindow.rootViewController.view addSubview:mNativeView];
-  } else {
-    [nsAppShell::gTopLevelViews addObject:mNativeView];
   }
 
   mTextInputHandler = new widget::TextInputHandler(this);
@@ -787,10 +783,9 @@ void nsWindow::Show(bool aState) {
   if (aState != mVisible) {
     mNativeView.hidden = aState ? NO : YES;
     if (aState) {
-      UIView* parentView = mParent
-                               ? mParent->mNativeView
-                               : nsAppShell::gWindow.rootViewController.view;
-      [parentView bringSubviewToFront:mNativeView];
+      if (mParent) {
+        [mParent->mNativeView bringSubviewToFront:mNativeView];
+      }
       [mNativeView setNeedsDisplay];
     }
     mVisible = aState;
@@ -806,7 +801,9 @@ void nsWindow::Move(double aX, double aY) {
   mBounds.x = aX;
   mBounds.y = aY;
 
-  mNativeView.frame = DevPixelsToUIKitPoints(mBounds, BackingScaleFactor());
+  if (mWindowType != WindowType::TopLevel) {
+    mNativeView.frame = DevPixelsToUIKitPoints(mBounds, BackingScaleFactor());
+  }
 
   if (mVisible) [mNativeView setNeedsDisplay];
 
@@ -828,7 +825,10 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     mBounds.height = aHeight;
   }
 
-  [mNativeView setFrame:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())];
+  if (mWindowType != WindowType::TopLevel) {
+    [mNativeView
+        setFrame:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())];
+  }
 
   if (mVisible && aRepaint) [mNativeView setNeedsDisplay];
 
@@ -844,7 +844,10 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
   mBounds.width = aWidth;
   mBounds.height = aHeight;
 
-  [mNativeView setFrame:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())];
+  if (mWindowType != WindowType::TopLevel) {
+    [mNativeView
+        setFrame:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())];
+  }
 
   if (mVisible && aRepaint) [mNativeView setNeedsDisplay];
 
@@ -856,6 +859,7 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
     return;
   }
 
+  // FIXME: Delegate this to our embedder.
   mSizeMode = static_cast<nsSizeMode>(aMode);
   if (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen) {
     // Resize to fill screen
@@ -941,9 +945,9 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
 
   CGPoint temp = [mNativeView convertPoint:temp toView:nil];
 
-  if (!mParent && nsAppShell::gWindow) {
+  if (!mParent && mNativeView.window) {
     // convert to screen coords
-    temp = [nsAppShell::gWindow convertPoint:temp toWindow:nil];
+    temp = [mNativeView.window convertPoint:temp toWindow:nil];
   }
 
   offset.x += static_cast<int32_t>(temp.x);
