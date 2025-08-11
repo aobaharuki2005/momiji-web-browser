@@ -318,6 +318,8 @@
   <string name="browser_menu_sign_back_in_to_sync">Eñepyrũjey tembiapo embojuehe hag̃ua</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">Ñembojuehe mombytapyre</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">Eñangareko eykeko ha embojuehéva</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">Tendayke pyahu ñemigua</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -415,6 +417,8 @@
   <string name="browser_menu_default_banner_title">Ejapo %1$s-gui ijypyguáva</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Ndahetái aravo\'i. Emoambuekuaa ejapose vove.</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">Ipya’e, hekoñemi ha nemba’erãva.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Mboyke</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
@@ -628,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Eikuaaukávo mba’éichapa eikuaára’e Firefox ha ijeporu, orepytyvõ emoherakuã hag̃ua ore kundahára hetave tapichápe.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Emoherakuã’imi mba’ekuaarã marketing Mozilla-pegua kundahára ndive. Ko’ã mba’ekuaarã noñevendemo’ãi ha ndohechaukamo’ãi ñemurã.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Emoherakuã mba’ekuaarã Mozilla-pegua marketing ndive. Ko’ã mba’ekuaarã noñevendéi ha ndoikomo’ãi ñemurãrõ.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Mba’éichapa jaiporu umi mba’ekuaarã</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1083,6 +1089,8 @@
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Ambue</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">¿Emoambue tembiporu’i ra’ãnga’i?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">Ta’ãnga’i moambue oikotevẽ tembiporu’i ñepyrũjeýre.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive">Eñepyrũjey ko’ág̃a</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -1264,6 +1272,8 @@
   <string name="preference_simple_toolbar">Simple</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Myasãimbyre</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Kundaha rupa oĩ’arã yvate ojehechávo tendayke rupa.</string>
   <!--
     App icon Preferences
 
@@ -1776,6 +1786,8 @@
   <string name="tab_crash_restore">Embojevy tendayke</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s oñemoñepyrũ jey</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s ndikói. ¿Emondo marandu’i?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Oĩ marandu’i jejavygua oñemondo’ỹva jejavy ojehapykuehóva rehegua. Emondóramo orepytyvõta iporãve hag̃ua %1$s. Embotývo ko ñemomarandu omboykéta ko marandu’i.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -3746,6 +3758,8 @@
   <string name="setup_checklist_task_explore_extensions">Ejeporekave jepysokuére</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Emohenda widget jehekaha</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Eiporu jehekaha widget</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3810,6 +3824,17 @@
   <string name="review_prompt_feedback_header">Rombyasy eguereko haguére apañuái. Mba’éichapa roipytyvõkuaa %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Ehai ne remiandu</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Roreko ñembohekopyahu</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Eñemboaravo ehechami ha emoneĩ hag̃ua. %1$s.</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Jeporurã Reko</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->

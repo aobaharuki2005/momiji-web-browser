@@ -57,7 +57,7 @@
   <!-- Description for the "tabs" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_tabs_description">Tilgå faneblade</string>
   <!-- Description for the "webNavigation" WebExtensions API permission. -->
-  <string name="mozac_feature_addons_permissions_web_navigation_description">Tilgå browser-aktivitet under navigation</string>
+  <string name="mozac_feature_addons_permissions_web_navigation_description">Tilgå browser-aktivitet under navigering</string>
   <!-- Description for the "bookmarks" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_bookmarks_description">Læse og ændre bogmærker</string>
   <!-- Description for the "browserSettings" WebExtensions API permission. -->
@@ -110,6 +110,8 @@
   <string name="mozac_feature_addons_permissions_all_urls_description_for_update">Tilgå dine data for alle websteder.</string>
   <!-- Description for the "tabs" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_tabs_description_for_update">Tilgå faneblade.</string>
+  <!-- Description for the "webNavigation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_web_navigation_description_for_update">Tilgå browser-aktivitet under navigering.</string>
   <!-- Description for the "bookmarks" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_bookmarks_description_for_update">Læse og ændre bogmærker.</string>
   <!-- Description for the "browserSettings" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->

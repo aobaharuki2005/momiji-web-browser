@@ -3250,7 +3250,7 @@
   -->
   <string name="automatic_translation_option_offer_to_translate_title_preference">Übersetzung anbieten (Standard)</string>
   <!-- Preference option for offering to translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s bietet an, Websites in diese Sprache zu übersetzen.</string>
+  <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s bietet an, Websites in dieser Sprache zu übersetzen.</string>
   <!-- Preference option for always translate. Radio button title text. -->
   <string name="automatic_translation_option_always_translate_title_preference">Immer übersetzen</string>
   <!-- Preference option for always translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
@@ -3258,7 +3258,7 @@
   <!-- Preference option for never translate. Radio button title text. -->
   <string name="automatic_translation_option_never_translate_title_preference">Nie übersetzen</string>
   <!-- Preference option for never translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="automatic_translation_option_never_translate_summary_preference">%1$s wird niemals anbieten, Websites in diese Sprache zu übersetzen.</string>
+  <string name="automatic_translation_option_never_translate_summary_preference">%1$s wird niemals anbieten, Websites in dieser Sprache zu übersetzen.</string>
   <!--
     Never translate site preference screen
 
