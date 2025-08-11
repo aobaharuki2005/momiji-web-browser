@@ -512,12 +512,9 @@ fxms-schemas:
         using: run-task
         cwd: '{checkout}'
         command: >
+            export GECKO_BINARY_PATH=${MOZ_FETCHES_DIR}/firefox/firefox &&
             cd browser/components/asrouter/content-src/schemas &&
-            env LD_LIBRARY_PATH=${MOZ_FETCHES_DIR}/firefox \
-                ${MOZ_FETCHES_DIR}/bin/xpcshell \
-                    -g ${MOZ_FETCHES_DIR}/firefox \
-                    -a ${MOZ_FETCHES_DIR}/firefox/browser \
-                    extract-test-corpus.js
+            ../../../../../mach xpcshell --app "${GECKO_BINARY_PATH}" -- extract-test-corpus.js &&
             ../../../../../mach python -- make-schemas.py --check
     when:
         files-changed:
