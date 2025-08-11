@@ -203,7 +203,7 @@ async function assertActualEnginesEqualsExpected(
   expectedDefaultPrivate,
   message
 ) {
-  engineSelector.clearCachedConfigurationForTests();
+  engineSelector._configuration = null;
   SearchTestUtils.setRemoteSettingsConfig(config, []);
 
   let { appDefaultEngineId, appPrivateDefaultEngineId } =
