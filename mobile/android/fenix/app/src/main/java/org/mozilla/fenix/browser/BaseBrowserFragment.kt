@@ -184,6 +184,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
+import org.mozilla.fenix.components.toolbar.isTallWindow
 import org.mozilla.fenix.compose.core.Action
 import org.mozilla.fenix.compose.snackbar.DefaultSnackbarFactory
 import org.mozilla.fenix.compose.snackbar.Snackbar
@@ -1339,7 +1340,9 @@ abstract class BaseBrowserFragment :
     ): @Composable () -> Unit = {
         FirefoxTheme {
             TabStrip(
-                showActionButtons = context?.settings()?.shouldUseExpandedToolbar != true,
+                // Show action buttons only if the navigation bar (which has the same buttons) is not showing.
+                showActionButtons = context?.settings()?.shouldUseExpandedToolbar != true ||
+                        context?.isTallWindow() == false,
                 onAddTabClick = {
                     if (activity.settings().enableHomepageAsNewTab) {
                         requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(

@@ -1408,6 +1408,26 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN on a large portrait screen with extended layout enabled THEN don't show a share button as page end action`() {
+        every { settings.shouldUseExpandedToolbar } returns true
+        mockkStatic(Context::isLargeWindow) {
+            mockkStatic(Context::isTallWindow) {
+                every { any<Context>().isLargeWindow() } returns true
+                every { any<Context>().isTallWindow() } returns true
+                val browserScreenStore = buildBrowserScreenStore()
+                val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
+                val toolbarStore = buildStore(
+                    middleware,
+                    browsingModeManager = browsingModeManager,
+                    navController = navController,
+                )
+
+                assertTrue(toolbarStore.state.displayState.pageActionsEnd.isEmpty())
+            }
+        }
+    }
+
+    @Test
     fun `GIVEN in landscape with tabstrip is disabled and not using the extended layout THEN show a share button as page end action`() {
         every { appState.orientation } returns Landscape
         every { settings.isTabStripEnabled } returns false
@@ -1552,6 +1572,27 @@ class BrowserToolbarMiddlewareTest {
 
         val shareButton = toolbarStore.state.displayState.browserActionsEnd[0]
         assertEquals(expectedShareButton(), shareButton)
+    }
+
+    @Test
+    fun `GIVEN on a large portrait screen with tabstrip and extended layout enabled THEN don't show a share button as browser end action`() {
+        every { settings.isTabStripEnabled } returns true
+        every { settings.shouldUseExpandedToolbar } returns true
+        mockkStatic(Context::isLargeWindow) {
+            mockkStatic(Context::isTallWindow) {
+                every { any<Context>().isLargeWindow() } returns true
+                every { any<Context>().isTallWindow() } returns true
+                val browserScreenStore = buildBrowserScreenStore()
+                val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
+                val toolbarStore = buildStore(
+                    middleware,
+                    browsingModeManager = browsingModeManager,
+                    navController = navController,
+                )
+
+                assertTrue(toolbarStore.state.displayState.pageActionsEnd.isEmpty())
+            }
+        }
     }
 
     @Test

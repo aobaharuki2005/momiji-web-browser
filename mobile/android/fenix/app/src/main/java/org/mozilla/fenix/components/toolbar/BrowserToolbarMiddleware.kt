@@ -724,6 +724,8 @@ class BrowserToolbarMiddleware(
     private fun buildEndPageActions(): List<Action> {
         val isWideOrShortScreen = environment?.context?.isLargeWindow() == true ||
                 environment?.context?.isTallWindow() == false
+        val isExpandedAndTallScreen = settings.shouldUseExpandedToolbar &&
+                environment?.context?.isTallWindow() == true
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.ReaderMode) {
@@ -735,7 +737,7 @@ class BrowserToolbarMiddleware(
                     FxNimbus.features.translations.value().mainFlowToolbarEnabled
             },
             ToolbarActionConfig(ToolbarAction.Share) {
-                isWideOrShortScreen && !settings.isTabStripEnabled && !settings.shouldUseExpandedToolbar
+                isWideOrShortScreen && !settings.isTabStripEnabled && !isExpandedAndTallScreen
             },
         ).filter { config ->
             config.isVisible()
@@ -758,7 +760,7 @@ class BrowserToolbarMiddleware(
                 !settings.isTabStripEnabled && !isExpandedAndTallScreen
             },
             ToolbarActionConfig(ToolbarAction.Share) {
-                isWideOrShortScreen && settings.isTabStripEnabled && !settings.shouldUseExpandedToolbar
+                isWideOrShortScreen && settings.isTabStripEnabled && !isExpandedAndTallScreen
             },
             ToolbarActionConfig(ToolbarAction.Menu) { !isExpandedAndTallScreen },
         ).filter { config ->

@@ -268,11 +268,22 @@
     <issue
         id="NoStaticMocking"
         message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(NavController::nav) {"
+        errorLine1="        mockkStatic(Context::isTallWindow) {"
         errorLine2="        ^">
         <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="494"
+            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="157"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isTallWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="171"
             column="9"/>
     </issue>
 
@@ -283,7 +294,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="510"
+            line="493"
             column="9"/>
     </issue>
 
@@ -294,7 +305,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="537"
+            line="509"
             column="9"/>
     </issue>
 
@@ -305,7 +316,18 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="566"
+            line="536"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(NavController::nav) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="565"
             column="9"/>
     </issue>
 
@@ -314,20 +336,20 @@
         message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
         errorLine1="        mockkStatic(Context::settings) {"
         errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="795"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="            mockkStatic(NavController::nav) {"
+        errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
             line="796"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(NavController::nav) {"
-        errorLine2="            ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="797"
             column="13"/>
     </issue>
 
@@ -338,7 +360,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="840"
+            line="839"
             column="9"/>
     </issue>
 
@@ -349,7 +371,7 @@
         errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="841"
+            line="840"
             column="13"/>
     </issue>
 
@@ -360,7 +382,18 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1292"
+            line="1291"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isTallWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1382"
             column="9"/>
     </issue>
 
@@ -371,7 +404,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1394"
+            line="1400"
             column="9"/>
     </issue>
 
@@ -382,7 +415,29 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1517"
+            line="1414"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="            mockkStatic(Context::isTallWindow) {"
+        errorLine2="            ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1415"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isTallWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1528"
             column="9"/>
     </issue>
 
@@ -393,7 +448,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1585"
+            line="1550"
             column="9"/>
     </issue>
 
@@ -404,7 +459,51 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1617"
+            line="1582"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="            mockkStatic(Context::isTallWindow) {"
+        errorLine2="            ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1583"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isTallWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1614"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isTallWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1625"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isTallWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1641"
             column="9"/>
     </issue>
 
@@ -415,7 +514,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1642"
+            line="1657"
             column="9"/>
     </issue>
 
@@ -426,7 +525,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1673"
+            line="1689"
             column="9"/>
     </issue>
 
@@ -437,7 +536,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1705"
+            line="1714"
             column="9"/>
     </issue>
 
@@ -448,7 +547,40 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1816"
+            line="1745"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isLargeWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1777"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isLargeWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1888"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isTallWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="2392"
             column="9"/>
     </issue>
 
@@ -1929,6 +2061,17 @@
     <issue
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        context?.isTallWindow() == false,"
+        errorLine2="                                 ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/browser/BaseBrowserFragment.kt"
+            line="1347"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
         errorLine1="        getCurrentTab()?.let { tab ->"
         errorLine2="        ~~~~~~~~~~~~~">
         <location
@@ -2743,7 +2886,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values-vi/strings.xml"
-            line="3699"
+            line="3714"
             column="62"/>
     </issue>
 
@@ -3210,94 +3353,6 @@
         <location
             file="src/test/java/org/mozilla/fenix/ext/LogTest.kt"
             line="25"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Config)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1383"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Config)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1509"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Config)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1574"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Config)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1585"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Config)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1601"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Config)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="2352"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Config)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="157"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Config)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="171"
             column="9"/>
     </issue>
 
