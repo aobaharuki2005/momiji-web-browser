@@ -286,33 +286,15 @@ nsScrollbarFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-void nsScrollbarFrame::SetScrollbarMediatorContent(nsIContent* aMediator) {
-  mScrollbarMediator = aMediator;
+void nsScrollbarFrame::SetOverrideScrollbarMediator(nsIScrollbarMediator* aMediator) {
+  mOverriddenScrollbarMediator = do_QueryFrame(aMediator);
 }
 
 nsIScrollbarMediator* nsScrollbarFrame::GetScrollbarMediator() {
-  if (!mScrollbarMediator) {
-    return nullptr;
+  if (auto* override = mOverriddenScrollbarMediator.GetFrame()) {
+    return do_QueryFrame(override);
   }
-  nsIFrame* f = mScrollbarMediator->GetPrimaryFrame();
-  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f);
-  nsIScrollbarMediator* sbm;
-
-  if (scrollContainerFrame) {
-    nsIFrame* scrolledFrame = scrollContainerFrame->GetScrolledFrame();
-    sbm = do_QueryFrame(scrolledFrame);
-    if (sbm) {
-      return sbm;
-    }
-  }
-  sbm = do_QueryFrame(f);
-  if (f && !sbm) {
-    f = f->PresShell()->GetRootScrollContainerFrame();
-    if (f && f->GetContent() == mScrollbarMediator) {
-      return do_QueryFrame(f);
-    }
-  }
-  return sbm;
+  return do_QueryFrame(GetParent());
 }
 
 bool nsScrollbarFrame::IsHorizontal() const {

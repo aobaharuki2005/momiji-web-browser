@@ -531,7 +531,6 @@ ScrollReflowInput::ScrollReflowInput(ScrollContainerFrame* aFrame,
   mOverlayScrollbars = aFrame->UsesOverlayScrollbars();
 
   if (nsScrollbarFrame* scrollbar = aFrame->GetScrollbarBox(false)) {
-    scrollbar->SetScrollbarMediatorContent(mReflowInput.mFrame->GetContent());
     mHScrollbarPrefSize = scrollbar->ScrollbarMinSize();
     // A zero minimum size is a bug with non-overlay scrollbars. That means
     // we'll always try to place the scrollbar, even if it will ultimately not
@@ -544,7 +543,6 @@ ScrollReflowInput::ScrollReflowInput(ScrollContainerFrame* aFrame,
     mHScrollbarAllowedForScrollingVVInsideLV = false;
   }
   if (nsScrollbarFrame* scrollbar = aFrame->GetScrollbarBox(true)) {
-    scrollbar->SetScrollbarMediatorContent(mReflowInput.mFrame->GetContent());
     mVScrollbarPrefSize = scrollbar->ScrollbarMinSize();
     // See above.
     MOZ_ASSERT(mVScrollbarPrefSize.width && mVScrollbarPrefSize.height,
