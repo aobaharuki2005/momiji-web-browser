@@ -1101,11 +1101,9 @@ already_AddRefed<nsWindow> nsWindow::From(nsIWidget* aWidget) {
 
 NS_IMPL_ISUPPORTS(IOSView, nsIGeckoViewEventDispatcher, nsIGeckoViewView)
 
-IOSView::~IOSView() { [mInitData release]; }
-
 nsresult IOSView::GetInitData(JSContext* aCx,
                               JS::MutableHandle<JS::Value> aOut) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return EventDispatcher::UnboxBundle(aCx, mInitData.get(), aOut);
 }
 
 @interface GeckoViewWindowImpl : NSObject <GeckoViewWindow> {
@@ -1138,7 +1136,7 @@ nsresult IOSView::GetInitData(JSContext* aCx,
 
 id<GeckoViewWindow> GeckoViewOpenWindow(NSString* aId,
                                         id<SwiftEventDispatcher> aDispatcher,
-                                        id aInitData, bool aPrivateMode) {
+                                        NSDictionary* aInitData, bool aPrivateMode) {
   MOZ_ASSERT(NS_IsMainThread());
 
   AUTO_PROFILER_LABEL("GeckoViewOpenWindows", OTHER);
@@ -1155,7 +1153,7 @@ id<GeckoViewWindow> GeckoViewOpenWindow(NSString* aId,
   // Prepare an nsIGeckoViewView to pass as argument to the window.
   RefPtr<IOSView> iosView = new IOSView();
   iosView->mEventDispatcher->Attach(aDispatcher);
-  iosView->mInitData = [aInitData retain];
+  iosView->mInitData.AssignUnderGetRule((CFDictionaryRef)aInitData);
 
   nsAutoCString chromeFlags("chrome,dialog=0,remote,resizable,scrollbars");
   if (aPrivateMode) {
