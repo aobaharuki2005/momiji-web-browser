@@ -22,8 +22,7 @@ namespace mozilla {
 
 StickyScrollContainer::StickyScrollContainer(
     ScrollContainerFrame* aScrollContainerFrame)
-    : mScrollContainerFrame(aScrollContainerFrame) {
-}
+    : mScrollContainerFrame(aScrollContainerFrame) {}
 
 StickyScrollContainer::~StickyScrollContainer() = default;
 

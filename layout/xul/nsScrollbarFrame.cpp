@@ -286,7 +286,8 @@ nsScrollbarFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-void nsScrollbarFrame::SetOverrideScrollbarMediator(nsIScrollbarMediator* aMediator) {
+void nsScrollbarFrame::SetOverrideScrollbarMediator(
+    nsIScrollbarMediator* aMediator) {
   mOverriddenScrollbarMediator = do_QueryFrame(aMediator);
 }
 
