@@ -52,7 +52,7 @@
 == float-open-details-contains-float-right.html float-open-details-contains-float-right-ref.html
 
 # Various properties on details or summary
-test-pref(layout.css.details-content.enabled,true) == details-percentage-height-children.html details-percentage-height-children-ref.html
+== details-percentage-height-children.html details-percentage-height-children-ref.html
 == details-absolute-children.html details-absolute-children-ref.html
 == details-three-columns.html details-three-columns-ref.html
 == details-writing-mode.html details-writing-mode-ref.html
