@@ -285,6 +285,7 @@ class NativeLayerWayland : public NativeLayer {
 
   RefPtr<widget::WaylandSurface> mSurface;
 
+  // Final buffer which we attach to WaylandSurface
   RefPtr<widget::WaylandBuffer> mFrontBuffer;
 
   const bool mIsOpaque = false;
@@ -347,8 +348,7 @@ class NativeLayerWaylandRender final : public NativeLayerWayland {
 
   void DiscardBackbuffersLocked(const widget::WaylandSurfaceLock& aProofOfLock,
                                 bool aForce) override;
-  void HandlePartialUpdateLocked(
-      const widget::WaylandSurfaceLock& aProofOfLock);
+  void ReadBackFrontBuffer(const widget::WaylandSurfaceLock& aProofOfLock);
   bool CommitFrontBufferToScreenLocked(
       const widget::WaylandSurfaceLock& aProofOfLock) override;
 

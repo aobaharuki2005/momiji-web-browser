@@ -76,11 +76,21 @@ bool SurfacePoolWayland::CanRecycleSurfaceForRequest(
     const IntSize& aSize, GLContext* aGL) {
   MOZ_DIAGNOSTIC_ASSERT(!aEntry.mWaylandBuffer->IsAttached());
   if (aEntry.mSize != aSize) {
+    LOGVERBOSE(
+        "SurfacePoolWayland::CanRecycleSurfaceForRequest(): can't recycle due "
+        "to different sizes.");
     return false;
   }
   if (aEntry.mGLResources) {
+    LOGVERBOSE(
+        "SurfacePoolWayland::CanRecycleSurfaceForRequest(): mGLResources "
+        "recycle %d",
+        aEntry.mGLResources->mGL == aGL);
     return aEntry.mGLResources->mGL == aGL;
   }
+  LOGVERBOSE(
+      "SurfacePoolWayland::CanRecycleSurfaceForRequest(): aGL recycle %d",
+      aGL == nullptr);
   return aGL == nullptr;
 }
 
@@ -98,9 +108,11 @@ RefPtr<WaylandBuffer> SurfacePoolWayland::ObtainBufferFromPool(
     mInUseEntries.insert({buffer.get(), std::move(*iterToRecycle)});
     mAvailableEntries.RemoveElementAt(iterToRecycle);
     LOGVERBOSE(
-        "SurfacePoolWayland::ObtainBufferFromPool() recycled [%p] inUse [%zu] "
-        "available [%zu]",
-        buffer.get(), mInUseEntries.size(), mAvailableEntries.Length());
+        "SurfacePoolWayland::ObtainBufferFromPool() recycled [%p] U[%zu] "
+        "P[%zu] "
+        "A[%zu]",
+        buffer.get(), mInUseEntries.size(), mPendingEntries.Length(),
+        mAvailableEntries.Length());
     return buffer;
   }
 
@@ -115,9 +127,11 @@ RefPtr<WaylandBuffer> SurfacePoolWayland::ObtainBufferFromPool(
   if (buffer) {
     mInUseEntries.insert({buffer.get(), SurfacePoolEntry{aSize, buffer, {}}});
   }
-
-  LOGVERBOSE("SurfacePoolWayland::ObtainBufferFromPool() created [%p]",
-             buffer.get());
+  LOGVERBOSE(
+      "SurfacePoolWayland::ObtainBufferFromPool() created [%p] U[%d] P[%d] "
+      "A[%d]",
+      buffer.get(), (int)mInUseEntries.size(), (int)mPendingEntries.Length(),
+      (int)mAvailableEntries.Length());
   return buffer;
 }
 
@@ -136,8 +150,7 @@ void SurfacePoolWayland::ReturnBufferToPool(
   mInUseEntries.erase(inUseEntryIter);
 
   LOGVERBOSE(
-      "SurfacePoolWayland::ReturnBufferToPool() buffer [%p] inUse [%d] pending "
-      "[%d] available [%d]",
+      "SurfacePoolWayland::ReturnBufferToPool() buffer [%p] U[%d] P[%d] A[%d]",
       aBuffer.get(), (int)mInUseEntries.size(), (int)mPendingEntries.Length(),
       (int)mAvailableEntries.Length());
 }
@@ -175,6 +188,9 @@ void SurfacePoolWayland::CollectPendingSurfaces() {
     }
     return false;
   });
+  LOGVERBOSE("SurfacePoolWayland::CollectPendingSurfaces() U[%d] P[%d] A[%d]",
+             (int)mInUseEntries.size(), (int)mPendingEntries.Length(),
+             (int)mAvailableEntries.Length());
 }
 
 Maybe<GLuint> SurfacePoolWayland::GetFramebufferForBuffer(
