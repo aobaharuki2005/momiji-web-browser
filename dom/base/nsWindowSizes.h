@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SizeOfState.h"
+#include "nsStyleStructList.h"
 
 class nsTabSizes {
  public:
@@ -52,33 +53,33 @@ class nsTabSizes {
 struct nsStyleSizes {
   nsStyleSizes()
       :
-#define STYLE_STRUCT(name_) NS_STYLE_SIZES_FIELD(name_)(0),
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+#define INIT_FIELD(name_) NS_STYLE_SIZES_FIELD(name_)(0),
+        FOR_EACH_STYLE_STRUCT(INIT_FIELD, INIT_FIELD)
+#undef INIT_FIELD
 
-        dummy() {
+            dummy() {
   }
 
   void addToTabSizes(nsTabSizes* aSizes) const {
-#define STYLE_STRUCT(name_) \
+#define ADD_TO_TAB(name_) \
   aSizes->add(nsTabSizes::Style, NS_STYLE_SIZES_FIELD(name_));
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+      FOR_EACH_STYLE_STRUCT(ADD_TO_TAB, ADD_TO_TAB)
+#undef ADD_TO_TAB
   }
 
   size_t getTotalSize() const {
     size_t total = 0;
 
-#define STYLE_STRUCT(name_) total += NS_STYLE_SIZES_FIELD(name_);
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+#define ADD_TO_TOTAL(name_) total += NS_STYLE_SIZES_FIELD(name_);
+    FOR_EACH_STYLE_STRUCT(ADD_TO_TOTAL, ADD_TO_TOTAL)
+#undef ADD_TO_TOTAL
 
     return total;
   }
 
-#define STYLE_STRUCT(name_) size_t NS_STYLE_SIZES_FIELD(name_);
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+#define DECLARE_FIELD(name_) size_t NS_STYLE_SIZES_FIELD(name_);
+  FOR_EACH_STYLE_STRUCT(DECLARE_FIELD, DECLARE_FIELD)
+#undef DECLARE_FIELD
 
   // Present just to absorb the trailing comma in the constructor.
   int dummy;

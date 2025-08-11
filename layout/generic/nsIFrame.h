@@ -81,6 +81,7 @@
 #include "nsPresContext.h"
 #include "nsQueryFrame.h"
 #include "nsStyleStruct.h"
+#include "nsStyleStructList.h"
 #include "nsTHashSet.h"
 
 #ifdef ACCESSIBILITY
@@ -971,7 +972,7 @@ class nsIFrame : public nsQueryFrame {
  * Callers can use Style*WithOptionalParam if they're in a function that
  * accepts an *optional* pointer the style struct.
  */
-#define STYLE_STRUCT(name_)                                          \
+#define FRAME_STYLE_ACCESSORS(name_)                                 \
   const nsStyle##name_* Style##name_() const MOZ_NONNULL_RETURN {    \
     NS_ASSERTION(mComputedStyle, "No style found!");                 \
     return mComputedStyle->Style##name_();                           \
@@ -984,8 +985,8 @@ class nsIFrame : public nsQueryFrame {
     }                                                                \
     return Style##name_();                                           \
   }
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+  FOR_EACH_STYLE_STRUCT(FRAME_STYLE_ACCESSORS, FRAME_STYLE_ACCESSORS)
+#undef FRAME_STYLE_ACCESSORS
 
   /** Also forward GetVisitedDependentColor to the style */
   template <typename T, typename S>
