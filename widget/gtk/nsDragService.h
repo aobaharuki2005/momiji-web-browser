@@ -131,6 +131,8 @@ class nsDragSession : public nsBaseDragSession, public nsIObserver {
 
   static int GetLoopDepth() { return sEventLoopDepth; };
 
+  static bool IsTextFlavor(GdkAtom aFlavor);
+
  protected:
   // mScheduledTask indicates what signal has been received from GTK and
   // so what needs to be dispatched when the scheduled task is run.  It is

@@ -1663,7 +1663,10 @@ NSString* nsCocoaUtils::GetStringForTypeFromPasteboardItem(
   NSString* availableType =
       [aItem availableTypeFromArray:[NSArray arrayWithObjects:(id)aType, nil]];
   if (availableType && IsValidPasteboardType(availableType, aAllowFileURL)) {
-    return [aItem stringForType:(id)availableType];
+    NSString* str = [aItem stringForType:(id)availableType];
+    // Sanitize (remove NULs, etc) to align with other platforms.
+    return [NSString stringWithCString:[str UTF8String]
+                              encoding:NSUTF8StringEncoding];
   }
 
   return nil;
