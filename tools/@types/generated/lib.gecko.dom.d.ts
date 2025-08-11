@@ -24856,6 +24856,7 @@ declare namespace CSS {
     var highlights: HighlightRegistry;
     function Hz(value: number): CSSUnitValue;
     function Q(value: number): CSSUnitValue;
+    function _in(value: number): CSSUnitValue;
     function cap(value: number): CSSUnitValue;
     function ch(value: number): CSSUnitValue;
     function cm(value: number): CSSUnitValue;
@@ -24881,7 +24882,6 @@ declare namespace CSS {
     function fr(value: number): CSSUnitValue;
     function grad(value: number): CSSUnitValue;
     function ic(value: number): CSSUnitValue;
-    function in(value: number): CSSUnitValue;
     function kHz(value: number): CSSUnitValue;
     function lh(value: number): CSSUnitValue;
     function lvb(value: number): CSSUnitValue;
@@ -26990,4 +26990,10 @@ interface TestInterfaceAsyncIterableSingle {
 interface TestInterfaceAsyncIterableSingleWithArgs {
     [Symbol.asyncIterator](options?: TestInterfaceAsyncIteratorOptions): AsyncIterableIterator<number>;
     values(options?: TestInterfaceAsyncIteratorOptions): AsyncIterableIterator<number>;
+}
+
+declare namespace CSS {
+  export {
+    _in as in,
+  };
 }
