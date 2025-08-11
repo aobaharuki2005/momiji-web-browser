@@ -393,10 +393,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
     return NS_OK;
   }
 
-  nsAutoString orient;
-  el->GetAttr(nsGkAtoms::orient, orient);
-  bool vertical = orient.EqualsLiteral("vertical");
-
+  const bool vertical = el->HasAttr(nsGkAtoms::vertical);
   RefPtr<dom::NodeInfo> sbbNodeInfo =
       nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbarbutton, nullptr,
                                    kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
@@ -432,7 +429,6 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
         getter_AddRefs(mSlider),
         nodeInfoManager->GetNodeInfo(nsGkAtoms::slider, nullptr,
                                      kNameSpaceID_XUL, nsINode::ELEMENT_NODE));
-    mSlider->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, orient, false);
 
     aElements.AppendElement(ContentInfo(mSlider, key));
 
@@ -440,7 +436,6 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
         getter_AddRefs(mThumb),
         nodeInfoManager->GetNodeInfo(nsGkAtoms::thumb, nullptr,
                                      kNameSpaceID_XUL, nsINode::ELEMENT_NODE));
-    mThumb->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, orient, false);
     mSlider->AppendChildTo(mThumb, false, IgnoreErrors());
   }
 

@@ -319,15 +319,6 @@ bool nsNativeTheme::IsFirstTab(nsIFrame* aFrame) {
   return false;
 }
 
-bool nsNativeTheme::IsHorizontal(nsIFrame* aFrame) {
-  if (!aFrame) return false;
-
-  if (!aFrame->GetContent()->IsElement()) return true;
-
-  return !aFrame->GetContent()->AsElement()->AttrValueIs(
-      kNameSpaceID_None, nsGkAtoms::orient, nsGkAtoms::vertical, eCaseMatters);
-}
-
 bool nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, int32_t aOffset) {
   if (!aFrame) return false;
 

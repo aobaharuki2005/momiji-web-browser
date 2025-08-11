@@ -5479,31 +5479,20 @@ void ScrollContainerFrame::ReloadChildFrames() {
     if (content == GetContent()) {
       NS_ASSERTION(!mScrolledFrame, "Already found the scrolled frame");
       mScrolledFrame = frame;
-    } else {
-      nsAutoString value;
-      if (content->IsElement()) {
-        content->AsElement()->GetAttr(nsGkAtoms::orient, value);
-      }
-      if (!value.IsEmpty()) {
-        // probably a scrollbar then
-        if (value.LowerCaseEqualsLiteral("horizontal")) {
-          NS_ASSERTION(!mHScrollbarBox,
-                       "Found multiple horizontal scrollbars?");
-          mHScrollbarBox = do_QueryFrame(frame);
-          MOZ_ASSERT(mHScrollbarBox, "Not a scrollbar?");
-        } else {
-          NS_ASSERTION(!mVScrollbarBox, "Found multiple vertical scrollbars?");
-          mVScrollbarBox = do_QueryFrame(frame);
-          MOZ_ASSERT(mVScrollbarBox, "Not a scrollbar?");
-        }
-      } else if (content->IsXULElement(nsGkAtoms::resizer)) {
-        NS_ASSERTION(!mResizerBox, "Found multiple resizers");
-        mResizerBox = frame;
-      } else if (content->IsXULElement(nsGkAtoms::scrollcorner)) {
-        // probably a scrollcorner
-        NS_ASSERTION(!mScrollCornerBox, "Found multiple scrollcorners");
-        mScrollCornerBox = frame;
-      }
+    } else if (content == mVScrollbarContent) {
+      NS_ASSERTION(!mVScrollbarBox, "Found multiple vertical scrollbars?");
+      mVScrollbarBox = do_QueryFrame(frame);
+      MOZ_ASSERT(mVScrollbarBox, "Not a scrollbar?");
+    } else if (content == mHScrollbarContent) {
+      NS_ASSERTION(!mHScrollbarBox, "Found multiple horizontal scrollbars?");
+      mHScrollbarBox = do_QueryFrame(frame);
+      MOZ_ASSERT(mHScrollbarBox, "Not a scrollbar?");
+    } else if (content == mResizerContent) {
+      NS_ASSERTION(!mResizerBox, "Found multiple resizers");
+      mResizerBox = frame;
+    } else if (content == mScrollCornerContent) {
+      NS_ASSERTION(!mScrollCornerBox, "Found multiple scrollcorners");
+      mScrollCornerBox = frame;
     }
   }
 }
@@ -5513,11 +5502,6 @@ already_AddRefed<Element> ScrollContainerFrame::MakeScrollbar(
   MOZ_ASSERT(aNodeInfo);
   MOZ_ASSERT(
       aNodeInfo->Equals(nsGkAtoms::scrollbar, nullptr, kNameSpaceID_XUL));
-
-  static constexpr nsLiteralString kOrientValues[2] = {
-      u"horizontal"_ns,
-      u"vertical"_ns,
-  };
 
   aKey = AnonymousContentKey::Type_Scrollbar;
   if (aVertical) {
@@ -5535,15 +5519,16 @@ already_AddRefed<Element> ScrollContainerFrame::MakeScrollbar(
                  reinterpret_cast<void*>(true));
 #endif  // DEBUG
 
-  e->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, kOrientValues[aVertical],
-             false);
+  if (aVertical) {
+    e->SetAttr(kNameSpaceID_None, nsGkAtoms::vertical, u"true"_ns, false);
+  }
 
   if (mIsRoot) {
     e->SetProperty(nsGkAtoms::docLevelNativeAnonymousContent,
                    reinterpret_cast<void*>(true));
     e->SetAttr(kNameSpaceID_None, nsGkAtoms::root, u"true"_ns, false);
 
-    // Don't bother making style caching take [root="true"] styles into account.
+    // Don't bother making style caching take [root] styles into account.
     aKey = AnonymousContentKey::None;
   }
 
@@ -5618,9 +5603,7 @@ auto ScrollContainerFrame::GetNeededAnonymousContent() const
 }
 
 nsresult ScrollContainerFrame::CreateAnonymousContent(
-    nsTArray<nsIAnonymousContentCreator::ContentInfo>& aElements) {
-  typedef nsIAnonymousContentCreator::ContentInfo ContentInfo;
-
+    nsTArray<ContentInfo>& aElements) {
   nsPresContext* presContext = PresContext();
   nsNodeInfoManager* nodeInfoManager =
       presContext->Document()->NodeInfoManager();
