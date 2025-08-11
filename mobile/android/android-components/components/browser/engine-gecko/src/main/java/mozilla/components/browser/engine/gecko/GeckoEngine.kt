@@ -23,6 +23,7 @@ import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.preferences.DefaultGeckoPreferenceAccessor
 import mozilla.components.browser.engine.gecko.preferences.GeckoPreferenceAccessor
+import mozilla.components.browser.engine.gecko.preferences.GeckoPreferenceObserverDelegate
 import mozilla.components.browser.engine.gecko.preferences.GeckoPreferencesUtils.intoBrowserPreference
 import mozilla.components.browser.engine.gecko.preferences.GeckoPreferencesUtils.intoGeckoBranch
 import mozilla.components.browser.engine.gecko.preferences.GeckoPreferencesUtils.intoSetGeckoPreference
@@ -54,6 +55,7 @@ import mozilla.components.concept.engine.fission.WebContentIsolationStrategy
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.preferences.Branch
+import mozilla.components.concept.engine.preferences.BrowserPrefObserverDelegate
 import mozilla.components.concept.engine.preferences.BrowserPreference
 import mozilla.components.concept.engine.preferences.BrowserPreferencesRuntime
 import mozilla.components.concept.engine.preferences.SetBrowserPreference
@@ -752,6 +754,24 @@ class GeckoEngine(
         runtime.orientationController.delegate = null
     }
 
+    /**
+     * See [BrowserPreferencesRuntime.registerPreferenceObserverDelegate].
+     */
+    @OptIn(ExperimentalGeckoViewApi::class)
+    override fun registerPrefObserverDelegate(prefObserverDelegate: BrowserPrefObserverDelegate) {
+    runtime.preferencesObserverDelegate = GeckoPreferenceObserverDelegate(
+        delegate = prefObserverDelegate,
+    )
+}
+
+    /**
+     * See [BrowserPreferencesRuntime.unregisterPreferenceObserverDelegate].
+     */
+    @OptIn(ExperimentalGeckoViewApi::class)
+    override fun unregisterPrefObserverDelegate() {
+        runtime.preferencesObserverDelegate = null
+    }
+
     override fun registerServiceWorkerDelegate(serviceWorkerDelegate: ServiceWorkerDelegate) {
         runtime.serviceWorkerDelegate = GeckoServiceWorkerDelegate(
             delegate = serviceWorkerDelegate,
@@ -969,6 +989,48 @@ class GeckoEngine(
             neverTranslate = setting,
             onSuccess = onSuccess,
             onError = onError,
+        )
+    }
+
+    /**
+     * See [BrowserPreferencesRuntime.registerPrefForObservation].
+     */
+    @OptIn(ExperimentalGeckoViewApi::class)
+    override fun registerPrefForObservation(
+        pref: String,
+        onSuccess: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        geckoPreferenceAccessor.registerGeckoPrefForObservation(pref).then(
+            {
+                onSuccess()
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
+        )
+    }
+
+    /**
+     * See [BrowserPreferencesRuntime.unregisterPrefForObservation].
+     */
+    @OptIn(ExperimentalGeckoViewApi::class)
+    override fun unregisterPrefForObservation(
+        pref: String,
+        onSuccess: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        geckoPreferenceAccessor.unregisterGeckoPrefForObservation(pref).then(
+            {
+                onSuccess()
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
         )
     }
 

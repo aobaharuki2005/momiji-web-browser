@@ -52,6 +52,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.appservices.places.uniffi.PlacesApiException
+import mozilla.components.browser.engine.gecko.preferences.BrowserPrefObserverIntegration
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -325,6 +326,7 @@ abstract class BaseBrowserFragment :
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
     private val webAuthnFeature = ViewBoundFeatureWrapper<WebAuthnFeature>()
     private val screenOrientationFeature = ViewBoundFeatureWrapper<ScreenOrientationFeature>()
+    private val browserPrefObserverIntegration = ViewBoundFeatureWrapper<BrowserPrefObserverIntegration>()
     private val biometricPromptFeature = ViewBoundFeatureWrapper<BiometricPromptFeature>()
     private val crashContentIntegration = ViewBoundFeatureWrapper<CrashContentIntegration>()
     private val readerViewBinding = ViewBoundFeatureWrapper<ReaderViewBinding>()
@@ -1197,6 +1199,14 @@ abstract class BaseBrowserFragment :
             feature = ScreenOrientationFeature(
                 engine = requireComponents.core.engine,
                 activity = requireActivity(),
+            ),
+            owner = this,
+            view = view,
+        )
+
+        browserPrefObserverIntegration.set(
+            feature = BrowserPrefObserverIntegration(
+                engine = requireComponents.core.engine,
             ),
             owner = this,
             view = view,

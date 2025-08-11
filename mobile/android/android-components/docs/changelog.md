@@ -9,6 +9,7 @@ permalink: /changelog/
   * `AbstractFetchDownloadService.onDestroy` will now cancel all non-completed downloads. [Bug 1977393](https://bugzilla.mozilla.org/show_bug.cgi?id=1977393)
 * **concept-engine** and **browser-engine-gecko**
   * Added methods to get and set multiple browser preferences. [Bug 1974800](https://bugzilla.mozilla.org/show_bug.cgi?id=1974800)
+  * 🌟️ Added a mechanism to observe browser preferences changing. Use `registerPrefObserverDelegate` to register the delegate on the engine and `registerPrefForObservation` to register a specific pref for observation. Alternatively, use `BrowserPrefObserverFeature` which handles registration and broadcasts the events using an `ObserverRegistery`.
 
 # 142.0
 * **feature-tabs**:

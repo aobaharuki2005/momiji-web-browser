@@ -13,6 +13,7 @@ import mozilla.components.ExperimentalAndroidComponentsApi
 import mozilla.components.browser.engine.gecko.ext.getAntiTrackingPolicy
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.preferences.GeckoPreferenceAccessor
+import mozilla.components.browser.engine.gecko.preferences.GeckoPreferenceObserverDelegate
 import mozilla.components.browser.engine.gecko.serviceworker.GeckoServiceWorkerDelegate
 import mozilla.components.browser.engine.gecko.translate.RuntimeTranslationAccessor
 import mozilla.components.browser.engine.gecko.util.SpeculativeEngineSession
@@ -31,6 +32,7 @@ import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.preferences.Branch
+import mozilla.components.concept.engine.preferences.BrowserPrefObserverDelegate
 import mozilla.components.concept.engine.preferences.SetBrowserPreference
 import mozilla.components.concept.engine.serviceworker.ServiceWorkerDelegate
 import mozilla.components.concept.engine.translate.Language
@@ -2918,6 +2920,32 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `registerPrefObserverDelegate sets delegate`() {
+        val delegate = mock<BrowserPrefObserverDelegate>()
+        val runtime = GeckoRuntime.getDefault(testContext)
+        val settings = DefaultSettings()
+        val engine = GeckoEngine(context, runtime = runtime, defaultSettings = settings)
+
+        engine.registerPrefObserverDelegate(delegate)
+        val result = runtime.preferencesObserverDelegate as GeckoPreferenceObserverDelegate
+
+        assertEquals(delegate, result.delegate)
+    }
+
+    @Test
+    fun `unregisterPrefObserverDelegate sets delegate to null`() {
+        val runtime = GeckoRuntime.getDefault(testContext)
+        val settings = DefaultSettings()
+        val engine = GeckoEngine(context, runtime = runtime, defaultSettings = settings)
+
+        engine.registerPrefObserverDelegate(mock())
+        assertNotNull(runtime.preferencesObserverDelegate)
+
+        engine.unregisterPrefObserverDelegate()
+        assertNull(runtime.preferencesObserverDelegate)
+    }
+
+    @Test
     fun `registerServiceWorkerDelegate sets delegate`() {
         val delegate = mock<ServiceWorkerDelegate>()
         val runtime = GeckoRuntime.getDefault(testContext)
@@ -4083,6 +4111,136 @@ class GeckoEngineTest {
             WebExtensionController.INSTALLATION_METHOD_ONBOARDING,
             InstallationMethod.ONBOARDING.toGeckoInstallationMethod(),
         )
+    }
+
+    @Test
+    fun `WHEN registerPrefForObservation is called successfully THEN onSuccess is called`() {
+        val runtime: GeckoRuntime = mock()
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<Void>()
+        val geckoResultValue = null
+
+        val geckoPreferenceAccessor = mock<GeckoPreferenceAccessor>()
+        whenever(geckoPreferenceAccessor.registerGeckoPrefForObservation(anyString())).thenReturn(geckoResult)
+
+        val engine = GeckoEngine(
+            testContext,
+            runtime = runtime,
+            geckoPreferenceAccessor = geckoPreferenceAccessor,
+        )
+
+        @OptIn(ExperimentalAndroidComponentsApi::class)
+        engine.registerPrefForObservation(
+        anyString(),
+        onSuccess = { onSuccessCalled = true },
+        onError = { onErrorCalled = true },
+        )
+
+        geckoResult.complete(geckoResultValue)
+        shadowOf(getMainLooper()).idle()
+
+        assert(onSuccessCalled) { "Should have successfully registered." }
+        assert(!onErrorCalled) { "Should not have called onError." }
+    }
+
+    @Test
+    fun `WHEN registerPrefForObservation is called unsuccessfully THEN onError is called`() {
+        val runtime: GeckoRuntime = mock()
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<Void>()
+
+        val geckoPreferenceAccessor = mock<GeckoPreferenceAccessor>()
+        whenever(geckoPreferenceAccessor.registerGeckoPrefForObservation(anyString())).thenReturn(geckoResult)
+
+        val engine = GeckoEngine(
+            testContext,
+            runtime = runtime,
+            geckoPreferenceAccessor = geckoPreferenceAccessor,
+        )
+
+        @OptIn(ExperimentalAndroidComponentsApi::class)
+        engine.registerPrefForObservation(
+            anyString(),
+            onSuccess = { onSuccessCalled = true },
+            onError = { onErrorCalled = true },
+        )
+
+        geckoResult.completeExceptionally(Exception())
+        shadowOf(getMainLooper()).idle()
+
+        assert(!onSuccessCalled) { "Should not have successfully registered." }
+        assert(onErrorCalled) { "Should have called onError." }
+    }
+
+    @Test
+    fun `WHEN unregisterPrefForObservation is called successfully THEN onSuccess is called`() {
+        val runtime: GeckoRuntime = mock()
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<Void>()
+        val geckoResultValue = null
+
+        val geckoPreferenceAccessor = mock<GeckoPreferenceAccessor>()
+        whenever(geckoPreferenceAccessor.unregisterGeckoPrefForObservation(anyString())).thenReturn(geckoResult)
+
+        val engine = GeckoEngine(
+            testContext,
+            runtime = runtime,
+            geckoPreferenceAccessor = geckoPreferenceAccessor,
+        )
+
+        @OptIn(ExperimentalAndroidComponentsApi::class)
+        engine.unregisterPrefForObservation(
+            anyString(),
+            onSuccess = { onSuccessCalled = true },
+            onError = { onErrorCalled = true },
+        )
+
+        geckoResult.complete(geckoResultValue)
+        shadowOf(getMainLooper()).idle()
+
+        assert(onSuccessCalled) { "Should have successfully registered." }
+        assert(!onErrorCalled) { "Should not have called onError." }
+    }
+
+    @Test
+    fun `WHEN unregisterPrefForObservation is called unsuccessfully THEN onError is called`() {
+        val runtime: GeckoRuntime = mock()
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<Void>()
+
+        val geckoPreferenceAccessor = mock<GeckoPreferenceAccessor>()
+        whenever(geckoPreferenceAccessor.unregisterGeckoPrefForObservation(anyString())).thenReturn(geckoResult)
+
+        val engine = GeckoEngine(
+            testContext,
+            runtime = runtime,
+            geckoPreferenceAccessor = geckoPreferenceAccessor,
+        )
+
+        @OptIn(ExperimentalAndroidComponentsApi::class)
+        engine.unregisterPrefForObservation(
+            anyString(),
+            onSuccess = { onSuccessCalled = true },
+            onError = { onErrorCalled = true },
+        )
+
+        geckoResult.completeExceptionally(Exception())
+        shadowOf(getMainLooper()).idle()
+
+        assert(!onSuccessCalled) { "Should not have successfully registered." }
+        assert(onErrorCalled) { "Should have called onError." }
     }
 
     @Test
