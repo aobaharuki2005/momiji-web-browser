@@ -291,6 +291,8 @@ fxa-menu-message-close-button =
 
 fxa-menu-message-sign-up-button = Sign up
 
+fxa-menu-message-sign-in-button = Sign in
+
 fxa-menu-message-sync-devices-primary-text = Sync all your devices
 fxa-menu-message-sync-devices-secondary-text = Instantly get your info — like bookmarks and passwords — everywhere you use { -brand-short-name }.
 fxa-menu-message-sync-devices-collapsed-text = Sync all your devices
