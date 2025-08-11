@@ -19,7 +19,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.utils.PendingIntentUtils
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.support.utils.ext.stopForegroundCompat
 import mozilla.telemetry.glean.private.NoExtras
@@ -73,7 +72,7 @@ class SessionNotificationService : Service() {
                     }
 
                 if (areNotificationsEnabled) {
-                    createNotificationChannelIfNeeded()
+                    createNotificationChannel()
                     startForeground(NOTIFICATION_ID, buildNotification())
                 } else {
                     permissionHandler.get()?.invoke()
@@ -163,7 +162,7 @@ class SessionNotificationService : Service() {
 
     private fun createEraseIntent(): PendingIntent {
         val notificationIntentFlags =
-            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_ONE_SHOT
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT
         val intent = Intent(this, SessionNotificationService::class.java)
         intent.action = ACTION_ERASE
 
@@ -172,7 +171,7 @@ class SessionNotificationService : Service() {
 
     private fun createOpenActionIntent(): PendingIntent {
         val openActionIntentFlags =
-            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         val intent = Intent(this, MainActivity::class.java)
         intent.action = MainActivity.ACTION_OPEN
 
@@ -181,7 +180,7 @@ class SessionNotificationService : Service() {
 
     private fun createOpenAndEraseActionIntent(): PendingIntent {
         val openAndEraseActionIntentFlags =
-            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         val intent = Intent(this, MainActivity::class.java)
 
         intent.action = MainActivity.ACTION_ERASE
@@ -191,12 +190,7 @@ class SessionNotificationService : Service() {
         return PendingIntent.getActivity(this, 2, intent, openAndEraseActionIntentFlags)
     }
 
-    private fun createNotificationChannelIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            // Notification channels are only available on Android O or higher.
-            return
-        }
-
+    private fun createNotificationChannel() {
         val notificationChannelName = applicationContext.getString(R.string.notification_browsing_session_channel_name)
         val notificationChannelDescription = applicationContext.getString(
             R.string.notification_browsing_session_channel_description,

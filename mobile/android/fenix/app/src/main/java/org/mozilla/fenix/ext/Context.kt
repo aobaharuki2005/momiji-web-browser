@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
-import android.os.Build
 import android.provider.Settings
 import android.view.ContextThemeWrapper
 import android.view.View
@@ -103,14 +102,8 @@ fun Context.navigateToNotificationsSettings(
 ) {
     val intent = Intent()
     intent.let {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            it.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
-            it.putExtra(Settings.EXTRA_APP_PACKAGE, this.packageName)
-        } else {
-            it.action = "android.settings.APP_NOTIFICATION_SETTINGS"
-            it.putExtra("app_package", this.packageName)
-            it.putExtra("app_uid", this.applicationInfo.uid)
-        }
+        it.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+        it.putExtra(Settings.EXTRA_APP_PACKAGE, this.packageName)
     }
     startExternalActivitySafe(intent, onError)
 }

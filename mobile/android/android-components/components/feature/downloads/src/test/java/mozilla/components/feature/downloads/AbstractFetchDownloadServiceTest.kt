@@ -904,7 +904,7 @@ class AbstractFetchDownloadServiceTest {
         browserStore.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         service.onStartCommand(downloadIntent, 0, 0)
 
-        verify(service).setForegroundNotification(any())
+        verify(service).setForegroundNotification()
     }
 
     @Test
@@ -926,62 +926,9 @@ class AbstractFetchDownloadServiceTest {
 
         service.downloadJobs["1"] = downloadState
 
-        service.setForegroundNotification(downloadState)
+        service.setForegroundNotification()
 
         verify(service).startForeground(NOTIFICATION_DOWNLOAD_GROUP_ID, notification)
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.M])
-    fun `sets the notification foreground in devices that DO NOT support notification group`() {
-        val download = DownloadState(
-            id = "1",
-            url = "https://example.com/file.txt",
-            fileName = "file.txt",
-            status = DOWNLOADING,
-        )
-        val downloadState = DownloadJobState(
-            state = download,
-            status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt(),
-        )
-        val notification = mock<Notification>()
-
-        doReturn(notification).`when`(service).createCompactForegroundNotification(downloadState)
-
-        service.downloadJobs["1"] = downloadState
-
-        service.setForegroundNotification(downloadState)
-
-        verify(service).startForeground(downloadState.foregroundServiceId, notification)
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.M])
-    fun createCompactForegroundNotification() {
-        val download = DownloadState(
-            id = "1",
-            url = "https://example.com/file.txt",
-            fileName = "file.txt",
-            status = DOWNLOADING,
-        )
-        val downloadState = DownloadJobState(
-            state = download,
-            status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt(),
-        )
-
-        assertEquals(0, shadowNotificationService.size())
-
-        val notification = service.createCompactForegroundNotification(downloadState)
-
-        service.downloadJobs["1"] = downloadState
-
-        service.setForegroundNotification(downloadState)
-
-        assertNull(notification.group)
-        assertEquals(1, shadowNotificationService.size())
-        assertNotNull(shadowNotificationService.getNotification(downloadState.foregroundServiceId))
     }
 
     @Test
@@ -996,47 +943,6 @@ class AbstractFetchDownloadServiceTest {
         service.onStartCommand(downloadIntent, 0, 0)
 
         assertEquals(NOTIFICATION_DOWNLOAD_GROUP_ID, service.getForegroundId())
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.M])
-    fun `getForegroundId in devices that support DO NOT notification group will return the latest active download`() {
-        val download = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt")
-
-        val downloadIntent = Intent("ACTION_DOWNLOAD")
-        downloadIntent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
-
-        doNothing().`when`(service).performDownload(any(), anyBoolean())
-
-        browserStore.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
-        service.onStartCommand(downloadIntent, 0, 0)
-
-        val foregroundId = service.downloadJobs.values.first().foregroundServiceId
-        assertEquals(foregroundId, service.getForegroundId())
-        assertEquals(foregroundId, service.compatForegroundNotificationId)
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.M])
-    fun `updateNotificationGroup will do nothing on devices that do not support notificaiton groups`() = runTest(testsDispatcher) {
-        val download = DownloadState(
-            id = "1",
-            url = "https://example.com/file.txt",
-            fileName = "file.txt",
-            status = DOWNLOADING,
-        )
-        val downloadState = DownloadJobState(
-            state = download,
-            status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt(),
-        )
-
-        service.downloadJobs["1"] = downloadState
-
-        val notificationGroup = service.updateNotificationGroup()
-
-        assertNull(notificationGroup)
-        assertEquals(0, shadowNotificationService.size())
     }
 
     @Test
@@ -1056,12 +962,12 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs["1"] = downloadState
         service.downloadJobs["2"] = mock()
 
-        doNothing().`when`(service).updateForegroundNotificationIfNeeded(downloadState)
+        doNothing().`when`(service).updateForegroundNotificationIfNeeded()
 
         service.removeDownloadJob(downloadJobState = downloadState)
 
         assertEquals(1, service.downloadJobs.size)
-        verify(service).updateForegroundNotificationIfNeeded(downloadState)
+        verify(service).updateForegroundNotificationIfNeeded()
         verify(service).removeNotification(testContext, downloadState)
     }
 
@@ -1094,7 +1000,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs["1"] = downloadState1
         service.downloadJobs["2"] = downloadState2
 
-        service.updateForegroundNotificationIfNeeded(downloadState1)
+        service.updateForegroundNotificationIfNeeded()
 
         verify(service).stopForegroundCompat(false)
     }
@@ -1128,7 +1034,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs["1"] = downloadState1
         service.downloadJobs["2"] = downloadState2
 
-        service.updateForegroundNotificationIfNeeded(downloadState1)
+        service.updateForegroundNotificationIfNeeded()
 
         verify(service, never()).stopForeground(Service.STOP_FOREGROUND_DETACH)
     }
@@ -1157,87 +1063,16 @@ class AbstractFetchDownloadServiceTest {
 
         assertTrue(service.downloadJobs.isEmpty())
         verify(service).stopSelf()
-        verify(service, times(0)).updateForegroundNotificationIfNeeded(downloadState)
+        verify(service, times(0)).updateForegroundNotificationIfNeeded()
     }
 
     @Test
     fun `updateForegroundNotification will update the notification group for devices that support it`() {
         doReturn(null).`when`(service).updateNotificationGroup()
 
-        service.updateForegroundNotificationIfNeeded(mock())
+        service.updateForegroundNotificationIfNeeded()
 
         verify(service).updateNotificationGroup()
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.M])
-    fun `updateForegroundNotification will select a new foreground notification`() {
-        val downloadState1 = DownloadJobState(
-            state = DownloadState(
-                id = "1",
-                url = "https://example.com/file.txt",
-                fileName = "file.txt",
-                status = DownloadState.Status.COMPLETED,
-            ),
-            status = DownloadState.Status.COMPLETED,
-            foregroundServiceId = Random.nextInt(),
-        )
-        val downloadState2 = DownloadJobState(
-            state = DownloadState(
-                id = "2",
-                url = "https://example.com/file.txt",
-                fileName = "file.txt",
-                status = DOWNLOADING,
-            ),
-            status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt(),
-        )
-
-        service.compatForegroundNotificationId = downloadState1.foregroundServiceId
-
-        service.downloadJobs["1"] = downloadState1
-        service.downloadJobs["2"] = downloadState2
-
-        service.updateForegroundNotificationIfNeeded(downloadState1)
-
-        verify(service).setForegroundNotification(downloadState2)
-        assertEquals(downloadState2.foregroundServiceId, service.compatForegroundNotificationId)
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.M])
-    fun `updateForegroundNotification will NOT select a new foreground notification`() {
-        val downloadState1 = DownloadJobState(
-            state = DownloadState(
-                id = "1",
-                url = "https://example.com/file.txt",
-                fileName = "file.txt",
-                status = DOWNLOADING,
-            ),
-            status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt(),
-        )
-        val downloadState2 = DownloadJobState(
-            state = DownloadState(
-                id = "1",
-                url = "https://example.com/file.txt",
-                fileName = "file.txt",
-                status = DOWNLOADING,
-            ),
-            status = DOWNLOADING,
-            foregroundServiceId = Random.nextInt(),
-        )
-
-        service.compatForegroundNotificationId = downloadState1.foregroundServiceId
-
-        service.downloadJobs["1"] = downloadState1
-        service.downloadJobs["2"] = downloadState2
-
-        service.updateForegroundNotificationIfNeeded(downloadState1)
-
-        verify(service, times(0)).setForegroundNotification(downloadState2)
-        verify(service, times(0)).updateNotificationGroup()
-        assertEquals(downloadState1.foregroundServiceId, service.compatForegroundNotificationId)
     }
 
     @Test

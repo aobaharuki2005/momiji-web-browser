@@ -65,9 +65,9 @@ android {
 
     defaultConfig {
         applicationId "org.mozilla"
-        minSdkVersion = config.minSdkVersion
+        minSdkVersion config.minSdkVersion
         compileSdk = config.compileSdkVersion
-        targetSdkVersion = config.targetSdkVersion
+        targetSdkVersion config.targetSdkVersion
         versionCode 1
         versionName Config.generateDebugVersionName()
         vectorDrawables.useSupportLibrary = true

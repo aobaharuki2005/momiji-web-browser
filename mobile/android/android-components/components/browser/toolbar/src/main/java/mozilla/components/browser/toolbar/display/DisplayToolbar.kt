@@ -541,7 +541,7 @@ class DisplayToolbar internal constructor(
             Toolbar.SiteInfo.SECURE -> colors.siteInfoIconSecure
             Toolbar.SiteInfo.LOCAL_PDF -> colors.siteInfoIconLocalPdf
         }
-        if (color == Color.TRANSPARENT && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (color == Color.TRANSPARENT) {
             views.siteInfoIndicator.clearColorFilter()
         } else {
             views.siteInfoIndicator.setColorFilter(color)

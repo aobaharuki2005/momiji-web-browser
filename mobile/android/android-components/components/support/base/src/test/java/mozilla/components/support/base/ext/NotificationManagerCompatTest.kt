@@ -99,15 +99,4 @@ class NotificationManagerCompatTest {
 
         assertFalse(tested.isNotificationChannelEnabled(testChannel))
     }
-
-    @Test
-    fun `WHEN sdk less than 26 and areNotificationsEnabled returns true THEN isNotificationChannelEnabled returns true`() {
-        val testChannel = "test-channel"
-
-        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 25)
-
-        whenever(tested.areNotificationsEnabled()).thenReturn(true)
-
-        assertTrue(tested.isNotificationChannelEnabled(testChannel))
-    }
 }
