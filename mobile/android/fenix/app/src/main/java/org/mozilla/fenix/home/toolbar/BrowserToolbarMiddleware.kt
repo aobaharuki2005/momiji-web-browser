@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.toolbar
 
+import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Lifecycle.State.RESUMED
 import androidx.lifecycle.lifecycleScope
@@ -59,7 +60,6 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Private
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.UseCases
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
-import org.mozilla.fenix.components.appstate.OrientationMode
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.ext.nav
@@ -78,13 +78,14 @@ import org.mozilla.fenix.tabstray.Page
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
 
+private const val TALL_SCREEN_HEIGHT_DP = 480
+
 @VisibleForTesting
 internal sealed class DisplayActions : BrowserToolbarEvent {
     data class MenuClicked(override val source: Source) : DisplayActions()
     data object FakeClicked : DisplayActions()
 }
 
-@VisibleForTesting
 internal sealed class TabCounterInteractions : BrowserToolbarEvent {
     data class TabCounterClicked(override val source: Source) : TabCounterInteractions()
     data class TabCounterLongClicked(override val source: Source) : TabCounterInteractions()
@@ -94,6 +95,20 @@ internal sealed class TabCounterInteractions : BrowserToolbarEvent {
 
 internal sealed class PageOriginInteractions : BrowserToolbarEvent {
     data object OriginClicked : PageOriginInteractions()
+}
+
+/**
+ * Helper function to determine whether the app's current window height
+ * is at least more than [TALL_SCREEN_HEIGHT_DP].
+ *
+ * This is useful when navigation bar should only be enabled on
+ * taller screens (e.g., to avoid crowding content vertically).
+ *
+ * @return true if the window height size is more than [TALL_SCREEN_HEIGHT_DP].
+ */
+@VisibleForTesting
+internal fun Context.isTallWindow(): Boolean {
+    return resources.configuration.screenHeightDp > TALL_SCREEN_HEIGHT_DP
 }
 
 /**
@@ -314,14 +329,14 @@ class BrowserToolbarMiddleware(
 
     private fun buildEndBrowserActions(): List<Action> {
         val environment = environment ?: return emptyList()
-        val isExpandedAndPortrait = environment.context.settings().shouldUseExpandedToolbar &&
-                appStore.state.orientation == OrientationMode.Portrait
+        val isExpandedAndTallScreen = environment.context.settings().shouldUseExpandedToolbar &&
+                environment.context.isTallWindow()
 
         return listOf(
             HomeToolbarActionConfig(HomeToolbarAction.TabCounter) {
-                !environment.context.settings().isTabStripEnabled && !isExpandedAndPortrait
+                !environment.context.settings().isTabStripEnabled && !isExpandedAndTallScreen
             },
-            HomeToolbarActionConfig(HomeToolbarAction.Menu) { !isExpandedAndPortrait },
+            HomeToolbarActionConfig(HomeToolbarAction.Menu) { !isExpandedAndTallScreen },
         ).filter { config ->
             config.isVisible()
         }.map { config ->
@@ -339,15 +354,15 @@ class BrowserToolbarMiddleware(
 
     private fun buildNavigationActions(): List<Action> {
         val environment = environment ?: return emptyList()
-        val isExpandedAndPortrait = environment.context.settings().shouldUseExpandedToolbar &&
-                appStore.state.orientation == OrientationMode.Portrait
+        val isExpandedAndTallScreen = environment.context.settings().shouldUseExpandedToolbar &&
+                environment.context.isTallWindow()
 
         return listOf(
-            HomeToolbarActionConfig(HomeToolbarAction.FakeBookmark) { isExpandedAndPortrait },
-            HomeToolbarActionConfig(HomeToolbarAction.FakeShare) { isExpandedAndPortrait },
-            HomeToolbarActionConfig(HomeToolbarAction.NewTab) { isExpandedAndPortrait },
-            HomeToolbarActionConfig(HomeToolbarAction.TabCounter) { isExpandedAndPortrait },
-            HomeToolbarActionConfig(HomeToolbarAction.Menu) { isExpandedAndPortrait },
+            HomeToolbarActionConfig(HomeToolbarAction.FakeBookmark) { isExpandedAndTallScreen },
+            HomeToolbarActionConfig(HomeToolbarAction.FakeShare) { isExpandedAndTallScreen },
+            HomeToolbarActionConfig(HomeToolbarAction.NewTab) { isExpandedAndTallScreen },
+            HomeToolbarActionConfig(HomeToolbarAction.TabCounter) { isExpandedAndTallScreen },
+            HomeToolbarActionConfig(HomeToolbarAction.Menu) { isExpandedAndTallScreen },
         ).filter { config ->
             config.isVisible()
         }.map { config ->

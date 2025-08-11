@@ -14,6 +14,7 @@ import androidx.navigation.NavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.android.asCoroutineDispatcher
@@ -143,33 +144,42 @@ class BrowserToolbarMiddlewareTest {
     @Test
     fun `WHEN initializing the toolbar AND should use expanded toolbar THEN add browser end actions`() = runTestOnMain {
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
+        mockkStatic(Context::isTallWindow) {
+            every { any<Context>().isTallWindow() } returns true
+            val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
 
-        val toolbarStore = buildStore(middleware)
+            val toolbarStore = buildStore(middleware)
 
-        val toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
-        assertEquals(0, toolbarBrowserActions.size)
+            val toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
+            assertEquals(0, toolbarBrowserActions.size)
+        }
     }
 
     @Test
     fun `WHEN initializing the navigation bar AND should use expanded toolbar THEN add navigation bar actions`() = runTestOnMain {
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
+        mockkStatic(Context::isTallWindow) {
+            every { any<Context>().isTallWindow() } returns true
+            val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
 
-        val toolbarStore = buildStore(middleware)
+            val toolbarStore = buildStore(middleware)
 
-        val navigationActions = toolbarStore.state.displayState.navigationActions
-        assertEquals(5, navigationActions.size)
-        val bookmarkButton = navigationActions[0] as ActionButtonRes
-        val shareButton = navigationActions[1] as ActionButtonRes
-        val newTabButton = navigationActions[2] as ActionButtonRes
-        val tabCounterButton = navigationActions[3] as TabCounterAction
-        val menuButton = navigationActions[4] as ActionButtonRes
-        assertEquals(expectedBookmarkButton, bookmarkButton)
-        assertEquals(expectedShareButton, shareButton)
-        assertEquals(expectedNewTabButton(Source.NavigationBar), newTabButton)
-        assertEqualsToolbarButton(expectedToolbarButton(source = Source.NavigationBar), tabCounterButton)
-        assertEquals(expectedMenuButton(Source.NavigationBar), menuButton)
+            val navigationActions = toolbarStore.state.displayState.navigationActions
+            assertEquals(5, navigationActions.size)
+            val bookmarkButton = navigationActions[0] as ActionButtonRes
+            val shareButton = navigationActions[1] as ActionButtonRes
+            val newTabButton = navigationActions[2] as ActionButtonRes
+            val tabCounterButton = navigationActions[3] as TabCounterAction
+            val menuButton = navigationActions[4] as ActionButtonRes
+            assertEquals(expectedBookmarkButton, bookmarkButton)
+            assertEquals(expectedShareButton, shareButton)
+            assertEquals(expectedNewTabButton(Source.NavigationBar), newTabButton)
+            assertEqualsToolbarButton(
+                expectedToolbarButton(source = Source.NavigationBar),
+                tabCounterButton,
+            )
+            assertEquals(expectedMenuButton(Source.NavigationBar), menuButton)
+        }
     }
 
     @Test

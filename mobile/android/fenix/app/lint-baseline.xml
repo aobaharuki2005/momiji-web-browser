@@ -3213,4 +3213,92 @@
             column="9"/>
     </issue>
 
+    <issue
+        id="NoObjectMocking"
+        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
+        errorLine1="        mockkObject(Config)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1383"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoObjectMocking"
+        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
+        errorLine1="        mockkObject(Config)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1509"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoObjectMocking"
+        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
+        errorLine1="        mockkObject(Config)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1574"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoObjectMocking"
+        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
+        errorLine1="        mockkObject(Config)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1585"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoObjectMocking"
+        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
+        errorLine1="        mockkObject(Config)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1601"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoObjectMocking"
+        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
+        errorLine1="        mockkObject(Config)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="2352"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoObjectMocking"
+        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
+        errorLine1="        mockkObject(Config)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="157"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoObjectMocking"
+        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
+        errorLine1="        mockkObject(Config)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="171"
+            column="9"/>
+    </issue>
+
 </issues>
