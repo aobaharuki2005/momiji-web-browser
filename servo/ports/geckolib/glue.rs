@@ -8083,18 +8083,15 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
 
 fn computed_or_resolved_value(
     style: &ComputedValues,
-    prop: nsCSSPropertyID,
+    prop: NonCustomPropertyId,
     context: Option<&resolved::Context>,
     value: &mut nsACString,
 ) {
-    if let Some(longhand) = LonghandId::from_nscsspropertyid(prop) {
-        return style
-            .computed_or_resolved_value(longhand, context, value)
-            .unwrap();
-    }
+    let shorthand = match prop.longhand_or_shorthand() {
+        Ok(longhand) =>  return style.computed_or_resolved_value(longhand, context, value).unwrap(),
+        Err(shorthand) => shorthand,
+    };
 
-    let shorthand =
-        ShorthandId::from_nscsspropertyid(prop).expect("Not a shorthand nor a longhand?");
     let mut block = PropertyDeclarationBlock::new();
     for longhand in shorthand.longhands() {
         block.push(
@@ -8111,6 +8108,7 @@ pub unsafe extern "C" fn Servo_GetComputedValue(
     prop: nsCSSPropertyID,
     value: &mut nsACString,
 ) {
+    let prop = NonCustomPropertyId::from_nscsspropertyid(prop).unwrap();
     computed_or_resolved_value(style, prop, None, value)
 }
 
@@ -8124,12 +8122,14 @@ pub unsafe extern "C" fn Servo_GetResolvedValue(
 ) {
     let data = raw_data.borrow();
     let device = data.stylist.device();
+    let prop = NonCustomPropertyId::from_nscsspropertyid(prop).unwrap();
     let context = resolved::Context {
         style,
         device,
         element_info: resolved::ResolvedElementInfo {
             element: GeckoElement(element),
         },
+        for_property: prop,
     };
 
     computed_or_resolved_value(style, prop, Some(&context), value)
