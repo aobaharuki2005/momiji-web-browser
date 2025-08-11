@@ -12,13 +12,15 @@
 #include "mozilla/Span.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 #include "nsIGlobalObject.h"
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
 namespace dom {
 class OwningHTMLVideoElementOrVideoFrame;
-}
+enum class PredefinedColorSpace : uint8_t;
+}  // namespace dom
 namespace layers {
 class BufferDescriptor;
 class Image;
@@ -27,24 +29,51 @@ class Image;
 namespace webgpu {
 
 class Device;
+class ExternalTextureSourceClient;
 class WebGPUParent;
 
-// NOTE: Incomplete. Follow-up to complete implementation is at
-// <https://bugzilla.mozilla.org/show_bug.cgi?id=1827116>.
-class ExternalTexture : public ObjectBase {
+// Implementation of WebGPU's GPUExternalTexture [1].
+//
+// A GPUExternalTexture is a sampleable 2D texture wrapping an external video
+// frame. It is an immutable snapshot; its contents may not change over time,
+// either from inside WebGPU (it is only sampleable) or from outside WebGPU
+// (e.g. due to video frame advancement).
+//
+// External textures can be imported from either a HTMLVideoElement or a
+// VideoFrame, and they can be bound to bind groups. They can be used in WGSL
+// shaders via the `texture_external` type.
+//
+// Our implementation differentiates between the imported snapshot of
+// the video frame (see `ExternalTextureSourceClient`) and the external texture
+// itself (this class). This allows us to efficiently create multiple
+// `ExternalTexture`s from the same source.
+//
+// The external texture holds a strong reference to its external texture
+// source, ensuring the source's resources remain alive as long as required
+// by any external textures.
+//
+// [1] https://www.w3.org/TR/webgpu/#gpuexternaltexture
+class ExternalTexture : public ObjectBase, public ChildOf<Device> {
  public:
   GPU_DECL_CYCLE_COLLECTION(ExternalTexture)
   GPU_DECL_JS_WRAP(ExternalTexture)
 
-  explicit ExternalTexture(nsIGlobalObject* const aGlobal) : mGlobal(aGlobal) {}
+  static already_AddRefed<ExternalTexture> Create(
+      Device* const aParent, const nsString& aLabel,
+      const RefPtr<ExternalTextureSourceClient>& aSource,
+      dom::PredefinedColorSpace aColorSpace);
 
-  nsIGlobalObject* GetParentObject() const { return mGlobal; }
+  const RawId mId;
 
  private:
-  nsCOMPtr<nsIGlobalObject> mGlobal;
+  explicit ExternalTexture(Device* const aParent, RawId aId,
+                           RefPtr<ExternalTextureSourceClient> aSource);
+  virtual ~ExternalTexture();
+  void Cleanup();
 
-  ~ExternalTexture() = default;
-  void Cleanup() {}
+  // Hold a strong reference to the source to ensure it stays alive as long as
+  // the external texture may still be used.
+  RefPtr<ExternalTextureSourceClient> mSource;
 };
 
 // The client side of an imported external texture source. This gets imported
@@ -104,6 +133,11 @@ class ExternalTextureSourceHost {
   Span<const RawId> TextureIds() const { return mTextureIds; }
   Span<const RawId> ViewIds() const { return mViewIds; }
 
+  // Returns information required to create the wgpu::ExternalTexture that is
+  // only available to the host side.
+  ffi::WGPUExternalTextureDescriptorFromSource GetExternalTextureDescriptor(
+      ffi::WGPUPredefinedColorSpace aDestColorSpace) const;
+
  private:
   ExternalTextureSourceHost(Span<const RawId> aTextureIds,
                             Span<const RawId> aViewIds, gfx::IntSize aSize,
@@ -121,10 +155,6 @@ class ExternalTextureSourceHost {
   // propagated to any external textures created from it.
   static ExternalTextureSourceHost CreateError();
 
-  // The following fields are currently unused. They will be used in upcoming
-  // patches. They are marked public for now to suppress clang's
-  // unused-private-field warning.
- public:
   // These should be const but can't be else we wouldn't be move constructible.
   // While we are always provided with 3 texture IDs and 3 view IDs by the
   // client, we only store here the IDs that are actually used. For example an

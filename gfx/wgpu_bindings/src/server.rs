@@ -1256,6 +1256,11 @@ extern "C" {
     #[cfg(target_os = "macos")]
     fn wgpu_server_get_external_io_surface_id(parent: WebGPUParentPtr, id: id::TextureId) -> u32;
     fn wgpu_server_remove_shared_texture(parent: WebGPUParentPtr, id: id::TextureId);
+    fn wgpu_parent_external_texture_source_get_external_texture_descriptor<'a>(
+        parent: WebGPUParentPtr,
+        id: crate::ExternalTextureSourceId,
+        dest_color_space: crate::PredefinedColorSpace,
+    ) -> crate::ExternalTextureDescriptorFromSource<'a>;
     fn wgpu_parent_destroy_external_texture_source(
         parent: WebGPUParentPtr,
         id: crate::ExternalTextureSourceId,
@@ -2018,6 +2023,66 @@ impl Global {
                     error_buf.init(err, device_id);
                 }
             }
+            DeviceAction::CreateExternalTexture(id, desc) => {
+                // Obtain the descriptor from the source. A source ID of `None`
+                // indicates the client-side encountered an error when
+                // importing the source.
+                let source_desc = desc.source.and_then(|source| {
+                    let source_desc = unsafe {
+                        wgpu_parent_external_texture_source_get_external_texture_descriptor(
+                            self.owner,
+                            source,
+                            desc.color_space,
+                        )
+                    };
+                    let planes = unsafe { source_desc.planes.as_slice() };
+                    // The source having no planes indicates we encountered an
+                    // error on the server side when importing the source
+                    if planes.is_empty() {
+                        None
+                    } else {
+                        Some(source_desc)
+                    }
+                });
+                match source_desc {
+                    Some(source_desc) => {
+                        let planes = unsafe { source_desc.planes.as_slice() };
+                        let desc = wgt::ExternalTextureDescriptor {
+                            label: desc.label,
+                            width: source_desc.width,
+                            height: source_desc.height,
+                            format: source_desc.format,
+                            yuv_conversion_matrix: source_desc.yuv_conversion_matrix,
+                            gamut_conversion_matrix: source_desc.gamut_conversion_matrix,
+                            src_transfer_function: source_desc.src_transfer_function,
+                            dst_transfer_function: source_desc.dst_transfer_function,
+                            sample_transform: source_desc.sample_transform,
+                            load_transform: source_desc.load_transform,
+                        };
+                        let (_, error) =
+                            self.device_create_external_texture(device_id, &desc, planes, Some(id));
+                        if let Some(err) = error {
+                            error_buf.init(err, device_id);
+                        }
+                    }
+                    None => {
+                        // Create the external texture in an error state.
+                        let desc = wgt::ExternalTextureDescriptor {
+                            label: desc.label,
+                            width: 0,
+                            height: 0,
+                            format: wgt::ExternalTextureFormat::Rgba,
+                            yuv_conversion_matrix: Default::default(),
+                            gamut_conversion_matrix: Default::default(),
+                            src_transfer_function: Default::default(),
+                            dst_transfer_function: Default::default(),
+                            sample_transform: Default::default(),
+                            load_transform: Default::default(),
+                        };
+                        self.create_external_texture_error(Some(id), &desc);
+                    }
+                }
+            }
             DeviceAction::CreateSampler(id, desc) => {
                 let (_, error) = self.device_create_sampler(device_id, &desc, Some(id));
                 if let Some(err) = error {
@@ -2752,6 +2817,7 @@ unsafe fn process_message(
             global.texture_drop(id);
         }
         Message::DropTextureView(id) => global.texture_view_drop(id).unwrap(),
+        Message::DropExternalTexture(id) => global.external_texture_drop(id),
         Message::DropExternalTextureSource(id) => {
             wgpu_parent_drop_external_texture_source(global.owner, id)
         }

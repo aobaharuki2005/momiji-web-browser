@@ -184,6 +184,8 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
 
   void RemoveSharedTexture(RawId aTextureId);
 
+  const ExternalTextureSourceHost& GetExternalTextureSource(
+      ffi::WGPUExternalTextureSourceId aId) const;
   void DestroyExternalTextureSource(RawId aId);
   void DropExternalTextureSource(RawId aId);
 

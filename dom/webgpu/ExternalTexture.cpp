@@ -5,6 +5,7 @@
 
 #include "ExternalTexture.h"
 
+#include "Colorspaces.h"
 #include "ImageContainer.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
@@ -14,6 +15,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/webgpu/Queue.h"
+#include "mozilla/webgpu/Utility.h"
 #include "mozilla/webgpu/WebGPUChild.h"
 #include "mozilla/webgpu/WebGPUParent.h"
 #include "nsLayoutUtils.h"
@@ -21,12 +23,55 @@
 
 namespace mozilla::webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(ExternalTexture, mGlobal)
+GPU_IMPL_CYCLE_COLLECTION(ExternalTexture, mParent)
+GPU_IMPL_JS_WRAP(ExternalTexture)
 
-JSObject* ExternalTexture::WrapObject(JSContext* cx,
-                                      JS ::Handle<JSObject*> givenProto) {
-  return dom::GPUExternalTexture_Binding::Wrap(cx, this, givenProto);
+ExternalTexture::ExternalTexture(Device* const aParent, RawId aId,
+                                 RefPtr<ExternalTextureSourceClient> aSource)
+    : ChildOf(aParent), mId(aId), mSource(aSource) {
+  MOZ_RELEASE_ASSERT(aId);
 }
+
+/* static */ already_AddRefed<ExternalTexture> ExternalTexture::Create(
+    Device* const aParent, const nsString& aLabel,
+    const RefPtr<ExternalTextureSourceClient>& aSource,
+    dom::PredefinedColorSpace aColorSpace) {
+  const webgpu::StringHelper label(aLabel);
+  const ffi::WGPUPredefinedColorSpace colorSpace =
+      ConvertPredefinedColorSpace(aColorSpace);
+  const ffi::WGPUExternalTextureDescriptor desc = {
+      .label = label.Get(),
+      .source = aSource ? aSource->mId : 0,
+      .color_space = colorSpace,
+  };
+
+  const RawId id = ffi::wgpu_client_create_external_texture(
+      aParent->GetBridge()->GetClient(), aParent->mId, &desc);
+
+  RefPtr<ExternalTexture> externalTexture =
+      new ExternalTexture(aParent, id, aSource);
+  externalTexture->SetLabel(aLabel);
+
+  return externalTexture.forget();
+}
+
+void ExternalTexture::Cleanup() {
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  mSource = nullptr;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  ffi::wgpu_client_drop_external_texture(bridge->GetClient(), mId);
+}
+
+ExternalTexture::~ExternalTexture() { Cleanup(); }
 
 ExternalTextureSourceClient::ExternalTextureSourceClient(
     WebGPUChild* aBridge, RawId aId, const std::array<RawId, 3>& aTextureIds,
@@ -444,6 +489,200 @@ ExternalTextureSourceHost::CreateError() {
   return ExternalTextureSourceHost(
       {}, {}, gfx::IntSize(0, 0), gfx::SurfaceFormat::R8G8B8A8,
       gfx::YUVRangedColorSpace::GbrIdentity, {}, {});
+}
+
+static color::ColorspaceTransform GetColorSpaceTransform(
+    gfx::YUVRangedColorSpace aSrcColorSpace,
+    ffi::WGPUPredefinedColorSpace aDestColorSpace) {
+  const bool rec709GammaAsSrgb =
+      StaticPrefs::gfx_color_management_rec709_gamma_as_srgb();
+  const bool rec2020GammaAsRec709 =
+      StaticPrefs::gfx_color_management_rec2020_gamma_as_rec709();
+
+  color::ColorspaceDesc srcColorSpace;
+  switch (aSrcColorSpace) {
+    case gfx::YUVRangedColorSpace::BT601_Narrow:
+      srcColorSpace = {
+          .chrom = color::Chromaticities::Rec601_525_Ntsc(),
+          .tf = rec709GammaAsSrgb ? color::PiecewiseGammaDesc::Srgb()
+                                  : color::PiecewiseGammaDesc::Rec709(),
+          .yuv =
+              color::YuvDesc{
+                  .yCoeffs = color::YuvLumaCoeffs::Rec601(),
+                  .ycbcr = color::YcbcrDesc::Narrow8(),
+              },
+      };
+      break;
+    case gfx::YUVRangedColorSpace::BT601_Full:
+      srcColorSpace = {
+          .chrom = color::Chromaticities::Rec601_525_Ntsc(),
+          .tf = rec709GammaAsSrgb ? color::PiecewiseGammaDesc::Srgb()
+                                  : color::PiecewiseGammaDesc::Rec709(),
+          .yuv =
+              color::YuvDesc{
+                  .yCoeffs = color::YuvLumaCoeffs::Rec601(),
+                  .ycbcr = color::YcbcrDesc::Full8(),
+              },
+      };
+      break;
+    case gfx::YUVRangedColorSpace::BT709_Narrow:
+      srcColorSpace = {
+          .chrom = color::Chromaticities::Rec709(),
+          .tf = rec709GammaAsSrgb ? color::PiecewiseGammaDesc::Srgb()
+                                  : color::PiecewiseGammaDesc::Rec709(),
+          .yuv =
+              color::YuvDesc{
+                  .yCoeffs = color::YuvLumaCoeffs::Rec709(),
+                  .ycbcr = color::YcbcrDesc::Narrow8(),
+              },
+      };
+      break;
+    case gfx::YUVRangedColorSpace::BT709_Full:
+      srcColorSpace = {
+          .chrom = color::Chromaticities::Rec709(),
+          .tf = rec709GammaAsSrgb ? color::PiecewiseGammaDesc::Srgb()
+                                  : color::PiecewiseGammaDesc::Rec709(),
+          .yuv =
+              color::YuvDesc{
+                  .yCoeffs = color::YuvLumaCoeffs::Rec709(),
+                  .ycbcr = color::YcbcrDesc::Full8(),
+              },
+      };
+      break;
+    case gfx::YUVRangedColorSpace::BT2020_Narrow:
+      srcColorSpace = {
+          .chrom = color::Chromaticities::Rec2020(),
+          .tf = rec2020GammaAsRec709 && rec709GammaAsSrgb
+                    ? color::PiecewiseGammaDesc::Srgb()
+                    : (rec2020GammaAsRec709
+                           ? color::PiecewiseGammaDesc::Rec709()
+                           : color::PiecewiseGammaDesc::Rec2020_12bit()),
+          .yuv =
+              color::YuvDesc{
+                  .yCoeffs = color::YuvLumaCoeffs::Rec2020(),
+                  .ycbcr = color::YcbcrDesc::Narrow8(),
+              },
+      };
+      break;
+    case gfx::YUVRangedColorSpace::BT2020_Full:
+      srcColorSpace = {
+          .chrom = color::Chromaticities::Rec2020(),
+          .tf = rec2020GammaAsRec709 && rec709GammaAsSrgb
+                    ? color::PiecewiseGammaDesc::Srgb()
+                    : (rec2020GammaAsRec709
+                           ? color::PiecewiseGammaDesc::Rec709()
+                           : color::PiecewiseGammaDesc::Rec2020_12bit()),
+          .yuv =
+              color::YuvDesc{
+                  .yCoeffs = color::YuvLumaCoeffs::Rec2020(),
+                  .ycbcr = color::YcbcrDesc::Full8(),
+              },
+      };
+      break;
+    case gfx::YUVRangedColorSpace::GbrIdentity:
+      srcColorSpace = {
+          .chrom = color::Chromaticities::Rec709(),
+          .tf = color::PiecewiseGammaDesc::Rec709(),
+          .yuv =
+              color::YuvDesc{
+                  .yCoeffs = color::YuvLumaCoeffs::Gbr(),
+                  .ycbcr = color::YcbcrDesc::Full8(),
+              },
+      };
+      break;
+  }
+
+  color::ColorspaceDesc destColorSpace{};
+  switch (aDestColorSpace) {
+    case ffi::WGPUPredefinedColorSpace_Srgb:
+      destColorSpace = {.chrom = color::Chromaticities::Srgb(),
+                        .tf = color::PiecewiseGammaDesc::Srgb()};
+      break;
+    case ffi::WGPUPredefinedColorSpace_DisplayP3:
+      destColorSpace = {.chrom = color::Chromaticities::DisplayP3(),
+                        .tf = color::PiecewiseGammaDesc::DisplayP3()};
+      break;
+    case ffi::WGPUPredefinedColorSpace_Sentinel:
+      MOZ_CRASH("Invalid WGPUPredefinedColorSpace");
+  }
+
+  return color::ColorspaceTransform::Create(srcColorSpace, destColorSpace);
+}
+
+static ffi::WGPUExternalTextureFormat MapFormat(gfx::SurfaceFormat aFormat) {
+  switch (aFormat) {
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8:
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::R8G8B8X8:
+      return ffi::WGPUExternalTextureFormat_Rgba;
+    case gfx::SurfaceFormat::YUV420:
+      return ffi::WGPUExternalTextureFormat_Yu12;
+    case gfx::SurfaceFormat::NV12:
+      return ffi::WGPUExternalTextureFormat_Nv12;
+    default:
+      MOZ_CRASH("Unexpected SurfaceFormat");
+  }
+}
+
+static ffi::WGPUExternalTextureTransferFunction MapTransferFunction(
+    std::optional<color::PiecewiseGammaDesc> aTf) {
+  if (aTf) {
+    return ffi::WGPUExternalTextureTransferFunction{
+        .a = aTf->a,
+        .b = aTf->b,
+        .g = aTf->g,
+        .k = aTf->k,
+    };
+  } else {
+    return ffi::WGPUExternalTextureTransferFunction{
+        .a = 1.0,
+        .b = 1.0,
+        .g = 1.0,
+        .k = 1.0,
+    };
+  }
+}
+
+ffi::WGPUExternalTextureDescriptorFromSource
+ExternalTextureSourceHost::GetExternalTextureDescriptor(
+    ffi::WGPUPredefinedColorSpace aDestColorSpace) const {
+  ffi::WGPUExternalTextureDescriptorFromSource desc;
+
+  desc.planes = ffi::WGPUFfiSlice_TextureViewId{
+      .data = mViewIds.Elements(),
+      .length = mViewIds.Length(),
+  };
+  desc.width = static_cast<uint32_t>(mSize.width);
+  desc.height = static_cast<uint32_t>(mSize.height);
+  desc.format = MapFormat(mFormat);
+
+  auto colorSpaceTransform =
+      GetColorSpaceTransform(mColorSpace, aDestColorSpace);
+  // Makes a generator for a color::mat that yields its components in
+  // column-major order
+  auto make_column_major_generator = [](auto mat) {
+    return [i = 0, mat]() mutable {
+      auto val = mat.at(i / mat.y_rows, i % mat.y_rows);
+      i++;
+      return val;
+    };
+  };
+  std::generate(
+      std::begin(desc.yuv_conversion_matrix),
+      std::end(desc.yuv_conversion_matrix),
+      make_column_major_generator(colorSpaceTransform.srcRgbTfFromSrc));
+  std::generate(
+      std::begin(desc.gamut_conversion_matrix),
+      std::end(desc.gamut_conversion_matrix),
+      make_column_major_generator(colorSpaceTransform.dstRgbLinFromSrcRgbLin));
+  desc.src_transfer_function = MapTransferFunction(colorSpaceTransform.srcTf);
+  desc.dst_transfer_function = MapTransferFunction(colorSpaceTransform.dstTf);
+  std::copy(mSampleTransform.begin(), mSampleTransform.end(),
+            desc.sample_transform);
+  std::copy(mLoadTransform.begin(), mLoadTransform.end(), desc.load_transform);
+
+  return desc;
 }
 
 }  // namespace mozilla::webgpu
