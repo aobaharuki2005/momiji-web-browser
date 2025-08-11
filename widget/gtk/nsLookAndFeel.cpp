@@ -2166,8 +2166,8 @@ void nsLookAndFeel::PerThemeData::Init() {
   mName = GetGtkTheme();
 
   mFamily = [&] {
-    if (StringBeginsWith(mName, "Adw"_ns)) {
-      // This catches "Adwaita", "Adwaita-dark", and "Adw-gtk3" too.
+    if (StringBeginsWith(mName, "adw"_ns, nsCaseInsensitiveCStringComparator)) {
+      // This catches "Adwaita", "Adwaita-dark", and "{A,a}dw-gtk3" too.
       return ThemeFamily::Adwaita;
     }
     if (StringBeginsWith(mName, "Breeze"_ns)) {
