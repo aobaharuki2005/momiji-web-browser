@@ -54,6 +54,8 @@
 @end
 
 @protocol GeckoViewWindow <NSObject>
+- (UIView*)view;
+- (void)close;
 @end
 
 MOZ_BEGIN_EXTERN_C
