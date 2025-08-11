@@ -93,6 +93,7 @@ import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
@@ -204,10 +205,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             scope = lifecycleScope,
         )
 
-        if (requireContext().settings().shouldUseComposableToolbar) {
-            toolbarStore = buildToolbarStore()
-        }
-
         return view
     }
 
@@ -244,6 +241,11 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
+        if (requireContext().settings().shouldUseComposableToolbar) {
+            toolbarStore = buildToolbarStore()
+            QrScannerBinding.register(this)
+        }
 
         consumeFrom(historyStore) {
             historyView.update(it)

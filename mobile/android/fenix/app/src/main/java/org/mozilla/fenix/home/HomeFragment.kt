@@ -179,7 +179,6 @@ class HomeFragment : Fragment() {
     internal var _binding: FragmentHomeBinding? = null
     internal val binding get() = _binding!!
     private val snackbarBinding = ViewBoundFeatureWrapper<SnackbarBinding>()
-    private val qrScannerBinding = ViewBoundFeatureWrapper<QrScannerBinding>()
 
     private val homeViewModel: HomeScreenViewModel by activityViewModels()
 
@@ -449,20 +448,6 @@ class HomeFragment : Fragment() {
                 tabsUseCases = requireContext().components.useCases.tabsUseCases,
                 sendTabUseCases = SendTabUseCases(requireComponents.backgroundServices.accountManager),
                 customTabSessionId = null,
-            ),
-            owner = this,
-            view = binding.root,
-        )
-
-        qrScannerBinding.set(
-            feature = QrScannerBinding(
-                appStore = requireContext().components.appStore,
-                qrScannerDelegate = QrScannerDelegate(
-                    activity = requireActivity() as AppCompatActivity,
-                    browserStore = requireContext().components.core.store,
-                    appStore = requireContext().components.appStore,
-                    settings = requireContext().settings(),
-                ),
             ),
             owner = this,
             view = binding.root,
@@ -915,6 +900,10 @@ class HomeFragment : Fragment() {
             if (!searchFragmentAlreadyAdded) {
                 sessionControlInteractor.onNavigateSearch()
             }
+        }
+
+        if (requireContext().settings().shouldUseComposableToolbar) {
+            QrScannerBinding.register(this)
         }
 
         (toolbarView as? HomeToolbarView)?.let {

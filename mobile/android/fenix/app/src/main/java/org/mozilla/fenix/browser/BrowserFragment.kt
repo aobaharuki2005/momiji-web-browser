@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -43,7 +42,6 @@ import org.mozilla.fenix.browser.store.BrowserScreenAction.ReaderModeStatusUpdat
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.VoiceSearchFeature
 import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
-import org.mozilla.fenix.components.appstate.qrScanner.QrScannerDelegate
 import org.mozilla.fenix.components.toolbar.BrowserToolbarComposable
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.FenixBrowserToolbarView
@@ -63,7 +61,6 @@ import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCoo
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.termsofuse.shouldShowTermsOfUsePrompt
 import org.mozilla.fenix.theme.ThemeManager
-import kotlin.lazy
 
 /**
  * Fragment used for browsing the web within the main app.
@@ -74,9 +71,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
     private val translationsBinding = ViewBoundFeatureWrapper<TranslationsBinding>()
 
-    private val qrScannerBinding by lazy(LazyThreadSafetyMode.NONE) {
-        ViewBoundFeatureWrapper<QrScannerBinding>()
-    }
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
     }
@@ -181,7 +175,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private fun initBrowserToolbarComposableUpdates(rootView: View) {
         initReaderModeUpdates(rootView.context, rootView)
         initTranslationsUpdates(rootView.context, rootView)
-        initQrScanningSupport(rootView.context)
+        QrScannerBinding.register(this)
         initVoiceSearchSupport(rootView.context)
     }
 
@@ -299,22 +293,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             ),
             owner = this,
             view = view,
-        )
-    }
-
-    private fun initQrScanningSupport(context: Context) {
-        qrScannerBinding.set(
-            feature = QrScannerBinding(
-                appStore = context.components.appStore,
-                qrScannerDelegate = QrScannerDelegate(
-                    activity = requireActivity() as AppCompatActivity,
-                    browserStore = context.components.core.store,
-                    appStore = context.components.appStore,
-                    settings = context.settings(),
-                ),
-            ),
-            owner = viewLifecycleOwner,
-            view = binding.root,
         )
     }
 

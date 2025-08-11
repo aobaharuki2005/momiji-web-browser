@@ -31,6 +31,7 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
+import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
@@ -186,6 +187,13 @@ class BookmarkFragment : Fragment() {
                     }
                 }
             }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        if (requireContext().settings().shouldUseComposableToolbar) {
+            QrScannerBinding.register(this)
+        }
     }
 
     private fun buildToolbarStore() = when (requireComponents.settings.shouldUseComposableToolbar) {
