@@ -79,6 +79,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
                                 isChecked = false
                                 summary = getString(R.string.preferences_debug_settings_toolbar_redesign_summary)
                                 context.settings().toolbarRedesignEnabled = false
+                                context.settings().shouldUseExpandedToolbar = false
                             }
                         }
                     }
@@ -95,7 +96,15 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
                 false -> getString(R.string.preferences_debug_settings_toolbar_redesign_summary)
             }
             isChecked = context.settings().toolbarRedesignEnabled
-            onPreferenceChangeListener = SharedPreferenceUpdater()
+            onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+                (newValue as? Boolean)?.let { newOption ->
+                    context.settings().toolbarRedesignEnabled = newOption
+                    if (newOption == false) {
+                        context.settings().shouldUseExpandedToolbar = false
+                    }
+                }
+                true
+            }
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_enable_address_sync).apply {
