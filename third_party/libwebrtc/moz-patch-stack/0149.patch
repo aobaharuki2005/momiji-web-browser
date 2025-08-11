@@ -1,26 +1,29 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 7 Aug 2025 11:55:00 -0500
-Subject: Bug 1980479 - (fix-1e750debf5) fixes for c++20 support
+Date: Thu, 7 Aug 2025 11:37:00 -0500
+Subject: Bug 1980479 - (fix-50544d8dc4) add missing stub implementations for
+ SSLStreamAdapter static methods.
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/43c2cad5c4e576f3b23f71513b23a3adcb248506
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8fee7e6d9736f8d1dfe78e9bc2c4676ca86d0405
 ---
- api/crypto/crypto_options.cc | 5 +++++
- 1 file changed, 5 insertions(+)
+ rtc_base/ssl_stream_adapter.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/api/crypto/crypto_options.cc b/api/crypto/crypto_options.cc
-index e939f390e5..0f1e3683ef 100644
---- a/api/crypto/crypto_options.cc
-+++ b/api/crypto/crypto_options.cc
-@@ -106,7 +106,12 @@ CryptoOptions::EphemeralKeyExchangeCipherGroups::GetSupported() {
- }
+diff --git a/rtc_base/ssl_stream_adapter.h b/rtc_base/ssl_stream_adapter.h
+index f8f817337a..d01c37c1ce 100644
+--- a/rtc_base/ssl_stream_adapter.h
++++ b/rtc_base/ssl_stream_adapter.h
+@@ -245,11 +245,12 @@ class SSLStreamAdapter : public StreamInterface {
+   static bool IsAcceptableCipher(int cipher, KeyType key_type);
+   static bool IsAcceptableCipher(absl::string_view cipher, KeyType key_type);
  
- void CryptoOptions::EphemeralKeyExchangeCipherGroups::AddFirst(uint16_t group) {
-+#if defined(WEBRTC_MOZILLA_BUILD)
-+  // until we support c++20
-+  enabled_.erase(std::remove(enabled_.begin(), enabled_.end(), group));
-+#else
-   std::erase(enabled_, group);
-+#endif
-   enabled_.insert(enabled_.begin(), group);
- }
+-  static std::set<uint16_t> GetSupportedEphemeralKeyExchangeCipherGroups();
++  static std::set<uint16_t> GetSupportedEphemeralKeyExchangeCipherGroups()
++      { return {}; }
+   static std::optional<std::string> GetEphemeralKeyExchangeCipherGroupName(
+       uint16_t);
+   static std::vector<uint16_t> GetDefaultEphemeralKeyExchangeCipherGroups(
+-      const FieldTrialsView* field_trials);
++      const FieldTrialsView* field_trials) { return {}; }
  
+   ////////////////////////////////////////////////////////////////////////////
+   // Testing only member functions

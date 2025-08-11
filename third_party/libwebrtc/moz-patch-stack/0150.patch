@@ -1,22 +1,26 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 8 Aug 2025 14:18:00 -0500
-Subject: Bug 1980479 - (fix-2f21adc141) turn off rtc_rusty_base64
+Date: Thu, 7 Aug 2025 11:55:00 -0500
+Subject: Bug 1980479 - (fix-1e750debf5) fixes for c++20 support
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6038962cc8531f7bac3a58170b052326f5fabf4a
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/43c2cad5c4e576f3b23f71513b23a3adcb248506
 ---
- webrtc.gni | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ api/crypto/crypto_options.cc | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/webrtc.gni b/webrtc.gni
-index 637d9aa0e4..09f271dc49 100644
---- a/webrtc.gni
-+++ b/webrtc.gni
-@@ -343,7 +343,7 @@ declare_args() {
-   rtc_disable_metrics = false
- 
-   # Enables an experimental rust version of base64 for building and testing.
--  rtc_rusty_base64 = true
-+  rtc_rusty_base64 = !build_with_mozilla
+diff --git a/api/crypto/crypto_options.cc b/api/crypto/crypto_options.cc
+index e939f390e5..0f1e3683ef 100644
+--- a/api/crypto/crypto_options.cc
++++ b/api/crypto/crypto_options.cc
+@@ -106,7 +106,12 @@ CryptoOptions::EphemeralKeyExchangeCipherGroups::GetSupported() {
  }
  
- declare_args() {
+ void CryptoOptions::EphemeralKeyExchangeCipherGroups::AddFirst(uint16_t group) {
++#if defined(WEBRTC_MOZILLA_BUILD)
++  // until we support c++20
++  enabled_.erase(std::remove(enabled_.begin(), enabled_.end(), group));
++#else
+   std::erase(enabled_, group);
++#endif
+   enabled_.insert(enabled_.begin(), group);
+ }
+ 
