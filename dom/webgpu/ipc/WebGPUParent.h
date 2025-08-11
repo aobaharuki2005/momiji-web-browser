@@ -12,6 +12,7 @@
 #include "base/timer.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/ipc/SharedMemoryHandle.h"
+#include "mozilla/webgpu/ExternalTexture.h"
 #include "mozilla/webgpu/PWebGPUParent.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -102,6 +103,9 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
                               ipc::ByteBuf&& aSerializedMessages,
                               nsTArray<ipc::ByteBuf>&& aDataBuffers,
                               nsTArray<MutableSharedMemoryHandle>&& aShmems);
+  ipc::IPCResult RecvCreateExternalTextureSource(
+      RawId aDeviceId, RawId aQueueId, RawId aExternalTextureSourceId,
+      const ExternalTextureSourceDescriptor& aDesc);
   void QueueSubmit(RawId aQueueId, RawId aDeviceId,
                    Span<const RawId> aCommandBuffers,
                    Span<const RawId> aTextureIds);
@@ -179,6 +183,10 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
   RefPtr<gfx::FileHandleWrapper> GetDeviceFenceHandle(const RawId aDeviceId);
 
   void RemoveSharedTexture(RawId aTextureId);
+
+  void DestroyExternalTextureSource(RawId aId);
+  void DropExternalTextureSource(RawId aId);
+
   void DeallocBufferShmem(RawId aBufferId);
   void PreDeviceDrop(RawId aDeviceId);
 
@@ -240,6 +248,8 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
 
   std::unordered_map<ffi::WGPUTextureId, std::shared_ptr<SharedTexture>>
       mSharedTextures;
+
+  std::unordered_map<RawId, ExternalTextureSourceHost> mExternalTextureSources;
 
   // Store a set of DeviceIds that have been SendDeviceLost. We use this to
   // limit each Device to one DeviceLost message.

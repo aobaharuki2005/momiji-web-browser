@@ -7,6 +7,7 @@
 
 #include <unordered_set>
 
+#include "ExternalTexture.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/WebGPUBinding.h"
@@ -169,6 +170,18 @@ extern void wgpu_server_remove_shared_texture(WGPUWebGPUParentPtr aParent,
                                               WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParent);
   parent->RemoveSharedTexture(aId);
+}
+
+extern void wgpu_parent_destroy_external_texture_source(
+    WGPUWebGPUParentPtr aParent, WGPUExternalTextureSourceId aId) {
+  auto* const parent = static_cast<WebGPUParent*>(aParent);
+  parent->DestroyExternalTextureSource(aId);
+}
+
+extern void wgpu_parent_drop_external_texture_source(
+    WGPUWebGPUParentPtr aParent, WGPUExternalTextureSourceId aId) {
+  auto* const parent = static_cast<WebGPUParent*>(aParent);
+  parent->DropExternalTextureSource(aId);
 }
 
 extern void wgpu_server_dealloc_buffer_shmem(WGPUWebGPUParentPtr aParent,
@@ -776,6 +789,28 @@ void WebGPUParent::RemoveSharedTexture(RawId aTextureId) {
   auto it = mSharedTextures.find(aTextureId);
   if (it != mSharedTextures.end()) {
     mSharedTextures.erase(it);
+  }
+}
+
+void WebGPUParent::DestroyExternalTextureSource(RawId aSourceId) {
+  auto it = mExternalTextureSources.find(aSourceId);
+  if (it != mExternalTextureSources.end()) {
+    for (const auto textureId : it->second.TextureIds()) {
+      ffi::wgpu_server_texture_destroy(mContext.get(), textureId);
+    }
+  }
+}
+
+void WebGPUParent::DropExternalTextureSource(RawId aSourceId) {
+  auto it = mExternalTextureSources.find(aSourceId);
+  if (it != mExternalTextureSources.end()) {
+    for (const auto viewId : it->second.ViewIds()) {
+      ffi::wgpu_server_texture_view_drop(mContext.get(), viewId);
+    }
+    for (const auto textureId : it->second.TextureIds()) {
+      ffi::wgpu_server_texture_drop(mContext.get(), textureId);
+    }
+    mExternalTextureSources.erase(it);
   }
 }
 
@@ -1525,6 +1560,18 @@ ipc::IPCResult WebGPUParent::RecvMessages(
                             shmem_mapping_slices);
 
   mTempMappings.Clear();
+
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvCreateExternalTextureSource(
+    RawId aDeviceId, RawId aQueueId, RawId aExternalTextureSourceId,
+    const ExternalTextureSourceDescriptor& aDesc) {
+  MOZ_RELEASE_ASSERT(mExternalTextureSources.find(aExternalTextureSourceId) ==
+                     mExternalTextureSources.end());
+  mExternalTextureSources.emplace(
+      aExternalTextureSourceId,
+      ExternalTextureSourceHost::Create(this, aDeviceId, aQueueId, aDesc));
 
   return IPC_OK();
 }
