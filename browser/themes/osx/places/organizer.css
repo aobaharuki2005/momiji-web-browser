@@ -25,6 +25,7 @@
 #placesToolbar > toolbarbutton {
   appearance: auto;
   -moz-default-appearance: toolbarbutton;
+  color: inherit;
   padding: 3px;
   min-height: var(--toolbar-item-height);
   margin: var(--toolbar-item-margin);

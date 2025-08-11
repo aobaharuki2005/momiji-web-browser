@@ -163,17 +163,8 @@ menubar > menu {
     padding-block: 2px;
     padding-inline: 7px 5px;
     margin: 1px 0;
-
-    &[_moz-menuactive] {
-      color: inherit;
-      background-color: transparent;
-    }
-
-    &[open] {
-      color: -moz-menuhovertext;
-      background-color: -moz-menuhover;
-    }
   }
+
   @media (-moz-platform: windows) {
     padding: 1px 6px 2px;
 
