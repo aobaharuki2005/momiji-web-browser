@@ -310,6 +310,8 @@
       <menuitem id="context-selectall"
                 data-l10n-id="text-action-select-all"
                 command="cmd_selectAll"/>
+      <menuitem id="context-pdfjs-comment-selection"
+                data-l10n-id="text-action-comment-selection"/>
       <menuitem id="context-pdfjs-highlight-selection"
                 data-l10n-id="text-action-highlight-selection"/>
       <menuitem id="context-reveal-password"

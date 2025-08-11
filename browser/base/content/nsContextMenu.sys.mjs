@@ -63,6 +63,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "PDFJS_ENABLE_COMMENT",
+  "pdfjs.enableComment",
+  false
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "QueryStringStripper",
@@ -404,10 +411,12 @@ export class nsContextMenu {
       this.showItem(id, this.inPDFEditor);
     }
 
+    const hasSelectedText = this.pdfEditorStates?.hasSelectedText ?? false;
     this.showItem(
-      "context-pdfjs-highlight-selection",
-      this.pdfEditorStates?.hasSelectedText
+      "context-pdfjs-comment-selection",
+      lazy.PDFJS_ENABLE_COMMENT && hasSelectedText
     );
+    this.showItem("context-pdfjs-highlight-selection", hasSelectedText);
 
     if (!this.inPDFEditor) {
       return;
