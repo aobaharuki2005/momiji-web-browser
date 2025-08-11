@@ -845,8 +845,7 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
 
   const auto* disp = StyleDisplay();
   if (disp->mPosition == StylePositionProperty::Sticky) {
-    if (auto* ssc =
-            StickyScrollContainer::GetStickyScrollContainerForFrame(this)) {
+    if (auto* ssc = StickyScrollContainer::GetOrCreateForFrame(this)) {
       ssc->RemoveFrame(this);
     }
   }
@@ -1333,8 +1332,7 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     // yet know if we're a later part of a block-in-inline split, we'll just
     // add later members of a block-in-inline split here, and then
     // StickyScrollContainer will remove them later.
-    if (auto* ssc =
-            StickyScrollContainer::GetStickyScrollContainerForFrame(this)) {
+    if (auto* ssc = StickyScrollContainer::GetOrCreateForFrame(this)) {
       if (disp->mPosition == StylePositionProperty::Sticky) {
         ssc->AddFrame(this);
       } else {
@@ -3871,15 +3869,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
         aBuilder->CurrentActiveScrolledRoot(),
         clipState.IsClippedToDisplayPort());
 
-    bool shouldFlatten = true;
-
-    StickyScrollContainer* stickyScrollContainer =
-        StickyScrollContainer::GetStickyScrollContainerForFrame(this);
-    if (stickyScrollContainer && stickyScrollContainer->ScrollContainer()
-                                     ->IsMaybeAsynchronouslyScrolled()) {
-      shouldFlatten = false;
-    }
-
+    auto* ssc = StickyScrollContainer::GetOrCreateForFrame(this);
+    const bool shouldFlatten =
+        !ssc || !ssc->ScrollContainer()->IsMaybeAsynchronouslyScrolled();
     stickyItem->SetShouldFlatten(shouldFlatten);
 
     resultList.AppendToTop(stickyItem);

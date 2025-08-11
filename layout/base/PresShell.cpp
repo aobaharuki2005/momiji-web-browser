@@ -12491,8 +12491,7 @@ void PresShell::MarkStickyFramesForReflow() {
     return;
   }
 
-  StickyScrollContainer* ssc =
-      StickyScrollContainer::GetStickyScrollContainerForScrollFrame(sc);
+  StickyScrollContainer* ssc = sc->GetStickyContainer();
   if (!ssc) {
     return;
   }

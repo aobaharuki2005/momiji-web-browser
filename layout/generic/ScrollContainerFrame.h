@@ -29,7 +29,6 @@
 class nsPresContext;
 class nsIContent;
 class nsAtom;
-class nsIScrollPositionListener;
 class AutoContainsBlendModeCapturer;
 
 namespace mozilla {
@@ -40,6 +39,7 @@ enum class PhysicalAxis : uint8_t;
 enum class StyleScrollbarWidth : uint8_t;
 class ScrollContainerFrame;
 class ScrollPositionUpdate;
+class StickyScrollContainer;
 struct ScrollReflowInput;
 struct ScrollStyles;
 struct StyleScrollSnapAlign;
@@ -131,6 +131,11 @@ class ScrollContainerFrame : public nsContainerFrame,
   Maybe<nscoord> GetNaturalBaselineBOffset(
       WritingMode aWM, BaselineSharingGroup aBaselineGroup,
       BaselineExportContext aExportContext) const override;
+
+  StickyScrollContainer* GetStickyContainer() const {
+    return mStickyContainer.get();
+  }
+  StickyScrollContainer& EnsureStickyContainer();
 
   // Recomputes the scrollable overflow area we store in the helper to take
   // children that are affected by perpsective set on the outer frame and scroll
@@ -513,21 +518,6 @@ class ScrollContainerFrame : public nsContainerFrame,
 
   bool NeedRestorePosition() const {
     return mRestorePos.y != -1 && mLastPos.x != -1 && mLastPos.y != -1;
-  }
-
-  /**
-   * Add a scroll position listener. This listener must be removed
-   * before it is destroyed.
-   */
-  void AddScrollPositionListener(nsIScrollPositionListener* aListener) {
-    mListeners.AppendElement(aListener);
-  }
-
-  /**
-   * Remove a scroll position listener.
-   */
-  void RemoveScrollPositionListener(nsIScrollPositionListener* aListener) {
-    mListeners.RemoveElement(aListener);
   }
 
   /**
@@ -1326,7 +1316,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   RefPtr<AsyncScroll> mAsyncScroll;
   RefPtr<AsyncSmoothMSDScroll> mAsyncSmoothMSDScroll;
   RefPtr<layout::ScrollbarActivity> mScrollbarActivity;
-  nsTArray<nsIScrollPositionListener*> mListeners;
   ScrollOrigin mLastScrollOrigin;
   Maybe<nsPoint> mApzSmoothScrollDestination;
   MainThreadScrollGeneration mScrollGeneration;
@@ -1529,6 +1518,8 @@ class ScrollContainerFrame : public nsContainerFrame,
   // in the case of the top level document.
   nsRect mScrollPort;
   UniquePtr<ScrollSnapTargetIds> mLastSnapTargetIds;
+  // Lazily created on demand, see StickyScrollContainer::GetOrCreateForFrame.
+  UniquePtr<StickyScrollContainer> mStickyContainer;
 };
 
 }  // namespace mozilla

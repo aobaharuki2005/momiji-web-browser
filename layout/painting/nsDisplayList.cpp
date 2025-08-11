@@ -1584,10 +1584,8 @@ static bool IsStickyFrameActive(nsDisplayListBuilder* aBuilder,
   MOZ_ASSERT(aFrame->StyleDisplay()->mPosition ==
              StylePositionProperty::Sticky);
 
-  StickyScrollContainer* stickyScrollContainer =
-      StickyScrollContainer::GetStickyScrollContainerForFrame(aFrame);
-  return stickyScrollContainer && stickyScrollContainer->ScrollContainer()
-                                      ->IsMaybeAsynchronouslyScrolled();
+  auto* ssc = StickyScrollContainer::GetOrCreateForFrame(aFrame);
+  return ssc && ssc->ScrollContainer()->IsMaybeAsynchronouslyScrolled();
 }
 
 bool nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
@@ -5673,28 +5671,26 @@ static nscoord NegativePart(nscoord min, nscoord max) {
 }
 
 StickyScrollContainer* nsDisplayStickyPosition::GetStickyScrollContainer() {
-  StickyScrollContainer* stickyScrollContainer =
-      StickyScrollContainer::GetStickyScrollContainerForFrame(mFrame);
-  if (stickyScrollContainer) {
-    // If there's no ASR for the scrollframe that this sticky item is attached
-    // to, then don't create a WR sticky item for it either. Trying to do so
-    // will end in sadness because WR will interpret some coordinates as
-    // relative to the nearest enclosing scrollframe, which will correspond
-    // to the nearest ancestor ASR on the gecko side. That ASR will not be the
-    // same as the scrollframe this sticky item is actually supposed to be
-    // attached to, thus the sadness.
-    // Not sending WR the sticky item is ok, because the enclosing scrollframe
-    // will never be asynchronously scrolled. Instead we will always position
-    // the sticky items correctly on the gecko side and WR will never need to
-    // adjust their position itself.
-    MOZ_ASSERT(stickyScrollContainer->ScrollContainer()
-                   ->IsMaybeAsynchronouslyScrolled());
-    if (!stickyScrollContainer->ScrollContainer()
-             ->IsMaybeAsynchronouslyScrolled()) {
-      stickyScrollContainer = nullptr;
-    }
+  auto* ssc = StickyScrollContainer::GetOrCreateForFrame(mFrame);
+  if (!ssc) {
+    return nullptr;
   }
-  return stickyScrollContainer;
+  // If there's no ASR for the scrollframe that this sticky item is attached
+  // to, then don't create a WR sticky item for it either. Trying to do so
+  // will end in sadness because WR will interpret some coordinates as
+  // relative to the nearest enclosing scrollframe, which will correspond
+  // to the nearest ancestor ASR on the gecko side. That ASR will not be the
+  // same as the scrollframe this sticky item is actually supposed to be
+  // attached to, thus the sadness.
+  // Not sending WR the sticky item is ok, because the enclosing scrollframe
+  // will never be asynchronously scrolled. Instead we will always position
+  // the sticky items correctly on the gecko side and WR will never need to
+  // adjust their position itself.
+  MOZ_ASSERT(ssc->ScrollContainer()->IsMaybeAsynchronouslyScrolled());
+  if (!ssc->ScrollContainer()->IsMaybeAsynchronouslyScrolled()) {
+    return nullptr;
+  }
+  return ssc;
 }
 
 bool nsDisplayStickyPosition::CreateWebRenderCommands(
