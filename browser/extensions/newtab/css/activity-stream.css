@@ -4709,7 +4709,7 @@ main section {
   justify-content: center;
   position: absolute;
   width: 100%;
-  z-index: 10;
+  z-index: 2;
 }
 
 .timer-set-minutes:focus,
