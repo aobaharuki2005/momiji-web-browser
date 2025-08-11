@@ -7,7 +7,7 @@ import {
   LitElement,
   classMap,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import { tokensTable, variableLookupTable } from "./tokens-table.mjs";
+import { storybookTables, variableLookupTable } from "./tokens-storybook.mjs";
 import styles from "./tokens-table.css";
 
 export default {
@@ -72,7 +72,7 @@ class TablesPage extends LitElement {
   constructor() {
     super();
     this.surface = "brand";
-    this.tokensData = tokensTable;
+    this.tokensData = storybookTables;
   }
 
   handleSurfaceChange(e) {
@@ -198,7 +198,7 @@ class TablesPage extends LitElement {
             <moz-button type=${!this.tableFilter ? "primary" : "default"}>
               All tokens
             </moz-button>
-            ${Object.keys(tokensTable).map(table => {
+            ${Object.keys(storybookTables).map(table => {
               return html`<moz-button
                 type=${this.tableFilter == table ? "primary" : "default"}
                 data-filter=${table}
