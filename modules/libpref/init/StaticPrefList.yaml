@@ -18006,6 +18006,15 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+
+# Enable classification for safebrowsing and anti-tracking
+# 0 -> disabled, 1 -> anti-tracking only, 2 -> safe-browsing only, 3 -> enabled
+# see netwerk/base/nsNetUtil.cpp for C++ enum
+- name: urlclassifier.enabled_mode
+  type: RelaxedAtomicUint32
+  value: 3
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "view_source."
 #---------------------------------------------------------------------------

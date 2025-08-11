@@ -20,6 +20,7 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/StaticPrefs_urlclassifier.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/TaskQueue.h"
 #include "nsAboutProtocolUtils.h"
@@ -130,6 +131,13 @@ using mozilla::dom::PerformanceStorage;
 using mozilla::dom::ServiceWorkerDescriptor;
 
 #define MAX_RECURSION_COUNT 50
+
+enum class ClassifierMode {
+  Disabled = 0,
+  AntiTracking = 1,
+  SafeBrowsing = 2,
+  Enabled = 3,
+};
 
 already_AddRefed<nsIIOService> do_GetIOService(nsresult* error /* = 0 */) {
   nsCOMPtr<nsIIOService> io;
@@ -3359,6 +3367,19 @@ bool NS_IsOffline() {
  *    flag to enforce bypassing the URL classifier check.
  */
 bool NS_ShouldClassifyChannel(nsIChannel* aChannel, ClassifyType aType) {
+  auto pref =
+      static_cast<ClassifierMode>(StaticPrefs::urlclassifier_enabled_mode());
+  if (pref == ClassifierMode::Disabled) {
+    return false;
+  }
+  if (aType == ClassifyType::SafeBrowsing &&
+      pref == ClassifierMode::AntiTracking) {
+    return false;
+  }
+  if (aType == ClassifyType::ETP && pref == ClassifierMode::SafeBrowsing) {
+    return false;
+  }
+
   nsLoadFlags loadFlags;
   Unused << aChannel->GetLoadFlags(&loadFlags);
   //  If our load flags dictate that we must let this channel through without
