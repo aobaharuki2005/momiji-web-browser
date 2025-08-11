@@ -77,6 +77,20 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "TEXT_FRAGMENTS_ENABLED",
+  "dom.text_fragments.enabled",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "TEXT_FRAGMENTS_SHOW_CONTEXT_MENU",
+  "dom.text_fragments.create_text_fragment.enabled",
+  false
+);
+
 const PASSWORD_FIELDNAME_HINTS = ["current-password", "new-password"];
 const USERNAME_FIELDNAME_HINT = "username";
 
@@ -440,10 +454,8 @@ export class nsContextMenu {
 
   initTextFragmentItems() {
     const shouldShow =
-      Services.prefs.getBoolPref(
-        "dom.text_fragments.create_text_fragment.enabled",
-        false
-      ) &&
+      lazy.TEXT_FRAGMENTS_SHOW_CONTEXT_MENU &&
+      lazy.TEXT_FRAGMENTS_ENABLED &&
       lazy.STRIP_ON_SHARE_ENABLED &&
       !(
         this.inPDFViewer ||

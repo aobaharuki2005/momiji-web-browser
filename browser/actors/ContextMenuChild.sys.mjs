@@ -309,6 +309,15 @@ export class ContextMenuChild extends JSWindowActorChild {
       }
 
       case "ContextMenu:GetTextDirective": {
+        if (
+          !Services.prefs.getBoolPref("dom.text_fragments.enabled", false) ||
+          !Services.prefs.getBoolPref(
+            "dom.text_fragments.create_text_fragment.enabled",
+            false
+          )
+        ) {
+          return null;
+        }
         if (!this.textDirectiveTarget) {
           return null;
         }
@@ -921,9 +930,9 @@ export class ContextMenuChild extends JSWindowActorChild {
     context.inPDFEditor = false;
 
     const textDirectiveRanges =
-      this.document.fragmentDirective?.getTextDirectiveRanges();
+      this.document.fragmentDirective?.getTextDirectiveRanges?.() || [];
     // .hasTextFragments indicates whether the page will show highlights.
-    context.hasTextFragments = !!textDirectiveRanges?.length;
+    context.hasTextFragments = !!textDirectiveRanges.length;
     const { offsetNode, offset } =
       node.ownerDocument.caretPositionFromPoint(
         aEvent.clientX,
