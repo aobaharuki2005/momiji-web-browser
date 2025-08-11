@@ -65,11 +65,35 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         requirePreference<SwitchPreference>(R.string.pref_key_enable_composable_toolbar).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().shouldUseComposableToolbar
-            onPreferenceChangeListener = SharedPreferenceUpdater()
+            onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+                (newValue as? Boolean)?.let { newOption ->
+                    context.settings().shouldUseComposableToolbar = newOption
+                    requirePreference<SwitchPreference>(R.string.pref_key_enable_toolbar_redesign).apply {
+                        isEnabled = newOption
+                        when (newOption) {
+                            true -> {
+                                summary = null
+                            }
+
+                            false -> {
+                                isChecked = false
+                                summary = getString(R.string.preferences_debug_settings_toolbar_redesign_summary)
+                                context.settings().toolbarRedesignEnabled = false
+                            }
+                        }
+                    }
+                }
+                true
+            }
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_enable_toolbar_redesign).apply {
-            isVisible = Config.channel.isDebug
+            isVisible = Config.channel.isNightlyOrDebug
+            isEnabled = context.settings().shouldUseComposableToolbar
+            summary = when (context.settings().shouldUseComposableToolbar) {
+                true -> null
+                false -> getString(R.string.preferences_debug_settings_toolbar_redesign_summary)
+            }
             isChecked = context.settings().toolbarRedesignEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
