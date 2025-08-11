@@ -32,6 +32,7 @@
 #include "nsDocShell.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIPrincipal.h"
+#include "nsISHistory.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"

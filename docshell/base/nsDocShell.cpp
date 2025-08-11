@@ -12517,9 +12517,10 @@ void nsDocShell::MaybeFireTraverseHistory(nsDocShellLoadState* aLoadState) {
   }
 
   BrowsingContext* browsingContext = GetBrowsingContext();
-  if (!browsingContext || !browsingContext->IsTop()) {
+  if (!browsingContext || browsingContext->IsTop()) {
     return;
   }
+
   if (!mActiveEntry) {
     return;
   }
