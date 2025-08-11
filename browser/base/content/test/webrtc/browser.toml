@@ -92,7 +92,7 @@ https_first_disabled = true
 skip-if = [
   "os == 'linux'", # Bug 1775945
   "os == 'mac' && os_version == '10.15' && processor == 'x86_64'", # Bug 1974591
-  "os == 'mac' && os_version == '15.00' && arch == 'aarch64'", # Bug 1974591
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1974591
   "os == 'win' && !debug", # Bug 1775945
 ]
 
