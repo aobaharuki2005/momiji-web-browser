@@ -5752,12 +5752,6 @@
   value: false
   mirror: always
 
-# Whether allowing using <tab> to move focus to root elements
-- name: dom.disable_tab_focus_to_root_element
-  type: bool
-  value: true
-  mirror: always
-
 # Whether or not the `Origin-Agent-Cluster` HTTP header is enabled.
 - name: dom.origin_agent_cluster.enabled
   type: bool
