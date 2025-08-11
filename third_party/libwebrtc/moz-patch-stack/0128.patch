@@ -160,7 +160,7 @@ index aa65cccbab..b16bd955f8 100644
  rtc_library("ssl") {
  if (!build_with_mozilla) {
 diff --git a/webrtc.gni b/webrtc.gni
-index aab6b9e272..20736a5abe 100644
+index 20dc8f05b9..a939e7e076 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -125,7 +125,7 @@ declare_args() {

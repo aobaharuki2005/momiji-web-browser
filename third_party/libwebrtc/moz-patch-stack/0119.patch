@@ -10,10 +10,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/45b99d1ba95b46896
  1 file changed, 71 insertions(+)
 
 diff --git a/webrtc.gni b/webrtc.gni
-index 083904b147..224295cbe7 100644
+index 13cffd3ca5..68fb6ca921 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
-@@ -705,6 +705,36 @@ template("rtc_source_set") {
+@@ -706,6 +706,36 @@ template("rtc_source_set") {
          deps += [ "//third_party/abseil-cpp:absl" ]
        }
      }
@@ -50,7 +50,7 @@ index 083904b147..224295cbe7 100644
    }
  }
  
-@@ -939,6 +969,47 @@ template("rtc_library") {
+@@ -940,6 +970,47 @@ template("rtc_library") {
          deps += [ "//third_party/abseil-cpp:absl" ]
        }
      }

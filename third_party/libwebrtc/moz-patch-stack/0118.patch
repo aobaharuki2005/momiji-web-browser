@@ -61,7 +61,7 @@ index 52c391dc3f..c91b9a0b60 100644
  
  rtc_library("encoded_frame") {
 diff --git a/webrtc.gni b/webrtc.gni
-index 4f94a5dc67..083904b147 100644
+index b77a0ce638..13cffd3ca5 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -11,7 +11,7 @@ import("//build/config/mips.gni")
@@ -73,7 +73,7 @@ index 4f94a5dc67..083904b147 100644
  
  if (!build_with_chromium && is_component_build) {
    print("The Gn argument `is_component_build` is currently " +
-@@ -501,8 +501,8 @@ all_poison_types = [
+@@ -502,8 +502,8 @@ all_poison_types = [
    "software_video_codecs",
  ]
  
