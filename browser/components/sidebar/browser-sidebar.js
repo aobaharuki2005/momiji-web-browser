@@ -1406,8 +1406,8 @@ var SidebarController = {
 
       // Re-add MousePosTracker listener
       MousePosTracker.addListener(this);
+      this._hoverBlockerCount--;
     }
-    this._hoverBlockerCount--;
   },
 
   _showToolbarButtonBadge() {
@@ -2281,6 +2281,7 @@ var SidebarController = {
         ? ""
         : "0";
     } else {
+      this._removeHoverStateBlocker();
       MousePosTracker.removeListener(this);
       if (!this.mouseOverTask?.isFinalized) {
         this.mouseOverTask?.finalize();
