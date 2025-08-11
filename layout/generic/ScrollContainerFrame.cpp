@@ -5710,15 +5710,6 @@ nsresult ScrollContainerFrame::CreateAnonymousContent(
     }
     aElements.AppendElement(ContentInfo(mScrollCornerContent, key));
   }
-
-  // Don't cache styles if we are a child of a <select> element, since we have
-  // some UA style sheet rules that depend on the <select>'s attributes.
-  if (GetContent()->IsHTMLElement(nsGkAtoms::select)) {
-    for (auto& info : aElements) {
-      info.mKey = AnonymousContentKey::None;
-    }
-  }
-
   return NS_OK;
 }
 

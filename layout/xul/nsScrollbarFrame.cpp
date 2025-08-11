@@ -460,14 +460,6 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
     aElements.AppendElement(ContentInfo(mDownBottomButton, key));
   }
 
-  // Don't cache styles if we are inside a <select> element, since we have
-  // some UA style sheet rules that depend on the <select>'s attributes.
-  if (el->GetParent() && el->GetParent()->IsHTMLElement(nsGkAtoms::select)) {
-    for (auto& info : aElements) {
-      info.mKey = AnonymousContentKey::None;
-    }
-  }
-
   return NS_OK;
 }
 
