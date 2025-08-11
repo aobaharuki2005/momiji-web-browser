@@ -287,10 +287,7 @@ newtab-custom-widget-lists-toggle =
 newtab-custom-widget-timer-toggle =
   .label = Timer
 newtab-custom-widget-section-title = Widgets
-# Tooltip for close button
-newtab-custom-close-menu-button =
-    .title = Close
-    .aria-label = Close menu
+newtab-custom-close-button = Close
 newtab-custom-settings = Manage more settings
 
 ## New Tab Wallpapers

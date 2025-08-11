@@ -75,14 +75,12 @@ export class _CustomizeMenu extends React.PureComponent {
             data-l10n-id="newtab-settings-dialog-label"
           >
             <div className="close-button-wrapper">
-              <moz-button
+              <button
                 onClick={() => this.props.onClose()}
-                id="close-button"
-                type="icon ghost"
-                data-l10n-id="newtab-custom-close-menu-button"
-                iconsrc="chrome://global/skin/icons/close.svg"
+                className="close-button"
+                data-l10n-id="newtab-custom-close-button"
                 ref={c => (this.closeButton = c)}
-              ></moz-button>
+              />
             </div>
             <ContentSection
               openPreferences={this.props.openPreferences}
