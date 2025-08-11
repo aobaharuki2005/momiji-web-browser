@@ -358,6 +358,15 @@ export let StartupTelemetry = {
     _checkGPCPref();
   },
 
+  // check if the launcher was used to open firefox
+  isUsingLauncher() {
+    if (Services.env.get("FIREFOX_LAUNCHED_BY_DESKTOP_LAUNCHER") == "TRUE") {
+      return true;
+    }
+
+    return false;
+  },
+
   async pinningStatus() {
     let shellService = Cc["@mozilla.org/browser/shell-service;1"].getService(
       Ci.nsIWindowsShellService
@@ -403,6 +412,8 @@ export let StartupTelemetry = {
         classification = "Autostart";
       } else if (shortcut) {
         classification = "OtherShortcut";
+      } else if (this.isUsingLauncher()) {
+        classification = "DesktopLauncher";
       } else {
         classification = "Other";
       }

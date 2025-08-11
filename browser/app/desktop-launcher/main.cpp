@@ -15,6 +15,15 @@
 #define DOWNLOAD_PAGE L"https://www.mozilla.org/firefox/new/"
 
 int wmain() {
+  // For telemetry purposes, let's set the env variable to indicate that
+  // we used the launcher to start Firefox
+  if (!SetEnvironmentVariableW(L"FIREFOX_LAUNCHED_BY_DESKTOP_LAUNCHER",
+                               L"TRUE")) {
+    std::wcout
+        << L"Could not set env variable FIREFOX_LAUNCHED_BY_DESKTOP_LAUNCHER"
+        << std::endl;
+  }
+
   // First, we try to launch Firefox if it is installed
   std::optional<std::wstring> firefox_path = lookupFirefoxPath();
   if (firefox_path.has_value()) {
