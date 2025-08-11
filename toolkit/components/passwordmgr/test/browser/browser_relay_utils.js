@@ -119,7 +119,6 @@ add_setup(async function () {
     const treatment = autocompleteUXTreatments[key];
     allMessageIds.push(...treatment.messageIds);
   }
-  allMessageIds.push("firefox-relay-use-mask-title-1");
   gRelayACOptionsTitles = await new Localization([
     "browser/firefoxRelay.ftl",
     "toolkit/branding/brandings.ftl",
