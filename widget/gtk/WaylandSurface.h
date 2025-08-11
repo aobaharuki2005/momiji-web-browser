@@ -60,6 +60,11 @@ class WaylandSurface final {
       const std::function<void(wl_callback*, uint32_t)>& aFrameCallbackHandler,
       bool aEmulateFrameCallback = false);
 
+  // Clears frame callback handler. It's used if frame callback handler
+  // contains strong reference to WaylandSurface class owner
+  // which we want to clear.
+  void ClearFrameCallbackHandlerLocked(const WaylandSurfaceLock& aProofOfLock);
+
   // Enable/Disable any frame callback emission (includes emulated ones).
   void SetFrameCallbackStateLocked(const WaylandSurfaceLock& aProofOfLock,
                                    bool aEnabled);

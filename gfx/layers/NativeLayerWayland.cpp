@@ -941,7 +941,9 @@ void NativeLayerWayland::Unmap() {
   LOG("NativeLayerWayland::Unmap()");
 
   mSurface->UnmapLocked(surfaceLock);
-
+  // Clear reference to this added at NativeLayerWayland::Map() by
+  // callback handler.
+  mSurface->ClearFrameCallbackHandlerLocked(surfaceLock);
   mState.mMutatedStackingOrder = true;
   mState.mMutatedVisibility = true;
   mState.mIsRendered = false;

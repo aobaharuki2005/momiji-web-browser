@@ -358,6 +358,12 @@ void WaylandSurface::ClearFrameCallbackLocked(
   MozClearPointer(mFrameCallback, wl_callback_destroy);
 }
 
+void WaylandSurface::ClearFrameCallbackHandlerLocked(
+    const WaylandSurfaceLock& aProofOfLock) {
+  MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
+  mFrameCallbackHandler = FrameCallback{};
+}
+
 void WaylandSurface::SetFrameCallbackLocked(
     const WaylandSurfaceLock& aProofOfLock,
     const std::function<void(wl_callback*, uint32_t)>& aFrameCallbackHandler,
