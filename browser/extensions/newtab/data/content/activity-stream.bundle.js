@@ -5090,7 +5090,10 @@ const PromoCard = () => {
     className: "promo-card-inner"
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "img-wrapper"
-  }), /*#__PURE__*/external_React_default().createElement("span", {
+  }, /*#__PURE__*/external_React_default().createElement("img", {
+    src: "chrome://newtab/content/data/content/assets/puzzle-fox.svg",
+    alt: ""
+  })), /*#__PURE__*/external_React_default().createElement("span", {
     className: "promo-card-title",
     "data-l10n-id": "newtab-promo-card-title"
   }), /*#__PURE__*/external_React_default().createElement("span", {

@@ -32,8 +32,12 @@ const PromoCard = () => {
         />
       </div>
       <div className="promo-card-inner">
-        <div className="img-wrapper"></div>
-        {/* bug 1981800 waiting on final illustration*/}
+        <div className="img-wrapper">
+          <img
+            src="chrome://newtab/content/data/content/assets/puzzle-fox.svg"
+            alt=""
+          />
+        </div>
         <span
           className="promo-card-title"
           data-l10n-id="newtab-promo-card-title"
