@@ -793,7 +793,7 @@ index 8be2817955..8b83c1bac5 100644
            ]
          }
 diff --git a/system_wrappers/BUILD.gn b/system_wrappers/BUILD.gn
-index a36adfa47b..3764e6682d 100644
+index a1fab28ad8..bf043a60da 100644
 --- a/system_wrappers/BUILD.gn
 +++ b/system_wrappers/BUILD.gn
 @@ -7,8 +7,8 @@
