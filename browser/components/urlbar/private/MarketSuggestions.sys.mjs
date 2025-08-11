@@ -191,7 +191,7 @@ export class MarketSuggestions extends SuggestProvider {
       case "not_interested": {
         lazy.UrlbarPrefs.set("suggest.market", false);
         result.acknowledgeDismissalL10n = {
-          id: "urlbar-dismissal-acknowledgment-market",
+          id: "urlbar-result-dismissal-acknowledgment-market",
         };
         controller.removeResult(result);
         return;
