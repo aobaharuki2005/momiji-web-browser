@@ -151,7 +151,7 @@
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s daje większą kontrolę.</p> <p>Jako prywatna przeglądarka umożliwia: <ul> <li>wyszukiwanie i przeglądanie prosto z aplikacji</li> <li>blokowanie elementów śledzących (można to zmienić w ustawieniach)</li> <li>usuwanie ciasteczek oraz całej historii wyszukiwania i przeglądania</li> </ul> </p> <p>%1$s jest tworzony przez Mozillę. Naszym celem jest wspieranie zdrowego i otwartego Internetu.<br/> <a href=\"%2$s\">Więcej informacji</a></p>]]></string>
   <!-- A link to SUMO at the bottom of About Focus screen. -->
-  <string name="about_screen_learn_more">Dowiedz się więcej</string>
+  <string name="about_screen_learn_more">Więcej informacji</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Prywatność i bezpieczeństwo</string>
   <!-- Preference summary for settings related to privacy and security -->
