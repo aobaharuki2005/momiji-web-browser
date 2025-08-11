@@ -4626,6 +4626,16 @@ main section {
   margin-inline-end: auto;
 }
 
+.focus-timer-context-menu-wrapper {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.focus-timer:hover .focus-timer-context-menu-wrapper, .focus-timer:focus-within .focus-timer-context-menu-wrapper {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .progress-circle-wrapper {
   /* Colours for the main timer */
   --timer-red: var(--color-red-50);

@@ -23,6 +23,7 @@
   padding-inline: var(--space-large);
 }
 
+// Align the context menu button to the right while keeping the Focus/Break button centered
 .focus-timer-tabs-buttons {
   display: flex;
   gap: var(--space-small);
@@ -31,9 +32,21 @@
   margin-inline-start: calc(var(--space-xlarge) + var(--space-small));
 }
 
-// Align the context menu button to the right while keeping the Focus/Break button centered
 .focus-timer-context-menu {
   margin-inline-end: auto;
+}
+
+// Make sure context menu is only visible as you hover over the Timer widget
+.focus-timer-context-menu-wrapper {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.focus-timer:hover, .focus-timer:focus-within {
+  .focus-timer-context-menu-wrapper {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .progress-circle-wrapper {
