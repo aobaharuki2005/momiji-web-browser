@@ -18,6 +18,7 @@
 #include <algorithm>
 
 #include "nsWindow.h"
+#include "ScreenHelperUIKit.h"
 #include "nsAppShell.h"
 #include "nsIAppWindow.h"
 #include "nsIWindowWatcher.h"
@@ -49,6 +50,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/widget/GeckoViewSupport.h"
+#include "mozilla/layers/NativeLayerCA.h"
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/MUIRootAccessibleProtocol.h"
 #endif
@@ -98,6 +100,13 @@ class nsAutoRetainUIKitObject {
   BOOL mWaitingForPaint;
   NSMapTable<UITouch*, NSNumber*>* mTouches;
   int mNextTouchID;
+
+  // The CALayer that wraps Gecko's rendered contents. It's a sublayer of
+  // mPixelHostingView's backing layer. Always non-null.
+  CALayer* mRootCALayer;  // [STRONG]
+
+  // Whether we're inside updateRootCALayer at the moment.
+  BOOL mIsUpdatingLayer;
 }
 // sets up our view, attaching it to its owning gecko view
 - (id)initWithFrame:(CGRect)inFrame geckoChild:(nsWindow*)inChild;
@@ -120,6 +129,12 @@ class nsAutoRetainUIKitObject {
 - (void)touchesCancelled:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event;
 - (void)touchesEnded:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event;
 - (void)touchesMoved:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event;
+// Reacts to the view being resized.
+- (void)layoutSubviews;
+
+- (void)markLayerForDisplay;
+- (CALayer*)rootCALayer;
+- (void)updateRootCALayer;
 
 - (void)activateWindow:(NSNotification*)notification;
 - (void)deactivateWindow:(NSNotification*)notification;
@@ -145,14 +160,17 @@ class nsAutoRetainUIKitObject {
 @end
 
 @implementation ChildView
-+ (Class)layerClass {
-  return [CAEAGLLayer class];
-}
-
 - (id)initWithFrame:(CGRect)inFrame geckoChild:(nsWindow*)inChild {
   self.multipleTouchEnabled = YES;
   if ((self = [super initWithFrame:inFrame])) {
     mGeckoChild = inChild;
+
+    mRootCALayer = [[CALayer layer] retain];
+    mRootCALayer.position = CGPointZero;
+    mRootCALayer.bounds = CGRectZero;
+    mRootCALayer.anchorPoint = CGPointZero;
+    mRootCALayer.contentsGravity = kCAGravityTopLeft;
+    [[self layer] addSublayer:mRootCALayer];
   }
   ALOG("[ChildView[%p] initWithFrame:] (mGeckoChild = %p)", (void*)self,
        (void*)mGeckoChild);
@@ -320,6 +338,20 @@ class nsAutoRetainUIKitObject {
                 widget:mGeckoChild];
 }
 
+- (void)layoutSubviews {
+  ALOG("[ChildView[%p] layoutSubviews", self);
+  if (!mGeckoChild ||
+      mGeckoChild->GetWindowType() != nsIWidget::WindowType::TopLevel) {
+    return;
+  }
+
+  CGFloat scaleFactor = [self contentScaleFactor];
+  mGeckoChild->Resize(self.frame.origin.x * scaleFactor,
+                      self.frame.origin.y * scaleFactor,
+                      self.frame.size.width * scaleFactor,
+                      self.frame.size.height * scaleFactor, false);
+}
+
 - (BOOL)canBecomeFirstResponder {
   if (!mGeckoChild) {
     return NO;
@@ -346,6 +378,29 @@ class nsAutoRetainUIKitObject {
                     inModes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
     }
   }
+}
+
+- (void)markLayerForDisplay {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (!mIsUpdatingLayer) {
+    // This call will cause updateRootCALayer to be called during the upcoming
+    // main thread CoreAnimation transaction. It will also trigger a transaction
+    // if no transaction is currently pending.
+    [[self layer] setNeedsDisplay];
+  }
+}
+
+- (void)updateRootCALayer {
+  if (NS_IsMainThread() && mGeckoChild) {
+    MOZ_RELEASE_ASSERT(!mIsUpdatingLayer, "Re-entrant layer display?");
+    mIsUpdatingLayer = YES;
+    mGeckoChild->HandleMainThreadCATransaction();
+    mIsUpdatingLayer = NO;
+  }
+}
+
+- (CALayer*)rootCALayer {
+  return mRootCALayer;
 }
 
 - (BOOL)isUsingMainThreadOpenGL {
@@ -493,6 +548,14 @@ class nsAutoRetainUIKitObject {
   CGContextSetLineWidth(aContext, 4.0);
   CGContextStrokeRect(aContext, aRect);
 #endif
+}
+
+- (BOOL)wantsUpdateLayer {
+  return YES;
+}
+
+- (void)updateLayer {
+  [(ChildView*)[self superview] updateRootCALayer];
 }
 
 // UIKeyInput
@@ -747,6 +810,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   if (parent && parent->mNativeView) {
     [parent->mNativeView addSubview:mNativeView];
   }
+
+  CGFloat scaleFactor = [UIScreen mainScreen].scale;
+
+  mNativeLayerRoot =
+      NativeLayerRootCA::CreateForCALayer([mNativeView rootCALayer]);
+  mNativeLayerRoot->SetBackingScale(scaleFactor);
 
   mTextInputHandler = new widget::TextInputHandler(this);
 
@@ -1072,6 +1141,89 @@ int32_t nsWindow::RoundsWidgetCoordinatesTo() {
     return 2;
   }
   return 1;
+}
+
+RefPtr<layers::NativeLayerRoot> nsWindow::GetNativeLayerRoot() {
+  return mNativeLayerRoot;
+}
+
+void nsWindow::HandleMainThreadCATransaction() {
+  WillPaintWindow();
+
+  // Trigger a synchronous OMTC composite. This will call NextSurface and
+  // NotifySurfaceReady on the compositor thread to update mNativeLayerRoot's
+  // contents, and the main thread (this thread) will wait inside PaintWindow
+  // during that time.
+  PaintWindow(LayoutDeviceIntRegion(GetBounds()));
+
+  {
+    // Apply the changes inside mNativeLayerRoot to the underlying CALayers. Now
+    // is a good time to call this because we know we're currently inside a main
+    // thread CATransaction, and the lock makes sure that no composition is
+    // currently in progress, so we won't present half-composited state to the
+    // screen.
+    // TODO: We don't have a lock oops
+    // MutexAutoLock lock(mCompositingLock);
+    mNativeLayerRoot->CommitToScreen();
+  }
+
+  MaybeScheduleUnsuspendAsyncCATransactions();
+}
+
+// The following three methods are primarily an attempt to avoid glitches during
+// window resizing.
+// Here's some background on how these glitches come to be:
+// CoreAnimation transactions are per-thread. They don't nest across threads.
+// If you submit a transaction on the main thread and a transaction on a
+// different thread, the two will race to the window server and show up on the
+// screen in the order that they happen to arrive in at the window server.
+// When the window size changes, there's another event that needs to be
+// synchronized with: the window "shape" change. Cocoa has built-in
+// synchronization mechanics that make sure that *main thread* window paints
+// during window resizes are synchronized properly with the window shape change.
+// But no such built-in synchronization exists for CATransactions that are
+// triggered on a non-main thread. To cope with this, we define a "danger zone"
+// during which we simply avoid triggering any CATransactions on a non-main
+// thread (called "async" CATransactions here). This danger zone starts at the
+// earliest opportunity at which we know about the size change, which is
+// nsChildView::Resize, and ends at a point at which we know for sure that the
+// paint has been handled completely, which is when we return to the event loop
+// after layer display.
+void nsWindow::SuspendAsyncCATransactions() {
+  if (mUnsuspendAsyncCATransactionsRunnable) {
+    mUnsuspendAsyncCATransactionsRunnable->Cancel();
+    mUnsuspendAsyncCATransactionsRunnable = nullptr;
+  }
+
+  // Make sure that there actually will be a CATransaction on the main thread
+  // during which we get a chance to schedule unsuspension. Otherwise we might
+  // accidentally stay suspended indefinitely.
+  [mNativeView markLayerForDisplay];
+
+  mNativeLayerRoot->SuspendOffMainThreadCommits();
+}
+
+void nsWindow::MaybeScheduleUnsuspendAsyncCATransactions() {
+  if (mNativeLayerRoot->AreOffMainThreadCommitsSuspended() &&
+      !mUnsuspendAsyncCATransactionsRunnable) {
+    mUnsuspendAsyncCATransactionsRunnable = NewCancelableRunnableMethod(
+        "nsWindow::MaybeScheduleUnsuspendAsyncCATransactions", this,
+        &nsWindow::UnsuspendAsyncCATransactions);
+    NS_DispatchToMainThread(mUnsuspendAsyncCATransactionsRunnable);
+  }
+}
+
+void nsWindow::UnsuspendAsyncCATransactions() {
+  mUnsuspendAsyncCATransactionsRunnable = nullptr;
+
+  if (mNativeLayerRoot->UnsuspendOffMainThreadCommits()) {
+    // We need to call mNativeLayerRoot->CommitToScreen() at the next available
+    // opportunity.
+    // The easiest way to handle this request is to mark the layer as needing
+    // display, because this will schedule a main thread CATransaction, during
+    // which HandleMainThreadCATransaction will call CommitToScreen().
+    [mNativeView markLayerForDisplay];
+  }
 }
 
 EventDispatcher* nsWindow::GetEventDispatcher() const {
