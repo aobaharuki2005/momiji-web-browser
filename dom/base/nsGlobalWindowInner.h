@@ -1314,7 +1314,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Indicates that the current document has never received a document focus
   // event.
   bool mNeedsFocus : 1;
-  bool mHasFocus : 1;
 
   // true if tab navigation has occurred for this window. Focus rings
   // should be displayed.
