@@ -5009,7 +5009,7 @@ bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType attributesSet) {
     return false;
   }
 
-  if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_AFTER_ASSERT)) {
+  if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_AFTER_WITH)) {
     return false;
   }
 
@@ -5033,7 +5033,7 @@ bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType attributesSet) {
     } else if (token == TokenKind::String) {
       keyName = anyChars.currentToken().atom();
     } else {
-      error(JSMSG_ASSERT_KEY_EXPECTED);
+      error(JSMSG_ATTRIBUTE_KEY_EXPECTED);
       return false;
     }
 
@@ -5044,7 +5044,7 @@ bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType attributesSet) {
         ReportOutOfMemory(this->fc_);
         return false;
       }
-      error(JSMSG_DUPLICATE_ASSERT_KEY, str.get());
+      error(JSMSG_DUPLICATE_ATTRIBUTE_KEY, str.get());
       return false;
     }
     if (!usedAssertionKeys.add(p, keyName)) {
@@ -5055,10 +5055,10 @@ bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType attributesSet) {
     NameNodeType keyNode;
     MOZ_TRY_VAR_OR_RETURN(keyNode, newName(keyName), false);
 
-    if (!mustMatchToken(TokenKind::Colon, JSMSG_COLON_AFTER_ASSERT_KEY)) {
+    if (!mustMatchToken(TokenKind::Colon, JSMSG_COLON_AFTER_ATTRIBUTE_KEY)) {
       return false;
     }
-    if (!mustMatchToken(TokenKind::String, JSMSG_ASSERT_STRING_LITERAL)) {
+    if (!mustMatchToken(TokenKind::String, JSMSG_WITH_CLAUSE_STRING_LITERAL)) {
       return false;
     }
 
