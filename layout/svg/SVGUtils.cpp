@@ -541,7 +541,10 @@ class MixModeBlender {
     IntRect result;
     ToRect(clippedFrameSurfaceRect).ToIntRect(&result);
 
-    return Factory::CheckSurfaceSize(result.Size()) ? result : IntRect();
+    return mSourceCtx->GetDrawTarget()->CanCreateSimilarDrawTarget(
+               result.Size(), SurfaceFormat::B8G8R8A8)
+               ? result
+               : IntRect();
   }
 
   nsIFrame* mFrame;
