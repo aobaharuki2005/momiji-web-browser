@@ -24,9 +24,58 @@ class RemoteTextureOwnerClient;
 
 namespace webgpu {
 
-class ErrorBuffer;
 class SharedTexture;
 class PresentationData;
+
+// A fixed-capacity buffer for receiving textual error messages from
+// `wgpu_bindings`.
+//
+// The `ToFFI` method returns an `ffi::WGPUErrorBuffer` pointing to our
+// buffer, for you to pass to fallible FFI-visible `wgpu_bindings`
+// functions. These indicate failure by storing an error message in the
+// buffer, which you can retrieve by calling `GetError`.
+//
+// If you call `ToFFI` on this type, you must also call `GetError` to check for
+// an error. Otherwise, the destructor asserts.
+//
+// TODO: refactor this to avoid stack-allocating the buffer all the time.
+class ErrorBuffer {
+  // if the message doesn't fit, it will be truncated
+  static constexpr unsigned BUFFER_SIZE = 512;
+  ffi::WGPUErrorBufferType mType = ffi::WGPUErrorBufferType_None;
+  char mMessageUtf8[BUFFER_SIZE] = {};
+  bool mAwaitingGetError = false;
+  RawId mDeviceId = 0;
+
+ public:
+  ErrorBuffer();
+  ErrorBuffer(const ErrorBuffer&) = delete;
+  ~ErrorBuffer();
+
+  ffi::WGPUErrorBuffer ToFFI();
+
+  ffi::WGPUErrorBufferType GetType();
+
+  static Maybe<dom::GPUErrorFilter> ErrorTypeToFilterType(
+      ffi::WGPUErrorBufferType aType);
+
+  struct Error {
+    dom::GPUErrorFilter type;
+    bool isDeviceLost;
+    nsCString message;
+    RawId deviceId;
+  };
+
+  // Retrieve the error message was stored in this buffer. Asserts that
+  // this instance actually contains an error (viz., that `GetType() !=
+  // ffi::WGPUErrorBufferType_None`).
+  //
+  // Mark this `ErrorBuffer` as having been handled, so its destructor
+  // won't assert.
+  Maybe<Error> GetError();
+
+  void CoerceValidationToInternal();
+};
 
 // Destroy/Drop messages:
 // - Messages with "Destroy" in their name request deallocation of resources
