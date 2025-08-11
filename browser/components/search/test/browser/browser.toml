@@ -43,7 +43,11 @@ support-files = ["test.html", "test_windows1252.html"]
 support-files = ["browser_contentContextMenu.xhtml"]
 
 ["browser_contentContextMenu_visualSearch.js"]
-support-files = ["browser_contentContextMenu.xhtml"]
+support-files = [
+  "browser_contentContextMenu.xhtml",
+  "ctxmenu-image.png",
+  "search-glass.svg",
+]
 
 ["browser_contentSearch.js"]
 support-files = [

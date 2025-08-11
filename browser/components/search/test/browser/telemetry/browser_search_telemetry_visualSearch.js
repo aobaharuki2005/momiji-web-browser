@@ -20,11 +20,11 @@ const CONTEXT_MENU_ID = "contentAreaContextMenu";
 const VISUAL_SEARCH_MENUITEM_ID = "context-visual-search";
 
 const TEST_PAGE_URL =
-  "http://mochi.test:8888/browser/browser/components/search/test/browser/telemetry/browser_contentContextMenu.xhtml";
+  "http://mochi.test:8888/browser/browser/components/search/test/browser/browser_contentContextMenu.xhtml";
 
-// The URL of the image in the test page.
+// The URL of the primary image in the test page.
 const IMAGE_URL =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAATklEQVRYhe3SIQ4AIBADwf7/04elBAtrVlSduGnSTDJ7cuT1PQJwwO+Hl7sAGAA07gjAAfgIBeAAoHFHAA7ARygABwCNOwJwAD5CATRgAYXh+kypw86nAAAAAElFTkSuQmCC";
+  "http://mochi.test:8888/browser/browser/components/search/test/browser/ctxmenu-image.png";
 
 const ENGINE_ID = "visual-search";
 const ENGINE_NAME = "Visual Search Engine";
@@ -410,6 +410,18 @@ async function openAndCheckMenu({
   win = window,
   selector = "#image",
 }) {
+  let selectorMatches = await SpecialPowers.spawn(
+    win.gBrowser.selectedBrowser,
+    [selector],
+    async function (sel) {
+      return !!content.document.querySelector(sel);
+    }
+  );
+  Assert.ok(
+    selectorMatches,
+    "Sanity check: selector should match an element in the page: " + selector
+  );
+
   let menu = win.document.getElementById(CONTEXT_MENU_ID);
   let popupPromise = BrowserTestUtils.waitForEvent(menu, "popupshown");
 

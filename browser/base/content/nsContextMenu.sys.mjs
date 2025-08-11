@@ -2921,6 +2921,11 @@ export class nsContextMenu {
       isContextRelevant:
         this.onImage &&
         this.imageInfo?.currentSrc &&
+        // Google Lens seems not to support images encoded as data URIs on its
+        // GET endpoint, so we hide the visual search item for them. If we ever
+        // add support for its POST endpoint or another visual engine that does
+        // support data URIs, we should revisit this.
+        !this.imageInfo.currentSrc.startsWith("data:") &&
         Services.prefs.getBoolPref("browser.search.visualSearch.featureGate"),
       searchTerms: this.imageInfo?.currentSrc,
       searchUrlType: lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH,
