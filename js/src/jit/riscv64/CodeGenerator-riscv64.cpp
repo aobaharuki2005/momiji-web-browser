@@ -700,6 +700,8 @@ void CodeGenerator::visitAddI(LAddI* ins) {
   bailoutFrom(&overflow, ins->snapshot());
 }
 
+void CodeGenerator::visitAddIntPtr(LAddIntPtr* ins) { MOZ_CRASH(); }
+
 void CodeGenerator::visitAddI64(LAddI64* lir) {
   LInt64Allocation lhs = lir->lhs();
   LInt64Allocation rhs = lir->rhs();
@@ -743,6 +745,8 @@ void CodeGenerator::visitSubI(LSubI* ins) {
 
   bailoutFrom(&overflow, ins->snapshot());
 }
+
+void CodeGenerator::visitSubIntPtr(LSubIntPtr* ins) { MOZ_CRASH(); }
 
 void CodeGenerator::visitSubI64(LSubI64* lir) {
   LInt64Allocation lhs = lir->lhs();
@@ -886,6 +890,8 @@ void CodeGenerator::visitMulI(LMulI* ins) {
     }
   }
 }
+
+void CodeGenerator::visitMulIntPtr(LMulIntPtr* ins) { MOZ_CRASH(); }
 
 void CodeGenerator::visitMulI64(LMulI64* lir) {
   LInt64Allocation lhs = lir->lhs();
@@ -1351,6 +1357,8 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
     }
   }
 }
+
+void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) { MOZ_CRASH(); }
 
 void CodeGenerator::visitShiftI64(LShiftI64* lir) {
   LInt64Allocation lhs = lir->lhs();
