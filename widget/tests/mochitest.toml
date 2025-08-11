@@ -46,6 +46,8 @@ skip-if = [
 support-files = "file_test_clipboard_pngPreservesTransparency.js"
 scheme = "https" # ImageDecoder requires secure context
 
+["test_clipboard_read_paste_ignoreNuls.html"]
+
 ["test_contextmenu_by_mouse_on_unix.html"]
 run-if = [
   "os == 'linux'",
@@ -58,6 +60,12 @@ run-if = ["os == 'win'"] # only Windows updates the mouse button state when enqu
 skip-if = [
   "headless", # headless widget doesn't dispatch contextmenu event by mouse event.
   "xorigin", # high-frequently intermittent fail
+]
+
+["test_dnd_ignoreNuls.html"]
+skip-if = [
+  "headless", # DND test requires a window!  nsDragService is not available.
+  "os == 'android'",  # Fx on android does not currently support DND
 ]
 
 ["test_keypress_event_with_alt_on_mac.html"]
