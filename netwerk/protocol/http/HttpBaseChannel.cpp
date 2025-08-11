@@ -4611,6 +4611,10 @@ void HttpBaseChannel::AddCookiesToRequest() {
     return;
   }
 
+  if (!nsContentSecurityManager::ShouldAddCookies(this)) {
+    return;
+  }
+
   bool useCookieService = (XRE_IsParentProcess());
   nsAutoCString cookie;
   if (useCookieService) {
