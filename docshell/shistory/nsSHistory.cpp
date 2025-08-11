@@ -1508,10 +1508,8 @@ static bool MaybeCheckUnloadingIsCanceled(
     return false;
   }
 
-  // Step 4.3.3
-  if (needsBeforeUnload) {
-    aLoadResults.RemoveElementAt(found);
-  }
+  // Step 4.3.3 isn't needed since that's what PermitUnloadChildNavigables
+  // achieves by skipping top level navigable.
 
   // Step 4.3.4
   // PermitUnloadTraversable only includes the process of the top level browsing
