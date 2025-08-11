@@ -1292,7 +1292,8 @@ nsresult IOSView::GetInitData(JSContext* aCx,
 
 id<GeckoViewWindow> GeckoViewOpenWindow(NSString* aId,
                                         id<SwiftEventDispatcher> aDispatcher,
-                                        NSDictionary* aInitData, bool aPrivateMode) {
+                                        NSDictionary* aInitData,
+                                        bool aPrivateMode) {
   MOZ_ASSERT(NS_IsMainThread());
 
   AUTO_PROFILER_LABEL("GeckoViewOpenWindows", OTHER);
