@@ -529,10 +529,11 @@ class MockCubeb {
   // The streams that are currently running.
   DataMutex<nsTArray<RefPtr<SmartMockCubebStream>>> mLiveStreams{
       "MockCubeb::mLiveStreams"};
-  // Thread that simulates the audio thread, shared across MockCubebStreams to
-  // avoid unintended drift. This is set together with mLiveStreams, under the
-  // mLiveStreams DataMutex.
-  UniquePtr<std::thread> mFakeAudioThread;
+  // Whether we've launched the detached thread that simulates the audio
+  // thread, shared across MockCubebStreams to avoid unintended drift. This
+  // should only be read and written within the mLiveStreams DataMutex locked
+  // critical section.
+  bool mFakeAudioThreadRunning = false;
   // Whether to run the fake audio thread in fast mode, not caring about wall
   // clock time. false is default and means data is processed every 10ms. When
   // true we sleep(0) between iterations instead of 10ms.
