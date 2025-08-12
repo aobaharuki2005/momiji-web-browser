@@ -18,6 +18,8 @@ import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHig
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayInAudibleBlockingAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayInAudibleChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.CameraChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.LocalDeviceAccessChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.LocalNetworkAccessChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.LocationChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.MediaKeySystemAccesChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.MicrophoneChangedAction
@@ -914,6 +916,46 @@ class SitePermissionsFeatureTest {
         sitePermissionFeature.updatePermissionToolbarIndicator(request, ALLOWED, true)
 
         verify(mockStore).dispatch(NotificationChangedAction(tab1.id, true))
+    }
+
+    @Test
+    fun `GIVEN local device access request WHEN calling updatePermissionToolbarIndicator THEN dispatch `() {
+        val tab1 = createTab("https://www.mozilla.org", id = "1")
+        val request: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentLocalDeviceAccess(id = "permission")))
+        }
+
+        doReturn(tab1).`when`(sitePermissionFeature).getCurrentTabState()
+        doReturn(SitePermissionsRules.Action.BLOCKED).`when`(mockSitePermissionRules).localDeviceAccess
+
+        sitePermissionFeature.updatePermissionToolbarIndicator(request, BLOCKED, false)
+        verify(mockStore, never()).dispatch(any<LocalDeviceAccessChangedAction>())
+
+        sitePermissionFeature.updatePermissionToolbarIndicator(request, BLOCKED, true)
+        verify(mockStore).dispatch(LocalDeviceAccessChangedAction(tab1.id, false))
+
+        sitePermissionFeature.updatePermissionToolbarIndicator(request, ALLOWED, true)
+        verify(mockStore).dispatch(LocalDeviceAccessChangedAction(tab1.id, true))
+    }
+
+    @Test
+    fun `GIVEN local network access request WHEN calling updatePermissionToolbarIndicator THEN dispatch `() {
+        val tab1 = createTab("https://www.mozilla.org", id = "1")
+        val request: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentLocalNetworkAccess(id = "permission")))
+        }
+
+        doReturn(tab1).`when`(sitePermissionFeature).getCurrentTabState()
+        doReturn(SitePermissionsRules.Action.BLOCKED).`when`(mockSitePermissionRules).localNetworkAccess
+
+        sitePermissionFeature.updatePermissionToolbarIndicator(request, BLOCKED, false)
+        verify(mockStore, never()).dispatch(any<LocalNetworkAccessChangedAction>())
+
+        sitePermissionFeature.updatePermissionToolbarIndicator(request, BLOCKED, true)
+        verify(mockStore).dispatch(LocalNetworkAccessChangedAction(tab1.id, false))
+
+        sitePermissionFeature.updatePermissionToolbarIndicator(request, ALLOWED, true)
+        verify(mockStore).dispatch(LocalNetworkAccessChangedAction(tab1.id, true))
     }
 
     @Test

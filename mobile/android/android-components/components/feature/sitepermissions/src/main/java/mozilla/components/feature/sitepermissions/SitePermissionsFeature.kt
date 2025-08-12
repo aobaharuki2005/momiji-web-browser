@@ -29,6 +29,8 @@ import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHig
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayInAudibleBlockingAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayInAudibleChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.CameraChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.LocalDeviceAccessChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.LocalNetworkAccessChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.LocationChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.MediaKeySystemAccesChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.MicrophoneChangedAction
@@ -614,6 +616,14 @@ class SitePermissionsFeature(
                         tab.id,
                         value != sitePermissionsRules?.mediaKeySystemAccess?.toStatus(),
                     )
+                    request.isForLocalDeviceAccess() -> LocalDeviceAccessChangedAction(
+                        tabId = tab.id,
+                        value = value != sitePermissionsRules?.localDeviceAccess?.toStatus(),
+                    )
+                    request.isForLocalNetworkAccess() -> LocalNetworkAccessChangedAction(
+                        tabId = tab.id,
+                        value = value != sitePermissionsRules?.localNetworkAccess?.toStatus(),
+                    )
                     request.isForAutoplayAudible() -> AutoPlayAudibleChangedAction(
                         tab.id,
                         value != sitePermissionsRules?.autoplayAudible?.toAutoplayStatus()
@@ -738,6 +748,12 @@ class SitePermissionsFeature(
 
     private fun PermissionRequest.isForMediaKeySystemAccess() =
         this.permissions.any { it is ContentMediaKeySystemAccess }
+
+    private fun PermissionRequest.isForLocalDeviceAccess() =
+        this.permissions.any { it is ContentLocalDeviceAccess }
+
+    private fun PermissionRequest.isForLocalNetworkAccess() =
+        this.permissions.any { it is ContentLocalNetworkAccess }
 
     @VisibleForTesting
     internal fun updateSitePermissionsStatus(
