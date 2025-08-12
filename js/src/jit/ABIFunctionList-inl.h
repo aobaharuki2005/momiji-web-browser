@@ -200,6 +200,7 @@ namespace jit {
   _(js::TypedArrayFillFloat32)                                                 \
   _(js::TypedArrayFillInt32)                                                   \
   _(js::TypedArrayFillInt64)                                                   \
+  _(js::TypedArraySetFromSubarrayInfallible)                                   \
   _(js::TypedArraySetInfallible)                                               \
   _(js::TypedArraySortFromJit)                                                 \
   _(js::TypeOfObject)                                                          \

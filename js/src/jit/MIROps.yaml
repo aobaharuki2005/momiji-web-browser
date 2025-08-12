@@ -1888,6 +1888,19 @@
   possibly_calls: true
   generate_lir: true
 
+- name: TypedArraySetFromSubarray
+  operands:
+    target: Object
+    source: Object
+    offset: IntPtr
+    sourceOffset: IntPtr
+    sourceLength: IntPtr
+  arguments:
+    canUseBitwiseCopy: bool
+  alias_set: custom
+  possibly_calls: true
+  generate_lir: true
+
 - name: GuardTypedArraySetOffset
   operands:
     offset: IntPtr

@@ -4563,6 +4563,19 @@ void LIRGenerator::visitTypedArraySet(MTypedArraySet* ins) {
   }
 }
 
+void LIRGenerator::visitTypedArraySetFromSubarray(
+    MTypedArraySetFromSubarray* ins) {
+  auto* lir = new (alloc()) LTypedArraySetFromSubarray(
+      useRegisterAtStart(ins->target()), useRegisterAtStart(ins->source()),
+      useRegisterAtStart(ins->offset()),
+      useRegisterAtStart(ins->sourceOffset()),
+      useRegisterAtStart(ins->sourceLength()));
+  add(lir, ins);
+  if (!ins->canUseBitwiseCopy()) {
+    assignSafepoint(lir, ins);
+  }
+}
+
 void LIRGenerator::visitTypedArraySubarray(MTypedArraySubarray* ins) {
   auto* lir = new (alloc()) LTypedArraySubarray(
       useRegisterAtStart(ins->object()), useRegisterAtStart(ins->start()),
