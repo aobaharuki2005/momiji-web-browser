@@ -111,7 +111,10 @@ class BrowserToolbarComposable(
                     // Toolbar background
                     layer1 = customColors.value?.toolbarColor?.let { Color(it) } ?: firefoxColors.layer1,
                     // Page origin background
-                    layer3 = customColors.value?.toolbarColor?.let { Color(it) } ?: firefoxColors.layer3,
+                    layer3 = when (customTabSession) {
+                        null -> firefoxColors.layer3 // show a different background only for normal tabs
+                        else -> customColors.value?.toolbarColor?.let { Color(it) } ?: firefoxColors.layer1
+                    },
                     // All text but the title
                     textPrimary = customColors.value?.readableColor?.let { Color(it) } ?: firefoxColors.textPrimary,
                     // Title
