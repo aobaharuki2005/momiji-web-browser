@@ -189,7 +189,8 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     private fun setupToolbarLayout() {
         val settings = requireContext().settings()
         (requirePreference(R.string.pref_key_customization_category_toolbar_layout) as PreferenceCategory).apply {
-            isVisible = Config.channel.isDebug && settings.shouldUseComposableToolbar && settings.toolbarRedesignEnabled
+            isVisible = Config.channel.isNightlyOrDebug &&
+                settings.shouldUseComposableToolbar && settings.toolbarRedesignEnabled
         }
         updateToolbarLayoutIcons()
     }
