@@ -219,7 +219,7 @@ interface SessionControlControllerCallback {
     fun registerCollectionStorageObserver()
 
     /**
-     * Callback to remove collection with undo snack bar.
+     * Callback to remove collection.
      */
     fun removeCollection(tabCollection: TabCollection)
 
