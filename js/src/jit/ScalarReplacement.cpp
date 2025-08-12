@@ -3071,6 +3071,7 @@ class SubarrayReplacer : public MDefinitionVisitorDefaultNoop {
   void visitGuardHasAttachedArrayBuffer(MGuardHasAttachedArrayBuffer* ins);
   void visitGuardShape(MGuardShape* ins);
   void visitTypedArrayElementSize(MTypedArrayElementSize* ins);
+  void visitTypedArrayFill(MTypedArrayFill* ins);
   void visitUnbox(MUnbox* ins);
 
   // New instructions created in SubarrayReplacer.
@@ -3279,6 +3280,46 @@ void SubarrayReplacer::visitTypedArrayElementSize(MTypedArrayElementSize* ins) {
   ins->block()->discard(ins);
 }
 
+void SubarrayReplacer::visitTypedArrayFill(MTypedArrayFill* ins) {
+  // Skip other typed array objects.
+  if (!isSubarrayOrGuard(ins->object())) {
+    return;
+  }
+
+  auto* subarrayStart = subarray()->start();
+  auto* subarrayLength = subarray()->length();
+
+  // Make |start| and |end| relative to |subarrayLength|.
+  auto* relativeStart =
+      MToIntegerIndex::New(alloc(), ins->start(), subarrayLength);
+  ins->block()->insertBefore(ins, relativeStart);
+
+  auto* relativeEnd = MToIntegerIndex::New(alloc(), ins->end(), subarrayLength);
+  ins->block()->insertBefore(ins, relativeEnd);
+
+  // Compute actual start and end indices by adding |subarrayStart|.
+  auto* actualStart =
+      MAdd::New(alloc(), relativeStart, subarrayStart, MIRType::IntPtr);
+  ins->block()->insertBefore(ins, actualStart);
+
+  auto* actualEnd =
+      MAdd::New(alloc(), relativeEnd, subarrayStart, MIRType::IntPtr);
+  ins->block()->insertBefore(ins, actualEnd);
+
+  auto* newFill =
+      MTypedArrayFill::New(alloc(), subarray()->object(), ins->value(),
+                           actualStart, actualEnd, ins->elementType());
+  newFill->setBailoutKind(ins->bailoutKind());
+  newFill->stealResumePoint(ins);
+  ins->block()->insertBefore(ins, newFill);
+
+  // Replace the fill.
+  ins->replaceAllUsesWith(newFill);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
 // Returns false if the subarray typed array object does not escape.
 bool SubarrayReplacer::escapes(MInstruction* ins) const {
   MOZ_ASSERT(ins->type() == MIRType::Object);
@@ -3342,6 +3383,7 @@ bool SubarrayReplacer::escapes(MInstruction* ins) const {
       case MDefinition::Opcode::ArrayBufferViewElements:
       case MDefinition::Opcode::ArrayBufferViewLength:
       case MDefinition::Opcode::TypedArrayElementSize:
+      case MDefinition::Opcode::TypedArrayFill:
         break;
 
       // This instruction is a no-op used to test that scalar replacement is
