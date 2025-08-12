@@ -1591,6 +1591,12 @@ export class TelemetryFeed {
           display_status: action.data.value,
         });
         break;
+      case "widgets.focusTimer.showSystemNotifications":
+        Glean.newtab.widgetsTimerToggleNotification.record({
+          newtab_visit_id: session.session_id,
+          display_status: action.data.value,
+        });
+        break;
     }
   }
 

@@ -1244,6 +1244,28 @@ newtab:
     send_in_pings:
       - newtab
 
+  widgets_timer_toggle_notification:
+    type: event
+    description: >
+      Whether the timer widget's notification pref is enabled. Matches
+      the `widgets.focusTimer.showSystemNotifications` pref
+    bugs:
+      - https://bugzil.la/1982516
+    data_reviews:
+      - https://bugzil.la/1982516
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - rhamoui@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      display_status:
+        description: boolean value if the timer widget notification is enabled
+        type: boolean
+    send_in_pings:
+      - newtab
+
 newtab.search:
   enabled:
     lifetime: application
