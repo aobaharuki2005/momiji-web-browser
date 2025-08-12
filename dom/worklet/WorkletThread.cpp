@@ -163,6 +163,10 @@ class WorkletJSContext final : public CycleCollectedJSContext {
 #endif
 
     JS::JobQueueMayNotBeEmpty(cx);
+    if (!runnable->isInList()) {
+      // A recycled object may be in the list already.
+      mMicrotasksToTrace.insertBack(runnable);
+    }
     PROFILER_MARKER_FLOW_ONLY("WorkletJSContext::DispatchToMicroTask", OTHER,
                               {}, FlowMarker,
                               Flow::FromPointer(runnable.get()));
