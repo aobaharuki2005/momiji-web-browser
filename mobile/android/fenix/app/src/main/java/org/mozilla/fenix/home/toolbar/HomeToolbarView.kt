@@ -241,10 +241,8 @@ internal class HomeToolbarView(
 
     override fun updateAddressBarVisibility(isVisible: Boolean) {
         if (isVisible) {
-            toolbarBinding.toolbarWrapper.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
             toolbarBinding.toolbarWrapper.visibility = View.VISIBLE
         } else {
-            toolbarBinding.toolbarWrapper.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
             toolbarBinding.toolbarWrapper.visibility = View.INVISIBLE
         }
     }
