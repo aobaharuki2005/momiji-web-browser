@@ -16,6 +16,10 @@ const SPEAKER_SELECTION_ENABLED = Services.prefs.getBoolPref(
   "media.setsinkid.enabled"
 );
 
+const LOCAL_NETWORK_ACCESS_ENABLED = Services.prefs.getBoolPref(
+  "network.lna.blocking"
+);
+
 add_task(async function testPermissionsListing() {
   let expectedPermissions = [
     "autoplay-media",
@@ -25,8 +29,6 @@ add_task(async function testPermissionsListing() {
     "focus-tab-by-prompt",
     "geo",
     "install",
-    "localhost",
-    "local-network",
     "microphone",
     "popup",
     "screen",
@@ -50,6 +52,10 @@ add_task(async function testPermissionsListing() {
   }
   if (SPEAKER_SELECTION_ENABLED) {
     expectedPermissions.push("speaker");
+  }
+  if (LOCAL_NETWORK_ACCESS_ENABLED) {
+    expectedPermissions.push("localhost");
+    expectedPermissions.push("local-network");
   }
   Assert.deepEqual(
     SitePermissions.listPermissions().sort(),
@@ -88,6 +94,8 @@ add_task(async function testGetAllByPrincipal() {
     SitePermissions.ALLOW,
     SitePermissions.SCOPE_SESSION
   );
+
+  Services.prefs.setBoolPref("network.lna.blocking", true);
 
   SitePermissions.setForPrincipal(
     principal,
@@ -187,6 +195,7 @@ add_task(async function testGetAllByPrincipal() {
 
   SitePermissions.removeFromPrincipal(principal, "shortcuts");
   Services.prefs.clearUserPref("permissions.default.shortcuts");
+  Services.prefs.clearUserPref("network.lna.blocking");
 });
 
 add_task(async function testGetAvailableStates() {
