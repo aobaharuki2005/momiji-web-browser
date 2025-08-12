@@ -67,4 +67,10 @@ interface TopSiteInteractor {
      * @param topSite The top site that was long clicked.
      */
     fun onTopSiteLongClicked(topSite: TopSite)
+
+    /**
+     * Navigates to the Shortcuts screen. Called when an user clicks on the "Show all" button for
+     * shortcuts on the homepage.
+     */
+    fun onShowAllTopSitesClicked()
 }

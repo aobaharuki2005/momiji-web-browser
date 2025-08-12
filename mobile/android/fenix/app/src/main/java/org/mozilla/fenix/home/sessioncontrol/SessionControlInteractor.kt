@@ -247,6 +247,10 @@ class SessionControlInteractor(
         topSiteController.handleTopSiteLongClicked(topSite)
     }
 
+    override fun onShowAllTopSitesClicked() {
+        topSiteController.handleShowAllTopSitesClicked()
+    }
+
     override fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean {
         return controller.handleShowWallpapersOnboardingDialog(state)
     }

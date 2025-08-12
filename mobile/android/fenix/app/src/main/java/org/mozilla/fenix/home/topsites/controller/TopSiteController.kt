@@ -90,6 +90,11 @@ interface TopSiteController {
      * @see [TopSiteInteractor.onTopSiteLongClicked]
      */
     fun handleTopSiteLongClicked(topSite: TopSite)
+
+    /**
+     * @see [TopSiteInteractor.onShowAllTopSitesClicked]
+     */
+    fun handleShowAllTopSitesClicked()
 }
 
 /**
@@ -338,6 +343,13 @@ class DefaultTopSiteController(
 
     override fun handleTopSiteLongClicked(topSite: TopSite) {
         TopSites.longPress.record(TopSites.LongPressExtra(topSite.type))
+    }
+
+    override fun handleShowAllTopSitesClicked() {
+        navController.nav(
+            R.id.homeFragment,
+            HomeFragmentDirections.actionHomeFragmentToShortcutsFragment(),
+        )
     }
 
     /**

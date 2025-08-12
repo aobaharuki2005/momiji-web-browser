@@ -139,6 +139,8 @@ internal object FakeHomepagePreview {
             override fun onSponsorPrivacyClicked() { /* no op */ }
 
             override fun onTopSiteLongClicked(topSite: TopSite) { /* no op */ }
+
+            override fun onShowAllTopSitesClicked() { /* no op */ }
         }
 
     internal val recentTabInteractor

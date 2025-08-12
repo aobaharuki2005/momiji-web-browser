@@ -254,6 +254,8 @@ internal fun TopSitesSection(
     HomeSectionHeader(
         headerText = stringResource(R.string.homepage_shortcuts_title),
         modifier = Modifier.padding(horizontal = horizontalMargin),
+        description = stringResource(R.string.homepage_shortcuts_show_all_content_description),
+        onShowAllClick = interactor::onShowAllTopSitesClicked,
     )
 
     Spacer(Modifier.height(16.dp))

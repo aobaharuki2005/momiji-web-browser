@@ -2773,6 +2773,9 @@
     <!-- Top Sites -->
     <!-- Title text displayed for the shortcuts home screen section. -->
     <string name="homepage_shortcuts_title">Shortcuts</string>
+    <!-- Context description text for the "Show all" button in the shortcuts home screen section
+        which navigates the user to a screen displaying all the shortcuts. -->
+    <string name="homepage_shortcuts_show_all_content_description">Show all shortcuts</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Shortcut limit reached</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
