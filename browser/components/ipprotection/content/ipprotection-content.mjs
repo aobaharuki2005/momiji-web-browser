@@ -9,6 +9,8 @@ import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-consta
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-header.mjs";
 // eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/ipprotection/ipprotection-flag.mjs";
+// eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-toggle.mjs";
@@ -221,11 +223,13 @@ export default class IPProtectionContentElement extends MozLitElement {
   }
 
   descriptionTemplate() {
-    // TODO: add icon (Bug 1976769), this is just a placeholder element
-    return html`
-      <img id="location-icon" src="chrome://global/skin/icons/folder.svg" />
-      <span id="location-name">${this.state.location}</span>
-    `;
+    return this.state.location
+      ? html`
+          <ipprotection-flag
+            .location=${this.state.location}
+          ></ipprotection-flag>
+        `
+      : null;
   }
 
   statusCardTemplate() {

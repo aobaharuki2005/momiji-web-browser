@@ -118,58 +118,39 @@ add_task(async function test_main_content() {
 add_task(async function test_status_card() {
   const l10nIdOn = "ipprotection-connection-status-on";
   const l10nIdOff = "ipprotection-connection-status-off";
-  const mockLocationName = "Planet Earth";
   const fiveDaysInMS = 5 * 24 * 60 * 60 * 1000;
   const enabledSince = Date.now() - fiveDaysInMS;
-  let originalState = null;
+  const mockLocation = {
+    name: "United States",
+    code: "us",
+  };
 
-  let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
-  let panelView = PanelMultiView.getViewNode(
-    document,
-    lazy.IPProtectionWidget.PANEL_ID
-  );
-
-  let panelShownPromise = waitForPanelEvent(document, "popupshown");
-  // Open the panel
-  button.click();
-  await panelShownPromise;
-
-  let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
+  let content = await openPanel({
+    isSignedIn: true,
+    protectionEnabledSince: enabledSince,
+    location: mockLocation,
+  });
 
   Assert.ok(
     BrowserTestUtils.isVisible(content),
     "ipprotection content component should be present"
   );
-
-  originalState = structuredClone(content.state);
-
-  await setAndUpdateIsSignedIn(content, true);
-
   Assert.ok(content.statusCardEl, "Status card should be present");
   Assert.equal(
     content.statusCardEl?.getAttribute("data-l10n-id"),
     l10nIdOff,
     "Status card connection toggle data-l10n-id should be correct by default"
   );
-
-  // Verify UI updates based on state
-  content.state.location = mockLocationName;
-  content.requestUpdate();
-  await content.updateComplete;
-
-  let locationName =
-    content.locationEl?.shadowRoot.getElementById("location-name");
-  Assert.equal(
-    locationName?.textContent,
-    mockLocationName,
-    "Location name should be present and correct"
-  );
-
   Assert.equal(
     content.statusCardEl?.description,
     "",
     "Time string should be empty"
   );
+  Assert.ok(content.locationEl, "Location details should be present");
+
+  let flag = content.locationEl?.shadowRoot.querySelector("ipprotection-flag");
+
+  Assert.ok(flag, "Flag component should be present");
 
   let animationLoadedPromise = BrowserTestUtils.waitForMutationCondition(
     content.shadowRoot,
@@ -229,13 +210,7 @@ add_task(async function test_status_card() {
     "Status card animation should not be present"
   );
 
-  // To be safe, reset the entire state
-  await resetStateToObj(content, originalState);
-
-  // Close the panel
-  let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
-  EventUtils.synthesizeKey("KEY_Escape");
-  await panelHiddenPromise;
+  await closePanel();
 });
 
 /**

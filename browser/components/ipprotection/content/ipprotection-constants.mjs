@@ -12,3 +12,7 @@ export const LINKS = Object.freeze({
     "https://accounts.firefox.com?entrypoint=desktop-fx-vpn&service=sync&entrypoint_experiment=fx-vpn-pilot&entrypoint_variation=alpha",
   SUPPORT_URL: "https://support.mozilla.org/kb/use-ip-concealment-in-firefox",
 });
+
+export const FLAGS = Object.freeze({
+  us: "chrome://browser/content/ipprotection/assets/flags/us.png",
+});
