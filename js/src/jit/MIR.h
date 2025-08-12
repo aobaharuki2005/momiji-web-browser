@@ -1280,6 +1280,22 @@ class MQuaternaryInstruction : public MAryInstruction<4> {
   HashNumber valueHash() const override;
 };
 
+class MQuinaryInstruction : public MAryInstruction<5> {
+ protected:
+  MQuinaryInstruction(Opcode op, MDefinition* first, MDefinition* second,
+                      MDefinition* third, MDefinition* fourth,
+                      MDefinition* fifth)
+      : MAryInstruction(op) {
+    initOperand(0, first);
+    initOperand(1, second);
+    initOperand(2, third);
+    initOperand(3, fourth);
+    initOperand(4, fifth);
+  }
+
+  HashNumber valueHash() const override;
+};
+
 template <class T>
 class MVariadicT : public T {
   FixedList<MUse> operands_;

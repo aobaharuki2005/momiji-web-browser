@@ -539,6 +539,20 @@ HashNumber MQuaternaryInstruction::valueHash() const {
   return hash;
 }
 
+HashNumber MQuinaryInstruction::valueHash() const {
+  HashNumber hash = HashNumber(op());
+  hash = addU32ToHash(hash, getOperand(0)->id());
+  hash = addU32ToHash(hash, getOperand(1)->id());
+  hash = addU32ToHash(hash, getOperand(2)->id());
+  hash = addU32ToHash(hash, getOperand(3)->id());
+  hash = addU32ToHash(hash, getOperand(4)->id());
+  if (MDefinition* dep = dependency()) {
+    hash = addU32ToHash(hash, dep->id());
+  }
+  MOZ_ASSERT(hash == MDefinition::valueHash());
+  return hash;
+}
+
 const MDefinition* MDefinition::skipObjectGuards() const {
   const MDefinition* result = this;
   // These instructions don't modify the object and just guard specific
