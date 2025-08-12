@@ -2365,8 +2365,8 @@ impl<'a> SceneBuilder<'a> {
 
         // If we are forcing a backdrop root here, isolate this context
         // by using an intermediate surface.
-        if flags.contains(StackingContextFlags::IS_BACKDROP_ROOT) {
-            blit_reason = BlitReason::BACKDROP;
+        if flags.contains(StackingContextFlags::FORCED_ISOLATION) {
+            blit_reason = BlitReason::FORCED_ISOLATION;
         }
 
         // Stacking context snapshots are offscreen surfaces.
@@ -2402,7 +2402,7 @@ impl<'a> SceneBuilder<'a> {
             if !self.sc_stack.is_empty() {
                 // If we are already inside a stacking context hierarchy with a surface, then we
                 // need to do the normal isolate of this blend container as a regular surface
-                blit_reason |= BlitReason::ISOLATE;
+                blit_reason |= BlitReason::BLEND_MODE;
                 is_redundant = false;
             } else {
                 // If the current slice is empty, then we can just mark the slice as
@@ -2418,7 +2418,7 @@ impl<'a> SceneBuilder<'a> {
                     // If the slice wasn't empty, we need to isolate a separate surface
                     // to ensure that the content already in the slice is not used as
                     // an input to the mix-blend composite
-                    blit_reason |= BlitReason::ISOLATE;
+                    blit_reason |= BlitReason::BLEND_MODE;
                     is_redundant = false;
                 }
             }

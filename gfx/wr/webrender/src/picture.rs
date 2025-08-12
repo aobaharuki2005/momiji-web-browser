@@ -4378,13 +4378,13 @@ bitflags! {
     #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct BlitReason: u32 {
         /// Mix-blend-mode on a child that requires isolation.
-        const ISOLATE = 1 << 0;
+        const BLEND_MODE = 1 << 0;
         /// Clip node that _might_ require a surface.
         const CLIP = 1 << 1;
         /// Preserve-3D requires a surface for plane-splitting.
         const PRESERVE3D = 1 << 2;
-        /// A backdrop that is reused which requires a surface.
-        const BACKDROP = 1 << 3;
+        /// A forced isolation request from gecko.
+        const FORCED_ISOLATION = 1 << 3;
         /// We may need to render the picture into an image and cache it.
         const SNAPSHOT = 1 << 4;
     }
@@ -8504,7 +8504,7 @@ fn test_large_surface_scale_1() {
 
     get_surface_rects(
         SurfaceIndex(1),
-        &PictureCompositeMode::Blit(BlitReason::ISOLATE),
+        &PictureCompositeMode::Blit(BlitReason::BLEND_MODE),
         SurfaceIndex(0),
         &mut surfaces,
         &spatial_tree,
