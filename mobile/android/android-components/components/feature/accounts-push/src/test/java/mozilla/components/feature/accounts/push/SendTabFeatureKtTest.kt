@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.accounts.push
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
@@ -18,7 +17,6 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 
-@ExperimentalCoroutinesApi
 class SendTabFeatureKtTest {
     @Test
     fun `feature register all observers`() = runTest {

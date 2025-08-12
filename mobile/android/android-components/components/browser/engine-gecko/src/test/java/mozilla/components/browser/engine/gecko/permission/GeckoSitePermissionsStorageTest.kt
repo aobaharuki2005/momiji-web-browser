@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.engine.gecko.permission
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
@@ -46,7 +45,6 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_TRACKING
 import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.StorageController.ClearFlags
 
-@ExperimentalCoroutinesApi
 class GeckoSitePermissionsStorageTest {
     private lateinit var runtime: GeckoRuntime
     private lateinit var geckoStorage: GeckoSitePermissionsStorage
