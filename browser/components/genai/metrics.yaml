@@ -283,29 +283,6 @@ genai.chatbot:
         type: quantity
         description: Onboarding screen number.
 
-  onboarding_continue:
-    type: event
-    description: >
-      Chatbot onboarding continued from provider choice.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1911104
-    data_reviews:
-      - https://phabricator.services.mozilla.com/D223938
-    data_sensitivity:
-      - interaction
-    expires: 147
-    notification_emails:
-      - elee@mozilla.com
-    send_in_pings:
-      - events
-    extra_keys:
-      provider:
-        type: string
-        description: Which provider was last selected.
-      step:
-        type: quantity
-        description: Onboarding screen number.
-
   onboarding_finish:
     type: event
     description: >
@@ -446,29 +423,6 @@ genai.chatbot:
       text:
         type: string
         description: Which terms link.
-
-  onboarding_text_highlight_displayed:
-    type: event
-    description: >
-      Chatbot onboarding impression for text highlight screen.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1911104
-    data_reviews:
-      - https://phabricator.services.mozilla.com/D223938
-    data_sensitivity:
-      - interaction
-    expires: 147
-    notification_emails:
-      - elee@mozilla.com
-    send_in_pings:
-      - events
-    extra_keys:
-      provider:
-        type: string
-        description: Which provider was last selected.
-      step:
-        type: quantity
-        description: Onboarding screen number.
 
   prompt_click:
     type: event

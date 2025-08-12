@@ -59,11 +59,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
           title: {
             fontWeight: 400,
-            string_id: "genai-onboarding-header",
+            string_id: "genai-onboarding-choose-header",
           },
           cta_paragraph: {
             text: {
-              string_id: "genai-onboarding-description",
+              string_id: "genai-onboarding-choose-description",
               string_name: "learn-more",
             },
             action: {
@@ -88,37 +88,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
             action: { dismiss: true, type: ACTIONS.CHATBOT_REVERT },
             label: { string_id: "genai-onboarding-secondary" },
             style: "link",
-          },
-          progress_bar: true,
-        },
-      },
-      {
-        id: "chat_suggest",
-        content: {
-          fullscreen: true,
-          hide_secondary_section: "responsive",
-          narrow: true,
-          position: "split",
-
-          title: {
-            fontWeight: 400,
-            string_id: "genai-onboarding-select-header",
-          },
-          subtitle: { string_id: "genai-onboarding-select-description" },
-          above_button_content: [
-            {
-              height: "172px",
-              type: "image",
-              width: "307px",
-            },
-            {
-              text: " ",
-              type: "text",
-            },
-          ],
-          primary_button: {
-            action: { navigate: true },
-            label: { string_id: "genai-onboarding-select-primary" },
           },
           progress_bar: true,
         },
@@ -485,26 +454,26 @@ function showOnboarding(length) {
         }
       });
     },
-    AWSendEventTelemetry({ event, event_context: { source }, message_id }) {
+    AWSendEventTelemetry({ event, event_context: { source } }) {
       const { provider } = window.AWSendEventTelemetry;
-      const step = message_id.match(/chat_pick/) ? 1 : 2;
+      const step = 1;
       switch (true) {
-        case step == 1 && event == "IMPRESSION":
+        case event == "IMPRESSION":
           Glean.genaiChatbot.onboardingProviderChoiceDisplayed.record({
             provider: lazy.GenAI.getProviderId(lazy.providerPref),
             step,
           });
           break;
-        case step == 1 && source == "cta_paragraph":
+        case source == "cta_paragraph":
           Glean.genaiChatbot.onboardingLearnMore.record({ provider, step });
           break;
-        case step == 1 && source == "primary_button":
-          Glean.genaiChatbot.onboardingContinue.record({ provider, step });
+        case source == "primary_button":
+          Glean.genaiChatbot.onboardingFinish.record({ provider, step });
           break;
-        case step == 1 && source == "additional_button":
+        case source == "additional_button":
           Glean.genaiChatbot.onboardingClose.record({ provider, step });
           break;
-        case step == 1 && source.startsWith("link"):
+        case source.startsWith("link"):
           Glean.genaiChatbot.onboardingProviderTerms.record({
             provider,
             step,
@@ -512,21 +481,12 @@ function showOnboarding(length) {
           });
           break;
         // Assume generic click not yet handled above single select of provider
-        case step == 1 && event == "CLICK_BUTTON":
+        case event == "CLICK_BUTTON":
           window.AWSendEventTelemetry.provider = source;
           Glean.genaiChatbot.onboardingProviderSelection.record({
             provider: source,
             step,
           });
-          break;
-        case step == 2 && event == "IMPRESSION":
-          Glean.genaiChatbot.onboardingTextHighlightDisplayed.record({
-            provider,
-            step,
-          });
-          break;
-        case step == 2 && source == "primary_button":
-          Glean.genaiChatbot.onboardingFinish.record({ provider, step });
           break;
       }
     },
