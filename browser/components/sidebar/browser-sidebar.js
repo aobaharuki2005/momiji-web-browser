@@ -1406,6 +1406,8 @@ var SidebarController = {
 
       // Re-add MousePosTracker listener
       MousePosTracker.addListener(this);
+    }
+    if (this._hoverBlockerCount > 0) {
       this._hoverBlockerCount--;
     }
   },
