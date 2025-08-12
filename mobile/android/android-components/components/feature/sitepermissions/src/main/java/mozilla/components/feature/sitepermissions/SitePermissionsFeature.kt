@@ -49,6 +49,8 @@ import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAu
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
 import mozilla.components.concept.engine.permission.Permission.ContentCrossOriginStorageAccess
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
+import mozilla.components.concept.engine.permission.Permission.ContentLocalDeviceAccess
+import mozilla.components.concept.engine.permission.Permission.ContentLocalNetworkAccess
 import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
@@ -60,7 +62,6 @@ import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOW
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.feature.sitepermissions.SitePermissionsFeature.DialogConfig
 import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -884,6 +885,32 @@ class SitePermissionsFeature(
                     shouldSelectRememberChoice = true,
                 )
             }
+            is ContentLocalDeviceAccess -> {
+                createSinglePermissionPrompt(
+                    context,
+                    origin,
+                    permissionRequest,
+                    titleId = R.string.mozac_feature_sitepermissions_local_device_access_title,
+                    iconId = iconsR.drawable.mozac_ic_device_desktop_24,
+                    showDoNotAskAgainCheckBox = true,
+                    doNotAskAgainCheckBoxLabel = R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site3,
+                    shouldSelectRememberChoice = false,
+                    negativeButtonResId = R.string.mozac_feature_sitepermissions_block,
+                )
+            }
+            is ContentLocalNetworkAccess -> {
+                createSinglePermissionPrompt(
+                    context,
+                    origin,
+                    permissionRequest,
+                    titleId = R.string.mozac_feature_sitepermissions_local_network_access_title,
+                    iconId = iconsR.drawable.mozac_ic_router_24,
+                    showDoNotAskAgainCheckBox = true,
+                    doNotAskAgainCheckBoxLabel = R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site3,
+                    shouldSelectRememberChoice = false,
+                    negativeButtonResId = R.string.mozac_feature_sitepermissions_block,
+                )
+            }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
         }
@@ -909,8 +936,10 @@ class SitePermissionsFeature(
         @StringRes titleId: Int,
         @DrawableRes iconId: Int,
         showDoNotAskAgainCheckBox: Boolean,
+        @StringRes doNotAskAgainCheckBoxLabel: Int? = null,
         shouldSelectRememberChoice: Boolean,
         isNotificationRequest: Boolean = false,
+        @StringRes negativeButtonResId: Int? = null,
     ): SitePermissionsDialogFragment {
         val trimmedOrigin = trimOriginHttpsSchemeAndPort(origin)
         val title = context.getString(titleId, trimmedOrigin)
@@ -919,14 +948,20 @@ class SitePermissionsFeature(
             ?: throw IllegalStateException("Unable to find session for $sessionId or selected session")
 
         return SitePermissionsDialogFragment.newInstance(
-            currentSessionId,
-            title,
-            iconId,
-            permissionRequest.id,
-            this,
-            showDoNotAskAgainCheckBox,
+            sessionId = currentSessionId,
+            title = title,
+            titleIcon = iconId,
+            permissionRequestId = permissionRequest.id,
+            feature = this,
+            shouldShowDoNotAskAgainCheckBox = showDoNotAskAgainCheckBox,
+            doNotAskAgainCheckBoxLabel = if (doNotAskAgainCheckBoxLabel != null) {
+                context.getString(doNotAskAgainCheckBoxLabel)
+            } else {
+                null
+            },
             isNotificationRequest = isNotificationRequest,
             shouldSelectDoNotAskAgainCheckBox = shouldSelectRememberChoice,
+            negativeButtonText = if (negativeButtonResId != null) context.getString(negativeButtonResId) else null,
         )
     }
 
@@ -1098,6 +1133,7 @@ private fun Permission.isSupported(): Boolean {
         is ContentVideoCamera, is ContentVideoCapture,
         is ContentAutoPlayAudible, is ContentAutoPlayInaudible,
         is ContentMediaKeySystemAccess,
+        is ContentLocalDeviceAccess, is ContentLocalNetworkAccess,
         -> true
         else -> false
     }

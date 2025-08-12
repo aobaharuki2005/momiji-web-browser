@@ -8,6 +8,7 @@ import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import androidx.annotation.StringRes
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -1231,7 +1232,7 @@ class SitePermissionsFeatureTest {
     fun `GIVEN permissionRequest and containsVideoAndAudioSources true WHEN createPrompt THEN createSinglePermissionPrompt is called`() {
         // given
         val permissionRequest: PermissionRequest = object : PermissionRequest {
-            override val uri: String?
+            override val uri: String
                 get() = "http://www.mozilla.org"
             override val id: String
                 get() = PERMISSION_ID
@@ -1255,14 +1256,16 @@ class SitePermissionsFeatureTest {
         val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
         doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
             .createSinglePermissionPrompt(
-                any(),
-                ArgumentMatchers.anyString(),
-                any(),
-                ArgumentMatchers.anyInt(),
-                ArgumentMatchers.anyInt(),
-                ArgumentMatchers.anyBoolean(),
-                ArgumentMatchers.anyBoolean(),
-                ArgumentMatchers.anyBoolean(),
+                context = any(),
+                origin = ArgumentMatchers.anyString(),
+                permissionRequest = any(),
+                titleId = ArgumentMatchers.anyInt(),
+                iconId = ArgumentMatchers.anyInt(),
+                showDoNotAskAgainCheckBox = ArgumentMatchers.anyBoolean(),
+                doNotAskAgainCheckBoxLabel = ArgumentMatchers.anyInt(),
+                shouldSelectRememberChoice = ArgumentMatchers.anyBoolean(),
+                isNotificationRequest = ArgumentMatchers.anyBoolean(),
+                negativeButtonResId = ArgumentMatchers.anyInt(),
             )
 
         // when
@@ -1270,14 +1273,16 @@ class SitePermissionsFeatureTest {
 
         // then
         verify(sitePermissionFeature).createSinglePermissionPrompt(
-            any(),
-            ArgumentMatchers.anyString(),
-            any(),
-            ArgumentMatchers.anyInt(),
-            ArgumentMatchers.anyInt(),
-            ArgumentMatchers.anyBoolean(),
-            ArgumentMatchers.anyBoolean(),
-            ArgumentMatchers.anyBoolean(),
+            context = any(),
+            origin = ArgumentMatchers.anyString(),
+            permissionRequest = any(),
+            titleId = ArgumentMatchers.anyInt(),
+            iconId = ArgumentMatchers.anyInt(),
+            showDoNotAskAgainCheckBox = ArgumentMatchers.anyBoolean(),
+            doNotAskAgainCheckBoxLabel = ArgumentMatchers.isNull(),
+            shouldSelectRememberChoice = ArgumentMatchers.anyBoolean(),
+            isNotificationRequest = ArgumentMatchers.anyBoolean(),
+            negativeButtonResId = ArgumentMatchers.isNull(),
         )
     }
 
@@ -1322,14 +1327,16 @@ class SitePermissionsFeatureTest {
             val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
             doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
                 .createSinglePermissionPrompt(
-                    any(),
-                    ArgumentMatchers.anyString(),
-                    any(),
-                    ArgumentMatchers.anyInt(),
-                    ArgumentMatchers.anyInt(),
-                    ArgumentMatchers.anyBoolean(),
-                    ArgumentMatchers.anyBoolean(),
-                    ArgumentMatchers.anyBoolean(),
+                    context = any(),
+                    origin = ArgumentMatchers.anyString(),
+                    permissionRequest = any(),
+                    titleId = ArgumentMatchers.anyInt(),
+                    iconId = ArgumentMatchers.anyInt(),
+                    showDoNotAskAgainCheckBox = ArgumentMatchers.anyBoolean(),
+                    doNotAskAgainCheckBoxLabel = ArgumentMatchers.anyInt(),
+                    shouldSelectRememberChoice = ArgumentMatchers.anyBoolean(),
+                    isNotificationRequest = ArgumentMatchers.anyBoolean(),
+                    negativeButtonResId = ArgumentMatchers.anyInt(),
                 )
 
             sitePermissionFeature.createPrompt(permissionRequest, URL)
