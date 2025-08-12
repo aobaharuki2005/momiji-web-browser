@@ -537,7 +537,9 @@ private fun BookmarksList(
                         onAutoComplete = { suggestion ->
                             searchStore.dispatch(SuggestionSelected(suggestion))
                         },
-                        onVisibilityStateUpdated = {},
+                        onVisibilityStateUpdated = {
+                            browserStore.dispatch(AwesomeBarAction.VisibilityStateUpdated(it))
+                        },
                         onScroll = { view.hideKeyboard() },
                         profiler = components.core.engine.profiler,
                     )

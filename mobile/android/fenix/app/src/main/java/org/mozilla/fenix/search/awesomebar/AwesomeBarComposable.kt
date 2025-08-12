@@ -28,6 +28,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
+import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
@@ -220,7 +221,9 @@ class AwesomeBarComposable(
                     onAutoComplete = { suggestion ->
                         searchStore.dispatch(SuggestionSelected(suggestion))
                     },
-                    onVisibilityStateUpdated = {},
+                    onVisibilityStateUpdated = {
+                        browserStore.dispatch(AwesomeBarAction.VisibilityStateUpdated(it))
+                    },
                     onScroll = { view.hideKeyboard() },
                     profiler = components.core.engine.profiler,
                 )

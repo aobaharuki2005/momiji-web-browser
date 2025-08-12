@@ -61,6 +61,7 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.action.AwesomeBarAction.EngagementFinished
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
@@ -477,7 +478,11 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                                         onAutoComplete = { suggestion ->
                                             searchStore.dispatch(SuggestionSelected(suggestion))
                                         },
-                                        onVisibilityStateUpdated = {},
+                                        onVisibilityStateUpdated = {
+                                            requireComponents.core.store.dispatch(
+                                                AwesomeBarAction.VisibilityStateUpdated(it),
+                                            )
+                                        },
                                         onScroll = { view.hideKeyboard() },
                                         profiler = requireComponents.core.engine.profiler,
                                     )
