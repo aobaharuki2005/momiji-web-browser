@@ -53,7 +53,7 @@ export class SearchEngineSelector {
   }
 
   /**
-   * Resets the remote settings listeners.
+   * Resets the remote settings listeners, intended for test use only.
    */
   reset() {
     /**
@@ -73,6 +73,14 @@ export class SearchEngineSelector {
   }
 
   /**
+   * Resets the cached configuration, thus clearing the way to fetch a new
+   * configuration the next time `fetchEngineConfiguration` is called.
+   */
+  clearCachedConfigurationForTests() {
+    this.#configuration = null;
+  }
+
+  /**
    * Handles getting the configuration from remote settings.
    *
    * @returns {Promise<object>}
@@ -88,10 +96,10 @@ export class SearchEngineSelector {
       this.#getConfigurationOverrides(),
     ]);
     let remoteSettingsData = await this.#getConfigurationPromise;
-    this._configuration = remoteSettingsData[0];
+    this.#configuration = remoteSettingsData[0];
     this.#getConfigurationPromise = null;
 
-    if (!this._configuration?.length) {
+    if (!this.#configuration?.length) {
       throw Components.Exception(
         "Failed to get engine data from Remote Settings",
         Cr.NS_ERROR_UNEXPECTED
@@ -114,13 +122,13 @@ export class SearchEngineSelector {
     }
 
     this.#selector.setSearchConfig(
-      JSON.stringify({ data: this._configuration })
+      JSON.stringify({ data: this.#configuration })
     );
     this.#selector.setConfigOverrides(
       JSON.stringify({ data: remoteSettingsData[1] })
     );
 
-    return this._configuration;
+    return this.#configuration;
   }
 
   /**
@@ -133,7 +141,7 @@ export class SearchEngineSelector {
    *   The configuration data for an engine.
    */
   async findContextualSearchEngineByHost(host) {
-    for (let config of this._configuration) {
+    for (let config of this.#configuration) {
       if (config.recordType !== "engine") {
         continue;
       }
@@ -160,7 +168,7 @@ export class SearchEngineSelector {
    *   The configuration data for an engine.
    */
   async findContextualSearchEngineById(id) {
-    for (let config of this._configuration) {
+    for (let config of this.#configuration) {
       if (config.recordType !== "engine") {
         continue;
       }
@@ -203,7 +211,7 @@ export class SearchEngineSelector {
     appName = Services.appinfo.name ?? "",
     version = Services.appinfo.version ?? "",
   }) {
-    if (!this._configuration) {
+    if (!this.#configuration) {
       await this.getEngineConfiguration();
     }
 
@@ -266,6 +274,16 @@ export class SearchEngineSelector {
    * collection.
    */
   #remoteConfigOverrides;
+
+  /**
+   * The currently cached configuration. This is cached so that
+   * `findContextualSearchEngineByHost` and `findContextualSearchEngineById`
+   * do not need to get the configuration from remote settings every time
+   * they are called.
+   *
+   * @type {object[]}
+   */
+  #configuration;
 
   /**
    * The bound version of the configuration updated listener.
@@ -351,10 +369,10 @@ export class SearchEngineSelector {
    *   The new configuration object
    */
   _onConfigurationUpdated({ data: { current } }) {
-    this._configuration = current;
+    this.#configuration = current;
 
     this.#selector.setSearchConfig(
-      JSON.stringify({ data: this._configuration })
+      JSON.stringify({ data: this.#configuration })
     );
 
     lazy.logConsole.debug("Search configuration updated remotely");
