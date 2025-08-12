@@ -950,6 +950,16 @@ export var SessionStore = {
   },
 
   /**
+   * Convert tab state into a saved group tab state. Used to convert a
+   * closed tab group into a saved tab group.
+   *
+   * @param {TabState} tabState closed tab state
+   */
+  formatTabStateForSavedGroup(tab) {
+    return SessionStoreInternal._formatTabStateForSavedGroup(tab);
+  },
+
+  /**
    * Validates that a state object matches the schema
    * defined in browser/components/sessionstore/session.schema.json
    *
