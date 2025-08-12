@@ -50,11 +50,10 @@ export default class SidebarPinsPromo extends MozLitElement {
     this.launcherObserver = new MutationObserver(() => this.requestUpdate());
   }
   #icons = [
-    "chrome://browser/skin/sidebar/firefox.svg",
-    "chrome://browser/skin/sidebar/slack.svg",
-    "chrome://browser/skin/sidebar/foxy-light.svg",
-    "chrome://browser/skin/sidebar/foxy-dark.svg",
-    "chrome://browser/skin/sidebar/gmail.svg",
+    { name: "firefox", src: "chrome://browser/skin/sidebar/firefox.svg" },
+    { name: "slack", src: "chrome://browser/skin/sidebar/slack.svg" },
+    { name: "foxy", src: "chrome://browser/skin/sidebar/foxy.svg" },
+    { name: "gmail", src: "chrome://browser/skin/sidebar/gmail.svg" },
   ];
 
   connectedCallback() {
@@ -126,18 +125,17 @@ export default class SidebarPinsPromo extends MozLitElement {
   /**
    * Wrap one of the icons to be shown in a dotted border box.
    *
-   * @param {string} src
+   * @param {object} icon
    * @returns {HTMLDivElement}
    */
-  #iconCellTemplate(src) {
+  #iconCellTemplate(icon) {
     return html`<div
       class=${classMap({
         "icon-cell": true,
-        foxydark: src.includes("foxy-dark"),
-        foxylight: src.includes("foxy-light"),
+        [`icon-${icon.name}`]: true,
       })}
     >
-      <img src=${src} role="presentation" />
+      <img src=${icon.src} role="presentation" />
     </div>`;
   }
 
@@ -164,7 +162,7 @@ export default class SidebarPinsPromo extends MozLitElement {
       <moz-card class="promo-card">
         <div class="promo-text" data-l10n-id="sidebar-pins-promo-text"></div>
         <div class="icon-row">
-          ${map(this.#icons, src => this.#iconCellTemplate(src))}
+          ${map(this.#icons, icon => this.#iconCellTemplate(icon))}
         </div>
       </moz-card>
       <moz-button

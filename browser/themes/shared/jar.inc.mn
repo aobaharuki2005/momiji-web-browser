@@ -243,8 +243,7 @@
   skin/classic/browser/searchbar.css                           (../shared/search/searchbar.css)
 
   skin/classic/browser/sidebar/firefox.svg                     (../shared/sidebar/firefox.svg)
-  skin/classic/browser/sidebar/foxy-dark.svg                   (../shared/sidebar/foxy-dark.svg)
-  skin/classic/browser/sidebar/foxy-light.svg                  (../shared/sidebar/foxy-light.svg)
+  skin/classic/browser/sidebar/foxy.svg                        (../shared/sidebar/foxy.svg)
   skin/classic/browser/sidebar/gmail.svg                       (../shared/sidebar/gmail.svg)
   skin/classic/browser/sidebar/slack.svg                       (../shared/sidebar/slack.svg)
 
