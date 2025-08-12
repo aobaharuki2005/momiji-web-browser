@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.topsites.interactor
 
 import mozilla.components.feature.top.sites.TopSite
+import org.mozilla.fenix.home.topsites.controller.TopSiteController
 
 /**
  * Interface for top site related actions on the homepage.
@@ -73,4 +74,53 @@ interface TopSiteInteractor {
      * shortcuts on the homepage.
      */
     fun onShowAllTopSitesClicked()
+}
+
+/**
+ * Default implementation of [TopSiteInteractor].
+ */
+class DefaultTopSiteInteractor(
+    private val controller: TopSiteController,
+) : TopSiteInteractor {
+    override fun onOpenInPrivateTabClicked(topSite: TopSite) {
+        controller.handleOpenInPrivateTabClicked(topSite)
+    }
+
+    override fun onEditTopSiteClicked(topSite: TopSite) {
+        controller.handleEditTopSiteClicked(topSite)
+    }
+
+    override fun onRemoveTopSiteClicked(topSite: TopSite) {
+        controller.handleRemoveTopSiteClicked(topSite)
+    }
+
+    override fun onSelectTopSite(
+        topSite: TopSite,
+        position: Int,
+    ) {
+        controller.handleSelectTopSite(topSite, position)
+    }
+
+    override fun onTopSiteImpression(
+        topSite: TopSite.Provided,
+        position: Int,
+    ) {
+        controller.handleTopSiteImpression(topSite, position)
+    }
+
+    override fun onSettingsClicked() {
+        controller.handleTopSiteSettingsClicked()
+    }
+
+    override fun onSponsorPrivacyClicked() {
+        controller.handleSponsorPrivacyClicked()
+    }
+
+    override fun onTopSiteLongClicked(topSite: TopSite) {
+        controller.handleTopSiteLongClicked(topSite)
+    }
+
+    override fun onShowAllTopSitesClicked() {
+        controller.handleShowAllTopSitesClicked()
+    }
 }
