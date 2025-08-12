@@ -1010,10 +1010,16 @@
   <string name="alternative_app_icon_option_minimal">Bihanañ</string>
   <!-- Title for the "Pride" themed alternative app icon variant in the icon picker screen. The app icon incorporates a rainbow color scheme in support of the LGBTQ+ community. -->
   <string name="alternative_app_icon_option_pride">Lorc’h</string>
+  <!-- Title for the "Cute" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
+  <string name="alternative_app_icon_option_cute">Moutig</string>
   <!-- Title for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Krouet gant @heyheymomodraws</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">All</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Nullañ</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1412,6 +1418,8 @@
   <string name="download_in_progress_snackbar_action_details">Munudoù</string>
   <!-- Text for the snackbar to confirm that a download has completed. -->
   <string name="download_completed_snackbar">Pellgargadur echu</string>
+  <!-- Text for the snackbar action button to open a completed download. -->
+  <string name="download_completed_snackbar_action_open">Digeriñ</string>
   <!-- Text for the snackbar action button to undo deleting a download. -->
   <string name="download_undo_delete_snackbar_action">Dizober</string>
   <!-- Text shown when no download exists -->
@@ -1421,8 +1429,17 @@
     %1$d is the number of downloads selected
   -->
   <string name="download_multi_select_title">%1$d diuzet</string>
+  <!--
+    Text for the cancel button in the dialog that is shown when there is not enough storage space to download a file.
+    This button will dismiss the dialog.
+  -->
+  <string name="download_file_has_not_enough_storage_dialog_cancel_button_text">Nullañ</string>
   <!-- Text for the button to delete a single downloaded file item -->
   <string name="download_delete_item">Dilemel</string>
+  <!-- Content description for the toolbar "Navigate back" button -->
+  <string name="download_navigate_back_description">Distreiñ</string>
+  <!-- Content description for the toolbar back button while searching the downloads -->
+  <string name="download_close_search_description">Distreiñ ha serriñ ar c’hlask</string>
   <!--
     Content description for the search bar clear text button on the downloads screen
 
@@ -1433,6 +1450,7 @@
   <string name="download_resume_action">Kenderc’hel</string>
   <!-- Content description for retry download action button on the downloads screen -->
   <string name="download_retry_action">Klask en-dro</string>
+  <string name="download_clear_search_description">Skarzhañ</string>
   <!-- Text for the button to share the download URL -->
   <string name="download_share_url">Rannañ an URL</string>
   <!-- Text for the button to share the download file -->
@@ -1457,6 +1475,8 @@
   <string name="download_time_period_last_7_days">Ar 7 deiz diwezhañ</string>
   <!-- Text for the header that groups the downloads the past 30 days -->
   <string name="download_time_period_last_30_days">An 30 deiz diwezhañ</string>
+  <!-- Text for the header that groups the downloads older than other groups -->
+  <string name="download_time_period_older">Koshoc’h</string>
   <!-- Description of an in progress download item, displayed in the downloads list when the download has just started. -->
   <string name="download_item_in_progress_description_preparing">O prientiñ ar pellgargadur…</string>
   <!--
@@ -1515,6 +1535,8 @@
   <string name="download_content_type_filter_all">Pep tra</string>
   <!-- Text for the filter button to show only images in the downloads list -->
   <string name="download_content_type_filter_image">Skeudennoù</string>
+  <!-- Text for the filter button to show only video files in the downloads list -->
+  <string name="download_content_type_filter_video">Videoioù</string>
   <!-- Text for the filter button to show only documents in the downloads list -->
   <string name="download_content_type_filter_document">Teulioù</string>
   <!-- Text for the filter button to show all other file types in the downloads list -->
@@ -1527,6 +1549,8 @@
   <string name="webcompat_reporter_screen_title">Danevelliñ ul lec\'hienn torret</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Sikourit da wellaat %1$s evit an holl. Implijidi Mozilla a c’hall arverañ ar roadennoù a gasit evit kempenn kudennoù al lec’hiennoù.</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Gouzout hiroc’h</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1535,6 +1559,8 @@
   <string name="webcompat_reporter_label_whats_broken_2">Petra eo ar gudenn?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Dibab an abeg</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Dibab un abeg</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Dibabit un abeg mar plij</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1577,10 +1603,15 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Kas danevelloù sac’hañ ent emgefreek</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Serriñ</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">SERRIÑ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Na ziskouez en-dro</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">KAS</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Kas an danevell sac’hadenn</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Gouzout hiroc’h</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Gouzout hiroc’h</string>
   <!--
@@ -2003,6 +2034,8 @@
   <string name="preference_accessibility_text_size_summary">Kreskiñ pe zigreskiñ an destenn war al lecʼhiennoù</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Ment an nodrezh</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Ment emgefreek an nodrezh</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2238,6 +2271,12 @@
     Enhanced tracking protection exception preference icon for ETP settings.
   -->
   <string name="preference_etp_exceptions_icon_description">Arlun gwellvezioù an nemedennoù evit ar gwarez kreñvaet a-enep an heuliañ</string>
+  <!--
+    DNS over HTTPS (DoH)
+
+    Preference title for DNS over HTTPS settings
+  -->
+  <string name="preference_doh_title">DNS a-raok HTTPS</string>
   <!-- Used as text for the link in `preference_doh_title`, points to documentation about "DNS over HTTPS" -->
   <string name="preference_doh_learn_more">Gouzout hiroc’h</string>
   <!-- Content description for the "Exceptions" button -->
@@ -2248,6 +2287,8 @@
   <string name="preference_doh_add_site_description">Ouzhpennañ ul lec’hienn</string>
   <!-- Title displayed for "Default Protection" option under "DNS over HTTPS" -->
   <string name="preference_doh_default_protection">Gwarez dre ziouer</string>
+  <!-- Bullet point 1 for "Default Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_default_protection_info_1">Ober gant ar pourchaser a zo bet diuzet ganeoc’h</string>
   <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off">Diweredekaet</string>
   <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
@@ -2669,6 +2710,12 @@
   <string name="synced_tabs_expand_group">Kreskiñ ar strollad ivinelloù goubredet</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Krennañ ar strollad ivinelloù goubredet</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Berradennoù</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Bevenn berradenn tizhet</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -2843,6 +2890,8 @@
     Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on.
   -->
   <string name="translation_option_bottom_sheet_title_heading">Arventennoù an droidigezh</string>
+  <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. %1$s is the language name, for example, "Spanish". -->
+  <string name="translation_option_bottom_sheet_always_translate_in_language">Bepred treiñ %1$s</string>
   <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. %1$s is the language name, for example, "Spanish". -->
   <string name="translation_option_bottom_sheet_never_translate_in_language">Na dreiñ biken %1$s</string>
   <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
@@ -3028,6 +3077,12 @@
   <string name="protection_panel_banner_not_secure_description">N’eo ket diogel ho kennask.</string>
   <!-- Title text for the protection panel banner when tracking protection is disabled. -->
   <string name="protection_panel_banner_not_protected_title">Diweredekaet ho peus ar gwarezioù</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Gweredekaet</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Diweredekaet</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Ma seblant bezañ torret un dra bennak war al lec’hienn-mañ, klaskit diweredekaat anezhañ.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3215,6 +3270,8 @@
     The title of the glean debugging feature
   -->
   <string name="glean_debug_tools_title">Ostilhoù diveugañ Glean</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Klask hizivadurioù</string>
   <!--
     Messages explaining how to exit fullscreen mode
 
@@ -3289,4 +3346,20 @@
   <string name="review_prompt_positive_button">Dispar eo!</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Reiñ hoc’h ali</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Un hizivadur zo da gaout</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Termenoù implij</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Evezhiadennoù a-fet buhez prevez</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Gouzout hiroc’h</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Asantiñ</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Degas soñj din diwezhatoc’h</string>
 </resources>

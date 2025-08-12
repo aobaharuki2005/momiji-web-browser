@@ -1469,6 +1469,12 @@
   <string name="tabs_header_normal_tabs_title">Раздели</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">Sync</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">Нов раздел</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">Нов поверителен раздел</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">Синхронизиране на раздели</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Добавяне на раздел</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -2215,7 +2221,7 @@
   <!-- Text shown in snackbar when user closes all private tabs -->
   <string name="snackbar_private_tabs_closed" moz:removedIn="141" tools:ignore="UnusedResources">Поверителните раздели са затворени</string>
   <!-- Text shown in snackbar when user erases their private browsing data -->
-  <string name="snackbar_private_data_deleted">Личните данни за сърфиране са изтрити</string>
+  <string name="snackbar_private_data_deleted">Поверителните данни за сърфиране са изтрити</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
   <string name="snackbar_deleted_undo">ОТМЕНЯНЕ</string>
   <!-- Text shown in snackbar when user removes a top site -->

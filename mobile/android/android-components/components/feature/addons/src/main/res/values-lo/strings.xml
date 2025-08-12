@@ -110,6 +110,10 @@
   <string name="mozac_feature_addons_permissions_all_urls_description_for_update">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານສໍາລັບເວັບໄຊທ໌ທັງຫມົດ.</string>
   <!-- Description for the "tabs" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_tabs_description_for_update">ເຂົ້າເຖິງແຖບຂອງຕົວທ່ອງເວັບ.</string>
+  <!-- Description for the "webNavigation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_web_navigation_description_for_update">ເຂົ້າເຖິງການເຄື່ອນໄຫວຂອງຕົວທ່ອງເວັບໃນລະຫວ່າງການນໍາທາງ.</string>
+  <!-- Description for the "bookmarks" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_bookmarks_description_for_update">ອ່ານ ແລະ ແກ້ໄຂ bookmarks.</string>
   <!-- Description for the "browserSettings" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">ອ່ານ ແລະ ແກ້ໄຂການຕັ້ງຄ່າຂອງຕົວທ່ອງເວັບ.</string>
   <!-- Description for the "geolocation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
@@ -136,6 +140,8 @@
   <string name="mozac_feature_addons_permissions_data_collection_bookmarksInfo_short_description">ບຸກມາກ</string>
   <!-- Short description for the browsingActivity data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_short_description">ກິດ​ຈະ​ກໍາ​ການ​ຊອກ​ຫາ​</string>
+  <!-- Short description for the financialAndPaymentInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_financialAndPaymentInfo_short_description">ຂໍ້ມູນທາງດ້ານການເງິນ ແລະ ການຊຳລະເງິນ</string>
   <!-- Short description for the healthInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_healthInfo_short_description">ຂໍ້​ມູນ​ສຸ​ຂະ​ພາບ​</string>
   <!-- Short description for the locationInfo data collection permission -->
