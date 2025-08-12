@@ -104,4 +104,22 @@ class SecureTabManagerBindingTest {
 
         verify(exactly = 0) { fragment.removeSecure() }
     }
+
+    @Test
+    fun `GIVEN in Normal browsing mode WHEN fragment is stopped THEN set fragment to un-secure`() {
+        every { settings.lastKnownMode.isPrivate } returns false
+        val tabsTrayStore = TabsTrayStore(TabsTrayState())
+        val secureTabManagerBinding = SecureTabManagerBinding(
+            store = tabsTrayStore,
+            settings = settings,
+            fragment = fragment,
+        )
+
+        secureTabManagerBinding.start()
+        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.NormalTabs))
+        tabsTrayStore.waitUntilIdle()
+        secureTabManagerBinding.stop()
+
+        verify { fragment.removeSecure() }
+    }
 }
