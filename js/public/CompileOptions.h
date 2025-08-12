@@ -126,7 +126,7 @@ class JS_PUBLIC_API ReadOnlyDecodeOptions;
 class JS_PUBLIC_API PrefableCompileOptions {
  public:
   PrefableCompileOptions()
-      : importAttributes_(false),
+      : importAttributes_(true),
         sourcePragmas_(true),
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
         explicitResourceManagement_(
