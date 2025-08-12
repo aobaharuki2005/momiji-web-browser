@@ -80,11 +80,10 @@ export class SearchEngineSelector {
 
     this._getConfigurationPromise = Promise.all([
       this._getConfiguration(),
-      this._getConfigurationOverrides(),
+      this.#getConfigurationOverrides(),
     ]);
     let remoteSettingsData = await this._getConfigurationPromise;
     this._configuration = remoteSettingsData[0];
-    this._configurationOverrides = remoteSettingsData[1];
     delete this._getConfigurationPromise;
 
     if (!this._configuration?.length) {
@@ -107,7 +106,7 @@ export class SearchEngineSelector {
       JSON.stringify({ data: this._configuration })
     );
     this.#selector.setConfigOverrides(
-      JSON.stringify({ data: this._configurationOverrides })
+      JSON.stringify({ data: remoteSettingsData[1] })
     );
 
     return this._configuration;
@@ -161,17 +160,6 @@ export class SearchEngineSelector {
       }
     }
     return null;
-  }
-
-  /**
-   * Used by tests to get the configuration overrides.
-   *
-   * @returns {Promise<object>}
-   *   The engine overrides data.
-   */
-  async getEngineConfigurationOverrides() {
-    await this.getEngineConfiguration();
-    return this._configurationOverrides;
   }
 
   /**
@@ -250,11 +238,7 @@ export class SearchEngineSelector {
    *   The new configuration object
    */
   _onConfigurationOverridesUpdated({ data: { current } }) {
-    this._configurationOverrides = current;
-
-    this.#selector.setConfigOverrides(
-      JSON.stringify({ data: this._configurationOverrides })
-    );
+    this.#selector.setConfigOverrides(JSON.stringify({ data: current }));
 
     lazy.logConsole.debug("Search configuration overrides updated remotely");
     if (this._changeListener) {
@@ -269,7 +253,7 @@ export class SearchEngineSelector {
    *   An array of objects in the database, or an empty array if none
    *   could be obtained.
    */
-  async _getConfigurationOverrides() {
+  async #getConfigurationOverrides() {
     let result = [];
     try {
       result = await this._remoteConfigOverrides.get();
