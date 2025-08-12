@@ -609,13 +609,11 @@ PRIntervalTime nsSocketTransportService::PollTimeout(PRIntervalTime now) {
   return minR;
 }
 
-int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
-                                       PRIntervalTime ts) {
+int32_t nsSocketTransportService::Poll(PRIntervalTime ts) {
   MOZ_ASSERT(IsOnCurrentThread());
   PRPollDesc* firstPollEntry;
   uint32_t pollCount;
   PRIntervalTime pollTimeout;
-  *pollDuration = nullptr;
 
   // If there are pending events for this thread then
   // DoPollIteration() should service the network without blocking.
@@ -688,10 +686,6 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
                                 PR_IntervalToMilliseconds(pollTimeout)));
     }
 #endif
-  }
-
-  if (Telemetry::CanRecordPrereleaseData() && !pollStart.IsNull()) {
-    *pollDuration = TimeStamp::NowLoRes() - pollStart;
   }
 
   SOCKET_LOG(("    ...returned after %i milliseconds\n",
@@ -1144,17 +1138,10 @@ nsSocketTransportService::Run() {
   // For measuring of the poll iteration duration without time spent blocked
   // in poll().
   TimeStamp pollCycleStart;
-  // Time blocked in poll().
-  TimeDuration singlePollDuration;
 
   // For calculating the time needed for a new element to run.
   TimeStamp startOfIteration;
   TimeStamp startOfNextIteration;
-
-  // If there is too many pending events queued, we will run some poll()
-  // between them and the following variable is cumulative time spent
-  // blocking in poll().
-  TimeDuration pollDuration;
 
   for (;;) {
     bool pendingEvents = false;
@@ -1162,7 +1149,6 @@ nsSocketTransportService::Run() {
       startOfCycleForLastCycleCalc = TimeStamp::NowLoRes();
       startOfNextIteration = TimeStamp::NowLoRes();
     }
-    pollDuration = nullptr;
     // We pop out to this loop when there are no pending events.
     // If we don't reset these, we may not re-enter ProcessNextEvent()
     // until we have events to process, and it may seem like we have
@@ -1174,14 +1160,7 @@ nsSocketTransportService::Run() {
         pollCycleStart = TimeStamp::NowLoRes();
       }
 
-      DoPollIteration(&singlePollDuration);
-
-      if (Telemetry::CanRecordPrereleaseData() && !pollCycleStart.IsNull()) {
-        glean::sts::poll_block_time.AccumulateRawDuration(singlePollDuration);
-        glean::sts::poll_cycle.AccumulateRawDuration(
-            TimeStamp::NowLoRes() - (pollCycleStart + singlePollDuration));
-        pollDuration += singlePollDuration;
-      }
+      DoPollIteration();
 
       mRawThread->HasPendingEvents(&pendingEvents);
       if (pendingEvents) {
@@ -1218,24 +1197,12 @@ nsSocketTransportService::Run() {
         } while (pendingEvents && mServingPendingQueue &&
                  ((TimeStamp::NowLoRes() - eventQueueStart).ToMilliseconds() <
                   mMaxTimePerPollIter));
-
-        if (Telemetry::CanRecordPrereleaseData() && !mServingPendingQueue &&
-            !startOfIteration.IsNull()) {
-          glean::sts::poll_and_events_cycle.AccumulateRawDuration(
-              TimeStamp::NowLoRes() - (startOfIteration + pollDuration));
-          pollDuration = nullptr;
-        }
       }
     } while (pendingEvents);
 
     bool goingOffline = false;
     // now that our event queue is empty, check to see if we should exit
     if (mShuttingDown) {
-      if (Telemetry::CanRecordPrereleaseData() &&
-          !startOfCycleForLastCycleCalc.IsNull()) {
-        glean::sts::poll_and_event_the_last_cycle.AccumulateRawDuration(
-            TimeStamp::NowLoRes() - startOfCycleForLastCycleCalc);
-      }
       break;
     }
     {
@@ -1297,7 +1264,7 @@ void nsSocketTransportService::Reset(bool aGuardLocals) {
   }
 }
 
-nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
+nsresult nsSocketTransportService::DoPollIteration() {
   SOCKET_LOG(("STS poll iter\n"));
 
   PRIntervalTime now = PR_IntervalNow();
@@ -1369,14 +1336,13 @@ nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
 
   // Measures seconds spent while blocked on PR_Poll
   int32_t n = 0;
-  *pollDuration = nullptr;
 
   if (!gIOService->IsNetTearingDown()) {
     // Let's not do polling during shutdown.
 #if defined(XP_WIN)
     StartPolling();
 #endif
-    n = Poll(pollDuration, now);
+    n = Poll(now);
 #if defined(XP_WIN)
     EndPolling();
 #endif
