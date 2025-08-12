@@ -67,3 +67,15 @@ experimental-features-fx-web-apps =
 
 # “Add tab to taskbar” is found in the tooltip text of `-taskbar-tab-urlbar-button-open`.
 experimental-features-fx-web-apps-description = Open sites you frequently visit as a web app from your taskbar. Look for the “Add tab to taskbar” icon to the right the address bar to launch that site in a streamlined window with all of { -brand-product-name }’s protections. <a data-l10n-name="connect">Share feedback</a>
+
+## New Tab Productivity Widgets
+
+# Lists Widget
+experimental-features-newtab-widget-lists =
+    .label = Lists on { -firefox-home-brand-name }
+experimental-features-newtab-widget-lists-description = Keep your to-do list top-of-mind when you open a new tab. From packing lists to shopping lists, make your plans in { -brand-product-name }. <a data-l10n-name="connect">Share feedback</a>
+
+# Timer Widget
+experimental-features-newtab-widget-timer =
+    .label = Timer on { -firefox-home-brand-name }
+experimental-features-newtab-widget-timer-description = Set a timer to keep you focused, nudge you to stay on track, or remind you to recharge. <a data-l10n-name="connect">Share feedback</a>
