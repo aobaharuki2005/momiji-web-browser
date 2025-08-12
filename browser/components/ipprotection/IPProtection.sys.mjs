@@ -65,6 +65,7 @@ class IPProtectionWidget {
     }
 
     lazy.IPProtectionService.init();
+    lazy.CustomizableUI.addListener(this);
     this.#destroyed = false;
   }
 
@@ -76,6 +77,7 @@ class IPProtectionWidget {
     this.#uninitPanels();
     lazy.IPProtectionService.uninit();
     this.#destroyed = true;
+    lazy.CustomizableUI.removeListener(this);
   }
 
   /**
@@ -303,6 +305,13 @@ class IPProtectionWidget {
       "IPProtectionService:Stopped",
       this.handleEvent
     );
+  }
+
+  onWidgetRemoved(widgetId) {
+    // Shut down VPN connection when widget is removed
+    if (widgetId == IPProtectionWidget.WIDGET_ID) {
+      lazy.IPProtectionService.stop();
+    }
   }
 
   async #sendReadyTrigger() {

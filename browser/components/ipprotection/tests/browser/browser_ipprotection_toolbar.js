@@ -105,3 +105,32 @@ add_task(async function toolbar_icon_status() {
   EventUtils.synthesizeKey("KEY_Escape");
   await panelHiddenPromise;
 });
+
+add_task(async function customize_toolbar_remove_widget() {
+  let widget = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  Assert.ok(
+    BrowserTestUtils.isVisible(widget),
+    "IP Protection toolbaritem should be visible"
+  );
+  let prevPosition = CustomizableUI.getPlacementOfWidget(
+    lazy.IPProtectionWidget.WIDGET_ID
+  ).position;
+
+  let stoppedEventPromise = BrowserTestUtils.waitForEvent(
+    lazy.IPProtectionService,
+    "IPProtectionService:Stopped"
+  );
+  CustomizableUI.removeWidgetFromArea(lazy.IPProtectionWidget.WIDGET_ID);
+  // VPN should disconect when the toolbaritem is removed
+  await stoppedEventPromise;
+  Assert.ok(
+    !BrowserTestUtils.isVisible(widget),
+    "Toolbaritem is no longer visible"
+  );
+
+  CustomizableUI.addWidgetToArea(
+    IPProtectionWidget.WIDGET_ID,
+    CustomizableUI.AREA_NAVBAR,
+    prevPosition
+  );
+});
