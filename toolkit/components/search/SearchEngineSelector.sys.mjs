@@ -38,32 +38,37 @@ const lazy = XPCOMUtils.declareLazy({
  */
 export class SearchEngineSelector {
   /**
-   * @param {Function} listener
+   * @param {() => void} listener
    *   A listener for configuration update changes.
    */
   constructor(listener) {
-    this._remoteConfig = lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
-    this._remoteConfigOverrides = lazy.RemoteSettings(
+    this.#remoteConfig = lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
+    this.#remoteConfigOverrides = lazy.RemoteSettings(
       lazy.SearchUtils.SETTINGS_OVERRIDES_KEY
     );
-    this._listenerAdded = false;
-    this._onConfigurationUpdated = this._onConfigurationUpdated.bind(this);
-    this._onConfigurationOverridesUpdated =
+    this.#boundOnConfigurationUpdated = this._onConfigurationUpdated.bind(this);
+    this.#boundOnConfigurationOverridesUpdated =
       this._onConfigurationOverridesUpdated.bind(this);
-    this._changeListener = listener;
+    this.#changeListener = listener;
   }
 
   /**
    * Resets the remote settings listeners.
    */
   reset() {
-    if (this._listenerAdded) {
-      this._remoteConfig.off("sync", this._onConfigurationUpdated);
-      this._remoteConfigOverrides.off(
+    /**
+     * Records whether the listeners have been added or not.
+     */
+    if (this.#listenerAdded) {
+      this.#remoteConfig.off("sync", this.#boundOnConfigurationUpdated);
+      this.#remoteConfigOverrides.off(
         "sync",
-        this._onConfigurationOverridesUpdated
+        this.#boundOnConfigurationOverridesUpdated
       );
-      this._listenerAdded = false;
+      /**
+       * Records whether the listeners have been added or not.
+       */
+      this.#listenerAdded = false;
     }
   }
 
@@ -74,17 +79,17 @@ export class SearchEngineSelector {
    *   The configuration data.
    */
   async getEngineConfiguration() {
-    if (this._getConfigurationPromise) {
-      return this._getConfigurationPromise;
+    if (this.#getConfigurationPromise) {
+      return this.#getConfigurationPromise;
     }
 
-    this._getConfigurationPromise = Promise.all([
-      this._getConfiguration(),
+    this.#getConfigurationPromise = Promise.all([
+      this.#getConfiguration(),
       this.#getConfigurationOverrides(),
     ]);
-    let remoteSettingsData = await this._getConfigurationPromise;
+    let remoteSettingsData = await this.#getConfigurationPromise;
     this._configuration = remoteSettingsData[0];
-    delete this._getConfigurationPromise;
+    this.#getConfigurationPromise = null;
 
     if (!this._configuration?.length) {
       throw Components.Exception(
@@ -93,13 +98,19 @@ export class SearchEngineSelector {
       );
     }
 
-    if (!this._listenerAdded) {
-      this._remoteConfig.on("sync", this._onConfigurationUpdated);
-      this._remoteConfigOverrides.on(
+    /**
+     * Records whether the listeners have been added or not.
+     */
+    if (!this.#listenerAdded) {
+      this.#remoteConfig.on("sync", this.#boundOnConfigurationUpdated);
+      this.#remoteConfigOverrides.on(
         "sync",
-        this._onConfigurationOverridesUpdated
+        this.#boundOnConfigurationOverridesUpdated
       );
-      this._listenerAdded = true;
+      /**
+       * Records whether the listeners have been added or not.
+       */
+      this.#listenerAdded = true;
     }
 
     this.#selector.setSearchConfig(
@@ -160,107 +171,6 @@ export class SearchEngineSelector {
       }
     }
     return null;
-  }
-
-  /**
-   * Obtains the configuration from remote settings. This includes
-   * verifying the signature of the record within the database.
-   *
-   * If the signature in the database is invalid, the database will be wiped
-   * and the stored dump will be used, until the settings next update.
-   *
-   * Note that this may cause a network check of the certificate, but that
-   * should generally be quick.
-   *
-   * @param {boolean} [firstTime]
-   *   Internal boolean to indicate if this is the first time check or not.
-   * @returns {Promise<object[]>}
-   *   An array of objects in the database, or an empty array if none
-   *   could be obtained.
-   */
-  async _getConfiguration(firstTime = true) {
-    let result = [];
-    let failed = false;
-    try {
-      result = await this._remoteConfig.get({
-        order: "id",
-      });
-    } catch (ex) {
-      lazy.logConsole.error(ex);
-      failed = true;
-    }
-    if (!result.length) {
-      lazy.logConsole.error("Received empty search configuration!");
-      failed = true;
-    }
-    // If we failed, or the result is empty, try loading from the local dump.
-    if (firstTime && failed) {
-      await this._remoteConfig.db.clear();
-      // Now call this again.
-      return this._getConfiguration(false);
-    }
-    return result;
-  }
-
-  /**
-   * Handles updating of the configuration. Note that the search service is
-   * only updated after a period where the user is observed to be idle.
-   *
-   * @param {object} options
-   *   The options object
-   * @param {object} options.data
-   *   The data to update
-   * @param {Array} options.data.current
-   *   The new configuration object
-   */
-  _onConfigurationUpdated({ data: { current } }) {
-    this._configuration = current;
-
-    this.#selector.setSearchConfig(
-      JSON.stringify({ data: this._configuration })
-    );
-
-    lazy.logConsole.debug("Search configuration updated remotely");
-    if (this._changeListener) {
-      this._changeListener();
-    }
-  }
-
-  /**
-   * Handles updating of the configuration. Note that the search service is
-   * only updated after a period where the user is observed to be idle.
-   *
-   * @param {object} options
-   *   The options object
-   * @param {object} options.data
-   *   The data to update
-   * @param {Array} options.data.current
-   *   The new configuration object
-   */
-  _onConfigurationOverridesUpdated({ data: { current } }) {
-    this.#selector.setConfigOverrides(JSON.stringify({ data: current }));
-
-    lazy.logConsole.debug("Search configuration overrides updated remotely");
-    if (this._changeListener) {
-      this._changeListener();
-    }
-  }
-
-  /**
-   * Obtains the configuration overrides from remote settings.
-   *
-   * @returns {Promise<object[]>}
-   *   An array of objects in the database, or an empty array if none
-   *   could be obtained.
-   */
-  async #getConfigurationOverrides() {
-    let result = [];
-    try {
-      result = await this._remoteConfigOverrides.get();
-    } catch (ex) {
-      // This data is remote only, so we just return an empty array if it fails.
-    }
-    return result;
   }
 
   /**
@@ -344,6 +254,153 @@ export class SearchEngineSelector {
     }
 
     return refinedSearchConfig;
+  }
+
+  /**
+   * The remote settings client for handling the search configuration collection.
+   */
+  #remoteConfig;
+
+  /**
+   * The remote settings client for handling the search configuration overrides
+   * collection.
+   */
+  #remoteConfigOverrides;
+
+  /**
+   * The bound version of the configuration updated listener.
+   */
+  #boundOnConfigurationUpdated;
+
+  /**
+   * The bound version of the configuration overrides updated listener.
+   */
+  #boundOnConfigurationOverridesUpdated;
+
+  /**
+   * Records whether the listeners have been added or not.
+   */
+  #listenerAdded = false;
+
+  /**
+   * A listener that is notified when changes to the search collections are
+   * detected.
+   */
+  #changeListener;
+
+  /**
+   * A promise that is used to de-bounce getting the configuration, it is
+   * resolved once the has been completed.
+   *
+   * @type {Promise<[object[], object[]]>}
+   */
+  #getConfigurationPromise;
+
+  /**
+   * Obtains the configuration from remote settings. This includes
+   * verifying the signature of the record within the database.
+   *
+   * If the signature in the database is invalid, the database will be wiped
+   * and the stored dump will be used, until the settings next update.
+   *
+   * Note that this may cause a network check of the certificate, but that
+   * should generally be quick.
+   *
+   * @param {boolean} [firstTime]
+   *   Internal boolean to indicate if this is the first time check or not.
+   * @returns {Promise<object[]>}
+   *   An array of objects in the database, or an empty array if none
+   *   could be obtained.
+   */
+  async #getConfiguration(firstTime = true) {
+    let result = [];
+    let failed = false;
+    try {
+      result = await this.#remoteConfig.get({
+        order: "id",
+      });
+    } catch (ex) {
+      lazy.logConsole.error(ex);
+      failed = true;
+    }
+    if (!result.length) {
+      lazy.logConsole.error("Received empty search configuration!");
+      failed = true;
+    }
+    // If we failed, or the result is empty, try loading from the local dump.
+    if (firstTime && failed) {
+      await this.#remoteConfig.db.clear();
+      // Now call this again.
+      return this.#getConfiguration(false);
+    }
+    return result;
+  }
+
+  /**
+   * Handles updating of the configuration. Note that the search service is
+   * only updated after a period where the user is observed to be idle.
+   *
+   * This is exposed so that searchengine-devtools can easily change the
+   * configuration within its instance of the class object.
+   *
+   * @param {object} options
+   *   The options object
+   * @param {object} options.data
+   *   The data to update
+   * @param {Array} options.data.current
+   *   The new configuration object
+   */
+  _onConfigurationUpdated({ data: { current } }) {
+    this._configuration = current;
+
+    this.#selector.setSearchConfig(
+      JSON.stringify({ data: this._configuration })
+    );
+
+    lazy.logConsole.debug("Search configuration updated remotely");
+    if (this.#changeListener) {
+      this.#changeListener();
+    }
+  }
+
+  /**
+   * Handles updating of the configuration. Note that the search service is
+   * only updated after a period where the user is observed to be idle.
+   *
+   * This is exposed so that searchengine-devtools can easily change the
+   * configuration within its instance of the class object.
+   *
+   * @param {object} options
+   *   The options object
+   * @param {object} options.data
+   *   The data to update
+   * @param {Array} options.data.current
+   *   The new configuration object
+   */
+  _onConfigurationOverridesUpdated({ data: { current } }) {
+    this.#selector.setConfigOverrides(JSON.stringify({ data: current }));
+
+    lazy.logConsole.debug("Search configuration overrides updated remotely");
+    if (this.#changeListener) {
+      this.#changeListener();
+    }
+  }
+
+  /**
+   * Obtains the configuration overrides from remote settings.
+   *
+   * @returns {Promise<object[]>}
+   *   An array of objects in the database, or an empty array if none
+   *   could be obtained.
+   */
+  async #getConfigurationOverrides() {
+    let result = [];
+    try {
+      result = await this.#remoteConfigOverrides.get();
+    } catch (ex) {
+      // This data is remote only, so we just return an empty array if it fails.
+    }
+    return result;
   }
 
   /**
