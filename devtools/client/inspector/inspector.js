@@ -15,6 +15,7 @@ const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 // Use privileged promise in panel documents to prevent having them to freeze
 // during toolbox destruction. See bug 1402779.
 const Promise = require("Promise");
+const osString = Services.appinfo.OS;
 
 loader.lazyRequireGetter(
   this,
@@ -281,6 +282,7 @@ class Inspector extends EventEmitter {
     this.breadcrumbs = new HTMLBreadcrumbs(this);
     this.#setupExtensionSidebars();
     this.#setupSearchBox();
+    this.#createInspectorShortcuts();
 
     this.#onNewSelection();
 
@@ -742,8 +744,6 @@ class Inspector extends EventEmitter {
     this.searchBox.addEventListener("focus", this.#listenForSearchEvents, {
       once: true,
     });
-
-    this.#createSearchBoxShortcuts();
   }
 
   #onSearchLabelClick = () => {
@@ -757,34 +757,42 @@ class Inspector extends EventEmitter {
     this.search.on("search-result", this.#updateSearchResultsLabel);
   };
 
-  #createSearchBoxShortcuts() {
-    this.searchboxShortcuts = new KeyShortcuts({
+  #isFromInspectorWindow = event => {
+    const win = event.originalTarget.ownerGlobal;
+    return win === this.panelWin || win.parent === this.panelWin;
+  };
+
+  #createInspectorShortcuts = () => {
+    this.inspectorShortcuts = new KeyShortcuts({
       window: this.panelDoc.defaultView,
       // The inspector search shortcuts need to be available from everywhere in the
       // inspector, and the inspector uses iframes (markupview, sidepanel webextensions).
       // Use the chromeEventHandler as the target to catch events from all frames.
       target: this.toolbox.getChromeEventHandler(),
     });
-    const key = INSPECTOR_L10N.getStr("inspector.searchHTML.key");
-    this.searchboxShortcuts.on(key, event => {
+
+    const searchboxKey = INSPECTOR_L10N.getStr("inspector.searchHTML.key");
+    this.inspectorShortcuts.on(searchboxKey, event => {
       // Prevent overriding same shortcut from the computed/rule views
       if (
         event.originalTarget.closest("#sidebar-panel-ruleview") ||
-        event.originalTarget.closest("#sidebar-panel-computedview")
+        event.originalTarget.closest("#sidebar-panel-computedview") ||
+        !this.#isFromInspectorWindow(event)
       ) {
         return;
       }
-
-      const win = event.originalTarget.ownerGlobal;
-      // Check if the event is coming from an inspector window to avoid catching
-      // events from other panels. Note, we are testing both win and win.parent
-      // because the inspector uses iframes.
-      if (win === this.panelWin || win.parent === this.panelWin) {
-        event.preventDefault();
-        this.searchBox.focus();
-      }
+      event.preventDefault();
+      this.searchBox.focus();
     });
-  }
+    const eyedropperKey = INSPECTOR_L10N.getStr("inspector.eyedropper.key");
+    this.inspectorShortcuts.on(eyedropperKey, event => {
+      if (!this.#isFromInspectorWindow(event)) {
+        return;
+      }
+      event.preventDefault();
+      this.onEyeDropperButtonClicked();
+    });
+  };
 
   get searchSuggestions() {
     return this.search.autocompleter;
@@ -1500,8 +1508,13 @@ class Inspector extends EventEmitter {
         "inspector-eyedropper-toggle"
       );
       this.eyeDropperButton.disabled = false;
-      this.eyeDropperButton.title = INSPECTOR_L10N.getStr(
-        "inspector.eyedropper.label"
+      const shortcutKey = INSPECTOR_L10N.getStr(
+        "inspector.eyedropper.key"
+      ).replace("CmdOrCtrl", osString == "Darwin" ? "Cmd" : "Ctrl");
+
+      this.eyeDropperButton.title = INSPECTOR_L10N.getFormatStr(
+        "inspector.eyedropper.label2",
+        shortcutKey
       );
       this.eyeDropperButton.addEventListener(
         "click",
@@ -1636,10 +1649,9 @@ class Inspector extends EventEmitter {
     }
 
     // When changing hosts, the toolbox chromeEventHandler might change, for instance when
-    // switching from docked to window hosts. Recreate the searchbox shortcuts.
-    this.searchboxShortcuts.destroy();
-    this.#createSearchBoxShortcuts();
-
+    // switching from docked to window hosts. Recreate the inspector shortcuts.
+    this.inspectorShortcuts.destroy();
+    this.#createInspectorShortcuts();
     this.#setSidebarSplitBoxState();
   };
 
@@ -1789,8 +1801,8 @@ class Inspector extends EventEmitter {
 
     this.breadcrumbs.destroy();
     this.styleChangeTracker.destroy();
-    this.searchboxShortcuts.destroy();
-    this.searchboxShortcuts = null;
+    this.inspectorShortcuts.destroy();
+    this.inspectorShortcuts = null;
 
     this.commands.targetCommand.unwatchTargets({
       types: [this.commands.targetCommand.TYPES.FRAME],
@@ -1877,6 +1889,7 @@ class Inspector extends EventEmitter {
   onEyeDropperDone() {
     this.eyeDropperButton.classList.remove("checked");
     this.stopEyeDropperListeners();
+    this.panelWin.focus();
   }
 
   /**
