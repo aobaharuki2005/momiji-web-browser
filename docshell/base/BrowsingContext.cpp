@@ -277,7 +277,11 @@ LogModule* BrowsingContext::GetSyncLog() { return gBrowsingContextSyncLog; }
 
 /* static */
 already_AddRefed<BrowsingContext> BrowsingContext::Get(uint64_t aId) {
-  return do_AddRef(sBrowsingContexts->Get(aId));
+  if (sBrowsingContexts) {
+    return do_AddRef(sBrowsingContexts->Get(aId));
+  }
+
+  return nullptr;
 }
 
 /* static */
@@ -1182,7 +1186,11 @@ void BrowsingContext::SetOpener(BrowsingContext* aOpener) {
 }
 
 bool BrowsingContext::HasOpener() const {
-  return sBrowsingContexts->Contains(GetOpenerId());
+  if (sBrowsingContexts) {
+    return sBrowsingContexts->Contains(GetOpenerId());
+  }
+
+  return false;
 }
 
 bool BrowsingContext::AncestorsAreCurrent() const {
