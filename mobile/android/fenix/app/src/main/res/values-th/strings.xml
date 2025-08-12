@@ -1771,6 +1771,7 @@
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">ไม่ต้องแสดงอีกครั้ง</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">ส่งรายงานข้อผิดพลาด</string>
+  <string name="unsubmitted_crash_dialog_learn_more">เรียนรู้เพิ่มเติม</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">เรียนรู้เพิ่มเติม</string>
   <!--
@@ -3788,4 +3789,14 @@
   <string name="review_prompt_feedback_header">ขออภัยในความไม่สะดวกที่เกิดขึ้น โปรดบอกเราว่ามีสิ่งใดที่เราสามารถพัฒนา %1$s ได้บ้าง</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">เสนอข้อคิดเห็น</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">เงื่อนไขการใช้งาน</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">ประกาศความเป็นส่วนตัว</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">เรียนรู้เพิ่มเติม</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">ยอมรับ</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">เตือนฉันภายหลัง</string>
 </resources>

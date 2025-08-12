@@ -621,7 +621,7 @@
   <!-- Line two of the terms of service onboarding page. 'Firefox' is intentionally hardcoded. %1$s is replaced by an active link, using onboarding_term_of_service_line_two_link_text as text (“Privacy Notice”). -->
   <string name="onboarding_term_of_service_line_two_2" tools:ignore="BrandUsage">Firefox bryr seg om personvernet ditt. Les mer i vår %1$s.</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_two. -->
-  <string name="onboarding_term_of_service_line_two_link_text">Personvernbestemmelser</string>
+  <string name="onboarding_term_of_service_line_two_link_text">Personvernerklæring</string>
   <!-- Line three of the terms of service onboarding page. 'Firefox' and 'Mozilla' are intentionally hardcoded. %1$s is replaced by an active link using onboarding_term_of_service_line_three_link_text as text (“Manage”). -->
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">For å hjelpe til med å forbedre nettleseren sender Firefox diagnose- og interaksjonsdata til Mozilla. %1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
@@ -2577,11 +2577,11 @@
   <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
   <string name="about_crashes">Krasj</string>
   <!-- About page link text to open privacy notice link -->
-  <string name="about_privacy_notice">Personvernbestemmelser</string>
+  <string name="about_privacy_notice">Personvernerklæring</string>
   <!-- About page link text to open know your rights link -->
   <string name="about_know_your_rights">Kjenn dine rettigheter</string>
   <!-- About page link text to open terms of use link -->
-  <string name="about_terms_of_use" tools:ignore="UnusedResources">Vilkår for bruk</string>
+  <string name="about_terms_of_use" tools:ignore="UnusedResources">Bruksvilkår</string>
   <!-- About page link text to open licensing information link -->
   <string name="about_licensing_information">Lisensinformasjon</string>
   <!-- About page link text to open a screen with libraries that are used -->
@@ -3519,7 +3519,7 @@
   -->
   <string name="micro_survey_survey_header_2">Fyll ut spørreundersøkelsen</string>
   <!-- The privacy notice link -->
-  <string name="micro_survey_privacy_notice_2">Personvernbestemmelser</string>
+  <string name="micro_survey_privacy_notice_2">Personvernerklæring</string>
   <!-- The submit button label text -->
   <string name="micro_survey_submit_button_label">Send</string>
   <!-- The survey completion header -->

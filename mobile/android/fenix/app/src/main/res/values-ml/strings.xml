@@ -318,6 +318,8 @@
   <string name="browser_menu_sign_back_in_to_sync">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കുക</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">സമന്വയിപ്പിക്കൽ താൽക്കാലികമായി നിർത്തി</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">താങ്ങൾ എന്തിന്റെ കരുതൽപ്പകൎപ്പു് എടുക്കാൻ പോവുന്നു അല്ലെങ്കിൽ സമന്വയിപ്പിക്കാൻ പോവുന്നുയെന്നു കൈകാര്യം ചെയ്യുക</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">പുതിയ സ്വകാര്യ ടാബ്</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -419,6 +421,8 @@
   <string name="browser_menu_default_banner_subtitle_2">ഉടൻ, സ്വകാര്യം, താങ്ങൾക്കുവേണ്ടി\u0020</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">കളയുക</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">പ്രചരണം നിരസിക്കുക</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
   <string name="browser_menu_recommended_extensions_content_description">കൂടുതൽ വിവരങ്ങൾ</string>
   <!--
@@ -808,6 +812,8 @@
   <string name="preferences_home_2">ആമുഖം</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">പ്രയോഗയടയാളം</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">ടാബുപ്പട്ട വിവരപ്പലക</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">ആംഗ്യങ്ങൾ</string>
   <!-- Preference for settings related to visual options -->
@@ -1030,6 +1036,10 @@
   <string name="alternative_app_icon_group_gradients">നിറച്ചരുമാനം</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">മറ്റുള്ളവ</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">പ്രയോഗയടയാളം മാറ്റണോ?</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">ഉടന്‍ വീണ്ടും തുടങ്ങുക</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">റദ്ദാക്കുക</string>
   <!--
@@ -1143,6 +1153,8 @@
   <string name="preferences_daily_usage_ping_description">സജീവ ഉപയോക്താക്കളുടെ കണക്കെടുക്കാൻ ഇതു് മോസ്സില്ലയെ സഹായിക്കുന്നു.</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">തകർച്ച വിവരങ്ങൾ തന്നെതാന്നെ അയയ്ക്കുക</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">അറിയിപ്പയച്ചു</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
   <string name="preferences_crashes_learn_more">തകർച്ചവിവരങ്ങളെക്കുറിച്ചു കൂടുതലറിയുക</string>
   <!-- Title Headers for data collection settings screen -->
@@ -1205,6 +1217,12 @@
   <string name="preference_auto_battery_theme">ബാറ്ററി സേവർ സജ്ജമാക്കിയത്</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">ഉപകരണ അലങ്കാരം പിന്തുടരുക</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">ടാബുപ്പട്ട കാണിക്കുക</string>
   <!--
     Gestures Preferences
 
@@ -1691,14 +1709,21 @@
   <string name="tab_crash_restore">ടാബ് പുനസ്ഥാപിക്കുക</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s-നു വീണ്ടും തുടങ്ങണ്ടി വന്നു</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s തകൎന്നു. ഇതിന്റെ വിവരം അറിയിക്കണോ?</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">തകർച്ച വിവരങ്ങൾ തന്നെതാന്നെ അയയ്ക്കുക</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">അടയ്ക്കുക</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">അടയ്ക്കുക</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">ഇനി ഒരിക്കലും കാണിയ്ക്കരുത്</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">അയയ്ക്കുക</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">തകരാറിനെപ്പറ്റിയുള്ള അറിയിപ്പ് അയയ്ക്കുക</string>
+  <string name="unsubmitted_crash_dialog_learn_more">കൂടുതലറിയുക</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">കൂടുതലറിയുക</string>
   <!--
@@ -2595,6 +2620,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">വിലാസങ്ങൾ കരുതവച്ചുിട്ടു് പൂരിപ്പിക്കുക</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">ഫോൺ നമ്പറുകളും ഇ-തപാൽ വിലാസങ്ങളും ഉൾപ്പെടുന്നു</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">എല്ലാ ഉപകരണങ്ങളിലും വിലാസങ്ങൾ സമന്വയിപ്പിക്കുക</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">വിലാസങ്ങൾ സമന്വയിപ്പിക്കുക</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">ചീട്ടു് ചേർക്കുക</string>
   <!-- Title of the "Edit card" screen -->
@@ -3599,4 +3628,20 @@
   <string name="review_prompt_feedback_header">താങ്ങൾക്കു് കുഴപ്പങ്ങൾ നേരിടുന്നതിലു് ഞങ്ങളെ പൊറുക്കണം. %1$s എങ്ങനെ മെച്ചപ്പെടുത്താമെന്നു് ഞങ്ങളെ അറിയിച്ചാൽ വളരെ നന്ദി.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">പ്രതികരണം നൽകുക</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">പുതുക്കൽ ലഭ്യം</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">ഉപയോഗനിബന്ധനകള്‍</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">സ്വകാര്യത അറിയിപ്പു്</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">കൂടുതലറിയുക</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">അംഗീകരിക്കുക</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">പിന്നീടു് ഓൎമ്മിപ്പിക്കുക</string>
 </resources>
