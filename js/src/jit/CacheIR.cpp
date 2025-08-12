@@ -1055,6 +1055,24 @@ void IRGenerator::emitCallAccessorGuards(NativeObject* obj,
   MOZ_ASSERT(holder->containsPure(id, prop));
 
   if (mode_ == ICState::Mode::Specialized || IsWindow(obj)) {
+    // Fast path for constant properties of objects with an ObjectFuse.
+    ObjectFuse* objFuse = nullptr;
+    if (canOptimizeConstantAccessorProperty(holder, prop, &objFuse)) {
+      ObjOperandId holderId;
+      if (obj == holder) {
+        writer.guardSpecificObject(objId, obj);
+        holderId = objId;
+      } else {
+        // Note: we don't need to call GeneratePrototypeGuards here because the
+        // ObjectFuse's generation will be updated when the proto chain is
+        // mutated.
+        TestMatchingNativeReceiver(writer, obj, objId);
+        holderId = writer.loadObject(holder);
+      }
+      emitGuardConstantAccessorProperty(holder, holderId, id, prop, objFuse);
+      return;
+    }
+
     TestMatchingNativeReceiver(writer, obj, objId);
 
     if (obj != holder) {
