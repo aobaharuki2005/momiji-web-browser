@@ -27,6 +27,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHigh
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.search.HomeSearchController
 import org.mozilla.fenix.home.toolbar.ToolbarController
+import org.mozilla.fenix.home.topsites.controller.TopSiteController
 import org.mozilla.fenix.search.toolbar.SearchSelectorController
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.wallpapers.WallpaperState
@@ -183,6 +184,7 @@ class SessionControlInteractor(
     private val searchSelectorController: SearchSelectorController,
     private val toolbarController: ToolbarController,
     private val homeSearchController: HomeSearchController,
+    private val topSiteController: TopSiteController,
 ) : HomepageInteractor {
 
     override fun onCollectionAddTabTapped(collection: TabCollection) {
@@ -210,15 +212,15 @@ class SessionControlInteractor(
     }
 
     override fun onOpenInPrivateTabClicked(topSite: TopSite) {
-        controller.handleOpenInPrivateTabClicked(topSite)
+        topSiteController.handleOpenInPrivateTabClicked(topSite)
     }
 
     override fun onEditTopSiteClicked(topSite: TopSite) {
-        controller.handleEditTopSiteClicked(topSite)
+        topSiteController.handleEditTopSiteClicked(topSite)
     }
 
     override fun onRemoveTopSiteClicked(topSite: TopSite) {
-        controller.handleRemoveTopSiteClicked(topSite)
+        topSiteController.handleRemoveTopSiteClicked(topSite)
     }
 
     override fun onRenameCollectionTapped(collection: TabCollection) {
@@ -226,23 +228,23 @@ class SessionControlInteractor(
     }
 
     override fun onSelectTopSite(topSite: TopSite, position: Int) {
-        controller.handleSelectTopSite(topSite, position)
+        topSiteController.handleSelectTopSite(topSite, position)
     }
 
     override fun onTopSiteImpression(topSite: TopSite.Provided, position: Int) {
-        controller.handleTopSiteImpression(topSite, position)
+        topSiteController.handleTopSiteImpression(topSite, position)
     }
 
     override fun onSettingsClicked() {
-        controller.handleTopSiteSettingsClicked()
+        topSiteController.handleTopSiteSettingsClicked()
     }
 
     override fun onSponsorPrivacyClicked() {
-        controller.handleSponsorPrivacyClicked()
+        topSiteController.handleSponsorPrivacyClicked()
     }
 
     override fun onTopSiteLongClicked(topSite: TopSite) {
-        controller.handleTopSiteLongClicked(topSite)
+        topSiteController.handleTopSiteLongClicked(topSite)
     }
 
     override fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean {

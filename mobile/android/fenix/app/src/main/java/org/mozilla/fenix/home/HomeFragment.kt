@@ -135,6 +135,7 @@ import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.home.topsites.TopSitesConfigConstants.AMAZON_SEARCH_ENGINE_NAME
 import org.mozilla.fenix.home.topsites.TopSitesConfigConstants.AMAZON_SPONSORED_TITLE
 import org.mozilla.fenix.home.topsites.TopSitesConfigConstants.EBAY_SPONSORED_TITLE
+import org.mozilla.fenix.home.topsites.controller.DefaultTopSiteController
 import org.mozilla.fenix.home.topsites.getTopSitesConfig
 import org.mozilla.fenix.home.ui.Homepage
 import org.mozilla.fenix.home.ui.MiddleSearchHomepage
@@ -467,8 +468,6 @@ class HomeFragment : Fragment() {
             restoreUseCase = components.useCases.tabsUseCases.restore,
             selectTabUseCase = components.useCases.tabsUseCases.selectTab,
             reloadUrlUseCase = components.useCases.sessionUseCases.reload,
-            topSitesUseCases = components.useCases.topSitesUseCase,
-            marsUseCases = components.useCases.marsUseCases,
             fenixBrowserUseCases = components.useCases.fenixBrowserUseCases,
             appStore = components.appStore,
             navControllerRef = WeakReference(findNavController()),
@@ -554,6 +553,17 @@ class HomeFragment : Fragment() {
             ),
             homeSearchController = DefaultHomeSearchController(
                 appStore = components.appStore,
+            ),
+            topSiteController = DefaultTopSiteController(
+                activityRef = WeakReference(activity),
+                store = store,
+                navControllerRef = WeakReference(findNavController()),
+                settings = components.settings,
+                addTabUseCase = components.useCases.tabsUseCases.addTab,
+                selectTabUseCase = components.useCases.tabsUseCases.selectTab,
+                topSitesUseCases = components.useCases.topSitesUseCase,
+                marsUseCases = components.useCases.marsUseCases,
+                viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
             ),
         )
 
