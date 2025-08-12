@@ -667,6 +667,12 @@ class SitePermissionsFeature(
                 is ContentCrossOriginStorageAccess -> {
                     permissionFromStore.crossOriginStorageAccess.doNotAskAgain()
                 }
+                is ContentLocalDeviceAccess -> {
+                    permissionFromStore.localDeviceAccess.doNotAskAgain()
+                }
+                is ContentLocalNetworkAccess -> {
+                    permissionFromStore.localNetworkAccess.doNotAskAgain()
+                }
                 else -> false
             }
         }
@@ -766,6 +772,12 @@ class SitePermissionsFeature(
             }
             is ContentCrossOriginStorageAccess -> {
                 sitePermissions.copy(crossOriginStorageAccess = status)
+            }
+            is ContentLocalDeviceAccess -> {
+                sitePermissions.copy(localDeviceAccess = status)
+            }
+            is ContentLocalNetworkAccess -> {
+                sitePermissions.copy(localNetworkAccess = status)
             }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
@@ -1117,6 +1129,12 @@ internal fun isPermissionGranted(
         }
         is ContentAutoPlayInaudible -> {
             permissionFromStorage.autoplayInaudible.isAllowed()
+        }
+        is ContentLocalDeviceAccess -> {
+            permissionFromStorage.localDeviceAccess.isAllowed()
+        }
+        is ContentLocalNetworkAccess -> {
+            permissionFromStorage.localNetworkAccess.isAllowed()
         }
         else ->
             throw InvalidParameterException("$permission is not a valid permission.")

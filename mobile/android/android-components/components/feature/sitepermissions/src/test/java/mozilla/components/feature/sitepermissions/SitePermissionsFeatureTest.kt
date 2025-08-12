@@ -8,7 +8,6 @@ import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import androidx.annotation.StringRes
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -38,6 +37,8 @@ import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAu
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
 import mozilla.components.concept.engine.permission.Permission.ContentCrossOriginStorageAccess
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
+import mozilla.components.concept.engine.permission.Permission.ContentLocalDeviceAccess
+import mozilla.components.concept.engine.permission.Permission.ContentLocalNetworkAccess
 import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
@@ -1362,6 +1363,8 @@ class SitePermissionsFeatureTest {
             ContentAutoPlayAudible(),
             ContentAutoPlayInaudible(),
             ContentMediaKeySystemAccess(),
+            ContentLocalDeviceAccess(),
+            ContentLocalNetworkAccess(),
         )
 
         sitePermissionsList.forEach { permission ->
@@ -1380,6 +1383,8 @@ class SitePermissionsFeatureTest {
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).mediaKeySystemAccess
             doReturn(AutoplayStatus.ALLOWED).`when`(sitePermissionFromStorage).autoplayAudible
             doReturn(AutoplayStatus.ALLOWED).`when`(sitePermissionFromStorage).autoplayInaudible
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).localDeviceAccess
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).localNetworkAccess
 
             val isAllowed = sitePermissionFromStorage.isGranted(request)
             assertTrue(isAllowed)
@@ -1396,6 +1401,8 @@ class SitePermissionsFeatureTest {
             ContentVideoCamera(),
             ContentVideoCapture(),
             ContentCrossOriginStorageAccess(),
+            ContentLocalDeviceAccess(),
+            ContentLocalNetworkAccess(),
             Generic(),
         )
 
@@ -1412,6 +1419,8 @@ class SitePermissionsFeatureTest {
             doReturn(BLOCKED).`when`(sitePermissionFromStorage).camera
             doReturn(BLOCKED).`when`(sitePermissionFromStorage).microphone
             doReturn(BLOCKED).`when`(sitePermissionFromStorage).crossOriginStorageAccess
+            doReturn(BLOCKED).`when`(sitePermissionFromStorage).localDeviceAccess
+            doReturn(BLOCKED).`when`(sitePermissionFromStorage).localNetworkAccess
 
             try {
                 val isAllowed = sitePermissionFromStorage.isGranted(request)
@@ -1490,6 +1499,8 @@ class SitePermissionsFeatureTest {
             persistentStorage = SitePermissionsRules.Action.BLOCKED,
             crossOriginStorageAccess = SitePermissionsRules.Action.ALLOWED,
             mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW,
+            localDeviceAccess = SitePermissionsRules.Action.ASK_TO_ALLOW,
+            localNetworkAccess = SitePermissionsRules.Action.ASK_TO_ALLOW,
         )
 
         sitePermissionFeature.sitePermissionsRules = rules
@@ -1505,6 +1516,8 @@ class SitePermissionsFeatureTest {
         assertEquals(ALLOWED, sitePermissions.autoplayInaudible.toStatus())
         assertEquals(BLOCKED, sitePermissions.localStorage)
         assertEquals(ALLOWED, sitePermissions.crossOriginStorageAccess)
+        assertEquals(NO_DECISION, sitePermissions.localDeviceAccess)
+        assertEquals(NO_DECISION, sitePermissions.localNetworkAccess)
         assertEquals(NO_DECISION, sitePermissions.mediaKeySystemAccess)
     }
 

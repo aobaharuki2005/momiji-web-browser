@@ -37,6 +37,8 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_LOCAL_DEVICE_ACCESS
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_LOCAL_NETWORK_ACCESS
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_MEDIA_KEY_SYSTEM_ACCESS
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_PERSISTENT_STORAGE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_STORAGE_ACCESS
@@ -295,6 +297,8 @@ class GeckoSitePermissionsStorageTest {
             mediaKeySystemAccess = ALLOWED,
             autoplayAudible = AutoplayStatus.ALLOWED,
             autoplayInaudible = AutoplayStatus.ALLOWED,
+            localDeviceAccess = ALLOWED,
+            localNetworkAccess = ALLOWED,
             savedAt = 0,
         )
         val geckoPermissions = listOf(
@@ -305,6 +309,8 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
             geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
+            geckoContentPermission(type = PERMISSION_LOCAL_DEVICE_ACCESS),
+            geckoContentPermission(type = PERMISSION_LOCAL_NETWORK_ACCESS),
         )
 
         doReturn(geckoPermissions).`when`(geckoStorage)
@@ -325,6 +331,8 @@ class GeckoSitePermissionsStorageTest {
         assertEquals(NO_DECISION, permission.mediaKeySystemAccess)
         assertEquals(ALLOWED, permission.camera)
         assertEquals(ALLOWED, permission.microphone)
+        assertEquals(NO_DECISION, permission.localDeviceAccess)
+        assertEquals(NO_DECISION, permission.localNetworkAccess)
         assertEquals(AutoplayStatus.BLOCKED, permission.autoplayAudible)
         assertEquals(AutoplayStatus.BLOCKED, permission.autoplayInaudible)
     }
