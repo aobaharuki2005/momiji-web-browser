@@ -55,6 +55,8 @@ ExternalTexture::ExternalTexture(Device* const aParent, RawId aId,
   return externalTexture.forget();
 }
 
+void ExternalTexture::Expire() { mIsExpired = true; }
+
 void ExternalTexture::Cleanup() {
   if (!mValid) {
     return;

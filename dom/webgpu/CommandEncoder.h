@@ -10,10 +10,12 @@
 #include "ObjectModel.h"
 #include "QuerySet.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Span.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
@@ -41,6 +43,7 @@ class CanvasContext;
 class CommandBuffer;
 class ComputePassEncoder;
 class Device;
+class ExternalTexture;
 class RenderPassEncoder;
 class WebGPUChild;
 
@@ -70,6 +73,7 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
 
   RefPtr<WebGPUChild> mBridge;
   CanvasContextArray mPresentationContexts;
+  nsTArray<RefPtr<ExternalTexture>> mExternalTextures;
 
   void TrackPresentationContext(WeakPtr<CanvasContext> aTargetContext);
 
@@ -80,9 +84,11 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   CommandEncoderState GetState() const { return mState; };
 
   void EndComputePass(ffi::WGPURecordedComputePass& aPass,
-                      CanvasContextArray& aCanvasContexts);
+                      CanvasContextArray& aCanvasContexts,
+                      Span<RefPtr<ExternalTexture>> aExternalTextures);
   void EndRenderPass(ffi::WGPURecordedRenderPass& aPass,
-                     CanvasContextArray& aCanvasContexts);
+                     CanvasContextArray& aCanvasContexts,
+                     Span<RefPtr<ExternalTexture>> aExternalTextures);
 
   void CopyBufferToBuffer(const Buffer& aSource, const Buffer& aDestination,
                           const dom::Optional<BufferAddress>& aSize) {

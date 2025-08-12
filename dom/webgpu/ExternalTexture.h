@@ -10,6 +10,7 @@
 
 #include "ObjectModel.h"
 #include "mozilla/Span.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
@@ -53,7 +54,9 @@ class WebGPUParent;
 // by any external textures.
 //
 // [1] https://www.w3.org/TR/webgpu/#gpuexternaltexture
-class ExternalTexture : public ObjectBase, public ChildOf<Device> {
+class ExternalTexture : public ObjectBase,
+                        public ChildOf<Device>,
+                        public SupportsWeakPtr {
  public:
   GPU_DECL_CYCLE_COLLECTION(ExternalTexture)
   GPU_DECL_JS_WRAP(ExternalTexture)
@@ -62,6 +65,14 @@ class ExternalTexture : public ObjectBase, public ChildOf<Device> {
       Device* const aParent, const nsString& aLabel,
       const RefPtr<ExternalTextureSourceClient>& aSource,
       dom::PredefinedColorSpace aColorSpace);
+
+  // Sets the external texture's "expired" state to true. This gets called at
+  // the end of the task in which the external texture was imported if
+  // imported from an HTMLVideoElement, and when the video frame is closed if
+  // imported from a VideoFrame. It is an error to submit a command buffer
+  // which uses an expired external texture.
+  void Expire();
+  bool IsExpired() const { return mIsExpired; }
 
   const RawId mId;
 
@@ -74,6 +85,7 @@ class ExternalTexture : public ObjectBase, public ChildOf<Device> {
   // Hold a strong reference to the source to ensure it stays alive as long as
   // the external texture may still be used.
   RefPtr<ExternalTextureSourceClient> mSource;
+  bool mIsExpired = false;
 };
 
 // The client side of an imported external texture source. This gets imported

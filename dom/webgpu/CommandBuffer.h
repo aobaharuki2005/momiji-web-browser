@@ -7,8 +7,10 @@
 #define GPU_CommandBuffer_H_
 
 #include "ObjectModel.h"
+#include "mozilla/Span.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla::webgpu {
@@ -16,6 +18,7 @@ namespace mozilla::webgpu {
 class CanvasContext;
 class CommandEncoder;
 class Device;
+class ExternalTexture;
 
 class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
  public:
@@ -23,7 +26,12 @@ class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_JS_WRAP(CommandBuffer)
 
   CommandBuffer(Device* const aParent, WebGPUChild* const aBridge, RawId aId,
-                nsTArray<WeakPtr<CanvasContext>>&& aPresentationContexts);
+                nsTArray<WeakPtr<CanvasContext>>&& aPresentationContexts,
+                nsTArray<RefPtr<ExternalTexture>>&& aExternalTextures);
+
+  Span<const RefPtr<ExternalTexture>> GetExternalTextures() const {
+    return mExternalTextures;
+  }
 
   Maybe<RawId> Commit();
 
@@ -35,6 +43,9 @@ class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
   const RawId mId;
   RefPtr<WebGPUChild> mBridge;
   const nsTArray<WeakPtr<CanvasContext>> mPresentationContexts;
+
+  // List of external textures used in this command buffer.
+  nsTArray<RefPtr<ExternalTexture>> mExternalTextures;
 };
 
 }  // namespace mozilla::webgpu

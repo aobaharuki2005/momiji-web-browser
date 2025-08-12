@@ -36,6 +36,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/VideoFrame.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "nsGlobalWindowInner.h"
 
@@ -201,7 +202,43 @@ already_AddRefed<ExternalTexture> Device::ImportExternalTexture(
   RefPtr<ExternalTextureSourceClient> source =
       ExternalTextureSourceClient::Create(this, aDesc.mSource, aRv);
 
-  return ExternalTexture::Create(this, aDesc.mLabel, source, aDesc.mColorSpace);
+  RefPtr<ExternalTexture> externalTexture =
+      ExternalTexture::Create(this, aDesc.mLabel, source, aDesc.mColorSpace);
+
+  switch (aDesc.mSource.GetType()) {
+    case dom::OwningHTMLVideoElementOrVideoFrame::Type::eHTMLVideoElement: {
+      // Add the texture to the list of textures to be expired in the next
+      // automatic expiry task, scheduling the task if required.
+      // Using RunInStableState ensures it runs after any microtasks that may
+      // be scheduled during the current task.
+      if (mExternalTexturesToExpire.IsEmpty()) {
+        nsContentUtils::RunInStableState(
+            NewRunnableMethod("webgpu::Device::ExpireExternalTextures", this,
+                              &Device::ExpireExternalTextures));
+      }
+      mExternalTexturesToExpire.AppendElement(externalTexture);
+    } break;
+    case dom::OwningHTMLVideoElementOrVideoFrame::Type::eVideoFrame: {
+      // Ensure the VideoFrame knows about the external texture, so that it can
+      // expire it when the VideoFrame is closed.
+      const auto& videoFrame = aDesc.mSource.GetAsVideoFrame();
+      videoFrame->TrackWebGPUExternalTexture(externalTexture.get());
+    } break;
+  }
+
+  return externalTexture.forget();
+}
+
+void Device::ExpireExternalTextures() {
+  MOZ_ASSERT(!mExternalTexturesToExpire.IsEmpty(),
+             "Task should not have been scheduled if there are no external "
+             "textures to expire");
+  for (const auto& weakExternalTexture : mExternalTexturesToExpire) {
+    if (auto* externalTexture = weakExternalTexture.get()) {
+      externalTexture->Expire();
+    }
+  }
+  mExternalTexturesToExpire.Clear();
 }
 
 already_AddRefed<Sampler> Device::CreateSampler(
@@ -436,6 +473,7 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
     const dom::GPUBindGroupDescriptor& aDesc) {
   nsTArray<ffi::WGPUBindGroupEntry> entries(aDesc.mEntries.Length());
   CanvasContextArray canvasContexts;
+  nsTArray<RefPtr<ExternalTexture>> externalTextures;
   for (const auto& entry : aDesc.mEntries) {
     ffi::WGPUBindGroupEntry e = {};
     e.binding = entry.mBinding;
@@ -476,7 +514,10 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
     } else if (entry.mResource.IsGPUSampler()) {
       e.sampler = entry.mResource.GetAsGPUSampler()->mId;
     } else if (entry.mResource.IsGPUExternalTexture()) {
-      e.external_texture = entry.mResource.GetAsGPUExternalTexture()->mId;
+      const RefPtr<ExternalTexture> externalTexture =
+          entry.mResource.GetAsGPUExternalTexture();
+      e.external_texture = externalTexture->mId;
+      externalTextures.AppendElement(externalTexture);
     } else {
       // Not a buffer, nor a texture view, nor a sampler, nor an external
       // texture. If we pass this to wgpu_client, it'll panic. Log a warning
@@ -497,7 +538,8 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
   RawId id =
       ffi::wgpu_client_create_bind_group(mBridge->GetClient(), mId, &desc);
 
-  RefPtr<BindGroup> object = new BindGroup(this, id, std::move(canvasContexts));
+  RefPtr<BindGroup> object = new BindGroup(this, id, std::move(canvasContexts),
+                                           std::move(externalTextures));
   object->SetLabel(aDesc.mLabel);
 
   return object.forget();

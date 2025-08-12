@@ -123,6 +123,10 @@ class Device final : public DOMEventTargetHelper {
  private:
   ~Device();
   void Cleanup();
+  // Expires external textures in mExternalTexturesToExpire. Scheduled to run
+  // as a stable state task when an external texture is imported from an
+  // HTMLVideoElement.
+  void ExpireExternalTextures();
 
   RefPtr<WebGPUChild> mBridge;
   bool mValid = true;
@@ -131,6 +135,9 @@ class Device final : public DOMEventTargetHelper {
   RefPtr<Queue> mQueue;
   nsTHashSet<nsCString> mKnownWarnings;
   nsTHashSet<Buffer*> mTrackedBuffers;
+  // List of external textures due to be expired in the next automatic expiry
+  // task.
+  nsTArray<WeakPtr<ExternalTexture>> mExternalTexturesToExpire;
 
  public:
   void GetLabel(nsAString& aValue) const;
