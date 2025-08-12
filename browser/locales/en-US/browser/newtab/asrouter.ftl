@@ -290,11 +290,12 @@ fxa-menu-message-close-button =
     .aria-label = Close
 
 fxa-menu-message-sign-up-button = Sign up
-
 fxa-menu-message-sign-in-button = Sign in
+fxa-menu-message-sync-button = Start syncing
 
 fxa-menu-message-sync-devices-primary-text = Sync all your devices
 fxa-menu-message-sync-devices-secondary-text = Instantly get your info — like bookmarks and passwords — everywhere you use { -brand-short-name }.
+fxa-menu-message-sync-devices-secondary-text2 = Instantly get your bookmarks, passwords, and more — everywhere you’re signed in to { -brand-short-name }.
 fxa-menu-message-sync-devices-collapsed-text = Sync all your devices
 
 fxa-menu-message-backup-data-primary-text = Back up your browser data
