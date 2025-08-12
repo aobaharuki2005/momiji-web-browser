@@ -479,7 +479,7 @@ browser_ml_semantic_history_search_perf.js
  --verbose
  --manifest perftest.toml
  --manifest-flavor browser-chrome
- --try-platform linux, mac, win
+ --try-platform mac, win
 
 **Test for latency for ML Semantic Search History Feature**
 

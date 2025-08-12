@@ -439,6 +439,7 @@ ml-perf-semantic-ft:
             --flavor mochitest
             --output $MOZ_FETCHES_DIR/../artifacts
             --hooks toolkit/components/ml/tests/tools/hooks_local_hub.py
+            --mochitest-extra-args setenv=MOZ_DISABLE_CONTENT_SANDBOX=1
             --mochitest-name-change
             toolkit/components/ml/tests/browser/browser_ml_semantic_history_search_perf.js
 
