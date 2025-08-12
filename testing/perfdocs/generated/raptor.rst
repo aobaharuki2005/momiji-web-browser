@@ -773,7 +773,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 2000000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/JetStream2
-   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **repository revision**: 6acd3f58f12dbd71cf4743666cad305862681630
    * **subtest lower is better**: false
    * **subtest unit**: score
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
