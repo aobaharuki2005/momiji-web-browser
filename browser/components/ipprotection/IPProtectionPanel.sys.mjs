@@ -77,8 +77,10 @@ export class IPProtectionPanel {
    *
    * @param {Window} window
    *   Window containing the panelView to manage.
+   * @param {string} variant
+   *   Variant of the panel that should be used.
    */
-  constructor(window) {
+  constructor(window, variant = "") {
     this.handleEvent = this.#handleEvent.bind(this);
 
     let {
@@ -92,6 +94,7 @@ export class IPProtectionPanel {
       isProtectionEnabled,
       protectionEnabledSince,
       location: "United States",
+      variant,
     };
 
     if (window) {

@@ -36,6 +36,7 @@ class IPProtectionWidget {
   static PANEL_ID = "PanelUI-ipprotection";
 
   static ENABLED_PREF = "browser.ipProtection.enabled";
+  static VARIANT_PREF = "browser.ipProtection.variant";
 
   #enabled = true;
   #created = false;
@@ -266,7 +267,7 @@ class IPProtectionWidget {
   #onBeforeCreated(doc) {
     let { ownerGlobal } = doc;
     if (!this.#panels.has(ownerGlobal)) {
-      let panel = new lazy.IPProtectionPanel(ownerGlobal);
+      let panel = new lazy.IPProtectionPanel(ownerGlobal, this.variant);
       this.#panels.set(ownerGlobal, panel);
     }
   }
@@ -342,6 +343,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   IPProtectionWidget.ENABLED_PREF,
   false,
   IPProtection.updateEnabled
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  IPProtection,
+  "variant",
+  IPProtectionWidget.VARIANT_PREF,
+  ""
 );
 
 export { IPProtection, IPProtectionWidget };
