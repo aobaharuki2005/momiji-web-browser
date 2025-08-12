@@ -105,7 +105,6 @@ export const DefaultMeta = ({
   context_type,
   sponsor,
   sponsored_by_override,
-  saveToPocketCard,
   ctaButtonVariant,
   dispatch,
   spocMessageVariant,
@@ -221,11 +220,7 @@ export const DefaultMeta = ({
           newSponsoredLabel cards sponsored label is moved to just under the thumbnail,
           so we can display both, so we specifically don't pass in context. */}
       {newSponsoredLabel && (
-        <DSMessageFooter
-          context_type={context_type}
-          context={null}
-          saveToPocketCard={saveToPocketCard}
-        />
+        <DSMessageFooter context_type={context_type} context={null} />
       )}
     </div>
   );
@@ -779,7 +774,6 @@ export class _DSCard extends React.PureComponent {
       isRecentSave,
       DiscoveryStream,
       Prefs,
-      saveToPocketCard,
       isListCard,
       isFakespot,
       mayHaveSectionsCards,
@@ -1004,7 +998,6 @@ export class _DSCard extends React.PureComponent {
               context_type={this.props.context_type}
               sponsor={this.props.sponsor}
               sponsored_by_override={this.props.sponsored_by_override}
-              saveToPocketCard={saveToPocketCard}
               ctaButtonVariant={ctaButtonVariant}
               dispatch={this.props.dispatch}
               spocMessageVariant={this.props.spocMessageVariant}

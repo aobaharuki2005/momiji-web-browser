@@ -366,13 +366,6 @@ export class DiscoveryStreamFeed {
     const { region } = this.store.getState().Prefs.values;
 
     this.setupSpocsCacheUpdateTime();
-    const saveToPocketCardRegions = nimbusConfig.saveToPocketCardRegions
-      ?.split(",")
-      .map(s => s.trim());
-    const saveToPocketCard =
-      pocketButtonEnabled &&
-      (nimbusConfig.saveToPocketCard ||
-        saveToPocketCardRegions?.includes(region));
 
     const hideDescriptionsRegions = nimbusConfig.hideDescriptionsRegions
       ?.split(",")
@@ -391,7 +384,6 @@ export class DiscoveryStreamFeed {
         data: {
           recentSavesEnabled: nimbusConfig.recentSavesEnabled,
           pocketButtonEnabled,
-          saveToPocketCard,
           hideDescriptions,
           compactImages: nimbusConfig.compactImages,
           imageGradient: nimbusConfig.imageGradient,

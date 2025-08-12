@@ -759,7 +759,6 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ...prevState,
         recentSavesEnabled: action.data.recentSavesEnabled,
         pocketButtonEnabled: action.data.pocketButtonEnabled,
-        saveToPocketCard: action.data.saveToPocketCard,
         hideDescriptions: action.data.hideDescriptions,
         compactImages: action.data.compactImages,
         imageGradient: action.data.imageGradient,

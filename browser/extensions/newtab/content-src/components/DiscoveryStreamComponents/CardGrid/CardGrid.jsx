@@ -355,7 +355,7 @@ export class _CardGrid extends React.PureComponent {
       DiscoveryStream,
     } = this.props;
 
-    const { saveToPocketCard, topicsLoading } = DiscoveryStream;
+    const { topicsLoading } = DiscoveryStream;
     const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const isOnboardingExperienceDismissed =
       prefs[PREF_ONBOARDING_EXPERIENCE_DISMISSED];
@@ -428,7 +428,6 @@ export class _CardGrid extends React.PureComponent {
             context_type={rec.context_type}
             bookmarkGuid={rec.bookmarkGuid}
             is_collection={this.props.is_collection}
-            saveToPocketCard={saveToPocketCard}
             ctaButtonSponsors={ctaButtonSponsors}
             ctaButtonVariant={ctaButtonVariant}
             spocMessageVariant={spocMessageVariant}

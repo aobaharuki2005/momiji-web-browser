@@ -2181,8 +2181,6 @@ describe("DiscoveryStreamFeed", () => {
               titleLines: "1",
               descLines: "1",
               readTime: true,
-              saveToPocketCard: false,
-              saveToPocketCardRegions: "US,CA,GB",
             },
           },
         },
@@ -2196,7 +2194,6 @@ describe("DiscoveryStreamFeed", () => {
       assert.deepEqual(feed.store.dispatch.secondCall.args[0].data, {
         recentSavesEnabled: true,
         pocketButtonEnabled: true,
-        saveToPocketCard: true,
         hideDescriptions: true,
         compactImages: true,
         imageGradient: true,

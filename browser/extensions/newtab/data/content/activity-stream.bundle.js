@@ -3450,8 +3450,7 @@ class DSContextFooter extends (external_React_default()).PureComponent {
 const DSMessageFooter = props => {
   const {
     context,
-    context_type,
-    saveToPocketCard
+    context_type
   } = props;
   const dsMessageLabel = DSMessageLabel({
     context,
@@ -3459,7 +3458,7 @@ const DSMessageFooter = props => {
   });
 
   // This case is specific and already displayed to the user elsewhere.
-  if (!dsMessageLabel || saveToPocketCard && context_type === "pocket") {
+  if (!dsMessageLabel) {
     return null;
   }
   return /*#__PURE__*/external_React_default().createElement("div", {
@@ -3611,7 +3610,6 @@ const DefaultMeta = ({
   context_type,
   sponsor,
   sponsored_by_override,
-  saveToPocketCard,
   ctaButtonVariant,
   dispatch,
   spocMessageVariant,
@@ -3687,8 +3685,7 @@ const DefaultMeta = ({
     mayHaveSectionsCards: mayHaveSectionsCards
   }), newSponsoredLabel && /*#__PURE__*/external_React_default().createElement(DSMessageFooter, {
     context_type: context_type,
-    context: null,
-    saveToPocketCard: saveToPocketCard
+    context: null
   }));
 };
 class _DSCard extends (external_React_default()).PureComponent {
@@ -4124,7 +4121,6 @@ class _DSCard extends (external_React_default()).PureComponent {
       isRecentSave,
       DiscoveryStream,
       Prefs,
-      saveToPocketCard,
       isListCard,
       isFakespot,
       mayHaveSectionsCards,
@@ -4298,7 +4294,6 @@ class _DSCard extends (external_React_default()).PureComponent {
       context_type: this.props.context_type,
       sponsor: this.props.sponsor,
       sponsored_by_override: this.props.sponsored_by_override,
-      saveToPocketCard: saveToPocketCard,
       ctaButtonVariant: ctaButtonVariant,
       dispatch: this.props.dispatch,
       spocMessageVariant: this.props.spocMessageVariant,
@@ -5642,7 +5637,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
       DiscoveryStream
     } = this.props;
     const {
-      saveToPocketCard,
       topicsLoading
     } = DiscoveryStream;
     const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
@@ -5701,7 +5695,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
         is_collection: this.props.is_collection,
-        saveToPocketCard: saveToPocketCard,
         ctaButtonSponsors: ctaButtonSponsors,
         ctaButtonVariant: ctaButtonVariant,
         spocMessageVariant: spocMessageVariant,
@@ -8590,7 +8583,6 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ...prevState,
         recentSavesEnabled: action.data.recentSavesEnabled,
         pocketButtonEnabled: action.data.pocketButtonEnabled,
-        saveToPocketCard: action.data.saveToPocketCard,
         hideDescriptions: action.data.hideDescriptions,
         compactImages: action.data.compactImages,
         imageGradient: action.data.imageGradient,
@@ -12108,9 +12100,6 @@ function CardSection({
   const trendingEnabled = prefs[CardSections_PREF_TRENDING_SEARCH] && prefs[CardSections_PREF_TRENDING_SEARCH_SYSTEM] && prefs[CardSections_PREF_SEARCH_ENGINE]?.toLowerCase() === "google";
   const trendingVariant = prefs[CardSections_PREF_TRENDING_SEARCH_VARIANT];
   const shouldShowTrendingSearch = trendingEnabled && trendingVariant === "b";
-  const {
-    saveToPocketCard
-  } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.DiscoveryStream);
   const mayHaveSectionsPersonalization = prefs[PREF_SECTIONS_PERSONALIZATION_ENABLED];
   const {
     sectionKey,
@@ -12298,7 +12287,6 @@ function CardSection({
       selectedTopics: selectedTopics,
       availableTopics: availableTopics,
       is_collection: is_collection,
-      saveToPocketCard: saveToPocketCard,
       ctaButtonSponsors: ctaButtonSponsors,
       ctaButtonVariant: ctaButtonVariant,
       spocMessageVariant: spocMessageVariant,

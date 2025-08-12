@@ -172,7 +172,6 @@ function CardSection({
 
   const shouldShowTrendingSearch = trendingEnabled && trendingVariant === "b";
 
-  const { saveToPocketCard } = useSelector(state => state.DiscoveryStream);
   const mayHaveSectionsPersonalization =
     prefs[PREF_SECTIONS_PERSONALIZATION_ENABLED];
 
@@ -399,7 +398,6 @@ function CardSection({
               selectedTopics={selectedTopics}
               availableTopics={availableTopics}
               is_collection={is_collection}
-              saveToPocketCard={saveToPocketCard}
               ctaButtonSponsors={ctaButtonSponsors}
               ctaButtonVariant={ctaButtonVariant}
               spocMessageVariant={spocMessageVariant}
