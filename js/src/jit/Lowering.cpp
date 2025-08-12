@@ -4445,6 +4445,17 @@ void LIRGenerator::visitArrayBufferViewElements(MArrayBufferViewElements* ins) {
          ins);
 }
 
+void LIRGenerator::visitArrayBufferViewElementsWithOffset(
+    MArrayBufferViewElementsWithOffset* ins) {
+  MOZ_ASSERT(ins->offset()->type() == MIRType::IntPtr);
+  MOZ_ASSERT(ins->type() == MIRType::Elements);
+
+  define(new (alloc()) LArrayBufferViewElementsWithOffset(
+             useRegister(ins->object()),
+             useRegisterOrIndexConstant(ins->offset(), ins->elementType())),
+         ins);
+}
+
 void LIRGenerator::visitTypedArrayElementSize(MTypedArrayElementSize* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   define(new (alloc())

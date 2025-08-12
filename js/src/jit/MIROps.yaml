@@ -1767,10 +1767,24 @@
   compute_range: custom
   generate_lir: true
 
-# Read the length of an array buffer view.
+# Read the elements of an array buffer view.
 - name: ArrayBufferViewElements
   operands:
     object: Object
+  result_type: Elements
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  clone: true
+  generate_lir: true
+
+# Read the elements of an array buffer view and adjust it with the given offset.
+- name: ArrayBufferViewElementsWithOffset
+  operands:
+    object: Object
+    offset: IntPtr
+  arguments:
+    elementType: Scalar::Type
   result_type: Elements
   movable: true
   congruent_to: if_operands_equal
