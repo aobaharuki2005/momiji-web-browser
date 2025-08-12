@@ -2291,8 +2291,13 @@ void Document::AccumulatePageLoadTelemetry() {
   TimeStamp navigationStart =
       GetNavigationTiming()->GetNavigationStartTimeStamp();
 
-  if (!responseStart || !navigationStart) {
+  if (!navigationStart) {
     return;
+  }
+
+  if (!responseStart) {
+    // This happens when getting a response from the cache.
+    responseStart = navigationStart;
   }
 
   nsAutoCString dnsKey("Native");
@@ -17293,11 +17298,13 @@ void Document::ReportLCP() {
   timedChannel->GetResponseStart(&responseStart);
 
   if (!responseStart) {
-    return;
+    // This happens when getting a response from the cache.
+    mozilla::glean::perf::largest_contentful_paint_from_response_start
+        .AccumulateRawDuration(lcpTime - timing->GetNavigationStartTimeStamp());
+  } else {
+    mozilla::glean::perf::largest_contentful_paint_from_response_start
+        .AccumulateRawDuration(lcpTime - responseStart);
   }
-
-  mozilla::glean::perf::largest_contentful_paint_from_response_start
-      .AccumulateRawDuration(lcpTime - responseStart);
 
   if (profiler_thread_is_being_profiled_for_markers()) {
     MarkerInnerWindowId innerWindowID =
