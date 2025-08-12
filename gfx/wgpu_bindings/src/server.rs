@@ -1066,10 +1066,13 @@ pub extern "C" fn wgpu_vkimage_create_with_dma_buf(
 
         let mut layouts = Vec::new();
         for i in 0..plane_count {
+            // VUID-vkGetImageSubresourceLayout-tiling-09433: For
+            // `DMA_BUF` images, the planes must be identified using the
+            // `MEMORY_PLANE_i_EXT bits, not the `PLANE_i` bits.
             let flag = match i {
-                0 => vk::ImageAspectFlags::PLANE_0,
-                1 => vk::ImageAspectFlags::PLANE_1,
-                2 => vk::ImageAspectFlags::PLANE_2,
+                0 => vk::ImageAspectFlags::MEMORY_PLANE_0_EXT,
+                1 => vk::ImageAspectFlags::MEMORY_PLANE_1_EXT,
+                2 => vk::ImageAspectFlags::MEMORY_PLANE_2_EXT,
                 _ => unreachable!(),
             };
             let subresource = vk::ImageSubresource::default().aspect_mask(flag);
@@ -1590,6 +1593,38 @@ impl Global {
             let mut external_image_create_info = vk::ExternalMemoryImageCreateInfo::default()
                 .handle_types(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT);
 
+            // Surprising rule:
+            //
+            // > VUID-VkImageDrmFormatModifierExplicitCreateInfoEXT-size-02267:
+            // > For each element of pPlaneLayouts, size must be 0
+            //
+            // Rationale:
+            //
+            // > In each element of pPlaneLayouts, the implementation must ignore
+            // > size. The implementation calculates the size of each plane, which
+            // > the application can query with vkGetImageSubresourceLayout.
+            //
+            // So, make a temporary copy of the plane layouts and zero
+            // out their sizes.
+            let memory_plane_layouts: Vec<_> = vk_image_wrapper
+                .layouts
+                .iter()
+                .map(|layout| vk::SubresourceLayout { size: 0, ..*layout })
+                .collect();
+
+            // VUID-VkImageCreateInfo-pNext-00990
+            //
+            // Since `wgpu_vkimage_create_with_dma_buf` above succeeded in
+            // creating the original DMABuf image, if we pass the same
+            // parameters, including the DRM format modifier and plane layouts,
+            // we can assume that this call will succeed too.
+            //
+            // The only thing we're adding is the `ALIAS` flag, because this
+            // aliases the original image.
+            let mut modifier_list = vk::ImageDrmFormatModifierExplicitCreateInfoEXT::default()
+                .drm_format_modifier(vk_image_wrapper.modifier)
+                .plane_layouts(&memory_plane_layouts);
+
             let vk_info = vk::ImageCreateInfo::default()
                 .flags(vk::ImageCreateFlags::ALIAS)
                 .image_type(vk::ImageType::TYPE_2D)
@@ -1598,10 +1633,11 @@ impl Global {
                 .mip_levels(1)
                 .array_layers(1)
                 .samples(vk::SampleCountFlags::TYPE_1)
-                .tiling(vk::ImageTiling::OPTIMAL)
+                .tiling(vk::ImageTiling::DRM_FORMAT_MODIFIER_EXT)
                 .usage(usage_flags)
                 .sharing_mode(vk::SharingMode::EXCLUSIVE)
                 .initial_layout(vk::ImageLayout::UNDEFINED)
+                .push_next(&mut modifier_list)
                 .push_next(&mut external_image_create_info);
 
             let image = match device.create_image(&vk_info, None) {
