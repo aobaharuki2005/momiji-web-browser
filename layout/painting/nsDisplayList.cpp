@@ -5024,7 +5024,7 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
     params.flags |= wr::StackingContextFlags::WRAPS_BACKDROP_FILTER;
   }
   if (mForceIsolation) {
-    params.flags |= wr::StackingContextFlags::IS_BACKDROP_ROOT;
+    params.flags |= wr::StackingContextFlags::FORCED_ISOLATION;
   }
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
@@ -6812,7 +6812,7 @@ bool nsDisplayTransform::CreateWebRenderCommands(
     params.flags |= wr::StackingContextFlags::WRAPS_BACKDROP_FILTER;
   }
   if (mForceIsolation) {
-    params.flags |= wr::StackingContextFlags::IS_BACKDROP_ROOT;
+    params.flags |= wr::StackingContextFlags::FORCED_ISOLATION;
   }
 
   wr::WrTransformInfo transform_info;
@@ -8481,7 +8481,7 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
   wr::StackingContextParams params;
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
-  params.flags = wr::StackingContextFlags::IS_BACKDROP_ROOT;
+  params.flags = wr::StackingContextFlags::FORCED_ISOLATION;
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
 
