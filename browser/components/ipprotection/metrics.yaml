@@ -40,3 +40,11 @@ ipprotection:
         type: boolean
         description: >
           True if IP Protection was turned on.
+      userAction:
+        type: boolean
+        description: >
+          If the VPN was connected or disconnected by a user action.
+      duration:
+        type: string
+        description: >
+          Amount of time the VPN was connnected in a session.

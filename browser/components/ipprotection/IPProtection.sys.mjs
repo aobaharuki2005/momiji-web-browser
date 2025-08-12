@@ -64,6 +64,7 @@ class IPProtectionWidget {
     }
 
     lazy.IPProtectionService.init();
+    this.#destroyed = false;
   }
 
   /**

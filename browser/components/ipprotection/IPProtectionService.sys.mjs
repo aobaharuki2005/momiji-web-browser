@@ -24,6 +24,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 class IPProtectionServiceSingleton extends EventTarget {
   isActive = false;
   activatedAt = null;
+  deactivatedAt = null;
+  sessionLength = 0;
   isSignedIn = false;
 
   #inited = false;
@@ -49,7 +51,7 @@ class IPProtectionServiceSingleton extends EventTarget {
       this.fxaObserver = null;
     }
     if (this.isActive) {
-      this.stop();
+      this.stop(false);
     }
 
     this.isSignedIn = false;
@@ -62,13 +64,15 @@ class IPProtectionServiceSingleton extends EventTarget {
    *
    * TODO: Add logic to start the proxy connection.
    *
+   * @param {boolean} userAction
+   * True if started by user action, false if system action
    */
-  start() {
+  start(userAction = true) {
     if (!this.isSignedIn) {
       return;
     }
     this.isActive = true;
-    this.activatedAt = Date.now();
+    this.activatedAt = Cu.now();
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Started", {
         bubbles: true,
@@ -78,6 +82,10 @@ class IPProtectionServiceSingleton extends EventTarget {
         },
       })
     );
+    Glean.ipprotection.toggled.record({
+      userAction,
+      enabled: true,
+    });
   }
 
   /**
@@ -85,9 +93,21 @@ class IPProtectionServiceSingleton extends EventTarget {
    *
    * TODO: Add logic to stop the proxy connection.
    *
+   * @param {boolean} userAction
+   * True if started by user action, false if system action
    */
-  stop() {
+  stop(userAction = true) {
     this.isActive = false;
+
+    let deactivatedAt = Cu.now();
+    let sessionLength = this.activatedAt - deactivatedAt;
+
+    Glean.ipprotection.toggled.record({
+      userAction,
+      duration: sessionLength,
+      enabled: false,
+    });
+
     this.activatedAt = null;
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Stopped", {
