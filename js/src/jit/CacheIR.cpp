@@ -1369,7 +1369,13 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       maybeEmitIdGuard(id);
       ObjOperandId windowObjId =
           GuardAndLoadWindowProxyWindow(writer, objId, windowObj);
-      EmitReadSlotResult(writer, windowObj, holder, *prop, windowObjId);
+      ObjectFuse* objFuse = nullptr;
+      if (holder == windowObj &&
+          canOptimizeConstantDataProperty(holder, *prop, &objFuse)) {
+        emitConstantDataPropertyResult(holder, windowObjId, id, *prop, objFuse);
+      } else {
+        EmitReadSlotResult(writer, windowObj, holder, *prop, windowObjId);
+      }
       writer.returnFromIC();
 
       trackAttached("GetProp.WindowProxySlot");
