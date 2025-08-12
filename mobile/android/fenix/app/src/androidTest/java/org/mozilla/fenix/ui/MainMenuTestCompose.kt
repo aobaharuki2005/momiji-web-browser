@@ -38,6 +38,7 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
@@ -316,7 +317,9 @@ class MainMenuTestCompose : TestSetup() {
             closeAddonInstallCompletePrompt()
         }
         browserScreen {
+            waitForPageToLoad()
         }.openThreeDotMenu(composeTestRule) {
+            waitForAppWindowToBeUpdated()
         }.openExtensionsFromMainMenu {
             clickManageExtensionsButtonFromRedesignedMainMenu(composeTestRule)
             verifyAddonsListIsDisplayed(shouldBeDisplayed = true)

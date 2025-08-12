@@ -246,7 +246,11 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
         Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Verified that the collapsed \"Extensions\" button with installed $extensionTitle exists.")
     }
 
+    @OptIn(ExperimentalTestApi::class)
     fun verifyTryRecommendedExtensionButton() {
+        Log.i(TAG, "verifyTryRecommendedExtensionButton: Waiting for $waitingTime for the \"Extensions - Try a recommended extension\" button to exists.")
+        composeTestRule.waitUntilAtLeastOneExists(hasContentDescription("Extensions Try a recommended extension", substring = true), waitingTime)
+        Log.i(TAG, "verifyTryRecommendedExtensionButton: Waited for $waitingTime for the \"Extensions - Try a recommended extension\" button to exists.")
         Log.i(TAG, "verifyTryRecommendedExtensionButton: Trying to verify that the \"Extensions - Try a recommended extension\" button exists.")
         composeTestRule.tryRecommendedExtensionButton().assertExists()
         Log.i(TAG, "verifyTryRecommendedExtensionButton: Verified that the \"Extensions - Try a recommended extension\" button exists.")
