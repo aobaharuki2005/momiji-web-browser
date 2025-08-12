@@ -1899,6 +1899,15 @@
   possibly_calls: true
   generate_lir: true
 
+- name: ToIntegerIndex
+  operands:
+    index: IntPtr
+    length: IntPtr
+  result_type: IntPtr
+  alias_set: none
+  folds_to: custom
+  generate_lir: true
+
 - name: GuardNumberToIntPtrIndex
   gen_boilerplate: false
 

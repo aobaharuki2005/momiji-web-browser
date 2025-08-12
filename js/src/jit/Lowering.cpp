@@ -4560,6 +4560,15 @@ void LIRGenerator::visitTypedArraySubarray(MTypedArraySubarray* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitToIntegerIndex(MToIntegerIndex* ins) {
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+  MOZ_ASSERT(ins->length()->type() == MIRType::IntPtr);
+
+  auto* lir = new (alloc())
+      LToIntegerIndex(useRegister(ins->index()), useRegister(ins->length()));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitGuardNumberToIntPtrIndex(
     MGuardNumberToIntPtrIndex* ins) {
   MDefinition* input = ins->input();
