@@ -538,7 +538,7 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
           (void)featureStr;
           nsPrintfCString msg(
               "`GPUAdapter.requestDevice`: '%s' was requested in "
-              "`requiredFeatures`, but it is not supported by Firefox."
+              "`requiredFeatures`, but it is not supported by Firefox. "
               "Follow <%s> for updates.",
               featureStr.get(), status.value.unimplemented.bugzillaUrlAscii);
           promise->MaybeRejectWithTypeError(msg);
