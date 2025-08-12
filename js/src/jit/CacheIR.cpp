@@ -2256,6 +2256,41 @@ void IRGenerator::emitConstantDataPropertyResult(NativeObject* holder,
   }
 }
 
+bool IRGenerator::canOptimizeConstantAccessorProperty(NativeObject* holder,
+                                                      PropertyInfo prop,
+                                                      ObjectFuse** objFuse) {
+  MOZ_ASSERT(prop.isAccessorProperty());
+  MOZ_ASSERT(holder->getSlot(prop.slot()).toGCThing()->is<GetterSetter>());
+
+  if (mode_ != ICState::Mode::Specialized || !holder->hasObjectFuse()) {
+    return false;
+  }
+
+  *objFuse = cx_->zone()->objectFuses.getOrCreate(cx_, holder);
+  if (!*objFuse) {
+    cx_->recoverFromOutOfMemory();
+    return false;
+  }
+
+  return (*objFuse)->tryOptimizeConstantProperty(prop);
+}
+
+void IRGenerator::emitGuardConstantAccessorProperty(NativeObject* holder,
+                                                    ObjOperandId holderId,
+                                                    PropertyKey key,
+                                                    PropertyInfo prop,
+                                                    ObjectFuse* objFuse) {
+  MOZ_ASSERT(prop.isAccessorProperty());
+
+  auto data = objFuse->getConstantPropertyGuardData(prop);
+  bool canUseFastPath = !objFuse->hasInvalidatedConstantProperty();
+  writer.guardObjectFuseProperty(holderId, holder, objFuse, data.generation,
+                                 data.propIndex, data.propMask, canUseFastPath);
+#ifdef DEBUG
+  writer.assertPropertyLookup(holderId, key, prop.slot());
+#endif
+}
+
 static void AssertArgumentsCustomDataProp(ArgumentsObject* obj,
                                           PropertyKey key) {
 #ifdef DEBUG
@@ -3738,24 +3773,32 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
   bool needsWindowProxy =
       IsWindow(global) && GetterNeedsWindowProxyThis(holder, *prop);
 
-  // Shape guard for global lexical.
-  writer.guardShape(objId, globalLexical->shape());
-
-  // Guard on the shape of the GlobalObject.
-  ObjOperandId globalId = writer.loadEnclosingEnvironment(objId);
-  writer.guardShape(globalId, global->shape());
-
-  if (holder != global) {
-    // Shape guard holder.
-    ObjOperandId holderId = writer.loadObject(holder);
-    writer.guardShape(holderId, holder->shape());
-    emitGuardGetterSetterSlot(holder, *prop, holderId, AccessorKind::Getter,
-                              /* holderIsConstant = */ true);
+  ObjOperandId globalId;
+  ObjectFuse* objFuse = nullptr;
+  if (holder == global &&
+      canOptimizeConstantAccessorProperty(global, *prop, &objFuse)) {
+    globalId = writer.loadObject(global);
+    emitGuardConstantAccessorProperty(global, globalId, id, *prop, objFuse);
   } else {
-    // Note: pass true for |holderIsConstant| because the holder must be the
-    // current global object.
-    emitGuardGetterSetterSlot(holder, *prop, globalId, AccessorKind::Getter,
-                              /* holderIsConstant = */ true);
+    // Shape guard for global lexical.
+    writer.guardShape(objId, globalLexical->shape());
+
+    // Guard on the shape of the GlobalObject.
+    globalId = writer.loadEnclosingEnvironment(objId);
+    writer.guardShape(globalId, global->shape());
+
+    if (holder != global) {
+      // Shape guard holder.
+      ObjOperandId holderId = writer.loadObject(holder);
+      writer.guardShape(holderId, holder->shape());
+      emitGuardGetterSetterSlot(holder, *prop, holderId, AccessorKind::Getter,
+                                /* holderIsConstant = */ true);
+    } else {
+      // Note: pass true for |holderIsConstant| because the holder must be the
+      // current global object.
+      emitGuardGetterSetterSlot(holder, *prop, globalId, AccessorKind::Getter,
+                                /* holderIsConstant = */ true);
+    }
   }
 
   if (CanAttachDOMGetterSetter(cx_, JSJitInfo::Getter, global, holder, *prop,

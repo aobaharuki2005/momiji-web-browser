@@ -129,6 +129,14 @@ class MOZ_RAII IRGenerator {
                                       ObjOperandId holderId, PropertyKey key,
                                       PropertyInfo prop, ObjectFuse* objFuse);
 
+  bool canOptimizeConstantAccessorProperty(NativeObject* holder,
+                                           PropertyInfo prop,
+                                           ObjectFuse** objFuse);
+  void emitGuardConstantAccessorProperty(NativeObject* holder,
+                                         ObjOperandId holderId, PropertyKey key,
+                                         PropertyInfo prop,
+                                         ObjectFuse* objFuse);
+
   gc::AllocSite* maybeCreateAllocSite();
 
   friend class CacheIRSpewer;
