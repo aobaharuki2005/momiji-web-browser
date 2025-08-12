@@ -2490,7 +2490,9 @@ bool WarpCacheIRTranspiler::emitTypedArraySetResult(ObjOperandId targetId,
 }
 
 bool WarpCacheIRTranspiler::emitTypedArraySubarrayResult(
-    ObjOperandId objId, IntPtrOperandId startId, IntPtrOperandId endId) {
+    uint32_t templateObjectOffset, ObjOperandId objId, IntPtrOperandId startId,
+    IntPtrOperandId endId) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
   MDefinition* obj = getOperand(objId);
   MDefinition* start = getOperand(startId);
   MDefinition* end = getOperand(endId);
@@ -2511,7 +2513,11 @@ bool WarpCacheIRTranspiler::emitTypedArraySubarrayResult(
   auto* length = MSub::New(alloc(), actualEnd, minStart, MIRType::IntPtr);
   add(length);
 
-  auto* ins = MTypedArraySubarray::New(alloc(), obj, actualStart, length);
+  // TODO: support pre-tenuring.
+  gc::Heap heap = gc::Heap::Default;
+
+  auto* ins = MTypedArraySubarray::New(alloc(), obj, actualStart, length,
+                                       templateObj, heap);
   add(ins);
 
   pushResult(ins);

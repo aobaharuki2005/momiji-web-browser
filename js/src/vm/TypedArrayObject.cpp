@@ -1641,6 +1641,24 @@ static TypedArrayObject* GetTemplateObjectForBuffer(
 }
 
 template <typename T>
+static TypedArrayObject* GetTemplateObjectForBufferView(
+    JSContext* cx, Handle<TypedArrayObject*> bufferView) {
+  if (bufferView->is<ResizableTypedArrayObject>()) {
+    return ResizableTypedArrayObjectTemplate<T>::makeTemplateObject(cx);
+  }
+
+  if (bufferView->is<ImmutableTypedArrayObject>()) {
+    return ImmutableTypedArrayObjectTemplate<T>::makeTemplateObject(cx);
+  }
+
+  // We don't use the template's length in the object case, so we can create
+  // the template typed array with an initial length of zero.
+  uint32_t len = 0;
+
+  return FixedLengthTypedArrayObjectTemplate<T>::makeTemplateObject(cx, len);
+}
+
+template <typename T>
 static TypedArrayObject* GetTemplateObjectForArrayLike(
     JSContext* cx, Handle<JSObject*> arrayLike) {
   MOZ_ASSERT(!arrayLike->is<ArrayBufferObjectMaybeShared>(),
@@ -1677,6 +1695,19 @@ static TypedArrayObject* GetTemplateObjectForArrayLike(
 #define CREATE_TYPED_ARRAY_TEMPLATE(_, T, N) \
   case Scalar::N:                            \
     return ::GetTemplateObjectForBuffer<T>(cx, buffer);
+    JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY_TEMPLATE)
+#undef CREATE_TYPED_ARRAY_TEMPLATE
+    default:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+}
+
+/* static */ TypedArrayObject* TypedArrayObject::GetTemplateObjectForBufferView(
+    JSContext* cx, Handle<TypedArrayObject*> bufferView) {
+  switch (bufferView->type()) {
+#define CREATE_TYPED_ARRAY_TEMPLATE(_, T, N) \
+  case Scalar::N:                            \
+    return ::GetTemplateObjectForBufferView<T>(cx, bufferView);
     JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY_TEMPLATE)
 #undef CREATE_TYPED_ARRAY_TEMPLATE
     default:

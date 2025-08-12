@@ -127,6 +127,9 @@ class TypedArrayObject : public ArrayBufferViewObject {
       JSContext* cx, Scalar::Type type,
       Handle<ArrayBufferObjectMaybeShared*> buffer);
 
+  static TypedArrayObject* GetTemplateObjectForBufferView(
+      JSContext* cx, Handle<TypedArrayObject*> bufferView);
+
   static TypedArrayObject* GetTemplateObjectForArrayLike(
       JSContext* cx, Scalar::Type type, Handle<JSObject*> arrayLike);
 
