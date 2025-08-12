@@ -2757,6 +2757,124 @@ function getActiveCardSize(screenWidth, classNames, sectionsEnabled, flightId) {
   }
   return null;
 }
+const CONFETTI_VARS = ["--color-red-40", "--color-yellow-40", "--color-purple-40", "--color-blue-40", "--color-green-40"];
+
+/**
+ * Custom hook to animate a confetti burst.
+ *
+ * @param {number} count   Number of particles
+ * @param {number} spread  spread of confetti
+ * @returns {[React.RefObject<HTMLCanvasElement>, () => void]}
+ */
+function useConfetti(count = 80, spread = Math.PI / 3) {
+  // avoid errors from about:home cache
+  const prefersReducedMotion = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let colors;
+  // if in abouthome cache, getComputedStyle will not be available
+  if (typeof getComputedStyle === "function") {
+    const styles = getComputedStyle(document.documentElement);
+    colors = CONFETTI_VARS.map(variable => styles.getPropertyValue(variable).trim());
+  } else {
+    colors = ["#fa5e75", "#de9600", "#c671eb", "#3f94ff", "#37b847"];
+  }
+  const canvasRef = (0,external_React_namespaceObject.useRef)(null);
+  const particlesRef = (0,external_React_namespaceObject.useRef)([]);
+  const animationFrameRef = (0,external_React_namespaceObject.useRef)(0);
+
+  // initialize/reset pool
+  const initializeConfetti = (0,external_React_namespaceObject.useCallback)((width, height) => {
+    const centerX = width / 2;
+    const centerY = height;
+    const pool = particlesRef.current;
+
+    // Create or overwrite each particle’s initial state
+    for (let i = 0; i < count; i++) {
+      const angle = Math.PI / 2 + (Math.random() - 0.5) * spread;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      pool[i] = {
+        x: centerX + (Math.random() - 0.5) * 40,
+        y: centerY,
+        cos,
+        sin,
+        velocity: Math.random() * 6 + 6,
+        gravity: 0.3,
+        decay: 0.96,
+        size: 8,
+        color,
+        life: 0,
+        maxLife: 100,
+        tilt: Math.random() * Math.PI * 2,
+        tiltSpeed: Math.random() * 0.2 + 0.05
+      };
+    }
+  }, [count, spread, colors]);
+
+  // Core animation loop — updates physics & renders each frame
+  const animateParticles = (0,external_React_namespaceObject.useCallback)(canvas => {
+    const context = canvas.getContext("2d");
+    const {
+      width,
+      height
+    } = canvas;
+    const pool = particlesRef.current;
+
+    // Clear the entire canvas each frame
+    context.clearRect(0, 0, width, height);
+    let anyAlive = false;
+    for (let particle of pool) {
+      if (particle.life < particle.maxLife) {
+        anyAlive = true;
+
+        // update each particles physics: position, velocity decay, gravity, tilt, lifespan
+        particle.velocity *= particle.decay;
+        particle.x += particle.cos * particle.velocity;
+        particle.y -= particle.sin * particle.velocity;
+        particle.y += particle.gravity;
+        particle.tilt += particle.tiltSpeed;
+        particle.life += 1;
+      }
+
+      // Draw: apply alpha, transform & draw a rotated, scaled square
+      const alphaValue = 1 - particle.life / particle.maxLife;
+      const scaleY = Math.sin(particle.tilt);
+      context.globalAlpha = alphaValue;
+      context.setTransform(1, 0, 0, 1, particle.x, particle.y);
+      context.rotate(Math.PI / 4);
+      context.scale(1, scaleY);
+      context.fillStyle = particle.color;
+      context.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size);
+
+      // reset each particle
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.globalAlpha = 1;
+    }
+    if (anyAlive) {
+      // continue the animation
+      animationFrameRef.current = requestAnimationFrame(() => {
+        animateParticles(canvas);
+      });
+    } else {
+      cancelAnimationFrame(animationFrameRef.current);
+      context.clearRect(0, 0, width, height);
+    }
+  }, []);
+
+  // Resets and starts a new confetti animation
+  const fireConfetti = (0,external_React_namespaceObject.useCallback)(() => {
+    if (prefersReducedMotion) {
+      return;
+    }
+    const canvas = canvasRef?.current;
+    if (canvas) {
+      cancelAnimationFrame(animationFrameRef.current);
+      initializeConfetti(canvas.width, canvas.height);
+      animateParticles(canvas);
+    }
+  }, [initializeConfetti, animateParticles, prefersReducedMotion]);
+  return [canvasRef, fireConfetti];
+}
 
 ;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSitesConstants.mjs
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -12422,12 +12540,14 @@ function Lists({
   const [newTask, setNewTask] = (0,external_React_namespaceObject.useState)("");
   const [isEditing, setIsEditing] = (0,external_React_namespaceObject.useState)(false);
   const [pendingNewList, setPendingNewList] = (0,external_React_namespaceObject.useState)(null);
+  const selectedList = (0,external_React_namespaceObject.useMemo)(() => lists[selected], [lists, selected]);
+  const prevCompletedCount = (0,external_React_namespaceObject.useRef)(selectedList?.completed?.length || 0);
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
   const selectRef = (0,external_React_namespaceObject.useRef)(null);
   const reorderListRef = (0,external_React_namespaceObject.useRef)(null);
+  const [canvasRef, fireConfetti] = useConfetti();
 
   // store selectedList with useMemo so it isnt re-calculated on every re-render
-  const selectedList = (0,external_React_namespaceObject.useMemo)(() => lists[selected], [lists, selected]);
   const isValidUrl = (0,external_React_namespaceObject.useCallback)(str => URL.canParse(str), []);
   const handleIntersection = (0,external_React_namespaceObject.useCallback)(() => {
     dispatch(actionCreators.AlsoToMain({
@@ -12784,6 +12904,17 @@ function Lists({
       }
     }));
   }
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (selectedList) {
+      const doneCount = selectedList.completed?.length || 0;
+      const previous = Math.floor(prevCompletedCount.current / 5);
+      const current = Math.floor(doneCount / 5);
+      if (current > previous) {
+        fireConfetti();
+      }
+      prevCompletedCount.current = doneCount;
+    }
+  }, [selectedList, fireConfetti]);
   if (!lists) {
     return null;
   }
@@ -12881,7 +13012,10 @@ function Lists({
     task: completedTask,
     deleteTask: deleteTask,
     updateTask: updateTask
-  })))))));
+  })))))), /*#__PURE__*/external_React_default().createElement("canvas", {
+    className: "confetti-canvas",
+    ref: canvasRef
+  }));
 }
 function ListItem({
   task,

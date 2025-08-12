@@ -11,7 +11,7 @@ import React, {
 } from "react";
 import { useSelector, batch } from "react-redux";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
-import { useIntersectionObserver } from "../../../lib/utils";
+import { useIntersectionObserver, useConfetti } from "../../../lib/utils";
 
 const TASK_TYPE = {
   IN_PROGRESS: "tasks",
@@ -34,14 +34,15 @@ function Lists({ dispatch }) {
   const [newTask, setNewTask] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [pendingNewList, setPendingNewList] = useState(null);
+  const selectedList = useMemo(() => lists[selected], [lists, selected]);
 
+  const prevCompletedCount = useRef(selectedList?.completed?.length || 0);
   const inputRef = useRef(null);
   const selectRef = useRef(null);
   const reorderListRef = useRef(null);
+  const [canvasRef, fireConfetti] = useConfetti();
 
   // store selectedList with useMemo so it isnt re-calculated on every re-render
-  const selectedList = useMemo(() => lists[selected], [lists, selected]);
-
   const isValidUrl = useCallback(str => URL.canParse(str), []);
 
   const handleIntersection = useCallback(() => {
@@ -461,6 +462,19 @@ function Lists({ dispatch }) {
     );
   }
 
+  useEffect(() => {
+    if (selectedList) {
+      const doneCount = selectedList.completed?.length || 0;
+      const previous = Math.floor(prevCompletedCount.current / 5);
+      const current = Math.floor(doneCount / 5);
+
+      if (current > previous) {
+        fireConfetti();
+      }
+      prevCompletedCount.current = doneCount;
+    }
+  }, [selectedList, fireConfetti]);
+
   if (!lists) {
     return null;
   }
@@ -588,6 +602,7 @@ function Lists({ dispatch }) {
           </fieldset>
         </moz-reorderable-list>
       </div>
+      <canvas className="confetti-canvas" ref={canvasRef} />
     </article>
   );
 }
