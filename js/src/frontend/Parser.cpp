@@ -3878,7 +3878,10 @@ bool Parser<FullParseHandler, Unit>::asmJS(ListNodeType list) {
     return true;
   }
 
-  pc_->functionBox()->useAsm = true;
+  // Mark this function as being in a "use asm" directive.
+  if (!pc_->functionBox()->setUseAsm()) {
+    return false;
+  }
 
   // Attempt to validate and compile this asm.js module. On success, the
   // tokenStream has been advanced to the closing }. On failure, the
