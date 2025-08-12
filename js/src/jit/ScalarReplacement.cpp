@@ -3065,6 +3065,7 @@ class SubarrayReplacer : public MDefinitionVisitorDefaultNoop {
     return subarray_->toTypedArraySubarray();
   }
 
+  void visitGuardHasAttachedArrayBuffer(MGuardHasAttachedArrayBuffer* ins);
   void visitGuardShape(MGuardShape* ins);
   void visitUnbox(MUnbox* ins);
  public:
@@ -3106,6 +3107,26 @@ void SubarrayReplacer::visitGuardShape(MGuardShape* ins) {
   ins->replaceAllUsesWith(subarray_);
 
   // Remove the guard.
+  ins->block()->discard(ins);
+}
+
+void SubarrayReplacer::visitGuardHasAttachedArrayBuffer(
+    MGuardHasAttachedArrayBuffer* ins) {
+  // Skip guards on other objects.
+  if (ins->object() != subarray_) {
+    return;
+  }
+
+  // Create a new guard on the subarray's input argument.
+  auto* newGuard =
+      MGuardHasAttachedArrayBuffer::New(alloc(), subarray()->object());
+  newGuard->setBailoutKind(ins->bailoutKind());
+  ins->block()->insertBefore(ins, newGuard);
+
+  // Replace the guard.
+  ins->replaceAllUsesWith(newGuard);
+
+  // Remove original instruction.
   ins->block()->discard(ins);
 }
 
@@ -3152,6 +3173,15 @@ bool SubarrayReplacer::escapes(MInstruction* ins) const {
           return true;
         }
         if (escapes(def->toInstruction())) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::GuardHasAttachedArrayBuffer: {
+        auto* guard = def->toGuardHasAttachedArrayBuffer();
+        if (escapes(guard)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
           return true;
         }
