@@ -561,6 +561,7 @@ class HomeFragment : Fragment() {
                 settings = components.settings,
                 addTabUseCase = components.useCases.tabsUseCases.addTab,
                 selectTabUseCase = components.useCases.tabsUseCases.selectTab,
+                fenixBrowserUseCases = components.useCases.fenixBrowserUseCases,
                 topSitesUseCases = components.useCases.topSitesUseCase,
                 marsUseCases = components.useCases.marsUseCases,
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,

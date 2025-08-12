@@ -42,6 +42,7 @@ class ShortcutsFragment : ComposeFragment() {
             settings = requireComponents.settings,
             addTabUseCase = requireComponents.useCases.tabsUseCases.addTab,
             selectTabUseCase = requireComponents.useCases.tabsUseCases.selectTab,
+            fenixBrowserUseCases = requireComponents.useCases.fenixBrowserUseCases,
             topSitesUseCases = requireComponents.useCases.topSitesUseCase,
             marsUseCases = requireComponents.useCases.marsUseCases,
             viewLifecycleScope = viewLifecycleOwner.lifecycleScope,

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.topsites.controller
 
 import androidx.navigation.NavController
-import androidx.navigation.NavDirections
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -31,13 +30,13 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Analytics
+import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.home.mars.MARSUseCases
@@ -60,6 +59,7 @@ class DefaultTopSiteControllerTest {
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
     private val selectTabUseCase: TabsUseCases = mockk(relaxed = true)
     private val topSitesUseCases: TopSitesUseCases = mockk(relaxed = true)
+    private val fenixBrowserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
     private val marsUseCases: MARSUseCases = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
     private val analytics: Analytics = mockk(relaxed = true)
@@ -186,10 +186,11 @@ class DefaultTopSiteControllerTest {
         controller.handleSelectTopSite(topSite, position = 0)
 
         verify {
-            activity.openToBrowserAndLoad(
+            navController.navigate(R.id.browserFragment)
+            fenixBrowserUseCases.loadUrlOrSearch(
                 searchTermOrURL = topSite.url,
                 newTab = false,
-                from = BrowserDirection.FromHome,
+                private = false,
             )
         }
     }
@@ -842,11 +843,13 @@ class DefaultTopSiteControllerTest {
         assertNotNull(TopSites.contileSponsorsAndPrivacy.testGetValue())
         assertEquals(1, TopSites.contileSponsorsAndPrivacy.testGetValue()!!.size)
         assertNull(TopSites.contileSponsorsAndPrivacy.testGetValue()!!.single().extra)
+
         verify {
-            activity.openToBrowserAndLoad(
+            navController.navigate(R.id.browserFragment)
+            fenixBrowserUseCases.loadUrlOrSearch(
                 searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SPONSOR_PRIVACY),
                 newTab = true,
-                from = BrowserDirection.FromHome,
+                private = false,
             )
         }
     }
@@ -871,7 +874,7 @@ class DefaultTopSiteControllerTest {
     }
 
     @Test
-    fun `WHEN handleOpenInPrivateTabClicked is called with a TopSite#Provided site THEN Event#TopSiteOpenContileInPrivateTab is reported`() {
+    fun `WHEN handleOpenInPrivateTabClicked is called with a TopSite#Provided site THEN navigate to the top site and record telemetry`() {
         val topSite = TopSite.Provided(
             id = 1L,
             title = "Mozilla",
@@ -886,6 +889,44 @@ class DefaultTopSiteControllerTest {
         assertNotNull(TopSites.openContileInPrivateTab.testGetValue())
         assertEquals(1, TopSites.openContileInPrivateTab.testGetValue()!!.size)
         assertNull(TopSites.openContileInPrivateTab.testGetValue()!!.single().extra)
+
+        verify {
+            navController.navigate(R.id.browserFragment)
+            fenixBrowserUseCases.loadUrlOrSearch(
+                searchTermOrURL = topSite.url,
+                newTab = true,
+                private = true,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN homepage as a new tab is enabled WHEN handleOpenInPrivateTabClicked is called with a TopSite#Provided site THEN navigate to the top site and record telemetry`() {
+        every { settings.enableHomepageAsNewTab } returns true
+
+        val topSite = TopSite.Provided(
+            id = 1L,
+            title = "Mozilla",
+            url = "mozilla.org",
+            clickUrl = "",
+            imageUrl = "",
+            impressionUrl = "",
+            createdAt = 0,
+        )
+        createController().handleOpenInPrivateTabClicked(topSite)
+
+        assertNotNull(TopSites.openContileInPrivateTab.testGetValue())
+        assertEquals(1, TopSites.openContileInPrivateTab.testGetValue()!!.size)
+        assertNull(TopSites.openContileInPrivateTab.testGetValue()!!.single().extra)
+
+        verify {
+            navController.navigate(R.id.browserFragment)
+            fenixBrowserUseCases.loadUrlOrSearch(
+                searchTermOrURL = topSite.url,
+                newTab = true,
+                private = true,
+            )
+        }
     }
 
     @Test
@@ -930,6 +971,7 @@ class DefaultTopSiteControllerTest {
             settings = settings,
             addTabUseCase = tabsUseCases.addTab,
             selectTabUseCase = selectTabUseCase.selectTab,
+            fenixBrowserUseCases = fenixBrowserUseCases,
             topSitesUseCases = topSitesUseCases,
             marsUseCases = marsUseCases,
             viewLifecycleScope = scope,

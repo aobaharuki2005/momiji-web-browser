@@ -38,6 +38,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MetricsUtils
+import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -108,6 +109,7 @@ class DefaultTopSiteController(
     private val settings: Settings,
     private val addTabUseCase: TabsUseCases.AddNewTabUseCase,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
+    private val fenixBrowserUseCases: FenixBrowserUseCases,
     private val topSitesUseCases: TopSitesUseCases,
     private val marsUseCases: MARSUseCases,
     private val viewLifecycleScope: CoroutineScope,
@@ -125,14 +127,15 @@ class DefaultTopSiteController(
         } else {
             TopSites.openInPrivateTab.record(NoExtras())
         }
-        with(activity) {
-            browsingModeManager.mode = BrowsingMode.Private
-            openToBrowserAndLoad(
-                searchTermOrURL = topSite.url,
-                newTab = true,
-                from = BrowserDirection.FromHome,
-            )
-        }
+
+        activity.browsingModeManager.mode = BrowsingMode.Private
+
+        navController.navigate(R.id.browserFragment)
+        fenixBrowserUseCases.loadUrlOrSearch(
+            searchTermOrURL = topSite.url,
+            newTab = true,
+            private = true,
+        )
     }
 
     @SuppressLint("InflateParams")
@@ -257,10 +260,10 @@ class DefaultTopSiteController(
         }
 
         if (settings.enableHomepageAsNewTab) {
-            activity.openToBrowserAndLoad(
+            fenixBrowserUseCases.loadUrlOrSearch(
                 searchTermOrURL = appendSearchAttributionToUrlIfNeeded(topSite.url),
                 newTab = false,
-                from = BrowserDirection.FromHome,
+                private = false,
             )
         } else {
             val existingTabForUrl = when (topSite) {
@@ -282,9 +285,9 @@ class DefaultTopSiteController(
             } else {
                 selectTabUseCase.invoke(existingTabForUrl.id)
             }
-
-            navController.navigate(R.id.browserFragment)
         }
+
+        navController.navigate(R.id.browserFragment)
     }
 
     @VisibleForTesting
@@ -331,10 +334,12 @@ class DefaultTopSiteController(
 
     override fun handleSponsorPrivacyClicked() {
         TopSites.contileSponsorsAndPrivacy.record(NoExtras())
-        activity.openToBrowserAndLoad(
+
+        navController.navigate(R.id.browserFragment)
+        fenixBrowserUseCases.loadUrlOrSearch(
             searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SPONSOR_PRIVACY),
             newTab = true,
-            from = BrowserDirection.FromHome,
+            private = false,
         )
     }
 
