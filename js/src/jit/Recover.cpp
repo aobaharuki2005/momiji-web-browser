@@ -2581,9 +2581,9 @@ RTypedArraySubarray::RTypedArraySubarray(CompactBufferReader& reader) {}
 bool RTypedArraySubarray::recover(JSContext* cx, SnapshotIterator& iter) const {
   Rooted<TypedArrayObject*> obj(cx, &iter.readObject()->as<TypedArrayObject>());
   intptr_t start = iter.readIntPtr();
-  intptr_t end = iter.readIntPtr();
+  intptr_t length = iter.readIntPtr();
 
-  auto* result = TypedArraySubarrayRecover(cx, obj, start, end);
+  auto* result = TypedArraySubarrayRecover(cx, obj, start, length);
   if (!result) {
     return false;
   }

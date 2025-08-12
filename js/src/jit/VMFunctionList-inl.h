@@ -366,6 +366,7 @@ namespace jit {
   _(ToStringSlow, js::ToStringSlow<js::CanGC>)                                 \
   _(TypedArraySet, js::TypedArraySet)                                          \
   _(TypedArraySubarray, js::TypedArraySubarray)                                \
+  _(TypedArraySubarrayWithLength, js::TypedArraySubarrayWithLength)            \
   _(ValueToIterator, js::ValueToIterator)                                      \
   _(VarEnvironmentObjectCreateWithoutEnclosing,                                \
     js::VarEnvironmentObject::createWithoutEnclosing)
