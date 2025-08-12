@@ -13630,11 +13630,21 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
 
   if (const char* str = op.getStringOption("spectre-mitigations")) {
     if (strcmp(str, "on") == 0) {
+#if defined(JS_CODEGEN_RISCV64) || defined(JS_CODEGEN_LOONG64) || \
+    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_WASM32)
+      // MacroAssembler::spectreZeroRegister and MacroAssembler::spectreMovePtr
+      // are not implemented for these targets.
+      fprintf(
+          stderr,
+          "Warning: Spectre mitigations are not implemented for this target."
+          " --spectre-mitigations=on is ignored.\n");
+#else
       jit::JitOptions.spectreIndexMasking = true;
       jit::JitOptions.spectreObjectMitigations = true;
       jit::JitOptions.spectreStringMitigations = true;
       jit::JitOptions.spectreValueMasking = true;
       jit::JitOptions.spectreJitToCxxCalls = true;
+#endif
     } else if (strcmp(str, "off") == 0) {
       jit::JitOptions.spectreIndexMasking = false;
       jit::JitOptions.spectreObjectMitigations = false;
