@@ -30,19 +30,15 @@ ipprotection-feature-introduction-button-secondary-no-thanks = No thanks
 
 ##
 
-# The panel status card has a header and a connection time displayed under it.
+# The panel status card has a header and a connection time displayed under it when the VPN is on.
 # Variables:
 #   $time (String) - The amount of time connected to the proxy as HH:MM:SS (hours, minutes, seconds).
 ipprotection-connection-status-on =
   .label = VPN on
   .description = { $time }
 
-# The panel status card has a header and a connection time displayed under it.
-# Variables:
-#   $time (String) - The amount of time connected to the proxy as HH:MM:SS (hours, minutes, seconds).
 ipprotection-connection-status-off =
   .label = VPN off
-  .description = { $time }
 
 # When VPN is toggled on
 ipprotection-toggle-active =

@@ -119,6 +119,8 @@ add_task(async function test_status_card() {
   const l10nIdOn = "ipprotection-connection-status-on";
   const l10nIdOff = "ipprotection-connection-status-off";
   const mockLocationName = "Planet Earth";
+  const fiveDaysInMS = 5 * 24 * 60 * 60 * 1000;
+  const enabledSince = Date.now() - fiveDaysInMS;
   let originalState = null;
 
   let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
@@ -163,17 +165,32 @@ add_task(async function test_status_card() {
     "Location name should be present and correct"
   );
 
+  Assert.equal(
+    content.statusCardEl?.description,
+    "",
+    "Time string should be empty"
+  );
+
   let animationLoadedPromise = BrowserTestUtils.waitForMutationCondition(
     content.shadowRoot,
     { childList: true, subtree: true },
     () => !content.animationEl
   );
+  let timerUpdatedPromise = BrowserTestUtils.waitForMutationCondition(
+    content.shadowRoot,
+    { childList: true, subtree: true },
+    () => content._connectionTimeInterval
+  );
 
   // Set state as if protection is enabled
   content.state.isProtectionEnabled = true;
+  content.state.protectionEnabledSince = enabledSince;
   content.requestUpdate();
-  await content.updateComplete;
-  await animationLoadedPromise;
+  await Promise.all([
+    content.updateComplete,
+    timerUpdatedPromise,
+    animationLoadedPromise,
+  ]);
 
   Assert.equal(
     content.statusCardEl?.getAttribute("data-l10n-id"),
@@ -187,12 +204,20 @@ add_task(async function test_status_card() {
     { childList: true, subtree: true },
     () => !content.animationEl
   );
+  let timerStoppedPromise = BrowserTestUtils.waitForMutationCondition(
+    content.shadowRoot,
+    { childList: true, subtree: true },
+    () => !content._connectionTimeInterval
+  );
 
   // Set state as if protection is disabled
   content.state.isProtectionEnabled = false;
   content.requestUpdate();
-  await content.updateComplete;
-  await animationUnloadedPromise;
+  await Promise.all([
+    content.updateComplete,
+    animationUnloadedPromise,
+    timerStoppedPromise,
+  ]);
 
   Assert.equal(
     content.statusCardEl?.getAttribute("data-l10n-id"),

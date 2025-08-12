@@ -13,7 +13,7 @@ import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-toggle.mjs";
 
-const DEFAULT_TIME_CONNECTED = "00:00:00";
+const TIMER_INTERVAL_MS = 1000;
 
 export default class IPProtectionContentElement extends MozLitElement {
   static queries = {
@@ -32,6 +32,12 @@ export default class IPProtectionContentElement extends MozLitElement {
   static properties = {
     state: { type: Object },
     showAnimation: { type: Boolean, state: true },
+    /**
+     * _timeString is the current value shown on the panel,
+     * and is separate from protectionEnabledSince. We will use
+     * protectionEnabledSince to calculate what _timeString should be.
+     */
+    _timeString: { type: String, state: true },
   };
 
   constructor() {
@@ -41,19 +47,76 @@ export default class IPProtectionContentElement extends MozLitElement {
 
     this.keyListener = this.#keyListener.bind(this);
     this.showAnimation = false;
+    this._timeString = "";
+    this._connectionTimeInterval = null;
   }
 
   connectedCallback() {
     super.connectedCallback();
     this.dispatchEvent(new CustomEvent("IPProtection:Init", { bubbles: true }));
-
     this.addEventListener("keydown", this.keyListener, { capture: true });
+
+    // If we're able to show the time string right away, do it.
+    if (this.canShowConnectionTime) {
+      this._timeString = this.#getFormattedTime(
+        this.state.protectionEnabledSince
+      );
+    }
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
 
     this.removeEventListener("keydown", this.keyListener, { capture: true });
+    this.#stopTimer();
+  }
+
+  get canShowConnectionTime() {
+    return (
+      this.state &&
+      this.state.isProtectionEnabled &&
+      this.state.protectionEnabledSince &&
+      this.state.isSignedIn
+    );
+  }
+
+  #startTimerIfUnset() {
+    if (this._connectionTimeInterval) {
+      return;
+    }
+
+    this._connectionTimeInterval = setInterval(() => {
+      this._timeString = this.#getFormattedTime(
+        this.state.protectionEnabledSince
+      );
+    }, TIMER_INTERVAL_MS);
+  }
+
+  #stopTimer() {
+    clearInterval(this._connectionTimeInterval);
+    this._connectionTimeInterval = null;
+    this._timeString = "";
+  }
+
+  /**
+   * Returns the formatted connection duration time string as HH:MM:SS (hours, minutes, seconds).
+   *
+   * @param {Date} startMS
+   *  The timestamp in milliseconds since a connection to the proxy was made.
+   * @returns {string}
+   *  The formatted time in HH:MM:SS.
+   */
+  #getFormattedTime(startMS) {
+    let duration = window.Temporal.Duration.from({
+      milliseconds: Date.now() - startMS,
+    }).round({ smallestUnit: "seconds", largestUnit: "hours" });
+
+    let formatter = new Intl.DurationFormat("en-US", {
+      style: "digital",
+      hoursDisplay: "always",
+      hours: "2-digit",
+    });
+    return formatter.format(duration);
   }
 
   handleClickSupportLink(event) {
@@ -134,6 +197,11 @@ export default class IPProtectionContentElement extends MozLitElement {
   updated(changedProperties) {
     super.updated(changedProperties);
 
+    // If the only updates are time string changes, ignore them.
+    if (changedProperties.size == 1 && changedProperties.has("_timeString")) {
+      return;
+    }
+
     /**
      * Don't show animations until all elements are connected and layout is fully drawn.
      * This will allow us to best position our animation component with the globe icon
@@ -143,6 +211,12 @@ export default class IPProtectionContentElement extends MozLitElement {
       this.showAnimation = true;
     } else {
       this.showAnimation = false;
+    }
+
+    if (this.canShowConnectionTime && this.isConnected) {
+      this.#startTimerIfUnset(this.state.protectionEnabledSince);
+    } else {
+      this.#stopTimer();
     }
   }
 
@@ -166,8 +240,9 @@ export default class IPProtectionContentElement extends MozLitElement {
       ? "chrome://browser/content/ipprotection/assets/ipprotection-connection-on.svg"
       : "chrome://browser/content/ipprotection/assets/ipprotection-connection-off.svg";
 
-    // TODO: update timer and its starting value according to the protectionEnabledSince property (Bug 1972460)
-    const timeConnected = DEFAULT_TIME_CONNECTED;
+    // Time is rendered as blank until we have a value to show.
+    let time =
+      this.canShowConnectionTime && this._timeString ? this._timeString : "";
 
     return html`<moz-box-group class="vpn-status-group">
       ${this.showAnimation
@@ -183,7 +258,7 @@ export default class IPProtectionContentElement extends MozLitElement {
         layout="large-icon"
         iconsrc=${statusIcon}
         data-l10n-id=${statusCardL10nId}
-        data-l10n-args=${JSON.stringify({ time: timeConnected })}
+        data-l10n-args=${JSON.stringify({ time })}
       >
         <moz-toggle
           id="connection-toggle"
