@@ -752,6 +752,17 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the LNA (Local Network Access / Local Device Access) blocking is enabled
+     *
+     * This refers to whether or not we are blocking or allowing requests that originate from
+     * remote origins targeting either localhost addresses or local network addresses.
+     */
+    var isLnaBlockingEnabled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_enable_lna_blocking_enabled),
+        default = false,
+    )
+
+    /**
      * Indicates if the user should start on the home screen, based on the user's preferences.
      */
     fun shouldStartOnHome(): Boolean {
