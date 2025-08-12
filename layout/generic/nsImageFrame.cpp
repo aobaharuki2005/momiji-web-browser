@@ -68,13 +68,13 @@
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
 #endif
+#include "DisplayListClipState.h"
 #include "ImageContainer.h"
 #include "ImageRegion.h"
 #include "gfxRect.h"
 #include "imgIContainer.h"
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/HTMLAnchorElement.h"

@@ -50,7 +50,6 @@
 
 #include <algorithm>
 
-#include "DisplayListClipState.h"
 #include "FrameProperties.h"
 #include "LayoutConstants.h"
 #include "Visibility.h"
