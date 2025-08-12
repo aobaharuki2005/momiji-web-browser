@@ -617,19 +617,27 @@ void nsFilePicker::ClearPortalState() {
 void nsFilePicker::DonePortal(GVariant* aResult) {
   LOG("nsFilePicker::DonePortal(%s)\n",
       GUniquePtr<char>(g_variant_print(aResult, TRUE)).get());
-  ResultCode result = [&] {
+  auto result = [&]() -> Maybe<ResultCode> {
     RefPtr<GVariant> resultCode =
         dont_AddRef(g_variant_get_child_value(aResult, 0));
     switch (g_variant_get_uint32(resultCode)) {
       case 0:
-        return ResultCode::returnOK;
+        return Some(ResultCode::returnOK);
       case 1:
+        return Some(ResultCode::returnCancel);
       default:
-        return ResultCode::returnCancel;
+        return Nothing();
     }
   }();
 
-  if (result == returnOK) {
+  if (!result) {
+    // This can happen if the portal is available but no existing backend works,
+    // see bug 1982187. In that case, fall back to the GTK impl.
+    ClearPortalState();
+    return OpenNonPortal();
+  }
+
+  if (*result == returnOK) {
     RefPtr<GVariant> results =
         dont_AddRef(g_variant_get_child_value(aResult, 1));
     GVariantIter iter;
@@ -658,7 +666,7 @@ void nsFilePicker::DonePortal(GVariant* aResult) {
   }
 
   ClearPortalState();
-  DoneCommon(result);
+  DoneCommon(*result);
 }
 #endif
 
