@@ -2642,16 +2642,29 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  uint32_t clipFlags =
-      nsStyleUtil::ObjectPropsMightCauseOverflow(StylePosition())
-          ? 0
-          : DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT;
-
-  DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox clip(
-      aBuilder, this, clipFlags);
+  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+  const bool isViewTransition = mKind == Kind::ViewTransition;
+  auto clipAxes = ShouldApplyOverflowClipping(StyleDisplay());
+  if (!clipAxes.isEmpty()) {
+    nsRect clipRect;
+    nscoord radii[8];
+    bool haveRadii =
+        ComputeOverflowClipRectRelativeToSelf(clipAxes, clipRect, radii);
+    clipState.ClipContainingBlockDescendants(
+        clipRect + aBuilder->ToReferenceFrame(this),
+        haveRadii ? radii : nullptr);
+  } else if (!isViewTransition) {
+    // Allow overflow by default for view transitions, but not for other image
+    // types, for historical reasons.
+    uint32_t clipFlags =
+        nsStyleUtil::ObjectPropsMightCauseOverflow(StylePosition())
+            ? 0
+            : DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT;
+    clipState.ClipContainingBlockDescendantsToContentBox(aBuilder, this,
+                                                         clipFlags);
+  }
 
   if (!mComputedSize.IsEmpty()) {
-    const bool isViewTransition = mKind == Kind::ViewTransition;
     const bool imageOK = mKind != Kind::ImageLoadingContent ||
                          ImageOk(mContent->AsElement()->State());
 
