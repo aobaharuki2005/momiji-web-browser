@@ -82,8 +82,6 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
   static bool IsCompatibleWithCrossOriginIsolation(
       nsILoadInfo::CrossOriginEmbedderPolicy aPolicy);
 
-  static bool ShouldAddCookies(nsIChannel* aChannel);
-
  private:
   static nsresult CheckChannel(nsIChannel* aChannel);
   static nsresult CheckAllowLoadInSystemPrivilegedContext(nsIChannel* aChannel);
