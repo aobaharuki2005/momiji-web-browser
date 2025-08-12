@@ -662,11 +662,8 @@ export class ConfigSearchEngine extends SearchEngine {
   #init(engineConfig) {
     this._orderHint = engineConfig.orderHint;
     this._telemetryId = engineConfig.identifier;
-    this.#isGeneralPurposeSearchEngine = lazy.SearchUtils
-      .rustSelectorFeatureGate
-      ? engineConfig.classification == lazy.SearchEngineClassification.GENERAL
-      : // @ts-ignore This is supporting the non-Rust search engine selector.
-        engineConfig.classification == "general";
+    this.#isGeneralPurposeSearchEngine =
+      engineConfig.classification == lazy.SearchEngineClassification.GENERAL;
 
     if (engineConfig.charset) {
       this._queryCharset = engineConfig.charset;

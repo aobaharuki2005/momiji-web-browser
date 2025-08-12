@@ -3440,9 +3440,6 @@ pref("browser.search.suggest.enabled.private", false);
 pref("browser.search.separatePrivateDefault", true);
 pref("browser.search.separatePrivateDefault.ui.enabled", false);
 pref("browser.search.removeEngineInfobar.enabled", true);
-// Temporary preference to allow switching between the Rust based search engine
-// selector and the JavaScript one (bug 1914143).
-pref("browser.search.rustSelector.featureGate", true);
 
 // GMPInstallManager prefs
 
