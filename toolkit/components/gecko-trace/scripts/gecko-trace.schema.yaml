@@ -13,7 +13,7 @@ additionalProperties: false
 properties:
   events:
     type: object
-    description: Map of event identifiers → event definition objects.
+    description: Map of event identifiers => event definition objects.
     minProperties: 1
     propertyNames:
       type: string
