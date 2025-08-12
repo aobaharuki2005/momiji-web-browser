@@ -1651,6 +1651,10 @@ class GeckoEngine(
         override var bannedPorts: String
             get() = runtime.settings.bannedPorts
             set(value) { runtime.settings.setBannedPorts(value) }
+
+        override var lnaBlockingEnabled: Boolean
+            get() = runtime.settings.lnaBlockingEnabled
+            set(value) { runtime.settings.setLnaBlockingEnabled(value) }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
@@ -1697,6 +1701,7 @@ class GeckoEngine(
             this.postQuantumKeyExchangeEnabled = it.postQuantumKeyExchangeEnabled
             this.dohAutoselectEnabled = it.dohAutoselectEnabled
             this.bannedPorts = it.bannedPorts
+            this.lnaBlockingEnabled = it.lnaBlockingEnabled
         }
     }
 
