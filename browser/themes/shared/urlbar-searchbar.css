@@ -11,10 +11,9 @@
 }
 
 #urlbar[actiontype="switchtab"][action-override] > .urlbar-input-container > #urlbar-label-box,
-#urlbar:not([actiontype="switchtab"], [actiontype="extension"], [searchmode]) > .urlbar-input-container > #urlbar-label-box,
+#urlbar:not([actiontype="switchtab"], [actiontype="extension"]) > .urlbar-input-container > #urlbar-label-box,
 #urlbar:not([actiontype="switchtab"]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
 #urlbar:not([actiontype="extension"]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
-#urlbar[searchmode][breakout-extend] > .urlbar-input-container > #urlbar-label-box,
 .urlbar-input-container[pageproxystate="invalid"] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
 #urlbar[usertyping] > .urlbar-input-container > #page-action-buttons > #urlbar-zoom-button,
@@ -488,10 +487,6 @@
   #urlbar[searchmode] > .urlbar-input-container > & {
     display: inline-flex;
   }
-}
-
-#urlbar[searchmode] > .urlbar-input-container > #urlbar-label-box {
-  display: none;
 }
 
 #urlbar-search-mode-indicator-close,
