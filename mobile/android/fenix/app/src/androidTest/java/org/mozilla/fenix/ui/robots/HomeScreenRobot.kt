@@ -831,7 +831,7 @@ class HomeScreenRobot {
             mDevice
                 .findObject(
                     UiSelector()
-                        .textContains(getStringResource(R.string.recent_tabs_show_all)),
+                        .descriptionContains(getStringResource(R.string.recent_tabs_show_all_content_description_2)),
                 ).clickAndWaitForNewWindow(waitingTime)
             Log.i(TAG, "clickJumpBackInShowAllButton: Clicked \"Show all\" button and wait for $waitingTime ms for a new window")
 
