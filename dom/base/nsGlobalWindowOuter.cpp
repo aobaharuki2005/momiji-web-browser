@@ -6442,31 +6442,29 @@ Location* nsGlobalWindowOuter::GetLocation() {
 }
 
 void nsGlobalWindowOuter::SetIsBackground(bool aIsBackground) {
-  bool changed = aIsBackground != IsBackground();
+  const bool changed = aIsBackground != IsBackground();
   SetIsBackgroundInternal(aIsBackground);
 
   nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal(this);
-
-  if (inner && changed) {
-    inner->UpdateBackgroundState();
-  }
-
-  if (aIsBackground) {
-    // Notify gamepadManager we are at the background window,
-    // we need to stop vibrate.
-    // Stop the vr telemery time spent when it switches to
-    // the background window.
-    if (inner && changed) {
-      inner->StopGamepadHaptics();
-      inner->StopVRActivity();
-    }
+  if (!inner) {
     return;
   }
 
-  if (inner) {
-    inner->SyncGamepadState();
-    inner->StartVRActivity();
+  if (changed) {
+    inner->UpdateBackgroundState();
+    if (aIsBackground) {
+      // Notify gamepadManager we are at the background window,
+      // we need to stop vibrate.
+      // Stop the vr telemery time spent when it switches to
+      // the background window.
+      inner->StopGamepadHaptics();
+      inner->StopVRActivity();
+      return;
+    }
   }
+  // FIXME: Why doing this even if not changed?
+  inner->SyncGamepadState();
+  inner->StartVRActivity();
 }
 
 void nsGlobalWindowOuter::SetIsBackgroundInternal(bool aIsBackground) {
