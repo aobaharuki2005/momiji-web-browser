@@ -634,7 +634,7 @@ async function assertSelectorEnginesEqualsExpected(
   expectedEngines,
   message
 ) {
-  engineSelector._configuration = null;
+  engineSelector.clearCachedConfigurationForTests();
   SearchTestUtils.setRemoteSettingsConfig(config);
 
   if (expectedEngines.length) {
