@@ -190,7 +190,7 @@ class JitcodeGlobalEntry : public JitCodeRange {
 
   bool trace(JSTracer* trc);
   void traceWeak(JSTracer* trc);
-  uint64_t lookupRealmID(JSRuntime* rt, void* ptr) const;
+  uint64_t realmID(JSRuntime* rt) const;
   void* canonicalNativeAddrFor(JSRuntime* rt, void* ptr) const;
 
   // Read the inline call stack at a given point in the native code and append
@@ -233,12 +233,16 @@ class IonEntry : public JitcodeGlobalEntry {
   // of the memory space.
   const JitcodeIonTable* regionTable_;
 
+  uint64_t realmId_;
+
  public:
   IonEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
-           ScriptList&& scriptList, JitcodeIonTable* regionTable)
+           ScriptList&& scriptList, JitcodeIonTable* regionTable,
+           uint64_t realmId)
       : JitcodeGlobalEntry(Kind::Ion, code, nativeStartAddr, nativeEndAddr),
         scriptList_(std::move(scriptList)),
-        regionTable_(regionTable) {
+        regionTable_(regionTable),
+        realmId_(realmId) {
     MOZ_ASSERT(regionTable);
   }
 
@@ -265,7 +269,7 @@ class IonEntry : public JitcodeGlobalEntry {
   uint32_t callStackAtAddr(void* ptr, const char** results,
                            uint32_t maxResults) const;
 
-  uint64_t lookupRealmID(void* ptr) const;
+  uint64_t realmID() const { return realmId_; }
 
   bool trace(JSTracer* trc);
   void traceWeak(JSTracer* trc);
@@ -291,7 +295,7 @@ class IonICEntry : public JitcodeGlobalEntry {
   uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** results,
                            uint32_t maxResults) const;
 
-  uint64_t lookupRealmID(JSRuntime* rt, void* ptr) const;
+  uint64_t realmID(JSRuntime* rt) const;
 
   bool trace(JSTracer* trc);
   void traceWeak(JSTracer* trc);
@@ -300,14 +304,16 @@ class IonICEntry : public JitcodeGlobalEntry {
 class BaselineEntry : public JitcodeGlobalEntry {
   JSScript* script_;
   UniqueChars str_;
+  uint64_t realmId_;
 
  public:
   BaselineEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
-                JSScript* script, UniqueChars str)
+                JSScript* script, UniqueChars str, uint64_t realmId)
       : JitcodeGlobalEntry(Kind::Baseline, code, nativeStartAddr,
                            nativeEndAddr),
         script_(script),
-        str_(std::move(str)) {
+        str_(std::move(str)),
+        realmId_(realmId) {
     MOZ_ASSERT(script_);
     MOZ_ASSERT(str_);
   }
@@ -321,7 +327,7 @@ class BaselineEntry : public JitcodeGlobalEntry {
   uint32_t callStackAtAddr(void* ptr, const char** results,
                            uint32_t maxResults) const;
 
-  uint64_t lookupRealmID() const;
+  uint64_t realmID() const { return realmId_; }
 
   bool trace(JSTracer* trc);
   void traceWeak(JSTracer* trc);
@@ -349,7 +355,7 @@ class SelfHostedSharedEntry : public JitcodeGlobalEntry {
   uint32_t callStackAtAddr(void* ptr, const char** results,
                            uint32_t maxResults) const;
 
-  uint64_t lookupRealmID() const;
+  uint64_t realmID() const;
 };
 
 class BaselineInterpreterEntry : public JitcodeGlobalEntry {
@@ -364,7 +370,7 @@ class BaselineInterpreterEntry : public JitcodeGlobalEntry {
   uint32_t callStackAtAddr(void* ptr, const char** results,
                            uint32_t maxResults) const;
 
-  uint64_t lookupRealmID() const;
+  uint64_t realmID() const;
 };
 
 // Dummy entries are created for jitcode generated when profiling is not
@@ -384,7 +390,7 @@ class DummyEntry : public JitcodeGlobalEntry {
     return 0;
   }
 
-  uint64_t lookupRealmID() const { return 0; }
+  uint64_t realmID() const { return 0; }
 };
 
 inline const IonEntry& JitcodeGlobalEntry::asIon() const {

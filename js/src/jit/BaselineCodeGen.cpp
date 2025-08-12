@@ -382,8 +382,10 @@ bool BaselineCompiler::finishCompile(JSContext* cx) {
       entry = MakeJitcodeGlobalEntry<SelfHostedSharedEntry>(
           cx, code, code->raw(), code->rawEnd(), std::move(str));
     } else {
-      entry = MakeJitcodeGlobalEntry<BaselineEntry>(
-          cx, code, code->raw(), code->rawEnd(), script, std::move(str));
+      uint64_t realmId = script->realm()->creationOptions().profilerRealmID();
+      entry = MakeJitcodeGlobalEntry<BaselineEntry>(cx, code, code->raw(),
+                                                    code->rawEnd(), script,
+                                                    std::move(str), realmId);
     }
     if (!entry) {
       return false;
