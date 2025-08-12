@@ -37,7 +37,7 @@ fuzzy(0-1,0-6) == rotate3d-2a.html rotatey-1-ref.html
 != backface-visibility-1a.html about:blank
 == backface-visibility-1b.html about:blank
 == backface-visibility-1c.html about:blank
-fuzzy-if(useDrawSnapshot,64-64,1438-1438) == backface-visibility-2.html backface-visibility-2-ref.html
+fuzzy-if(useDrawSnapshot,64-64,1428-1438) == backface-visibility-2.html backface-visibility-2-ref.html
 == backface-visibility-3.html backface-visibility-3-ref.html
 == perspective-clipping-1.html perspective-clipping-1-ref.html
 == perspective-clipping-2.html perspective-clipping-2-ref.html
