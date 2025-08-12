@@ -70,22 +70,6 @@ linux64-clang-14-stage1:
         toolchain:
             - linux64-toolchain-sysroot
 
-linux64-clang-14:
-    description: "Clang 14 toolchain build"
-    attributes:
-        local-toolchain: true
-    treeherder:
-        symbol: TL(clang-14)
-    worker-type: b-linux-amd
-    worker:
-        max-run-time: 600
-    run:
-        script: repack-clang.sh
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        toolchain:
-            - linux64-clang-14-stage1
-
 macosx64-clang-14-raw:
     description: "Clang 14 toolchain build"
     treeherder:
