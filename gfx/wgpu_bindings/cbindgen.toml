@@ -31,6 +31,7 @@ using WGPUOption_SamplerId = uint64_t;
 using WGPUOption_SurfaceId = uint64_t;
 using WGPUOption_TextureViewId = uint64_t;
 using WGPUOption_ExternalTextureSourceId = uint64_t;
+using WGPUOption_ExternalTextureId = uint64_t;
 using WGPUOption_QuerySetId = uint64_t;
 using WGPUOption_DeviceId = uint64_t;
 
@@ -77,6 +78,7 @@ exclude = [
 	"Option_SurfaceId",
 	"Option_TextureViewId",
 	"Option_ExternalTextureSourceId",
+	"Option_ExternalTextureId",
 	"Option_BufferSize",
 	"Option_NonZeroU32",
 	"Option_NonZeroU8",

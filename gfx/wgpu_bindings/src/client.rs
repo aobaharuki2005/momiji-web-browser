@@ -220,6 +220,7 @@ pub struct BindGroupEntry {
     size: Option<wgt::BufferSize>,
     sampler: Option<id::SamplerId>,
     texture_view: Option<id::TextureViewId>,
+    external_texture: Option<id::ExternalTextureId>,
 }
 
 #[repr(C)]
@@ -1544,6 +1545,8 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group(
                 wgc::binding_model::BindingResource::Sampler(id)
             } else if let Some(id) = entry.texture_view {
                 wgc::binding_model::BindingResource::TextureView(id)
+            } else if let Some(id) = entry.external_texture {
+                wgc::binding_model::BindingResource::ExternalTexture(id)
             } else {
                 panic!("Unexpected binding entry {:?}", entry);
             },

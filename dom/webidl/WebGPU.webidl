@@ -609,7 +609,8 @@ typedef (GPUSampler or
          GPUTexture or
          GPUTextureView or
          GPUBuffer or
-         GPUBufferBinding) GPUBindingResource;
+         GPUBufferBinding or
+         GPUExternalTexture) GPUBindingResource;
 
 dictionary GPUBindGroupEntry {
     required GPUIndex32 binding;

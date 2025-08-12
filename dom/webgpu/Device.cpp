@@ -475,10 +475,12 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
       setTextureViewBinding(texture_view);
     } else if (entry.mResource.IsGPUSampler()) {
       e.sampler = entry.mResource.GetAsGPUSampler()->mId;
+    } else if (entry.mResource.IsGPUExternalTexture()) {
+      e.external_texture = entry.mResource.GetAsGPUExternalTexture()->mId;
     } else {
-      // Not a buffer, nor a texture view, nor a sampler. If we pass
-      // this to wgpu_client, it'll panic. Log a warning instead and
-      // ignore this entry.
+      // Not a buffer, nor a texture view, nor a sampler, nor an external
+      // texture. If we pass this to wgpu_client, it'll panic. Log a warning
+      // instead and ignore this entry.
       NS_WARNING("Bind group entry has unknown type.");
       continue;
     }
