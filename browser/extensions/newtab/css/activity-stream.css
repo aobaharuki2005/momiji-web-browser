@@ -4412,11 +4412,14 @@ main section {
 .lists .select-wrapper {
   padding-inline: var(--space-large);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   position: relative;
+  align-items: center;
+  gap: var(--space-medium);
 }
 .lists .select-wrapper moz-button {
   visibility: hidden;
+  margin-inline-start: auto;
 }
 .lists:hover .select-wrapper moz-button, .lists:focus-within .select-wrapper moz-button,
 .lists .select-wrapper panel-list[open] .select-wrapper moz-button {

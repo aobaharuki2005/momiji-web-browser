@@ -104,6 +104,11 @@ function templateHTML(options) {
     <script
       async
       type="module"
+      src="chrome://global/content/elements/moz-badge.mjs"
+    ></script>
+    <script
+      async
+      type="module"
       src="chrome://global/content/elements/moz-button.mjs"
     ></script>
     <script

@@ -25,11 +25,14 @@
   .select-wrapper {
     padding-inline: var(--space-large);
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     position: relative;
+    align-items: center;
+    gap: var(--space-medium);
 
     moz-button {
       visibility: hidden;
+      margin-inline-start: auto;
     }
   }
 
