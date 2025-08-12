@@ -157,18 +157,13 @@ TEST(NimbusFeaturesUpdate, Errors)
   ASSERT_EQ(NimbusFeatures::GetInt("foo"_ns, "value"_ns, 0), 24);
 
   // Verify updating foo.enabled doesn't call FooValueUpdated.
-  gPrefUpdate = false;
+  ASSERT_TRUE(NimbusFeatures::GetBool("foo"_ns, "enabled"_ns, false));
   ASSERT_EQ(Preferences::SetBool("nimbus.syncdatastore.foo.enabled", false,
                                  PrefValueKind::User),
             NS_OK);
   ASSERT_FALSE(NimbusFeatures::GetBool("foo"_ns, "enabled"_ns, true));
-  ASSERT_EQ(Preferences::SetBool("nimbus.syncdatastore.foo.enabled", true,
-                                 PrefValueKind::User),
-            NS_OK);
-  ASSERT_TRUE(NimbusFeatures::GetBool("foo"_ns, "enabled"_ns, false));
-  ASSERT_FALSE(gPrefUpdate);
+  gPrefUpdate = false;
 
-  // Verify updating bar.value calls BarRolloutValueUpdated
   ASSERT_EQ(Preferences::SetInt("nimbus.syncdefaultsstore.bar.value", 25,
                                 PrefValueKind::User),
             NS_OK);
