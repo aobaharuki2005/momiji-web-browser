@@ -17,7 +17,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -89,7 +88,6 @@ import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.CheckI
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.ReviewPromptShown
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
-import org.mozilla.fenix.components.appstate.qrScanner.QrScannerDelegate
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.components.toolbar.BottomToolbarContainerView
 import org.mozilla.fenix.compose.snackbar.Snackbar

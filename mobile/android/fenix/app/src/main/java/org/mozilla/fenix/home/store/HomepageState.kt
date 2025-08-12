@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.home.store
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -192,7 +194,8 @@ internal sealed class HomepageState {
                         showHeader = settings.showHomepageHeader,
                         searchBarVisible = shouldShowSearchBar(appState = appState),
                         searchBarEnabled = settings.enableHomepageSearchBar &&
-                            settings.toolbarPosition == ToolbarPosition.TOP,
+                            settings.toolbarPosition == ToolbarPosition.TOP &&
+                                LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT,
                         firstFrameDrawn = firstFrameDrawn,
                         setupChecklistState = setupChecklistState,
                         topSiteColors = TopSiteColors.colors(wallpaperState = wallpaperState),

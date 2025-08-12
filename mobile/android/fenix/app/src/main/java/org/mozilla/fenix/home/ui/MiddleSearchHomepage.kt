@@ -92,8 +92,8 @@ internal fun MiddleSearchHomepage(
 
                             Spacer(modifier = Modifier.weight(1f))
 
-                            LaunchedEffect(searchBarVisible) {
-                                onMiddleSearchBarVisibilityChanged(searchBarVisible)
+                            LaunchedEffect(key1 = searchBarEnabled, key2 = searchBarVisible) {
+                                onMiddleSearchBarVisibilityChanged(searchBarEnabled && searchBarVisible)
                             }
 
                             if (searchBarEnabled && searchBarVisible) {
