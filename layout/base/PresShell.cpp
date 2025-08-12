@@ -5919,7 +5919,7 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll) {
     return;
   }
 
-  if (mLastMousePointerId.isNothing() && !mPointerIds.IsEmpty()) {
+  if (mLastMousePointerId.isNothing() && mPointerIds.IsEmpty()) {
     return;
   }
 
