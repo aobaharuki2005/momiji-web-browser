@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.home.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,7 @@ import org.mozilla.fenix.home.interactor.HomepageInteractor
 import org.mozilla.fenix.home.pocket.ui.PocketSection
 import org.mozilla.fenix.home.store.HomepageState
 import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE
+import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Top level composable for the middle search homepage.
@@ -123,5 +126,21 @@ internal fun MiddleSearchHomepage(
                 }
             }
         }
+
+        if (state.isSearchInProgress) {
+            Scrim(onDismiss = interactor::onHomeContentFocusedWhileSearchIsActive)
+        }
     }
+}
+
+@Composable
+private fun Scrim(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .background(FirefoxTheme.colors.layerScrim.copy(alpha = 0.75f))
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { onDismiss() })
+            },
+    )
 }
