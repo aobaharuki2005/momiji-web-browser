@@ -1894,6 +1894,8 @@
     start: IntPtr
     end: IntPtr
   result_type: Object
+  alias_set: none
+  can_recover: true
   possibly_calls: true
   generate_lir: true
 
