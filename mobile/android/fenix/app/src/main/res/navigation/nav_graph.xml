@@ -297,7 +297,13 @@
 
     <fragment
         android:id="@+id/shortcutsFragment"
-        android:name="org.mozilla.fenix.home.topsites.ShortcutsFragment" />
+        android:name="org.mozilla.fenix.home.topsites.ShortcutsFragment">
+        <action
+            android:id="@+id/action_shortcutsFragment_to_browserFragment"
+            app:destination="@id/browserFragment"
+            app:popUpTo="@id/shortcutsFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
     <dialog
         android:id="@+id/researchSurfaceDialogFragment"

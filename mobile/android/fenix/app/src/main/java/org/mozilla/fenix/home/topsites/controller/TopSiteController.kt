@@ -31,7 +31,6 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
@@ -43,6 +42,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.mars.MARSUseCases
+import org.mozilla.fenix.home.topsites.ShortcutsFragmentDirections
 import org.mozilla.fenix.home.topsites.interactor.TopSiteInteractor
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
@@ -130,7 +130,12 @@ class DefaultTopSiteController(
 
         activity.browsingModeManager.mode = BrowsingMode.Private
 
-        navController.navigate(R.id.browserFragment)
+        if (navController.currentDestination?.id == R.id.shortcutsFragment) {
+            navController.navigate(ShortcutsFragmentDirections.actionShortcutsFragmentToBrowserFragment())
+        } else {
+            navController.navigate(R.id.browserFragment)
+        }
+
         fenixBrowserUseCases.loadUrlOrSearch(
             searchTermOrURL = topSite.url,
             newTab = true,
@@ -287,7 +292,11 @@ class DefaultTopSiteController(
             }
         }
 
-        navController.navigate(R.id.browserFragment)
+        if (navController.currentDestination?.id == R.id.shortcutsFragment) {
+            navController.navigate(ShortcutsFragmentDirections.actionShortcutsFragmentToBrowserFragment())
+        } else {
+            navController.navigate(R.id.browserFragment)
+        }
     }
 
     @VisibleForTesting
@@ -335,7 +344,12 @@ class DefaultTopSiteController(
     override fun handleSponsorPrivacyClicked() {
         TopSites.contileSponsorsAndPrivacy.record(NoExtras())
 
-        navController.navigate(R.id.browserFragment)
+        if (navController.currentDestination?.id == R.id.shortcutsFragment) {
+            navController.navigate(ShortcutsFragmentDirections.actionShortcutsFragmentToBrowserFragment())
+        } else {
+            navController.navigate(R.id.browserFragment)
+        }
+
         fenixBrowserUseCases.loadUrlOrSearch(
             searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SPONSOR_PRIVACY),
             newTab = true,

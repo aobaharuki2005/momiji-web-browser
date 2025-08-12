@@ -40,6 +40,7 @@ import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.home.mars.MARSUseCases
+import org.mozilla.fenix.home.topsites.ShortcutsFragmentDirections
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
@@ -191,6 +192,34 @@ class DefaultTopSiteControllerTest {
                 searchTermOrURL = topSite.url,
                 newTab = false,
                 private = false,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN current destination is the shortcuts fragment WHEN a top site is selected THEN open top site in a new tab`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.shortcutsFragment
+        }
+
+        val topSite = TopSite.Default(
+            id = 1L,
+            title = "Mozilla",
+            url = "mozilla.org",
+            createdAt = 0,
+        )
+        val controller = spyk(createController())
+
+        every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
+
+        controller.handleSelectTopSite(topSite, position = 0)
+
+        verify {
+            navController.navigate(ShortcutsFragmentDirections.actionShortcutsFragmentToBrowserFragment())
+            tabsUseCases.addTab.invoke(
+                url = topSite.url,
+                selectTab = true,
+                startLoading = true,
             )
         }
     }
@@ -855,6 +884,28 @@ class DefaultTopSiteControllerTest {
     }
 
     @Test
+    fun `GIVEN current destination is the shortcuts fragmentWHEN handleSponsorPrivacyClicked is called THEN navigate to the privacy webpage AND report the interaction`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.shortcutsFragment
+        }
+
+        createController().handleSponsorPrivacyClicked()
+
+        assertNotNull(TopSites.contileSponsorsAndPrivacy.testGetValue())
+        assertEquals(1, TopSites.contileSponsorsAndPrivacy.testGetValue()!!.size)
+        assertNull(TopSites.contileSponsorsAndPrivacy.testGetValue()!!.single().extra)
+
+        verify {
+            navController.navigate(ShortcutsFragmentDirections.actionShortcutsFragmentToBrowserFragment())
+            fenixBrowserUseCases.loadUrlOrSearch(
+                searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SPONSOR_PRIVACY),
+                newTab = true,
+                private = false,
+            )
+        }
+    }
+
+    @Test
     fun `WHEN top site long clicked is called THEN report the top site long click telemetry`() {
         assertNull(TopSites.longPress.testGetValue())
 
@@ -892,6 +943,37 @@ class DefaultTopSiteControllerTest {
 
         verify {
             navController.navigate(R.id.browserFragment)
+            fenixBrowserUseCases.loadUrlOrSearch(
+                searchTermOrURL = topSite.url,
+                newTab = true,
+                private = true,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN current destination is the shortcuts fragment WHEN handleOpenInPrivateTabClicked is called with a TopSite#Provided site THEN navigate to the top site and record telemetry`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.shortcutsFragment
+        }
+
+        val topSite = TopSite.Provided(
+            id = 1L,
+            title = "Mozilla",
+            url = "mozilla.org",
+            clickUrl = "",
+            imageUrl = "",
+            impressionUrl = "",
+            createdAt = 0,
+        )
+        createController().handleOpenInPrivateTabClicked(topSite)
+
+        assertNotNull(TopSites.openContileInPrivateTab.testGetValue())
+        assertEquals(1, TopSites.openContileInPrivateTab.testGetValue()!!.size)
+        assertNull(TopSites.openContileInPrivateTab.testGetValue()!!.single().extra)
+
+        verify {
+            navController.navigate(ShortcutsFragmentDirections.actionShortcutsFragmentToBrowserFragment())
             fenixBrowserUseCases.loadUrlOrSearch(
                 searchTermOrURL = topSite.url,
                 newTab = true,
