@@ -93,10 +93,7 @@ already_AddRefed<dom::Promise> Queue::OnSubmittedWorkDone(ErrorResult& aRv) {
 
   ffi::wgpu_client_on_submitted_work_done(mBridge->GetClient(), mId);
 
-  auto pending_promise =
-      WebGPUChild::PendingOnSubmittedWorkDonePromise{RefPtr(promise), mId};
-  mBridge->mPendingOnSubmittedWorkDonePromises.push_back(
-      std::move(pending_promise));
+  mBridge->mPendingOnSubmittedWorkDonePromises[mId].push_back(promise);
 
   return promise.forget();
 }
