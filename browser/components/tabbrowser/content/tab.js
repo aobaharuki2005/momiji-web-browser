@@ -72,10 +72,6 @@
        */
       this.muteReason = undefined;
 
-      this.mOverCloseButton = false;
-
-      this.mCorrespondingMenuitem = null;
-
       this.closing = false;
     }
 
@@ -409,15 +405,11 @@
     }
 
     on_mouseover(event) {
-      if (event.target.classList.contains("tab-close-button")) {
-        this.mOverCloseButton = true;
-      }
-
       if (!this.visible) {
         return;
       }
 
-      let tabToWarm = this.mOverCloseButton
+      let tabToWarm = event.target.classList.contains("tab-close-button")
         ? gBrowser._findTabToBlurTo(this)
         : this;
       gBrowser.warmupTab(tabToWarm);
@@ -429,10 +421,6 @@
     }
 
     on_mouseout(event) {
-      if (event.target.classList.contains("tab-close-button")) {
-        this.mOverCloseButton = false;
-      }
-
       // If the new target is not part of this tab then this is a mouseleave event.
       if (!this.contains(event.relatedTarget)) {
         this._mouseleave();
@@ -448,11 +436,6 @@
       if (event.eventPhase == Event.CAPTURING_PHASE) {
         this.style.MozUserFocus = "";
       } else if (
-        this.mOverCloseButton ||
-        // Bug 1964646 - mOverCloseButton doesn't work when the tab strip is collapsed
-        // and in vertical mode, since the close button is already outside of the tab's
-        // bounding box. In this case, we need to check if the click was on the close button.
-        // We do still use mOverCloseButton just in case.
         event.target.classList?.contains("tab-close-button") ||
         gSharedTabWarning.willShowSharedTabWarning(this)
       ) {
