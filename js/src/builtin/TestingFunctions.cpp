@@ -212,12 +212,6 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  bool importAttributes = cx->options().importAttributes();
-  if (!JS_SetProperty(cx, info, "importAttributes",
-                      importAttributes ? TrueHandleValue : FalseHandleValue)) {
-    return false;
-  }
-
   if (args.length() == 1) {
     RootedString str(cx, ToString(cx, args[0]));
     if (!str) {

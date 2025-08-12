@@ -5000,11 +5000,6 @@ bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType attributesSet) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assert) ||
              anyChars.isCurrentTokenType(TokenKind::With));
 
-  if (!options().importAttributes()) {
-    error(JSMSG_IMPORT_ATTRIBUTES_NOT_SUPPORTED);
-    return false;
-  }
-
   if (!abortIfSyntaxParser()) {
     return false;
   }
@@ -12649,30 +12644,25 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
     }
 
     Node optionalArg;
-    if (options().importAttributes()) {
-      if (next == TokenKind::Comma) {
-        tokenStream.consumeKnownToken(TokenKind::Comma,
-                                      TokenStream::SlashIsRegExp);
+    if (next == TokenKind::Comma) {
+      tokenStream.consumeKnownToken(TokenKind::Comma,
+                                    TokenStream::SlashIsRegExp);
+
+      if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
+        return errorResult();
+      }
+
+      if (next != TokenKind::RightParen) {
+        MOZ_TRY_VAR(optionalArg,
+                    assignExpr(InAllowed, yieldHandling, TripledotProhibited));
 
         if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
           return errorResult();
         }
 
-        if (next != TokenKind::RightParen) {
-          MOZ_TRY_VAR(optionalArg, assignExpr(InAllowed, yieldHandling,
-                                              TripledotProhibited));
-
-          if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
-            return errorResult();
-          }
-
-          if (next == TokenKind::Comma) {
-            tokenStream.consumeKnownToken(TokenKind::Comma,
-                                          TokenStream::SlashIsRegExp);
-          }
-        } else {
-          MOZ_TRY_VAR(optionalArg,
-                      handler_.newPosHolder(TokenPos(pos().end, pos().end)));
+        if (next == TokenKind::Comma) {
+          tokenStream.consumeKnownToken(TokenKind::Comma,
+                                        TokenStream::SlashIsRegExp);
         }
       } else {
         MOZ_TRY_VAR(optionalArg,
