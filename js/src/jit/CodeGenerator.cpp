@@ -17106,11 +17106,12 @@ bool CodeGenerator::link(JSContext* cx) {
 
     // Find the realmId. We do not do cross-realm inlining, so it should be the
     // same for every inlined script.
-    uint64_t realmId =
-        scriptList[0].script->realm()->creationOptions().profilerRealmID();
+    uint64_t realmId = script->realm()->creationOptions().profilerRealmID();
 #ifdef DEBUG
-    for (auto& pair : scriptList) {
-      MOZ_ASSERT(pair.script->realm()->creationOptions().profilerRealmID() == realmId);
+    for (const auto* scriptSnapshot : snapshot_->scripts()) {
+      JSScript* inlinedScript = scriptSnapshot->script();
+      MOZ_ASSERT(inlinedScript->realm()->creationOptions().profilerRealmID() ==
+                 realmId);
     }
 #endif
 
