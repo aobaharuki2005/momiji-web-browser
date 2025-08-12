@@ -3388,7 +3388,7 @@ template void MacroAssembler::emitMegamorphicCachedSetSlot<ValueOperand>(
 void MacroAssembler::guardNonNegativeIntPtrToInt32(Register reg, Label* fail) {
 #ifdef DEBUG
   Label ok;
-  branchPtr(Assembler::NotSigned, reg, reg, &ok);
+  branchTestPtr(Assembler::NotSigned, reg, reg, &ok);
   assumeUnreachable("Unexpected negative value");
   bind(&ok);
 #endif
