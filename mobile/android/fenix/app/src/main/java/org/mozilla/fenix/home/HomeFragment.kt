@@ -160,7 +160,6 @@ import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
 import org.mozilla.fenix.snackbar.SnackbarBinding
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
-import org.mozilla.fenix.termsofuse.shouldShowTermsOfUsePrompt
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.utils.showAddSearchWidgetPromptIfSupported
@@ -569,12 +568,6 @@ class HomeFragment : Fragment() {
         disableAppBarDragging()
 
         FxNimbus.features.homescreen.recordExposure()
-
-        if (requireContext().settings().shouldShowTermsOfUsePrompt()) {
-            findNavController().navigate(
-                BrowserFragmentDirections.actionGlobalTermsOfUseDialog(),
-            )
-        }
 
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
         requireComponents.core.engine.profiler?.addMarker(
@@ -1155,6 +1148,12 @@ class HomeFragment : Fragment() {
 
         // Trigger review prompt logic and show the appropriate prompt variation if applicable
         requireComponents.appStore.dispatch(CheckIfEligibleForReviewPrompt)
+
+        if (requireComponents.termsOfUseManager.shouldShowTermsOfUsePromptOnHomepage()) {
+            findNavController().navigate(
+                BrowserFragmentDirections.actionGlobalTermsOfUseDialog(),
+            )
+        }
     }
 
     @VisibleForTesting

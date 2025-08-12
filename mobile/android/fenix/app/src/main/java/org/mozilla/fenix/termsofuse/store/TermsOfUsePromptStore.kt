@@ -33,6 +33,11 @@ sealed interface TermsOfUsePromptAction : Action {
      * background scrim
      */
     data object OnPromptManuallyDismissed : TermsOfUsePromptAction
+
+    /**
+     * Triggered when the prompt is dismissed for any reason.
+     */
+    data object OnPromptDismissed : TermsOfUsePromptAction
 }
 
 /**

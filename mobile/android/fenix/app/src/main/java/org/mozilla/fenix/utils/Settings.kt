@@ -97,6 +97,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         const val ONE_DAY_MS = 60 * 60 * 24 * 1000L
         const val TWO_DAYS_MS = 2 * ONE_DAY_MS
         const val THREE_DAYS_MS = 3 * ONE_DAY_MS
+        const val FIVE_DAYS_MS = 5 * ONE_DAY_MS
         const val ONE_WEEK_MS = 60 * 60 * 24 * 7 * 1000L
         const val ONE_MONTH_MS = (60 * 60 * 24 * 365 * 1000L) / 12
 
@@ -536,10 +537,19 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Timestamp in milliseconds when the terms of use prompt was last shown to the user.
+     * A value of 0L indicates that the prompt has never been shown.
+     */
+    var lastTermsOfUsePromptTimeInMillis: Long by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_terms_last_prompt_time),
+        default = 0L,
+    )
+
+    /**
      * Users who have not accepted ToS will see a popup asking them to accept.
      * They can select "Not now" to postpone accepting.
      */
-    var hasPostponedAcceptingTermsOfService by booleanPreference(
+    var hasPostponedAcceptingTermsOfUse by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_terms_postponed),
         default = false,
     )

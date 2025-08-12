@@ -59,7 +59,6 @@ import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
-import org.mozilla.fenix.termsofuse.shouldShowTermsOfUsePrompt
 import org.mozilla.fenix.theme.ThemeManager
 
 /**
@@ -156,12 +155,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 ),
                 owner = this,
                 view = view,
-            )
-        }
-
-        if (requireContext().settings().shouldShowTermsOfUsePrompt()) {
-            findNavController().navigate(
-                BrowserFragmentDirections.actionGlobalTermsOfUseDialog(),
             )
         }
     }
@@ -554,6 +547,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         subscribeToTabCollections()
         updateLastBrowseActivity()
+
+        if (requireComponents.termsOfUseManager.shouldShowTermsOfUsePromptOnBrowserFragment()) {
+            findNavController().navigate(
+                BrowserFragmentDirections.actionGlobalTermsOfUseDialog(),
+            )
+        }
     }
 
     override fun onStop() {

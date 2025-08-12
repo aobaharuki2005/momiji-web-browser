@@ -5,6 +5,7 @@
 package org.mozilla.fenix.termsofuse.ui
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +17,7 @@ import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.termsofuse.store.DefaultTermsOfUsePromptRepository
+import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptAction
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptPreferencesMiddleware
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptStore
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -55,7 +57,9 @@ class TermsOfUseBottomSheetFragment : BottomSheetDialogFragment() {
             FirefoxTheme {
                 TermsOfUseBottomSheet(
                     store = termsOfUsePromptStore,
-                    onDismiss = { dismiss() },
+                    onDismiss = {
+                        dismiss()
+                    },
                     onTermsOfUseClicked = {
                         SupportUtils.launchSandboxCustomTab(
                             context,
@@ -81,5 +85,10 @@ class TermsOfUseBottomSheetFragment : BottomSheetDialogFragment() {
                 )
             }
         }
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        termsOfUsePromptStore.dispatch(TermsOfUsePromptAction.OnPromptDismissed)
     }
 }
