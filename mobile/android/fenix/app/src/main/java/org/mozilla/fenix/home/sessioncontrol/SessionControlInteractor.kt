@@ -124,69 +124,6 @@ interface CollectionInteractor {
     fun onRemoveCollectionsPlaceholder()
 }
 
-/**
- * Interface for top site related actions in the [SessionControlInteractor].
- */
-interface TopSiteInteractor {
-    /**
-     * Opens the given top site in private mode. Called when an user clicks on the "Open in private
-     * tab" top site menu item.
-     *
-     * @param topSite The top site that will be open in private mode.
-     */
-    fun onOpenInPrivateTabClicked(topSite: TopSite)
-
-    /**
-     * Opens a dialog to edit the given top site. Called when an user clicks on the "Edit" top site menu item.
-     *
-     * @param topSite The top site that will be edited.
-     */
-    fun onEditTopSiteClicked(topSite: TopSite)
-
-    /**
-     * Removes the given top site. Called when an user clicks on the "Remove" top site menu item.
-     *
-     * @param topSite The top site that will be removed.
-     */
-    fun onRemoveTopSiteClicked(topSite: TopSite)
-
-    /**
-     * Selects the given top site. Called when a user clicks on a top site.
-     *
-     * @param topSite The top site that was selected.
-     * @param position The position of the top site.
-     */
-    fun onSelectTopSite(topSite: TopSite, position: Int)
-
-    /**
-     * Called when a user sees a provided top site.
-     *
-     * @param topSite The provided top site that was seen by the user.
-     * @param position The position of the top site.
-     */
-    fun onTopSiteImpression(topSite: TopSite.Provided, position: Int)
-
-    /**
-     * Navigates to the Homepage Settings. Called when an user clicks on the "Settings" top site
-     * menu item.
-     */
-    fun onSettingsClicked()
-
-    /**
-     * Opens the sponsor privacy support articles. Called when an user clicks on the
-     * "Our sponsors & your privacy" top site menu item.
-     */
-    fun onSponsorPrivacyClicked()
-
-    /**
-     * Handles long click event for the given top site. Called when an user long clicks on a top
-     * site.
-     *
-     * @param topSite The top site that was long clicked.
-     */
-    fun onTopSiteLongClicked(topSite: TopSite)
-}
-
 interface MessageCardInteractor {
     /**
      * Called when a [Message]'s button is clicked
