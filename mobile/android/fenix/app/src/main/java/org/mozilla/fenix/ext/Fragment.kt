@@ -67,7 +67,7 @@ fun Fragment.getPreferenceKey(@StringRes resourceId: Int): String = getString(re
 fun Fragment.showToolbar(title: String) {
     (requireActivity() as AppCompatActivity).title = title
     activity?.setNavigationIcon(R.drawable.ic_back_button)
-    (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary().show()
+    (activity as? NavHostActivity)?.getSupportActionBarAndInflateIfNecessary()?.show()
 }
 
 /**

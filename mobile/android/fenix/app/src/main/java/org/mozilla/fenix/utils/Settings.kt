@@ -1527,8 +1527,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             persistentStorage = getSitePermissionsPhoneFeatureAction(PhoneFeature.PERSISTENT_STORAGE),
             crossOriginStorageAccess = getSitePermissionsPhoneFeatureAction(PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS),
             mediaKeySystemAccess = getSitePermissionsPhoneFeatureAction(PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS),
-            localDeviceAccess = Action.ASK_TO_ALLOW,
-            localNetworkAccess = Action.ASK_TO_ALLOW,
+            localDeviceAccess = getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCAL_DEVICE_ACCESS),
+            localNetworkAccess = getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCAL_NETWORK_ACCESS),
         )
     }
 
@@ -1543,6 +1543,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             PhoneFeature.PERSISTENT_STORAGE,
             PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS,
             PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS,
+            PhoneFeature.LOCAL_DEVICE_ACCESS,
+            PhoneFeature.LOCAL_NETWORK_ACCESS,
         ).map { it.getPreferenceKey(appContext) }
 
         preferences.registerOnSharedPreferenceChangeListener(lifecycleOwner) { _, key ->

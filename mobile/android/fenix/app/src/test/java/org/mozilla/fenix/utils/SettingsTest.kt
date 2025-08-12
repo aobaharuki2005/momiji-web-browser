@@ -586,6 +586,30 @@ class SettingsTest {
     }
 
     @Test
+    fun getSitePermissionsCustomSettingsRules_localDeviceAccess() {
+        // When
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.LOCAL_DEVICE_ACCESS, BLOCKED)
+
+        // Then
+        assertEquals(
+            defaultPermissions.copy(localDeviceAccess = BLOCKED),
+            settings.getSitePermissionsCustomSettingsRules(),
+        )
+    }
+
+    @Test
+    fun getSitePermissionsCustomSettingsRules_localNetworkAccess() {
+        // When
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.LOCAL_NETWORK_ACCESS, BLOCKED)
+
+        // Then
+        assertEquals(
+            defaultPermissions.copy(localNetworkAccess = BLOCKED),
+            settings.getSitePermissionsCustomSettingsRules(),
+        )
+    }
+
+    @Test
     fun getSitePermissionsCustomSettingsRules_autoplayAudible() {
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_AUDIBLE, ALLOWED)
 
