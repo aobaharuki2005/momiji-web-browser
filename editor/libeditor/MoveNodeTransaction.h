@@ -10,6 +10,7 @@
 
 #include "EditorDOMPoint.h"
 #include "EditorForwards.h"
+#include "SelectionState.h"
 
 #include "nsCOMPtr.h"  // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
@@ -224,6 +225,26 @@ class MoveSiblingsTransaction final : public MoveNodeTransactionBase {
     }
     return true;
   }
+
+  /**
+   * Remove all aClonedSiblingsToMove from the DOM.  aClonedSiblingsToMove must
+   * be a clone of mSiblingsToMove in the stack.
+   */
+  MOZ_CAN_RUN_SCRIPT void RemoveAllSiblingsToMove(
+      HTMLEditor& aHTMLEditor,
+      const nsTArray<OwningNonNull<nsIContent>>& aClonedSiblingsToMove,
+      AutoMoveNodeSelNotify& aNotifier) const;
+
+  /**
+   * Insert all disconnected aClonedSiblingsToMove to before aReferenceNode or
+   * end of aParentNode.  Before calling this, RemoveAllSiblingsToMove()
+   * should've already been called.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult InsertAllSiblingsToMove(
+      HTMLEditor& aHTMLEditor,
+      const nsTArray<OwningNonNull<nsIContent>>& aClonedSiblingsToMove,
+      nsINode& aParentNode, nsIContent* aReferenceNode,
+      AutoMoveNodeSelNotify& aNotifier) const;
 
   // The content which will be or was moved from mOldContainer to mContainer.
   AutoTArray<OwningNonNull<nsIContent>, 2> mSiblingsToMove;

@@ -155,69 +155,25 @@ nsresult MoveSiblingsTransaction::DoTransactionInternal() {
   MOZ_DIAGNOSTIC_ASSERT(mContainer);
   MOZ_DIAGNOSTIC_ASSERT(mOldContainer);
 
-  OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  OwningNonNull<nsINode> newContainer = *mContainer;
-  nsCOMPtr<nsIContent> newNextSibling = mReference;
   {
-    Maybe<uint32_t> srcIndex = mSiblingsToMove[0]->ComputeIndexInParentNode();
-    Maybe<uint32_t> destIndex;
-    if (newNextSibling) {
-      destIndex = newNextSibling->ComputeIndexInParentNode();
-    }
-    uint32_t i = 0;
+    const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
+    const OwningNonNull<nsINode> newContainer = *mContainer;
+    const nsCOMPtr<nsIContent> newNextSibling = mReference;
     const CopyableAutoTArray<OwningNonNull<nsIContent>, 64> siblingsToMove(
         mSiblingsToMove);
-    for (const OwningNonNull<nsIContent>& contentToMove : siblingsToMove) {
-      if (MOZ_UNLIKELY(contentToMove->IsInComposedDoc() &&
-                       !HTMLEditUtils::IsRemovableNode(*contentToMove))) {
-        continue;
-      }
-      if (contentToMove->IsElement() &&
-          !contentToMove->AsElement()->HasAttr(nsGkAtoms::mozdirty)) {
-        nsresult rv = htmlEditor->MarkElementDirty(
-            MOZ_KnownLive(*contentToMove->AsElement()));
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "EditorBase::MarkElementDirty() failed, but ignored");
-        Unused << rv;
-      }
-
-      {
-        const EditorRawDOMPoint atMovingContent =
-            srcIndex ? EditorRawDOMPoint(contentToMove->GetParentNode(),
-                                         contentToMove, *srcIndex)
-                     : EditorRawDOMPoint(contentToMove);
-        // Store the next index if and only if we'll move nextSibling at next
-        // time to save the cost of computing the index.
-        if (i + 1 < siblingsToMove.Length() &&
-            contentToMove->GetNextSibling() == siblingsToMove[i + 1]) {
-          srcIndex = Some(atMovingContent.Offset());
-        } else {
-          srcIndex.reset();
-        }
-        const EditorRawDOMPoint moveTo =
-            !newNextSibling
-                ? EditorRawDOMPoint::AtEndOf(newContainer)
-                : EditorRawDOMPoint(newNextSibling->GetParentNode(),
-                                    newNextSibling, destIndex.ref()++);
-        // FIXME: I think we can improve the performance of
-        // AutoMoveNodeSelNotify with handling all children move once.
-        AutoMoveNodeSelNotify notifyStoredRanges(htmlEditor->RangeUpdaterRef(),
-                                                 atMovingContent, moveTo);
-        IgnoredErrorResult error;
-        newContainer->InsertBefore(*contentToMove, newNextSibling, error);
-        // InsertBefore() may call MightThrowJSException() even if there is no
-        // error. We don't need the flag here.
-        error.WouldReportJSException();
-        if (MOZ_UNLIKELY(error.Failed())) {
-          NS_WARNING(nsPrintfCString("nsINode::InsertBefore() failed (%s)",
-                                     ToString(contentToMove.ref()).c_str())
-                         .get());
-          return Err(error.StealNSResult());
-        }
-      }
-      i++;
-    }
+    AutoMoveNodeSelNotify notifier(
+        htmlEditor->RangeUpdaterRef(),
+        mReference ? EditorRawDOMPoint(mReference)
+                   : EditorRawDOMPoint::AtEndOf(*newContainer));
+    // First, remove all nodes from the DOM if they are removable.  Then,
+    // IMEContentObserver can use cache to avoid to compute the start offset of
+    // each deleting text.
+    RemoveAllSiblingsToMove(htmlEditor, siblingsToMove, notifier);
+    // Next, insert all removed nodes into the DOM.  Then, IMEContentObserver
+    // can use cache to avoid to compute the start offset of each inserting
+    // text.
+    InsertAllSiblingsToMove(htmlEditor, siblingsToMove, newContainer,
+                            newNextSibling, notifier);
   }
   return NS_WARN_IF(mHTMLEditor->Destroyed()) ? NS_ERROR_EDITOR_DESTROYED
                                               : NS_OK;
@@ -263,64 +219,25 @@ NS_IMETHODIMP MoveSiblingsTransaction::UndoTransaction() {
   mContainer = mSiblingsToMove.LastElement()->GetParentNode();
   mReference = mSiblingsToMove.LastElement()->GetNextSibling();
 
-  OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  OwningNonNull<nsINode> oldContainer = *mOldContainer;
-  nsCOMPtr<nsIContent> oldNextSibling = mOldNextSibling;
   {
-    Maybe<uint32_t> srcIndex = mSiblingsToMove[0]->ComputeIndexInParentNode();
-    Maybe<uint32_t> destIndex;
-    if (oldNextSibling) {
-      destIndex = oldNextSibling->ComputeIndexInParentNode();
-    }
-    uint32_t i = 0;
+    const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
+    const OwningNonNull<nsINode> oldContainer = *mOldContainer;
+    const nsCOMPtr<nsIContent> oldNextSibling = mOldNextSibling;
     const CopyableAutoTArray<OwningNonNull<nsIContent>, 64> siblingsToMove(
         mSiblingsToMove);
-    for (const OwningNonNull<nsIContent>& contentToMove : siblingsToMove) {
-      if (MOZ_UNLIKELY(contentToMove->IsInComposedDoc() &&
-                       !HTMLEditUtils::IsRemovableNode(*contentToMove))) {
-        continue;
-      }
-      if (contentToMove->IsElement() &&
-          !contentToMove->AsElement()->HasAttr(nsGkAtoms::mozdirty)) {
-        nsresult rv = htmlEditor->MarkElementDirty(
-            MOZ_KnownLive(*contentToMove->AsElement()));
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "EditorBase::MarkElementDirty() failed, but ignored");
-        Unused << rv;
-      }
-
-      {
-        const EditorRawDOMPoint atMovingContent =
-            srcIndex ? EditorRawDOMPoint(contentToMove->GetParentNode(),
-                                         contentToMove, *srcIndex)
-                     : EditorRawDOMPoint(contentToMove);
-        // Store the next index if and only if we'll move nextSibling at next
-        // time to save the cost of computing the index.
-        if (i + 1 < siblingsToMove.Length() &&
-            contentToMove->GetNextSibling() == siblingsToMove[i + 1]) {
-          srcIndex = Some(atMovingContent.Offset());
-        } else {
-          srcIndex.reset();
-        }
-        const EditorRawDOMPoint moveTo =
-            !oldNextSibling ? EditorRawDOMPoint::AtEndOf(oldContainer)
-                            : EditorRawDOMPoint(oldContainer, oldNextSibling,
-                                                destIndex.ref()++);
-        AutoMoveNodeSelNotify notifyStoredRanges(htmlEditor->RangeUpdaterRef(),
-                                                 atMovingContent, moveTo);
-        IgnoredErrorResult error;
-        oldContainer->InsertBefore(*contentToMove, oldNextSibling, error);
-        // InsertBefore() may call MightThrowJSException() even if there is no
-        // error. We don't need the flag here.
-        error.WouldReportJSException();
-        if (error.Failed()) {
-          NS_WARNING("nsINode::InsertBefore() failed");
-          return error.StealNSResult();
-        }
-      }
-      i++;
-    }
+    AutoMoveNodeSelNotify notifier(
+        htmlEditor->RangeUpdaterRef(),
+        oldNextSibling ? EditorRawDOMPoint(oldNextSibling)
+                       : EditorRawDOMPoint::AtEndOf(*oldContainer));
+    // First, remove all nodes from the DOM if they are removable.  Then,
+    // IMEContentObserver can use cache to avoid to compute the start offset of
+    // each deleting text.
+    RemoveAllSiblingsToMove(htmlEditor, siblingsToMove, notifier);
+    // Next, insert all removed nodes into the DOM.  Then, IMEContentObserver
+    // can use cache to avoid to compute the start offset of each inserting
+    // text.
+    InsertAllSiblingsToMove(htmlEditor, siblingsToMove, oldContainer,
+                            oldNextSibling, notifier);
   }
 
   return NS_WARN_IF(mHTMLEditor->Destroyed()) ? NS_ERROR_EDITOR_DESTROYED
@@ -392,6 +309,83 @@ nsIContent* MoveSiblingsTransaction::GetLastMovedContent() const {
     }
   }
   return nullptr;
+}
+
+void MoveSiblingsTransaction::RemoveAllSiblingsToMove(
+    HTMLEditor& aHTMLEditor,
+    const nsTArray<OwningNonNull<nsIContent>>& aClonedSiblingsToMove,
+    AutoMoveNodeSelNotify& aNotifier) const {
+  // Be aware, if we're undoing or redoing, some aClonedSiblingsToMove may not
+  // be the adjacent sibling of prev/next element in the array.  Therefore, we
+  // may need to compute the index within the expensive path.
+
+  // First, we need to make AutoMoveNodeSelNotify instances store all indices of
+  // the moving content nodes.
+  {
+    for (const OwningNonNull<nsIContent>& contentToMove :
+         aClonedSiblingsToMove) {
+      if (contentToMove->IsInComposedDoc() &&
+          !HTMLEditUtils::IsRemovableNode(contentToMove)) {
+        continue;
+      }
+      aNotifier.AppendContentWhichWillBeMoved(contentToMove);
+    }
+  }
+  // Then, remove all nodes unless not removable.
+  for (const size_t i : IntegerRange(aNotifier.MovingContentCount())) {
+    nsIContent* const contentToMove = aNotifier.GetContentAt(i);
+    MOZ_ASSERT(contentToMove);
+    // MOZ_KnownLive because it's guaranteed by both notifier and
+    // aClonedSiblingsToMove.
+    MOZ_KnownLive(contentToMove)->Remove();
+  }
+}
+
+nsresult MoveSiblingsTransaction::InsertAllSiblingsToMove(
+    HTMLEditor& aHTMLEditor,
+    const nsTArray<OwningNonNull<nsIContent>>& aClonedSiblingsToMove,
+    nsINode& aParentNode, nsIContent* aReferenceNode,
+    AutoMoveNodeSelNotify& aNotifier) const {
+  MOZ_ASSERT(mHTMLEditor);
+  nsresult rv = NS_SUCCESS_DOM_NO_OPERATION;
+  for (const size_t i : IntegerRange(aNotifier.MovingContentCount())) {
+    nsIContent* const contentToMove = aNotifier.GetContentAt(i);
+    MOZ_ASSERT(contentToMove);
+    if (Element* const elementToMove = Element::FromNodeOrNull(contentToMove)) {
+      if (!elementToMove->HasAttr(nsGkAtoms::mozdirty)) {
+        nsresult rvMarkElementDirty = aHTMLEditor.MarkElementDirty(
+            MOZ_KnownLive(*contentToMove->AsElement()));
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rvMarkElementDirty),
+            "EditorBase::MarkElementDirty() failed, but ignored");
+        Unused << rvMarkElementDirty;
+      }
+    }
+
+    IgnoredErrorResult error;
+    aParentNode.InsertBefore(
+        // MOZ_KnownLive because of guaranteed by both aNotifier and
+        // aClonedSiblingsToMove.
+        MOZ_KnownLive(*contentToMove), aReferenceNode, error);
+    // InsertBefore() may call MightThrowJSException() even if there is no
+    // error. We don't need the flag here.
+    error.WouldReportJSException();
+    if (MOZ_UNLIKELY(error.Failed())) {
+      NS_WARNING("nsINode::InsertBefore() failed");
+      rv = error.StealNSResult();
+    }
+  }
+
+  Document* const document = aHTMLEditor.GetDocument();
+  for (const size_t i : IntegerRange(aNotifier.MovingContentCount())) {
+    nsIContent* const content = aNotifier.GetContentAt(i);
+    MOZ_ASSERT(content);
+    if (MOZ_LIKELY(content->GetParentNode() &&
+                   content->OwnerDoc() == document)) {
+      aNotifier.DidMoveContent(*content);
+    }
+  }
+  return NS_WARN_IF(aHTMLEditor.Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : rv;
 }
 
 }  // namespace mozilla
