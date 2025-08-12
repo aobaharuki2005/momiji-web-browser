@@ -831,14 +831,8 @@ class DefaultTopSiteControllerTest {
         assertNotNull(TopSites.contileSettings.testGetValue())
         assertEquals(1, TopSites.contileSettings.testGetValue()!!.size)
         assertNull(TopSites.contileSettings.testGetValue()!!.single().extra)
-        verify {
-            navController.navigate(
-                match<NavDirections> {
-                    it.actionId == R.id.action_global_homeSettingsFragment
-                },
-                null,
-            )
-        }
+
+        verify { navController.navigate(R.id.homeSettingsFragment) }
     }
 
     @Test

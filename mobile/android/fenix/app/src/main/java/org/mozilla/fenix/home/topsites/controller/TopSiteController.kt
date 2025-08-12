@@ -326,10 +326,7 @@ class DefaultTopSiteController(
 
     override fun handleTopSiteSettingsClicked() {
         TopSites.contileSettings.record(NoExtras())
-        navController.nav(
-            R.id.homeFragment,
-            HomeFragmentDirections.actionGlobalHomeSettingsFragment(),
-        )
+        navController.navigate(R.id.homeSettingsFragment)
     }
 
     override fun handleSponsorPrivacyClicked() {
