@@ -8991,8 +8991,9 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
       return {
         ...prevState,
         [timerType]: {
-          duration: 0,
-          initialDuration: 0,
+          ...prevState[timerType],
+          duration: action.data.duration,
+          initialDuration: action.data.duration,
           startTime: null,
           isRunning: false,
         },
@@ -13366,7 +13367,9 @@ const FocusTimer = ({
       dispatch(actionCreators.AlsoToMain({
         type: actionTypes.WIDGETS_TIMER_RESET,
         data: {
-          timerType
+          timerType,
+          duration: initialTimerDuration,
+          initialDuration: initialTimerDuration
         }
       }));
       dispatch(actionCreators.OnlyToMain({

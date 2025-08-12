@@ -328,7 +328,11 @@ export const FocusTimer = ({ dispatch }) => {
       dispatch(
         ac.AlsoToMain({
           type: at.WIDGETS_TIMER_RESET,
-          data: { timerType },
+          data: {
+            timerType,
+            duration: initialTimerDuration,
+            initialDuration: initialTimerDuration,
+          },
         })
       );
 
