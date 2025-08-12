@@ -577,14 +577,21 @@ void DCLayerTree::DisableNativeCompositor() {
   mRootVisual->RemoveAllVisuals();
 }
 
-void DCLayerTree::EnableAsyncScreenshot() {
+bool DCLayerTree::EnableAsyncScreenshot() {
   MOZ_ASSERT(UseLayerCompositor());
   if (!UseLayerCompositor()) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    return;
+    return false;
   }
-  mEnableAsyncScreenshot = true;
+
   mAsyncScreenshotLastFrameUsed = mCurrentFrame;
+
+  if (!mEnableAsyncScreenshot) {
+    mEnableAsyncScreenshotInNextFrame = true;
+    return false;
+  }
+
+  return true;
 }
 
 bool DCLayerTree::MaybeUpdateDebugCounter() {
@@ -637,6 +644,10 @@ bool DCLayerTree::MaybeUpdateDebugVisualRedrawRegions() {
 void DCLayerTree::CompositorBeginFrame() {
   mCurrentFrame++;
   mUsedOverlayTypesInFrame = DCompOverlayTypes::NO_OVERLAY;
+  if (mEnableAsyncScreenshotInNextFrame) {
+    mEnableAsyncScreenshot = true;
+    mEnableAsyncScreenshotInNextFrame = false;
+  }
 }
 
 void DCLayerTree::CompositorEndFrame() {
@@ -701,7 +712,7 @@ void DCLayerTree::CompositorEndFrame() {
   }
 
   if (mEnableAsyncScreenshot &&
-      (mCurrentFrame - mAsyncScreenshotLastFrameUsed) > 5) {
+      (mCurrentFrame - mAsyncScreenshotLastFrameUsed) > 1) {
     mEnableAsyncScreenshot = false;
   }
 

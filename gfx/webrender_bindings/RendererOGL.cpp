@@ -298,10 +298,10 @@ RenderedFrameId RendererOGL::UpdateAndRender(
 }
 
 bool RendererOGL::EnsureAsyncScreenshot() {
-  if (mCompositor->SupportAsyncScreenshot()) {
-    return true;
+  if (mCompositor->UseLayerCompositor()) {
+    return mCompositor->EnableAsyncScreenshot();
   }
-  if (mCompositor->EnableAsyncScreenshot()) {
+  if (mCompositor->SupportAsyncScreenshot()) {
     return true;
   }
   if (!mDisableNativeCompositor) {
