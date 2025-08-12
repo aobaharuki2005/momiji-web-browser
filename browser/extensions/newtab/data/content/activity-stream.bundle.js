@@ -15177,10 +15177,12 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       "data-l10n-id": "newtab-settings-dialog-label"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "close-button-wrapper"
-    }, /*#__PURE__*/external_React_default().createElement("button", {
+    }, /*#__PURE__*/external_React_default().createElement("moz-button", {
       onClick: () => this.props.onClose(),
-      className: "close-button",
-      "data-l10n-id": "newtab-custom-close-button",
+      id: "close-button",
+      type: "icon ghost",
+      "data-l10n-id": "newtab-custom-close-menu-button",
+      iconsrc: "chrome://global/skin/icons/close.svg",
       ref: c => this.closeButton = c
     })), /*#__PURE__*/external_React_default().createElement(ContentSection, {
       openPreferences: this.props.openPreferences,
