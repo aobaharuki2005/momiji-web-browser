@@ -1448,25 +1448,11 @@ main section {
   font-size: var(--font-size-small);
 }
 @media (max-width: 865px) {
-  .top-stories-bottom-container .wrapper-topics,
-.top-stories-bottom-container .wrapper-cta + .wrapper-more-recommendations {
+  .top-stories-bottom-container .wrapper-topics {
     display: none;
   }
 }
 @media (max-width: 609px) {
-  .top-stories-bottom-container .wrapper-cta {
-    text-align: center;
-  }
-  .top-stories-bottom-container .wrapper-cta .pocket-logged-in-cta {
-    display: block;
-    margin-inline-end: 0;
-  }
-  .top-stories-bottom-container .wrapper-cta .pocket-logged-in-cta .pocket-cta-button {
-    max-width: none;
-    display: block;
-    margin-inline-end: 0;
-    margin: var(--space-xsmall) 0 var(--space-small);
-  }
   .top-stories-bottom-container .wrapper-more-recommendations {
     width: 100%;
   }
@@ -4129,33 +4115,6 @@ main section {
 }
 .discoverystream-admin .weather-section form label {
   margin-inline-end: var(--space-medium);
-}
-
-.pocket-logged-in-cta {
-  font-size: var(--font-size-small);
-  margin-inline-end: var(--space-large);
-  display: flex;
-  align-items: flex-start;
-}
-.pocket-logged-in-cta .pocket-cta-button {
-  white-space: nowrap;
-  background: var(--newtab-primary-action-background);
-  letter-spacing: -0.34px;
-  color: var(--color-white);
-  border-radius: var(--border-radius-small);
-  cursor: pointer;
-  max-width: 130px;
-  margin-block-start: calc(var(--space-xxsmall) * -1);
-  min-height: 18px;
-  padding: 0 var(--space-small);
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  margin-inline-end: var(--space-small);
-}
-.pocket-logged-in-cta .pocket-cta-button,
-.pocket-logged-in-cta .cta-text {
-  vertical-align: top;
 }
 
 .more-recommendations {

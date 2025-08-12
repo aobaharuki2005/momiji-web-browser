@@ -7570,37 +7570,6 @@ class MoreRecommendations extends (external_React_default()).PureComponent {
     return null;
   }
 }
-;// CONCATENATED MODULE: ./content-src/components/PocketLoggedInCta/PocketLoggedInCta.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-class _PocketLoggedInCta extends (external_React_default()).PureComponent {
-  render() {
-    const {
-      pocketCta
-    } = this.props.Pocket;
-    return /*#__PURE__*/external_React_default().createElement("span", {
-      className: "pocket-logged-in-cta"
-    }, /*#__PURE__*/external_React_default().createElement("a", {
-      className: "pocket-cta-button",
-      href: pocketCta.ctaUrl ? pocketCta.ctaUrl : "https://getpocket.com/"
-    }, pocketCta.ctaButton ? pocketCta.ctaButton : /*#__PURE__*/external_React_default().createElement("span", {
-      "data-l10n-id": "newtab-pocket-cta-button"
-    })), /*#__PURE__*/external_React_default().createElement("a", {
-      href: pocketCta.ctaUrl ? pocketCta.ctaUrl : "https://getpocket.com/"
-    }, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "cta-text"
-    }, pocketCta.ctaText ? pocketCta.ctaText : /*#__PURE__*/external_React_default().createElement("span", {
-      "data-l10n-id": "newtab-pocket-cta-text"
-    }))));
-  }
-}
-const PocketLoggedInCta = (0,external_ReactRedux_namespaceObject.connect)(state => ({
-  Pocket: state.Pocket
-}))(_PocketLoggedInCta);
 ;// CONCATENATED MODULE: ./content-src/components/TopSites/SearchShortcutsForm.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -10820,7 +10789,6 @@ function Sections_extends() { return Sections_extends = Object.assign ? Object.a
 
 
 
-
 const Sections_VISIBLE = "visible";
 const Sections_VISIBILITY_CHANGE_EVENT = "visibilitychange";
 const CARDS_PER_ROW_DEFAULT = 3;
@@ -10952,7 +10920,6 @@ class Section extends (external_React_default()).PureComponent {
       eventSource,
       title,
       rows,
-      Pocket,
       emptyState,
       dispatch,
       compactCards,
@@ -10972,14 +10939,6 @@ class Section extends (external_React_default()).PureComponent {
     } = this;
     const maxCards = maxCardsPerRow * numRows;
     const maxCardsOnNarrow = CARDS_PER_ROW_DEFAULT * numRows;
-    const {
-      pocketCta,
-      isUserLoggedIn
-    } = Pocket || {};
-    const {
-      useCta
-    } = pocketCta || {};
-    const shouldShowPocketCta = id === "topstories" && useCta && isUserLoggedIn === false;
     const shouldShowReadMore = read_more_endpoint;
     const realRows = rows.slice(0, maxCards);
 
@@ -11049,9 +11008,7 @@ class Section extends (external_React_default()).PureComponent {
       className: "empty-state-message"
     })))), id === "topstories" && /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-stories-bottom-container"
-    }, shouldShowPocketCta && /*#__PURE__*/external_React_default().createElement("div", {
-      className: "wrapper-cta"
-    }, /*#__PURE__*/external_React_default().createElement(PocketLoggedInCta, null)), /*#__PURE__*/external_React_default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "wrapper-more-recommendations"
     }, shouldShowReadMore && /*#__PURE__*/external_React_default().createElement(MoreRecommendations, {
       read_more_endpoint: read_more_endpoint
