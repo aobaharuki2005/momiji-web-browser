@@ -81,6 +81,13 @@
     display: flex;
     justify-content: space-between;
     margin-block-end: var(--space-small);
+    transition: opacity 300ms ease;
+
+    @media (prefers-reduced-motion: no-preference) {
+      &.exiting {
+        opacity: 0;
+      }
+    }
 
     .checkbox-wrapper {
       display: flex;
@@ -151,6 +158,7 @@
   }
 
   .empty-list-text {
+    height: var(--space-xlarge);
     color: var(--text-color-deemphasized);
   }
 

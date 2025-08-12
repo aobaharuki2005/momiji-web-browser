@@ -112,18 +112,6 @@ export class ListsFeed {
       case at.WIDGETS_LISTS_UPDATE:
         await this.cache.set("lists", action.data.lists);
         this.update(action.data);
-        // The current tab stores a temporary version of lists, where
-        // the completed task isn't moved to the
-        // completed section until a reload or next tab is open
-        this.store.dispatch(
-          ac.OnlyToOneContent(
-            {
-              type: at.WIDGETS_LISTS_SET,
-              data: action.data.localLists || action.data.lists,
-            },
-            action.meta.fromTarget
-          )
-        );
         break;
       case at.WIDGETS_LISTS_CHANGE_SELECTED:
         await this.cache.set("selected", action.data);

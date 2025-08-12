@@ -4455,6 +4455,12 @@ main section {
   display: flex;
   justify-content: space-between;
   margin-block-end: var(--space-small);
+  transition: opacity 300ms ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lists .task-item.exiting {
+    opacity: 0;
+  }
 }
 .lists .task-item .checkbox-wrapper {
   display: flex;
@@ -4508,6 +4514,7 @@ main section {
   outline: var(--focus-outline);
 }
 .lists .empty-list-text {
+  height: var(--space-xlarge);
   color: var(--text-color-deemphasized);
 }
 .lists .completed-task-wrapper summary {

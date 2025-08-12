@@ -377,12 +377,14 @@ function OnlyToMain(action, fromTarget) {
  * BroadcastToContent - Creates a message that will be dispatched to main and sent to ALL content processes.
  *
  * @param  {object} action Any redux action (required)
+ * @param  {object} options (optional)
  * @return {object} An action with added .meta properties
  */
-function BroadcastToContent(action) {
+function BroadcastToContent(action, options) {
   return _RouteMessage(action, {
     from: MAIN_MESSAGE_TYPE,
     to: CONTENT_MESSAGE_TYPE,
+    ...options,
   });
 }
 
@@ -12554,7 +12556,6 @@ function Lists({
     const isNowCompleted = updatedTask.completed;
     let newTasks = selectedList.tasks;
     let newCompleted = selectedList.completed;
-    let localUpdatedTasks;
     let userAction;
 
     // If the task is in the completed array and is now unchecked
@@ -12571,9 +12572,6 @@ function Lists({
     } else if (shouldMoveToCompleted) {
       newTasks = selectedList.tasks.filter(task => task.id !== updatedTask.id);
       newCompleted = [...selectedList.completed, updatedTask];
-
-      // Keep a local version of tasks that still includes this item (to preserve UI in this tab)
-      localUpdatedTasks = selectedList.tasks.map(existingTask => existingTask.id === updatedTask.id ? updatedTask : existingTask);
       userAction = USER_ACTION_TYPES.TASK_COMPLETE;
     } else {
       const targetKey = isCompletedType ? "completed" : "tasks";
@@ -12594,27 +12592,11 @@ function Lists({
         completed: newCompleted
       }
     };
-
-    // local override: keep completed item out of the "completed" array
-    const localLists = {
-      ...lists,
-      [selected]: {
-        ...selectedList,
-        tasks: localUpdatedTasks || newTasks,
-        completed: newCompleted.filter(({
-          id
-        }) => id !== updatedTask.id)
-      }
-    };
-
-    // Dispatch the update to main - will sync across tabs
-    // and apply local override to this tab only
     (0,external_ReactRedux_namespaceObject.batch)(() => {
       dispatch(actionCreators.AlsoToMain({
         type: actionTypes.WIDGETS_LISTS_UPDATE,
         data: {
-          lists: updatedLists,
-          localLists
+          lists: updatedLists
         }
       }));
       if (userAction) {
@@ -12912,13 +12894,34 @@ function ListItem({
   isLast = false
 }) {
   const [isEditing, setIsEditing] = (0,external_React_namespaceObject.useState)(false);
+  const [exiting, setExiting] = (0,external_React_namespaceObject.useState)(false);
   const isCompleted = type === TASK_TYPE.COMPLETED;
+  const prefersReducedMotion = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   function handleCheckboxChange(e) {
+    const {
+      checked
+    } = e.target;
     const updatedTask = {
       ...task,
-      completed: e.target.checked
+      completed: checked
     };
-    updateTask(updatedTask, type);
+    if (checked && !prefersReducedMotion) {
+      setExiting(true);
+    } else {
+      updateTask(updatedTask, type);
+    }
+  }
+
+  // When the CSS transition finishes, dispatch the real “completed = true”
+  function handleTransitionEnd(e) {
+    // only fire once for the exit:
+    if (e.propertyName === "opacity" && exiting) {
+      updateTask({
+        ...task,
+        completed: true
+      }, type);
+      setExiting(false);
+    }
   }
   function handleSave(newValue) {
     const trimmedTask = newValue.trimEnd();
@@ -12946,15 +12949,16 @@ function ListItem({
     onClick: () => setIsEditing(true)
   }, task.value);
   return /*#__PURE__*/external_React_default().createElement("div", {
-    className: `task-item task-type-${type}`,
+    className: `task-item task-type-${type} ${exiting ? " exiting" : ""}`,
     id: task.id,
-    key: task.id
+    key: task.id,
+    onTransitionEnd: handleTransitionEnd
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "checkbox-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("input", {
     type: "checkbox",
     onChange: handleCheckboxChange,
-    checked: task.completed
+    checked: task.completed || exiting
   }), isCompleted ? taskLabel : /*#__PURE__*/external_React_default().createElement(EditableText, {
     isEditing: isEditing,
     setIsEditing: setIsEditing,

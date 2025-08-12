@@ -77,12 +77,15 @@ describe("<Lists>", () => {
   });
 
   it("should toggle task completion", () => {
+    const taskItem = wrapper.find(".task-item").at(0);
     const checkbox = wrapper.find("input[type='checkbox']").at(0);
     checkbox.simulate("change", { target: { checked: true } });
-
+    // dispatch not called until transition has ended
+    assert.equal(dispatch.callCount, 0);
+    taskItem.simulate("transitionEnd", { propertyName: "opacity" });
+    assert.ok(dispatch.calledTwice);
     const [action] = dispatch.getCall(0).args;
     assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
-    console.log(`CONSOLE: `, action.data.lists["test-list"]);
     assert.ok(action.data.lists["test-list"].completed[0].completed);
   });
 
