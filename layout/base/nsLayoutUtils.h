@@ -388,7 +388,7 @@ class nsLayoutUtils {
 
   static int32_t CompareTreePosition(
       const nsIFrame* aFrame1, const nsIFrame* aFrame2,
-      nsTArray<const nsIFrame*>& aFrame2Ancestors,
+      const nsTArray<const nsIFrame*>& aFrame2Ancestors,
       const nsIFrame* aCommonAncestor = nullptr) {
     return DoCompareTreePosition(aFrame1, aFrame2, aFrame2Ancestors,
                                  aCommonAncestor);
@@ -403,7 +403,7 @@ class nsLayoutUtils {
                                        const nsIFrame* aCommonAncestor);
   static int32_t DoCompareTreePosition(
       const nsIFrame* aFrame1, const nsIFrame* aFrame2,
-      nsTArray<const nsIFrame*>& aFrame2Ancestors,
+      const nsTArray<const nsIFrame*>& aFrame2Ancestors,
       const nsIFrame* aCommonAncestor);
 
   /**

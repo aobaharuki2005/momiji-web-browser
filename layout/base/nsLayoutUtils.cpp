@@ -1149,7 +1149,7 @@ int32_t nsLayoutUtils::DoCompareTreePosition(const nsIFrame* aFrame1,
 // static
 int32_t nsLayoutUtils::DoCompareTreePosition(
     const nsIFrame* aFrame1, const nsIFrame* aFrame2,
-    nsTArray<const nsIFrame*>& aFrame2Ancestors,
+    const nsTArray<const nsIFrame*>& aFrame2Ancestors,
     const nsIFrame* aCommonAncestor) {
   MOZ_ASSERT(aFrame1, "aFrame1 must not be null");
   MOZ_ASSERT(aFrame2, "aFrame2 must not be null");
