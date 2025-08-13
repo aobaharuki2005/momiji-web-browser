@@ -375,7 +375,13 @@ class AdjustedTargetForFilter {
       return;
     }
 
-    if (!mFinalTarget->CanCreateSimilarDrawTarget(mSourceGraphicRect.Size(),
+    if (!(mFillPaintRect.IsEmpty() ||
+          mFinalTarget->CanCreateSimilarDrawTarget(mFillPaintRect.Size(),
+                                                   SurfaceFormat::B8G8R8A8)) ||
+        !(mStrokePaintRect.IsEmpty() ||
+          mFinalTarget->CanCreateSimilarDrawTarget(mStrokePaintRect.Size(),
+                                                   SurfaceFormat::B8G8R8A8)) ||
+        !mFinalTarget->CanCreateSimilarDrawTarget(mSourceGraphicRect.Size(),
                                                   SurfaceFormat::B8G8R8A8)) {
       mTarget = mFinalTarget;
       mCtx = nullptr;
