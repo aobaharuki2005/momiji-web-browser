@@ -79,19 +79,34 @@ export let UnexpectedScriptObserver = {
     });
     messageFragment.appendChild(message);
 
+    // ----------------------------------------------------------------
+    let openWindow = action => {
+      let args = {
+        action,
+        scriptName: aScriptName,
+      };
+      window.gDialogBox.open(
+        "chrome://browser/content/security/unexpectedScriptLoad.xhtml",
+        args
+      );
+    };
+
+    // ----------------------------------------------------------------
+
     let buttons = [{ supportPage: "unexpected-script-load" }];
     buttons.push({
       "l10n-id": "unexpected-script-load-message-button-allow",
-      callback() {
-        window.gDialogBox.open(
-          "chrome://browser/content/security/unexpectedScriptLoad.xhtml"
-        );
-        return true; // Do not close the dialog bar until the user has done so explcitly or taken an action
+      callback: () => {
+        openWindow("allow");
+        return true;
       },
     });
     buttons.push({
       "l10n-id": "unexpected-script-load-message-button-block",
-      callback() {},
+      callback: () => {
+        openWindow("block");
+        return true; // Do not close the dialog bar until the user has done so explcitly or taken an action
+      },
     });
 
     await notificationBox.appendNotification(

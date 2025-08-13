@@ -44,9 +44,10 @@
       <xul:hbox class="dialogContent">
         <xul:vbox>
           <p>
-            Firefox will <strong>ALLOW</strong> unexpected privileged scripts,
-            including the one below, to load. This will make your Firefox
-            installation less secure.
+            Firefox will
+            <strong id="allow-or-deny-label">ALLOW</strong> unexpected
+            privileged scripts, including the one below, to load. This will make
+            your Firefox installation less secure.
             <a
               id="more-info-link"
               data-l10n-id="unexpected-script-load-more-info"
@@ -86,10 +87,17 @@
             </moz-fieldset>
           </div>
 
-          <div class="actionContainer">
-            <button>Allow</button>
-            <button>Block</button>
-          </div>
+          <moz-button-group id="actionContainer">
+            <a
+              id="learn-more-link"
+              is="moz-support-link"
+              support-page="unexpected-script-load"
+              data-l10n-id="unexpected-script-load-learn-more"
+              target="_blank"
+            ></a>
+            <moz-button id="allow-button">Allow</moz-button>
+            <moz-button id="block-button">Block</moz-button>
+          </moz-button-group>
         </xul:vbox>
       </xul:hbox>
     </xul:vbox>

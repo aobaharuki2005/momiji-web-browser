@@ -33,3 +33,9 @@
   color: var(--text-color-deemphasized);
   margin-top: 0.5em;
 }
+
+#actionContainer {
+  align-items: center; /* Centers elements vertically */
+  gap: 5px;
+  padding-block: 10px;
+}

@@ -19,3 +19,5 @@ unexpected-script-load-message-button-block =
     .accesskey = B
 
 unexpected-script-load-more-info = More Info
+
+unexpected-script-load-learn-more = Learn More

@@ -9,6 +9,13 @@ var UnexpectedScriptLoadPanel = new (class {
   /** @type {Console?} */
   #console;
 
+  /**
+   * The URL of the script being handled by the panel.
+   *
+   * @type {string}
+   */
+  #scriptName = "";
+
   get console() {
     if (!this.#console) {
       this.#console = console.createInstance({
@@ -38,7 +45,12 @@ var UnexpectedScriptLoadPanel = new (class {
         reportCheckbox: document.querySelector("#reportCheckbox"),
         emailCheckbox: document.querySelector("#emailCheckbox"),
         emailInput: document.querySelector("#emailInput"),
+        allowButton: document.querySelector("#allow-button"),
+        blockButton: document.querySelector("#block-button"),
+        allowOrDenyLabel: document.querySelector("#allow-or-deny-label"),
+        scriptUrl: document.querySelector(".scriptUrl"),
         moreInfoLink: document.querySelector("#more-info-link"),
+        learnMoreLink: document.querySelector("#learn-more-link"),
       };
     }
 
@@ -51,6 +63,16 @@ var UnexpectedScriptLoadPanel = new (class {
   init() {
     this.console?.warn("UnexpectedScriptLoadPanel initialized");
 
+    let args = window.arguments[0];
+    let action = args.action;
+    this.#scriptName = args.scriptName;
+    this.elements.scriptUrl.textContent = this.#scriptName;
+
+    if (action === "allow") {
+      this.setupAllowLayout();
+    } else if (action === "block") {
+      this.setupBlockLayout();
+    }
     this.setupEventHandlers();
   }
 
@@ -62,6 +84,9 @@ var UnexpectedScriptLoadPanel = new (class {
     // of the "Content windows may never have chrome windows as their openers"
     // error, so we use openTrustedLinkIn instead."
     this.elements.moreInfoLink.addEventListener("click", () => {
+      this.onLearnMoreLink();
+    });
+    this.elements.learnMoreLink.addEventListener("click", () => {
       this.onLearnMoreLink();
     });
     // If the user has filled in their email, but not checked the report checkbox,
@@ -100,6 +125,19 @@ var UnexpectedScriptLoadPanel = new (class {
         this.elements.emailInput.value = "";
       }
     });
+  }
+
+  setupAllowLayout() {
+    this.elements.allowOrDenyLabel.textContent = "ALLOW";
+    this.elements.allowButton.setAttribute("type", "primary");
+    this.elements.blockButton.setAttribute("type", "");
+  }
+
+  setupBlockLayout() {
+    this.elements.allowOrDenyLabel.textContent = "BLOCK";
+    this.elements.reportCheckbox.checked = true;
+    this.elements.allowButton.setAttribute("type", "");
+    this.elements.blockButton.setAttribute("type", "primary");
   }
 
   /**
