@@ -523,6 +523,7 @@ WEBIDL_FILES = [
     "CSSNumericArray.webidl",
     "CSSNumericValue.webidl",
     "CSSPageRule.webidl",
+    "CSSPerspective.webidl",
     "CSSPositionTryRule.webidl",
     "CSSPropertyRule.webidl",
     "CSSPseudoElement.webidl",
