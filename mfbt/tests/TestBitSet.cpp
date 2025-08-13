@@ -178,11 +178,32 @@ class BitSetSuite {
     }
   }
 
+  void testCount() {
+    testCountForSize<1>();
+    testCountForSize<kBitsPerWord>();
+    testCountForSize<kBitsPerWord + 1>();
+  }
+
+  template <size_t N>
+  void testCountForSize() {
+    TestBitSet<N> bits;
+    MOZ_RELEASE_ASSERT(bits.Count() == 0);
+    bits.SetAll();
+    MOZ_RELEASE_ASSERT(bits.Count() == N);
+    bits.ResetAll();
+    bits[0] = true;
+    MOZ_RELEASE_ASSERT(bits.Count() == 1);
+    bits[0] = false;
+    bits[N - 1] = true;
+    MOZ_RELEASE_ASSERT(bits.Count() == 1);
+  }
+
   void runTests() {
     testLength();
     testConstructAndAssign();
     testSetBit();
     testFindBits();
+    testCount();
   }
 };
 
