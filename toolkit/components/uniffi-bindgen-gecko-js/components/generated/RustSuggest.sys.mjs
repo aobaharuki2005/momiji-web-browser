@@ -1334,6 +1334,51 @@ export class FfiConverterOptionalBytes extends FfiConverterArrayBuffer {
 
 
 // Export the FFIConverter object to make external types work.
+export class FfiConverterSequenceInt32 extends FfiConverterArrayBuffer {
+    static read(dataStream) {
+        const len = dataStream.readInt32();
+        const arr = [];
+        for (let i = 0; i < len; i++) {
+            arr.push(FfiConverterInt32.read(dataStream));
+        }
+        return arr;
+    }
+
+    static write(dataStream, value) {
+        dataStream.writeInt32(value.length);
+        value.forEach((innerValue) => {
+            FfiConverterInt32.write(dataStream, innerValue);
+        })
+    }
+
+    static computeSize(value) {
+        // The size of the length
+        let size = 4;
+        for (const innerValue of value) {
+            size += FfiConverterInt32.computeSize(innerValue);
+        }
+        return size;
+    }
+
+    static checkType(value) {
+        if (!Array.isArray(value)) {
+            throw new UniFFITypeError(`${value} is not an array`);
+        }
+        value.forEach((innerValue, idx) => {
+            try {
+                FfiConverterInt32.checkType(innerValue);
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart(`[${idx}]`);
+                }
+                throw e;
+            }
+        })
+    }
+}
+
+
+// Export the FFIConverter object to make external types work.
 export class FfiConverterOptionalTypeFtsMatchInfo extends FfiConverterArrayBuffer {
     static checkType(value) {
         if (value !== undefined && value !== null) {
@@ -1534,7 +1579,7 @@ export class Suggestion {}
  * Amp
  */
 Suggestion.Amp = class extends Suggestion{
-   constructor({title = undefined, url = undefined, rawUrl = undefined, icon = undefined, iconMimetype = undefined, fullKeyword = undefined, blockId = undefined, advertiser = undefined, iabCategory = undefined, impressionUrl = undefined, clickUrl = undefined, rawClickUrl = undefined, score = undefined, ftsMatchInfo = undefined } = {}) {
+   constructor({title = undefined, url = undefined, rawUrl = undefined, icon = undefined, iconMimetype = undefined, fullKeyword = undefined, blockId = undefined, advertiser = undefined, iabCategory = undefined, categories = undefined, impressionUrl = undefined, clickUrl = undefined, rawClickUrl = undefined, score = undefined, ftsMatchInfo = undefined } = {}) {
                 super();
             try {
                 FfiConverterString.checkType(title);
@@ -1609,6 +1654,14 @@ Suggestion.Amp = class extends Suggestion{
                 throw e;
             }
             this.iabCategory = iabCategory;try {
+                FfiConverterSequenceInt32.checkType(categories);
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("categories");
+                }
+                throw e;
+            }
+            this.categories = categories;try {
                 FfiConverterString.checkType(impressionUrl);
             } catch (e) {
                 if (e instanceof UniFFITypeError) {
@@ -2067,6 +2120,7 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
                     blockId: FfiConverterInt64.read(dataStream),
                     advertiser: FfiConverterString.read(dataStream),
                     iabCategory: FfiConverterString.read(dataStream),
+                    categories: FfiConverterSequenceInt32.read(dataStream),
                     impressionUrl: FfiConverterString.read(dataStream),
                     clickUrl: FfiConverterString.read(dataStream),
                     rawClickUrl: FfiConverterString.read(dataStream),
@@ -2154,6 +2208,7 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
             FfiConverterInt64.write(dataStream, value.blockId);
             FfiConverterString.write(dataStream, value.advertiser);
             FfiConverterString.write(dataStream, value.iabCategory);
+            FfiConverterSequenceInt32.write(dataStream, value.categories);
             FfiConverterString.write(dataStream, value.impressionUrl);
             FfiConverterString.write(dataStream, value.clickUrl);
             FfiConverterString.write(dataStream, value.rawClickUrl);
@@ -2247,6 +2302,7 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
             totalSize += FfiConverterInt64.computeSize(value.blockId);
             totalSize += FfiConverterString.computeSize(value.advertiser);
             totalSize += FfiConverterString.computeSize(value.iabCategory);
+            totalSize += FfiConverterSequenceInt32.computeSize(value.categories);
             totalSize += FfiConverterString.computeSize(value.impressionUrl);
             totalSize += FfiConverterString.computeSize(value.clickUrl);
             totalSize += FfiConverterString.computeSize(value.rawClickUrl);
@@ -2502,8 +2558,6 @@ export class FfiConverterTypeQueryWithMetricsResult extends FfiConverterArrayBuf
         }
     }
 }
-
-
 /**
  * Global Suggest configuration data.
  */
