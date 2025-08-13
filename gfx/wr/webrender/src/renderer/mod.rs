@@ -3851,16 +3851,13 @@ impl Renderer {
         assert_eq!(swapchain_layers.len(), input_layers.len());
 
         if window_is_opaque {
-            match input_layers.first_mut() {
-                Some(_layer) => {
-                    // If the window is opaque, and the first layer is a content layer
-                    // then mark that as opaque.
-                    // TODO(gw): This causes flickering in some cases when changing
-                    //           layer count. We need to find out why so we can enable
-                    //           selecting an opaque swapchain where possible.
-                    // if let CompositorSurfaceUsage::Content = layer.usage {
-                    //     layer.is_opaque = true;
-                    // }
+            match input_layers.last_mut() {
+                Some(layer) => {
+                    // If the window is opaque, and the last(back) layer is
+                    //  a content layer then mark that as opaque.
+                    if let CompositorSurfaceUsage::Content = layer.usage {
+                        layer.is_opaque = true;
+                    }
                 }
                 None => {
                     // If no tiles were present, and we expect an opaque window,
