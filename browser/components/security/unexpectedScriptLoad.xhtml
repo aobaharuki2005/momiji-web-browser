@@ -79,7 +79,7 @@
             </moz-fieldset>
           </div>
 
-          <moz-button-group id="actionContainer">
+          <div id="actionContainer">
             <a
               id="learn-more-link"
               is="moz-support-link"
@@ -87,15 +87,17 @@
               data-l10n-id="unexpected-script-load-learn-more"
               target="_blank"
             ></a>
-            <moz-button
-              id="allow-button"
-              data-l10n-id="unexpected-script-load-message-button-allow"
-            ></moz-button>
-            <moz-button
-              id="block-button"
-              data-l10n-id="unexpected-script-load-message-button-block"
-            ></moz-button>
-          </moz-button-group>
+            <moz-button-group id="actionButtons">
+              <moz-button
+                id="allow-button"
+                data-l10n-id="unexpected-script-load-message-button-allow"
+              ></moz-button>
+              <moz-button
+                id="block-button"
+                data-l10n-id="unexpected-script-load-message-button-block"
+              ></moz-button>
+            </moz-button-group>
+          </div>
         </xul:vbox>
       </xul:hbox>
     </xul:vbox>

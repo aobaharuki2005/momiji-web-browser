@@ -35,6 +35,14 @@
 }
 
 #actionContainer {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-content: space-between;
+  width: 100%;
+}
+
+#actionButtons {
   align-items: center; /* Centers elements vertically */
   gap: 5px;
   padding-block: 10px;
