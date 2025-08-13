@@ -4,6 +4,10 @@
 
 "use strict";
 
+const LOCAL_NETWORK_ACCESS_ENABLED = Services.prefs.getBoolPref(
+  "network.lna.blocking"
+);
+
 // This tests the SitePermissions.getAllPermissionDetailsForBrowser function.
 add_task(async function testGetAllPermissionDetailsForBrowser() {
   let principal =
@@ -98,21 +102,23 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     scope: SitePermissions.SCOPE_SESSION,
   });
 
-  let localhost = permissions.find(({ id }) => id === "localhost");
-  Assert.deepEqual(localhost, {
-    id: "localhost",
-    label: "Access this device",
-    state: SitePermissions.ALLOW,
-    scope: SitePermissions.SCOPE_SESSION,
-  });
+  if (LOCAL_NETWORK_ACCESS_ENABLED) {
+    let localhost = permissions.find(({ id }) => id === "localhost");
+    Assert.deepEqual(localhost, {
+      id: "localhost",
+      label: "Access this device",
+      state: SitePermissions.ALLOW,
+      scope: SitePermissions.SCOPE_SESSION,
+    });
 
-  let localNetwork = permissions.find(({ id }) => id === "local-network");
-  Assert.deepEqual(localNetwork, {
-    id: "local-network",
-    label: "Access local network devices",
-    state: SitePermissions.ALLOW,
-    scope: SitePermissions.SCOPE_SESSION,
-  });
+    let localNetwork = permissions.find(({ id }) => id === "local-network");
+    Assert.deepEqual(localNetwork, {
+      id: "local-network",
+      label: "Access local network devices",
+      state: SitePermissions.ALLOW,
+      scope: SitePermissions.SCOPE_SESSION,
+    });
+  }
 
   let shortcuts = permissions.find(({ id }) => id === "shortcuts");
   Assert.deepEqual(shortcuts, {
