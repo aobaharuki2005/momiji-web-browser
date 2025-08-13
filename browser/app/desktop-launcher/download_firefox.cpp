@@ -70,18 +70,18 @@ std::optional<std::wstring> get_object_name() {
   std::wstring product = L"firefox-stub";
 #elif defined(MOZ_BRANDING_IS_NIGHTLY)
   // Nightly build: download the latest Firefox Nightly installer
-  std::wstring product = L"firefox-nightly-latest-ssl";
+  std::wstring product = L"firefox-nightly-stub";
 #elif defined(MOZ_BRANDING_IS_BETA)
   // Beta edition build: download the latest Firefox Beta installer
-  std::wstring product = L"firefox-beta-latest-ssl";
+  std::wstring product = L"firefox-beta-stub";
 #elif defined(MOZ_BRANDING_IS_DEVEDITION)
   // Dev edition build: download the latest Firefox Devevloper Edition installer
-  std::wstring product = L"firefox-devedition-latest-ssl";
+  std::wstring product = L"firefox-devedition-stub";
 #elif defined(MOZ_BRANDING_IS_UNOFFICIAL)
   // For unofficial/local builds, download the nightly version. The advantage of
   // this, over the release version, is that it uses the full installer, which
   // gives the user the chance to cancel installation.
-  std::wstring product = L"firefox-nightly-latest-ssl";
+  std::wstring product = L"firefox-nightly-stub";
 #else
   // Unexpected case. Fail the build here so we can figure out the missing case.
   static_assert(false);

@@ -6,6 +6,7 @@
 #include <string>
 #include <optional>
 #include <shellapi.h>
+#include <winhttp.h>
 
 #include "find_firefox.h"
 #include "tempfile_name.h"
@@ -64,6 +65,24 @@ class StringDataSink : public DataSink {
   }
 };
 
+static void DownloadAndCheckStub(const std::wstring& product) {
+  StringDataSink sink;
+  std::wstring object_name = L"/?os=win64&lang=en-US&product=" + product;
+
+  ErrCode ec =
+      download_file(&sink, L"download.mozilla.org", INTERNET_DEFAULT_HTTPS_PORT,
+                    true,  // HTTPS
+                    object_name, L"application/x-msdos-program");
+
+  // First, ensure that the request was successful
+  ASSERT_EQ(ec, ErrCode::OK);
+
+  // All .exe files start with MZ
+  ASSERT_EQ((unsigned char)sink.data[0], 'M')
+      << "File is not a valid PE executable";
+  ASSERT_EQ((unsigned char)sink.data[1], 'Z');
+}
+
 class DesktopLauncherDownloaderTest : public ::testing::Test {
  protected:
   HANDLE serverProcessHandle = nullptr;
@@ -106,4 +125,19 @@ TEST_F(DesktopLauncherDownloaderTest, TestDownloadFile_InvalidRequest) {
                              L"/name_doesnt_matter.txt", L"text/plain");
   ASSERT_EQ(ec, ErrCode::ERR_REQUEST_INVALID);
   ASSERT_STREQ(sink.data.c_str(), "");
+}
+
+TEST(DesktopLauncherDownloaderReal, DownloadNightlyStub)
+{
+  DownloadAndCheckStub(L"firefox-nightly-stub");
+}
+
+TEST(DesktopLauncherDownloaderReal, DownloadBetaStub)
+{
+  DownloadAndCheckStub(L"firefox-beta-stub");
+}
+
+TEST(DesktopLauncherDownloaderReal, DownloadDevStub)
+{
+  DownloadAndCheckStub(L"firefox-devedition-stub");
 }
