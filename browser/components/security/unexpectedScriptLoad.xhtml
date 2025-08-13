@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+>
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome: resource:;"
+    />
+    <link rel="stylesheet" href="chrome://global/skin/global.css" />
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/content/security/unexpectedScriptLoad.css"
+    />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="browser/unexpectedScript.ftl" />
+    <script src="chrome://global/content/customElements.js" />
+    <title>Unexpected!</title>
+  </head>
+  <body>
+    <xul:vbox
+      class="dialogBox"
+      pack="end"
+      role="dialog"
+      aria-labelledby="dialogTitle"
+    >
+      <xul:hbox class="dialogTitleBar" align="center">
+        <label class="dialogTitle">Unexpected Script Load</label>
+        <moz-button
+          type="ghost"
+          class="dialogClose"
+          iconsrc="chrome://global/skin/icons/close.svg"
+          data-l10n-id="unexpected-script-close-button"
+        />
+      </xul:hbox>
+      <xul:hbox class="dialogContent">
+        <xul:vbox>
+          <p>
+            Firefox will <strong>ALLOW</strong> unexpected privileged scripts,
+            including the one below, to load. This will make your Firefox
+            installation less secure.
+            <a
+              id="more-info-link"
+              data-l10n-id="unexpected-script-load-more-info"
+              target="_blank"
+            ></a>
+          </p>
+          <p>
+            Even if you allow this script, please report it to Mozilla to help
+            understand how and why it has loaded.
+            <u
+              >Without this information, the functionality will break in the
+              future.</u
+            >
+          </p>
+          <p class="scriptUrl">
+            http://example.com/something/else/some-weird-script.js
+          </p>
+
+          <div class="checkbox-grid">
+            <moz-checkbox
+              id="reportCheckbox"
+              label="Report this script to Mozilla"
+            />
+            <moz-fieldset
+              ><!-- I am omitting the label as I do not want a label displayed -->
+              <moz-checkbox
+                id="emailCheckbox"
+                label="Include my email so Mozilla can contact me if needed"
+              >
+                <input
+                  slot="nested"
+                  id="emailInput"
+                  type="text"
+                  placeholder="Enter email here"
+                />
+              </moz-checkbox>
+            </moz-fieldset>
+          </div>
+
+          <div class="actionContainer">
+            <button>Allow</button>
+            <button>Block</button>
+          </div>
+        </xul:vbox>
+      </xul:hbox>
+    </xul:vbox>
+    <script src="chrome://browser/content/security/unexpectedScriptLoad.js"></script>
+  </body>
+</html>

@@ -1,0 +1,136 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * This singleton class controls the Unexpected Script Load Dialog.
+ */
+var UnexpectedScriptLoadPanel = new (class {
+  /** @type {Console?} */
+  #console;
+
+  get console() {
+    if (!this.#console) {
+      this.#console = console.createInstance({
+        maxLogLevelPref: "browser.unexpectedScriptLoad.logLevel",
+        prefix: "UnexpectedScriptLoad",
+      });
+    }
+    return this.#console;
+  }
+
+  /**
+   * Where the lazy elements are stored.
+   *
+   * @type {Record<string, Element>?}
+   */
+  #lazyElements;
+
+  /**
+   * Lazily creates the dom elements, and lazily selects them.
+   *
+   * @returns {Record<string, Element>}
+   */
+  get elements() {
+    if (!this.#lazyElements) {
+      this.#lazyElements = {
+        dialogCloseButton: document.querySelector(".dialogClose"),
+        reportCheckbox: document.querySelector("#reportCheckbox"),
+        emailCheckbox: document.querySelector("#emailCheckbox"),
+        emailInput: document.querySelector("#emailInput"),
+        moreInfoLink: document.querySelector("#more-info-link"),
+      };
+    }
+
+    return this.#lazyElements;
+  }
+
+  /**
+   * Initializes the panel when the script loads.
+   */
+  init() {
+    this.console?.warn("UnexpectedScriptLoadPanel initialized");
+
+    this.setupEventHandlers();
+  }
+
+  setupEventHandlers() {
+    this.elements.dialogCloseButton.addEventListener("click", () => {
+      this.close();
+    });
+    // This is needed because a simple <a> element on the page run afoul
+    // of the "Content windows may never have chrome windows as their openers"
+    // error, so we use openTrustedLinkIn instead."
+    this.elements.moreInfoLink.addEventListener("click", () => {
+      this.onLearnMoreLink();
+    });
+    // If the user has filled in their email, but not checked the report checkbox,
+    // we automatically check both report checkboxes when the email input loses focus.
+    this.elements.emailInput.addEventListener("change", e => {
+      const hasEmail = this.elements.emailInput.value.trim() !== "";
+      if (!hasEmail) return;
+
+      // If the user has typed in the email field, and clicks the (unchecked)
+      // email checkbox, on blur we would set the email checkbox to checked,
+      // then the click event would toggle it back to unchecked. So we need to
+      // defer the check to the next event loop tick.
+      setTimeout(() => {
+        this.console?.warn(`Rechecking checkboxes`);
+        if (this.elements.emailInput.value.trim()) {
+          this.elements.emailCheckbox.checked = true;
+          this.elements.reportCheckbox.checked = true;
+        }
+      }, 0);
+
+      // The email input field is _inside_ the email checkbox, so we need to
+      // stop the click event from propagating to the checkbox
+      e.stopPropagation();
+    });
+    // If the user unchecks the report email checkbox, clear the email field
+    // This is a little complicated because
+    this.elements.emailCheckbox.addEventListener("change", () => {
+      if (!this.elements.emailCheckbox.checked) {
+        this.elements.emailInput.value = "";
+      }
+    });
+    // If the user unchecks the report checkbox, clear the email field
+    this.elements.reportCheckbox.addEventListener("change", () => {
+      if (!this.elements.reportCheckbox.checked) {
+        this.elements.emailCheckbox.checked = false;
+        this.elements.emailInput.value = "";
+      }
+    });
+  }
+
+  /**
+   * Hide the pop up (for event handlers).
+   */
+  close() {
+    this.console?.warn("UnexpectedScriptLoadPanel is closing");
+    window.close();
+  }
+
+  /*
+   * Handler for clicking the learn more link from linked text
+   * within the translations panel.
+   */
+  onLearnMoreLink() {
+    this.close();
+
+    // This is an ugly hack.
+    // If a modal is open, we will not focus the tab we are opening, even if we ask to
+    //  ref: https://searchfox.org/mozilla-central/rev/fcb776c1d580000af961677f6df3aeef67168a6f/browser/components/tabbrowser/content/tabbrowser.js#438
+    // However we do not remove the window-modal-open until _after_ the dialog is closed
+    // which is after we open the tab.
+    //  ref: https://searchfox.org/mozilla-central/rev/fcb776c1d580000af961677f6df3aeef67168a6f/browser/base/content/browser.js#5180
+    window.top.document.documentElement.removeAttribute("window-modal-open");
+
+    window.browsingContext.top.window.openTrustedLinkIn(
+      "https://support.mozilla.org/kb/unexpected-script-load",
+      "tab"
+    );
+  }
+})();
+
+// Call the init method when the script loads
+UnexpectedScriptLoadPanel.init();

@@ -84,8 +84,9 @@ export let UnexpectedScriptObserver = {
       "l10n-id": "unexpected-script-load-message-button-allow",
       callback() {
         window.gDialogBox.open(
-          "chrome://browser/content/security/unexpectedScriptLoadDialog.xhtml"
+          "chrome://browser/content/security/unexpectedScriptLoad.xhtml"
         );
+        return true; // Do not close the dialog bar until the user has done so explcitly or taken an action
       },
     });
     buttons.push({

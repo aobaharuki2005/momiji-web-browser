@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+unexpected-script-close-button =
+    .aria-label = Close
+
 # This string is used in the notification bar
 # Variables:
 #   $origin (string) - The top level domain the unexpected script was loaded from
@@ -14,3 +17,5 @@ unexpected-script-load-message-button-allow =
 unexpected-script-load-message-button-block =
     .label = Block
     .accesskey = B
+
+unexpected-script-load-more-info = More Info
