@@ -16581,6 +16581,14 @@
   value: false
   mirror: always
 
+# A pref needed for testing: xpinstall.signatures.required is disabled
+# for Marionette, which trips the JSHacks detection and disables our script
+# protections, so this pref skips the JSHacks check
+- name: security.parent_unrestricted_js_loads.skip_jshacks
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Don't enable this! This is only meant for legacy tests.
 - name: security.allow_eval_with_system_principal
   type: RelaxedAtomicBool

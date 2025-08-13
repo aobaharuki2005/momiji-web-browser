@@ -2045,7 +2045,8 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
 
   DetectJsHacks();
 
-  if (MOZ_UNLIKELY(!sJSHacksChecked)) {
+  if (!StaticPrefs::security_parent_unrestricted_js_loads_skip_jshacks() &&
+      MOZ_UNLIKELY(!sJSHacksChecked)) {
     MOZ_LOG(
         sCSMLog, LogLevel::Debug,
         ("Allowing a javascript load of %s because "
@@ -2054,7 +2055,8 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
     return true;
   }
 
-  if (MOZ_UNLIKELY(sJSHacksPresent)) {
+  if (!StaticPrefs::security_parent_unrestricted_js_loads_skip_jshacks() &&
+      MOZ_UNLIKELY(sJSHacksPresent)) {
     MOZ_LOG(sCSMLog, LogLevel::Debug,
             ("Allowing a javascript load of %s because "
              "some JS hacks may be present",
