@@ -42,3 +42,5 @@ unexpected-script-load-email-textbox =
 unexpected-script-load-more-info = More Info
 
 unexpected-script-load-learn-more = Learn More
+
+unexpected-script-load-telemetry-disabled = Reporting is disabled because Telemetry is disabled in Settings. Enable Telemetry to Report.

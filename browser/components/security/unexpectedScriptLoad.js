@@ -53,6 +53,9 @@ var UnexpectedScriptLoadPanel = new (class {
         ),
         moreInfoLink: document.querySelector("#more-info-link"),
         learnMoreLink: document.querySelector("#learn-more-link"),
+        telemetryDisabledMessage: document.querySelector(
+          "#telemetry-disabled-message"
+        ),
       };
     }
 
@@ -70,14 +73,29 @@ var UnexpectedScriptLoadPanel = new (class {
     this.#scriptName = args.scriptName;
     this.elements.scriptUrl.textContent = this.#scriptName;
 
+    let uploadEnabled = Services.prefs.getBoolPref(
+      "datareporting.healthreport.uploadEnabled",
+      false
+    );
+
     if (action === "allow") {
       this.setupAllowLayout();
       Glean.unexpectedScriptLoad.scriptAllowedOpened.record();
     } else if (action === "block") {
       Glean.unexpectedScriptLoad.scriptBlockedOpened.record();
-      this.setupBlockLayout();
+      this.setupBlockLayout(uploadEnabled);
     }
     this.setupEventHandlers();
+
+    if (uploadEnabled) {
+      this.elements.telemetryDisabledMessage.setAttribute("hidden", "true");
+    } else {
+      this.elements.telemetryDisabledMessage.removeAttribute("hidden");
+    }
+    this.elements.reportCheckbox.disabled = !uploadEnabled;
+    this.elements.emailCheckbox.disabled = !uploadEnabled;
+    this.elements.emailInput.disabled = !uploadEnabled;
+    this.elements.emailInput.readOnly = !uploadEnabled;
   }
 
   setupEventHandlers() {
@@ -146,12 +164,12 @@ var UnexpectedScriptLoadPanel = new (class {
     this.elements.blockButton.setAttribute("type", "");
   }
 
-  setupBlockLayout() {
+  setupBlockLayout(uploadEnabled) {
     this.elements.unexpectedScriptLoadDetail1.setAttribute(
       "data-l10n-id",
       "unexpected-script-load-detail-1-block"
     );
-    this.elements.reportCheckbox.checked = true;
+    this.elements.reportCheckbox.checked = uploadEnabled;
     this.elements.allowButton.setAttribute("type", "");
     this.elements.blockButton.setAttribute("type", "primary");
   }

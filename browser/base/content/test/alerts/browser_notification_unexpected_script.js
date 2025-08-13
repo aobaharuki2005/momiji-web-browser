@@ -239,6 +239,19 @@ async function runWorkflow(actions_to_take, expected_results) {
     );
 
     // ============================================================
+    // Verify the telemetry message
+    let telemetryMessage =
+      window.gDialogBox.dialog._frame.contentDocument.getElementById(
+        "telemetry-disabled-message"
+      );
+    isnot(telemetryMessage, null, "Should have one telemetry message.");
+    is(
+      telemetryMessage.hasAttribute("hidden"),
+      !!actions_to_take.enable_telemetry,
+      `Telemetry Message should ${actions_to_take.enable_telemetry ? "" : "not"} be visible`
+    );
+
+    // ============================================================
     // Verify the report checkbox is checked
     let reportCheckbox =
       window.gDialogBox.dialog._frame.contentDocument.getElementById(
@@ -247,8 +260,9 @@ async function runWorkflow(actions_to_take, expected_results) {
     isnot(reportCheckbox, null, "Should have one report checkbox.");
     is(
       reportCheckbox.checked,
-      expected_results.report_checkbox_checked_by_default,
-      `Report checkbox should ${expected_results.report_checkbox_checked_by_default ? "" : "not"} be checked by default`
+      expected_results.report_checkbox_checked_by_default &&
+        actions_to_take.enable_telemetry,
+      `Report checkbox should ${expected_results.report_checkbox_checked_by_default && actions_to_take.enable_telemetry ? "" : "not"} be checked by default`
     );
 
     // ============================================================
@@ -323,7 +337,11 @@ async function runWorkflow(actions_to_take, expected_results) {
       "security.block_parent_unrestricted_js_loads.temporary",
       false
     );
-    is(isBlocked, expected_results.block_pref_set, `Should ${expected_results.block_pref_set ? "" : "not"} have set the pref`);
+    is(
+      isBlocked,
+      expected_results.block_pref_set,
+      `Should ${expected_results.block_pref_set ? "" : "not"} have set the pref`
+    );
 
     let isAllowed = Services.prefs.getBoolPref(
       "security.allow_parent_unrestricted_js_loads",
@@ -468,5 +486,14 @@ add_task(async function test_block_with_no_report_email_workflow() {
     report: true,
     report_email: false,
     enable_telemetry: true,
+  });
+});
+
+add_task(async function test_block_workflow_no_telemetry() {
+  await runWorkflow({
+    click_block: true,
+    report: true,
+    report_email: true,
+    enable_telemetry: false,
   });
 });

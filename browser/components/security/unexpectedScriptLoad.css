@@ -47,3 +47,8 @@
   gap: 5px;
   padding-block: 10px;
 }
+
+#telemetry-disabled-message {
+  font-style: italic;
+  padding-bottom: 5px;
+}
