@@ -36,7 +36,7 @@ no_check_targets = [
 # to force additional review for new uses of exec_script, which is strongly
 # discouraged except for gypi_to_gn calls.
 exec_script_whitelist = build_dotfile_settings.exec_script_whitelist +
-                        [ "//libwebrtc/build_overrides/build.gni" ]
+                        [ "//build_overrides/build.gni" ]
 
 # Normally, we'd use 'if (!build_with_mozilla)', but that flag isn't
 # available yet.

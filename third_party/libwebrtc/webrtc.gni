@@ -11,7 +11,7 @@ import("//chromium/build/config/mips.gni")
 import("//chromium/build/config/ozone.gni")
 import("//chromium/build/config/sanitizers/sanitizers.gni")
 import("//chromium/build/config/sysroot.gni")
-import("//libwebrtc/build_overrides/build.gni")
+import("//build_overrides/build.gni")
 
 if (!build_with_chromium && is_component_build) {
   print("The Gn argument `is_component_build` is currently " +

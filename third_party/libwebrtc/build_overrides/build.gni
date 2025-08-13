@@ -39,7 +39,7 @@ enable_perfetto_trace_processor = true
 # except for local iOS builds where it's unsupported.
 # Allow for mac cross compile on linux machines.
 if (host_os == "mac" || host_os == "linux") {
-  _result = exec_script("//chromium/build/mac/should_use_hermetic_xcode.py",
+  _result = exec_script("//build/mac/should_use_hermetic_xcode.py",
                         [ target_os ],
                         "value")
   assert(_result != 2,
@@ -47,10 +47,6 @@ if (host_os == "mac" || host_os == "linux") {
              "hermetic toolchain if the minimum OS version is not met.")
   use_system_xcode = _result == 0
 }
-
-use_system_xcode = false
-xcode_version = "10.15"
-mac_xcode_version = "default"
 
 declare_args() {
   # WebRTC doesn't depend on //base from production code but only for testing
