@@ -43,6 +43,9 @@ extern bool gUserCancelledDrag;
 // This global makes the transferable array available to Cocoa's promised
 // file destination callback.
 mozilla::StaticRefPtr<nsIArray> gDraggedTransferables;
+// This global ensures that file promises only resolve once and that the
+// associated file is only created once on disk per drag session.
+bool gCreatedPromisedFile;
 
 already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
   RefPtr<nsIDragSession> sess = new nsDragSession();
@@ -200,6 +203,7 @@ nsresult nsDragSession::InvokeDragSessionImpl(
 
   // Save the transferables away in case a promised file callback is invoked.
   gDraggedTransferables = aTransferableArray;
+  gCreatedPromisedFile = false;
 
   // We need to retain the view and the event during the drag in case either
   // gets destroyed.

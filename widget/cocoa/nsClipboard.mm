@@ -748,6 +748,17 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(
                                forKey:urlPromise];
       [pasteboardOutputDict setObject:[NSArray arrayWithObject:@""]
                                forKey:urlPromiseContent];
+      NSString* fileUTType =
+          [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL];
+      // Ideally, we would make use of `NSFilePromiseProvider` for file
+      // promises. However, we cannot easily support this since
+      // `NSFilePromiseProvider` expects to be the only data provider for the
+      // drag session. This means that no other data types could be written out
+      // to the drag pasteboard simultaneously without major rework. We work
+      // around this by setting an empty string here for `kUTTypeFileURL` as our
+      // signal to create the file once the drag completes, replicating the file
+      // promise behavior.
+      [pasteboardOutputDict setObject:@"" forKey:fileUTType];
     } else if (flavorStr.EqualsLiteral(kURLMime)) {
       nsCOMPtr<nsISupports> genericURL;
       rv = aTransferable->GetTransferData(flavorStr.get(),

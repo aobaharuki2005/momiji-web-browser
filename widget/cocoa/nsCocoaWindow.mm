@@ -162,6 +162,7 @@ static void RollUpPopups(nsIRollupListener::AllowAnimations aAllowAnimations =
 }
 
 extern nsIArray* gDraggedTransferables;
+extern bool gCreatedPromisedFile;
 ChildView* ChildViewMouseTracker::sLastMouseEventView = nil;
 NSEvent* ChildViewMouseTracker::sLastMouseMoveEvent = nil;
 NSWindow* ChildViewMouseTracker::sWindowUnderMouse = nil;
@@ -3706,8 +3707,6 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 #endif
 
-  gDraggedTransferables = nullptr;
-
   NSEvent* currentEvent = [NSApp currentEvent];
   gUserCancelledDrag = ([currentEvent type] == NSEventTypeKeyDown &&
                         [currentEvent keyCode] == kVK_Escape);
@@ -3801,20 +3800,20 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-// Get the paste location from the low level pasteboard.
-static CFTypeRefPtr<CFURLRef> GetPasteLocation(NSPasteboard* aPasteboard) {
-  PasteboardRef pboardRef = nullptr;
-  PasteboardCreate((CFStringRef)[aPasteboard name], &pboardRef);
-  if (!pboardRef) {
-    return nullptr;
+static NSURL* GetPasteLocation() {
+  // First, attempt to get the paste location from the pasteboard.
+  NSPasteboard* pasteboard =
+      [NSPasteboard pasteboardWithName:NSPasteboardNameDrag];
+  NSString* pasteLocation =
+      [pasteboard stringForType:@"com.apple.pastelocation"];
+  if (pasteLocation) {
+    return [NSURL fileURLWithPath:pasteLocation];
   }
-
-  auto pasteBoard = CFTypeRefPtr<PasteboardRef>::WrapUnderCreateRule(pboardRef);
-  PasteboardSynchronize(pasteBoard.get());
-
-  CFURLRef urlRef = nullptr;
-  PasteboardCopyPasteLocation(pasteBoard.get(), &urlRef);
-  return CFTypeRefPtr<CFURLRef>::WrapUnderCreateRule(urlRef);
+  // If no paste location was present on the pasteboard, fall back to a temp
+  // directory instead.
+  return [NSURL
+      fileURLWithPath:[NSTemporaryDirectory()
+                          stringByAppendingPathComponent:@"mozDraggedFiles"]];
 }
 
 // NSPasteboardItemDataProvider
@@ -3862,47 +3861,20 @@ static CFTypeRefPtr<CFURLRef> GetPasteLocation(NSPasteboard* aPasteboard) {
                                   stringFromPboardType:kPublicUrlPboardType]] ||
           [curType isEqualToString:[UTIHelper stringFromPboardType:
                                                   kPublicUrlNamePboardType]] ||
-          [curType
-              isEqualToString:[UTIHelper
-                                  stringFromPboardType:(NSString*)
-                                                           kUTTypeFileURL]]) {
+          ([curType
+               isEqualToString:[UTIHelper
+                                   stringFromPboardType:(NSString*)
+                                                            kUTTypeFileURL]] &&
+           ![[pasteboardOutputDict valueForKey:curType] isEqualToString:@""])) {
         [aPasteboard setString:[pasteboardOutputDict valueForKey:curType]
                        forType:curType];
       } else if ([curType isEqualToString:[UTIHelper
                                               stringFromPboardType:
-                                                  kUrlsWithTitlesPboardType]]) {
-        [aPasteboard setPropertyList:[pasteboardOutputDict valueForKey:curType]
-                             forType:curType];
-      } else if ([curType
-                     isEqualToString:[UTIHelper stringFromPboardType:
-                                                    NSPasteboardTypeHTML]]) {
-        [aPasteboard setString:(nsClipboard::WrapHtmlForSystemPasteboard(
-                                   [pasteboardOutputDict valueForKey:curType]))
-                       forType:curType];
-      } else if ([curType
-                     isEqualToString:[UTIHelper stringFromPboardType:
-                                                    NSPasteboardTypeTIFF]] ||
-                 [curType isEqualToString:[UTIHelper
-                                              stringFromPboardType:
-                                                  kMozCustomTypesPboardType]]) {
-        [aPasteboard setData:[pasteboardOutputDict valueForKey:curType]
-                     forType:curType];
-      } else if ([curType
-                     isEqualToString:[UTIHelper stringFromPboardType:
-                                                    kMozFileUrlsPboardType]]) {
-        [aPasteboard writeObjects:[pasteboardOutputDict valueForKey:curType]];
-      } else if ([curType
-                     isEqualToString:
-                         [UTIHelper
-                             stringFromPboardType:
-                                 (NSString*)kPasteboardTypeFileURLPromise]]) {
-        CFTypeRefPtr<CFURLRef> url = GetPasteLocation(aPasteboard);
-        if (!url) {
-          continue;
-        }
-
+                                                  (NSString*)kUTTypeFileURL]] &&
+                 !gCreatedPromisedFile) {
+        NSURL* url = GetPasteLocation();
         nsCOMPtr<nsILocalFileMac> macLocalFile;
-        if (NS_FAILED(NS_NewLocalFileWithCFURL(url.get(),
+        if (NS_FAILED(NS_NewLocalFileWithCFURL((__bridge CFURLRef)url,
                                                getter_AddRefs(macLocalFile)))) {
           NS_ERROR("failed NS_NewLocalFileWithCFURL");
           continue;
@@ -3931,12 +3903,46 @@ static CFTypeRefPtr<CFURLRef> GetPasteLocation(NSPasteboard* aPasteboard) {
           // Now request the kFilePromiseMime data, which will invoke the data
           // provider. If successful, the file will have been created.
           nsCOMPtr<nsISupports> fileDataPrimitive;
-          Unused << item->GetTransferData(kFilePromiseMime,
-                                          getter_AddRefs(fileDataPrimitive));
+          if (NS_FAILED(item->GetTransferData(
+                  kFilePromiseMime, getter_AddRefs(fileDataPrimitive)))) {
+            continue;
+          }
+          nsCOMPtr<nsIFile> file = do_QueryInterface(fileDataPrimitive);
+          if (!file) {
+            continue;
+          }
+          nsAutoCString finalPath;
+          file->GetNativePath(finalPath);
+          NSString* filePath =
+              [NSString stringWithUTF8String:(const char*)finalPath.get()];
+          [aPasteboard
+              setString:[[NSURL fileURLWithPath:filePath] absoluteString]
+                forType:curType];
+          gCreatedPromisedFile = true;
         }
-
+      } else if ([curType isEqualToString:[UTIHelper
+                                              stringFromPboardType:
+                                                  kUrlsWithTitlesPboardType]]) {
         [aPasteboard setPropertyList:[pasteboardOutputDict valueForKey:curType]
                              forType:curType];
+      } else if ([curType
+                     isEqualToString:[UTIHelper stringFromPboardType:
+                                                    NSPasteboardTypeHTML]]) {
+        [aPasteboard setString:(nsClipboard::WrapHtmlForSystemPasteboard(
+                                   [pasteboardOutputDict valueForKey:curType]))
+                       forType:curType];
+      } else if ([curType
+                     isEqualToString:[UTIHelper stringFromPboardType:
+                                                    NSPasteboardTypeTIFF]] ||
+                 [curType isEqualToString:[UTIHelper
+                                              stringFromPboardType:
+                                                  kMozCustomTypesPboardType]]) {
+        [aPasteboard setData:[pasteboardOutputDict valueForKey:curType]
+                     forType:curType];
+      } else if ([curType
+                     isEqualToString:[UTIHelper stringFromPboardType:
+                                                    kMozFileUrlsPboardType]]) {
+        [aPasteboard writeObjects:[pasteboardOutputDict valueForKey:curType]];
       }
     }
   }
