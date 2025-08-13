@@ -3160,8 +3160,8 @@ MDefinition* MBinaryArithInstruction::foldsTo(TempAllocator& alloc) {
 void MBinaryArithInstruction::trySpecializeFloat32(TempAllocator& alloc) {
   MOZ_ASSERT(IsNumberType(type()));
 
-  // Do not use Float32 if we can use int32.
-  if (type() == MIRType::Int32) {
+  // Do not use Float32 if we can use integer types.
+  if (!IsFloatingPointType(type())) {
     return;
   }
 
