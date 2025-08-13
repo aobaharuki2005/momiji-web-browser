@@ -2259,6 +2259,7 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx,
 }
 
 UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
+    mozilla::CanvasUtils::ImageExtraction aExtractionBehavior,
     int32_t* out_format, gfx::IntSize* out_imageSize) {
   UniquePtr<uint8_t[]> ret;
 
@@ -2281,7 +2282,7 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
 
   mBufferProvider->ReturnSnapshot(snapshot.forget());
 
-  if (ret && ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+  if (ret && aExtractionBehavior == CanvasUtils::ImageExtraction::Randomize) {
     nsRFPService::RandomizePixels(
         GetCookieJarSettings(), PrincipalOrNull(), ret.get(),
         out_imageSize->width, out_imageSize->height,
@@ -2293,9 +2294,10 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
 }
 
 NS_IMETHODIMP
-CanvasRenderingContext2D::GetInputStream(const char* aMimeType,
-                                         const nsAString& aEncoderOptions,
-                                         nsIInputStream** aStream) {
+CanvasRenderingContext2D::GetInputStream(
+    const char* aMimeType, const nsAString& aEncoderOptions,
+    mozilla::CanvasUtils::ImageExtraction aExtractionBehavior,
+    nsIInputStream** aStream) {
   nsCString enccid("@mozilla.org/image/encoder;2?type=");
   enccid += aMimeType;
   nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get());
@@ -2305,7 +2307,8 @@ CanvasRenderingContext2D::GetInputStream(const char* aMimeType,
 
   int32_t format = 0;
   gfx::IntSize imageSize = {};
-  UniquePtr<uint8_t[]> imageBuffer = GetImageBuffer(&format, &imageSize);
+  UniquePtr<uint8_t[]> imageBuffer =
+      GetImageBuffer(aExtractionBehavior, &format, &imageSize);
   if (!imageBuffer) {
     return NS_ERROR_FAILURE;
   }
@@ -5412,7 +5415,7 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX,
   if (mCanvasElement) {
     nsCOMPtr<Document> ownerDoc = mCanvasElement->OwnerDoc();
     if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
-                                               aSubjectPrincipal)) {
+                                               &aSubjectPrincipal)) {
       return false;
     }
   } else if (mOffscreenCanvas && mOffscreenCanvas->ShouldResistFingerprinting(
@@ -5456,7 +5459,7 @@ bool CanvasRenderingContext2D::IsPointInStroke(
   if (mCanvasElement) {
     nsCOMPtr<Document> ownerDoc = mCanvasElement->OwnerDoc();
     if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
-                                               aSubjectPrincipal)) {
+                                               &aSubjectPrincipal)) {
       return false;
     }
   } else if (mOffscreenCanvas && mOffscreenCanvas->ShouldResistFingerprinting(
@@ -6520,10 +6523,10 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
       CanvasUtils::ImageExtraction::Unrestricted;
   if (mCanvasElement) {
     permission = CanvasUtils::ImageExtractionResult(mCanvasElement, aCx,
-                                                    aSubjectPrincipal);
+                                                    &aSubjectPrincipal);
   } else if (mOffscreenCanvas) {
     permission = CanvasUtils::ImageExtractionResult(mOffscreenCanvas, aCx,
-                                                    aSubjectPrincipal);
+                                                    &aSubjectPrincipal);
   }
 
   // Clone the data source surface if canvas randomization is enabled. We need

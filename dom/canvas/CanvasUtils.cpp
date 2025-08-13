@@ -47,19 +47,23 @@
 
 using namespace mozilla::gfx;
 
-static bool IsUnrestrictedPrincipal(nsIPrincipal& aPrincipal) {
+static bool IsUnrestrictedPrincipal(nsIPrincipal* aPrincipal) {
+  if (!aPrincipal) {
+    return false;
+  }
+
   // The system principal can always extract canvas data.
-  if (aPrincipal.IsSystemPrincipal()) {
+  if (aPrincipal->IsSystemPrincipal()) {
     return true;
   }
 
   // Allow chrome: and resource: (this especially includes PDF.js)
-  if (aPrincipal.SchemeIs("chrome") || aPrincipal.SchemeIs("resource")) {
+  if (aPrincipal->SchemeIs("chrome") || aPrincipal->SchemeIs("resource")) {
     return true;
   }
 
   // Allow extension principals.
-  return aPrincipal.GetIsAddonOrExpandedAddonPrincipal();
+  return aPrincipal->GetIsAddonOrExpandedAddonPrincipal();
 }
 
 namespace mozilla::CanvasUtils {
@@ -79,7 +83,7 @@ class OffscreenCanvasPermissionRunnable final
   bool MainThreadRun() override {
     AssertIsOnMainThread();
 
-    mResult = GetCanvasExtractDataPermission(*mPrincipal);
+    mResult = GetCanvasExtractDataPermission(mPrincipal);
     return true;
   }
 
@@ -90,7 +94,11 @@ class OffscreenCanvasPermissionRunnable final
   uint32_t mResult = nsIPermissionManager::UNKNOWN_ACTION;
 };
 
-uint32_t GetCanvasExtractDataPermission(nsIPrincipal& aPrincipal) {
+uint32_t GetCanvasExtractDataPermission(nsIPrincipal* aPrincipal) {
+  if (!aPrincipal) {
+    return nsIPermissionManager::UNKNOWN_ACTION;
+  }
+
   if (IsUnrestrictedPrincipal(aPrincipal)) {
     return true;
   }
@@ -103,14 +111,14 @@ uint32_t GetCanvasExtractDataPermission(nsIPrincipal& aPrincipal) {
 
     uint32_t permission;
     rv = permissionManager->TestPermissionFromPrincipal(
-        &aPrincipal, PERMISSION_CANVAS_EXTRACT_DATA, &permission);
+        aPrincipal, PERMISSION_CANVAS_EXTRACT_DATA, &permission);
     NS_ENSURE_SUCCESS(rv, nsIPermissionManager::UNKNOWN_ACTION);
 
     return permission;
   }
   if (auto* workerPrivate = dom::GetCurrentThreadWorkerPrivate()) {
     RefPtr<OffscreenCanvasPermissionRunnable> runnable =
-        new OffscreenCanvasPermissionRunnable(workerPrivate, &aPrincipal);
+        new OffscreenCanvasPermissionRunnable(workerPrivate, aPrincipal);
     ErrorResult rv;
     runnable->Dispatch(workerPrivate, dom::WorkerStatus::Canceling, rv);
     if (rv.Failed()) {
@@ -123,7 +131,7 @@ uint32_t GetCanvasExtractDataPermission(nsIPrincipal& aPrincipal) {
 
 /*
 ┌──────────────────────────────────────────────────────────────────────────┐
-│IsImageExtractionAllowed(dom::OffscreenCanvas*, JSContext*, nsIPrincipal&)│
+│IsImageExtractionAllowed(dom::OffscreenCanvas*, JSContext*, nsIPrincipal*)│
 └────────────────────────────────────┬─────────────────────────────────────┘
                                      │
                    ┌─────────────────▼────────────────────┐
@@ -167,7 +175,7 @@ bool IsImageExtractionAllowed_impl(
     bool aCanvasImageExtractionPrompt,
     bool aCanvasExtractionBeforeUserInputIsBlocked,
     bool aCanvasExtractionFromThirdPartiesIsBlocked, JSContext* aCx,
-    nsIPrincipal& aPrincipal,
+    nsIPrincipal* aPrincipal,
     const std::function<bool()>& aGetIsThirdPartyWindow,
     const std::function<void(const nsAutoString&)>& aReportToConsole,
     const std::function<void(bool)>& aTryPrompt) {
@@ -222,7 +230,10 @@ bool IsImageExtractionAllowed_impl(
     }
 
     nsAutoCString originResult;
-    nsresult rv = aPrincipal.GetOrigin(originResult);
+    nsresult rv = NS_ERROR_FAILURE;
+    if (aPrincipal) {
+      rv = aPrincipal->GetOrigin(originResult);
+    }
     origin = NS_SUCCEEDED(rv) ? Some(originResult) : Some(""_ns);
 
     return NS_SUCCEEDED(rv);
@@ -294,7 +305,7 @@ bool IsImageExtractionAllowed_impl(
 }
 
 bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
-                              nsIPrincipal& aPrincipal) {
+                              nsIPrincipal* aPrincipal) {
   if (NS_WARN_IF(!aDocument)) {
     return false;
   }
@@ -328,8 +339,12 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
   };
 
   auto prompt = [&](bool hidePermissionDoorhanger) {
+    if (!aPrincipal) {
+      return;
+    }
+
     nsAutoCString origin;
-    nsresult rv = aPrincipal.GetOrigin(origin);
+    nsresult rv = aPrincipal->GetOrigin(origin);
     if (NS_FAILED(rv)) {
       return;
     }
@@ -364,7 +379,7 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
 
 ImageExtraction ImageExtractionResult(dom::HTMLCanvasElement* aCanvasElement,
                                       JSContext* aCx,
-                                      nsIPrincipal& aPrincipal) {
+                                      nsIPrincipal* aPrincipal) {
   if (IsUnrestrictedPrincipal(aPrincipal)) {
     return ImageExtraction::Unrestricted;
   }
@@ -382,7 +397,7 @@ ImageExtraction ImageExtractionResult(dom::HTMLCanvasElement* aCanvasElement,
 }
 
 bool IsImageExtractionAllowed(dom::OffscreenCanvas* aOffscreenCanvas,
-                              JSContext* aCx, nsIPrincipal& aPrincipal) {
+                              JSContext* aCx, nsIPrincipal* aPrincipal) {
   if (!aOffscreenCanvas) {
     return false;
   }
@@ -437,8 +452,7 @@ bool IsImageExtractionAllowed(dom::OffscreenCanvas* aOffscreenCanvas,
   };
 
   nsAutoCString origin;
-  nsresult rv = aPrincipal.GetOrigin(origin);
-  if (NS_FAILED(rv)) {
+  if (!aPrincipal || NS_FAILED(aPrincipal->GetOrigin(origin))) {
     origin = ""_ns;
   }
 
@@ -485,7 +499,7 @@ bool IsImageExtractionAllowed(dom::OffscreenCanvas* aOffscreenCanvas,
 
 ImageExtraction ImageExtractionResult(dom::OffscreenCanvas* aOffscreenCanvas,
                                       JSContext* aCx,
-                                      nsIPrincipal& aPrincipal) {
+                                      nsIPrincipal* aPrincipal) {
   if (IsUnrestrictedPrincipal(aPrincipal)) {
     return ImageExtraction::Unrestricted;
   }
