@@ -12,8 +12,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "sidebar.verticalTabs"
 );
 
-const DEFAULT_LAUNCHER_VISIBLE = false;
-
 /**
  * The properties that make up a sidebar's UI state.
  *
@@ -183,19 +181,19 @@ export class SidebarState {
    * Update the starting properties according to external factors such as
    * window type and user preferences.
    */
-  initializeState(showLauncher = this.defaultLauncherVisible) {
+  initializeState() {
     const isPopup = !this.#controllerGlobal.toolbar.visible;
     if (isPopup) {
       // Don't show launcher if we're in a popup window.
       this.launcherVisible = false;
     } else {
-      if (lazy.verticalTabsEnabled) {
-        this.#props.launcherExpanded = true;
-      }
-      this.launcherVisible = showLauncher;
+      this.launcherVisible = this.defaultLauncherVisible;
     }
 
     // Explicitly trigger effects to ensure that the UI is kept up to date.
+    if (lazy.verticalTabsEnabled) {
+      this.#props.launcherExpanded = true;
+    }
     this.launcherExpanded = this.#props.launcherExpanded;
   }
 
@@ -207,28 +205,19 @@ export class SidebarState {
    *   New properties to overwrite the default state with.
    */
   loadInitialState(props) {
-    // Override any initial launcher visible state when the new sidebar has not been
-    // made visible yet
-    let hasPreviousVisibleState = false;
+    // Override any initial launcher visible state when the pref is defined
+    // and the new sidebar has not been made visible yet
     if (props.hasOwnProperty("hidden")) {
       props.launcherVisible = !props.hidden;
-      hasPreviousVisibleState = true;
       delete props.hidden;
-    }
-    if (props.hasOwnProperty("launcherVisible")) {
-      hasPreviousVisibleState = true;
     }
 
     const hasSidebarLauncherBeenVisible =
       this.#controller.SidebarManager.hasSidebarLauncherBeenVisible;
 
     // We override a falsey launcherVisible property with the default value if
-    // there's no explicitly visible/hidden state and its not been visible before
-    if (
-      !props.launcherVisible &&
-      !hasPreviousVisibleState &&
-      !hasSidebarLauncherBeenVisible
-    ) {
+    // its not been visible before.
+    if (!props.launcherVisible && !hasSidebarLauncherBeenVisible) {
       props.launcherVisible = this.defaultLauncherVisible;
     }
     for (const [key, value] of Object.entries(props)) {
@@ -408,7 +397,7 @@ export class SidebarState {
     if (lazy.verticalTabsEnabled) {
       return true;
     }
-    return DEFAULT_LAUNCHER_VISIBLE;
+    return this.#controller.revampDefaultLauncherVisible;
   }
 
   get launcherVisible() {

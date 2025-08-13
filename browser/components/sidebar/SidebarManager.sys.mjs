@@ -49,17 +49,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "sidebarRevampEnabled",
   "sidebar.revamp",
   false,
-  (pref, oldVal, newVal) => {
-    SidebarManager.updateDefaultTools();
-
-    if (!newVal) {
-      // Disable vertical tabs if revamped sidebar is turned off
-      Services.prefs.setBoolPref("sidebar.verticalTabs", false);
-    } else if (newVal && !lazy.verticalTabsEnabled) {
-      // horizontal tabs with sidebar.revamp must have visibility of "hide-sidebar"
-      Services.prefs.setStringPref(VISIBILITY_SETTING_PREF, "hide-sidebar");
-    }
-  }
+  () => SidebarManager.updateDefaultTools()
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(lazy, "sidebarTools", SIDEBAR_TOOLS, "");

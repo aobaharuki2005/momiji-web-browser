@@ -117,10 +117,7 @@ add_task(async function testTabOrder() {
       "sidebar.revamp",
       false
     );
-    let sidebarLauncherVisible =
-      sidebarRevampEnabled &&
-      BrowserTestUtils.isVisible(document.querySelector("sidebar-main"));
-    if (!sidebarLauncherVisible) {
+    if (!sidebarRevampEnabled) {
       EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
       await focused;
       ok(true, "Toolbox focused after shift+tab");
