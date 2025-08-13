@@ -30,6 +30,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSObject.h"
+#include "vm/Modules.h"
 #include "vm/ObjectOperations.h"
 
 #include "builtin/HandlerFunction-inl.h"
@@ -412,15 +413,6 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
 
   Handle<PromiseObject*> promise = promiseObject.as<PromiseObject>();
 
-  JS::ModuleLoadHook moduleLoadHook = cx->runtime()->moduleLoadHook;
-  if (!moduleLoadHook) {
-    JS_ReportErrorASCII(cx, "Module load hook not set");
-    if (!RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
-    }
-    return promise;
-  }
-
   {
     // Step 3. Let runningContext be the running execution context. (Implicit)
     // Step 4. If runningContext is not already suspended, suspend
@@ -461,21 +453,11 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
 
     // Step 7. Perform ! HostLoadImportedModule(referrer, specifierString,
     // EMPTY, innerCapability).
-    //
-    // By specification, this is supposed to take ReferencingScriptOrModule as
-    // null, see first parameter above. However, if we do that, we don't end up
-    // with a script reference, which is used to figure out what the base-URI
-    // should be So then we end up using the default one for the module loader;
-    // which because of the way we set the parent module loader up, means we end
-    // up having the incorrect base URI, as the module loader ends up just using
-    // the document's base URI.
-    //
-    // I have filed https://github.com/tc39/proposal-shadowrealm/issues/363 to
-    // discuss this.
-    Rooted<Value> referencingPrivate(cx, script->sourceObject()->getPrivate());
     Rooted<Value> payload(cx, ObjectValue(*promise));
-    if (!moduleLoadHook(cx, nullptr, referencingPrivate, moduleRequest,
-                        payload)) {
+    if (!js::HostLoadImportedModule(cx, script, moduleRequest, payload)) {
+      if (!RejectPromiseWithPendingError(cx, promise)) {
+        return nullptr;
+      }
       return promise;
     }
 

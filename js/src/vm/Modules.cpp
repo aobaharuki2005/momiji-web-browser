@@ -792,21 +792,37 @@ static void ThrowUnexpectedModuleStatus(JSContext* cx, ModuleStatus status) {
 }
 
 // https://tc39.es/ecma262/#sec-HostLoadImportedModule
-static bool HostLoadImportedModule(
-    JSContext* cx, Handle<ModuleObject*> referrer,
-    Handle<JSObject*> moduleRequest,
-    Handle<GraphLoadingStateRecordObject*> state) {
+//
+// According to spec the referrer can be a module script, classic script or
+// realm. The first two are supplied to this function by passing the script.
+// When the referrer is a realm nullptr is passed.
+bool js::HostLoadImportedModule(JSContext* cx, Handle<JSScript*> referrer,
+                                Handle<JSObject*> moduleRequest,
+                                Handle<Value> payload) {
+  MOZ_ASSERT(moduleRequest);
+  MOZ_ASSERT(!payload.isUndefined());
+
   JS::ModuleLoadHook moduleLoadHook = cx->runtime()->moduleLoadHook;
   if (!moduleLoadHook) {
     JS_ReportErrorASCII(cx, "Module load hook not set");
     return false;
   }
 
-  MOZ_ASSERT(referrer);
-  MOZ_ASSERT(moduleRequest);
-  Rooted<Value> referencingPrivate(cx, JS::GetModulePrivate(referrer));
-  RootedValue payload(cx, ObjectValue(*state));
-  return moduleLoadHook(cx, referrer, referencingPrivate, moduleRequest,
+  // TODO: Bug 1968870 : Pass referrer to HostLoadImportedModule in dynamic
+  // import Currently we only pass module referrers to the callback, passing
+  // nullptr for script and realm referrers.
+  Rooted<ModuleObject*> referrerModule(cx);
+  Rooted<Value> referencingPrivate(cx);
+  if (referrer) {
+    if (referrer->isModule()) {
+      referrerModule = referrer->module();
+      referencingPrivate = JS::GetModulePrivate(referrerModule);
+    } else {
+      referencingPrivate = referrer->sourceObject()->getPrivate();
+    }
+  }
+
+  return moduleLoadHook(cx, referrerModule, referencingPrivate, moduleRequest,
                         payload);
 }
 
@@ -1529,7 +1545,9 @@ static bool InnerModuleLoading(JSContext* cx,
         // Step 2.d.ii. Else,
         // Step 2.d.ii.1. Perform HostLoadImportedModule(module, required,
         //                state.[[HostDefined]], state).
-        if (!HostLoadImportedModule(cx, module, moduleRequest, state)) {
+        Rooted<Value> payload(cx, ObjectValue(*state));
+        Rooted<JSScript*> referrer(cx, module->script());
+        if (!HostLoadImportedModule(cx, referrer, moduleRequest, payload)) {
           return false;
         }
       }
@@ -2647,11 +2665,14 @@ static bool EvaluateDynamicImportOptions(
   return true;
 }
 
+// https://tc39.es/ecma262/#sec-evaluate-import-call
+//
 // ShadowRealmImportValue duplicates some of this, so be sure to keep these in
 // sync.
 JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                        HandleValue specifierArg,
                                        HandleValue optionsArg) {
+  // Step 7. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
   if (!promise) {
     return nullptr;
@@ -2667,16 +2688,11 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
   return promise;
 }
 
+// https://tc39.es/ecma262/#sec-evaluate-import-call continued.
 static bool TryStartDynamicModuleImport(JSContext* cx, HandleScript script,
                                         HandleValue specifierArg,
                                         HandleValue optionsArg,
                                         HandleObject promise) {
-  JS::ModuleLoadHook moduleLoadHook = cx->runtime()->moduleLoadHook;
-  if (!moduleLoadHook) {
-    JS_ReportErrorASCII(cx, "Module load hook not set");
-    return false;
-  }
-
   RootedString specifier(cx, ToString(cx, specifierArg));
   if (!specifier) {
     return false;
@@ -2692,22 +2708,19 @@ static bool TryStartDynamicModuleImport(JSContext* cx, HandleScript script,
     return false;
   }
 
+  // Step 12. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]:
+  //          specifierString, [[Attributes]]: attributes }.
   RootedObject moduleRequest(
       cx, ModuleRequestObject::create(cx, specifierAtom, attributes));
   if (!moduleRequest) {
     return false;
   }
 
-  RootedValue referencingPrivate(cx, script->sourceObject()->getPrivate());
+  // Step 13. Perform HostLoadImportedModule(referrer, moduleRequest, empty,
+  //          promiseCapability).
   RootedValue payload(cx, ObjectValue(*promise));
+  (void)HostLoadImportedModule(cx, script, moduleRequest, payload);
 
-  // TODO:
-  // Bug 1968870 : Pass referrer to HostLoadImportedModule in dynamic import
-  //
-  // The host layer is responsible for calling FinishLoadingImportedModule,
-  // regardless of whether it succeeds or fails.
-  (void)moduleLoadHook(cx, /* referrer */ nullptr, referencingPrivate,
-                       moduleRequest, payload);
   return true;
 }
 

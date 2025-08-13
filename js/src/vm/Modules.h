@@ -64,6 +64,10 @@ bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
                           HandleValue hostDefined,
                           MutableHandle<JSObject*> promiseOut);
 
+bool HostLoadImportedModule(JSContext* cx, Handle<JSScript*> referrer,
+                            Handle<JSObject*> moduleRequest,
+                            Handle<Value> payload);
+
 }  // namespace js
 
 #endif  // vm_Modules_h
