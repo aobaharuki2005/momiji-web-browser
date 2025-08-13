@@ -12,7 +12,6 @@
     --box-border-radius-inner: calc(var(--box-border-radius) - var(--border-width));
     --box-padding: var(--space-large);
     --box-icon-size: var(--icon-size);
-    --box-icon-fill: var(--icon-color);
 
     border: var(--box-border);
     border-block-end: var(--box-border-width-end) solid var(--box-border-color);
@@ -70,8 +69,6 @@
 }
 
 .button {
-  box-sizing: border-box;
-  width: 100%;
   align-items: center;
   justify-content: space-between;
   font-family: inherit;

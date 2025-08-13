@@ -41,7 +41,3 @@ slot[name="actions-start"] {
   -moz-context-properties: fill;
   fill: currentColor;
 }
-
-.actions:has(> slot:not(:has-slotted)) {
-  display: none;
-}
