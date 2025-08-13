@@ -2985,6 +2985,18 @@ localNetworkAccess:
       setPref:
         branch: default
         pref: "network.lna.block_trackers"
+    lnaPromptsEnabled:
+      description: Whether we should prompt users for permission whenever we detect local network access.
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.lna.blocking"
+    lnaFeatureEnabled:
+      description: Blanket flag to enable/disable LNA sub-features.
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.lna.enabled"
 
 essentialFallbackDomains:
   description: "Whether to retry failing system requests with a backup domain"
