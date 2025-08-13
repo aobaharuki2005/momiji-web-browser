@@ -885,6 +885,57 @@ newtab:
     send_in_pings:
       - newtab
 
+  promo_card_impression:
+    type: event
+    description: Recorded when the promo card is visible
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1981817
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1981817
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - achurchwell@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
+  promo_card_click:
+    type: event
+    description: Recorded when there is a click on the promo card cta
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1981817
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1981817
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - achurchwell@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
+  promo_card_dismiss:
+    type: event
+    description: Recorded when the promo card is dismissed
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1981817
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1981817
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - achurchwell@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
   abouthome_cache_construction:
     type: timing_distribution
     description: >

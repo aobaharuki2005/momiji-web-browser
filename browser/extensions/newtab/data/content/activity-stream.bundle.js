@@ -215,6 +215,9 @@ for (const type of [
   "PREVIEW_REQUEST",
   "PREVIEW_REQUEST_CANCEL",
   "PREVIEW_RESPONSE",
+  "PROMO_CARD_CLICK",
+  "PROMO_CARD_DISMISS",
+  "PROMO_CARD_IMPRESSION",
   "REMOVE_DOWNLOAD_FILE",
   "REPORT_AD_OPEN",
   "REPORT_AD_SUBMIT",
@@ -5189,6 +5192,7 @@ const AdBanner = ({
 
 
 
+
 const PREF_PROMO_CARD_DISMISSED = "discoverystream.promoCard.visible";
 
 /**
@@ -5198,17 +5202,34 @@ const PREF_PROMO_CARD_DISMISSED = "discoverystream.promoCard.visible";
 
 const PromoCard = () => {
   const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
+  const onCtaClick = (0,external_React_namespaceObject.useCallback)(() => {
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.PROMO_CARD_CLICK
+    }));
+  }, [dispatch]);
   const onDismissClick = (0,external_React_namespaceObject.useCallback)(() => {
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.PROMO_CARD_DISMISS
+    }));
     dispatch(actionCreators.SetPref(PREF_PROMO_CARD_DISMISSED, false));
   }, [dispatch]);
+  const handleIntersection = (0,external_React_namespaceObject.useCallback)(() => {
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.PROMO_CARD_IMPRESSION
+    }));
+  }, [dispatch]);
+  const ref = useIntersectionObserver(handleIntersection);
   return /*#__PURE__*/external_React_default().createElement("div", {
-    className: "promo-card-wrapper"
+    className: "promo-card-wrapper",
+    ref: el => {
+      ref.current = [el];
+    }
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "promo-card-dismiss-button"
   }, /*#__PURE__*/external_React_default().createElement("moz-button", {
     type: "icon ghost",
     size: "small",
-    "data-l10n-id": "promo-card-dismiss-button",
+    "data-l10n-id": "newtab-promo-card-dismiss-button",
     iconsrc: "chrome://global/skin/icons/close.svg",
     onClick: onDismissClick,
     onKeyDown: onDismissClick
@@ -5231,7 +5252,8 @@ const PromoCard = () => {
     href: "https://support.mozilla.org/kb/sponsor-privacy",
     "data-l10n-id": "newtab-promo-card-cta",
     target: "_blank",
-    rel: "noreferrer"
+    rel: "noreferrer",
+    onClick: onCtaClick
   }))));
 };
 

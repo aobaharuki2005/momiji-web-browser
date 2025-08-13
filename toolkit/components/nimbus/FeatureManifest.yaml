@@ -1013,7 +1013,7 @@ newtabAdSizingExperiment:
         Medium rectangle (MREC) ad size and UI.
 
 newtabPromoCard:
-  description: about:newtab reporting ads feature
+  description: the promo card that appears next to the ad banner
   owner: achurchwell@mozilla.com
   hasExposure: false
   variables:

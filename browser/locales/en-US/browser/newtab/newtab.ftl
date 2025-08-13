@@ -626,3 +626,6 @@ newtab-widget-timer-menu-learn-more = Learn more
 newtab-promo-card-title = Support { -brand-product-name }
 newtab-promo-card-body = Our sponsors support our mission to build a better web
 newtab-promo-card-cta = Learn more
+newtab-promo-card-dismiss-button =
+    .title = Dismiss
+    .aria-label = Dismiss

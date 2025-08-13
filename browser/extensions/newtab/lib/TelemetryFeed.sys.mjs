@@ -1283,6 +1283,33 @@ export class TelemetryFeed {
       case at.WIDGETS_TIMER_USER_EVENT:
       case at.WIDGETS_TIMER_USER_IMPRESSION:
         this.handleWidgetsUserEvent(action);
+        break;
+      case at.PROMO_CARD_CLICK:
+      case at.PROMO_CARD_DISMISS:
+      case at.PROMO_CARD_IMPRESSION:
+        this.handlePromoCardUserEvent(action);
+        break;
+    }
+  }
+
+  handlePromoCardUserEvent(action) {
+    const session = this.sessions.get(au.getPortIdOfSender(action));
+    if (session) {
+      const payload = {
+        newtab_visit_id: session.visit_id,
+      };
+
+      switch (action.type) {
+        case at.PROMO_CARD_CLICK:
+          Glean.newtab.promoCardClick.record(payload);
+          break;
+        case at.PROMO_CARD_DISMISS:
+          Glean.newtab.promoCardDismiss.record(payload);
+          break;
+        case at.PROMO_CARD_IMPRESSION:
+          Glean.newtab.promoCardImpression.record(payload);
+          break;
+      }
     }
   }
 
@@ -1587,12 +1614,6 @@ export class TelemetryFeed {
         break;
       case "widgets.focusTimer.enabled":
         Glean.newtab.widgetsTimerChangeDisplay.record({
-          newtab_visit_id: session.session_id,
-          display_status: action.data.value,
-        });
-        break;
-      case "widgets.focusTimer.showSystemNotifications":
-        Glean.newtab.widgetsTimerToggleNotification.record({
           newtab_visit_id: session.session_id,
           display_status: action.data.value,
         });
