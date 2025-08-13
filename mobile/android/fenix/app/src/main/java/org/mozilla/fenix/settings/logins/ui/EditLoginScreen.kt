@@ -173,7 +173,8 @@ private fun EditLoginUsername(store: LoginsStore, user: String) {
             store.dispatch(EditLoginAction.UsernameChanged(newUsername))
         },
         placeholder = "",
-        errorText = "",
+        errorText = stringResource(R.string.saved_login_username_required_2),
+        isError = username.isBlank(),
         modifier = Modifier
             .padding(
                 horizontal = FirefoxTheme.layout.space.static200,
@@ -207,7 +208,8 @@ private fun EditLoginPassword(store: LoginsStore, pass: String) {
                 store.dispatch(EditLoginAction.PasswordChanged(newPassword))
             },
             placeholder = "",
-            errorText = "",
+            errorText = stringResource(R.string.saved_login_password_required_2),
+            isError = password.isBlank(),
             modifier = Modifier
                 .padding(
                     horizontal = FirefoxTheme.layout.space.static200,
