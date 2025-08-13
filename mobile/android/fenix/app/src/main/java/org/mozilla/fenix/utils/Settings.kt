@@ -68,7 +68,6 @@ import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_AUDIBLE
 import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
-import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.security.InvalidParameterException
 import java.util.UUID
@@ -286,10 +285,28 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         get() = FxNimbus.features.homescreen.value().sectionsEnabled
 
     /**
-     * Indicates if the homepage section settings should be visible.
+     * Indicates if the top sites homepage section settings should be visible
      */
-    val showHomepageSectionToggleSettings: Boolean
-        get() = !overrideUserSpecifiedHomepageSections
+    val showHomepageTopSitesSectionToggle: Boolean
+        get() = !overrideUserSpecifiedHomepageSections || enableHomepageSearchBar
+
+    /**
+     * Indicates if the recent tabs homepage section settings should be visible
+     */
+    val showHomepageRecentTabsSectionToggle: Boolean
+        get() = !overrideUserSpecifiedHomepageSections && !enableHomepageSearchBar
+
+    /**
+     * Indicates if the bookmarks homepage section settings should be visible
+     */
+    val showHomepageBookmarksSectionToggle: Boolean
+        get() = !overrideUserSpecifiedHomepageSections && !enableHomepageSearchBar
+
+    /**
+     * Indicates if the recently visited homepage section settings should be visible
+     */
+    val showHomepageRecentlyVisitedSectionToggle: Boolean
+        get() = !overrideUserSpecifiedHomepageSections && !enableHomepageSearchBar
 
     /**
      * Indicates if the user specified homepage section visibility should be ignored.
