@@ -3844,19 +3844,6 @@ class _DSCard extends (external_React_default()).PureComponent {
     // The values chosen here were the dimensions of the card thumbnails as
     // computed by getBoundingClientRect() for each type of viewport width
     // across both high-density and normal-density displays.
-    this.dsImageSizes = [{
-      mediaMatcher: "(min-width: 1122px)",
-      width: 296,
-      height: 148
-    }, {
-      mediaMatcher: "(min-width: 866px)",
-      width: 218,
-      height: 109
-    }, {
-      mediaMatcher: "(max-width: 610px)",
-      width: 202,
-      height: 101
-    }];
     this.standardCardImageSizes = [{
       mediaMatcher: "default",
       width: 296,
@@ -4236,6 +4223,45 @@ class _DSCard extends (external_React_default()).PureComponent {
     const secureImage = sectionsEnabled && ohttpImagesEnabled && ohttpEnabled && sectionPersonalized && inferredPersonalization;
     return secureImage;
   }
+  renderImage({
+    sizes = [],
+    classNames = ""
+  } = {}) {
+    const {
+      Prefs
+    } = this.props;
+    const rawImageSrc = this.getRawImageSrc();
+    const smartCrop = Prefs.values["images.smart"];
+    return /*#__PURE__*/external_React_default().createElement(DSImage, {
+      extraClassNames: `img ${classNames}`,
+      source: this.props.image_src,
+      rawSource: rawImageSrc,
+      sizes: sizes,
+      url: this.props.url,
+      title: this.props.title,
+      isRecentSave: this.props.isRecentSave,
+      alt_text: this.props.alt_text,
+      smartCrop: smartCrop,
+      secureImage: this.secureImage
+    });
+  }
+  renderSectionCardImages() {
+    const {
+      sectionsCardImageSizes
+    } = this.props;
+    const columns = ["1", "2", "3", "4"];
+    const images = [];
+    for (const column of columns) {
+      const size = sectionsCardImageSizes[column];
+      const sizes = [this.getSectionImageSize(column, size)];
+      const image = this.renderImage({
+        sizes,
+        classNames: `image-${column}`
+      });
+      images.push(image);
+    }
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, images);
+  }
   render() {
     const {
       isRecentSave,
@@ -4244,8 +4270,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       isListCard,
       isFakespot,
       mayHaveSectionsCards,
-      format,
-      alt_text
+      format
     } = this.props;
     const refinedCardsLayout = Prefs.values["discoverystream.refinedCardsLayout.enabled"];
     const refinedCardsClassName = refinedCardsLayout ? `refined-cards` : ``;
@@ -4291,7 +4316,6 @@ class _DSCard extends (external_React_default()).PureComponent {
       readTime: displayReadTime
     } = DiscoveryStream;
     const sectionsEnabled = Prefs.values[DSCard_PREF_SECTIONS_ENABLED];
-    const smartCrop = Prefs.values["images.smart"];
     // Refined cards have their own excerpt hiding logic.
     // We can ignore hideDescriptions if we are in sections and refined cards.
     const excerpt = !hideDescriptions || sectionsEnabled && refinedCardsLayout ? this.props.excerpt : "";
@@ -4311,24 +4335,22 @@ class _DSCard extends (external_React_default()).PureComponent {
     const listCardClassName = isListCard ? `list-feed-card` : ``;
     const fakespotClassName = isFakespot ? `fakespot` : ``;
     const sectionsCardsClassName = [mayHaveSectionsCards ? `sections-card-ui` : ``, this.props.sectionsClassNames].join(" ");
-    const sectionsCardsImageSizes = this.props.sectionsCardImageSizes;
     const titleLinesName = `ds-card-title-lines-${titleLines}`;
     const descLinesClassName = `ds-card-desc-lines-${descLines}`;
     const isMediumRectangle = format === "rectangle";
     const spocFormatClassName = isMediumRectangle ? `ds-spoc-rectangle` : ``;
-    const rawImageSrc = this.getRawImageSrc();
     const faviconSrc = this.getFaviconSrc();
-    let sizes = [];
-    if (!isMediumRectangle) {
-      sizes = this.dsImageSizes;
-      if (sectionsEnabled) {
-        sizes = [this.getSectionImageSize("4", sectionsCardsImageSizes["4"]), this.getSectionImageSize("3", sectionsCardsImageSizes["3"]), this.getSectionImageSize("2", sectionsCardsImageSizes["2"]), this.getSectionImageSize("1", sectionsCardsImageSizes["1"])];
-      } else {
-        sizes = this.standardCardImageSizes;
-      }
-      if (isListCard) {
-        sizes = this.listCardImageSizes;
-      }
+    let images = this.renderImage({
+      sizes: this.standardCardImageSizes
+    });
+    if (isMediumRectangle) {
+      images = this.renderImage();
+    } else if (isListCard) {
+      images = this.renderImage({
+        sizes: this.listCardImageSizes
+      });
+    } else if (sectionsEnabled) {
+      images = this.renderSectionCardImages();
     }
     return /*#__PURE__*/external_React_default().createElement("article", {
       className: `ds-card ${listCardClassName} ${fakespotClassName} ${sectionsCardsClassName} ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${spocFormatClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName} ${refinedCardsClassName}`,
@@ -4348,18 +4370,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       "data-l10n-id": `newtab-topic-label-${this.props.topic}`
     }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "img-wrapper"
-    }, /*#__PURE__*/external_React_default().createElement(DSImage, {
-      extraClassNames: "img",
-      source: this.props.image_src,
-      rawSource: rawImageSrc,
-      sizes: sizes,
-      url: this.props.url,
-      title: this.props.title,
-      isRecentSave: isRecentSave,
-      alt_text: alt_text,
-      smartCrop: smartCrop,
-      secureImage: this.secureImage
-    })), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
+    }, images), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
       flightId: this.props.flightId,
       rows: [{
         id: this.props.id,
