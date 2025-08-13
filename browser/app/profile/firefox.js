@@ -3460,3 +3460,4 @@ pref("browser.contextual-services.contextId.rust-component.enabled", true);
 pref("browser.ipProtection.enabled", false);
 pref("browser.ipProtection.variant", "");
 
+pref("browser.ipProtection.guardian.endpoint", "https://vpn.mozilla.org/");

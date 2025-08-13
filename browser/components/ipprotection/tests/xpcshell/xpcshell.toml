@@ -5,6 +5,8 @@ prefs = [
   "browser.ipProtection.enabled=true",
 ]
 
+["test_GuardianClient.js"]
+
 ["test_IPProtection.js"]
 
 ["test_IPProtectionPanel.js"]
