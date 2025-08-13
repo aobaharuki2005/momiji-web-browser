@@ -213,17 +213,12 @@ BOOL WINAPI GetThreadInformation(
 #  include "EHABIStackWalk.h"
 #endif
 
-// Android 64-bit usually has frame pointers available.
-#if defined(GP_PLAT_amd64_android) || defined(GP_PLAT_arm64_android)
-#  define HAVE_NATIVE_UNWIND
-#  define USE_FRAME_POINTER_STACK_WALK
-#endif
-
 // Linux/BSD builds use LUL, which uses DWARF info to unwind stacks.
 #if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) ||       \
+    defined(GP_PLAT_amd64_android) || defined(GP_PLAT_x86_android) ||   \
     defined(GP_PLAT_mips64_linux) || defined(GP_PLAT_arm64_linux) ||    \
-    defined(GP_PLAT_amd64_freebsd) || defined(GP_PLAT_arm64_freebsd) || \
-    defined(GP_PLAT_x86_android)
+    defined(GP_PLAT_arm64_android) || defined(GP_PLAT_amd64_freebsd) || \
+    defined(GP_PLAT_arm64_freebsd)
 #  define HAVE_NATIVE_UNWIND
 #  define USE_LUL_STACKWALK
 #  include "lul/LulMain.h"
