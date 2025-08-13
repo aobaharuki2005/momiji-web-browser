@@ -4527,6 +4527,12 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
   mCacheQueueSizeWhenOpen =
       CacheStorageService::CacheQueueSize(mCacheOpenWithPriority);
 
+  // If the browser is set to offline, or it doesn't have any active network
+  // interfaces then don't race, as it's unlikely the network would win :)
+  if (NS_IsOffline()) {
+    maybeRCWN = false;
+  }
+
   if ((mNetworkTriggerDelay || StaticPrefs::network_http_rcwn_enabled()) &&
       maybeRCWN && mAllowRCWN) {
     bool hasAltData = false;
