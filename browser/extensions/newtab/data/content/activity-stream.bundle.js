@@ -5778,9 +5778,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const prefs = this.props.Prefs.values;
     const {
       items,
-      fourCardLayout,
-      essentialReadsHeader,
-      editorsPicksHeader,
       onboardingExperience,
       ctaButtonSponsors,
       ctaButtonVariant,
@@ -5811,8 +5808,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
     // filter out recs that should be in ListFeed
     const recs = this.props.data.recommendations.filter(item => !item.feedName).slice(0, items);
     const cards = [];
-    let essentialReadsCards = [];
-    let editorsPicksCards = [];
     for (let index = 0; index < items; index++) {
       const rec = recs[index];
       cards.push(topicsLoading || !rec || rec.placeholder || rec.flight_id && !spocsStartupCacheEnabled && this.props.App.isForStartupCache.DiscoveryStream ? /*#__PURE__*/external_React_default().createElement(PlaceholderDSCard, {
@@ -5964,36 +5959,17 @@ class _CardGrid extends (external_React_default()).PureComponent {
     }
     let moreRecsHeader = "";
     // For now this is English only.
-    if (showRecentSaves || essentialReadsHeader && editorsPicksHeader) {
-      let spliceAt = 6;
-      // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
-      if (fourCardLayout) {
-        spliceAt = 8;
-      }
+    if (showRecentSaves) {
       // If we have a custom header, ensure the more recs section also has a header.
       moreRecsHeader = "More Recommendations";
-      // Put the first 2 rows into essentialReadsCards.
-      essentialReadsCards = [...cards.splice(0, spliceAt)];
-      // Put the rest into editorsPicksCards.
-      if (essentialReadsHeader && editorsPicksHeader) {
-        editorsPicksCards = [...cards.splice(0, cards.length)];
-      }
     }
     const gridClassName = this.renderGridClassName();
     return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, !isOnboardingExperienceDismissed && onboardingExperience && /*#__PURE__*/external_React_default().createElement(OnboardingExperience, {
       dispatch: this.props.dispatch
-    }), essentialReadsCards?.length > 0 && /*#__PURE__*/external_React_default().createElement("div", {
-      className: gridClassName
-    }, essentialReadsCards), showRecentSaves && /*#__PURE__*/external_React_default().createElement(RecentSavesContainer, {
+    }), showRecentSaves && /*#__PURE__*/external_React_default().createElement(RecentSavesContainer, {
       gridClassName: gridClassName,
       dispatch: this.props.dispatch
-    }), editorsPicksCards?.length > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "section-title"
-    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
-      message: "Editor\u2019s Picks"
-    }))), /*#__PURE__*/external_React_default().createElement("div", {
-      className: gridClassName
-    }, editorsPicksCards)), cards?.length > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, moreRecsHeader && /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
+    }), cards?.length > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, moreRecsHeader && /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
       className: "section-title"
     }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: moreRecsHeader
@@ -13900,9 +13876,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           subtitle: component.header && component.header.subtitle,
           link_text: component.header && component.header.link_text,
           link_url: component.header && component.header.link_url,
-          icon: component.header && component.header.icon,
-          essentialReadsHeader: component.essentialReadsHeader,
-          editorsPicksHeader: component.editorsPicksHeader
+          icon: component.header && component.header.icon
         });
       case "SectionTitle":
         return /*#__PURE__*/external_React_default().createElement(SectionTitle, {
@@ -13964,12 +13938,10 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
             hideCardBackground: component.properties.hideCardBackground,
             fourCardLayout: component.properties.fourCardLayout,
             compactGrid: component.properties.compactGrid,
-            essentialReadsHeader: component.properties.essentialReadsHeader,
             onboardingExperience: component.properties.onboardingExperience,
             ctaButtonSponsors: component.properties.ctaButtonSponsors,
             ctaButtonVariant: component.properties.ctaButtonVariant,
             spocMessageVariant: component.properties.spocMessageVariant,
-            editorsPicksHeader: component.properties.editorsPicksHeader,
             recentSavesEnabled: this.props.DiscoveryStream.recentSavesEnabled,
             hideDescriptions: this.props.DiscoveryStream.hideDescriptions,
             firstVisibleTimestamp: this.props.firstVisibleTimestamp,
@@ -14081,18 +14053,6 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
     };
     let sectionTitle = message.header.title;
     let subTitle = "";
-
-    // If we're in one of these experiments, override the default message.
-    // For now this is English only.
-    if (message.essentialReadsHeader || message.editorsPicksHeader) {
-      learnMore = null;
-      subTitle = "Recommended By Pocket";
-      if (message.essentialReadsHeader) {
-        sectionTitle = "Today’s Essential Reads";
-      } else if (message.editorsPicksHeader) {
-        sectionTitle = "Editor’s Picks";
-      }
-    }
     const {
       DiscoveryStream
     } = this.props;

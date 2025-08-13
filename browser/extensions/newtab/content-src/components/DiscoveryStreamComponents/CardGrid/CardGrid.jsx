@@ -343,9 +343,6 @@ export class _CardGrid extends React.PureComponent {
     const prefs = this.props.Prefs.values;
     const {
       items,
-      fourCardLayout,
-      essentialReadsHeader,
-      editorsPicksHeader,
       onboardingExperience,
       ctaButtonSponsors,
       ctaButtonVariant,
@@ -382,9 +379,6 @@ export class _CardGrid extends React.PureComponent {
       .filter(item => !item.feedName)
       .slice(0, items);
     const cards = [];
-
-    let essentialReadsCards = [];
-    let editorsPicksCards = [];
 
     for (let index = 0; index < items; index++) {
       const rec = recs[index];
@@ -577,20 +571,9 @@ export class _CardGrid extends React.PureComponent {
 
     let moreRecsHeader = "";
     // For now this is English only.
-    if (showRecentSaves || (essentialReadsHeader && editorsPicksHeader)) {
-      let spliceAt = 6;
-      // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
-      if (fourCardLayout) {
-        spliceAt = 8;
-      }
+    if (showRecentSaves) {
       // If we have a custom header, ensure the more recs section also has a header.
       moreRecsHeader = "More Recommendations";
-      // Put the first 2 rows into essentialReadsCards.
-      essentialReadsCards = [...cards.splice(0, spliceAt)];
-      // Put the rest into editorsPicksCards.
-      if (essentialReadsHeader && editorsPicksHeader) {
-        editorsPicksCards = [...cards.splice(0, cards.length)];
-      }
     }
 
     const gridClassName = this.renderGridClassName();
@@ -600,24 +583,11 @@ export class _CardGrid extends React.PureComponent {
         {!isOnboardingExperienceDismissed && onboardingExperience && (
           <OnboardingExperience dispatch={this.props.dispatch} />
         )}
-        {essentialReadsCards?.length > 0 && (
-          <div className={gridClassName}>{essentialReadsCards}</div>
-        )}
         {showRecentSaves && (
           <RecentSavesContainer
             gridClassName={gridClassName}
             dispatch={this.props.dispatch}
           />
-        )}
-        {editorsPicksCards?.length > 0 && (
-          <>
-            <DSSubHeader>
-              <span className="section-title">
-                <FluentOrText message="Editor’s Picks" />
-              </span>
-            </DSSubHeader>
-            <div className={gridClassName}>{editorsPicksCards}</div>
-          </>
         )}
         {cards?.length > 0 && (
           <>

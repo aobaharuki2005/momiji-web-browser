@@ -930,11 +930,6 @@ export class DiscoveryStreamFeed {
       fourCardLayout: pocketConfig.fourCardLayout,
       newFooterSection: pocketConfig.newFooterSection,
       compactGrid: pocketConfig.compactGrid,
-      // For now essentialReadsHeader and editorsPicksHeader are English only.
-      essentialReadsHeader:
-        this.locale.startsWith("en-") && pocketConfig.essentialReadsHeader,
-      editorsPicksHeader:
-        this.locale.startsWith("en-") && pocketConfig.editorsPicksHeader,
       onboardingExperience,
       // For now button variants are for experimentation and English only.
       ctaButtonSponsors: this.locale.startsWith("en-") ? ctaButtonSponsors : [],
@@ -3135,8 +3130,6 @@ export class DiscoveryStreamFeed {
      `fourCardLayout` Enable four Pocket cards per row.
      `newFooterSection` Changes the layout of the topics section.
      `compactGrid` Reduce the number of pixels between the Pocket cards.
-     `essentialReadsHeader` Updates the Pocket section header and title to say "Today’s Essential Reads", moves the "Recommended by Pocket" header to the right side.
-     `editorsPicksHeader` Updates the Pocket section header and title to say "Editor’s Picks", if used with essentialReadsHeader, creates a second section 2 rows down for editorsPicks.
      `onboardingExperience` Show new users some UI explaining Pocket above the Pocket section.
      `ctaButtonSponsors` An array of sponsors we want to show a cta button on the card for.
      `ctaButtonVariant` Sets the variant for the cta sponsor button.
@@ -3159,8 +3152,6 @@ getHardcodedLayout = ({
   fourCardLayout = false,
   newFooterSection = false,
   compactGrid = false,
-  essentialReadsHeader = false,
-  editorsPicksHeader = false,
   onboardingExperience = false,
   ctaButtonSponsors = [],
   ctaButtonVariant = "",
@@ -3242,8 +3233,6 @@ getHardcodedLayout = ({
           : []),
         {
           type: "Message",
-          essentialReadsHeader,
-          editorsPicksHeader,
           header: {
             title: {
               id: pocketStoriesHeadlineId,
@@ -3270,8 +3259,6 @@ getHardcodedLayout = ({
             hideCardBackground,
             fourCardLayout,
             compactGrid,
-            essentialReadsHeader,
-            editorsPicksHeader,
             onboardingExperience,
             ctaButtonSponsors,
             ctaButtonVariant,

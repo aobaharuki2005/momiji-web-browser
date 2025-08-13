@@ -147,8 +147,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             link_text={component.header && component.header.link_text}
             link_url={component.header && component.header.link_url}
             icon={component.header && component.header.icon}
-            essentialReadsHeader={component.essentialReadsHeader}
-            editorsPicksHeader={component.editorsPicksHeader}
           />
         );
       case "SectionTitle":
@@ -213,12 +211,10 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             hideCardBackground={component.properties.hideCardBackground}
             fourCardLayout={component.properties.fourCardLayout}
             compactGrid={component.properties.compactGrid}
-            essentialReadsHeader={component.properties.essentialReadsHeader}
             onboardingExperience={component.properties.onboardingExperience}
             ctaButtonSponsors={component.properties.ctaButtonSponsors}
             ctaButtonVariant={component.properties.ctaButtonVariant}
             spocMessageVariant={component.properties.spocMessageVariant}
-            editorsPicksHeader={component.properties.editorsPicksHeader}
             recentSavesEnabled={this.props.DiscoveryStream.recentSavesEnabled}
             hideDescriptions={this.props.DiscoveryStream.hideDescriptions}
             firstVisibleTimestamp={this.props.firstVisibleTimestamp}
@@ -327,18 +323,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
     };
     let sectionTitle = message.header.title;
     let subTitle = "";
-
-    // If we're in one of these experiments, override the default message.
-    // For now this is English only.
-    if (message.essentialReadsHeader || message.editorsPicksHeader) {
-      learnMore = null;
-      subTitle = "Recommended By Pocket";
-      if (message.essentialReadsHeader) {
-        sectionTitle = "Today’s Essential Reads";
-      } else if (message.editorsPicksHeader) {
-        sectionTitle = "Editor’s Picks";
-      }
-    }
 
     const { DiscoveryStream } = this.props;
 

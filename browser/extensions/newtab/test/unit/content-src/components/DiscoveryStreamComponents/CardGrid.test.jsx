@@ -67,37 +67,6 @@ describe("<CardGrid>", () => {
     assert.ok(wrapper.find(".ds-card-grid-hide-background").exists());
   });
 
-  it("should render sub header in the middle of the card grid for both regular and compact", () => {
-    const commonProps = {
-      essentialReadsHeader: true,
-      editorsPicksHeader: true,
-      items: 12,
-      data: {
-        recommendations: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
-      },
-      Prefs: INITIAL_STATE.Prefs,
-      DiscoveryStream: INITIAL_STATE.DiscoveryStream,
-    };
-    wrapper = mount(
-      <WrapWithProvider>
-        <CardGrid {...commonProps} />
-      </WrapWithProvider>
-    );
-
-    assert.ok(wrapper.find(DSSubHeader).exists());
-
-    wrapper.setProps({
-      compact: true,
-    });
-    wrapper = mount(
-      <WrapWithProvider>
-        <CardGrid {...commonProps} compact={true} />
-      </WrapWithProvider>
-    );
-
-    assert.ok(wrapper.find(DSSubHeader).exists());
-  });
-
   it("should add/hide description classname to card grid", () => {
     wrapper.setProps({
       data: { recommendations: [{}, {}] },
@@ -129,8 +98,6 @@ describe("<CardGrid>", () => {
 
   it("should create a list feed", () => {
     const commonProps = {
-      essentialReadsHeader: true,
-      editorsPicksHeader: true,
       items: 12,
       data: {
         recommendations: [
