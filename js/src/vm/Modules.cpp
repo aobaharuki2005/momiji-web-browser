@@ -46,6 +46,8 @@ using namespace js;
 
 using mozilla::Utf8Unit;
 
+class DynamicImportContextObject;
+
 static bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module);
 static bool ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
                            MutableHandle<Value> rval);
@@ -59,6 +61,17 @@ static bool TryStartDynamicModuleImport(JSContext* cx, HandleScript script,
                                         HandleValue specifierArg,
                                         HandleValue optionsArg,
                                         HandleObject promise);
+static bool ContinueDynamicImport(JSContext* cx,
+                                  Handle<Value> referencingPrivate,
+                                  Handle<JSObject*> moduleRequest,
+                                  Handle<PromiseObject*> promiseCapability,
+                                  Handle<JSObject*> result, bool usePromise);
+static bool LinkAndEvaluateDynamicImport(JSContext* cx, unsigned argc,
+                                         Value* vp);
+static bool LinkAndEvaluateDynamicImport(
+    JSContext* cx, Handle<DynamicImportContextObject*> context);
+static bool DynamicImportResolved(JSContext* cx, unsigned argc, Value* vp);
+static bool DynamicImportRejected(JSContext* cx, unsigned argc, Value* vp);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
@@ -133,9 +146,9 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
   // Step 3. Else,
   // Step 3.a. Perform ContinueDynamicImport(payload, result).
   MOZ_ASSERT(object->is<PromiseObject>());
-  Rooted<JSObject*> promise(cx, &object->as<PromiseObject>());
-  return js::ContinueDynamicImport(cx, referencingPrivate, moduleRequest,
-                                   promise, result, usePromise);
+  Rooted<PromiseObject*> promise(cx, &object->as<PromiseObject>());
+  return ContinueDynamicImport(cx, referencingPrivate, moduleRequest, promise,
+                               result, usePromise);
 }
 
 // https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
@@ -338,9 +351,7 @@ JS_PUBLIC_API void JS::GetLoadingModuleHostDefinedValue(
   CHECK_THREAD(cx);
   cx->releaseCheck(statePrivate);
 
-  Rooted<GraphLoadingStateRecordObject*> state(cx);
-  state = static_cast<GraphLoadingStateRecordObject*>(&statePrivate.toObject());
-  MOZ_ASSERT(state);
+  auto* state = &statePrivate.toObject().as<GraphLoadingStateRecordObject>();
   hostDefinedOut.set(state->hostDefined());
 }
 
@@ -2745,9 +2756,9 @@ bool js::OnModuleEvaluationFailure(JSContext* cx,
 // This is used for |fulfilledClosure| and |rejectedClosure| in
 // https://tc39.es/ecma262/#sec-ContinueDynamicImport
 //
-// It is used to marshal some of the arguments to FinishDynamicModuleImport
-// and pass them through to the promise resolve and reject callbacks. It holds a
-// reference to the referencing private to keep it alive until it is needed.
+// It is used to marshal some arguments and pass them through to the promise
+// resolve and reject callbacks. It holds a reference to the referencing private
+// to keep it alive until it is needed.
 class DynamicImportContextObject : public NativeObject {
  public:
   enum { ReferencingPrivateSlot = 0, PromiseSlot, ModuleSlot, SlotCount };
@@ -2848,12 +2859,126 @@ void DynamicImportContextObject::clearReferencingPrivate(
   }
 }
 
+// https://tc39.es/ecma262/#sec-ContinueDynamicImport
+/* static */
+bool ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
+                           Handle<JSObject*> moduleRequest,
+                           Handle<PromiseObject*> promiseCapability,
+                           Handle<JSObject*> result, bool usePromise) {
+  // Step 1: Already handled in FinishLoadingImportedModuleFailed functions.
+
+  // Step 6. Let linkAndEvaluateClosure be a new Abstract Closure with no
+  // parameters that captures module, promiseCapability, and onRejected...
+  MOZ_ASSERT(result);
+  Rooted<DynamicImportContextObject*> context(
+      cx, DynamicImportContextObject::create(cx, referencingPrivate,
+                                             promiseCapability, result));
+  if (!context) {
+    return RejectPromiseWithPendingError(cx, promiseCapability);
+  }
+
+  // Our implementation provides an option for synchronous completion for
+  // environments where we can't use promises.
+  if (!usePromise) {
+    return LinkAndEvaluateDynamicImport(cx, context);
+  }
+
+  // Step 3: The module dependencies has been loaded in the host layer, so we
+  // only need to do _linkAndEvaluate_ part defined in the spec. Create a
+  // promise that we'll resolve immediately.
+  JS::Rooted<PromiseObject*> loadPromise(cx, CreatePromiseObjectForAsync(cx));
+  if (!loadPromise) {
+    return RejectPromiseWithPendingError(cx, promiseCapability);
+  }
+
+  // Step 7. Let linkAndEvaluate be
+  //         CreateBuiltinFunction(linkAndEvaluateClosure, 0, "", []).
+  Rooted<JSFunction*> linkAndEvaluate(cx);
+  linkAndEvaluate = js::NewFunctionWithReserved(
+      cx, LinkAndEvaluateDynamicImport, 0, 0, "resolved");
+  if (!linkAndEvaluate) {
+    return RejectPromiseWithPendingError(cx, promiseCapability);
+  }
+
+  // Step 8. Perform PerformPromiseThen(loadPromise, linkAndEvaluate,
+  // onRejected).
+  js::SetFunctionNativeReserved(linkAndEvaluate, 0, ObjectValue(*context));
+  JS::AddPromiseReactions(cx, loadPromise, linkAndEvaluate, nullptr);
+  return AsyncFunctionReturned(cx, loadPromise, UndefinedHandleValue);
+}
+
+// static
+bool LinkAndEvaluateDynamicImport(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  Value value = js::GetFunctionNativeReserved(&args.callee(), 0);
+  Rooted<DynamicImportContextObject*> context(cx);
+  context = &value.toObject().as<DynamicImportContextObject>();
+  return LinkAndEvaluateDynamicImport(cx, context);
+}
+
+// https://tc39.es/ecma262/#sec-ContinueDynamicImport
+static bool LinkAndEvaluateDynamicImport(
+    JSContext* cx, Handle<DynamicImportContextObject*> context) {
+  MOZ_ASSERT(context);
+  Rooted<JSObject*> module(cx, context->module());
+  Rooted<JSObject*> promise(cx, context->promise());
+
+  // Step 6.a. Let link be Completion(module.Link()).
+  if (!JS::ModuleLink(cx, module)) {
+    //   b. If link is an abrupt completion, then
+    //      i. Perform ! Call(promiseCapability.[[Reject]], undefined, [
+    //         link.[[Value]] ]).
+    //      ii. Return unused.
+    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+  }
+  MOZ_ASSERT(!JS_IsExceptionPending(cx));
+
+  // Step 6.c. Let evaluatePromise be module.Evaluate().
+  JS::Rooted<JS::Value> rval(cx);
+  mozilla::DebugOnly<bool> ok = JS::ModuleEvaluate(cx, module, &rval);
+  MOZ_ASSERT_IF(ok, !JS_IsExceptionPending(cx));
+  if (!rval.isObject()) {
+    // If we do not have an evaluation promise or a module request for the
+    // module, we can assume that evaluation has failed or been interrupted and
+    // can reject the dynamic module.
+    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+  }
+
+  JS::Rooted<JSObject*> evaluatePromise(cx, &rval.toObject());
+  MOZ_ASSERT(evaluatePromise->is<PromiseObject>());
+
+  // Step 6.e. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "",
+  //           []).
+  RootedValue contextValue(cx, ObjectValue(*context));
+  RootedFunction onFulfilled(cx);
+  onFulfilled = NewHandlerWithExtraValue(cx, DynamicImportResolved, promise,
+                                         contextValue);
+  if (!onFulfilled) {
+    return false;
+  }
+
+  // Step 5. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "",
+  //         []).
+  RootedFunction onRejected(cx);
+  onRejected = NewHandlerWithExtraValue(cx, DynamicImportRejected, promise,
+                                        contextValue);
+  if (!onRejected) {
+    return false;
+  }
+
+  // Step 6.f. Perform PerformPromiseThen(evaluatePromise, onFulfilled,
+  //           onRejected).
+  // Step 6.g. Return unused.
+  return JS::AddPromiseReactionsIgnoringUnhandledRejection(
+      cx, evaluatePromise, onFulfilled, onRejected);
+}
+
 // This performs the steps for |fulfilledClosure| from
 // https://tc39.es/ecma262/#sec-ContinueDynamicImport step 6.d.
 //
 // With adjustment for Top-level await:
 // https://GitHub.com/tc39/proposal-dynamic-import/pull/71/files
-static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
+static bool DynamicImportResolved(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.get(0).isUndefined());
 
@@ -2889,7 +3014,7 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 6.d.ii. Perform ! Call(promiseCapability.[[Resolve]], undefined, [
-  // namespace ]).
+  //              namespace ]).
   RootedValue value(cx, ObjectValue(*ns));
   if (!PromiseObject::resolve(cx, promise, value)) {
     return false;
@@ -2902,7 +3027,7 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
 
 // This performs the steps for |rejectedClosure| from
 // https://tc39.es/ecma262/#sec-ContinueDynamicImport step 4.
-static bool OnRejectedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
+static bool DynamicImportRejected(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue error = args.get(0);
 
@@ -2915,113 +3040,13 @@ static bool OnRejectedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   RootedValue referencingPrivate(cx, context->referencingPrivate());
   Rooted<PromiseObject*> promise(cx, TargetFromHandler<PromiseObject>(args));
 
+  // Step 4.a. Perform ! Call(promiseCapability.[[Reject]], undefined, [ reason
+  // ]).
+  if (!PromiseObject::reject(cx, promise, error)) {
+    return false;
+  }
+
+  // Step 4.b. Return NormalCompletion(undefined).
   args.rval().setUndefined();
-  return PromiseObject::reject(cx, promise, error);
-};
-
-bool js::FinishDynamicModuleImport(JSContext* cx, HandleValue contextValue,
-                                   HandleObject evaluationPromise) {
-  // If we do not have an evaluation promise or a module request for the module,
-  // we can assume that evaluation has failed or been interrupted -- we can
-  // reject the dynamic module.
-
-  Rooted<DynamicImportContextObject*> context(
-      cx, &contextValue.toObject().as<DynamicImportContextObject>());
-  MOZ_ASSERT(context);
-
-  Rooted<JSObject*> promise(cx, context->promise());
-  if (!evaluationPromise) {
-    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
-  }
-
-  RootedFunction onResolved(
-      cx, NewHandlerWithExtraValue(cx, OnResolvedDynamicModule, promise,
-                                   contextValue));
-  if (!onResolved) {
-    return false;
-  }
-
-  RootedFunction onRejected(
-      cx, NewHandlerWithExtraValue(cx, OnRejectedDynamicModule, promise,
-                                   contextValue));
-  if (!onRejected) {
-    return false;
-  }
-
-  if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(
-          cx, evaluationPromise, onResolved, onRejected)) {
-    return false;
-  }
-
   return true;
-}
-
-static bool OnLoadRequestedModulesResolvedImpl(
-    JSContext* cx, Handle<DynamicImportContextObject*> context) {
-  MOZ_ASSERT(context);
-  Rooted<JSObject*> module(cx, context->module());
-  Rooted<JSObject*> promise(cx, context->promise());
-  if (!JS::ModuleLink(cx, module)) {
-    //    b. If link is an abrupt completion, then
-    //      i. Perform ! Call(promiseCapability.[[Reject]], undefined, Â«
-    //      link.[[Value]] Â»). ii. Return unused.
-    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
-  }
-  MOZ_ASSERT(!JS_IsExceptionPending(cx));
-
-  //    c. Let evaluatePromise be module.Evaluate().
-  JS::Rooted<JS::Value> rval(cx);
-  JS::Rooted<JSObject*> evaluationPromise(cx);
-  mozilla::DebugOnly<bool> ok = JS::ModuleEvaluate(cx, module, &rval);
-  if (rval.isObject()) {
-    evaluationPromise.set(&rval.toObject());
-  }
-  MOZ_ASSERT_IF(ok, !JS_IsExceptionPending(cx));
-
-  Rooted<Value> contextValue(cx, ObjectValue(*context));
-  return FinishDynamicModuleImport(cx, contextValue, evaluationPromise);
-}
-
-// static
-bool OnLoadRequestedModulesResolved(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  Rooted<DynamicImportContextObject*> context(cx);
-  context = static_cast<DynamicImportContextObject*>(
-      &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-  return OnLoadRequestedModulesResolvedImpl(cx, context);
-}
-
-bool js::ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
-                               Handle<JSObject*> moduleRequest,
-                               Handle<JSObject*> promise,
-                               Handle<JSObject*> result, bool usePromise) {
-  MOZ_ASSERT(result);
-  Rooted<DynamicImportContextObject*> context(
-      cx, DynamicImportContextObject::create(cx, referencingPrivate, promise,
-                                             result));
-  if (!context) {
-    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
-  }
-
-  // The module dependencies has been loaded in the host layer, so we only need
-  // to do _linkAndEvaluate_ part defined in the spec.
-  if (usePromise) {
-    JS::Rooted<PromiseObject*> promise(cx, CreatePromiseObjectForAsync(cx));
-    Rooted<Value> contextValue(cx, ObjectValue(*context));
-
-    Rooted<JSFunction*> onResolved(
-        cx, js::NewFunctionWithReserved(cx, OnLoadRequestedModulesResolved, 0,
-                                        0, "resolved"));
-    if (!onResolved) {
-      JS_ReportOutOfMemory(cx);
-      return RejectPromiseWithPendingError(cx, promise);
-    }
-
-    RootedObject resolveFuncObj(cx, JS_GetFunctionObject(onResolved));
-    js::SetFunctionNativeReserved(resolveFuncObj, 0, contextValue);
-    JS::AddPromiseReactions(cx, promise, resolveFuncObj, nullptr);
-    return AsyncFunctionReturned(cx, promise, UndefinedHandleValue);
-  } else {
-    return OnLoadRequestedModulesResolvedImpl(cx, context);
-  }
 }

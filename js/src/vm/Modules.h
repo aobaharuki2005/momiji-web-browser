@@ -55,9 +55,6 @@ void AsyncModuleExecutionRejected(JSContext* cx, Handle<ModuleObject*> module,
 bool OnModuleEvaluationFailure(JSContext* cx, HandleObject evaluationPromise,
                                JS::ModuleErrorBehaviour errorBehaviour);
 
-bool FinishDynamicModuleImport(JSContext* cx, HandleValue contextValue,
-                               HandleObject evaluationPromise);
-
 bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
                           HandleValue hostDefined,
                           JS::LoadModuleResolvedCallback resolved,
@@ -66,11 +63,6 @@ bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
 bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
                           HandleValue hostDefined,
                           MutableHandle<JSObject*> promiseOut);
-
-bool ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
-                           Handle<JSObject*> moduleRequest,
-                           Handle<JSObject*> promise, Handle<JSObject*> result,
-                           bool usePromise);
 
 }  // namespace js
 
