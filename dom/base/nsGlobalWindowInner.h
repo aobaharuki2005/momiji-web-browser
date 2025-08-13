@@ -971,12 +971,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     return mWebTaskSchedulingState;
   }
 
-  MOZ_CAN_RUN_SCRIPT bool SynthesizeMouseEvent(
-      const nsAString& aType, float aOffsetX, float aOffsetY,
-      const mozilla::dom::SynthesizeMouseEventData& aMouseEventData,
-      const mozilla::dom::SynthesizeMouseEventOptions& aOptions,
-      mozilla::ErrorResult& aError);
-
  protected:
   // Web IDL helpers
 

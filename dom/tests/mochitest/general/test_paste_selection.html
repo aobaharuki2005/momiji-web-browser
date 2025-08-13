@@ -61,11 +61,11 @@ function pasteArea()
   var pasteAreaRect = pasteArea.getBoundingClientRect();
   var pasteAreaCenterX = pasteAreaRect.left + pasteAreaRect.width/2;
   var pasteAreaCenterY = pasteAreaRect.top + pasteAreaRect.height/2;
-  var wrappedWindow = SpecialPowers.wrap(window);
+  var util = SpecialPowers.getDOMWindowUtils(window);
 
   pasteArea.focus();
-  wrappedWindow.synthesizeMouseEvent("mousedown", pasteAreaCenterX, pasteAreaCenterY, { button: 1 }, { toWindow: true });
-  wrappedWindow.synthesizeMouseEvent("mouseup", pasteAreaCenterX, pasteAreaCenterY, { button: 1 }, { toWindow: true });
+  util.sendMouseEventToWindow("mousedown", pasteAreaCenterX, pasteAreaCenterY, 1, 1, 0, true);
+  util.sendMouseEventToWindow("mouseup",   pasteAreaCenterX, pasteAreaCenterY, 1, 1, 0, true);
 
   var usesMouseButtonPaste = SpecialPowers.getBoolPref("middlemouse.paste");
   if (usesMouseButtonPaste) {

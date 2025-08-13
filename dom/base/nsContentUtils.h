@@ -198,8 +198,6 @@ struct SetHTMLUnsafeOptions;
 enum class ShadowRootMode : uint8_t;
 class ShadowRoot;
 struct StructuredSerializeOptions;
-struct SynthesizeMouseEventData;
-struct SynthesizeMouseEventOptions;
 class TrustedHTMLOrString;
 class WorkerPrivate;
 enum class ElementCallbackType;
@@ -3079,17 +3077,17 @@ class nsContentUtils {
 
   /**
    * Synthesize a mouse event to the given widget
-   * (See synthesizeMouseEvent in Window.webidl).
-   *
-   * @return A boolean indicating whether the default action was prevented
-   *         by any event listener.
+   * (see nsIDOMWindowUtils.sendMouseEvent).
    */
   MOZ_CAN_RUN_SCRIPT
-  static mozilla::Result<bool, nsresult> SynthesizeMouseEvent(
+  static nsresult SendMouseEvent(
       mozilla::PresShell* aPresShell, nsIWidget* aWidget,
       const nsAString& aType, mozilla::LayoutDeviceIntPoint& aRefPoint,
-      const mozilla::dom::SynthesizeMouseEventData& aMouseEventData,
-      const mozilla::dom::SynthesizeMouseEventOptions& aOptions);
+      int32_t aButton, int32_t aButtons, int32_t aClickCount,
+      int32_t aModifiers, bool aIgnoreRootScrollFrame, float aPressure,
+      unsigned short aInputSourceArg, uint32_t aIdentifier, bool aToWindow,
+      bool* aPreventDefault, bool aIsDOMEventSynthesized,
+      bool aIsWidgetEventSynthesized);
 
   static void FirePageShowEventForFrameLoaderSwap(
       nsIDocShellTreeItem* aItem,
