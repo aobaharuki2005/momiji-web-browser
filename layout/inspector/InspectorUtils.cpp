@@ -83,10 +83,24 @@ static nsPresContext* EnsureSafeToHandOutRules(Element& aElement) {
 }
 
 static already_AddRefed<const ComputedStyle> GetStartingStyle(
-    Element& aElement) {
+    Element& aElement, const PseudoStyleRequest& aPseudo) {
+  Element* elementOrPseudoElement = aElement.GetPseudoElement(aPseudo);
+  if (!elementOrPseudoElement) {
+    // For the pseudo elements which doesn't support animations or transitions,
+    // this returns nullptr. This is probably fine because @starting-style
+    // doesn't work on these pseudo elements neither.
+    //
+    // FIXME: If we still want to retrieve the @starting-style rules for those
+    // pseudo-elements which don't support animations, we may have to rework
+    // Servo_ResolveStartingStyle() because now @starting-style doesn't work on
+    // eagerly-cascaded pseudo-elements, and the above function,
+    // GetPseudoElement(), only works on the pseudo-elements which support
+    // animations.
+    return nullptr;
+  }
   // If this element is unstyled, or it doesn't have matched rules in
   // @starting-style, we return.
-  if (!Servo_Element_MayHaveStartingStyle(&aElement)) {
+  if (!Servo_Element_MayHaveStartingStyle(elementOrPseudoElement)) {
     return nullptr;
   }
   if (!EnsureSafeToHandOutRules(aElement)) {
@@ -101,7 +115,7 @@ static already_AddRefed<const ComputedStyle> GetStartingStyle(
   if (!ps) {
     return nullptr;
   }
-  return ps->StyleSet()->ResolveStartingStyle(aElement);
+  return ps->StyleSet()->ResolveStartingStyle(*elementOrPseudoElement);
 }
 
 static already_AddRefed<const ComputedStyle> GetCleanComputedStyleForElement(
@@ -435,12 +449,13 @@ void InspectorUtils::GetMatchingCSSRules(
 
   RefPtr<const ComputedStyle> computedStyle;
   if (aWithStartingStyle) {
-    computedStyle = GetStartingStyle(aElement);
+    computedStyle = GetStartingStyle(aElement, *pseudo);
   }
 
   // Note: GetStartingStyle() return nullptr if this element doesn't have rules
-  // inside @starting-style. For this case, we would like to return the primay
-  // rules of this element.
+  // inside @starting-style, or the pseudo-element doesn't support animations or
+  // transitions. For this case, we would like to return the primay rules of
+  // this element.
   if (!computedStyle) {
     computedStyle = GetCleanComputedStyleForElement(&aElement, *pseudo);
   }
