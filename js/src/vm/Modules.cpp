@@ -125,8 +125,9 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
   // Step 2.a. Perform ContinueModuleLoading(payload, result).
   JSObject* object = &payload.toObject();
   if (object->is<GraphLoadingStateRecordObject>()) {
-    return js::ContinueLoadingImportedModule(cx, payload, result,
-                                             UndefinedHandleValue);
+    Rooted<GraphLoadingStateRecordObject*> state(cx);
+    state = &object->as<GraphLoadingStateRecordObject>();
+    return ContinueModuleLoading(cx, state, result, UndefinedHandleValue);
   }
 
   // Step 3. Else,
@@ -150,7 +151,9 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailed(
   // Step 2.a. Perform ContinueModuleLoading(payload, result).
   JSObject* payload = &payloadArg.toObject();
   if (payload->is<GraphLoadingStateRecordObject>()) {
-    return js::ContinueLoadingImportedModule(cx, payloadArg, nullptr, error);
+    Rooted<GraphLoadingStateRecordObject*> state(cx);
+    state = &payload->as<GraphLoadingStateRecordObject>();
+    return ContinueModuleLoading(cx, state, nullptr, error);
   }
 
   // Step 3. Else,
@@ -1575,20 +1578,6 @@ static bool ContinueModuleLoading(JSContext* cx,
   // undefined, « moduleCompletion.[[Value]] »).
   RootedValue hostDefined(cx, state->hostDefined());
   return state->rejected(cx, hostDefined, error);
-}
-
-// The 2nd part of FinishLoadingImportedModule defined in
-// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
-bool js::ContinueLoadingImportedModule(JSContext* cx,
-                                       Handle<Value> statePrivate,
-                                       Handle<JSObject*> result,
-                                       Handle<Value> error) {
-  // Step 2. If payload is a GraphLoadingState Record, then
-  // Step 2.a. Perform ContinueModuleLoading(payload, result).
-  MOZ_ASSERT(!statePrivate.isUndefined());
-  Rooted<GraphLoadingStateRecordObject*> state(cx);
-  state = static_cast<GraphLoadingStateRecordObject*>(&statePrivate.toObject());
-  return ContinueModuleLoading(cx, state, result, error);
 }
 
 // https://tc39.es/ecma262/#sec-LoadRequestedModules

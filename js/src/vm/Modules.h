@@ -67,10 +67,6 @@ bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
                           HandleValue hostDefined,
                           MutableHandle<JSObject*> promiseOut);
 
-bool ContinueLoadingImportedModule(JSContext* cx, Handle<Value> statePrivate,
-                                   Handle<JSObject*> result,
-                                   Handle<Value> error);
-
 bool ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
                            Handle<JSObject*> moduleRequest,
                            Handle<JSObject*> promise, Handle<JSObject*> result,
