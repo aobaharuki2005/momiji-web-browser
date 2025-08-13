@@ -55,7 +55,7 @@ static bool SyntheticModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
                                     MutableHandle<Value> rval);
 static bool ContinueModuleLoading(JSContext* cx,
                                   Handle<GraphLoadingStateRecordObject*> state,
-                                  Handle<JSObject*> moduleCompletion,
+                                  Handle<ModuleObject*> moduleCompletion,
                                   Handle<Value> error);
 static bool TryStartDynamicModuleImport(JSContext* cx, HandleScript script,
                                         HandleValue specifierArg,
@@ -65,7 +65,8 @@ static bool ContinueDynamicImport(JSContext* cx,
                                   Handle<Value> referencingPrivate,
                                   Handle<JSObject*> moduleRequest,
                                   Handle<PromiseObject*> promiseCapability,
-                                  Handle<JSObject*> result, bool usePromise);
+                                  Handle<ModuleObject*> module,
+                                  bool usePromise);
 static bool LinkAndEvaluateDynamicImport(JSContext* cx, unsigned argc,
                                          Value* vp);
 static bool LinkAndEvaluateDynamicImport(
@@ -110,6 +111,9 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
   CHECK_THREAD(cx);
   cx->check(referrer, referencingPrivate, moduleRequest, payload, result);
 
+  MOZ_ASSERT(result);
+  Rooted<ModuleObject*> module(cx, &result->as<ModuleObject>());
+
   if (referrer) {
     // We currently only pass module referrers, not script or realm
     // referrers. |loadedModules| is only required to be stored on modules.
@@ -121,12 +125,12 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
         referrer->as<ModuleObject>().loadedModules();
     if (auto record = loadedModules.lookup(moduleRequest)) {
       //  Step 1.a.i. Assert: That Record's [[Module]] is result.[[Value]].
-      MOZ_ASSERT(record->value() == result);
+      MOZ_ASSERT(record->value() == module);
     } else {
       // Step 1.b. Else, append the Record { moduleRequest.[[Specifer]],
       //           [[Attributes]]: moduleRequest.[[Attributes]],
       //           [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
-      if (!loadedModules.putNew(moduleRequest, &result->as<ModuleObject>())) {
+      if (!loadedModules.putNew(moduleRequest, module)) {
         ReportOutOfMemory(cx);
         return FinishLoadingImportedModuleFailedWithPendingException(cx,
                                                                      payload);
@@ -140,7 +144,7 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
   if (object->is<GraphLoadingStateRecordObject>()) {
     Rooted<GraphLoadingStateRecordObject*> state(cx);
     state = &object->as<GraphLoadingStateRecordObject>();
-    return ContinueModuleLoading(cx, state, result, UndefinedHandleValue);
+    return ContinueModuleLoading(cx, state, module, UndefinedHandleValue);
   }
 
   // Step 3. Else,
@@ -148,7 +152,7 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
   MOZ_ASSERT(object->is<PromiseObject>());
   Rooted<PromiseObject*> promise(cx, &object->as<PromiseObject>());
   return ContinueDynamicImport(cx, referencingPrivate, moduleRequest, promise,
-                               result, usePromise);
+                               module, usePromise);
 }
 
 // https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
@@ -1576,7 +1580,7 @@ static bool InnerModuleLoading(JSContext* cx,
 // ContinueModuleLoading ( state, moduleCompletion )
 static bool ContinueModuleLoading(JSContext* cx,
                                   Handle<GraphLoadingStateRecordObject*> state,
-                                  Handle<JSObject*> moduleCompletion,
+                                  Handle<ModuleObject*> moduleCompletion,
                                   Handle<Value> error) {
   MOZ_ASSERT_IF(moduleCompletion, error.isUndefined());
 
@@ -1588,8 +1592,7 @@ static bool ContinueModuleLoading(JSContext* cx,
   // Step 2. If moduleCompletion is a normal completion, then
   if (moduleCompletion) {
     // Step 2.a. Perform InnerModuleLoading(state, moduleCompletion.[[Value]]).
-    Rooted<ModuleObject*> module(cx, &moduleCompletion->as<ModuleObject>());
-    return InnerModuleLoading(cx, state, module);
+    return InnerModuleLoading(cx, state, moduleCompletion);
   }
 
   // Step 3. Else,
@@ -2768,11 +2771,11 @@ class DynamicImportContextObject : public NativeObject {
 
   [[nodiscard]] static DynamicImportContextObject* create(
       JSContext* cx, Handle<Value> referencingPrivate,
-      Handle<JSObject*> promise, Handle<JSObject*> module);
+      Handle<PromiseObject*> promise, Handle<ModuleObject*> module);
 
   Value referencingPrivate() const;
-  JSObject* promise() const;
-  JSObject* module() const;
+  PromiseObject* promise() const;
+  ModuleObject* module() const;
 
   static void clearReferencingPrivate(JSRuntime* runtime,
                                       DynamicImportContextObject* ic);
@@ -2805,8 +2808,8 @@ const JSClassOps DynamicImportContextObject::classOps_ = {
 
 /* static */
 DynamicImportContextObject* DynamicImportContextObject::create(
-    JSContext* cx, Handle<Value> referencingPrivate, Handle<JSObject*> promise,
-    Handle<JSObject*> module) {
+    JSContext* cx, Handle<Value> referencingPrivate,
+    Handle<PromiseObject*> promise, Handle<ModuleObject*> module) {
   Rooted<DynamicImportContextObject*> self(
       cx, NewObjectWithGivenProto<DynamicImportContextObject>(cx, nullptr));
   if (!self) {
@@ -2825,22 +2828,22 @@ Value DynamicImportContextObject::referencingPrivate() const {
   return getReservedSlot(ReferencingPrivateSlot);
 }
 
-JSObject* DynamicImportContextObject::promise() const {
+PromiseObject* DynamicImportContextObject::promise() const {
   Value value = getReservedSlot(PromiseSlot);
   if (value.isUndefined()) {
     return nullptr;
   }
 
-  return &value.toObject();
+  return &value.toObject().as<PromiseObject>();
 }
 
-JSObject* DynamicImportContextObject::module() const {
+ModuleObject* DynamicImportContextObject::module() const {
   Value value = getReservedSlot(ModuleSlot);
   if (value.isUndefined()) {
     return nullptr;
   }
 
-  return &value.toObject();
+  return &value.toObject().as<ModuleObject>();
 }
 
 /* static */
@@ -2864,15 +2867,16 @@ void DynamicImportContextObject::clearReferencingPrivate(
 bool ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
                            Handle<JSObject*> moduleRequest,
                            Handle<PromiseObject*> promiseCapability,
-                           Handle<JSObject*> result, bool usePromise) {
-  // Step 1: Already handled in FinishLoadingImportedModuleFailed functions.
+                           Handle<ModuleObject*> module, bool usePromise) {
+  MOZ_ASSERT(module);
+
+  // Step 1, 2: Already handled in FinishLoadingImportedModuleFailed functions.
 
   // Step 6. Let linkAndEvaluateClosure be a new Abstract Closure with no
   // parameters that captures module, promiseCapability, and onRejected...
-  MOZ_ASSERT(result);
   Rooted<DynamicImportContextObject*> context(
       cx, DynamicImportContextObject::create(cx, referencingPrivate,
-                                             promiseCapability, result));
+                                             promiseCapability, module));
   if (!context) {
     return RejectPromiseWithPendingError(cx, promiseCapability);
   }
@@ -2920,8 +2924,8 @@ bool LinkAndEvaluateDynamicImport(JSContext* cx, unsigned argc, Value* vp) {
 static bool LinkAndEvaluateDynamicImport(
     JSContext* cx, Handle<DynamicImportContextObject*> context) {
   MOZ_ASSERT(context);
-  Rooted<JSObject*> module(cx, context->module());
-  Rooted<JSObject*> promise(cx, context->promise());
+  Rooted<ModuleObject*> module(cx, context->module());
+  Rooted<PromiseObject*> promise(cx, context->promise());
 
   // Step 6.a. Let link be Completion(module.Link()).
   if (!JS::ModuleLink(cx, module)) {
@@ -2929,7 +2933,7 @@ static bool LinkAndEvaluateDynamicImport(
     //      i. Perform ! Call(promiseCapability.[[Reject]], undefined, [
     //         link.[[Value]] ]).
     //      ii. Return unused.
-    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+    return RejectPromiseWithPendingError(cx, promise);
   }
   MOZ_ASSERT(!JS_IsExceptionPending(cx));
 
@@ -2941,7 +2945,7 @@ static bool LinkAndEvaluateDynamicImport(
     // If we do not have an evaluation promise or a module request for the
     // module, we can assume that evaluation has failed or been interrupted and
     // can reject the dynamic module.
-    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+    return RejectPromiseWithPendingError(cx, promise);
   }
 
   JS::Rooted<JSObject*> evaluatePromise(cx, &rval.toObject());
@@ -2992,7 +2996,7 @@ static bool DynamicImportResolved(JSContext* cx, unsigned argc, Value* vp) {
 
   Rooted<PromiseObject*> promise(cx, TargetFromHandler<PromiseObject>(args));
 
-  Rooted<ModuleObject*> module(cx, &context->module()->as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, context->module());
   if (module->status() != ModuleStatus::EvaluatingAsync &&
       module->status() != ModuleStatus::Evaluated) {
     JS_ReportErrorASCII(
