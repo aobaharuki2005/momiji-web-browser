@@ -915,7 +915,6 @@ export class _DSCard extends React.PureComponent {
           onLinkClick={!this.props.placeholder ? this.onLinkClick : undefined}
           url={this.props.url}
           title={this.props.title}
-          isSponsored={!!this.props.flightId}
         >
           {this.props.showTopics &&
             !this.props.mayHaveSectionsCards &&
