@@ -280,7 +280,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(JSContext* aCx,
 bool ModuleLoaderBase::FinishLoadingImportedModule(
     JSContext* aCx, ModuleLoadRequest* aRequest) {
   // The request should been removed from mDynamicImportRequests.
-  MOZ_ASSERT_IF(aRequest->mDynamicPromise,
+  MOZ_ASSERT_IF(aRequest->IsDynamicImport(),
                 !aRequest->mLoader->HasDynamicImport(aRequest));
 
   Rooted<JSObject*> module(aCx);
@@ -296,12 +296,7 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
   Rooted<Value> referencingPrivate(aCx, aRequest->mReferencingPrivate);
   Rooted<JSObject*> moduleReqObj(aCx, aRequest->mModuleRequestObj);
   Rooted<Value> statePrivate(aCx, aRequest->mPayload);
-
   Rooted<Value> payload(aCx, aRequest->mPayload);
-  if (payload.isUndefined()) {
-    MOZ_ASSERT(aRequest->mDynamicPromise);
-    payload = ObjectValue(*aRequest->mDynamicPromise);
-  }
 
   LOG(("ScriptLoadRequest (%p): FinishLoadingImportedModule module (%p)",
        aRequest, module.get()));
@@ -1380,13 +1375,13 @@ void ModuleLoaderBase::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
     return;
   }
 
-  if (!aRequest->mDynamicPromise) {
+  if (aRequest->mPayload.isUndefined()) {
     // Import has already been completed.
     return;
   }
 
   JSContext* cx = jsapi.cx();
-  Rooted<Value> payload(cx, ObjectValue(*aRequest->mDynamicPromise));
+  Rooted<Value> payload(cx, aRequest->mPayload);
 
   if (NS_FAILED(aResult) &&
       aResult != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
@@ -1483,9 +1478,9 @@ void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
 
   RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
   if (!aRequest->IsCanceled()) {
-    // If the mDynamicPromise has been cleared, then it should be remove from
-    // mDynamicImportRequests as well.
-    MOZ_ASSERT(aRequest->mDynamicPromise);
+    // If the ClearDynamicImport() has been called, then it should have been
+    // removed from mDynamicImportRequests as well.
+    MOZ_ASSERT(!aRequest->mPayload.isUndefined());
 
     aRequest->Cancel();
     // FinishDynamicImport must happen exactly once for each dynamic import
@@ -1564,7 +1559,7 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
   }
 
   if (aRequest->mModuleScript->HasParseError()) {
-    Rooted<Value> payload(cx, ObjectValue(*aRequest->mDynamicPromise));
+    Rooted<Value> payload(cx, aRequest->mPayload);
     Rooted<Value> error(cx, aRequest->mModuleScript->ParseError());
     FinishLoadingImportedModuleFailed(cx, payload, error);
     return;
