@@ -54,7 +54,10 @@ add_task(async function click_toolbar_button() {
  * Tests that the panel also loads the custom elements in a new window.
  */
 add_task(async function test_panel_in_new_window() {
-  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow({
+    url: "about:newtab",
+  });
+  newWindow.focus();
 
   let button = newWindow.document.getElementById(
     lazy.IPProtectionWidget.WIDGET_ID
@@ -85,10 +88,6 @@ add_task(async function test_panel_in_new_window() {
     "ipprotection-header component should be present"
   );
 
-  // Close the panel
-  let panelHiddenPromise = waitForPanelEvent(newWindow.document, "popuphidden");
-  EventUtils.synthesizeKey("KEY_Escape", undefined, newWindow);
-  await panelHiddenPromise;
   await BrowserTestUtils.closeWindow(newWindow);
 });
 

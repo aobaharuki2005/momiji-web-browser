@@ -7,7 +7,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  IPProtectionWidget: "resource:///modules/ipprotection/IPProtection.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
 });
@@ -17,13 +16,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * `browser.ipProtection.enabled`.
  */
 add_task(async function toolbar_added_and_removed() {
-  let widget = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     BrowserTestUtils.isVisible(widget),
     "IP Protection widget should be added to the navbar"
   );
   let position = CustomizableUI.getPlacementOfWidget(
-    lazy.IPProtectionWidget.WIDGET_ID
+    IPProtectionWidget.WIDGET_ID
   ).position;
   Assert.equal(
     position,
@@ -32,12 +31,12 @@ add_task(async function toolbar_added_and_removed() {
   );
   // Disable the feature
   Services.prefs.clearUserPref("browser.ipProtection.enabled");
-  widget = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.equal(widget, null, "IP Protection widget is removed");
 
   // Reenable the feature
   Services.prefs.setBoolPref("browser.ipProtection.enabled", true);
-  widget = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     BrowserTestUtils.isVisible(widget),
     "IP Protection widget should be added back to the navbar"
@@ -49,7 +48,7 @@ add_task(async function toolbar_added_and_removed() {
  */
 
 add_task(async function toolbar_icon_status() {
-  let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  let button = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     BrowserTestUtils.isVisible(button),
     "IP Protection widget should be added to the navbar"
@@ -107,20 +106,20 @@ add_task(async function toolbar_icon_status() {
 });
 
 add_task(async function customize_toolbar_remove_widget() {
-  let widget = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     BrowserTestUtils.isVisible(widget),
     "IP Protection toolbaritem should be visible"
   );
   let prevPosition = CustomizableUI.getPlacementOfWidget(
-    lazy.IPProtectionWidget.WIDGET_ID
+    IPProtectionWidget.WIDGET_ID
   ).position;
 
   let stoppedEventPromise = BrowserTestUtils.waitForEvent(
     lazy.IPProtectionService,
     "IPProtectionService:Stopped"
   );
-  CustomizableUI.removeWidgetFromArea(lazy.IPProtectionWidget.WIDGET_ID);
+  CustomizableUI.removeWidgetFromArea(IPProtectionWidget.WIDGET_ID);
   // VPN should disconect when the toolbaritem is removed
   await stoppedEventPromise;
   Assert.ok(
