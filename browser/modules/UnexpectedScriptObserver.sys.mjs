@@ -23,6 +23,15 @@ export let UnexpectedScriptObserver = {
       return;
     }
 
+    if (
+      Services.prefs.getBoolPref(
+        "security.hide_parent_unrestricted_js_loads_warning.temporary",
+        false
+      )
+    ) {
+      return;
+    }
+
     if (aTopic == "UnexpectedJavaScriptLoad-CheckInitialState") {
       aScriptName =
         Services.scriptSecurityManager.firstUnexpectedJavaScriptLoad;
