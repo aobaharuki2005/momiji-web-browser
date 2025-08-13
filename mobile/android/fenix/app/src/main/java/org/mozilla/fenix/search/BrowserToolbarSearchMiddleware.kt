@@ -461,7 +461,7 @@ class BrowserToolbarSearchMiddleware(
         val isValidSearchEngine = selectedSearchEngine?.isGeneral == true ||
                 selectedSearchEngine?.type == CUSTOM
 
-        if (isSpeechRecognitionAvailable()) {
+        if (settings.shouldShowVoiceSearch && isSpeechRecognitionAvailable()) {
             add(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_microphone_24,
