@@ -292,7 +292,7 @@ export class DynamicSuggestions extends SuggestProvider {
           description,
           descriptionL10n,
           url,
-          icon: "chrome://global/skin/icons/search-glass.svg",
+          icon: "chrome://browser/skin/calendar-24.svg",
           helpUrl: lazy.QuickSuggest.HELP_URL,
           isManageable: true,
           isBlockable: true,

@@ -226,7 +226,7 @@ function makeExpectedResult({
       isManageable: true,
       isBlockable: true,
       helpUrl: QuickSuggest.HELP_URL,
-      icon: "chrome://global/skin/icons/search-glass.svg",
+      icon: "chrome://browser/skin/calendar-24.svg",
     },
   };
 }
