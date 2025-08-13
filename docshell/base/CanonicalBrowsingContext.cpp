@@ -68,6 +68,7 @@
 using namespace mozilla::ipc;
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
+extern mozilla::LazyLogModule gNavigationLog;
 extern mozilla::LazyLogModule gSHLog;
 extern mozilla::LazyLogModule gSHIPBFCacheLog;
 
@@ -647,8 +648,25 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
 
               return true;
             });
+
+        loadingInfo->mTriggeringEntry = Some(mActiveEntry->Info());
+        MOZ_LOG_FMT(gNavigationLog, LogLevel::Verbose,
+                    "Triggering entry was {}.",
+                    fmt::ptr(loadingInfo->mTriggeringEntry
+                                 .map([](auto& entry) { return &entry; })
+                                 .valueOr(nullptr)));
       }
     }
+    loadingInfo->mTriggeringNavigationType =
+        Some(existingEntry ? NavigationType::Traverse
+             : (aLoadState->LoadType() & nsIDocShell::LOAD_CMD_RELOAD) ||
+                     aLoadState->HasLoadFlags(
+                         nsIWebNavigation::LOAD_FLAGS_IS_REFRESH)
+                 ? NavigationType::Reload
+                 : aLoadState->GetNavigationType());
+    MOZ_LOG_FMT(gNavigationLog, LogLevel::Verbose,
+                "Triggering navigation type was {}.",
+                loadingInfo->mTriggeringNavigationType.value());
   }
 
   MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(loadingInfo->mLoadId)->mEntry ==
