@@ -3869,25 +3869,6 @@ main section {
 .discoverystream-admin.collapsed {
   display: none;
 }
-.discoverystream-admin .sidebar {
-  inset-inline-start: 0;
-  position: fixed;
-  width: 240px;
-  padding: var(--space-xxlarge) var(--space-xlarge);
-}
-.discoverystream-admin .sidebar ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.discoverystream-admin .sidebar li a {
-  padding: var(--space-medium) var(--space-xxlarge);
-  display: block;
-  color: inherit;
-}
-.discoverystream-admin .sidebar li a:hover {
-  background: var(--newtab-background-color-secondary);
-}
 .discoverystream-admin h1 {
   font-size: var(--font-size-xxlarge);
 }
@@ -3897,35 +3878,6 @@ main section {
   padding: var(--space-xsmall) var(--space-medium);
   margin-inline-start: var(--space-xsmall);
   margin-block-end: 0;
-}
-.discoverystream-admin .general-textarea {
-  direction: ltr;
-  width: 740px;
-  height: 500px;
-  overflow: auto;
-  resize: none;
-  border-radius: var(--border-radius-small);
-  display: flex;
-}
-.discoverystream-admin .wnp-textarea {
-  direction: ltr;
-  width: 740px;
-  height: 500px;
-  overflow: auto;
-  resize: none;
-  border-radius: var(--border-radius-small);
-  display: flex;
-}
-.discoverystream-admin .json-button {
-  display: inline-flex;
-  font-size: var(--font-size-small);
-  padding: var(--space-xsmall) var(--space-medium);
-  margin-block-end: var(--space-xsmall);
-  margin-inline-end: var(--space-xsmall);
-}
-.discoverystream-admin .json-button:hover {
-  background-color: var(--newtab-element-hover-color);
-  box-shadow: none;
 }
 .discoverystream-admin .toggle-wrapper {
   margin-block: var(--space-large);
@@ -3968,15 +3920,6 @@ main section {
   max-height: 500px;
   overflow-y: scroll;
 }
-.discoverystream-admin .sourceLabel {
-  background: var(--newtab-background-color-secondary);
-  padding: var(--space-xxsmall) var(--space-xsmall);
-  border-radius: var(--border-radius-small);
-}
-.discoverystream-admin .sourceLabel.isDisabled {
-  background: var(--color-red-10);
-  color: var(--newtab-status-error);
-}
 .discoverystream-admin .message-item:first-child td {
   border-top: 1px solid var(--newtab-border-color);
 }
@@ -4012,9 +3955,6 @@ main section {
   font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
   font-size: var(--font-size-small);
 }
-.discoverystream-admin .providerUrl {
-  font-size: var(--font-size-small);
-}
 .discoverystream-admin pre {
   background: var(--newtab-background-color-secondary);
   margin: 0;
@@ -4023,9 +3963,6 @@ main section {
   max-width: 750px;
   overflow: auto;
   font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
-}
-.discoverystream-admin .errorState {
-  border: 1px solid var(--newtab-status-error);
 }
 .discoverystream-admin .helpLink {
   padding: var(--space-medium);
@@ -4044,18 +3981,6 @@ main section {
 .discoverystream-admin .ds-component {
   margin-block-end: var(--space-large);
 }
-.discoverystream-admin .modalOverlayInner {
-  height: 80%;
-}
-.discoverystream-admin .clearButton {
-  border: 0;
-  padding: var(--space-xsmall);
-  border-radius: var(--border-radius-small);
-  display: flex;
-}
-.discoverystream-admin .clearButton:hover {
-  background: var(--newtab-element-hover-color);
-}
 .discoverystream-admin .collapsed {
   display: none;
 }
@@ -4068,44 +3993,6 @@ main section {
   opacity: 0.5;
   cursor: unset;
   box-shadow: none;
-}
-.discoverystream-admin .impressions-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-large);
-}
-.discoverystream-admin .impressions-section .impressions-item {
-  display: flex;
-  flex-flow: column nowrap;
-  padding: var(--space-small);
-  border: 1px solid var(--newtab-border-color);
-  border-radius: var(--border-radius-small);
-}
-.discoverystream-admin .impressions-section .impressions-item .impressions-inner-box {
-  display: flex;
-  flex-flow: row nowrap;
-  gap: var(--space-small);
-}
-.discoverystream-admin .impressions-section .impressions-item .impressions-category {
-  font-size: var(--font-size-large);
-  white-space: nowrap;
-  flex-grow: 0.1;
-}
-.discoverystream-admin .impressions-section .impressions-item .impressions-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-small);
-}
-.discoverystream-admin .impressions-section .impressions-item .impressions-buttons button {
-  margin: 0;
-}
-.discoverystream-admin .impressions-section .impressions-item .impressions-editor {
-  display: flex;
-  flex-grow: 1.5;
-}
-.discoverystream-admin .impressions-section .impressions-item .impressions-editor .general-textarea {
-  width: auto;
-  flex-grow: 1;
 }
 .discoverystream-admin .weather-section {
   margin-block-end: var(--space-xlarge);
