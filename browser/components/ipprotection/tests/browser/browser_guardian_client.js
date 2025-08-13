@@ -4,9 +4,6 @@
 
 "use strict";
 
-const { HttpServer } = ChromeUtils.importESModule(
-  "resource://testing-common/httpd.sys.mjs"
-);
 const { GuardianClient } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/GuardianClient.sys.mjs"
 );

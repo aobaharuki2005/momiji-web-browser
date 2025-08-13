@@ -7,6 +7,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   // eslint-disable-next-line mozilla/valid-lazy
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
+  // eslint-disable-next-line mozilla/valid-lazy
+  IPPChannelFilter: "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
 });
 
