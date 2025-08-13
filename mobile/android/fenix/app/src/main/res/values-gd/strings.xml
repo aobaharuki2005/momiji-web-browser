@@ -421,6 +421,10 @@
   <string name="browser_menu_default_banner_subtitle_2">Luath, prìobhaideach is air a dhèanamh dhutsa.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Leig seachad</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">Leig seachad an iomairt</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">Barrachd fiosrachaidh</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -628,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Ma dh’innseas tu do chàch mar a fhuair thusa lorg air Firefox is gu bheil thu ga chleachdadh, bidh e nas fhasa daoine eile a thàladh dhan bhrabhsair.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Co-rinn glè bheag de dhàta le com-pàirtichean teicneolas margaideachd Mozilla. Cha tèid an dàta seo a reic idir is cha chleachdar e airson sanasachd a shealltainn dhut.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Co-rinn dàta le com-pàirtichean teicneolas margaideachd Mozilla. Cha tèid an dàta seo a reic idir is cha chleachdar e airson sanasachd a shealltainn dhut.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Mar a chleachdas sinn an dàta seo</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->

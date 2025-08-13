@@ -889,6 +889,8 @@
   <string name="alternative_app_icon_group_gradients">Градыенты</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Іншыя</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Перазапусціць зараз</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Скасаваць</string>
   <!--
@@ -1185,6 +1187,10 @@
   <string name="tabs_header_normal_tabs_title">Карткі</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">Сінхранізацыя</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">Новая картка</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">Прыватная картка</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Дадаць картку</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1357,6 +1363,8 @@
   <string name="webcompat_reporter_url_error_invalid">Калі ласка, увядзіце сапраўдны URL</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Выберыце прычыну</string>
+  <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_error">Калі ласка, выберыце прычыну</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Апішыце праблему (неабавязкова)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
@@ -2009,6 +2017,20 @@
     Enhanced tracking protection exception preference icon for ETP settings.
   -->
   <string name="preference_etp_exceptions_icon_description">Значок перавагі выключэння ўзмоцненай аховы ад сачэння</string>
+  <!--
+    DNS over HTTPS (DoH)
+
+    Preference title for DNS over HTTPS settings
+  -->
+  <string name="preference_doh_title">DNS праз HTTPS</string>
+  <!-- Content description for the "Info" button -->
+  <string name="preference_doh_info_description">Інфармацыя</string>
+  <!-- Content description for the "Add Site" button -->
+  <string name="preference_doh_add_site_description">Дадаць сайт</string>
+  <!-- Title displayed for "Default Protection" option under "DNS over HTTPS" -->
+  <string name="preference_doh_default_protection">Прадвызначаная ахова</string>
+  <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
+  <string name="preference_doh_off">Выкл.</string>
   <!-- Summary displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off_summary">Выкарыстоўваць стандартны правайдар DNS</string>
   <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
@@ -2017,6 +2039,16 @@
   <string name="preference_doh_provider_default">(змоўчны)</string>
   <!-- Text displayed for "Custom" under "DNS over HTTPS" providers -->
   <string name="preference_doh_provider_custom">Адмысловы</string>
+  <!-- Add button text for provider textfield under "DNS over HTTPS" -->
+  <string name="preference_doh_provider_custom_dialog_add">Дадаць</string>
+  <!-- Preference to access list of login exceptions that we don't use DNS over HTTPS -->
+  <string name="preference_doh_exceptions">Выключэнні</string>
+  <!-- Description of "exceptions" for "DNS over HTTPS". %1$s is the name of the app (for example "Firefox"). -->
+  <string name="preference_doh_exceptions_summary">%1$s не будзе выкарыстоўваць бяспечны DNS на гэтых сайтах і іх субдаменах.</string>
+  <!-- Text displayed that links to adding website domain for "DNS over HTTPS" exceptions. -->
+  <string name="preference_doh_exceptions_add">Дадаць сайт</string>
+  <!-- Text displayed above the input field when adding exceptions for "DNS over HTTPS". -->
+  <string name="preference_doh_exceptions_add_site">Сайт</string>
   <!-- About page link text to open support link -->
   <string name="about_support">Падтрымка</string>
   <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -2025,6 +2057,8 @@
   <string name="about_privacy_notice">Паведамленне аб прыватнасці</string>
   <!-- About page link text to open know your rights link -->
   <string name="about_know_your_rights">Ведай свае правы</string>
+  <!-- About page link text to open terms of use link -->
+  <string name="about_terms_of_use" tools:ignore="UnusedResources">Умовы выкарыстання</string>
   <!-- About page link text to open licensing information link -->
   <string name="about_licensing_information">Звесткі пра ліцэнзію</string>
   <!-- About page link text to open a screen with libraries that are used -->
@@ -2823,4 +2857,9 @@
   <!-- Push notification title about old Firefox version. "Update" is a noun. -->
   <string name="certificate_warning_push_notification_update_recommended_title" tools:ignore="UnusedResources">Рэкамендуецца абнавіць</string>
   <!-- TextField Design System Component -->
+
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Прыняць</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Нагадаць пазней</string>
 </resources>
