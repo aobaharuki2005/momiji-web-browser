@@ -47,8 +47,10 @@ var UnexpectedScriptLoadPanel = new (class {
         emailInput: document.querySelector("#emailInput"),
         allowButton: document.querySelector("#allow-button"),
         blockButton: document.querySelector("#block-button"),
-        allowOrDenyLabel: document.querySelector("#allow-or-deny-label"),
         scriptUrl: document.querySelector(".scriptUrl"),
+        unexpectedScriptLoadDetail1: document.querySelector(
+          "#unexpected-script-load-detail-1"
+        ),
         moreInfoLink: document.querySelector("#more-info-link"),
         learnMoreLink: document.querySelector("#learn-more-link"),
       };
@@ -136,13 +138,19 @@ var UnexpectedScriptLoadPanel = new (class {
   }
 
   setupAllowLayout() {
-    this.elements.allowOrDenyLabel.textContent = "ALLOW";
+    this.elements.unexpectedScriptLoadDetail1.setAttribute(
+      "data-l10n-id",
+      "unexpected-script-load-detail-1-allow"
+    );
     this.elements.allowButton.setAttribute("type", "primary");
     this.elements.blockButton.setAttribute("type", "");
   }
 
   setupBlockLayout() {
-    this.elements.allowOrDenyLabel.textContent = "BLOCK";
+    this.elements.unexpectedScriptLoadDetail1.setAttribute(
+      "data-l10n-id",
+      "unexpected-script-load-detail-1-block"
+    );
     this.elements.reportCheckbox.checked = true;
     this.elements.allowButton.setAttribute("type", "");
     this.elements.blockButton.setAttribute("type", "primary");

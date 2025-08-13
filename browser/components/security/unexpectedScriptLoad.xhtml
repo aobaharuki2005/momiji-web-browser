@@ -23,7 +23,7 @@
     <link rel="localization" href="branding/brand.ftl" />
     <link rel="localization" href="browser/unexpectedScript.ftl" />
     <script src="chrome://global/content/customElements.js" />
-    <title>Unexpected!</title>
+    <title data-l10n-id="unexpected-script-load-title"></title>
   </head>
   <body>
     <xul:vbox
@@ -33,7 +33,9 @@
       aria-labelledby="dialogTitle"
     >
       <xul:hbox class="dialogTitleBar" align="center">
-        <label class="dialogTitle">Unexpected Script Load</label>
+        <label class="dialogTitle" data-l10n-id="unexpected-script-load-title"
+          >Unexpected Script Load</label
+        >
         <moz-button
           type="ghost"
           class="dialogClose"
@@ -44,24 +46,14 @@
       <xul:hbox class="dialogContent">
         <xul:vbox>
           <p>
-            Firefox will
-            <strong id="allow-or-deny-label">ALLOW</strong> unexpected
-            privileged scripts, including the one below, to load. This will make
-            your Firefox installation less secure.
+            <span id="unexpected-script-load-detail-1"></span>
             <a
               id="more-info-link"
               data-l10n-id="unexpected-script-load-more-info"
               target="_blank"
             ></a>
           </p>
-          <p>
-            Even if you allow this script, please report it to Mozilla to help
-            understand how and why it has loaded.
-            <u
-              >Without this information, the functionality will break in the
-              future.</u
-            >
-          </p>
+          <p data-l10n-id="unexpected-script-load-detail-2"></p>
           <p class="scriptUrl">
             http://example.com/something/else/some-weird-script.js
           </p>
@@ -69,19 +61,19 @@
           <div class="checkbox-grid">
             <moz-checkbox
               id="reportCheckbox"
-              label="Report this script to Mozilla"
+              data-l10n-id="unexpected-script-load-report-checkbox"
             />
-            <moz-fieldset
-              ><!-- I am omitting the label as I do not want a label displayed -->
+            <moz-fieldset>
+              <!-- I am omitting the label as I do not want a label displayed -->
               <moz-checkbox
                 id="emailCheckbox"
-                label="Include my email so Mozilla can contact me if needed"
+                data-l10n-id="unexpected-script-load-email-checkbox"
               >
                 <input
                   slot="nested"
                   id="emailInput"
                   type="text"
-                  placeholder="Enter email here"
+                  data-l10n-id="unexpected-script-load-email-textbox"
                 />
               </moz-checkbox>
             </moz-fieldset>
@@ -95,8 +87,14 @@
               data-l10n-id="unexpected-script-load-learn-more"
               target="_blank"
             ></a>
-            <moz-button id="allow-button">Allow</moz-button>
-            <moz-button id="block-button">Block</moz-button>
+            <moz-button
+              id="allow-button"
+              data-l10n-id="unexpected-script-load-message-button-allow"
+            ></moz-button>
+            <moz-button
+              id="block-button"
+              data-l10n-id="unexpected-script-load-message-button-block"
+            ></moz-button>
           </moz-button-group>
         </xul:vbox>
       </xul:hbox>
