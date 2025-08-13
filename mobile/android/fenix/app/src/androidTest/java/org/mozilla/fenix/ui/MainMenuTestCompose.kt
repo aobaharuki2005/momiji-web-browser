@@ -26,10 +26,12 @@ import org.mozilla.fenix.helpers.DataGenerationHelper.getRecommendedExtensionTit
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MockBrowserDataHelper
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.getPdfFormAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeVeryShort
@@ -1249,6 +1251,133 @@ class MainMenuTestCompose : TestSetup() {
             verifySettingsView()
         }.goBackToBrowser {
             verifyPageContent(testPage.content)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080096
+    @SmokeTest
+    @Test
+    fun verifyTheMainMenuBackButtonFromCustomTabTest() {
+        val customMenuItem = "TestMenuItem"
+        val customTabPage = getGenericAsset(mockWebServer, 4)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPage.url.toString(),
+                customMenuItem,
+            ),
+        )
+
+        customTabScreen {
+            clickPageObject(itemContainingText("Link 1"))
+        }.openMainMenuFromRedesignedToolbar {
+        }.clickBackButtonFromMenu(composeTestRule) {
+            waitForPageToLoad(waitingTime)
+        }
+
+        browserScreen {
+            verifyPageContent(customTabPage.content)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080097
+    @SmokeTest
+    @Test
+    fun verifyTheMainMenuForwardButtonFromCustomTabTest() {
+        val customMenuItem = "TestMenuItem"
+        val firstCustomTabPage = getGenericAsset(mockWebServer, 4)
+        val secondCustomTabPage = getGenericAsset(mockWebServer, 1)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                firstCustomTabPage.url.toString(),
+                customMenuItem,
+            ),
+        )
+
+        customTabScreen {
+            clickPageObject(itemContainingText("Link 1"))
+        }.openMainMenuFromRedesignedToolbar {
+        }.clickBackButtonFromMenu(composeTestRule) {
+            waitForPageToLoad(waitingTime)
+            verifyPageContent(firstCustomTabPage.content)
+        }
+
+        customTabScreen {
+        }.openMainMenuFromRedesignedToolbar {
+        }.clickForwardButtonFromMenu(composeTestRule) {
+            waitForPageToLoad(waitingTime)
+            verifyPageContent(secondCustomTabPage.content)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080098
+    @Test
+    fun verifyTheMainMenuRefreshButtonFromCustomTabTest() {
+        val customMenuItem = "TestMenuItem"
+        val customTabPage = TestAssetHelper.getRefreshAsset(mockWebServer)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPage.url.toString(),
+                customMenuItem,
+
+                ),
+        )
+
+        browserScreen {
+            verifyPageContent("DEFAULT")
+        }
+        customTabScreen {
+        }.openMainMenuFromRedesignedToolbar {
+        }.clickRefreshButton(composeTestRule) {
+            verifyPageContent("REFRESHED")
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080099
+    @Test
+    fun verifyTheMainMenuShareButtonFromCustomTabTest() {
+        val customMenuItem = "TestMenuItem"
+        val customTabPage = getGenericAsset(mockWebServer, 1)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPage.url.toString(),
+                customMenuItem,
+
+                ),
+        )
+
+        customTabScreen {
+        }.openMainMenuFromRedesignedToolbar {
+        }.clickShareButtonFromRedesignedMenu(composeTestRule) {
+            verifyShareTabLayout()
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080102
+    @Test
+    fun verifySwitchToDesktopSiteIsDisabledOnPDFsFromCustomTabTest() {
+        val customMenuItem = "TestMenuItem"
+        val customTabPDF = getPdfFormAsset(mockWebServer)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPDF.url.toString(),
+                customMenuItem,
+
+                ),
+        )
+
+        browserScreen {
+            verifyPageContent(customTabPDF.content)
+        }
+
+        customTabScreen {
+        }.openMainMenuFromRedesignedToolbar {
+            verifySwitchToDesktopSiteButton(composeTestRule)
+            verifyDesktopSiteButtonState(composeTestRule, isEnabled = false)
         }
     }
 }
