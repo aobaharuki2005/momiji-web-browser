@@ -72,6 +72,7 @@ bool ModuleLoader::LoadImportedModule(JSContext* cx,
                                       JS::Handle<JSObject*> referrer,
                                       JS::HandleValue referencingPrivate,
                                       JS::Handle<JSObject*> moduleRequest,
+                                      JS::HandleValue hostDefined,
                                       JS::HandleValue payload) {
   ShellContext* scx = GetShellContext(cx);
   return scx->moduleLoader->loadImportedModule(cx, referrer, referencingPrivate,

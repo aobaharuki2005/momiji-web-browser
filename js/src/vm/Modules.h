@@ -66,7 +66,7 @@ bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
 
 bool HostLoadImportedModule(JSContext* cx, Handle<JSScript*> referrer,
                             Handle<JSObject*> moduleRequest,
-                            Handle<Value> payload);
+                            Handle<Value> hostDefined, Handle<Value> payload);
 
 }  // namespace js
 

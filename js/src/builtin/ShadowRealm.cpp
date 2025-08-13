@@ -454,7 +454,8 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
     // Step 7. Perform ! HostLoadImportedModule(referrer, specifierString,
     // EMPTY, innerCapability).
     Rooted<Value> payload(cx, ObjectValue(*promise));
-    if (!js::HostLoadImportedModule(cx, script, moduleRequest, payload)) {
+    if (!js::HostLoadImportedModule(cx, script, moduleRequest,
+                                    JS::UndefinedHandleValue, payload)) {
       if (!RejectPromiseWithPendingError(cx, promise)) {
         return nullptr;
       }

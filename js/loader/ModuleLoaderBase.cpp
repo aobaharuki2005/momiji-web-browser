@@ -150,7 +150,8 @@ static bool CreateBadModuleTypeError(JSContext* aCx, LoadedScript* aScript,
 bool ModuleLoaderBase::HostLoadImportedModule(
     JSContext* aCx, JS::Handle<JSObject*> aReferrer,
     JS::Handle<JS::Value> aReferencingPrivate,
-    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aPayload) {
+    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aHostDefined,
+    JS::Handle<JS::Value> aPayload) {
   // https://tc39.es/ecma262/#sec-HostLoadImportedModule
 
   // TODO: Bug 1968895 : Unify the fetching for static/dynamic import
@@ -268,7 +269,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
     } else {
       loader->StartFetchingModuleAndDependencies(
           aCx, ModuleMapKey(uri, moduleType), aReferrer, aReferencingPrivate,
-          aModuleRequest, aPayload);
+          aModuleRequest, aHostDefined, aPayload);
     }
   }
 
@@ -1323,7 +1324,8 @@ bool ModuleLoaderBase::GetImportMapSRI(
 void ModuleLoaderBase::StartFetchingModuleAndDependencies(
     JSContext* aCx, const ModuleMapKey& aRequestedModule,
     JS::Handle<JSObject*> aReferrer, JS::Handle<JS::Value> aReferencingPrivate,
-    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aPayload) {
+    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aHostDefined,
+    JS::Handle<JS::Value> aPayload) {
   MOZ_ASSERT(aReferrer);
   JS::Rooted<JS::Value> referrerPrivate(aCx, JS::GetModulePrivate(aReferrer));
   RefPtr<LoadedScript> referrer = GetLoadedScriptOrNull(aCx, referrerPrivate);
@@ -1333,10 +1335,8 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
   GetImportMapSRI(aRequestedModule.mUri, referrer->GetURI(),
                   mLoader->GetConsoleReportCollector(), &sriMetadata);
 
-  JS::Rooted<JS::Value> hostDefinedVal(aCx);
-  JS::GetLoadingModuleHostDefinedValue(aCx, aPayload, &hostDefinedVal);
   ModuleLoadRequest* root =
-      static_cast<ModuleLoadRequest*>(hostDefinedVal.toPrivate());
+      static_cast<ModuleLoadRequest*>(aHostDefined.toPrivate());
   MOZ_ASSERT(root);
   LoadContextBase* loadContext = root->mLoadContext;
 

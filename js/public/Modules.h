@@ -78,6 +78,7 @@ enum class ModuleType : uint32_t {
 using ModuleLoadHook = bool (*)(JSContext* cx, Handle<JSObject*> referrer,
                                 Handle<Value> referencingPrivate,
                                 Handle<JSObject*> moduleRequest,
+                                Handle<Value> hostDefined,
                                 Handle<Value> payload);
 
 /**
@@ -113,14 +114,6 @@ extern JS_PUBLIC_API bool LoadRequestedModules(
 extern JS_PUBLIC_API bool LoadRequestedModules(
     JSContext* cx, Handle<JSObject*> module, Handle<Value> hostDefined,
     MutableHandle<JSObject*> promiseOut);
-
-/**
- * Used to retrieve the hostDefined value passed to LoadRequestedModules during
- * HostLoadImportedModules.
- */
-extern JS_PUBLIC_API void GetLoadingModuleHostDefinedValue(
-    JSContext* cx, Handle<Value> statePrivate,
-    MutableHandleValue hostDefinedOut);
 
 /**
  * The module metadata hook.

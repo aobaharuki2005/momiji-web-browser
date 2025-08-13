@@ -348,17 +348,6 @@ JS_PUBLIC_API bool JS::LoadRequestedModules(
                                   promiseOut);
 }
 
-JS_PUBLIC_API void JS::GetLoadingModuleHostDefinedValue(
-    JSContext* cx, Handle<Value> statePrivate,
-    MutableHandleValue hostDefinedOut) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->releaseCheck(statePrivate);
-
-  auto* state = &statePrivate.toObject().as<GraphLoadingStateRecordObject>();
-  hostDefinedOut.set(state->hostDefined());
-}
-
 JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
                                       Handle<JSObject*> moduleRecord,
                                       MutableHandle<JS::Value> rval) {
@@ -798,6 +787,7 @@ static void ThrowUnexpectedModuleStatus(JSContext* cx, ModuleStatus status) {
 // When the referrer is a realm nullptr is passed.
 bool js::HostLoadImportedModule(JSContext* cx, Handle<JSScript*> referrer,
                                 Handle<JSObject*> moduleRequest,
+                                Handle<Value> hostDefined,
                                 Handle<Value> payload) {
   MOZ_ASSERT(moduleRequest);
   MOZ_ASSERT(!payload.isUndefined());
@@ -823,7 +813,7 @@ bool js::HostLoadImportedModule(JSContext* cx, Handle<JSScript*> referrer,
   }
 
   bool ok = moduleLoadHook(cx, referrerModule, referencingPrivate,
-                           moduleRequest, payload);
+                           moduleRequest, hostDefined, payload);
 
   if (!ok) {
     MOZ_ASSERT(JS_IsExceptionPending(cx));
@@ -1558,9 +1548,11 @@ static bool InnerModuleLoading(JSContext* cx,
         // Step 2.d.ii. Else,
         // Step 2.d.ii.1. Perform HostLoadImportedModule(module, required,
         //                state.[[HostDefined]], state).
-        Rooted<Value> payload(cx, ObjectValue(*state));
         Rooted<JSScript*> referrer(cx, module->script());
-        if (!HostLoadImportedModule(cx, referrer, moduleRequest, payload)) {
+        Rooted<Value> hostDefined(cx, state->hostDefined());
+        Rooted<Value> payload(cx, ObjectValue(*state));
+        if (!HostLoadImportedModule(cx, referrer, moduleRequest, hostDefined,
+                                    payload)) {
           return false;
         }
       }
@@ -2732,7 +2724,8 @@ static bool TryStartDynamicModuleImport(JSContext* cx, HandleScript script,
   // Step 13. Perform HostLoadImportedModule(referrer, moduleRequest, empty,
   //          promiseCapability).
   RootedValue payload(cx, ObjectValue(*promise));
-  (void)HostLoadImportedModule(cx, script, moduleRequest, payload);
+  (void)HostLoadImportedModule(cx, script, moduleRequest,
+                               JS::UndefinedHandleValue, payload);
 
   return true;
 }
