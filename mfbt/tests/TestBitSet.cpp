@@ -198,12 +198,43 @@ class BitSetSuite {
     MOZ_RELEASE_ASSERT(bits.Count() == 1);
   }
 
+  void testComparison() {
+    testComparisonForSize<1>();
+    testComparisonForSize<kBitsPerWord>();
+    testComparisonForSize<kBitsPerWord + 1>();
+  }
+
+  template <size_t N>
+  void testComparisonForSize() {
+    TestBitSet<N> a;
+    TestBitSet<N> b;
+    MOZ_RELEASE_ASSERT(a == b);
+    MOZ_RELEASE_ASSERT(!(a != b));
+    a[0] = true;
+    MOZ_RELEASE_ASSERT(a != b);
+    MOZ_RELEASE_ASSERT(!(a == b));
+    b[0] = true;
+    MOZ_RELEASE_ASSERT(a == b);
+    MOZ_RELEASE_ASSERT(!(a != b));
+    a.SetAll();
+    b.SetAll();
+    MOZ_RELEASE_ASSERT(a == b);
+    MOZ_RELEASE_ASSERT(!(a != b));
+    a[N - 1] = false;
+    MOZ_RELEASE_ASSERT(a != b);
+    MOZ_RELEASE_ASSERT(!(a == b));
+    b[N - 1] = false;
+    MOZ_RELEASE_ASSERT(a == b);
+    MOZ_RELEASE_ASSERT(!(a != b));
+  }
+
   void runTests() {
     testLength();
     testConstructAndAssign();
     testSetBit();
     testFindBits();
     testCount();
+    testComparison();
   }
 };
 
