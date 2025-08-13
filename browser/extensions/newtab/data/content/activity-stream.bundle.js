@@ -3201,7 +3201,8 @@ class SafeAnchor extends (external_React_default()).PureComponent {
           },
           referrer: this.props.referrer || "https://getpocket.com/recommendations",
           // Use the anchor's url, which could have been cleaned up
-          url: event.currentTarget.href
+          url: event.currentTarget.href,
+          is_sponsored: this.props.isSponsored
         }
       }));
     }
@@ -10021,7 +10022,8 @@ class TopSite extends (external_React_default()).PureComponent {
             ctrlKey,
             metaKey,
             shiftKey
-          }
+          },
+          is_sponsored: !!this.props.link.sponsored_tile_id
         })
       }));
       if (this.props.link.type === SPOC_TYPE) {

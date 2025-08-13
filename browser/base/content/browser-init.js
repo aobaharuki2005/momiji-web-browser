@@ -788,6 +788,10 @@ var gBrowserInit = {
                   "triggeringSponsoredURLVisitTimeMS"
                 );
             }
+            if (extraOptions.hasKey("triggeringSource")) {
+              globalHistoryOptions.triggeringSource =
+                extraOptions.getPropertyAsACString("triggeringSource");
+            }
           }
           if (extraOptions.hasKey("triggeringRemoteType")) {
             triggeringRemoteType = extraOptions.getPropertyAsACString(

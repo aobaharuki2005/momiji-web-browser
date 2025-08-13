@@ -129,6 +129,12 @@ function openInWindow(url, params, sourceWindow) {
         globalHistoryOptions.triggeringSponsoredURLVisitTimeMS
       );
     }
+    if (globalHistoryOptions.triggeringSource) {
+      extraOptions.setPropertyAsACString(
+        "triggeringSource",
+        globalHistoryOptions.triggeringSource
+      );
+    }
   }
   if (params.schemelessInput !== undefined) {
     extraOptions.setPropertyAsUint32("schemelessInput", params.schemelessInput);
@@ -279,6 +285,7 @@ function openInCurrentTab(targetBrowser, url, uriObj, params) {
     triggeringRemoteType,
     schemelessInput,
   });
+
   params.resolveOnContentBrowserCreated?.(targetBrowser);
 }
 

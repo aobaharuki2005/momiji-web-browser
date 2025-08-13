@@ -15,6 +15,8 @@ ChromeUtils.defineESModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
+  SponsorProtection:
+    "moz-src:///browser/components/newtab/SponsorProtection.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
@@ -125,6 +127,29 @@ async function waitForLocationChanged(destinationURL) {
   });
 }
 
+/**
+ * Asserts that browser has SponsorProtection applied if expectsProtection is
+ * true, or does not have it applied if expectsProtection is false.
+ *
+ * @param {Browser} browser
+ *   The browser to check.
+ * @param {boolean} expectsProtection
+ *   True if SponsorProtection is expected to be applied.
+ */
+function assertSponsorProtectionState(browser, expectsProtection) {
+  if (expectsProtection) {
+    Assert.ok(
+      SponsorProtection.isProtectedBrowser(browser),
+      "Expected sponsor protection."
+    );
+  } else {
+    Assert.ok(
+      !SponsorProtection.isProtectedBrowser(browser),
+      "Expected no sponsor protection."
+    );
+  }
+}
+
 async function openAndTest({
   linkSelector,
   linkURL,
@@ -163,6 +188,8 @@ async function openAndTest({
 
     await onLoad;
     await onLocationChanged;
+
+    assertSponsorProtectionState(gBrowser.selectedBrowser, expected.protection);
   } else if (openType === OPEN_TYPE.NEWTAB_BY_CLICK) {
     const onLoad = BrowserTestUtils.waitForNewTab(
       gBrowser,
@@ -179,6 +206,7 @@ async function openAndTest({
 
     const tab = await onLoad;
     await onLocationChanged;
+    assertSponsorProtectionState(tab.linkedBrowser, expected.protection);
     BrowserTestUtils.removeTab(tab);
   } else if (openType === OPEN_TYPE.NEWTAB_BY_MIDDLECLICK) {
     const onLoad = BrowserTestUtils.waitForNewTab(
@@ -196,6 +224,8 @@ async function openAndTest({
 
     const tab = await onLoad;
     await onLocationChanged;
+
+    assertSponsorProtectionState(tab.linkedBrowser, expected.protection);
     BrowserTestUtils.removeTab(tab);
   } else if (openType === OPEN_TYPE.NEWTAB_BY_CONTEXTMENU) {
     const onLoad = BrowserTestUtils.waitForNewTab(
@@ -220,6 +250,8 @@ async function openAndTest({
 
     const tab = await onLoad;
     await onLocationChanged;
+
+    assertSponsorProtectionState(tab.linkedBrowser, expected.protection);
     BrowserTestUtils.removeTab(tab);
   } else if (openType === OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU) {
     const onLoad = BrowserTestUtils.waitForNewWindow({ url: destinationURL });
@@ -236,6 +268,10 @@ async function openAndTest({
     contextMenu.activateItem(openLinkMenuItem);
 
     const win = await onLoad;
+    assertSponsorProtectionState(
+      win.gBrowser.selectedBrowser,
+      expected.protection
+    );
     await BrowserTestUtils.closeWindow(win);
   } else if (openType === OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU_OF_TILE) {
     const onLoad = BrowserTestUtils.waitForNewWindow({ url: destinationURL });
@@ -256,6 +292,11 @@ async function openAndTest({
     );
 
     const win = await onLoad;
+
+    assertSponsorProtectionState(
+      win.gBrowser.selectedBrowser,
+      expected.protection
+    );
     await BrowserTestUtils.closeWindow(win);
   }
   await promiseVisited;
@@ -347,6 +388,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
+        protection: true,
       },
     },
     {
@@ -356,6 +398,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
+        protection: true,
       },
     },
     {
@@ -365,6 +408,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
+        protection: true,
       },
     },
     {
@@ -374,6 +418,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
+        protection: true,
       },
     },
     {
@@ -383,6 +428,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
+        protection: true,
       },
     },
     {
@@ -392,6 +438,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
+        protection: true,
       },
     },
     {
@@ -401,6 +448,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
         frecency: FRECENCY.BOOKMARKED,
+        protection: false,
       },
     },
     {
@@ -411,6 +459,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
         frecency: FRECENCY.BOOKMARKED,
+        protection: false,
       },
     },
     {
@@ -421,6 +470,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
         frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
+        protection: false,
       },
     },
     {
@@ -431,6 +481,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
         frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
+        protection: false,
       },
     },
     {
@@ -441,6 +492,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
         frecency: FRECENCY.NEWWINDOW_BOOKMARKED,
+        protection: false,
       },
     },
     {
@@ -451,6 +503,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
         frecency: FRECENCY.BOOKMARKED,
+        protection: false,
       },
     },
     {
@@ -460,6 +513,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.BOOKMARKED,
+        protection: true,
       },
     },
     {
@@ -471,6 +525,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.BOOKMARKED,
+        protection: true,
       },
     },
     {
@@ -481,6 +536,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
+        protection: true,
       },
     },
     {
@@ -491,6 +547,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
+        protection: true,
       },
     },
     {
@@ -502,6 +559,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.NEWWINDOW_BOOKMARKED,
+        protection: true,
       },
     },
     {
@@ -513,6 +571,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.BOOKMARKED,
+        protection: true,
       },
     },
     {
@@ -521,6 +580,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.TYPED,
+        protection: false,
       },
     },
     {
@@ -530,6 +590,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.TYPED,
+        protection: false,
       },
     },
     {
@@ -539,6 +600,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.MIDDLECLICK_TYPED,
+        protection: false,
       },
     },
     {
@@ -548,6 +610,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.MIDDLECLICK_TYPED,
+        protection: false,
       },
     },
     {
@@ -557,6 +620,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.NEWWINDOW_TYPED,
+        protection: false,
       },
     },
     {
@@ -566,6 +630,7 @@ add_task(async function basic() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.TYPED,
+        protection: false,
       },
     },
   ];
@@ -620,6 +685,7 @@ add_task(async function redirection() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
 
@@ -643,6 +709,7 @@ add_task(async function redirection() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
 
@@ -688,6 +755,7 @@ add_task(async function inherit() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
+        protection: true,
       },
     });
 
@@ -700,6 +768,7 @@ add_task(async function inherit() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -715,6 +784,7 @@ add_task(async function inherit() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -730,6 +800,7 @@ add_task(async function inherit() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -742,6 +813,7 @@ add_task(async function inherit() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
 
@@ -754,6 +826,7 @@ add_task(async function inherit() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -769,6 +842,7 @@ add_task(async function inherit() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -784,6 +858,7 @@ add_task(async function inherit() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -796,6 +871,7 @@ add_task(async function inherit() {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
+        protection: true,
       },
     });
 
@@ -806,6 +882,7 @@ add_task(async function inherit() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.VISITED,
+        protection: true,
       },
     });
 
@@ -865,6 +942,7 @@ add_task(async function timeout() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
+        protection: true,
       },
     });
 
@@ -885,6 +963,7 @@ add_task(async function timeout() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.VISITED,
+        protection: true,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -899,6 +978,7 @@ add_task(async function timeout() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.VISITED,
+        protection: true,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -913,6 +993,7 @@ add_task(async function timeout() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.VISITED,
+        protection: true,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -924,6 +1005,7 @@ add_task(async function timeout() {
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.VISITED,
+        protection: true,
       },
     });
 
