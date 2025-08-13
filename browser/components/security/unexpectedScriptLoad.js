@@ -217,6 +217,12 @@ var UnexpectedScriptLoadPanel = new (class {
     window.browsingContext.top.window.gNotificationBox
       .getNotificationWithValue("unexpected-script-notification")
       ?.close();
+
+    Services.obs.notifyObservers(
+      null,
+      "UnexpectedJavaScriptLoad-UserTookAction"
+    );
+
     this.close(false);
   }
 
@@ -233,6 +239,12 @@ var UnexpectedScriptLoadPanel = new (class {
     window.browsingContext.top.window.gNotificationBox
       .getNotificationWithValue("unexpected-script-notification")
       ?.close();
+
+    Services.obs.notifyObservers(
+      null,
+      "UnexpectedJavaScriptLoad-UserTookAction"
+    );
+
     this.close(false);
   }
 })();

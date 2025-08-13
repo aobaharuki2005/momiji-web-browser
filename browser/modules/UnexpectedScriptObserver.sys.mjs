@@ -5,27 +5,36 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+  EveryWindow: "resource:///modules/EveryWindow.sys.mjs",
 });
 
-export let UnexpectedScriptObserver = {
-  _notificationHasBeenShown: false,
+const NOTIFICATION_VALUE = "unexpected-script-notification";
 
-  async onFirstWindowShown() {
-    this.observe(null, "UnexpectedJavaScriptLoad-CheckInitialState");
-  },
+export let UnexpectedScriptObserver = {
+  // EveryWindow has a race condition in early startup where a callback may be called twice
+  // for the same window. This WeakSet is used to track which windows have already been
+  // handled to avoid showing the notification bar multiple times. See Bug 1982859
+  _windowsHandled: new WeakSet(),
+
+  _notificationHasBeenShown: false,
 
   async observe(aSubject, aTopic, aScriptName) {
     if (
       aTopic != "UnexpectedJavaScriptLoad-Live" &&
-      aTopic != "UnexpectedJavaScriptLoad-CheckInitialState" &&
-      aTopic != "UnexpectedJavaScriptLoad-ResetNotification"
+      aTopic != "UnexpectedJavaScriptLoad-ResetNotification" &&
+      aTopic != "UnexpectedJavaScriptLoad-UserTookAction"
     ) {
       return;
     }
 
     if (aTopic == "UnexpectedJavaScriptLoad-ResetNotification") {
       this._notificationHasBeenShown = false;
+      this._windowsHandled = new WeakSet();
+      return;
+    }
+
+    if (aTopic == "UnexpectedJavaScriptLoad-UserTookAction") {
+      lazy.EveryWindow.unregisterCallback("UnexpectedScriptLoadPanel");
       return;
     }
 
@@ -38,28 +47,7 @@ export let UnexpectedScriptObserver = {
       return;
     }
 
-    if (aTopic == "UnexpectedJavaScriptLoad-CheckInitialState") {
-      aScriptName =
-        Services.scriptSecurityManager.firstUnexpectedJavaScriptLoad;
-      if (!aScriptName) {
-        return;
-      }
-    }
-
-    const NOTIFICATION_VALUE = "unexpected-script-notification";
-    if (!lazy.BrowserWindowTracker.getTopWindow()?.gNotificationBox) {
-      // We don't have a top window, or we don't have a notification box
-      // This happens (and is expected) when the script is loaded very early in startup
-      // (like a PAC script).  We handle that situation by checking the value of
-      // Services.scriptSecurityManager.getUnexpectedJavaScriptLoad() in browser-init.js
-      return;
-    }
-    if (
-      this._notificationHasBeenShown ||
-      lazy.BrowserWindowTracker.getTopWindow().gNotificationBox.getNotificationWithValue(
-        NOTIFICATION_VALUE
-      )
-    ) {
+    if (this._notificationHasBeenShown) {
       // There is already a notification bar, or we showed one in the past and we
       // won't show it again until browser restart
       return;
@@ -83,71 +71,99 @@ export let UnexpectedScriptObserver = {
       return;
     }
 
-    let window = lazy.BrowserWindowTracker.getTopWindow();
-    let MozXULElement = window.MozXULElement;
-    let document = window.document;
-    let notificationBox = window.gNotificationBox;
+    lazy.EveryWindow.registerCallback(
+      "UnexpectedScriptLoadPanel",
+      async window => {
+        if (this._windowsHandled.has(window)) {
+          return;
+        }
+        this._windowsHandled.add(window);
 
-    MozXULElement.insertFTLIfNeeded("browser/unexpectedScript.ftl");
-    let messageFragment = document.createDocumentFragment();
-    let message = document.createElement("span");
-    document.l10n.setAttributes(message, "unexpected-script-load-message", {
-      origin: scriptOrigin,
-    });
-    messageFragment.appendChild(message);
+        let MozXULElement = window.MozXULElement;
+        let document = window.document;
 
-    // ----------------------------------------------------------------
-    let openWindow = action => {
-      let args = {
-        action,
-        scriptName: aScriptName,
-      };
-      window.gDialogBox.open(
-        "chrome://browser/content/security/unexpectedScriptLoad.xhtml",
-        args
-      );
-    };
+        MozXULElement.insertFTLIfNeeded("browser/unexpectedScript.ftl");
+        let messageFragment = document.createDocumentFragment();
+        let message = document.createElement("span");
+        document.l10n.setAttributes(message, "unexpected-script-load-message", {
+          origin: scriptOrigin,
+        });
+        messageFragment.appendChild(message);
 
-    // ----------------------------------------------------------------
-    let buttons = [
-      {
-        supportPage: "unexpected-script-load",
-        callback: () => {
-          Glean.unexpectedScriptLoad.moreInfoOpened.record();
-        },
+        // ----------------------------------------------------------------
+        let openWindow = action => {
+          let args = {
+            action,
+            scriptName: aScriptName,
+          };
+          window.gDialogBox.open(
+            "chrome://browser/content/security/unexpectedScriptLoad.xhtml",
+            args
+          );
+        };
+
+        // ----------------------------------------------------------------
+        let buttons = [
+          {
+            supportPage: "unexpected-script-load",
+            callback: () => {
+              Glean.unexpectedScriptLoad.moreInfoOpened.record();
+            },
+          },
+        ];
+        buttons.push({
+          "l10n-id": "unexpected-script-load-message-button-allow",
+          callback: () => {
+            openWindow("allow");
+            return true;
+          },
+        });
+        buttons.push({
+          "l10n-id": "unexpected-script-load-message-button-block",
+          callback: () => {
+            openWindow("block");
+            return true; // Do not close the dialog bar until the user has done so explcitly or taken an action
+          },
+        });
+
+        let notificationBox = window.gNotificationBox;
+
+        if (!notificationBox.getNotificationWithValue(NOTIFICATION_VALUE)) {
+          await notificationBox.appendNotification(
+            NOTIFICATION_VALUE,
+            {
+              label: messageFragment,
+              priority: notificationBox.PRIORITY_WARNING_HIGH,
+              eventCallback: event => {
+                if (event == "dismissed") {
+                  Glean.unexpectedScriptLoad.infobarDismissed.record();
+                  GleanPings.unexpectedScriptLoad.submit();
+                }
+              },
+            },
+            buttons
+          );
+        }
       },
-    ];
-    buttons.push({
-      "l10n-id": "unexpected-script-load-message-button-allow",
-      callback: () => {
-        openWindow("allow");
-        return true;
-      },
-    });
-    buttons.push({
-      "l10n-id": "unexpected-script-load-message-button-block",
-      callback: () => {
-        openWindow("block");
-        return true; // Do not close the dialog bar until the user has done so explcitly or taken an action
-      },
-    });
+      // Unregister Callback:
+      // This is needed to remove the notification bar from all the windows
+      // once the user has taken action on one of them, and ensure any open
+      // dialog box is also closed.
+      async window => {
+        window.gNotificationBox
+          .getNotificationWithValue(NOTIFICATION_VALUE)
+          ?.close();
+        if (
+          window.gDialogBox?.dialog?._openedURL ==
+          "chrome://browser/content/security/unexpectedScriptLoad.xhtml"
+        ) {
+          window.gDialogBox.dialog.close();
+        }
+        GleanPings.unexpectedScriptLoad.submit();
+      }
+    );
 
     Glean.unexpectedScriptLoad.infobarShown.record();
-
-    await notificationBox.appendNotification(
-      NOTIFICATION_VALUE,
-      {
-        label: messageFragment,
-        priority: notificationBox.PRIORITY_WARNING_HIGH,
-        eventCallback: event => {
-          if (event == "dismissed") {
-            Glean.unexpectedScriptLoad.infobarDismissed.record();
-            GleanPings.unexpectedScriptLoaded.submit();
-          }
-        },
-      },
-      buttons
-    );
 
     this._notificationHasBeenShown = true;
   },

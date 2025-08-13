@@ -27,8 +27,8 @@ let gObservers = {
   "canvas-permissions-prompt": ["CanvasPermissionPromptHelper"],
   "canvas-permissions-prompt-hide-doorhanger": ["CanvasPermissionPromptHelper"],
 
-  "UnexpectedJavaScriptLoad-CheckInitialState": ["UnexpectedScriptObserver"],
   "UnexpectedJavaScriptLoad-Live": ["UnexpectedScriptObserver"],
+  "UnexpectedJavaScriptLoad-UserTookAction": ["UnexpectedScriptObserver"],
 
   "file-picker-crashed": ["FilePickerCrashed"],
   "gmp-plugin-crash": ["PluginManager"],
