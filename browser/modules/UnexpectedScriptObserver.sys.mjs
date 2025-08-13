@@ -18,8 +18,14 @@ export let UnexpectedScriptObserver = {
   async observe(aSubject, aTopic, aScriptName) {
     if (
       aTopic != "UnexpectedJavaScriptLoad-Live" &&
-      aTopic != "UnexpectedJavaScriptLoad-CheckInitialState"
+      aTopic != "UnexpectedJavaScriptLoad-CheckInitialState" &&
+      aTopic != "UnexpectedJavaScriptLoad-ResetNotification"
     ) {
+      return;
+    }
+
+    if (aTopic == "UnexpectedJavaScriptLoad-ResetNotification") {
+      this._notificationHasBeenShown = false;
       return;
     }
 

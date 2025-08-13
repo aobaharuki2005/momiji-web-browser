@@ -34,6 +34,11 @@ let gObservers = {
   "gmp-plugin-crash": ["PluginManager"],
   "plugin-crashed": ["PluginManager"],
 };
+if (Cu.isInAutomation) {
+  gObservers["UnexpectedJavaScriptLoad-ResetNotification"] = [
+    "UnexpectedScriptObserver",
+  ];
+}
 
 if (AppConstants.MOZ_UPDATER) {
   ChromeUtils.defineESModuleGetters(lazy, {
