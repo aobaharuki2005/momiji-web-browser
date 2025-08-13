@@ -3386,21 +3386,11 @@ criteria = "safe-to-deploy"
 version = "0.3.0"
 notes = "This crate doesn't contain any unsafe code or IO usage."
 
-[[audits.jexl-eval]]
-who = "Tif Tran <ttran@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.3.0 -> 0.4.0"
-
 [[audits.jexl-parser]]
 who = "Ben Dean-Kawamura <bdk@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "0.3.0"
 notes = "This crate doesn't contain any unsafe code or IO usage."
-
-[[audits.jexl-parser]]
-who = "Tif Tran <ttran@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.3.0 -> 0.4.0"
 
 [[audits.jobserver]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

@@ -28,7 +28,7 @@ pub fn init_for_tests_with_level(level: Level) {
 }
 
 #[cfg(all(feature = "testing", feature = "tracing-logging"))]
-pub use tracing_support::{init_for_tests, init_for_tests_with_level};
+pub use tracing_support::init_for_tests;
 
 mod macros;
 

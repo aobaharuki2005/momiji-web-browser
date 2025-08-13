@@ -24,10 +24,7 @@ readme = false
 license = "MPL-2.0"
 
 [features]
-debug-tools = [
-    "dep:text-table",
-    "rusqlite/column_decltype",
-]
+debug-tools = ["rusqlite/column_decltype"]
 default = []
 
 [lib]
@@ -54,10 +51,6 @@ features = [
     "bundled",
     "unlock_notify",
 ]
-
-[dependencies.text-table]
-path = "../text-table"
-optional = true
 
 [dev-dependencies.error-support]
 path = "../error"
