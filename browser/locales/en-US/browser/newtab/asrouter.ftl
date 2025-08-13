@@ -342,3 +342,36 @@ windows-10-eos-sync-toast-title = Upgrading to Windows 11? Don’t lose bookmark
 windows-10-eos-sync-toast-subtitle = Back up your data so { -brand-short-name } is ready to go any time, on this PC or the next one.
 windows-10-eos-sync-toast-primary-label = Get started
 windows-10-eos-sync-toast-secondary-label = Remind me later
+
+## Windows 10 EoS sync messages group 2 feature callouts
+
+windows-10-eos-challenger-callout-title = { -brand-product-name } isn’t preloaded like other Big Tech browsers. That’s the point.
+windows-10-eos-challenger-sync-callout-subtitle = When you back up your { -brand-product-name } bookmarks and passwords, it’s easier to bring the browser you chose to your next device.
+windows-10-eos-challenger-pin-callout-subtitle = Pin { -brand-shorter-name } to your taskbar so the browser you chose is always there when you need it.
+windows-10-eos-challenger-sync-primary-button = Back up { -brand-shorter-name }
+windows-10-eos-challenger-pin-primary-button = Pin { -brand-shorter-name }
+
+windows-10-eos-sync-callout-privacy-screen-1-title = { -brand-product-name } blocks cryptominers, social media trackers, and fingerprinters.
+windows-10-eos-sync-callout-privacy-screen-1-subtitle = Trackers can’t ID your device or follow you across the web — because we don’t let them.
+windows-10-eos-sync-callout-privacy-screen-2-title = Secure your passwords and bookmarks for your next device.
+windows-10-eos-sync-callout-privacy-screen-2-subtitle = Backing up { -brand-shorter-name } makes it easy to bring your data and privacy settings with you.
+windows-10-eos-sync-callout-privacy-info-button = See what’s blocked
+
+windows-10-eos-callout-addons-title = Try add-ons: simple upgrades, big impacts
+windows-10-eos-callout-addons-subtitle = These extensions were chosen to help you stay productive, protected, and distraction-free.
+windows-10-eos-callout-addons-primary-button = See our picks
+
+windows-10-eos-sync-callout-addons-title = Don’t lose your add-ons when you upgrade from Windows 10.
+windows-10-eos-sync-callout-addons-subtitle = Sync now so your { -brand-product-name } add-ons are always available, even after a device change.
+
+windows-10-eos-sync-callout-next-button = Next
+windows-10-eos-sync-callout-get-started-button = Get started
+
+## Windows 10 EoS Sync messages group 2 toast notification
+
+windows-10-eos-feature-toast-title = Vertical tabs and tab groups are here!
+
+# In English, "dropped" is a colloquial form for released.
+windows-10-eos-feature-toast-subtitle = By popular request, { -brand-product-name } just dropped new features to keep your browsing streamlined and focused.
+windows-10-eos-feature-toast-whats-new-button = See what’s new
+windows-10-eos-feature-toast-dismiss-button = Dismiss
