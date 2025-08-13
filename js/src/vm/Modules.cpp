@@ -1440,6 +1440,25 @@ static bool ModuleInitializeEnvironment(JSContext* cx,
   return ModuleObject::instantiateFunctionDeclarations(cx, module);
 }
 
+static bool FailWithUnsupportedAttributeException(
+    JSContext* cx, Handle<GraphLoadingStateRecordObject*> state,
+    Handle<ModuleRequestObject*> moduleRequest) {
+  UniqueChars printableKey = AtomToPrintableString(
+      cx, moduleRequest->getFirstUnsupportedAttributeKey());
+  JS_ReportErrorNumberASCII(
+      cx, GetErrorMessage, nullptr,
+      JSMSG_IMPORT_ATTRIBUTES_STATIC_IMPORT_UNSUPPORTED_ATTRIBUTE,
+      printableKey ? printableKey.get() : "");
+
+  JS::ExceptionStack exnStack(cx);
+  if (!JS::StealPendingExceptionStack(cx, &exnStack)) {
+    return false;
+  }
+
+  ContinueModuleLoading(cx, state, nullptr, exnStack.exception());
+  return true;
+}
+
 // https://tc39.es/ecma262/#sec-InnerModuleLoading
 // InnerModuleLoading ( state, module )
 static bool InnerModuleLoading(JSContext* cx,
@@ -1479,19 +1498,9 @@ static bool InnerModuleLoading(JSContext* cx,
 
       // https://tc39.es/proposal-import-attributes/#sec-InnerModuleLoading
       if (moduleRequest->hasFirstUnsupportedAttributeKey()) {
-        UniqueChars printableKey = AtomToPrintableString(
-            cx, moduleRequest->getFirstUnsupportedAttributeKey());
-        JS_ReportErrorNumberASCII(
-            cx, GetErrorMessage, nullptr,
-            JSMSG_IMPORT_ATTRIBUTES_STATIC_IMPORT_UNSUPPORTED_ATTRIBUTE,
-            printableKey ? printableKey.get() : "");
-
-        JS::ExceptionStack exnStack(cx);
-        if (!JS::StealPendingExceptionStack(cx, &exnStack)) {
+        if (!FailWithUnsupportedAttributeException(cx, state, moduleRequest)) {
           return false;
         }
-
-        ContinueModuleLoading(cx, state, nullptr, exnStack.exception());
       } else if (auto record = module->loadedModules().lookup(moduleRequest)) {
         // Step 2.d.i. If module.[[LoadedModules]] contains a Record whose
         //             [[Specifier]] is required, then
@@ -1558,6 +1567,8 @@ static bool ContinueModuleLoading(JSContext* cx,
                                   Handle<GraphLoadingStateRecordObject*> state,
                                   Handle<JSObject*> moduleCompletion,
                                   Handle<Value> error) {
+  MOZ_ASSERT_IF(moduleCompletion, error.isUndefined());
+
   // Step 1. If state.[[IsLoading]] is false, return unused.
   if (!state->isLoading()) {
     return true;
