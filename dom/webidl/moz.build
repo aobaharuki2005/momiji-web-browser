@@ -516,6 +516,7 @@ WEBIDL_FILES = [
     "CSSMathProduct.webidl",
     "CSSMathSum.webidl",
     "CSSMathValue.webidl",
+    "CSSMatrixComponent.webidl",
     "CSSMediaRule.webidl",
     "CSSMozDocumentRule.webidl",
     "CSSNamespaceRule.webidl",
