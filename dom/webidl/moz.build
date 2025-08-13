@@ -529,6 +529,7 @@ WEBIDL_FILES = [
     "CSSRotate.webidl",
     "CSSRule.webidl",
     "CSSRuleList.webidl",
+    "CSSScale.webidl",
     "CSSScopeRule.webidl",
     "CSSStartingStyleRule.webidl",
     "CSSStyleDeclaration.webidl",
