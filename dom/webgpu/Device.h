@@ -6,6 +6,7 @@
 #ifndef GPU_DEVICE_H_
 #define GPU_DEVICE_H_
 
+#include "ExternalTexture.h"
 #include "ObjectModel.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MozPromise.h"
@@ -67,7 +68,6 @@ class BindGroupLayout;
 class Buffer;
 class CommandEncoder;
 class ComputePipeline;
-class ExternalTexture;
 class Fence;
 class InputState;
 class PipelineLayout;
@@ -135,6 +135,7 @@ class Device final : public DOMEventTargetHelper {
   RefPtr<Queue> mQueue;
   nsTHashSet<nsCString> mKnownWarnings;
   nsTHashSet<Buffer*> mTrackedBuffers;
+  ExternalTextureCache mExternalTextureCache;
   // List of external textures due to be expired in the next automatic expiry
   // task.
   nsTArray<WeakPtr<ExternalTexture>> mExternalTexturesToExpire;

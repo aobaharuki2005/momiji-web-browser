@@ -199,11 +199,8 @@ already_AddRefed<Texture> Device::CreateTexture(
 
 already_AddRefed<ExternalTexture> Device::ImportExternalTexture(
     const dom::GPUExternalTextureDescriptor& aDesc, ErrorResult& aRv) {
-  RefPtr<ExternalTextureSourceClient> source =
-      ExternalTextureSourceClient::Create(this, aDesc.mSource, aRv);
-
   RefPtr<ExternalTexture> externalTexture =
-      ExternalTexture::Create(this, aDesc.mLabel, source, aDesc.mColorSpace);
+      mExternalTextureCache.GetOrCreate(this, aDesc, aRv);
 
   switch (aDesc.mSource.GetType()) {
     case dom::OwningHTMLVideoElementOrVideoFrame::Type::eHTMLVideoElement: {
