@@ -116,7 +116,8 @@ class MOZ_STACK_CLASS gfxVarsCollectUpdates;
   _(GPUProcessEnabled, bool, false)                                \
   _(DMABufModifiersP010, ArrayOfuint64_t, nsTArray<uint64_t>())    \
   _(DMABufModifiersNV12, ArrayOfuint64_t, nsTArray<uint64_t>())    \
-  _(AllowGLNorm16Textures, bool, false)
+  _(AllowGLNorm16Textures, bool, false)                            \
+  _(AllowWebGPUExternalTexture, bool, false)
 
 /* Add new entries above this line. */
 
