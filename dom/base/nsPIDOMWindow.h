@@ -1121,7 +1121,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   virtual nsresult MoveBy(int32_t aXDif, int32_t aYDif) = 0;
 
-  MOZ_CAN_RUN_SCRIPT virtual void UpdateCommands(const nsAString& anAction) = 0;
+  virtual void UpdateCommands(const nsAString& anAction) = 0;
 
   mozilla::dom::DocGroup* GetDocGroup() const;
 
