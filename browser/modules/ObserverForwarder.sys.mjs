@@ -16,6 +16,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/modules/CanvasPermissionPromptHelper.sys.mjs",
   FilePickerCrashed: "resource:///modules/FilePickerCrashed.sys.mjs",
   PluginManager: "resource:///actors/PluginParent.sys.mjs",
+  UnexpectedScriptObserver:
+    "moz-src:///browser/modules/UnexpectedScriptObserver.sys.mjs",
 });
 
 // Map from observer topic to a list of exported objects whose observe()
@@ -24,6 +26,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 let gObservers = {
   "canvas-permissions-prompt": ["CanvasPermissionPromptHelper"],
   "canvas-permissions-prompt-hide-doorhanger": ["CanvasPermissionPromptHelper"],
+
+  "UnexpectedJavaScriptLoad-CheckInitialState": ["UnexpectedScriptObserver"],
+  "UnexpectedJavaScriptLoad-Live": ["UnexpectedScriptObserver"],
 
   "file-picker-crashed": ["FilePickerCrashed"],
   "gmp-plugin-crash": ["PluginManager"],
