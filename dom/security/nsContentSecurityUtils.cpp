@@ -2141,17 +2141,25 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
     }
   }
 
-  // Log to MOZ_LOG
+  FilenameTypeAndDetails fileNameTypeAndDetails =
+      FilenameToFilenameType(filename, true);
+  glean::security::JavascriptLoadParentProcessExtra extra = {
+      .fileinfo = fileNameTypeAndDetails.second,
+      .value = Some(fileNameTypeAndDetails.first)};
+
+  if (StaticPrefs::security_block_parent_unrestricted_js_loads_temporary()) {
+    // Log to MOZ_LOG
+    MOZ_LOG(sCSMLog, LogLevel::Error,
+            ("ValidateScriptFilename Failed, But Blocking: %s\n", aFilename));
+
+    extra.blocked = Some(true);
+    glean::security::javascript_load_parent_process.Record(Some(extra));
+
+    return false;
+  }
   MOZ_LOG(sCSMLog, LogLevel::Error,
           ("ValidateScriptFilename Failed: %s\n", aFilename));
 
-  FilenameTypeAndDetails fileNameTypeAndDetails =
-      FilenameToFilenameType(filename, true);
-
-  glean::security::JavascriptLoadParentProcessExtra extra = {
-      .fileinfo = fileNameTypeAndDetails.second,
-      .value = Some(fileNameTypeAndDetails.first),
-  };
   glean::security::javascript_load_parent_process.Record(Some(extra));
 
 #if defined(DEBUG) || defined(FUZZING)

@@ -533,6 +533,10 @@ security:
         description: >
           Information about the filename that was requested to be loaded
         type: string
+      blocked:
+        description: >
+          Whether the load was blocked using our temporary pref
+        type: boolean
     telemetry_mirror: Security_Javascriptload_Parentprocess
 
   https_only_mode_upgrade_time:

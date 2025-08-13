@@ -190,15 +190,49 @@ var UnexpectedScriptLoadPanel = new (class {
     );
   }
 
+  maybeReport() {
+    if (this.elements.reportCheckbox.checked) {
+      let extra = {
+        script_url: this.#scriptName,
+      };
+
+      if (this.elements.emailCheckbox.checked) {
+        extra.user_email = this.elements.emailInput.value.trim();
+      }
+
+      Glean.unexpectedScriptLoad.scriptReported.record(extra);
+    }
+  }
+
   onBlock() {
     this.#console.warn("UnexpectedScriptLoadPanel.onBlock() called");
     Glean.unexpectedScriptLoad.scriptBlocked.record();
+    this.maybeReport();
+
+    Services.prefs.setBoolPref(
+      "security.block_parent_unrestricted_js_loads.temporary",
+      true
+    );
+
+    window.browsingContext.top.window.gNotificationBox
+      .getNotificationWithValue("unexpected-script-notification")
+      ?.close();
     this.close(false);
   }
 
   onAllow() {
     this.#console.warn("UnexpectedScriptLoadPanel.onAllow() called");
     Glean.unexpectedScriptLoad.scriptAllowed.record();
+    this.maybeReport();
+
+    Services.prefs.setBoolPref(
+      "security.allow_parent_unrestricted_js_loads",
+      true
+    );
+
+    window.browsingContext.top.window.gNotificationBox
+      .getNotificationWithValue("unexpected-script-notification")
+      ?.close();
     this.close(false);
   }
 })();
