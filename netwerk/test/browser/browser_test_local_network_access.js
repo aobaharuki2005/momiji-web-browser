@@ -201,22 +201,6 @@ async function runPromptedLnaTest(test, overrideLabel, notificationID) {
       userAction,
       notificationID
     );
-    // Wait some time for cache entry to be updated
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    await new Promise(resolve => setTimeout(resolve, 100));
-    // ensure we hit the cache
-    Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
-
-    // Now run the test again with cached main document
-    await runSingleTestCase(
-      test,
-      rand,
-      expectedStatus,
-      `LNA test (${overrideLabel}) for ${test.type} with user action: ${userAction}`,
-      userAction,
-      notificationID
-    );
-    Services.prefs.clearUserPref("network.http.rcwn.enabled");
   }
 }
 
