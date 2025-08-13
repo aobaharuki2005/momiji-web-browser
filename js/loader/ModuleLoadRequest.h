@@ -143,8 +143,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   RefPtr<ModuleScript> mModuleScript;
 
   // For dynamic imports, the details to pass to FinishDynamicImport.
-  RefPtr<LoadedScript> mDynamicReferencingScript;
-  Heap<JSString*> mDynamicSpecifier;
   Heap<JSObject*> mDynamicPromise;
 
   Heap<JSObject*> mReferrerObj;

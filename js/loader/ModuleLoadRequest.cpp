@@ -32,15 +32,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ModuleLoadRequest,
   tmp->mReferrerObj = nullptr;
   tmp->mModuleRequestObj = nullptr;
   tmp->mPayload.setUndefined();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mRootModule, mModuleScript,
-                                  mDynamicReferencingScript)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mRootModule, mModuleScript)
   tmp->ClearDynamicImport();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ModuleLoadRequest,
                                                   ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoader, mRootModule, mModuleScript,
-                                    mDynamicReferencingScript)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoader, mRootModule, mModuleScript)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
@@ -178,7 +176,6 @@ void ModuleLoadRequest::LoadFinished() {
 void ModuleLoadRequest::SetDynamicImport(LoadedScript* aReferencingScript,
                                          Handle<JSObject*> aModuleRequestObj,
                                          Handle<JSObject*> aPromise) {
-  mDynamicReferencingScript = aReferencingScript;
   mModuleRequestObj = aModuleRequestObj;
   mDynamicPromise = aPromise;
 
@@ -186,7 +183,6 @@ void ModuleLoadRequest::SetDynamicImport(LoadedScript* aReferencingScript,
 }
 
 void ModuleLoadRequest::ClearDynamicImport() {
-  mDynamicReferencingScript = nullptr;
   mModuleRequestObj = nullptr;
   mDynamicPromise = nullptr;
 }
