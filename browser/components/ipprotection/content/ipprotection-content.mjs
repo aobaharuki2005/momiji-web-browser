@@ -4,12 +4,17 @@
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html, classMap } from "chrome://global/content/vendor/lit.all.mjs";
-import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
+import {
+  LINKS,
+  ERRORS,
+} from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-header.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-flag.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/ipprotection/ipprotection-message-bar.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
 // eslint-disable-next-line import/no-unassigned-import
@@ -21,6 +26,7 @@ export default class IPProtectionContentElement extends MozLitElement {
   static queries = {
     headerEl: "ipprotection-header",
     signedOutEl: "ipprotection-signedout",
+    messagebarEl: "ipprotection-message-bar",
     statusCardEl: "#status-card",
     animationEl: "#status-card-animation",
     connectionToggleEl: "#connection-toggle",
@@ -40,6 +46,8 @@ export default class IPProtectionContentElement extends MozLitElement {
      * protectionEnabledSince to calculate what _timeString should be.
      */
     _timeString: { type: String, state: true },
+    _showMessageBar: { type: Boolean, state: true },
+    _messageDismissed: { type: Boolean, state: true },
   };
 
   constructor() {
@@ -48,6 +56,9 @@ export default class IPProtectionContentElement extends MozLitElement {
     this.state = {};
 
     this.keyListener = this.#keyListener.bind(this);
+    this.messageBarListener = this.#messageBarListener.bind(this);
+    this._showMessageBar = false;
+    this._messageDismissed = false;
     this.showAnimation = false;
     this._timeString = "";
     this._connectionTimeInterval = null;
@@ -57,6 +68,10 @@ export default class IPProtectionContentElement extends MozLitElement {
     super.connectedCallback();
     this.dispatchEvent(new CustomEvent("IPProtection:Init", { bubbles: true }));
     this.addEventListener("keydown", this.keyListener, { capture: true });
+    this.addEventListener(
+      "ipprotection-message-bar:user-dismissed",
+      this.#messageBarListener
+    );
 
     // If we're able to show the time string right away, do it.
     if (this.canShowConnectionTime) {
@@ -70,6 +85,11 @@ export default class IPProtectionContentElement extends MozLitElement {
     super.disconnectedCallback();
 
     this.removeEventListener("keydown", this.keyListener, { capture: true });
+    this.removeEventListener(
+      "ipprotection-message-bar:user-dismissed",
+      this.#messageBarListener
+    );
+
     this.#stopTimer();
   }
 
@@ -80,6 +100,10 @@ export default class IPProtectionContentElement extends MozLitElement {
       this.state.protectionEnabledSince &&
       this.state.isSignedIn
     );
+  }
+
+  get #hasErrors() {
+    return !this.state || this.state.error !== "";
   }
 
   #startTimerIfUnset() {
@@ -198,6 +222,13 @@ export default class IPProtectionContentElement extends MozLitElement {
     }
   }
 
+  #messageBarListener(event) {
+    if (event.type === "ipprotection-message-bar:user-dismissed") {
+      this._showMessageBar = false;
+      this._messageDismissed = true;
+    }
+  }
+
   updated(changedProperties) {
     super.updated(changedProperties);
 
@@ -222,6 +253,16 @@ export default class IPProtectionContentElement extends MozLitElement {
     } else {
       this.#stopTimer();
     }
+  }
+
+  messageBarTemplate() {
+    // Fallback to a generic error
+    return html`
+      <ipprotection-message-bar
+        class="vpn-top-content"
+        type=${ERRORS.GENERIC}
+      ></ipprotection-message-bar>
+    `;
   }
 
   descriptionTemplate() {
@@ -355,6 +396,13 @@ export default class IPProtectionContentElement extends MozLitElement {
   }
 
   render() {
+    if (this.#hasErrors && !this._messageDismissed) {
+      this._showMessageBar = true;
+    }
+
+    const messageBar = this._showMessageBar ? this.messageBarTemplate() : null;
+    const content = html`${messageBar}${this.mainContentTemplate()}`;
+
     // TODO: Conditionally render post-upgrade subview within #ipprotection-content-wrapper - Bug 1973813
     return html`
       <link
@@ -363,7 +411,7 @@ export default class IPProtectionContentElement extends MozLitElement {
       />
       <ipprotection-header titleId="ipprotection-title"></ipprotection-header>
       <hr />
-      <div id="ipprotection-content-wrapper">${this.mainContentTemplate()}</div>
+      <div id="ipprotection-content-wrapper">${content}</div>
     `;
   }
 }

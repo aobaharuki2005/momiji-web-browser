@@ -16,3 +16,7 @@ export const LINKS = Object.freeze({
 export const FLAGS = Object.freeze({
   us: "chrome://browser/content/ipprotection/assets/flags/us.png",
 });
+
+export const ERRORS = Object.freeze({
+  GENERIC: "generic-error",
+});

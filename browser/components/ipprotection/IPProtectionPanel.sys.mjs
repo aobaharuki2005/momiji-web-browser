@@ -54,6 +54,10 @@ export class IPProtectionPanel {
    *  The location country name
    * @property {string} location.code
    *  The location country code
+   * @property {"generic" | ""} error
+   *  The error type as a string if an error occurred, or empty string if there are no errors.
+   * @property {"alpha"} variant
+   * The feature variant type as a string.
    */
 
   /**
@@ -101,6 +105,7 @@ export class IPProtectionPanel {
         name: "United States",
         code: "us",
       },
+      error: "",
       variant,
     };
 

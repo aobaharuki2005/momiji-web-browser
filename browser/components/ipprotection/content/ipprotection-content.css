@@ -24,6 +24,11 @@ hr {
   padding-block: var(--panel-subview-body-padding-block);
 }
 
+.vpn-top-content {
+  margin-inline: var(--space-large);
+  margin-block-start: var(--space-small);
+}
+
 .vpn-status-group {
   position: relative;
   margin: var(--space-large);
