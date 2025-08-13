@@ -1711,6 +1711,11 @@ who = "Andreas Pehrson <apehrson@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.12.0 -> 0.13.0"
 
+[[audits.cubeb]]
+who = "Matthew Gregan <kinetik@flim.org>"
+criteria = "safe-to-deploy"
+delta = "0.13.0 -> 0.29.0"
+
 [[audits.cubeb-backend]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
@@ -1746,6 +1751,11 @@ delta = "0.10.7 -> 0.12.0"
 who = "Andreas Pehrson <apehrson@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.12.0 -> 0.13.0"
+
+[[audits.cubeb-backend]]
+who = "Matthew Gregan <kinetik@flim.org>"
+criteria = "safe-to-deploy"
+delta = "0.13.0 -> 0.29.0"
 
 [[audits.cubeb-core]]
 who = "Matthew Gregan <kinetik@flim.org>"
@@ -1788,6 +1798,11 @@ who = "Andreas Pehrson <apehrson@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.12.0 -> 0.13.0"
 
+[[audits.cubeb-core]]
+who = "Matthew Gregan <kinetik@flim.org>"
+criteria = "safe-to-deploy"
+delta = "0.13.0 -> 0.29.0"
+
 [[audits.cubeb-sys]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
@@ -1823,6 +1838,11 @@ delta = "0.10.7 -> 0.12.0"
 who = "Andreas Pehrson <apehrson@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.12.0 -> 0.13.0"
+
+[[audits.cubeb-sys]]
+who = "Matthew Gregan <kinetik@flim.org>"
+criteria = "safe-to-deploy"
+delta = "0.13.0 -> 0.29.0"
 
 [[audits.d3d12]]
 who = "Jim Blandy <jimb@red-bean.com>"
@@ -7097,7 +7117,7 @@ end = "2024-04-25"
 
 [[trusted.equivalent]]
 criteria = "safe-to-deploy"
-user-id = 539
+user-id = 539 # Josh Stone (cuviper)
 start = "2023-02-05"
 end = "2024-07-17"
 
@@ -7145,7 +7165,7 @@ end = "2026-07-04"
 
 [[trusted.indexmap]]
 criteria = "safe-to-deploy"
-user-id = 539
+user-id = 539 # Josh Stone (cuviper)
 start = "2020-01-15"
 end = "2024-05-05"
 
@@ -7220,6 +7240,24 @@ criteria = "safe-to-deploy"
 user-id = 10 # Carl Lerche (carllerche)
 start = "2019-05-15"
 end = "2024-05-06"
+
+[[trusted.num]]
+criteria = "safe-to-deploy"
+user-id = 539 # Josh Stone (cuviper)
+start = "2020-01-10"
+end = "2026-07-30"
+
+[[trusted.num-bigint]]
+criteria = "safe-to-deploy"
+user-id = 539 # Josh Stone (cuviper)
+start = "2019-09-04"
+end = "2026-07-30"
+
+[[trusted.num-complex]]
+criteria = "safe-to-deploy"
+user-id = 539 # Josh Stone (cuviper)
+start = "2019-06-10"
+end = "2026-07-30"
 
 [[trusted.num_cpus]]
 criteria = "safe-to-deploy"
