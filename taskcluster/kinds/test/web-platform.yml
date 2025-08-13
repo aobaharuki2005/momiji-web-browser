@@ -227,6 +227,8 @@ web-platform-tests-reftest:
     chunks:
         by-test-platform:
             .*-ccov.*: 8
+            android.*/debug: 16
+            android.*: 8
             linux.*64-tsan(-qr)?/opt: 16
             linux1804-64(-qr)?/.*: 6
             linux1804-64-asan(-qr)?/.*: 6
@@ -236,7 +238,6 @@ web-platform-tests-reftest:
             macosx.*-64/opt: 3
             windows.*-32.*/debug: 5
             windows.*-64.*/debug: 5
-            android.*: 6
             default: 4
     variants:
         - no-fission
