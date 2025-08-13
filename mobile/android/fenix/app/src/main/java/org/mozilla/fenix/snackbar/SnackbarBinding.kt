@@ -23,7 +23,6 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.ui.widgets.SnackbarDelegate
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.SentFromFirefox
 import org.mozilla.fenix.R
 import org.mozilla.fenix.bookmarks.friendlyRootTitle
@@ -285,17 +284,11 @@ class SnackbarBinding(
                         snackbarDelegate.show(
                             text = context.getString(R.string.download_in_progress_snackbar),
                             duration = DOWNLOAD_SNACKBAR_DURATION_MS,
-                            action = if (FeatureFlags.showLiveDownloads) {
-                                context.getString(R.string.download_in_progress_snackbar_action_details)
-                            } else {
-                                null
-                            },
+                            action = context.getString(R.string.download_in_progress_snackbar_action_details),
                         ) {
-                            if (FeatureFlags.showLiveDownloads) {
-                                navController.navigate(
-                                    BrowserFragmentDirections.actionGlobalDownloadsFragment(),
-                                )
-                            }
+                            navController.navigate(
+                                BrowserFragmentDirections.actionGlobalDownloadsFragment(),
+                            )
                         }
 
                         appStore.dispatch(SnackbarAction.SnackbarShown)
@@ -307,17 +300,11 @@ class SnackbarBinding(
                             subText = state.fileName,
                             subTextOverflow = TextOverflow.MiddleEllipsis,
                             duration = DOWNLOAD_SNACKBAR_DURATION_MS,
-                            action = if (FeatureFlags.showLiveDownloads) {
-                                context.getString(R.string.download_failed_snackbar_action_details)
-                            } else {
-                                null
-                            },
+                            action = context.getString(R.string.download_failed_snackbar_action_details),
                         ) {
-                            if (FeatureFlags.showLiveDownloads) {
-                                navController.navigate(
-                                    BrowserFragmentDirections.actionGlobalDownloadsFragment(),
-                                )
-                            }
+                            navController.navigate(
+                                BrowserFragmentDirections.actionGlobalDownloadsFragment(),
+                            )
                         }
                         appStore.dispatch(SnackbarAction.SnackbarShown)
                     }
