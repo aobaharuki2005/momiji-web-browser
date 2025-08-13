@@ -2472,6 +2472,7 @@ def check_perf_task_fission_filtering(config, tasks):
             ("chrome-m" in task["label"] or "cstm-car-m" in task["label"])
             and "nofis" not in task["label"]
             and "android" in task["label"]
+            and "startup" not in task["label"]
         ):
             continue
         yield task
