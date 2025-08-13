@@ -201,26 +201,8 @@ bool ModuleLoader::loadImportedModule(JSContext* cx,
   // TODO: Bug 1968904: Update HostLoadImportedModule
   if (payload.isObject() && payload.toObject().is<PromiseObject>()) {
     // This is a dynamic import.
-    if (!dynamicImport(cx, referencingPrivate, moduleRequest, payload)) {
-      return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                       payload);
-    }
-    return true;
+    return dynamicImport(cx, referencingPrivate, moduleRequest, payload);
   }
-
-  auto finishLoading = mozilla::MakeScopeExit([cx, &payload]() {
-    if (!JS_IsExceptionPending(cx)) {
-      JS::FinishLoadingImportedModuleFailed(cx, payload, UndefinedHandleValue);
-      return;
-    }
-
-    JS::ExceptionStack exnStack(cx);
-    if (!JS::StealPendingExceptionStack(cx, &exnStack)) {
-      return;
-    }
-
-    JS::FinishLoadingImportedModuleFailed(cx, payload, exnStack.exception());
-  });
 
   Rooted<JSLinearString*> path(cx,
                                resolve(cx, moduleRequest, referencingPrivate));
@@ -232,8 +214,6 @@ bool ModuleLoader::loadImportedModule(JSContext* cx,
   if (!module) {
     return false;
   }
-
-  finishLoading.release();
 
   return JS::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
                                          moduleRequest, payload, module, false);

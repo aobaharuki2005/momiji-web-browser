@@ -160,20 +160,10 @@ bool ModuleLoaderBase::HostLoadImportedModule(
   }
   bool isDynamicImport = object && JS::IsPromiseObject(object);
 
-  // Ensure we always call FinishLoadingImportedModuleFailed to report errors if
-  // we return early.
-  auto reportFailure = mozilla::MakeScopeExit([aCx, &aPayload]() {
-    if (JS_IsExceptionPending(aCx)) {
-      JS::FinishLoadingImportedModuleFailedWithPendingException(aCx, aPayload);
-    } else {
-      JS::FinishLoadingImportedModuleFailed(aCx, aPayload,
-                                            UndefinedHandleValue);
-    }
-  });
-
   JS::Rooted<JSString*> specifierString(
       aCx, JS::GetModuleRequestSpecifier(aCx, aModuleRequest));
   if (!specifierString) {
+    JS_ReportOutOfMemory(aCx);
     return false;
   }
 
@@ -181,6 +171,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
   // module script and specifier.
   nsAutoJSString string;
   if (!string.init(aCx, specifierString)) {
+    JS_ReportOutOfMemory(aCx);
     return false;
   }
 
@@ -198,7 +189,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
     if (isDynamicImport && !loader->IsDynamicImportSupported()) {
       JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                                 JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
-      return true;
+      return false;
     }
 
     // Step 7. Disallow further import maps given settingsObject.
@@ -225,7 +216,6 @@ bool ModuleLoaderBase::HostLoadImportedModule(
 
       // Step 9.2. Perform FinishLoadingImportedModule(referrer, moduleRequest,
       //           payload, completion).
-      reportFailure.release();
       JS::FinishLoadingImportedModuleFailed(aCx, aPayload, error);
 
       // Step 9.3. Return.
@@ -251,7 +241,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
         return false;
       }
       JS_SetPendingException(aCx, error);
-      return true;
+      return false;
     }
 
     if (isDynamicImport) {
@@ -262,7 +252,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
         // Throws TypeError if CreateDynamicImport returns nullptr.
         JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                                   JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
-        return true;
+        return false;
       }
 
       nsresult rv = loader->StartDynamicImport(request);
@@ -273,7 +263,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
         uri->GetSpec(url);
         JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                                   JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
-        return true;
+        return false;
       }
     } else {
       loader->StartFetchingModuleAndDependencies(
@@ -282,7 +272,6 @@ bool ModuleLoaderBase::HostLoadImportedModule(
     }
   }
 
-  reportFailure.release();
   return true;
 }
 

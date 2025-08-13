@@ -822,8 +822,21 @@ bool js::HostLoadImportedModule(JSContext* cx, Handle<JSScript*> referrer,
     }
   }
 
-  return moduleLoadHook(cx, referrerModule, referencingPrivate, moduleRequest,
-                        payload);
+  bool ok = moduleLoadHook(cx, referrerModule, referencingPrivate,
+                           moduleRequest, payload);
+
+  if (!ok) {
+    MOZ_ASSERT(JS_IsExceptionPending(cx));
+    if (JS_IsExceptionPending(cx)) {
+      return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
+                                                                       payload);
+    }
+
+    return JS::FinishLoadingImportedModuleFailed(cx, payload,
+                                                 UndefinedHandleValue);
+  }
+
+  return true;
 }
 
 static bool ModuleResolveExportImpl(JSContext* cx, Handle<ModuleObject*> module,

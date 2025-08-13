@@ -53,7 +53,7 @@ enum class ModuleType : uint32_t {
  *
  * This embedding-defined hook is used to implement module loading. It is called
  * to get or create a module object corresponding to |moduleRequest| occurring
- * in the context of the script or module with private value
+ * in the context of the script or module |referrer| with private value
  * |referencingPrivate|.
  *
  * The module specifier string for the request can be obtained by calling
@@ -63,8 +63,10 @@ enum class ModuleType : uint32_t {
  * JS::SetModulePrivate. It's assumed that the embedding can handle receiving
  * either here.
  *
- * The spec defines the embedding (host layer) must call
- * FinishLoadingImportedModule either synchronously or asynchronously.
+ * If this call succeeds then the embedding must call
+ * FinishLoadingImportedModule or one of the FinishLoadingImportedModuleFailed
+ * APIs at some point in the future. This is handled by the engine if the call
+ * returns false.
  *
  * This hook must obey the restrictions defined in the spec:
  *  - Each time the hook is called with the same (referrer, referencingPrivate)
