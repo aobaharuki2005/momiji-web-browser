@@ -297,6 +297,7 @@ enum Message<'a> {
 
     DestroyBuffer(id::BufferId),
     DestroyTexture(id::TextureId),
+    DestroyExternalTexture(id::ExternalTextureId),
     DestroyExternalTextureSource(crate::ExternalTextureSourceId),
     DestroyDevice(id::DeviceId),
 

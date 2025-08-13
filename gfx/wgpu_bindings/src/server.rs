@@ -2824,6 +2824,7 @@ unsafe fn process_message(
             wgpu_server_remove_shared_texture(global.owner, id);
             global.texture_destroy(id)
         }
+        Message::DestroyExternalTexture(id) => global.external_texture_destroy(id),
         Message::DestroyExternalTextureSource(id) => {
             wgpu_parent_destroy_external_texture_source(global.owner, id)
         }

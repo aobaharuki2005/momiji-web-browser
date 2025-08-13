@@ -20,6 +20,7 @@
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WebGLTexelConversions.h"
 #include "mozilla/dom/WebGLTypes.h"
@@ -54,9 +55,40 @@ void Queue::Cleanup() {
   ffi::wgpu_client_drop_queue(bridge->GetClient(), mId);
 }
 
+struct ExternalTextureWorkDoneHandler : dom::PromiseNativeHandler {
+  NS_DECL_ISUPPORTS
+
+  explicit ExternalTextureWorkDoneHandler(
+      nsTArray<RefPtr<ExternalTexture>>&& aExternalTextures,
+      uint64_t aSubmissionId)
+      : mExternalTextures(std::move(aExternalTextures)),
+        mSubmissionId(aSubmissionId) {}
+
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
+    for (const auto& externalTexture : mExternalTextures) {
+      externalTexture->OnSubmittedWorkDone(mSubmissionId);
+    }
+  }
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
+    MOZ_ASSERT_UNREACHABLE("Work done promise should not be rejected");
+  }
+
+ private:
+  ~ExternalTextureWorkDoneHandler() = default;
+  // We must hold a strong reference to the external textures to ensure that
+  // they are not released before all work involving them is done.
+  const nsTArray<RefPtr<ExternalTexture>> mExternalTextures;
+  const uint64_t mSubmissionId;
+};
+
+NS_IMPL_ISUPPORTS0(ExternalTextureWorkDoneHandler)
+
 void Queue::Submit(
     const dom::Sequence<OwningNonNull<CommandBuffer>>& aCommandBuffers) {
   nsTArray<RawId> list(aCommandBuffers.Length());
+  nsTArray<RefPtr<ExternalTexture>> externalTextures;
   for (uint32_t i = 0; i < aCommandBuffers.Length(); ++i) {
     auto idMaybe = aCommandBuffers[i]->Commit();
 
@@ -76,6 +108,7 @@ void Queue::Submit(
         return;
       }
     }
+    externalTextures.AppendElements(aCommandBuffers[i]->GetExternalTextures());
 
     if (idMaybe) {
       list.AppendElement(*idMaybe);
@@ -83,6 +116,26 @@ void Queue::Submit(
   }
 
   mBridge->QueueSubmit(mId, mParent->mId, list);
+
+  if (!externalTextures.IsEmpty()) {
+    for (const auto& externalTexture : externalTextures) {
+      externalTexture->OnSubmit(mNextExternalTextureSubmissionIndex);
+    }
+    ErrorResult rv;
+    RefPtr<dom::Promise> promise = OnSubmittedWorkDone(rv);
+    // Without this promise we have no way of knowing when work involving the
+    // external textures is done. This would lead to us holding on to the
+    // external texture's resources indefinitely, which we don't want.
+    // The alternative of releasing the resources immediately is unacceptable
+    // while there is still pending work, so just crash.
+    MOZ_RELEASE_ASSERT(promise);
+    RefPtr<ExternalTextureWorkDoneHandler> handler =
+        new ExternalTextureWorkDoneHandler(std::move(externalTextures),
+                                           mNextExternalTextureSubmissionIndex);
+    promise->AppendNativeHandler(handler);
+
+    mNextExternalTextureSubmissionIndex++;
+  }
 }
 
 already_AddRefed<dom::Promise> Queue::OnSubmittedWorkDone(ErrorResult& aRv) {

@@ -55,7 +55,36 @@ ExternalTexture::ExternalTexture(Device* const aParent, RawId aId,
   return externalTexture.forget();
 }
 
-void ExternalTexture::Expire() { mIsExpired = true; }
+void ExternalTexture::Expire() {
+  mIsExpired = true;
+  MaybeDestroy();
+}
+
+void ExternalTexture::OnSubmit(uint64_t aSubmissionIndex) {
+  mLastSubmittedIndex = aSubmissionIndex;
+}
+
+void ExternalTexture::OnSubmittedWorkDone(uint64_t aSubmissionIndex) {
+  mLastSubmittedWorkDoneIndex = aSubmissionIndex;
+  MaybeDestroy();
+}
+
+void ExternalTexture::MaybeDestroy() {
+  if (!mIsDestroyed && mIsExpired &&
+      mLastSubmittedWorkDoneIndex >= mLastSubmittedIndex) {
+    mIsDestroyed = true;
+    mSource = nullptr;
+    // We could be cleverer and keep the external texture alive until its
+    // source is destroyed and there's no chance we could want to reuse the
+    // external texture. But that would complicate the logic and perhaps not
+    // even gain all that much, as typically attempts to reuse the external
+    // texture will occur before the previously submitted work is done, so will
+    // be successful anyway.
+    if (auto bridge = mParent->GetBridge()) {
+      ffi::wgpu_client_destroy_external_texture(bridge->GetClient(), mId);
+    }
+  }
+}
 
 void ExternalTexture::Cleanup() {
   if (!mValid) {

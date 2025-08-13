@@ -506,6 +506,7 @@ mod drop {
 
     #[no_mangle] pub extern "C" fn wgpu_client_destroy_buffer(client: &Client, id: id::BufferId) { client.queue_message(&Message::DestroyBuffer(id)); }
     #[no_mangle] pub extern "C" fn wgpu_client_destroy_texture(client: &Client, id: id::TextureId) { client.queue_message(&Message::DestroyTexture(id)); }
+    #[no_mangle] pub extern "C" fn wgpu_client_destroy_external_texture(client: &Client, id: id::ExternalTextureId) { client.queue_message(&Message::DestroyExternalTexture(id)); }
     #[no_mangle] pub extern "C" fn wgpu_client_destroy_external_texture_source(client: &Client, id: crate::ExternalTextureSourceId) { client.queue_message(&&Message::DestroyExternalTextureSource(id)); }
     #[no_mangle] pub extern "C" fn wgpu_client_destroy_device(client: &Client, id: id::DeviceId) { client.queue_message(&Message::DestroyDevice(id)); }
 

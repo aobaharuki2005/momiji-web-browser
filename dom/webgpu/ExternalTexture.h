@@ -74,6 +74,9 @@ class ExternalTexture : public ObjectBase,
   void Expire();
   bool IsExpired() const { return mIsExpired; }
 
+  void OnSubmit(uint64_t aSubmissionIndex);
+  void OnSubmittedWorkDone(uint64_t aSubmissionIndex);
+
   const RawId mId;
 
  private:
@@ -82,10 +85,18 @@ class ExternalTexture : public ObjectBase,
   virtual ~ExternalTexture();
   void Cleanup();
 
+  // Destroys the external texture if it is no longer required, i.e. all
+  // submitted work using the external texture has completed, and the external
+  // texture has been expired.
+  void MaybeDestroy();
+
   // Hold a strong reference to the source to ensure it stays alive as long as
   // the external texture may still be used.
   RefPtr<ExternalTextureSourceClient> mSource;
   bool mIsExpired = false;
+  bool mIsDestroyed = false;
+  uint64_t mLastSubmittedIndex = 0;
+  uint64_t mLastSubmittedWorkDoneIndex = 0;
 };
 
 // The client side of an imported external texture source. This gets imported
@@ -96,7 +107,9 @@ class ExternalTexture : public ObjectBase,
 // The client side is responsible for creating and destroying the host side.
 // Any external texture created from this source must ensure the source remains
 // alive as long as it is required by the external texture, by holding a strong
-// reference.
+// reference. The source itself retains a strong reference to the layers::Image
+// it was imported from, which ensures that the decoder does not attempt to
+// reuse the image's underlying resources while the source is still in use.
 class ExternalTextureSourceClient {
   NS_INLINE_DECL_REFCOUNTING(ExternalTextureSourceClient)
 
@@ -109,6 +122,17 @@ class ExternalTextureSourceClient {
       ErrorResult& aRv);
 
   const RawId mId;
+
+  // Hold a strong reference to the image as long as we are alive. If the
+  // SurfaceDescriptor sent to the host was a SurfaceDescriptorGPUVideo, this
+  // ensures the remote TextureHost is kept alive until we have imported the
+  // textures into wgpu. Additionally this prevents the decoder from recycling
+  // the underlying resource whilst still in use, e.g. decoding a future video
+  // frame into a texture that is currently being rendered by wgpu. When all
+  // external textures created from this source have been destroyed the final
+  // reference to the source will be released, causing this reference to be
+  // released, indicating to the decoder that it can reuse the resources.
+  const RefPtr<layers::Image> mImage;
 
   // External texture sources can consist of up to 3 planes of texture data, but
   // on the client side we do not know how many planes will actually be
