@@ -533,6 +533,7 @@ WEBIDL_FILES = [
     "CSSScopeRule.webidl",
     "CSSSkew.webidl",
     "CSSSkewX.webidl",
+    "CSSSkewY.webidl",
     "CSSStartingStyleRule.webidl",
     "CSSStyleDeclaration.webidl",
     "CSSStyleRule.webidl",
