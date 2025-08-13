@@ -50,9 +50,6 @@ export let UnexpectedScriptObserver = {
       return;
     }
 
-    let notificationBox =
-      lazy.BrowserWindowTracker.getTopWindow().gNotificationBox;
-
     let scriptOrigin;
     try {
       let scriptUrl = new URL(aScriptName);
@@ -69,8 +66,10 @@ export let UnexpectedScriptObserver = {
       return;
     }
 
-    let MozXULElement = lazy.BrowserWindowTracker.getTopWindow().MozXULElement;
-    let document = lazy.BrowserWindowTracker.getTopWindow().document;
+    let window = lazy.BrowserWindowTracker.getTopWindow();
+    let MozXULElement = window.MozXULElement;
+    let document = window.document;
+    let notificationBox = window.gNotificationBox;
 
     MozXULElement.insertFTLIfNeeded("browser/unexpectedScript.ftl");
     let messageFragment = document.createDocumentFragment();
@@ -82,8 +81,12 @@ export let UnexpectedScriptObserver = {
 
     let buttons = [{ supportPage: "unexpected-script-load" }];
     buttons.push({
-      callback() {},
       "l10n-id": "unexpected-script-load-message-button-allow",
+      callback() {
+        window.gDialogBox.open(
+          "chrome://browser/content/security/unexpectedScriptLoadDialog.xhtml"
+        );
+      },
     });
     buttons.push({
       "l10n-id": "unexpected-script-load-message-button-block",
