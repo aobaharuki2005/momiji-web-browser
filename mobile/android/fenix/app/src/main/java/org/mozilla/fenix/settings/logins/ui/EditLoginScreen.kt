@@ -248,13 +248,7 @@ private fun EditLoginPassword(store: LoginsStore, pass: String) {
 @FlexibleWindowLightDarkPreview
 private fun EditLoginScreenPreview() {
     val store = LoginsStore(
-        initialState = LoginsState(
-            loginItems = listOf(),
-            searchText = "",
-            sortOrder = LoginsSortOrder.default,
-            biometricAuthenticationDialogState = null,
-            loginsListState = null,
-            loginsAddLoginState = null,
+        initialState = LoginsState.default.copy(
             loginsEditLoginState = LoginsEditLoginState(
                 login = LoginItem(
                     guid = "123",
@@ -266,8 +260,6 @@ private fun EditLoginScreenPreview() {
                 newPassword = "password 456",
                 isPasswordVisible = true,
             ),
-            loginsLoginDetailState = null,
-            loginsDeletionState = null,
         ),
     )
 
