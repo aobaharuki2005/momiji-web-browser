@@ -67,7 +67,8 @@ class TextInputListener final : public nsIDOMEventListener,
  protected:
   virtual ~TextInputListener() = default;
 
-  nsresult UpdateTextInputCommands(const nsAString& aCommandsToUpdate);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  UpdateTextInputCommands(const nsAString& aCommandsToUpdate);
 
  protected:
   nsIFrame* mFrame;

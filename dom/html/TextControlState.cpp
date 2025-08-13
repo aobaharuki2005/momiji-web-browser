@@ -1075,7 +1075,7 @@ nsresult TextInputListener::UpdateTextInputCommands(
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_FAILURE;
   }
-  nsPIDOMWindowOuter* domWindow = doc->GetWindow();
+  RefPtr<nsPIDOMWindowOuter> domWindow = doc->GetWindow();
   if (NS_WARN_IF(!domWindow)) {
     return NS_ERROR_FAILURE;
   }
