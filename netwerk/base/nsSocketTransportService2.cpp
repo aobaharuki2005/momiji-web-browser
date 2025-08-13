@@ -385,6 +385,20 @@ nsSocketTransportService::AttachSocket(PRFileDesc* fd,
   SOCKET_LOG(
       ("nsSocketTransportService::AttachSocket [handler=%p]\n", handler));
 
+#ifdef XP_UNIX
+#  ifdef XP_DARWIN
+  // See the Darwin case in config/external/nspr/pr/moz.build
+  static constexpr PROsfd kFDs = 4096;
+#  else
+  static constexpr PROsfd kFDs = 65536;
+#  endif
+  PROsfd osfd = PR_FileDesc2NativeHandle(fd);
+  // If the native fd exceeds what PR_Poll can handle, PR_Poll will treat it as
+  // invalid (POLLNVAL) and networking degrades into hard-to-debug failures.
+  // Crash early with a clear reason instead. See bug 1980171 for context.
+  MOZ_RELEASE_ASSERT(osfd < kFDs);
+#endif
+
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (!CanAttachSocket()) {
