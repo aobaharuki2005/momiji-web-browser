@@ -121,7 +121,9 @@ var UnexpectedScriptLoadPanel = new (class {
     // we automatically check both report checkboxes when the email input loses focus.
     this.elements.emailInput.addEventListener("change", e => {
       const hasEmail = this.elements.emailInput.value.trim() !== "";
-      if (!hasEmail) return;
+      if (!hasEmail) {
+        return;
+      }
 
       // If the user has typed in the email field, and clicks the (unchecked)
       // email checkbox, on blur we would set the email checkbox to checked,
