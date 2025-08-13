@@ -35,7 +35,7 @@ async function closePreviews(win = window) {
   EventUtils.synthesizeMouse(
     tabs,
     0,
-    tabs.outerHeight + 1,
+    1,
     {
       type: "mouseout",
     },
