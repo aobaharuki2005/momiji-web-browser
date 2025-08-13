@@ -31,7 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ModuleLoadRequest,
   tmp->mReferencingPrivate.setUndefined();
   tmp->mReferrerObj = nullptr;
   tmp->mModuleRequestObj = nullptr;
-  tmp->mStatePrivate.setUndefined();
+  tmp->mPayload.setUndefined();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mRootModule, mModuleScript,
                                   mDynamicReferencingScript)
   tmp->ClearDynamicImport();
@@ -49,7 +49,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReferrerObj)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mModuleRequestObj)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReferencingPrivate)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStatePrivate)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mPayload)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ModuleLoadRequest::ModuleLoadRequest(

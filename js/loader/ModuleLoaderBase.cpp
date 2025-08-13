@@ -295,9 +295,9 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
   Rooted<JSObject*> referrer(aCx, aRequest->mReferrerObj);
   Rooted<Value> referencingPrivate(aCx, aRequest->mReferencingPrivate);
   Rooted<JSObject*> moduleReqObj(aCx, aRequest->mModuleRequestObj);
-  Rooted<Value> statePrivate(aCx, aRequest->mStatePrivate);
+  Rooted<Value> statePrivate(aCx, aRequest->mPayload);
 
-  Rooted<Value> payload(aCx, aRequest->mStatePrivate);
+  Rooted<Value> payload(aCx, aRequest->mPayload);
   if (payload.isUndefined()) {
     MOZ_ASSERT(aRequest->mDynamicPromise);
     payload = ObjectValue(*aRequest->mDynamicPromise);
@@ -314,7 +314,7 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
   aRequest->mReferrerObj = nullptr;
   aRequest->mReferencingPrivate.setUndefined();
   aRequest->mModuleRequestObj = nullptr;
-  aRequest->mStatePrivate.setUndefined();
+  aRequest->mPayload.setUndefined();
   aRequest->ClearDynamicImport();
 
   return true;
@@ -822,8 +822,8 @@ void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
     }
     JSContext* cx = jsapi.cx();
 
-    MOZ_ASSERT(!aRequest->mStatePrivate.isUndefined());
-    Rooted<Value> statePrivate(cx, aRequest->mStatePrivate);
+    MOZ_ASSERT(!aRequest->mPayload.isUndefined());
+    Rooted<Value> statePrivate(cx, aRequest->mPayload);
     Rooted<Value> error(cx);
 
     // https://html.spec.whatwg.org/#hostloadimportedmodule
@@ -858,7 +858,7 @@ void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
     aRequest->mReferrerObj = nullptr;
     aRequest->mReferencingPrivate.setUndefined();
     aRequest->mModuleRequestObj = nullptr;
-    aRequest->mStatePrivate.setUndefined();
+    aRequest->mPayload.setUndefined();
   }
 }
 
@@ -1343,9 +1343,9 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
   childRequest->mReferrerObj = aReferrer;
   childRequest->mReferencingPrivate = aReferencingPrivate;
   childRequest->mModuleRequestObj = aModuleRequest;
-  childRequest->mStatePrivate = aPayload;
+  childRequest->mPayload = aPayload;
 
-  // To prevent mStatePrivate from GCed.
+  // To prevent mPayload from being GCed.
   mozilla::HoldJSObjects(childRequest.get());
 
   nsresult rv = StartModuleLoad(childRequest);

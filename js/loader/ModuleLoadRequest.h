@@ -31,7 +31,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
     MOZ_ASSERT(!mReferrerObj);
     MOZ_ASSERT(!mModuleRequestObj);
     MOZ_ASSERT(mReferencingPrivate.isUndefined());
-    MOZ_ASSERT(mStatePrivate.isUndefined());
+    MOZ_ASSERT(mPayload.isUndefined());
   }
 
   ModuleLoadRequest(const ModuleLoadRequest& aOther) = delete;
@@ -150,7 +150,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   Heap<JSObject*> mReferrerObj;
   Heap<JSObject*> mModuleRequestObj;
   Heap<Value> mReferencingPrivate;
-  Heap<Value> mStatePrivate;
+  Heap<Value> mPayload;
 };
 
 }  // namespace JS::loader
