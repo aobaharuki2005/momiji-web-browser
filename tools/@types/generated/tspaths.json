@@ -77,6 +77,9 @@
       "chrome://browser/content/ipprotection/ipprotection-constants.mjs": [
         "browser/components/ipprotection/content/ipprotection-constants.mjs"
       ],
+      "chrome://browser/content/ipprotection/ipprotection-flag.mjs": [
+        "browser/components/ipprotection/content/ipprotection-flag.mjs"
+      ],
       "chrome://browser/content/ipprotection/ipprotection-header.mjs": [
         "browser/components/ipprotection/content/ipprotection-header.mjs"
       ],
@@ -898,6 +901,12 @@
       ],
       "resource:///modules/Discovery.sys.mjs": [
         "browser/modules/Discovery.sys.mjs"
+      ],
+      "resource:///modules/DownloadsCommon.sys.mjs": [
+        "browser/components/downloads/DownloadsCommon.sys.mjs"
+      ],
+      "resource:///modules/DownloadsViewUI.sys.mjs": [
+        "browser/components/downloads/DownloadsViewUI.sys.mjs"
       ],
       "resource:///modules/ESEDBReader.sys.mjs": [
         "browser/components/migration/ESEDBReader.sys.mjs"
@@ -3293,6 +3302,9 @@
       "resource://devtools/client/netmonitor/src/reducers/sort.js": [
         "devtools/client/netmonitor/src/reducers/sort.js"
       ],
+      "resource://devtools/client/netmonitor/src/reducers/statistics.js": [
+        "devtools/client/netmonitor/src/reducers/statistics.js"
+      ],
       "resource://devtools/client/netmonitor/src/reducers/timing-markers.js": [
         "devtools/client/netmonitor/src/reducers/timing-markers.js"
       ],
@@ -3310,6 +3322,9 @@
       ],
       "resource://devtools/client/netmonitor/src/selectors/search.js": [
         "devtools/client/netmonitor/src/selectors/search.js"
+      ],
+      "resource://devtools/client/netmonitor/src/selectors/statistics.js": [
+        "devtools/client/netmonitor/src/selectors/statistics.js"
       ],
       "resource://devtools/client/netmonitor/src/selectors/timing-markers.js": [
         "devtools/client/netmonitor/src/selectors/timing-markers.js"
