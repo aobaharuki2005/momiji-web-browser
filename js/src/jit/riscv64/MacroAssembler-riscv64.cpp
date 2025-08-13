@@ -5709,6 +5709,33 @@ void MacroAssemblerRiscv64::ma_addPtrTestCarry(Condition cond, Register rd,
   }
 }
 
+void MacroAssemblerRiscv64::ma_addPtrTestSigned(Condition cond, Register rd,
+                                                Register rj, Register rk,
+                                                Label* taken) {
+  MOZ_ASSERT(cond == Assembler::Signed || cond == Assembler::NotSigned);
+
+  ma_add64(rd, rj, rk);
+  ma_b(rd, rd, taken, cond);
+}
+
+void MacroAssemblerRiscv64::ma_addPtrTestSigned(Condition cond, Register rd,
+                                                Register rj, Imm32 imm,
+                                                Label* taken) {
+  MOZ_ASSERT(cond == Assembler::Signed || cond == Assembler::NotSigned);
+
+  ma_add64(rd, rj, imm);
+  ma_b(rd, rd, taken, cond);
+}
+
+void MacroAssemblerRiscv64::ma_addPtrTestSigned(Condition cond, Register rd,
+                                                Register rj, ImmWord imm,
+                                                Label* taken) {
+  MOZ_ASSERT(cond == Assembler::Signed || cond == Assembler::NotSigned);
+
+  ma_add64(rd, rj, Operand(imm.value));
+  ma_b(rd, rd, taken, cond);
+}
+
 FaultingCodeOffset MacroAssemblerRiscv64::ma_load(
     Register dest, const BaseIndex& src, LoadStoreSize size,
     LoadStoreExtension extension) {
