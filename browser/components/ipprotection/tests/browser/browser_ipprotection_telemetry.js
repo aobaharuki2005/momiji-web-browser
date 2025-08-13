@@ -144,7 +144,7 @@ add_task(async function toggle_off_on_shutdown() {
   Assert.equal(toggledEvents[0].extra.userAction, "true");
 
   // Simulate closing the window
-  IPProtection.uninit();
+  lazy.IPProtectionService.uninit(true);
   toggledEvents = Glean.ipprotection.toggled.testGetValue();
   Assert.equal(toggledEvents.length, 2, "should have recorded a second toggle");
   Assert.equal(toggledEvents[1].category, "ipprotection");
@@ -154,7 +154,7 @@ add_task(async function toggle_off_on_shutdown() {
 
   Services.fog.testResetFOG();
   // Re-initialize to avoid breaking tests that follow
-  IPProtection.init();
+  lazy.IPProtectionService.init();
   let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     BrowserTestUtils.isVisible(widget),
