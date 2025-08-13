@@ -48,6 +48,17 @@ ipprotection:
         type: string
         description: >
           Amount of time the VPN was connnected in a session.
+  click_upgrade_button:
+    type: event
+    description: >
+      This is recorded when a user clicks the upgrade button in the VPN panel.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972930
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972930
+    notification_emails:
+      - rking@mozilla.com
+    expires: never
   usage_tx:
     type: memory_distribution
     memory_unit: byte

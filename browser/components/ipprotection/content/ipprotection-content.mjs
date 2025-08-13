@@ -153,6 +153,8 @@ export default class IPProtectionContentElement extends MozLitElement {
     this.dispatchEvent(
       new CustomEvent("IPProtection:Close", { bubbles: true })
     );
+
+    Glean.ipprotection.clickUpgradeButton.record();
   }
 
   handleDownload(event) {

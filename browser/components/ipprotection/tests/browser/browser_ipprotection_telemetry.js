@@ -127,7 +127,6 @@ add_task(async function toggle_off_on_shutdown() {
   Assert.ok(toggle, "Status card connection toggle should be present");
 
   Services.fog.testResetFOG();
-  await Services.fog.testFlushAllChildren();
 
   let vpnOnPromise = BrowserTestUtils.waitForEvent(
     lazy.IPProtectionService,
@@ -160,4 +159,54 @@ add_task(async function toggle_off_on_shutdown() {
     BrowserTestUtils.isVisible(widget),
     "IP Protection widget should be added back to the navbar"
   );
+});
+
+/**
+ * Tests that the click upgrade button event is recorded when CTA is clicked
+ */
+add_task(async function click_upgrade_button() {
+  let button = document.getElementById(IPProtectionWidget.WIDGET_ID);
+  Assert.ok(
+    BrowserTestUtils.isVisible(button),
+    "IP Protection widget should be added to the navbar"
+  );
+
+  lazy.IPProtectionService.isSignedIn = true;
+
+  let panelShownPromise = waitForPanelEvent(document, "popupshown");
+  let panelInitPromise = BrowserTestUtils.waitForEvent(
+    document,
+    "IPProtection:Init"
+  );
+  button.click();
+  await Promise.all([panelShownPromise, panelInitPromise]);
+
+  let panelView = PanelMultiView.getViewNode(
+    document,
+    IPProtectionWidget.PANEL_ID
+  );
+
+  let content = panelView.querySelector(IPProtectionPanel.CONTENT_TAGNAME);
+
+  Assert.ok(content, "Panel content should be present");
+
+  content.state.isSignedIn = true;
+  content.requestUpdate();
+  await content.updateComplete;
+
+  let upgradeButton = content.upgradeEl.querySelector("#upgrade-vpn-button");
+
+  Services.fog.testResetFOG();
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+  let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
+  upgradeButton.click();
+  let newTab = await newTabPromise;
+  await panelHiddenPromise;
+
+  let upgradeEvent = Glean.ipprotection.clickUpgradeButton.testGetValue();
+  Assert.equal(upgradeEvent.length, 1, "should have recorded a toggle");
+
+  Services.fog.testResetFOG();
+
+  BrowserTestUtils.removeTab(newTab);
 });
