@@ -259,45 +259,44 @@ fn support_use_shared_texture_in_swap_chain(
 
     #[cfg(target_os = "linux")]
     {
-        let support = if backend != wgt::Backend::Vulkan {
+        if backend != wgt::Backend::Vulkan {
             log::info!(concat!(
                 "WebGPU: disabling SharedTexture swapchain: \n",
                 "wgpu backend is not Vulkan"
             ));
-            false
-        } else {
-            unsafe {
-                match global.adapter_as_hal::<wgc::api::Vulkan>(self_id) {
-                    None => {
-                        emit_critical_invalid_note("Vulkan adapter");
-                        false
-                    }
-                    Some(hal_adapter) => {
-                        let capabilities = hal_adapter.physical_device_capabilities();
-                        static REQUIRED: &[&'static std::ffi::CStr] = &[
-                            khr::external_memory_fd::NAME,
-                            ash::ext::external_memory_dma_buf::NAME,
-                            ash::ext::image_drm_format_modifier::NAME,
-                            khr::external_semaphore_fd::NAME,
-                        ];
-                        REQUIRED.iter().all(|extension| {
-                            let supported = capabilities.supports_extension(extension);
-                            if !supported {
-                                log::info!(
-                                    concat!(
-                                        "WebGPU: disabling SharedTexture swapchain: \n",
-                                        "Vulkan extension not supported: {:?}",
-                                    ),
-                                    extension.to_string_lossy()
-                                );
-                            }
-                            supported
-                        })
-                    }
-                }
-            }
+            return false;
+        }
+
+        let Some(hal_adapter) = (unsafe { global.adapter_as_hal::<wgc::api::Vulkan>(self_id) })
+        else {
+            unreachable!("given adapter ID was actually for a different backend");
         };
-        return support;
+
+        let capabilities = hal_adapter.physical_device_capabilities();
+        static REQUIRED: &[&'static std::ffi::CStr] = &[
+            khr::external_memory_fd::NAME,
+            ash::ext::external_memory_dma_buf::NAME,
+            ash::ext::image_drm_format_modifier::NAME,
+            khr::external_semaphore_fd::NAME,
+        ];
+        let all_extensions_supported = REQUIRED.iter().all(|&extension| {
+            let supported = capabilities.supports_extension(extension);
+            if !supported {
+                log::info!(
+                    concat!(
+                        "WebGPU: disabling SharedTexture swapchain: \n",
+                        "Vulkan extension not supported: {:?}",
+                    ),
+                    extension.to_string_lossy()
+                );
+            }
+            supported
+        });
+        if !all_extensions_supported {
+            return false;
+        }
+
+        return true;
     }
 
     #[cfg(target_os = "macos")]
