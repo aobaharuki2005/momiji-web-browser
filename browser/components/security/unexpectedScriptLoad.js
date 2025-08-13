@@ -63,7 +63,7 @@ var UnexpectedScriptLoadPanel = new (class {
    * Initializes the panel when the script loads.
    */
   init() {
-    this.console?.warn("UnexpectedScriptLoadPanel initialized");
+    this.console?.log("UnexpectedScriptLoadPanel initialized");
 
     let args = window.arguments[0];
     let action = args.action;
@@ -160,7 +160,7 @@ var UnexpectedScriptLoadPanel = new (class {
    * Hide the pop up (for event handlers).
    */
   close(userDismissed) {
-    this.console?.warn("UnexpectedScriptLoadPanel is closing");
+    this.console?.log("UnexpectedScriptLoadPanel is closing");
     if (userDismissed) {
       Glean.unexpectedScriptLoad.dialogDismissed.record();
     }
@@ -205,7 +205,7 @@ var UnexpectedScriptLoadPanel = new (class {
   }
 
   onBlock() {
-    this.#console.warn("UnexpectedScriptLoadPanel.onBlock() called");
+    this.console?.log("UnexpectedScriptLoadPanel.onBlock() called");
     Glean.unexpectedScriptLoad.scriptBlocked.record();
     this.maybeReport();
 
@@ -221,7 +221,7 @@ var UnexpectedScriptLoadPanel = new (class {
   }
 
   onAllow() {
-    this.#console.warn("UnexpectedScriptLoadPanel.onAllow() called");
+    this.console?.log("UnexpectedScriptLoadPanel.onAllow() called");
     Glean.unexpectedScriptLoad.scriptAllowed.record();
     this.maybeReport();
 
