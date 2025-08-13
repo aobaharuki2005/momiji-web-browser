@@ -114,6 +114,9 @@
     <!-- Label for toggling the Tab Manager enhancements -->
     <string name="preferences_tab_manager_enhancements" translatable="false">Enable Tab Manager enhancements</string>
 
+    <string name="preferences_terms_of_use_accepted" translatable="false">Terms of Use accepted</string>
+    <string name="preferences_terms_of_use_debug_timer" translatable="false">30s ToU timer enabled</string>
+
     <!-- Label for enabling LNA blocking -->
     <string name="preferences_debug_settings_enable_lna_blocking" translatable="false">Enable LNA blocking</string>
 

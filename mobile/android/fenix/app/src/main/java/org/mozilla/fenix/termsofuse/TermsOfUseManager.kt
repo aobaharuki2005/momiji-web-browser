@@ -7,6 +7,7 @@ package org.mozilla.fenix.termsofuse
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.Settings.Companion.FIVE_DAYS_MS
+import org.mozilla.fenix.utils.Settings.Companion.THIRTY_SECONDS_MS
 
 /**
  * Helps determine when the terms of use prompt should show.
@@ -54,8 +55,13 @@ class TermsOfUseManager(private val settings: Settings) {
         isFirstCheckSinceStartingApp = false
 
         val durationSinceLastPrompt = currentTimeInMillis - settings.lastTermsOfUsePromptTimeInMillis
+        val durationBetweenPrompts = if (settings.isDebugTermsOfServiceTriggerTimeEnabled) {
+            THIRTY_SECONDS_MS
+        } else {
+            FIVE_DAYS_MS
+        }
 
-        if (settings.hasPostponedAcceptingTermsOfUse && durationSinceLastPrompt < FIVE_DAYS_MS) return false
+        if (settings.hasPostponedAcceptingTermsOfUse && durationSinceLastPrompt < durationBetweenPrompts) return false
         if (!ignoreFirstCheckSinceStartingApp && !isFirstCheck) return false
         if (!Config.channel.isDebug) return false
 
