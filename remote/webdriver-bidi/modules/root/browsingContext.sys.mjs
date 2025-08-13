@@ -822,7 +822,7 @@ class BrowsingContextModule extends RootBiDiModule {
       contexts = [this.#getBrowsingContext(rootId)];
     } else {
       // Return all top-level browsing contexts.
-      contexts = lazy.TabManager.getBrowsers().map(
+      contexts = lazy.TabManager.browsers.map(
         browser => browser.browsingContext
       );
     }

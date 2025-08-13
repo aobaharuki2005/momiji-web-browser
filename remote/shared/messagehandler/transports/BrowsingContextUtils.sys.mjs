@@ -110,10 +110,6 @@ export function isInitialDocument(browsingContext) {
 export function isBrowsingContextCompatible(browsingContext, options = {}) {
   const { browserId, userContext } = options;
 
-  if (!BrowsingContext.isInstance(browsingContext)) {
-    return false;
-  }
-
   // If a browserId was provided, skip browsing contexts which are not
   // associated with this browserId.
   if (browserId !== undefined && browsingContext.browserId !== browserId) {
