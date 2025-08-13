@@ -875,7 +875,7 @@ class HomeFragment : Fragment() {
             },
         )
 
-        toolbarView.build(requireComponents.core.store.state)
+        toolbarView.build(requireComponents.core.store.state, requireContext().settings().enableHomepageSearchBar)
         if (requireContext().settings().isTabStripEnabled) {
             initTabStrip()
         }

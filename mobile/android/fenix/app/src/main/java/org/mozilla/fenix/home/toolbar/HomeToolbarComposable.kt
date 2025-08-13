@@ -46,7 +46,6 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition.BOTTOM
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.TOP
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.pixelSizeFor
-import org.mozilla.fenix.home.toolbar.HomeToolbarComposable.Companion.DirectToSearchConfig
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -154,7 +153,7 @@ internal class HomeToolbarComposable(
         homeBinding.homeLayout.addView(this)
     }
 
-    override fun build(browserState: BrowserState) {
+    override fun build(browserState: BrowserState, middleSearchEnabled: Boolean) {
         layout.updateLayoutParams {
             (this as? CoordinatorLayout.LayoutParams)?.gravity = when (settings.toolbarPosition) {
                 TOP -> Gravity.TOP
@@ -168,6 +167,7 @@ internal class HomeToolbarComposable(
 
         updateHomeAppBarIntegration()
         configureStartingInSearchMode()
+        updateAddressBarVisibility(!middleSearchEnabled)
     }
 
     override fun updateDividerVisibility(isVisible: Boolean) {

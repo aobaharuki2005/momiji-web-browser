@@ -7,7 +7,6 @@ package org.mozilla.fenix.home.toolbar
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
@@ -66,7 +65,7 @@ internal class HomeToolbarView(
         initLayoutParameters()
     }
 
-    override fun build(browserState: BrowserState) {
+    override fun build(browserState: BrowserState, middleSearchEnabled: Boolean) {
         initLayoutParameters()
 
         toolbarBinding.toolbarText.compoundDrawablePadding =
@@ -92,6 +91,7 @@ internal class HomeToolbarView(
         )
 
         updateButtonVisibility(browserState)
+        updateAddressBarVisibility(!middleSearchEnabled)
     }
 
     override fun updateButtonVisibility(browserState: BrowserState) {
