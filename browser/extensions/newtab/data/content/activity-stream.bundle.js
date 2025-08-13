@@ -5024,10 +5024,84 @@ function AdBannerContextMenu({
     source: type.toUpperCase()
   })));
 }
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/PromoCard/PromoCard.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+
+const PREF_PROMO_CARD_DISMISSED = "discoverystream.promoCard.visible";
+
+/**
+ * The PromoCard component displays a promotional message.
+ * It is used next to the AdBanner component in a four-column layout.
+ */
+
+const PromoCard = () => {
+  const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
+  const onCtaClick = (0,external_React_namespaceObject.useCallback)(() => {
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.PROMO_CARD_CLICK
+    }));
+  }, [dispatch]);
+  const onDismissClick = (0,external_React_namespaceObject.useCallback)(() => {
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.PROMO_CARD_DISMISS
+    }));
+    dispatch(actionCreators.SetPref(PREF_PROMO_CARD_DISMISSED, false));
+  }, [dispatch]);
+  const handleIntersection = (0,external_React_namespaceObject.useCallback)(() => {
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.PROMO_CARD_IMPRESSION
+    }));
+  }, [dispatch]);
+  const ref = useIntersectionObserver(handleIntersection);
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "promo-card-wrapper",
+    ref: el => {
+      ref.current = [el];
+    }
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "promo-card-dismiss-button"
+  }, /*#__PURE__*/external_React_default().createElement("moz-button", {
+    type: "icon ghost",
+    size: "small",
+    "data-l10n-id": "newtab-promo-card-dismiss-button",
+    iconsrc: "chrome://global/skin/icons/close.svg",
+    onClick: onDismissClick,
+    onKeyDown: onDismissClick
+  })), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "promo-card-inner"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "img-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement("img", {
+    src: "chrome://newtab/content/data/content/assets/puzzle-fox.svg",
+    alt: ""
+  })), /*#__PURE__*/external_React_default().createElement("span", {
+    className: "promo-card-title",
+    "data-l10n-id": "newtab-promo-card-title"
+  }), /*#__PURE__*/external_React_default().createElement("span", {
+    className: "promo-card-body",
+    "data-l10n-id": "newtab-promo-card-body"
+  }), /*#__PURE__*/external_React_default().createElement("span", {
+    className: "promo-card-cta-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement("a", {
+    href: "https://support.mozilla.org/kb/sponsor-privacy",
+    "data-l10n-id": "newtab-promo-card-cta",
+    target: "_blank",
+    rel: "noreferrer",
+    onClick: onCtaClick
+  }))));
+};
+
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/AdBanner/AdBanner.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -5040,6 +5114,8 @@ const AdBanner_PREF_CONTEXTUAL_ADS = "discoverystream.sections.contextualAds.ena
 const PREF_USER_INFERRED_PERSONALIZATION = "discoverystream.sections.personalization.inferred.user.enabled";
 const PREF_SYSTEM_INFERRED_PERSONALIZATION = "discoverystream.sections.personalization.inferred.enabled";
 const PREF_REPORT_ADS_ENABLED = "discoverystream.reportAds.enabled";
+const PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
+const PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
 
 /**
  * A new banner ad that appears between rows of stories: leaderboard or billboard size.
@@ -5080,6 +5156,7 @@ const AdBanner = ({
       height: undefined
     };
   };
+  const promoCardEnabled = spoc.format === "billboard" && prefs[PREF_PROMOCARD_ENABLED] && prefs[PREF_PROMOCARD_VISIBLE];
   const sectionsEnabled = prefs[AdBanner_PREF_SECTIONS_ENABLED];
   const ohttpEnabled = prefs[AdBanner_PREF_OHTTP_UNIFIED_ADS];
   const contextualAds = prefs[AdBanner_PREF_CONTEXTUAL_ADS];
@@ -5087,7 +5164,7 @@ const AdBanner = ({
   const showAdReporting = prefs[PREF_REPORT_ADS_ENABLED];
   const ohttpImagesEnabled = prefs.ohttpImagesConfig?.enabled;
   const [menuActive, setMenuActive] = (0,external_React_namespaceObject.useState)(false);
-  const adBannerWrapperClassName = `ad-banner-wrapper ${menuActive ? "active" : ""}`;
+  const adBannerWrapperClassName = `ad-banner-wrapper ${menuActive ? "active" : ""} ${promoCardEnabled ? "promo-card" : ""}`;
   const {
     width: imgWidth,
     height: imgHeight
@@ -5182,81 +5259,8 @@ const AdBanner = ({
     type: type,
     showAdReporting: showAdReporting,
     toggleActive: toggleActive
-  }))));
+  }))), promoCardEnabled && /*#__PURE__*/external_React_default().createElement(PromoCard, null));
 };
-;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/PromoCard/PromoCard.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-const PREF_PROMO_CARD_DISMISSED = "discoverystream.promoCard.visible";
-
-/**
- * The PromoCard component displays a promotional message.
- * It is used next to the AdBanner component in a four-column layout.
- */
-
-const PromoCard = () => {
-  const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
-  const onCtaClick = (0,external_React_namespaceObject.useCallback)(() => {
-    dispatch(actionCreators.AlsoToMain({
-      type: actionTypes.PROMO_CARD_CLICK
-    }));
-  }, [dispatch]);
-  const onDismissClick = (0,external_React_namespaceObject.useCallback)(() => {
-    dispatch(actionCreators.AlsoToMain({
-      type: actionTypes.PROMO_CARD_DISMISS
-    }));
-    dispatch(actionCreators.SetPref(PREF_PROMO_CARD_DISMISSED, false));
-  }, [dispatch]);
-  const handleIntersection = (0,external_React_namespaceObject.useCallback)(() => {
-    dispatch(actionCreators.AlsoToMain({
-      type: actionTypes.PROMO_CARD_IMPRESSION
-    }));
-  }, [dispatch]);
-  const ref = useIntersectionObserver(handleIntersection);
-  return /*#__PURE__*/external_React_default().createElement("div", {
-    className: "promo-card-wrapper",
-    ref: el => {
-      ref.current = [el];
-    }
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "promo-card-dismiss-button"
-  }, /*#__PURE__*/external_React_default().createElement("moz-button", {
-    type: "icon ghost",
-    size: "small",
-    "data-l10n-id": "newtab-promo-card-dismiss-button",
-    iconsrc: "chrome://global/skin/icons/close.svg",
-    onClick: onDismissClick,
-    onKeyDown: onDismissClick
-  })), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "promo-card-inner"
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "img-wrapper"
-  }, /*#__PURE__*/external_React_default().createElement("img", {
-    src: "chrome://newtab/content/data/content/assets/puzzle-fox.svg",
-    alt: ""
-  })), /*#__PURE__*/external_React_default().createElement("span", {
-    className: "promo-card-title",
-    "data-l10n-id": "newtab-promo-card-title"
-  }), /*#__PURE__*/external_React_default().createElement("span", {
-    className: "promo-card-body",
-    "data-l10n-id": "newtab-promo-card-body"
-  }), /*#__PURE__*/external_React_default().createElement("span", {
-    className: "promo-card-cta-wrapper"
-  }, /*#__PURE__*/external_React_default().createElement("a", {
-    href: "https://support.mozilla.org/kb/sponsor-privacy",
-    "data-l10n-id": "newtab-promo-card-cta",
-    target: "_blank",
-    rel: "noreferrer",
-    onClick: onCtaClick
-  }))));
-};
-
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/TrendingSearches/TrendingSearches.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -5501,7 +5505,6 @@ function TrendingSearches() {
 
 
 
-
 const PREF_ONBOARDING_EXPERIENCE_DISMISSED = "discoverystream.onboardingExperience.dismissed";
 const PREF_SECTIONS_CARDS_ENABLED = "discoverystream.sections.cards.enabled";
 const PREF_THUMBS_UP_DOWN_ENABLED = "discoverystream.thumbsUpDown.enabled";
@@ -5514,8 +5517,6 @@ const PREF_LIST_FEED_SELECTED_FEED = "discoverystream.contextualContent.selected
 const PREF_FAKESPOT_ENABLED = "discoverystream.contextualContent.fakespot.enabled";
 const PREF_BILLBOARD_ENABLED = "newtabAdSize.billboard";
 const PREF_BILLBOARD_POSITION = "newtabAdSize.billboard.position";
-const PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
-const PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
 const PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
 const PREF_LEADERBOARD_POSITION = "newtabAdSize.leaderboard.position";
 const PREF_TRENDING_SEARCH = "trendingSearch.enabled";
@@ -5800,7 +5801,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const listFeedEnabled = prefs[PREF_LIST_FEED_ENABLED];
     const listFeedSelectedFeed = prefs[PREF_LIST_FEED_SELECTED_FEED];
     const billboardEnabled = prefs[PREF_BILLBOARD_ENABLED];
-    const promoCardEnabled = prefs[PREF_PROMOCARD_ENABLED] && prefs[PREF_PROMOCARD_VISIBLE];
     const leaderboardEnabled = prefs[PREF_LEADERBOARD_ENABLED];
     const trendingEnabled = prefs[PREF_TRENDING_SEARCH] && prefs[PREF_TRENDING_SEARCH_SYSTEM] && prefs[PREF_SEARCH_ENGINE]?.toLowerCase() === "google";
     const trendingVariant = prefs[PREF_TRENDING_SEARCH_VARIANT];
@@ -5944,9 +5944,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
             row: row,
             prefs: prefs
           }));
-          if (promoCardEnabled) {
-            cards.splice(bannerIndex + 1, 0, /*#__PURE__*/external_React_default().createElement(PromoCard, null));
-          }
         };
         const getBannerIndex = () => {
           // Calculate the index for where the AdBanner should be added, depending on number of cards per row on the grid
@@ -12065,7 +12062,6 @@ function FollowSectionButtonHighlight({
 
 
 
-
 // Prefs
 const CardSections_PREF_SECTIONS_CARDS_ENABLED = "discoverystream.sections.cards.enabled";
 const PREF_SECTIONS_CARDS_THUMBS_UP_DOWN_ENABLED = "discoverystream.sections.cards.thumbsUpDown.enabled";
@@ -12078,8 +12074,6 @@ const PREF_INTEREST_PICKER_ENABLED = "discoverystream.sections.interestPicker.en
 const CardSections_PREF_VISIBLE_SECTIONS = "discoverystream.sections.interestPicker.visibleSections";
 const CardSections_PREF_BILLBOARD_ENABLED = "newtabAdSize.billboard";
 const CardSections_PREF_BILLBOARD_POSITION = "newtabAdSize.billboard.position";
-const CardSections_PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
-const CardSections_PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
 const CardSections_PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
 const CardSections_PREF_LEADERBOARD_POSITION = "newtabAdSize.leaderboard.position";
 const PREF_REFINED_CARDS_ENABLED = "discoverystream.refinedCardsLayout.enabled";
@@ -12450,7 +12444,6 @@ function CardSections({
   // Add a billboard/leaderboard IAB ad to the sectionsToRender array (if enabled/possible).
   const billboardEnabled = prefs[CardSections_PREF_BILLBOARD_ENABLED];
   const leaderboardEnabled = prefs[CardSections_PREF_LEADERBOARD_ENABLED];
-  const promoCardEnabled = prefs[CardSections_PREF_PROMOCARD_ENABLED] && prefs[CardSections_PREF_PROMOCARD_VISIBLE];
   if ((billboardEnabled || leaderboardEnabled) && spocs?.data?.newtab_spocs?.items) {
     const spocToRender = spocs.data.newtab_spocs.items.find(({
       format
@@ -12461,9 +12454,7 @@ function CardSections({
       const row = spocToRender.format === "leaderboard" ? prefs[CardSections_PREF_LEADERBOARD_POSITION] : prefs[CardSections_PREF_BILLBOARD_POSITION];
       sectionsToRender.splice(
       // Math.min is used here to ensure the given row stays within the bounds of the sectionsToRender array.
-      Math.min(sectionsToRender.length - 1, row), 0, /*#__PURE__*/external_React_default().createElement("div", {
-        className: "ad-banner-container"
-      }, /*#__PURE__*/external_React_default().createElement(AdBanner, {
+      Math.min(sectionsToRender.length - 1, row), 0, /*#__PURE__*/external_React_default().createElement(AdBanner, {
         spoc: spocToRender,
         key: `dscard-${spocToRender.id}`,
         dispatch: dispatch,
@@ -12471,7 +12462,7 @@ function CardSections({
         firstVisibleTimestamp: firstVisibleTimestamp,
         row: row,
         prefs: prefs
-      }), promoCardEnabled && /*#__PURE__*/external_React_default().createElement(PromoCard, null)));
+      }));
     }
   }
 

@@ -9,7 +9,6 @@ import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
 import { ListFeed } from "../ListFeed/ListFeed.jsx";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { AdBanner } from "../AdBanner/AdBanner.jsx";
-import { PromoCard } from "../PromoCard/PromoCard.jsx";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import React, { useEffect, useState, useRef, useCallback } from "react";
@@ -31,8 +30,6 @@ const PREF_FAKESPOT_ENABLED =
   "discoverystream.contextualContent.fakespot.enabled";
 const PREF_BILLBOARD_ENABLED = "newtabAdSize.billboard";
 const PREF_BILLBOARD_POSITION = "newtabAdSize.billboard.position";
-const PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
-const PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
 const PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
 const PREF_LEADERBOARD_POSITION = "newtabAdSize.leaderboard.position";
 const PREF_TRENDING_SEARCH = "trendingSearch.enabled";
@@ -365,8 +362,6 @@ export class _CardGrid extends React.PureComponent {
     const listFeedEnabled = prefs[PREF_LIST_FEED_ENABLED];
     const listFeedSelectedFeed = prefs[PREF_LIST_FEED_SELECTED_FEED];
     const billboardEnabled = prefs[PREF_BILLBOARD_ENABLED];
-    const promoCardEnabled =
-      prefs[PREF_PROMOCARD_ENABLED] && prefs[PREF_PROMOCARD_VISIBLE];
     const leaderboardEnabled = prefs[PREF_LEADERBOARD_ENABLED];
     const trendingEnabled =
       prefs[PREF_TRENDING_SEARCH] &&
@@ -552,10 +547,6 @@ export class _CardGrid extends React.PureComponent {
               prefs={prefs}
             />
           );
-
-          if (promoCardEnabled) {
-            cards.splice(bannerIndex + 1, 0, <PromoCard />);
-          }
         };
 
         const getBannerIndex = () => {

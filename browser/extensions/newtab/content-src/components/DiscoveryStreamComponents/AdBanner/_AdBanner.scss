@@ -1,22 +1,3 @@
-// in a 4-column layout, the promo card fills remaining space
-@media (min-width: $break-point-sections-variant) {
-  .ad-banner-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
-    margin-block: var(--space-medium) var(--space-xlarge);
-
-    .ad-banner-wrapper {
-      width: unset;
-      display: inline-block;
-      inset-inline-start: unset;
-      transform: unset;
-      margin-block: unset;
-    }
-  }
-}
-
 .ad-banner-wrapper {
   --banner-padding: var(--space-large);
   --billboard-width: 970px;
@@ -27,6 +8,8 @@
   --leaderboard-height: 90px;
 
   position: relative;
+  display: flex;
+  justify-content: space-around;
   grid-column: 1/-1;
   // allow the ad banner to take up full width
   // of screen rather than card-grid width
@@ -35,6 +18,13 @@
   transform: translate3d(-50%, 0, 0);
   margin-block-start: var(--space-medium);
   margin-block-end: var(--space-xlarge);
+
+  // in a 4-column layout, the promo card fills remaining space
+  @media (min-width: $break-point-sections-variant) {
+    &.promo-card {
+      justify-content: space-between;
+    }
+  }
 
   // Adding min-width if .billboard/.leaderboard exist within
   // .ad-banner-inner to keep the banners from shrinking on smaller screens
@@ -55,7 +45,6 @@
   }
 
   .ad-banner-inner {
-    margin-inline: auto;
     position: relative;
     background: var(--newtab-background-card);
     box-shadow: var(--box-shadow-card);
