@@ -50,6 +50,55 @@ export let UnexpectedScriptObserver = {
       return;
     }
 
+    let notificationBox =
+      lazy.BrowserWindowTracker.getTopWindow().gNotificationBox;
+
+    let scriptOrigin;
+    try {
+      let scriptUrl = new URL(aScriptName);
+      scriptOrigin = scriptUrl.hostname;
+
+      if (scriptUrl.protocol != "http:" && scriptUrl.protocol != "https:") {
+        // For this dialog, we only care about loading scripts from web origins
+        return;
+      }
+    } catch (e) {
+      console.error("Invalid scriptName URL:", aScriptName);
+      // For this dialog, we only care about loading scripts from web origins,
+      // so if we couldn't parse it, just exit.
+      return;
+    }
+
+    let MozXULElement = lazy.BrowserWindowTracker.getTopWindow().MozXULElement;
+    let document = lazy.BrowserWindowTracker.getTopWindow().document;
+
+    MozXULElement.insertFTLIfNeeded("browser/unexpectedScript.ftl");
+    let messageFragment = document.createDocumentFragment();
+    let message = document.createElement("span");
+    document.l10n.setAttributes(message, "unexpected-script-load-message", {
+      origin: scriptOrigin,
+    });
+    messageFragment.appendChild(message);
+
+    let buttons = [{ supportPage: "unexpected-script-load" }];
+    buttons.push({
+      callback() {},
+      "l10n-id": "unexpected-script-load-message-button-allow",
+    });
+    buttons.push({
+      "l10n-id": "unexpected-script-load-message-button-block",
+      callback() {},
+    });
+
+    await notificationBox.appendNotification(
+      NOTIFICATION_VALUE,
+      {
+        label: messageFragment,
+        priority: notificationBox.PRIORITY_WARNING_HIGH,
+      },
+      buttons
+    );
+
     this._notificationHasBeenShown = true;
   },
 };
