@@ -83,7 +83,7 @@
   <!-- In the example, the two URLs in markup do not need to be translated. -->
   <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Browserul nu a găsit serverul-gazdă pentru adresa furnizată.</p> <ul> <li>Verifică adresa pentru erori de tastare precum <strong>ww</strong>.exemplu.com în loc de <strong>www</strong>.exemplu.com.</li> <li>Dacă nu poți încărca nicio pagină, verifică datele dispozitivului sau conexiunea Wi-Fi.</li> </ul>]]></string>
   <!-- The document title and heading of an error page. -->
-  <string name="mozac_browser_errorpages_no_internet_title_2">Se pare că există o problemă cu conexiunea ta la internet</string>
+  <string name="mozac_browser_errorpages_no_internet_title_2">Se pare că ai o problemă cu conexiunea la internet</string>
   <!-- The main body text of this error page. It will be shown beneath the title -->
   <string name="mozac_browser_errorpages_no_internet_message_2">Încearcă să te conectezi pe un alt dispozitiv. Verifică modemul sau routerul. Deconectează-te și reconectează-te la Wi-Fi.</string>
   <!-- The document title and heading of an error page. -->

@@ -2156,7 +2156,7 @@
   <string name="notification_pbm_delete_text_2">Затваряне на поверителни раздели</string>
   <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
   <string name="notification_erase_title_android_14">Затваряне на поверителни раздели?</string>
-  <string name="notification_erase_text_android_14">Докоснете или плъзнете това известие, за да затворите поверителни раздели.</string>
+  <string name="notification_erase_text_android_14">Докоснете или плъзнете това известие, за да затворите поверителните раздели.</string>
   <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
   <string name="notification_marketing_channel_name">Маркетинг</string>
   <!--
@@ -2186,7 +2186,7 @@
   <!-- Title B shown in the notification that pops up to re-engage the user -->
   <string name="notification_re_engagement_B_title">Направете първото си търсене</string>
   <!-- Text B shown in the notification that pops up to re-engage the user -->
-  <string name="notification_re_engagement_B_text">Намерете нещо наблизо. Или да откриете нещо забавно.</string>
+  <string name="notification_re_engagement_B_text">Намерете нещо наоколо. Или отрийте нещо забавно.</string>
   <!--
     Survey
 
@@ -2475,9 +2475,9 @@
   <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_redirect_trackers_description">Изчиства бисквитки за пренасочване към известни проследяващи страници.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
-  <string name="etp_suspected_fingerprinters_title">Съмнения за снемане на пръстови отпечатъци</string>
+  <string name="etp_suspected_fingerprinters_title">Съмнения за изпозлване на цифрови отпечатци</string>
   <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
-  <string name="etp_suspected_fingerprinters_description">Активира защита от пръстови отпечатъци за спиране на съмнителни отпечатъци.</string>
+  <string name="etp_suspected_fingerprinters_description">Активира защита от цифрови отпечатъци и спирането им.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_known_fingerprinters_title">Известни снемащи отпечатъци</string>
   <!--
@@ -2513,7 +2513,7 @@
   <!-- Summary displayed for "Default Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
   <string name="preference_doh_default_protection_summary">%1$s решава кога да използва защитен DNS, за да защити поверителността ви.</string>
   <!-- Bullet point 1 for "Default Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_default_protection_info_1">Използва се избран от вас доставчик</string>
+  <string name="preference_doh_default_protection_info_1">Използване на избран от вас доставчик</string>
   <!-- Bullet point 2 for "Default Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_default_protection_info_2">Използва вашия DNS ресолвер по подразбиране, ако има проблем с доставчика на сигурен DNS</string>
   <!-- Bullet point 3 for "Default Protection" information page under "DNS over HTTPS". %1$s is replaced by a link using `preference_doh_learn_more` at text ("Learn More"). -->
