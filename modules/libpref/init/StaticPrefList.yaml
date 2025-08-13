@@ -5547,12 +5547,6 @@
 #endif
   mirror: always
 
-# Whether WebGPU's GPUExternalTexture API is enabled.
-- name: dom.webgpu.external-texture.enabled
-  type: bool
-  value: false
-  mirror: once
-
 # For testing purposes, crash if we don't get a hardware adapter.
 - name: dom.webgpu.testing.assert-hardware-adapter
   type: RelaxedAtomicBool

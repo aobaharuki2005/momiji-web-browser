@@ -3245,18 +3245,19 @@ void gfxPlatform::InitWebGPUConfig() {
     return;
   }
 
-  FeatureState& featureWebGPU = gfxConfig::GetFeature(Feature::WEBGPU);
-  featureWebGPU.EnableByDefault();
+  FeatureState& feature = gfxConfig::GetFeature(Feature::WEBGPU);
+  feature.EnableByDefault();
 
   nsCString message;
   nsCString failureId;
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WEBGPU, &message, failureId)) {
     if (StaticPrefs::gfx_webgpu_ignore_blocklist_AtStartup()) {
-      featureWebGPU.UserForceEnable(
+      feature.UserForceEnable(
           "Ignoring blocklist entry because gfx.webgpu.ignore-blocklist is "
           "true.");
     }
-    featureWebGPU.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
+
+    feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   }
 
   // When this condition changes, be sure to update the `run-if`
@@ -3268,7 +3269,7 @@ void gfxPlatform::InitWebGPUConfig() {
       "WEBGPU_DISABLE_RELEASE_OR_NON_WINDOWS"_ns);
 #endif
 
-  gfxVars::SetAllowWebGPU(featureWebGPU.IsEnabled());
+  gfxVars::SetAllowWebGPU(feature.IsEnabled());
 
   if (StaticPrefs::dom_webgpu_allow_present_without_readback()
 #if XP_WIN
@@ -3277,24 +3278,6 @@ void gfxPlatform::InitWebGPUConfig() {
   ) {
     gfxVars::SetAllowWebGPUPresentWithoutReadback(true);
   }
-
-  FeatureState& featureExternalTexture =
-      gfxConfig::GetFeature(Feature::WEBGPU_EXTERNAL_TEXTURE);
-  featureExternalTexture.SetDefaultFromPref(
-      StaticPrefs::GetPrefName_dom_webgpu_external_texture_enabled(), true,
-      StaticPrefs::GetPrefDefault_dom_webgpu_external_texture_enabled());
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WEBGPU_EXTERNAL_TEXTURE,
-                           &message, failureId)) {
-    featureExternalTexture.Disable(FeatureStatus::Blocklisted, message.get(),
-                                   failureId);
-  }
-#if !defined(XP_WIN)
-  featureExternalTexture.ForceDisable(
-      FeatureStatus::Blocked,
-      "WebGPU external textures are only supported on Windows",
-      "WEBGPU_EXTERNAL_TEXTURE_UNSUPPORTED_OS"_ns);
-#endif
-  gfxVars::SetAllowWebGPUExternalTexture(featureExternalTexture.IsEnabled());
 }
 
 #ifdef XP_WIN
