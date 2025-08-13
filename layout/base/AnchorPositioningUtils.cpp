@@ -127,10 +127,10 @@ bool IsAnchorLaidOutStrictlyBeforeElement(
         }
 
         if (parentContainingBlock == positionedContainingBlock) {
-          return !parentContainingBlock->IsAbsPosContainingBlock() ||
-                 nsLayoutUtils::CompareTreePosition(
-                     parentContainingBlock, aPositionedFrame,
-                     aPositionedFrameAncestors, nullptr) < 0;
+          return !it->IsAbsolutelyPositioned() ||
+                 nsLayoutUtils::CompareTreePosition(it, aPositionedFrame,
+                                                    aPositionedFrameAncestors,
+                                                    nullptr) < 0;
         }
 
         it = parentContainingBlock;
