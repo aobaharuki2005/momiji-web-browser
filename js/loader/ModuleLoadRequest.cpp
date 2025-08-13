@@ -53,7 +53,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ModuleLoadRequest::ModuleLoadRequest(
-    nsIURI* aURI, JS::ModuleType aModuleType,
+    nsIURI* aURI, ModuleType aModuleType,
     mozilla::dom::ReferrerPolicy aReferrerPolicy,
     ScriptFetchOptions* aFetchOptions,
     const mozilla::dom::SRIMetadata& aIntegrity, nsIURI* aReferrer,
@@ -175,9 +175,9 @@ void ModuleLoadRequest::LoadFinished() {
   mLoader->OnModuleLoadComplete(request);
 }
 
-void ModuleLoadRequest::SetDynamicImport(
-    LoadedScript* aReferencingScript, JS::Handle<JSObject*> aModuleRequestObj,
-    JS::Handle<JSObject*> aPromise) {
+void ModuleLoadRequest::SetDynamicImport(LoadedScript* aReferencingScript,
+                                         Handle<JSObject*> aModuleRequestObj,
+                                         Handle<JSObject*> aPromise) {
   mDynamicReferencingScript = aReferencingScript;
   mModuleRequestObj = aModuleRequestObj;
   mDynamicPromise = aPromise;
