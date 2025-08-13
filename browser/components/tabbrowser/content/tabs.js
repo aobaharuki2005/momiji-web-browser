@@ -2760,7 +2760,6 @@
       let size = this.verticalMode ? "height" : "width";
       let translateAxis = this.verticalMode ? "translateY" : "translateX";
       let { width: tabWidth, height: tabHeight } = bounds(draggedTab);
-      let tabSize = this.verticalMode ? tabHeight : tabWidth;
       let translateX = event.screenX - dragData.screenX;
       let translateY = event.screenY - dragData.screenY;
 
@@ -2770,6 +2769,7 @@
       dragData.translateY = translateY;
 
       // Move the dragged tab based on the mouse position.
+      let lastTab = allTabs.at(-1);
       let periphery = document.getElementById(
         "tabbrowser-arrowscrollbox-periphery"
       );
@@ -2781,20 +2781,19 @@
       let shiftSize = lastMovingTabScreen - firstMovingTabScreen;
       let translate = screen - dragData[screenAxis];
 
-      // Constrain the range over which the moving tabs can move between the pinned container and periphery.
+      // Constrain the range over which the moving tabs can move between the pinned container and last tab.
       let startBound = this[screenAxis] - firstMovingTabScreen;
-      let endBound =
-        periphery[screenAxis] -
-        lastMovingTabScreen +
-        // Use periphery width only in horizontal rtl mode since we are moving the other direction.
-        // Tab width results in a bounds that falls short, whilst periphery width is accurate.
-        (this.#rtlMode ? bounds(periphery).width : tabSize);
-      // Account for marginBlockStart added to periphery on vertical overflow
-      if (
-        this.arrowScrollbox.hasAttribute("overflowing") &&
-        this.verticalMode
-      ) {
-        endBound = endBound - tabHeight;
+      // Use periphery when the endBound would otherwise be the dragged tab.
+      let endBound;
+      if (!numPinned && lastTab == draggedTab) {
+        endBound =
+          periphery[screenAxis] -
+          lastMovingTabScreen +
+          // Use periphery width only in horizontal rtl mode since we are moving the other direction.
+          // Tab width results in a bounds that falls short, whilst periphery width is accurate.
+          (this.#rtlMode ? bounds(periphery).width : bounds(draggedTab)[size]);
+      } else {
+        endBound = endEdge(lastTab) - lastMovingTabScreen;
       }
 
       translate = this.#rtlMode
@@ -2802,18 +2801,12 @@
         : Math.min(Math.max(translate, startBound), endBound);
 
       // Center the tab under the cursor if the tab is not under the cursor while dragging
-      let draggedTabScreenAxis = draggedTab[screenAxis] + translate;
       if (
-        (screen < draggedTabScreenAxis ||
-          screen > draggedTabScreenAxis + tabSize) &&
-        draggedTabScreenAxis + tabSize < endBound &&
-        draggedTabScreenAxis > startBound
+        screen < draggedTab[screenAxis] + translate ||
+        screen > endEdge(draggedTab) + translate
       ) {
-        translate = screen - draggedTab[screenAxis] - tabSize / 2;
-        // Ensure, after the above calculation, we are still within bounds
-        translate = this.#rtlMode
-          ? Math.min(Math.max(translate, endBound), startBound)
-          : Math.min(Math.max(translate, startBound), endBound);
+        translate =
+          screen - draggedTab[screenAxis] - bounds(draggedTab)[size] / 2;
       }
 
       if (!gBrowser.pinnedTabCount) {
