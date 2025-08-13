@@ -160,6 +160,7 @@ pub extern "C" fn wgpu_server_new(owner: WebGPUParentPtr) -> *mut Global {
                 },
                 dx12: wgt::Dx12BackendOptions {
                     shader_compiler: dx12_shader_compiler,
+                    ..Default::default()
                 },
                 noop: wgt::NoopBackendOptions { enable: false },
             },
