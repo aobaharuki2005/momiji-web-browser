@@ -222,7 +222,7 @@ export class RootTransport {
     let browsingContexts = [];
 
     // Fetch all tab related browsing contexts for top-level windows.
-    for (const { browsingContext } of lazy.TabManager.browsers) {
+    for (const { browsingContext } of lazy.TabManager.getBrowsers()) {
       if (
         lazy.isBrowsingContextCompatible(browsingContext, {
           browserId,
