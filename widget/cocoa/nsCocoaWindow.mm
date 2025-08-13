@@ -956,7 +956,7 @@ void nsCocoaWindow::SetCompositorWidgetDelegate(
 void nsCocoaWindow::GetCompositorWidgetInitData(
     mozilla::widget::CompositorWidgetInitData* aInitData) {
   MOZ_ASSERT(mChildEndpoint.IsValid());
-  auto deviceIntRect = GetBounds();
+  auto deviceIntRect = GetClientBounds();
   *aInitData = mozilla::widget::CocoaCompositorWidgetInitData(
       deviceIntRect.Size(), std::move(mChildEndpoint));
 }
@@ -6366,11 +6366,19 @@ void nsCocoaWindow::BackingScaleFactorChanged() {
     return;
   }
 
+  UpdateBounds();
+
   SuspendAsyncCATransactions();
   mBackingScaleFactor = newScale;
   if (mNativeLayerRoot) {
     mNativeLayerRoot->SetBackingScale(newScale);
   }
+
+  if (mCompositorWidgetDelegate) {
+    auto deviceIntRect = GetClientBounds();
+    mCompositorWidgetDelegate->NotifyClientSizeChanged(deviceIntRect.Size());
+  }
+
   NotifyAPZOfDPIChange();
   if (mWidgetListener) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
@@ -7048,7 +7056,7 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   UpdateBounds();
 
   if (mCompositorWidgetDelegate) {
-    auto deviceIntRect = GetBounds();
+    auto deviceIntRect = GetClientBounds();
     mCompositorWidgetDelegate->NotifyClientSizeChanged(deviceIntRect.Size());
   }
 
