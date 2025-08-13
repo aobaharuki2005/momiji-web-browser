@@ -50,6 +50,8 @@ export let UnexpectedScriptObserver = {
       return;
     }
 
+    GleanPings.unexpectedScriptLoad.setEnabled(true);
+
     let scriptOrigin;
     try {
       let scriptUrl = new URL(aScriptName);
@@ -92,8 +94,14 @@ export let UnexpectedScriptObserver = {
     };
 
     // ----------------------------------------------------------------
-
-    let buttons = [{ supportPage: "unexpected-script-load" }];
+    let buttons = [
+      {
+        supportPage: "unexpected-script-load",
+        callback: () => {
+          Glean.unexpectedScriptLoad.moreInfoOpened.record();
+        },
+      },
+    ];
     buttons.push({
       "l10n-id": "unexpected-script-load-message-button-allow",
       callback: () => {
@@ -109,11 +117,19 @@ export let UnexpectedScriptObserver = {
       },
     });
 
+    Glean.unexpectedScriptLoad.infobarShown.record();
+
     await notificationBox.appendNotification(
       NOTIFICATION_VALUE,
       {
         label: messageFragment,
         priority: notificationBox.PRIORITY_WARNING_HIGH,
+        eventCallback: event => {
+          if (event == "dismissed") {
+            Glean.unexpectedScriptLoad.infobarDismissed.record();
+            GleanPings.unexpectedScriptLoaded.submit();
+          }
+        },
       },
       buttons
     );

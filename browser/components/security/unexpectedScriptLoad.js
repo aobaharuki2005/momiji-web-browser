@@ -70,7 +70,9 @@ var UnexpectedScriptLoadPanel = new (class {
 
     if (action === "allow") {
       this.setupAllowLayout();
+      Glean.unexpectedScriptLoad.scriptAllowedOpened.record();
     } else if (action === "block") {
+      Glean.unexpectedScriptLoad.scriptBlockedOpened.record();
       this.setupBlockLayout();
     }
     this.setupEventHandlers();
@@ -78,7 +80,7 @@ var UnexpectedScriptLoadPanel = new (class {
 
   setupEventHandlers() {
     this.elements.dialogCloseButton.addEventListener("click", () => {
-      this.close();
+      this.close(true);
     });
     // This is needed because a simple <a> element on the page run afoul
     // of the "Content windows may never have chrome windows as their openers"
@@ -88,6 +90,12 @@ var UnexpectedScriptLoadPanel = new (class {
     });
     this.elements.learnMoreLink.addEventListener("click", () => {
       this.onLearnMoreLink();
+    });
+    this.elements.allowButton.addEventListener("click", () => {
+      this.onAllow();
+    });
+    this.elements.blockButton.addEventListener("click", () => {
+      this.onBlock();
     });
     // If the user has filled in their email, but not checked the report checkbox,
     // we automatically check both report checkboxes when the email input loses focus.
@@ -143,9 +151,13 @@ var UnexpectedScriptLoadPanel = new (class {
   /**
    * Hide the pop up (for event handlers).
    */
-  close() {
+  close(userDismissed) {
     this.console?.warn("UnexpectedScriptLoadPanel is closing");
+    if (userDismissed) {
+      Glean.unexpectedScriptLoad.dialogDismissed.record();
+    }
     window.close();
+    GleanPings.unexpectedScriptLoad.submit();
   }
 
   /*
@@ -153,7 +165,8 @@ var UnexpectedScriptLoadPanel = new (class {
    * within the translations panel.
    */
   onLearnMoreLink() {
-    this.close();
+    Glean.unexpectedScriptLoad.moreInfoOpened.record();
+    this.close(false);
 
     // This is an ugly hack.
     // If a modal is open, we will not focus the tab we are opening, even if we ask to
@@ -167,6 +180,18 @@ var UnexpectedScriptLoadPanel = new (class {
       "https://support.mozilla.org/kb/unexpected-script-load",
       "tab"
     );
+  }
+
+  onBlock() {
+    this.#console.warn("UnexpectedScriptLoadPanel.onBlock() called");
+    Glean.unexpectedScriptLoad.scriptBlocked.record();
+    this.close(false);
+  }
+
+  onAllow() {
+    this.#console.warn("UnexpectedScriptLoadPanel.onAllow() called");
+    Glean.unexpectedScriptLoad.scriptAllowed.record();
+    this.close(false);
   }
 })();
 
