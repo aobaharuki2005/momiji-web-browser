@@ -1047,11 +1047,6 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
         static_cast<const RemoteObjectProxyBase*>(js::GetProxyHandler(obj));
     return handler->NoteChildren(obj, aCb);
   }
-
-  JS::Value value = js::MaybeGetScriptPrivate(obj);
-  if (!value.isUndefined()) {
-    aCb.NoteXPCOMChild(static_cast<nsISupports*>(value.toPrivate()));
-  }
 }
 
 void CycleCollectedJSRuntime::TraverseGCThing(
