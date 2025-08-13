@@ -76,6 +76,15 @@ describe("<DSCard>", () => {
     );
   });
 
+  it("should pass isSponsored=false when flightId is not provided", () => {
+    assert.propertyVal(wrapper.children().at(0).props(), "isSponsored", false);
+  });
+
+  it("should pass isSponsored=true when flightId is provided", () => {
+    wrapper.setProps({ flightId: "12345" });
+    assert.propertyVal(wrapper.children().at(0).props(), "isSponsored", true);
+  });
+
   it("should render DSLinkMenu", () => {
     // Note: <DSLinkMenu> component moved from a direct child element of `.ds-card`. See Bug 1893936
     const default_link_menu = wrapper.find(DSLinkMenu);

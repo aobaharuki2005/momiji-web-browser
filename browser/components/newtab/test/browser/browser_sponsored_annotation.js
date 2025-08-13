@@ -14,6 +14,7 @@ if (AppConstants.platform === "macosx") {
 ChromeUtils.defineESModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
@@ -43,6 +44,22 @@ const {
   VISIT_SOURCE_SPONSORED,
   VISIT_SOURCE_BOOKMARKED,
 } = PlacesUtils.history;
+
+async function clearHistoryAndBookmarks() {
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+  QueryCache.expireAll();
+}
+
+// Toggle the feed off and on as a workaround to read the new prefs.
+async function toggleTopsitesPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtabpage.activity-stream.feeds.system.topsites", false]],
+  });
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtabpage.activity-stream.feeds.system.topsites", true]],
+  });
+}
 
 /**
  * To be used before checking database contents when they depend on a visit
