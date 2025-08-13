@@ -522,14 +522,6 @@ LoadedScript* ModuleLoaderBase::GetLoadedScriptOrNull(
   return script;
 }
 
-JS::Value PrivateFromLoadedScript(LoadedScript* aScript) {
-  if (!aScript) {
-    return JS::UndefinedValue();
-  }
-
-  return JS::PrivateValue(aScript);
-}
-
 nsresult ModuleLoaderBase::StartModuleLoad(ModuleLoadRequest* aRequest) {
   return StartOrRestartModuleLoad(aRequest, RestartRequest::No);
 }
