@@ -1203,6 +1203,7 @@ class EditorBase : public nsIEditor,
      * ranges to selection ranges.
      */
     void AppendTargetRange(dom::StaticRange& aTargetRange);
+    void AppendTargetRange(RefPtr<dom::StaticRange>&& aTargetRange);
 
     /**
      * Make dispatching `beforeinput` forcibly non-cancelable.
