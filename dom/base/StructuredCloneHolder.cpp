@@ -1111,7 +1111,7 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     return ClonedErrorHolder::ReadStructuredClone(aCx, aReader, this);
   }
 
-  if (VideoFrame::PrefEnabled() && aTag == SCTAG_DOM_VIDEOFRAME &&
+  if (VideoFrame::PrefEnabled(aCx) && aTag == SCTAG_DOM_VIDEOFRAME &&
       CloneScope() == StructuredCloneScope::SameProcess &&
       aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     JS::Rooted<JSObject*> global(aCx, mGlobal->GetGlobalJSObject());
@@ -1251,7 +1251,7 @@ bool StructuredCloneHolder::CustomWriteHandler(
   }
 
   // See if this is a VideoFrame object.
-  if (VideoFrame::PrefEnabled()) {
+  if (VideoFrame::PrefEnabled(aCx)) {
     VideoFrame* videoFrame = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(VideoFrame, &obj, videoFrame))) {
       SameProcessScopeRequired(aSameProcessScopeRequired);
@@ -1447,7 +1447,7 @@ StructuredCloneHolder::CustomReadTransferHandler(
                                             aReturnObject);
   }
 
-  if (VideoFrame::PrefEnabled() && aTag == SCTAG_DOM_VIDEOFRAME &&
+  if (VideoFrame::PrefEnabled(aCx) && aTag == SCTAG_DOM_VIDEOFRAME &&
       CloneScope() == StructuredCloneScope::SameProcess &&
       aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     MOZ_ASSERT(aContent);
@@ -1592,7 +1592,7 @@ StructuredCloneHolder::CustomWriteTransferHandler(
         return true;
       }
 
-      if (VideoFrame::PrefEnabled()) {
+      if (VideoFrame::PrefEnabled(aCx)) {
         VideoFrame* videoFrame = nullptr;
         rv = UNWRAP_OBJECT(VideoFrame, &obj, videoFrame);
         if (NS_SUCCEEDED(rv)) {
@@ -1759,7 +1759,7 @@ void StructuredCloneHolder::CustomFreeTransferHandler(
     return;
   }
 
-  if (VideoFrame::PrefEnabled() && aTag == SCTAG_DOM_VIDEOFRAME &&
+  if (aTag == SCTAG_DOM_VIDEOFRAME &&
       CloneScope() == StructuredCloneScope::SameProcess) {
     if (aContent) {
       VideoFrame::TransferredData* data =
@@ -1768,8 +1768,7 @@ void StructuredCloneHolder::CustomFreeTransferHandler(
     }
     return;
   }
-  if (StaticPrefs::dom_media_webcodecs_enabled() &&
-      aTag == SCTAG_DOM_AUDIODATA &&
+  if (aTag == SCTAG_DOM_AUDIODATA &&
       CloneScope() == StructuredCloneScope::SameProcess) {
     if (aContent) {
       AudioData::TransferredData* data =
@@ -1852,7 +1851,7 @@ bool StructuredCloneHolder::CustomCanTransferHandler(
     }
   }
 
-  if (VideoFrame::PrefEnabled()) {
+  if (VideoFrame::PrefEnabled(aCx)) {
     VideoFrame* videoframe = nullptr;
     nsresult rv = UNWRAP_OBJECT(VideoFrame, &obj, videoframe);
     if (NS_SUCCEEDED(rv)) {
