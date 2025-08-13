@@ -133,7 +133,6 @@ export class ClickHandlerParent extends JSWindowActorParent {
         triggeringSponsoredURLVisitTimeMS: browser.getAttribute(
           "triggeringSponsoredURLVisitTimeMS"
         ),
-        triggeringSource: browser.getAttribute("triggeringSource"),
       };
     }
 

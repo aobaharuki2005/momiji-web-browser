@@ -8,8 +8,6 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PageWireframes: "resource:///modules/sessionstore/PageWireframes.sys.mjs",
-  SponsorProtection:
-    "moz-src:///browser/components/newtab/SponsorProtection.sys.mjs",
 });
 
 const ZERO_DELAY_ACTIVATION_TIME = 300;
@@ -345,20 +343,7 @@ export default class TabHoverPreviewPanel {
   }
 
   get _displayActiveness() {
-    let debugString = "";
-
-    if (this._tab?.linkedBrowser?.docShellIsActive) {
-      debugString += "[A]";
-    }
-
-    if (
-      lazy.SponsorProtection.debugEnabled &&
-      lazy.SponsorProtection.isProtectedBrowser(this._tab?.linkedBrowser)
-    ) {
-      debugString += "[S]";
-    }
-
-    return debugString;
+    return this._tab?.linkedBrowser?.docShellIsActive ? "[A]" : "";
   }
 }
 
