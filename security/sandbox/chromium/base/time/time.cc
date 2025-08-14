@@ -38,8 +38,10 @@ std::atomic<TimeNowFunction> g_time_now_from_system_time_function{
 std::atomic<TimeTicksNowFunction> g_time_ticks_now_function{
     &subtle::TimeTicksNowIgnoringOverride};
 
+#if !defined(MOZ_SANDBOX)
 std::atomic<LiveTicksNowFunction> g_live_ticks_now_function{
     &subtle::LiveTicksNowIgnoringOverride};
+#endif
 
 std::atomic<ThreadTicksNowFunction> g_thread_ticks_now_function{
     &subtle::ThreadTicksNowIgnoringOverride};
@@ -267,10 +269,12 @@ std::ostream& operator<<(std::ostream& os, TimeTicks time_ticks) {
 
 // LiveTicks ------------------------------------------------------------------
 
+#if !defined(MOZ_SANDBOX)
 // static
 LiveTicks LiveTicks::Now() {
   return internal::g_live_ticks_now_function.load(std::memory_order_relaxed)();
 }
+#endif
 
 #if !BUILDFLAG(IS_WIN)
 namespace subtle {

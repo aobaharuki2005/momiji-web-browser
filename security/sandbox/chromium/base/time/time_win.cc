@@ -644,6 +644,7 @@ TimeTicks::Clock TimeTicks::GetClock() {
 
 // LiveTicks ------------------------------------------------------------------
 
+#if !defined(MOZ_SANDBOX)
 namespace subtle {
 LiveTicks LiveTicksNowIgnoringOverride() {
   ULONGLONG unbiased_interrupt_time;
@@ -653,6 +654,7 @@ LiveTicks LiveTicksNowIgnoringOverride() {
   return LiveTicks() + Nanoseconds(unbiased_interrupt_time * 100);
 }
 }  // namespace subtle
+#endif
 
 // ThreadTicks ----------------------------------------------------------------
 
