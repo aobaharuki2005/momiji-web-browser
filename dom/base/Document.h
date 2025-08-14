@@ -3137,28 +3137,19 @@ class Document : public nsINode,
   void CancelVideoFrameCallbacks(HTMLVideoElement* aElement);
 
   /**
-   * Returns true if the handle refers to a callback that was canceled that
-   * we did not find in our list of callbacks (e.g. because it is one of those
-   * in the set of callbacks currently queued to be run).
-   */
-  bool IsCanceledFrameRequestCallback(uint32_t aHandle) const;
-
-  /**
    * Put this document's video frame request callbacks into the provided
    * list, and forget about them.
    */
   void TakeVideoFrameRequestCallbacks(
       nsTArray<RefPtr<HTMLVideoElement>>& aVideoCallbacks);
 
-  /**
-   * Put this document's frame request callbacks into the provided
-   * list, and forget about them.
-   */
-  void TakeFrameRequestCallbacks(nsTArray<FrameRequest>& aCallbacks);
-
   /** Whether we have any scheduled frame request */
   bool HasFrameRequestCallbacks() const {
     return !mFrameRequestManager.IsEmpty();
+  }
+
+  dom::FrameRequestManager& FrameRequestManager() {
+    return mFrameRequestManager;
   }
 
   /**
@@ -5288,7 +5279,7 @@ class Document : public nsINode,
 
   nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
 
-  FrameRequestManager mFrameRequestManager;
+  dom::FrameRequestManager mFrameRequestManager;
 
   // This object allows us to evict ourself from the back/forward cache.  The
   // pointer is non-null iff we're currently in the bfcache.
