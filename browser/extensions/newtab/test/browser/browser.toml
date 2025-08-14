@@ -78,8 +78,6 @@ run-if = [
   "os == 'mac'", # Test setup only implemented for OSX and Windows
 ]
 
-["browser_topsites_annotation.js"]
-
 ["browser_topsites_contextMenu_options.js"]
 
 ["browser_topsites_section.js"]

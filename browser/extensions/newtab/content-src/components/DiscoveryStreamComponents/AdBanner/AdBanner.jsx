@@ -137,6 +137,7 @@ export const AdBanner = ({
           title={spoc.title || spoc.sponsor || spoc.alt_text}
           onLinkClick={onLinkClick}
           dispatch={dispatch}
+          isSponsored={true}
         >
           <ImpressionStats
             flightId={spoc.flight_id}

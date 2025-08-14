@@ -53,7 +53,7 @@ export class SafeAnchor extends React.PureComponent {
   }
 
   render() {
-    const { url, className, title } = this.props;
+    const { url, className, title, isSponsored } = this.props;
 
     let anchor = (
       <a
@@ -61,6 +61,7 @@ export class SafeAnchor extends React.PureComponent {
         title={title}
         className={className}
         onClick={this.onClick}
+        data-is-sponsored-link={!!isSponsored}
         {...(this.props.tabIndex === 0 || this.props.tabIndex
           ? {
               ref: this.props.setRef,
