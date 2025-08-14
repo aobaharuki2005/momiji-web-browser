@@ -22,8 +22,7 @@ const FXA_WIDGET_ID = "fxa-toolbar-menu-button";
 const EXT_WIDGET_ID = "unified-extensions-button";
 
 /**
- * IPProtectionWidget is the class for the singleton IPProtection, which
- * exposes init and uninit for app startup.
+ * IPProtectionWidget is the class for the singleton IPProtection.
  *
  * It is a minimal manager for creating and removing a CustomizableUI widget
  * for IP protection features.
@@ -38,25 +37,20 @@ class IPProtectionWidget {
   static ENABLED_PREF = "browser.ipProtection.enabled";
   static VARIANT_PREF = "browser.ipProtection.variant";
 
-  #enabled = true;
+  #inited = false;
   #created = false;
-  #destroyed = false;
   #panels = new WeakMap();
 
   constructor() {
-    this.updateEnabled = this.#updateEnabled.bind(this);
     this.sendReadyTrigger = this.#sendReadyTrigger.bind(this);
     this.handleEvent = this.#handleEvent.bind(this);
   }
 
   /**
-   * Creates the widget if the feature is enabled and
-   * the widget has not already been created.
-   *
-   * @param {Window} _window - new browser window.
+   * Creates the widget.
    */
-  init(_window) {
-    if (!this.isEnabled) {
+  init() {
+    if (this.#inited) {
       return;
     }
 
@@ -64,20 +58,33 @@ class IPProtectionWidget {
       this.#createWidget();
     }
 
-    lazy.IPProtectionService.init();
     lazy.CustomizableUI.addListener(this);
-    this.#destroyed = false;
+
+    this.#inited = true;
   }
 
   /**
    * Destroys the widget and prevents any updates.
+   *
+   * If only enabling pref has changed the panels
+   * WeakMap should not be cleared.
+   *
+   * @param {boolean} prefChange
    */
-  uninit() {
+  uninit(prefChange = false) {
+    if (!this.#inited) {
+      return;
+    }
     this.#destroyWidget();
     this.#uninitPanels();
-    lazy.IPProtectionService.uninit();
-    this.#destroyed = true;
+
     lazy.CustomizableUI.removeListener(this);
+
+    if (!prefChange) {
+      this.#uninitPanels();
+    }
+
+    this.#inited = false;
   }
 
   /**
@@ -219,23 +226,6 @@ class IPProtectionWidget {
   }
 
   /**
-   * Sets whether the feature pref is enabled and not destroyed.
-   *
-   * If enabled, creates the widget if it hasn't been created yet.
-   * If not enabled, destroys the widget if it has been created.
-   */
-  #updateEnabled() {
-    this.#enabled = this.isEnabled && !this.#destroyed;
-    if (this.#enabled && !this.#created) {
-      this.#createWidget();
-      lazy.IPProtectionService.init();
-    } else if (!this.#enabled && this.#created) {
-      this.#destroyWidget();
-      lazy.IPProtectionService.uninit();
-    }
-  }
-
-  /**
    * Updates the state of the panel before it is shown.
    *
    * @param {Event} event - the panel shown.
@@ -345,14 +335,6 @@ class IPProtectionWidget {
 }
 
 const IPProtection = new IPProtectionWidget();
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  IPProtection,
-  "isEnabled",
-  IPProtectionWidget.ENABLED_PREF,
-  false,
-  IPProtection.updateEnabled
-);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   IPProtection,

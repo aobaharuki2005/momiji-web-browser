@@ -34,14 +34,6 @@ class FakeIPProtectionPanelElement {
   }
 }
 
-add_setup(() => {
-  IPProtectionService.init();
-
-  registerCleanupFunction(() => {
-    IPProtectionService.uninit();
-  });
-});
-
 /**
  * Tests that we can set a state and pass it to a fake element.
  */

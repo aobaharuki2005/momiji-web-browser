@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -10,10 +12,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   // eslint-disable-next-line mozilla/valid-lazy
   IPPChannelFilter: "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
+  IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
 });
+
+const ENABLED_PREF = "browser.ipProtection.enabled";
 
 /**
  * A singleton service that manages proxy integration and backend functionality.
+ *
+ * It exposes init and uninit for app startup.
  *
  * @fires event:"IPProtectionService:Started"
  *  When the proxy has started and includes the timestamp of when
@@ -33,23 +40,44 @@ class IPProtectionServiceSingleton extends EventTarget {
   isSignedIn = false;
 
   #inited = false;
+  #hasWidget = false;
 
   constructor() {
     super();
+
+    this.updateEnabled = this.#updateEnabled.bind(this);
   }
 
+  /**
+   * Setups the IPProtectionService if enabled.
+   */
   init() {
-    if (this.#inited) {
+    if (this.#inited || !this.featureEnabled) {
       return;
     }
 
     this.updateSignInStatus();
     this.addSignInStateObserver();
 
+    if (!this.#hasWidget) {
+      lazy.IPProtection.init();
+      this.#hasWidget = true;
+    }
+
     this.#inited = true;
   }
 
-  uninit() {
+  /**
+   * Removes the IPProtectionService and IPProtection widget.
+   *
+   * @param {boolean} prefChange
+   */
+  uninit(prefChange = false) {
+    if (this.#hasWidget) {
+      lazy.IPProtection.uninit(prefChange);
+      this.#hasWidget = false;
+    }
+
     if (this.fxaObserver) {
       Services.obs.removeObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
       this.fxaObserver = null;
@@ -122,6 +150,18 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
+   * Checks whether the feature pref is enabled and
+   * will init or uninit the IPProtectionService instance.
+   */
+  #updateEnabled() {
+    if (this.featureEnabled) {
+      this.init();
+    } else {
+      this.uninit(true);
+    }
+  }
+
+  /**
    * Adds an observer for the FxA sign-in state.
    */
   addSignInStateObserver() {
@@ -169,5 +209,13 @@ class IPProtectionServiceSingleton extends EventTarget {
 }
 
 const IPProtectionService = new IPProtectionServiceSingleton();
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  IPProtectionService,
+  "featureEnabled",
+  ENABLED_PREF,
+  false,
+  IPProtectionService.updateEnabled
+);
 
 export { IPProtectionService };
