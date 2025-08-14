@@ -70,7 +70,6 @@ bool ModuleLoader::init(JSContext* cx, HandleString loadPath) {
 // static
 bool ModuleLoader::LoadImportedModule(JSContext* cx,
                                       JS::Handle<JSScript*> referrer,
-                                      JS::HandleValue referencingPrivate,
                                       JS::Handle<JSObject*> moduleRequest,
                                       JS::HandleValue hostDefined,
                                       JS::HandleValue payload) {

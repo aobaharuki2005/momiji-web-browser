@@ -76,7 +76,6 @@ enum class ModuleType : uint32_t {
  *    value to be passed through to FinishLoadingImportedModule.
  */
 using ModuleLoadHook = bool (*)(JSContext* cx, Handle<JSScript*> referrer,
-                                Handle<Value> referencingPrivate,
                                 Handle<JSObject*> moduleRequest,
                                 Handle<Value> hostDefined,
                                 Handle<Value> payload);

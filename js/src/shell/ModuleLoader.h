@@ -27,7 +27,6 @@ class ModuleLoader {
 
  private:
   static bool LoadImportedModule(JSContext* cx, JS::Handle<JSScript*> referrer,
-                                 HandleValue referencingPrivate,
                                  HandleObject moduleRequest,
                                  HandleValue hostDefined, HandleValue payload);
 

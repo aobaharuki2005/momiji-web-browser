@@ -458,7 +458,6 @@ class ModuleLoaderBase : public nsISupports {
 
   static bool HostLoadImportedModule(JSContext* aCx,
                                      Handle<JSScript*> aReferrer,
-                                     Handle<Value> aReferencingPrivate,
                                      Handle<JSObject*> aModuleRequest,
                                      Handle<Value> aHostDefined,
                                      Handle<Value> aPayload);
