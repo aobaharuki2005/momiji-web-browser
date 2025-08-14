@@ -19,7 +19,6 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/NavigationActivation.h"
-#include "mozilla/dom/NavigationBinding.h"
 #include "mozilla/dom/NavigationCurrentEntryChangeEvent.h"
 #include "mozilla/dom/NavigationHistoryEntry.h"
 #include "mozilla/dom/NavigationTransition.h"
@@ -28,7 +27,6 @@
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalChild.h"
-#include "mozilla/ipc/IPDLParamTraits.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDocShell.h"
@@ -1449,58 +1447,4 @@ Navigation::AddUpcomingTraverseAPIMethodTracker(const nsID& aKey,
   return mUpcomingTraverseAPIMethodTrackers.InsertOrUpdate(aKey,
                                                            apiMethodTracker);
 }
-
-// https://html.spec.whatwg.org/#update-document-for-history-step-application
-void Navigation::CreateNavigationActivationFrom(
-    SessionHistoryInfo* aPreviousEntryForActivation,
-    NavigationType aNavigationType) {
-  // Note: we do Step 7.1 at the end of method so we can both create and
-  // initialize the activation at once.
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
-              "Creating NavigationActivation for from={}, type={}",
-              fmt::ptr(aPreviousEntryForActivation), aNavigationType);
-
-  // Step 7.2. Let previousEntryIndex be the result of getting the navigation
-  // API entry index of previousEntryForActivation within navigation.
-  auto possiblePreviousEntry =
-      std::find_if(mEntries.begin(), mEntries.end(),
-                   [aPreviousEntryForActivation](const auto& entry) {
-                     return entry->IsSameEntry(aPreviousEntryForActivation);
-                   });
-
-  // 3. If previousEntryIndex is non-negative, then set activation's old entry
-  // to navigation's entry list[previousEntryIndex].
-  RefPtr<NavigationHistoryEntry> oldEntry;
-  if (possiblePreviousEntry != mEntries.end()) {
-    MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Found previous entry at {}",
-                fmt::ptr(possiblePreviousEntry->get()));
-    oldEntry = *possiblePreviousEntry;
-  } else if (aNavigationType == NavigationType::Replace &&
-             !aPreviousEntryForActivation->IsTransient()) {
-    // 4. Otherwise, if all the following are true:
-    //     navigationType is "replace";
-    //     previousEntryForActivation's document state's origin is same origin
-    //     with document's origin; and previousEntryForActivation's document's
-    //     initial about:blank is false,
-    // then set activation's old entry to a new NavigationHistoryEntry in
-    // navigation's relevant realm, whose session history entry is
-    // previousEntryForActivation.
-
-    // Note: the check for same-origin occurs within the
-    // CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad.
-    oldEntry = MakeRefPtr<NavigationHistoryEntry>(
-        GetOwnerGlobal(), aPreviousEntryForActivation, -1);
-    MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Created a new entry at {}",
-                fmt::ptr(oldEntry.get()));
-  }
-
-  // 1. If navigation's activation is null, then set navigation's
-  // activation to a new NavigationActivation object in navigation's relevant
-  // realm.
-  // 5. Set activation's new entry to navigation's current entry.
-  // 6. Set activation's navigation type to navigationType.
-  mActivation = MakeRefPtr<NavigationActivation>(
-      GetOwnerGlobal(), GetCurrentEntry().take(), oldEntry, aNavigationType);
-}
-
 }  // namespace mozilla::dom

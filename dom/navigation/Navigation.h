@@ -138,10 +138,6 @@ class Navigation final : public DOMEventTargetHelper {
   void AbortOngoingNavigation(
       JSContext* aCx, JS::Handle<JS::Value> aError = JS::UndefinedHandleValue);
 
-  void CreateNavigationActivationFrom(
-      SessionHistoryInfo* aPreviousEntryForActivation,
-      NavigationType aNavigationType);
-
  private:
   friend struct NavigationAPIMethodTracker;
   using UpcomingTraverseAPIMethodTrackers =
@@ -239,25 +235,5 @@ class Navigation final : public DOMEventTargetHelper {
 };
 
 }  // namespace mozilla::dom
-
-template <>
-struct fmt::formatter<mozilla::dom::NavigationType, char>
-    : public formatter<nsCString> {
-  template <typename FmtContext>
-  constexpr auto format(const mozilla::dom::NavigationType& aNavigationType,
-                        FmtContext& aCtx) const {
-    using mozilla::dom::NavigationType;
-    switch (aNavigationType) {
-      case NavigationType::Push:
-        return formatter<nsCString>::format("push"_ns, aCtx);
-      case NavigationType::Replace:
-        return formatter<nsCString>::format("replace"_ns, aCtx);
-      case NavigationType::Reload:
-        return formatter<nsCString>::format("reload"_ns, aCtx);
-      case NavigationType::Traverse:
-        return formatter<nsCString>::format("traverse"_ns, aCtx);
-    }
-  }
-};
 
 #endif  // mozilla_dom_Navigation_h___
