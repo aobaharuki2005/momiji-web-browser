@@ -444,6 +444,13 @@ void PrototypeDocumentContentSink::CloseElement(Element* aElement,
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aElement);
     MOZ_ASSERT(sele, "Node didn't QI to script.");
     if (sele->GetScriptIsModule()) {
+      // https://html.spec.whatwg.org/#parsing-main-incdata
+      // An end tag whose tag name is "script"
+      //  - If the active speculative HTML parser is null and the JavaScript
+      // execution context stack is empty, then perform a microtask checkpoint.
+      {
+        nsAutoMicroTask mt;
+      }
       DebugOnly<bool> block = sele->AttemptToExecute();
       MOZ_ASSERT(!block, "<script type=module> shouldn't block the parser");
     }

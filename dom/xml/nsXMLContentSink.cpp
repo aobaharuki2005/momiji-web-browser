@@ -622,6 +622,13 @@ nsresult nsXMLContentSink::CloseElement(nsIContent* aContent) {
     // script element being adding to the tree.
     FlushTags();
 
+    // https://html.spec.whatwg.org/#parsing-xhtml-documents
+    // When the element's end tag is subsequently parsed, the user agent must
+    // perform a microtask checkpoint, and then prepare the script element.
+    {
+      nsAutoMicroTask mt;
+    }
+
     // Now tell the script that it's ready to go. This may execute the script
     // or return true, or neither if the script doesn't need executing.
     bool block = sele->AttemptToExecute();

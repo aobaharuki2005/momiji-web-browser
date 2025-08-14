@@ -141,13 +141,6 @@ bool ScriptElement::MaybeProcessScript() {
   NS_ASSERTION(cont->DebugGetSlots()->mMutationObservers.contains(this),
                "You forgot to add self as observer");
 
-  // https://html.spec.whatwg.org/#parsing-main-incdata
-  // An end tag whose tag name is "script"
-  //  - If the active speculative HTML parser is null and the JavaScript
-  // execution context stack is empty, then perform a microtask checkpoint.
-  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-      "ScriptElement::MaybeProcessScript", []() { nsAutoMicroTask mt; }));
-
   if (mAlreadyStarted || !mDoneAddingChildren || !cont->GetComposedDoc() ||
       mMalformed) {
     return false;
