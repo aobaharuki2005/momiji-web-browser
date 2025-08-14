@@ -28,9 +28,7 @@ class AndroidSharedBlitGL final {
     if (!sContext) {
       MOZ_ASSERT(sInstanceCount == 0);
       sContext = CreateContext();
-      if (NS_WARN_IF(!sContext)) {
-        gfxCriticalNoteOnce << "Create AndroidSharedBlitGL context failed";
-        MOZ_ASSERT_UNREACHABLE("Failed to create sContext!");
+      if (!sContext) {
         return;
       }
     }
@@ -38,31 +36,19 @@ class AndroidSharedBlitGL final {
     const auto& egl = *(sContext->mEgl);
     mTargetSurface =
         egl.fCreateWindowSurface(sContext->mSurfaceConfig, window, nullptr);
-    if (NS_WARN_IF(mTargetSurface == EGL_NO_SURFACE)) {
-      gfxCriticalNote << "Create AndroidSharedBlitGL surface failed "
-                      << gfx::hexa(egl.mLib->fGetError());
-      MOZ_ASSERT_UNREACHABLE("Failed to create target surface!");
-      if (sInstanceCount == 0) {
-        sContext = nullptr;
-      }
-      return;
-    }
 
     ++sInstanceCount;
   }
 
   ~AndroidSharedBlitGL() {
     StaticMutexAutoLock lock(sMutex);
-    if (mTargetSurface == EGL_NO_SURFACE) {
-      return;
+
+    if (mTargetSurface != EGL_NO_SURFACE) {
+      const auto& egl = *(sContext->mEgl);
+      egl.fDestroySurface(mTargetSurface);
     }
 
-    MOZ_ASSERT(sContext);
-    const auto& egl = *(sContext->mEgl);
-    egl.fDestroySurface(mTargetSurface);
-
     // Destroy shared GL context when no one uses it.
-    MOZ_ASSERT(sInstanceCount > 0);
     if (--sInstanceCount == 0) {
       sContext = nullptr;
     }
@@ -72,12 +58,9 @@ class AndroidSharedBlitGL final {
   void Blit(const java::GeckoSurfaceTexture::Ref& surfaceTexture,
             const gfx::IntSize& imageSize) {
     StaticMutexAutoLock lock(sMutex);
-    if (mTargetSurface == EGL_NO_SURFACE) {
-      return;
-    }
+    MOZ_ASSERT(sContext);
 
     // Setting overide also makes conext and surface current.
-    MOZ_ASSERT(sContext);
     sContext->SetEGLSurfaceOverride(mTargetSurface);
     DebugOnly<bool> rv = sContext->BlitHelper()->Blit(
         surfaceTexture, imageSize, gfx::IntRect(gfx::IntPoint(0, 0), imageSize),
@@ -92,8 +75,8 @@ class AndroidSharedBlitGL final {
 #endif
 
  private:
-  static already_AddRefed<GLContextEGL> CreateContextImpl(bool aUseGles)
-      MOZ_REQUIRES(sMutex) {
+  static already_AddRefed<GLContextEGL> CreateContextImpl(bool aUseGles) {
+    sMutex.AssertCurrentThreadOwns();
     MOZ_ASSERT(!sContext);
 
     nsCString ignored;
@@ -114,7 +97,7 @@ class AndroidSharedBlitGL final {
     return gl.forget();
   }
 
-  static already_AddRefed<GLContextEGL> CreateContext() MOZ_REQUIRES(sMutex) {
+  static already_AddRefed<GLContextEGL> CreateContext() {
     RefPtr<GLContextEGL> gl;
 #if !defined(MOZ_WIDGET_ANDROID)
     gl = CreateContextImpl(/* aUseGles */ false);
@@ -126,7 +109,8 @@ class AndroidSharedBlitGL final {
     return gl.forget();
   }
 
-  static bool UnmakeCurrent(GLContextEGL* const gl) MOZ_REQUIRES(sMutex) {
+  static bool UnmakeCurrent(GLContextEGL* const gl) {
+    sMutex.AssertCurrentThreadOwns();
     MOZ_ASSERT(gl);
 
     if (!gl->IsCurrent()) {
@@ -136,11 +120,11 @@ class AndroidSharedBlitGL final {
     return egl.fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
   }
 
-  static StaticMutex sMutex;
-  static StaticRefPtr<GLContextEGL> sContext MOZ_GUARDED_BY(sMutex);
-  static size_t sInstanceCount MOZ_GUARDED_BY(sMutex);
+  static StaticMutex sMutex MOZ_UNANNOTATED;
+  static StaticRefPtr<GLContextEGL> sContext;
+  static size_t sInstanceCount;
 
-  EGLSurface mTargetSurface = EGL_NO_SURFACE;
+  EGLSurface mTargetSurface;
 };
 
 StaticMutex AndroidSharedBlitGL::sMutex;
