@@ -605,7 +605,9 @@ def get_compiler_info(configure_cache, compiler, language):
         if data.get("XCODE"):
             # Derived from https://en.wikipedia.org/wiki/Xcode#Toolchain_versions
             # with enough granularity for major.minor version checks further
-            # down the line
+            # down the line. `version` is compared against the version in the
+            # "clang version string" column, and the resolved version is the
+            # value from the "LLVM version" column.
             if version < "9.1":
                 version = Version("4.0.0.or.less")
             elif version < "10.0":
@@ -632,8 +634,10 @@ def get_compiler_info(configure_cache, compiler, language):
                 version = Version("15.0.0")
             elif version < "16.0":
                 version = Version("16.0.0")
+            elif version < "17.0":
+                version = Version("17.0.6")
             else:
-                version = Version("17.0.6.or.more")
+                version = Version("19.1.4.or.more")
 
     return namespace(
         type=type,
