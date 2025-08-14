@@ -7511,6 +7511,11 @@ void Document::TakeVideoFrameRequestCallbacks(
   mFrameRequestManager.Take(aVideoCallbacks);
 }
 
+void Document::TakeFrameRequestCallbacks(nsTArray<FrameRequest>& aCallbacks) {
+  MOZ_ASSERT(aCallbacks.IsEmpty());
+  mFrameRequestManager.Take(aCallbacks);
+}
+
 bool Document::ShouldThrottleFrameRequests() const {
   if (mStaticCloneCount > 0) {
     // Even if we're not visible, a static clone may be, so run at full speed.
@@ -14204,6 +14209,10 @@ nsresult Document::ScheduleFrameRequestCallback(FrameRequestCallback& aCallback,
 
 void Document::CancelFrameRequestCallback(uint32_t aHandle) {
   mFrameRequestManager.Cancel(aHandle);
+}
+
+bool Document::IsCanceledFrameRequestCallback(uint32_t aHandle) const {
+  return mFrameRequestManager.IsCanceled(aHandle);
 }
 
 void Document::ScheduleVideoFrameCallbacks(HTMLVideoElement* aElement) {

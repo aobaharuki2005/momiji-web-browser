@@ -24,6 +24,7 @@ class FrameRequestManager final : public FrameRequestManagerBase {
 
   using FrameRequestManagerBase::Cancel;
   using FrameRequestManagerBase::Schedule;
+  using FrameRequestManagerBase::Take;
 
   void Schedule(HTMLVideoElement*);
   bool Cancel(HTMLVideoElement*);
