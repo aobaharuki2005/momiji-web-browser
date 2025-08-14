@@ -95,6 +95,7 @@ $ git maintenance start
 
 For more advanced configuration please see the doc linked above.
 
+(git-mercurial-transplant)=
 ## Transplanting Patches To and From Mercurial Repositories
 
 A simple mercurial changeset series can be transplanted to a git repository for the current directory using:
