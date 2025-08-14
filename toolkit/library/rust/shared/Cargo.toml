@@ -91,7 +91,7 @@ mime-guess-ffi = { path = "../../../../dom/fs/parent/rust/mime-guess-ffi" }
 # version less than or equal to what we link to. This isn't a problem because we
 # tend to keep this up to date, but it needs to be taken into consideration when
 # changing this version.
-rusqlite = { workspace = true, features = ["modern_sqlite", "in_gecko"] }
+rusqlite = { workspace = true, features = ["modern_sqlite"] }
 
 fluent = { version = "0.17.0", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
@@ -150,6 +150,12 @@ thread_sanitizer = ["xpcom/thread_sanitizer"]
 uniffi_fixtures = ["uniffi-bindgen-gecko-js-test-fixtures"]
 webmidi_midir_impl = ["midir_impl"]
 icu4x = ["jsrust_shared/icu4x"]
+# Set when we're building libxul (as opposed to building the unittests, for example)
+for_xul = [
+    # This makes it so `rusqlite` doesn't handle linking itself.  Instead, we'll link it to the
+    # `libmozsqlite` that we distribute.
+    "rusqlite/in_gecko"
+]
 
 [lib]
 path = "lib.rs"
