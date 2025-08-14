@@ -735,6 +735,18 @@ static int dl_iterate_callback(struct dl_phdr_info* dl_info, size_t size,
   if (dl_info->dlpi_phnum <= 0) return 0;
 
   unsigned long baseAddress = dl_info->dlpi_addr;
+
+  // Skip entries with null base address.
+  // Correct implementations of dl_iterate_phdr should never pass a null base
+  // address here, but we have a custom implementation of dl_iterate_phdr in
+  // in our custom linker which is used on Android 22 and older, and this
+  // implementation can sometimes pass null, e.g., from SystemElf::GetBase(). We
+  // can remove this workaround once we remove the custom linker when we drop
+  // support for those Android versions.
+  if (baseAddress == 0) {
+    return 0;
+  }
+
   unsigned long firstMappingStart = -1;
   unsigned long lastMappingEnd = 0;
   std::vector<uint8_t> elfFileIdentifier;
