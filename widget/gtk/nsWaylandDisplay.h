@@ -121,6 +121,7 @@ class nsWaylandDisplay {
   }
   void SetSupportedCoefficientsAndRanges(uint32_t aCoefficients,
                                          uint32_t aRange);
+  uint32_t GetColorRange(uint32_t aCoefficients, bool aFullRange);
   RefPtr<DMABufFormats> GetDMABufFormats() const { return mFormats; }
   bool HasDMABufFeedback() const { return mDmabufIsFeedback; }
   void EnsureDMABufFormats();
@@ -173,12 +174,12 @@ class nsWaylandDisplay {
   int mSupportedTransfer[sColorTransfersNum] = {};
   int mSupportedPrimaries[sColorPrimariesNum] = {};
 
-  constexpr static int SupportedRangeFull = 1;
-  constexpr static int SupportedRangeLimited = 2;
-  constexpr static int SupportedRangeBoth = 3;
-  constexpr static int SupportedRangesNum =
+  constexpr static int sSupportedRangeFull = 1;
+  constexpr static int sSupportedRangeLimited = 2;
+  constexpr static int sSupportedRangeBoth = 3;
+  constexpr static int sSupportedRangesNum =
       WP_COLOR_REPRESENTATION_SURFACE_V1_COEFFICIENTS_ICTCP + 1;
-  int mSupportedRanges[SupportedRangesNum] = {};
+  uint32_t mSupportedRanges[sSupportedRangesNum] = {};
 
   bool mExplicitSync = false;
   bool mIsPrimarySelectionEnabled = false;

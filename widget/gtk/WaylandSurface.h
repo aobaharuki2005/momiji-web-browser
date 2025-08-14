@@ -262,6 +262,9 @@ class WaylandSurface final {
                        RefPtr<WaylandSurface> aParent);
 
   bool EnableColorManagementLocked(const WaylandSurfaceLock& aProofOfLock);
+  void SetColorRepresentationLocked(const WaylandSurfaceLock& aProofOfLock,
+                                    mozilla::gfx::YUVColorSpace aColorSpace,
+                                    bool aFullRange);
 
   static void ImageDescriptionFailed(
       void* aData, struct wp_image_description_v1* aImageDescription,
@@ -478,6 +481,7 @@ class WaylandSurface final {
   // HDR support
   bool mHDRSet = false;
   wp_color_management_surface_v1* mColorSurface = nullptr;
+  wp_color_representation_surface_v1* mColorRepresentationSurface = nullptr;
   wp_image_description_v1* mImageDescription = nullptr;
 };
 

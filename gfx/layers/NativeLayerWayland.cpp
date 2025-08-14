@@ -879,6 +879,16 @@ bool NativeLayerWayland::Map(WaylandSurfaceLock* aParentWaylandSurfaceLock) {
     mSurface->EnableColorManagementLocked(surfaceLock);
   }
 
+  if (auto* external = AsNativeLayerWaylandExternal()) {
+    if (RefPtr surface = external->GetSurface()) {
+      if (auto* surfaceYUV = surface->GetAsDMABufSurfaceYUV()) {
+        mSurface->SetColorRepresentationLocked(surfaceLock,
+                                               surfaceYUV->GetYUVColorSpace(),
+                                               surfaceYUV->IsFullRange());
+      }
+    }
+  }
+
   mNeedsMainThreadUpdate = MainThreadUpdate::Map;
   mState.mMutatedStackingOrder = true;
   mState.mMutatedVisibility = true;
@@ -1193,6 +1203,10 @@ NativeLayerWaylandRender::~NativeLayerWaylandRender() {
   DiscardBackbuffersLocked(lock, /* aForce */ true);
 }
 
+RefPtr<DMABufSurface> NativeLayerWaylandExternal::GetSurface() {
+  return mTextureHost ? mTextureHost->GetSurface() : nullptr;
+}
+
 NativeLayerWaylandExternal::NativeLayerWaylandExternal(
     NativeLayerRootWayland* aRootLayer, bool aIsOpaque)
     : NativeLayerWayland(aRootLayer, IntSize(), aIsOpaque) {}
@@ -1218,23 +1232,24 @@ void NativeLayerWaylandExternal::AttachExternalImage(
 
   mState.mMutatedFrontBuffer =
       (!mTextureHost || mTextureHost->GetSurface() != texture->GetSurface());
-  if (mState.mMutatedFrontBuffer) {
-    mTextureHost = texture;
-
-    auto surface = mTextureHost->GetSurface();
-    mIsHDR = surface->IsHDRSurface();
-
-    LOG("NativeLayerWaylandExternal::AttachExternalImage() host [%p] "
-        "DMABufSurface [%p] DMABuf UID %d [%d x %d] HDR %d Opaque %d recycle "
-        "%d",
-        mTextureHost.get(), mTextureHost->GetSurface().get(),
-        mTextureHost->GetSurface()->GetUID(), mSize.width, mSize.height, mIsHDR,
-        mIsOpaque, surface->CanRecycle());
-
-    mFrontBuffer = surface->CanRecycle()
-                       ? mRootLayer->BorrowExternalBuffer(surface)
-                       : widget::WaylandBufferDMABUF::CreateExternal(surface);
+  if (!mState.mMutatedFrontBuffer) {
+    return;
   }
+  mTextureHost = texture;
+
+  auto surface = mTextureHost->GetSurface();
+  mIsHDR = surface->IsHDRSurface();
+
+  LOG("NativeLayerWaylandExternal::AttachExternalImage() host [%p] "
+      "DMABufSurface [%p] DMABuf UID %d [%d x %d] HDR %d Opaque %d recycle "
+      "%d",
+      mTextureHost.get(), mTextureHost->GetSurface().get(),
+      mTextureHost->GetSurface()->GetUID(), mSize.width, mSize.height, mIsHDR,
+      mIsOpaque, surface->CanRecycle());
+
+  mFrontBuffer = surface->CanRecycle()
+                     ? mRootLayer->BorrowExternalBuffer(surface)
+                     : widget::WaylandBufferDMABUF::CreateExternal(surface);
 }
 
 void NativeLayerWaylandExternal::DiscardBackbuffersLocked(

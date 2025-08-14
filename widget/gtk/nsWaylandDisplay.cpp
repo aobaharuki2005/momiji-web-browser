@@ -20,6 +20,7 @@
 #include "WidgetUtilsGtk.h"
 #include "mozilla/widget/xx-pip-v1-client-protocol.h"
 #include "nsGtkKeyUtils.h"
+#include "nsGtkUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsWindow.h"
 #include "wayland-proxy.h"
@@ -549,11 +550,28 @@ void nsWaylandDisplay::SetColorManager(wp_color_manager_v1* aColorManager) {
 
 void nsWaylandDisplay::SetSupportedCoefficientsAndRanges(uint32_t aCoefficients,
                                                          uint32_t aRange) {
-  if (aCoefficients < SupportedRangesNum) {
+  if (aCoefficients < sSupportedRangesNum) {
     LOG("nsWaylandDisplay::SetSupportedCoefficientsAndRanges(): coefficients "
         "%d range %d",
         aCoefficients, aRange);
     mSupportedRanges[aCoefficients] += aRange;
+  }
+}
+
+uint32_t nsWaylandDisplay::GetColorRange(uint32_t aCoefficients,
+                                         bool aFullRange) {
+  if (aCoefficients >= sSupportedRangesNum) {
+    return 0;
+  }
+  auto range = mSupportedRanges[aCoefficients];
+  if (aFullRange) {
+    return range == sSupportedRangeBoth || range == sSupportedRangeFull
+               ? WP_COLOR_REPRESENTATION_SURFACE_V1_RANGE_FULL
+               : 0;
+  } else {
+    return range == sSupportedRangeBoth || range == sSupportedRangeLimited
+               ? WP_COLOR_REPRESENTATION_SURFACE_V1_RANGE_LIMITED
+               : 0;
   }
 }
 
@@ -675,8 +693,7 @@ static void global_registry_handler(void* data, wl_registry* registry,
   } else if (iface.EqualsLiteral("wp_color_representation_manager_v1")) {
     auto* colorRepresentationManager =
         WaylandRegistryBind<wp_color_representation_manager_v1>(
-            registry, id, &wp_color_representation_manager_v1_interface,
-            version);
+            registry, id, &wp_color_representation_manager_v1_interface, 1);
     display->SetColorRepresentationManager(colorRepresentationManager);
   } else if (iface.EqualsLiteral("xx_pip_shell_v1")) {
     auto* pipShell = WaylandRegistryBind<xx_pip_shell_v1>(
@@ -703,6 +720,9 @@ static const struct wl_registry_listener registry_listener = {
 
 nsWaylandDisplay::~nsWaylandDisplay() {
   g_list_free_full(mAsyncRoundtrips, (GDestroyNotify)wl_callback_destroy);
+  MozClearPointer(mColorManager, wp_color_manager_v1_destroy);
+  MozClearPointer(mColorRepresentationManager,
+                  wp_color_representation_manager_v1_destroy);
 }
 
 void nsWaylandDisplay::AsyncRoundtripCallback(void* aData,
