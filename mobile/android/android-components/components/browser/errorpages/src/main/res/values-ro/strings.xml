@@ -5,7 +5,7 @@
   <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
   <string name="mozac_browser_errorpages_generic_title">Cererea nu poate fi finalizată</string>
   <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
-  <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Nu sunt disponibile momentan informații suplimentare despre această problemă sau eroare.</p>]]></string>
+  <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Momentan nu sunt disponibile informații suplimentare despre această problemă sau eroare.</p>]]></string>
   <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
   <string name="mozac_browser_errorpages_security_ssl_title">Conexiunea securizată a eșuat</string>
   <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
@@ -13,11 +13,11 @@
   <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
   <string name="mozac_browser_errorpages_security_bad_cert_title">Conexiunea securizată a eșuat</string>
   <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
-  <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul> <li>Ar putea fi din cauza unei probleme în configurația serverului sau ar putea să fie cineva care încearcă să uzurpe identitatea serverului.</li> <li>Dacă te-ai conectat cu succes în trecut la acest server, eroarea poate fi temporară și poți încerca din nou mai târziu.</li> </ul>]]></string>
+  <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul> <li>Ar putea fi din cauza unei probleme de configurare a serverului sau cineva ar putea încerca să uzurpe identitatea acestui server.</li> <li>Dacă te-ai conectat cu succes la acest server în trecut, este posibil ca eroarea să fie temporară și poți încerca din nou mai târziu.</li> </ul>]]></string>
   <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
   <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avansat…</string>
   <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
-  <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Cineva ar putea încerca să uzurpe site-ul și ar fi bine să nu mergi mai departe.</label> <br><br> <label>Site-urile web își dovedesc identitatea prin certificate. %1$s nu are încredere în <b>%2$s</b> deoarece emitentul certificatului este necunoscut, certificatul este autosemnat sau serverul nu trimite certificatele intermediare corecte.</label>]]></string>
+  <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Cineva ar putea încerca să uzurpe acest site și nu ar trebui să continui.</label> <br><br> <label>Site-urile web își dovedesc identitatea prin certificate. %1$s nu are încredere în <b>%2$s</b> deoarece emitentul certificatului este necunoscut, certificatul este autosemnat sau serverul nu trimite certificatele intermediare corecte.</label>]]></string>
   <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
   <string name="mozac_browser_errorpages_security_bad_cert_back">Înapoi (recomandat)</string>
   <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -31,19 +31,19 @@
   <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
   <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[<label> <b>%1$s</b> are o politică de securitate denumită HTTP Securitate Strictă a Transportului (HSTS), ce presupune că <b>%2$s</b> se poate conecta la acesta doar securizat. Nu puteți adăuga o excepție pentru a vizita acest site.</label>]]></string>
   <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
-  <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Mergi înapoi</string>
+  <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Înapoi</string>
   <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
   <string name="mozac_browser_errorpages_net_interrupt_title">Conexiunea a fost întreruptă</string>
   <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-  <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Browserul s-a conectat cu succes, dar conexiunea a fost întreruptă în timpul transferului de informații. Încearcă din nou.</p> <ul> <li>Site-ul ar putea fi temporar indisponibil sau prea ocupat. Încearcă din nou în câteva momente.</li> <li>Dacă nu poți încărca nicio pagină, verifică datele dispozitivului tău sau conexiunea Wi-Fi.</li> </ul>]]></string>
+  <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Browserul s-a conectat cu succes, dar conexiunea a fost întreruptă în timpul transferului de informații. Încearcă din nou.</p> <ul> <li>Site-ul ar putea fi temporar indisponibil sau prea aglomerat. Încearcă din nou în câteva momente.</li> <li>Dacă nu poți încărca nicio pagină, verifică conexiunea la datele mobile sau la rețeaua Wi-Fi a dispozitivului tău.</li> </ul>]]></string>
   <!-- The document title and heading of the error page shown when a website takes too long to load. -->
   <string name="mozac_browser_errorpages_net_timeout_title">Conexiunea a expirat</string>
   <!-- The error message shown when a website took long to load. -->
-  <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p> Site-ul solicitat nu a răspuns la o solicitare de conectare și browserul a încetat să aștepte un răspuns. </p> <ul> <li> S-ar putea ca serverul să aibă o cerere ridicată sau o întrerupere temporară? Încearcă din nou mai târziu. </li> <li> Nu poți naviga pe alte site-uri? Verifică-ți conexiunea la rețea. </li> <li> Dispozitivul tău sau rețeaua ta este protejat(ă) de un firewall sau proxy? Setările incorecte pot interfera cu navigarea pe Web. </li> <li> Mai ai probleme? Consultă administratorul de rețea sau furnizorul de internet pentru asistență. </li> </ul>]]></string>
+  <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Site-ul solicitat nu a răspuns cererii de conexiune, iar browserul a încetat să mai aștepte un răspuns.</p><ul><li>Se poate ca serverul să fie foarte solicitat sau să sufere o defecțiune temporară? Încearcați din nou mai târziu.</li><li>Aveți probleme cu navigarea pe alte site-uri? Verificați conexiunea la rețeaua calculatorului.</li><li>Calculatorul sau rețeaua dvs. este protejat de un firewall sau proxy? Setările incorecte ale acestora poate afecta navigarea pe web.</li><li>Problemele persistă? Consultați administratorul rețelei sau furnizorul de internet pentru asistență.</li></ul>]]></string>
   <!-- The document title and heading of the error page shown when a website could not be reached. -->
   <string name="mozac_browser_errorpages_connection_failure_title">Conectare eșuată</string>
   <!-- The error message shown when a website could not be reached. -->
-  <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul> <li>Site-ul ar putea fi temporar indisponibil sau prea ocupat. Încearcă din nou în câteva momente.</li> <li>Dacă nu poți încărca nicio pagină, verifică datele dispozitivului sau conexiunea Wi-Fi.</li> </ul>]]></string>
+  <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul> <li>Site-ul ar putea fi temporar indisponibil sau prea aglomerat. Încearcă din nou în câteva momente.</li> <li>Dacă nu reușești să încarci nicio pagină, verifică conexiunea la datele mobile sau la rețeaua Wi-Fi a dispozitivului tău.</li> </ul>]]></string>
   <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
   <string name="mozac_browser_errorpages_unknown_socket_type_title">Răspuns neașteptat de la server</string>
   <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->

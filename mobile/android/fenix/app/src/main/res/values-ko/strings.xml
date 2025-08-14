@@ -1969,6 +1969,10 @@
   <string name="clear_permissions_on_all_sites">모든 사이트의 권한 지우기</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">자동 재생</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">기기 앱과 서비스</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">로컬 네트워크 기기</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">카메라</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2999,6 +3003,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">바로 가기</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">모든 단축키 보기</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">바로 가기 한도에 도달됨</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
