@@ -1470,9 +1470,9 @@
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">Sincronizar</string>
   <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
-  <string name="tab_manager_floating_action_button_new_normal_tab">Nova lapela</string>
+  <string name="tab_manager_floating_action_button_new_normal_tab">Nova pestana</string>
   <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
-  <string name="tab_manager_floating_action_button_new_private_tab">Nova lapela privada</string>
+  <string name="tab_manager_floating_action_button_new_private_tab">Nova pestana privada</string>
   <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
   <string name="tab_manager_floating_action_button_sync_tabs">Sincronizar pestanas</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -3855,7 +3855,7 @@
     Second part of the terms of use pop up prompt
     %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
   -->
-  <string name="terms_of_use_prompt_message_2">Dedique un momento a revisar e aceptar. %1$s.</string>
+  <string name="terms_of_use_prompt_message_2">Adica un momento a revisar e aceptar. %1$s.</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Temos de uso</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
