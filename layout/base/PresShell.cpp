@@ -6214,12 +6214,14 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
   if (aMoveMessage == eMouseMove) {
     mouseMoveEvent.emplace(true, eMouseMove, view->GetWidget(),
                            WidgetMouseEvent::eSynthesized);
+    mouseMoveEvent->mButton = MouseButton::ePrimary;
     // We don't want to dispatch preceding pointer event since the caller
     // should've already been dispatched it.  However, if the target is an OOP
     // iframe, we'll set this to true again below.
     mouseMoveEvent->convertToPointer = false;
   } else {
     pointerMoveEvent.emplace(true, ePointerMove, view->GetWidget());
+    pointerMoveEvent->mButton = MouseButton::eNotPressed;
     pointerMoveEvent->mReason = WidgetMouseEvent::eSynthesized;
   }
   WidgetMouseEvent& event =
