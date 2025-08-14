@@ -10,6 +10,22 @@ panel {
   --menuitem-margin: 0px;
   --menuitem-padding: 0.5em 1em;
 
+  --badge-text-color: var(--text-color-deemphasized);
+  --badge-background-color: transparent;
+  --badge-border-color: currentColor;
+
+  --badge-filled-text-color: light-dark(var(--color-white), var(--color-gray-100));
+  --badge-filled-background-color: light-dark(var(--color-green-70), var(--color-green-40));
+  --badge-filled-border-color: light-dark(rgba(251, 251, 254, 0.4), rgba(21, 20, 26, 0.4));
+
+  @media (forced-colors) {
+    --badge-text-color: CanvasText;
+    --badge-background-color: Canvas;
+    --badge-filled-border-color: CanvasText;
+    --badge-filled-text-color: AccentColorText;
+    --badge-filled-background-color: AccentColor;
+  }
+
   @media (-moz-platform: linux) {
     --menuitem-padding: 0.25em 0.5em;
   }
@@ -407,9 +423,16 @@ menupopup[needsgutter] {
 
 menuitem[badge]::after {
   border-radius: var(--border-radius-small);
-  border: 1px solid;
-  color: var(--text-color-deemphasized);
+  border: 1px solid var(--badge-border-color);
+  color: var(--badge-text-color);
+  background-color: var(--badge-background-color);
   content: attr(badge);
   margin-inline-start: var(--space-small);
   padding: var(--space-xxsmall) var(--space-small);
+}
+
+menuitem.badge-new::after {
+  border-color: var(--badge-filled-border-color);
+  color: var(--badge-filled-text-color);
+  background-color: var(--badge-filled-background-color);
 }

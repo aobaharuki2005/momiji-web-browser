@@ -380,6 +380,7 @@ export class SearchModeSwitcher {
 
       if (engine.isNew() && engine.isAppProvided) {
         menuitem.setAttribute("badge", await lazy.searchModeNewBadge);
+        menuitem.classList.add("badge-new");
       }
 
       menuitem.addEventListener("command", e => {
