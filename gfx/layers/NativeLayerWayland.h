@@ -204,7 +204,7 @@ class NativeLayerWayland : public NativeLayer {
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
   bool SurfaceIsFlipped() override;
 
-  void RenderLayer(int aScale);
+  void RenderLayer(double aScale);
   // TODO
   GpuFence* GetGpuFence() override { return nullptr; }
 
@@ -257,7 +257,7 @@ class NativeLayerWayland : public NativeLayer {
 
  protected:
   void SetScalelocked(const widget::WaylandSurfaceLock& aProofOfLock,
-                      int aScale);
+                      double aScale);
   void UpdateLayerPlacementLocked(
       const widget::WaylandSurfaceLock& aProofOfLock);
   virtual bool CommitFrontBufferToScreenLocked(
@@ -303,7 +303,7 @@ class NativeLayerWayland : public NativeLayer {
   Maybe<gfx::IntRect> mClipRect;
   Maybe<gfx::RoundedRect> mRoundedClipRect;
   gfx::SamplingFilter mSamplingFilter = gfx::SamplingFilter::POINT;
-  int mScale = 1;
+  double mScale = 1.0f;
   LayerState mState{};
   bool mSurfaceIsFlipped = false;
   bool mIsHDR = false;

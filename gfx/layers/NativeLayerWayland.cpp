@@ -482,13 +482,7 @@ bool NativeLayerRootWayland::CommitToScreen() {
     RequestUpdateOnMainThreadLocked(lock);
   }
 
-  // scale < 1 means we're missing any scale info (even from monitor).
-  // Use default scale in such case.
-  int scale = (int)roundf(mRootSurface->GetScale());
-  if (scale < 1) {
-    scale = 1.0;
-  }
-
+  const double scale = mRootSurface->GetScaleSafe();
   mRootAllLayersRendered = true;
   for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
     layer->RenderLayer(scale);
@@ -742,7 +736,7 @@ IntRect NativeLayerWayland::CurrentSurfaceDisplayRect() {
 }
 
 void NativeLayerWayland::SetScalelocked(
-    const widget::WaylandSurfaceLock& aProofOfLock, int aScale) {
+    const widget::WaylandSurfaceLock& aProofOfLock, double aScale) {
   MOZ_DIAGNOSTIC_ASSERT(aScale > 0);
   if (aScale != mScale) {
     mScale = aScale;
@@ -774,9 +768,7 @@ void NativeLayerWayland::UpdateLayerPlacementLocked(
     surfaceRectClipped = surfaceRectClipped.Intersect(Rect(mClipRect.value()));
   }
 
-  bool visible = (roundf(surfaceRectClipped.width) > 0 &&
-                  roundf(surfaceRectClipped.height) > 0);
-
+  const bool visible = !surfaceRectClipped.IsEmpty();
   if (mState.mIsVisible != visible) {
     mState.mIsVisible = visible;
     mState.mMutatedVisibility = true;
@@ -791,26 +783,10 @@ void NativeLayerWayland::UpdateLayerPlacementLocked(
 
   mSurface->SetTransformFlippedLocked(aProofOfLock, transform2D._11 < 0.0,
                                       transform2D._22 < 0.0);
-  gfx::IntPoint pos((int)roundf(surfaceRectClipped.x),
-                    (int)roundf(surfaceRectClipped.y));
-
-  if (pos.x % mScale || pos.y % mScale) {
-    NS_WARNING(
-        "NativeLayerWayland: Tile position doesn't match scale, rendering "
-        "glitches ahead!");
-  }
-
-  mSurface->MoveLocked(aProofOfLock,
-                       gfx::IntPoint(pos.x / mScale, pos.y / mScale));
-  gfx::IntSize size((int)roundf(surfaceRectClipped.width),
-                    (int)roundf(surfaceRectClipped.height));
-  if (size.width % mScale || size.height % mScale) {
-    NS_WARNING(
-        "NativeLayerWayland: Tile size doesn't match scale, rendering "
-        "glitches ahead!");
-  }
-  mSurface->SetViewPortDestLocked(
-      aProofOfLock, gfx::IntSize(size.width / mScale, size.height / mScale));
+  auto unscaledRect =
+      gfx::RoundedToInt(surfaceRectClipped / UnknownScaleFactor(mScale));
+  mSurface->MoveLocked(aProofOfLock, unscaledRect.TopLeft());
+  mSurface->SetViewPortDestLocked(aProofOfLock, unscaledRect.Size());
 
   auto transform2DInversed = transform2D.Inverse();
   Rect bufferClip = transform2DInversed.TransformBounds(surfaceRectClipped);
@@ -819,7 +795,7 @@ void NativeLayerWayland::UpdateLayerPlacementLocked(
       bufferClip.Intersect(Rect(0, 0, mSize.width, mSize.height)));
 }
 
-void NativeLayerWayland::RenderLayer(int aScale) {
+void NativeLayerWayland::RenderLayer(double aScale) {
   WaylandSurfaceLock lock(mSurface);
 
   LOG("NativeLayerWayland::RenderLayer()");
@@ -1017,12 +993,11 @@ RefPtr<DrawTarget> NativeLayerWaylandRender::NextSurfaceAsDrawTarget(
 
   WaylandSurfaceLock lock(mSurface);
 
-  gfx::IntRect r = IntRect(aDisplayRect);
-  if (!mDisplayRect.IsEqualEdges(r)) {
-    mDisplayRect = r;
+  if (!mDisplayRect.IsEqualEdges(aDisplayRect)) {
+    mDisplayRect = aDisplayRect;
     mState.mMutatedPlacement = true;
   }
-  mDirtyRegion = IntRegion(aUpdateRegion);
+  mDirtyRegion = aUpdateRegion;
 
   MOZ_DIAGNOSTIC_ASSERT(!mInProgressBuffer);
   if (mFrontBuffer && !mFrontBuffer->IsAttached()) {
@@ -1068,9 +1043,8 @@ Maybe<GLuint> NativeLayerWaylandRender::NextSurfaceAsFramebuffer(
 
   WaylandSurfaceLock lock(mSurface);
 
-  gfx::IntRect r = IntRect(aDisplayRect);
-  if (!mDisplayRect.IsEqualEdges(r)) {
-    mDisplayRect = r;
+  if (!mDisplayRect.IsEqualEdges(aDisplayRect)) {
+    mDisplayRect = aDisplayRect;
     mState.mMutatedPlacement = true;
   }
   mDirtyRegion = IntRegion(aUpdateRegion);

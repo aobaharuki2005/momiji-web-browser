@@ -859,21 +859,26 @@ void WaylandSurface::SetSizeLocked(const WaylandSurfaceLock& aProofOfLock,
 void WaylandSurface::SetViewPortDestLocked(
     const WaylandSurfaceLock& aProofOfLock, gfx::IntSize aDestSize) {
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
-  if (mViewport) {
-    if (mViewportDestinationSize == aDestSize) {
-      return;
-    }
-    LOGWAYLAND("WaylandSurface::SetViewPortDestLocked(): Size [%d x %d]",
-               aDestSize.width, aDestSize.height);
-    if (aDestSize.width < 1 || aDestSize.height < 1) {
-      NS_WARNING("WaylandSurface::SetViewPortDestLocked(): Wrong coordinates!");
-      aDestSize.width = aDestSize.height = -1;
-    }
-    mViewportDestinationSize = aDestSize;
-    wp_viewport_set_destination(mViewport, mViewportDestinationSize.width,
-                                mViewportDestinationSize.height);
-    mSurfaceNeedsCommit = true;
+  if (!mViewport) {
+    return;
   }
+  if (mViewportDestinationSize == aDestSize) {
+    return;
+  }
+  LOGWAYLAND("WaylandSurface::SetViewPortDestLocked(): Size [%d x %d]",
+             aDestSize.width, aDestSize.height);
+  if (aDestSize.width < 1 || aDestSize.height < 1) {
+    NS_WARNING(
+        nsPrintfCString(
+            "WaylandSurface::SetViewPortDestLocked(%s): Wrong coordinates!",
+            ToString(aDestSize).c_str())
+            .get());
+    aDestSize.width = aDestSize.height = -1;
+  }
+  mViewportDestinationSize = aDestSize;
+  wp_viewport_set_destination(mViewport, mViewportDestinationSize.width,
+                              mViewportDestinationSize.height);
+  mSurfaceNeedsCommit = true;
 }
 
 void WaylandSurface::SetViewPortSourceRectLocked(
@@ -890,8 +895,10 @@ void WaylandSurface::SetViewPortSourceRectLocked(
 
   // Don't throw protocol error with bad coords
   if (aRect.x < 0 || aRect.y < 0 || aRect.width < 1 || aRect.height < 1) {
-    NS_WARNING(
-        "WaylandSurface::SetViewPortSourceRectLocked(): Wrong coordinates!");
+    NS_WARNING(nsPrintfCString("WaylandSurface::SetViewPortSourceRectLocked(%s)"
+                               ": Wrong coordinates!",
+                               ToString(aRect).c_str())
+                   .get());
     aRect.x = aRect.y = aRect.width = aRect.height = -1;
   }
 
