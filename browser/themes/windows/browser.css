@@ -217,7 +217,7 @@
 
 /* Address bar */
 
-#urlbar,
+.urlbar,
 #searchbar {
   font-size: 1.15em;
 }

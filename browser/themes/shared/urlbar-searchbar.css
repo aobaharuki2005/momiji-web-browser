@@ -17,8 +17,7 @@
 .urlbar-input-container[pageproxystate="invalid"] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
 #urlbar[usertyping] > .urlbar-input-container > #page-action-buttons > #urlbar-zoom-button,
-#urlbar:not([usertyping]) > .urlbar-input-container > .urlbar-go-button,
-#urlbar:not([focused]) > .urlbar-input-container > .urlbar-go-button,
+.urlbar:is(:not([usertyping]), :not([focused])) > .urlbar-input-container > .urlbar-go-button,
 .urlbar-revert-button-container {
   display: none;
 }
@@ -42,7 +41,7 @@
   }
 }
 
-#urlbar {
+.urlbar {
   display: flex;
   flex-direction: row;
   flex: 1;
@@ -60,7 +59,7 @@
   background-color: initial;
 }
 
-#urlbar,
+.urlbar,
 #searchbar {
   /* Setting a min-width to let the location & search bars maintain a constant
    * width in case they haven't been resized manually. (bug 965772) */
@@ -82,7 +81,7 @@
   }
 }
 
-#urlbar[focused],
+.urlbar[focused],
 #searchbar:focus-within {
   :root[lwt-toolbar-field-focus="light"] & {
     color-scheme: light;
@@ -139,23 +138,23 @@
     text-align: right !important;
   }
 
-  #urlbar:not([focused])[domaindir="ltr"] > .urlbar-input-container > .urlbar-input-box > & {
+  .urlbar:not([focused])[domaindir="ltr"] > .urlbar-input-container > .urlbar-input-box > & {
     direction: ltr;
     unicode-bidi: embed;
   }
 
   /* The following rules apply overflow masks to the unfocused urlbar
      This mask may be overriden when a Contextual Feature Recommendation is shown. */
-  #urlbar:not([focused])[textoverflow="both"] > .urlbar-input-container > .urlbar-input-box > & {
+  .urlbar:not([focused])[textoverflow="both"] > .urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to right, transparent, black 3ch, black calc(100% - 3ch), transparent);
   }
-  #urlbar:not([focused])[textoverflow="right"] > .urlbar-input-container > .urlbar-input-box > & {
+  .urlbar:not([focused])[textoverflow="right"] > .urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to left, transparent, black 3ch);
   }
-  #urlbar:not([focused])[textoverflow="left"] > .urlbar-input-container > .urlbar-input-box > & {
+  .urlbar:not([focused])[textoverflow="left"] > .urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to right, transparent, black 3ch);
   }
-  #urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > .urlbar-input-container > .urlbar-input-box > & {
+  .urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > .urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
   }
 }
@@ -206,12 +205,12 @@
   }
 }
 
-#urlbar:is([focused], [open]),
+.urlbar:is([focused], [open]),
 #searchbar:focus-within {
   color: var(--toolbar-field-focus-color);
 }
 
-:is([focused], [open]) > .urlbar-background,
+.urlbar:is([focused], [open]) > .urlbar-background,
 #searchbar:focus-within {
   background-color: var(--toolbar-field-focus-background-color);
 }
@@ -240,7 +239,7 @@
   }
 }
 
-#urlbar:not([focused]) {
+.urlbar:not([focused]) {
   caret-color: transparent;
 }
 
@@ -250,7 +249,7 @@
  * the bounds of the urlbar.
  */
 
-#urlbar,
+.urlbar,
 .urlbar-input-container,
 .urlbarView {
   position: relative;
@@ -273,7 +272,7 @@
   min-height: var(--urlbar-container-height);
 }
 
-#urlbar[breakout] {
+.urlbar[breakout] {
   display: block;
   /* This is technically not needed, because popover takes care of it, but
    * helps for clarity. */
@@ -287,12 +286,12 @@
   }
 }
 
-#urlbar:not([open]) > .urlbarView,
-#urlbar:not([breakout]) > .urlbarView {
+.urlbar:not([open]) > .urlbarView,
+.urlbar:not([breakout]) > .urlbarView {
   display: none;
 }
 
-#urlbar[breakout][breakout-extend] {
+.urlbar[breakout][breakout-extend] {
   height: auto;
   margin-left: calc(-1 * var(--urlbar-margin-inline));
   width: calc(var(--urlbar-width) + 2 * var(--urlbar-margin-inline));
@@ -829,7 +828,7 @@
   }
 }
 
-#urlbar[persistsearchterms] > .urlbar-input-container {
+.urlbar[persistsearchterms] > .urlbar-input-container {
   > .urlbar-revert-button-container {
     display: inherit;
   }
@@ -1022,6 +1021,20 @@
   }
 }
 
+#searchbar-new {
+  display: none;
+}
+
+/* stylelint-disable-next-line media-query-no-invalid */
+@media -moz-pref("browser.search.widget.new") {
+  #searchbar-new {
+    display: flex;
+  }
+  #searchbar {
+    display: none;
+  }
+}
+
 .search-go-button {
   margin-inline: 1px;
 }
@@ -1115,11 +1128,11 @@
   }
 
   /* No need space if page information icons such as lock and shield is shown */
-  #urlbar[pageproxystate="valid"] & {
+  .urlbar[pageproxystate="valid"] & {
     margin-inline-end: 0;
   }
 
-  #urlbar[searchmode] & {
+  .urlbar[searchmode] & {
     background-color: var(--urlbar-box-bgcolor);
     margin-inline-end: 0;
     border-start-end-radius: 0;
@@ -1127,7 +1140,7 @@
   }
 
   /* The background rule should match to .searchmode-switcher-chicklet */
-  #urlbar[focused] & {
+  .urlbar[focused] & {
     background-color: var(--urlbar-box-focus-bgcolor);
   }
 
@@ -1159,12 +1172,12 @@
 
   /* stylelint-disable-next-line media-query-no-invalid */
   @media -moz-pref("browser.urlbar.searchModeSwitcher.featureGate") or -moz-pref("browser.urlbar.scotchBonnet.enableOverride") {
-    #urlbar[searchmode] & {
+    .urlbar[searchmode] & {
       display: inline-flex;
     }
   }
 
-  #urlbar[focused] & {
+  .urlbar[focused] & {
     background-color: var(--urlbar-box-focus-bgcolor);
   }
 }
@@ -1187,13 +1200,13 @@
   pointer-events: all;
   margin-inline: var(--urlbar-searchmodeswitcher-inline-padding);
 
-  #urlbar[searchmode] & {
+  .urlbar[searchmode] & {
     display: inline-flex;
   }
 }
 
 .searchmode-switcher-dropmarker {
-  #urlbar[searchmode] & {
+  .urlbar[searchmode] & {
     display: none;
   }
   .urlbar-searchmode-switcher[open] & {
@@ -1242,7 +1255,7 @@
   @media not -moz-pref("browser.urlbar.unifiedSearchButton.always") {
     .searchmode-switcher {
       background-color: var(--urlbar-box-bgcolor);
-      #urlbar:not([unifiedsearchbutton-available]) > .urlbar-input-container > & {
+      .urlbar:not([unifiedsearchbutton-available]) > .urlbar-input-container > & {
         /* Display as off-screen to get focus */
         position: fixed;
         top: -999px;

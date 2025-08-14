@@ -172,6 +172,7 @@
                    overflows="false">
         <toolbartabstop/>
         <html:div id="urlbar"
+              class="urlbar"
               popover="manual"
               focused="true"
               pageproxystate="invalid"
@@ -442,6 +443,23 @@
               </hbox>
             </hbox>
           </hbox>
+          <vbox class="urlbarView"
+                context=""
+                role="group"
+                tooltip="aHTMLTooltip">
+            <html:div class="urlbarView-body-outer">
+              <html:div class="urlbarView-body-inner">
+                <html:div id="urlbar-results"
+                          class="urlbarView-results"
+                          role="listbox"/>
+              </html:div>
+            </html:div>
+            <menupopup class="urlbarView-result-menu"
+                       consumeoutsideclicks="false"/>
+            <hbox class="search-one-offs"
+                  includecurrentengine="true"
+                  disabletab="true"/>
+          </vbox>
         </html:div>
         <toolbartabstop/>
       </toolbaritem>
@@ -684,6 +702,85 @@
                  persist="width">
       <toolbartabstop/>
       <searchbar id="searchbar" flex="1"/>
+      <html:div id="searchbar-new"
+            class="urlbar"
+            popover="manual"
+            pageproxystate="invalid"
+            unifiedsearchbutton-available=""
+        >
+        <hbox class="urlbar-background"/>
+        <hbox class="urlbar-input-container"
+              flex="1"
+              pageproxystate="invalid">
+          <toolbarbutton id="searchbar-searchmode-switcher"
+                         class="searchmode-switcher chromeclass-toolbar-additional"
+                         align="center"
+                         aria-expanded="false"
+                         aria-haspopup="menu"
+                         tooltip="dynamic-shortcut-tooltip"
+                         data-l10n-id="urlbar-searchmode-default"
+                         type="menu">
+            <image class="searchmode-switcher-icon toolbarbutton-icon"/>
+            <image class="searchmode-switcher-dropmarker toolbarbutton-icon toolbarbutton-combined-buttons-dropmarker"
+                   data-l10n-id="urlbar-searchmode-dropmarker" />
+            <menupopup class="searchmode-switcher-popup toolbar-menupopup"
+                       consumeoutsideclicks="false">
+              <label class="searchmode-switcher-popup-description"
+                     data-l10n-id="urlbar-searchmode-popup-description"
+                     role="heading" />
+              <menuseparator/>
+              <menuseparator class="searchmode-switcher-popup-footer-separator"/>
+              <menuitem class="searchmode-switcher-popup-search-settings-button menuitem-iconic"
+                        data-action="openpreferences"
+                        image="chrome://global/skin/icons/settings.svg"
+                        data-l10n-id="urlbar-searchmode-popup-search-settings-menuitem"/>
+            </menupopup>
+          </toolbarbutton>
+          <box class="searchmode-switcher-chicklet">
+            <label class="searchmode-switcher-title" />
+            <toolbarbutton class="searchmode-switcher-close toolbarbutton-icon close-button"
+                           data-action="exitsearchmode"
+                           role="button"
+                           data-l10n-id="urlbar-searchmode-exit-button" />
+          </box>
+          <moz-input-box tooltip="aHTMLTooltip"
+                         class="urlbar-input-box"
+                         flex="1"
+                         role="combobox"
+                         aria-owns="searchbar-results">
+            <html:input class="urlbar-input textbox-input"
+                        aria-controls="searchbar-results"
+                        aria-autocomplete="both"
+                        inputmode="mozAwesomebar"
+                        data-l10n-id="urlbar-placeholder"
+                        data-l10n-attrs="placeholder"/>
+          </moz-input-box>
+          <hbox class="urlbar-revert-button-container">
+            <toolbartabstop/>
+            <image class="urlbar-icon urlbar-revert-button"
+                   role="button"
+                   data-l10n-id="urlbar-revert-button"/>
+          </hbox>
+          <image id="searchbar-go-button"
+                 class="urlbar-icon urlbar-go-button"
+                 role="button"
+                 data-l10n-id="urlbar-go-button"/>
+        </hbox>
+        <vbox class="urlbarView"
+              context=""
+              role="group"
+              tooltip="aHTMLTooltip">
+          <html:div class="urlbarView-body-outer">
+            <html:div class="urlbarView-body-inner">
+              <html:div id="searchbar-results"
+                        class="urlbarView-results"
+                        role="listbox"/>
+            </html:div>
+          </html:div>
+          <menupopup class="urlbarView-result-menu"
+                     consumeoutsideclicks="false"/>
+        </vbox>
+      </html:div>
       <toolbartabstop/>
     </toolbaritem>
 
