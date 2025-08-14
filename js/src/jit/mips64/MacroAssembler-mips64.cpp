@@ -507,8 +507,8 @@ void MacroAssemblerMIPS64::ma_addPtrTestCarry(Condition cond, Register rd,
 }
 
 void MacroAssemblerMIPS64::ma_addPtrTestSigned(Condition cond, Register rd,
-                                                Register rj, Register rk,
-                                                Label* taken) {
+                                               Register rj, Register rk,
+                                               Label* taken) {
   MOZ_ASSERT(cond == Assembler::Signed || cond == Assembler::NotSigned);
 
   as_daddu(rd, rj, rk);
@@ -516,8 +516,8 @@ void MacroAssemblerMIPS64::ma_addPtrTestSigned(Condition cond, Register rd,
 }
 
 void MacroAssemblerMIPS64::ma_addPtrTestSigned(Condition cond, Register rd,
-                                                Register rj, Imm32 imm,
-                                                Label* taken) {
+                                               Register rj, Imm32 imm,
+                                               Label* taken) {
   MOZ_ASSERT(cond == Assembler::Signed || cond == Assembler::NotSigned);
 
   ma_daddu(rd, rj, imm);
@@ -525,8 +525,8 @@ void MacroAssemblerMIPS64::ma_addPtrTestSigned(Condition cond, Register rd,
 }
 
 void MacroAssemblerMIPS64::ma_addPtrTestSigned(Condition cond, Register rd,
-                                                Register rj, ImmWord imm,
-                                                Label* taken) {
+                                               Register rj, ImmWord imm,
+                                               Label* taken) {
   MOZ_ASSERT(cond == Assembler::Signed || cond == Assembler::NotSigned);
 
   SecondScratchRegisterScope scratch2(asMasm());
