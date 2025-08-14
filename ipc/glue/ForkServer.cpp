@@ -30,6 +30,11 @@
 #  include "mozilla/SandboxLaunch.h"
 #endif
 
+#if defined(XP_OPENBSD)
+#  include "BinaryPath.h"
+#  include <err.h>
+#endif
+
 #include <algorithm>
 
 namespace mozilla {
@@ -74,6 +79,13 @@ ForkServer::ForkServer(int* aArgc, char*** aArgv) : mArgc(aArgc), mArgv(aArgv) {
  */
 static void ForkServerPreload(int& aArgc, char** aArgv) {
   Omnijar::ChildProcessInit(aArgc, aArgv);
+#if defined(XP_OPENBSD)
+  char binaryPath[MAXPATHLEN];
+  nsresult rv = mozilla::BinaryPath::Get(binaryPath);
+  if (NS_FAILED(rv)) {
+    errx(1, "failed to cache binary path ?");
+  }
+#endif
 }
 
 /**
