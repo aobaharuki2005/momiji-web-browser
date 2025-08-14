@@ -3939,7 +3939,7 @@
 # See bug 1953860 for background and additional details.
 - name: dom.quotaManager.loadQuotaFromSecondaryCache
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Should we check build ID as part of the cache validation?
@@ -4074,7 +4074,7 @@
 # L2 cache to all users on all platforms in the release channel.
 - name: dom.quotaManager.originInitialization.updateOriginMetadata
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # A pref that is used to slow down origin initialization for testing purposes.
