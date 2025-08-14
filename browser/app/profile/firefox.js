@@ -369,11 +369,7 @@ pref("browser.warnOnQuit", true);
 
 pref("browser.overlink-delay", 80);
 
-#if defined(XP_WIN)
-  pref("browser.taskbarTabs.enabled", true);
-#else
-  pref("browser.taskbarTabs.enabled", false);
-#endif
+pref("browser.taskbarTabs.enabled", false);
 
 #if defined(MOZ_WIDGET_GTK)
   pref("browser.theme.native-theme", true);
