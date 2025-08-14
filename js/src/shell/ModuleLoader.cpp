@@ -216,8 +216,8 @@ bool ModuleLoader::loadImportedModule(JSContext* cx,
     return false;
   }
 
-  return JS::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
-                                         moduleRequest, payload, module, false);
+  return JS::FinishLoadingImportedModule(cx, referrer, moduleRequest, payload,
+                                         module, false);
 }
 
 bool ModuleLoader::populateImportMeta(JSContext* cx,
@@ -368,8 +368,8 @@ bool ModuleLoader::doDynamicImport(JSContext* cx,
                                                                      payload);
   }
 
-  return JS::FinishLoadingImportedModule(cx, nullptr, referencingPrivate,
-                                         moduleRequest, payload, module, false);
+  return JS::FinishLoadingImportedModule(cx, nullptr, moduleRequest, payload,
+                                         module, false);
 }
 
 JSLinearString* ModuleLoader::resolve(JSContext* cx,

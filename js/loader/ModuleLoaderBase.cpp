@@ -301,9 +301,8 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
   LOG(("ScriptLoadRequest (%p): FinishLoadingImportedModule module (%p)",
        aRequest, module.get()));
   bool usePromise = aRequest->HasScriptLoadContext();
-  MOZ_ALWAYS_TRUE(JS::FinishLoadingImportedModule(
-      aCx, referrer, referencingPrivate, moduleReqObj, payload, module,
-      usePromise));
+  MOZ_ALWAYS_TRUE(JS::FinishLoadingImportedModule(aCx, referrer, moduleReqObj,
+                                                  payload, module, usePromise));
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   aRequest->mReferrerScript = nullptr;
