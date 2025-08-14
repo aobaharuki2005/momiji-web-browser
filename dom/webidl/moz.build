@@ -543,6 +543,7 @@ WEBIDL_FILES = [
     "CSSStyleValue.webidl",
     "CSSSupportsRule.webidl",
     "CSSTransformComponent.webidl",
+    "CSSTransformValue.webidl",
     "CSSTransition.webidl",
     "CSSTranslate.webidl",
     "CSSUnitValue.webidl",
