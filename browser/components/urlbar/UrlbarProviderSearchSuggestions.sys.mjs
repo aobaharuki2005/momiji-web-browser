@@ -328,10 +328,12 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    *
    * @param {UrlbarResult} result
    *   The result to get menu comands for.
+   *
+   * @returns {Array} The commands to be shown.
    */
   getResultCommands(result) {
     if (result.payload.trending) {
-      return /** @type {UrlbarResultCommand[]} */ ([
+      return [
         {
           name: RESULT_MENU_COMMANDS.TRENDING_BLOCK,
           l10n: { id: "urlbar-result-menu-trending-dont-show" },
@@ -343,7 +345,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
           name: RESULT_MENU_COMMANDS.TRENDING_HELP,
           l10n: { id: "urlbar-result-menu-trending-why" },
         },
-      ]);
+      ];
     }
     return undefined;
   }

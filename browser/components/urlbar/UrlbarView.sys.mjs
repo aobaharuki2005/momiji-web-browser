@@ -3274,9 +3274,6 @@ export class UrlbarView {
       return this.#resultMenuCommands.get(result);
     }
 
-    /**
-     * @type {?UrlbarResultCommand[]}
-     */
     let commands = lazy.UrlbarProvidersManager.getProvider(
       result.providerName
     )?.tryMethod("getResultCommands", result);
@@ -3316,14 +3313,7 @@ export class UrlbarView {
     return rv;
   }
 
-  /**
-   * Popuplates the result menu with commands.
-   *
-   * @param {object} options
-   * @param {XULTextElement} options.menupopup
-   * @param {UrlbarResultCommand[]} options.commands
-   */
-  #populateResultMenu({ menupopup = this.resultMenu, commands }) {
+  #populateResultMenu({ menupopup = this.resultMenu, commands } = {}) {
     menupopup.textContent = "";
     for (let data of commands) {
       if (data.children) {
