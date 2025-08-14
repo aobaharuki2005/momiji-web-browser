@@ -1496,6 +1496,7 @@ export class nsContextMenu {
       policyContainer: this.policyContainer,
       frameID: this.contentData.frameID,
       hasValidUserGestureActivation: true,
+      textDirectiveUserActivation: true,
     };
     for (let p in extra) {
       params[p] = extra[p];

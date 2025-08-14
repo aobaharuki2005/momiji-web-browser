@@ -755,6 +755,7 @@ var gBrowserInit = {
             : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
 
         let hasValidUserGestureActivation = undefined;
+        let textDirectiveUserActivation = undefined;
         let fromExternal = undefined;
         let globalHistoryOptions = undefined;
         let triggeringRemoteType = undefined;
@@ -771,6 +772,11 @@ var gBrowserInit = {
           if (extraOptions.hasKey("hasValidUserGestureActivation")) {
             hasValidUserGestureActivation = extraOptions.getPropertyAsBool(
               "hasValidUserGestureActivation"
+            );
+          }
+          if (extraOptions.hasKey("textDirectiveUserActivation")) {
+            textDirectiveUserActivation = extraOptions.getPropertyAsBool(
+              "textDirectiveUserActivation"
             );
           }
           if (extraOptions.hasKey("fromExternal")) {
@@ -826,6 +832,7 @@ var gBrowserInit = {
             forceAboutBlankViewerInCurrent: !!window.arguments[6],
             forceAllowDataURI,
             hasValidUserGestureActivation,
+            textDirectiveUserActivation,
             fromExternal,
             globalHistoryOptions,
             triggeringRemoteType,
