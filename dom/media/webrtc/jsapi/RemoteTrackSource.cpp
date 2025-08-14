@@ -40,6 +40,10 @@ RemoteTrackSource::~RemoteTrackSource() { Destroy(); }
 
 void RemoteTrackSource::Destroy() {
   if (mStream) {
+    if (mReceiver && mStream->mType == MediaSegment::VIDEO) {
+      mReceivingSizeOnEnded = mReceiver->ReceivingSize().orElse(
+          [] { return Some(gfx::IntSize{0, 0}); });
+    }
     MOZ_ASSERT(!mStream->IsDestroyed());
     mStream->End();
     mStream->Destroy();
@@ -51,7 +55,13 @@ void RemoteTrackSource::Destroy() {
 }
 
 void RemoteTrackSource::GetSettings(dom::MediaTrackSettings& aSettings) {
-  if (mStream->mType == MediaSegment::VIDEO) {
+  if (mReceivingSizeOnEnded) {
+    aSettings.mWidth.Construct(mReceivingSizeOnEnded->width);
+    aSettings.mHeight.Construct(mReceivingSizeOnEnded->height);
+    return;
+  }
+
+  if (mStream && mStream->mType == MediaSegment::VIDEO) {
     const gfx::IntSize size = mReceiver->ReceivingSize().valueOrFrom(
         [] { return gfx::IntSize{0, 0}; });
     aSettings.mWidth.Construct(size.width);

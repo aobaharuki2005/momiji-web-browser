@@ -40,12 +40,12 @@
     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission.
   -->
-  <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">Să îți acceseze datele în %1$d alte domenii</string>
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">Să îți acceseze datele în alte %1$d domenii</string>
   <!--
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on other domains".
   -->
-  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_2">Să-ți acceseze datele pe alte domenii</string>
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_2">Să îți acceseze datele pe alte domenii</string>
   <!-- When an add-on requires access to domains, this entry is used to describe the total number of domains. Underneath it will be the list of all the domains. %1$d is the number of all the domains that will be shown to the user as required. -->
   <string name="mozac_feature_addons_permissions_all_domain_count_description" tools:ignore="PluralsCandidate">Să-ți acceseze datele pentru site-uri din %1$d domenii</string>
   <!-- Content description for a permission item, for an installed add-on details page. %1$s will be replaced with the permission text name, %2$d will be replaced with the permission position in the list and %3$d will be replaced with the total number of permissions in the list.Taking as an example "Read and modify privacy settings" the whole text will read Read and modify privacy settings, 2 of 6. -->
@@ -123,7 +123,7 @@
   <!-- Description for the "clipboardWrite" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_clipboard_write_description_for_update">Introducerea datelor în clipboard.</string>
   <!-- Description for the "declarativeNetRequest" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_declarative_net_request_description_for_update">Blocați conținutul de pe orice pagină.</string>
+  <string name="mozac_feature_addons_permissions_declarative_net_request_description_for_update">Blochează conținutul de pe orice pagină.</string>
   <!-- Description for the "declarativeNetRequestFeedback" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description_for_update">Citește istoricul de navigare.</string>
   <!-- Description for the "downloads" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
@@ -171,7 +171,7 @@
     When an add-on requires access to more than 2 domains, for example the add-on requires access for 4 domains. We will show the first 2 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description_for_update,
     then we will show another collapsed entry saying "Access your data on other domains.".
   -->
-  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_for_update">Să-ți acceseze datele pe alte domenii.</string>
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_for_update">Să îți acceseze datele pe alte domenii.</string>
   <!--
     When an add-on requires access to more than 2 sites, for example the add-on requires access for 3 sites. We will show the first 2 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description_for_update,
     then we will show another collapsed entry saying "Access your data on another site.".

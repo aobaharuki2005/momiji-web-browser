@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">როდესაც გვიზიარებთ, თუ როგორ აღმოაჩინეთ Firefox და როგორ იყენებთ, გვეხმარებით გავაცნოთ ბრაუზერი კიდევ უფრო მეტ ხალხს.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">გაუზიარეთ მცირე ოდენობის მონაცემები Mozilla-ს გაყიდვების საქმიანობაში მოკავშირე სამსახურებს. ეს მონაცემები არასდროს გაიყიდება და არ იქნება გამოყენებული სარეკლამოდ.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">გაუზიარეთ მონაცემები Mozilla-ს გაყიდვების საქმიანობაში მოკავშირე სამსახურებს. ეს მონაცემები არასდროს გაიყიდება და არ იქნება გამოყენებული სარეკლამოდ.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">როგორ ვიყენებთ მონაცემებს</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1084,7 +1086,7 @@
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">ცვალებადი ფერები</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other">სხვა</string>
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">სხვა</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">შეიცვალოს პროგრამის ხატულა?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">ვრცლად დღიური გამოყენების უწყების შესახებ</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">უეცარი გათიშვის მოხსენებების თვითგაგზავნა</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">მოხსენება გაიგზავნა</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">საშუალებას მოგვცემს, გამოვავლინოთ და მოვაგვაროთ ბრაუზერის ხარვეზები. მოხსენებები შეიძლება შეიცავდეს პირად ან საფრთხილო მონაცემებს.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1718,6 +1722,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">დაგვეხმარეთ, განვავითაროთ %1$s ყველასთვის. Mozilla-ს თანამშრომლები თქვენ მიერ გამოგზავნილ მონაცემებს იყენებენ ვებსაიტთან დაკავშირებული ხარვეზების მოსაგვარებლად.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">თქვენი მოხსენება გვეხმარება ხარვეზების გამოვლენაში, რომ გამოვასწოროთ %1$s და გავხადოთ უკეთესი ყველასთვის. ვრცლად</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">თქვენი მოხსენება გვეხმარება ხარვეზების გამოვლენაში, რომ გამოვასწოროთ %1$s და გავხადოთ უკეთესი ყველასთვის. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">ვრცლად</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1782,6 +1788,8 @@
   <string name="tab_crash_restore">ჩანართის აღდგენა</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s ახლიდან უნდა ჩაირთოს</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s უეცრად გაითიშა. გაიგზავნოს მოხსენება?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">გადაუგზავნელი მოხსენება გაქვთ უეცარი გათიშვის შესახებ, რომლის კვლევაც მიმდინარეობს. მისი გამოგზავნით დაგვეხმარებით, გავაუმჯობესოთ %1$s. ამ ცნობის დახურვით მოხსენება უგულებელყოფილი დარჩება.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1798,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">უეცარი გათიშვის მოხსენებების თვითგაგზავნა</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">დახურვა</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ᲓᲐᲮᲣᲠᲕᲐ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">აღარ გამოჩნდეს</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ᲒᲐᲒᲖᲐᲕᲜᲐ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">უეცარი გათიშვის მოხსენება</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">უეცარი გათიშვის მოხსენებები გვეხმარება, გამოვავლინოთ და მოვაგვაროთ ბრაუზერის ხარვეზები. მოხსენებები შეიძლება შეიცავდეს პირად ან საფრთხილო მონაცემებს. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">ვრცლად</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">ვრცლად</string>
   <!--
@@ -1801,11 +1816,11 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">ნამდვილად გსურთ ამ საქაღალდის წაშლა?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">ნამდვილად გსურთ ამ საქაღალდის წაშლა?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">ნამდვილად გსურთ მონიშნული ერთეულების წაშლა?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s წაშლის მონიშნულებს.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s წაშლის მონიშნულებს.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">გაუქმება</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1835,7 +1850,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">წაშლა</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">შენახვა</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">შენახვა</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">დალაგება შერჩეული თანმიმდევრობით</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1856,7 +1871,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">საქაღალდის ჩასწორება</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">შედით დასინქრონებული სანიშნების სანახავად</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">შედით დასინქრონებული სანიშნების სანახავად</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL-ბმული</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1868,24 +1883,24 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">სახელი</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">საქაღალდის დამატება</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">საქაღალდის დამატება</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">საქაღალდის მითითება</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">უნდა ჰქონდეს სათაური</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">უნდა ჰქონდეს სათაური</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">არამართებული URL</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">სანიშნები არ არის</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">სანიშნები არ არის</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">წაიშალა %1$s</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">სანიშნები წაიშალა</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">სანიშნები წაიშალა</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">იშლება მითითებული საქაღალდეები</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">იშლება მითითებული საქაღალდეები</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">დაბრუნება</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
@@ -1893,7 +1908,7 @@
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">წაშლილი ერთეულები: %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">შეიყვანეთ საძიებო ფრაზა</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">შეიყვანეთ საძიებო ფრაზა</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">გადასვლა უკან</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -2221,7 +2236,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">ნამდვილად გსურთ, წაიშალოს %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">წაშლა</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">წაშლა</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL-ს ასლი აღებულია</string>
   <!-- Sample text for accessibility font size -->
@@ -2896,7 +2911,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">გამონაკლისები არ არის</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">ნამდვილად გსურთ ამ სანიშნის წაშლა?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">ნამდვილად გსურთ ამ სანიშნის წაშლა?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">მალსახმობებში დამატება</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -3066,7 +3081,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">ზემოთ გადასვლა</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">დახურვა</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">დახურვა</string>
   <!--
     Pocket recommended stories
 
@@ -3751,6 +3766,8 @@
   <string name="setup_checklist_task_explore_extensions">გაფართოებების მოძიება</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">საძიებო ჩანამატის ჩადგმა</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">მოსინჯეთ საძიებოს ჩანამატი</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3815,4 +3832,32 @@
   <string name="review_prompt_feedback_header">სამწუხაროა, რომ სიძნელეებს წააწყდით. გვაცნობეთ, თუ რით შეიძლება გავაუმჯობესოთ %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">გამოგვეხმაურეთ</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">გარკვეული ცვლილებებია</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">ახლახან წარვადგინეთ შესწორებული %1$s %2$s და განვაახლეთ %3$s.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">გთხოვთ, დრო დაუთმოთ მის განხილვას და დაეთანხმოთ. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">გამოყენების პირობები</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">პირადულობის დებულება</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">ვრცლად</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">მიღება</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">მოგვიანებით შეხსენება</string>
 </resources>

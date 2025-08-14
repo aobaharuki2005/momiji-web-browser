@@ -662,9 +662,9 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Ar tikrai norite pašalinti šį aplanką?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Ar tikrai norite pašalinti šį aplanką?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">„%s“ pašalins pasirinktus elementus.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">„%s“ pašalins pasirinktus elementus.</string>
   <!-- Screen title for adding a bookmarks folder -->
   <string name="bookmark_add_folder">Įtraukti aplanką</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -682,7 +682,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Pašalinti</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">Įrašyti</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Įrašyti</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -693,7 +693,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Redaguoti aplanką</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Prisijunkite, norėdami pamatyti adresyno įrašus iš kitų įrenginių</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Prisijunkite, norėdami pamatyti adresyno įrašus iš kitų įrenginių</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -701,24 +701,24 @@
   <!-- Bookmark NAME editing field label -->
   <string name="bookmark_name_label">Pavadinimas</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Įtraukti aplanką</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Įtraukti aplanką</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Pasirinkite aplanką</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">Būtinas pavadinimas</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Būtinas pavadinimas</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">Neteisingas URL</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Adresyno įrašų nėra</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Adresyno įrašų nėra</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Pašalintas %1$s</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">Adresyno įrašai pašalinti</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Adresyno įrašai pašalinti</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">Šalinami pasirinkti aplankai</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Šalinami pasirinkti aplankai</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">Atšaukti</string>
   <!--
@@ -926,7 +926,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Ar tikrai norite pašalinti „%1$s“?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Pašalinti</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Pašalinti</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL nukopijuotas</string>
   <!-- Sample text for accessibility font size -->
@@ -1298,7 +1298,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Nėra išimčių svetainėms</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">Ar tikrai norite pašalinti šį adresyno įrašą?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Ar tikrai norite pašalinti šį adresyno įrašą?</string>
   <!--
     text shown before the issuer name to indicate who its verified by, %1$s is the name of
     the certificate authority that verified the ticket
@@ -1385,7 +1385,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Pereiti aukštyn</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">Užverti</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Užverti</string>
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">Straipsniai pagal temas</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->

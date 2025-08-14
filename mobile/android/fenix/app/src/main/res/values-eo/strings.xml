@@ -318,6 +318,8 @@
   <string name="browser_menu_sign_back_in_to_sync">Rekomencu seancon por speguli</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">Spegulado paŭzinta</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">Adminstri vickopiojn kaj speguladon</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">Nova privata langeto</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -415,6 +417,8 @@
   <string name="browser_menu_default_banner_title">Igu %1$s norma</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Tio postulas sekundojn. Vi povas ŝanĝi iam ajn.</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">Rapida, privata kaj farita por vi.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Ignori</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
@@ -628,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Kiam vi rakontas kiel vi malkovris Firefox kaj la fakton ke vi ĝin uzas, vi helpas nin prezenti la retumilon al pli da personoj.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Dividu minimumajn datumojn kun la marketikaj teknologiaj asociitoj de Mozilla. Tiuj datumoj neniam estos venditaj aŭ uzitaj por montri al vi reklamojn.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Dividu datumojn kun la marketikaj teknologiaj asociitoj de Mozilla. Tiuj datumoj neniam estos venditaj aŭ uzitaj por montri al vi reklamojn.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Kiel ni uzas la datumojn</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -826,6 +832,8 @@
   <string name="preferences_home_2">Eka paĝo</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Emblemo de apo</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Montro de la langeta strio</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gestoj</string>
   <!-- Preference for settings related to visual options -->
@@ -1078,7 +1086,15 @@
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Gamoj</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other">Aliaj</string>
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Aliaj</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Ĉu ŝanĝi la emblemon de la apo?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">Ŝanĝo de la emblemo postulas restartigon de la apo.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Restartigi nun</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Nuligi</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1199,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Pli da informo pri la ping de taga uzo</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Aŭtomate sendi raportojn pri paneoj</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Raporto sendita</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Tio ĉi helpas nin diagnozi kaj solvi problemojn en la retumilo. Raportoj povus inkluzivi personajn aŭ delikatajn datumojn.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1254,6 +1272,8 @@
   <string name="preference_simple_toolbar">Simpla</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Etendita</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">La adresa strio devas esti supre kiam la langeta strio estas montrita.</string>
   <!--
     App icon Preferences
 
@@ -1272,6 +1292,12 @@
   <string name="preference_auto_battery_theme">Difinita de la ŝparado de energio</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Uzi la etoson de la aparato</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Montri langetan strion</string>
   <!--
     Gestures Preferences
 
@@ -1696,6 +1722,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Helpu igi %1$s pli bona por ĉiuj. Laboristoj en Mozilla uzas la informon, kiun vi sendas, por solvi problemojn kun retejoj.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Via raporto helpos nin kompreni kaj solvi problemojn en %1$s kaj igi ĝin pli bona por ĉiuj. Pli da informo</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Via raporto helpos nin kompreni kaj solvi problemojn en %1$s kaj igi ĝin pli bona por ĉiuj. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Pli da informo</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1760,6 +1788,8 @@
   <string name="tab_crash_restore">Restarigi langeton</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s devis restarti</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s paneis. Ĉu sendi raporton?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Vi havas nesenditan raporton pri paneo, kiu rilatas pristudatajn paneojn. Se vi sendas ĝin, ĝi helpos nin plibonigi %1$s. La raporto estos ignorita se vi fermas tiun ĉi sciigon.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1768,10 +1798,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Aŭtomate sendi raportojn pri paneoj</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Fermi</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">FERMI</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Neniam montri denove</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">SENDI</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Sendi raporton pri paneo</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Raportoj pri paneo helpas nin diagnozi kaj solvi problemojn en la retumilo. Raportoj povus inkluzivi personajn aŭ delikatajn datumojn. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Pli da informo</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Pli da informo</string>
   <!--
@@ -1779,11 +1816,11 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Ĉu vi certe volas forigi tiun ĉi dosierujon?</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Ĉu vi certe volas forigi tiun ĉi dosierujon?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">Ĉu vi certe volas forigi la elektita(j)n elemento(j)n?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s forigos la elektitajn elementojn.</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s forigos la elektitajn elementojn.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Nuligi</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1813,7 +1850,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Forigi</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">Konservi</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Konservi</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Ordigi laŭ personecigita ordo</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1834,7 +1871,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Redakti dosierujon</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">Komencu seancon por vidi spegulitajn legosignojn</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Komencu seancon por vidi spegulitajn legosignojn</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">RETADRESO</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1846,24 +1883,24 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Nomo</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">Aldoni dosierujon</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Aldoni dosierujon</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Elekti dosierujon</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">Titolo postulata</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Titolo postulata</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">Nevalida retadreso</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">Neniu legosigno estas ĉi tie</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Neniu legosigno estas ĉi tie</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">%1$s forigita</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">Legosignoj forigitaj</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Legosignoj forigitaj</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">Elektitaj dosierujoj forigataj</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Elektitaj dosierujoj forigataj</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">MALFARI</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
@@ -1871,7 +1908,7 @@
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">Forigitaj elementoj: %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">Tajpu serĉan tekston</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Tajpu serĉan tekston</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Iri reen</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -2199,7 +2236,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Ĉu vi certe volas forigi %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">Forigi</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Forigi</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Retadreso kopiita</string>
   <!-- Sample text for accessibility font size -->
@@ -2713,6 +2750,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Konservi kaj aŭtomate plenigi adresojn</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Telefonnumeroj kaj retpoŝtaj adresoj inkluzivitaj</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Speguli adresojn inter aparatoj</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Speguli adresojn</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Aldoni kreditkarton</string>
   <!-- Title of the "Edit card" screen -->
@@ -2870,7 +2911,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Sen esceptoj por retejo</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">Ĉu vi certe volas forigi tiun ĉi legosignon?</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Ĉu vi certe volas forigi tiun ĉi legosignon?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Aldoni al ŝparvojoj</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -3040,7 +3081,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Iri supren</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">Fermi</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Fermi</string>
   <!--
     Pocket recommended stories
 
@@ -3725,6 +3766,8 @@
   <string name="setup_checklist_task_explore_extensions">Esplori etendaĵojn</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Instali serĉan komponanton</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Malkovri la serĉan komponanton</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3789,4 +3832,32 @@
   <string name="review_prompt_feedback_header">Ni bedaŭras, ke vi havu problemojn. Rakontu al kiel ni povas plibonigi %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Komenti</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Ni havas ĝisdatigon</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Estas novaj %2$s por %1$s kaj ĝisdatigita %3$s.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Bonvolu paŭzi momenton por revizii kaj akcepti. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Kondiĉoj de uzo</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Rimarko pri privateco</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Pli da informo</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Akcepti</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Rememorigi poste</string>
 </resources>

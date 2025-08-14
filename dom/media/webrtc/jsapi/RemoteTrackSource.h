@@ -61,6 +61,7 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
 
   RefPtr<SourceMediaTrack> mStream;
   RefPtr<dom::RTCRtpReceiver> mReceiver;
+  Maybe<gfx::IntSize> mReceivingSizeOnEnded;
 };
 
 }  // namespace mozilla

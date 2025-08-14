@@ -1228,9 +1228,9 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">بھلا تہاکوں پک ہے جو تساں ایہ فولڈر مٹاوݨ چاہندے ہو؟</string>
+  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">بھلا تہاکوں پک ہے جو تساں ایہ فولڈر مٹاوݨ چاہندے ہو؟</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s چݨے ہوئے آئٹماں کوں مٹیسی۔</string>
+  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s چݨے ہوئے آئٹماں کوں مٹیسی۔</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">منسوخ</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1256,7 +1256,7 @@
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">مٹاؤ</string>
   <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button">محفوظ</string>
+  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">محفوظ</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -1267,7 +1267,7 @@
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">فولڈر وچ تبدیلی کرو</string>
   <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button">ہم وقت تھیاں نشانیاں ݙیکھݨ کیتے سائن ان تھیوو</string>
+  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">ہم وقت تھیاں نشانیاں ݙیکھݨ کیتے سائن ان تھیوو</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">یوآرایل</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1279,30 +1279,30 @@
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">ناں</string>
   <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label">فولڈر بناؤ</string>
+  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">فولڈر بناؤ</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">فولڈر چݨو</string>
   <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error">ہک عنوان ضروری ہے</string>
+  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">ہک عنوان ضروری ہے</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">غلط یوآرایل</string>
   <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message">اتھاں کوئی نشانیاں کائنی</string>
+  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">اتھاں کوئی نشانیاں کائنی</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">%1$s مٹ ڳیا</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2">نشانیاں مٹ ڳیاں</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">نشانیاں مٹ ڳیاں</string>
   <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3">چُݨے ہوئے فولڈر مٹیندا پئے</string>
+  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">چُݨے ہوئے فولڈر مٹیندا پئے</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">اݨ کیتا کرو</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
   <string name="bookmark_delete_single_item">مٹ ڳیا %s</string>
   <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search">ڳولݨ ٹرماں درج کرو</string>
+  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">ڳولݨ ٹرماں درج کرو</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">واپس ون٘ڄو</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -1620,7 +1620,7 @@
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">بھلا تہاکوں پک ہے جو تساں %1$s مٹاوݨ چاہندے ہو؟</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive">مٹاؤ</string>
+  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">مٹاؤ</string>
   <!-- Message for copying the URL via long press on the toolbar -->
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">یوآرایل نقل تھی ڳیا</string>
   <!-- Sample text for accessibility font size -->
@@ -2177,7 +2177,7 @@
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">کوئی سائٹ استثنات کائنی</string>
   <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation">بھلا تہاکوں پک ہے جو تساں ایہ نشانی مٹاوݨ چاہندے ہو؟</string>
+  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">بھلا تہاکوں پک ہے جو تساں ایہ نشانی مٹاوݨ چاہندے ہو؟</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">شارٹ کٹاں وچ شامل کرو</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -2334,7 +2334,7 @@
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">اُتے ون٘ڄو</string>
   <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description">بند کرو</string>
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">بند کرو</string>
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">موضوع دے لحاظ نال کہاݨیاں</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
