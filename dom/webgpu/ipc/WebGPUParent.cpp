@@ -12,6 +12,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/gfx/FileHandleWrapper.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/RemoteTextureMap.h"
@@ -170,6 +171,10 @@ extern void wgpu_server_remove_shared_texture(WGPUWebGPUParentPtr aParent,
                                               WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParent);
   parent->RemoveSharedTexture(aId);
+}
+
+extern bool wgpu_parent_is_external_texture_enabled() {
+  return gfx::gfxVars::AllowWebGPUExternalTexture();
 }
 
 extern ffi::WGPUExternalTextureDescriptorFromSource
