@@ -23,7 +23,6 @@ const OFFLINE_REMOTE_SETTINGS = [
               descriptionL10n: {
                 id: "urlbar-result-market-opt-in-description",
               },
-              descriptionLearnMoreTopic: "firefox-suggest",
             },
           },
         },
@@ -45,7 +44,6 @@ const OFFLINE_REMOTE_SETTINGS = [
               descriptionL10n: {
                 id: "urlbar-result-market-opt-in-description",
               },
-              descriptionLearnMoreTopic: "test",
             },
           },
         },

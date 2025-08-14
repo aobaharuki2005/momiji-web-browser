@@ -702,7 +702,7 @@ class ProviderInterventions extends UrlbarProvider {
 
   onEngagement(queryContext, controller, details) {
     // `selType` is "tip" when the tip's main button is picked. Ignore clicks on
-    // the help command ("help"), which is handled by UrlbarInput since we
+    // the help command ("tiphelp"), which is handled by UrlbarInput since we
     // set `helpUrl` on the result payload. Currently there aren't any other
     // buttons or commands but this will ignore clicks on them too.
     if (details.selType == "tip") {

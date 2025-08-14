@@ -68,10 +68,6 @@ add_task(async function selected_result_tip() {
     await doTest(async () => {
       await openPopup("example");
       await selectRowByType(type);
-      let newTabOpened = BrowserTestUtils.waitForNewTab(
-        gBrowser,
-        "https://example.com/"
-      );
       EventUtils.synthesizeKey("VK_RETURN");
       await deferred.promise;
 
@@ -81,9 +77,6 @@ add_task(async function selected_result_tip() {
           results: expected,
         },
       ]);
-
-      let newTab = await newTabOpened;
-      await BrowserTestUtils.removeTab(newTab);
     });
 
     UrlbarProvidersManager.unregisterProvider(provider);
@@ -159,52 +152,6 @@ add_task(async function selected_result_intervention_update() {
       },
     ]
   );
-});
-
-add_task(async function learn_more_link() {
-  const provider = new UrlbarTestUtils.TestProvider({
-    results: [
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.TIP,
-        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        {
-          type: "test",
-          titleL10n: { id: "urlbar-search-tips-confirm" },
-          descriptionL10n: {
-            id: "firefox-suggest-onboarding-main-accept-option-label",
-          },
-          descriptionLearnMoreTopic: "learn_more_link",
-        }
-      ),
-    ],
-    priority: 1,
-  });
-  UrlbarProvidersManager.registerProvider(provider);
-
-  await doTest(async () => {
-    await openPopup("any");
-    let expectedURL = "http://127.0.0.1:8888/support-dummy/learn_more_link";
-    let newTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, expectedURL);
-    EventUtils.synthesizeKey("KEY_Tab");
-    Assert.equal(
-      gURLBar.view.selectedElement.dataset.l10nName,
-      "learn-more-link"
-    );
-    EventUtils.synthesizeKey("KEY_Enter");
-    info("Wait until expected url is loaded in the current tab");
-    let newTab = await newTabOpened;
-
-    assertEngagementTelemetry([
-      {
-        selected_result: "tip_unknown",
-        engagement_type: "help",
-      },
-    ]);
-
-    await BrowserTestUtils.removeTab(newTab);
-  });
-
-  UrlbarProvidersManager.unregisterProvider(provider);
 });
 
 async function doInterventionTest(keyword, type, dialog, expectedTelemetry) {

@@ -1132,8 +1132,13 @@ export class UrlbarInput {
       private: this.isPrivate,
     };
 
-    if (resultUrl && where == "current") {
-      // Open help links in a new tab.
+    if (
+      resultUrl &&
+      result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP &&
+      where == "current"
+    ) {
+      // Open non-tip help links in a new tab unless the user held a modifier.
+      // TODO (bug 1696232): Do this for tip help links, too.
       where = "tab";
     }
 
@@ -3217,7 +3222,11 @@ export class UrlbarInput {
       result,
       element,
       searchString: this._lastSearchString,
-      selType: element.dataset.command,
+      selType:
+        element.dataset.command == "help" &&
+        result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
+          ? "tiphelp"
+          : element.dataset.command,
     });
 
     if (element.dataset.command == "manage") {
@@ -3236,8 +3245,9 @@ export class UrlbarInput {
     }
 
     let where = this._whereToOpen(event);
-    if (element.dataset.command == "help" && where == "current") {
-      // Open help links in a new tab.
+    if (result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP && where == "current") {
+      // Open non-tip help links in a new tab unless the user held a modifier.
+      // TODO (bug 1696232): Do this for tip help links, too.
       where = "tab";
     }
 

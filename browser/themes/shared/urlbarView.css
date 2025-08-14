@@ -997,21 +997,6 @@
     > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-url {
       display: none;
     }
-
-    > .urlbarView-row-body > .urlbarView-row-body-description {
-      /* Keep padding so the entire selected outline for learn more link */
-      padding-block: 4px;
-
-      > a {
-        white-space: nowrap;
-      }
-
-      > a[selected] {
-        border-radius: var(--border-radius-small);
-        outline: var(--focus-outline);
-        outline-offset: var(--link-focus-outline-offset);
-      }
-    }
   }
 
   .urlbarView-results[wrap] > & {

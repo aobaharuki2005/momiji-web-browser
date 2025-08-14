@@ -209,8 +209,9 @@ add_task(async function pickHelp() {
       "The result's helpUrl should be defined and non-empty: " +
         JSON.stringify(result.payload.helpUrl)
     );
-    let newTabOpened = BrowserTestUtils.waitForNewTab(
-      gBrowser,
+    let loadPromise = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
       result.payload.helpUrl
     );
     await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
@@ -218,8 +219,7 @@ add_task(async function pickHelp() {
       resultIndex: 1,
     });
     info("Waiting for help URL to load in the current tab");
-    let newTab = await newTabOpened;
-    await BrowserTestUtils.removeTab(newTab);
+    await loadPromise;
 
     // Wait a bit and make sure the clear recent history dialog did not open.
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
