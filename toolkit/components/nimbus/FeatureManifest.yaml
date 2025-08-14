@@ -268,31 +268,14 @@ urlbar:
       description: >-
         Feature gate that controls whether result deduplication in the urlbar
         is enabled.
+    # TODO Bug 1982966: Remove this after all experiments and rollouts using it
+    # finish.
     fakespotFeatureGate:
       type: boolean
       fallbackPref: browser.urlbar.fakespot.featureGate
       description: >-
         Feature gate that controls whether all aspects of the Fakespot suggestion
         feature are exposed to the user.
-    fakespotMinKeywordLength:
-      type: int
-      description: >-
-        The minimum prefix length of a Fakespot keyword the user must type to
-        trigger the suggestion.
-    fakespotShowLessFrequentlyCap:
-      type: int
-      fallbackPref: browser.urlbar.fakespot.showLessFrequentlyCap
-      description: >-
-        If defined and non-zero, this is the maximum number of times the user
-        will be able to click the "Show less frequently" command for Fakespot
-        suggestions. If undefined or zero, the user will be able to click the
-        command without any limit.
-    fakespotSuggestedIndex:
-      type: int
-      fallbackPref: browser.urlbar.fakespot.suggestedIndex
-      description: >-
-        The index of Fakespot results within the Firefox Suggest section. A
-        negative index is relative to the end of the section.
     keywordExposureResults:
       type: string
       setPref:
