@@ -171,7 +171,7 @@ interface GPUDevice : EventTarget {
     [Throws]
     GPUBuffer createBuffer(GPUBufferDescriptor descriptor);
     GPUTexture createTexture(GPUTextureDescriptor descriptor);
-    [Throws]
+    [Throws, Func="mozilla::webgpu::Instance::ExternalTextureEnabled"]
     GPUExternalTexture importExternalTexture(GPUExternalTextureDescriptor descriptor);
     GPUSampler createSampler(optional GPUSamplerDescriptor descriptor = {});
 

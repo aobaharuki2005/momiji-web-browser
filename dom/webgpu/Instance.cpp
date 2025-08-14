@@ -53,6 +53,14 @@ static inline nsDependentCString ToCString(const std::string_view s) {
   return true;
 }
 
+/* static */ bool Instance::ExternalTextureEnabled(JSContext* aCx,
+                                                   JSObject* aObj) {
+  // Some tests won't have initialized gfxPlatform by the time the bindings are
+  // generated, but these shouldn't exercise WebGPU, so we can safely return the
+  // default in this case.
+  return gfx::gfxVars::GetAllowWebGPUExternalTextureOrDefault();
+}
+
 /*static*/
 already_AddRefed<Instance> Instance::Create(nsIGlobalObject* aOwner) {
   RefPtr<Instance> result = new Instance(aOwner);
