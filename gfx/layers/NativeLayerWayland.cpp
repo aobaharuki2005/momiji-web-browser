@@ -489,9 +489,8 @@ bool NativeLayerRootWayland::CommitToScreen() {
     if (layer->State()->mMutatedStackingOrder) {
       mRootMutatedStackingOrder = true;
     }
-    if (!layer->State()->mIsRendered) {
-      LOGVERBOSE(
-          "NativeLayerRootWayland::CommitToScreen() layer [%p] is not rendered",
+    if (layer->State()->mIsVisible && !layer->State()->mIsRendered) {
+      LOG("NativeLayerRootWayland::CommitToScreen() layer [%p] is not rendered",
           layer.get());
       mRootAllLayersRendered = false;
     }
