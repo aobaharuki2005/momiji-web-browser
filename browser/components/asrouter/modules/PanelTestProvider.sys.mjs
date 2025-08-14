@@ -20,6 +20,73 @@ const isMSIX =
 
 const MESSAGES = () => [
   {
+    id: "TASKBAR_TAB_TEST_CALLOUT",
+    template: "feature_callout",
+    groups: ["cfr"],
+    content: {
+      id: "TASKBAR_TAB_TEST_CALLOUT",
+      template: "multistage",
+      backdrop: "transparent",
+      transitions: false,
+      screens: [
+        {
+          id: "TASKBAR_TAB_TEST_CALLOUT",
+          anchors: [
+            {
+              selector: "#taskbar-tabs-button",
+              panel_position: {
+                anchor_attachment: "bottomcenter",
+                callout_attachment: "topright",
+              },
+            },
+          ],
+          content: {
+            position: "callout",
+            padding: 16,
+            width: "330px",
+            title_logo: {
+              imageURL:
+                "chrome://browser/content/asrouter/assets/smiling-fox-icon.svg",
+              width: "24px",
+              height: "24px",
+              marginInline: "0 16px",
+              alignment: "top",
+            },
+            title: {
+              raw: "Taskbar tabs action test",
+            },
+            primary_button: {
+              label: {
+                raw: "Create taskbar tab",
+              },
+              action: {
+                type: "CREATE_TASKBAR_TAB",
+              },
+            },
+            dismiss_button: {
+              action: {
+                dismiss: true,
+              },
+              background: true,
+              size: "small",
+              marginInline: "0 20px",
+              marginBlock: "20px 0",
+            },
+          },
+        },
+      ],
+    },
+    targeting: "visitsCount >= 1",
+    trigger: {
+      id: "openURL",
+      params: ["wikipedia.org", "www.wikipedia.org"],
+    },
+    frequency: {
+      lifetime: 1,
+    },
+    skip_in_tests: "it's not tested in automation",
+  },
+  {
     id: "FREQUENCY_CAP_CLEANUP_TEST",
     profileScope: "single",
     template: "feature_callout",

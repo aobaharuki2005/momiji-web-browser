@@ -767,6 +767,18 @@
           "required": ["type"],
           "additionalProperties": false,
           "description": "Summarize current page content."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["CREATE_TASKBAR_TAB"]
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Creates a taskbar tab from the current URL and asks to pin it to the taskbar. Windows only."
         }
       ]
     }

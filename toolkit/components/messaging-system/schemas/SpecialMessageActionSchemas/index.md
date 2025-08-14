@@ -455,3 +455,10 @@ interface SearchMode {
 Summarize current page content.
 
 * args: optional `string` entry value to identify initiator default "message"
+
+
+### `CREATE_TASKBAR_TAB`
+
+Creates a taskbar tab from the current URL and asks to pin it to the taskbar. Windows only.
+
+- args: (none)
