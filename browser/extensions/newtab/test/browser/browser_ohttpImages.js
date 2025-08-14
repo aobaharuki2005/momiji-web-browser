@@ -11,6 +11,14 @@ const { NimbusTestUtils } = ChromeUtils.importESModule(
 );
 
 add_task(async function test_nimbus_experiment_enabled() {
+  if (!NimbusFeatures.newtabOhttpImages) {
+    Assert.ok(
+      true,
+      "Skipping because the app does not have OHTTP image support."
+    );
+    return;
+  }
+
   const onActionSpy = sinon.spy(DiscoveryStreamFeed.prototype, "onAction");
 
   await ExperimentAPI.ready();
