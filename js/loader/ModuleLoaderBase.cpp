@@ -179,8 +179,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(JSContext* aCx,
   {
     // LoadedScript should only live in this block, otherwise it will be a GC
     // hazard
-    RefPtr<LoadedScript> script(
-        GetLoadedScriptOrNull(aCx, aReferencingPrivate));
+    RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aReferrer));
 
     RefPtr<ModuleLoaderBase> loader = GetCurrentModuleLoader(aCx);
     if (!loader) {
@@ -268,8 +267,8 @@ bool ModuleLoaderBase::HostLoadImportedModule(JSContext* aCx,
       }
     } else {
       loader->StartFetchingModuleAndDependencies(
-          aCx, ModuleMapKey(uri, moduleType), aReferrer, aReferencingPrivate,
-          aModuleRequest, aHostDefined, aPayload);
+          aCx, ModuleMapKey(uri, moduleType), aReferrer, aModuleRequest,
+          aHostDefined, aPayload);
     }
   }
 
@@ -293,7 +292,6 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
   MOZ_ASSERT(module);
 
   Rooted<JSScript*> referrer(aCx, aRequest->mReferrerScript);
-  Rooted<Value> referencingPrivate(aCx, aRequest->mReferencingPrivate);
   Rooted<JSObject*> moduleReqObj(aCx, aRequest->mModuleRequestObj);
   Rooted<Value> statePrivate(aCx, aRequest->mPayload);
   Rooted<Value> payload(aCx, aRequest->mPayload);
@@ -306,7 +304,6 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   aRequest->mReferrerScript = nullptr;
-  aRequest->mReferencingPrivate.setUndefined();
   aRequest->mModuleRequestObj = nullptr;
   aRequest->mPayload.setUndefined();
   aRequest->ClearDynamicImport();
@@ -500,18 +497,17 @@ ModuleLoaderBase* ModuleLoaderBase::GetCurrentModuleLoader(JSContext* aCx) {
 
 // static
 LoadedScript* ModuleLoaderBase::GetLoadedScriptOrNull(
-    JSContext* aCx, Handle<Value> aReferencingPrivate) {
-  if (aReferencingPrivate.isUndefined()) {
+    Handle<JSScript*> aReferrer) {
+  if (!aReferrer) {
     return nullptr;
   }
 
-  auto* script = static_cast<LoadedScript*>(aReferencingPrivate.toPrivate());
+  Value value = GetScriptPrivate(aReferrer);
+  if (value.isUndefined()) {
+    return nullptr;
+  }
 
-  MOZ_ASSERT_IF(script->IsModuleScript(),
-                GetModulePrivate(script->AsModuleScript()->ModuleRecord()) ==
-                    aReferencingPrivate);
-
-  return script;
+  return static_cast<LoadedScript*>(value.toPrivate());
 }
 
 nsresult ModuleLoaderBase::StartModuleLoad(ModuleLoadRequest* aRequest) {
@@ -850,7 +846,6 @@ void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
     FinishLoadingImportedModuleFailed(cx, statePrivate, error);
 
     aRequest->mReferrerScript = nullptr;
-    aRequest->mReferencingPrivate.setUndefined();
     aRequest->mModuleRequestObj = nullptr;
     aRequest->mPayload.setUndefined();
   }
@@ -1311,12 +1306,11 @@ bool ModuleLoaderBase::GetImportMapSRI(
 
 void ModuleLoaderBase::StartFetchingModuleAndDependencies(
     JSContext* aCx, const ModuleMapKey& aRequestedModule,
-    Handle<JSScript*> aReferrer, Handle<Value> aReferencingPrivate,
-    Handle<JSObject*> aModuleRequest, Handle<Value> aHostDefined,
-    Handle<Value> aPayload) {
+    Handle<JSScript*> aReferrer, Handle<JSObject*> aModuleRequest,
+    Handle<Value> aHostDefined, Handle<Value> aPayload) {
   MOZ_ASSERT(aReferrer);
   Rooted<Value> referrerPrivate(aCx, GetScriptPrivate(aReferrer));
-  RefPtr<LoadedScript> referrer = GetLoadedScriptOrNull(aCx, referrerPrivate);
+  RefPtr<LoadedScript> referrer = GetLoadedScriptOrNull(aReferrer);
 
   // Check import map for integrity information
   mozilla::dom::SRIMetadata sriMetadata;
@@ -1335,7 +1329,6 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
        childRequest.get(), root));
 
   childRequest->mReferrerScript = aReferrer;
-  childRequest->mReferencingPrivate = aReferencingPrivate;
   childRequest->mModuleRequestObj = aModuleRequest;
   childRequest->mPayload = aPayload;
 

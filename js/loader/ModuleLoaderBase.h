@@ -452,8 +452,7 @@ class ModuleLoaderBase : public nsISupports {
   friend class JS::loader::ModuleLoadRequest;
 
   static ModuleLoaderBase* GetCurrentModuleLoader(JSContext* aCx);
-  static LoadedScript* GetLoadedScriptOrNull(JSContext* aCx,
-                                             Handle<Value> aReferencingPrivate);
+  static LoadedScript* GetLoadedScriptOrNull(Handle<JSScript*> aReferrer);
 
   static void EnsureModuleHooksInitialized();
 
@@ -511,7 +510,6 @@ class ModuleLoaderBase : public nsISupports {
   void StartFetchingModuleAndDependencies(JSContext* aCx,
                                           const ModuleMapKey& aRequestedModule,
                                           Handle<JSScript*> aReferrer,
-                                          Handle<Value> aReferencingPrivate,
                                           Handle<JSObject*> aModuleRequest,
                                           Handle<Value> aHostDefined,
                                           Handle<Value> aPayload);

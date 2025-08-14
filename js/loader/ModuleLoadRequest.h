@@ -30,7 +30,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   ~ModuleLoadRequest() {
     MOZ_ASSERT(!mReferrerScript);
     MOZ_ASSERT(!mModuleRequestObj);
-    MOZ_ASSERT(mReferencingPrivate.isUndefined());
     MOZ_ASSERT(mPayload.isUndefined());
   }
 
@@ -144,7 +143,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   Heap<JSScript*> mReferrerScript;
   Heap<JSObject*> mModuleRequestObj;
-  Heap<Value> mReferencingPrivate;
   Heap<Value> mPayload;
 };
 
