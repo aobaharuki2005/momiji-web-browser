@@ -1646,9 +1646,14 @@ void GetUsageOp::ProcessOriginInternal(QuotaManager* aQuotaManager,
 
         OriginUsageMetadata metadata;
         metadata.mOrigin = aOrigin;
+        metadata.mIsPrivate = false;
         metadata.mPersistenceType = PERSISTENCE_TYPE_DEFAULT;
-        metadata.mPersisted = false;
         metadata.mLastAccessTime = 0;
+        metadata.mLastMaintenanceDate = 0;
+        metadata.mAccessed = false;
+        metadata.mPersisted = false;
+        metadata.mOriginUsage = 0;
+        metadata.mQuotaVersion = kNoQuotaVersion;
         metadata.mUsage = 0;
 
         return mOriginUsages.EmplaceBack(std::move(metadata));
