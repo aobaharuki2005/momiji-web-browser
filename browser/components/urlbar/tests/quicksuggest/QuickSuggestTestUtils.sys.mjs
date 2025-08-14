@@ -465,6 +465,7 @@ class _QuickSuggestTestUtils {
     isBestMatch = false,
     requestId = undefined,
     descriptionL10n = { id: "urlbar-result-action-sponsored" },
+    categories = [],
   } = {}) {
     let result = {
       suggestedIndex,
@@ -510,6 +511,7 @@ class _QuickSuggestTestUtils {
         blockId,
         advertiser,
         iabCategory,
+        categories,
         impressionUrl,
         clickUrl,
         rawClickUrl: clickUrl,

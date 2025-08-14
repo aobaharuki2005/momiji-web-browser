@@ -60,6 +60,29 @@ return handleRustResult(
 }
 
 /**
+ * registerMinLevelEventSink
+ * @param {TracingLevel} level
+ * @param {EventSink} sink
+ */
+export function registerMinLevelEventSink(
+    level, 
+    sink) {
+   
+FfiConverterTypeTracingLevel.checkType(level);
+FfiConverterTypeEventSink.checkType(sink);
+const result = UniFFIScaffolding.callSync(
+    90, // uniffi_tracing_support_fn_func_register_min_level_event_sink
+    FfiConverterTypeTracingLevel.lower(level),
+    FfiConverterTypeEventSink.lower(sink),
+)
+return handleRustResult(
+    result,
+    (result) => undefined,
+    null,
+)
+}
+
+/**
  * unregisterEventSink
  * @param {string} target
  */
@@ -68,8 +91,23 @@ export function unregisterEventSink(
    
 FfiConverterString.checkType(target);
 const result = UniFFIScaffolding.callSync(
-    90, // uniffi_tracing_support_fn_func_unregister_event_sink
+    91, // uniffi_tracing_support_fn_func_unregister_event_sink
     FfiConverterString.lower(target),
+)
+return handleRustResult(
+    result,
+    (result) => undefined,
+    null,
+)
+}
+
+/**
+ * Remove the sink registered with [register_min_level_event_sink], if any.
+ */
+export function unregisterMinLevelEventSink() {
+   
+const result = UniFFIScaffolding.callSync(
+    92, // uniffi_tracing_support_fn_func_unregister_min_level_event_sink
 )
 return handleRustResult(
     result,

@@ -55,6 +55,7 @@ const REMOTE_SETTINGS_RESULTS = [
     advertiser: "HttpAdvertiser",
     iab_category: "22 - Shopping",
     icon: "1234",
+    serp_categories: [2],
   },
   {
     id: 4,
@@ -167,6 +168,7 @@ function expectedHttpResult() {
     clickUrl: suggestion.click_url,
     blockId: suggestion.id,
     advertiser: suggestion.advertiser,
+    categories: suggestion.serp_categories,
   });
 }
 

@@ -75,6 +75,8 @@ WebExtStorageStore = "AsyncWrapped"
 [tracing_support.async_wrappers]
 "register_event_sink" = "Sync"
 "unregister_event_sink" = "Sync"
+"register_min_level_event_sink" = "Sync"
+"unregister_min_level_event_sink" = "Sync"
 
 [uniffi_bindings_tests.async_wrappers]
 "clone_interface" = "Sync"
