@@ -676,6 +676,34 @@ void MacroAssemblerLOONG64::ma_addPtrTestCarry(Condition cond, Register rd,
   }
 }
 
+void MacroAssemblerLOONG64::ma_addPtrTestSigned(Condition cond, Register rd,
+                                                Register rj, Register rk,
+                                                Label* taken) {
+  MOZ_ASSERT(cond == Assembler::Signed || cond == Assembler::NotSigned);
+
+  as_add_d(rd, rj, rk);
+  ma_b(rd, rd, taken, cond);
+}
+
+void MacroAssemblerLOONG64::ma_addPtrTestSigned(Condition cond, Register rd,
+                                                Register rj, Imm32 imm,
+                                                Label* taken) {
+  MOZ_ASSERT(cond == Assembler::Signed || cond == Assembler::NotSigned);
+
+  ma_add_d(rd, rj, imm);
+  ma_b(rd, rd, taken, cond);
+}
+
+void MacroAssemblerLOONG64::ma_addPtrTestSigned(Condition cond, Register rd,
+                                                Register rj, ImmWord imm,
+                                                Label* taken) {
+  MOZ_ASSERT(cond == Assembler::Signed || cond == Assembler::NotSigned);
+
+  SecondScratchRegisterScope scratch2(asMasm());
+  ma_li(scratch2, imm);
+  ma_addPtrTestSigned(cond, rd, rj, scratch2, taken);
+}
+
 // Subtract.
 void MacroAssemblerLOONG64::ma_sub_d(Register rd, Register rj, Imm32 imm) {
   if (is_intN(-imm.value, 12)) {
