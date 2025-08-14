@@ -235,7 +235,7 @@ class InputPipe extends Pipe {
       this.overlapped.address()
     );
 
-    if (!ok && (!this.process.handle || ctypes.winLastError)) {
+    if (!ok && (!this.process.handle || libc.winLastError)) {
       this.onError();
     } else {
       io.updatePollEvents();
@@ -758,18 +758,11 @@ io = {
 
   updatePollEvents() {
     let shouldPoll = false;
-    for (const process of this.processes.values()) {
+    if (this.processes.size) {
       // As long as the process is alive, it may notify IOCP.
-      // When the process exits, process.handle is cleared by its wait(), which
-      // calls updatePollEvents(), but before it is removed from io.processes.
-      // To ensure that we immediately stop polling if it was the last process,
-      // check if process.handle is set.
-      if (process.handle) {
-        shouldPoll = true;
-        break;
-      }
-    }
-    if (!shouldPoll) {
+      // When the process exits, we'll remove it from io.processes.
+      shouldPoll = true;
+    } else {
       for (let pipe of this.pipes.values()) {
         if (pipe.hasPendingIO()) {
           shouldPoll = true;

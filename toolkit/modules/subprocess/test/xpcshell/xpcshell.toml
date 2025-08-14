@@ -27,5 +27,3 @@ skip-if = [
 ["test_subprocess_getEnvironment.js"]
 
 ["test_subprocess_pathSearch.js"]
-
-["test_subprocess_polling.js"]
