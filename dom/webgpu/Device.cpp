@@ -38,7 +38,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/VideoFrame.h"
 #include "mozilla/dom/WebGPUBinding.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "nsGlobalWindowInner.h"
 
 namespace mozilla::webgpu {
@@ -200,11 +199,6 @@ already_AddRefed<Texture> Device::CreateTexture(
 
 already_AddRefed<ExternalTexture> Device::ImportExternalTexture(
     const dom::GPUExternalTextureDescriptor& aDesc, ErrorResult& aRv) {
-  if (!gfx::gfxVars::AllowWebGPUExternalTexture()) {
-    aRv.ThrowNotSupportedError("WebGPU external textures are disabled");
-    return nullptr;
-  }
-
   RefPtr<ExternalTexture> externalTexture =
       mExternalTextureCache.GetOrCreate(this, aDesc, aRv);
 

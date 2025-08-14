@@ -396,16 +396,6 @@ unsafe fn adapter_request_device(
         }
     }
 
-    if wgpu_parent_is_external_texture_enabled() {
-        if global
-            .adapter_features(self_id)
-            .contains(wgt::Features::EXTERNAL_TEXTURE)
-        {
-            desc.required_features
-                .insert(wgt::Features::EXTERNAL_TEXTURE);
-        }
-    }
-
     // TODO: in https://github.com/gfx-rs/wgpu/pull/3626/files#diff-033343814319f5a6bd781494692ea626f06f6c3acc0753a12c867b53a646c34eR97
     // which introduced the queue id parameter, the queue id is also the device id. I don't know how applicable this is to
     // other situations (this one in particular).
@@ -1295,7 +1285,6 @@ extern "C" {
     #[cfg(target_os = "macos")]
     fn wgpu_server_get_external_io_surface_id(parent: WebGPUParentPtr, id: id::TextureId) -> u32;
     fn wgpu_server_remove_shared_texture(parent: WebGPUParentPtr, id: id::TextureId);
-    fn wgpu_parent_is_external_texture_enabled() -> bool;
     fn wgpu_parent_external_texture_source_get_external_texture_descriptor<'a>(
         parent: WebGPUParentPtr,
         id: crate::ExternalTextureSourceId,
