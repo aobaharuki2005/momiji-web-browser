@@ -34,8 +34,8 @@ user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
 [[publisher.audio_thread_priority]]
-version = "0.32.0"
-when = "2024-03-14"
+version = "0.34.0"
+when = "2025-08-13"
 user-id = 1258
 user-login = "padenot"
 user-name = "Paul Adenot"
