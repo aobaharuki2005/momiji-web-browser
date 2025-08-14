@@ -1582,7 +1582,7 @@ export class UrlbarView {
     return classes;
   }
 
-  #createRowContentForRichSuggestion(item) {
+  #createRowContentForRichSuggestion(item, result) {
     item._content.toggleAttribute("selectable", true);
 
     let favicon = this.#createElement("img");
@@ -1627,6 +1627,16 @@ export class UrlbarView {
     description.classList.add("urlbarView-row-body-description");
     body.appendChild(description);
     item._elements.set("description", description);
+
+    if (result.payload.descriptionLearnMoreTopic) {
+      let learnMoreLink = this.#createElement("a");
+      learnMoreLink.dataset.url = this.window.getHelpLinkURL(
+        result.payload.descriptionLearnMoreTopic
+      );
+      learnMoreLink.setAttribute("data-l10n-name", "learn-more-link");
+      learnMoreLink.toggleAttribute("selectable");
+      description.appendChild(learnMoreLink);
+    }
 
     let bottom = this.#createElement("div");
     bottom.className = "urlbarView-row-body-bottom";
@@ -1808,6 +1818,8 @@ export class UrlbarView {
           oldResult.payload.userContextId
         ) &&
         result.type != oldResultType) ||
+      !!result.payload.descriptionLearnMoreTopic !=
+        !!oldResult.payload.descriptionLearnMoreTopic ||
       result.testForceNewContent;
 
     if (needsNewContent) {

@@ -1495,10 +1495,11 @@ class TelemetryEvent {
     if (!element) {
       return "none";
     }
-    if (element.dataset.command == "help") {
-      return result?.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
-        ? "tiphelp"
-        : "help";
+    if (
+      element.dataset.command == "help" ||
+      element.dataset.l10nName == "learn-more-link"
+    ) {
+      return "help";
     }
     if (element.dataset.command == "dismiss") {
       return "block";

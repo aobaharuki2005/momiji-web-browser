@@ -2244,6 +2244,14 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       },
       titleL10n: L10N_SCHEMA,
       descriptionL10n: L10N_SCHEMA,
+      // If the `descriptionL10n` string includes a "Learn more" link, the
+      // link anchor must have the attribute `data-l10n-name="learn-more-link"`
+      // and the value of `descriptionLearnMoreTopic` must be the SUMO help
+      // topic (the string appended to `app.support.baseURL`, e.g.,
+      // "firefox-suggest").
+      descriptionLearnMoreTopic: {
+        type: "string",
+      },
       type: {
         type: "string",
         enum: [
