@@ -458,7 +458,7 @@ class ModuleLoaderBase : public nsISupports {
   static void EnsureModuleHooksInitialized();
 
   static bool HostLoadImportedModule(JSContext* aCx,
-                                     Handle<JSObject*> aReferrer,
+                                     Handle<JSScript*> aReferrer,
                                      Handle<Value> aReferencingPrivate,
                                      Handle<JSObject*> aModuleRequest,
                                      Handle<Value> aHostDefined,
@@ -510,7 +510,7 @@ class ModuleLoaderBase : public nsISupports {
 
   void StartFetchingModuleAndDependencies(JSContext* aCx,
                                           const ModuleMapKey& aRequestedModule,
-                                          Handle<JSObject*> aReferrer,
+                                          Handle<JSScript*> aReferrer,
                                           Handle<Value> aReferencingPrivate,
                                           Handle<JSObject*> aModuleRequest,
                                           Handle<Value> aHostDefined,

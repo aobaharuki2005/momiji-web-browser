@@ -69,7 +69,7 @@ bool ModuleLoader::init(JSContext* cx, HandleString loadPath) {
 
 // static
 bool ModuleLoader::LoadImportedModule(JSContext* cx,
-                                      JS::Handle<JSObject*> referrer,
+                                      JS::Handle<JSScript*> referrer,
                                       JS::HandleValue referencingPrivate,
                                       JS::Handle<JSObject*> moduleRequest,
                                       JS::HandleValue hostDefined,
@@ -195,7 +195,7 @@ bool ModuleLoader::LoadRejected(JSContext* cx, HandleValue hostDefined,
 }
 
 bool ModuleLoader::loadImportedModule(JSContext* cx,
-                                      JS::Handle<JSObject*> referrer,
+                                      JS::Handle<JSScript*> referrer,
                                       JS::HandleValue referencingPrivate,
                                       JS::Handle<JSObject*> moduleRequest,
                                       JS::HandleValue payload) {

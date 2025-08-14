@@ -147,7 +147,7 @@ static bool CreateBadModuleTypeError(JSContext* aCx, LoadedScript* aScript,
 // https://html.spec.whatwg.org/#hostloadimportedmodule
 // static
 bool ModuleLoaderBase::HostLoadImportedModule(JSContext* aCx,
-                                              Handle<JSObject*> aReferrer,
+                                              Handle<JSScript*> aReferrer,
                                               Handle<Value> aReferencingPrivate,
                                               Handle<JSObject*> aModuleRequest,
                                               Handle<Value> aHostDefined,
@@ -292,7 +292,7 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
   }
   MOZ_ASSERT(module);
 
-  Rooted<JSObject*> referrer(aCx, aRequest->mReferrerObj);
+  Rooted<JSScript*> referrer(aCx, aRequest->mReferrerScript);
   Rooted<Value> referencingPrivate(aCx, aRequest->mReferencingPrivate);
   Rooted<JSObject*> moduleReqObj(aCx, aRequest->mModuleRequestObj);
   Rooted<Value> statePrivate(aCx, aRequest->mPayload);
@@ -306,7 +306,7 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
       usePromise));
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
-  aRequest->mReferrerObj = nullptr;
+  aRequest->mReferrerScript = nullptr;
   aRequest->mReferencingPrivate.setUndefined();
   aRequest->mModuleRequestObj = nullptr;
   aRequest->mPayload.setUndefined();
@@ -850,7 +850,7 @@ void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
     MOZ_ASSERT(!statePrivate.isUndefined());
     FinishLoadingImportedModuleFailed(cx, statePrivate, error);
 
-    aRequest->mReferrerObj = nullptr;
+    aRequest->mReferrerScript = nullptr;
     aRequest->mReferencingPrivate.setUndefined();
     aRequest->mModuleRequestObj = nullptr;
     aRequest->mPayload.setUndefined();
@@ -1312,11 +1312,11 @@ bool ModuleLoaderBase::GetImportMapSRI(
 
 void ModuleLoaderBase::StartFetchingModuleAndDependencies(
     JSContext* aCx, const ModuleMapKey& aRequestedModule,
-    Handle<JSObject*> aReferrer, Handle<Value> aReferencingPrivate,
+    Handle<JSScript*> aReferrer, Handle<Value> aReferencingPrivate,
     Handle<JSObject*> aModuleRequest, Handle<Value> aHostDefined,
     Handle<Value> aPayload) {
   MOZ_ASSERT(aReferrer);
-  Rooted<Value> referrerPrivate(aCx, GetModulePrivate(aReferrer));
+  Rooted<Value> referrerPrivate(aCx, GetScriptPrivate(aReferrer));
   RefPtr<LoadedScript> referrer = GetLoadedScriptOrNull(aCx, referrerPrivate);
 
   // Check import map for integrity information
@@ -1335,7 +1335,7 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
   LOG(("ScriptLoadRequest (%p): start fetch dependencies: root (%p)",
        childRequest.get(), root));
 
-  childRequest->mReferrerObj = aReferrer;
+  childRequest->mReferrerScript = aReferrer;
   childRequest->mReferencingPrivate = aReferencingPrivate;
   childRequest->mModuleRequestObj = aModuleRequest;
   childRequest->mPayload = aPayload;

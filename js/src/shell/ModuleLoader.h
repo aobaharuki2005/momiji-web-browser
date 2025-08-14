@@ -26,7 +26,7 @@ class ModuleLoader {
   void clearModules(JSContext* cx);
 
  private:
-  static bool LoadImportedModule(JSContext* cx, JS::Handle<JSObject*> referrer,
+  static bool LoadImportedModule(JSContext* cx, JS::Handle<JSScript*> referrer,
                                  HandleValue referencingPrivate,
                                  HandleObject moduleRequest,
                                  HandleValue hostDefined, HandleValue payload);
@@ -47,7 +47,7 @@ class ModuleLoader {
   static bool LoadResolved(JSContext* cx, HandleValue hostDefined);
   static bool LoadRejected(JSContext* cx, HandleValue hostDefined,
                            HandleValue error);
-  bool loadImportedModule(JSContext* cx, HandleObject referrer,
+  bool loadImportedModule(JSContext* cx, HandleScript referrer,
                           HandleValue referencingPrivate,
                           HandleObject moduleRequest, HandleValue payload);
   bool populateImportMeta(JSContext* cx, HandleValue privateValue,
