@@ -208,3 +208,9 @@
     padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall)); // 17px
   }
 }
+
+.timer-notification-status {
+  color: var(--text-color-deemphasized);
+  font-size: var(--font-size-small);
+  margin-block: var(--space-xsmall) 0;
+}

@@ -4255,8 +4255,8 @@ main section {
 }
 
 .widgets-container:has(.lists), .widgets-container:has(.focus-timer) {
-  align-items: flex-start;
   display: grid;
+  align-items: flex-start;
   grid-template-columns: repeat(auto-fit, minmax(300px, 300px));
   gap: var(--space-large);
   justify-content: center;
@@ -4613,6 +4613,12 @@ main section {
 .set-timer-controls-wrapper .focus-timer-controls > moz-button::part(button) {
   border-radius: 50%;
   padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall));
+}
+
+.timer-notification-status {
+  color: var(--text-color-deemphasized);
+  font-size: var(--font-size-small);
+  margin-block: var(--space-xsmall) 0;
 }
 
 .ds-onboarding-container,

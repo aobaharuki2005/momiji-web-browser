@@ -10,8 +10,8 @@
 .widgets-container {
   &:has(.lists),
   &:has(.focus-timer) {
-    align-items: flex-start;
     display: grid;
+    align-items: flex-start;
     grid-template-columns: repeat(auto-fit, minmax(300px, 300px));
     gap: var(--space-large);
     justify-content: center;
