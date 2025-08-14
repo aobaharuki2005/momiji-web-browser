@@ -462,6 +462,13 @@ function Lists({ dispatch }) {
     );
   }
 
+  // Reset baseline only when switching lists
+  useEffect(() => {
+    prevCompletedCount.current = selectedList?.completed?.length || 0;
+    // intentionally leaving out selectedList from dependency array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
+
   useEffect(() => {
     if (selectedList) {
       const doneCount = selectedList.completed?.length || 0;
@@ -473,7 +480,7 @@ function Lists({ dispatch }) {
       }
       prevCompletedCount.current = doneCount;
     }
-  }, [selectedList, fireConfetti]);
+  }, [selectedList, fireConfetti, selected]);
 
   if (!lists) {
     return null;

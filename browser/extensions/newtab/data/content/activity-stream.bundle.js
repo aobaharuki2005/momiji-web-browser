@@ -12747,6 +12747,13 @@ function Lists({
       }
     }));
   }
+
+  // Reset baseline only when switching lists
+  (0,external_React_namespaceObject.useEffect)(() => {
+    prevCompletedCount.current = selectedList?.completed?.length || 0;
+    // intentionally leaving out selectedList from dependency array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
   (0,external_React_namespaceObject.useEffect)(() => {
     if (selectedList) {
       const doneCount = selectedList.completed?.length || 0;
@@ -12757,7 +12764,7 @@ function Lists({
       }
       prevCompletedCount.current = doneCount;
     }
-  }, [selectedList, fireConfetti]);
+  }, [selectedList, fireConfetti, selected]);
   if (!lists) {
     return null;
   }
