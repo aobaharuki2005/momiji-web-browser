@@ -510,9 +510,6 @@ tags = "vertical-tabs"
 ["browser_tab_group_menu.js"]
 tags = "vertical-tabs"
 
-["browser_tab_group_preview.js"]
-skip-if = ["os == 'win' && os_version == '11.26100'"] # Bug 1978618
-
 ["browser_tab_groups.js"]
 support-files = ["file_new_tab_page.html"]
 tags = "vertical-tabs"
