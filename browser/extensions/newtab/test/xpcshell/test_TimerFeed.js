@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-// const lazy = {}
+const lazy = {};
 
 ChromeUtils.defineESModuleGetters(this, {
   actionTypes: "resource://newtab/common/Actions.mjs",
@@ -10,13 +10,14 @@ ChromeUtils.defineESModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
-// ChromeUtils.defineLazyGetter(lazy, "gNewTabStrings", () => {
-//   return new Localization(["browser/newtab/newtab.ftl"], true);
-// });
+ChromeUtils.defineLazyGetter(lazy, "gNewTabStrings", () => {
+  return new Localization(["browser/newtab/newtab.ftl"], true);
+});
 
 const PREF_TIMER_ENABLED = "widgets.timer.enabled";
 const PREF_SYSTEM_TIMER_ENABLED = "widgets.system.timer.enabled";
-// const PREF_TIMER_SHOW_NOTIFICATIONS = "widgets.focusTimer.showSystemNotifications";
+const PREF_TIMER_SHOW_NOTIFICATIONS =
+  "widgets.focusTimer.showSystemNotifications";
 
 add_task(async function test_construction() {
   let feed = new TimerFeed();
@@ -91,96 +92,86 @@ add_task(async function test_isEnabled() {
   Assert.ok(feed.enabled);
 });
 
-// To-do: un-comment the tests below and localization setup at top of file when fix lands:
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1982652
+add_task(async function test_system_notification_on_focus_end() {
+  const [titleMessage, bodyMessage] = await lazy.gNewTabStrings.formatMessages([
+    { id: "newtab-widget-timer-notification-title" },
+    { id: "newtab-widget-timer-notification-focus" },
+  ]);
 
-// add_task(async function test_system_notification_on_focus_end() {
+  const feed = new TimerFeed();
 
-//   const [titleMessage, bodyMessage] = await lazy.gNewTabStrings.formatMessages([
-//     { id: "newtab-widget-timer-notification-title" },
-//     { id: "newtab-widget-timer-notification-focus" },
-//   ]);
+  feed.store = {
+    getState() {
+      return this.state;
+    },
+    dispatch: sinon.spy(),
+    state: {
+      Prefs: {
+        values: {
+          [PREF_TIMER_ENABLED]: true,
+          [PREF_SYSTEM_TIMER_ENABLED]: true,
+          [PREF_TIMER_SHOW_NOTIFICATIONS]: true,
+        },
+      },
+      TimerWidget: {},
+    },
+  };
 
-//   const feed = new TimerFeed();
+  feed.showSystemNotification = sinon.spy();
 
-//   feed.store = {
-//     getState() {
-//       return this.state;
-//     },
-//     dispatch: sinon.spy(),
-//     state: {
-//       Prefs: {
-//         values: {
-//           [PREF_TIMER_ENABLED]: true,
-//           [PREF_SYSTEM_TIMER_ENABLED]: true,
-//           [PREF_TIMER_SHOW_NOTIFICATIONS]: true,
-//         },
-//       },
-//       TimerWidget: {},
-//     },
-//   };
+  await feed.onAction({
+    type: actionTypes.WIDGETS_TIMER_END,
+    data: { duration: 1500, timerType: "focus" },
+  });
 
-//   feed.showSystemNotification = sinon.spy();
+  Assert.ok(
+    feed.showSystemNotification.calledOnce,
+    "TimerFeed WIDGETS_TIMER_END event should show notification"
+  );
 
-//   await feed.onAction({
-//     type: actionTypes.WIDGETS_TIMER_END,
-//     data: { duration: 1500, timerType: "focus" },
-//   });
+  const [title, text] = feed.showSystemNotification.firstCall.args;
+  Assert.equal(title, titleMessage?.value);
+  Assert.equal(text, bodyMessage?.value);
+});
 
-//   Assert.ok(
-//     feed.showSystemNotification.calledOnce,
-//     "TimerFeed WIDGETS_TIMER_END event should show notification"
-//   );
+add_task(async function test_system_notification_on_break_end() {
+  const [titleMessage, bodyMessage] = await lazy.gNewTabStrings.formatMessages([
+    { id: "newtab-widget-timer-notification-title" },
+    { id: "newtab-widget-timer-notification-break" },
+  ]);
 
-//   const [title, text] = feed.showSystemNotification.firstCall.args;
-//   Assert.equal(title, titleMessage?.value);
-//   Assert.equal(
-//     text,
-//     bodyMessage?.value
-//   );
-// });
+  const feed = new TimerFeed();
 
-// add_task(async function test_system_notification_on_break_end() {
-// const [titleMessage, bodyMessage] = await lazy.gNewTabStrings.formatMessages([
-//     { id: "newtab-widget-timer-notification-title" },
-//     { id: "newtab-widget-timer-notification-break" },
-//   ]);
+  feed.store = {
+    getState() {
+      return this.state;
+    },
+    dispatch: sinon.spy(),
+    state: {
+      Prefs: {
+        values: {
+          [PREF_TIMER_ENABLED]: true,
+          [PREF_SYSTEM_TIMER_ENABLED]: true,
+          [PREF_TIMER_SHOW_NOTIFICATIONS]: true,
+        },
+      },
+      TimerWidget: {},
+    },
+  };
 
-//   const feed = new TimerFeed();
+  feed.showSystemNotification = sinon.spy();
 
-//   feed.store = {
-//     getState() {
-//       return this.state;
-//     },
-//     dispatch: sinon.spy(),
-//     state: {
-//       Prefs: {
-//         values: {
-//           [PREF_TIMER_ENABLED]: true,
-//           [PREF_SYSTEM_TIMER_ENABLED]: true,
-//           [PREF_TIMER_SHOW_NOTIFICATIONS]: true,
-//         },
-//       },
-//       TimerWidget: {},
-//     },
-//   };
+  await feed.onAction({
+    type: actionTypes.WIDGETS_TIMER_END,
+    data: { duration: 1500, timerType: "break" },
+  });
 
-//   feed.showSystemNotification = sinon.spy();
+  Assert.ok(
+    feed.showSystemNotification.calledOnce,
+    "TimerFeed WIDGETS_TIMER_END event should show notification"
+  );
 
-//   await feed.onAction({
-//     type: actionTypes.WIDGETS_TIMER_END,
-//     data: { duration: 1500, timerType: "break" },
-//   });
-
-//   Assert.ok(
-//     feed.showSystemNotification.calledOnce,
-//     "TimerFeed WIDGETS_TIMER_END event should show notification"
-//   );
-
-//   const [title, text] = feed.showSystemNotification.firstCall.args;
-//   Assert.equal(title, titleMessage?.value);
-//   Assert.equal(
-//     text,
-//     bodyMessage?.value
-//   );
-// });
+  const [title, text] = feed.showSystemNotification.firstCall.args;
+  Assert.equal(title, titleMessage?.value);
+  Assert.equal(text, bodyMessage?.value);
+});
