@@ -13,6 +13,10 @@ EXTRA_JS_MODULES += [
     "AboutNewTabResourceMapping.sys.mjs",
 ]
 
+MOZ_SRC_FILES += [
+    "SponsorProtection.sys.mjs",
+]
+
 XPCOM_MANIFESTS += [
     "components.conf",
 ]

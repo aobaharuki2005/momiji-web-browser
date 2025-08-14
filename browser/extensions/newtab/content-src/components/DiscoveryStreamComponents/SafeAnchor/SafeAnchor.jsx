@@ -25,6 +25,7 @@ export class SafeAnchor extends React.PureComponent {
               this.props.referrer || "https://getpocket.com/recommendations",
             // Use the anchor's url, which could have been cleaned up
             url: event.currentTarget.href,
+            is_sponsored: this.props.isSponsored,
           },
         })
       );
