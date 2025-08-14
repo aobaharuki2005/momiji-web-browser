@@ -189,7 +189,7 @@
     "url": {
       "type": "object",
       "properties": {
-        "accepted_content_types": {
+        "acceptedContentTypes": {
           "title": "Accepted content types",
           "description": "If this URL performs searches only for certain MIME types, they should be listed here. If `None`, it's assumed the content type is text or not relevant. This field is intended to be used for URLs like visual search, which might support certain image types and not others. Consumers can use it to determine whether search UI corresponding to the URL should be shown to the user in a given context.",
           "type": "array",
