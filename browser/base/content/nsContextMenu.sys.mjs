@@ -1526,10 +1526,7 @@ export class nsContextMenu {
   _getGlobalHistoryOptions() {
     if (this.isSponsoredLink) {
       return {
-        globalHistoryOptions: {
-          triggeringSponsoredURL: this.linkURL,
-          triggeringSource: "newtab",
-        },
+        globalHistoryOptions: { triggeringSponsoredURL: this.linkURL },
       };
     } else if (this.browser.hasAttribute("triggeringSponsoredURL")) {
       return {
@@ -1540,7 +1537,6 @@ export class nsContextMenu {
           triggeringSponsoredURLVisitTimeMS: this.browser.getAttribute(
             "triggeringSponsoredURLVisitTimeMS"
           ),
-          triggeringSource: this.browser.getAttribute("triggeringSource"),
         },
       };
     }

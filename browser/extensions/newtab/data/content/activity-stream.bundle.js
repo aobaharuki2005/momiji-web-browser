@@ -1861,7 +1861,7 @@ const LinkMenuOptions = {
         referrer: site.referrer,
         typedBonus: site.typedBonus,
         url: site.url,
-        is_sponsored: !!site.sponsored_tile_id,
+        sponsored_tile_id: site.sponsored_tile_id,
         event_source: "CONTEXT_MENU",
         topic: site.topic,
         firstVisibleTimestamp: site.firstVisibleTimestamp,
@@ -3200,8 +3200,7 @@ class SafeAnchor extends (external_React_default()).PureComponent {
           },
           referrer: this.props.referrer || "https://getpocket.com/recommendations",
           // Use the anchor's url, which could have been cleaned up
-          url: event.currentTarget.href,
-          is_sponsored: this.props.isSponsored
+          url: event.currentTarget.href
         }
       }));
     }
@@ -3229,15 +3228,13 @@ class SafeAnchor extends (external_React_default()).PureComponent {
     const {
       url,
       className,
-      title,
-      isSponsored
+      title
     } = this.props;
     let anchor = /*#__PURE__*/external_React_default().createElement("a", SafeAnchor_extends({
       href: this.safeURI(url),
       title: title,
       className: className,
-      onClick: this.onClick,
-      "data-is-sponsored-link": !!isSponsored
+      onClick: this.onClick
     }, this.props.tabIndex === 0 || this.props.tabIndex ? {
       ref: this.props.setRef,
       tabIndex: this.props.tabIndex
@@ -4369,8 +4366,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       dispatch: this.props.dispatch,
       onLinkClick: !this.props.placeholder ? this.onLinkClick : undefined,
       url: this.props.url,
-      title: this.props.title,
-      isSponsored: !!this.props.flightId
+      title: this.props.title
     }, this.props.showTopics && !this.props.mayHaveSectionsCards && this.props.topic && !isListCard && !refinedCardsLayout && /*#__PURE__*/external_React_default().createElement("span", {
       className: "ds-card-topic",
       "data-l10n-id": `newtab-topic-label-${this.props.topic}`
@@ -5224,8 +5220,7 @@ const AdBanner = ({
     url: spoc.url,
     title: spoc.title || spoc.sponsor || spoc.alt_text,
     onLinkClick: onLinkClick,
-    dispatch: dispatch,
-    isSponsored: true
+    dispatch: dispatch
   }, /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
     flightId: spoc.flight_id,
     rows: [{
@@ -9839,8 +9834,7 @@ class TopSite extends (external_React_default()).PureComponent {
             ctrlKey,
             metaKey,
             shiftKey
-          },
-          is_sponsored: !!this.props.link.sponsored_tile_id
+          }
         })
       }));
       if (this.props.link.type === SPOC_TYPE) {

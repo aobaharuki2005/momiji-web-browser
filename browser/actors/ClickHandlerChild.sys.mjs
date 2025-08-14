@@ -166,10 +166,7 @@ export class ClickHandlerChild extends JSWindowActorChild {
         (ownerDoc.URL === "about:newtab" || ownerDoc.URL === "about:home") &&
         node.dataset.isSponsoredLink === "true"
       ) {
-        json.globalHistoryOptions = {
-          triggeringSource: "newtab",
-          triggeringSponsoredURL: href,
-        };
+        json.globalHistoryOptions = { triggeringSponsoredURL: href };
       }
 
       // If a link element is clicked with middle button, user wants to open

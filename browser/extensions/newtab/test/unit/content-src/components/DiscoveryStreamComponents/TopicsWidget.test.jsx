@@ -108,7 +108,6 @@ describe("Discovery Stream <TopicsWidget>", () => {
             },
             referrer: "https://getpocket.com/recommendations",
             url: "https://getpocket.com/explore/technology?utm_source=utmSource&utm_content=utmContent&utm_campaign=utmCampaign",
-            is_sponsored: undefined,
           },
         })
       );
@@ -160,7 +159,6 @@ describe("Discovery Stream <TopicsWidget>", () => {
             },
             referrer: "https://getpocket.com/recommendations",
             url: "https://getpocket.com/collections?utm_source=utmSource&utm_content=utmContent&utm_campaign=utmCampaign",
-            is_sponsored: undefined,
           },
         })
       );
@@ -212,7 +210,6 @@ describe("Discovery Stream <TopicsWidget>", () => {
             },
             referrer: "https://getpocket.com/recommendations",
             url: "https://getpocket.com/?utm_source=utmSource&utm_content=utmContent&utm_campaign=utmCampaign",
-            is_sponsored: undefined,
           },
         })
       );
