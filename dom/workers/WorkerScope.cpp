@@ -1201,9 +1201,6 @@ void DedicatedWorkerGlobalScope::OnVsync(const VsyncEvent& aVsync) {
     return;
   }
 
-  nsTArray<FrameRequest> callbacks;
-  mFrameRequestManager.Take(callbacks);
-
   RefPtr<DedicatedWorkerGlobalScope> scope(this);
   CallbackDebuggerNotificationGuard guard(
       scope, DebuggerNotificationType::RequestAnimationFrameCallback);
@@ -1223,8 +1220,10 @@ void DedicatedWorkerGlobalScope::OnVsync(const VsyncEvent& aVsync) {
         timeStamp, 0, this->GetRTPCallerType());
   }
 
-  for (auto& callback : callbacks) {
-    if (mFrameRequestManager.IsCanceled(callback.mHandle)) {
+  FrameRequestManager::FiringCallbacks callbacks(mFrameRequestManager);
+
+  for (auto& callback : callbacks.mList) {
+    if (callback.mCancelled) {
       continue;
     }
 

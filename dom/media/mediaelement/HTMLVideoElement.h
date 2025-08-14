@@ -45,12 +45,12 @@ class HTMLVideoElement final : public HTMLMediaElement {
                   const Maybe<nsIntSize>& aNewIntrinsicSize,
                   ForceInvalidate aForceInvalidate) override;
 
-  virtual bool IsVideo() const override { return true; }
+  bool IsVideo() const override { return true; }
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
@@ -208,11 +208,14 @@ class HTMLVideoElement final : public HTMLMediaElement {
   uint32_t RequestVideoFrameCallback(VideoFrameRequestCallback& aCallback,
                                      ErrorResult& aRv);
   void CancelVideoFrameCallback(uint32_t aHandle);
-  void TakeVideoFrameRequestCallbacks(const TimeStamp& aNowTime,
-                                      const Maybe<TimeStamp>& aNextTickTime,
-                                      VideoFrameCallbackMetadata& aMd,
-                                      nsTArray<VideoFrameRequest>& aCallbacks);
-  bool IsVideoFrameCallbackCancelled(uint32_t aHandle);
+  // Returns false if the video element is not ready and callbacks shouldn't
+  // be fired (yet).
+  [[nodiscard]] bool WillFireVideoFrameCallbacks(
+      const TimeStamp& aNowTime, const Maybe<TimeStamp>& aNextTickTime,
+      VideoFrameCallbackMetadata& aMd);
+  VideoFrameRequestManager& FrameRequestManager() {
+    return mVideoFrameRequestManager;
+  }
   void FinishedVideoFrameRequestCallbacks();
 
  private:

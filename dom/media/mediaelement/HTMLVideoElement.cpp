@@ -696,11 +696,9 @@ void HTMLVideoElement::ResetState() {
   mLastPresentedFrameID = layers::kContainerFrameID_Invalid;
 }
 
-void HTMLVideoElement::TakeVideoFrameRequestCallbacks(
+bool HTMLVideoElement::WillFireVideoFrameCallbacks(
     const TimeStamp& aNowTime, const Maybe<TimeStamp>& aNextTickTime,
-    VideoFrameCallbackMetadata& aMd, nsTArray<VideoFrameRequest>& aCallbacks) {
-  MOZ_ASSERT(aCallbacks.IsEmpty());
-
+    VideoFrameCallbackMetadata& aMd) {
   // Attempt to find the next image to be presented on this tick. Note that
   // composited will be accurate only if the element is visible.
   AutoTArray<ImageContainer::OwningImage, 4> images;
@@ -711,7 +709,7 @@ void HTMLVideoElement::TakeVideoFrameRequestCallbacks(
   // If we did not find any current images, we must have fired too early, or we
   // are in the process of shutting down. Wait for the next invalidation.
   if (images.IsEmpty()) {
-    return;
+    return false;
   }
 
   // We are guaranteed that the images are in timestamp order. It is possible we
@@ -744,7 +742,7 @@ void HTMLVideoElement::TakeVideoFrameRequestCallbacks(
   // fired too early. Wait for the next invalidation.
   if (!selected || selected->mFrameID == layers::kContainerFrameID_Invalid ||
       selected->mFrameID == mLastPresentedFrameID) {
-    return;
+    return false;
   }
 
   // If we have got a dummy frame, then we must have suspended decoding and have
@@ -752,7 +750,7 @@ void HTMLVideoElement::TakeVideoFrameRequestCallbacks(
   // requesting a callback, and the media state machine advancing.
   gfx::IntSize frameSize = selected->mImage->GetSize();
   if (NS_WARN_IF(frameSize.IsEmpty())) {
-    return;
+    return false;
   }
 
   // If we have already displayed the expected frame, we need to make the
@@ -852,11 +850,11 @@ void HTMLVideoElement::TakeVideoFrameRequestCallbacks(
   // many frames we have advanced.
   aMd.mPresentedFrames = mPresentedFrames;
 
-  mVideoFrameRequestManager.Take(aCallbacks);
-
   NS_DispatchToMainThread(NewRunnableMethod(
       "HTMLVideoElement::FinishedVideoFrameRequestCallbacks", this,
       &HTMLVideoElement::FinishedVideoFrameRequestCallbacks));
+
+  return true;
 }
 
 void HTMLVideoElement::FinishedVideoFrameRequestCallbacks() {
@@ -877,10 +875,6 @@ uint32_t HTMLVideoElement::RequestVideoFrameCallback(
     NotifyDecoderActivityChanges();
   }
   return handle;
-}
-
-bool HTMLVideoElement::IsVideoFrameCallbackCancelled(uint32_t aHandle) {
-  return mVideoFrameRequestManager.IsCanceled(aHandle);
 }
 
 void HTMLVideoElement::CancelVideoFrameCallback(uint32_t aHandle) {
