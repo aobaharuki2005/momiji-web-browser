@@ -89,7 +89,7 @@ class RequestCallbackManager {
 
     ~FiringCallbacks() {
       MOZ_ASSERT(mManager.mFiringCallbacksOnStack.LastElement() == this);
-      mManager.mFiringCallbacksOnStack.PopLastElement();
+      mManager.mFiringCallbacksOnStack.RemoveLastElement();
     }
 
     RequestCallbackManager& mManager;
