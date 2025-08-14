@@ -31,12 +31,20 @@ support-files = ["file_test_clipboard.js"]
 support-files = ["file_test_clipboard_asyncSetData.js"]
 
 ["test_clipboard_getDataSnapshot.html"]
-skip-if = ["display == 'wayland'"] # Bug 1879835
 support-files = ["file_test_clipboard_getDataSnapshot.js"]
+skip-if = [
+  "display == 'wayland'", # Bug 1879835
+  "os == 'android' && android_version == '34' && processor == 'x86_64' && debug", # Bug 1982951
+  "os == 'android' && android_version == '34' && processor == 'x86_64' && opt", # Bug 1982951
+]
 
 ["test_clipboard_getDataSnapshotSync.html"]
-skip-if = ["display == 'wayland'"] # Bug 1879835
 support-files = "file_test_clipboard_getDataSnapshotSync.js"
+skip-if = [
+  "display == 'wayland'", # Bug 1879835
+  "os == 'android' && android_version == '34' && processor == 'x86_64' && debug", # Bug 1982951
+  "os == 'android' && android_version == '34' && processor == 'x86_64' && opt", # Bug 1982951
+]
 
 ["test_clipboard_pngPreservesTransparency.html"]
 skip-if = [
