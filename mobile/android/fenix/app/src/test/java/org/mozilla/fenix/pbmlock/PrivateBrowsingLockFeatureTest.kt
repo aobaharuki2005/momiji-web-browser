@@ -572,6 +572,34 @@ class PrivateBrowsingLockFeatureTest {
         assertFalse(appStore.state.isPrivateScreenLocked)
     }
 
+    @Test
+    fun `GIVEN the feature is on and there are private tabs and we are in a custom tab WHEN we click on Open in Firefox THEN we don't lock PBM`() {
+        val isFeatureEnabled = true
+
+        val appStore = AppStore(initialState = AppState(openInFirefoxRequested = false))
+        val browserStore = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab("https://www.firefox.com", id = "firefox", private = true),
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                ),
+                selectedTabId = "mozilla",
+            ),
+        )
+        val feature = createFeature(browserStore = browserStore, appStore = appStore, storage = createStorage(isFeatureEnabled = isFeatureEnabled))
+        appStore.waitUntilIdle()
+
+        appStore.dispatch(AppAction.OpenInFirefoxStarted).joinBlocking()
+        appStore.waitUntilIdle()
+
+        val activity = mockk<AppCompatActivity>(relaxed = true)
+
+        feature.onStop(activity)
+        appStore.waitUntilIdle()
+
+        assertFalse(appStore.state.isPrivateScreenLocked)
+    }
+
     // turning the feature on and off tests
     @Test
     fun `GIVEN the feature is on and there are private tabs WHEN we turn off the feature THEN we unlock private tabs and don't lock it`() {

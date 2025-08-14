@@ -101,7 +101,9 @@ class PrivateBrowsingLockFeature(
     private val storage: PrivateBrowsingLockStorage,
 ) : DefaultLifecycleObserver {
     private var browserStoreScope: CoroutineScope? = null
+    private var appStoreScope: CoroutineScope? = null
     private var isFeatureEnabled = false
+    private var openInFirefoxRequested = false
 
     init {
         isFeatureEnabled = storage.isFeatureEnabled
@@ -143,6 +145,7 @@ class PrivateBrowsingLockFeature(
 
     private fun start(isLocked: Boolean) {
         observePrivateTabsClosure()
+        observeOpenInFirefoxRequest()
 
         appStore.dispatch(
             PrivateBrowsingLockAction.UpdatePrivateBrowsingLock(
@@ -154,6 +157,9 @@ class PrivateBrowsingLockFeature(
     private fun stop() {
         browserStoreScope?.cancel()
         browserStoreScope = null
+
+        appStoreScope?.cancel()
+        appStoreScope = null
 
         appStore.dispatch(
             PrivateBrowsingLockAction.UpdatePrivateBrowsingLock(
@@ -179,13 +185,30 @@ class PrivateBrowsingLockFeature(
         }
     }
 
+    private fun observeOpenInFirefoxRequest() {
+        appStoreScope = appStore.flowScoped { flow ->
+            flow.map { it.openInFirefoxRequested }
+                .distinctUntilChanged()
+                .filter { it }
+                .collect { openInFirefoxRequested = true }
+        }
+    }
+
+    override fun onStart(owner: LifecycleOwner) {
+        super.onStart(owner)
+
+        // We nee to reset the flag here.
+        openInFirefoxRequested = false
+    }
+
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
 
         if (!isFeatureEnabled) return
 
-        // lock when activity hits onStop and it isn’t a config-change restart
-        if (owner is Activity && !owner.isChangingConfigurations) {
+        // Lock when the activity hits onStop unless it's a config-change restart or comes from
+        // a custom tab.
+        if (owner is Activity && !owner.isChangingConfigurations && !openInFirefoxRequested) {
             maybeLockPrivateModeOnStop()
         }
     }
