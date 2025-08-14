@@ -41,6 +41,7 @@ namespace mozilla {
 class EditorBase;
 class EnterLeaveDispatcher;
 class IMEContentObserver;
+class LazyLogModule;
 class ScrollbarsForWheel;
 class ScrollContainerFrame;
 class TextControlElement;
@@ -224,6 +225,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   nsresult Init();
   nsresult Shutdown();
+
+  static LazyLogModule& MouseCursorUpdateLogRef();
 
   /* The PreHandleEvent method is called before event dispatch to either
    * the DOM or frames.  Any processing which must not be prevented or
@@ -419,7 +422,17 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    */
   void RecomputeMouseEnterStateForRemoteFrame(dom::Element& aElement);
 
-  nsPresContext* GetPresContext() { return mPresContext; }
+  nsPresContext* GetPresContext() const { return mPresContext; }
+
+  PresShell* GetPresShell() const {
+    return mPresContext ? mPresContext->GetPresShell() : nullptr;
+  }
+
+  /**
+   * Return the in-process root PresShell which is associated with the root
+   * nsPresContext of mPresContext.
+   */
+  PresShell* GetRootPresShell() const;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EventStateManager, nsIObserver)
 

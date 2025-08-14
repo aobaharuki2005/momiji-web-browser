@@ -23,6 +23,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Logging.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MiscEvents.h"
@@ -128,6 +129,26 @@
 namespace mozilla {
 
 using namespace dom;
+
+// Log the mouse cursor updates.  That should be updated only by the events for
+// the last pointer which is actually handled as a user input.  I.e., should not
+// be updated by synthesized mouse/pointer move events which are not for the
+// last pointer.
+// - MouseCursorUpdate:3 logs only when EventStateManager and BrowserParent
+// updated the cursor.
+// - MouseCursorUpdate:4 logs any results when BrowserParent handles that.
+// - MouseCursorUpdate:5 logs when UpdateCursor() stopped updating the cursor.
+//
+// NOTE: This can work only on debug builds for avoiding to the damage to the
+// performance.
+LazyLogModule gMouseCursorUpdates("MouseCursorUpdates");
+
+#ifdef DEBUG
+#  define MOZ_LOG_IF_DEBUG(_module, _level, _args) \
+    MOZ_LOG(_module, _level, _args)
+#else
+#  define MOZ_LOG_IF_DEBUG(_module, _level, _args)
+#endif
 
 static const LayoutDeviceIntPoint kInvalidRefPoint =
     LayoutDeviceIntPoint(-1, -1);
@@ -635,6 +656,11 @@ EventStateManager::EventStateManager()
     UpdateUserActivityTimer();
   }
   ++sESMInstanceCount;
+}
+
+// static
+LazyLogModule& EventStateManager::MouseCursorUpdateLogRef() {
+  return gMouseCursorUpdates;
 }
 
 nsresult EventStateManager::UpdateUserActivityTimer() {
@@ -4848,6 +4874,23 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                      WidgetMouseEvent* aEvent,
                                      nsIFrame* aTargetFrame,
                                      nsEventStatus* aStatus) {
+  if (!PointerEventHandler::IsLastPointerId(aEvent->pointerId)) {
+    MOZ_LOG_IF_DEBUG(
+        gMouseCursorUpdates, LogLevel::Verbose,
+        ("EventStateManager::UpdateCursor(aEvent=${pointerId=%u, source=%s, "
+         "message=%s, reason=%s}): Stopped updating cursor for the pointer "
+         "because of %s, ESM: %p, in-process root PresShell: %p",
+         aEvent->pointerId, InputSourceToString(aEvent->mInputSource).get(),
+         ToChar(aEvent->mMessage), aEvent->IsReal() ? "Real" : "Synthesized",
+         !PointerEventHandler::GetLastPointerId()
+             ? "no last pointerId"
+             : nsPrintfCString("different from last pointerId (%u)",
+                               *PointerEventHandler::GetLastPointerId())
+                   .get(),
+         this, GetRootPresShell()));
+    return;
+  }
+
   // XXX This is still not entirely correct, e.g. when mouse hover over the
   // broder of a cross-origin iframe, we should show the cursor specified on the
   // iframe (see bug 1943530).
@@ -4855,6 +4898,15 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     if (auto* fl = f->FrameLoader();
         fl && fl->IsRemoteFrame() && f->ContentReactsToPointerEvents()) {
       // The sub-frame will update the cursor if needed.
+      MOZ_LOG_IF_DEBUG(
+          gMouseCursorUpdates, LogLevel::Verbose,
+          ("EventStateManager::UpdateCursor(aEvent=${pointerId=%u, source=%s, "
+           "message=%s, reason=%s}): Stopped updating cursor for the pointer "
+           "because of over a remote frame, ESM: %p, in-process root "
+           "PresShell: %p",
+           aEvent->pointerId, InputSourceToString(aEvent->mInputSource).get(),
+           ToChar(aEvent->mMessage), aEvent->IsReal() ? "Real" : "Synthesized",
+           this, GetRootPresShell()));
       return;
     }
   }
@@ -4907,6 +4959,14 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
               aTargetFrame->GetNearestWidget(), false);
     gLastCursorSourceFrame = aTargetFrame;
     gLastCursorUpdateTime = TimeStamp::NowLoRes();
+    MOZ_LOG_IF_DEBUG(
+        gMouseCursorUpdates, LogLevel::Info,
+        ("EventStateManager::UpdateCursor(aEvent=${pointerId=%u, source=%s, "
+         "message=%s, reason=%s}): Updated the cursor to %u, ESM: %p, "
+         "in-process root PresShell: %p",
+         aEvent->pointerId, InputSourceToString(aEvent->mInputSource).get(),
+         ToChar(aEvent->mMessage), aEvent->IsReal() ? "Real" : "Synthesized",
+         static_cast<uint32_t>(cursor), this, GetRootPresShell()));
   }
 
   if (mLockCursor != kInvalidCursorKind || StyleCursorKind::Auto != cursor) {
@@ -6858,6 +6918,11 @@ uint32_t EventStateManager::GetRegisteredAccessKey(Element* aElement) {
   return accessKey.First();
 }
 
+PresShell* EventStateManager::GetRootPresShell() const {
+  PresShell* const presShell = GetPresShell();
+  return presShell ? presShell->GetRootPresShell() : nullptr;
+}
+
 void EventStateManager::EnsureDocument(nsPresContext* aPresContext) {
   if (!mDocument) mDocument = aPresContext->Document();
 }
@@ -7701,3 +7766,5 @@ void EventStateManager::NotifyContentWillBeRemovedForGesture(
 }
 
 }  // namespace mozilla
+
+#undef MOZ_LOG_IF_DEBUG
