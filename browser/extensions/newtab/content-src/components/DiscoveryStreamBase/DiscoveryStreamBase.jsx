@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { CardGrid } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
-import { CollectionCardGrid } from "content-src/components/DiscoveryStreamComponents/CollectionCardGrid/CollectionCardGrid";
 import { CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
 import { connect } from "react-redux";
 import { DSMessage } from "content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage";
@@ -165,21 +164,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             privacyNoticeURL={component.properties.privacyNoticeURL}
           />
         );
-      case "CollectionCardGrid": {
-        const { DiscoveryStream } = this.props;
-        return (
-          <CollectionCardGrid
-            data={component.data}
-            feed={component.feed}
-            spocs={DiscoveryStream.spocs}
-            placement={component.placement}
-            type={component.type}
-            items={component.properties.items}
-            dismissible={this.props.DiscoveryStream.isCollectionDismissible}
-            dispatch={this.props.dispatch}
-          />
-        );
-      }
       case "CardGrid": {
         const sectionsEnabled =
           this.props.Prefs.values["discoverystream.sections.enabled"];
@@ -305,7 +289,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
     // Extract TopSites to render before the rest and Message to use for header
     const topSites = extractComponent("TopSites");
     const widgets = extractComponent("Widgets");
-    const sponsoredCollection = extractComponent("CollectionCardGrid");
     const message = extractComponent("Message") || {
       header: {
         link_text: topStories.learnMore.link.message,
@@ -351,13 +334,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
               width: 12,
               components: [widgets],
               sectionType: "widgets",
-            },
-          ])}
-        {sponsoredCollection &&
-          this.renderLayout([
-            {
-              width: 12,
-              components: [sponsoredCollection],
             },
           ])}
         {!!layoutRender.length && (

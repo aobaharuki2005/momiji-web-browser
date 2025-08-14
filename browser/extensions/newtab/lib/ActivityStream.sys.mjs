@@ -1007,13 +1007,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "discoverystream.isCollectionDismissible",
-    {
-      title: "Allows Pocket story collections to be dismissed",
-      value: false,
-    },
-  ],
-  [
     "discoverystream.onboardingExperience.dismissed",
     {
       title: "Allows the user to dismiss the new Pocket onboarding experience",

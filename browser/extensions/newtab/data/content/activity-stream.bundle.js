@@ -119,7 +119,6 @@ for (const type of [
   "DIALOG_CLOSE",
   "DIALOG_OPEN",
   "DISABLE_SEARCH",
-  "DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE",
   "DISCOVERY_STREAM_CONFIG_CHANGE",
   "DISCOVERY_STREAM_CONFIG_RESET",
   "DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS",
@@ -6045,145 +6044,6 @@ const CardGrid = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   App: state.App,
   DiscoveryStream: state.DiscoveryStream
 }))(_CardGrid);
-;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/CollectionCardGrid/CollectionCardGrid.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-
-class CollectionCardGrid extends (external_React_default()).PureComponent {
-  constructor(props) {
-    super(props);
-    this.onDismissClick = this.onDismissClick.bind(this);
-    this.state = {
-      dismissed: false
-    };
-  }
-  onDismissClick() {
-    const {
-      data
-    } = this.props;
-    if (this.props.dispatch && data && data.spocs && data.spocs.length) {
-      this.setState({
-        dismissed: true
-      });
-      const pos = 0;
-      const source = this.props.type.toUpperCase();
-      // Grab the available items in the array to dismiss.
-      // This fires a ping for all items available, even if below the fold.
-      const spocsData = data.spocs.map(item => ({
-        url: item.url,
-        guid: item.id,
-        shim: item.shim,
-        flight_id: item.flightId
-      }));
-      const blockUrlOption = LinkMenuOptions.BlockUrls(spocsData, pos, source);
-      const {
-        action,
-        impression,
-        userEvent
-      } = blockUrlOption;
-      this.props.dispatch(action);
-      this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
-        event: userEvent,
-        source,
-        action_position: pos
-      }));
-      if (impression) {
-        this.props.dispatch(impression);
-      }
-    }
-  }
-  render() {
-    const {
-      data,
-      dismissible,
-      pocket_button_enabled
-    } = this.props;
-    if (this.state.dismissed || !data || !data.spocs || !data.spocs[0] ||
-    // We only display complete collections.
-    data.spocs.length < 3) {
-      return null;
-    }
-    const {
-      spocs,
-      placement,
-      feed
-    } = this.props;
-    // spocs.data is spocs state data, and not an array of spocs.
-    const {
-      title,
-      context,
-      sponsored_by_override,
-      sponsor
-    } = spocs.data[placement.name] || {};
-    // Just in case of bad data, don't display a broken collection.
-    if (!title) {
-      return null;
-    }
-    let sponsoredByMessage = "";
-
-    // If override is not false or an empty string.
-    if (sponsored_by_override || sponsored_by_override === "") {
-      // We specifically want to display nothing if the server returns an empty string.
-      // So the server can turn off the label.
-      // This is to support the use cases where the sponsored context is displayed elsewhere.
-      sponsoredByMessage = sponsored_by_override;
-    } else if (sponsor) {
-      sponsoredByMessage = {
-        id: `newtab-label-sponsored-by`,
-        values: {
-          sponsor
-        }
-      };
-    } else if (context) {
-      sponsoredByMessage = context;
-    }
-
-    // Generally a card grid displays recs with spocs already injected.
-    // Normally it doesn't care which rec is a spoc and which isn't,
-    // it just displays content in a grid.
-    // For collections, we're only displaying a list of spocs.
-    // We don't need to tell the card grid that our list of cards are spocs,
-    // it shouldn't need to care. So we just pass our spocs along as recs.
-    // Think of it as injecting all rec positions with spocs.
-    // Consider maybe making recommendations in CardGrid use a more generic name.
-    const recsData = {
-      recommendations: data.spocs
-    };
-
-    // All cards inside of a collection card grid have a slightly different type.
-    // For the case of interactions to the card grid, we use the type "COLLECTIONCARDGRID".
-    // Example, you dismiss the whole collection, we use the type "COLLECTIONCARDGRID".
-    // For interactions inside the card grid, example, you dismiss a single card in the collection,
-    // we use the type "COLLECTIONCARDGRID_CARD".
-    const type = `${this.props.type}_card`;
-    const collectionGrid = /*#__PURE__*/external_React_default().createElement("div", {
-      className: "ds-collection-card-grid"
-    }, /*#__PURE__*/external_React_default().createElement(CardGrid, {
-      pocket_button_enabled: pocket_button_enabled,
-      title: title,
-      context: sponsoredByMessage,
-      data: recsData,
-      feed: feed,
-      type: type,
-      is_collection: true,
-      dispatch: this.props.dispatch,
-      items: this.props.items
-    }));
-    if (dismissible) {
-      return /*#__PURE__*/external_React_default().createElement(DSDismiss, {
-        onDismissClick: this.onDismissClick,
-        extraClasses: `ds-dismiss-ds-collection`
-      }, collectionGrid);
-    }
-    return collectionGrid;
-  }
-}
 ;// CONCATENATED MODULE: ./content-src/components/A11yLinkButton/A11yLinkButton.jsx
 function A11yLinkButton_extends() { return A11yLinkButton_extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, A11yLinkButton_extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -7929,8 +7789,6 @@ const TOP_SITES_MAX_SITES_PER_ROW = 8;
 
 
 
-const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
-
 const dedupe = new Dedupe(site => site && site.url);
 
 const INITIAL_STATE = {
@@ -7994,7 +7852,6 @@ const INITIAL_STATE = {
     config: { enabled: false },
     layout: [],
     isPrivacyInfoModalVisible: false,
-    isCollectionDismissible: false,
     topicsLoading: false,
     feeds: {
       data: {
@@ -8663,11 +8520,6 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ...prevState,
         layout: action.data.layout || [],
       };
-    case actionTypes.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:
-      return {
-        ...prevState,
-        isCollectionDismissible: action.data.value,
-      };
     case actionTypes.DISCOVERY_STREAM_TOPICS_LOADING:
       return {
         ...prevState,
@@ -8834,14 +8686,6 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ? prevState
         : nextState(items => items.map(removeBookmarkInfo));
     }
-    case actionTypes.PREF_CHANGED:
-      if (action.data.name === PREF_COLLECTION_DISMISSIBLE) {
-        return {
-          ...prevState,
-          isCollectionDismissible: action.data.value,
-        };
-      }
-      return prevState;
     case actionTypes.TOPIC_SELECTION_SPOTLIGHT_OPEN:
       return {
         ...prevState,
@@ -11421,7 +11265,6 @@ const selectLayoutRender = ({ state = {}, prefs = {} }) => {
     "Navigation",
     "Widgets",
     "CardGrid",
-    "CollectionCardGrid",
     "HorizontalRule",
     "PrivacyLink",
   ];
@@ -13767,7 +13610,6 @@ function Widgets() {
 
 
 
-
 const ALLOWED_CSS_URL_PREFIXES = ["chrome://", "resource://", "https://img-getpocket.cdn.mozilla.net/"];
 const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
 
@@ -13885,22 +13727,6 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           newFooterSection: component.newFooterSection,
           privacyNoticeURL: component.properties.privacyNoticeURL
         });
-      case "CollectionCardGrid":
-        {
-          const {
-            DiscoveryStream
-          } = this.props;
-          return /*#__PURE__*/external_React_default().createElement(CollectionCardGrid, {
-            data: component.data,
-            feed: component.feed,
-            spocs: DiscoveryStream.spocs,
-            placement: component.placement,
-            type: component.type,
-            items: component.properties.items,
-            dismissible: this.props.DiscoveryStream.isCollectionDismissible,
-            dispatch: this.props.dispatch
-          });
-        }
       case "CardGrid":
         {
           const sectionsEnabled = this.props.Prefs.values["discoverystream.sections.enabled"];
@@ -14027,7 +13853,6 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
     // Extract TopSites to render before the rest and Message to use for header
     const topSites = extractComponent("TopSites");
     const widgets = extractComponent("Widgets");
-    const sponsoredCollection = extractComponent("CollectionCardGrid");
     const message = extractComponent("Message") || {
       header: {
         link_text: topStories.learnMore.link.message,
@@ -14059,9 +13884,6 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
       width: 12,
       components: [widgets],
       sectionType: "widgets"
-    }]), sponsoredCollection && this.renderLayout([{
-      width: 12,
-      components: [sponsoredCollection]
     }]), !!layoutRender.length && /*#__PURE__*/external_React_default().createElement(CollapsibleSection, {
       className: "ds-layout",
       collapsed: topStories.pref.collapsed,

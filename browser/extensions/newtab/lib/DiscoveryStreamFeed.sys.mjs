@@ -86,10 +86,7 @@ const PREF_SHOW_SPONSORED_TOPSITES = "showSponsoredTopSites";
 const NIMBUS_VARIABLE_CONTILE_SOV_ENABLED = "topSitesContileSovEnabled";
 const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
 const PREF_FLIGHT_BLOCKS = "discoverystream.flight.blocks";
-const PREF_COLLECTIONS_ENABLED =
-  "discoverystream.sponsored-collections.enabled";
 const PREF_POCKET_BUTTON = "extensions.pocket.enabled";
-const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 const PREF_SELECTED_TOPICS = "discoverystream.topicSelection.selectedTopics";
 const PREF_TOPIC_SELECTION_ENABLED = "discoverystream.topicSelection.enabled";
 const PREF_TOPIC_SELECTION_PREVIOUS_SELECTED =
@@ -400,19 +397,6 @@ export class DiscoveryStreamFeed {
 
     // sync redux store with PersistantCache personalization data
     this.configureFollowedSections(isStartup);
-
-    this.store.dispatch(
-      ac.BroadcastToContent({
-        type: at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE,
-        data: {
-          value:
-            this.store.getState().Prefs.values[PREF_COLLECTION_DISMISSIBLE],
-        },
-        meta: {
-          isStartup,
-        },
-      })
-    );
   }
 
   async configureFollowedSections(isStartup = false) {
@@ -797,9 +781,6 @@ export class DiscoveryStreamFeed {
       this.store.getState().Prefs.values[PREF_HARDCODED_BASIC_LAYOUT] ||
       this.store.getState().Prefs.values[PREF_REGION_BASIC_LAYOUT];
 
-    const sponsoredCollectionsEnabled =
-      this.store.getState().Prefs.values[PREF_COLLECTIONS_ENABLED];
-
     // TODO: Add all pref logic
     const widgetsEnabled =
       this.store.getState().Prefs.values[PREF_WIDGET_LISTS_ENABLED];
@@ -909,7 +890,6 @@ export class DiscoveryStreamFeed {
       spocsUrl,
       feedUrl,
       items,
-      sponsoredCollectionsEnabled,
       spocPlacementData,
       spocTopsitesPlacementEnabled,
       spocTopsitesPlacementData,
@@ -1188,18 +1168,6 @@ export class DiscoveryStreamFeed {
       sponsored_by_override,
       ...(flight_id ? { flight_id } : {}),
     };
-  }
-
-  updateSponsoredCollectionsPref(collectionEnabled = false) {
-    const currentState =
-      this.store.getState().Prefs.values[PREF_COLLECTIONS_ENABLED];
-
-    // If the current state does not match the new state, update the pref.
-    if (currentState !== collectionEnabled) {
-      this.store.dispatch(
-        ac.SetPref(PREF_COLLECTIONS_ENABLED, collectionEnabled)
-      );
-    }
   }
 
   // This returns ad placements that contain IAB content.
@@ -1481,9 +1449,6 @@ export class DiscoveryStreamFeed {
                   override: !spocsResponse.settings.feature_flags.spoc_v2,
                 },
               })
-            );
-            this.updateSponsoredCollectionsPref(
-              spocsResponse.settings.feature_flags.collections
             );
           }
 
@@ -2684,14 +2649,6 @@ export class DiscoveryStreamFeed {
     }
   }
 
-  onCollectionsChanged() {
-    // Update layout, and reload any off screen tabs.
-    // This does not change any existing open tabs.
-    // It also doesn't update any spoc or rec data, just the layout.
-    const dispatch = action => this.store.dispatch(ac.AlsoToPreloaded(action));
-    this.loadLayout(dispatch, false);
-  }
-
   async retreiveProfileAge() {
     let profileAccessor = await lazy.ProfileAge();
     let profileCreateTime = await profileAccessor.created;
@@ -2746,9 +2703,6 @@ export class DiscoveryStreamFeed {
       case PREF_USER_INFERRED_PERSONALIZATION:
       case PREF_SYSTEM_INFERRED_PERSONALIZATION:
         this._isContextualAds = undefined;
-        break;
-      case PREF_COLLECTIONS_ENABLED:
-        this.onCollectionsChanged();
         break;
       case PREF_SELECTED_TOPICS:
         this.store.dispatch(
@@ -3124,7 +3078,6 @@ export class DiscoveryStreamFeed {
      `spocPlacementData` Used to set the spoc content.
      `spocTopsitesPlacementEnabled` Tuns on and off the sponsored topsites placement.
      `spocTopsitesPlacementData` Used to set spoc content for topsites.
-     `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
      `hybridLayout` Changes cards to smaller more compact cards only for specific breakpoints.
      `hideCardBackground` Removes Pocket card background and borders.
      `fourCardLayout` Enable four Pocket cards per row.
@@ -3146,7 +3099,6 @@ getHardcodedLayout = ({
   spocTopsitesPlacementData = { ad_types: [3120], zone_ids: [280143] },
   widgetPositions = [],
   widgetData = [],
-  sponsoredCollectionsEnabled = false,
   hybridLayout = false,
   hideCardBackground = false,
   fourCardLayout = false,
@@ -3196,38 +3148,6 @@ getHardcodedLayout = ({
           ? [
               {
                 type: "Widgets",
-              },
-            ]
-          : []),
-        ...(sponsoredCollectionsEnabled
-          ? [
-              {
-                type: "CollectionCardGrid",
-                properties: {
-                  items: 3,
-                },
-                header: {
-                  title: "",
-                },
-                placement: {
-                  name: "sponsored-collection",
-                  ad_types: [3617],
-                  zone_ids: [217759, 218031],
-                },
-                spocs: {
-                  probability: 1,
-                  positions: [
-                    {
-                      index: 0,
-                    },
-                    {
-                      index: 1,
-                    },
-                    {
-                      index: 2,
-                    },
-                  ],
-                },
               },
             ]
           : []),
