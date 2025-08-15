@@ -2187,7 +2187,7 @@ pref("browser.ml.linkPreview.noKeyPointsRegions", "AD,AT,BE,BG,CH,CY,CZ,DE,DK,EE
 pref("browser.ml.linkPreview.optin", false);
 pref("browser.ml.linkPreview.outputSentences", 3);
 pref("browser.ml.linkPreview.recentTypingMs", 1000);
-pref("browser.ml.linkPreview.shift", true);
+pref("browser.ml.linkPreview.shift", false);
 pref("browser.ml.linkPreview.shiftAlt", false);
 
 pref("browser.ml.pageAssist.enabled", false);
