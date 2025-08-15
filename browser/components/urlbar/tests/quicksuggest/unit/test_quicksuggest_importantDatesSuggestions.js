@@ -16,7 +16,6 @@ const REMOTE_SETTINGS_RECORDS = [
             payload: {
               dates: ["2025-03-05", "2026-02-18"],
               name: "Event 1",
-              notes: "Always the first Monday in January.",
             },
           },
         },
@@ -38,6 +37,46 @@ const REMOTE_SETTINGS_RECORDS = [
       },
     ],
   },
+  {
+    type: "dynamic-suggestions",
+    suggestion_type: "other_suggestions",
+    attachment: [
+      {
+        keywords: [["event", [" 2"]]],
+        data: {
+          result: {
+            isBestMatch: true,
+            payload: {
+              title: "Top Pick Suggestion 1",
+              url: "https://foo.com/",
+              description:
+                "A suggestion that just so happens to have the same keyword",
+            },
+          },
+        },
+      },
+    ],
+  },
+  {
+    type: "dynamic-suggestions",
+    suggestion_type: "other_suggestions",
+    attachment: [
+      {
+        keywords: [["event", [" 3"]]],
+        data: {
+          result: {
+            isBestMatch: true,
+            payload: {
+              title: "Top Pick Suggestion 2",
+              url: "https://foo.com/",
+              description:
+                "Another suggestion that just so happens to have the same keyword",
+            },
+          },
+        },
+      },
+    ],
+  },
 ];
 
 let SystemDate;
@@ -46,7 +85,10 @@ add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: REMOTE_SETTINGS_RECORDS,
     prefs: [
-      ["quicksuggest.dynamicSuggestionTypes", "important_dates"],
+      [
+        "quicksuggest.dynamicSuggestionTypes",
+        "important_dates,other_suggestions",
+      ],
       ["suggest.quicksuggest.nonsponsored", true],
       ["suggest.quicksuggest.sponsored", true],
       ["quicksuggest.ampTopPickCharThreshold", 0],
@@ -156,6 +198,51 @@ add_task(async function lastDayDuringMultiDay() {
   await checkDatesResults(query, expected);
 });
 
+// Test whether the date suggestion is before the other
+// isBestMatch suggestion.
+add_task(async function testTwoSuggestions() {
+  setTime("2025-03-01T00:00");
+
+  // 1 date suggestion and 2 other suggestions match this, but
+  // one of the two other suggestions should be deduped.
+  let query = "event";
+  let expectedDateSuggestion = makeExpectedResult({
+    date: "Wednesday, March 5, 2025",
+    descriptionL10n: {
+      id: "urlbar-result-dates-countdown",
+      args: { daysUntilStart: 4, name: "Event 1" },
+      cacheable: true,
+      excludeArgsFromCacheKey: true,
+    },
+  });
+
+  let expectedOtherSuggestion = {
+    type: UrlbarUtils.RESULT_TYPE.URL,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    heuristic: false,
+    isBestMatch: true,
+    isRichSuggestion: true,
+    suggestedIndex: 1,
+    payload: {
+      source: "rust",
+      provider: "Dynamic",
+      title: "Top Pick Suggestion 1",
+      url: "https://foo.com/",
+      telemetryType: "other_suggestions",
+      displayUrl: "foo.com",
+      description: "A suggestion that just so happens to have the same keyword",
+      isManageable: true,
+      isSponsored: false,
+      helpUrl: QuickSuggest.HELP_URL,
+    },
+  };
+
+  await checkDatesResults(query, [
+    expectedDateSuggestion,
+    expectedOtherSuggestion,
+  ]);
+});
+
 /**
  * Stubs the Date object of the system global to use timeStr
  * when the constructor is called without arguments.
@@ -193,7 +280,7 @@ async function checkDatesResults(query, expected) {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
-    matches: expected ? [expected] : [],
+    matches: expected ? [expected].flat() : [],
   });
 }
 
@@ -211,6 +298,7 @@ function makeExpectedResult({
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     isBestMatch,
+    suggestedIndex: 1,
     isRichSuggestion,
     payload: {
       title: date,

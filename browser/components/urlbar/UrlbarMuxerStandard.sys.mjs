@@ -749,6 +749,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         // Always allow hidden exposure Suggest results.
         return true;
       }
+      if (
+        result.payload.suggestionObject?.suggestionType == "important_dates"
+      ) {
+        // Always allow important date results since they are considered
+        // utility suggestions rather than typical suggestions.
+        // We assume that there will be at most one.
+        return true;
+      }
 
       if (state.quickSuggestResult && state.quickSuggestResult != result) {
         // A Suggest result was already added.
@@ -1237,7 +1245,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state.canShowTailSuggestions = false;
     }
 
-    if (result.providerName == lazy.UrlbarProviderQuickSuggest.name) {
+    if (
+      result.providerName == lazy.UrlbarProviderQuickSuggest.name &&
+      result.payload.suggestionObject?.suggestionType != "important_dates"
+    ) {
       state.quickSuggestResult ??= result;
     }
 
@@ -1380,6 +1391,15 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
 
       if (a.providerName === b.providerName) {
+        if (a.providerName === lazy.UrlbarProviderQuickSuggest.name) {
+          // The important dates suggestion should be before the other suggestion.
+          let aIsDate =
+            a.payload.suggestionObject?.suggestionType === "important_dates";
+          let bIsDate =
+            b.payload.suggestionObject?.suggestionType === "important_dates";
+          return Number(aIsDate) - Number(bIsDate);
+        }
+
         return 0;
       }
 
