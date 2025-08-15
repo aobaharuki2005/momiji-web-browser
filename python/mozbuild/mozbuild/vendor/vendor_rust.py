@@ -86,12 +86,6 @@ PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
 ]
 
 
-# Historically duplicated crates. Eventually we want this list to be empty.
-# If you do need to make changes increasing the number of duplicates, please
-# add a comment as to why.
-TOLERATED_DUPES = {}
-
-
 class VendorRust(MozbuildObject):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -625,74 +619,16 @@ license file's hash.
                         if all(d.split()[0] != name for d in p.get("dependencies", []))
                     ]
                 )
-                expected = TOLERATED_DUPES.get(name, 1)
-                if num > expected:
+                if num > 1:
                     self.log(
                         logging.ERROR,
                         "duplicate_crate",
                         {
                             "crate": name,
                             "num": num,
-                            "expected": expected,
-                            "file": Path(__file__).relative_to(self.topsrcdir),
                         },
-                        "There are {num} different versions of crate {crate} "
-                        "(expected {expected}). Please avoid the extra duplication "
-                        "or adjust TOLERATED_DUPES in {file} if not possible "
-                        "(but we'd prefer the former).",
-                    )
-                    failed = True
-                elif num < expected and num > 1:
-                    self.log(
-                        logging.ERROR,
-                        "less_duplicate_crate",
-                        {
-                            "crate": name,
-                            "num": num,
-                            "expected": expected,
-                            "file": Path(__file__).relative_to(self.topsrcdir),
-                        },
-                        "There are {num} different versions of crate {crate} "
-                        "(expected {expected}). Please adjust TOLERATED_DUPES in "
-                        "{file} to reflect this improvement.",
-                    )
-                    failed = True
-                elif num < expected and num > 0:
-                    self.log(
-                        logging.ERROR,
-                        "less_duplicate_crate",
-                        {
-                            "crate": name,
-                            "file": Path(__file__).relative_to(self.topsrcdir),
-                        },
-                        "Crate {crate} is not duplicated anymore. "
-                        "Please adjust TOLERATED_DUPES in {file} to reflect this improvement.",
-                    )
-                    failed = True
-                elif name in TOLERATED_DUPES and expected <= 1:
-                    self.log(
-                        logging.ERROR,
-                        "broken_allowed_dupes",
-                        {
-                            "crate": name,
-                            "file": Path(__file__).relative_to(self.topsrcdir),
-                        },
-                        "Crate {crate} is not duplicated. Remove it from "
-                        "TOLERATED_DUPES in {file}.",
-                    )
-                    failed = True
-
-            for name in TOLERATED_DUPES:
-                if name not in grouped:
-                    self.log(
-                        logging.ERROR,
-                        "outdated_allowed_dupes",
-                        {
-                            "crate": name,
-                            "file": Path(__file__).relative_to(self.topsrcdir),
-                        },
-                        "Crate {crate} is not in Cargo.lock anymore. Remove it from "
-                        "TOLERATED_DUPES in {file}.",
+                        "There are {num} different versions of crate {crate}. "
+                        "Please avoid the extra duplication.",
                     )
                     failed = True
 
