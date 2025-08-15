@@ -392,7 +392,8 @@ nsRect ViewportFrame::GetContainingBlockAdjustedForScrollbars(
     if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(kidFrame)) {
       // Note: In ReflowInput::CalculateHypotheticalPosition(), we exclude the
       // scrollbar or scrollbar-gutter area when computing the offset to
-      // ViewportFrame. Ensure the code there remains in sync with the logic here.
+      // ViewportFrame. Ensure the code there remains in sync with the logic
+      // here.
       LogicalMargin scrollbars(wm,
                                scrollContainerFrame->GetActualScrollbarSizes());
       computedSize.ISize(wm) =
