@@ -6799,7 +6799,6 @@ void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
     MOZ_ASSERT(frameSize() % JitStackAlignment == 0,
                "Stack padding assumes that the frameSize is correct");
     MOZ_ASSERT(JitStackValueAlignment == 2);
-    Label noPaddingNeeded;
     // If the number of arguments is odd, then we do not need any padding.
     //
     // Note: The |JitStackValueAlignment == 2| condition requires that the
@@ -6807,9 +6806,12 @@ void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
     // of arguments, we don't need any padding, because the |thisValue| is
     // pushed after the arguments, so the overall number of values on the stack
     // is even.
-    masm.branchTestPtr(Assembler::NonZero, argcreg, Imm32(1), &noPaddingNeeded);
-    masm.addPtr(Imm32(1), scratch);
-    masm.bind(&noPaddingNeeded);
+    //
+    // We can align by unconditionally setting the low bit. If the number of
+    // arguments is odd, the low bit was already set, so this adds no padding.
+    // If the number of arguments is even, the low bit was not set, so this adds
+    // 1, as we require.
+    masm.orPtr(Imm32(1), scratch);
   }
 
   // Reserve space for copying the arguments.
