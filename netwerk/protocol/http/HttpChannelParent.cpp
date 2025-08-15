@@ -504,8 +504,8 @@ bool HttpChannelParent::DoAsyncOpen(
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannelInternal(getter_AddRefs(channel), aURI, loadInfo, nullptr,
-                             nullptr, nullptr, aLoadFlags, ios);
+  rv = mHttpHandler->NewProxiedChannel(aURI, nullptr, 0, nullptr, loadInfo,
+                                       getter_AddRefs(channel));
   if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);
   }
