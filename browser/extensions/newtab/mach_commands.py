@@ -89,7 +89,7 @@ def run_mach(command_context, cmd, **kwargs):
 @SubCommand(
     "newtab",
     "watch",
-    description="Parses the current locales-report.json and produces something human readable.",
+    description="Invokes npm run watchmc and mach watch simultaneously for auto-building and bundling of compiled newtab code.",
 )
 def watch(command_context):
     processes = []
