@@ -75,6 +75,13 @@ class ViewportFrame : public nsContainerFrame {
    */
   nsRect AdjustReflowInputAsContainingBlock(ReflowInput& aReflowInput) const;
 
+  /*
+   * This is similar to AdjustReflowInputAsContainingBlock, but it doesn't
+   * change the input ReflowInput. Only return the containing block rect.
+   */
+  nsRect GetContainingBlockAdjustedForScrollbars(
+      const ReflowInput& aReflowInput) const;
+
   /**
    * Update our style (and recursively the styles of any anonymous boxes we
    * might own)
@@ -94,10 +101,6 @@ class ViewportFrame : public nsContainerFrame {
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
- protected:
-  ViewportFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
-      : nsContainerFrame(aStyle, aPresContext, aID), mView(nullptr) {}
-
   /**
    * Calculate how much room is available for fixed frames. That means
    * determining if the viewport is scrollable and whether the vertical and/or
@@ -106,6 +109,10 @@ class ViewportFrame : public nsContainerFrame {
    * @return the current scroll position, or (0,0) if not scrollable.
    */
   nsPoint AdjustReflowInputForScrollbars(ReflowInput& aReflowInput) const;
+
+ protected:
+  ViewportFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
+      : nsContainerFrame(aStyle, aPresContext, aID), mView(nullptr) {}
 
   nsView* GetViewInternal() const override { return mView; }
   void SetViewInternal(nsView* aView) override { mView = aView; }

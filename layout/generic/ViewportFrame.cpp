@@ -381,6 +381,35 @@ nsRect ViewportFrame::AdjustReflowInputAsContainingBlock(
   return rect;
 }
 
+nsRect ViewportFrame::GetContainingBlockAdjustedForScrollbars(
+    const ReflowInput& aReflowInput) const {
+  const WritingMode wm = aReflowInput.GetWritingMode();
+
+  LogicalSize computedSize = aReflowInput.ComputedSize();
+  const nsPoint& origin = [&]() {
+    // Get our prinicpal child frame and see if we're scrollable
+    nsIFrame* kidFrame = mFrames.FirstChild();
+    if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(kidFrame)) {
+      // Note: In ReflowInput::CalculateHypotheticalPosition(), we exclude the
+      // scrollbar or scrollbar-gutter area when computing the offset to
+      // ViewportFrame. Ensure the code there remains in sync with the logic here.
+      LogicalMargin scrollbars(wm,
+                               scrollContainerFrame->GetActualScrollbarSizes());
+      computedSize.ISize(wm) =
+          std::max(0, aReflowInput.ComputedISize() - scrollbars.IStartEnd(wm));
+      computedSize.BSize(wm) =
+          std::max(0, aReflowInput.ComputedBSize() - scrollbars.BStartEnd(wm));
+      return nsPoint(scrollbars.Left(wm), scrollbars.Top(wm));
+    }
+    return nsPoint(0, 0);
+  }();
+
+  nsRect rect(origin, computedSize.GetPhysicalSize(wm));
+  rect.SizeTo(AdjustViewportSizeForFixedPosition(rect));
+
+  return rect;
+}
+
 void ViewportFrame::Reflow(nsPresContext* aPresContext,
                            ReflowOutput& aDesiredSize,
                            const ReflowInput& aReflowInput,
@@ -451,8 +480,8 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
   if (HasAbsolutelyPositionedChildren()) {
-    // Make a copy of the reflow input and change the computed width and height
-    // to reflect the available space for the fixed items
+    // Make a copy of the reflow input and change the computed block size to
+    // reflect the available space for the fixed items
     ReflowInput reflowInput(aReflowInput);
 
     if (reflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
@@ -466,11 +495,17 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
       reflowInput.SetComputedBSize(maxSize.BSize(wm));
     }
 
-    nsRect rect = AdjustReflowInputAsContainingBlock(reflowInput);
-    AbsPosReflowFlags flags =
-        AbsPosReflowFlags::CBWidthAndHeightChanged;  // XXX could be optimized
+    // The containing block for children. We intentionally not take scrollbar
+    // size and dynamic toolbar into account because
+    // ::-moz-snapshot-containing-block should include those areas.
+    //
+    // We will take them into account in nsAbsoluteContainingBlock::Reflow(),
+    // for kid frames other than ::-moz-snapshot-containing-block.
+    const nsRect cb(nsPoint(), reflowInput.ComputedPhysicalSize());
+    // XXX could be optimized
+    AbsPosReflowFlags flags = AbsPosReflowFlags::CBWidthAndHeightChanged;
     GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowInput,
-                                         aStatus, rect, flags,
+                                         aStatus, cb, flags,
                                          /* aOverflowAreas = */ nullptr);
   }
 

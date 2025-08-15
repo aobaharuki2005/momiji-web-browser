@@ -15,6 +15,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ReflowInput.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/ViewportFrame.h"
 #include "nsAtomicContainerFrame.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsContainerFrame.h"
@@ -146,6 +147,11 @@ static void MaybeMarkAncestorsAsHavingDescendantDependentOnItsStaticPos(
   }
 }
 
+static bool IsSnapshotContainingBlock(const nsIFrame* aFrame) {
+  return aFrame->Style()->GetPseudoType() ==
+         PseudoStyleType::mozSnapshotContainingBlock;
+}
+
 void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
                                        nsPresContext* aPresContext,
                                        const ReflowInput& aReflowInput,
@@ -187,10 +193,24 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
           kidFrame, aDelegatingFrame);
     }
 
-    nscoord availBSize = aReflowInput.AvailableBSize();
-    const nsRect& cb =
-        isGrid ? nsGridContainerFrame::GridItemCB(kidFrame) : aContainingBlock;
-    WritingMode containerWM = aReflowInput.GetWritingMode();
+    const nsRect usedCbForKid = [&] {
+      if (isGrid) {
+        return nsGridContainerFrame::GridItemCB(kidFrame);
+      }
+
+      if (ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {
+        if (!IsSnapshotContainingBlock(kidFrame)) {
+          return viewport->GetContainingBlockAdjustedForScrollbars(
+              aReflowInput);
+        }
+        // else, we would like to use the default containing block for
+        // ::-moz-snapshot-containing-block.
+      }
+      return aContainingBlock;
+    }();
+
+    const nscoord availBSize = aReflowInput.AvailableBSize();
+    const WritingMode containerWM = aReflowInput.GetWritingMode();
     if (!kidNeedsReflow && availBSize != NS_UNCONSTRAINEDSIZE) {
       // If we need to redo pagination on the kid, we need to reflow it.
       // This can happen either if the available height shrunk and the
@@ -203,13 +223,14 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
         // Not sure what the right test would be here.
         kidNeedsReflow = true;
       } else {
-        nscoord kidBEnd = kidFrame->GetLogicalRect(cb.Size()).BEnd(kidWM);
+        nscoord kidBEnd =
+            kidFrame->GetLogicalRect(usedCbForKid.Size()).BEnd(kidWM);
         nscoord kidOverflowBEnd =
             LogicalRect(containerWM,
                         // Use ...RelativeToSelf to ignore transforms
                         kidFrame->ScrollableOverflowRectRelativeToSelf() +
                             kidFrame->GetPosition(),
-                        aContainingBlock.Size())
+                        usedCbForKid.Size())
                 .BEnd(containerWM);
         NS_ASSERTION(kidOverflowBEnd >= kidBEnd,
                      "overflow area should be at least as large as frame rect");
@@ -222,9 +243,9 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
     if (kidNeedsReflow && !aPresContext->HasPendingInterrupt()) {
       // Reflow the frame
       nsReflowStatus kidStatus;
-      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowInput, cb,
-                          aFlags, kidFrame, kidStatus, aOverflowAreas,
-                          referencedAnchors);
+      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowInput,
+                          usedCbForKid, aFlags, kidFrame, kidStatus,
+                          aOverflowAreas, referencedAnchors);
       MOZ_ASSERT(!kidStatus.IsInlineBreakBefore(),
                  "ShouldAvoidBreakInside should prevent this from happening");
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
@@ -875,6 +896,9 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
     NS_ASSERTION(
         aReflowInput.ComputedSize(wm).ISize(wm) != NS_UNCONSTRAINEDSIZE,
         "Must have a useful inline-size _somewhere_");
+    // Note: if |aDelegatingFrame| is ViewportFrame, the caller should always
+    // provide |aContainingBlock| with a valid isize, so we don't have to tweak
+    // aReflowInput here for scrolbars.
     availISize = aReflowInput.ComputedSizeWithPadding(wm).ISize(wm);
   }
 
@@ -920,10 +944,29 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
                                        border.ConvertTo(wm, outerWM).BStart(wm)
                                  : NS_UNCONSTRAINEDSIZE;
 
-  ReflowInput kidReflowInput(aPresContext, aReflowInput, aKidFrame,
-                             LogicalSize(wm, availISize, availBSize),
-                             Some(logicalCBSize), initFlags, {}, {},
-                             aReferencedAnchors);
+  // If |aDelegatingFrame| is ViewportFrame, the parent reflow input is also
+  // |mCBReflowInput| of |kidReflowInput|. When initializing |kidReflowInput|,
+  // we use |logicalCBSize|, instead of the computed size of |mCBReflowInput|,
+  // if the cb size is not NS_UNCONSTRAINEDSIZE. However, in
+  // ReflowInput::CalculateHypotheticalPosition(), we may use the computed size
+  // of |mCBReflowInput| to calculate the hypothetical position, so here, we are
+  // trying to update the cb reflow input for kidReflowInput to match the size
+  // of |logicalCBSize|.
+  //
+  // FIXME: Bug 1983345. We may not need this if all the init functions in
+  // ReflowInput use the customized containing block rect (if any), instead of
+  // using the size of |mCBReflowInput| to do calculation.
+  Maybe<ReflowInput> parentReflowInput;
+  if (const ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {
+    parentReflowInput.emplace(aReflowInput);
+    // This function tweaks the computed inline size, computed block size, and
+    // available inline size of the input reflow input by scrollbars.
+    Unused << viewport->AdjustReflowInputForScrollbars(parentReflowInput.ref());
+  }
+  ReflowInput kidReflowInput(
+      aPresContext, parentReflowInput.refOr(aReflowInput), aKidFrame,
+      LogicalSize(wm, availISize, availBSize), Some(logicalCBSize), initFlags,
+      {}, {}, aReferencedAnchors);
 
   if (nscoord kidAvailBSize = kidReflowInput.AvailableBSize();
       kidAvailBSize != NS_UNCONSTRAINEDSIZE) {
