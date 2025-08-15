@@ -176,7 +176,10 @@ class ChannelListener {
       this.#imageListener.onStopRequest(request, status);
     }
 
-    if (!Components.isSuccessCode(status)) {
+    if (
+      !Components.isSuccessCode(status) &&
+      status !== Cr.NS_ERROR_PARSED_DATA_CACHED
+    ) {
       this.#rejector(new Components.Exception("Image loading failed", status));
     }
 
