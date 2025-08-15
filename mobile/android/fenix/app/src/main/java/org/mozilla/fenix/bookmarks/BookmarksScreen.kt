@@ -1075,7 +1075,7 @@ private fun BookmarkListOverflowMenu(
         ),
         MenuItem(
             title = stringResource(R.string.bookmark_menu_delete_button),
-            color = FirefoxTheme.colors.actionCritical,
+            color = FirefoxTheme.colors.textCritical,
             onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.DeleteClicked) },
         ),
     )
