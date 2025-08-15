@@ -394,14 +394,14 @@ export const GenAI = {
   async addAskChatItems(browser, extraContext, itemAdder, entry, cleanup) {
     // Prepare context used for both targeting and handling prompts
     const window = browser.ownerGlobal;
-    const tab = window?.gBrowser?.getTabForBrowser(browser);
+    const tab = window.gBrowser.getTabForBrowser(browser);
     const uri = browser.currentURI;
     const context = {
       ...extraContext,
       entry,
       provider: lazy.chatProvider,
       tabTitle: (tab?._labelIsContentTitle && tab?.label) || "",
-      url: uri?.asciiHost + uri?.filePath,
+      url: uri.asciiHost + uri.filePath,
       window,
     };
 
@@ -678,13 +678,6 @@ export const GenAI = {
     } = contextMenu;
 
     showItem(menu, false);
-
-    // DO NOT show menu when inside an extension panel
-    const uri = browser.browsingContext.currentURI.spec;
-    if (uri.startsWith("moz-extension:")) {
-      return;
-    }
-
     // Page feature can be shown without provider unless disabled via menu
     // or revamp sidebar excludes chatbot
     const isPageFeatureAllowed =
@@ -710,17 +703,21 @@ export const GenAI = {
 
     const provider = this.chatProviders.get(lazy.chatProvider)?.name;
     const doc = menu.ownerDocument;
-    if (provider) {
-      doc.l10n.setAttributes(menu, "genai-menu-ask-provider-2", { provider });
-    } else {
-      doc.l10n.setAttributes(
-        menu,
-        lazy.chatProvider
-          ? "genai-menu-ask-generic-2"
-          : "genai-menu-no-provider-2"
-      );
+
+    // Only "page" and "tab" contexts need a <menu> submenu
+    if (source !== "tool") {
+      if (provider) {
+        doc.l10n.setAttributes(menu, "genai-menu-ask-provider-2", { provider });
+      } else {
+        doc.l10n.setAttributes(
+          menu,
+          lazy.chatProvider
+            ? "genai-menu-ask-generic-2"
+            : "genai-menu-no-provider-2"
+        );
+      }
+      menu.menupopup?.remove();
     }
-    menu.menupopup?.remove();
 
     // Determine if we have selection or should use page content
     const context = {

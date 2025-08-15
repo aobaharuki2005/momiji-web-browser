@@ -399,37 +399,13 @@ async function test_contextmenu(selector, menuItems, options = {}) {
     info("Completed onContextMenuShown");
   }
 
-  if (
-    typeof options.awaitOnMenuBuilt === "object" &&
-    options.awaitOnMenuBuilt.id
-  ) {
-    const elementId = options.awaitOnMenuBuilt.id;
-    const menu = document.getElementById(elementId);
-    await TestUtils.waitForCondition(
-      () => menu && !menu.hidden,
-      `Menu ${elementId} did not appear in time`
-    );
-    info(`Menu "${elementId}" was built and is now visible`);
-  }
-
   if (menuItems) {
     if (Services.prefs.getBoolPref("devtools.inspector.enabled", true)) {
-      let inspectItems = [];
-      let hasSeparatorAboveAskChat = false;
-      const hasViewSource =
+      const inspectItems =
         menuItems.includes("context-viewsource") ||
-        menuItems.includes("context-viewpartialsource-selection");
-
-      const askChatIndex = menuItems.indexOf("context-ask-chat");
-      const isAskChatLastItem = menuItems.at(-4) === "context-ask-chat";
-      if (askChatIndex >= 2) {
-        hasSeparatorAboveAskChat = menuItems[askChatIndex - 2] === "---";
-      }
-
-      if (!hasViewSource && !(isAskChatLastItem && hasSeparatorAboveAskChat)) {
-        inspectItems.push("---", null);
-      }
-
+        menuItems.includes("context-viewpartialsource-selection")
+          ? []
+          : ["---", null];
       if (
         Services.prefs.getBoolPref("devtools.accessibility.enabled", true) &&
         (Services.prefs.getBoolPref("devtools.everOpened", false) ||
