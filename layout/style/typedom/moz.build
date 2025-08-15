@@ -8,6 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 EXPORTS.mozilla.dom += [
+    "CSSImageValue.h",
     "CSSKeywordValue.h",
     "CSSMathClamp.h",
     "CSSMathInvert.h",
@@ -38,6 +39,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    "CSSImageValue.cpp",
     "CSSKeywordValue.cpp",
     "CSSMathClamp.cpp",
     "CSSMathInvert.cpp",

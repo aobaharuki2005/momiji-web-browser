@@ -501,6 +501,7 @@ WEBIDL_FILES = [
     "CSSFontFeatureValuesRule.webidl",
     "CSSFontPaletteValuesRule.webidl",
     "CSSGroupingRule.webidl",
+    "CSSImageValue.webidl",
     "CSSImportRule.webidl",
     "CSSKeyframeRule.webidl",
     "CSSKeyframesRule.webidl",
