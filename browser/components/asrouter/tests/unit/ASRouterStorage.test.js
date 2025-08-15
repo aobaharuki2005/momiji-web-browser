@@ -301,6 +301,47 @@ describe("Shared database methods", () => {
         event: "SHARED_DB_READ_FAILED",
       });
     });
+
+    it("should return null when getConnection throws an error", async () => {
+      const connectionError = new Error("Failed to get database connection");
+
+      overrider.set({
+        ASRouterPreferences: {
+          console: { error: errorStub },
+        },
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().rejects(connectionError),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.getSharedMessageImpressions();
+
+      assert.equal(result, null);
+      assert.calledOnce(errorStub);
+      assert.calledWith(
+        errorStub,
+        "ASRouterStorage: Failed reading from MessagingSystemMessageImpressions",
+        connectionError
+      );
+      assert.calledOnce(storage.telemetry.handleUndesiredEvent);
+      assert.calledWith(storage.telemetry.handleUndesiredEvent, {
+        event: "SHARED_DB_READ_FAILED",
+      });
+    });
+
+    it("should return null when getConnection returns null", async () => {
+      overrider.set({
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().resolves(null),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.getSharedMessageImpressions();
+
+      assert.equal(result, null);
+    });
   });
 
   describe("#setSharedMessageImpressions", () => {
@@ -421,6 +462,53 @@ describe("Shared database methods", () => {
       await storage.setSharedMessageImpressions("test_message", [123]);
       assert.calledOnce(notifySpy);
     });
+
+    it("should return false when getConnection throws an error", async () => {
+      const connectionError = new Error("Failed to get database connection");
+
+      overrider.set({
+        ASRouterPreferences: {
+          console: { error: errorStub },
+        },
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().rejects(connectionError),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.setSharedMessageImpressions(
+        "test_message",
+        [123, 456]
+      );
+
+      assert.equal(result, false);
+      assert.calledOnce(errorStub);
+      assert.calledWith(
+        errorStub,
+        "ASRouterStorage: Failed writing to MessagingSystemMessageImpressions",
+        connectionError
+      );
+      assert.calledOnce(storage.telemetry.handleUndesiredEvent);
+      assert.calledWith(storage.telemetry.handleUndesiredEvent, {
+        event: "SHARED_DB_WRITE_FAILED",
+      });
+    });
+
+    it("should return false when getConnection returns null", async () => {
+      overrider.set({
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().resolves(null),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.setSharedMessageImpressions(
+        "test_message",
+        [123, 456]
+      );
+
+      assert.equal(result, false);
+    });
   });
 
   describe("#getSharedMessageBlocklist", () => {
@@ -484,6 +572,47 @@ describe("Shared database methods", () => {
       assert.calledWith(storage.telemetry.handleUndesiredEvent, {
         event: "SHARED_DB_READ_FAILED",
       });
+    });
+
+    it("should return null when getConnection throws an error", async () => {
+      const connectionError = new Error("Failed to get database connection");
+
+      overrider.set({
+        ASRouterPreferences: {
+          console: { error: errorStub },
+        },
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().rejects(connectionError),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.getSharedMessageBlocklist();
+
+      assert.equal(result, null);
+      assert.calledOnce(errorStub);
+      assert.calledWith(
+        errorStub,
+        "ASRouterStorage: Failed reading from MessagingSystemMessageBlocklist",
+        connectionError
+      );
+      assert.calledOnce(storage.telemetry.handleUndesiredEvent);
+      assert.calledWith(storage.telemetry.handleUndesiredEvent, {
+        event: "SHARED_DB_READ_FAILED",
+      });
+    });
+
+    it("should return null when getConnection returns null", async () => {
+      overrider.set({
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().resolves(null),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.getSharedMessageBlocklist();
+
+      assert.equal(result, null);
     });
   });
 
@@ -571,6 +700,100 @@ describe("Shared database methods", () => {
 
       await storage.setSharedMessageBlocked("test_message", true);
       assert.calledOnce(notifySpy);
+    });
+
+    it("should return false when getConnection throws an error when blocking a message", async () => {
+      const connectionError = new Error("Failed to get database connection");
+
+      overrider.set({
+        ASRouterPreferences: {
+          console: { error: errorStub },
+        },
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().rejects(connectionError),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.setSharedMessageBlocked(
+        "test_message",
+        true
+      );
+
+      assert.equal(result, false);
+      assert.calledOnce(errorStub);
+      assert.calledWith(
+        errorStub,
+        "ASRouterStorage: Failed writing to MessagingSystemMessageBlocklist",
+        connectionError
+      );
+      assert.calledOnce(storage.telemetry.handleUndesiredEvent);
+      assert.calledWith(storage.telemetry.handleUndesiredEvent, {
+        event: "SHARED_DB_WRITE_FAILED",
+      });
+    });
+
+    it("should return false when getConnection throws an error when unblocking a message", async () => {
+      const connectionError = new Error("Failed to get database connection");
+
+      overrider.set({
+        ASRouterPreferences: {
+          console: { error: errorStub },
+        },
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().rejects(connectionError),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.setSharedMessageBlocked(
+        "test_message",
+        false
+      );
+
+      assert.equal(result, false);
+      assert.calledOnce(errorStub);
+      assert.calledWith(
+        errorStub,
+        "ASRouterStorage: Failed writing to MessagingSystemMessageBlocklist",
+        connectionError
+      );
+      assert.calledOnce(storage.telemetry.handleUndesiredEvent);
+      assert.calledWith(storage.telemetry.handleUndesiredEvent, {
+        event: "SHARED_DB_WRITE_FAILED",
+      });
+    });
+
+    it("should return false when getConnection returns null when blocking a mesasge", async () => {
+      overrider.set({
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().resolves(null),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.setSharedMessageBlocked(
+        "test_message",
+        true
+      );
+
+      assert.equal(result, false);
+    });
+
+    it("should return false when getConnection returns null when unblokcing a message", async () => {
+      overrider.set({
+        ProfilesDatastoreService: {
+          getConnection: sandbox.stub().resolves(null),
+          notify: sandbox.stub(),
+        },
+      });
+
+      const result = await storage.setSharedMessageBlocked(
+        "test_message",
+        false
+      );
+
+      assert.equal(result, false);
     });
   });
 });
