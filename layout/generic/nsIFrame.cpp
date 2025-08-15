@@ -11257,12 +11257,14 @@ static nsIFrame* GetCorrectedParent(const nsIFrame* aFrame) {
   }
 
   // Prevent a NAC pseudo-element from inheriting from its NAC parent, and
-  // inherit from the NAC generator element instead.
-  if (pseudo != PseudoStyleType::NotPseudo) {
+  // inherit from the NAC generator element instead. (We exclude element-backed
+  // pseudos from this check, since they're not NAC.)
+  if (pseudo != PseudoStyleType::NotPseudo &&
+      !PseudoStyle::IsElementBackedPseudo(pseudo)) {
     MOZ_ASSERT(aFrame->GetContent());
     Element* element = Element::FromNode(aFrame->GetContent());
-    // Make sure to avoid doing the fixup for non-element-backed pseudos like
-    // ::first-line and such.
+    // Make sure to only do the fixup for anonymous content pseudos (i.e. avoid
+    // fixup for ::first-line and such).
     if (element && !element->IsRootOfNativeAnonymousSubtree() &&
         element->GetPseudoElementType() == aFrame->Style()->GetPseudoType()) {
       while (parent->GetContent() &&
