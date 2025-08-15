@@ -56,10 +56,17 @@ const kFaviconService = Cc[
 ].createInstance(Ci.nsIFaviconService);
 
 let gPngFavicon;
+let gSvgFavicon;
 add_setup(async () => {
   const pngFile = do_get_file("favicon-normal16.png");
   const pngData = await IOUtils.read(pngFile.path);
   gPngFavicon = { rawData: pngData.buffer, mimeType: "image/png" };
+
+  const svgFile = do_get_file("icon.svg");
+  gSvgFavicon = {
+    dataURI: Services.io.newFileURI(svgFile),
+    mimeType: "image/svg+xml",
+  };
 });
 
 let gFavicon;
@@ -177,6 +184,25 @@ add_task(async function test_pin_existing_favicon_raster() {
   ok(
     kDefaultIconSpy.get.notCalled,
     "The default icon should not be used when a favicon exists for the page."
+  );
+
+  await testWrittenIconFile(iconFile);
+
+  shellPinCalled(taskbarTab);
+});
+
+add_task(async function test_pin_existing_favicon_vector() {
+  sinon.resetHistory();
+  gFavicon = gSvgFavicon;
+
+  let iconFile = getTempFile();
+  gOverrideWindowsIconFileOnce = iconFile;
+
+  await TaskbarTabsPin.pinTaskbarTab(taskbarTab, registry);
+
+  ok(
+    kDefaultIconSpy.get.notCalled,
+    "The default icon should not be used when a vector favicon exists for the page."
   );
 
   await testWrittenIconFile(iconFile);
