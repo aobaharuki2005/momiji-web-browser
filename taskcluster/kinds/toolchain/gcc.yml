@@ -21,7 +21,6 @@ linux64-gcc-8:
     run:
         script: build-gcc-linux.sh
         toolchain-alias:
-            - linux64-gcc
             - linux64-gcc-base
     fetches:
         fetch:
@@ -51,6 +50,8 @@ linux64-gcc-10:
         symbol: TL(gcc10)
     run:
         script: build-gcc-linux.sh
+        toolchain-alias:
+            - linux64-gcc
     fetches:
         fetch:
             - gcc-10.5.0
