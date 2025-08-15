@@ -729,8 +729,6 @@ def main():
         extra_cxxflags2 = [
             "-fPIC",
             "-Qunused-arguments",
-            # Align with the Firefox build system for the clang plugin.
-            "-D_GLIBCXX_USE_CXX11_ABI=0",
         ]
         extra_asmflags = []
         # Avoid libLLVM internal function calls going through the PLT.
