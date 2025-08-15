@@ -339,6 +339,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   nsresult OnPermissionPromptResult(bool aGranted, const nsACString& aType);
   LNAPermission UpdateLocalNetworkAccessPermissions(
       const nsACString& aPermissionType);
+  void MaybeUpdateDocumentIPAddressSpaceFromCache();
   nsresult ProcessLNAActions();
 
  public:
