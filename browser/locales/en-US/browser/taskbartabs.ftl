@@ -10,6 +10,8 @@ taskbar-tab-urlbar-button-open =
   .tooltiptext = Add tab to taskbar
 taskbar-tab-urlbar-button-close =
   .tooltiptext = Remove tab from taskbar
+taskbar-tab-urlbar-button-show = Show Web App page action
+taskbar-tab-urlbar-button-hide = Hide Web App page action
 
 # This string is used in the description of a Windows Start Menu
 # shortcut for a Taskbar Tab.
