@@ -12758,7 +12758,7 @@ function Lists({
     onBlur: () => saveTask(),
     onChange: e => setNewTask(e.target.value),
     value: newTask,
-    placeholder: "Add a task",
+    "data-l10n-id": "newtab-widget-lists-input-add-an-item",
     className: "add-task-input",
     onKeyDown: handleKeyDown,
     type: "text",
