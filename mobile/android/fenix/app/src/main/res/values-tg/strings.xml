@@ -574,7 +574,7 @@
   -->
   <string name="juno_onboarding_enable_notifications_description_nimbus_2" tools:ignore="BrandUsage">Варақаҳоро байни дастгоҳҳои худ ба таври бехатар ирсол намоед ва хусусиятҳои дигари махфиятро дар «Firefox» кашф намоед.</string>
   <!-- Text for the button to request notification permission on the device -->
-  <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Хомӯш кардани огоҳномаҳо</string>
+  <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Фаъол кардани огоҳномаҳо</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
   <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ҳоло не</string>
   <!--

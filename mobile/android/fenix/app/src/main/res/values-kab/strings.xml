@@ -415,6 +415,8 @@
   <string name="browser_menu_default_banner_title">Err %1$s d amezwer</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Kra n tsinin kan. Beddel sya ɣer da</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">D arurad, d uslig, yettwaxdem i kečč⋅kemm.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Zgel</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
@@ -1073,6 +1075,8 @@
   <string name="alternative_app_icon_group_gradients">Tafesna n yini</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Wayeḍ</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Beddel tignit n usnas?</string>
   <!--
     Add-ons general availability nimbus message
 
