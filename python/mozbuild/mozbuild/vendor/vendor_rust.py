@@ -136,18 +136,24 @@ class VendorRust(MozbuildObject):
                 )
             return cargo
 
-    def check_cargo_version(self, cargo):
-        """
-        Ensure that Cargo is new enough.
-        """
+    def cargo_version(self, cargo):
         out = (
             subprocess.check_output([cargo, "--version"])
             .splitlines()[0]
             .decode("UTF-8")
         )
         if not out.startswith("cargo"):
+            raise RuntimeError("Unexpected `cargo --version` output")
+        return LooseVersion(out.split()[1])
+
+    def check_cargo_version(self, cargo):
+        """
+        Ensure that Cargo is new enough.
+        """
+        try:
+            version = self.cargo_version(cargo)
+        except RuntimeError:
             return False
-        version = LooseVersion(out.split()[1])
         # Cargo 1.85.0 changed vendoring in a way that creates a lot of noise
         # if we go back and forth between vendoring with an older version and
         # a newer version. Only allow the newer versions.
@@ -782,6 +788,81 @@ license file's hash.
                     directory=replace["directory"],
                 )
             )
+
+        # cargo 1.89 started adding things that older versions didn't add, but
+        # it's a tough sell to bump the vendoring requirement to 1.89 when we're
+        # still using 1.86 on CI.
+        if self.cargo_version(cargo) >= "1.89":
+            for package in cargo_lock["package"]:
+                # Crates vendored from crates.io are affected by changes, but not
+                # those vendored from git.
+                if not package.get("source", "").startswith("registry+"):
+                    continue
+                package_dir = Path(vendor_dir) / package["name"]
+                # Cargo.toml.orig was not included before but now is.
+                unlinked = ["Cargo.toml.orig"]
+                with (package_dir / "Cargo.toml").open(encoding="utf-8") as fh:
+                    toml_data = toml.load(fh)
+                    cargo_package = toml_data.get("package", {})
+                    # A readme explicitly listed in package.readme is now included
+                    # even when it's not in package.include.
+                    if readme := cargo_package.get("readme"):
+                        if includes := cargo_package.get("include"):
+                            if not any(
+                                mozpath.match(readme, include.removeprefix("/"))
+                                for include in includes
+                            ):
+                                try:
+                                    (package_dir / readme).unlink()
+                                    unlinked.append(readme)
+                                except FileNotFoundError:
+                                    pass
+
+                # dotfiles weren't included before, but now are.
+                for path in package_dir.glob("**/.*"):
+                    # The checksum file is handled separately because it needs to
+                    # be updated.
+                    if path.name == ".cargo-checksum.json":
+                        continue
+                    if path.is_dir():
+                        for root, dirs, files in os.walk(path, topdown=False):
+                            root = Path(root)
+                            for name in files:
+                                to_unlink = root / name
+                                try:
+                                    to_unlink.unlink()
+                                    unlinked.append(
+                                        mozpath.normsep(
+                                            str(to_unlink.relative_to(package_dir))
+                                        )
+                                    )
+                                except FileNotFoundError:
+                                    pass
+                            for name in dirs:
+                                try:
+                                    (root / name).rmdir()
+                                except OSError:
+                                    pass
+                    else:
+                        try:
+                            path.unlink()
+                            unlinked.append(
+                                mozpath.normsep(str(path.relative_to(package_dir)))
+                            )
+                        except FileNotFoundError:
+                            pass
+
+                # Update the checksums with the changes we made.
+                checksum_json = package_dir / ".cargo-checksum.json"
+                with checksum_json.open(encoding="utf-8") as fh:
+                    checksum_data = json.load(fh)
+                for path in unlinked:
+                    try:
+                        del checksum_data["files"][path]
+                    except KeyError:
+                        pass
+                with checksum_json.open(mode="w", encoding="utf-8") as fh:
+                    json.dump(checksum_data, fh, separators=(",", ":"))
 
         if not self._check_licenses(vendor_dir) and not force:
             self.log(
