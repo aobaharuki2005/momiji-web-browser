@@ -308,4 +308,27 @@ describe("<Lists>", () => {
     const [action] = dispatch.getCall(0).args;
     assert.equal(action.type, at.OPEN_LINK);
   });
+
+  it("disables Create new list action (in the panel list) when at the max lists limit", () => {
+    // Set temporary maximum list limit
+    const stateAtMax = {
+      ...mockState,
+      Prefs: {
+        ...INITIAL_STATE.Prefs,
+        values: {
+          ...INITIAL_STATE.Prefs.values,
+          "widgets.lists.maxLists": 1,
+        },
+      },
+    };
+
+    const localWrapper = mount(
+      <WrapWithProvider state={stateAtMax}>
+        <Lists dispatch={dispatch} />
+      </WrapWithProvider>
+    );
+
+    const createListBtn = localWrapper.find("panel-item.create-list").at(0);
+    assert.strictEqual(createListBtn.prop("disabled"), true);
+  });
 });

@@ -117,7 +117,7 @@ add_task(async function test_syncLists_moves_completed_tasks_and_dispatches() {
     dispatch: dispatchSpy,
   };
 
-  sinon.stub(feed.cache, "get").resolves(cachedListData);
+  const getStub = sinon.stub(feed.cache, "get").resolves(cachedListData);
 
   await feed.syncLists();
 
@@ -133,4 +133,54 @@ add_task(async function test_syncLists_moves_completed_tasks_and_dispatches() {
     actionTypes.WIDGETS_LISTS_SET,
     "dispatches lists"
   );
+
+  getStub.restore();
+});
+
+add_task(async function test_syncLists_errors_when_over_max() {
+  const PREF_WIDGETS_LISTS_MAX_LISTS = "widgets.lists.maxLists";
+
+  const feed = new ListsFeed();
+  const dispatchSpy = sinon.spy();
+
+  // Store state: lists enabled, system lists enabled, max count = 1
+  feed.store = {
+    getState() {
+      return {
+        Prefs: {
+          values: {
+            [PREF_LISTS_ENABLED]: true,
+            [PREF_SYSTEM_LISTS_ENABLED]: true,
+            [PREF_WIDGETS_LISTS_MAX_LISTS]: 1,
+          },
+        },
+      };
+    },
+    dispatch: dispatchSpy,
+  };
+
+  // Cached data with 2 lists -> exceeds max (1)
+  const cachedListData = {
+    lists: {
+      listA: { label: "List A", tasks: [], completed: [] },
+      listB: { label: "List B", tasks: [], completed: [] },
+    },
+  };
+
+  const getStub = sinon.stub(feed.cache, "get").resolves(cachedListData);
+
+  // Expect an error and NO dispatches
+  await Assert.rejects(
+    feed.syncLists(),
+    /Over the maximum list count/,
+    "syncLists should throw when over the maximum list count"
+  );
+
+  Assert.equal(
+    dispatchSpy.callCount,
+    0,
+    "No dispatch should occur when over the maximum list count"
+  );
+
+  getStub.restore();
 });

@@ -29,7 +29,10 @@ const USER_ACTION_TYPES = {
   TASK_COMPLETE: "task_complete",
 };
 
+const PREF_WIDGETS_LISTS_MAX_LISTS = "widgets.lists.maxLists";
+
 function Lists({ dispatch }) {
+  const prefs = useSelector(state => state.Prefs.values);
   const { selected, lists } = useSelector(state => state.ListsWidget);
   const [newTask, setNewTask] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -486,6 +489,18 @@ function Lists({ dispatch }) {
     return null;
   }
 
+  // Enforce maximum count limits to lists
+  const currentListsCount = Object.keys(lists).length;
+  let maxListsCount = prefs[PREF_WIDGETS_LISTS_MAX_LISTS];
+
+  function isAtMaxListsLimit() {
+    // Edge case if user sets max limit to `0`
+    if (maxListsCount < 1) {
+      maxListsCount = 1;
+    }
+    return currentListsCount >= maxListsCount;
+  }
+
   return (
     <article
       className="lists"
@@ -521,8 +536,10 @@ function Lists({ dispatch }) {
             onClick={() => setIsEditing(true)}
           ></panel-item>
           <panel-item
+            {...(isAtMaxListsLimit ? { disabled: true } : {})}
             data-l10n-id="newtab-widget-lists-menu-create"
             onClick={() => handleCreateNewList()}
+            className="create-list"
           ></panel-item>
           <panel-item
             data-l10n-id="newtab-widget-lists-menu-delete"
