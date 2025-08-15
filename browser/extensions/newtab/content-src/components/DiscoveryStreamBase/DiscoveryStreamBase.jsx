@@ -175,7 +175,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
               dispatch={this.props.dispatch}
               type={component.type}
               firstVisibleTimestamp={this.props.firstVisibleTimestamp}
-              is_collection={true}
               ctaButtonSponsors={component.properties.ctaButtonSponsors}
               ctaButtonVariant={component.properties.ctaButtonVariant}
               spocMessageVariant={component.properties.spocMessageVariant}

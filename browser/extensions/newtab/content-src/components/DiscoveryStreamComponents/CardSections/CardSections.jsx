@@ -139,7 +139,6 @@ function CardSection({
   dispatch,
   type,
   firstVisibleTimestamp,
-  is_collection,
   spocMessageVariant,
   ctaButtonVariant,
   ctaButtonSponsors,
@@ -394,7 +393,6 @@ function CardSection({
               showTopics={shouldShowLabels}
               selectedTopics={selectedTopics}
               availableTopics={availableTopics}
-              is_collection={is_collection}
               ctaButtonSponsors={ctaButtonSponsors}
               ctaButtonVariant={ctaButtonVariant}
               spocMessageVariant={spocMessageVariant}
@@ -423,7 +421,6 @@ function CardSections({
   dispatch,
   type,
   firstVisibleTimestamp,
-  is_collection,
   spocMessageVariant,
   ctaButtonVariant,
   ctaButtonSponsors,
@@ -473,7 +470,6 @@ function CardSections({
       dispatch={dispatch}
       type={type}
       firstVisibleTimestamp={firstVisibleTimestamp}
-      is_collection={is_collection}
       spocMessageVariant={spocMessageVariant}
       ctaButtonVariant={ctaButtonVariant}
       ctaButtonSponsors={ctaButtonSponsors}
