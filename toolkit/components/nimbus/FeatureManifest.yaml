@@ -1757,12 +1757,6 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.onboardingExperience.enabled
       description: >-
         Enables an onboarding experience for Pocket section on newtab.
-    recentSavesEnabled:
-      type: boolean
-      fallbackPref: >-
-        browser.newtabpage.activity-stream.discoverystream.recentSaves.enabled
-      description: >-
-        Updates the Pocket section with a new header and 1 row of recently saved Pocket stories.
     readTime:
       type: boolean
       fallbackPref: >-
@@ -1992,12 +1986,6 @@ saveToPocket:
         branch: user
         pref: extensions.pocket.refresh.emailButton.enabled
       description: Just for the new Pocket panels, enables the email signup button.
-    hideRecentSaves:
-      type: boolean
-      setPref:
-        branch: user
-        pref: extensions.pocket.refresh.hideRecentSaves.enabled
-      description: Hides the recently saved section in the home panel.
     bffRecentSaves:
       type: boolean
       setPref:

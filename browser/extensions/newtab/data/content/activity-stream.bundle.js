@@ -149,7 +149,6 @@ for (const type of [
   "DISCOVERY_STREAM_POCKET_STATE_INIT",
   "DISCOVERY_STREAM_POCKET_STATE_SET",
   "DISCOVERY_STREAM_PREFS_SETUP",
-  "DISCOVERY_STREAM_RECENT_SAVES",
   "DISCOVERY_STREAM_RETRY_FEED",
   "DISCOVERY_STREAM_SPOCS_CAPS",
   "DISCOVERY_STREAM_SPOCS_ENDPOINT",
@@ -5507,7 +5506,6 @@ function TrendingSearches() {
 
 
 
-
 const PREF_ONBOARDING_EXPERIENCE_DISMISSED = "discoverystream.onboardingExperience.dismissed";
 const PREF_SECTIONS_CARDS_ENABLED = "discoverystream.sections.cards.enabled";
 const PREF_THUMBS_UP_DOWN_ENABLED = "discoverystream.thumbsUpDown.enabled";
@@ -5660,122 +5658,6 @@ function CardGrid_IntersectionObserver({
     ref: intersectionElement
   }, children);
 }
-function RecentSavesContainer({
-  gridClassName = "",
-  dispatch,
-  windowObj = window,
-  items = 3,
-  source = "CARDGRID_RECENT_SAVES"
-}) {
-  const {
-    recentSavesData,
-    isUserLoggedIn,
-    experimentData: {
-      utmCampaign,
-      utmContent,
-      utmSource
-    }
-  } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.DiscoveryStream);
-  const [visible, setVisible] = (0,external_React_namespaceObject.useState)(false);
-  const onIntersecting = (0,external_React_namespaceObject.useCallback)(() => setVisible(true), []);
-  (0,external_React_namespaceObject.useEffect)(() => {
-    if (visible) {
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.DISCOVERY_STREAM_POCKET_STATE_INIT
-      }));
-    }
-  }, [visible, dispatch]);
-
-  // The user has not yet scrolled to this section,
-  // so wait before potentially requesting Pocket data.
-  if (!visible) {
-    return /*#__PURE__*/external_React_default().createElement(CardGrid_IntersectionObserver, {
-      windowObj: windowObj,
-      onIntersecting: onIntersecting
-    });
-  }
-
-  // Intersection observer has finished, but we're not yet logged in.
-  if (visible && !isUserLoggedIn) {
-    return null;
-  }
-  let queryParams = `?utm_source=${utmSource}`;
-  // We really only need to add these params to urls we own.
-  if (utmCampaign && utmContent) {
-    queryParams += `&utm_content=${utmContent}&utm_campaign=${utmCampaign}`;
-  }
-  function renderCard(rec, index) {
-    const url = new URL(rec.url);
-    const urlSearchParams = new URLSearchParams(queryParams);
-    if (rec?.id && !url.href.match(/getpocket\.com\/read/)) {
-      url.href = `https://getpocket.com/read/${rec.id}`;
-    }
-    for (let [key, val] of urlSearchParams.entries()) {
-      url.searchParams.set(key, val);
-    }
-    return /*#__PURE__*/external_React_default().createElement(DSCard, {
-      key: `dscard-${rec?.id || index}`,
-      id: rec.id,
-      pos: index,
-      type: source,
-      image_src: rec.image_src,
-      raw_image_src: rec.raw_image_src,
-      icon_src: rec.icon_src,
-      word_count: rec.word_count,
-      time_to_read: rec.time_to_read,
-      title: rec.title,
-      excerpt: rec.excerpt,
-      url: url.href,
-      source: rec.domain,
-      isRecentSave: true,
-      dispatch: dispatch
-    });
-  }
-  function onMyListClicked() {
-    dispatch(actionCreators.DiscoveryStreamUserEvent({
-      event: "CLICK",
-      source: `${source}_VIEW_LIST`
-    }));
-  }
-  const recentSavesCards = [];
-  // We fill the cards with a for loop over an inline map because
-  // we want empty placeholders if there are not enough cards.
-  for (let index = 0; index < items; index++) {
-    const recentSave = recentSavesData[index];
-    if (!recentSave) {
-      recentSavesCards.push(/*#__PURE__*/external_React_default().createElement(PlaceholderDSCard, {
-        key: `dscard-${index}`
-      }));
-    } else {
-      recentSavesCards.push(renderCard({
-        id: recentSave.id,
-        image_src: recentSave.top_image_url,
-        raw_image_src: recentSave.top_image_url,
-        word_count: recentSave.word_count,
-        time_to_read: recentSave.time_to_read,
-        title: recentSave.resolved_title || recentSave.given_title,
-        url: recentSave.resolved_url || recentSave.given_url,
-        domain: recentSave.domain_metadata?.name,
-        excerpt: recentSave.excerpt
-      }, index));
-    }
-  }
-
-  // We are visible and logged in.
-  return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
-    className: "section-title"
-  }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
-    message: "Recently Saved to your List"
-  })), /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
-    onLinkClick: onMyListClicked,
-    className: "section-sub-link",
-    url: `https://getpocket.com/a${queryParams}`
-  }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
-    message: "View My List"
-  }))), /*#__PURE__*/external_React_default().createElement("div", {
-    className: `ds-card-grid-recent-saves ${gridClassName}`
-  }, recentSavesCards));
-}
 class _CardGrid extends (external_React_default()).PureComponent {
   // eslint-disable-next-line max-statements
   renderCards() {
@@ -5787,13 +5669,11 @@ class _CardGrid extends (external_React_default()).PureComponent {
       ctaButtonVariant,
       spocMessageVariant,
       widgets,
-      recentSavesEnabled,
       DiscoveryStream
     } = this.props;
     const {
       topicsLoading
     } = DiscoveryStream;
-    const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const isOnboardingExperienceDismissed = prefs[PREF_ONBOARDING_EXPERIENCE_DISMISSED];
     const mayHaveSectionsCards = prefs[PREF_SECTIONS_CARDS_ENABLED];
     const mayHaveThumbsUpDown = prefs[PREF_THUMBS_UP_DOWN_ENABLED];
@@ -5956,25 +5836,12 @@ class _CardGrid extends (external_React_default()).PureComponent {
         injectAdBanner(getBannerIndex());
       }
     }
-    let moreRecsHeader = "";
-    // For now this is English only.
-    if (showRecentSaves) {
-      // If we have a custom header, ensure the more recs section also has a header.
-      moreRecsHeader = "More Recommendations";
-    }
     const gridClassName = this.renderGridClassName();
     return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, !isOnboardingExperienceDismissed && onboardingExperience && /*#__PURE__*/external_React_default().createElement(OnboardingExperience, {
       dispatch: this.props.dispatch
-    }), showRecentSaves && /*#__PURE__*/external_React_default().createElement(RecentSavesContainer, {
-      gridClassName: gridClassName,
-      dispatch: this.props.dispatch
-    }), cards?.length > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, moreRecsHeader && /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "section-title"
-    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
-      message: moreRecsHeader
-    }))), /*#__PURE__*/external_React_default().createElement("div", {
+    }), cards?.length > 0 && /*#__PURE__*/external_React_default().createElement("div", {
       className: gridClassName
-    }, cards)));
+    }, cards));
   }
   renderListFeed(recommendations, selectedFeed) {
     const recs = recommendations.filter(item => item.feedName === selectedFeed);
@@ -7823,9 +7690,7 @@ const INITIAL_STATE = {
       utmCampaign: undefined,
       utmContent: undefined,
     },
-    recentSavesData: [],
     isUserLoggedIn: false,
-    recentSavesEnabled: false,
     showTopicSelection: false,
     report: {
       visible: false,
@@ -8469,7 +8334,6 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     case actionTypes.DISCOVERY_STREAM_PREFS_SETUP:
       return {
         ...prevState,
-        recentSavesEnabled: action.data.recentSavesEnabled,
         pocketButtonEnabled: action.data.pocketButtonEnabled,
         hideDescriptions: action.data.hideDescriptions,
         compactImages: action.data.compactImages,
@@ -8478,11 +8342,6 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         titleLines: action.data.titleLines,
         descLines: action.data.descLines,
         readTime: action.data.readTime,
-      };
-    case actionTypes.DISCOVERY_STREAM_RECENT_SAVES:
-      return {
-        ...prevState,
-        recentSavesData: action.data.recentSaves,
       };
     case actionTypes.DISCOVERY_STREAM_POCKET_STATE_SET:
       return {
@@ -13729,7 +13588,6 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
             ctaButtonSponsors: component.properties.ctaButtonSponsors,
             ctaButtonVariant: component.properties.ctaButtonVariant,
             spocMessageVariant: component.properties.spocMessageVariant,
-            recentSavesEnabled: this.props.DiscoveryStream.recentSavesEnabled,
             hideDescriptions: this.props.DiscoveryStream.hideDescriptions,
             firstVisibleTimestamp: this.props.firstVisibleTimestamp,
             spocPositions: component.spocs?.positions
@@ -14753,7 +14611,6 @@ class ContentSection extends (external_React_default()).PureComponent {
       enabledWidgets,
       pocketRegion,
       mayHaveInferredPersonalization,
-      mayHaveRecentSaves,
       mayHaveWeather,
       mayHaveTrendingSearch,
       mayHaveWidgets,
@@ -14772,7 +14629,6 @@ class ContentSection extends (external_React_default()).PureComponent {
       weatherEnabled,
       trendingSearchEnabled,
       showInferredPersonalizationEnabled,
-      showRecentSavesEnabled,
       topSitesRowsCount
     } = enabledSections;
     const {
@@ -14918,7 +14774,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       "data-l10n-id": "newtab-custom-stories-toggle"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       slot: "nested"
-    }, (mayHaveRecentSaves || mayHaveInferredPersonalization || mayHaveTopicSections) && /*#__PURE__*/external_React_default().createElement("div", {
+    }, (mayHaveInferredPersonalization || mayHaveTopicSections) && /*#__PURE__*/external_React_default().createElement("div", {
       className: "more-info-pocket-wrapper"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "more-information",
@@ -14940,23 +14796,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       htmlFor: "inferred-personalization"
     }, "Recommendations inferred from your activity with the feed")), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
       exitEventFired: exitEventFired
-    }), mayHaveRecentSaves && /*#__PURE__*/external_React_default().createElement("div", {
-      className: "check-wrapper",
-      role: "presentation"
-    }, /*#__PURE__*/external_React_default().createElement("input", {
-      id: "recent-saves-pocket",
-      className: "customize-menu-checkbox",
-      disabled: !pocketEnabled,
-      checked: showRecentSavesEnabled,
-      type: "checkbox",
-      onChange: this.onPreferenceSelect,
-      "data-preference": "showRecentSaves",
-      "data-eventSource": "POCKET_RECENT_SAVES"
-    }), /*#__PURE__*/external_React_default().createElement("label", {
-      className: "customize-menu-checkbox-label",
-      htmlFor: "recent-saves-pocket",
-      "data-l10n-id": "newtab-custom-pocket-show-recent-saves"
-    })))))))), /*#__PURE__*/external_React_default().createElement("span", {
+    }))))))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"
     }), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("button", {
@@ -15053,7 +14893,6 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       pocketRegion: this.props.pocketRegion,
       mayHaveTopicSections: this.props.mayHaveTopicSections,
       mayHaveInferredPersonalization: this.props.mayHaveInferredPersonalization,
-      mayHaveRecentSaves: this.props.DiscoveryStream.recentSavesEnabled,
       mayHaveWeather: this.props.mayHaveWeather,
       mayHaveTrendingSearch: this.props.mayHaveTrendingSearch,
       mayHaveWidgets: this.props.mayHaveWidgets,
@@ -16768,7 +16607,6 @@ class BaseContent extends (external_React_default()).PureComponent {
       topSitesEnabled: prefs["feeds.topsites"],
       pocketEnabled: prefs["feeds.section.topstories"],
       showInferredPersonalizationEnabled: prefs[Base_PREF_INFERRED_PERSONALIZATION_USER],
-      showRecentSavesEnabled: prefs.showRecentSaves,
       topSitesRowsCount: prefs.topSitesRows,
       weatherEnabled: prefs.showWeather,
       trendingSearchEnabled: prefs["trendingSearch.enabled"]

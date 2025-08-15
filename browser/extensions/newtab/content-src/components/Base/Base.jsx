@@ -586,7 +586,6 @@ export class BaseContent extends React.PureComponent {
       pocketEnabled: prefs["feeds.section.topstories"],
       showInferredPersonalizationEnabled:
         prefs[PREF_INFERRED_PERSONALIZATION_USER],
-      showRecentSavesEnabled: prefs.showRecentSaves,
       topSitesRowsCount: prefs.topSitesRows,
       weatherEnabled: prefs.showWeather,
       trendingSearchEnabled: prefs["trendingSearch.enabled"],

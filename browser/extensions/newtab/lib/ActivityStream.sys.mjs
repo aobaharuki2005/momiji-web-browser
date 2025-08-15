@@ -1167,13 +1167,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "showRecentSaves",
-    {
-      title: "Control whether a user wants recent saves visible on Newtab",
-      value: true,
-    },
-  ],
-  [
     "discoverystream.spocs.cacheTimeout",
     {
       title: "Set sponsored content cache timeout in minutes.",

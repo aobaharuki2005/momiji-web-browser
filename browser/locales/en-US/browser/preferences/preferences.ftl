@@ -728,8 +728,6 @@ home-prefs-recommended-by-description-generic = Exceptional content curated by t
 home-prefs-recommended-by-learn-more = How it works
 home-prefs-recommended-by-option-sponsored-stories =
     .label = Sponsored stories
-home-prefs-recommended-by-option-recent-saves =
-    .label = Show Recent Saves
 
 home-prefs-highlights-option-visited-pages =
     .label = Visited pages

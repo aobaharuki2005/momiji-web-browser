@@ -379,7 +379,6 @@ export class DiscoveryStreamFeed {
       ac.AlsoToPreloaded({
         type: at.DISCOVERY_STREAM_PREFS_SETUP,
         data: {
-          recentSavesEnabled: nimbusConfig.recentSavesEnabled,
           pocketButtonEnabled,
           hideDescriptions,
           compactImages: nimbusConfig.compactImages,
@@ -460,33 +459,6 @@ export class DiscoveryStreamFeed {
         isUserLoggedIn,
       },
     });
-
-    // If we're not logged in, don't bother fetching recent saves, we're done.
-    if (isUserLoggedIn) {
-      let recentSaves = await lazy.pktApi.getRecentSavesCache();
-      if (recentSaves) {
-        // We have cache, so we can use those.
-        dispatch({
-          type: at.DISCOVERY_STREAM_RECENT_SAVES,
-          data: {
-            recentSaves,
-          },
-        });
-      } else {
-        // We don't have cache, so fetch fresh stories.
-        lazy.pktApi.getRecentSaves({
-          success(data) {
-            dispatch({
-              type: at.DISCOVERY_STREAM_RECENT_SAVES,
-              data: {
-                recentSaves: data,
-              },
-            });
-          },
-          error() {},
-        });
-      }
-    }
   }
 
   uninitPrefs() {

@@ -289,7 +289,7 @@ module.exports = function (config) {
               statements: 80.95,
               lines: 80.95,
               functions: 71.43,
-              branches: 71,
+              branches: 70.9,
             },
             /**
              * WallpaperCategories.jsx is tested via an xpcshell test
