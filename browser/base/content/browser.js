@@ -3301,8 +3301,7 @@ function GetDynamicShortcutTooltipText(nodeId) {
 }
 
 function UpdateDynamicShortcutTooltipText(aTooltip) {
-  let nodeId =
-    aTooltip.triggerNode.id || aTooltip.triggerNode.getAttribute("anonid");
+  let nodeId = aTooltip.triggerNode.id;
   aTooltip.setAttribute("label", GetDynamicShortcutTooltipText(nodeId));
 }
 
