@@ -523,7 +523,7 @@ function Lists({ dispatch }) {
             ))}
           </moz-select>
         </EditableText>
-        <moz-badge data-l10n-id="newtab-widget-lists-label-beta"></moz-badge>
+        <moz-badge data-l10n-id="newtab-widget-lists-label-new"></moz-badge>
         <moz-button
           className="lists-panel-button"
           iconSrc="chrome://global/skin/icons/more.svg"
