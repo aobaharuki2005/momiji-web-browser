@@ -159,10 +159,10 @@ async function runWorkflow(actions_to_take, expected_results) {
     // ============================================================
     // Trigger the notification
     let sandbox = Cu.Sandbox(null);
-    let sawAnError = false;
     try {
-      // This will trigger the unexpected script load notification
-      // as well as an error while trying to run the script.
+      // This will trigger the unexpected script load notification.
+      // On Nightly, where we enforce the restriction, it will also
+      // cause an error, necessitating the try/catch.
       Cu.evalInSandbox(
         "let x = 1",
         sandbox,
@@ -170,10 +170,7 @@ async function runWorkflow(actions_to_take, expected_results) {
         "https://example.net/script.js",
         1
       );
-    } catch (e) {
-      sawAnError = true;
-    }
-    ok(sawAnError, "Should have seen an error from the evalInSandbox call");
+    } catch (e) {}
 
     let notification = await notificationShownPromise;
 
