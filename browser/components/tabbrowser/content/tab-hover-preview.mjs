@@ -8,6 +8,8 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PageWireframes: "resource:///modules/sessionstore/PageWireframes.sys.mjs",
+  SponsorProtection:
+    "moz-src:///browser/components/newtab/SponsorProtection.sys.mjs",
 });
 
 // Denotes the amount of time (in ms) that the panel will *not* respect
@@ -434,6 +436,13 @@ class TabPanel extends Panel {
     return this.#tab?.linkedBrowser?.docShellIsActive ? "[A]" : "";
   }
 
+  get #displaySponsorProtection() {
+    return lazy.SponsorProtection.debugEnabled &&
+      lazy.SponsorProtection.isProtectedBrowser(this.#tab?.linkedBrowser)
+      ? "[S]"
+      : "";
+  }
+
   #updatePreview() {
     this.panelElement.querySelector(".tab-preview-title").textContent =
       this.#displayTitle;
@@ -444,7 +453,7 @@ class TabPanel extends Panel {
       this.panelElement.querySelector(".tab-preview-pid").textContent =
         this.#displayPids;
       this.panelElement.querySelector(".tab-preview-activeness").textContent =
-        this.#displayActiveness;
+        this.#displayActiveness + this.#displaySponsorProtection;
     } else {
       this.panelElement.querySelector(".tab-preview-pid").textContent = "";
       this.panelElement.querySelector(".tab-preview-activeness").textContent =

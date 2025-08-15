@@ -1317,6 +1317,34 @@ newtab:
     send_in_pings:
       - newtab
 
+  spons_nav_traffic_sent:
+    type: memory_distribution
+    memory_unit: kilobyte
+    description: >
+      The volume of traffic sent through browsers that were link targets for
+      sponsored topsite or content navigations.
+    bugs:
+      - https://bugzil.la/1978161
+    data_reviews:
+      - https://bugzil.la/1978161
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+
+  spons_nav_traffic_recvd:
+    type: memory_distribution
+    memory_unit: kilobyte
+    description: >
+      The volume of traffic received through browsers that were link targets
+      for sponsored topsite or content navigations.
+    bugs:
+      - https://bugzil.la/1978161
+    data_reviews:
+      - https://bugzil.la/1978161
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+
 newtab.search:
   enabled:
     lifetime: application

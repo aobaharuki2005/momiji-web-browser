@@ -2057,6 +2057,8 @@ pref("browser.newtabpage.resource-mapping.log", false);
 // Base URL for the newtab trainhop add-on version xpi downloads.
 pref("browser.newtabpage.trainhopAddon.xpiBaseURL", "https://archive.mozilla.org/pub/system-addons/newtab/");
 
+pref("browser.newtabpage.sponsor-protection.enabled", true);
+
 // Separate about welcome
 pref("browser.aboutwelcome.enabled", true);
 // Used to set multistage welcome UX
