@@ -73,7 +73,7 @@ class ViewportFrame : public nsContainerFrame {
    * GetContentDocumentFixedPositionMargins adjustments.
    * @return the rect to use as containing block rect
    */
-  nsRect AdjustReflowInputAsContainingBlock(ReflowInput* aReflowInput) const;
+  nsRect AdjustReflowInputAsContainingBlock(ReflowInput& aReflowInput) const;
 
   /**
    * Update our style (and recursively the styles of any anonymous boxes we
@@ -105,7 +105,7 @@ class ViewportFrame : public nsContainerFrame {
    * available isize for aReflowInput accordingly.
    * @return the current scroll position, or (0,0) if not scrollable.
    */
-  nsPoint AdjustReflowInputForScrollbars(ReflowInput* aReflowInput) const;
+  nsPoint AdjustReflowInputForScrollbars(ReflowInput& aReflowInput) const;
 
   nsView* GetViewInternal() const override { return mView; }
   void SetViewInternal(nsView* aView) override { mView = aView; }
