@@ -1360,13 +1360,26 @@ content-blocking-etp-standard-tcp-title = Includes Total Cookie Protection, our 
 
 content-blocking-warning-title = Heads up!
 content-blocking-and-isolating-etp-warning-description-3 = This setting may cause some websites to not display content or function correctly. We provide optional exceptions for websites that we know can be affected by your configuration. To reduce the chance of broken websites, allow these tracker exceptions. If a site appears broken, you can turn off tracking protection for that site to load all content and report the issue so we can help fix it for everyone.
+content-blocking-warning-title-2 = Some sites may break with strict tracking protection
+# “Fix site issues” references the string content-blocking-exceptions-subheader
+content-blocking-and-isolating-etp-warning-description-4 = { -brand-short-name } recommends using the “Fix site issues” settings to reduce broken site features and content. If a site seems broken, try turning off tracking protection for that site to load all content.
 content-blocking-warning-learn-how = Learn how
 
 content-blocking-baseline-exceptions =
     .label = Allow { -brand-short-name } to automatically apply exceptions required to avoid major website breakage.
+content-blocking-baseline-exceptions-2 =
+    .label = Helps load sites and features by unblocking only essential elements that may contain trackers. Covers most common problems.
 
 content-blocking-convenience-exceptions =
     .label = Also apply exceptions automatically that are only required to fix minor issues and make convenience features available.
+# This option to fix minor site issues must be used with the option to fix major site issues (string content-blocking-baseline-exceptions-2)
+content-blocking-convenience-exceptions-2 =
+    .label = Restores things like videos in an article or comment sections by unblocking elements that may contain trackers. This can reduce site issues but offers less protection. Must be used with fixes for major issues.
+
+content-blocking-baseline-label = Fix major site issues (recommended)
+content-blocking-convenience-label = Fix minor site issues
+
+content-blocking-exceptions-subheader = Fix site issues
 
 content-blocking-reload-description = You will need to reload your tabs to apply these changes.
 content-blocking-reload-tabs-button =
