@@ -73,10 +73,33 @@ function addMenuitems(items, popup) {
   }
 }
 
-const SubmenuButtonInner = ({ content, handleAction }) => {
+const SubmenuButtonInner = ({
+  content,
+  handleAction,
+  buttonType = "submenu",
+}) => {
   const ref = useRef(null);
   const [isSubmenuExpanded, setIsSubmenuExpanded] = useState(false);
-  const isPrimary = content.submenu_button?.style === "primary";
+  const hasDismissButton = content.dismiss_button;
+
+  const buttonConfig =
+    buttonType === "submenu" ? content.submenu_button : content.more_button;
+  const isMoreButton = buttonType === "more";
+
+  if (isMoreButton && hasDismissButton) {
+    return null;
+  }
+
+  const isPrimary = buttonConfig?.style === "primary";
+
+  const submenuItems = buttonConfig?.submenu || [];
+
+  const buttonId = isMoreButton ? "more_button" : "submenu_button";
+  const buttonValue = isMoreButton ? "more_button" : "submenu_button";
+  const buttonClassName = isMoreButton
+    ? "more-button"
+    : `submenu-button ${isPrimary ? "primary" : "secondary"}`;
+
   const onCommand = useCallback(
     event => {
       let { config } = event.target;
@@ -104,7 +127,7 @@ const SubmenuButtonInner = ({ content, handleAction }) => {
     }
     let menupopup = document.createXULElement("menupopup");
     menupopup.className = "fxms-multi-stage-submenu";
-    addMenuitems(content.submenu_button.submenu, menupopup);
+    addMenuitems(submenuItems, menupopup);
     button.appendChild(menupopup);
     let stylesheet;
     if (
@@ -139,17 +162,26 @@ const SubmenuButtonInner = ({ content, handleAction }) => {
     };
   }, [onCommand]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Don't render the button if there's no button config, or no items
+  if (!buttonConfig || !submenuItems.length) {
+    return null;
+  }
+
   return (
-    <Localized text={content.submenu_button.label ?? {}}>
+    <Localized text={buttonConfig.label ?? {}}>
       <button
-        id="submenu_button"
-        className={`submenu-button ${isPrimary ? "primary" : "secondary"}`}
-        value="submenu_button"
+        id={buttonId}
+        className={buttonClassName}
+        value={buttonValue}
         onClick={onClick}
         ref={ref}
         aria-haspopup="menu"
         aria-expanded={isSubmenuExpanded}
-        aria-labelledby={`${content.submenu_button.attached_to} submenu_button`}
+        aria-labelledby={
+          !isMoreButton
+            ? `${buttonConfig.attached_to || content.attached_to || ""} submenu_button`.trim()
+            : null
+        }
       />
     </Localized>
   );

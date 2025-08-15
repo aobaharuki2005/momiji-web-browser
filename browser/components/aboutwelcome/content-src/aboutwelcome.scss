@@ -1490,7 +1490,8 @@ html {
               }
             }
 
-            .dismiss-button {
+            .dismiss-button,
+            .more-button {
               top: -$small-secondary-section-height;
             }
 
@@ -2310,7 +2311,8 @@ html {
     margin-block: 0;
   }
 
-  .dismiss-button {
+  .dismiss-button,
+  .more-button {
     position: absolute;
     z-index: 2;
     top: 0;
@@ -2348,6 +2350,10 @@ html {
         background-color: var(--button-background-color-active);
       }
     }
+  }
+
+  .more-button {
+    background: url('chrome://global/skin/icons/more.svg') no-repeat center / 16px;
   }
 
   @keyframes fadein {
@@ -2503,7 +2509,8 @@ html {
   .primary,
   .secondary,
   .additional-cta,
-  .submenu-button {
+  .submenu-button,
+  .more-button {
     font-size: 13px;
     line-height: 16px;
     padding: 11px 15px;
@@ -2739,7 +2746,8 @@ html {
 
     .dialog-initial {
       .main-content,
-      .dismiss-button {
+      .dismiss-button,
+      .more-button {
         translate: 0 calc(-2 * var(--translate));
       }
 
@@ -2869,7 +2877,8 @@ html {
       }
 
       .main-content,
-      .dismiss-button {
+      .dismiss-button,
+      .more-button {
         opacity: 0;
         translate: 0 calc(2 * var(--translate));
         transition-delay: 0.4s;

@@ -624,7 +624,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     const value = event.currentTarget.value ?? event.currentTarget.getAttribute("value");
     const source = event.source || value;
     let targetContent = props.content[value] || props.content.tiles || props.content.languageSwitcher;
-    if (value === "submenu_button" && event.action) {
+    if (["submenu_button", "more_button"].includes(value) && event.action) {
       targetContent = {
         action: event.action
       };
@@ -963,9 +963,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _LinkParagraph__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(13);
 /* harmony import */ var _ContentTiles__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(14);
 /* harmony import */ var _InstallButton__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(16);
+/* harmony import */ var _SubmenuButton__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(12);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -1284,6 +1286,13 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       }
     });
   }
+  renderMoreButton() {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmenuButton__WEBPACK_IMPORTED_MODULE_12__.SubmenuButton, {
+      content: this.props.content,
+      handleAction: this.props.handleAction,
+      buttonType: "more"
+    });
+  }
   renderStepsIndicator() {
     const {
       order,
@@ -1459,7 +1468,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       content: content,
       handleAction: this.props.handleAction,
       position: "top"
-    }) : null, includeNoodles ? this.renderNoodles() : null, content.dismiss_button && !content.reverse_split ? this.renderDismissButton() : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }) : null, includeNoodles ? this.renderNoodles() : null, content.more_button ? this.renderMoreButton() : null, content.dismiss_button && !content.reverse_split ? this.renderDismissButton() : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `main-content ${hideStepsIndicator ? "no-steps" : ""}`,
       style: {
         background: content.background && isCenterPosition ? content.background : null,
@@ -2033,11 +2042,22 @@ function addMenuitems(items, popup) {
 }
 const SubmenuButtonInner = ({
   content,
-  handleAction
+  handleAction,
+  buttonType = "submenu"
 }) => {
   const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const [isSubmenuExpanded, setIsSubmenuExpanded] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-  const isPrimary = content.submenu_button?.style === "primary";
+  const hasDismissButton = content.dismiss_button;
+  const buttonConfig = buttonType === "submenu" ? content.submenu_button : content.more_button;
+  const isMoreButton = buttonType === "more";
+  if (isMoreButton && hasDismissButton) {
+    return null;
+  }
+  const isPrimary = buttonConfig?.style === "primary";
+  const submenuItems = buttonConfig?.submenu || [];
+  const buttonId = isMoreButton ? "more_button" : "submenu_button";
+  const buttonValue = isMoreButton ? "more_button" : "submenu_button";
+  const buttonClassName = isMoreButton ? "more-button" : `submenu-button ${isPrimary ? "primary" : "secondary"}`;
   const onCommand = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(event => {
     let {
       config
@@ -2066,7 +2086,7 @@ const SubmenuButtonInner = ({
     }
     let menupopup = document.createXULElement("menupopup");
     menupopup.className = "fxms-multi-stage-submenu";
-    addMenuitems(content.submenu_button.submenu, menupopup);
+    addMenuitems(submenuItems, menupopup);
     button.appendChild(menupopup);
     let stylesheet;
     if (!document.head.querySelector(`link[href="chrome://global/content/widgets.css"], link[href="chrome://global/skin/global.css"]`)) {
@@ -2097,17 +2117,21 @@ const SubmenuButtonInner = ({
     };
   }, [onCommand]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Don't render the button if there's no button config, or no items
+  if (!buttonConfig || !submenuItems.length) {
+    return null;
+  }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: content.submenu_button.label ?? {}
+    text: buttonConfig.label ?? {}
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    id: "submenu_button",
-    className: `submenu-button ${isPrimary ? "primary" : "secondary"}`,
-    value: "submenu_button",
+    id: buttonId,
+    className: buttonClassName,
+    value: buttonValue,
     onClick: onClick,
     ref: ref,
     "aria-haspopup": "menu",
     "aria-expanded": isSubmenuExpanded,
-    "aria-labelledby": `${content.submenu_button.attached_to} submenu_button`
+    "aria-labelledby": !isMoreButton ? `${buttonConfig.attached_to || content.attached_to || ""} submenu_button`.trim() : null
   }));
 };
 
@@ -3485,7 +3509,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4);
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */

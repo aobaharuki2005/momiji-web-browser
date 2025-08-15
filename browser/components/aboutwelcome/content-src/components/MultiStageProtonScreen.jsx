@@ -18,6 +18,7 @@ import { AdditionalCTA } from "./AdditionalCTA";
 import { LinkParagraph } from "./LinkParagraph";
 import { ContentTiles } from "./ContentTiles";
 import { InstallButton } from "./InstallButton";
+import { SubmenuButton } from "./SubmenuButton";
 
 export const MultiStageProtonScreen = props => {
   const { autoAdvance, handleAction, order } = props;
@@ -384,6 +385,16 @@ export class ProtonScreen extends React.PureComponent {
     );
   }
 
+  renderMoreButton() {
+    return (
+      <SubmenuButton
+        content={this.props.content}
+        handleAction={this.props.handleAction}
+        buttonType="more"
+      />
+    );
+  }
+
   renderStepsIndicator() {
     const {
       order,
@@ -671,6 +682,7 @@ export class ProtonScreen extends React.PureComponent {
             />
           ) : null}
           {includeNoodles ? this.renderNoodles() : null}
+          {content.more_button ? this.renderMoreButton() : null}
           {content.dismiss_button && !content.reverse_split
             ? this.renderDismissButton()
             : null}
