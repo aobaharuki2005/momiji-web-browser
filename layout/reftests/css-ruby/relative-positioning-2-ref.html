@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" class="reftest-wait">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Bug 1055658 - Relative positioning for ruby</title>
   <script type="text/javascript" src="utils.js"></script>
-  <link rel="stylesheet" href="common.css">
 </head>
-<body style="font: 25px Ahem">
+<body style="font-family: monospace">
   <div style="height: 80px; line-height: 80px;">
     before
     <div style="position: relative; top: 20px; display: inline-block">
@@ -24,11 +23,8 @@
     after
   </div>
   <script type="text/javascript">
-    document.fonts.ready.then(() => {
-      makeBSizeMatchInlineBox(document.getElementById('annotation'),
-                              document.getElementById('inline'));
-      document.documentElement.classList.remove("reftest-wait");
-    });
+    makeBSizeMatchInlineBox(document.getElementById('annotation'),
+                            document.getElementById('inline'));
   </script>
 </body>
 </html>

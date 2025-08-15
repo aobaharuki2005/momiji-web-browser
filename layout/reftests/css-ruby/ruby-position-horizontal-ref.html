@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="reftest-wait">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Bug 1055665 - Test for ruby-position</title>
@@ -7,7 +7,7 @@
   <script type="text/javascript" src="utils.js"></script>
   <style>
     body {
-      font: 50px Ahem;
+      font-family: monospace;
     }
     .annotation, .annotation > div {
       position: absolute;
@@ -29,10 +29,7 @@
     </div>
   </div>
   <script type="text/javascript">
-    document.fonts.ready.then(() => {
-      makeBSizeOfParentMatch(document.getElementsByTagName('span'));
-      document.documentElement.classList.remove("reftest-wait");
-    })
+    makeBSizeOfParentMatch(document.getElementsByTagName('span'));
   </script>
 </body>
 </html>
