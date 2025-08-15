@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Ko objavite, kako ste odkrili Firefox in da ga uporabljate, nam pomagate predstaviti naš brskalnik več ljudem.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Delite minimalne podatke z Mozillinimi tehnološkimi partnerji za trženje. Ti podatki se nikoli ne prodajajo ali uporabljajo za prikaz oglasov.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Delite podatke z Mozillinimi tehnološkimi partnerji za trženje. Ti podatki se nikoli ne prodajajo ali uporabljajo za prikazovanje oglasov.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Kako uporabljamo te podatke</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -2997,6 +2999,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">Bližnjice</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">Prikaži vse bližnjice</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Doseženo je največje število bližnjic</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

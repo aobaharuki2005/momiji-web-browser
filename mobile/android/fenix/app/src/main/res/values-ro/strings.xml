@@ -64,7 +64,7 @@
     Explanation for private browsing displayed to users on home view when they first enable private mode.
     %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">%1$s îți șterge istoricul de căutare și navigare din filele private când le închizi sau când ieși din aplicație. Deși nu te anonimizează pe site-urile web sau pentru furnizorul de servicii de internet, ușurează păstrarea confidențialității asupra a ce faci online față de oricine altcineva folosește acest dispozitiv.</string>
+  <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">%1$s îți șterge istoricul de căutare și navigare din filele private când le închizi sau când ieși din aplicație. Deși acest lucru nu te face anonim pentru site-uri sau pentru furnizorul tău de internet, te ajută să păstrezi activitatea online privată față de ceilalți utilizatori ai acestui dispozitiv.</string>
   <string name="private_browsing_common_myths">Mituri comune despre navigarea privată</string>
   <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
   <string name="private_browsing_a11y_session_announcement">Sesiune de navigare privată</string>
@@ -330,7 +330,7 @@
   -->
   <string name="browser_menu_new_in_firefox" moz:removedIn="141" tools:ignore="UnusedResources">Nou în %1$s</string>
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
-  <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Treci la versiunea pentru desktop</string>
+  <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Comută la versiunea desktop</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
   <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Treci la site-ul mobil</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
@@ -631,9 +631,9 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Când ne împărtășești cum ai descoperit Firefox și că îl folosești, ne ajuți să prezentăm browserul nostru mai multor persoane.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Împărtășești date minime cu partenerii tehnologici de marketing ai Mozilla. Aceste date nu sunt niciodată vândute sau utilizate pentru a-ți afișa reclame.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Partajează date cu partenerii Mozilla din domeniul tehnologiilor de marketing. Aceste date nu sunt niciodată vândute și nu sunt folosite pentru a-ți afișa reclame.</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_out_checkbox">Împărtășești date minime cu partenerii tehnologici de marketing ai Mozilla. Aceste date nu sunt niciodată vândute sau utilizate pentru a-ți afișa reclame.</string>
+  <string name="onboarding_marketing_opt_out_checkbox">Partajează date cu partenerii Mozilla din domeniul tehnologiilor de marketing. Aceste date nu sunt niciodată vândute și nu sunt folosite pentru a-ți afișa reclame.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Cum utilizăm datele</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -641,7 +641,7 @@
   <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
   <string name="onboarding_marketing_title_1" tools:ignore="UnusedResources">Un ultim lucru</string>
   <!-- Marketing onboarding page body variant. 'Firefox' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Împărtășește partenerilor de marketing Mozilla cum ai descoperit Firefox și cum îl folosești. Aceste date nu sunt niciodată vândute.</string>
+  <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Partajează cu partenerii de marketing ai Mozilla modul în care ai descoperit Firefox și faptul că îl folosești. Aceste date nu sunt niciodată vândute.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Sunt de acord și încep navigarea</string>
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
@@ -755,7 +755,7 @@
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Adaugă o comandă rapidă pentru navigare privată</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
-  <string name="preferences_https_only_title">Mod numai HTTPS</string>
+  <string name="preferences_https_only_title">Mod exclusiv HTTPS</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Folosește blocarea ecranului pentru a ascunde filele în navigarea privată</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
@@ -831,7 +831,7 @@
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Pagină de start</string>
   <!-- Preference for customizing the app icon -->
-  <string name="preferences_app_icon">Iconița aplicației</string>
+  <string name="preferences_app_icon">Pictograma aplicației</string>
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">Afișarea barei de file</string>
   <!-- Preference for gestures based actions -->
@@ -1220,7 +1220,7 @@
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Acest lucru ne ajută să diagnosticăm și să remediem problemele browserului. Rapoartele pot include date personale sau sensibile.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
-  <string name="preferences_crashes_learn_more">Aflați mai multe despre rapoartele de blocare</string>
+  <string name="preferences_crashes_learn_more">Află mai multe despre rapoartele de blocare</string>
   <!-- Title Headers for data collection settings screen -->
   <string name="crash_reports_data_category">Rapoarte de blocare</string>
   <string name="usage_data_category">Date de utilizare</string>
@@ -1235,7 +1235,7 @@
     Preference description for marketing data collection.
     Note: The words "Firefox" and "Mozilla" should NOT be translated. “That you use it” is to mean that the user is opting in to sharing that they are continuing to use Firefox after installing it; not that Firefox is tracking their “usage” or what they’re using it for.
   -->
-  <string name="preferences_marketing_data_description_4" tools:ignore="BrandUsage">Împărtășește partenerilor tehnologici de marketing ai Mozilla cum ai descoperit Firefox și cum îl folosești.</string>
+  <string name="preferences_marketing_data_description_4" tools:ignore="BrandUsage">Partajează cu partenerii Mozilla din domeniul tehnologiilor de marketing modul în care ai descoperit Firefox și faptul că îl folosești.</string>
   <!-- Learn more link for marketing data preference -->
   <string name="preferences_marketing_data_learn_more">Află mai multe despre datele de marketing</string>
   <!-- Learn more link for crash reporting preference -->
@@ -1309,7 +1309,7 @@
   <!-- Preference for showing the opened tabs by swiping up on the toolbar -->
   <string name="preference_gestures_swipe_toolbar_show_tabs">Glisează bara de instrumente în sus pentru a deschide filele</string>
   <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
-  <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Glisează bara de adrese în lateral pentru a schimba între filele</string>
+  <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Glisează bara de adrese în lateral pentru a schimba între file</string>
   <!--
     Library
 
@@ -1441,7 +1441,7 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Activ</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Încearcă funcționalitățile și ideile înainte de a le lansa public.</string>
+  <string name="studies_description_3">Încearcă funcții și idei înainte să fie lansate public.</string>
   <!-- Title of the Studies data preference -->
   <string name="studies_title">Instalează și execută studii</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -2271,7 +2271,7 @@
   <!-- Title for the cookies and site data items in Delete browsing data -->
   <string name="preferences_delete_browsing_data_cookies_and_site_data">Cookie-uri și date ale site-urilor</string>
   <!-- Subtitle for the cookies item in Delete browsing data -->
-  <string name="preferences_delete_browsing_data_cookies_subtitle">Vei fi deconectat(ă) de pe majoritatea site-urilor</string>
+  <string name="preferences_delete_browsing_data_cookies_subtitle">Te vei deconecta de pe majoritatea site-urilor</string>
   <!-- Title for the cached images and files item in Delete browsing data -->
   <string name="preferences_delete_browsing_data_cached_files">Imagini și fișiere în cache</string>
   <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -2279,13 +2279,13 @@
   <!-- Title for the site permissions item in Delete browsing data -->
   <string name="preferences_delete_browsing_data_site_permissions">Permisiuni pentru site-uri</string>
   <!-- Title for the downloads item in Delete browsing data -->
-  <string name="preferences_delete_browsing_data_downloads">Descărcările</string>
+  <string name="preferences_delete_browsing_data_downloads">Descărcări</string>
   <!-- Text for the button to delete browsing data -->
   <string name="preferences_delete_browsing_data_button">Șterge datele de navigare</string>
   <!-- Title for the Delete browsing data on quit preference -->
   <string name="preferences_delete_browsing_data_on_quit">Șterge datele de navigare la ieșire</string>
   <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-  <string name="preference_summary_delete_browsing_data_on_quit_2">Șterge automat datele de navigare când selectezi \\„Închide\\” în meniul principal</string>
+  <string name="preference_summary_delete_browsing_data_on_quit_2">Șterge automat datele de navigare când selectezi „Închide” în meniul principal</string>
   <!-- Action item in menu for the Delete browsing data on quit feature -->
   <string name="delete_browsing_data_on_quit_action">Închide</string>
   <!-- Title text of a delete browsing data dialog. -->
@@ -2345,7 +2345,7 @@
   <!-- Text shown for settings option for sign with email -->
   <string name="sign_in_with_email">Folosește e-mailul în schimb</string>
   <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here. -->
-  <string name="sign_in_create_account_text" tools:ignore="BrandUsage"><![CDATA[Fără cont? <u> Crează unul </u> pentru a sincroniza Firefox între dispozitive.]]></string>
+  <string name="sign_in_create_account_text" tools:ignore="BrandUsage"><![CDATA[Fără cont? <u>Creează unul</u> pentru a sincroniza Firefox între dispozitive.]]></string>
   <!-- Text shown in confirmation dialog to sign out of account. %s is the name of the app (for example "Firefox"). -->
   <string name="sign_out_confirmation_message_2">%s va înceta să se mai sincronizeze cu contul tău, dar nu va șterge nimic din datele de navigare de pe acest dispozitiv.</string>
   <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -2365,7 +2365,7 @@
   <!-- Preference summary for enhanced tracking protection settings on/off switch -->
   <string name="preference_enhanced_tracking_protection_summary">Acum includem Protecție Totală pentru Cookie-uri, cea mai puternică barieră de până acum împotriva trackerelor cross-site.</string>
   <!-- Description of enhanced tracking protection. %s is the name of the app (for example "Firefox"). -->
-  <string name="preference_enhanced_tracking_protection_explanation_2">%s te protejează de multe dintre cele mai comune dispozitive de urmărire care urmăresc ceea ce faci online.</string>
+  <string name="preference_enhanced_tracking_protection_explanation_2">%s te protejează de multe dintre cele mai comune dispozitive de urmărire care îți urmăresc activitatea online.</string>
   <!-- Text displayed that links to website about enhanced tracking protection -->
   <string name="preference_enhanced_tracking_protection_explanation_learn_more">Află mai multe</string>
   <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -2485,7 +2485,7 @@
     Content description (not visible, for screen readers etc.):
     Enhanced tracking protection exception preference icon for ETP settings.
   -->
-  <string name="preference_etp_exceptions_icon_description">Pictogramă de preferință pentru excepții de protecție îmbunătățită împotriva urmăririi</string>
+  <string name="preference_etp_exceptions_icon_description">Pictograma pentru excepții din protecția îmbunătățită împotriva urmăririi</string>
   <!--
     DNS over HTTPS (DoH)
 
@@ -2621,7 +2621,7 @@
   <!-- Preference for managing the saving of logins and passwords in Fenix -->
   <string name="preferences_passwords_save_logins_2">Salvează parolele</string>
   <!-- Preference option for asking to save passwords in Fenix -->
-  <string name="preferences_passwords_save_logins_ask_to_save">Întreabă pentru salvare</string>
+  <string name="preferences_passwords_save_logins_ask_to_save">Întreabă înainte de a salva</string>
   <!-- Preference option for never saving passwords in Fenix -->
   <string name="preferences_passwords_save_logins_never_save">Nu salva niciodată</string>
   <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->

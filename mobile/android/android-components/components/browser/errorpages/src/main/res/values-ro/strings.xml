@@ -25,11 +25,11 @@
   <!-- The document title and heading of the error page shown when a website uses HSTS. -->
   <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Acest site necesită o conexiune securizată.</string>
   <!-- The error message shown when a website uses HSTS. -->
-  <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[<ul> <li>Pagina pe care încerci să o vizualizezi nu poate fi afișată, deoarece acest site web necesită o conexiune securizată.</li> <li>Cel mai probabil, problema este asociată site-ului web, și nu este nimic ce poți face pentru a o rezolva.</li> <li>Poți notifica administratorul site-ului web despre problemă.</li> </ul>]]></string>
+  <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[<ul> <li>Pagina pe care încerci să o vizualizezi nu poate fi afișată, deoarece acest site web necesită o conexiune securizată.</li> <li>Cel mai probabil, problema este asociată site-ului web, și nu poți face nimic pentru a o rezolva.</li> <li>Poți notifica administratorul site-ului web despre problemă.</li> </ul>]]></string>
   <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
   <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avansat…</string>
   <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-  <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[<label> <b>%1$s</b> are o politică de securitate denumită HTTP Securitate Strictă a Transportului (HSTS), ce presupune că <b>%2$s</b> se poate conecta la acesta doar securizat. Nu puteți adăuga o excepție pentru a vizita acest site.</label>]]></string>
+  <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[<label> <b>%1$s</b> are o politică de securitate denumită HTTP Securitate Strictă a Transportului (HSTS), ce presupune că <b>%2$s</b> se poate conecta la acesta doar securizat. Nu poți adăuga o excepție pentru a vizita acest site.</label>]]></string>
   <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
   <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Înapoi</string>
   <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
@@ -39,9 +39,9 @@
   <!-- The document title and heading of the error page shown when a website takes too long to load. -->
   <string name="mozac_browser_errorpages_net_timeout_title">Conexiunea a expirat</string>
   <!-- The error message shown when a website took long to load. -->
-  <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Site-ul solicitat nu a răspuns cererii de conexiune, iar browserul a încetat să mai aștepte un răspuns.</p><ul><li>Se poate ca serverul să fie foarte solicitat sau să sufere o defecțiune temporară? Încearcați din nou mai târziu.</li><li>Aveți probleme cu navigarea pe alte site-uri? Verificați conexiunea la rețeaua calculatorului.</li><li>Calculatorul sau rețeaua dvs. este protejat de un firewall sau proxy? Setările incorecte ale acestora poate afecta navigarea pe web.</li><li>Problemele persistă? Consultați administratorul rețelei sau furnizorul de internet pentru asistență.</li></ul>]]></string>
+  <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Site-ul solicitat nu a răspuns la cererea de conectare, iar browserul a încetat să mai aștepte un răspuns.</p><ul><li>Este posibil ca serverul să fie suprasolicitat sau sau să aibă o întrerupere temporară? Încearcă din nou mai târziu.</li><li>Ai probleme cu navigarea pe alte site-uri? Verifică conexiunea la rețea a dispozitivului tău..</li><li>Dispozitivul sau rețeaua ta sunt protejate de un firewall sau proxy? Setările incorecte pot interfera cu navigarea pe web.</li><li>Încă întâmpini probleme? Consultă administratorul de rețea sau furnizorul de servicii Internet pentru asistență.</li></ul>]]></string>
   <!-- The document title and heading of the error page shown when a website could not be reached. -->
-  <string name="mozac_browser_errorpages_connection_failure_title">Conectare eșuată</string>
+  <string name="mozac_browser_errorpages_connection_failure_title">Conexiunea nu a reușit</string>
   <!-- The error message shown when a website could not be reached. -->
   <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul> <li>Site-ul ar putea fi temporar indisponibil sau prea aglomerat. Încearcă din nou în câteva momente.</li> <li>Dacă nu reușești să încarci nicio pagină, verifică conexiunea la datele mobile sau la rețeaua Wi-Fi a dispozitivului tău.</li> </ul>]]></string>
   <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
@@ -51,11 +51,11 @@
   <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
   <string name="mozac_browser_errorpages_redirect_loop_title">Pagina nu se redirecționează corect</string>
   <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-  <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Browserul a încetat să încerce să recupereze articolul solicitat. Site-ul redirecționează solicitarea într-un mod în care nu va fi niciodată finalizat. </p> <ul> <li>Ai dezactivat sau ai blocat cookie-urile solicitate de acest site?</li> <li>Dacă acceptarea cookie-urilor site-ului nu rezolvă problema, este probabil o problemă de configurare a serverului și nu pe calculatorul tău.</li> </ul>]]></string>
+  <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Browserul a oprit încercarea de a recupera elementul solicitat. Site-ul redirecționează solicitarea într-un mod care nu se va finaliza niciodată. </p> <ul> <li>Ai dezactivat sau ai blocat cookie-urile solicitate de acest site?</li> <li>Dacă acceptarea cookie-urilor site-ului nu rezolvă problema, este probabil o problemă de configurare a serverului și nu a dispozitivului tău.</p> <ul>]]></string>
   <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
   <string name="mozac_browser_errorpages_offline_title">Mod offline</string>
   <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-  <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Browserul este în modul offline și nu se poate conecta la articolul solicitat.</p> <ul> <li>Dispozitivul este conectat la o rețea activă?</li> <li>Apasă „Încearcă din nou” pentru trecerea pe modul online și reîncărcarea paginii.</li> </ul>]]></string>
+  <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Browserul funcționează în modul său offline și nu se poate conecta la elementul solicitat.</p> <ul> <li>Dispozitivul este conectat la o rețea activă?</li> <li>Apăsați „Încercați din nou” pentru a trece la modul online și a reîncărca pagina.</li> </ul>]]></string>
   <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
   <string name="mozac_browser_errorpages_port_blocked_title">Port restricționat din motive de securitate</string>
   <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
@@ -63,7 +63,7 @@
   <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
   <string name="mozac_browser_errorpages_net_reset_title">Conexiunea a fost resetată</string>
   <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
-  <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Legătura la rețea a fost întreruptă în timpul negocierii unei conexiuni. Încearcă din nou.</p> <ul> <li>S-ar putea ca site-ul să fie temporar indisponibil sau prea ocupat. Încearcă din nou în câteva momente.</li> <li>Dacă nu poți încărca nicio pagină, verifică datele dispozitivului sau conexiunea Wi-Fi.</li> </ul>]]></string>
+  <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Legătura la rețea a fost întreruptă în timpul stabilirii conexiunii. Încearcă din nou.</p> <ul> <li>S-ar putea ca site-ul să fie temporar indisponibil sau prea aglomerat. Încearcă din nou în câteva momente.</li> <li>Dacă nu reușești să încarci nicio pagină, verifică conexiunea la datele mobile sau la rețeaua Wi-Fi a dispozitivului tău.</li> </ul>]]></string>
   <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
   <string name="mozac_browser_errorpages_unsafe_content_type_title">Tip de fișier nesigur</string>
   <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
@@ -125,7 +125,7 @@
   <!-- The %1$s will be replaced by the malicious website URL -->
   <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Site-ul de la %1$s a fost raportat ca site potențial dăunător și a fost blocat pe baza preferințelor tale de securitate.</p>]]></string>
   <!-- The document title and heading of an error page. -->
-  <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problemă de site înșelător</string>
+  <string name="mozac_browser_errorpages_safe_phishing_uri_title">Site înșelător detectat</string>
   <!-- The %1$s will be replaced by the malicious website URL -->
   <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Această pagină web de la %1$s a fost raportată ca site înșelător și a fost blocată pe baza preferințelor tale de securitate.</p>]]></string>
   <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
