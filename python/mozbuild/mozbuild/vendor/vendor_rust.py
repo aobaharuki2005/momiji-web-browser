@@ -200,36 +200,6 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             )
         return modified
 
-    def check_openssl(self):
-        """
-        Set environment flags for building with openssl.
-
-        MacOS doesn't include openssl, but the openssl-sys crate used by
-        mach-vendor expects one of the system. It's common to have one
-        installed in /usr/local/opt/openssl by homebrew, but custom link
-        flags are necessary to build against it.
-        """
-
-        test_paths = ["/usr/include", "/usr/local/include"]
-        if any(
-            [os.path.exists(os.path.join(path, "openssl/ssl.h")) for path in test_paths]
-        ):
-            # Assume we can use one of these system headers.
-            return None
-
-        if os.path.exists("/usr/local/opt/openssl/include/openssl/ssl.h"):
-            # Found a likely homebrew install.
-            self.log(
-                logging.INFO, "openssl", {}, "Using OpenSSL in /usr/local/opt/openssl"
-            )
-            return {
-                "OPENSSL_INCLUDE_DIR": "/usr/local/opt/openssl/include",
-                "OPENSSL_LIB_DIR": "/usr/local/opt/openssl/lib",
-            }
-
-        self.log(logging.ERROR, "openssl", {}, "OpenSSL not found!")
-        return None
-
     def _ensure_cargo(self):
         """
         Ensures all the necessary cargo bits are installed.
