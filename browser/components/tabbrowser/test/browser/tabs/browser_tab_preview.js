@@ -37,7 +37,6 @@ async function openTabPreview(tab, win = window) {
 
 async function closeTabPreviews(win = window) {
   const tabs = win.document.getElementById("tabbrowser-tabs");
-  const tabsRect = tabs.getBoundingClientRect();
   const previewHidden = BrowserTestUtils.waitForPopupEvent(
     win.document.getElementById(TAB_PREVIEW_PANEL_ID),
     "hidden"
@@ -45,7 +44,7 @@ async function closeTabPreviews(win = window) {
   EventUtils.synthesizeMouse(
     tabs,
     0,
-    tabsRect.height + 1,
+    tabs.outerHeight + 1,
     {
       type: "mouseout",
     },
@@ -74,7 +73,6 @@ async function openGroupPreview(group, win = window) {
 
 async function closeGroupPreviews(win = window) {
   const tabs = win.document.getElementById("tabbrowser-tabs");
-  const tabsRect = tabs.getBoundingClientRect();
   const previewHidden = BrowserTestUtils.waitForPopupEvent(
     win.document.getElementById(TAB_GROUP_PREVIEW_PANEL_ID),
     "hidden"
@@ -82,7 +80,7 @@ async function closeGroupPreviews(win = window) {
   EventUtils.synthesizeMouse(
     tabs,
     0,
-    tabsRect.height + 1,
+    tabs.outerHeight + 1,
     {
       type: "mouseout",
     },
@@ -1188,11 +1186,10 @@ add_task(async function panelSuppressionOnPanelLazyLoadTests() {
 
   // Reset state: close the popup and move the mouse off the tab
   const tabs = fgWindow.document.getElementById("tabbrowser-tabs");
-  const tabsRect = tabs.getBoundingClientRect();
   EventUtils.synthesizeMouse(
     tabs,
     0,
-    tabsRect.height + 1,
+    tabs.outerHeight + 1,
     {
       type: "mouseout",
     },

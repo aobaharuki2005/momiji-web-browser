@@ -20,13 +20,15 @@ window.addEventListener('load', () => {
   target.classList.add('red');
   setTimeout(() => {
     target.classList.remove('red');
-    SpecialPowers.wrap(window)
-                 .synthesizeMouseEvent("mousemove", 100, 100, { button: 1, modifiers: 1 });
+    SpecialPowers.getDOMWindowUtils(window)
+                 .sendMouseEvent("mousemove", 100, 100, 1,
+                                 0, 1, 0);
     setTimeout(() => {
       document.documentElement.classList.remove("reftest-wait");
     }, 0);
   }, 0);
-  SpecialPowers.wrap(window)
-               .synthesizeMouseEvent("mousemove", 100, 100, { button: 1, modifiers: 1 });
+  SpecialPowers.getDOMWindowUtils(window)
+               .sendMouseEvent("mousemove", 100, 100, 1,
+                               0, 1, 0);
 });
 </script>

@@ -390,40 +390,6 @@ Window includes SpeechSynthesisGetter;
 #endif
 
 // Mozilla-specific stuff
-dictionary SynthesizeMouseEventData {
-  // A unique identifier for the pointer causing the event, defaulting to 0.
-  unsigned long identifier = 0;
-  // Indicates which mouse button is pressed/released when a mouse event is triggered.
-  long button = 0;
-  // Indicates which mouse buttons are pressed when a mouse event is triggered.
-  // If not specified, the value is generated from the button property.
-  long buttons;
-  // Number of clicks that have been performed. If not specified, a default value
-  // is generated based on the event type, e.g. 1 for mousedown and mouseup events,
-  // and 0 for others.
-  long clickCount;
-  // Touch input pressure (0.0 -> 1.0).
-  float pressure = 0;
-  // Input source, see MouseEvent for values. Defaults to MouseEvent.MOZ_SOURCE_MOUSE.
-  short inputSource = 1;
-  // Modifiers pressed, using constants defined as MODIFIER_* in nsIDOMWindowUtils.
-  long modifiers = 0;
-};
-
-// Mozilla-specific stuff
-dictionary SynthesizeMouseEventOptions {
-  // Indicates whether the event should ignore viewport bounds during dispatch.
-  boolean ignoreRootScrollFrame = false;
-  // Controls Event.isSynthesized value that helps identifying test related events.
-  boolean isDOMEventSynthesized = true;
-  // Controls WidgetMouseEvent.mReason value.
-  boolean isWidgetEventSynthesized = false;
-  // Set this to true to ensure that the event is dispatched to this DOM window
-  // or one of its children.
-  boolean toWindow = false;
-};
-
-// Mozilla-specific stuff
 partial interface Window {
   //[NewObject, Throws] CSSStyleDeclaration getDefaultComputedStyle(Element elt, optional DOMString pseudoElt = "");
   [NewObject, Throws] CSSStyleDeclaration? getDefaultComputedStyle(Element elt, optional DOMString pseudoElt = "");
@@ -564,45 +530,6 @@ partial interface Window {
    */
   [Constant, Throws, ChromeOnly]
   readonly attribute nsIDOMWindowUtils windowUtils;
-
-  /**
-   * Synthesize a mouse event. The event types supported are:
-   *    mousedown, mouseup, mousemove, mouseover, mouseout, mousecancel,
-   *    contextmenu, MozMouseHittest
-   *
-   * Events are sent in coordinates offset by offsetX and offsetY from the window.
-   *
-   * Note that additional events may be fired as a result of this call. For
-   * instance, typically a click event will be fired as a result of a
-   * mousedown and mouseup in sequence.
-   *
-   * Normally at this level of events, the mouseover and mouseout events are
-   * only fired when the window is entered or exited. For inter-element
-   * mouseover and mouseout events, a movemove event fired on the new element
-   * should be sufficient to generate the correct over and out events as well.
-   *
-   * The event is dispatched via the toplevel window, so it could go to any
-   * window under the toplevel window, in some cases it could never reach this
-   * window at all.
-   *
-   * NOTE: mousecancel is used to represent the vanishing of an input device
-   * such as a pen leaving its digitizer by synthesizing a WidgetMouseEvent,
-   * whose mMessage is eMouseExitFromWidget and mExitFrom is
-   * WidgetMouseEvent::eTopLevel.
-   *
-   * @param type            Event type.
-   * @param offsetX         X offset in CSS pixels.
-   * @param offsetY         Y offset in CSS pixels.
-   * @param mouseEventData  A SynthesizeMouseEventData dictionary containing mouse event data.
-   * @param options         A SynthesizeMouseEventOptions dictionary containing options
-   *                        for the event dispatching.
-   *
-   * @return true if someone called prevent default on this event.
-   */
-  [ChromeOnly, Throws]
-  boolean synthesizeMouseEvent(DOMString type, float offsetX, float offsetY,
-                               optional SynthesizeMouseEventData mouseEventData = {},
-                               optional SynthesizeMouseEventOptions options = {});
 
   [Pure, ChromeOnly]
   readonly attribute WindowGlobalChild? windowGlobalChild;
