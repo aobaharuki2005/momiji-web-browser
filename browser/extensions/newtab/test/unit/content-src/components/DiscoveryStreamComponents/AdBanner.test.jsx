@@ -125,6 +125,11 @@ describe("Discovery Stream <AdBanner>", () => {
     // AdBannerContextMenu.test.jsx
   });
 
+  it("should render data-is-sponsored-link='true' on banner link", () => {
+    const link = wrapper.find(".ad-banner-link a");
+    assert.equal(link.prop("data-is-sponsored-link"), true);
+  });
+
   it("should call onLinkClick when banner is clicked", () => {
     const link = wrapper.find(".ad-banner-link a");
     link.simulate("click");

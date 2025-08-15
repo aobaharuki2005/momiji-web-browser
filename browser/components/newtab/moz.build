@@ -22,3 +22,7 @@ FINAL_LIBRARY = "browsercomps"
 XPCSHELL_TESTS_MANIFESTS += [
     "test/xpcshell/xpcshell.toml",
 ]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.toml",
+]
