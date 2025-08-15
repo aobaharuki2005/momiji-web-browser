@@ -716,7 +716,7 @@ export const GenAI = {
     // or revamp sidebar excludes chatbot
     const isPageFeatureAllowed =
       lazy.chatPage &&
-      lazy.chatMenu &&
+      (lazy.chatProvider != "" || lazy.chatMenu) &&
       (!lazy.sidebarRevamp || lazy.sidebarTools.includes("aichat"));
 
     let canShow = false;

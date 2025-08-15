@@ -329,6 +329,95 @@ add_task(async function test_tab_menu_has_label_and_separator() {
 });
 
 /**
+ * Check tab menu shows page feature when provider is configured or chat menu is enabled
+ */
+add_task(async function test_tab_menu_page_feature_with_provider_or_menu() {
+  // Test with provider configured but no chat menu
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.ml.chat.provider", "http://localhost:8080"],
+      ["browser.ml.chat.page", true],
+      ["browser.ml.chat.menu", false],
+      ["sidebar.revamp", true],
+      ["sidebar.main.tools", "aichat"],
+    ],
+  });
+
+  await openContextMenu({
+    menuId: TAB_CONTEXT_MENU,
+    browser: gBrowser.selectedTab.linkedBrowser,
+  });
+
+  const menu = document.getElementById("context_askChat");
+  await TestUtils.waitForCondition(() => {
+    return menu && !menu.hidden && !menu.disabled;
+  }, "Menu should be visible with provider configured");
+
+  Assert.equal(
+    menu.hidden,
+    false,
+    "Tab menu shows page feature when provider is configured"
+  );
+
+  await hideContextMenu(TAB_CONTEXT_MENU);
+
+  // Test with no provider but chat menu enabled
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.ml.chat.provider", ""],
+      ["browser.ml.chat.page", true],
+      ["browser.ml.chat.menu", true],
+      ["sidebar.revamp", true],
+      ["sidebar.main.tools", "aichat"],
+    ],
+  });
+
+  await openContextMenu({
+    menuId: TAB_CONTEXT_MENU,
+    browser: gBrowser.selectedTab.linkedBrowser,
+  });
+
+  await TestUtils.waitForCondition(() => {
+    return menu && !menu.hidden && !menu.disabled;
+  }, "Menu should be visible with chat menu enabled");
+
+  Assert.equal(
+    menu.hidden,
+    false,
+    "Tab menu shows page feature when chat menu is enabled"
+  );
+
+  await hideContextMenu(TAB_CONTEXT_MENU);
+
+  // Test with neither provider nor chat menu
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.ml.chat.provider", ""],
+      ["browser.ml.chat.page", true],
+      ["browser.ml.chat.menu", false],
+      ["sidebar.revamp", true],
+      ["sidebar.main.tools", "aichat"],
+    ],
+  });
+
+  await openContextMenu({
+    menuId: TAB_CONTEXT_MENU,
+    browser: gBrowser.selectedTab.linkedBrowser,
+  });
+
+  await TestUtils.waitForCondition(() => {
+    return menu.hidden;
+  }, "Menu should be hidden with neither provider nor chat menu");
+
+  Assert.ok(
+    menu.hidden,
+    "Tab menu hides page feature when neither provider nor chat menu is configured"
+  );
+
+  await hideContextMenu(TAB_CONTEXT_MENU);
+});
+
+/**
  * Check tab menu should not be shown
  *
  */
