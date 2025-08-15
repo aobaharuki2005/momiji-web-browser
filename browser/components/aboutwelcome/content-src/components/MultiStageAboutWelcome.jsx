@@ -564,7 +564,7 @@ export class WelcomeScreen extends React.PureComponent {
       props.content.tiles ||
       props.content.languageSwitcher;
 
-    if (["submenu_button", "more_button"].includes(value) && event.action) {
+    if (value === "submenu_button" && event.action) {
       targetContent = { action: event.action };
     }
 

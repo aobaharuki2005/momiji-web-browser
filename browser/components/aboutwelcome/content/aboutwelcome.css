@@ -378,8 +378,7 @@ div#feature-callout.hidden {
   padding: 0;
   white-space: nowrap;
 }
-#feature-callout .screen[pos=callout][layout=inline] .section-main .dismiss-button,
-#feature-callout .screen[pos=callout][layout=inline] .section-main .more-button {
+#feature-callout .screen[pos=callout][layout=inline] .section-main .dismiss-button {
   height: 24px;
   width: 24px;
   min-height: 24px;
@@ -542,8 +541,7 @@ div#feature-callout.hidden {
 #feature-callout .screen[pos=callout] .section-main .main-content .steps .indicator.current, #feature-callout .screen[pos=callout] .section-main .main-content .steps.progress-bar .indicator.complete {
   border-color: var(--fc-accent-color);
 }
-#feature-callout .screen[pos=callout] .section-main .dismiss-button,
-#feature-callout .screen[pos=callout] .section-main .more-button {
+#feature-callout .screen[pos=callout] .section-main .dismiss-button {
   font-size: 1em;
   inset-block: 0 auto;
   inset-inline: auto 0;
@@ -551,43 +549,34 @@ div#feature-callout.hidden {
   margin-inline: 0 16px;
   background-color: transparent;
 }
-#feature-callout .screen[pos=callout] .section-main .dismiss-button[button-size=small],
-#feature-callout .screen[pos=callout] .section-main .more-button[button-size=small] {
+#feature-callout .screen[pos=callout] .section-main .dismiss-button[button-size=small] {
   height: 24px;
   width: 24px;
   min-height: 24px;
   min-width: 24px;
 }
-#feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background,
-#feature-callout .screen[pos=callout] .section-main .more-button.with-background {
+#feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background {
   background: url("chrome://global/skin/icons/close.svg") no-repeat center/16px, var(--fc-dismiss-button-background);
 }
-#feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background:hover,
-#feature-callout .screen[pos=callout] .section-main .more-button.with-background:hover {
+#feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background:hover {
   background: url("chrome://global/skin/icons/close.svg") no-repeat center/16px, var(--fc-dismiss-button-background-hover);
   color: var(--fc-button-color-hover);
 }
-#feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background:hover:active,
-#feature-callout .screen[pos=callout] .section-main .more-button.with-background:hover:active {
+#feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background:hover:active {
   background: url("chrome://global/skin/icons/close.svg") no-repeat center/16px, var(--fc-dismiss-button-background-active);
 }
 @media (prefers-contrast) {
-  #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background,
-  #feature-callout .screen[pos=callout] .section-main .more-button.with-background {
+  #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background {
     background-color: var(--fc-button-background);
     border: 1px solid var(--fc-button-border);
     color: var(--fc-button-color);
   }
-  #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background:hover:not(:disabled), #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background[open],
-  #feature-callout .screen[pos=callout] .section-main .more-button.with-background:hover:not(:disabled),
-  #feature-callout .screen[pos=callout] .section-main .more-button.with-background[open] {
+  #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background:hover:not(:disabled), #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background[open] {
     background-color: var(--fc-button-background-hover);
     color: var(--fc-button-color-hover);
     border: 1px solid var(--fc-button-border-hover);
   }
-  #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background:hover:not(:disabled):active, #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background[open]:active,
-  #feature-callout .screen[pos=callout] .section-main .more-button.with-background:hover:not(:disabled):active,
-  #feature-callout .screen[pos=callout] .section-main .more-button.with-background[open]:active {
+  #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background:hover:not(:disabled):active, #feature-callout .screen[pos=callout] .section-main .dismiss-button.with-background[open]:active {
     background-color: var(--fc-button-background-active);
     color: var(--fc-button-color-active);
     border: 1px solid var(--fc-button-border-active);
@@ -662,45 +651,37 @@ div#feature-callout.hidden {
 }
 #feature-callout .screen[pos=callout] .action-buttons .primary,
 #feature-callout .screen[pos=callout] .action-buttons .secondary,
-#feature-callout .screen[pos=callout] .dismiss-button,
-#feature-callout .screen[pos=callout] .more-button {
+#feature-callout .screen[pos=callout] .dismiss-button {
   border-radius: 4px;
 }
 #feature-callout .screen[pos=callout] .action-buttons .primary:focus-visible,
 #feature-callout .screen[pos=callout] .action-buttons .secondary:focus-visible,
-#feature-callout .screen[pos=callout] .dismiss-button:focus-visible,
-#feature-callout .screen[pos=callout] .more-button:focus-visible {
+#feature-callout .screen[pos=callout] .dismiss-button:focus-visible {
   box-shadow: none;
   outline: 2px solid var(--fc-accent-color);
   outline-offset: 2px;
 }
 #feature-callout .screen[pos=callout] .action-buttons .primary:disabled,
 #feature-callout .screen[pos=callout] .action-buttons .secondary:disabled,
-#feature-callout .screen[pos=callout] .dismiss-button:disabled,
-#feature-callout .screen[pos=callout] .more-button:disabled {
+#feature-callout .screen[pos=callout] .dismiss-button:disabled {
   opacity: 0.4;
   cursor: auto;
 }
 #feature-callout .screen[pos=callout] .action-buttons .secondary,
-#feature-callout .screen[pos=callout] .dismiss-button,
-#feature-callout .screen[pos=callout] .more-button {
+#feature-callout .screen[pos=callout] .dismiss-button {
   border: 1px solid var(--fc-button-border);
   color: var(--fc-button-color);
 }
 #feature-callout .screen[pos=callout] .action-buttons .secondary:hover:not(:disabled), #feature-callout .screen[pos=callout] .action-buttons .secondary[open],
 #feature-callout .screen[pos=callout] .dismiss-button:hover:not(:disabled),
-#feature-callout .screen[pos=callout] .dismiss-button[open],
-#feature-callout .screen[pos=callout] .more-button:hover:not(:disabled),
-#feature-callout .screen[pos=callout] .more-button[open] {
+#feature-callout .screen[pos=callout] .dismiss-button[open] {
   background-color: var(--fc-button-background-hover);
   color: var(--fc-button-color-hover);
   border: 1px solid var(--fc-button-border-hover);
 }
 #feature-callout .screen[pos=callout] .action-buttons .secondary:hover:not(:disabled):active, #feature-callout .screen[pos=callout] .action-buttons .secondary[open]:active,
 #feature-callout .screen[pos=callout] .dismiss-button:hover:not(:disabled):active,
-#feature-callout .screen[pos=callout] .dismiss-button[open]:active,
-#feature-callout .screen[pos=callout] .more-button:hover:not(:disabled):active,
-#feature-callout .screen[pos=callout] .more-button[open]:active {
+#feature-callout .screen[pos=callout] .dismiss-button[open]:active {
   background-color: var(--fc-button-background-active);
   color: var(--fc-button-color-active);
   border: 1px solid var(--fc-button-border-active);
@@ -2283,8 +2264,7 @@ html {
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .additional-cta.cta-link {
     align-self: center;
   }
-  .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .dismiss-button,
-  .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .more-button {
+  .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .dismiss-button {
     top: -100px;
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main:dir(rtl) {
@@ -2471,8 +2451,7 @@ html {
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .additional-cta.cta-link {
   align-self: center;
 }
-[narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .dismiss-button,
-[narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .more-button {
+[narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .dismiss-button {
   top: -100px;
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main:dir(rtl) {
@@ -3134,8 +3113,7 @@ html {
   font-size: 16px;
   margin-block: 0;
 }
-.onboardingContainer .dismiss-button,
-.onboardingContainer .more-button {
+.onboardingContainer .dismiss-button {
   position: absolute;
   z-index: 2;
   top: 0;
@@ -3156,25 +3134,18 @@ html {
   fill: currentColor;
   transition: var(--transition);
 }
-.onboardingContainer .dismiss-button:dir(rtl),
-.onboardingContainer .more-button:dir(rtl) {
+.onboardingContainer .dismiss-button:dir(rtl) {
   left: 0;
   right: auto;
 }
-.onboardingContainer .dismiss-button.with-background,
-.onboardingContainer .more-button.with-background {
+.onboardingContainer .dismiss-button.with-background {
   background-color: var(--background-color-canvas);
 }
-.onboardingContainer .dismiss-button.with-background:hover,
-.onboardingContainer .more-button.with-background:hover {
+.onboardingContainer .dismiss-button.with-background:hover {
   background-color: var(--button-background-color-hover);
 }
-.onboardingContainer .dismiss-button.with-background:active,
-.onboardingContainer .more-button.with-background:active {
+.onboardingContainer .dismiss-button.with-background:active {
   background-color: var(--button-background-color-active);
-}
-.onboardingContainer .more-button {
-  background: url("chrome://global/skin/icons/more.svg") no-repeat center/16px;
 }
 @keyframes fadein {
   from {
@@ -3304,8 +3275,7 @@ html {
 .onboardingContainer .primary,
 .onboardingContainer .secondary,
 .onboardingContainer .additional-cta,
-.onboardingContainer .submenu-button,
-.onboardingContainer .more-button {
+.onboardingContainer .submenu-button {
   font-size: 13px;
   line-height: 16px;
   padding: 11px 15px;
@@ -3314,8 +3284,7 @@ html {
 .onboardingContainer .primary.rtamo,
 .onboardingContainer .secondary.rtamo,
 .onboardingContainer .additional-cta.rtamo,
-.onboardingContainer .submenu-button.rtamo,
-.onboardingContainer .more-button.rtamo {
+.onboardingContainer .submenu-button.rtamo {
   margin-top: 24px;
 }
 .onboardingContainer .secondary {
@@ -3503,8 +3472,7 @@ html {
   scale: var(--scale);
 }
 .onboardingContainer.transition-in .dialog-initial .main-content,
-.onboardingContainer.transition-in .dialog-initial .dismiss-button,
-.onboardingContainer.transition-in .dialog-initial .more-button {
+.onboardingContainer.transition-in .dialog-initial .dismiss-button {
   translate: 0 calc(-2 * var(--translate));
 }
 .onboardingContainer.transition-in .dialog-initial .brand-logo,
@@ -3602,8 +3570,7 @@ html {
   transition-delay: 0s;
 }
 .onboardingContainer.transition-out .dialog-last .main-content,
-.onboardingContainer.transition-out .dialog-last .dismiss-button,
-.onboardingContainer.transition-out .dialog-last .more-button {
+.onboardingContainer.transition-out .dialog-last .dismiss-button {
   opacity: 0;
   translate: 0 calc(2 * var(--translate));
   transition-delay: 0.4s;
