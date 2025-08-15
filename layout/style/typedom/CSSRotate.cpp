@@ -34,33 +34,32 @@ already_AddRefed<CSSRotate> CSSRotate::Constructor(const GlobalObject& aGlobal,
 
 //  static
 already_AddRefed<CSSRotate> CSSRotate::Constructor(
-    const GlobalObject& aGlobal, const DoubleOrCSSNumericValue& aX,
-    const DoubleOrCSSNumericValue& aY, const DoubleOrCSSNumericValue& aZ,
-    CSSNumericValue& aAngle, ErrorResult& aRv) {
+    const GlobalObject& aGlobal, const CSSNumberish& aX, const CSSNumberish& aY,
+    const CSSNumberish& aZ, CSSNumericValue& aAngle, ErrorResult& aRv) {
   return MakeAndAddRef<CSSRotate>(aGlobal.GetAsSupports());
 }
 
-void CSSRotate::GetX(OwningDoubleOrCSSNumericValue& aRetVal) const {
+void CSSRotate::GetX(OwningCSSNumberish& aRetVal) const {
   aRetVal.SetAsDouble() = 0;
 }
 
-void CSSRotate::SetX(const DoubleOrCSSNumericValue& aArg, ErrorResult& aRv) {
+void CSSRotate::SetX(const CSSNumberish& aArg, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-void CSSRotate::GetY(OwningDoubleOrCSSNumericValue& aRetVal) const {
+void CSSRotate::GetY(OwningCSSNumberish& aRetVal) const {
   aRetVal.SetAsDouble() = 0;
 }
 
-void CSSRotate::SetY(const DoubleOrCSSNumericValue& aArg, ErrorResult& aRv) {
+void CSSRotate::SetY(const CSSNumberish& aArg, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-void CSSRotate::GetZ(OwningDoubleOrCSSNumericValue& aRetVal) const {
+void CSSRotate::GetZ(OwningCSSNumberish& aRetVal) const {
   aRetVal.SetAsDouble() = 0;
 }
 
-void CSSRotate::SetZ(const DoubleOrCSSNumericValue& aArg, ErrorResult& aRv) {
+void CSSRotate::SetZ(const CSSNumberish& aArg, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 

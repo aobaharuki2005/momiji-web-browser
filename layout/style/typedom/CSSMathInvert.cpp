@@ -26,7 +26,7 @@ JSObject* CSSMathInvert::WrapObject(JSContext* aCx,
 
 // static
 already_AddRefed<CSSMathInvert> CSSMathInvert::Constructor(
-    const GlobalObject& aGlobal, const DoubleOrCSSNumericValue& aArg) {
+    const GlobalObject& aGlobal, const CSSNumberish& aArg) {
   return MakeAndAddRef<CSSMathInvert>(aGlobal.GetAsSupports());
 }
 

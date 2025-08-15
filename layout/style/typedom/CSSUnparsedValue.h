@@ -40,15 +40,14 @@ class CSSUnparsedValue final : public CSSStyleValue {
 
   static already_AddRefed<CSSUnparsedValue> Constructor(
       const GlobalObject& aGlobal,
-      const Sequence<OwningUTF8StringOrCSSVariableReferenceValue>& aMembers);
+      const Sequence<OwningCSSUnparsedSegment>& aMembers);
 
   uint32_t Length() const;
 
   void IndexedGetter(uint32_t aIndex, bool& aFound,
-                     OwningUTF8StringOrCSSVariableReferenceValue& aRetVal);
+                     OwningCSSUnparsedSegment& aRetVal);
 
-  void IndexedSetter(uint32_t aIndex,
-                     const UTF8StringOrCSSVariableReferenceValue& aVal,
+  void IndexedSetter(uint32_t aIndex, const CSSUnparsedSegment& aVal,
                      ErrorResult& aRv);
 
   // end of CSSUnparsedValue Web IDL declarations

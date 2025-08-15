@@ -40,24 +40,24 @@ class CSSNumericValue : public CSSStyleValue {
   // start of CSSNumbericValue Web IDL declarations
 
   already_AddRefed<CSSNumericValue> Add(
-      const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv);
+      const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv);
 
   already_AddRefed<CSSNumericValue> Sub(
-      const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv);
+      const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv);
 
   already_AddRefed<CSSNumericValue> Mul(
-      const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv);
+      const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv);
 
   already_AddRefed<CSSNumericValue> Div(
-      const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv);
+      const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv);
 
   already_AddRefed<CSSNumericValue> Min(
-      const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv);
+      const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv);
 
   already_AddRefed<CSSNumericValue> Max(
-      const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv);
+      const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv);
 
-  bool Equals(const Sequence<OwningDoubleOrCSSNumericValue>& aValue);
+  bool Equals(const Sequence<OwningCSSNumberish>& aValue);
 
   already_AddRefed<CSSUnitValue> To(const nsACString& aUnit, ErrorResult& aRv);
 

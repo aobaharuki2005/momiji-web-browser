@@ -24,43 +24,42 @@ JSObject* CSSNumericValue::WrapObject(JSContext* aCx,
 // start of CSSNumericValue Web IDL implementation
 
 already_AddRefed<CSSNumericValue> CSSNumericValue::Add(
-    const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv) {
+    const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
 
 already_AddRefed<CSSNumericValue> CSSNumericValue::Sub(
-    const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv) {
+    const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
 
 already_AddRefed<CSSNumericValue> CSSNumericValue::Mul(
-    const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv) {
+    const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
 
 already_AddRefed<CSSNumericValue> CSSNumericValue::Div(
-    const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv) {
+    const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
 
 already_AddRefed<CSSNumericValue> CSSNumericValue::Min(
-    const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv) {
+    const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
 
 already_AddRefed<CSSNumericValue> CSSNumericValue::Max(
-    const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv) {
+    const Sequence<OwningCSSNumberish>& aValues, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
 
-bool CSSNumericValue::Equals(
-    const Sequence<OwningDoubleOrCSSNumericValue>& aValue) {
+bool CSSNumericValue::Equals(const Sequence<OwningCSSNumberish>& aValue) {
   return false;
 }
 

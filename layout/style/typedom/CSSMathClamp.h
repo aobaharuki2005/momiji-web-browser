@@ -34,10 +34,11 @@ class CSSMathClamp final : public CSSMathValue {
 
   // start of CSSMathClamp Web IDL declarations
 
-  static already_AddRefed<CSSMathClamp> Constructor(
-      const GlobalObject& aGlobal, const DoubleOrCSSNumericValue& aLower,
-      const DoubleOrCSSNumericValue& aValue,
-      const DoubleOrCSSNumericValue& aUpper, ErrorResult& aRv);
+  static already_AddRefed<CSSMathClamp> Constructor(const GlobalObject& aGlobal,
+                                                    const CSSNumberish& aLower,
+                                                    const CSSNumberish& aValue,
+                                                    const CSSNumberish& aUpper,
+                                                    ErrorResult& aRv);
 
   CSSNumericValue* GetLower(ErrorResult& aRv) const;
 

@@ -35,7 +35,7 @@ class CSSMathInvert final : public CSSMathValue {
   // start of CSSMathInvert Web IDL declarations
 
   static already_AddRefed<CSSMathInvert> Constructor(
-      const GlobalObject& aGlobal, const DoubleOrCSSNumericValue& aArg);
+      const GlobalObject& aGlobal, const CSSNumberish& aArg);
 
   CSSNumericValue* GetValue(ErrorResult& aRv) const;
 

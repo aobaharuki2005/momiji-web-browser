@@ -27,20 +27,17 @@ JSObject* CSSPerspective::WrapObject(JSContext* aCx,
 
 //  static
 already_AddRefed<CSSPerspective> CSSPerspective::Constructor(
-    const GlobalObject& aGlobal,
-    const CSSNumericValueOrUTF8StringOrCSSKeywordValue& aLength,
+    const GlobalObject& aGlobal, const CSSPerspectiveValue& aLength,
     ErrorResult& aRv) {
   return MakeAndAddRef<CSSPerspective>(aGlobal.GetAsSupports());
 }
 
-void CSSPerspective::GetLength(
-    OwningCSSNumericValueOrUTF8StringOrCSSKeywordValue& aRetVal) const {
+void CSSPerspective::GetLength(OwningCSSPerspectiveValue& aRetVal) const {
   aRetVal.SetAsUTF8String() = EmptyCString();
 }
 
-void CSSPerspective::SetLength(
-    const CSSNumericValueOrUTF8StringOrCSSKeywordValue& aArg,
-    ErrorResult& aRv) {
+void CSSPerspective::SetLength(const CSSPerspectiveValue& aArg,
+                               ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 

@@ -35,15 +35,12 @@ class CSSPerspective final : public CSSTransformComponent {
   // start of CSSPerspective Web IDL declarations
 
   static already_AddRefed<CSSPerspective> Constructor(
-      const GlobalObject& aGlobal,
-      const CSSNumericValueOrUTF8StringOrCSSKeywordValue& aLength,
+      const GlobalObject& aGlobal, const CSSPerspectiveValue& aLength,
       ErrorResult& aRv);
 
-  void GetLength(
-      OwningCSSNumericValueOrUTF8StringOrCSSKeywordValue& aRetVal) const;
+  void GetLength(OwningCSSPerspectiveValue& aRetVal) const;
 
-  void SetLength(const CSSNumericValueOrUTF8StringOrCSSKeywordValue& aArg,
-                 ErrorResult& aRv);
+  void SetLength(const CSSPerspectiveValue& aArg, ErrorResult& aRv);
 
   // end of CSSPerspective Web IDL declarations
 

@@ -38,8 +38,8 @@ class CSSMathProduct final : public CSSMathValue {
   // start of CSSMathProduct Web IDL declarations
 
   static already_AddRefed<CSSMathProduct> Constructor(
-      const GlobalObject& aGlobal,
-      const Sequence<OwningDoubleOrCSSNumericValue>& aArgs, ErrorResult& aRv);
+      const GlobalObject& aGlobal, const Sequence<OwningCSSNumberish>& aArgs,
+      ErrorResult& aRv);
 
   CSSNumericArray* GetValues(ErrorResult& aRv) const;
 

@@ -26,7 +26,7 @@ JSObject* CSSMathNegate::WrapObject(JSContext* aCx,
 
 // static
 already_AddRefed<CSSMathNegate> CSSMathNegate::Constructor(
-    const GlobalObject& aGlobal, const DoubleOrCSSNumericValue& aArg) {
+    const GlobalObject& aGlobal, const CSSNumberish& aArg) {
   return MakeAndAddRef<CSSMathNegate>(aGlobal.GetAsSupports());
 }
 

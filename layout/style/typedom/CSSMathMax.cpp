@@ -26,8 +26,8 @@ JSObject* CSSMathMax::WrapObject(JSContext* aCx,
 
 // static
 already_AddRefed<CSSMathMax> CSSMathMax::Constructor(
-    const GlobalObject& aGlobal,
-    const Sequence<OwningDoubleOrCSSNumericValue>& aArgs, ErrorResult& aRv) {
+    const GlobalObject& aGlobal, const Sequence<OwningCSSNumberish>& aArgs,
+    ErrorResult& aRv) {
   return MakeAndAddRef<CSSMathMax>(aGlobal.GetAsSupports());
 }
 

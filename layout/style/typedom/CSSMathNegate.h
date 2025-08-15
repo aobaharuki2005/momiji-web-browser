@@ -35,7 +35,7 @@ class CSSMathNegate final : public CSSMathValue {
   // start of CSSMathNegate Web IDL declarations
 
   static already_AddRefed<CSSMathNegate> Constructor(
-      const GlobalObject& aGlobal, const DoubleOrCSSNumericValue& aArg);
+      const GlobalObject& aGlobal, const CSSNumberish& aArg);
 
   CSSNumericValue* GetValue(ErrorResult& aRv) const;
 

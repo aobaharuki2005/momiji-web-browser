@@ -38,22 +38,24 @@ class CSSRotate final : public CSSTransformComponent {
                                                  CSSNumericValue& aAngle,
                                                  ErrorResult& aRv);
 
-  static already_AddRefed<CSSRotate> Constructor(
-      const GlobalObject& aGlobal, const DoubleOrCSSNumericValue& aX,
-      const DoubleOrCSSNumericValue& aY, const DoubleOrCSSNumericValue& aZ,
-      CSSNumericValue& aAngle, ErrorResult& aRv);
+  static already_AddRefed<CSSRotate> Constructor(const GlobalObject& aGlobal,
+                                                 const CSSNumberish& aX,
+                                                 const CSSNumberish& aY,
+                                                 const CSSNumberish& aZ,
+                                                 CSSNumericValue& aAngle,
+                                                 ErrorResult& aRv);
 
-  void GetX(OwningDoubleOrCSSNumericValue& aRetVal) const;
+  void GetX(OwningCSSNumberish& aRetVal) const;
 
-  void SetX(const DoubleOrCSSNumericValue& aArg, ErrorResult& aRv);
+  void SetX(const CSSNumberish& aArg, ErrorResult& aRv);
 
-  void GetY(OwningDoubleOrCSSNumericValue& aRetVal) const;
+  void GetY(OwningCSSNumberish& aRetVal) const;
 
-  void SetY(const DoubleOrCSSNumericValue& aArg, ErrorResult& aRv);
+  void SetY(const CSSNumberish& aArg, ErrorResult& aRv);
 
-  void GetZ(OwningDoubleOrCSSNumericValue& aRetVal) const;
+  void GetZ(OwningCSSNumberish& aRetVal) const;
 
-  void SetZ(const DoubleOrCSSNumericValue& aArg, ErrorResult& aRv);
+  void SetZ(const CSSNumberish& aArg, ErrorResult& aRv);
 
   CSSNumericValue* GetAngle(ErrorResult& aRv) const;
 

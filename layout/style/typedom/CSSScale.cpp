@@ -27,33 +27,32 @@ JSObject* CSSScale::WrapObject(JSContext* aCx,
 
 //  static
 already_AddRefed<CSSScale> CSSScale::Constructor(
-    const GlobalObject& aGlobal, const DoubleOrCSSNumericValue& aX,
-    const DoubleOrCSSNumericValue& aY,
-    const Optional<DoubleOrCSSNumericValue>& aZ, ErrorResult& aRv) {
+    const GlobalObject& aGlobal, const CSSNumberish& aX, const CSSNumberish& aY,
+    const Optional<CSSNumberish>& aZ, ErrorResult& aRv) {
   return MakeAndAddRef<CSSScale>(aGlobal.GetAsSupports());
 }
 
-void CSSScale::GetX(OwningDoubleOrCSSNumericValue& aRetVal) const {
+void CSSScale::GetX(OwningCSSNumberish& aRetVal) const {
   aRetVal.SetAsDouble() = 0;
 }
 
-void CSSScale::SetX(const DoubleOrCSSNumericValue& aArg, ErrorResult& aRv) {
+void CSSScale::SetX(const CSSNumberish& aArg, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-void CSSScale::GetY(OwningDoubleOrCSSNumericValue& aRetVal) const {
+void CSSScale::GetY(OwningCSSNumberish& aRetVal) const {
   aRetVal.SetAsDouble() = 0;
 }
 
-void CSSScale::SetY(const DoubleOrCSSNumericValue& aArg, ErrorResult& aRv) {
+void CSSScale::SetY(const CSSNumberish& aArg, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-void CSSScale::GetZ(OwningDoubleOrCSSNumericValue& aRetVal) const {
+void CSSScale::GetZ(OwningCSSNumberish& aRetVal) const {
   aRetVal.SetAsDouble() = 0;
 }
 
-void CSSScale::SetZ(const DoubleOrCSSNumericValue& aArg, ErrorResult& aRv) {
+void CSSScale::SetZ(const CSSNumberish& aArg, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 

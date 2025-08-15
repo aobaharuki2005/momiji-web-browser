@@ -36,8 +36,8 @@ class CSSMathSum final : public CSSMathValue {
   // start of CSSMathSum Web IDL declarations
 
   static already_AddRefed<CSSMathSum> Constructor(
-      const GlobalObject& aGlobal,
-      const Sequence<OwningDoubleOrCSSNumericValue>& aArgs, ErrorResult& aRv);
+      const GlobalObject& aGlobal, const Sequence<OwningCSSNumberish>& aArgs,
+      ErrorResult& aRv);
 
   CSSNumericArray* GetValues(ErrorResult& aRv) const;
 
