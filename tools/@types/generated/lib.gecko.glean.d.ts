@@ -409,6 +409,8 @@ interface GleanImpl {
     enabled: GleanBoolean;
     experimentCheckboxClick: GleanEventWithExtras<{ enabled?: string }>;
     keyboardShortcut: GleanEventWithExtras<{ enabled?: string, sidebar?: string }>;
+    lengthDisclaimer: GleanEventWithExtras<{ type?: string, length?: string, provider?: string }>;
+    lengthDisclaimerDismissed: GleanEventWithExtras<{ type?: string, provider?: string }>;
     menu: GleanBoolean;
     onboardingClose: GleanEventWithExtras<{ provider?: string, step?: string }>;
     onboardingContinue: GleanEventWithExtras<{ provider?: string, step?: string }>;

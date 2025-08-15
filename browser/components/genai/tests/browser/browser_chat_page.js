@@ -483,3 +483,49 @@ add_task(async function test_provider_less_summarization() {
   SidebarController.hide();
   gBrowser.removeTab(gBrowser.selectedTab);
 });
+
+add_task(async function test_show_warning_when_text_is_long() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.ml.chat.sidebar", true],
+      ["browser.ml.chat.page", true],
+      ["browser.ml.chat.provider", "http://localhost:8080"],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    "data:text/plain,hi".repeat(10000),
+    async () => {
+      await SidebarController.show("viewGenaiChatSidebar");
+
+      const { document } = SidebarController.browser.contentWindow;
+      const messageContainer = document.getElementById("message-container");
+      const summarizeButton = document.getElementById("summarize-button");
+
+      summarizeButton.click();
+      await TestUtils.waitForCondition(() => {
+        return messageContainer.hasChildNodes();
+      }, "Warning message shows because text is too long");
+
+      let events = Glean.genaiChatbot.lengthDisclaimer.testGetValue();
+      Assert.equal(events.length, 1, "Warning message is shown");
+      Assert.equal(events[0].extra.type, "page_summarization", "Page type");
+      Assert.equal(events[0].extra.length, 179984, "Has selection length");
+      Assert.equal(events[0].extra.provider, "localhost", "With localhost");
+
+      const warningElement = messageContainer.querySelector("moz-message-bar");
+      warningElement.shadowRoot.querySelector(".close").click();
+      await TestUtils.waitForCondition(() => {
+        return !messageContainer.hasChildNodes();
+      }, "Warning message is dismissed");
+
+      events = Glean.genaiChatbot.lengthDisclaimerDismissed.testGetValue();
+      Assert.equal(events.length, 1, "Warning message is dismissed");
+      Assert.equal(events[0].extra.type, "page_summarization", "Page type");
+      Assert.equal(events[0].extra.provider, "localhost", "With localhost");
+
+      SidebarController.hide();
+      await SpecialPowers.popPrefEnv();
+    }
+  );
+});

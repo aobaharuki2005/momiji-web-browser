@@ -83,6 +83,10 @@ browser {
   }
 }
 
+#message-container {
+  padding: var(--space-xsmall);
+}
+
 #multi-stage-message-root {
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
