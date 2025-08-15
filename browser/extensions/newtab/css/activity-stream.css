@@ -4454,6 +4454,7 @@ main section {
 .lists .empty-list-text {
   height: var(--space-xlarge);
   color: var(--text-color-deemphasized);
+  font-size: var(--font-size-small);
 }
 .lists .completed-task-wrapper summary {
   list-style: none;
