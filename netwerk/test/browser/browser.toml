@@ -236,6 +236,7 @@ support-files = [
 ["browser_test_local_network_access.js"]
 support-files = [
   "page_with_non_trackers.html",
+  "page_with_non_trackers.html^headers^",
   "fetch_from_tracker.sjs",
 ]
 

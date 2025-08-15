@@ -26,13 +26,14 @@ add_setup(async function () {
       ["network.websocket.max-connections", 1000],
       ["network.lna.block_trackers", true],
       ["network.lna.blocking", true],
+      ["network.http.rcwn.enabled", false],
     ],
   });
   Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
   registerCleanupFunction(restorePermissions);
 });
 
-requestLongerTimeout(2);
+requestLongerTimeout(10);
 
 function clickDoorhangerButton(buttonIndex, browser, notificationID) {
   let popup = PopupNotifications.getNotification(notificationID, browser);
@@ -193,6 +194,21 @@ async function runPromptedLnaTest(test, overrideLabel, notificationID) {
     const expectedStatus =
       userAction === "allow" ? test.allowStatus : test.denyStatus;
 
+    await runSingleTestCase(
+      test,
+      rand,
+      expectedStatus,
+      `LNA test (${overrideLabel}) for ${test.type} with user action: ${userAction}`,
+      userAction,
+      notificationID
+    );
+
+    // Wait some time for cache entry to be updated
+    // XXX(valentin) though this should not be necessary.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Now run the test again with cached main document
     await runSingleTestCase(
       test,
       rand,
