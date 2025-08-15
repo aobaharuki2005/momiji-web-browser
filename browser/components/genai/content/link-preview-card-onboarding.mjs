@@ -24,7 +24,7 @@ class LinkPreviewCardOnboarding extends MozLitElement {
 
   constructor() {
     super();
-    this.onboardingType = "longpress";
+    this.onboardingType = "shiftKey";
   }
 
   /**
