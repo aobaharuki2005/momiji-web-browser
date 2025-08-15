@@ -523,7 +523,10 @@ function Lists({ dispatch }) {
             ))}
           </moz-select>
         </EditableText>
-        <moz-badge data-l10n-id="newtab-widget-lists-label-new"></moz-badge>
+        {/* Hide the badge when user is editing task list title */}
+        {!isEditing && (
+          <moz-badge data-l10n-id="newtab-widget-lists-label-new"></moz-badge>
+        )}
         <moz-button
           className="lists-panel-button"
           iconSrc="chrome://global/skin/icons/more.svg"

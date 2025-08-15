@@ -12734,7 +12734,7 @@ function Lists({
     key: key,
     value: key,
     label: list.label
-  })))), /*#__PURE__*/external_React_default().createElement("moz-badge", {
+  })))), !isEditing && /*#__PURE__*/external_React_default().createElement("moz-badge", {
     "data-l10n-id": "newtab-widget-lists-label-new"
   }), /*#__PURE__*/external_React_default().createElement("moz-button", {
     className: "lists-panel-button",
