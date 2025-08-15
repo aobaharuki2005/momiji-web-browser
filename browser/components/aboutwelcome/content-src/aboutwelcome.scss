@@ -1887,7 +1887,6 @@ html {
       flex: 1;
       padding: 0;
       min-width: 50px;
-      color: #000;
       box-shadow: none;
       border-radius: 4px;
       cursor: pointer;
@@ -1931,7 +1930,6 @@ html {
 
       .text {
         display: flex;
-        color: var(--text-color);
         font-size: 14px;
         font-weight: normal;
         line-height: 20px;
