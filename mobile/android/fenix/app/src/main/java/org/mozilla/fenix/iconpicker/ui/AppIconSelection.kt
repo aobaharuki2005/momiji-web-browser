@@ -73,6 +73,7 @@ fun AppIconSelection(
     groupedIconOptions: Map<IconGroupTitle, List<AppIcon>>,
     onAppIconSelected: (AppIcon) -> Unit,
 ) {
+    var currentAppIcon by remember { mutableStateOf(currentAppIcon) }
     var selectedAppIcon by remember { mutableStateOf<AppIcon?>(null) }
 
     LazyColumn(
@@ -111,7 +112,9 @@ fun AppIconSelection(
     selectedAppIcon?.let {
         RestartWarningDialog(
             onConfirm = {
+                currentAppIcon = it
                 onAppIconSelected(it)
+                selectedAppIcon = null
             },
             onDismiss = {
                 selectedAppIcon = null
