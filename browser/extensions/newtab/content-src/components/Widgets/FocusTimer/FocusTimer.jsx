@@ -630,7 +630,7 @@ export const FocusTimer = ({ dispatch }) => {
           />
         </div>
       </div>
-      {!showSystemNotifications && (
+      {!showSystemNotifications && !timerData[timerType].isRunning && (
         <p
           className="timer-notification-status"
           data-l10n-id="newtab-widget-timer-notification-warning"

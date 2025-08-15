@@ -4249,9 +4249,46 @@ main section {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .discovery-stream.ds-layout.ds-layout-widgets {
   margin-inline: 0;
   margin-block-end: var(--space-xlarge);
+}
+
+.widgets-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.widgets-wrapper .widgets-scroll-message {
+  color: var(--newtab-text-primary-color);
+  position: absolute;
+  bottom: calc(var(--space-xxlarge) * -2);
+  animation: fade-in 0.25s ease-out 0.7s both;
+  border-radius: var(--button-border-radius);
+  background: var(--button-background-color);
+  padding: var(--space-small) var(--space-xlarge);
+}
+.lightWallpaper .widgets-wrapper .widgets-scroll-message {
+  color-scheme: light;
+}
+.darkWallpaper .widgets-wrapper .widgets-scroll-message {
+  color-scheme: dark;
+}
+.widgets-wrapper .widgets-scroll-message p {
+  margin: 0;
+  font-weight: var(--font-weight-bold);
 }
 
 .widgets-container:has(.lists), .widgets-container:has(.focus-timer) {

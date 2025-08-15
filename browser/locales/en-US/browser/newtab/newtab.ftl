@@ -621,6 +621,8 @@ newtab-widget-timer-menu-notifications-on = Turn on notifications
 newtab-widget-timer-menu-hide = Hide timer
 newtab-widget-timer-menu-learn-more = Learn more
 
+newtab-widget-keep-scrolling = Scroll for more
+
 # Strings for the default promo card
 
 newtab-promo-card-title = Support { -brand-product-name }
