@@ -86,8 +86,8 @@ skip == enable-sheet-7.html multiple-in-family-1-ref.html
 == ex-unit-1.html ex-unit-1-ref.html
 == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
-fuzzy-if(gtkWidget,0-255,0-4426) == local-1.html local-1-ref.html
-== local-styled-1.html local-styled-1-ref.html
+fuzzy-if(Android&&/34/.test(AndroidVersion),255-255,5167-5167) fuzzy-if(gtkWidget,0-255,0-4426) == local-1.html local-1-ref.html # Android Bug 1983250
+fuzzy-if(Android&&/34/.test(AndroidVersion),255-255,3623-3632) == local-styled-1.html local-styled-1-ref.html # Android Bug 1983250
 
 == synthetic-weight-style.html synthetic-weight-style-ref.html
 == synthetic-variations.html synthetic-variations-ref.html
