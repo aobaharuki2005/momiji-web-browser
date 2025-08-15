@@ -73,8 +73,8 @@ add_task(
     Assert.equal(dir_info[0].dir_name, "db");
     Assert.equal(dir_info[0].dir_exists, true);
     // There should be at most 2 files in the db directory, data.safe.bin and maybe data.safe.tmp
-    Assert.equal(dir_info[0].files.length <= 2, true);
-    Assert.equal(dir_info[0].files[0].file_size > 0, true);
+    Assert.lessOrEqual(dir_info[0].files.length, 2);
+    Assert.greater(dir_info[0].files[0].file_size, 0);
     Assert.equal(dir_info[1].dir_name, "events");
     Assert.equal(dir_info[1].dir_exists, true);
     Assert.equal(dir_info[2].dir_name, "pending_pings");
@@ -87,7 +87,7 @@ add_task(
     Assert.equal(new_dir_info[1].dir_exists, true);
     Assert.equal(new_dir_info[1].file_count, 1);
     Assert.equal(new_dir_info[1].files[0].file_name, "test-ping");
-    Assert.equal(new_dir_info[1].files[0].file_size > 0, true);
+    Assert.greater(new_dir_info[1].files[0].file_size, 0);
 
     console.log(
       "Directory info collected on startup: ",
