@@ -72,7 +72,6 @@ export const INITIAL_STATE = {
     // This is a JSON-parsed copy of the discoverystream.config pref value.
     config: { enabled: false },
     layout: [],
-    isPrivacyInfoModalVisible: false,
     topicsLoading: false,
     feeds: {
       data: {
@@ -769,15 +768,9 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ...prevState,
         isUserLoggedIn: action.data.isUserLoggedIn,
       };
-    case at.HIDE_PRIVACY_INFO:
-      return {
-        ...prevState,
-        isPrivacyInfoModalVisible: false,
-      };
     case at.SHOW_PRIVACY_INFO:
       return {
         ...prevState,
-        isPrivacyInfoModalVisible: true,
       };
     case at.DISCOVERY_STREAM_LAYOUT_RESET:
       return { ...INITIAL_STATE.DiscoveryStream, config: prevState.config };

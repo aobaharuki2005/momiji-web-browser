@@ -133,18 +133,6 @@ newtab-menu-manage-sponsored-content = Manage sponsored content
 newtab-menu-our-sponsors-and-your-privacy = Our sponsors and your privacy
 newtab-menu-report-this-ad = Report this ad
 
-## Message displayed in a modal window to explain privacy and provide context for sponsored content.
-
-newtab-privacy-modal-button-done = Done
-newtab-privacy-modal-button-manage = Manage sponsored content settings
-newtab-privacy-modal-header = Your privacy matters.
-newtab-privacy-modal-paragraph-2 =
-    In addition to dishing up captivating stories, we also show you relevant,
-    highly-vetted content from select sponsors. Rest assured, <strong>your browsing
-    data never leaves your personal copy of { -brand-product-name }</strong> — we don’t see it, and our
-    sponsors don’t either.
-newtab-privacy-modal-link = Learn how privacy works on the new tab
-
 ##
 
 # Bookmark is a noun in this case, "Remove bookmark".

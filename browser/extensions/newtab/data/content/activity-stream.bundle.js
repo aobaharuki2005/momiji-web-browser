@@ -167,7 +167,6 @@ for (const type of [
   "FOLLOW_SECTION",
   "HANDOFF_SEARCH_TO_AWESOMEBAR",
   "HIDE_PERSONALIZE",
-  "HIDE_PRIVACY_INFO",
   "HIDE_TOAST_MESSAGE",
   "INFERRED_PERSONALIZATION_MODEL_UPDATE",
   "INFERRED_PERSONALIZATION_REFRESH",
@@ -6313,117 +6312,6 @@ class DSMessage extends (external_React_default()).PureComponent {
     }))));
   }
 }
-;// CONCATENATED MODULE: ./content-src/components/ModalOverlay/ModalOverlay.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function ModalOverlayWrapper({
-  // eslint-disable-next-line no-shadow
-  document = globalThis.document,
-  unstyled,
-  innerClassName,
-  onClose,
-  children,
-  headerId,
-  id
-}) {
-  const modalRef = (0,external_React_namespaceObject.useRef)(null);
-  let className = unstyled ? "" : "modalOverlayInner active";
-  if (innerClassName) {
-    className += ` ${innerClassName}`;
-  }
-
-  // The intended behaviour is to listen for an escape key
-  // but not for a click; see Bug 1582242
-  const onKeyDown = (0,external_React_namespaceObject.useCallback)(event => {
-    if (event.key === "Escape") {
-      onClose(event);
-    }
-  }, [onClose]);
-  (0,external_React_namespaceObject.useEffect)(() => {
-    document.addEventListener("keydown", onKeyDown);
-    document.body.classList.add("modal-open");
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.classList.remove("modal-open");
-    };
-  }, [document, onKeyDown]);
-  return /*#__PURE__*/external_React_default().createElement("div", {
-    className: "modalOverlayOuter active",
-    onKeyDown: onKeyDown,
-    role: "presentation"
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: className,
-    "aria-labelledby": headerId,
-    id: id,
-    role: "dialog",
-    ref: modalRef
-  }, children));
-}
-
-;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-class DSPrivacyModal extends (external_React_default()).PureComponent {
-  constructor(props) {
-    super(props);
-    this.closeModal = this.closeModal.bind(this);
-    this.onLearnLinkClick = this.onLearnLinkClick.bind(this);
-    this.onManageLinkClick = this.onManageLinkClick.bind(this);
-  }
-  onLearnLinkClick() {
-    this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
-      event: "CLICK_PRIVACY_INFO",
-      source: "DS_PRIVACY_MODAL"
-    }));
-  }
-  onManageLinkClick() {
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.SETTINGS_OPEN
-    }));
-  }
-  closeModal() {
-    this.props.dispatch({
-      type: `HIDE_PRIVACY_INFO`,
-      data: {}
-    });
-  }
-  render() {
-    return /*#__PURE__*/external_React_default().createElement(ModalOverlayWrapper, {
-      onClose: this.closeModal,
-      innerClassName: "ds-privacy-modal"
-    }, /*#__PURE__*/external_React_default().createElement("div", {
-      className: "privacy-notice"
-    }, /*#__PURE__*/external_React_default().createElement("h3", {
-      "data-l10n-id": "newtab-privacy-modal-header"
-    }), /*#__PURE__*/external_React_default().createElement("p", {
-      "data-l10n-id": "newtab-privacy-modal-paragraph-2"
-    }), /*#__PURE__*/external_React_default().createElement("a", {
-      className: "modal-link modal-link-privacy",
-      "data-l10n-id": "newtab-privacy-modal-link",
-      onClick: this.onLearnLinkClick,
-      href: "https://support.mozilla.org/kb/pocket-recommendations-firefox-new-tab"
-    }), /*#__PURE__*/external_React_default().createElement("button", {
-      className: "modal-link modal-link-manage",
-      "data-l10n-id": "newtab-privacy-modal-button-manage",
-      onClick: this.onManageLinkClick
-    })), /*#__PURE__*/external_React_default().createElement("section", {
-      className: "actions"
-    }, /*#__PURE__*/external_React_default().createElement("button", {
-      className: "done",
-      type: "submit",
-      onClick: this.closeModal,
-      "data-l10n-id": "newtab-privacy-modal-button-done"
-    })));
-  }
-}
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/ReportContent/ReportContent.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7560,6 +7448,56 @@ class MoreRecommendations extends (external_React_default()).PureComponent {
     return null;
   }
 }
+;// CONCATENATED MODULE: ./content-src/components/ModalOverlay/ModalOverlay.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function ModalOverlayWrapper({
+  // eslint-disable-next-line no-shadow
+  document = globalThis.document,
+  unstyled,
+  innerClassName,
+  onClose,
+  children,
+  headerId,
+  id
+}) {
+  const modalRef = (0,external_React_namespaceObject.useRef)(null);
+  let className = unstyled ? "" : "modalOverlayInner active";
+  if (innerClassName) {
+    className += ` ${innerClassName}`;
+  }
+
+  // The intended behaviour is to listen for an escape key
+  // but not for a click; see Bug 1582242
+  const onKeyDown = (0,external_React_namespaceObject.useCallback)(event => {
+    if (event.key === "Escape") {
+      onClose(event);
+    }
+  }, [onClose]);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    document.addEventListener("keydown", onKeyDown);
+    document.body.classList.add("modal-open");
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.classList.remove("modal-open");
+    };
+  }, [document, onKeyDown]);
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "modalOverlayOuter active",
+    onKeyDown: onKeyDown,
+    role: "presentation"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: className,
+    "aria-labelledby": headerId,
+    id: id,
+    role: "dialog",
+    ref: modalRef
+  }, children));
+}
+
 ;// CONCATENATED MODULE: ./content-src/components/TopSites/SearchShortcutsForm.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -7855,7 +7793,6 @@ const INITIAL_STATE = {
     // This is a JSON-parsed copy of the discoverystream.config pref value.
     config: { enabled: false },
     layout: [],
-    isPrivacyInfoModalVisible: false,
     topicsLoading: false,
     feeds: {
       data: {
@@ -8552,15 +8489,9 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ...prevState,
         isUserLoggedIn: action.data.isUserLoggedIn,
       };
-    case actionTypes.HIDE_PRIVACY_INFO:
-      return {
-        ...prevState,
-        isPrivacyInfoModalVisible: false,
-      };
     case actionTypes.SHOW_PRIVACY_INFO:
       return {
         ...prevState,
-        isPrivacyInfoModalVisible: true,
       };
     case actionTypes.DISCOVERY_STREAM_LAYOUT_RESET:
       return { ...INITIAL_STATE.DiscoveryStream, config: prevState.config };
@@ -13634,7 +13565,6 @@ function Widgets() {
 
 
 
-
 const ALLOWED_CSS_URL_PREFIXES = ["chrome://", "resource://", "https://img-getpocket.cdn.mozilla.net/"];
 const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
 
@@ -13896,9 +13826,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
     const {
       DiscoveryStream
     } = this.props;
-    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, this.props.DiscoveryStream.isPrivacyInfoModalVisible && /*#__PURE__*/external_React_default().createElement(DSPrivacyModal, {
-      dispatch: this.props.dispatch
-    }), (reportAdsEnabled && spocsEnabled || sectionsEnabled) && /*#__PURE__*/external_React_default().createElement(ReportContent, {
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, (reportAdsEnabled && spocsEnabled || sectionsEnabled) && /*#__PURE__*/external_React_default().createElement(ReportContent, {
       spocs: DiscoveryStream.spocs
     }), topSites && this.renderLayout([{
       width: 12,
