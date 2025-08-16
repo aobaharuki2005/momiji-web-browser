@@ -1972,7 +1972,7 @@
   <!-- Preference for local device access for all websites -->
   <string name="preference_browser_feature_local_device_access">Apps und Dienste des Geräts</string>
   <!-- Preference for local network access for all websites -->
-  <string name="preference_browser_feature_local_network_access">Lokale Netzwerkgeräte</string>
+  <string name="preference_browser_feature_local_network_access">Geräte im lokalen Netzwerk</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Kamera</string>
   <!-- Preference for altering the microphone access for all websites -->

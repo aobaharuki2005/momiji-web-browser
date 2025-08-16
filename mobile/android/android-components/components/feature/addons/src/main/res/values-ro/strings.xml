@@ -77,7 +77,7 @@
   <!-- Description for the "downloads.open" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_downloads_open_description">Să deschidă fișiere descărcate pe dispozitiv</string>
   <!-- Description for the "find" WebExtensions API permission. -->
-  <string name="mozac_feature_addons_permissions_find_description">Să citească textul din toate filele deschise</string>
+  <string name="mozac_feature_addons_permissions_find_description">Citește textul din toate filele deschise</string>
   <!-- Description for the "geolocation" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_geolocation_description">Să îți acceseze locația</string>
   <!-- Description for the "history" WebExtensions API permission. -->
@@ -103,7 +103,7 @@
   <!-- Description for the "userScripts" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_user_scripts_description">Acordă accesul scripturilor terțe neverificate la datele tale</string>
   <!-- Description for the "devtools" WebExtensions API permission. -->
-  <string name="mozac_feature_addons_permissions_devtools_description">Să extindă instrumentele pentru dezvoltatori pentru a-ți accesa datele în filele deschise</string>
+  <string name="mozac_feature_addons_permissions_devtools_description">Extinde instrumentele pentru dezvoltatori pentru a accesa datele din filele deschise</string>
   <!-- Description for the "privacy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_privacy_description_for_update">Citește și modifică setările de confidențialitate.</string>
   <!-- Description for the "<all_urls>" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
@@ -157,7 +157,7 @@
   <!-- Description for the "userScripts" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_user_scripts_description_for_update">Acordă accesul scripturilor terțe neverificate la datele tale.</string>
   <!-- Description for the "devtools" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_devtools_description_for_update">Extinde instrumentele pentru dezvoltatori pentru a accesa datele în filele deschise.</string>
+  <string name="mozac_feature_addons_permissions_devtools_description_for_update">Extinde instrumentele pentru dezvoltatori pentru a accesa datele din filele deschise.</string>
   <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
   <string name="mozac_feature_addons_permissions_one_site_description_for_update">Să îți acceseze datele pentru %1$s.</string>
   <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->

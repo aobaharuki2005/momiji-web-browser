@@ -1967,6 +1967,10 @@
   <string name="clear_permissions_on_all_sites">ניקוי הרשאות בכל האתרים</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">ניגון אוטומטי</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">יישומים ושירותים של מכשירים</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">מכשירים ברשת המקומית</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">מצלמה</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2993,6 +2997,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">קיצורי דרך</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">הצגת כל קיצורי הדרך</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">מכסת קיצורי הדרך הושגה</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

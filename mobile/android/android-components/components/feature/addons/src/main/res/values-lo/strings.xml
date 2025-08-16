@@ -120,6 +120,8 @@
   <string name="mozac_feature_addons_permissions_browsing_data_description_for_update">ລຶບລ້າງປະຫວັດການທ່ອງເວັບ, ຄຸກກີ້ ແລະ ຂໍ້ມູນທີ່ກ່ຽວຂ້ອງ.</string>
   <!-- Description for the "geolocation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_geolocation_description_for_update">ເຂົ້າເຖິງສະຖານທີ່ຂອງທ່ານ.</string>
+  <!-- Description for the "history" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_history_description_for_update">ເຂົ້າເຖິງປະຫວັດການທ່ອງເວັບ.</string>
   <!-- Description for the "topSites" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_top_sites_description_for_update">ເຂົ້າເຖິງປະຫວັດການທ່ອງເວັບ.</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
@@ -212,6 +214,8 @@
   <string name="mozac_feature_addons_permissions_dialog_subtitle" moz:removedIn="141" tools:ignore="UnusedResources">ຕ້ອງໄດ້ຮັບການອະນຸຍາດຈາກທ່ານເພື່ອ:</string>
   <!-- Heading for the permissions section in the add-on install dialog. -->
   <string name="mozac_feature_addons_permissions_dialog_heading_required_permissions">ການ​ອະ​ນຸ​ຍາດ​ທີ່​ຕ້ອງ​ການ​:</string>
+  <!-- Heading for the data collection permissions section in the add-on install dialog. -->
+  <string name="mozac_feature_addons_permissions_dialog_heading_required_data_collection">ການ​ເກັບ​ກໍາ​ຂໍ້​ມູນ​ທີ່​ຕ້ອງ​ການ​:</string>
   <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
   <string name="mozac_feature_addons_optional_permissions_dialog_subtitle" moz:removedIn="142" tools:ignore="UnusedResources">ສ່ວນຂະຫຍາຍຕ້ອງການ:</string>
   <!-- This is a button to add (install) an add-on . -->

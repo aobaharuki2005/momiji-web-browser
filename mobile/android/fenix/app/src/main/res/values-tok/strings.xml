@@ -1358,12 +1358,23 @@
   <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">mi jo e nimi nasin</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">nimi li pana ala e kon. ona li lon tawa ni taso: sina ante e suli nimi la nimi li pona ala pona tawa lukin?</string>
+  <!-- Title for Accessibility Text Size Scaling Preference -->
+  <string name="preference_accessibility_font_size_title">suli pi sitelen nimi</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
+  <!-- Subtitle for the tabs item in Delete browsing data, %d is the number of open tabs -->
+  <string name="preferences_delete_browsing_data_tabs_subtitle">poki %d</string>
   <!--
     Title for the data and history items in Delete browsing data
 
     Title for the history item in Delete browsing data
   -->
   <string name="preferences_delete_browsing_data_browsing_history_title">lukin pini lipu</string>
+  <!--
+    Subtitle for the data and history items in delete browsing data, %d is the
+    number of history items the user has
+  -->
+  <string name="preferences_delete_browsing_data_browsing_data_subtitle">lipu %d</string>
   <!-- Title for the site permissions item in Delete browsing data -->
   <string name="preferences_delete_browsing_data_site_permissions">ken lipu</string>
   <!-- Title for the downloads item in Delete browsing data -->
@@ -1400,6 +1411,12 @@
   <string name="preference_enhanced_tracking_protection_strict">nasin wawa</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
   <string name="preference_enhanced_tracking_protection_custom">nasin sina</string>
+  <!--
+    Header for categories that are being blocked by current Enhanced Tracking Protection settings
+
+    Preference for enhanced tracking protection for the custom protection settings for cookies
+  -->
+  <string name="preference_enhanced_tracking_protection_custom_cookies">ilo jo pi sona sina</string>
   <!-- About page link text to open what's new link. %s is the name of the app (for example "Firefox"). -->
   <string name="about_whats_new">ilo %s la seme li sin</string>
   <!--
@@ -1407,16 +1424,30 @@
     %s is the name of the app (for example "Firefox")
   -->
   <string name="open_source_licenses_title">ilo %s la ilo open pi sona nanpa</string>
+  <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+  <string name="preference_etp_smartblock_learn_more">o sona</string>
   <!-- Text displayed for "Default provider" under "DNS over HTTPS" providers -->
   <string name="preference_doh_provider_default">(ante ala)</string>
+  <!-- Text displayed for "Custom" under "DNS over HTTPS" providers -->
+  <string name="preference_doh_provider_custom">nasin sina</string>
   <!-- Error text displayed for provider textfield under "DNS over HTTPS" if the URL does not start with "https://" or its scheme is not "https" -->
   <string name="preference_doh_provider_custom_dialog_error_https">nimi nasin li wile e open “https://”</string>
   <!-- Error text displayed for provider textfield under "DNS over HTTPS" if the URL is invalid -->
   <string name="preference_doh_provider_custom_dialog_error_invalid">nimi nasin ni li pakala</string>
+  <!-- Add button text for provider textfield under "DNS over HTTPS" -->
+  <string name="preference_doh_provider_custom_dialog_add">o pana</string>
+  <!-- Text displayed above the input field when adding exceptions for "DNS over HTTPS". -->
+  <string name="preference_doh_exceptions_add_site">nimi lipu</string>
+  <!-- Placeholder URL displayed in the input field when adding exceptions for "DNS over HTTPS". -->
+  <string name="preference_doh_exceptions_add_placeholder">example.com</string>
+  <!-- Text displayed on the button within the input field for adding exceptions to "DNS over HTTPS" -->
+  <string name="preference_doh_exceptions_add_save">o pana</string>
   <!-- About page link text to open privacy notice link -->
   <string name="about_privacy_notice">toki lawa pi len sona</string>
   <!-- About page link text to open know your rights link -->
   <string name="about_know_your_rights">o sona e ken</string>
+  <!-- About page link text to open terms of use link -->
+  <string name="about_terms_of_use" tools:ignore="UnusedResources">lawa kepeken</string>
   <!-- About page link text to open licensing information link -->
   <string name="about_licensing_information">toki lawa pi nasin kepeken</string>
   <!--
@@ -1475,6 +1506,8 @@
   <string name="logins_username_copied">mi pana e nimi sijelo tawa poki ilo</string>
   <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins -->
   <string name="saved_logins_copy_password">o jo e nimi open ni</string>
+  <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login -->
+  <string name="saved_logins_clear_password">o weka e nimi open sina</string>
   <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
   <string name="saved_login_copy_username">o jo e nimi ni</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
@@ -1493,6 +1526,8 @@
   <string name="saved_login_hide_password">o lukin ala e nimi open ni</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">o open e ilo tawa ni: sina lukin e nimi open</string>
+  <!-- Content description (not visible, for screen readers etc.) -->
+  <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">o nasin nimi</string>
   <!-- Preference option for managing saved cards -->
   <string name="preferences_credit_cards_manage_saved_cards_2">o ante e lipu mani</string>
   <!-- Preference option for adding an address -->
@@ -1575,6 +1610,10 @@
   <string name="search_engine_add_custom_search_engine_title">o pana e ilo alasa</string>
   <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
   <string name="search_engine_add_custom_search_engine_button_content_description">o pana e ilo alasa sin</string>
+  <!-- Title of the Edit search engine screen -->
+  <string name="search_engine_edit_custom_search_engine_title">o ante e ilo alasa</string>
+  <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">mi open e lipu \"%s\"</string>
   <!-- First step for the allowing a permission -->
   <string name="phone_feature_blocked_step_settings">1. o lukin e nasin ilo lon ilo Android</string>
   <!-- Label that indicates a site is using a secure connection -->
