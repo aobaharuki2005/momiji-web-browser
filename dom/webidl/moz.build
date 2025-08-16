@@ -509,6 +509,7 @@ WEBIDL_FILES = [
     "CSSKeyframeRule.webidl",
     "CSSKeyframesRule.webidl",
     "CSSKeywordValue.webidl",
+    "CSSLab.webidl",
     "CSSLayerBlockRule.webidl",
     "CSSLayerStatementRule.webidl",
     "CSSMarginRule.webidl",
