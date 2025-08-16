@@ -728,6 +728,8 @@
   <string name="preferences_search_browsing_history">Пошук у гісторыі аглядання</string>
   <!-- Preference title for switch preference to suggest bookmarks when searching -->
   <string name="preferences_search_bookmarks">Пошук у закладках</string>
+  <!-- Preference title for switch preference to show shortcuts when searching -->
+  <string name="preferences_show_shortcuts">Паказаць скароты</string>
   <!-- Preference title for switch preference to suggest synced tabs when searching -->
   <string name="preferences_search_synced_tabs">Шукаць у сінхранізаваных картках</string>
   <!-- Preference for account settings -->
@@ -1191,6 +1193,8 @@
   <string name="tab_manager_floating_action_button_new_normal_tab">Новая картка</string>
   <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
   <string name="tab_manager_floating_action_button_new_private_tab">Прыватная картка</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">Сінхранізаваць карткі</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Дадаць картку</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1331,6 +1335,8 @@
   <string name="download_time_period_yesterday">Учора</string>
   <!-- Text for the header that groups the downloads the past 7 days -->
   <string name="download_time_period_last_7_days">Апошнія 7 дзён</string>
+  <!-- Text for the header that groups the downloads the past 30 days -->
+  <string name="download_time_period_last_30_days">Апошнія 30 дзён</string>
   <!-- Text for the header that groups the downloads older than other groups -->
   <string name="download_time_period_older">Даўней</string>
   <!-- Text for the snackbar action button to view failed download details. -->
