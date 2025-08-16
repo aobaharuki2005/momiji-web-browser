@@ -468,7 +468,8 @@
 
 /* Button with label, e.g. tip button */
 
-.urlbarView-button:where(:not(:empty):not(.urlbarView-button-result-menu)) {
+.urlbarView-button:where(:not(:empty):not(.urlbarView-button-result-menu)),
+.urlbarView-splitbutton-dropmarker {
   border-radius: var(--toolbarbutton-border-radius);
   padding: 0.5em 1em;
   margin-inline-end: 1.4em;
@@ -481,7 +482,7 @@
   flex-basis: initial;
   flex-shrink: 0;
 
-  &:not(:hover) {
+  &:not(:hover, [open]) {
     background-color: var(--button-background-color);
   }
 
@@ -501,7 +502,11 @@
   }
 }
 
-/* Split Buton component */
+/* Split Button component */
+.urlbarView-splitbutton {
+  display: flex;
+}
+
 .urlbarView-splitbutton-main {
   margin-inline-start: 0;
   /* Make the cap to the dropmarker */
@@ -511,6 +516,7 @@
 }
 
 .urlbarView-splitbutton-dropmarker {
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   border-start-start-radius: 0;
   border-end-start-radius: 0;
   padding-inline: 0;
