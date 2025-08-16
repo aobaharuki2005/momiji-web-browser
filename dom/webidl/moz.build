@@ -512,6 +512,7 @@ WEBIDL_FILES = [
     "CSSLab.webidl",
     "CSSLayerBlockRule.webidl",
     "CSSLayerStatementRule.webidl",
+    "CSSLCH.webidl",
     "CSSMarginRule.webidl",
     "CSSMathClamp.webidl",
     "CSSMathInvert.webidl",
