@@ -10,6 +10,7 @@ with Files("**"):
 EXPORTS.mozilla.dom += [
     "CSSColorValue.h",
     "CSSHSL.h",
+    "CSSHWB.h",
     "CSSImageValue.h",
     "CSSKeywordValue.h",
     "CSSMathClamp.h",
@@ -44,6 +45,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "CSSColorValue.cpp",
     "CSSHSL.cpp",
+    "CSSHWB.cpp",
     "CSSImageValue.cpp",
     "CSSKeywordValue.cpp",
     "CSSMathClamp.cpp",
