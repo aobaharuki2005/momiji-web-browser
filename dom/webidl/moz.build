@@ -530,6 +530,7 @@ WEBIDL_FILES = [
     "CSSPositionTryRule.webidl",
     "CSSPropertyRule.webidl",
     "CSSPseudoElement.webidl",
+    "CSSRGB.webidl",
     "CSSRotate.webidl",
     "CSSRule.webidl",
     "CSSRuleList.webidl",
