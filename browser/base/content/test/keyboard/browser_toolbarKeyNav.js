@@ -127,6 +127,11 @@ add_setup(async function () {
       ["accessibility.tabfocus", 7],
       // Bug 1968055 - Temporarily enabled pocket pref while we remove the pref entirely
       ["extensions.pocket.enabled", true],
+      // Taskbar Tabs' page action is controlled by a pref that differs across
+      // platforms and by runtime checks. Patching around it is currently
+      // onorous and creates issues with existing tests without improving test
+      // coverage, so disable it herein.
+      ["browser.taskbarTabs.enabled", false],
     ],
   });
   resetToolbarWithoutDevEditionButtons();
