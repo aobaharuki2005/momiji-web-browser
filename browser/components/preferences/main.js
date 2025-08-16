@@ -148,8 +148,6 @@ Preferences.addAll([
   { id: "accessibility.tabfocus", type: "int" },
   { id: "browser.ml.linkPreview.enabled", type: "bool" },
   { id: "browser.ml.linkPreview.optin", type: "bool" },
-  { id: "browser.ml.linkPreview.shift", type: "bool" },
-  { id: "browser.ml.linkPreview.shiftAlt", type: "bool" },
   { id: "browser.ml.linkPreview.longPress", type: "bool" },
 
   {
@@ -280,15 +278,6 @@ Preferences.addSetting({
   visible: () => LinkPreview.canShowKeyPoints,
 });
 Preferences.addSetting({
-  id: "linkPreviewShift",
-  pref: "browser.ml.linkPreview.shift",
-});
-Preferences.addSetting({
-  id: "linkPreviewShiftAlt",
-  pref: "browser.ml.linkPreview.shiftAlt",
-  visible: () => LinkPreview.canShowLegacy,
-});
-Preferences.addSetting({
   id: "linkPreviewLongPress",
   pref: "browser.ml.linkPreview.longPress",
 });
@@ -398,14 +387,6 @@ let SETTINGS_CONFIG = {
           {
             id: "linkPreviewKeyPoints",
             l10nId: "link-preview-settings-key-points",
-          },
-          {
-            id: "linkPreviewShift",
-            l10nId: "link-preview-settings-shift",
-          },
-          {
-            id: "linkPreviewShiftAlt",
-            l10nId: "link-preview-settings-shift-alt",
           },
           {
             id: "linkPreviewLongPress",
