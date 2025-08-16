@@ -529,6 +529,7 @@ WEBIDL_FILES = [
     "CSSNestedDeclarations.webidl",
     "CSSNumericArray.webidl",
     "CSSNumericValue.webidl",
+    "CSSOKLab.webidl",
     "CSSPageRule.webidl",
     "CSSPerspective.webidl",
     "CSSPositionTryRule.webidl",
