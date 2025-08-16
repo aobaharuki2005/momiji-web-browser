@@ -8,6 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 EXPORTS.mozilla.dom += [
+    "CSSColor.h",
     "CSSColorValue.h",
     "CSSHSL.h",
     "CSSHWB.h",
@@ -47,6 +48,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    "CSSColor.cpp",
     "CSSColorValue.cpp",
     "CSSHSL.cpp",
     "CSSHWB.cpp",

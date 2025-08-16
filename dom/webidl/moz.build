@@ -494,6 +494,7 @@ WEBIDL_FILES = [
     "CSPReport.webidl",
     "CSS.webidl",
     "CSSAnimation.webidl",
+    "CSSColor.webidl",
     "CSSColorValue.webidl",
     "CSSConditionRule.webidl",
     "CSSContainerRule.webidl",
