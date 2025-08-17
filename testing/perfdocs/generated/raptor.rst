@@ -263,7 +263,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/assorted-dom.toml#15>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/assorted-dom.toml#16>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -271,6 +271,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **repository path**: benchmarks/assorted-dom
    * **repository revision**: 61332db584026b73e37066d717a162825408c36b
    * **screen capture**: true
+   * **sparse checkout**: true
    * **test url**: `<http://\<host\>:\<port\>/assorted/driver.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
@@ -473,13 +474,14 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/jetstream2-mobile.toml#16>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/jetstream2-mobile.toml#17>`__
    * **lower is better**: false
    * **page cycles**: 4
    * **page timeout**: 2000000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/JetStream2
    * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **sparse checkout**: true
    * **subtest lower is better**: false
    * **subtest unit**: score
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
@@ -767,13 +769,14 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/jetstream2.toml#16>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/jetstream2.toml#17>`__
    * **lower is better**: false
    * **page cycles**: 4
    * **page timeout**: 2000000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/JetStream2
    * **repository revision**: 6acd3f58f12dbd71cf4743666cad305862681630
+   * **sparse checkout**: true
    * **subtest lower is better**: false
    * **subtest unit**: score
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
@@ -1695,13 +1698,14 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/matrix-react-bench.toml#16>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/matrix-react-bench.toml#17>`__
    * **lower is better**: true
    * **page cycles**: 30
    * **page timeout**: 2000000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/matrix-react-bench
    * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **sparse checkout**: true
    * **subtest lower is better**: true
    * **subtest unit**: ms
    * **test url**: `<http://\<host\>:\<port\>/matrix_demo.html>`__
@@ -5411,7 +5415,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/twitch-animation.toml#15>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/twitch-animation.toml#16>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 2000000
@@ -5419,6 +5423,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/twitch-animation
    * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **sparse checkout**: true
    * **subtest lower is better**: true
    * **subtest unit**: ms
    * **test url**: `<http://\<host\>:\<port\>/index.html>`__
@@ -5603,13 +5608,14 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/unity-webgl-desktop.toml#14>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/unity-webgl-desktop.toml#15>`__
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 420000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/unity-webgl
    * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **sparse checkout**: true
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
@@ -6738,13 +6744,14 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/wasm-misc.toml#14>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/wasm-misc.toml#15>`__
    * **lower is better**: true
    * **page cycles**: 5
    * **page timeout**: 1200000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/wasm-misc
    * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **sparse checkout**: true
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
@@ -6942,7 +6949,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/wasm-misc-baseline.toml#13>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/wasm-misc-baseline.toml#14>`__
    * **lower is better**: true
    * **page cycles**: 5
    * **page timeout**: 1200000
@@ -6950,6 +6957,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/wasm-misc
    * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **sparse checkout**: true
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
@@ -7132,7 +7140,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/wasm-misc-optimizing.toml#13>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/benchmarks/wasm-misc-optimizing.toml#14>`__
    * **lower is better**: true
    * **page cycles**: 5
    * **page timeout**: 1200000
@@ -7140,6 +7148,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/wasm-misc
    * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **sparse checkout**: true
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
@@ -19642,13 +19651,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#21>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#22>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=av01.0.04M.08&latencyModes=quality&width=1920&height=1080&framerate=30>`__
    * **type**: benchmark
@@ -19853,13 +19863,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#18>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#19>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=av01.0.04M.08&latencyModes=realtime&width=1920&height=1080&framerate=30>`__
    * **type**: benchmark
@@ -20064,13 +20075,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#27>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#28>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=avc1.42001E:avc&latencyModes=quality&width=1920&height=1080&framerate=30>`__
    * **type**: benchmark
@@ -20197,13 +20209,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#33>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#34>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=avc1.42001E:avc&latencyModes=quality&width=640&height=480&framerate=30>`__
    * **type**: benchmark
@@ -20350,13 +20363,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#24>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#25>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=avc1.42001E:annexb&latencyModes=realtime&width=1920&height=1080&framerate=30>`__
    * **type**: benchmark
@@ -20483,13 +20497,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#30>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#31>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=avc1.42001E:annexb&latencyModes=realtime&width=640&height=480&framerate=30>`__
    * **type**: benchmark
@@ -20636,13 +20651,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#39>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#40>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=vp8&latencyModes=quality&width=1920&height=1080&framerate=30>`__
    * **type**: benchmark
@@ -20847,13 +20863,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#36>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#37>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=vp8&latencyModes=realtime&width=1920&height=1080&framerate=30>`__
    * **type**: benchmark
@@ -21058,13 +21075,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#45>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#46>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=vp09.00.10.08&latencyModes=quality&width=1920&height=1080&framerate=30>`__
    * **type**: benchmark
@@ -21269,13 +21287,14 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#42>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-webcodecs.toml#43>`__
    * **lower is better**: true
    * **page cycles**: 3
    * **page timeout**: 360000
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/webcodecs
    * **repository revision**: d34775ba6b6cef6068005c05b570d6c79eb0f7d8
+   * **sparse checkout**: true
    * **support class**: browsertime_benchmark.py
    * **test url**: `<http://\<host\>:\<port\>/index.html?raptor&codecs=vp09.00.10.08&latencyModes=realtime&width=1920&height=1080&framerate=30>`__
    * **type**: benchmark
@@ -21484,7 +21503,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **gecko profile features**: stackwalk,js,cpu,java,processcpu,screenshots,memory
    * **gecko profile interval**: 1
    * **gecko profile threads**: BackgroundThreadPool,Compositor,decoder,GeckoMain,gmp,graph,grph,InotifyEventThread,IPDL Background,media,ModuleProcessThread,PacerThread,RemVidChild,RenderBackend,Renderer,SwComposite,TextureUpdate,ImageBridgeChld
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-video-playback-latency.toml#36>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-video-playback-latency.toml#37>`__
    * **lower is better**: true
    * **measure**: firstFrame, secondFrame, lastFrame, estimatedFirstFrameLatency, estimatedAnyFrameLatency
    * **newtab per cycle**: true
@@ -21494,6 +21513,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/video-playback-latency
    * **repository revision**: e3d0295c15cfdd6f32e6d4270de0ed5d6c1632cd
+   * **sparse checkout**: true
    * **support class**: video_playback_latency.py
    * **test url**: `<http://\<host\>:\<port\>/av1_1080p.html>`__
    * **type**: pageload
@@ -21786,7 +21806,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **gecko profile features**: stackwalk,js,cpu,java,processcpu,screenshots,memory
    * **gecko profile interval**: 1
    * **gecko profile threads**: BackgroundThreadPool,Compositor,decoder,GeckoMain,gmp,graph,grph,InotifyEventThread,IPDL Background,media,ModuleProcessThread,PacerThread,RemVidChild,RenderBackend,Renderer,SwComposite,TextureUpdate,ImageBridgeChld
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-video-playback-latency.toml#30>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-video-playback-latency.toml#31>`__
    * **lower is better**: true
    * **measure**: firstFrame, secondFrame, lastFrame, estimatedFirstFrameLatency, estimatedAnyFrameLatency
    * **newtab per cycle**: true
@@ -21796,6 +21816,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/video-playback-latency
    * **repository revision**: e3d0295c15cfdd6f32e6d4270de0ed5d6c1632cd
+   * **sparse checkout**: true
    * **support class**: video_playback_latency.py
    * **test url**: `<http://\<host\>:\<port\>/h264_1080p.html>`__
    * **type**: pageload
@@ -22093,7 +22114,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **gecko profile features**: stackwalk,js,cpu,java,processcpu,screenshots,memory
    * **gecko profile interval**: 1
    * **gecko profile threads**: BackgroundThreadPool,Compositor,decoder,GeckoMain,gmp,graph,grph,InotifyEventThread,IPDL Background,media,ModuleProcessThread,PacerThread,RemVidChild,RenderBackend,Renderer,SwComposite,TextureUpdate,ImageBridgeChld
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-video-playback-latency.toml#33>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-video-playback-latency.toml#34>`__
    * **lower is better**: true
    * **measure**: firstFrame, secondFrame, lastFrame, estimatedFirstFrameLatency, estimatedAnyFrameLatency
    * **newtab per cycle**: true
@@ -22103,6 +22124,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **repository**: https://github.com/mozilla/perf-automation
    * **repository path**: benchmarks/video-playback-latency
    * **repository revision**: e3d0295c15cfdd6f32e6d4270de0ed5d6c1632cd
+   * **sparse checkout**: true
    * **support class**: video_playback_latency.py
    * **test url**: `<http://\<host\>:\<port\>/vp9_1080p.html>`__
    * **type**: pageload
