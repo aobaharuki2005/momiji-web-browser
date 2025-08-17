@@ -2048,7 +2048,7 @@
   <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
   <string name="collection_menu_button_content_description">Meni zběrkow</string>
   <!-- Label to describe what collections are to a new user without any collections -->
-  <string name="no_collections_description2">Zběrajće wěcy, kotrež su wam wažne.\nZeskupće podobne pytanja a rajtarki za spěšny přistup pozdźišo.</string>
+  <string name="no_collections_description2">Hromadźće wěcy, kotrež su wam wažne.\nZeskupće podobne pytanja a rajtarki za spěšny přistup pozdźišo.</string>
   <!-- Title for the "select tabs" step of the collection creator -->
   <string name="create_collection_select_tabs">Rajtarki wubrać</string>
   <!-- Title for the "select collection" step of the collection creator -->
@@ -2427,7 +2427,7 @@
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
   <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptokopaki</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
-  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Znate porstowe wotćišće</string>
+  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Znate hromadźaki porstowych wotćišćow</string>
   <!-- Button label for navigating to the Enhanced Tracking Protection details -->
   <string name="enhanced_tracking_protection_details">Podrobnosće</string>
   <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
@@ -2479,11 +2479,11 @@
   <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_redirect_trackers_description">Zhaša placki, kotrež su so přez dalesposrědkowanja k znatym slědowacym websydłam stajili.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
-  <string name="etp_suspected_fingerprinters_title">Podhladne porstowe wotćišće</string>
+  <string name="etp_suspected_fingerprinters_title">Podhladne hromadźaki porstowych wotćišćow</string>
   <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
-  <string name="etp_suspected_fingerprinters_description">Zmóžnja škit přećiwo porstowym wotćišćam, zo byšće podhladne kradnjenja porstowych wotćišćow blokował.</string>
+  <string name="etp_suspected_fingerprinters_description">Zmóžnja škit přećiwo hromadźakam porstowych wotćišćow, zo byšće podhladne hromadźaki porstowych wotćišćow blokował.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_known_fingerprinters_title">Znate porstowe wotćišće</string>
+  <string name="etp_known_fingerprinters_title">Znate hromadźaki porstowych wotćišćow</string>
   <!--
     Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
     as we use it on the UI to indicate which trackers have been partially unblocked.
