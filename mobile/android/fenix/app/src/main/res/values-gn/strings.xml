@@ -1469,6 +1469,12 @@
   <string name="tabs_header_normal_tabs_title">Tendayke</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">Mbojuehe</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">Tendayke pyahu</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">Tendayke pyahu ñemigua</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">Embojuehe tendayke</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Embojuaju tendayke</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1959,6 +1965,10 @@
   <string name="clear_permissions_on_all_sites">Emboguete ñemoneĩ opaite tendápe</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">Mbohetajehegui</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">Tembiporu’i ha mba’epytyvõrã mba’e’okagua</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">Mba’e’oka ñanduti rehegua</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Ta’ãnganohẽha</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2985,6 +2995,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">Jeikepya’eha</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">Ehechaukapa tairenda mbopya’eha</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Emohu’ãma mbopya’ehápe g̃uarã</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -3830,6 +3845,13 @@
     Title for the pop up prompt
   -->
   <string name="terms_of_use_prompt_title">Roreko ñembohekopyahu</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Rohaíma %1$s %2$s ha hekopyahúva ore %3$s.</string>
   <!--
     Second part of the terms of use pop up prompt
     %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use

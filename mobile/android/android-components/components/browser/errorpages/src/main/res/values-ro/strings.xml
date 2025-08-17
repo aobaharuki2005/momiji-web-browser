@@ -51,7 +51,7 @@
   <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
   <string name="mozac_browser_errorpages_redirect_loop_title">Pagina nu se redirecționează corect</string>
   <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-  <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Browserul a oprit încercarea de a recupera elementul solicitat. Site-ul redirecționează solicitarea într-un mod care nu se va finaliza niciodată. </p> <ul> <li>Ai dezactivat sau ai blocat cookie-urile solicitate de acest site?</li> <li>Dacă acceptarea cookie-urilor site-ului nu rezolvă problema, este probabil o problemă de configurare a serverului și nu a dispozitivului tău.</p> <ul>]]></string>
+  <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Browserul a oprit încercarea de a recupera elementul solicitat. Site-ul redirecționează solicitarea într-un mod care nu se va finaliza niciodată. </p> <ul> <li>Ai dezactivat sau ai blocat cookie-urile solicitate de acest site?</li> <li>Dacă acceptarea cookie-urilor site-ului nu rezolvă problema, este probabil o problemă de configurare a serverului și nu a dispozitivului tău.</li> </ul>]]></string>
   <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
   <string name="mozac_browser_errorpages_offline_title">Mod offline</string>
   <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
