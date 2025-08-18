@@ -204,11 +204,6 @@ Zone::~Zone() {
   }
 
   js_delete(jitZone_.ref());
-
-  if (preservedWrappers_) {
-    MOZ_RELEASE_ASSERT(preservedWrappersCount_ == 0);
-    js_free(preservedWrappers_);
-  }
 }
 
 bool Zone::init() {

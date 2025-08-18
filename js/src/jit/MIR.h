@@ -8278,15 +8278,13 @@ class MAddAndStoreSlot
   Kind kind_;
   uint32_t slotOffset_;
   CompilerShape shape_;
-  bool preserveWrapper_;
 
   MAddAndStoreSlot(MDefinition* obj, MDefinition* value, Kind kind,
-                   uint32_t slotOffset, Shape* shape, bool preserveWrapper)
+                   uint32_t slotOffset, Shape* shape)
       : MBinaryInstruction(classOpcode, obj, value),
         kind_(kind),
         slotOffset_(slotOffset),
-        shape_(shape),
-        preserveWrapper_(preserveWrapper) {}
+        shape_(shape) {}
 
  public:
   INSTRUCTION_HEADER(AddAndStoreSlot)
@@ -8296,9 +8294,6 @@ class MAddAndStoreSlot
   Kind kind() const { return kind_; }
   uint32_t slotOffset() const { return slotOffset_; }
   Shape* shape() const { return shape_; }
-  bool preserveWrapper() const { return preserveWrapper_; }
-
-  bool possiblyCalls() const override { return preserveWrapper_; }
 
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::ObjectFields |

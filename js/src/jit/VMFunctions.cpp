@@ -2645,11 +2645,6 @@ bool DoStringToInt64(JSContext* cx, HandleString str, uint64_t* res) {
   return true;
 }
 
-bool PreserveWrapper(JSContext* cx, JSObject* obj) {
-  AutoUnsafeCallWithABI unsafe;
-  return cx->zone()->preserveWrapper(obj);
-}
-
 template <EqualityKind Kind>
 bool BigIntEqual(BigInt* x, BigInt* y) {
   AutoUnsafeCallWithABI unsafe;

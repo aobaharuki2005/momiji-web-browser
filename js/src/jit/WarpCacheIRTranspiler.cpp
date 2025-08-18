@@ -262,8 +262,7 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   bool emitAddAndStoreSlotShared(MAddAndStoreSlot::Kind kind,
                                  ObjOperandId objId, uint32_t offsetOffset,
-                                 ValOperandId rhsId, uint32_t newShapeOffset,
-                                 bool preserveWrapper);
+                                 ValOperandId rhsId, uint32_t newShapeOffset);
 
   MInstruction* emitTypedArrayLength(ArrayBufferViewKind viewKind,
                                      MDefinition* obj);
@@ -2971,7 +2970,7 @@ bool WarpCacheIRTranspiler::emitStoreFixedSlotUndefinedResult(
 
 bool WarpCacheIRTranspiler::emitAddAndStoreSlotShared(
     MAddAndStoreSlot::Kind kind, ObjOperandId objId, uint32_t offsetOffset,
-    ValOperandId rhsId, uint32_t newShapeOffset, bool preserveWrapper) {
+    ValOperandId rhsId, uint32_t newShapeOffset) {
   int32_t offset = int32StubField(offsetOffset);
   Shape* shape = shapeStubField(newShapeOffset);
 
@@ -2981,8 +2980,8 @@ bool WarpCacheIRTranspiler::emitAddAndStoreSlotShared(
   auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
   add(barrier);
 
-  auto* addAndStore = MAddAndStoreSlot::New(alloc(), obj, rhs, kind, offset,
-                                            shape, preserveWrapper);
+  auto* addAndStore =
+      MAddAndStoreSlot::New(alloc(), obj, rhs, kind, offset, shape);
   addEffectful(addAndStore);
 
   return resumeAfter(addAndStore);
@@ -2991,26 +2990,21 @@ bool WarpCacheIRTranspiler::emitAddAndStoreSlotShared(
 bool WarpCacheIRTranspiler::emitAddAndStoreFixedSlot(ObjOperandId objId,
                                                      uint32_t offsetOffset,
                                                      ValOperandId rhsId,
-                                                     uint32_t newShapeOffset,
-                                                     bool preserveWrapper) {
+                                                     uint32_t newShapeOffset) {
   return emitAddAndStoreSlotShared(MAddAndStoreSlot::Kind::FixedSlot, objId,
-                                   offsetOffset, rhsId, newShapeOffset,
-                                   preserveWrapper);
+                                   offsetOffset, rhsId, newShapeOffset);
 }
 
-bool WarpCacheIRTranspiler::emitAddAndStoreDynamicSlot(ObjOperandId objId,
-                                                       uint32_t offsetOffset,
-                                                       ValOperandId rhsId,
-                                                       uint32_t newShapeOffset,
-                                                       bool preserveWrapper) {
+bool WarpCacheIRTranspiler::emitAddAndStoreDynamicSlot(
+    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
+    uint32_t newShapeOffset) {
   return emitAddAndStoreSlotShared(MAddAndStoreSlot::Kind::DynamicSlot, objId,
-                                   offsetOffset, rhsId, newShapeOffset,
-                                   preserveWrapper);
+                                   offsetOffset, rhsId, newShapeOffset);
 }
 
 bool WarpCacheIRTranspiler::emitAllocateAndStoreDynamicSlot(
     ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    uint32_t newShapeOffset, uint32_t numNewSlotsOffset, bool preserveWrapper) {
+    uint32_t newShapeOffset, uint32_t numNewSlotsOffset) {
   int32_t offset = int32StubField(offsetOffset);
   Shape* shape = shapeStubField(newShapeOffset);
   uint32_t numNewSlots = uint32StubField(numNewSlotsOffset);
@@ -3021,8 +3015,8 @@ bool WarpCacheIRTranspiler::emitAllocateAndStoreDynamicSlot(
   auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
   add(barrier);
 
-  auto* allocateAndStore = MAllocateAndStoreSlot::New(
-      alloc(), obj, rhs, offset, shape, numNewSlots, preserveWrapper);
+  auto* allocateAndStore =
+      MAllocateAndStoreSlot::New(alloc(), obj, rhs, offset, shape, numNewSlots);
   addEffectful(allocateAndStore);
 
   return resumeAfter(allocateAndStore);

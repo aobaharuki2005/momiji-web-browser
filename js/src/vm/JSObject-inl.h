@@ -554,11 +554,8 @@ static inline bool MaybePreserveDOMWrapper(JSContext* cx, HandleObject obj) {
     return true;
   }
 
-  if (!obj->zone()->preserveWrapper(obj.get())) {
-    return cx->runtime()->preserveWrapperCallback(cx, obj);
-  }
-
-  return true;
+  MOZ_ASSERT(cx->runtime()->preserveWrapperCallback);
+  return cx->runtime()->preserveWrapperCallback(cx, obj);
 }
 
 } /* namespace js */

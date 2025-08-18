@@ -486,10 +486,6 @@ void js::SetPreserveWrapperCallbacks(
   cx->runtime()->hasReleasedWrapperCallback = hasReleasedWrapper;
 }
 
-void js::CommitPendingWrapperPreservations(JSContext* cx) {
-  cx->runtime()->commitPendingWrapperPreservations();
-}
-
 JS_PUBLIC_API unsigned JS_PCToLineNumber(
     JSScript* script, jsbytecode* pc,
     JS::LimitedColumnNumberOneOrigin* columnp) {

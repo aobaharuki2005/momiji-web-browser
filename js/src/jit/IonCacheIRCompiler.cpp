@@ -1416,8 +1416,7 @@ bool IonCacheIRCompiler::emitStoreDynamicSlot(ObjOperandId objId,
 
 bool IonCacheIRCompiler::emitAddAndStoreSlotShared(
     CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    uint32_t newShapeOffset, Maybe<uint32_t> numNewSlotsOffset,
-    bool preserveWrapper) {
+    uint32_t newShapeOffset, Maybe<uint32_t> numNewSlotsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   int32_t offset = int32StubField(offsetOffset);
@@ -1426,20 +1425,8 @@ bool IonCacheIRCompiler::emitAddAndStoreSlotShared(
   AutoScratchRegister scratch1(allocator, masm);
 
   Maybe<AutoScratchRegister> scratch2;
-  if (op == CacheOp::AllocateAndStoreDynamicSlot || preserveWrapper) {
+  if (op == CacheOp::AllocateAndStoreDynamicSlot) {
     scratch2.emplace(allocator, masm);
-  }
-
-  FailurePath* failure = nullptr;
-  if (preserveWrapper) {
-    if (!addFailurePath(&failure)) {
-      return false;
-    }
-    LiveRegisterSet save = liveVolatileRegs();
-    save.takeUnchecked(scratch1);
-    save.takeUnchecked(scratch2.ref());
-    masm.preserveWrapper(obj, scratch1, scratch2.ref(), save);
-    masm.branchIfFalseBool(scratch1, failure->label());
   }
 
   Shape* newShape = shapeStubField(newShapeOffset);
@@ -1449,7 +1436,8 @@ bool IonCacheIRCompiler::emitAddAndStoreSlotShared(
     // only fallible operation here. Note that growSlotsPure is
     // fallible but does not GC.
 
-    if (!failure && !addFailurePath(&failure)) {
+    FailurePath* failure;
+    if (!addFailurePath(&failure)) {
       return false;
     }
 
@@ -1503,34 +1491,32 @@ bool IonCacheIRCompiler::emitAddAndStoreSlotShared(
 bool IonCacheIRCompiler::emitAddAndStoreFixedSlot(ObjOperandId objId,
                                                   uint32_t offsetOffset,
                                                   ValOperandId rhsId,
-                                                  uint32_t newShapeOffset,
-                                                  bool preserveWrapper) {
+                                                  uint32_t newShapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Maybe<uint32_t> numNewSlotsOffset = mozilla::Nothing();
   return emitAddAndStoreSlotShared(CacheOp::AddAndStoreFixedSlot, objId,
                                    offsetOffset, rhsId, newShapeOffset,
-                                   numNewSlotsOffset, preserveWrapper);
+                                   numNewSlotsOffset);
 }
 
 bool IonCacheIRCompiler::emitAddAndStoreDynamicSlot(ObjOperandId objId,
                                                     uint32_t offsetOffset,
                                                     ValOperandId rhsId,
-                                                    uint32_t newShapeOffset,
-                                                    bool preserveWrapper) {
+                                                    uint32_t newShapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Maybe<uint32_t> numNewSlotsOffset = mozilla::Nothing();
   return emitAddAndStoreSlotShared(CacheOp::AddAndStoreDynamicSlot, objId,
                                    offsetOffset, rhsId, newShapeOffset,
-                                   numNewSlotsOffset, preserveWrapper);
+                                   numNewSlotsOffset);
 }
 
 bool IonCacheIRCompiler::emitAllocateAndStoreDynamicSlot(
     ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    uint32_t newShapeOffset, uint32_t numNewSlotsOffset, bool preserveWrapper) {
+    uint32_t newShapeOffset, uint32_t numNewSlotsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitAddAndStoreSlotShared(
-      CacheOp::AllocateAndStoreDynamicSlot, objId, offsetOffset, rhsId,
-      newShapeOffset, mozilla::Some(numNewSlotsOffset), preserveWrapper);
+  return emitAddAndStoreSlotShared(CacheOp::AllocateAndStoreDynamicSlot, objId,
+                                   offsetOffset, rhsId, newShapeOffset,
+                                   mozilla::Some(numNewSlotsOffset));
 }
 
 bool IonCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
