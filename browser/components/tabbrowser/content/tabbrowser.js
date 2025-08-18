@@ -115,7 +115,7 @@
         TabStateFlusher:
           "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
         UrlbarProviderOpenTabs:
-          "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
+          "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
       });
       ChromeUtils.defineLazyGetter(this, "tabLocalization", () => {
         return new Localization(

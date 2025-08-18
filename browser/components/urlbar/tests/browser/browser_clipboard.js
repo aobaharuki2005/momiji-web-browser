@@ -9,7 +9,7 @@
 
 const { UrlbarProviderClipboard, CLIPBOARD_IMPRESSION_LIMIT } =
   ChromeUtils.importESModule(
-    "moz-src:///browser/components/urlbar/UrlbarProviderClipboard.sys.mjs"
+    "resource:///modules/UrlbarProviderClipboard.sys.mjs"
   );
 
 add_setup(async function () {

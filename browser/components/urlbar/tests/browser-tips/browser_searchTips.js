@@ -13,9 +13,9 @@
 ChromeUtils.defineESModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   HttpServer: "resource://testing-common/httpd.sys.mjs",
-  UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderSearchTips:
-    "moz-src:///browser/components/urlbar/UrlbarProviderSearchTips.sys.mjs",
+    "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
 });
 
 // These should match the same consts in UrlbarProviderSearchTips.sys.mjs.

@@ -7,7 +7,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderClipboard:
-    "moz-src:///browser/components/urlbar/UrlbarProviderClipboard.sys.mjs",
+    "resource:///modules/UrlbarProviderClipboard.sys.mjs",
 });
 
 async function doHeuristicsTest({ trigger, assert }) {

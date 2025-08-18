@@ -5,15 +5,13 @@
 /* eslint-disable jsdoc/require-param */
 
 ChromeUtils.defineESModuleGetters(this, {
-  QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
-  UrlbarProviderAutofill:
-    "moz-src:///browser/components/urlbar/UrlbarProviderAutofill.sys.mjs",
+  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
   UrlbarProviderQuickSuggest:
-    "moz-src:///browser/components/urlbar/UrlbarProviderQuickSuggest.sys.mjs",
-  UrlbarSearchUtils:
-    "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
 add_setup(async function setUpQuickSuggestXpcshellTest() {

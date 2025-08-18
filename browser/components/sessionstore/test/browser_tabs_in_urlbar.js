@@ -14,7 +14,7 @@ const { PlacesTestUtils } = ChromeUtils.importESModule(
 );
 
 const { UrlbarProviderOpenTabs } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs"
+  "resource:///modules/UrlbarProviderOpenTabs.sys.mjs"
 );
 
 const { UrlbarTestUtils } = ChromeUtils.importESModule(

@@ -13,11 +13,11 @@ Services.scriptloader.loadSubScript(
 ChromeUtils.defineESModuleGetters(this, {
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.sys.mjs",
-  QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarProviderQuickSuggest:
-    "moz-src:///browser/components/urlbar/UrlbarProviderQuickSuggest.sys.mjs",
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {

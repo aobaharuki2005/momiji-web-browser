@@ -12,7 +12,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderClipboard:
-    "moz-src:///browser/components/urlbar/UrlbarProviderClipboard.sys.mjs",
+    "resource:///modules/UrlbarProviderClipboard.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
 });
 

@@ -5,7 +5,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarSearchTermsPersistence:
-    "moz-src:///browser/components/urlbar/UrlbarSearchTermsPersistence.sys.mjs",
+    "resource:///modules/UrlbarSearchTermsPersistence.sys.mjs",
 });
 
 const PROVIDERS = [

@@ -9,23 +9,21 @@
 import {
   UrlbarMuxer,
   UrlbarUtils,
-} from "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs";
+} from "resource:///modules/UrlbarUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
-  UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderGlobalActions:
-    "moz-src:///browser/components/urlbar/UrlbarProviderGlobalActions.sys.mjs",
-  UrlbarProviderOpenTabs:
-    "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
+    "resource:///modules/UrlbarProviderGlobalActions.sys.mjs",
+  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
   UrlbarProviderQuickSuggest:
-    "moz-src:///browser/components/urlbar/UrlbarProviderQuickSuggest.sys.mjs",
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderTabToSearch:
-    "moz-src:///browser/components/urlbar/UrlbarProviderTabToSearch.sys.mjs",
-  UrlbarSearchUtils:
-    "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
+    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>

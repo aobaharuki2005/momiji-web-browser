@@ -10,7 +10,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderUnitConversion:
-    "moz-src:///browser/components/urlbar/UrlbarProviderUnitConversion.sys.mjs",
+    "resource:///modules/UrlbarProviderUnitConversion.sys.mjs",
 });
 
 const TEST_DATA = [

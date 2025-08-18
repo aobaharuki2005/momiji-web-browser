@@ -9,7 +9,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   ActionsProviderQuickActions:
-    "moz-src:///browser/components/urlbar/ActionsProviderQuickActions.sys.mjs",
+    "resource:///modules/ActionsProviderQuickActions.sys.mjs",
 });
 
 let testActionCalled = 0;

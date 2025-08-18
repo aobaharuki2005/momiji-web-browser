@@ -7,7 +7,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  MLSuggest: "moz-src:///browser/components/urlbar/private/MLSuggest.sys.mjs",
+  MLSuggest: "resource:///modules/urlbar/private/MLSuggest.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 

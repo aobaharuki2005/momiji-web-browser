@@ -9,7 +9,7 @@
 requestLongerTimeout(5);
 
 ChromeUtils.defineESModuleGetters(this, {
-  UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 let tab;

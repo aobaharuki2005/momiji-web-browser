@@ -15,7 +15,7 @@ const DYNAMIC_RESULT_TYPE = "onboardTabToSearch";
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderTabToSearch:
-    "moz-src:///browser/components/urlbar/UrlbarProviderTabToSearch.sys.mjs",
+    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
 });
 
 add_setup(async function () {

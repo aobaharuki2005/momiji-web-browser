@@ -13,8 +13,7 @@ const { setTimeout } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProviderAutofill:
-    "moz-src:///browser/components/urlbar/UrlbarProviderAutofill.sys.mjs",
+  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
 });
 
 /**

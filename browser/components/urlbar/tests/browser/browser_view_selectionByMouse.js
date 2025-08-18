@@ -7,7 +7,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   ActionsProviderQuickActions:
-    "moz-src:///browser/components/urlbar/ActionsProviderQuickActions.sys.mjs",
+    "resource:///modules/ActionsProviderQuickActions.sys.mjs",
 });
 
 add_setup(async function () {

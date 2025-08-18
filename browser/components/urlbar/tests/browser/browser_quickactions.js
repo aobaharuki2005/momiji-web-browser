@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   UpdateService: "resource://gre/modules/UpdateService.sys.mjs",
   ActionsProviderQuickActions:
-    "moz-src:///browser/components/urlbar/ActionsProviderQuickActions.sys.mjs",
+    "resource:///modules/ActionsProviderQuickActions.sys.mjs",
 });
 
 const DUMMY_PAGE =

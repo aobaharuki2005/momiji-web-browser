@@ -5,7 +5,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderInterventions:
-    "moz-src:///browser/components/urlbar/UrlbarProviderInterventions.sys.mjs",
+    "resource:///modules/UrlbarProviderInterventions.sys.mjs",
 });
 
 add_setup(async function () {

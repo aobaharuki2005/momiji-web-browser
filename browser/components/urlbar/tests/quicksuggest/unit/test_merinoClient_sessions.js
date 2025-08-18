@@ -7,7 +7,7 @@
 "use strict";
 
 const { MerinoClient } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/urlbar/MerinoClient.sys.mjs"
+  "resource:///modules/MerinoClient.sys.mjs"
 );
 
 const { SEARCH_PARAMS } = MerinoClient;

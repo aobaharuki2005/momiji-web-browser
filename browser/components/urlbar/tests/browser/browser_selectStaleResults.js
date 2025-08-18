@@ -8,7 +8,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  UrlbarView: "moz-src:///browser/components/urlbar/UrlbarView.sys.mjs",
+  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
 add_setup(async function () {

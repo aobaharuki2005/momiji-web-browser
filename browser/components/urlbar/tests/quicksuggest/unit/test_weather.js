@@ -12,10 +12,9 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  MerinoClient: "moz-src:///browser/components/urlbar/MerinoClient.sys.mjs",
+  MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
-  UrlbarProviderPlaces:
-    "moz-src:///browser/components/urlbar/UrlbarProviderPlaces.sys.mjs",
+  UrlbarProviderPlaces: "resource:///modules/UrlbarProviderPlaces.sys.mjs",
 });
 
 const { WEATHER_SUGGESTION } = MerinoTestUtils;

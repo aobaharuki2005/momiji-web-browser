@@ -83,9 +83,6 @@
       "chrome://browser/content/ipprotection/ipprotection-header.mjs": [
         "browser/components/ipprotection/content/ipprotection-header.mjs"
       ],
-      "chrome://browser/content/ipprotection/ipprotection-message-bar.mjs": [
-        "browser/components/ipprotection/content/ipprotection-message-bar.mjs"
-      ],
       "chrome://browser/content/ipprotection/ipprotection-signedout.mjs": [
         "browser/components/ipprotection/content/ipprotection-signedout.mjs"
       ],
@@ -139,6 +136,9 @@
       ],
       "chrome://browser/content/tabbrowser/tab-hover-preview.mjs": [
         "browser/components/tabbrowser/content/tab-hover-preview.mjs"
+      ],
+      "chrome://browser/content/tabbrowser/tabgroup-hover-preview.mjs": [
+        "browser/components/tabbrowser/content/tabgroup-hover-preview.mjs"
       ],
       "chrome://browser/content/translations/TranslationsPanelShared.sys.mjs": [
         "browser/components/translations/content/TranslationsPanelShared.sys.mjs"
@@ -848,6 +848,18 @@
       "resource:///modules/AccountsGlue.sys.mjs": [
         "browser/components/AccountsGlue.sys.mjs"
       ],
+      "resource:///modules/ActionsProvider.sys.mjs": [
+        "browser/components/urlbar/ActionsProvider.sys.mjs"
+      ],
+      "resource:///modules/ActionsProviderContextualSearch.sys.mjs": [
+        "browser/components/urlbar/ActionsProviderContextualSearch.sys.mjs"
+      ],
+      "resource:///modules/ActionsProviderQuickActions.sys.mjs": [
+        "browser/components/urlbar/ActionsProviderQuickActions.sys.mjs"
+      ],
+      "resource:///modules/ActionsProviderTabGroups.sys.mjs": [
+        "browser/components/urlbar/ActionsProviderTabGroups.sys.mjs"
+      ],
       "resource:///modules/BrowserGlue.sys.mjs": [
         "browser/components/BrowserGlue.sys.mjs"
       ],
@@ -959,6 +971,9 @@
       "resource:///modules/MSMigrationUtils.sys.mjs": [
         "browser/components/migration/MSMigrationUtils.sys.mjs"
       ],
+      "resource:///modules/MerinoClient.sys.mjs": [
+        "browser/components/urlbar/MerinoClient.sys.mjs"
+      ],
       "resource:///modules/MigrationUtils.sys.mjs": [
         "browser/components/migration/MigrationUtils.sys.mjs"
       ],
@@ -983,6 +998,12 @@
       "resource:///modules/ProcessHangMonitor.sys.mjs": [
         "browser/modules/ProcessHangMonitor.sys.mjs"
       ],
+      "resource:///modules/QuickActionsLoaderDefault.sys.mjs": [
+        "browser/components/urlbar/QuickActionsLoaderDefault.sys.mjs"
+      ],
+      "resource:///modules/QuickSuggest.sys.mjs": [
+        "browser/components/urlbar/QuickSuggest.sys.mjs"
+      ],
       "resource:///modules/SafariProfileMigrator.sys.mjs": [
         "browser/components/migration/SafariProfileMigrator.sys.mjs"
       ],
@@ -994,6 +1015,9 @@
       ],
       "resource:///modules/ScreenshotsUtils.sys.mjs": [
         "browser/components/screenshots/ScreenshotsUtils.sys.mjs"
+      ],
+      "resource:///modules/SearchModeSwitcher.sys.mjs": [
+        "browser/components/urlbar/SearchModeSwitcher.sys.mjs"
       ],
       "resource:///modules/SelectionChangedMenulist.sys.mjs": [
         "browser/modules/SelectionChangedMenulist.sys.mjs"
@@ -1030,6 +1054,93 @@
       ],
       "resource:///modules/UnitConverterTimezone.sys.mjs": [
         "browser/components/urlbar/unitconverters/UnitConverterTimezone.sys.mjs"
+      ],
+      "resource:///modules/UrlbarController.sys.mjs": [
+        "browser/components/urlbar/UrlbarController.sys.mjs"
+      ],
+      "resource:///modules/UrlbarEventBufferer.sys.mjs": [
+        "browser/components/urlbar/UrlbarEventBufferer.sys.mjs"
+      ],
+      "resource:///modules/UrlbarInput.sys.mjs": [
+        "browser/components/urlbar/UrlbarInput.sys.mjs"
+      ],
+      "resource:///modules/UrlbarPrefs.sys.mjs": [
+        "browser/components/urlbar/UrlbarPrefs.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderAutofill.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderAutofill.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderCalculator.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderCalculator.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderClipboard.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderClipboard.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderGlobalActions.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderGlobalActions.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderInterventions.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderInterventions.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderOpenTabs.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderPlaces.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderPlaces.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderQuickSuggest.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderQuickSuggestContextualOptIn.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderQuickSuggestContextualOptIn.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderRecentSearches.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderRecentSearches.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderSearchSuggestions.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderSearchSuggestions.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderSearchTips.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderSearchTips.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderSemanticHistorySearch.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderSemanticHistorySearch.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderTabToSearch.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderTabToSearch.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderTopSites.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderTopSites.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderUnitConversion.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderUnitConversion.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProvidersManager.sys.mjs": [
+        "browser/components/urlbar/UrlbarProvidersManager.sys.mjs"
+      ],
+      "resource:///modules/UrlbarResult.sys.mjs": [
+        "browser/components/urlbar/UrlbarResult.sys.mjs"
+      ],
+      "resource:///modules/UrlbarSearchOneOffs.sys.mjs": [
+        "browser/components/urlbar/UrlbarSearchOneOffs.sys.mjs"
+      ],
+      "resource:///modules/UrlbarSearchTermsPersistence.sys.mjs": [
+        "browser/components/urlbar/UrlbarSearchTermsPersistence.sys.mjs"
+      ],
+      "resource:///modules/UrlbarSearchUtils.sys.mjs": [
+        "browser/components/urlbar/UrlbarSearchUtils.sys.mjs"
+      ],
+      "resource:///modules/UrlbarTokenizer.sys.mjs": [
+        "browser/components/urlbar/UrlbarTokenizer.sys.mjs"
+      ],
+      "resource:///modules/UrlbarUtils.sys.mjs": [
+        "browser/components/urlbar/UrlbarUtils.sys.mjs"
+      ],
+      "resource:///modules/UrlbarValueFormatter.sys.mjs": [
+        "browser/components/urlbar/UrlbarValueFormatter.sys.mjs"
+      ],
+      "resource:///modules/UrlbarView.sys.mjs": [
+        "browser/components/urlbar/UrlbarView.sys.mjs"
       ],
       "resource:///modules/WebProtocolHandlerRegistrar.sys.mjs": [
         "browser/components/protocolhandler/WebProtocolHandlerRegistrar.sys.mjs"
@@ -1193,12 +1304,6 @@
       "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs": [
         "browser/components/firefoxview/firefox-view-tabs-setup-manager.sys.mjs"
       ],
-      "resource:///modules/ipprotection/GuardianClient.sys.mjs": [
-        "browser/components/ipprotection/GuardianClient.sys.mjs"
-      ],
-      "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs": [
-        "browser/components/ipprotection/IPPChannelFilter.sys.mjs"
-      ],
       "resource:///modules/ipprotection/IPProtection.sys.mjs": [
         "browser/components/ipprotection/IPProtection.sys.mjs"
       ],
@@ -1339,6 +1444,24 @@
       ],
       "resource:///modules/topsites/constants.mjs": [
         "browser/components/topsites/constants.mjs"
+      ],
+      "resource:///modules/urlbar/private/AmpSuggestions.sys.mjs": [
+        "browser/components/urlbar/private/AmpSuggestions.sys.mjs"
+      ],
+      "resource:///modules/urlbar/private/GeolocationUtils.sys.mjs": [
+        "browser/components/urlbar/private/GeolocationUtils.sys.mjs"
+      ],
+      "resource:///modules/urlbar/private/ImpressionCaps.sys.mjs": [
+        "browser/components/urlbar/private/ImpressionCaps.sys.mjs"
+      ],
+      "resource:///modules/urlbar/private/MLSuggest.sys.mjs": [
+        "browser/components/urlbar/private/MLSuggest.sys.mjs"
+      ],
+      "resource:///modules/urlbar/private/SuggestBackendRust.sys.mjs": [
+        "browser/components/urlbar/private/SuggestBackendRust.sys.mjs"
+      ],
+      "resource:///modules/urlbar/private/SuggestFeature.sys.mjs": [
+        "browser/components/urlbar/private/SuggestFeature.sys.mjs"
       ],
       "resource:///modules/webrtcUI.sys.mjs": [
         "browser/modules/webrtcUI.sys.mjs"

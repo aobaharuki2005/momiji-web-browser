@@ -4,8 +4,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  QueryScorer:
-    "moz-src:///browser/components/urlbar/UrlbarProviderInterventions.sys.mjs",
+  QueryScorer: "resource:///modules/UrlbarProviderInterventions.sys.mjs",
 });
 
 const DISTANCE_THRESHOLD = 1;

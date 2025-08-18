@@ -15,7 +15,7 @@ const ENGINE_DOMAIN = "example.com";
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderTabToSearch:
-    "moz-src:///browser/components/urlbar/UrlbarProviderTabToSearch.sys.mjs",
+    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
 });
 
 /**

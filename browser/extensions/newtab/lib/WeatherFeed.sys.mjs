@@ -4,7 +4,7 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  MerinoClient: "moz-src:///browser/components/urlbar/MerinoClient.sys.mjs",
+  MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   PersistentCache: "resource://newtab/lib/PersistentCache.sys.mjs",

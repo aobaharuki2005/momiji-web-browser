@@ -5,7 +5,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-  UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
 let ENABLED_PREF = "recentsearches.featureGate";

@@ -16,15 +16,13 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  SkippableTimer: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
-  UrlbarMuxer: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
-  UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarProvider: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
-  UrlbarSearchUtils:
-    "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
-  UrlbarTokenizer:
-    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
-  UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
+  SkippableTimer: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarMuxer: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProvider: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>
@@ -36,67 +34,62 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
 // When adding new providers please remember to update the list in metrics.yaml.
 var localProviderModules = {
   UrlbarProviderAboutPages:
-    "moz-src:///browser/components/urlbar/UrlbarProviderAboutPages.sys.mjs",
+    "resource:///modules/UrlbarProviderAboutPages.sys.mjs",
   UrlbarProviderActionsSearchMode:
-    "moz-src:///browser/components/urlbar/UrlbarProviderActionsSearchMode.sys.mjs",
+    "resource:///modules/UrlbarProviderActionsSearchMode.sys.mjs",
   UrlbarProviderGlobalActions:
-    "moz-src:///browser/components/urlbar/UrlbarProviderGlobalActions.sys.mjs",
+    "resource:///modules/UrlbarProviderGlobalActions.sys.mjs",
   UrlbarProviderAliasEngines:
-    "moz-src:///browser/components/urlbar/UrlbarProviderAliasEngines.sys.mjs",
-  UrlbarProviderAutofill:
-    "moz-src:///browser/components/urlbar/UrlbarProviderAutofill.sys.mjs",
+    "resource:///modules/UrlbarProviderAliasEngines.sys.mjs",
+  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
   UrlbarProviderBookmarkKeywords:
-    "moz-src:///browser/components/urlbar/UrlbarProviderBookmarkKeywords.sys.mjs",
+    "resource:///modules/UrlbarProviderBookmarkKeywords.sys.mjs",
   UrlbarProviderCalculator:
-    "moz-src:///browser/components/urlbar/UrlbarProviderCalculator.sys.mjs",
+    "resource:///modules/UrlbarProviderCalculator.sys.mjs",
   UrlbarProviderClipboard:
-    "moz-src:///browser/components/urlbar/UrlbarProviderClipboard.sys.mjs",
+    "resource:///modules/UrlbarProviderClipboard.sys.mjs",
   UrlbarProviderHeuristicFallback:
-    "moz-src:///browser/components/urlbar/UrlbarProviderHeuristicFallback.sys.mjs",
+    "resource:///modules/UrlbarProviderHeuristicFallback.sys.mjs",
   UrlbarProviderHistoryUrlHeuristic:
-    "moz-src:///browser/components/urlbar/UrlbarProviderHistoryUrlHeuristic.sys.mjs",
+    "resource:///modules/UrlbarProviderHistoryUrlHeuristic.sys.mjs",
   UrlbarProviderInputHistory:
-    "moz-src:///browser/components/urlbar/UrlbarProviderInputHistory.sys.mjs",
+    "resource:///modules/UrlbarProviderInputHistory.sys.mjs",
   UrlbarProviderInterventions:
-    "moz-src:///browser/components/urlbar/UrlbarProviderInterventions.sys.mjs",
-  UrlbarProviderOmnibox:
-    "moz-src:///browser/components/urlbar/UrlbarProviderOmnibox.sys.mjs",
-  UrlbarProviderPlaces:
-    "moz-src:///browser/components/urlbar/UrlbarProviderPlaces.sys.mjs",
+    "resource:///modules/UrlbarProviderInterventions.sys.mjs",
+  UrlbarProviderOmnibox: "resource:///modules/UrlbarProviderOmnibox.sys.mjs",
+  UrlbarProviderPlaces: "resource:///modules/UrlbarProviderPlaces.sys.mjs",
   UrlbarProviderPrivateSearch:
-    "moz-src:///browser/components/urlbar/UrlbarProviderPrivateSearch.sys.mjs",
+    "resource:///modules/UrlbarProviderPrivateSearch.sys.mjs",
   UrlbarProviderQuickSuggest:
-    "moz-src:///browser/components/urlbar/UrlbarProviderQuickSuggest.sys.mjs",
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderQuickSuggestContextualOptIn:
-    "moz-src:///browser/components/urlbar/UrlbarProviderQuickSuggestContextualOptIn.sys.mjs",
+    "resource:///modules/UrlbarProviderQuickSuggestContextualOptIn.sys.mjs",
   UrlbarProviderRecentSearches:
-    "moz-src:///browser/components/urlbar/UrlbarProviderRecentSearches.sys.mjs",
+    "resource:///modules/UrlbarProviderRecentSearches.sys.mjs",
   UrlbarProviderRemoteTabs:
-    "moz-src:///browser/components/urlbar/UrlbarProviderRemoteTabs.sys.mjs",
+    "resource:///modules/UrlbarProviderRemoteTabs.sys.mjs",
   UrlbarProviderRestrictKeywords:
-    "moz-src:///browser/components/urlbar/UrlbarProviderRestrictKeywords.sys.mjs",
+    "resource:///modules/UrlbarProviderRestrictKeywords.sys.mjs",
   UrlbarProviderRestrictKeywordsAutofill:
-    "moz-src:///browser/components/urlbar/UrlbarProviderRestrictKeywordsAutofill.sys.mjs",
+    "resource:///modules/UrlbarProviderRestrictKeywordsAutofill.sys.mjs",
   UrlbarProviderSearchTips:
-    "moz-src:///browser/components/urlbar/UrlbarProviderSearchTips.sys.mjs",
+    "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
   UrlbarProviderSearchSuggestions:
-    "moz-src:///browser/components/urlbar/UrlbarProviderSearchSuggestions.sys.mjs",
+    "resource:///modules/UrlbarProviderSearchSuggestions.sys.mjs",
   UrlbarProviderSemanticHistorySearch:
-    "moz-src:///browser/components/urlbar/UrlbarProviderSemanticHistorySearch.sys.mjs",
+    "resource:///modules/UrlbarProviderSemanticHistorySearch.sys.mjs",
   UrlbarProviderTabToSearch:
-    "moz-src:///browser/components/urlbar/UrlbarProviderTabToSearch.sys.mjs",
+    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
   UrlbarProviderTokenAliasEngines:
-    "moz-src:///browser/components/urlbar/UrlbarProviderTokenAliasEngines.sys.mjs",
-  UrlbarProviderTopSites:
-    "moz-src:///browser/components/urlbar/UrlbarProviderTopSites.sys.mjs",
+    "resource:///modules/UrlbarProviderTokenAliasEngines.sys.mjs",
+  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarProviderUnitConversion:
-    "moz-src:///browser/components/urlbar/UrlbarProviderUnitConversion.sys.mjs",
+    "resource:///modules/UrlbarProviderUnitConversion.sys.mjs",
 };
 
 // List of available local muxers, each is implemented in its own jsm module.
 var localMuxerModules = {
-  UrlbarMuxerStandard:
-    "moz-src:///browser/components/urlbar/UrlbarMuxerStandard.sys.mjs",
+  UrlbarMuxerStandard: "resource:///modules/UrlbarMuxerStandard.sys.mjs",
 };
 
 const DEFAULT_MUXER = "UnifiedComplete";

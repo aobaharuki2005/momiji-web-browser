@@ -20,7 +20,7 @@ const SUGGEST_PREF = "browser.search.suggest.enabled";
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderTabToSearch:
-    "moz-src:///browser/components/urlbar/UrlbarProviderTabToSearch.sys.mjs",
+    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
