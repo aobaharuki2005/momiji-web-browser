@@ -13881,6 +13881,17 @@ gCSSProperties["math-style"] = {
   invalid_values: [],
 };
 
+if (IsCSSPropertyPrefEnabled("mathml.math_shift.enabled")) {
+  gCSSProperties["math-shift"] = {
+    domProp: "mathShift",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["normal"],
+    other_values: ["compact"],
+    invalid_values: [],
+  };
+}
+
 gCSSProperties["forced-color-adjust"] = {
   domProp: "forcedColorAdjust",
   inherited: true,
