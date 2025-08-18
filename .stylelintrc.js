@@ -8,6 +8,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const rollouts = require("./stylelint-rollouts.config");
 
 function readFile(filePath) {
   return fs
@@ -272,6 +273,7 @@ module.exports = {
   },
 
   overrides: [
+    ...rollouts,
     {
       files: "*.scss",
       customSyntax: "postcss-scss",
