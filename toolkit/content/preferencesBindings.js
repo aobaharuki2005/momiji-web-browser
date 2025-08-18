@@ -724,7 +724,7 @@ const Preferences = (window.Preferences = (function () {
         this.pref.on("change", this.onChange);
       }
       if (typeof this.config.setup === "function") {
-        this._teardown = this.config.setup(this.onChange, this.deps, this);
+        this._teardown = this.config.setup(this.onChange);
       }
     }
 
@@ -758,36 +758,16 @@ const Preferences = (window.Preferences = (function () {
       return this._deps;
     }
 
-    // Create a Proxy object to simplify getting the dep values in callbacks and
-    // make it clearer that the deps are provided for checking the value, not
-    // modifying them or adding listeners.
-    get depsProxy() {
-      if (!this._depsProxy) {
-        this._depsProxy = new Proxy(this.deps, {
-          get(target, prop) {
-            if (target.hasOwnProperty(prop)) {
-              return target[prop].value;
-            }
-            if (prop == "self") {
-              return this.value;
-            }
-            return null;
-          },
-        });
-      }
-      return this._depsProxy;
-    }
-
     get value() {
       let prefVal = this.pref?.value;
       if (this.config.get) {
-        return this.config.get(prefVal, this.depsProxy);
+        return this.config.get(prefVal);
       }
       return prefVal;
     }
 
     set value(val) {
-      let newVal = this.config.set ? this.config.set(val, this.depsProxy) : val;
+      let newVal = this.config.set ? this.config.set(val) : val;
       if (this.pref) {
         this.pref.value = newVal;
       }
@@ -798,18 +778,16 @@ const Preferences = (window.Preferences = (function () {
     }
 
     get visible() {
-      return this.config.visible ? this.config.visible(this.depsProxy) : true;
+      return this.config.visible ? this.config.visible(this.deps) : true;
     }
 
     get disabled() {
-      return this.config.disabled
-        ? this.config.disabled(this.depsProxy)
-        : false;
+      return this.config.disabled ? this.config.disabled(this.deps) : false;
     }
 
     getControlConfig(config) {
       if (this.config.getControlConfig) {
-        return this.config.getControlConfig(config, this.depsProxy);
+        return this.config.getControlConfig(config);
       }
       return config;
     }
@@ -817,7 +795,7 @@ const Preferences = (window.Preferences = (function () {
     userChange(val) {
       this.value = val;
       if (this.config.onUserChange) {
-        this.config.onUserChange(val, this.depsProxy);
+        this.config.onUserChange(val);
       }
     }
 
