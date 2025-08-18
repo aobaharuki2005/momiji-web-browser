@@ -2643,7 +2643,7 @@
 # Enable extra cookie-store properties
 - name: dom.cookieStore.extra.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # Is support for CSSPseudoElement enabled?
