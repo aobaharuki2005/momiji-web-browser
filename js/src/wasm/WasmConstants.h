@@ -1169,8 +1169,10 @@ static const unsigned MaxModuleBytes = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes = 7654321;
 static const unsigned MaxArrayNewFixedElements = 10000;
 
-// By spec, see https://github.com/WebAssembly/spec/issues/1895#issuecomment-2895078022
-static_assert((PageSize * MaxMemory64PagesValidation) <= (uint64_t(1) << 53) -1);
+// By spec, see
+// https://github.com/WebAssembly/spec/issues/1895#issuecomment-2895078022
+static_assert((PageSize * MaxMemory64PagesValidation) <=
+              (uint64_t(1) << 53) - 1);
 
 // Maximum payload size, in bytes, of a gc-proposal Array.  Puts it fairly
 // close to 2^31 without exposing us to potential danger at the signed-i32
