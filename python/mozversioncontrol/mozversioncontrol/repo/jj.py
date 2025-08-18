@@ -415,9 +415,14 @@ class JujutsuRepository(Repository):
         return datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f %z")
 
     def config_key_list_value_missing(self, key: str):
-        output = self._run_read_only("config", "list", key, stderr=subprocess.STDOUT)
-        warning_prefix = "Warning: No matching config key"
-        if output.startswith(warning_prefix):
+        output = self._run_read_only(
+            "config", "list", key, stderr=subprocess.DEVNULL
+        ).strip()
+
+        # Empty output means the key is missing. We can't rely on warnings because
+        # there could be one or more other warnings (eg: deprecated config flags)
+        # and parsing that would be messy.
+        if not output:
             return True
 
         if output.startswith(key):
@@ -505,10 +510,33 @@ class JujutsuRepository(Repository):
 
             # This enables watchman if it's installed.
             if which("watchman"):
-                self._set_default_if_missing("core.fsmonitor", "watchman")
-                self._set_default_if_missing(
-                    "core.watchman.register-snapshot-trigger", False
-                )
+                # Use appropriate config keys based on jj version. 0.32.0+ renamed these config keys
+                if jj_version >= Version("0.32"):
+                    # Remove deprecated config keys to prevent warnings
+                    for key in [
+                        "core.fsmonitor",
+                        "core.watchman.register-snapshot-trigger",
+                    ]:
+                        self._run(
+                            "config",
+                            "unset",
+                            "--repo",
+                            key,
+                            return_codes=[0, 1],
+                            stderr=subprocess.DEVNULL,
+                        )
+
+                    # Set 0.32.0+ config keys
+                    self._set_default_if_missing("fsmonitor.backend", "watchman")
+                    self._set_default_if_missing(
+                        "fsmonitor.watchman.register-snapshot-trigger", False
+                    )
+                else:
+                    # Set old config keys
+                    self._set_default_if_missing("core.fsmonitor", "watchman")
+                    self._set_default_if_missing(
+                        "core.watchman.register-snapshot-trigger", False
+                    )
 
                 print("Checking if watchman is enabled...")
                 output = self._run_read_only("debug", "watchman", "status")
