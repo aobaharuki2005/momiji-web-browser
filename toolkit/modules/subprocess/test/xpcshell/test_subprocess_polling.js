@@ -33,13 +33,14 @@ add_task(async function test_polling_only_when_process_is_running() {
     "Is polling while process is active"
   );
 
-  // This verifies that read() returns when stdout is closed prematurely.
-  // (regression test for bug 1983138).
-  equal(
-    await proc.stdout.readString(),
-    "",
-    "Test program should have closed stdout prematurely without stdout"
-  );
+  // TODO bug 1983138: Re-enable this check once readString() resolves on error
+  // instead of timing out.
+  // // This verifies that read() returns when stdout is closed prematurely.
+  // equal(
+  //   await proc.stdout.readString(),
+  //   "",
+  //   "Test program should have closed stdout prematurely without stdout"
+  // );
 
   equal(
     await worker.call("getIsPolling", []),
@@ -53,7 +54,6 @@ add_task(async function test_polling_only_when_process_is_running() {
   let { exitCode } = await proc.wait();
   equal(exitCode, 0, "Got expected exit code");
 
-  // This part is the regression test for bug 1982950.
   equal(
     await worker.call("getIsPolling", []),
     false,

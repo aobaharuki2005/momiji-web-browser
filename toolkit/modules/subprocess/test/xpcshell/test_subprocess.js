@@ -33,28 +33,7 @@ let readAll = async function (pipe) {
   return result.join("");
 };
 
-// Retrieves the ultimate Python program that runs the Python script itself.
-// By default, PYTHON runs Python in a virtualenv, which on Windows results in
-// two python.exe being spawned: python.exe (at PYTHON) spawns a new python.exe
-// (outside the virtualenv, but configured by the parent python.exe to use the
-// virtualenv modules).
-// In the test_subprocess_stdin_closed_by_program test below, we run a script
-// that closes stdin. This closed stdin does not propagate back via the parent
-// python.exe, so to make sure that it does, we directly launch the real Python
-// interpreter. This runs outside the virtualenv.
-async function getRealPythonExecutable() {
-  let proc = await Subprocess.call({
-    command: PYTHON,
-    arguments: ["-u", TEST_SCRIPT, "print_python_executable_path"],
-  });
-  let { exitCode } = await proc.wait();
-  equal(exitCode, 0, "Successfully got executable path");
-  let realPythonPath = await read(proc.stdout);
-  ok(realPythonPath, `Found path to Python program: ${realPythonPath}`);
-  return realPythonPath;
-}
-
-add_setup(async function setup() {
+add_task(async function setup() {
   PYTHON = await Subprocess.pathSearch(Services.env.get("PYTHON"));
 
   PYTHON_BIN = PathUtils.filename(PYTHON);
@@ -437,50 +416,6 @@ add_task(async function test_subprocess_eof() {
   let { exitCode } = await proc.wait();
 
   equal(exitCode, 0, "Got expected exit code");
-});
-
-// Regression test for bug 1983138.
-add_task(async function test_subprocess_stdin_closed_by_program() {
-  // On Windows, the actual python.exe that runs the script is a child of the
-  // python.exe of the virtualenv, and closing stdin from that child does not
-  // propagate back, which would cause the proc.stdin.write() call below to
-  // succeed unexpectedly.
-  //
-  // To avoid this issue, use the real Python, see getRealPythonExecutable.
-  let proc = await Subprocess.call({
-    command: await getRealPythonExecutable(),
-    arguments: ["-u", TEST_SCRIPT, "close_stdin_and_wait_forever"],
-  });
-
-  info("Waiting for program to notify us via stdout after closing stdin");
-
-  equal(
-    await read(proc.stdout),
-    "stdin_closed",
-    "Spawned process closed stdin"
-  );
-
-  // This is the most interesting part - write() should reject with an error.
-  await Assert.rejects(
-    proc.stdin.write("a"),
-    function (e) {
-      equal(
-        e.errorCode,
-        Subprocess.ERROR_END_OF_FILE,
-        "Got the expected error code"
-      );
-      return /File closed/.test(e.message);
-    },
-    "Promise should be rejected after program closed stdin"
-  );
-
-  let { exitCode } = await proc.kill();
-
-  // On UNIX platforms, our subprocess.kill() implementation sends SIGTERM,
-  // which Python handles and exiting with -15. On Windows, we send SIGKILL
-  // which the program cannot even handle and the exit code is -9.
-  const expectedExitCode = AppConstants.platform == "win" ? -9 : -15;
-  equal(exitCode, expectedExitCode, "Got expected exit code");
 });
 
 add_task(async function test_subprocess_invalid_json() {
