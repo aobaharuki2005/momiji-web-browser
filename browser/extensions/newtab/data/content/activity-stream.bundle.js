@@ -13344,7 +13344,7 @@ const FocusTimer = ({
     iconsrc: "chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg",
     "data-l10n-id": "newtab-widget-timer-reset",
     onClick: resetTimer
-  }))), !showSystemNotifications && !timerData[timerType].isRunning && /*#__PURE__*/external_React_default().createElement("p", {
+  }))), !showSystemNotifications && !timerData[timerType].isRunning && !progressVisible && /*#__PURE__*/external_React_default().createElement("p", {
     className: "timer-notification-status",
     "data-l10n-id": "newtab-widget-timer-notification-warning"
   })) : null;
