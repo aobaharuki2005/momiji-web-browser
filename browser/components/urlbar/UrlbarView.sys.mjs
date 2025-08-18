@@ -770,6 +770,16 @@ export class UrlbarView {
     if (!this.isOpen) {
       this.clear();
     }
+
+    // Set the actionmode atttribute if we are in actions search mode.
+    // We do this before updating the result rows so that there is no flicker
+    // after the actions are initially displayed.
+    if (
+      this.input.searchMode?.source == lazy.UrlbarUtils.RESULT_SOURCE.ACTIONS
+    ) {
+      this.#rows.toggleAttribute("actionmode", true);
+    }
+
     this.#queryUpdatedResults = true;
     this.#updateResults();
 
@@ -2341,11 +2351,6 @@ export class UrlbarView {
     } else {
       this.panel.setAttribute("noresults", "true");
     }
-
-    this.#rows.toggleAttribute(
-      "actionmode",
-      this.visibleResults[0]?.source == lazy.UrlbarUtils.RESULT_SOURCE.ACTIONS
-    );
   }
 
   /**
@@ -2565,6 +2570,20 @@ export class UrlbarView {
       row = next;
     }
     this.#updateIndices();
+
+    // Reset actionmode if we left the actions search mode.
+    // We do this after updating the result rows to ensure the attribute stays
+    // active the entire time the actions list is visible.
+
+    // this.input.searchMode updates early, so only checking it would cause a
+    // flicker, and the first visible result's source being an action doesn't
+    // necessarily imply we are in actions mode, therefore we should check both.
+    if (
+      this.input.searchMode?.source != lazy.UrlbarUtils.RESULT_SOURCE.ACTIONS &&
+      this.visibleResults[0]?.source != lazy.UrlbarUtils.RESULT_SOURCE.ACTIONS
+    ) {
+      this.#rows.toggleAttribute("actionmode", false);
+    }
 
     // Accept tentative exposures. This is analogous to unhiding the
     // hypothetical non-stale hidden rows of hidden-exposure results.
