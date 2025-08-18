@@ -20,19 +20,17 @@ namespace layers {
 
 /*static*/
 already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::Create(
-    AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
-    ScrollOrigin aOrigin) {
-  RefPtr<SmoothScrollAnimation> result = new SmoothScrollAnimation(
-      ScrollAnimationKind::Smooth, aApzc, aInitialPosition, aOrigin);
+    AsyncPanZoomController& aApzc, ScrollOrigin aOrigin) {
+  RefPtr<SmoothScrollAnimation> result =
+      new SmoothScrollAnimation(ScrollAnimationKind::Smooth, aApzc, aOrigin);
   return result.forget();
 }
 /*static*/
 already_AddRefed<SmoothScrollAnimation>
 SmoothScrollAnimation::CreateForKeyboard(AsyncPanZoomController& aApzc,
-                                         const nsPoint& aInitialPosition,
                                          ScrollOrigin aOrigin) {
-  RefPtr<SmoothScrollAnimation> result = new SmoothScrollAnimation(
-      ScrollAnimationKind::Keyboard, aApzc, aInitialPosition, aOrigin);
+  RefPtr<SmoothScrollAnimation> result =
+      new SmoothScrollAnimation(ScrollAnimationKind::Keyboard, aApzc, aOrigin);
   return result.forget();
 }
 
@@ -52,11 +50,10 @@ static ScrollOrigin OriginForDeltaType(
 
 /*static*/
 already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::CreateForWheel(
-    AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
+    AsyncPanZoomController& aApzc,
     ScrollWheelInput::ScrollDeltaType aDeltaType) {
   RefPtr<SmoothScrollAnimation> result = new SmoothScrollAnimation(
-      ScrollAnimationKind::Wheel, aApzc, aInitialPosition,
-      OriginForDeltaType(aDeltaType));
+      ScrollAnimationKind::Wheel, aApzc, OriginForDeltaType(aDeltaType));
   MOZ_ASSERT(nsLayoutUtils::IsSmoothScrollingEnabled(),
              "We shouldn't be creating a WheelScrollAnimation if smooth "
              "scrolling is disabled");
@@ -67,11 +64,11 @@ already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::CreateForWheel(
 
 SmoothScrollAnimation::SmoothScrollAnimation(ScrollAnimationKind aKind,
                                              AsyncPanZoomController& aApzc,
-                                             const nsPoint& aInitialPosition,
                                              ScrollOrigin aOrigin)
     : mKind(aKind),
       mApzc(aApzc),
-      mFinalDestination(aInitialPosition),
+      mFinalDestination(
+          CSSPoint::ToAppUnits(aApzc.Metrics().GetVisualScrollOffset())),
       mOrigin(aOrigin),
       mTriggeredByScript(ScrollTriggeredByScript::No) {
   // ScrollAnimationBezierPhysics (despite its name) handles the case of
@@ -79,10 +76,11 @@ SmoothScrollAnimation::SmoothScrollAnimation(ScrollAnimationKind aKind,
   // not (ie it scrolls smoothly).
   if (nsLayoutUtils::IsSmoothScrollingEnabled() &&
       StaticPrefs::general_smoothScroll_msdPhysics_enabled()) {
-    mAnimationPhysics = MakeUnique<ScrollAnimationMSDPhysics>(aInitialPosition);
+    mAnimationPhysics =
+        MakeUnique<ScrollAnimationMSDPhysics>(mFinalDestination);
   } else {
     mAnimationPhysics = MakeUnique<ScrollAnimationBezierPhysics>(
-        aInitialPosition,
+        mFinalDestination,
         apz::ComputeBezierAnimationSettingsForOrigin(aOrigin));
   }
 }

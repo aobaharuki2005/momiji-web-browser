@@ -2240,10 +2240,8 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
     }
     SetState(KEYBOARD_SCROLL);
 
-    nsPoint initialPosition =
-        CSSPoint::ToAppUnits(Metrics().GetVisualScrollOffset());
-    StartAnimation(SmoothScrollAnimation::CreateForKeyboard(
-        *this, initialPosition, scrollOrigin));
+    StartAnimation(
+        SmoothScrollAnimation::CreateForKeyboard(*this, scrollOrigin));
   }
 
   // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s and then
@@ -2728,10 +2726,8 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
         CancelAnimation();
         SetState(WHEEL_SCROLL);
 
-        nsPoint initialPosition =
-            CSSPoint::ToAppUnits(Metrics().GetVisualScrollOffset());
-        StartAnimation(SmoothScrollAnimation::CreateForWheel(
-            *this, initialPosition, aEvent.mDeltaType));
+        StartAnimation(
+            SmoothScrollAnimation::CreateForWheel(*this, aEvent.mDeltaType));
       }
       // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s and
       // then to appunits/second.
@@ -4226,10 +4222,8 @@ void AsyncPanZoomController::SmoothScrollTo(
   }
 
   SetState(SMOOTH_SCROLL);
-  nsPoint initialPosition =
-      CSSPoint::ToAppUnits(Metrics().GetVisualScrollOffset());
   RefPtr<SmoothScrollAnimation> animation =
-      SmoothScrollAnimation::Create(*this, initialPosition, aOrigin);
+      SmoothScrollAnimation::Create(*this, aOrigin);
   animation->UpdateDestinationAndSnapTargets(
       GetFrameTime().Time(), destination, velocity,
       std::move(aDestination.mTargetIds), aTriggeredByScript);
