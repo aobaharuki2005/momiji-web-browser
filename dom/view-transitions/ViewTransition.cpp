@@ -1846,140 +1846,144 @@ JSObject* ViewTransition::WrapObject(JSContext* aCx,
   return ViewTransition_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-static void ComputeActiveRect1D(nscoord aViewMin, nscoord aViewSize, nscoord& aCaptureMin, nscoord& aCaptureSize) {
-    nscoord captureMax = aCaptureMin + aCaptureSize;
-    nscoord viewMax = aViewMin + aViewSize;
+static void ComputeActiveRect1D(nscoord aViewMin, nscoord aViewSize,
+                                nscoord& aCaptureMin, nscoord& aCaptureSize) {
+  nscoord captureMax = aCaptureMin + aCaptureSize;
+  nscoord viewMax = aViewMin + aViewSize;
 
-    nscoord min;
-    nscoord max;
+  nscoord min;
+  nscoord max;
 
-    if (aCaptureSize < aViewSize) {
-        // The snapshot area is small enough on this axis, don't clip it.
-        min = aCaptureMin;
-        max = min + aCaptureSize;
-    } else if (aViewMin < aCaptureMin) {
-        // The view is before the capture area. Restrict the cpature size while
-        // snaping it to the beginning of its range.
-        min = aCaptureMin;
-        max = min + aViewSize;
-    } else if (viewMax > captureMax) {
-        // The view is after the capture area. Restrict the cpature size while
-        // snaping it to the end of its range.
-        max = captureMax;
-        min = max - aViewSize;
-    } else {
-        // The snapshot area extends beyond the viewport on both sides,
-        // set it to the viewport.
-        min = aViewMin;
-        max = viewMax;
-    }
+  if (aCaptureSize < aViewSize) {
+    // The snapshot area is small enough on this axis, don't clip it.
+    min = aCaptureMin;
+    max = min + aCaptureSize;
+  } else if (aViewMin < aCaptureMin) {
+    // The view is before the capture area. Restrict the cpature size while
+    // snaping it to the beginning of its range.
+    min = aCaptureMin;
+    max = min + aViewSize;
+  } else if (viewMax > captureMax) {
+    // The view is after the capture area. Restrict the cpature size while
+    // snaping it to the end of its range.
+    max = captureMax;
+    min = max - aViewSize;
+  } else {
+    // The snapshot area extends beyond the viewport on both sides,
+    // set it to the viewport.
+    min = aViewMin;
+    max = viewMax;
+  }
 
-    aCaptureMin = min;
-    aCaptureSize = max - min;
+  aCaptureMin = min;
+  aCaptureSize = max - min;
 }
 
 void ViewTransition::UpdateActiveRectForCapturedFrame(
-    nsIFrame* aCapturedFrame,
-    const gfx::MatrixScales& aInheritedScale,
-    nsRect& aOutCaptureRect
-) {
-    nsAtom* name = aCapturedFrame->GetProperty(ViewTransitionCaptureName());
-    if (NS_WARN_IF(!name)) {
-      return;
-    }
+    nsIFrame* aCapturedFrame, const gfx::MatrixScales& aInheritedScale,
+    nsRect& aOutCaptureRect) {
+  nsAtom* name = aCapturedFrame->GetProperty(ViewTransitionCaptureName());
+  if (NS_WARN_IF(!name)) {
+    return;
+  }
 
-    auto* el = mNamedElements.Get(name);
-    if (NS_WARN_IF(!el)) {
-      return;
-    }
+  auto* el = mNamedElements.Get(name);
+  if (NS_WARN_IF(!el)) {
+    return;
+  }
 
-    const bool isOld = mPhase < Phase::Animating;
+  const bool isOld = mPhase < Phase::Animating;
 
-    // The active rect to update (old or new).
-    Maybe<nsRect>* activeRect;
-    if (isOld) {
-        activeRect = &el->mOldActiveRect;
-        // We don't rely on it, but as a sanity check, since we only capture
-        // the old state once so we aren't expecting it to already contain an
-        // active rect.
-        MOZ_ASSERT(activeRect->isNothing());
-    } else {
-        activeRect = &el->mNewActiveRect;
-    }
+  // The active rect to update (old or new).
+  Maybe<nsRect>* activeRect;
+  if (isOld) {
+    activeRect = &el->mOldActiveRect;
+    // We don't rely on it, but as a sanity check, since we only capture
+    // the old state once so we aren't expecting it to already contain an
+    // active rect.
+    MOZ_ASSERT(activeRect->isNothing());
+  } else {
+    activeRect = &el->mNewActiveRect;
+  }
 
-    // Reset the active rect in case we early out and had previously
-    // updated it.
-    activeRect->reset();
+  // Reset the active rect in case we early out and had previously
+  // updated it.
+  activeRect->reset();
 
-    auto presShell = aCapturedFrame->PresShell();
-    if (!presShell->IsVisualViewportSizeSet()) {
-        return;
-    }
+  auto presShell = aCapturedFrame->PresShell();
+  if (!presShell->IsVisualViewportSizeSet()) {
+    return;
+  }
 
-    nsPresContext* pc = aCapturedFrame->PresContext();
+  nsPresContext* pc = aCapturedFrame->PresContext();
 
-    auto rootViewportSize = presShell->GetVisualViewportSize();
-    auto auPerDevPx = pc->AppUnitsPerDevPixel();
-    auto vvpSize = LayoutDeviceSize::FromAppUnits(rootViewportSize, auPerDevPx);
-    auto capSize = LayoutDeviceSize::FromAppUnits(aOutCaptureRect.Size(), auPerDevPx);
-    capSize.width *= aInheritedScale.xScale;
-    capSize.height *= aInheritedScale.yScale;
+  auto rootViewportSize = presShell->GetVisualViewportSize();
+  auto auPerDevPx = pc->AppUnitsPerDevPixel();
+  auto vvpSize = LayoutDeviceSize::FromAppUnits(rootViewportSize, auPerDevPx);
+  auto capSize =
+      LayoutDeviceSize::FromAppUnits(aOutCaptureRect.Size(), auPerDevPx);
+  capSize.width *= aInheritedScale.xScale;
+  capSize.height *= aInheritedScale.yScale;
 
-    // If the capture size is smaller than the visual viewport, it's a good
-    // indication that it is not unreasonably large, so we can early out.
-    if (capSize.width < vvpSize.width && capSize.height < vvpSize.height) {
-        return;
-    }
+  // If the capture size is smaller than the visual viewport, it's a good
+  // indication that it is not unreasonably large, so we can early out.
+  if (capSize.width < vvpSize.width && capSize.height < vvpSize.height) {
+    return;
+  }
 
-    // viewport is relative to the root frame.
-    //auto rootViewportOrigin = presShell->GetVisualViewportOffset();
-    auto rootViewportOrigin = nsPoint(0, 0);
-    nsRect viewport = nsRect(rootViewportOrigin, rootViewportSize);
+  // viewport is relative to the root frame.
+  // auto rootViewportOrigin = presShell->GetVisualViewportOffset();
+  auto rootViewportOrigin = nsPoint(0, 0);
+  nsRect viewport = nsRect(rootViewportOrigin, rootViewportSize);
 
-    // Inflate the viewport rect to give a bit of extra headroom in case the user
-    // scrolls a bit during the transition or the transition has some motion to it.
-    // But at the same time we want to avoid the margin pushing the snapshot size
-    // over 4k pixels since that will cause WebRender to render it downscaled.
-    float scale = std::max(aInheritedScale.xScale, aInheritedScale.yScale);
-    nscoord margin = NSFloatPixelsToAppUnits(512.0 / scale, auPerDevPx);
-    nscoord maxSize = NSFloatPixelsToAppUnits(4096.0 / scale, auPerDevPx);
-    margin = std::min(margin, std::max(0, maxSize - std::max(viewport.width, viewport.height)) / 2);
+  // Inflate the viewport rect to give a bit of extra headroom in case the user
+  // scrolls a bit during the transition or the transition has some motion to
+  // it. But at the same time we want to avoid the margin pushing the snapshot
+  // size over 4k pixels since that will cause WebRender to render it
+  // downscaled.
+  float scale = std::max(aInheritedScale.xScale, aInheritedScale.yScale);
+  nscoord margin = NSFloatPixelsToAppUnits(512.0 / scale, auPerDevPx);
+  nscoord maxSize = NSFloatPixelsToAppUnits(4096.0 / scale, auPerDevPx);
+  margin = std::min(
+      margin,
+      std::max(0, maxSize - std::max(viewport.width, viewport.height)) / 2);
 
-    viewport.Inflate(margin);
+  viewport.Inflate(margin);
 
-    nsIFrame* rootFrame = pc->GetPresShell()->GetRootFrame();
+  nsIFrame* rootFrame = pc->GetPresShell()->GetRootFrame();
 
-    const auto SUCCESS = nsLayoutUtils::TransformResult::TRANSFORM_SUCCEEDED;
-    if (!rootFrame || nsLayoutUtils::TransformRect(rootFrame, aCapturedFrame, viewport) != SUCCESS) {
-        return;
-    }
-    // viewport is now relative to aCapturedFrame.
+  const auto SUCCESS = nsLayoutUtils::TransformResult::TRANSFORM_SUCCEEDED;
+  if (!rootFrame || nsLayoutUtils::TransformRect(rootFrame, aCapturedFrame,
+                                                 viewport) != SUCCESS) {
+    return;
+  }
+  // viewport is now relative to aCapturedFrame.
 
-    ComputeActiveRect1D(viewport.x, viewport.width, aOutCaptureRect.x, aOutCaptureRect.width);
-    ComputeActiveRect1D(viewport.y, viewport.height, aOutCaptureRect.y, aOutCaptureRect.height);
+  ComputeActiveRect1D(viewport.x, viewport.width, aOutCaptureRect.x,
+                      aOutCaptureRect.width);
+  ComputeActiveRect1D(viewport.y, viewport.height, aOutCaptureRect.y,
+                      aOutCaptureRect.height);
 
-    // Store the active rect for later when we create the image items.
-    *activeRect = Some(aOutCaptureRect);
+  // Store the active rect for later when we create the image items.
+  *activeRect = Some(aOutCaptureRect);
 }
 
-Maybe<nsRect>
-ViewTransition::GetOldActiveRect(nsAtom* aName) const {
-    auto* el = mNamedElements.Get(aName);
-    if (NS_WARN_IF(!el)) {
-      return Nothing();
-    }
+Maybe<nsRect> ViewTransition::GetOldActiveRect(nsAtom* aName) const {
+  auto* el = mNamedElements.Get(aName);
+  if (NS_WARN_IF(!el)) {
+    return Nothing();
+  }
 
-    return el->mOldActiveRect;
+  return el->mOldActiveRect;
 }
 
-Maybe<nsRect>
-ViewTransition::GetNewActiveRect(nsAtom* aName) const {
-    auto* el = mNamedElements.Get(aName);
-    if (NS_WARN_IF(!el)) {
-      return Nothing();
-    }
+Maybe<nsRect> ViewTransition::GetNewActiveRect(nsAtom* aName) const {
+  auto* el = mNamedElements.Get(aName);
+  if (NS_WARN_IF(!el)) {
+    return Nothing();
+  }
 
-    return el->mNewActiveRect;
+  return el->mNewActiveRect;
 }
 
 };  // namespace mozilla::dom

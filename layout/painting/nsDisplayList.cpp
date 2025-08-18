@@ -5397,7 +5397,8 @@ bool nsDisplayViewTransitionCapture::CreateWebRenderCommands(
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
   if (key) {
-    vt->UpdateActiveRectForCapturedFrame(capturedFrame, aSc.GetInheritedScale(), captureRect);
+    vt->UpdateActiveRectForCapturedFrame(capturedFrame, aSc.GetInheritedScale(),
+                                         captureRect);
 
     si.emplace(wr::SnapshotInfo{
         .key = *key,
