@@ -9,6 +9,7 @@
 
 #include "GenericScrollAnimation.h"
 #include "ScrollPositionUpdate.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ScrollOrigin.h"
 #include "mozilla/layers/KeyboardScrollAction.h"
 
@@ -17,10 +18,25 @@ namespace layers {
 
 class AsyncPanZoomController;
 
+enum class ScrollAnimationKind : uint8_t {
+  // Scroll animation in response to programmatic scrolling performed
+  // by the page or otherwise triggered by the main thread (e.g. for
+  // scroll-to-anchor, or certain scrollbar interactions)
+  Smooth,
+  // Scroll animation in response to user keyboard input
+  Keyboard
+};
+
 class SmoothScrollAnimation : public GenericScrollAnimation {
  public:
-  SmoothScrollAnimation(AsyncPanZoomController& aApzc,
-                        const nsPoint& aInitialPosition, ScrollOrigin aOrigin);
+  // Create a SmoothScrollAnimation of kind Smooth.
+  static already_AddRefed<SmoothScrollAnimation> Create(
+      AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
+      ScrollOrigin aOrigin);
+  // Create a SmoothScrollAnimation of kind Keyboard.
+  static already_AddRefed<SmoothScrollAnimation> CreateForKeyboard(
+      AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
+      ScrollOrigin aOrigin);
 
   void UpdateDestinationAndSnapTargets(
       TimeStamp aTime, const nsPoint& aDestination,
@@ -31,13 +47,21 @@ class SmoothScrollAnimation : public GenericScrollAnimation {
   bool WasTriggeredByScript() const override {
     return mTriggeredByScript == ScrollTriggeredByScript::Yes;
   }
+  ScrollAnimationKind Kind() const { return mKind; }
   ScrollSnapTargetIds TakeSnapTargetIds() { return std::move(mSnapTargetIds); }
   ScrollOrigin GetScrollOrigin() const;
   static ScrollOrigin GetScrollOriginForAction(
       KeyboardScrollAction::KeyboardScrollActionType aAction);
 
  private:
+  SmoothScrollAnimation(ScrollAnimationKind aKind,
+                        AsyncPanZoomController& aApzc,
+                        const nsPoint& aInitialPosition, ScrollOrigin aOrigin);
+
+  ScrollAnimationKind mKind;
   ScrollOrigin mOrigin;
+
+  // These fields are only used for animations of kind Smooth.
   ScrollSnapTargetIds mSnapTargetIds;
   ScrollTriggeredByScript mTriggeredByScript;
 };

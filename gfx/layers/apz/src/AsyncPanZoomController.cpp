@@ -2243,8 +2243,8 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
 
     nsPoint initialPosition =
         CSSPoint::ToAppUnits(Metrics().GetVisualScrollOffset());
-    StartAnimation(do_AddRef(
-        new SmoothScrollAnimation(*this, initialPosition, scrollOrigin)));
+    StartAnimation(SmoothScrollAnimation::CreateForKeyboard(
+        *this, initialPosition, scrollOrigin));
   }
 
   // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s and then
@@ -4106,14 +4106,11 @@ Maybe<CSSPoint> AsyncPanZoomController::GetCurrentAnimationDestination(
   if (mState == WHEEL_SCROLL) {
     return Some(mAnimation->AsWheelScrollAnimation()->GetDestination());
   }
-  if (mState == SMOOTH_SCROLL) {
+  if (mState == SMOOTH_SCROLL || mState == KEYBOARD_SCROLL) {
     return Some(mAnimation->AsSmoothScrollAnimation()->GetDestination());
   }
   if (mState == SMOOTHMSD_SCROLL) {
     return Some(mAnimation->AsSmoothMsdScrollAnimation()->GetDestination());
-  }
-  if (mState == KEYBOARD_SCROLL) {
-    return Some(mAnimation->AsSmoothScrollAnimation()->GetDestination());
   }
 
   return Nothing();
@@ -4234,7 +4231,7 @@ void AsyncPanZoomController::SmoothScrollTo(
   nsPoint initialPosition =
       CSSPoint::ToAppUnits(Metrics().GetVisualScrollOffset());
   RefPtr<SmoothScrollAnimation> animation =
-      new SmoothScrollAnimation(*this, initialPosition, aOrigin);
+      SmoothScrollAnimation::Create(*this, initialPosition, aOrigin);
   animation->UpdateDestinationAndSnapTargets(
       GetFrameTime().Time(), destination, velocity,
       std::move(aDestination.mTargetIds), aTriggeredByScript);
@@ -4973,12 +4970,12 @@ bool AsyncPanZoomController::UpdateAnimation(
     if (!continueAnimation) {
       SetState(NOTHING);
       if (mAnimation->AsSmoothMsdScrollAnimation()) {
-        {
-          RecursiveMutexAutoLock lock(mRecursiveMutex);
-          mLastSnapTargetIds =
-              mAnimation->AsSmoothMsdScrollAnimation()->TakeSnapTargetIds();
-        }
-      } else if (mAnimation->AsSmoothScrollAnimation()) {
+        RecursiveMutexAutoLock lock(mRecursiveMutex);
+        mLastSnapTargetIds =
+            mAnimation->AsSmoothMsdScrollAnimation()->TakeSnapTargetIds();
+      } else if (mAnimation->AsSmoothScrollAnimation() &&
+                 mAnimation->AsSmoothScrollAnimation()->Kind() ==
+                     ScrollAnimationKind::Smooth) {
         RecursiveMutexAutoLock lock(mRecursiveMutex);
         mLastSnapTargetIds =
             mAnimation->AsSmoothScrollAnimation()->TakeSnapTargetIds();

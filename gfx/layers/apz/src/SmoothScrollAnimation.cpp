@@ -5,18 +5,36 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SmoothScrollAnimation.h"
-#include "ScrollAnimationBezierPhysics.h"
 #include "ScrollPositionUpdate.h"
 #include "apz/src/GenericScrollAnimation.h"
-#include "mozilla/layers/APZPublicUtils.h"
 
 namespace mozilla {
 namespace layers {
 
-SmoothScrollAnimation::SmoothScrollAnimation(AsyncPanZoomController& aApzc,
+/*static*/
+already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::Create(
+    AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
+    ScrollOrigin aOrigin) {
+  RefPtr<SmoothScrollAnimation> result = new SmoothScrollAnimation(
+      ScrollAnimationKind::Smooth, aApzc, aInitialPosition, aOrigin);
+  return result.forget();
+}
+/*static*/
+already_AddRefed<SmoothScrollAnimation>
+SmoothScrollAnimation::CreateForKeyboard(AsyncPanZoomController& aApzc,
+                                         const nsPoint& aInitialPosition,
+                                         ScrollOrigin aOrigin) {
+  RefPtr<SmoothScrollAnimation> result = new SmoothScrollAnimation(
+      ScrollAnimationKind::Keyboard, aApzc, aInitialPosition, aOrigin);
+  return result.forget();
+}
+
+SmoothScrollAnimation::SmoothScrollAnimation(ScrollAnimationKind aKind,
+                                             AsyncPanZoomController& aApzc,
                                              const nsPoint& aInitialPosition,
                                              ScrollOrigin aOrigin)
     : GenericScrollAnimation(aApzc, aInitialPosition, aOrigin),
+      mKind(aKind),
       mOrigin(aOrigin),
       mTriggeredByScript(ScrollTriggeredByScript::No) {}
 
