@@ -48,8 +48,7 @@ export class NewProfileCard extends EditProfileCard {
       return;
     }
 
-    let isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    let possibleThemes = this.themes.filter(t => t.isDark === isDark);
+    let possibleThemes = this.themes;
     if (isInAutomation) {
       possibleThemes = possibleThemes.filter(t => t.useInAutomation);
     }
