@@ -271,6 +271,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/gain_controller2_gn",
     "/third_party/libwebrtc/modules/audio_processing/high_pass_filter_gn",
     "/third_party/libwebrtc/modules/audio_processing/ns/ns_gn",
+    "/third_party/libwebrtc/modules/audio_processing/post_filter_gn",
     "/third_party/libwebrtc/modules/audio_processing/rms_level_gn",
     "/third_party/libwebrtc/modules/audio_processing/utility/cascaded_biquad_filter_gn",
     "/third_party/libwebrtc/modules/audio_processing/utility/legacy_delay_estimator_gn",
