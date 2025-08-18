@@ -393,6 +393,7 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/containers/flat_map_gn",
     "/third_party/libwebrtc/rtc_base/containers/flat_set_gn",
     "/third_party/libwebrtc/rtc_base/copy_on_write_buffer_gn",
+    "/third_party/libwebrtc/rtc_base/cpu_info_gn",
     "/third_party/libwebrtc/rtc_base/criticalsection_gn",
     "/third_party/libwebrtc/rtc_base/divide_round_gn",
     "/third_party/libwebrtc/rtc_base/dscp_gn",
