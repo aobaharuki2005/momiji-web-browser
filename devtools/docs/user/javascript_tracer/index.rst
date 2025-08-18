@@ -29,6 +29,7 @@ Once enabled, you have three ways to toggle the tracer:
     This will use the configuration current defined in the Debugger tracer icon's context menu.
 
 .. |image1| image:: trace-icon.svg
+  :alt: The JSTracer icon in the Toolbox top toolbar
 
 Tracer options
 **************
@@ -127,6 +128,7 @@ The Tracer will then be in pending mode, which is indicated via a blue badge on 
 
 .. |image3| image:: pending-icon.png
   :class: border
+  :alt: The JSTracer icon in the Toolbox top toolbar, with an active style and a small round circle at the right bottom corner.
 
 Tracing function returns
 ------------------------
@@ -138,6 +140,7 @@ Note that this option is enabled by default for the profiler output, without any
 in order to properly record each function call duration.
 
 .. image:: trace-returns.png
+  :alt: Tracer output showing 2 items. The first one is "→ [interpreter] isEmptyObject", and the second "← isEmptyObject return"
 
 (``:trace --returns``)
 
@@ -150,8 +153,10 @@ This is disabled by default as it complexify the output of the tracer, making it
 Note that the profiler output doesn't support this feature.
 
 .. image:: trace-returns-with-values.png
+  :alt: Tracer output showing 2 items. The first one is "→ [baseline] isEmptyObject( Object { } )", and the second "← isEmptyObject return true"
 
 .. image:: trace-values.png
+  :alt: Tracer output showing 2 items. The first one is a "DOM | mouseup", and the second "→ [interpreter] add/v.handle (mouseup { target: div#content, buttons: 0, clientX: 1018, clientY: 388, layerX: 1003, layerY: 325 })"
 
 (``:trace --values``)
 
