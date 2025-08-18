@@ -199,7 +199,6 @@ var allowlist = [
   { file: "resource://gre/greprefs.js" },
 
   // layout/mathml/nsMathMLChar.cpp
-  { file: "resource://gre/res/fonts/mathfontSTIXGeneral.properties" },
   { file: "resource://gre/res/fonts/mathfontUnicode.properties" },
 
   // toolkit/mozapps/extensions/AddonContentPolicy.cpp
