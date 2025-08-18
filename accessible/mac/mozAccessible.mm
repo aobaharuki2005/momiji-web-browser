@@ -537,14 +537,36 @@ static bool ProvidesTitle(const Accessible* aAccessible, nsString& aName) {
 }
 
 - (NSString*)moxHelp {
+  nsAutoString desc;
+  EDescriptionValueFlag descFlag = mGeckoAccessible->Description(desc);
+
+  if (@available(macOS 11.0, *)) {
+    // Provide AXHelp on non-aria descriptions (eg. title attribute)
+    return descFlag != eDescriptionFromARIA ? nsCocoaUtils::ToNSString(desc)
+                                            : nil;
+  }
+
+  // Prior to macOS 11.0
+  return nsCocoaUtils::ToNSString(desc);
+}
+
+- (NSArray*)moxCustomContent {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  // What needs to go here is actually the accDescription of an item.
-  // The MSAA acc_help method has nothing to do with this one.
-  nsAutoString helpText;
-  mGeckoAccessible->Description(helpText);
+  if (@available(macOS 11.0, *)) {
+    nsAutoString desc;
+    EDescriptionValueFlag descFlag = mGeckoAccessible->Description(desc);
 
-  return nsCocoaUtils::ToNSString(helpText);
+    if (!desc.IsEmpty() && descFlag == eDescriptionFromARIA) {
+      AXCustomContent* contentItem = [AXCustomContent
+          customContentWithLabel:@"description"
+                           value:nsCocoaUtils::ToNSString(desc)];
+      contentItem.importance = AXCustomContentImportanceHigh;
+      return @[ contentItem ];
+    }
+  }
+
+  return nil;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
