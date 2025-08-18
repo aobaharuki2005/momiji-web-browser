@@ -9952,7 +9952,7 @@
 #   2 - also fonts from optional language packs
 #   3 - also user-installed fonts
 - name: layout.css.font-visibility
-  type: int32_t
+  type: RelaxedAtomicInt32
   value: 3
   mirror: always
 

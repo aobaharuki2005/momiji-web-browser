@@ -51,6 +51,7 @@
 #include "gfxFontEntry.h"
 #include "gfxFontFeatures.h"
 
+class FontVisibilityProvider;
 class gfxContext;
 class gfxGraphiteShaper;
 class gfxHarfBuzzShaper;
@@ -1817,7 +1818,7 @@ class gfxFont {
   }
 
   template <typename T>
-  bool InitFakeSmallCapsRun(nsPresContext* aPresContext,
+  bool InitFakeSmallCapsRun(FontVisibilityProvider* aFontVisibilityProvider,
                             DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
                             const T* aText, uint32_t aOffset, uint32_t aLength,
                             FontMatchType aMatchType,

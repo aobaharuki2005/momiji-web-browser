@@ -17,6 +17,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/OffscreenCanvasDisplayHelper.h"
 #include "mozilla/dom/OffscreenCanvasRenderingContext2D.h"
@@ -51,7 +52,10 @@ OffscreenCanvasCloneData::~OffscreenCanvasCloneData() {
 
 OffscreenCanvas::OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth,
                                  uint32_t aHeight)
-    : DOMEventTargetHelper(aGlobal), mWidth(aWidth), mHeight(aHeight) {}
+    : DOMEventTargetHelper(aGlobal),
+      mWidth(aWidth),
+      mHeight(aHeight),
+      mFontVisibility(ComputeFontVisibility()) {}
 
 OffscreenCanvas::OffscreenCanvas(
     nsIGlobalObject* aGlobal, uint32_t aWidth, uint32_t aHeight,
@@ -61,7 +65,8 @@ OffscreenCanvas::OffscreenCanvas(
       mWidth(aWidth),
       mHeight(aHeight),
       mCompositorBackendType(aCompositorBackend),
-      mDisplay(aDisplay) {}
+      mDisplay(aDisplay),
+      mFontVisibility(ComputeFontVisibility()) {}
 
 OffscreenCanvas::~OffscreenCanvas() {
   Destroy();
@@ -613,6 +618,47 @@ already_AddRefed<OffscreenCanvas> OffscreenCanvas::CreateFromCloneData(
   }
   return wc.forget();
 }
+
+// FontVisibilityProvider implementation
+FontVisibility OffscreenCanvas::GetFontVisibility() const {
+  return mFontVisibility;
+}
+
+void OffscreenCanvas::ReportBlockedFontFamily(const nsCString& aMsg) const {
+  nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(aMsg),
+                                              nsIScriptError::warningFlag,
+                                              "Security"_ns, GetDocument());
+}
+
+dom::Document* OffscreenCanvas::GetDocument() const {
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal());
+  return win ? win->GetExtantDoc() : nullptr;
+}
+
+nsICookieJarSettings* OffscreenCanvas::GetCookieJarSettings() const {
+  dom::Document* doc = GetDocument();
+  if (doc) {
+    return doc->CookieJarSettings();
+  }
+
+  if (dom::WorkerPrivate* worker = dom::GetCurrentThreadWorkerPrivate()) {
+    return worker->CookieJarSettings();
+  }
+
+  return nullptr;
+}
+
+Maybe<FontVisibility> OffscreenCanvas::MaybeInheritFontVisibility() const {
+  dom::Document* doc = GetDocument();
+  NS_ENSURE_TRUE(doc, Nothing());
+
+  nsPresContext* presContext = doc->GetPresContext();
+  NS_ENSURE_TRUE(presContext, Nothing());
+
+  return Some(presContext->GetFontVisibility());
+}
+
+void OffscreenCanvas::UserFontSetUpdated(gfxUserFontEntry*) {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(OffscreenCanvas, DOMEventTargetHelper,
                                    mCurrentContext)

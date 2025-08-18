@@ -36,6 +36,7 @@
 #  include <stdio.h>
 #endif
 
+class FontVisibilityProvider;
 class gfxContext;
 class gfxFontGroup;
 class nsAtom;
@@ -910,7 +911,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
   static void
   Shutdown();  // platform must call this to release the languageAtomService
 
-  gfxFontGroup(nsPresContext* aPresContext,
+  gfxFontGroup(FontVisibilityProvider* aFontVisibilityProvider,
                const mozilla::StyleFontFamilyList& aFontFamilyList,
                const gfxFontStyle* aStyle, nsAtom* aLanguage,
                bool aExplicitLanguage, gfxTextPerfMetrics* aTextPerf,
@@ -945,7 +946,9 @@ class gfxFontGroup final : public gfxTextRunFactory {
 
   // Get the presContext for which this fontGroup was constructed. This may be
   // null! (In the case of canvas not connected to a document.)
-  nsPresContext* GetPresContext() const { return mPresContext; }
+  FontVisibilityProvider* GetFontVisibilityProvider() const {
+    return mFontVisibilityProvider;
+  }
 
   /**
    * The listed characters should be treated as invisible and zero-width
@@ -1352,7 +1355,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
     bool mHasFontEntry : 1;
   };
 
-  nsPresContext* mPresContext = nullptr;
+  FontVisibilityProvider* mFontVisibilityProvider = nullptr;
 
   // List of font families, either named or generic.
   // Generic names map to system pref fonts based on language.

@@ -4525,7 +4525,7 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
 
   // TODO: Cache fontGroups in the Worker (use an nsFontCache?)
   gfxFontGroup* fontGroup =
-      new gfxFontGroup(nullptr,           // aPresContext
+      new gfxFontGroup(mOffscreenCanvas,  // aFontVisibilityProvider
                        list,              // aFontFamilyList
                        &fontStyle,        // aStyle
                        language,          // aLanguage
@@ -5311,7 +5311,7 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
   // prescontext; if not, we need to discard and re-create it.
   RefPtr<gfxFontGroup>& fontGroup = CurrentState().fontGroup;
   if (fontGroup) {
-    if (fontGroup->GetPresContext() != presContext) {
+    if (fontGroup->GetFontVisibilityProvider() != presContext) {
       fontGroup = nullptr;
     }
   }

@@ -1868,22 +1868,23 @@ gfxFontEntry* gfxFT2FontList::CreateFontEntry(fontlist::Face* aFace,
 // called for each family name, based on the assumption that the
 // first part of the full name is the family name
 
-gfxFontEntry* gfxFT2FontList::LookupLocalFont(nsPresContext* aPresContext,
-                                              const nsACString& aFontName,
-                                              WeightRange aWeightForEntry,
-                                              StretchRange aStretchForEntry,
-                                              SlantStyleRange aStyleForEntry) {
+gfxFontEntry* gfxFT2FontList::LookupLocalFont(
+    FontVisibilityProvider* aFontVisibilityProvider,
+    const nsACString& aFontName, WeightRange aWeightForEntry,
+    StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry) {
   AutoLock lock(mLock);
 
   if (SharedFontList()) {
-    return LookupInSharedFaceNameList(aPresContext, aFontName, aWeightForEntry,
-                                      aStretchForEntry, aStyleForEntry);
+    return LookupInSharedFaceNameList(aFontVisibilityProvider, aFontName,
+                                      aWeightForEntry, aStretchForEntry,
+                                      aStyleForEntry);
   }
 
   // walk over list of names
   FT2FontEntry* fontEntry = nullptr;
-  FontVisibility level =
-      aPresContext ? aPresContext->GetFontVisibility() : FontVisibility::User;
+  FontVisibility level = aFontVisibilityProvider
+                             ? aFontVisibilityProvider->GetFontVisibility()
+                             : FontVisibility::User;
 
   for (const RefPtr<gfxFontFamily>& fontFamily : mFontFamilies.Values()) {
     if (!IsVisibleToCSS(*fontFamily, level)) {
@@ -1938,13 +1939,13 @@ searchDone:
 }
 
 FontFamily gfxFT2FontList::GetDefaultFontForPlatform(
-    nsPresContext* aPresContext, const gfxFontStyle* aStyle,
+    FontVisibilityProvider* aFontVisibilityProvider, const gfxFontStyle* aStyle,
     nsAtom* aLanguage) {
   FontFamily ff;
 #if defined(MOZ_WIDGET_ANDROID)
-  ff = FindFamily(aPresContext, "Roboto"_ns);
+  ff = FindFamily(aFontVisibilityProvider, "Roboto"_ns);
   if (ff.IsNull()) {
-    ff = FindFamily(aPresContext, "Droid Sans"_ns);
+    ff = FindFamily(aFontVisibilityProvider, "Droid Sans"_ns);
   }
 #endif
   /* TODO: what about Qt or other platforms that may use this? */
