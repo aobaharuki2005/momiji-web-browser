@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.70
- * pdfjsBuild = f16e0b6da
+ * pdfjsVersion = 5.4.86
+ * pdfjsBuild = 1bada43a2
  */
 
 ;// ./src/shared/util.js
@@ -2673,9 +2673,7 @@ class IccColorSpace extends ColorSpace {
   #convertPixel;
   static #useWasm = true;
   static #wasmUrl = null;
-  static #finalizer = new FinalizationRegistry(transformer => {
-    qcms_drop_transformer(transformer);
-  });
+  static #finalizer = null;
   constructor(iccProfile, name, numComps) {
     if (!IccColorSpace.isUsable) {
       throw new Error("No ICC color space support");
@@ -2702,6 +2700,9 @@ class IccColorSpace extends ColorSpace {
     if (!this.#transformer) {
       throw new Error("Failed to create ICC color space");
     }
+    IccColorSpace.#finalizer ||= new FinalizationRegistry(transformer => {
+      qcms_drop_transformer(transformer);
+    });
     IccColorSpace.#finalizer.register(this, this.#transformer);
   }
   getRgbHex(src, srcOffset) {
@@ -57580,7 +57581,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "5.4.70";
+    const workerVersion = "5.4.86";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }

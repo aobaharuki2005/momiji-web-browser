@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.70
- * pdfjsBuild = f16e0b6da
+ * pdfjsVersion = 5.4.86
+ * pdfjsBuild = 1bada43a2
  */
 
 ;// ./web/pdfjs.js
@@ -157,7 +157,13 @@ function scrollIntoView(element, spot, scrollMatches = false) {
       offsetY += spot.top;
     }
     if (spot.left !== undefined) {
-      offsetX += spot.left;
+      if (scrollMatches) {
+        const elementWidth = element.getBoundingClientRect().width;
+        const padding = MathClamp((parent.clientWidth - elementWidth) / 2, 20, 400);
+        offsetX += spot.left - padding;
+      } else {
+        offsetX += spot.left;
+      }
       parent.scrollLeft = offsetX;
     }
   }
@@ -3028,7 +3034,6 @@ const FindState = {
 };
 const FIND_TIMEOUT = 250;
 const MATCH_SCROLL_OFFSET_TOP = -50;
-const MATCH_SCROLL_OFFSET_LEFT = -400;
 const CHARACTERS_TO_NORMALIZE = {
   "\u2010": "-",
   "\u2018": "'",
@@ -3346,7 +3351,7 @@ class PDFFindController {
     this._scrollMatches = false;
     const spot = {
       top: MATCH_SCROLL_OFFSET_TOP,
-      left: selectedLeft + MATCH_SCROLL_OFFSET_LEFT
+      left: selectedLeft
     };
     scrollIntoView(element, spot, true);
   }
@@ -7392,6 +7397,7 @@ class PDFViewer {
   #eventAbortController = null;
   #minDurationToUpdateCanvas = 0;
   #mlManager = null;
+  #printingAllowed = true;
   #scrollTimeoutId = null;
   #switchAnnotationEditorModeAC = null;
   #switchAnnotationEditorModeTimeoutId = null;
@@ -7407,7 +7413,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.70";
+    const viewerVersion = "5.4.86";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -7472,6 +7478,9 @@ class PDFViewer {
         pdfPage?.cleanup();
       }
     });
+  }
+  get printingAllowed() {
+    return this.#printingAllowed;
   }
   get pagesCount() {
     return this._pages.length;
@@ -7652,8 +7661,18 @@ class PDFViewer {
       textLayerMode: this.#textLayerMode
     };
     if (!permissions) {
+      this.#printingAllowed = true;
+      this.eventBus.dispatch("printingallowed", {
+        source: this,
+        isAllowed: this.#printingAllowed
+      });
       return params;
     }
+    this.#printingAllowed = permissions.includes(PermissionFlag.PRINT_HIGH_QUALITY) || permissions.includes(PermissionFlag.PRINT);
+    this.eventBus.dispatch("printingallowed", {
+      source: this,
+      isAllowed: this.#printingAllowed
+    });
     if (!permissions.includes(PermissionFlag.COPY) && this.#textLayerMode === TextLayerMode.ENABLE) {
       params.textLayerMode = TextLayerMode.ENABLE_PERMISSIONS;
     }
@@ -7751,6 +7770,7 @@ class PDFViewer {
       this._scriptingManager?.setDocument(null);
       this.#annotationEditorUIManager?.destroy();
       this.#annotationEditorUIManager = null;
+      this.#printingAllowed = true;
     }
     this.pdfDocument = pdfDocument;
     if (!pdfDocument) {
@@ -9156,6 +9176,7 @@ const PDFViewerApplication = {
   _caretBrowsing: null,
   _isScrolling: false,
   editorUndoBar: null,
+  _printPermissionPromise: null,
   async initialize(appConfig) {
     this.appConfig = appConfig;
     try {
@@ -9500,9 +9521,16 @@ const PDFViewerApplication = {
         console.warn(msg);
       });
     }
+    const togglePrintingButtons = visible => {
+      appConfig.toolbar?.print?.classList.toggle("hidden", !visible);
+      appConfig.secondaryToolbar?.printButton.classList.toggle("hidden", !visible);
+    };
     if (!this.supportsPrinting) {
-      appConfig.toolbar?.print?.classList.add("hidden");
-      appConfig.secondaryToolbar?.printButton.classList.add("hidden");
+      togglePrintingButtons(false);
+    } else {
+      eventBus.on("printingallowed", ({
+        isAllowed
+      }) => togglePrintingButtons(isAllowed));
     }
     if (!this.supportsFullscreen) {
       appConfig.secondaryToolbar?.presentationModeButton.classList.add("hidden");
@@ -9820,6 +9848,20 @@ const PDFViewerApplication = {
   },
   load(pdfDocument) {
     this.pdfDocument = pdfDocument;
+    this._printPermissionPromise = new Promise(resolve => {
+      this.eventBus.on("printingallowed", ({
+        isAllowed
+      }) => {
+        if (!isAllowed) {
+          window.print = () => {
+            console.warn("Printing is not allowed.");
+          };
+        }
+        resolve(isAllowed);
+      }, {
+        once: true
+      });
+    });
     pdfDocument.getDownloadInfo().then(({
       length
     }) => {
@@ -10170,7 +10212,7 @@ const PDFViewerApplication = {
     if (this.printService) {
       return;
     }
-    if (!this.supportsPrinting) {
+    if (!this.supportsPrinting || !this.pdfViewer.printingAllowed) {
       this._otherError("pdfjs-printing-not-supported");
       return;
     }
@@ -10221,8 +10263,8 @@ const PDFViewerApplication = {
   requestPresentationMode() {
     this.pdfPresentationMode?.request();
   },
-  triggerPrinting() {
-    if (this.supportsPrinting) {
+  async triggerPrinting() {
+    if (this.supportsPrinting && (await this._printPermissionPromise)) {
       window.print();
     }
   },
@@ -10362,27 +10404,32 @@ const PDFViewerApplication = {
     }, {
       signal
     });
+    let scrollendTimeoutID, scrollAbortController;
     const scrollend = () => {
-      this._isScrolling = false;
-      mainContainer.addEventListener("scroll", scroll, {
-        passive: true,
-        signal
-      });
-      mainContainer.removeEventListener("scrollend", scrollend);
-      mainContainer.removeEventListener("blur", scrollend);
+      clearTimeout(scrollendTimeoutID);
+      if (this._isScrolling) {
+        scrollAbortController.abort();
+        scrollAbortController = null;
+        this._isScrolling = false;
+      }
     };
     const scroll = () => {
       if (this._isCtrlKeyDown) {
         return;
       }
-      mainContainer.removeEventListener("scroll", scroll);
-      this._isScrolling = true;
-      mainContainer.addEventListener("scrollend", scrollend, {
-        signal
-      });
-      mainContainer.addEventListener("blur", scrollend, {
-        signal
-      });
+      if (!this._isScrolling) {
+        scrollAbortController = new AbortController();
+        const abortSignal = AbortSignal.any([scrollAbortController.signal, signal]);
+        mainContainer.addEventListener("scrollend", scrollend, {
+          signal: abortSignal
+        });
+        mainContainer.addEventListener("blur", scrollend, {
+          signal: abortSignal
+        });
+        this._isScrolling = true;
+      }
+      clearTimeout(scrollendTimeoutID);
+      scrollendTimeoutID = setTimeout(scrollend, 100);
     };
     mainContainer.addEventListener("scroll", scroll, {
       passive: true,
