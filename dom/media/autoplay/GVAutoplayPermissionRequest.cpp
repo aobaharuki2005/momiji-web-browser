@@ -153,7 +153,15 @@ GVAutoplayPermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
   MOZ_ASSERT(status == RStatus::ePENDING || status == RStatus::eUNKNOWN);
   if (status == RStatus::ePENDING) {
     SetRequestStatus(RStatus::eALLOWED);
+    // Permission grant may arrive late and elements may be suspended.
+    // We message to wake them up and resume downloading data if needed.
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->NotifyObservers(ToSupports(mWindow), kGVAutoplayAllowedTopic,
+                           /* no extra string data */ nullptr);
+    }
   }
+
   mContext = nullptr;
   return NS_OK;
 }
@@ -191,6 +199,22 @@ void GVAutoplayPermissionRequestor::AskForPermissionIfNeeded(
 bool GVAutoplayPermissionRequestor::HasEverAskForRequest(
     BrowsingContext* aContext, RType aType) {
   return GetRequestStatus(aContext, aType) != RStatus::eUNKNOWN;
+}
+
+/* static */
+bool GVAutoplayPermissionRequestor::HasUnresolvedRequest(
+    nsPIDOMWindowInner* aWindow) {
+  if (!aWindow) {
+    return false;
+  }
+
+  RefPtr<BrowsingContext> context = aWindow->GetBrowsingContext()->Top();
+  auto gvAudible = context->GetGVAudibleAutoplayRequestStatus();
+  auto gvInaudible = context->GetGVInaudibleAutoplayRequestStatus();
+  return (gvAudible == GVAutoplayRequestStatus::eUNKNOWN) ||
+         (gvAudible == GVAutoplayRequestStatus::ePENDING) ||
+         (gvInaudible == GVAutoplayRequestStatus::eUNKNOWN) ||
+         (gvInaudible == GVAutoplayRequestStatus::ePENDING);
 }
 
 /* static */
