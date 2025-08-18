@@ -413,6 +413,20 @@ let config = [
     files: wrapPaths({ paths: ["**"] }),
     ...mozilla.configs["flat/valid-jsdoc"],
   },
+  {
+    name: "no-newtab-refs-outside-newtab",
+    files: ["**/*.mjs", "**/*.js", "**/*.sys.mjs"],
+    ignores: [
+      "tools/@types/generated/**",
+      "browser/base/content/test/static/browser_all_files_referenced.js",
+      "tools/lint/eslint/eslint-plugin-mozilla/lib/rules/no-newtab-refs-outside-newtab.mjs",
+      "tools/lint/eslint/eslint-plugin-mozilla/tests/no-newtab-refs-outside-newtab.mjs",
+    ],
+    plugins: { mozilla },
+    rules: {
+      "mozilla/no-newtab-refs-outside-newtab": "error",
+    },
+  },
 
   ...wrapPathsInConfig(subdirConfigs),
   ...wrapPathsInConfig(repositoryGlobals),
