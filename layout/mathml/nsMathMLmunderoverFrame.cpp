@@ -286,6 +286,9 @@ XXX The winner is the outermost setting in conflicting settings like these:
   */
   if (mContent->IsAnyOfMathMLElements(nsGkAtoms::mover,
                                       nsGkAtoms::munderover)) {
+    uint32_t compress = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
+                            ? NS_MATHML_COMPRESSED
+                            : 0;
     mIncrementOver = !NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags) ||
                      subsupDisplay;
     SetIncrementScriptLevel(mContent->IsMathMLElement(nsGkAtoms::mover) ? 1 : 2,
@@ -293,13 +296,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
     if (mIncrementOver) {
       PropagateFrameFlagFor(overscriptFrame, NS_FRAME_MATHML_SCRIPT_DESCENDANT);
     }
-    if (!StaticPrefs::mathml_math_shift_enabled()) {
-      uint32_t compress =
-          NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
-              ? NS_MATHML_COMPRESSED
-              : 0;
-      PropagatePresentationDataFor(overscriptFrame, compress, compress);
-    }
+    PropagatePresentationDataFor(overscriptFrame, compress, compress);
   }
   /*
      The TeXBook treats 'under' like a subscript, so p.141 or Rule 13a
@@ -315,10 +312,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
       PropagateFrameFlagFor(underscriptFrame,
                             NS_FRAME_MATHML_SCRIPT_DESCENDANT);
     }
-    if (!StaticPrefs::mathml_math_shift_enabled()) {
-      PropagatePresentationDataFor(underscriptFrame, NS_MATHML_COMPRESSED,
-                                   NS_MATHML_COMPRESSED);
-    }
+    PropagatePresentationDataFor(underscriptFrame, NS_MATHML_COMPRESSED,
+                                 NS_MATHML_COMPRESSED);
   }
 
   /* Set flags for dtls font feature settings.

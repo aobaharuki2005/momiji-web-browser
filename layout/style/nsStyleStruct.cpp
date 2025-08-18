@@ -189,7 +189,6 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
       mMinFontSizeRatio(aSrc.mMinFontSizeRatio),
       mMathVariant(aSrc.mMathVariant),
       mMathStyle(aSrc.mMathStyle),
-      mMathShift(aSrc.mMathShift),
       mExplicitLanguage(aSrc.mExplicitLanguage),
       mXTextScale(aSrc.mXTextScale),
       mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize),
@@ -218,7 +217,6 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mLineHeight(StyleLineHeight::Normal()),
       mMathVariant(StyleMathVariant::None),
       mMathStyle(StyleMathStyle::Normal),
-      mMathShift(StyleMathShift::Normal),
       mXTextScale(InitialTextScale(aDocument)),
       mScriptUnconstrainedSize(mSize),
       mScriptMinSize(Length::FromPixels(
@@ -242,7 +240,7 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
   if (mSize != aNewData.mSize || mLanguage != aNewData.mLanguage ||
       mExplicitLanguage != aNewData.mExplicitLanguage ||
       mMathVariant != aNewData.mMathVariant ||
-      mMathStyle != aNewData.mMathStyle || mMathShift != aNewData.mMathShift ||
+      mMathStyle != aNewData.mMathStyle ||
       mMinFontSizeRatio != aNewData.mMinFontSizeRatio ||
       mLineHeight != aNewData.mLineHeight) {
     return NS_STYLE_HINT_REFLOW;

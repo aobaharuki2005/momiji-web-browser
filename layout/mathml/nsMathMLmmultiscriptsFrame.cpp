@@ -85,12 +85,10 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData() {
     count++;
     childFrame = childFrame->GetNextSibling();
   }
-  if (!StaticPrefs::mathml_math_shift_enabled()) {
-    for (int32_t i = subScriptFrames.Length() - 1; i >= 0; i--) {
-      childFrame = subScriptFrames[i];
-      PropagatePresentationDataFor(childFrame, NS_MATHML_COMPRESSED,
-                                   NS_MATHML_COMPRESSED);
-    }
+  for (int32_t i = subScriptFrames.Length() - 1; i >= 0; i--) {
+    childFrame = subScriptFrames[i];
+    PropagatePresentationDataFor(childFrame, NS_MATHML_COMPRESSED,
+                                 NS_MATHML_COMPRESSED);
   }
 
   return NS_OK;
@@ -215,15 +213,13 @@ nsresult nsMathMLmmultiscriptsFrame::PlaceMultiScript(
   nscoord supScriptShift;
   nsPresentationData presentationData;
   aFrame->GetPresentationData(presentationData);
-  bool compressed = StaticPrefs::mathml_math_shift_enabled()
-                        ? font->mMathShift == StyleMathShift::Compact
-                        : NS_MATHML_IS_COMPRESSED(presentationData.flags);
   if (mathFont) {
     // Try and get the super script shift from the MATH table. Note that
     // contrary to TeX we only have two parameters.
     supScriptShift = mathFont->MathTable()->Constant(
-        compressed ? gfxMathTable::SuperscriptShiftUpCramped
-                   : gfxMathTable::SuperscriptShiftUp,
+        NS_MATHML_IS_COMPRESSED(presentationData.flags)
+            ? gfxMathTable::SuperscriptShiftUpCramped
+            : gfxMathTable::SuperscriptShiftUp,
         oneDevPixel);
   } else {
     // supScriptShift{1,2,3}
@@ -239,10 +235,10 @@ nsresult nsMathMLmmultiscriptsFrame::PlaceMultiScript(
     // get sup script shift depending on current script level and display style
     // Rule 18c, App. G, TeXbook
     if (font->mMathDepth == 0 && font->mMathStyle == StyleMathStyle::Normal &&
-        !compressed) {
+        !NS_MATHML_IS_COMPRESSED(presentationData.flags)) {
       // Style D in TeXbook
       supScriptShift = supScriptShift1;
-    } else if (compressed) {
+    } else if (NS_MATHML_IS_COMPRESSED(presentationData.flags)) {
       // Style C' in TeXbook = D',T',S',SS'
       supScriptShift = supScriptShift3;
     } else {

@@ -55,10 +55,8 @@ NS_IMETHODIMP
 nsMathMLmfracFrame::TransmitAutomaticData() {
   // The TeXbook (Ch 17. p.141) says the numerator inherits the compression
   //  while the denominator is compressed
-  if (!StaticPrefs::mathml_math_shift_enabled()) {
-    UpdatePresentationDataFromChildAt(1, 1, NS_MATHML_COMPRESSED,
-                                      NS_MATHML_COMPRESSED);
-  }
+  UpdatePresentationDataFromChildAt(1, 1, NS_MATHML_COMPRESSED,
+                                    NS_MATHML_COMPRESSED);
 
   // If displaystyle is false, then scriptlevel is incremented, so notify the
   // children of this.
