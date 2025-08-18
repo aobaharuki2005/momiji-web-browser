@@ -331,4 +331,53 @@ describe("<Lists>", () => {
     const createListBtn = localWrapper.find("panel-item.create-list").at(0);
     assert.strictEqual(createListBtn.prop("disabled"), true);
   });
+
+  it("overrides `widgets.lists.maxLists` pref when below `1` value", () => {
+    const state = {
+      ...mockState,
+      Prefs: {
+        ...mockState.Prefs,
+        values: {
+          ...mockState.Prefs.values,
+          "widgets.lists.maxLists": 0,
+        },
+      },
+    };
+    const localWrapper = mount(
+      <WrapWithProvider state={state}>
+        <Lists dispatch={dispatch} />
+      </WrapWithProvider>
+    );
+    const createListBtn = localWrapper.find("panel-item.create-list").at(0);
+    // with 1 existing list, and maxLists coerced to 1, it should be disabled
+    assert.strictEqual(createListBtn.prop("disabled"), true);
+  });
+
+  it("disables Create List option when at the maximum lists limit", () => {
+    const state = {
+      ...mockState,
+      ListsWidget: {
+        ...mockState.ListsWidget,
+        lists: {
+          "list-1": { label: "A", tasks: [], completed: [] },
+          "list-2": { label: "B", tasks: [], completed: [] },
+        },
+      },
+      Prefs: {
+        ...mockState.Prefs,
+        values: {
+          ...mockState.Prefs.values,
+          "widgets.lists.maxLists": 2,
+        },
+      },
+    };
+    const localWrapper = mount(
+      <WrapWithProvider state={state}>
+        <Lists dispatch={dispatch} />
+      </WrapWithProvider>
+    );
+    const createListBtn = localWrapper.find("panel-item.create-list").at(0);
+    // with 2 existing lists, and maxLists is set to 2, it should be disabled
+    assert.strictEqual(createListBtn.prop("disabled"), true);
+  });
 });
