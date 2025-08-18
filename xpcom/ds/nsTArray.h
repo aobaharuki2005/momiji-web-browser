@@ -269,7 +269,7 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase {
 struct nsTArrayHeader {
   uint32_t mLength;
   uint32_t mCapacity : 31;
-  uint32_t mIsAutoArray : 1;
+  uint32_t mIsAutoBuffer : 1;
 };
 
 extern "C" {
@@ -565,49 +565,15 @@ class nsTArray_base {
   void MoveInit(nsTArray_base<Allocator, RelocationStrategy>& aOther,
                 size_type aElemSize, size_t aElemAlign);
 
-  // This is an RAII class used in SwapArrayElements.
-  class IsAutoArrayRestorer {
-   public:
-    IsAutoArrayRestorer(nsTArray_base<Alloc, RelocationStrategy>& aArray,
-                        size_t aElemAlign);
-    ~IsAutoArrayRestorer();
-
-   private:
-    nsTArray_base<Alloc, RelocationStrategy>& mArray;
-    size_t mElemAlign;
-    bool mIsAuto;
-  };
-
-  // Helper function for SwapArrayElements. Ensures that if the array
-  // is an AutoTArray that it doesn't use the built-in buffer.
+  // Helper function for move construction and SwapArrayElements.
+  // Takes the storage from the nsTArray as a non-auto Header pointer.
+  // If the array is holding a reference to an AutoTArray buffer,
+  // it will be moved to the heap before being returned.
   template <typename ActualAlloc>
-  bool EnsureNotUsingAutoArrayBuffer(size_type aElemSize);
+  Header* TakeHeaderForMove(size_type aElemSize);
 
-  // Returns true if this nsTArray is an AutoTArray with a built-in buffer.
-  bool IsAutoArray() const { return mHdr->mIsAutoArray; }
-
-  // Returns a Header for the built-in buffer of this AutoTArray.
-  Header* GetAutoArrayBuffer(size_t aElemAlign) {
-    MOZ_ASSERT(IsAutoArray(), "Should be an auto array to call this");
-    return GetAutoArrayBufferUnsafe(aElemAlign);
-  }
-  const Header* GetAutoArrayBuffer(size_t aElemAlign) const {
-    MOZ_ASSERT(IsAutoArray(), "Should be an auto array to call this");
-    return GetAutoArrayBufferUnsafe(aElemAlign);
-  }
-
-  // Returns a Header for the built-in buffer of this AutoTArray, but doesn't
-  // assert that we are an AutoTArray.
-  Header* GetAutoArrayBufferUnsafe(size_t aElemAlign) {
-    return const_cast<Header*>(
-        static_cast<const nsTArray_base<Alloc, RelocationStrategy>*>(this)
-            ->GetAutoArrayBufferUnsafe(aElemAlign));
-  }
-  const Header* GetAutoArrayBufferUnsafe(size_t aElemAlign) const;
-
-  // Returns true if this is an AutoTArray and it currently uses the
-  // built-in buffer to store its elements.
-  bool UsesAutoArrayBuffer() const;
+  // Returns whether we're using our auto-array inline buffer.
+  bool UsesAutoArrayBuffer() const { return mHdr->mIsAutoBuffer; }
 
   // The array's elements (prefixed with a Header).  This pointer is never
   // null.  If the array is empty, then this will point to sEmptyTArrayHeader.
@@ -1067,7 +1033,7 @@ class nsTArray_Impl
   template <typename Allocator>
   explicit nsTArray_Impl(nsTArray_Impl<E, Allocator>&& aOther) noexcept {
     // We cannot be a (Copyable)AutoTArray because that overrides this ctor.
-    MOZ_ASSERT(!this->IsAutoArray());
+    MOZ_ASSERT(!this->UsesAutoArrayBuffer());
 
     // This does not use SwapArrayElements because that's unnecessarily complex.
     this->MoveConstructNonAutoArray(aOther, sizeof(value_type),
@@ -3093,6 +3059,32 @@ class MOZ_NON_MEMMOVABLE MOZ_GSL_OWNER AutoTArray : public nsTArray<E> {
     return result;
   }
 
+  // Clears ourself, and ensures that we end up pointer to our auto-buffer
+  // again.
+  void Clear() {
+    base_type::Clear();
+    Init();
+  }
+
+  void Compact() {
+    if (base_type::HasEmptyHeader() || base_type::UsesAutoArrayBuffer()) {
+      return;
+    }
+    auto length = base_type::Length();
+    if (N >= length) {
+      // Switch back to our auto-buffer.
+      auto* header = reinterpret_cast<Header*>(&mAutoBuf);
+      base_type::relocation_type::RelocateNonOverlappingRegionWithHeader(
+        header, this->mHdr, length, sizeof(value_type));
+      header->mCapacity = N;
+      header->mIsAutoBuffer = true;
+      nsTArrayFallibleAllocator::Free(this->mHdr);
+      this->mHdr = header;
+      return;
+    }
+    base_type::Compact();
+  }
+
  private:
   // nsTArray_base casts itself as an nsAutoArrayBase in order to get a pointer
   // to mAutoBuf.
@@ -3108,11 +3100,7 @@ class MOZ_NON_MEMMOVABLE MOZ_GSL_OWNER AutoTArray : public nsTArray<E> {
     *phdr = reinterpret_cast<Header*>(&mAutoBuf);
     (*phdr)->mLength = 0;
     (*phdr)->mCapacity = N;
-    (*phdr)->mIsAutoArray = 1;
-
-    MOZ_ASSERT(base_type::GetAutoArrayBuffer(alignof(value_type)) ==
-                   reinterpret_cast<Header*>(&mAutoBuf),
-               "GetAutoArrayBuffer needs to be fixed");
+    (*phdr)->mIsAutoBuffer = true;
   }
 
   // Declare mAutoBuf aligned to the maximum of the header's alignment and
