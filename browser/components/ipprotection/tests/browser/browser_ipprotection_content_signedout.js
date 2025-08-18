@@ -6,10 +6,18 @@
 
 const lazy = {};
 
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
 ChromeUtils.defineESModuleGetters(lazy, {
   IPProtectionWidget: "resource:///modules/ipprotection/IPProtection.sys.mjs",
   IPProtectionPanel:
     "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs",
+  IPProtectionService:
+    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
 
 /**
@@ -61,6 +69,13 @@ add_task(async function test_signed_out_content() {
  * Tests sign-in button functionality
  */
 add_task(async function test_signin_button() {
+  let sandbox = sinon.createSandbox();
+  sandbox
+    .stub(lazy.SpecialMessageActions, "fxaSignInFlow")
+    .callsFake(async function () {
+      return true;
+    });
+
   let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
 
   let panelView = PanelMultiView.getViewNode(
@@ -98,4 +113,19 @@ add_task(async function test_signin_button() {
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
   signInButton.click();
   await Promise.all([signInPromise, panelHiddenPromise]);
+
+  let panelShownAgainPromise = waitForPanelEvent(document, "popupshown");
+  await lazy.IPProtectionService.startLoginFlow(gBrowser);
+  await panelShownAgainPromise;
+
+  // Close the panel
+  let panelHiddenPromiseEnd = waitForPanelEvent(document, "popuphidden");
+
+  panelView.dispatchEvent(
+    new CustomEvent("IPProtection:Close", { bubbles: true })
+  );
+
+  await panelHiddenPromiseEnd;
+
+  sandbox.restore();
 });

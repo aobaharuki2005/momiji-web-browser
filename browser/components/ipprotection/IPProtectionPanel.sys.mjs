@@ -7,6 +7,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+  IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
 });
 
 import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
@@ -230,6 +231,19 @@ export class IPProtectionPanel {
   }
 
   /**
+   * Start flow for signing in and then opening the panel on success
+   */
+  async startLoginFlow() {
+    let window = this.panel.ownerGlobal;
+    let browser = window.gBrowser;
+    this.close();
+    let isSignedIn = await lazy.IPProtectionService.startLoginFlow(browser);
+    if (isSignedIn) {
+      lazy.IPProtection.openPanel(window);
+    }
+  }
+
+  /**
    * Remove added elements and listeners.
    */
   destroy() {
@@ -251,6 +265,7 @@ export class IPProtectionPanel {
     doc.addEventListener("IPProtection:UserEnable", this.handleEvent);
     doc.addEventListener("IPProtection:UserDisable", this.handleEvent);
     doc.addEventListener("IPProtection:ShowHelpPage", this.handleEvent);
+    doc.addEventListener("IPProtection:SignIn", this.handleEvent);
   }
 
   #removePanelListeners(doc) {
@@ -259,6 +274,7 @@ export class IPProtectionPanel {
     doc.removeEventListener("IPProtection:UserEnable", this.handleEvent);
     doc.removeEventListener("IPProtection:UserDisable", this.handleEvent);
     doc.removeEventListener("IPProtection:ShowHelpPage", this.handleEvent);
+    doc.removeEventListener("IPProtection:SignIn", this.handleEvent);
   }
 
   #addProxyListeners() {
@@ -328,6 +344,8 @@ export class IPProtectionPanel {
         isProtectionEnabled: false,
         protectionEnabledSince: null,
       });
+    } else if (event.type == "IPProtection:SignIn") {
+      this.startLoginFlow();
     }
   }
 }
