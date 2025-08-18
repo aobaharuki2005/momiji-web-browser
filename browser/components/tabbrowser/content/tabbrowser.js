@@ -866,9 +866,13 @@
       }
 
       this.showTab(aTab);
-      this.#handleTabMove(aTab, () =>
-        this.pinnedTabsContainer.appendChild(aTab)
-      );
+      this.#handleTabMove(aTab, () => {
+        let periphery = document.getElementById(
+          "pinned-tabs-container-periphery"
+        );
+        // If periphery is null, append to end
+        this.pinnedTabsContainer.insertBefore(aTab, periphery);
+      });
 
       aTab.setAttribute("pinned", "true");
       this._updateTabBarForPinnedTabs();
