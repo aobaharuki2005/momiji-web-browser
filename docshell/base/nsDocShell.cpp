@@ -8920,6 +8920,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   // origin skip handling otherwise
   if (!IsSamePrincipalForDocumentURI(doc->NodePrincipal(), mCurrentURI,
                                      newURI)) {
+    aSameDocument = false;
     MOZ_LOG(gSHLog, LogLevel::Debug,
             ("nsDocShell[%p]: possible violation of the same origin policy "
              "during same document navigation",
@@ -8927,7 +8928,8 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     return NS_OK;
   }
 
-  if (nsCOMPtr<nsPIDOMWindowInner> window = doc->GetInnerWindow()) {
+  if (nsCOMPtr<nsPIDOMWindowInner> window = doc->GetInnerWindow();
+      window && !aState.mHistoryNavBetweenSameDoc) {
     // https://html.spec.whatwg.org/#navigate-fragid
     // Step 1
     if (RefPtr<Navigation> navigation = window->Navigation()) {

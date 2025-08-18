@@ -201,6 +201,9 @@ class Navigation final : public DOMEventTargetHelper {
 
   Document* GetAssociatedDocument() const;
 
+  // Update the state managing if we need to dispatch the traverse event or not.
+  void UpdateNeedsTraverse();
+
   void LogHistory() const;
 
   // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-entry-list

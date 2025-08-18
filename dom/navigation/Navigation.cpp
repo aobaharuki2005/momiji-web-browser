@@ -154,22 +154,13 @@ JSObject* Navigation::WrapObject(JSContext* aCx,
 }
 
 void Navigation::EventListenerAdded(nsAtom* aType) {
-  if (nsPIDOMWindowInner* window = GetOwnerWindow()) {
-    if (WindowGlobalChild* windowGlobal = window->GetWindowGlobalChild()) {
-      windowGlobal->NavigateAdded();
-    }
-  }
+  UpdateNeedsTraverse();
 
   EventTarget::EventListenerAdded(aType);
 }
 
 void Navigation::EventListenerRemoved(nsAtom* aType) {
-  if (nsPIDOMWindowInner* window = GetOwnerWindow()) {
-    if (WindowGlobalChild* windowGlobal = window->GetWindowGlobalChild()) {
-      windowGlobal->NavigateRemoved();
-    }
-  }
-
+  UpdateNeedsTraverse();
   EventTarget::EventListenerRemoved(aType);
 }
 
@@ -1271,6 +1262,9 @@ void Navigation::PromoteUpcomingAPIMethodTrackerToOngoing(
   RefPtr<Navigation> navigation =
       aNavigationAPIMethodTracker->mNavigationObject;
 
+  auto needsTraverse =
+      MakeScopeExit([navigation]() { navigation->UpdateNeedsTraverse(); });
+
   // Step 2
   if (navigation->mOngoingAPIMethodTracker == aNavigationAPIMethodTracker) {
     navigation->mOngoingAPIMethodTracker = nullptr;
@@ -1371,6 +1365,43 @@ Document* Navigation::GetAssociatedDocument() const {
   return window ? window->GetDocument() : nullptr;
 }
 
+void Navigation::UpdateNeedsTraverse() {
+  nsGlobalWindowInner* innerWindow = GetOwnerWindow();
+  if (!innerWindow) {
+    return;
+  }
+
+  WindowContext* windowContext = innerWindow->GetWindowContext();
+  if (!windowContext) {
+    return;
+  }
+
+  // Since we only care about optimizing for the traversable, bail if we're not
+  // the top-level context.
+  if (BrowsingContext* browsingContext = innerWindow->GetBrowsingContext();
+      !browsingContext || !browsingContext->IsTop()) {
+    return;
+  }
+
+  // We need traverse if we have any method tracker.
+  bool needsTraverse = mOngoingAPIMethodTracker ||
+                       mUpcomingNonTraverseAPIMethodTracker ||
+                       !mUpcomingTraverseAPIMethodTrackers.IsEmpty();
+
+  // We need traverse if we have any event handlers.
+  if (EventListenerManager* eventListenerManager =
+          GetExistingListenerManager()) {
+    needsTraverse = needsTraverse || eventListenerManager->HasListeners();
+  }
+
+  // Don't toggle if nothing's changed.
+  if (windowContext->GetNeedsTraverse() == needsTraverse) {
+    return;
+  }
+
+  (void)windowContext->SetNeedsTraverse(needsTraverse);
+}
+
 void Navigation::LogHistory() const {
   if (!MOZ_LOG_TEST(gNavigationLog, LogLevel::Debug)) {
     return;
@@ -1416,6 +1447,9 @@ Navigation::MaybeSetUpcomingNonTraverseAPIMethodTracker(
   if (!HasEntriesAndEventsDisabled()) {
     mUpcomingNonTraverseAPIMethodTracker = apiMethodTracker;
   }
+
+  UpdateNeedsTraverse();
+
   // 6. Return apiMethodTracker.
   return apiMethodTracker;
 }
@@ -1443,8 +1477,12 @@ Navigation::AddUpcomingTraverseAPIMethodTracker(const nsID& aKey,
 
   // 4. Set navigation's upcoming traverse API method trackers[destinationKey]
   //    to apiMethodTracker.
+  RefPtr methodTracker =
+      mUpcomingTraverseAPIMethodTrackers.InsertOrUpdate(aKey, apiMethodTracker);
+
+  UpdateNeedsTraverse();
+
   // 5. Return apiMethodTracker.
-  return mUpcomingTraverseAPIMethodTrackers.InsertOrUpdate(aKey,
-                                                           apiMethodTracker);
+  return methodTracker;
 }
 }  // namespace mozilla::dom

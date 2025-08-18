@@ -1491,7 +1491,8 @@ static bool MaybeCheckUnloadingIsCanceled(
   // An efficiency trick. We've set this flag on the window context if we've
   // seen a "navigate" and/or a "beforeunload" handler set. If not we know we
   // can skip this.
-  if (!windowGlobalParent || !windowGlobalParent->NeedsBeforeUnload()) {
+  if (!windowGlobalParent || (!windowGlobalParent->NeedsBeforeUnload() &&
+                              !windowGlobalParent->GetNeedsTraverse())) {
     return false;
   }
 
