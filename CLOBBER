@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Modified build files in third_party/libwebrtc - Bug 1980479 - Vendor libwebrtc from 7b17217e59
+Modified build files in third_party/libwebrtc - Bug 1980479 (MOZ) - add a shim source_set for third_party/opus
