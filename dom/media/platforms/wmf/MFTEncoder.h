@@ -62,6 +62,7 @@ class MFTEncoder final {
   HRESULT SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType);
   HRESULT SetModes(const EncoderConfig& aConfig);
   HRESULT SetBitrate(UINT32 aBitsPerSec);
+  bool IsHardwareAccelerated() const;
 
   RefPtr<EncodePromise> Encode(InputSample&& aInput);
   RefPtr<EncodePromise> Drain();

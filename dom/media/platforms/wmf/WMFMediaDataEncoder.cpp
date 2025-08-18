@@ -109,6 +109,8 @@ RefPtr<InitPromise> WMFMediaDataEncoder::ProcessInit() {
   MOZ_ASSERT(!mEncoder,
              "Should not initialize encoder again without shutting down");
 
+  auto cleanup = MakeScopeExit([&] { mIsHardwareAccelerated = false; });
+
   if (!wmf::MediaFoundationInitializer::HasInitialized()) {
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -134,6 +136,9 @@ RefPtr<InitPromise> WMFMediaDataEncoder::ProcessInit() {
 
   mEncoder = std::move(encoder);
   InitializeConfigData();
+  mIsHardwareAccelerated = mEncoder->IsHardwareAccelerated();
+  WMF_ENC_LOGD("HW accelerated: %s", mIsHardwareAccelerated ? "yes" : "no");
+  cleanup.release();
   return InitPromise::CreateAndResolve(TrackInfo::TrackType::kVideoTrack,
                                        __func__);
 }

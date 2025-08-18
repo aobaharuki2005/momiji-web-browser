@@ -780,6 +780,12 @@ MFTEncoder::SetBitrate(UINT32 aBitsPerSec) {
   return mConfig->SetValue(&CODECAPI_AVEncCommonMeanBitRate, &var);
 }
 
+bool MFTEncoder::IsHardwareAccelerated() const {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+
+  return mFactory && mFactory->mProvider != MFTEncoder::Factory::Provider::SW;
+}
+
 template <typename T, typename E, bool IsExclusive = true>
 static auto ResultToPromise(Result<T, E>&& aResult) {
   if (aResult.isErr()) {
