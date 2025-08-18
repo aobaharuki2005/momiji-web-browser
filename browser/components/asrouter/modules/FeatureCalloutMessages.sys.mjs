@@ -1955,20 +1955,37 @@ const MESSAGES = () => {
                   lineHeight: "24px",
                 },
                 action: {
+                  type: "MULTI_ACTION",
                   dismiss: true,
-                  type: "SHOW_FIREFOX_ACCOUNTS",
                   data: {
-                    where: "tabshifted",
-                    entrypoint: "desktop-fx-vpn",
-                    extraParams: {
-                      service: "sync",
-                      entrypoint_experiment: "fx-vpn-pilot",
-                      entrypoint_variation: "alpha",
-                      utm_source: "callout",
-                      utm_campaign: "fx-vpn-pilot",
-                      utm_medium: "firefox-desktop",
-                      utm_term: "fx-vpn-pilot-callout-1",
-                    },
+                    actions: [
+                      {
+                        type: "FXA_SIGNIN_FLOW",
+                        data: {
+                          where: "tab",
+                          entrypoint: "desktop-fx-vpn",
+                          autoClose: false,
+                          extraParams: {
+                            service: "sync",
+                            entrypoint_experiment: "fx-vpn-pilot",
+                            entrypoint_variation: "alpha",
+                            utm_source: "callout",
+                            utm_campaign: "fx-vpn-pilot",
+                            utm_medium: "firefox-desktop",
+                            utm_term: "fx-vpn-pilot-callout-1",
+                          },
+                        },
+                      },
+                      {
+                        type: "OPEN_PANEL",
+                        data: {
+                          widgetId: "ipprotection-button",
+                          panelId: "PanelUI-ipprotection",
+                        },
+                        requiresPrevious: true,
+                      },
+                    ],
+                    orderedExecution: true,
                   },
                 },
               },
@@ -2067,20 +2084,37 @@ const MESSAGES = () => {
                   lineHeight: "24px",
                 },
                 action: {
+                  type: "MULTI_ACTION",
                   dismiss: true,
-                  type: "SHOW_FIREFOX_ACCOUNTS",
                   data: {
-                    where: "tabshifted",
-                    entrypoint: "desktop-fx-vpn",
-                    extraParams: {
-                      service: "sync",
-                      entrypoint_experiment: "fx-vpn-pilot",
-                      entrypoint_variation: "alpha",
-                      utm_source: "callout",
-                      utm_campaign: "fx-vpn-pilot",
-                      utm_medium: "firefox-desktop",
-                      utm_term: "fx-vpn-pilot-callout-2",
-                    },
+                    actions: [
+                      {
+                        type: "FXA_SIGNIN_FLOW",
+                        data: {
+                          where: "tab",
+                          entrypoint: "desktop-fx-vpn",
+                          autoClose: false,
+                          extraParams: {
+                            service: "sync",
+                            entrypoint_experiment: "fx-vpn-pilot",
+                            entrypoint_variation: "alpha",
+                            utm_source: "callout",
+                            utm_campaign: "fx-vpn-pilot",
+                            utm_medium: "firefox-desktop",
+                            utm_term: "fx-vpn-pilot-callout-2",
+                          },
+                        },
+                      },
+                      {
+                        type: "OPEN_PANEL",
+                        data: {
+                          widgetId: "ipprotection-button",
+                          panelId: "PanelUI-ipprotection",
+                        },
+                        requiresPrevious: true,
+                      },
+                    ],
+                    orderedExecution: true,
                   },
                 },
               },
