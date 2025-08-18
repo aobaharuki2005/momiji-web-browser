@@ -946,7 +946,8 @@ usage:
     type: boolean
     lifetime: application
     send_in_pings:
-      - usage-reporting
+      - metrics
+      - first-startup
     description: |
       Tracks if Windows Backup is enabled and configured to back up applications.
     bugs:
@@ -963,7 +964,8 @@ usage:
     unit: days
     lifetime: application
     send_in_pings:
-      - usage-reporting
+      - metrics
+      - first-startup
     description: |
         The age of the current users home folder in days.
     bugs:

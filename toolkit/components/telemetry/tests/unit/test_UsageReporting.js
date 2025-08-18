@@ -119,6 +119,11 @@ add_task(async function test_prefs() {
       testWindowsBuildNumber,
       Glean.usage.windowsBuildNumber.testGetValue("usage-reporting")
     );
+    Assert.greater(
+      Glean.usage.windowsUserProfileAgeInDays.testGetValue(),
+      0,
+      "The Windows user profile is not supposed to be created today in our tests."
+    );
     Assert.equal(
       testAppBuild,
       Glean.usage.appBuild.testGetValue("usage-reporting")
