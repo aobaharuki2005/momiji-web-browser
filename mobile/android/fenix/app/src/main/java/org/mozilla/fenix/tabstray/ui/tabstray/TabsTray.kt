@@ -2,15 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package org.mozilla.fenix.tabstray.ui.tabstray
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import mozilla.components.browser.state.state.ContentState
@@ -157,12 +163,18 @@ fun TabsTray(
             .sumOf { deviceSection: SyncedTabsListItem.DeviceSection -> deviceSection.tabs.size }
     }
 
+    val topAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+
     LaunchedEffect(tabsTrayState.selectedPage) {
         pagerState.animateScrollToPage(Page.pageToPosition(tabsTrayState.selectedPage))
     }
 
     Scaffold(
-        modifier = modifier.testTag(TabsTrayTestTag.TABS_TRAY),
+        modifier = modifier
+            .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
+            .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
+            .testTag(TabsTrayTestTag.TABS_TRAY),
         topBar = {
             TabsTrayBanner(
                 selectedPage = tabsTrayState.selectedPage,
@@ -173,6 +185,7 @@ fun TabsTray(
                 isInDebugMode = isInDebugMode,
                 shouldShowTabAutoCloseBanner = shouldShowTabAutoCloseBanner,
                 shouldShowLockPbmBanner = shouldShowLockPbmBanner,
+                scrollBehavior = topAppBarScrollBehavior,
                 onTabPageIndicatorClicked = onTabPageClick,
                 onSaveToCollectionClick = onSaveToCollectionClick,
                 onShareSelectedTabsClick = onShareSelectedTabsClick,
@@ -192,6 +205,7 @@ fun TabsTray(
         bottomBar = {
             TabManagerBottomAppBar(
                 tabsTrayStore = tabsTrayStore,
+                scrollBehavior = bottomAppBarScrollBehavior,
                 onShareAllTabsClick = onShareAllTabsClick,
                 onTabSettingsClick = onTabSettingsClick,
                 onRecentlyClosedClick = onRecentlyClosedClick,
@@ -202,7 +216,7 @@ fun TabsTray(
         floatingActionButton = {
             TabsTrayFab(
                 tabsTrayStore = tabsTrayStore,
-                expanded = true, // handled in bug 1976331
+                expanded = bottomAppBarScrollBehavior.state.collapsedFraction == 0f,
                 isSignedIn = isSignedIn,
                 onOpenNewNormalTabClicked = onOpenNewNormalTabClicked,
                 onOpenNewPrivateTabClicked = onOpenNewPrivateTabClicked,

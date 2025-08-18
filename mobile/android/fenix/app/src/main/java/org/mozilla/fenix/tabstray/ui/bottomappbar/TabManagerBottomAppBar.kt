@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package org.mozilla.fenix.tabstray.ui.bottomappbar
 
 import androidx.compose.animation.AnimatedVisibility
@@ -9,6 +11,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.BottomAppBarScrollBehavior
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +46,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * [BottomAppBar] for the Tab Manager.
  *
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState].
+ * @param scrollBehavior Defines how the [BottomAppBar] should behave when the content under it is scrolled.
  * @param modifier The [Modifier] to be applied to this FAB.
  * @param onShareAllTabsClick Invoked when the user clicks on the share all tabs banner menu item.
  * @param onTabSettingsClick Invoked when the user clicks on the tab settings banner menu item.
@@ -51,6 +57,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 internal fun TabManagerBottomAppBar(
     tabsTrayStore: TabsTrayStore,
+    scrollBehavior: BottomAppBarScrollBehavior,
     modifier: Modifier = Modifier,
     onShareAllTabsClick: () -> Unit,
     onTabSettingsClick: () -> Unit,
@@ -96,6 +103,7 @@ internal fun TabManagerBottomAppBar(
             modifier = modifier,
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             contentColor = MaterialTheme.colorScheme.secondary,
+            scrollBehavior = scrollBehavior,
         )
     }
 }
@@ -123,6 +131,7 @@ private fun TabManagerBottomAppBarPreview(
         ) {
             TabManagerBottomAppBar(
                 tabsTrayStore = remember { TabsTrayStore(initialState = state) },
+                scrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior(),
                 onShareAllTabsClick = {},
                 onTabSettingsClick = {},
                 onRecentlyClosedClick = {},
