@@ -161,7 +161,7 @@ nsTArray_base<Alloc, RelocationStrategy>::EnsureCapacityImpl(
 // shrink the capacity will leave the array unchanged.
 template <class Alloc, class RelocationStrategy>
 void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacity(
-    size_type aElemSize, size_t aElemAlign) {
+    size_type aElemSize) {
   if (HasEmptyHeader() || UsesAutoArrayBuffer()) {
     return;
   }
@@ -211,7 +211,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacity(
 
 template <class Alloc, class RelocationStrategy>
 void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacityToZero(
-    size_type aElemSize, size_t aElemAlign) {
+    size_type aElemSize) {
   MOZ_ASSERT(mHdr->mLength == 0);
 
   if (HasEmptyHeader() || UsesAutoArrayBuffer()) {
@@ -227,8 +227,7 @@ template <typename ActualAlloc>
 void nsTArray_base<Alloc, RelocationStrategy>::ShiftData(index_type aStart,
                                                          size_type aOldLen,
                                                          size_type aNewLen,
-                                                         size_type aElemSize,
-                                                         size_t aElemAlign) {
+                                                         size_type aElemSize) {
   if (aOldLen == aNewLen) {
     return;
   }
@@ -239,7 +238,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShiftData(index_type aStart,
   // Compute the resulting length of the array
   mHdr->mLength += aNewLen - aOldLen;
   if (mHdr->mLength == 0) {
-    ShrinkCapacityToZero(aElemSize, aElemAlign);
+    ShrinkCapacityToZero(aElemSize);
   } else {
     // Maybe nothing needs to be shifted
     if (num == 0) {
@@ -257,10 +256,8 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShiftData(index_type aStart,
 
 template <class Alloc, class RelocationStrategy>
 template <typename ActualAlloc>
-void nsTArray_base<Alloc, RelocationStrategy>::SwapFromEnd(index_type aStart,
-                                                           size_type aCount,
-                                                           size_type aElemSize,
-                                                           size_t aElemAlign) {
+void nsTArray_base<Alloc, RelocationStrategy>::SwapFromEnd(
+    index_type aStart, size_type aCount, size_type aElemSize) {
   // This method is part of the implementation of
   // nsTArray::SwapRemoveElement{s,}At. For more information, read the
   // documentation on that method.
@@ -275,7 +272,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::SwapFromEnd(index_type aStart,
 
   if (mHdr->mLength == 0) {
     // If we have no elements remaining in the array, we can free our buffer.
-    ShrinkCapacityToZero(aElemSize, aElemAlign);
+    ShrinkCapacityToZero(aElemSize);
     return;
   }
 
@@ -311,8 +308,7 @@ template <typename ActualAlloc>
 typename ActualAlloc::ResultTypeProxy
 nsTArray_base<Alloc, RelocationStrategy>::InsertSlotsAt(index_type aIndex,
                                                         size_type aCount,
-                                                        size_type aElemSize,
-                                                        size_t aElemAlign) {
+                                                        size_type aElemSize) {
   if (MOZ_UNLIKELY(aIndex > Length())) {
     mozilla::detail::InvalidArrayIndex_CRASH(aIndex, Length());
   }
@@ -324,7 +320,7 @@ nsTArray_base<Alloc, RelocationStrategy>::InsertSlotsAt(index_type aIndex,
 
   // Move the existing elements as needed.  Note that this will
   // change our mLength, so no need to call IncrementLength.
-  ShiftData<ActualAlloc>(aIndex, 0, aCount, aElemSize, aElemAlign);
+  ShiftData<ActualAlloc>(aIndex, 0, aCount, aElemSize);
 
   return ActualAlloc::SuccessResult();
 }
@@ -333,8 +329,7 @@ template <class Alloc, class RelocationStrategy>
 template <typename ActualAlloc, class Allocator>
 typename ActualAlloc::ResultTypeProxy
 nsTArray_base<Alloc, RelocationStrategy>::SwapArrayElements(
-    nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
-    size_t aElemAlign) {
+    nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize) {
   // If neither array uses an auto buffer which is big enough to store the
   // other array's elements, then ensure that both arrays use malloc'ed storage
   // and swap their mHdr pointers.
@@ -438,8 +433,7 @@ nsTArray_base<Alloc, RelocationStrategy>::SwapArrayElements(
 template <class Alloc, class RelocationStrategy>
 template <class Allocator>
 void nsTArray_base<Alloc, RelocationStrategy>::MoveInit(
-    nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
-    size_t aElemAlign) {
+    nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize) {
   // This method is similar to SwapArrayElements, but specialized for the case
   // where the target array is empty with no allocated heap storage. It is
   // provided and used to simplify template instantiation and enable better code
@@ -491,8 +485,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::MoveInit(
 template <class Alloc, class RelocationStrategy>
 template <class Allocator>
 void nsTArray_base<Alloc, RelocationStrategy>::MoveConstructNonAutoArray(
-    nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
-    size_t aElemAlign) {
+    nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize) {
   // We know that we are not an (Copyable)AutoTArray and we know that we are
   // empty, so don't use SwapArrayElements which doesn't know either of these
   // facts and is very complex. Use nsTArrayInfallibleAllocator regardless of
