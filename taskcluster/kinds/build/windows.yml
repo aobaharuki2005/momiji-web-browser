@@ -222,6 +222,7 @@ win64-non-unified/plain:
     worker:
         max-run-time: 7200
         env:
+            MOZ_AUTOMATION_BUILD_SYMBOLS: '0'
             PERFHERDER_EXTRA_OPTIONS: non-unified
     run:
         options: [append-env-variables-from-configs]
@@ -231,9 +232,11 @@ win64-non-unified/plain:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-        mozconfig-variant: non-unified
+        mozconfig-variant: nightly
         extra-config:
             mozconfig_platform: win64
+            extra_mozconfig_content:
+                - ac_add_options --disable-unified-build
     use-sccache: true
     run-on-projects: ['integration']
     fetches:

@@ -140,6 +140,7 @@ linux64-non-unified/plain:
     worker:
         max-run-time: 7200
         env:
+            MOZ_AUTOMATION_BUILD_SYMBOLS: '0'
             PERFHERDER_EXTRA_OPTIONS: non-unified
     run:
         using: mozharness
@@ -152,7 +153,9 @@ linux64-non-unified/plain:
         tooltool-downloads: public
         extra-config:
             disable_package_metrics: true
-        mozconfig-variant: non-unified
+            extra_mozconfig_content:
+                - ac_add_options --disable-unified-build
+        mozconfig-variant: nightly
     run-on-projects: ['integration']
     use-sccache: true
     fetches:
@@ -402,6 +405,7 @@ linux64-non-unified/debug:
     worker:
         max-run-time: 7200
         env:
+            MOZ_AUTOMATION_BUILD_SYMBOLS: '0'
             PERFHERDER_EXTRA_OPTIONS: non-unified
     run:
         using: mozharness
@@ -415,8 +419,9 @@ linux64-non-unified/debug:
         extra-config:
             disable_package_metrics: true
             extra_mozconfig_content:
+                - ac_add_options --disable-unified-build
                 - ac_add_options --enable-debug
-        mozconfig-variant: non-unified
+        mozconfig-variant: nightly
     run-on-projects: ['integration']
     use-sccache: true
     fetches:
