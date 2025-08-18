@@ -4733,6 +4733,13 @@ export class UrlbarInput {
     this.controller.engagementEvent.handleBounceEventTrigger(
       event.target.linkedBrowser
     );
+
+    if (this.view.isOpen) {
+      // Refresh results when a tab is closed while the results view is open.
+      // This prevents switch-to-tab results from remaining in the results
+      // list after their tab is closed.
+      this.startQuery();
+    }
   }
 
   _on_beforeinput(event) {
