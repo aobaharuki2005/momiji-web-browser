@@ -122,7 +122,8 @@ class HTMLTableAccessible : public HyperTextAccessible {
   }
 
   // LocalAccessible
-  virtual void Description(nsString& aDescription) const override;
+  virtual EDescriptionValueFlag Description(
+      nsString& aDescription) const override;
   virtual uint64_t NativeState() const override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual Relation RelationByType(RelationType aRelationType) const override;

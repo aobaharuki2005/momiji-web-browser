@@ -166,16 +166,24 @@ ENameValueFlag LocalAccessible::Name(nsString& aName) const {
   return nameFlag;
 }
 
-void LocalAccessible::Description(nsString& aDescription) const {
+EDescriptionValueFlag LocalAccessible::Description(
+    nsString& aDescription) const {
   // There are 4 conditions that make an accessible have no accDescription:
   // 1. it's a text node; or
   // 2. It has no ARIA describedby or description property
   // 3. it doesn't have an accName; or
   // 4. its title attribute already equals to its accName nsAutoString name;
 
-  if (!HasOwnContent() || mContent->IsText()) return;
+  EDescriptionValueFlag descFlag = eDescriptionOK;
+  aDescription.Truncate();
 
-  ARIADescription(aDescription);
+  if (!HasOwnContent() || mContent->IsText()) {
+    return descFlag;
+  }
+
+  if (ARIADescription(aDescription)) {
+    descFlag = eDescriptionFromARIA;
+  }
 
   if (aDescription.IsEmpty()) {
     NativeDescription(aDescription);
@@ -206,6 +214,8 @@ void LocalAccessible::Description(nsString& aDescription) const {
     // Don't expose a description if it is the same as the name.
     if (aDescription.Equals(name)) aDescription.Truncate();
   }
+
+  return descFlag;
 }
 
 KeyBinding LocalAccessible::AccessKey() const {
@@ -2699,7 +2709,7 @@ ENameValueFlag LocalAccessible::ARIAName(nsString& aName) const {
 }
 
 // LocalAccessible protected
-void LocalAccessible::ARIADescription(nsString& aDescription) const {
+bool LocalAccessible::ARIADescription(nsString& aDescription) const {
   // aria-describedby takes precedence over aria-description
   nsresult rv = nsTextEquivUtils::GetTextEquivFromIDRefs(
       this, nsGkAtoms::aria_describedby, aDescription);
@@ -2712,6 +2722,8 @@ void LocalAccessible::ARIADescription(nsString& aDescription) const {
                               nsGkAtoms::aria_description, aDescription)) {
     aDescription.CompressWhitespace();
   }
+
+  return !aDescription.IsEmpty();
 }
 
 // LocalAccessible protected
@@ -3492,11 +3504,17 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
 
     nsString description;
-    Description(description);
+    int32_t descFlag = Description(description);
     if (!description.IsEmpty()) {
       fields->SetAttribute(CacheKey::Description, std::move(description));
     } else if (IsUpdatePush(CacheDomain::NameAndDescription)) {
       fields->SetAttribute(CacheKey::Description, DeleteEntry());
+    }
+
+    if (descFlag != eDescriptionOK) {
+      fields->SetAttribute(CacheKey::DescriptionValueFlag, descFlag);
+    } else if (IsUpdatePush(CacheDomain::NameAndDescription)) {
+      fields->SetAttribute(CacheKey::DescriptionValueFlag, DeleteEntry());
     }
   }
 

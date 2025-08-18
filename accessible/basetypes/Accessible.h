@@ -60,6 +60,25 @@ enum ENameValueFlag {
 };
 
 /**
+ * Description type flags.
+ */
+enum EDescriptionValueFlag {
+  /**
+   * Description either
+   *  a) present (not empty): !description.IsEmpty()
+   *  b) no description (was missed): IsVoid() or IsEmpty(),
+   *     or NameAndDescription caching domain is not active.
+   */
+  eDescriptionOK,
+
+  /**
+   * Description was provided by ARIA (either aria-description or
+   * aria-describedby)
+   */
+  eDescriptionFromARIA,
+};
+
+/**
  * Group position (level, position in set and set size).
  */
 struct GroupPos {
@@ -320,7 +339,7 @@ class Accessible {
   /*
    * Get the description of this accessible.
    */
-  virtual void Description(nsString& aDescription) const = 0;
+  virtual EDescriptionValueFlag Description(nsString& aDescription) const = 0;
 
   /**
    * Get the value of this accessible.
