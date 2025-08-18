@@ -593,6 +593,9 @@ struct JSRuntime {
   void setTrustedPrincipals(const JSPrincipals* p) { trustedPrincipals_ = p; }
   const JSPrincipals* trustedPrincipals() const { return trustedPrincipals_; }
 
+  void commitPendingWrapperPreservations();
+  void commitPendingWrapperPreservations(JS::Zone* zone);
+
   js::MainThreadData<const JSWrapObjectCallbacks*> wrapObjectCallbacks;
   js::MainThreadData<js::PreserveWrapperCallback> preserveWrapperCallback;
   js::MainThreadData<js::HasReleasedWrapperCallback> hasReleasedWrapperCallback;

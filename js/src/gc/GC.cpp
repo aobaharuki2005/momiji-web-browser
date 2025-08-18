@@ -2848,6 +2848,14 @@ void GCRuntime::purgeSourceURLsForShrinkingGC() {
   }
 }
 
+void GCRuntime::purgePendingWrapperPreservationBuffersForShrinkingGC() {
+  gcstats::AutoPhase ap(stats(),
+                        gcstats::PhaseKind::PURGE_WRAPPER_PRESERVATION);
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+    zone->purgePendingWrapperPreservationBuffer();
+  }
+}
+
 void GCRuntime::unmarkWeakMaps() {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     /* Unmark all weak maps in the zones being collected. */
@@ -3024,6 +3032,11 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
       relazifyFunctionsForShrinkingGC();
       purgePropMapTablesForShrinkingGC();
       purgeSourceURLsForShrinkingGC();
+      {
+        AutoGCSession commitSession(this, JS::HeapState::Idle);
+        rt->commitPendingWrapperPreservations();
+        purgePendingWrapperPreservationBuffersForShrinkingGC();
+      }
     }
 
     if (isShutdownGC()) {
@@ -3681,8 +3694,9 @@ AutoHeapSession::AutoHeapSession(GCRuntime* gc, JS::HeapState heapState)
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
   MOZ_ASSERT(prevState == JS::HeapState::Idle ||
              (prevState == JS::HeapState::MajorCollecting &&
+              heapState == JS::HeapState::Idle) ||
+             (prevState == JS::HeapState::MajorCollecting &&
               heapState == JS::HeapState::MinorCollecting));
-  MOZ_ASSERT(heapState != JS::HeapState::Idle);
 
   gc->heapState_ = heapState;
 
@@ -3695,10 +3709,7 @@ AutoHeapSession::AutoHeapSession(GCRuntime* gc, JS::HeapState heapState)
   }
 }
 
-AutoHeapSession::~AutoHeapSession() {
-  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-  gc->heapState_ = prevState;
-}
+AutoHeapSession::~AutoHeapSession() { gc->heapState_ = prevState; }
 
 static const char* MajorGCStateToLabel(State state) {
   switch (state) {
@@ -3984,6 +3995,11 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
     case State::MarkRoots:
       endPreparePhase(reason);
 
+      {
+        AutoGCSession commitSession(this, JS::HeapState::Idle);
+        rt->commitPendingWrapperPreservations();
+      }
+
       beginMarkPhase(session);
       incrementalState = State::Mark;
 
@@ -4120,6 +4136,11 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 
     case State::Compact:
       if (isCompacting) {
+        {
+          AutoGCSession commitSession(this, JS::HeapState::Idle);
+          rt->commitPendingWrapperPreservations();
+        }
+
         if (NeedToCollectNursery(this)) {
           collectNurseryFromMajorGC(reason);
         }
