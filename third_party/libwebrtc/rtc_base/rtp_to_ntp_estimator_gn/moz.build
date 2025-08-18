@@ -35,10 +35,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/system_wrappers/source/clock.cc",
-    "/third_party/libwebrtc/system_wrappers/source/cpu_features.cc",
-    "/third_party/libwebrtc/system_wrappers/source/cpu_info.cc",
-    "/third_party/libwebrtc/system_wrappers/source/sleep.cc"
+    "/third_party/libwebrtc/rtc_base/rtp_to_ntp_estimator.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -64,12 +61,6 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__ANDROID_UNAVAILABLE_SYMBOLS_ARE_WEAK__"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
-
-    LOCAL_INCLUDES += [
-        "/config/external/nspr/",
-        "/nsprpub/lib/ds/",
-        "/nsprpub/pr/include/"
-    ]
 
     OS_LIBS += [
         "log"
@@ -99,10 +90,6 @@ if CONFIG["OS_TARGET"] == "Linux":
 
     OS_LIBS += [
         "rt"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/system_wrappers/source/cpu_features_linux.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -237,4 +224,4 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["_GNU_SOURCE"] = True
 
-Library("system_wrappers_gn")
+Library("rtp_to_ntp_estimator_gn")
