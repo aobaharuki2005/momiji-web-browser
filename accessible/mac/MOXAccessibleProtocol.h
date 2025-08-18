@@ -347,9 +347,6 @@
 // AXKeyShortcutsValue
 - (NSString* _Nullable)moxKeyShortcutsValue;
 
-// AXCustomContent
-- (NSArray* _Nullable)moxCustomContent;
-
 // AXMozDebugDescription
 - (NSString* _Nullable)moxMozDebugDescription;
 

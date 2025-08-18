@@ -56,10 +56,8 @@ ENameValueFlag ApplicationAccessible::Name(nsString& aName) const {
   return eNameOK;
 }
 
-EDescriptionValueFlag ApplicationAccessible::Description(
-    nsString& aDescription) const {
+void ApplicationAccessible::Description(nsString& aDescription) const {
   aDescription.Truncate();
-  return eDescriptionOK;
 }
 
 void ApplicationAccessible::Value(nsString& aValue) const { aValue.Truncate(); }

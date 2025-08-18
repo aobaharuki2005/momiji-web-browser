@@ -130,16 +130,13 @@ ENameValueFlag HTMLAreaAccessible::NativeName(nsString& aName) const {
   return eNameOK;
 }
 
-EDescriptionValueFlag HTMLAreaAccessible::Description(
-    nsString& aDescription) const {
+void HTMLAreaAccessible::Description(nsString& aDescription) const {
   aDescription.Truncate();
 
   // Still to do - follow IE's standard here
   RefPtr<dom::HTMLAreaElement> area =
       dom::HTMLAreaElement::FromNodeOrNull(mContent);
   if (area) area->GetShape(aDescription);
-
-  return eDescriptionOK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

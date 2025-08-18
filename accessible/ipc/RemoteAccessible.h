@@ -180,8 +180,7 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
   // Methods that potentially access a cache.
 
   virtual ENameValueFlag Name(nsString& aName) const override;
-  virtual EDescriptionValueFlag Description(
-      nsString& aDescription) const override;
+  virtual void Description(nsString& aDescription) const override;
   virtual void Value(nsString& aValue) const override;
 
   virtual double CurValue() const override;

@@ -5,8 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#import <Accessibility/Accessibility.h>
-
 #import "MOXAccessibleBase.h"
 
 #import "MacSelectorMap.h"
@@ -411,12 +409,6 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   return YES;
 }
 
-#pragma mark - AXCustomContentProvider protocol
-
-- (NSArray*)accessibilityCustomContent {
-  return [self moxCustomContent];
-}
-
 #pragma mark - MOXAccessible protocol
 
 - (NSNumber*)moxIndexForChildUIElement:(id)child {
@@ -579,10 +571,6 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     }
   }
 
-  return nil;
-}
-
-- (NSArray*)moxCustomContent {
   return nil;
 }
 

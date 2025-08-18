@@ -319,23 +319,16 @@ uint64_t HTMLComboboxAccessible::NativeState() const {
   return state;
 }
 
-EDescriptionValueFlag HTMLComboboxAccessible::Description(
-    nsString& aDescription) const {
+void HTMLComboboxAccessible::Description(nsString& aDescription) const {
   aDescription.Truncate();
   // First check to see if combo box itself has a description, perhaps through
   // tooltip (title attribute) or via aria-describedby
-  EDescriptionValueFlag descFlag = LocalAccessible::Description(aDescription);
-  if (!aDescription.IsEmpty()) {
-    return descFlag;
-  }
+  LocalAccessible::Description(aDescription);
+  if (!aDescription.IsEmpty()) return;
 
   // Otherwise use description of selected option.
   LocalAccessible* option = SelectedOption();
-  if (option) {
-    return option->Description(aDescription);
-  }
-
-  return eDescriptionOK;
+  if (option) option->Description(aDescription);
 }
 
 void HTMLComboboxAccessible::Value(nsString& aValue) const {

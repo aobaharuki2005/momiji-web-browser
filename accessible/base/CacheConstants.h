@@ -153,10 +153,6 @@ class CacheKey {
   static constexpr nsStaticAtom* CssPosition = nsGkAtoms::position;
   // nsString, CacheDomain::NameAndDescription
   static constexpr nsStaticAtom* Description = nsGkAtoms::description;
-  // EDescriptionValueFlag, CacheDomain::NameAndDescription
-  // Returned by Accessible::Description.
-  static constexpr nsStaticAtom* DescriptionValueFlag =
-      nsGkAtoms::aria_description;
   // nsString, CacheDomain::Relations
   // The "name" DOM attribute.
   static constexpr nsStaticAtom* DOMName = nsGkAtoms::attributeName;

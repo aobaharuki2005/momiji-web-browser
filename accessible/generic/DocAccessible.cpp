@@ -209,14 +209,13 @@ role DocAccessible::NativeRole() const {
   return roles::PANE;  // Fall back;
 }
 
-EDescriptionValueFlag DocAccessible::Description(nsString& aDescription) const {
+void DocAccessible::Description(nsString& aDescription) const {
   if (mParent) mParent->Description(aDescription);
 
   if (HasOwnContent() && aDescription.IsEmpty()) {
     nsTextEquivUtils::GetTextEquivFromIDRefs(this, nsGkAtoms::aria_describedby,
                                              aDescription);
   }
-  return eDescriptionFromARIA;
 }
 
 // LocalAccessible public method

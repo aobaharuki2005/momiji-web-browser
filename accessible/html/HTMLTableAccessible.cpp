@@ -657,13 +657,12 @@ bool HTMLTableAccessible::IsProbablyLayoutTable() {
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableAccessible: protected implementation
 
-EDescriptionValueFlag HTMLTableAccessible::Description(
-    nsString& aDescription) const {
+void HTMLTableAccessible::Description(nsString& aDescription) const {
   // Helpful for debugging layout vs. data tables
   aDescription.Truncate();
-  EDescriptionValueFlag descFlag = LocalAccessible::Description(aDescription);
+  LocalAccessible::Description(aDescription);
   if (!aDescription.IsEmpty()) {
-    return descFlag;
+    return;
   }
 
   // Use summary as description if it weren't used as a name.
@@ -689,8 +688,6 @@ EDescriptionValueFlag HTMLTableAccessible::Description(
   }
   printf("\nTABLE: %s\n", NS_ConvertUTF16toUTF8(mLayoutHeuristic).get());
 #endif
-
-  return eDescriptionOK;
 }
 
 nsTableWrapperFrame* HTMLTableAccessible::GetTableWrapperFrame() const {

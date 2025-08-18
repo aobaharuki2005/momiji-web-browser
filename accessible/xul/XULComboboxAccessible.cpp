@@ -59,23 +59,18 @@ bool XULComboboxAccessible::IsAcceptableChild(nsIContent* aContent) const {
   return AccessibleWrap::IsAcceptableChild(aContent) && !aContent->IsText();
 }
 
-EDescriptionValueFlag XULComboboxAccessible::Description(
-    nsString& aDescription) const {
+void XULComboboxAccessible::Description(nsString& aDescription) const {
   aDescription.Truncate();
   // Use description of currently focused option
   nsCOMPtr<nsIDOMXULMenuListElement> menuListElm = Elm()->AsXULMenuList();
-  if (!menuListElm) return eDescriptionOK;
+  if (!menuListElm) return;
 
   nsCOMPtr<dom::Element> focusedOptionItem;
   menuListElm->GetSelectedItem(getter_AddRefs(focusedOptionItem));
   if (focusedOptionItem && mDoc) {
     LocalAccessible* focusedOptionAcc = mDoc->GetAccessible(focusedOptionItem);
-    if (focusedOptionAcc) {
-      return focusedOptionAcc->Description(aDescription);
-    }
+    if (focusedOptionAcc) focusedOptionAcc->Description(aDescription);
   }
-
-  return eDescriptionOK;
 }
 
 void XULComboboxAccessible::Value(nsString& aValue) const {

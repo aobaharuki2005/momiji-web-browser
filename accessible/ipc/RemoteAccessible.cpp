@@ -254,25 +254,15 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
   return nameFlag;
 }
 
-EDescriptionValueFlag RemoteAccessible::Description(
-    nsString& aDescription) const {
+void RemoteAccessible::Description(nsString& aDescription) const {
   if (RequestDomainsIfInactive(CacheDomain::NameAndDescription)) {
-    return eDescriptionOK;
+    return;
   }
 
-  EDescriptionValueFlag descFlag = eDescriptionOK;
-
   if (mCachedFields) {
-    auto cachedDescriptionFlag =
-        mCachedFields->GetAttribute<int32_t>(CacheKey::DescriptionValueFlag);
-    if (cachedDescriptionFlag) {
-      descFlag = static_cast<EDescriptionValueFlag>(*cachedDescriptionFlag);
-    }
     mCachedFields->GetAttribute(CacheKey::Description, aDescription);
     VERIFY_CACHE(CacheDomain::NameAndDescription);
   }
-
-  return descFlag;
 }
 
 void RemoteAccessible::Value(nsString& aValue) const {

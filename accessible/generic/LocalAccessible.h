@@ -142,8 +142,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Get the description of this accessible.
    */
-  virtual EDescriptionValueFlag Description(
-      nsString& aDescription) const override;
+  virtual void Description(nsString& aDescription) const override;
 
   /**
    * Get the value of this accessible.
@@ -876,7 +875,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Returns the accessible description specified by ARIA.
    */
-  bool ARIADescription(nsString& aDescription) const;
+  void ARIADescription(nsString& aDescription) const;
 
   /**
    * Returns the accessible name specified for this control using XUL
