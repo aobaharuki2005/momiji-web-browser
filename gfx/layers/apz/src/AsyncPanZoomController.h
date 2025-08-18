@@ -1622,7 +1622,7 @@ class AsyncPanZoomController {
   friend class OverscrollAnimation;
   friend class SmoothMsdScrollAnimation;
   friend class GenericScrollAnimation;
-  friend class WheelScrollAnimation;
+  friend class SmoothScrollAnimation;
   friend class ZoomAnimation;
 
   friend class GenericOverscrollEffect;

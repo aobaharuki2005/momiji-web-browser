@@ -8,6 +8,7 @@
 #define mozilla_layers_SmoothScrollAnimation_h_
 
 #include "GenericScrollAnimation.h"
+#include "InputData.h"
 #include "ScrollPositionUpdate.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ScrollOrigin.h"
@@ -24,7 +25,9 @@ enum class ScrollAnimationKind : uint8_t {
   // scroll-to-anchor, or certain scrollbar interactions)
   Smooth,
   // Scroll animation in response to user keyboard input
-  Keyboard
+  Keyboard,
+  // Scroll animation in response to user wheel input
+  Wheel
 };
 
 class SmoothScrollAnimation : public GenericScrollAnimation {
@@ -37,6 +40,10 @@ class SmoothScrollAnimation : public GenericScrollAnimation {
   static already_AddRefed<SmoothScrollAnimation> CreateForKeyboard(
       AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
       ScrollOrigin aOrigin);
+  // Create a SmoothScrollAnimation of kind Wheel.
+  static already_AddRefed<SmoothScrollAnimation> CreateForWheel(
+      AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
+      ScrollWheelInput::ScrollDeltaType aDeltaType);
 
   void UpdateDestinationAndSnapTargets(
       TimeStamp aTime, const nsPoint& aDestination,

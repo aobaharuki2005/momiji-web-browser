@@ -91,7 +91,6 @@
 #include "ScrollAnimationPhysics.h"  // for ComputeAcceleratedWheelDelta
 #include "SmoothMsdScrollAnimation.h"
 #include "SmoothScrollAnimation.h"
-#include "WheelScrollAnimation.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "AndroidAPZ.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
@@ -2731,8 +2730,8 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
 
         nsPoint initialPosition =
             CSSPoint::ToAppUnits(Metrics().GetVisualScrollOffset());
-        StartAnimation(do_AddRef(new WheelScrollAnimation(
-            *this, initialPosition, aEvent.mDeltaType)));
+        StartAnimation(SmoothScrollAnimation::CreateForWheel(
+            *this, initialPosition, aEvent.mDeltaType));
       }
       // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s and
       // then to appunits/second.
@@ -2747,7 +2746,7 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
                                  Metrics().GetZoom());
       }
 
-      WheelScrollAnimation* animation = mAnimation->AsWheelScrollAnimation();
+      SmoothScrollAnimation* animation = mAnimation->AsSmoothScrollAnimation();
       animation->UpdateDelta(GetFrameTime().Time(), deltaInAppUnits,
                              nsSize(velocity.x, velocity.y));
       break;
@@ -4103,10 +4102,8 @@ float AsyncPanZoomController::ComputePLPPI(ParentLayerPoint aPoint,
 
 Maybe<CSSPoint> AsyncPanZoomController::GetCurrentAnimationDestination(
     const RecursiveMutexAutoLock& aProofOfLock) const {
-  if (mState == WHEEL_SCROLL) {
-    return Some(mAnimation->AsWheelScrollAnimation()->GetDestination());
-  }
-  if (mState == SMOOTH_SCROLL || mState == KEYBOARD_SCROLL) {
+  if (mState == SMOOTH_SCROLL || mState == KEYBOARD_SCROLL ||
+      mState == WHEEL_SCROLL) {
     return Some(mAnimation->AsSmoothScrollAnimation()->GetDestination());
   }
   if (mState == SMOOTHMSD_SCROLL) {
@@ -4210,7 +4207,8 @@ void AsyncPanZoomController::SmoothScrollTo(
   if (mState == SMOOTH_SCROLL && mAnimation) {
     RefPtr<SmoothScrollAnimation> animation(
         mAnimation->AsSmoothScrollAnimation());
-    if (animation->GetScrollOrigin() == aOrigin) {
+    if (animation->Kind() == ScrollAnimationKind::Smooth &&
+        animation->GetScrollOrigin() == aOrigin) {
       APZC_LOG("%p updating destination on existing animation\n", this);
       animation->UpdateDestinationAndSnapTargets(
           GetFrameTime().Time(), destination, velocity,
