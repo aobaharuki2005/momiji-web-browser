@@ -247,9 +247,9 @@ class gfxFT2FontList final : public gfxPlatformFontList {
   void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC)
       MOZ_REQUIRES(mLock);
 
-  FontFamily GetDefaultFontForPlatform(FontVisibilityProvider* aFontVisibilityProvider,
-                                       const gfxFontStyle* aStyle,
-                                       nsAtom* aLanguage = nullptr)
+  FontFamily GetDefaultFontForPlatform(
+      FontVisibilityProvider* aFontVisibilityProvider,
+      const gfxFontStyle* aStyle, nsAtom* aLanguage = nullptr)
       MOZ_REQUIRES(mLock) override;
 
   nsTHashSet<nsCString> mSkipSpaceLookupCheckFamilies;
