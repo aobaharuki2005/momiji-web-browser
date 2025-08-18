@@ -4585,54 +4585,6 @@ class DSEmptyState extends (external_React_default()).PureComponent {
     }, this.renderState()));
   }
 }
-;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-class DSDismiss extends (external_React_default()).PureComponent {
-  constructor(props) {
-    super(props);
-    this.onDismissClick = this.onDismissClick.bind(this);
-    this.onHover = this.onHover.bind(this);
-    this.offHover = this.offHover.bind(this);
-    this.state = {
-      hovering: false
-    };
-  }
-  onDismissClick() {
-    if (this.props.onDismissClick) {
-      this.props.onDismissClick();
-    }
-  }
-  onHover() {
-    this.setState({
-      hovering: true
-    });
-  }
-  offHover() {
-    this.setState({
-      hovering: false
-    });
-  }
-  render() {
-    let className = `ds-dismiss
-      ${this.state.hovering ? ` hovering` : ``}
-      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
-    return /*#__PURE__*/external_React_default().createElement("div", {
-      className: className
-    }, this.props.children, /*#__PURE__*/external_React_default().createElement("button", {
-      className: "ds-dismiss-button",
-      "data-l10n-id": "newtab-dismiss-button-tooltip",
-      onClick: this.onDismissClick,
-      onMouseEnter: this.onHover,
-      onMouseLeave: this.offHover
-    }, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "icon icon-dismiss"
-    })));
-  }
-}
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -5504,9 +5456,6 @@ function TrendingSearches() {
 
 
 
-
-
-const PREF_ONBOARDING_EXPERIENCE_DISMISSED = "discoverystream.onboardingExperience.dismissed";
 const PREF_SECTIONS_CARDS_ENABLED = "discoverystream.sections.cards.enabled";
 const PREF_THUMBS_UP_DOWN_ENABLED = "discoverystream.thumbsUpDown.enabled";
 const PREF_TOPICS_ENABLED = "discoverystream.topicLabels.enabled";
@@ -5524,9 +5473,6 @@ const PREF_TRENDING_SEARCH = "trendingSearch.enabled";
 const PREF_TRENDING_SEARCH_SYSTEM = "system.trendingSearch.enabled";
 const PREF_SEARCH_ENGINE = "trendingSearch.defaultSearchEngine";
 const PREF_TRENDING_SEARCH_VARIANT = "trendingSearch.variant";
-const CardGrid_INTERSECTION_RATIO = 0.5;
-const CardGrid_VISIBLE = "visible";
-const CardGrid_VISIBILITY_CHANGE_EVENT = "visibilitychange";
 const WIDGET_IDS = {
   TOPICS: 1
 };
@@ -5538,95 +5484,6 @@ function DSSubHeader({
   }, /*#__PURE__*/external_React_default().createElement("h3", {
     className: "section-title-container"
   }, children));
-}
-function OnboardingExperience({
-  dispatch,
-  windowObj = globalThis
-}) {
-  const [dismissed, setDismissed] = (0,external_React_namespaceObject.useState)(false);
-  const [maxHeight, setMaxHeight] = (0,external_React_namespaceObject.useState)(null);
-  const heightElement = (0,external_React_namespaceObject.useRef)(null);
-  const onDismissClick = (0,external_React_namespaceObject.useCallback)(() => {
-    // We update this as state and redux.
-    // The state update is for this newtab,
-    // and the redux update is for other tabs, offscreen tabs, and future tabs.
-    // We need the state update for this tab to support the transition.
-    setDismissed(true);
-    dispatch(actionCreators.SetPref(PREF_ONBOARDING_EXPERIENCE_DISMISSED, true));
-    dispatch(actionCreators.DiscoveryStreamUserEvent({
-      event: "BLOCK",
-      source: "POCKET_ONBOARDING"
-    }));
-  }, [dispatch]);
-  (0,external_React_namespaceObject.useEffect)(() => {
-    const resizeObserver = new windowObj.ResizeObserver(() => {
-      if (heightElement.current) {
-        setMaxHeight(heightElement.current.offsetHeight);
-      }
-    });
-    const options = {
-      threshold: CardGrid_INTERSECTION_RATIO
-    };
-    const intersectionObserver = new windowObj.IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= CardGrid_INTERSECTION_RATIO)) {
-        dispatch(actionCreators.DiscoveryStreamUserEvent({
-          event: "IMPRESSION",
-          source: "POCKET_ONBOARDING"
-        }));
-        // Once we have observed an impression, we can stop for this instance of newtab.
-        intersectionObserver.unobserve(heightElement.current);
-      }
-    }, options);
-    const onVisibilityChange = () => {
-      intersectionObserver.observe(heightElement.current);
-      windowObj.document.removeEventListener(CardGrid_VISIBILITY_CHANGE_EVENT, onVisibilityChange);
-    };
-    if (heightElement.current) {
-      resizeObserver.observe(heightElement.current);
-      // Check visibility or setup a visibility event to make
-      // sure we don't fire this for off screen pre loaded tabs.
-      if (windowObj.document.visibilityState === CardGrid_VISIBLE) {
-        intersectionObserver.observe(heightElement.current);
-      } else {
-        windowObj.document.addEventListener(CardGrid_VISIBILITY_CHANGE_EVENT, onVisibilityChange);
-      }
-      setMaxHeight(heightElement.current.offsetHeight);
-    }
-
-    // Return unmount callback to clean up observers.
-    return () => {
-      resizeObserver?.disconnect();
-      intersectionObserver?.disconnect();
-      windowObj.document.removeEventListener(CardGrid_VISIBILITY_CHANGE_EVENT, onVisibilityChange);
-    };
-  }, [dispatch, windowObj]);
-  const style = {};
-  if (dismissed) {
-    style.maxHeight = "0";
-    style.opacity = "0";
-    style.transition = "max-height 0.26s ease, opacity 0.26s ease";
-  } else if (maxHeight) {
-    style.maxHeight = `${maxHeight}px`;
-  }
-  return /*#__PURE__*/external_React_default().createElement("div", {
-    style: style
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "ds-onboarding-ref",
-    ref: heightElement
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "ds-onboarding-container"
-  }, /*#__PURE__*/external_React_default().createElement(DSDismiss, {
-    onDismissClick: onDismissClick,
-    extraClasses: `ds-onboarding`
-  }, /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("header", null, /*#__PURE__*/external_React_default().createElement("span", {
-    className: "icon icon-pocket"
-  }), /*#__PURE__*/external_React_default().createElement("span", {
-    "data-l10n-id": "newtab-pocket-onboarding-discover"
-  })), /*#__PURE__*/external_React_default().createElement("p", {
-    "data-l10n-id": "newtab-pocket-onboarding-cta"
-  })), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "ds-onboarding-graphic"
-  })))));
 }
 
 // eslint-disable-next-line no-shadow
@@ -5664,7 +5521,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const prefs = this.props.Prefs.values;
     const {
       items,
-      onboardingExperience,
       ctaButtonSponsors,
       ctaButtonVariant,
       spocMessageVariant,
@@ -5674,7 +5530,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const {
       topicsLoading
     } = DiscoveryStream;
-    const isOnboardingExperienceDismissed = prefs[PREF_ONBOARDING_EXPERIENCE_DISMISSED];
     const mayHaveSectionsCards = prefs[PREF_SECTIONS_CARDS_ENABLED];
     const mayHaveThumbsUpDown = prefs[PREF_THUMBS_UP_DOWN_ENABLED];
     const showTopics = prefs[PREF_TOPICS_ENABLED];
@@ -5837,9 +5692,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
       }
     }
     const gridClassName = this.renderGridClassName();
-    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, !isOnboardingExperienceDismissed && onboardingExperience && /*#__PURE__*/external_React_default().createElement(OnboardingExperience, {
-      dispatch: this.props.dispatch
-    }), cards?.length > 0 && /*#__PURE__*/external_React_default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, cards?.length > 0 && /*#__PURE__*/external_React_default().createElement("div", {
       className: gridClassName
     }, cards));
   }
@@ -6521,6 +6374,54 @@ class DSSignup extends (external_React_default()).PureComponent {
 DSSignup.defaultProps = {
   windowObj: window // Added to support unit tests
 };
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+class DSDismiss extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onDismissClick = this.onDismissClick.bind(this);
+    this.onHover = this.onHover.bind(this);
+    this.offHover = this.offHover.bind(this);
+    this.state = {
+      hovering: false
+    };
+  }
+  onDismissClick() {
+    if (this.props.onDismissClick) {
+      this.props.onDismissClick();
+    }
+  }
+  onHover() {
+    this.setState({
+      hovering: true
+    });
+  }
+  offHover() {
+    this.setState({
+      hovering: false
+    });
+  }
+  render() {
+    let className = `ds-dismiss
+      ${this.state.hovering ? ` hovering` : ``}
+      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: className
+    }, this.props.children, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ds-dismiss-button",
+      "data-l10n-id": "newtab-dismiss-button-tooltip",
+      onClick: this.onDismissClick,
+      onMouseEnter: this.onHover,
+      onMouseLeave: this.offHover
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "icon icon-dismiss"
+    })));
+  }
+}
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSTextPromo/DSTextPromo.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -13584,7 +13485,6 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
             hideCardBackground: component.properties.hideCardBackground,
             fourCardLayout: component.properties.fourCardLayout,
             compactGrid: component.properties.compactGrid,
-            onboardingExperience: component.properties.onboardingExperience,
             ctaButtonSponsors: component.properties.ctaButtonSponsors,
             ctaButtonVariant: component.properties.ctaButtonVariant,
             spocMessageVariant: component.properties.spocMessageVariant,

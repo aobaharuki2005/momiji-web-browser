@@ -2005,10 +2005,6 @@ pref("browser.newtabpage.activity-stream.discoverystream.recs.personalized", fal
 // System pref to allow Pocket sponsored content personalization to be turned on/off.
 pref("browser.newtabpage.activity-stream.discoverystream.spocs.personalized", true);
 
-// Flip this once the user has dismissed the Pocket onboarding experience,
-pref("browser.newtabpage.activity-stream.discoverystream.onboardingExperience.dismissed", false);
-pref("browser.newtabpage.activity-stream.discoverystream.onboardingExperience.enabled", false);
-
 // List of locales that get thumbs up/down on recommended stories by default.
 pref("browser.newtabpage.activity-stream.discoverystream.thumbsUpDown.locale-thumbs-config", "en-US, en-GB, en-CA");
 
