@@ -19,6 +19,61 @@
 #include "jit/Registers.h"
 #include "js/Value.h"
 
+/*
+ * [SMDOC] Allocating registers by hand
+ *
+ * To reduce our maintenance burden, much of our codegen is written using an
+ * architecture-independent macroassembler layer. All abstractions are leaky;
+ * one of the main ways that the masm abstraction leaks is when it comes to
+ * finding registers.
+ *
+ * The main constraint is 32-bit x86. There are eight general purpose registers
+ * on 32-bit x86, but two of those (esp and ebp) are permanently claimed for the
+ * stack pointer and the frame pointer, leaving six useful registers. JS::Value
+ * is eight bytes, so 32-bit architectures require two registers to store Values
+ * (one for the tag and one for the payload). Therefore, the most that
+ * architecture-independent codegen can keep alive at one time is:
+ *
+ *      +------+---------+
+ *      | GPRs |  Values |
+ *      +------+---------+
+ *      |  6   |    0    |
+ *      |  4   |    1    |
+ *      |  2   |    2    |
+ *      |  0   |    3    |
+ *      +------+---------+
+ *
+ * Hand-written masm (eg trampolines, stubs) often requires agreement between
+ * the caller and the code itself about which values will be passed in which
+ * registers. In such cases, we usually define a named register in a header:
+ * either an arch-specific header, like RegExpMatcherRegExpReg in
+ * jit/<arch>/Assembler-<arch>.h, or an arch-independent header like the
+ * registers in jit/IonGenericCallStub.h.  For scratch registers in such code,
+ * AllocatableGeneralRegisterSet can be used.
+ *
+ * Baseline deals primarily with boxed values, so we define three
+ * architecture-independent ValueOperands (R0, R1, and R2). When individual
+ * registers are needed, R<N>.scratchReg() can be used. If the sum of live
+ * Values and GPRs is greater than three, then AllocatableGeneralRegisterSet
+ * may be required.
+ *
+ * In baseline IC code, one additional register is dedicated to ICStubReg, so at
+ * most five registers (or 3 registers + 1 Value, ...) are available. Temps can
+ * be allocated using AutoScratchRegister. It's common for IC stubs to return a
+ * Value; to free up the register pair used for that output on 32-bit platforms,
+ * AutoScratchRegisterMaybeOutput/AutoScratchRegisterMaybeOutputType can be used
+ * for values that are dead before writing to the output.
+ *
+ * If more registers are necessary, there are a variety of workarounds. In some
+ * cases, the simplest answer is simply to disable an optimization on x86. We
+ * still support it, but it's not a performance priority. For example, we don't
+ * attach some specialized stubs for Map.get/has/set on x86. In other cases, it
+ * may be possible to manually spill a register to the stack to temporarily free
+ * it up. One useful pattern is to pass InvalidReg in cases where a register is
+ * not available, and decide whether to spill depending on whether a real
+ * register is free. See, for example, CacheIRCompiler::emitDataViewBoundsCheck.
+ */
+
 namespace js {
 namespace jit {
 
