@@ -59,9 +59,6 @@ def optionally_keyed_by(*arguments):
                 return res
         return Schema(schema)(obj)
 
-    # set to assist autodoc
-    setattr(validator, "schema", schema)
-    setattr(validator, "fields", fields)
     return validator
 
 
