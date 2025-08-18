@@ -4010,7 +4010,7 @@ export var Schemas = {
       return;
     }
 
-    const startTime = Cu.now();
+    const startTime = ChromeUtils.now();
     let schemaCache = await this.loadCachedSchemas();
     const fromCache = schemaCache.has(url);
 

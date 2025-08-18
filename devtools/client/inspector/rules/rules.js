@@ -1086,7 +1086,7 @@ CssRuleView.prototype = {
     }
 
     const isProfilerActive = Services.profiler?.IsActive();
-    const startTime = isProfilerActive ? Cu.now() : null;
+    const startTime = isProfilerActive ? ChromeUtils.now() : null;
 
     this.pageStyle = element.inspectorFront.pageStyle;
     this.pageStyle.on("stylesheet-updated", this.refreshPanel);

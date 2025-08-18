@@ -2872,7 +2872,7 @@ interface ProfilerMarkerOptions {
     captureStack?: boolean;
     category?: string;
     innerWindowId?: number;
-    startTime?: DOMHighResTimeStamp;
+    startTime?: number;
 }
 
 interface ProgressEventInit extends EventInit {
@@ -24928,7 +24928,7 @@ declare namespace ChromeUtils {
     var domProcessChild: nsIDOMProcessChild | null;
     var recentJSDevError: any;
     function CreateOriginAttributesFromOriginSuffix(suffix: string): OriginAttributesDictionary;
-    function addProfilerMarker(name: string, options?: ProfilerMarkerOptions | DOMHighResTimeStamp, text?: string): void;
+    function addProfilerMarker(name: string, options?: ProfilerMarkerOptions | number, text?: string): void;
     function androidMoveTaskToBack(): void;
     function base64URLDecode(string: string, options: Base64URLDecodeOptions): ArrayBuffer;
     function base64URLEncode(source: BufferSource, options: Base64URLEncodeOptions): string;
@@ -24982,6 +24982,7 @@ declare namespace ChromeUtils {
     function nondeterministicGetWeakSetKeys(aSet: any): any;
     function notifyDevToolsClosed(): void;
     function notifyDevToolsOpened(): void;
+    function now(): number;
     function originAttributesMatchPattern(originAttrs?: OriginAttributesDictionary, pattern?: OriginAttributesPatternDictionary): boolean;
     function originAttributesToSuffix(originAttrs?: OriginAttributesDictionary): string;
     function privateNoteIntentionalCrash(): void;

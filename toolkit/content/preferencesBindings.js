@@ -128,7 +128,7 @@ const Preferences = (window.Preferences = (function () {
       this.updateQueued = true;
 
       Services.tm.dispatchToMainThread(() => {
-        let startTime = performance.now();
+        let startTime = ChromeUtils.now();
 
         const elements = getElementsByAttribute("preference");
         for (const element of elements) {
@@ -525,7 +525,7 @@ const Preferences = (window.Preferences = (function () {
     }
 
     updateElements() {
-      let startTime = performance.now();
+      let startTime = ChromeUtils.now();
 
       if (!this.id) {
         return;

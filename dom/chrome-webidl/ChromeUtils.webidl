@@ -31,12 +31,9 @@ interface MozQueryInterface {
  * All fields are optional.
  */
 dictionary ProfilerMarkerOptions {
-  // A timestamp to use as the start time of the marker.
+  // A timestamp from `ChromeUtils.now()` to use as the start time of the marker.
   // If no start time is provided, the marker will have no duration.
-  // In window and ChromeWorker contexts, use a timestamp from
-  // `performance.now()`.
-  // In JS modules, use `Cu.now()` to get a timestamp.
-  DOMHighResTimeStamp startTime = 0;
+  double startTime = 0;
 
   // If captureStack is true, a profiler stack will be captured and associated
   // with the marker.
@@ -306,18 +303,15 @@ namespace ChromeUtils {
    * add a marker for the current thread. No-op otherwise.
    *
    * @param name              The name of the marker.
-   * @param options           Either a timestamp to use as the start time of the
-   *                          marker, or a ProfilerMarkerOptions object that can
-   *                          contain startTime, captureStack or category fields.
-   *                          If this parameter is omitted, the marker will have
-   *                           no duration.
-   *                          In window and ChromeWorker contexts, use a
-   *                          timestamp from `performance.now()`.
-   *                          In JS modules, use `Cu.now()` to get a timestamp.
+   * @param options           Either a timestamp from `ChromeUtils.now()` to use as
+   *                          the start time of the marker, or a ProfilerMarkerOptions
+   *                          object that can contain startTime, captureStack or
+   *                          category fields. If this parameter is omitted, the marker
+   *                          will have no duration.
    * @param text              Text to associate with the marker.
    */
   undefined addProfilerMarker(UTF8String name,
-                              optional (ProfilerMarkerOptions or DOMHighResTimeStamp) options = {},
+                              optional (ProfilerMarkerOptions or double) options = {},
                               optional UTF8String text);
 
   /**
@@ -331,6 +325,13 @@ namespace ChromeUtils {
    * Should be JS_Now()/1000 so that it can be compared to Date.now in Javascript.
    */
   double dateNow();
+
+  /**
+   * Return a fractional number of milliseconds from process startup,
+   * measured with a monotonic clock. This provides a unified timing source
+   * that works in all JavaScript contexts and can be used with addProfilerMarker.
+   */
+  double now();
 
   /**
    * Defines a getter on a specified object that will be created upon first

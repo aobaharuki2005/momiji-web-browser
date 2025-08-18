@@ -848,7 +848,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
    **/
   // eslint-disable-next-line complexity
   async receiveMessage(aMessage) {
-    let startTime = Cu.now();
+    let startTime = ChromeUtils.now();
     // Try block so we can use a finally statement to add a profiler marker
     // despite all the return statements.
     try {

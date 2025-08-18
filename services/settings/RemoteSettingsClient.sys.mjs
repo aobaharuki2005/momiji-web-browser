@@ -491,7 +491,7 @@ export class RemoteSettingsClient extends EventEmitter {
               lazy.console.debug(
                 `${this.identifier} Local DB is empty, pull data from server`
               );
-              const waitedAt = Cu.now();
+              const waitedAt = ChromeUtils.now();
               const pulled = await lazy.RemoteSettings.pullStartupBundle();
               // If collection is not part of startup bundle, then sync it individually.
               if (!pulled.includes(this.identifier)) {
@@ -506,7 +506,7 @@ export class RemoteSettingsClient extends EventEmitter {
                 "get() with syncIfEmpty"
               );
 
-              const durationMilliseconds = Cu.now() - waitedAt;
+              const durationMilliseconds = ChromeUtils.now() - waitedAt;
               lazy.console.debug(
                 `${this.identifier} Waited ${durationMilliseconds}ms for 'syncIfEmpty' in 'get()'`
               );

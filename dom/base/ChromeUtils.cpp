@@ -48,7 +48,6 @@
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/dom/PBrowserParent.h"
-#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Record.h"
@@ -278,31 +277,9 @@ void ChromeUtils::AddProfilerMarker(
     }
   }
   if (startTime) {
-    RefPtr<Performance> performance;
-
-    if (NS_IsMainThread()) {
-      nsCOMPtr<nsPIDOMWindowInner> ownerWindow =
-          do_QueryInterface(aGlobal.GetAsSupports());
-      if (ownerWindow) {
-        performance = ownerWindow->GetPerformance();
-      }
-    } else {
-      JSContext* cx = aGlobal.Context();
-      WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
-      if (workerPrivate) {
-        performance = workerPrivate->GlobalScope()->GetPerformance();
-      }
-    }
-
-    if (performance) {
-      options.Set(MarkerTiming::IntervalUntilNowFrom(
-          performance->CreationTimeStamp() +
-          TimeDuration::FromMilliseconds(startTime)));
-    } else {
-      options.Set(MarkerTiming::IntervalUntilNowFrom(
-          TimeStamp::ProcessCreation() +
-          TimeDuration::FromMilliseconds(startTime)));
-    }
+    options.Set(MarkerTiming::IntervalUntilNowFrom(
+        TimeStamp::ProcessCreation() +
+        TimeDuration::FromMilliseconds(startTime)));
   }
 
   if (innerWindowId) {
@@ -2503,6 +2480,11 @@ bool ChromeUtils::IsDarkBackground(GlobalObject&, Element& aElement) {
 }
 
 double ChromeUtils::DateNow(GlobalObject&) { return JS_Now() / 1000.0; }
+
+/* static */
+double ChromeUtils::Now(GlobalObject&) {
+  return (TimeStamp::Now() - TimeStamp::ProcessCreation()).ToMilliseconds();
+}
 
 /* static */
 void ChromeUtils::EnsureJSOracleStarted(GlobalObject&) {

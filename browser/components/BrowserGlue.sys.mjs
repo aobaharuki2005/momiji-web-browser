@@ -597,7 +597,7 @@ BrowserGlue.prototype = {
   },
 
   _earlyBlankFirstPaint(cmdLine) {
-    let startTime = Cu.now();
+    let startTime = ChromeUtils.now();
 
     let shouldCreateWindow = isPrivateWindow => {
       if (cmdLine.findFlag("wait-for-jsdebugger", false) != -1) {
@@ -720,7 +720,7 @@ BrowserGlue.prototype = {
     win.stop();
 
     ChromeUtils.addProfilerMarker("earlyBlankFirstPaint", startTime);
-    win.openTime = Cu.now();
+    win.openTime = ChromeUtils.now();
 
     let { TelemetryTimestamps } = ChromeUtils.importESModule(
       "resource://gre/modules/TelemetryTimestamps.sys.mjs"
@@ -1011,7 +1011,7 @@ BrowserGlue.prototype = {
         ChromeUtils.idleDispatch(
           async () => {
             if (!Services.startup.shuttingDown) {
-              let startTime = Cu.now();
+              let startTime = ChromeUtils.now();
               try {
                 await task.task();
               } catch (ex) {
@@ -1351,7 +1351,7 @@ BrowserGlue.prototype = {
     for (let task of idleTasks) {
       ChromeUtils.idleDispatch(async () => {
         if (!Services.startup.shuttingDown) {
-          let startTime = Cu.now();
+          let startTime = ChromeUtils.now();
           try {
             await task();
           } catch (ex) {

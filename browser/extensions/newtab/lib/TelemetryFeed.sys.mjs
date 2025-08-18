@@ -240,7 +240,7 @@ export class TelemetryFeed {
   }
 
   browserOpenNewtabStart() {
-    let now = Cu.now();
+    let now = ChromeUtils.now();
     this._browserOpenNewtabStart = Math.round(this.processStartTs + now);
 
     ChromeUtils.addProfilerMarker(

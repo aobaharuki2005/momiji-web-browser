@@ -1163,7 +1163,7 @@ export class TranslationsDocument {
           // The count of nodes that exited this observer's proximity.
           let exitedCount = 0;
 
-          const startTime = Cu.now();
+          const startTime = ChromeUtils.now();
           for (const { target, isIntersecting } of entries) {
             isIntersecting ? enteredCount++ : exitedCount++;
 
@@ -1220,7 +1220,7 @@ export class TranslationsDocument {
           // The count of nodes that exited this observer's proximity.
           let exitedCount = 0;
 
-          const startTime = Cu.now();
+          const startTime = ChromeUtils.now();
           for (const { target, isIntersecting } of entries) {
             if (isIntersecting) {
               // The target has entered the boundary, so we will enqueue it for translation.
@@ -1284,7 +1284,7 @@ export class TranslationsDocument {
           // The count of nodes that exited this observer's proximity.
           let exitedCount = 0;
 
-          const startTime = Cu.now();
+          const startTime = ChromeUtils.now();
           for (const { target, isIntersecting } of entries) {
             isIntersecting ? enteredCount++ : exitedCount++;
 
@@ -1339,7 +1339,7 @@ export class TranslationsDocument {
           // The count of nodes that exited this observer's proximity.
           let exitedCount = 0;
 
-          const startTime = Cu.now();
+          const startTime = ChromeUtils.now();
           for (const { target, isIntersecting } of entries) {
             if (isIntersecting) {
               // The target has entered the boundary, so we will enqueue it for translation.
@@ -1395,7 +1395,7 @@ export class TranslationsDocument {
       async mutationsList => {
         await this.#waitForFirstIntersectionObservations();
 
-        const startTime = Cu.now();
+        const startTime = ChromeUtils.now();
 
         // The count of attribute mutations in this observation.
         let attributeCount = 0;
@@ -1576,7 +1576,7 @@ export class TranslationsDocument {
     );
 
     const addRootElements = () => {
-      const startTime = Cu.now();
+      const startTime = ChromeUtils.now();
 
       this.#addRootElement(document.body);
       this.#addRootElement(document.head);
@@ -1923,7 +1923,7 @@ export class TranslationsDocument {
         const attributeElementCount = this.#elementsWithMutatedAttributes.size;
         let attributeRequestCount = 0;
 
-        const startTime = Cu.now();
+        const startTime = ChromeUtils.now();
 
         // Ensure the nodes are still alive.
         const liveNodes = [];
@@ -2430,7 +2430,7 @@ export class TranslationsDocument {
       return;
     }
 
-    const contentStartTime = Cu.now();
+    const contentStartTime = ChromeUtils.now();
     this.#subdivideNodeForContentTranslations(element);
     ChromeUtils.addProfilerMarker(
       "TranslationsDocument Add Root",
@@ -2438,7 +2438,7 @@ export class TranslationsDocument {
       `Subdivided new root "${node.nodeName}" for content translations`
     );
 
-    const attributeStartTime = Cu.now();
+    const attributeStartTime = ChromeUtils.now();
     this.#subdivideNodeForAttributeTranslations(element);
     ChromeUtils.addProfilerMarker(
       "TranslationsDocument Add Root",
@@ -2905,7 +2905,7 @@ export class TranslationsDocument {
     let detachedElementCount = 0;
     let updatedAttributeCount = 0;
 
-    const startTime = Cu.now();
+    const startTime = ChromeUtils.now();
 
     // Stop the mutations so that the updates won't trigger observations.
     this.#pauseMutationObserverAndThen(() => {
@@ -3217,7 +3217,7 @@ export class TranslationsDocument {
     let textNodeCount = 0;
     let elementCount = 0;
 
-    const startTime = Cu.now();
+    const startTime = ChromeUtils.now();
 
     // Stop the mutations so that the updates won't trigger observations.
     this.#pauseMutationObserverAndThen(() => {
@@ -3672,7 +3672,7 @@ export class TranslationsDocument {
         let contentRequestCount = 0;
         let attributeRequestCount = 0;
 
-        const startTime = Cu.now();
+        const startTime = ChromeUtils.now();
 
         const {
           inViewportContentPriority,

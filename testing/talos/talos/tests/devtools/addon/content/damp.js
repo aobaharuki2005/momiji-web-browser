@@ -32,7 +32,7 @@ function Damp() {}
 Damp.prototype = {
   async garbageCollect() {
     dump("Garbage collect\n");
-    let startTime = Cu.now();
+    let startTime = ChromeUtils.now();
 
     // Minimize memory usage
     // mimic miminizeMemoryUsage, by only flushing JS objects via GC.
@@ -125,11 +125,11 @@ Damp.prototype = {
       this.allocationTracker.flushAllocations();
     }
 
-    let start = Cu.now();
+    let start = ChromeUtils.now();
 
     return {
       done: () => {
-        let end = Cu.now();
+        let end = ChromeUtils.now();
         let duration = end - start;
         ChromeUtils.addProfilerMarker(
           "DAMP",
@@ -172,7 +172,7 @@ Damp.prototype = {
 
   async waitForPendingPaints(window) {
     let utils = window.windowUtils;
-    let startTime = Cu.now();
+    let startTime = ChromeUtils.now();
     while (utils.isMozAfterPaintPending) {
       await new Promise(done => {
         window.addEventListener(
