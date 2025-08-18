@@ -154,8 +154,7 @@ desktop-screenshot-capture:
 
 newtab-trainhop-tests:
     - mochitest-browser-newtab-trainhop-beta
-    # Disabled until newtab as a built-in addon reaches the release channel
-    # - mochitest-browser-newtab-trainhop-release
+    - mochitest-browser-newtab-trainhop-release
 
 ### Specific platform test sets
 
