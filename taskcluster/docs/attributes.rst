@@ -470,6 +470,11 @@ denotes which dependent kind is the `primary one`_.
 
 Typically this is set by the ``taskgraph.transforms.from_deps`` transforms.
 
+primary-dependency-label
+========================
+
+This attribute denotes which upstream task is the `primary one`_, and is typically used to indicate which upstream task other attributes should be derived from.
+
 snap_test_type
 ==============
 
