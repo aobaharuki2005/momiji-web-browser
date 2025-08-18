@@ -35,7 +35,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/system_wrappers/source/denormal_disabler.cc"
+    "/third_party/libwebrtc/rtc_base/denormal_disabler.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
