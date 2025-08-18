@@ -5379,10 +5379,11 @@ bool nsDisplayViewTransitionCapture::CreateWebRenderCommands(
   nsPresContext* pc = mFrame->PresContext();
   nsIFrame* capturedFrame =
       mIsRoot ? pc->FrameConstructor()->GetRootElementStyleFrame() : mFrame;
-  auto captureRect = mIsRoot ? ViewTransition::SnapshotContainingBlockRect(pc)
-                             : mFrame->InkOverflowRectRelativeToSelf();
-  auto* vt = pc->Document()->GetActiveViewTransition();
+  const auto captureRect = mIsRoot
+                               ? ViewTransition::SnapshotContainingBlockRect(pc)
+                               : mFrame->InkOverflowRectRelativeToSelf();
   auto key = [&]() -> Maybe<wr::SnapshotImageKey> {
+    auto* vt = pc->Document()->GetActiveViewTransition();
     if (NS_WARN_IF(!vt)) {
       return Nothing();
     }
@@ -5397,9 +5398,6 @@ bool nsDisplayViewTransitionCapture::CreateWebRenderCommands(
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
   if (key) {
-    vt->UpdateActiveRectForCapturedFrame(capturedFrame, aSc.GetInheritedScale(),
-                                         captureRect);
-
     si.emplace(wr::SnapshotInfo{
         .key = *key,
         .area = wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(
