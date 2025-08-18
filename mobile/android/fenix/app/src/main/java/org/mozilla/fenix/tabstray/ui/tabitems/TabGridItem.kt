@@ -175,7 +175,6 @@ private fun TabContent(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(gridItemAspectRatio)
                 .clip(tabContentCardShape)
                 .then(clickableModifier)
                 .semantics {
@@ -288,6 +287,7 @@ private fun TabContent(
                     bottomEnd = 12.dp,
                 )
                 Card(
+                    modifier = Modifier.aspectRatio(gridItemAspectRatio),
                     shape = thumbnailShape,
                 ) {
                     Thumbnail(
