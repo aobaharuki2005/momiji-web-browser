@@ -169,6 +169,15 @@ export class SidebarState {
    * @returns {XULElement}
    */
   get #toolsContainer() {
+    return this.#controller.sidebarMain?.buttonsWrapper;
+  }
+
+  /**
+   * Get the tools button-group element.
+   *
+   * @returns {XULElement}
+   */
+  get #toolsButtonGroup() {
     return this.#controller.sidebarMain?.buttonGroup;
   }
 
@@ -598,29 +607,15 @@ export class SidebarState {
   }
 
   get maxToolsHeight() {
-    const INLINE_PADDING = 8.811; // The inline padding for the tools button-group
-    const GAP_SIZE = 1.4685; // The size of the gap between each row of tools
-    if (!this.#toolsContainer) {
+    if (!this.#toolsButtonGroup) {
       return null;
     }
     let toolRect = this.#controllerGlobal.windowUtils.getBoundsWithoutFlushing(
-      this.#toolsContainer.children[0]
+      this.#toolsButtonGroup.children[0]
     );
-    let sidebarRect =
-      this.#controllerGlobal.windowUtils.getBoundsWithoutFlushing(
-        this.#launcherEl
-      );
-    let numRows;
-    if (this.#props.launcherExpanded) {
-      let availableWidth =
-        (sidebarRect.width - INLINE_PADDING) / toolRect.width;
-      numRows = Math.ceil(
-        this.#toolsContainer.children.length / availableWidth
-      );
-    }
     return this.#props.launcherExpanded
-      ? toolRect.height * numRows + (numRows - 1) * GAP_SIZE
-      : toolRect.height * this.#toolsContainer.children.length;
+      ? "unset"
+      : toolRect.height * this.#toolsButtonGroup.children.length;
   }
 
   get launcherHoverActive() {
