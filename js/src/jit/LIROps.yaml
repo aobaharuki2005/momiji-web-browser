@@ -2537,6 +2537,13 @@
   num_temps: 1
   mir_op: true
 
+- name: AddAndStoreSlotPreserveWrapper
+  operands:
+    object: WordSized
+    value: BoxedValue
+  num_temps: 2
+  mir_op: AddAndStoreSlot
+
 # Store a boxed value to an object's fixed slot.
 - name: StoreFixedSlotV
   operands:

@@ -17689,6 +17689,8 @@ void CodeGenerator::visitLoadDynamicSlotUnboxAndAtomize(
 }
 
 void CodeGenerator::visitAddAndStoreSlot(LAddAndStoreSlot* ins) {
+  MOZ_ASSERT(!ins->mir()->preserveWrapper());
+
   Register obj = ToRegister(ins->object());
   ValueOperand value = ToValue(ins->value());
   Register maybeTemp = ToTempRegisterOrInvalid(ins->temp0());
@@ -17712,11 +17714,53 @@ void CodeGenerator::visitAddAndStoreSlot(LAddAndStoreSlot* ins) {
   }
 }
 
+void CodeGenerator::visitAddAndStoreSlotPreserveWrapper(
+    LAddAndStoreSlotPreserveWrapper* ins) {
+  MOZ_ASSERT(ins->mir()->preserveWrapper());
+
+  Register obj = ToRegister(ins->object());
+  ValueOperand value = ToValue(ins->value());
+  Register temp0 = ToTempRegisterOrInvalid(ins->temp0());
+  Register temp1 = ToTempRegisterOrInvalid(ins->temp1());
+
+  LiveRegisterSet liveRegs = liveVolatileRegs(ins);
+  liveRegs.takeUnchecked(temp0);
+  liveRegs.takeUnchecked(temp1);
+  masm.preserveWrapper(obj, temp0, temp1, liveRegs);
+  bailoutIfFalseBool(temp0, ins->snapshot());
+
+  Shape* shape = ins->mir()->shape();
+  masm.storeObjShape(shape, obj, [](MacroAssembler& masm, const Address& addr) {
+    EmitPreBarrier(masm, addr, MIRType::Shape);
+  });
+
+  // Perform the store. No pre-barrier required since this is a new
+  // initialization.
+
+  uint32_t offset = ins->mir()->slotOffset();
+  if (ins->mir()->kind() == MAddAndStoreSlot::Kind::FixedSlot) {
+    Address slot(obj, offset);
+    masm.storeValue(value, slot);
+  } else {
+    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), temp0);
+    Address slot(temp0, offset);
+    masm.storeValue(value, slot);
+  }
+}
+
 void CodeGenerator::visitAllocateAndStoreSlot(LAllocateAndStoreSlot* ins) {
   Register obj = ToRegister(ins->object());
   ValueOperand value = ToValue(ins->value());
   Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
+
+  if (ins->mir()->preserveWrapper()) {
+    LiveRegisterSet liveRegs;
+    liveRegs.addUnchecked(obj);
+    liveRegs.addUnchecked(value);
+    masm.preserveWrapper(obj, temp0, temp1, liveRegs);
+    bailoutIfFalseBool(temp0, ins->snapshot());
+  }
 
   masm.Push(obj);
   masm.Push(value);
