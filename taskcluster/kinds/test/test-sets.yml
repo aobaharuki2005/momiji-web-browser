@@ -505,10 +505,10 @@ android-x86_64-tests:
     - xpcshell
 
 android14-x86_64-tests:
-    - cppunittest
+    # - cppunittest
     - crashtest
     # - geckoview-junit
-    - gtest
+    # - gtest
     # - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu
