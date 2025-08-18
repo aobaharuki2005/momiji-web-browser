@@ -47,6 +47,7 @@ enum class TestRequest : uint32_t {
   eAllowInAudible = 5,
   eDenyInAudible = 6,
   eLeaveAllPending = 7,
+  eAllowAllAsync = 8,
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(GVAutoplayPermissionRequest,
@@ -67,11 +68,15 @@ void GVAutoplayPermissionRequest::CreateRequest(nsGlobalWindowInner* aWindow,
   if (testingPref != TestRequest::ePromptAsNormal) {
     LOG("Create testing request, tesing value=%u",
         static_cast<uint32_t>(testingPref));
-    if (testingPref == TestRequest::eAllowAll ||
-        (testingPref == TestRequest::eAllowAudible &&
-         aType == RType::eAUDIBLE) ||
-        (testingPref == TestRequest::eAllowInAudible &&
-         aType == RType::eINAUDIBLE)) {
+    if (testingPref == TestRequest::eAllowAllAsync) {
+      request->RequestDelayedTask(
+          aWindow->SerialEventTarget(),
+          GVAutoplayPermissionRequest::DelayedTaskType::Allow);
+    } else if (testingPref == TestRequest::eAllowAll ||
+               (testingPref == TestRequest::eAllowAudible &&
+                aType == RType::eAUDIBLE) ||
+               (testingPref == TestRequest::eAllowInAudible &&
+                aType == RType::eINAUDIBLE)) {
       request->Allow(JS::UndefinedHandleValue);
     } else if (testingPref == TestRequest::eDenyAll ||
                (testingPref == TestRequest::eDenyAudible &&

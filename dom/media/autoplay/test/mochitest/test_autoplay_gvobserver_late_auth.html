@@ -20,9 +20,8 @@ add_task(async function testGVDelayedAutoplayStart() {
       // Below must be true to hit async permission code path
       // https://searchfox.org/mozilla-central/rev/6e2b186c296474e032d9ae2e000b7c870396775c/dom/media/autoplay/AutoplayPolicy.cpp#229-232
       ["media.geckoview.autoplay.request", true],
-      // Below must be 0 to hit async permission grants:
-      // https://searchfox.org/mozilla-central/rev/7f12cb24e022aefb9c716211e592a4f4b0a5890c/dom/media/autoplay/GVAutoplayPermissionRequest.cpp#67,83-88
-      ["media.geckoview.autoplay.request.testing", 0],
+      // 8 = Generate asynchronous eALLOWED permission grants.
+      ["media.geckoview.autoplay.request.testing", 8],
     ],
   });
 
@@ -36,11 +35,8 @@ add_task(async function testGVDelayedAutoplayStart() {
 
   document.body.appendChild(video);
 
-  const result = await Promise.race([
-    playingPromise.then(() => true),
-    new Promise(resolve => setTimeout(() => resolve(false), TIMEOUT_IN_MS)),
-  ]);
-  ok(result, "Video should autoplay.");
+  await playingPromise;
+  ok(true, "Video should autoplay.");
 });
 </script>
 </body>

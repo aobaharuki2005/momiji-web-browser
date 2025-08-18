@@ -12666,7 +12666,7 @@
  # pref works only when enabling the pref `media.geckoview.autoplay.request`.
  # 0=prompt as normal, 1=allow all, 2=deny all, 3=allow audible request,
  # 4=deny audible request, 5=allow inaudible request, 6=deny inaudible request.
- # 7=leave all requests pending.
+ # 7=leave all requests pending, 8=asynchronous allow all
 - name: media.geckoview.autoplay.request.testing
   type: uint32_t
   value: 0
