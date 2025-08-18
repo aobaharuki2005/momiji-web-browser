@@ -809,12 +809,9 @@ class WellKnownChecker {
                        nsILoadInfo* loadInfo) {
     nsLoadFlags flags;
 
-    ExtContentPolicyType contentPolicyType =
-        loadInfo->GetExternalContentPolicyType();
-
     uint64_t channelId = gHttpHandler->NewChannelId();
-    if (NS_FAILED(chan->Init(uri, caps, nullptr, 0, nullptr, channelId,
-                             contentPolicyType, loadInfo)) ||
+    if (NS_FAILED(
+            chan->Init(uri, caps, nullptr, 0, nullptr, channelId, loadInfo)) ||
         NS_FAILED(chan->SetAllowAltSvc(false)) ||
         NS_FAILED(chan->SetRedirectMode(
             nsIHttpChannelInternal::REDIRECT_MODE_ERROR)) ||
