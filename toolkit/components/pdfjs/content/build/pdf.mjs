@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.70
- * pdfjsBuild = f16e0b6da
+ * pdfjsVersion = 5.4.86
+ * pdfjsBuild = 1bada43a2
  */
 
 ;// ./src/shared/util.js
@@ -2009,6 +2009,7 @@ class AnnotationEditorUIManager {
   #floatingToolbar = null;
   #idManager = new IdManager();
   #isEnabled = false;
+  #isPointerDown = false;
   #isWaiting = false;
   #keyboardManagerAC = null;
   #lastActiveElement = null;
@@ -2120,6 +2121,18 @@ class AnnotationEditorUIManager {
       signal
     });
     eventBus._on("switchannotationeditorparams", evt => this.updateParams(evt.type, evt.value), {
+      signal
+    });
+    window.addEventListener("pointerdown", () => {
+      this.#isPointerDown = true;
+    }, {
+      capture: true,
+      signal
+    });
+    window.addEventListener("pointerup", () => {
+      this.#isPointerDown = false;
+    }, {
+      capture: true,
       signal
     });
     this.#addSelectionListener();
@@ -2482,24 +2495,29 @@ class AnnotationEditorUIManager {
     if (!this.isShiftKeyDown) {
       const activeLayer = this.#mode === AnnotationEditorType.HIGHLIGHT ? this.#getLayerForTextLayer(textLayer) : null;
       activeLayer?.toggleDrawing();
-      const ac = new AbortController();
-      const signal = this.combinedSignal(ac);
-      const pointerup = e => {
-        if (e.type === "pointerup" && e.button !== 0) {
-          return;
-        }
-        ac.abort();
+      if (this.#isPointerDown) {
+        const ac = new AbortController();
+        const signal = this.combinedSignal(ac);
+        const pointerup = e => {
+          if (e.type === "pointerup" && e.button !== 0) {
+            return;
+          }
+          ac.abort();
+          activeLayer?.toggleDrawing(true);
+          if (e.type === "pointerup") {
+            this.#onSelectEnd("main_toolbar");
+          }
+        };
+        window.addEventListener("pointerup", pointerup, {
+          signal
+        });
+        window.addEventListener("blur", pointerup, {
+          signal
+        });
+      } else {
         activeLayer?.toggleDrawing(true);
-        if (e.type === "pointerup") {
-          this.#onSelectEnd("main_toolbar");
-        }
-      };
-      window.addEventListener("pointerup", pointerup, {
-        signal
-      });
-      window.addEventListener("blur", pointerup, {
-        signal
-      });
+        this.#onSelectEnd("main_toolbar");
+      }
     }
   }
   #onSelectEnd(methodOfCreation = "") {
@@ -10625,7 +10643,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "5.4.70",
+    apiVersion: "5.4.86",
     data,
     password,
     disableAutoFetch,
@@ -12169,8 +12187,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "5.4.70";
-const build = "f16e0b6da";
+const version = "5.4.86";
+const build = "1bada43a2";
 
 ;// ./src/display/editor/color_picker.js
 

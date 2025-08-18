@@ -1977,6 +1977,9 @@ class OutputParser {
 
     // Prevent click event to be fired to not show the tooltip
     event.stopPropagation();
+    // Prevent text selection but switch the focus
+    event.preventDefault();
+    event.target.focus({ focusVisible: false });
 
     const swatch = event.target;
     const color = this.#colorSwatches.get(swatch);

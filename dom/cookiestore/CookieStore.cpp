@@ -555,9 +555,11 @@ already_AddRefed<Promise> CookieStore::Delete(
   NS_DispatchToCurrentThread(NS_NewRunnableFunction(
       __func__, [self = RefPtr(this), promise = RefPtr(promise), aOptions,
                  cookiePrincipal = RefPtr(cookiePrincipal.get())]() {
+        nsString name(TrimTabAndSpace(aOptions.mName));
+
         nsString domain;
-        if (!ValidateCookieDomain(cookiePrincipal, aOptions.mName,
-                                  aOptions.mDomain, domain, promise)) {
+        if (!ValidateCookieDomain(cookiePrincipal, name, aOptions.mDomain,
+                                  domain, promise)) {
           return;
         }
 
@@ -565,8 +567,8 @@ already_AddRefed<Promise> CookieStore::Delete(
           return;
         }
 
-        if (!ValidateCookieNamePrefix(aOptions.mName, u""_ns, domain,
-                                      aOptions.mPath, promise)) {
+        if (!ValidateCookieNamePrefix(name, u""_ns, domain, aOptions.mPath,
+                                      promise)) {
           return;
         }
 
@@ -606,7 +608,7 @@ already_AddRefed<Promise> CookieStore::Delete(
                 mozilla::WrapNotNull(cookieURI.get()),
                 cookiePrincipal->OriginAttributesRef(), thirdPartyContext,
                 partitionForeign, usingStorageAccess, isOn3PCBExceptionList,
-                aOptions.mName, domain, aOptions.mPath, aOptions.mPartitioned,
+                name, domain, aOptions.mPath, aOptions.mPartitioned,
                 operationID);
         if (NS_WARN_IF(!ipcPromise)) {
           promise->MaybeResolveWithUndefined();
@@ -699,7 +701,7 @@ already_AddRefed<Promise> CookieStore::GetInternal(
        aOnlyTheFirstMatch]() {
         nsAutoString name;
         if (aOptions.mName.WasPassed()) {
-          name = aOptions.mName.Value();
+          name = TrimTabAndSpace(aOptions.mName.Value());
         }
 
         nsAutoCString path;

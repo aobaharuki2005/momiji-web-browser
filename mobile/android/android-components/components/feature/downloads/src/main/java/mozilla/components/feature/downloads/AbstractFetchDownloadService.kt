@@ -213,7 +213,6 @@ abstract class AbstractFetchDownloadService : Service() {
                         removeNotification(context, currentDownloadJobState)
                         currentDownloadJobState.lastNotificationUpdate = System.currentTimeMillis()
                         currentDownloadJobState.createdTime = System.currentTimeMillis()
-                        currentDownloadJobState.currentBytesCopied = 0
                         setDownloadJobStatus(currentDownloadJobState, DOWNLOADING)
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {

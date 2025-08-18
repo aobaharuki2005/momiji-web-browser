@@ -866,9 +866,13 @@
       }
 
       this.showTab(aTab);
-      this.#handleTabMove(aTab, () =>
-        this.pinnedTabsContainer.appendChild(aTab)
-      );
+      this.#handleTabMove(aTab, () => {
+        let periphery = document.getElementById(
+          "pinned-tabs-container-periphery"
+        );
+        // If periphery is null, append to end
+        this.pinnedTabsContainer.insertBefore(aTab, periphery);
+      });
 
       aTab.setAttribute("pinned", "true");
       this._updateTabBarForPinnedTabs();
@@ -2523,6 +2527,15 @@
         return false;
       }
 
+      // discarding a browser will dismiss any dialogs, so don't
+      // allow this unless we're forcing it.
+      if (
+        !aForceDiscard &&
+        this.getTabDialogBox(browser)._tabDialogManager._dialogs.length
+      ) {
+        return false;
+      }
+
       return true;
     }
 
@@ -2553,6 +2566,10 @@
         this.resetBrowserSharing(browser);
       }
       webrtcUI.forgetStreamsFromBrowserContext(browser.browsingContext);
+
+      // Abort any dialogs since the browser is about to be discarded.
+      let tabDialogBox = this.getTabDialogBox(browser);
+      tabDialogBox.abortAllDialogs();
 
       // Set browser parameters for when browser is restored.  Also remove
       // listeners and set up lazy restore data in SessionStore. This must

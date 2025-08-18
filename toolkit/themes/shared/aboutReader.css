@@ -594,14 +594,6 @@ body.hcm .color-scheme-buttons {
   border-color: var(--popup-border);
 }
 
-.color-scheme-buttons > input:first-child + label {
-  margin-inline-start: 10px;
-}
-
-.color-scheme-buttons > label:last-child {
-  margin-inline-end: 10px;
-}
-
 /* Improved text and layout menu popup */
 
 #text-layout-controls {

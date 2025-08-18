@@ -685,8 +685,8 @@ impl ToComputedValue for TextEmphasisStyle {
                     //
                     // Also should probably use WritingMode::is_vertical rather
                     // than the computed value of the `writing-mode` property.
-                    if context.style().get_inherited_box().clone_writing_mode() ==
-                        SpecifiedWritingMode::HorizontalTb
+                    if context.style().get_inherited_box().clone_writing_mode()
+                        == SpecifiedWritingMode::HorizontalTb
                     {
                         TextEmphasisShapeKeyword::Circle
                     } else {
@@ -1077,7 +1077,7 @@ impl Parse for TextDecorationTrim {
         if let Ok(start) = input.try_parse(|i| Length::parse(ctx, i)) {
             let end = input.try_parse(|i| Length::parse(ctx, i));
             let end = end.unwrap_or_else(|_| start.clone());
-            return Ok(TextDecorationTrim::Length{start, end});
+            return Ok(TextDecorationTrim::Length { start, end });
         }
         input.expect_ident_matching("auto")?;
         Ok(TextDecorationTrim::Auto)
@@ -1200,8 +1200,8 @@ impl Parse for RubyPosition {
             "under" => false,
         };
         // Parse alternate after
-        let alternate = alternate ||
-            input
+        let alternate = alternate
+            || input
                 .try_parse(|i| i.expect_ident_matching("alternate"))
                 .is_ok();
 

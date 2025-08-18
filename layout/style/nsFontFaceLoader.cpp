@@ -194,7 +194,8 @@ void nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure) {
     AutoTArray<RefPtr<gfxUserFontSet>, 4> fontSets;
     ufe->GetUserFontSets(fontSets);
     for (gfxUserFontSet* fontSet : fontSets) {
-      if (nsPresContext* ctx = FontFaceSetImpl::GetPresContextFor(fontSet)) {
+      if (FontVisibilityProvider* ctx =
+              FontFaceSetImpl::GetFontVisibilityProviderFor(fontSet)) {
         fontSet->IncrementGeneration();
         ctx->UserFontSetUpdated(ufe);
         LOG(("userfonts (%p) timeout reflow for pres context %p display %d\n",

@@ -771,6 +771,32 @@
         {
           "type": "object",
           "properties": {
+            "data": {
+              "anchor_id": {
+                "type": "string",
+                "description": "Anchor to attach the panel to, if set will override widget_id"
+              },
+              "widget_id": {
+                "type": "string",
+                "description": "ID of the widget whose panel will open, can be set instead of anchor_id"
+              },
+              "panel_id": {
+                "type": "string",
+                "description": "ID of the panel to open"
+              }
+            },
+            "type": {
+              "type": "string",
+              "enum": ["OPEN_PANEL"]
+            }
+          },
+          "required": ["data", "type"],
+          "additionalProperties": true,
+          "description": "Opens a given panel based on ID"
+        },
+        {
+          "type": "object",
+          "properties": {
             "type": {
               "type": "string",
               "enum": ["CREATE_TASKBAR_TAB"]

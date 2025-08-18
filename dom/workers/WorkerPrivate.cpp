@@ -53,6 +53,7 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/FunctionBinding.h"
@@ -104,6 +105,7 @@
 #include "nsIURL.h"
 #include "nsIUUIDGenerator.h"
 #include "nsNetUtil.h"
+#include "nsPresContext.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
@@ -2809,7 +2811,8 @@ WorkerPrivate::WorkerPrivate(
       mAgentClusterOpenerPolicy(aAgentClusterOpenerPolicy),
       mIsPrivilegedAddonGlobal(false),
       mTopLevelWorkerFinishedRunnableCount(0),
-      mWorkerFinishedRunnableCount(0) {
+      mWorkerFinishedRunnableCount(0),
+      mFontVisibility(ComputeFontVisibility()) {
   LOG(WorkerLog(), ("WorkerPrivate::WorkerPrivate [%p]", this));
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
 
@@ -6731,6 +6734,44 @@ WorkerPrivate::AutoPushEventLoopGlobal::~AutoPushEventLoopGlobal() {
 #endif
   data->mCurrentEventLoopGlobal = std::move(mOldEventLoopGlobal);
 }
+
+// FontVisibilityProvider implementation
+FontVisibility WorkerPrivate::GetFontVisibility() const {
+  return mFontVisibility;
+}
+
+void WorkerPrivate::ReportBlockedFontFamily(const nsCString& aMsg) const {
+  nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(aMsg),
+                                              nsIScriptError::warningFlag,
+                                              "Security"_ns, GetDocument());
+}
+
+bool WorkerPrivate::IsChrome() const { return IsChromeWorker(); }
+
+bool WorkerPrivate::IsPrivateBrowsing() const {
+  return mLoadInfo.mOriginAttributes.IsPrivateBrowsing();
+}
+
+nsICookieJarSettings* WorkerPrivate::GetCookieJarSettings() const {
+  return CookieJarSettings();
+}
+
+Maybe<FontVisibility> WorkerPrivate::MaybeInheritFontVisibility() const {
+  if (mParent) {
+    // If we have a parent, we inherit the parent's font visibility.
+    return Some(mParent->GetFontVisibility());
+  }
+
+  dom::Document* doc = GetDocument();
+  NS_ENSURE_TRUE(doc, Nothing());
+
+  nsPresContext* presContext = doc->GetPresContext();
+  NS_ENSURE_TRUE(presContext, Nothing());
+
+  return Some(presContext->GetFontVisibility());
+}
+
+void WorkerPrivate::UserFontSetUpdated(gfxUserFontEntry*) {}
 
 // -----------------------------------------------------------------------------
 // AutoSyncLoopHolder

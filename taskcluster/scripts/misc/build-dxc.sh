@@ -30,7 +30,7 @@ cmake .. \
   -C ../cmake/caches/PredefinedParams.cmake \
   -DCMAKE_TOOLCHAIN_FILE=../cmake/platforms/WinMsvc.cmake \
   -DHOST_ARCH="$MOZ_DXC_TARGET_ARCH" \
-  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DLLVM_DISABLE_ASSEMBLY_FILES=ON \
   -DLLVM_NATIVE_TOOLCHAIN="$MOZ_FETCHES_DIR/clang" \
   -DLLVM_WINSYSROOT="$VSINSTALLDIR" \
@@ -49,11 +49,12 @@ cmake .. \
 
 
 # Only build the required target.
+# NOTE: This builds `dxcompiler.pdb`, too.
 ninja dxcompiler.dll
 
 # Pack the result and upload.
 mkdir $dxc_folder
-mv bin/dxcompiler.dll $dxc_folder
+mv bin/dxcompiler.dll bin/dxcompiler.pdb $dxc_folder
 
 mkdir -p $UPLOAD_DIR
 tar cavf $UPLOAD_DIR/$artifact $dxc_folder

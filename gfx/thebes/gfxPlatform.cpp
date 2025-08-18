@@ -1909,13 +1909,12 @@ bool gfxPlatform::IsKnownIconFontFamily(const nsAtom* aFamilyName) const {
       aFamilyName);
 }
 
-gfxFontEntry* gfxPlatform::LookupLocalFont(nsPresContext* aPresContext,
-                                           const nsACString& aFontName,
-                                           WeightRange aWeightForEntry,
-                                           StretchRange aStretchForEntry,
-                                           SlantStyleRange aStyleForEntry) {
+gfxFontEntry* gfxPlatform::LookupLocalFont(
+    FontVisibilityProvider* aFontVisibilityProvider,
+    const nsACString& aFontName, WeightRange aWeightForEntry,
+    StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry) {
   return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(
-      aPresContext, aFontName, aWeightForEntry, aStretchForEntry,
+      aFontVisibilityProvider, aFontName, aWeightForEntry, aStretchForEntry,
       aStyleForEntry);
 }
 

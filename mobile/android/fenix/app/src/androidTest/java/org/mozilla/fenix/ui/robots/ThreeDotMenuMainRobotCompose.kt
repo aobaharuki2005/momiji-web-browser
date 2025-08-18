@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -275,6 +276,13 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
         waitForAppWindowToBeUpdated()
     }
 
+    fun clickLessMenu() {
+        Log.i(TAG, "clickLessMenu: Trying to click the \"Less\" button from the new main menu design.")
+        composeTestRule.lessButton().performClick()
+        Log.i(TAG, "clickLessMenu: Clicked the \"Less\" button from the new main menu design.")
+        waitForAppWindowToBeUpdated()
+    }
+
     fun clickMoreOptionChevron() {
         Log.i(TAG, "clickMoreOptionChevron: Trying to click the \"More option chevron\" button from the new main menu design.")
         composeTestRule.moreChevronButton().performClick()
@@ -286,6 +294,19 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
         Log.i(TAG, "clickLessOptionChevron: Trying to click the \"Less option chevron\" button from the new main menu design.")
         composeTestRule.lessChevronButton().performClick()
         Log.i(TAG, "clickLessOptionChevron: Clicked the \"Less option chevron\" button from the new main menu design.")
+    }
+    fun verifyTheMoreMenuExpansion(composeTestRule: ComposeTestRule, isExpanded: Boolean) {
+        if (isExpanded) {
+            Log.i(TAG, "verifyTheMoreMenuExpansion: Trying to verify that the \"More menu\" list is expanded.")
+            composeTestRule.onNodeWithText("Less", useUnmergedTree = true).assertIsDisplayed()
+            composeTestRule.onNodeWithText("More", useUnmergedTree = true).assertDoesNotExist()
+            Log.i(TAG, "verifyTheMoreMenuExpansion: Verified that the \"More menu\" list is expanded.")
+        } else {
+            Log.i(TAG, "verifyTheMoreMenuExpansion: Trying to verify that the \"More menu\" list is collapsed.")
+            composeTestRule.onNodeWithText("More", useUnmergedTree = true).assertIsDisplayed()
+            composeTestRule.onNodeWithText("Less", useUnmergedTree = true).assertDoesNotExist()
+            Log.i(TAG, "verifyTheMoreMenuExpansion: Verified that the \"More menu\" list is collapsed.")
+        }
     }
 
     fun verifyBookmarkThisPageButton() {

@@ -37,6 +37,8 @@ support-files = [
 
 ["browser_sma_open_awesome_bar.js"]
 
+["browser_sma_open_panel.js"]
+
 ["browser_sma_open_private_browser_window.js"]
 
 ["browser_sma_open_protection_panel.js"]

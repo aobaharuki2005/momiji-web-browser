@@ -271,7 +271,7 @@ class Bootstrapper:
                 cls = GentooBootstrapper
             elif dist_id in ("solus"):
                 cls = SolusBootstrapper
-            elif dist_id in ("arch") or Path("/etc/arch-release").exists():
+            elif dist_id in ("arch", "kaos") or Path("/etc/arch-release").exists():
                 cls = ArchlinuxBootstrapper
             elif dist_id in ("aerynos"):
                 cls = AerynOsBootstrapper

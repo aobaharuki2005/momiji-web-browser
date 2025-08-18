@@ -287,9 +287,7 @@ Maybe<size_t> AntiTrackingUtils::CountSitesAllowStorageAccess(
 // static
 bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
                                                const nsAutoCString& aType,
-                                               bool aIsInPrivateBrowsing,
-                                               uint32_t* aRejectedReason,
-                                               uint32_t aBlockedReason) {
+                                               bool aIsInPrivateBrowsing) {
   RefPtr<PermissionManager> permManager = PermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
     LOG(("Failed to obtain the permission manager"));
@@ -357,9 +355,6 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
     }
 
     if (!found) {
-      if (aRejectedReason) {
-        *aRejectedReason = aBlockedReason;
-      }
       return false;
     }
   } else {
@@ -377,9 +372,6 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
         aPrincipal);
 
     if (result != nsIPermissionManager::ALLOW_ACTION) {
-      if (aRejectedReason) {
-        *aRejectedReason = aBlockedReason;
-      }
       return false;
     }
   }
@@ -552,11 +544,8 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
   nsAutoCString type;
   AntiTrackingUtils::CreateStoragePermissionKey(trackingPrincipal, type);
 
-  uint32_t unusedReason = 0;
-
-  if (AntiTrackingUtils::CheckStoragePermission(targetPrincipal, type,
-                                                NS_UsePrivateBrowsing(aChannel),
-                                                &unusedReason, unusedReason)) {
+  if (AntiTrackingUtils::CheckStoragePermission(
+          targetPrincipal, type, NS_UsePrivateBrowsing(aChannel))) {
     return nsILoadInfo::HasStoragePermission;
   }
 

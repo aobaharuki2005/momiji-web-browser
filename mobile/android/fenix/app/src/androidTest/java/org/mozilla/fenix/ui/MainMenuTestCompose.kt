@@ -1380,4 +1380,21 @@ class MainMenuTestCompose : TestSetup() {
             verifyDesktopSiteButtonState(composeTestRule, isEnabled = false)
         }
     }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080110
+    @SmokeTest
+    @Test
+    fun verifyTheMoreMainMenuSubListTest() {
+        val firstTestPage = TestAssetHelper.getFirstForeignWebPageAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstTestPage.url) {
+        }.openThreeDotMenu(composeTestRule) {
+            openMoreMenu()
+            verifyTheMoreMenuExpansion(composeTestRule, isExpanded = true)
+            verifyMoreMainMenuItems()
+            clickLessMenu()
+            verifyTheMoreMenuExpansion(composeTestRule, isExpanded = false)
+        }
+    }
 }
