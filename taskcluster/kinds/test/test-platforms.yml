@@ -431,6 +431,44 @@ android-em-7.0-x86-qr/opt:
     test-sets:
         - android-x86-tests
 
+# new android 14 emulator- will run in parallel for a few weeks
+android-em-14-x86_64/opt:
+    build-platform: android-x86_64/opt
+    test-sets:
+        - android14-x86_64-tests
+        - web-platform-tests-backlog
+
+android-em-14-x86_64-lite/opt:
+    build-platform: android-x86_64-lite/opt
+    test-sets:
+        - android14-x86_64-tests
+
+android-em-14-x86_64-shippable/opt:
+    build-platform: android-x86_64-shippable/opt
+    test-sets:
+        - android14-x86_64-tests
+        - web-platform-tests-backlog
+
+android-em-14-x86_64-shippable-lite/opt:
+    build-platform: android-x86_64-shippable-lite/opt
+    test-sets:
+        - android14-x86_64-tests
+
+android-em-14-x86_64/debug:
+    build-platform: android-x86_64/debug
+    test-sets:
+        - android14-x86_64-tests
+
+android-em-14-x86_64/debug-isolated-process:
+    build-platform: android-x86_64/debug-isolated-process
+    test-sets:
+        - android14-x86_64-tests
+
+android-em-14-x86/opt:
+    build-platform: android-x86/opt
+    test-sets:
+        - android-x86-tests
+
 # android-hw test platforms execute on real devices attached to Autophone hosts.
 
 # android-hw-p5-13-0 Google Pixel 5 Android 13.0

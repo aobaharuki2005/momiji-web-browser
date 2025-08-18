@@ -203,36 +203,13 @@ def set_treeherder_machine_platform(config, tasks):
         if "android" in task["test-platform"] and "pgo/opt" in task["test-platform"]:
             platform_new = task["test-platform"].replace("-pgo/opt", "/pgo")
             task["treeherder-machine-platform"] = platform_new
-        elif "android-em-7.0-x86_64-qr" in task["test-platform"]:
-            task["treeherder-machine-platform"] = task["test-platform"].replace(
-                ".", "-"
-            )
-        elif "android-em-7.0-x86_64-shippable-qr" in task["test-platform"]:
-            task["treeherder-machine-platform"] = task["test-platform"].replace(
-                ".", "-"
-            )
-        elif "android-em-7.0-x86_64-lite-qr" in task["test-platform"]:
-            task["treeherder-machine-platform"] = task["test-platform"].replace(
-                ".", "-"
-            )
-        elif "android-em-7.0-x86_64-shippable-lite-qr" in task["test-platform"]:
-            task["treeherder-machine-platform"] = task["test-platform"].replace(
-                ".", "-"
-            )
-        elif "android-em-7.0-x86-qr" in task["test-platform"]:
+        elif "android-em-7.0-x86" in task["test-platform"]:
             task["treeherder-machine-platform"] = task["test-platform"].replace(
                 ".", "-"
             )
         elif "android-hw" in task["test-platform"]:
             task["treeherder-machine-platform"] = task["test-platform"]
-        elif "android-em-7.0-x86_64" in task["test-platform"]:
-            task["treeherder-machine-platform"] = task["test-platform"].replace(
-                ".", "-"
-            )
-        elif "android-em-7.0-x86" in task["test-platform"]:
-            task["treeherder-machine-platform"] = task["test-platform"].replace(
-                ".", "-"
-            )
+
         # Bug 1602863 - must separately define linux64/asan and linux1804-64/asan
         # otherwise causes an exception during taskgraph generation about
         # duplicate treeherder platform/symbol.
@@ -783,6 +760,14 @@ def handle_tier(config, tasks):
                 "android-em-7.0-x86_64-shippable-lite-qr/opt",
                 "android-em-7.0-x86_64-lite-qr/debug",
                 "android-em-7.0-x86_64-lite-qr/opt",
+                "android-em-14-x86_64-shippable/opt",
+                "android-em-14-x86_64/opt",
+                "android-em-14-x86_64-shippable-lite/opt",
+                "android-em-14-x86_64-lite/opt",
+                "android-em-14-x86_64/debug",
+                "android-em-14-x86_64/debug-isolated-process",
+                "android-em-14-x86-shippable/opt",
+                "android-em-14-x86/opt",
             ]:
                 task["tier"] = 1
             else:

@@ -8,7 +8,7 @@ task-defaults:
     instance-size: xlarge-noscratch
     max-run-time:
         by-test-platform:
-            android-em-7.0-x86_64/debug: 7200
+            android-em.*/debug: 7200
             default: 5400
     mozharness:
         script: web_platform_tests.py
@@ -18,17 +18,18 @@ task-defaults:
                     - web_platform_tests/prod_config_windows_taskcluster.py
                 macosx.*:
                     - web_platform_tests/prod_config_mac.py
-                android-em.*:
+                android-em-7.*:
                     - android/android-x86_64.py
+                    - web_platform_tests/prod_config_android.py
+                android-em-14.*:
+                    - android/android14-x86_64.py
                     - web_platform_tests/prod_config_android.py
                 default:
                     - web_platform_tests/prod_config.py
                     - remove_executables.py
     target:
         by-test-platform:
-            android-em-7.0-x86_64-shippable(-lite)?(-qr)?/opt: geckoview-test_runner.apk
-            android-em-7.0-x86_64(-lite)?(-qr)?/opt: geckoview-test_runner.apk
-            android-em-7.0-x86_64(-lite)?(-qr)?/debug(-isolated-process)?: geckoview-test_runner.apk
+            android-em.*: geckoview-test_runner.apk
             default: null
 
 web-platform-tests:
@@ -44,7 +45,7 @@ web-platform-tests:
                     default: default
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: 3
+                    android-em.*/debug-isolated-process: 3
                     default: default
     chunks:
         by-variant:
@@ -71,7 +72,6 @@ web-platform-tests:
             linux.*64-asan(-qr)?/opt: 14400
             linux.*64(-qr)?/debug: 10800
             macosx.*/debug: 10800
-            android-em.*/.*: 10800
             default: 7200
     variants:
         - no-fission
@@ -84,12 +84,12 @@ web-platform-tests:
         by-variant:
             geckoview-no-fission-no-ship:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android-em.*: built-projects
                     default: []
             no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android.*: built-projects
                     linux1804-64(-qr)?/debug: ['mozilla-central']
                     linux1804-64(-shippable)?(-qr)?/opt: ['mozilla-central']
@@ -253,7 +253,7 @@ web-platform-tests-reftest:
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     linux1804-64(-qr)?/.*: ['mozilla-central']
                     linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
                     linux1804-64-asan(-qr)?/opt: ['mozilla-central']
@@ -263,7 +263,7 @@ web-platform-tests-reftest:
                     default: []
             no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     linux1804-64(-qr)?/.*: ['mozilla-central']
                     linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
                     linux1804-64-asan(-qr)?/opt: ['mozilla-central']
@@ -285,7 +285,7 @@ web-platform-tests-reftest:
                     default: default
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: 3
+                    android-em.*/debug-isolated-process: 3
                     default: default
     mozharness:
         extra-options:
@@ -446,7 +446,7 @@ web-platform-tests-canvas:
                     default: default
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: 3
+                    android-em.*/debug-isolated-process: 3
                     default: default
     chunks:
         by-test-platform:
@@ -467,7 +467,7 @@ web-platform-tests-canvas:
         by-variant:
             no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android.*: built-projects
                     linux1804-64(-qr)?/.*: ['mozilla-central']
                     linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
@@ -543,7 +543,7 @@ web-platform-tests-wdspec:
     mozharness:
         extra-options:
             by-test-platform:
-                android-em-7.*:
+                android-em.*:
                     - --test-type=wdspec
                     - --setpref=gfx.canvas.accelerated=false
                 default:
@@ -572,7 +572,7 @@ web-platform-tests-wdspec:
                     default: []
             geckoview-no-fission-no-ship:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android-em.*: built-projects
                     default: []
             async-event-dispatching:
@@ -598,6 +598,14 @@ web-platform-tests-wdspec:
                 android-em-7.*:
                     - android-system-image-x86_64-linux
                     - android-avd-x86_64-linux
+                    - android-emulator-linux
+                    - linux64-geckodriver
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                    - linux64-hostutils
+                android-em-14.*:
+                    - android34-system-image-x86_64-linux
+                    - android34-avd-x86_64-linux
                     - android-emulator-linux
                     - linux64-geckodriver
                     - linux64-minidump-stackwalk
@@ -648,7 +656,7 @@ web-platform-tests-crashtest:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     .*-32.*: []
                     linux.*64(-qr)?/debug: built-projects
                     macosx1015.*-64(-qr)?/debug: built-projects
@@ -657,7 +665,7 @@ web-platform-tests-crashtest:
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     linux1804-64(-qr)?/.*: ['mozilla-central']
                     linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
                     linux1804-64-asan(-qr)?/opt: ['mozilla-central']
@@ -667,7 +675,7 @@ web-platform-tests-crashtest:
                     default: []
             no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     linux1804-64(-qr)?/.*: ['mozilla-central']
                     linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
                     linux1804-64-asan(-qr)?/opt: ['mozilla-central']
@@ -678,7 +686,7 @@ web-platform-tests-crashtest:
                     default: []
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     android.*: []
                     default: built-projects
     tier:
@@ -725,7 +733,7 @@ web-platform-tests-print-reftest:
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     linux1804-64(-qr)?/.*: ['mozilla-central']
                     linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
                     linux1804-64-asan(-qr)?/opt: ['mozilla-central']
@@ -824,11 +832,11 @@ test-coverage-wpt:
         by-variant:
             webrender-sw+no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     default: []
             no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     default: []
             default:
                 by-test-platform:

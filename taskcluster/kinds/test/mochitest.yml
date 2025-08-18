@@ -7,7 +7,7 @@ task-defaults:
         category: mochitest
     target:
         by-test-platform:
-            android-em-7.*: geckoview-test_runner.apk
+            android-em.*: geckoview-test_runner.apk
             android-hw.*: geckoview-test_runner.apk
             windows11-64.*:
                 by-variant:
@@ -22,7 +22,7 @@ task-defaults:
                     default: 2
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: 3
+                    android-em.*/debug-isolated-process: 3
                     default: default
     mozharness:
         script:
@@ -35,6 +35,9 @@ task-defaults:
                 android-em-7.*:
                     - android/android_common.py
                     - android/android-x86_64.py
+                android-em-14.*:
+                    - android/android_common.py
+                    - android/android14-x86_64.py
                 android-hw.*:
                     - android/android_common.py
                     - android/android_hw.py
@@ -84,7 +87,7 @@ mochitest-plain:
                     macosx.*64(-shippable)?(-qr)?/.*: ['trunk']
                     windows11-64-24h2(-shippable)?(-qr)?/.*: ['trunk']
                     linux.*64-ccov(-qr)?/opt: ['mozilla-central']
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android-em.*: ['trunk']
                     default: []
             socketprocess_networking:
@@ -97,7 +100,7 @@ mochitest-plain:
                     default: []
             aab+no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     default: []
             headless:
                 by-test-platform:
@@ -107,7 +110,7 @@ mochitest-plain:
                     default: []
             no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android.*: built-projects
                     linux1804-64(-qr)?/debug: ['mozilla-central']
                     linux1804-64-asan(-qr)?/opt: ['mozilla-central']
@@ -128,18 +131,18 @@ mochitest-plain:
                     default: []
             geckoview-fission-isolate-high-value:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android-em.*: built-projects
                     default: []
             geckoview-no-fission-no-ship:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android-em.*: built-projects
                     default: []
             inc-origin-init: []
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android.*: built-projects
                     default: built-projects
     chunks:
@@ -210,6 +213,13 @@ mochitest-plain:
                     - linux64-node
                     - linux64-minidump-stackwalk
                     - linux64-hostutils
+                android-em-14.*:
+                    - android34-system-image-x86_64-linux
+                    - android34-avd-x86_64-linux
+                    - android-emulator-linux
+                    - linux64-node
+                    - linux64-minidump-stackwalk
+                    - linux64-hostutils
     worker-type:
         by-test-platform:
             .*-wayland.*: t-linux-wayland-vm
@@ -234,7 +244,7 @@ mochitest-a11y:
                     default: []
             webrender-sw+1proc:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     linux.*64(-qr)?/debug: built-projects
                     default: []
             1proc: built-projects
@@ -520,7 +530,7 @@ mochitest-chrome:
                     default: []
             webrender-sw+1proc:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     linux.*64(-qr)?/debug: built-projects
                     default: []
             1proc:
@@ -636,6 +646,13 @@ mochitest-devtools-chrome:
                     - linux64-node
                     - linux64-minidump-stackwalk
                     - linux64-hostutils
+                android-em-14.*:
+                    - android34-system-image-x86_64-linux
+                    - android34-avd-x86_64-linux
+                    - android-emulator-linux
+                    - linux64-node
+                    - linux64-minidump-stackwalk
+                    - linux64-hostutils
 
 
 mochitest-devtools-chrome-failures:
@@ -687,7 +704,7 @@ mochitest-plain-gpu:
         by-variant:
             webrender-sw+no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     linux.*-asan.*: ['mozilla-central']
                     linux.*64(-shippable)?(-qr)?/debug: ['mozilla-central']
                     linux.*64(-shippable)?(-qr)?/opt: ['mozilla-central']
@@ -698,7 +715,7 @@ mochitest-plain-gpu:
                     default: []
             no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     linux.*64-ccov(-qr)?/opt: []
                     linux1804-32.*: []
                     linux2404-32.*: []
@@ -709,7 +726,7 @@ mochitest-plain-gpu:
                     default: []
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     default: built-projects
     virtualization: virtual-with-gpu
     tier:
@@ -720,7 +737,7 @@ mochitest-plain-gpu:
                     default: default
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: 3
+                    android-em.*/debug-isolated-process: 3
                     default: default
     mozharness:
         mochitest-flavor: plain
@@ -753,7 +770,7 @@ mochitest-chrome-gpu:
             socketprocess_networking+1proc: []
             webrender-sw+1proc:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: built-projects
+                    android-em.*/debug: built-projects
                     linux.*64(-qr)?/debug: built-projects
                     default: []
             1proc:
@@ -799,7 +816,7 @@ mochitest-media:
             socketprocess+no-fission:
                 by-test-platform:
                     .*hw-ref.*: []
-                    android-em-7.0-x86_64(-qr)?/debug: ['autoland', 'mozilla-central']
+                    android-em.*/debug: ['autoland', 'mozilla-central']
                     android-hw-.*-aarch64(-qr)?/debug: built-projects
                     linux1804-64(-qr)?/debug: ['mozilla-central']
                     linux1804-64(-shippable)?(-qr)?/opt: ['mozilla-central']
@@ -825,7 +842,7 @@ mochitest-media:
             webrender-sw+no-fission:
                 by-test-platform:
                     .*hw-ref.*: []
-                    android-em-7.0-x86_64(-qr)?/debug: ['autoland', 'mozilla-central']
+                    android-em.*/debug: ['autoland', 'mozilla-central']
                     linux1804-64(-qr)?/.*: ['mozilla-central']
                     linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
                     linux1804-64-asan(-qr)?/opt: ['mozilla-central']
@@ -845,7 +862,7 @@ mochitest-media:
                     android-hw-.*/opt: []
                     .*hw-ref.*: []
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android.*: built-projects
                     linux1804-64(-qr)?/.*: ['mozilla-central']
                     linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
@@ -877,7 +894,7 @@ mochitest-media:
                 by-test-platform:
                     .*hw-ref.*: []
                     android-hw.*/opt: []
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: []
                     android.*: built-projects
                     linux.*-asan/opt: []
                     linux.*-ccov/opt: []
@@ -911,7 +928,7 @@ mochitest-media:
                 default: true
         extra-options:
             by-test-platform:
-                android-em-7.*:
+                android-em.*:
                     - --setpref=gfx.canvas.accelerated=false
                 default: []
     tier:
@@ -931,8 +948,8 @@ mochitest-media:
             default:
                 by-test-platform:
                     .*-ccov.*: 2
+                    android-em.*/debug-isolated-process: 3
                     android-em.*: 1
-                    android-em-7.0-x86_64(-qr)?/debug-isolated-process: 3
                     android-hw.*: 1
                     default: default
     worker-type:
@@ -1171,7 +1188,7 @@ mochitest-webgpu:
         by-variant:
             webrender-sw+no-fission:
                 by-test-platform:
-                    android-em-7.0-x86_64(-qr)?/debug: ["trunk"]
+                    android-em.*/debug: ["trunk"]
                     default: []
             no-fission:
                 by-test-platform:
