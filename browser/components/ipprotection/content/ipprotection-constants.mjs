@@ -20,3 +20,18 @@ export const FLAGS = Object.freeze({
 export const ERRORS = Object.freeze({
   GENERIC: "generic-error",
 });
+
+export const SIGNIN_DATA = Object.freeze({
+  where: "tab",
+  entrypoint: "desktop-fx-vpn",
+  autoClose: false,
+  extraParams: {
+    service: "sync",
+    entrypoint_experiment: "fx-vpn-pilot",
+    entrypoint_variation: "alpha",
+    utm_source: "callout",
+    utm_campaign: "fx-vpn-pilot",
+    utm_medium: "firefox-desktop",
+    utm_term: "fx-vpn-pilot-panel-button",
+  },
+});
