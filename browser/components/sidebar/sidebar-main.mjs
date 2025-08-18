@@ -44,7 +44,6 @@ export default class SidebarMain extends MozLitElement {
     customizeButton: ".bottom-actions > moz-button[view=viewCustomizeSidebar]",
     buttonGroup: ".actions-list:not(.bottom-actions):not(.overflow-button)",
     moreToolsButton: ".more-tools-button",
-    buttonsWrapper: ".buttons-wrapper",
   };
 
   get fluentStrings() {
@@ -795,71 +794,66 @@ export default class SidebarMain extends MozLitElement {
             window.SidebarController.sidebarVerticalTabsEnabled,
           () => html`${this.toolsSplitter}`
         )}
-        <div
-          class="buttons-wrapper"
-          ?overflowing=${this.shouldShowOverflowButton}
+        <button-group
+          class="tools-and-extensions actions-list"
+          orientation=${this.isToolsOverflowing() ? "horizontal" : "vertical"}
+          overflowing=${ifDefined(this.shouldShowOverflowButton)}
         >
-          <button-group
-            class="tools-and-extensions actions-list"
-            orientation=${this.isToolsOverflowing() ? "horizontal" : "vertical"}
-            overflowing=${ifDefined(this.shouldShowOverflowButton)}
-          >
-            ${when(!this.isToolsOverflowing(), () =>
-              repeat(
-                this.getToolsAndExtensions().values(),
-                action => action.view,
-                action => this.entrypointTemplate(action)
-              )
-            )}
-            ${when(window.SidebarController.sidebarVerticalTabsEnabled, () =>
-              repeat(
+          ${when(!this.isToolsOverflowing(), () =>
+            repeat(
+              this.getToolsAndExtensions().values(),
+              action => action.view,
+              action => this.entrypointTemplate(action)
+            )
+          )}
+          ${when(window.SidebarController.sidebarVerticalTabsEnabled, () =>
+            repeat(
+              this.bottomActions,
+              action => action.view,
+              action => this.entrypointTemplate(action)
+            )
+          )}
+          ${when(this.isToolsOverflowing(), () =>
+            repeat(
+              this.getToolsAndExtensions().values(),
+              action => action.view,
+              action => this.entrypointTemplate(action)
+            )
+          )}
+        </button-group>
+        ${when(
+          !window.SidebarController.sidebarVerticalTabsEnabled,
+          () =>
+            html` <div class="bottom-actions actions-list">
+              ${repeat(
                 this.bottomActions,
                 action => action.view,
                 action => this.entrypointTemplate(action)
-              )
-            )}
-            ${when(this.isToolsOverflowing(), () =>
-              repeat(
-                this.getToolsAndExtensions().values(),
-                action => action.view,
-                action => this.entrypointTemplate(action)
-              )
-            )}
-          </button-group>
-          ${when(
-            !window.SidebarController.sidebarVerticalTabsEnabled,
-            () =>
-              html` <div class="bottom-actions actions-list">
-                ${repeat(
-                  this.bottomActions,
-                  action => action.view,
-                  action => this.entrypointTemplate(action)
-                )}
-              </div>`
-          )}
-          ${when(
-            this.shouldShowOverflowButton,
-            () =>
-              html` <button-group
-                class="tools-and-extensions actions-list overflow-button"
-                orientation="vertical"
-                part="overflow-button"
+              )}
+            </div>`
+        )}
+        ${when(
+          this.shouldShowOverflowButton,
+          () =>
+            html` <button-group
+              class="tools-and-extensions actions-list overflow-button"
+              orientation="vertical"
+              part="overflow-button"
+            >
+              <moz-button
+                class="more-tools-button"
+                type=${this.isOverflowMenuOpen ? "icon" : "icon ghost"}
+                aria-pressed=${this.isOverflowMenuOpen}
+                @click=${window.SidebarController.sidebarRevampVisibility ===
+                "expand-on-hover"
+                  ? nothing
+                  : this.showOverflowMenu}
+                title=${moreToolsTooltip}
+                .iconSrc=${"chrome://global/skin/icons/chevron.svg"}
               >
-                <moz-button
-                  class="more-tools-button"
-                  type=${this.isOverflowMenuOpen ? "icon" : "icon ghost"}
-                  aria-pressed=${this.isOverflowMenuOpen}
-                  @click=${window.SidebarController.sidebarRevampVisibility ===
-                  "expand-on-hover"
-                    ? nothing
-                    : this.showOverflowMenu}
-                  title=${moreToolsTooltip}
-                  .iconSrc=${"chrome://global/skin/icons/chevron.svg"}
-                >
-                </moz-button>
-              </button-group>`
-          )}
-        </div>
+              </moz-button>
+            </button-group>`
+        )}
       </div>
     `;
   }
