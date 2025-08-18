@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -128,7 +129,7 @@ private fun LoginsList(store: LoginsStore) {
     ) { paddingValues ->
 
         if (state.searchText.isNullOrEmpty() && state.loginItems.isEmpty()) {
-            EmptyList(dispatcher = store::dispatch)
+            EmptyList(dispatcher = store::dispatch, paddingValues = paddingValues)
             return@Scaffold
         }
 
@@ -181,10 +182,12 @@ private fun AddPasswordItem(
 @Suppress("MaxLineLength")
 private fun EmptyList(
     dispatcher: (LoginsAction) -> Unit,
+    paddingValues: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
+            .padding(paddingValues)
             .fillMaxSize(),
         contentAlignment = Alignment.TopStart,
     ) {
