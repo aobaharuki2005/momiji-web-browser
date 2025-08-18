@@ -9,6 +9,7 @@
 #include "ScrollAnimationBezierPhysics.h"
 #include "ScrollAnimationMSDPhysics.h"
 #include "ScrollPositionUpdate.h"
+#include "Units.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "nsLayoutUtils.h"
 
@@ -25,6 +26,16 @@ already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::Create(
       new SmoothScrollAnimation(ScrollAnimationKind::Smooth, aApzc, aOrigin);
   return result.forget();
 }
+/*static*/
+already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::CreateMsd(
+    AsyncPanZoomController& aApzc) {
+  // Note: the ScrollOrigin is not used for SmoothMsd animations, hence it's
+  // fine to use NotSpecified.
+  RefPtr<SmoothScrollAnimation> result = new SmoothScrollAnimation(
+      ScrollAnimationKind::SmoothMsd, aApzc, ScrollOrigin::NotSpecified);
+  return result.forget();
+}
+
 /*static*/
 already_AddRefed<SmoothScrollAnimation>
 SmoothScrollAnimation::CreateForKeyboard(AsyncPanZoomController& aApzc,
@@ -74,10 +85,21 @@ SmoothScrollAnimation::SmoothScrollAnimation(ScrollAnimationKind aKind,
   // ScrollAnimationBezierPhysics (despite its name) handles the case of
   // general.smoothScroll being disabled whereas ScrollAnimationMSDPhysics does
   // not (ie it scrolls smoothly).
-  if (nsLayoutUtils::IsSmoothScrollingEnabled() &&
-      StaticPrefs::general_smoothScroll_msdPhysics_enabled()) {
-    mAnimationPhysics =
-        MakeUnique<ScrollAnimationMSDPhysics>(mFinalDestination);
+  if (mKind == ScrollAnimationKind::SmoothMsd ||
+      (nsLayoutUtils::IsSmoothScrollingEnabled() &&
+       StaticPrefs::general_smoothScroll_msdPhysics_enabled())) {
+    nscoord smallestVisibleIncrement = 1;
+    if (mKind == ScrollAnimationKind::SmoothMsd &&
+        mApzc.GetFrameMetrics().GetZoom() != CSSToParentLayerScale(0)) {
+      // SmoothMsdScrollAnimation used 1 ParentLayer pixel as the "smallest
+      // visible increment". Note that we are passing quantities (such as the
+      // destination) to ScrollAnimationMSDPhysics in app units, so the
+      // increment needs to be converted to app units as well.
+      smallestVisibleIncrement = CSSPixel::ToAppUnits(
+          ParentLayerCoord(1) / mApzc.GetFrameMetrics().GetZoom());
+    }
+    mAnimationPhysics = MakeUnique<ScrollAnimationMSDPhysics>(
+        mKind, mFinalDestination, smallestVisibleIncrement);
   } else {
     mAnimationPhysics = MakeUnique<ScrollAnimationBezierPhysics>(
         mFinalDestination,
@@ -191,9 +213,18 @@ bool SmoothScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
       ToString(adjustedOffset).c_str(), ToString(overscroll).c_str());
   if (!IsZero(displacement / zoom) && IsZero(adjustedOffset / zoom)) {
     // Nothing more to do - end the animation.
-    return false;
+    finished = true;
+  } else {
+    mApzc.ScrollBy(adjustedOffset / zoom);
   }
-  mApzc.ScrollBy(adjustedOffset / zoom);
+  if (finished && mKind == ScrollAnimationKind::SmoothMsd) {
+    // Set the scroll offset to the exact destination. If we allow the scroll
+    // offset to end up being a bit off from the destination, we can get
+    // artefacts like "scroll to the next snap point in this direction"
+    // scrolling to the snap point we're already supposed to be at.
+    mApzc.ClampAndSetVisualScrollOffset(
+        CSSPoint::FromAppUnits(mFinalDestination));
+  }
   return !finished;
 }
 

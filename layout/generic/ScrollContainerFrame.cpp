@@ -2183,8 +2183,9 @@ void ScrollContainerFrame::AsyncScroll::InitSmoothScroll(
   if (!mAnimationPhysics || aOrigin != mOrigin) {
     mOrigin = aOrigin;
     if (StaticPrefs::general_smoothScroll_msdPhysics_enabled()) {
-      mAnimationPhysics =
-          MakeUnique<ScrollAnimationMSDPhysics>(aInitialPosition);
+      mAnimationPhysics = MakeUnique<ScrollAnimationMSDPhysics>(
+          apz::ScrollAnimationKind::Smooth, aInitialPosition,
+          /*smallestVisibleIncrement=*/1.0);
     } else {
       ScrollAnimationBezierPhysicsSettings settings =
           layers::apz::ComputeBezierAnimationSettingsForOrigin(mOrigin);

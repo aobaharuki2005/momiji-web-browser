@@ -70,9 +70,6 @@ class AsyncPanZoomAnimation {
     return std::move(mDeferredTasks);
   }
 
-  virtual SmoothMsdScrollAnimation* AsSmoothMsdScrollAnimation() {
-    return nullptr;
-  }
   virtual SmoothScrollAnimation* AsSmoothScrollAnimation() { return nullptr; }
   virtual OverscrollAnimation* AsOverscrollAnimation() { return nullptr; }
 

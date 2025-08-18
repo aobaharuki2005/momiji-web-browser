@@ -12,6 +12,7 @@
 #include "ScrollPositionUpdate.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ScrollOrigin.h"
+#include "mozilla/layers/APZPublicUtils.h"
 #include "mozilla/layers/KeyboardScrollAction.h"
 
 namespace mozilla {
@@ -22,22 +23,16 @@ namespace layers {
 
 class AsyncPanZoomController;
 
-enum class ScrollAnimationKind : uint8_t {
-  // Scroll animation in response to programmatic scrolling performed
-  // by the page or otherwise triggered by the main thread (e.g. for
-  // scroll-to-anchor, or certain scrollbar interactions)
-  Smooth,
-  // Scroll animation in response to user keyboard input
-  Keyboard,
-  // Scroll animation in response to user wheel input
-  Wheel
-};
-
-class SmoothScrollAnimation final : public AsyncPanZoomAnimation {
+class SmoothScrollAnimation : public AsyncPanZoomAnimation {
  public:
+  using ScrollAnimationKind = apz::ScrollAnimationKind;
+
   // Create a SmoothScrollAnimation of kind Smooth.
   static already_AddRefed<SmoothScrollAnimation> Create(
       AsyncPanZoomController& aApzc, ScrollOrigin aOrigin);
+  // Create a SmoothScrollAnimation of kind SmoothMsd.
+  static already_AddRefed<SmoothScrollAnimation> CreateMsd(
+      AsyncPanZoomController& aApzc);
   // Create a SmoothScrollAnimation of kind Keyboard.
   static already_AddRefed<SmoothScrollAnimation> CreateForKeyboard(
       AsyncPanZoomController& aApzc, ScrollOrigin aOrigin);
@@ -93,7 +88,7 @@ class SmoothScrollAnimation final : public AsyncPanZoomAnimation {
   Maybe<ScrollDirection> mDirectionForcedToOverscroll;
   ScrollOrigin mOrigin;
 
-  // These fields are only used for animations of kind Smooth.
+  // These fields are only used for animations of kind Smooth and SmoothMsd.
   ScrollSnapTargetIds mSnapTargetIds;
   ScrollTriggeredByScript mTriggeredByScript;
 };
