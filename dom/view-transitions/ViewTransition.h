@@ -107,6 +107,8 @@ class ViewTransition final : public nsISupports, public nsWrapperCache {
   Maybe<nsSize> GetNewBorderBoxSize(nsAtom* aName) const;
   Maybe<nsPoint> GetOldInkOverflowOffset(nsAtom* aName) const;
   Maybe<nsPoint> GetNewInkOverflowOffset(nsAtom* aName) const;
+  Maybe<nsRect> GetOldActiveRect(nsAtom* aName) const;
+  Maybe<nsRect> GetNewActiveRect(nsAtom* aName) const;
   // Use this to generate the old state image key for use in a stacking context.
   // Do not use the returned image key in an image display item, use
   // ReadOldImageKey instead.
@@ -124,6 +126,11 @@ class ViewTransition final : public nsISupports, public nsWrapperCache {
   const wr::ImageKey* GetImageKeyForCapturedFrame(
       nsIFrame* aFrame, layers::RenderRootStateManager*,
       wr::IpcResourceUpdateQueue&) const;
+  void UpdateActiveRectForCapturedFrame(
+      nsIFrame* capturedFrame,
+      const gfx::MatrixScales& aInheritedScale,
+      nsRect& aOutCapturedRect
+  );
 
   Element* FindPseudo(const PseudoStyleRequest&) const;
 
