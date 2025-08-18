@@ -617,13 +617,9 @@ main section {
   padding: 0 var(--space-xlarge);
   font-size: var(--font-size-small);
   color: var(--newtab-contextual-text-primary-color);
-}
-@media (min-width: 866px) {
-  .no-search .no-sections .wallpaper-attribution, .only-search .wallpaper-attribution, .only-topsites .wallpaper-attribution {
-    position: absolute;
-    inset-block-end: var(--space-large);
-    inset-inline-start: 0;
-  }
+  position: absolute;
+  inset-block-end: var(--space-large);
+  inset-inline-start: 0;
 }
 .lightWallpaper .wallpaper-attribution {
   color-scheme: light;
