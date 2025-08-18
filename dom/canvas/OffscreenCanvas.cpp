@@ -284,7 +284,7 @@ OffscreenCanvas::CreateContext(CanvasContextType aContextType) {
   return ret.forget();
 }
 
-Maybe<uint64_t> OffscreenCanvas::GetWindowID() {
+Maybe<uint64_t> OffscreenCanvas::GetWindowID() const {
   if (NS_IsMainThread()) {
     if (nsIGlobalObject* global = GetOwnerGlobal()) {
       if (auto* window = global->GetAsInnerWindow()) {
@@ -625,20 +625,53 @@ FontVisibility OffscreenCanvas::GetFontVisibility() const {
 }
 
 void OffscreenCanvas::ReportBlockedFontFamily(const nsCString& aMsg) const {
-  nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(aMsg),
+  if (Maybe<uint64_t> windowID = GetWindowID()) {
+    nsContentUtils::ReportToConsoleByWindowID(NS_ConvertUTF8toUTF16(aMsg),
                                               nsIScriptError::warningFlag,
-                                              "Security"_ns, GetDocument());
+                                              "Security"_ns, *windowID);
+    return;
+  }
 }
 
-dom::Document* OffscreenCanvas::GetDocument() const {
-  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal());
-  return win ? win->GetExtantDoc() : nullptr;
+bool OffscreenCanvas::IsChrome() const {
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal());
+    NS_ENSURE_TRUE(win, false);
+
+    nsCOMPtr<Document> doc = win->GetExtantDoc();
+    NS_ENSURE_TRUE(doc, false);
+
+    return doc->ChromeRulesEnabled();
+  }
+
+  dom::WorkerPrivate* worker = dom::GetCurrentThreadWorkerPrivate();
+  NS_ENSURE_TRUE(worker, false);
+
+  return worker->IsChromeWorker();
+}
+
+bool OffscreenCanvas::IsPrivateBrowsing() const {
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal());
+    NS_ENSURE_TRUE(win, false);
+
+    nsCOMPtr<Document> doc = win->GetExtantDoc();
+    NS_ENSURE_TRUE(doc, false);
+
+    return doc->IsInPrivateBrowsing();
+  }
+
+  dom::WorkerPrivate* worker = dom::GetCurrentThreadWorkerPrivate();
+  NS_ENSURE_TRUE(worker, false);
+
+  return worker->IsPrivateBrowsing();
 }
 
 nsICookieJarSettings* OffscreenCanvas::GetCookieJarSettings() const {
-  dom::Document* doc = GetDocument();
-  if (doc) {
-    return doc->CookieJarSettings();
+  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal())) {
+    if (nsCOMPtr<Document> doc = win->GetExtantDoc()) {
+      return doc->CookieJarSettings();
+    }
   }
 
   if (dom::WorkerPrivate* worker = dom::GetCurrentThreadWorkerPrivate()) {
@@ -649,13 +682,23 @@ nsICookieJarSettings* OffscreenCanvas::GetCookieJarSettings() const {
 }
 
 Maybe<FontVisibility> OffscreenCanvas::MaybeInheritFontVisibility() const {
-  dom::Document* doc = GetDocument();
-  NS_ENSURE_TRUE(doc, Nothing());
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal());
+    NS_ENSURE_TRUE(win, Nothing());
 
-  nsPresContext* presContext = doc->GetPresContext();
-  NS_ENSURE_TRUE(presContext, Nothing());
+    nsCOMPtr<Document> doc = win->GetExtantDoc();
+    NS_ENSURE_TRUE(doc, Nothing());
 
-  return Some(presContext->GetFontVisibility());
+    nsPresContext* presContext = doc->GetPresContext();
+    NS_ENSURE_TRUE(presContext, Nothing());
+
+    return Some(presContext->GetFontVisibility());
+  }
+
+  dom::WorkerPrivate* worker = dom::GetCurrentThreadWorkerPrivate();
+  NS_ENSURE_TRUE(worker, Nothing());
+
+  return Some(worker->GetFontVisibility());
 }
 
 void OffscreenCanvas::UserFontSetUpdated(gfxUserFontEntry*) {}

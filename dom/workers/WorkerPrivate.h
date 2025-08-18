@@ -9,6 +9,7 @@
 
 #include <bitset>
 
+#include "FontVisibilityProvider.h"
 #include "MainThreadUtils.h"
 #include "ScriptLoader.h"
 #include "js/ContextOptions.h"
@@ -147,7 +148,8 @@ nsString ComputeWorkerPrivateId();
 
 class WorkerPrivate final
     : public RelativeTimeline,
-      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>>,
+      public FontVisibilityProvider {
  public:
   // Callback invoked on the parent thread when the worker's cancellation is
   // about to be requested.  This covers both calls to
@@ -234,6 +236,8 @@ class WorkerPrivate final
   };
 
   NS_INLINE_DECL_REFCOUNTING(WorkerPrivate)
+
+  FONT_VISIBILITY_PROVIDER_IMPL
 
   static already_AddRefed<WorkerPrivate> Constructor(
       JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1020,8 +1024,6 @@ class WorkerPrivate final
 
   bool IsWatchedByDevTools() const { return mLoadInfo.mWatchedByDevTools; }
 
-  bool ShouldResistFingerprinting(RFPTarget aTarget) const;
-
   const Maybe<RFPTargetSet>& GetOverriddenFingerprintingSettings() const {
     return mLoadInfo.mOverriddenFingerprintingSettings;
   }
@@ -1714,6 +1716,8 @@ class WorkerPrivate final
   bool hasNotifiedStorageKeyUsed{false};
 
   RefPtr<WorkerParentRef> mParentRef;
+
+  FontVisibility mFontVisibility;
 };
 
 class AutoSyncLoopHolder {

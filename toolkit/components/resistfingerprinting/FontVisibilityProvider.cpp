@@ -67,19 +67,14 @@ FontVisibility FontVisibilityProvider::ComputeFontVisibility() const {
     return *maybeVis;
   }
 
-  dom::Document* doc = GetDocument();
   // Rule 2: Allow all font access for privileged contexts, including
   // chrome and devtools contexts.
-  if (doc && doc->ChromeRulesEnabled()) {
+  if (IsChrome()) {
     return FontVisibility::User;
   }
 
   // Is this a private browsing context?
-  bool isPrivate = false;
-  if (nsCOMPtr<nsILoadContext> loadContext =
-          doc ? doc->GetLoadContext() : nullptr) {
-    isPrivate = loadContext->UsePrivateBrowsing();
-  }
+  bool isPrivate = IsPrivateBrowsing();
 
   int32_t level;
   // Rule 4

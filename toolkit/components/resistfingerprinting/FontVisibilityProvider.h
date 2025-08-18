@@ -38,7 +38,8 @@ class FontVisibilityProvider {
   virtual FontVisibility GetFontVisibility() const = 0;
   virtual bool ShouldResistFingerprinting(mozilla::RFPTarget aTarget) const = 0;
   virtual void ReportBlockedFontFamily(const nsCString& aMsg) const = 0;
-  virtual mozilla::dom::Document* GetDocument() const = 0;
+  virtual bool IsChrome() const = 0;
+  virtual bool IsPrivateBrowsing() const = 0;
   virtual nsICookieJarSettings* GetCookieJarSettings() const = 0;
   virtual mozilla::Maybe<FontVisibility> MaybeInheritFontVisibility() const = 0;
   virtual void UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont = nullptr) = 0;
@@ -49,12 +50,12 @@ class FontVisibilityProvider {
                                       FontVisibility aVisibility) const;
   FontVisibility ComputeFontVisibility() const;
 
-
 #define FONT_VISIBILITY_PROVIDER_IMPL                                         \
   FontVisibility GetFontVisibility() const override;                          \
   bool ShouldResistFingerprinting(mozilla::RFPTarget aTarget) const override; \
   void ReportBlockedFontFamily(const nsCString& aMsg) const override;         \
-  mozilla::dom::Document* GetDocument() const override;                       \
+  bool IsChrome() const override;                                             \
+  bool IsPrivateBrowsing() const override;                                    \
   nsICookieJarSettings* GetCookieJarSettings() const override;                \
   mozilla::Maybe<FontVisibility> MaybeInheritFontVisibility() const override; \
   void UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont = nullptr) override; \

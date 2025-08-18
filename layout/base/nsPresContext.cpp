@@ -3089,19 +3089,21 @@ FontVisibility nsPresContext::GetFontVisibility() const {
 }
 
 bool nsPresContext::ShouldResistFingerprinting(RFPTarget aTarget) const {
-  return GetDocument()->ShouldResistFingerprinting(aTarget);
+  return Document()->ShouldResistFingerprinting(aTarget);
 }
 
 void nsPresContext::ReportBlockedFontFamily(const nsCString& aMsg) const {
   nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(aMsg),
                                               nsIScriptError::warningFlag,
-                                              "Security"_ns, GetDocument());
+                                              "Security"_ns, Document());
 }
 
-dom::Document* nsPresContext::GetDocument() const { return Document(); }
+bool nsPresContext::IsPrivateBrowsing() const {
+  return Document()->IsInPrivateBrowsing();
+}
 
 nsICookieJarSettings* nsPresContext::GetCookieJarSettings() const {
-  return GetDocument()->CookieJarSettings();
+  return Document()->CookieJarSettings();
 }
 
 Maybe<FontVisibility> nsPresContext::MaybeInheritFontVisibility() const {
