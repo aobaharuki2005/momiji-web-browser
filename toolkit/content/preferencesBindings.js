@@ -22,6 +22,9 @@ const Preferences = (window.Preferences = (function () {
   const lazy = {};
   ChromeUtils.defineESModuleGetters(lazy, {
     DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+    ExtensionSettingsStore:
+      "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
+    AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   });
 
   function getElementsByAttribute(name, value) {
@@ -710,6 +713,27 @@ const Preferences = (window.Preferences = (function () {
      */
     _deps;
 
+    async _checkForControllingExtension() {
+      await lazy.ExtensionSettingsStore.initialize();
+      let info = lazy.ExtensionSettingsStore.getSetting(
+        "prefs",
+        this.config.controllingExtensionInfo.storeId
+      );
+      if (info && info.id) {
+        let addon = await lazy.AddonManager.getAddonByID(info.id);
+        if (addon) {
+          this.controllingExtensionInfo.name = addon.name;
+          this.controllingExtensionInfo.id = info.id;
+          this.emit("change");
+          return;
+        }
+      }
+      this._clearControllingExtensionInfo();
+    }
+    _clearControllingExtensionInfo() {
+      delete this.controllingExtensionInfo.id;
+      delete this.controllingExtensionInfo.name;
+    }
     constructor(id, config) {
       super();
       this.id = id;
@@ -720,14 +744,19 @@ const Preferences = (window.Preferences = (function () {
         setting.on("change", this.onChange);
       }
 
+      this.controllingExtensionInfo = {
+        ...this.config.controllingExtensionInfo,
+      };
       if (this.pref) {
         this.pref.on("change", this.onChange);
+      }
+      if (this.config.controllingExtensionInfo.storeId) {
+        this._checkForControllingExtension();
       }
       if (typeof this.config.setup === "function") {
         this._teardown = this.config.setup(this.onChange);
       }
     }
-
     onChange = () => {
       this.emit("change");
     };
