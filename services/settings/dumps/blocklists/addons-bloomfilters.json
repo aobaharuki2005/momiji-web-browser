@@ -2,6 +2,525 @@
   "data": [
     {
       "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "synth-hacker-colorizer@local:1.0",
+          "{d0e5902a-0c74-4f73-bc78-a1a74ebe6d7a}:1.0",
+          "code@snippet.downloader:0.0.0.3",
+          "code@snippet.downloader:0.0.0.4",
+          "code@snippet.downloader:0.0.0.2",
+          "{83830ac4-d1fa-4f36-8720-2729563fcb65}:1.0",
+          "{aa54c941-23a1-46f9-9c8b-7683f5f30af2}:1.0",
+          "{33699010-c770-4558-b5ad-996f11dd8e92}:1.0",
+          "serpclix_aug2025_custom@yourname.dev:3.5.4"
+        ]
+      },
+      "schema": 1755483344021,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755498905896,
+      "id": "4e3aa30f-d37a-4d35-80a0-e4c43b5d5035",
+      "last_modified": 1755498991684
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "megapeer911@gmail.com:1.6",
+          "{a3fa859f-410b-4186-a6c4-f9d140c2afc2}:1.0",
+          "{a3fa859f-410b-4186-a6c4-f9d140c2afc2}:2.0",
+          "kick-auto-resume-extension@fraggy.dev:0.16",
+          "kick-auto-resume-extension@fraggy.dev:0.17",
+          "{f6c47cf8-bbad-49e8-ba26-20318db4f165}:1.0",
+          "{f6c47cf8-bbad-49e8-ba26-20318db4f165}:2.0",
+          "flirty---dating-openers-1755468451687@converted.extension:2.5.1",
+          "flirty---dating-openers-1755469514551@converted.extension:2.5.1",
+          "{38bb1703-7513-4eed-b527-9a14c346e89b}:111.0",
+          "{d2ba5d38-1b0a-4669-85a9-55dbc003080f}:1.0",
+          "{d2ba5d38-1b0a-4669-85a9-55dbc003080f}:2.0"
+        ]
+      },
+      "schema": 1755455791109,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755477305855,
+      "id": "c2d1b4e8-2561-4b56-be8d-32bdb084133d",
+      "last_modified": 1755477391259
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "windowsmoverplasma@berrylium:1.0",
+          "windowsmoverplasma@berrylium:1.1",
+          "windowsmoverplasma@berrylium:2.0",
+          "windowsmoverplasma@berrylium:2.0.2",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.5.3",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.5.2",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.5.1",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.5",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.4.8",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.4.7",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.4.6",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.4.5",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.4.4",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.4.3",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.4.2",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.4.1",
+          "{ab1c5010-af39-4842-b727-42367f8c34b3}:1.4",
+          "lol@mind.io:2.0.0",
+          "quitware@example.com:2.1",
+          "SPG.Moodle.Pro@spengergasse.at:1.3.3",
+          "SPG.Moodle.Pro@spengergasse.at:1.3.4",
+          "SPG.Moodle.Pro@spengergasse.at:1.4.0",
+          "SPG.Moodle.Pro@spengergasse.at:1.4.1"
+        ]
+      },
+      "schema": 1755434191810,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755455706015,
+      "id": "01920e99-0469-4e60-b2a9-1bcc961ce443",
+      "last_modified": 1755455790956
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{c120a16b-9556-43b9-a292-167e4e1169a8}:2.0.0",
+          "auto-theme-switcher-7@example.com:2.2.3",
+          "new-tab-redirect-7@example.com:2.6.0",
+          "grab-n-tab@rai-software.com:0.0.1.234",
+          "{5bd1e2fb-6816-4d49-80a8-fdf7fa882023}:1.0",
+          "{6622f499-c33b-4b58-a7c0-606c1390ae97}:2.0.2",
+          "lang@masteroffice.ch:1.0",
+          "links@masteroffice.ch:1.0",
+          "calc@masteroffice.ch:1.0"
+        ]
+      },
+      "schema": 1755412589204,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755434106439,
+      "id": "521b0d15-5a5f-4456-a012-650790f860aa",
+      "last_modified": 1755434191743
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{bfdf5388-2b2a-45e3-917d-dfffa0d9a7e3}:2.1",
+          "{bfdf5388-2b2a-45e3-917d-dfffa0d9a7e3}:2.0",
+          "{11ea90de-7c7d-4f1f-a5a4-9baf3f519a6b}:1.4",
+          "{0f2cb0bf-84fb-4822-98ec-d1a9694bf023}:2.0",
+          "{ab9c3341-8c52-4002-bce3-db2358adde01}:1.0",
+          "{15e65476-b394-4f54-9c57-6bef5a746c89}:1.0",
+          "{b5468bbe-8345-4862-b8b4-967ad37343dd}:1.0",
+          "{b5468bbe-8345-4862-b8b4-967ad37343dd}:2.0",
+          "{aa1b52b1-4184-4060-9496-2f14077d1bd9}:1.0",
+          "{e6e58ba3-d17e-4797-983d-8c07aba38b61}:1.0",
+          "{48b5466a-7325-4b1e-9aef-983c03560512}:1.0",
+          "{c2b156c4-85ad-4b2d-b16c-4be551d3d5b8}:1.0",
+          "{b5cafe1f-e5a0-4d7d-8690-229c27940fd3}:1.0",
+          "{84cf8763-6dfc-4e54-98ce-4d67a8b2a1ed}:1.0"
+        ]
+      },
+      "schema": 1755396936950,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755412506019,
+      "id": "86c4d422-2820-4d8e-8f3e-94945848991a",
+      "last_modified": 1755412589074
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{5cbfa1e6-73fd-4b87-b57c-e57a9dcf14c8}:1.0.2",
+          "Android@bravenhancer.com:15.7.7",
+          "enhancer@goldenfox.com:15.7.7",
+          "boorubuddy@mcnabb.co.nz:1.1",
+          "boorubuddy@mcnabb.co.nz:1.2",
+          "ss@example.com:1.0.1",
+          "ss@example.com:1.0.0",
+          "{09b8dba2-ae33-4bea-8bf1-d85e50691408}:5.1.5",
+          "{918f740d-e7f9-48b0-b2fe-781934993634}:1.0",
+          "{41258d7a-181f-47c6-871f-891aec554f07}:1.0",
+          "wiktor.sorokin@rambler.ru:1.0"
+        ]
+      },
+      "schema": 1755369379023,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755390905843,
+      "id": "d9a9a36d-236f-4638-adbc-44244cf727d1",
+      "last_modified": 1755390987366
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "franky-c4g-utilities@acunit.dev:2.0.5.1",
+          "franky-c4g-utilities@acunit.dev:2.0.2.0",
+          "{e592cb00-3ed3-4358-b3a2-509f33427e3e}:2.0",
+          "{d5aefdfe-c9be-41ca-a3ef-5a760871b5c3}:1.7",
+          "yt-channel-bookmarker@example.com:1.0.3",
+          "{26fddc8a-d11c-4202-a897-39b4b4afe39a}:1.0",
+          "{fe7418ec-a455-4244-9037-360e5a4517ac}:1.0",
+          "{152086f5-8045-4ff7-844f-d837e6549e8a}:1.0",
+          "{8a483b14-ea6e-4ffc-810b-f32c08f5eb53}:1.0",
+          "{0a93c1a5-ee39-47a4-ab22-bb787f0beeea}:1.0",
+          "{14800f08-0f00-4223-9a7c-42d5f39765e7}:1.0",
+          "{03066a42-1665-47a6-a250-e0dda51607df}:1.0",
+          "{bb54986e-2a16-4ba8-b137-7d4a460fd20d}:1.0",
+          "{b09c0500-a48e-4ac3-9ab2-7d646e61866e}:1.0",
+          "@addon-example:1.0",
+          "{911c5683-d6fa-4f07-806e-871c42d2fe2d}:1.0",
+          "{f820db6c-1712-4774-8459-3c454d0dd0ee}:1.0",
+          "{b980c24a-575c-4991-a1f6-6ec9241e943b}:1.0",
+          "{10b23dfd-f36a-400b-b376-ca99609620b1}:1.0",
+          "{6c0409f7-b786-43ae-8fa0-6c18ea8a1189}:1.0",
+          "{d2a4c227-e98e-4b15-b838-27f77c5ec9b9}:1.0",
+          "{8ddf945b-d647-4dde-b281-a07713d0256e}:1.0",
+          "{2f5d007a-8216-4d37-a63d-3dc958aabb52}:1.0",
+          "{513a9377-828a-47da-a1fa-5e1c0ea3fb9a}:1.0",
+          "{eeca8d29-6d44-464c-8d2b-369dd4c64595}:1.0",
+          "{81470c34-d99a-4729-8fe2-3851cde461fe}:1.0",
+          "{d60c9bff-8faa-45e1-b653-6cd36aee34f5}:1.0",
+          "{9ef3a5aa-3d6f-45c8-b4d8-5f61ad1a48c7}:1.0",
+          "{902c2a81-dc95-4e1e-8db9-46dc62b81dde}:1.0",
+          "{8905e90d-956e-4776-a53e-8ce6e2309a71}:1.0",
+          "tab-manager@jasperlogix.com:1.0",
+          "{ced7f6f3-7009-4afc-8c62-bc643ce58c98}:0.2.38",
+          "{52a46e14-bf5a-4a0e-b84f-75fae25fca0e}:1.0",
+          "json-script-runner@example.com:1.0.0",
+          "chicken-vimium-extension@lab.picohost.org:0.9.6",
+          "chicken-vimium-extension@lab.picohost.org:0.9.5",
+          "chicken-vimium-extension@lab.picohost.org:0.9.4",
+          "fanatics-live-autogiveaway@example.com:1.1",
+          "{3b85a37a-335f-4ef9-a112-3d5a6e728d96}:1.0",
+          "{7c7f6dea-3957-4bb9-9eec-2ef2b9e5bcec}:1.6.18",
+          "{7c7f6dea-3957-4bb9-9eec-2ef2b9e5bcec}:1.6.19"
+        ]
+      },
+      "schema": 1755347781664,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755369304997,
+      "id": "8deca437-92d7-4734-94b0-3b167db68a5e",
+      "last_modified": 1755369378886
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "Daifuku_Translator@JaniceC001:0.3.1",
+          "Daifuku_Translator@JaniceC001:0.4.1",
+          "stayfocused@secondmikasa.dev:1.1.2",
+          "peek_pop_onClick@uxer:0.1.18",
+          "customize@webpage.modular:0.0.0.3",
+          "peek_pop_onClick@uxer:0.1.19",
+          "{8c136c8d-5114-420f-b8b1-681bb1ebd3c2}:1.0",
+          "{431b6743-8983-46f3-829c-11757c4d6d0c}:4.2",
+          "{431b6743-8983-46f3-829c-11757c4d6d0c}:4.1",
+          "{431b6743-8983-46f3-829c-11757c4d6d0c}:4.0",
+          "overlay-tool@example.com:1.0",
+          "{27e81126-5b1e-4fa3-a283-31470fb44590}:1.0.5"
+        ]
+      },
+      "schema": 1755326193333,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755347704975,
+      "id": "48358a27-ab33-4c83-b56e-78e2f5f7e5b1",
+      "last_modified": 1755347781478
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{491f2402-1df3-494d-b891-fdb33834dae2}:3755.123.0",
+          "{5266b659-a0d7-4cb2-8c9c-cae13aaca004}:1",
+          "{db091c0b-2070-46c1-9c0b-2dfcb4cefd65}:1",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:0.1",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:0.2",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.5",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.6",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.6.11",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.6.2",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.6.3",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.6.4",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.6.41",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.6.42",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.6.5",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.6.51",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.7",
+          "{8a05d8ec-f62f-4bcb-a93c-b2d606fb562f}:1.7.1",
+          "{7f116826-1ede-4c3d-ae4b-7c71fe6e64be}:0.2.1"
+        ]
+      },
+      "schema": 1755310540008,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755326105815,
+      "id": "8ecd53cb-d59e-4b51-9f29-df3c8f582d9a",
+      "last_modified": 1755326193197
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{39f347b1-3dc9-4986-95fe-9ce5d419926e}:3.0",
+          "SmartClip@Smitis:1.0.27.1",
+          "{4af099cd-cc21-442e-9299-d5d551b4249f}:1.0",
+          "kinozalhelper@elektrikis.id.lv:2.9.0",
+          "youtube-blocker@example.com:1.0.0",
+          "youtube-blocker@example.com:1.0",
+          "youtube-blocker@example.com:1.0.1",
+          "{5c0f56a4-7e5b-4c4f-9da2-3f6ab9a3b2f1}:1.3.1",
+          "{e701d816-6a1b-4b87-88bb-9c7d653aaf6d}:1.1",
+          "{e701d816-6a1b-4b87-88bb-9c7d653aaf6d}:1.2",
+          "{e701d816-6a1b-4b87-88bb-9c7d653aaf6d}:1.3",
+          "{e701d816-6a1b-4b87-88bb-9c7d653aaf6d}:1.4",
+          "{897c85ef-ebeb-4d0c-9e05-18f5e0721629}:1.0.6"
+        ]
+      },
+      "schema": 1755282991174,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755304505332,
+      "id": "dbdb86d6-5eef-4449-a461-dea80c666683",
+      "last_modified": 1755304578924
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{24b4082e-88e0-47b3-8dc5-541be373e65a}:1.0",
+          "{24b4082e-88e0-47b3-8dc5-541be373e65a}:76.1.2",
+          "{24b4082e-88e0-47b3-8dc5-541be373e65a}:109.8.1"
+        ],
+        "unblocked": [
+          "{ac1e429d-9c01-416c-8055-f2bf93203e36}:1.0.0",
+          "{ac1e429d-9c01-416c-8055-f2bf93203e36}:1.1.2",
+          "{ac1e429d-9c01-416c-8055-f2bf93203e36}:1.1.3",
+          "{ac1e429d-9c01-416c-8055-f2bf93203e36}:1.2.1",
+          "{ac1e429d-9c01-416c-8055-f2bf93203e36}:1.2.2",
+          "{ac1e429d-9c01-416c-8055-f2bf93203e36}:1.2.4",
+          "{ac1e429d-9c01-416c-8055-f2bf93203e36}:1.2.8",
+          "{ac1e429d-9c01-416c-8055-f2bf93203e36}:1.2.9",
+          "{5f9861fa-6b08-4eff-b035-f448d0f3a2bc}:0.0.1",
+          "{5f9861fa-6b08-4eff-b035-f448d0f3a2bc}:0.0.3",
+          "{5f9861fa-6b08-4eff-b035-f448d0f3a2bc}:0.0.4",
+          "{5f9861fa-6b08-4eff-b035-f448d0f3a2bc}:1.0.1",
+          "{5f9861fa-6b08-4eff-b035-f448d0f3a2bc}:1.0.2",
+          "{5f9861fa-6b08-4eff-b035-f448d0f3a2bc}:1.0.9",
+          "{5f9861fa-6b08-4eff-b035-f448d0f3a2bc}:1.0.10",
+          "{5f9861fa-6b08-4eff-b035-f448d0f3a2bc}:1.1.0",
+          "wallet@ncog.earth:1.4",
+          "wallet@ncog.earth:2.0.0",
+          "wallet@ncog.earth:2.1.0"
+        ],
+        "softblocked": [
+          "support@elements.cloud:1.2.0",
+          "typepilot@yourdomain.com:1.0",
+          "{e98de751-df33-49c4-8a22-7d9e9d1962e4}:1.0",
+          "{86916b35-e53a-4734-8871-2699e3604eda}:1.0",
+          "{6307e620-6968-48ef-8471-08d08686970e}:1.0",
+          "{ec3cd6c7-3ea8-46b5-96f1-7ea3d054a807}:1.0",
+          "{d023ae92-c089-4bee-b3f2-243f647085ef}:1.0",
+          "{7243d34c-a4b1-40c4-9ff8-532d5caa551d}:1.0",
+          "{7c0ae510-fb5f-47af-b66c-09906ef8a2b9}:1.0",
+          "cam-xemay-kcc@yourdomain.com:1.0",
+          "cam-cmnd@yourdomain.com:1.0",
+          "cam-cavet@yourdomain.com:1.0",
+          "cam-b2@yourdomain.com:1.0",
+          "{30f2dc41-70a7-41d8-84dd-4696e0bce483}:1.0.0",
+          "{e3c594aa-289a-4678-b4c4-da28f287a21e}:1.0.0",
+          "{5bf60d1a-364d-43d3-baf0-ffeb3c7a7469}:1.1",
+          "{8bc25a17-fe1e-45e2-8f0f-5f65510ac48a}:1.0",
+          "mini-translate@mini-translate.com:1.1.1",
+          "{fc2e3ede-724c-4fd7-91fb-5cbd5a410448}:1.0",
+          "{17f1cc49-8220-446a-9109-595e5c0e0764}:1.0",
+          "{17f1cc49-8220-446a-9109-595e5c0e0764}:2.0",
+          "{17f1cc49-8220-446a-9109-595e5c0e0764}:2.1",
+          "{17f1cc49-8220-446a-9109-595e5c0e0764}:2.2",
+          "{1538db6b-2a2c-4c7a-a4a6-d4ce2a33855f}:1.0",
+          "{7d3f5b5c-6be1-4b08-a6e5-7650039c459a}:1.0",
+          "{595ea6c9-9bd0-454b-aadb-8463f805d4d1}:1.0",
+          "{8b727def-a181-4707-9d6d-4cf35a07586e}:1.0",
+          "{709e792c-ce37-4249-bfe4-f1863b5444d7}:1.0",
+          "{b0db283e-f68c-4483-937c-f8a4f898ce92}:1.0",
+          "{827e56e9-7723-482d-b4ad-0960d09fd609}:1.0",
+          "{6741ccaf-45ae-44b7-a330-26f2af538302}:1.0",
+          "{c29aff26-2305-4bde-80dc-1169b53a30d9}:1.0",
+          "{ba375548-5884-405b-8240-62dcae057879}:1.0",
+          "{97c12fa3-cc79-487c-9b4c-174f7067bfdd}:1.0",
+          "{31415926-5358-4793-a384-626433832795}:1.2",
+          "{31415926-5358-4793-a384-626433832795}:1.3",
+          "{0a1569f9-90c9-412f-adcc-047eebdd99da}:1.0",
+          "{fb36abae-d69e-4639-b559-4af5fe1bfc89}:1.0",
+          "media-controller.extension@nicramu-tnychn:1.0",
+          "{2cccff26-22ff-4d71-a191-941dc69b2d01}:1.0",
+          "bikishovd@gmail.com:0.0.2",
+          "{337acf42-98b7-4797-a26a-177bcd2e371d}:1.0",
+          "{38b87f0c-32c9-43c8-bf67-cd56557711e6}:1.0",
+          "oci-change-console-color@the-town.jp:0.1",
+          "{2dccc225-5778-471e-9f90-e3683859244f}:1.0",
+          "{2a866566-a908-46c4-9058-f23608b9099c}:1.0",
+          "{3487db43-4c83-4958-803f-e37a4be6b48b}:1.0",
+          "{b73f573f-5bf4-447b-a58e-8b82b57733e8}:1.0",
+          "{c1ab9122-449b-41d3-b72b-6b3eb70f894b}:1.0",
+          "{e2813936-d476-45d2-b414-6083f2e31488}:1.0",
+          "{7982fc8b-1b91-456e-8eea-f5af20c9b562}:1.0",
+          "{7982fc8b-1b91-456e-8eea-f5af20c9b562}:2.0",
+          "{7982fc8b-1b91-456e-8eea-f5af20c9b562}:2.1",
+          "{7982fc8b-1b91-456e-8eea-f5af20c9b562}:2.2",
+          "{7982fc8b-1b91-456e-8eea-f5af20c9b562}:2.3",
+          "{24b4082e-88e0-47b3-8dc5-541be373e65a}:1742.18.1",
+          "syntaxhighlighter@streamscript.com:1.6",
+          "syntaxhighlighter@streamscript.com:1.7",
+          "syntaxhighlighter@streamscript.com:1.8",
+          "syntaxhighlighter@streamscript.com:1.9",
+          "syntaxhighlighter@streamscript.com:1.10",
+          "syntaxhighlighter@streamscript.com:1.11",
+          "syntaxhighlighter@streamscript.com:1.12",
+          "syntaxhighlighter@streamscript.com:1.13",
+          "syntaxhighlighter@streamscript.com:1.14",
+          "syntaxhighlighter@streamscript.com:1.15",
+          "{4c58e6de-dc39-4f77-bbb8-49e4e16973e2}:1.0.12",
+          "igdb-newtab@example.com:1.0",
+          "choice-firefox@youneedchoice.com:1.1.5",
+          "choice-firefox@youneedchoice.com:1.1.6",
+          "joborca-quick-add@joborca.com:0.2.0",
+          "{a7500b9a-e586-4fa2-8155-0d7444bc48f4}:1.0"
+        ]
+      },
+      "schema": 1755261392367,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755282906091,
+      "id": "2dfaf304-f34a-4b75-8776-4a639704fadb",
+      "last_modified": 1755282991015
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{13f96856-d4c2-490b-a233-80acf2ca51de}:1.0",
+          "{f906cf6a-ebfb-49ef-9f33-f53551ad0f72}:1.0",
+          "{174944f6-eb78-4fd2-8b23-f9815b3df0fd}:1.0",
+          "{ed786b92-7b96-4d59-b04d-3e7396d36ae1}:1.0",
+          "{cdcb3361-e02a-4b49-a6f8-0c3bb99d5eae}:1.0",
+          "{cdcb3361-e02a-4b49-a6f8-0c3bb99d5eae}:26.45.1",
+          "{8c2fc691-1651-49de-840b-ebed062ce030}:1.0",
+          "{9fd54d7a-db75-48ea-8ed6-e4b7c27a683c}:1.0",
+          "{9fd54d7a-db75-48ea-8ed6-e4b7c27a683c}:76.1.2",
+          "{3862da2c-323d-4f5c-9428-a35af4c0007c}:1.0",
+          "{9f1c7d2d-e0b7-482f-8c18-6404c244744a}:1.0",
+          "{9f1c7d2d-e0b7-482f-8c18-6404c244744a}:1.2",
+          "{050d8758-543c-4644-ac81-a6ea31628db6}:1.0",
+          "{d2c924bf-72ae-455c-93bb-584adc1374f8}:1.0",
+          "{ee296d33-f45e-471b-bc98-ae3617f2c626}:1.0",
+          "{6bfff2f9-27e7-4827-a9ff-d02ab5d45f56}:1.0",
+          "{6bfff2f9-27e7-4827-a9ff-d02ab5d45f56}:76.1.2",
+          "{30c42568-9431-4350-b867-4dc4575d0a3f}:1.0",
+          "{6bc62bb7-c780-4815-b405-af5833df07d7}:1.0",
+          "{a14befb7-7ec4-47d5-9795-5aa0757901e3}:1.0",
+          "{0f9339ff-eb98-49d7-9e59-87c7c5f09b73}:1.0"
+        ],
+        "unblocked": [],
+        "softblocked": [
+          "{f9a2665a-7b57-4362-9a17-69e43b354f4a}:1.0",
+          "{26c733ea-b6d3-42ee-b7f7-1469c4928918}:1.0",
+          "{58d2bbf3-c791-45d4-82db-3c2843da9cf1}:1.0",
+          "{12b08f0e-3563-40df-9c49-638999f07966}:1.0",
+          "{d6a42027-e238-4f34-8d50-10dae406ea06}:0.2.4"
+        ]
+      },
+      "schema": 1755239782250,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755261306082,
+      "id": "d45a9f61-778b-47d0-8525-21db122a9b36",
+      "last_modified": 1755261392246
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "task-runner-pro@example.com:1.0",
+          "{8f47e70d-6310-4335-8420-9904a85fe3d1}:1.0",
+          "{916786bc-ff0b-4180-96c2-ef68a0253d08}:1.0",
+          "{916786bc-ff0b-4180-96c2-ef68a0253d08}:2.0",
+          "{80d75e54-3fa2-430b-8f29-5098fb97348a}:1.0",
+          "{0cb64a02-d1a2-49bd-834e-51cce3157e57}:1.0",
+          "{e78a8d23-9f14-4c63-80c5-33223f1cdd08}:1.0",
+          "{bdfccb70-9d06-46df-9baa-ca43374a68b3}:1.0",
+          "magnolia@12.34:4.1.7.5",
+          "{6d26ffbd-2a71-4f18-8f54-362255da6d1a}:1.0",
+          "{0cf28f2a-8a9a-4881-8401-35693e1eff0f}:1.0",
+          "{3276d7e6-450b-47dd-a07c-48409c6093e6}:0.2.4",
+          "{37d8260e-9e66-463d-870b-2687c2096305}:0.2.4"
+        ]
+      },
+      "schema": 1755224141262,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755239705024,
+      "id": "235461bb-da2f-4245-a012-5a00eead706e",
+      "last_modified": 1755239782011
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{8321acc5-3bbf-4c0c-bfc7-9256fef0e64c}:4.0",
+          "{8321acc5-3bbf-4c0c-bfc7-9256fef0e64c}:3.0",
+          "{8321acc5-3bbf-4c0c-bfc7-9256fef0e64c}:2.0",
+          "{8321acc5-3bbf-4c0c-bfc7-9256fef0e64c}:5.0",
+          "{8321acc5-3bbf-4c0c-bfc7-9256fef0e64c}:6.0",
+          "{8321acc5-3bbf-4c0c-bfc7-9256fef0e64c}:1.0",
+          "{666ff4b1-df7f-409f-8c2f-81e19a05806e}:1.0",
+          "{c5112a60-ffc3-44ab-8fae-80d9b4e6ba4d}:2.0",
+          "{1400b9ea-6f7d-43ae-9681-8cd1cba774b5}:1.0",
+          "{cfc0ee5e-1bc1-4e83-95b9-98b530ba7403}:1.4.0.1",
+          "{fd4c78a2-271a-4907-9459-1cea1617c18b}:1.0",
+          "{a2fee312-d80d-4035-bcd3-9b9dea4ee62b}:1.0",
+          "dbl-click-dict-agnostic@wesinator.github.io:2.3.2"
+        ]
+      },
+      "schema": 1755196591127,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755218105343,
+      "id": "9be3693f-1acd-4b8b-a66e-a187e7a64481",
+      "last_modified": 1755218182771
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{e6c16076-e101-4a55-abad-1ef5a218d2f1}:1.0",
+          "{e6c16076-e101-4a55-abad-1ef5a218d2f1}:76.1.2",
+          "{523243dc-6940-4993-9698-03d3643451f0}:1.0.0"
+        ],
+        "unblocked": [],
+        "softblocked": [
+          "github-pr-counter@renuo.ch:1.0.12",
+          "{3f230f1d-c2bc-4064-86e2-6cbb1912c8e4}:1.2.2",
+          "antenna-bookmarks@masm11.me:0.0",
+          "antenna-bookmarks@masm11.me:0.1",
+          "youkippertube@example.com:1.3",
+          "youkippertube@example.com:1.3.1",
+          "youkippertube@example.com:1.3.2",
+          "amazon-review-generator@example.com:1.0.0",
+          "this.sensen@gmail.com:0.42.1"
+        ]
+      },
+      "schema": 1755187859323,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1755196505996,
+      "id": "4bce4c3a-5331-458e-a483-7dbc298944ea",
+      "last_modified": 1755196591068
+    },
+    {
+      "stash": {
         "blocked": [
           "{2d87cb68-4850-46ee-b08e-fefe84b40952}:1.0",
           "{2d87cb68-4850-46ee-b08e-fefe84b40952}:357.123.0",
@@ -362,5 +881,5 @@
       "last_modified": 1755023922753
     }
   ],
-  "timestamp": 1755174991253
+  "timestamp": 1755498991684
 }
