@@ -77,6 +77,7 @@ import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabCloseClick as OnSyncedTabCl
  * @param onInactiveTabClose Invoked when the user clicks on an inactive tab's close button.
  * @param onSyncedTabClick Invoked when the user clicks on a synced tab.
  * @param onSyncedTabClose Invoked when the user clicks on a synced tab's close button.
+ * @param onSignInClick Invoked when an unauthenticated user clicks to sign-in.
  * @param onSaveToCollectionClick Invoked when the user clicks on the save to collection button from
  * the multi select banner.
  * @param onShareSelectedTabsClick Invoked when the user clicks on the share button from the
@@ -128,6 +129,7 @@ fun TabsTray(
     onInactiveTabClose: (TabSessionState) -> Unit,
     onSyncedTabClick: OnSyncedTabClick,
     onSyncedTabClose: OnSyncedTabClose,
+    onSignInClick: () -> Unit,
     onSaveToCollectionClick: () -> Unit,
     onShareSelectedTabsClick: () -> Unit,
     onShareAllTabsClick: () -> Unit,
@@ -280,9 +282,11 @@ fun TabsTray(
 
                 Page.SyncedTabs -> {
                     SyncedTabsPage(
+                        isSignedIn = isSignedIn,
                         syncedTabs = tabsTrayState.syncedTabs,
                         onTabClick = onSyncedTabClick,
                         onTabClose = onSyncedTabClose,
+                        onSignInClick = onSignInClick,
                     )
                 }
             }
@@ -449,6 +453,7 @@ private fun TabsTrayPreviewRoot(
             },
             onSyncedTabClick = {},
             onSyncedTabClose = { _, _ -> },
+            onSignInClick = {},
             onSaveToCollectionClick = {},
             onShareSelectedTabsClick = {},
             onShareAllTabsClick = {},

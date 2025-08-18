@@ -34,6 +34,7 @@ import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -41,6 +42,7 @@ import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
@@ -171,6 +173,11 @@ interface TabManagerController : SyncedTabsController, InactiveTabsController, T
      * @return true if the button press was consumed.
      */
     fun handleBackPressed(): Boolean
+
+    /**
+     * Navigates to the sign into Sync flow
+     */
+    fun handleSignInClicked()
 }
 
 /**
@@ -632,6 +639,14 @@ class DefaultTabManagerController(
             numTabs = it.size
         }
         showUndoSnackbarForInactiveTab(numTabs)
+    }
+
+    override fun handleSignInClicked() {
+        navController.navigate(
+            TabManagementFragmentDirections.actionGlobalTurnOnSync(
+                entrypoint = FenixFxAEntryPoint.SyncedTabsMenu,
+            ),
+        )
     }
 
     /**

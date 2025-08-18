@@ -15,7 +15,6 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.hasAnyChild
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -42,6 +41,7 @@ import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -98,11 +98,11 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
     }
 
     fun verifySyncedTabsListWhenUserIsNotSignedIn() {
-        verifySyncedTabsList()
+        verifyUnauthenticatedSyncedTabsPage()
         assertUIObjectExists(
-            itemContainingText(getStringResource(R.string.synced_tabs_sign_in_message)),
-            itemContainingText(getStringResource(R.string.sync_sign_in)),
-            itemContainingText(getStringResource(R.string.tab_drawer_fab_sync)),
+            itemContainingText(getStringResource(R.string.tab_manager_empty_synced_tabs_page_header)),
+            itemContainingText(getStringResource(R.string.tab_manager_empty_synced_tabs_page_description)),
+            itemWithText(getStringResource(R.string.tab_manager_empty_synced_tabs_page_sign_in_cta)),
         )
     }
 
@@ -175,6 +175,12 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
         Log.i(TAG, "verifySyncedTabsList: Trying to verify that the synced tabs list exists")
         composeTestRule.syncedTabsList().assertExists()
         Log.i(TAG, "verifySyncedTabsList: Verified that the synced tabs list exists")
+    }
+
+    fun verifyUnauthenticatedSyncedTabsPage() {
+        Log.i(TAG, "verifyUnauthenticatedSyncedTabsPage: Trying to verify that the unauthenticated synced tabs page exists")
+        composeTestRule.unauthenticatedSyncedTabsPage().assertExists()
+        Log.i(TAG, "verifyUnauthenticatedSyncedTabsPage: Verified that the the unauthenticated synced tabs page exists")
     }
 
     fun verifyNoOpenTabsInNormalBrowsing() {
@@ -448,7 +454,7 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
 
         fun clickSignInToSyncButton(interact: SyncSignInRobot.() -> Unit): SyncSignInRobot.Transition {
             Log.i(TAG, "clickSignInToSyncButton: Trying to click the sign in to sync button and wait for $waitingTimeShort ms for a new window")
-            itemContainingText(getStringResource(R.string.sync_sign_in))
+            itemWithText(getStringResource(R.string.tab_manager_empty_synced_tabs_page_sign_in_cta))
                 .clickAndWaitForNewWindow(waitingTimeShort)
             Log.i(TAG, "clickSignInToSyncButton: Clicked the sign in to sync button and waited for $waitingTimeShort ms for a new window")
             SyncSignInRobot().interact()
@@ -615,6 +621,11 @@ private fun ComposeTestRule.privateTabsList() = onNodeWithTag(TabsTrayTestTag.PR
  * Obtains the synced tabs list.
  */
 private fun ComposeTestRule.syncedTabsList() = onNodeWithTag(TabsTrayTestTag.SYNCED_TABS_LIST)
+
+/**
+ * Obtains the unauthenticated synced tabs page.
+ */
+private fun ComposeTestRule.unauthenticatedSyncedTabsPage() = onNodeWithTag(TabsTrayTestTag.UNAUTHENTICATED_SYNCED_TABS_PAGE)
 
 /**
  * Obtains the empty normal tabs list.

@@ -280,6 +280,7 @@ class TabManagementFragment : ComposeFragment() {
                 onInactiveTabClose = tabManagerInteractor::onInactiveTabClosed,
                 onSyncedTabClick = tabManagerInteractor::onSyncedTabClicked,
                 onSyncedTabClose = tabManagerInteractor::onSyncedTabClosed,
+                onSignInClick = tabManagerInteractor::onSignInClicked,
                 onSaveToCollectionClick = tabManagerInteractor::onAddSelectedTabsToCollectionClicked,
                 onShareSelectedTabsClick = tabManagerInteractor::onShareSelectedTabs,
                 onShareAllTabsClick = {

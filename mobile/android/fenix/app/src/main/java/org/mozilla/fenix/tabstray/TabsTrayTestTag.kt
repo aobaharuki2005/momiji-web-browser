@@ -38,6 +38,7 @@ internal object TabsTrayTestTag {
 
     const val EMPTY_NORMAL_TABS_LIST = "$NORMAL_TABS_LIST.empty"
     const val EMPTY_PRIVATE_TABS_LIST = "$PRIVATE_TABS_LIST.empty"
+    const val UNAUTHENTICATED_SYNCED_TABS_PAGE = "$SYNCED_TABS_LIST.unauthenticated"
 
     // Tab items
     const val TAB_ITEM_ROOT = "$TABS_TRAY.tabItem"
