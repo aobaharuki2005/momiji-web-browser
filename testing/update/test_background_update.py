@@ -40,6 +40,8 @@ class TestBackgroundUpdate(MarionetteTestCase):
         self.marionette.navigate(self.about_fx_url)
 
         self.marionette.set_context(self.marionette.CONTEXT_CHROME)
+        self.marionette.find_element(By.ID, "PanelUI-menu-button").click()
+        self.marionette.find_element(By.ID, "PanelUI-menu-button").click()
         update_url = self.marionette.execute_async_script(
             """
             (async function() {

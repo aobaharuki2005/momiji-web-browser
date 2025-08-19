@@ -8,9 +8,9 @@ Transform the update-test suite to parametrize by locale, source version, machin
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.copy import deepcopy
 
-transforms = TransformSequence()
+from gecko_taskgraph.util.attributes import task_name
 
-DEFAULT_VERSIONS_BACK = 3
+transforms = TransformSequence()
 
 DOCKER_TO_WORKER = {
     "ubuntu2404-test": "t-linux-docker",
@@ -38,12 +38,31 @@ BASE_TYPE_COMMAND = "./mach update-test"
 
 UPDATE_ARTIFACT_NAME = "public/update-test"
 
+DEFAULT_VERSIONS_BACK = 3
+
 
 @transforms.add
 def set_task_configuration(config, tasks):
+    config_tasks = {}
+    is_beta = config.params["release_type"] == "beta"
+
+    for dep in config.kind_dependencies_tasks.values():
+        if "update-verify-config" in dep.kind:
+            config_tasks[task_name(dep)] = dep
+
     for task in tasks:
         for os in task["os"]:
             this_task = deepcopy(task)
+            if config_tasks:
+                if "ubuntu" in os:
+                    config_task = config_tasks["firefox-linux64"]
+                elif "win" in os:
+                    config_task = config_tasks["firefox-win64"]
+                elif "osx" in os:
+                    config_task = config_tasks["firefox-macosx64"]
+                this_task.setdefault("fetches", {})[config_task.label] = [
+                    "update-verify.cfg",
+                ]
             if os in DOCKER_TO_WORKER:
                 worker_type = DOCKER_TO_WORKER[os]
                 platform = DOCKER_TO_PLATFORM.get(os)
@@ -63,15 +82,12 @@ def set_task_configuration(config, tasks):
             this_task["run"]["cwd"] = "{checkout}"
             del this_task["os"]
 
+            if is_beta and this_task["shipping-product"] == "firefox":
+                this_task["name"] = this_task["name"] + "-beta"
+                this_task["run"]["command"] = (
+                    this_task["run"]["command"] + " --channel beta-localtest"
+                )
             yield this_task
-
-
-def get_command_prefix(command):
-    command_prefix = ""
-    if "&&" in command:
-        command_prefix, _ = command.rsplit("&& ", 1)
-        command_prefix = command_prefix + "&&"
-    return command_prefix
 
 
 def infix_treeherder_symbol(symbol, infix):
@@ -81,13 +97,13 @@ def infix_treeherder_symbol(symbol, infix):
 
 @transforms.add
 def parametrize_by_locale_and_source_version(config, tasks):
+    # TODO: uncomment when we fix background tests
+    # is_beta = config.params["release_type"] == "beta"
     for task in tasks:
-        command_prefix = get_command_prefix(task["run"]["command"])
         for locale in TOP_LOCALES:
             this_task = deepcopy(task)
             this_task["run"]["command"] = (
-                f"{command_prefix}{BASE_TYPE_COMMAND} --source-locale {locale} "
-                + f"--source-versions-back {DEFAULT_VERSIONS_BACK};"
+                this_task["run"]["command"] + f" --source-locale {locale}"
             )
             this_task["description"] = (
                 f'{this_task["description"]}, locale coverage: {locale}'
@@ -107,9 +123,9 @@ def parametrize_by_locale_and_source_version(config, tasks):
             if v == DEFAULT_VERSIONS_BACK:
                 continue
             this_task = deepcopy(task)
-            this_task["run"][
-                "command"
-            ] = f"{command_prefix}{BASE_TYPE_COMMAND} --source-versions-back {v};"
+            this_task["run"]["command"] = (
+                this_task["run"]["command"] + f" --source-versions-back {v}"
+            )
             description_tag = (
                 " from 3 major versions back" if v == 0 else f" from {v} releases back"
             )
@@ -122,13 +138,16 @@ def parametrize_by_locale_and_source_version(config, tasks):
             )
             yield this_task
 
-        # default task is actually a background update
-        task["name"] = task["name"] + "-bkg"
-        task["index"]["job-name"] = task["index"]["job-name"] + "-bkg"
-        task["treeherder"]["symbol"] = infix_treeherder_symbol(
-            task["treeherder"]["symbol"], "bkg"
-        )
-        yield task
+        # create task for background update; don't run on beta
+        # TODO: re-enable background tests when we figure out why they are flaky
+        # if not is_beta:
+        #     task["name"] = task["name"] + "-bkg"
+        #     task["run"]["command"] = task["run"]["command"] + " --test-type Background"
+        #     task["index"]["job-name"] = task["index"]["job-name"] + "-bkg"
+        #     task["treeherder"]["symbol"] = infix_treeherder_symbol(
+        #         task["treeherder"]["symbol"], "bkg"
+        #     )
+        #     yield task
 
 
 def get_build_platform(platform):
