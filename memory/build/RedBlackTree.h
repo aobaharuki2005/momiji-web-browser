@@ -736,6 +736,8 @@ class RedBlackTree {
       }
       return mDepth > 0 ? mPath[mDepth - 1].Get() : nullptr;
     }
+
+    bool NotDone() { return !!mDepth; }
   };
 
   Iterator iter() { return Iterator(this); }
