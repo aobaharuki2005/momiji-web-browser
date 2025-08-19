@@ -128,7 +128,7 @@ use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::container_rule::ContainerSizeQuery;
 use style::stylesheets::import_rule::{ImportLayer, ImportSheet};
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
-use style::stylesheets::scope_rule::{ImplicitScopeRoot, ScopeSubjectMap};
+use style::stylesheets::scope_rule::{ImplicitScopeRoot, ScopeRootCandidate, ScopeSubjectMap};
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
     AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRuleTypes,
@@ -2748,26 +2748,28 @@ pub struct ScopeRuleData {
     pub valid_til: usize,
 }
 
-#[no_mangle]
-pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
+fn selector_matches_element<F, R>(
     rules: &nsTArray<&LockedStyleRule>,
     scope_rules: &nsTArray<ScopeRuleData>,
-    element: &RawGeckoElement,
+    element: GeckoElement,
     index: u32,
     host: Option<&RawGeckoElement>,
     pseudo_type: PseudoStyleType,
     relevant_link_visited: bool,
-) -> bool {
+    on_match: F,
+) -> Option<R>
+where
+    F: FnOnce(Option<&ScopeRootCandidate>) -> R,
+{
     use selectors::matching::{
         matches_selector, IncludeStartingStyle, MatchingContext, MatchingMode, NeedsSelectorFlags,
         VisitedHandlingMode,
     };
 
-    let element = GeckoElement(element);
     let quirks_mode = element.as_node().owner_doc().quirks_mode();
     let (selectors, scopes) = desugared_selector_list_with_scope(quirks_mode, rules, scope_rules);
     let Some(selector) = selectors.slice().get(index as usize) else {
-        return false;
+        return None;
     };
     let mut matching_mode = MatchingMode::Normal;
     match PseudoElement::from_pseudo_type(pseudo_type, None) {
@@ -2778,14 +2780,14 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
                 Some(selector_pseudo) if *selector_pseudo == pseudo => {
                     matching_mode = MatchingMode::ForStatelessPseudoElement
                 },
-                _ => return false,
+                _ => return None,
             };
         },
         None => {
             // Do not attempt to match if a pseudo element is requested and
             // this is not a pseudo element selector, or vice versa.
             if selector.has_pseudo_element() {
-                return false;
+                return None;
             }
         },
     };
@@ -2808,7 +2810,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         MatchingForInvalidation::No,
     );
     ctx.with_shadow_host(host, |ctx| match scopes.as_ref() {
-        None => matches_selector(selector, 0, None, &element, ctx),
+        None => matches_selector(selector, 0, None, &element, ctx).then(|| on_match(None)),
         Some(s) => {
             let id = ScopeConditionId::new((s.conditions.len() - 1) as u16);
             let candidates = scope_root_candidates(
@@ -2819,13 +2821,66 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
                 &s.subject_map,
                 ctx,
             );
-            candidates.candidates.iter().any(|candidate| {
+            let scope_root = candidates.candidates.iter().find_map(|candidate| {
                 ctx.nest_for_scope(Some(candidate.root), |ctx| {
-                    matches_selector(selector, 0, None, &element, ctx)
+                    matches_selector(selector, 0, None, &element, ctx).then(|| candidate)
                 })
-            })
+            });
+            scope_root.map(|root| on_match(Some(root)))
         },
     })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
+    rules: &nsTArray<&LockedStyleRule>,
+    scope_rules: &nsTArray<ScopeRuleData>,
+    element: &RawGeckoElement,
+    index: u32,
+    host: Option<&RawGeckoElement>,
+    pseudo_type: PseudoStyleType,
+    relevant_link_visited: bool,
+) -> bool {
+    selector_matches_element(
+        rules,
+        scope_rules,
+        GeckoElement(element),
+        index,
+        host,
+        pseudo_type,
+        relevant_link_visited,
+        |_| true,
+    )
+    .unwrap_or(false)
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleRule_GetScopeRootFor(
+    rules: &nsTArray<&LockedStyleRule>,
+    scope_rules: &nsTArray<ScopeRuleData>,
+    element: &RawGeckoElement,
+    index: u32,
+    host: Option<&RawGeckoElement>,
+    pseudo_type: PseudoStyleType,
+    relevant_link_visited: bool,
+) -> *const RawGeckoElement {
+    let element = GeckoElement(element);
+    selector_matches_element(
+        rules,
+        scope_rules,
+        element,
+        index,
+        host,
+        pseudo_type,
+        relevant_link_visited,
+        |candidate| {
+            candidate
+                .map(|c| c.get_scope_root_element(element))
+                .flatten()
+        },
+    )
+    .flatten()
+    .map_or(ptr::null(), |e| e.0)
 }
 
 pub type SelectorList = selectors::SelectorList<style::gecko::selector_parser::SelectorImpl>;

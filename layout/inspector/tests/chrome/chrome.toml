@@ -1,5 +1,10 @@
 [DEFAULT]
+prefs = [
+  "layout.css.at-scope.enabled=true",
+]
 support-files = ["GentiumPlus-R.woff"]
+
+["test_CSSStyleRule_getScopeRootFor.html"]
 
 ["test_CSSStyleRule_querySelectorAll.html"]
 
