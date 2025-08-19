@@ -143,7 +143,7 @@ add_task(async function toggle_off_on_shutdown() {
   Assert.equal(toggledEvents[0].extra.userAction, "true");
 
   // Simulate closing the window
-  lazy.IPProtectionService.uninit(true);
+  lazy.IPProtectionService.uninit();
   toggledEvents = Glean.ipprotection.toggled.testGetValue();
   Assert.equal(toggledEvents.length, 2, "should have recorded a second toggle");
   Assert.equal(toggledEvents[1].category, "ipprotection");

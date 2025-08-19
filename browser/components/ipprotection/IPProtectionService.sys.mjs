@@ -76,13 +76,10 @@ class IPProtectionServiceSingleton extends EventTarget {
 
   /**
    * Removes the IPProtectionService and IPProtection widget.
-   *
-   * @param {boolean} prefChange
    */
-  uninit(prefChange = false) {
+  uninit() {
     if (this.#hasWidget) {
-      lazy.IPProtection.uninit(prefChange);
-      this.#hasWidget = false;
+      lazy.IPProtection.uninit();
     }
 
     if (this.fxaObserver) {
@@ -95,6 +92,7 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.isSignedIn = false;
 
+    this.#hasWidget = false;
     this.#inited = false;
   }
 
@@ -164,7 +162,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (this.featureEnabled) {
       this.init();
     } else {
-      this.uninit(true);
+      this.uninit();
     }
   }
 

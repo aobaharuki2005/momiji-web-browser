@@ -12,6 +12,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
+let hasCustomElements = new WeakSet();
+
 /**
  * Manages updates for a IP Protection panelView in a given browser window.
  */
@@ -32,6 +34,10 @@ export class IPProtectionPanel {
    * @param {Window} window
    */
   static loadCustomElements(window) {
+    if (hasCustomElements.has(window)) {
+      // Don't add the elements again for the same window.
+      return;
+    }
     Services.scriptloader.loadSubScriptWithOptions(
       IPProtectionPanel.CUSTOM_ELEMENTS_SCRIPT,
       {
@@ -39,6 +45,7 @@ export class IPProtectionPanel {
         async: true,
       }
     );
+    hasCustomElements.add(window);
   }
 
   /**
