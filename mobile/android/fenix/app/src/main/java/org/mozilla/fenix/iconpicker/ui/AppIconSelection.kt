@@ -45,10 +45,10 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.iconpicker.AppIcon
 import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
+import org.mozilla.fenix.iconpicker.DefaultPackageManagerWrapper
 import org.mozilla.fenix.iconpicker.IconBackground
 import org.mozilla.fenix.iconpicker.IconGroupTitle
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.utils.Settings
 
 private val ListItemHeight = 56.dp
 private val AppIconSize = 40.dp
@@ -269,7 +269,10 @@ private fun AppIconSelectionPreview() {
     FirefoxTheme {
         AppIconSelection(
             currentAppIcon = AppIcon.AppDefault,
-            groupedIconOptions = DefaultAppIconRepository(Settings(LocalContext.current)).groupedAppIcons,
+            groupedIconOptions = DefaultAppIconRepository(
+                packageManager = DefaultPackageManagerWrapper(LocalContext.current.packageManager),
+                packageName = LocalContext.current.packageName,
+            ).groupedAppIcons,
             onAppIconSelected = {},
         )
     }

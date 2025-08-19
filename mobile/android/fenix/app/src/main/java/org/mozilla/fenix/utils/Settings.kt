@@ -2703,14 +2703,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Suffix of the currently selected app icon (launcher alias).
-     */
-    var selectedAppIcon by stringPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_selected_app_icon),
-        default = AppIcon.AppDefault.aliasSuffix,
-    )
-
-    /**
      * Whether the Tab Manager enhancements are enabled.
      */
     var tabManagerEnhancementsEnabled by booleanPreference(
