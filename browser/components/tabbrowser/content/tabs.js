@@ -171,7 +171,7 @@
 
       this.newTabButton.setAttribute(
         "aria-label",
-        GetDynamicShortcutTooltipText("tabs-newtab-button")
+        DynamicShortcutTooltip.getText("tabs-newtab-button")
       );
 
       let handleResize = () => {
@@ -2073,15 +2073,17 @@
               parent.prepend(popup);
               parent.setAttribute("type", "menu");
               // Update tooltip text
-              nodeToTooltipMap[parent.id] = newTabLeftClickOpensContainersMenu
-                ? "newTabAlwaysContainer.tooltip"
-                : "newTabContainer.tooltip";
+              DynamicShortcutTooltip.nodeToTooltipMap[parent.id] =
+                newTabLeftClickOpensContainersMenu
+                  ? "newTabAlwaysContainer.tooltip"
+                  : "newTabContainer.tooltip";
             } else {
-              nodeToTooltipMap[parent.id] = "newTabButton.tooltip";
+              DynamicShortcutTooltip.nodeToTooltipMap[parent.id] =
+                "newTabButton.tooltip";
               parent.removeAttribute("context", "new-tab-button-popup");
             }
             // evict from tooltip cache
-            gDynamicTooltipCache.delete(parent.id);
+            DynamicShortcutTooltip.cache.delete(parent.id);
 
             // If containers and press-hold container menu are both used,
             // add to gClickAndHoldListenersOnElement; otherwise, remove.

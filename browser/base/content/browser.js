@@ -3239,71 +3239,72 @@ var gUIDensity = {
   },
 };
 
-const nodeToTooltipMap = {
-  "bookmarks-menu-button": "bookmarksMenuButton.tooltip",
-  "context-reload": "reloadButton.tooltip",
-  "context-stop": "stopButton.tooltip",
-  "downloads-button": "downloads.tooltip",
-  "fullscreen-button": "fullscreenButton.tooltip",
-  "appMenu-fullscreen-button2": "fullscreenButton.tooltip",
-  "new-window-button": "newWindowButton.tooltip",
-  "new-tab-button": "newTabButton.tooltip",
-  "tabs-newtab-button": "newTabButton.tooltip",
-  "reload-button": "reloadButton.tooltip",
-  "stop-button": "stopButton.tooltip",
-  "urlbar-zoom-button": "urlbar-zoom-button.tooltip",
-  "appMenu-zoomEnlarge-button2": "zoomEnlarge-button.tooltip",
-  "appMenu-zoomReset-button2": "zoomReset-button.tooltip",
-  "appMenu-zoomReduce-button2": "zoomReduce-button.tooltip",
-  "reader-mode-button": "reader-mode-button.tooltip",
-  "reader-mode-button-icon": "reader-mode-button.tooltip",
-  "vertical-tabs-newtab-button": "newTabButton.tooltip",
-};
-const nodeToShortcutMap = {
-  "bookmarks-menu-button": "manBookmarkKb",
-  "context-reload": "key_reload",
-  "context-stop": "key_stop",
-  "downloads-button": "key_openDownloads",
-  "fullscreen-button": "key_enterFullScreen",
-  "appMenu-fullscreen-button2": "key_enterFullScreen",
-  "new-window-button": "key_newNavigator",
-  "new-tab-button": "key_newNavigatorTab",
-  "tabs-newtab-button": "key_newNavigatorTab",
-  "reload-button": "key_reload",
-  "stop-button": "key_stop",
-  "urlbar-zoom-button": "key_fullZoomReset",
-  "appMenu-zoomEnlarge-button2": "key_fullZoomEnlarge",
-  "appMenu-zoomReset-button2": "key_fullZoomReset",
-  "appMenu-zoomReduce-button2": "key_fullZoomReduce",
-  "reader-mode-button": "key_toggleReaderMode",
-  "reader-mode-button-icon": "key_toggleReaderMode",
-  "vertical-tabs-newtab-button": "key_newNavigatorTab",
-};
+const DynamicShortcutTooltip = {
+  nodeToTooltipMap: {
+    "bookmarks-menu-button": "bookmarksMenuButton.tooltip",
+    "context-reload": "reloadButton.tooltip",
+    "context-stop": "stopButton.tooltip",
+    "downloads-button": "downloads.tooltip",
+    "fullscreen-button": "fullscreenButton.tooltip",
+    "appMenu-fullscreen-button2": "fullscreenButton.tooltip",
+    "new-window-button": "newWindowButton.tooltip",
+    "new-tab-button": "newTabButton.tooltip",
+    "tabs-newtab-button": "newTabButton.tooltip",
+    "reload-button": "reloadButton.tooltip",
+    "stop-button": "stopButton.tooltip",
+    "urlbar-zoom-button": "urlbar-zoom-button.tooltip",
+    "appMenu-zoomEnlarge-button2": "zoomEnlarge-button.tooltip",
+    "appMenu-zoomReset-button2": "zoomReset-button.tooltip",
+    "appMenu-zoomReduce-button2": "zoomReduce-button.tooltip",
+    "reader-mode-button": "reader-mode-button.tooltip",
+    "reader-mode-button-icon": "reader-mode-button.tooltip",
+    "vertical-tabs-newtab-button": "newTabButton.tooltip",
+  },
 
-const gDynamicTooltipCache = new Map();
-function GetDynamicShortcutTooltipText(nodeId) {
-  if (!gDynamicTooltipCache.has(nodeId) && nodeId in nodeToTooltipMap) {
-    let strId = nodeToTooltipMap[nodeId];
-    let args = [];
-    if (nodeId in nodeToShortcutMap) {
-      let shortcutId = nodeToShortcutMap[nodeId];
-      let shortcut = document.getElementById(shortcutId);
-      if (shortcut) {
-        args.push(ShortcutUtils.prettifyShortcut(shortcut));
+  nodeToShortcutMap: {
+    "bookmarks-menu-button": "manBookmarkKb",
+    "context-reload": "key_reload",
+    "context-stop": "key_stop",
+    "downloads-button": "key_openDownloads",
+    "fullscreen-button": "key_enterFullScreen",
+    "appMenu-fullscreen-button2": "key_enterFullScreen",
+    "new-window-button": "key_newNavigator",
+    "new-tab-button": "key_newNavigatorTab",
+    "tabs-newtab-button": "key_newNavigatorTab",
+    "reload-button": "key_reload",
+    "stop-button": "key_stop",
+    "urlbar-zoom-button": "key_fullZoomReset",
+    "appMenu-zoomEnlarge-button2": "key_fullZoomEnlarge",
+    "appMenu-zoomReset-button2": "key_fullZoomReset",
+    "appMenu-zoomReduce-button2": "key_fullZoomReduce",
+    "reader-mode-button": "key_toggleReaderMode",
+    "reader-mode-button-icon": "key_toggleReaderMode",
+    "vertical-tabs-newtab-button": "key_newNavigatorTab",
+  },
+
+  getText(nodeId) {
+    if (!this.cache.has(nodeId) && nodeId in this.nodeToTooltipMap) {
+      let strId = this.nodeToTooltipMap[nodeId];
+      let args = [];
+      if (nodeId in this.nodeToShortcutMap) {
+        let shortcutId = this.nodeToShortcutMap[nodeId];
+        let shortcut = document.getElementById(shortcutId);
+        if (shortcut) {
+          args.push(ShortcutUtils.prettifyShortcut(shortcut));
+        }
       }
+      this.cache.set(nodeId, gNavigatorBundle.getFormattedString(strId, args));
     }
-    gDynamicTooltipCache.set(
-      nodeId,
-      gNavigatorBundle.getFormattedString(strId, args)
-    );
-  }
-  return gDynamicTooltipCache.get(nodeId);
-}
+    return this.cache.get(nodeId);
+  },
 
-function UpdateDynamicShortcutTooltipText(aTooltip) {
-  let nodeId = aTooltip.triggerNode.id;
-  aTooltip.setAttribute("label", GetDynamicShortcutTooltipText(nodeId));
-}
+  updateText(aTooltip) {
+    let nodeId = aTooltip.triggerNode.id;
+    aTooltip.setAttribute("label", this.getText(nodeId));
+  },
+
+  cache: new Map(),
+};
 
 /*
  * - [ Dependencies ] ---------------------------------------------------------
