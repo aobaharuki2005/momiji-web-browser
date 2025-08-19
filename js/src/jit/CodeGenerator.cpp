@@ -6268,17 +6268,15 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
     masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
   }
 
-  // Restore stack pointer.
-  masm.setFramePushed(frameSize());
-  emitRestoreStackPointerFromFP();
-
   // If the return value of the constructing function is Primitive,
   // replace the return value with the Object from CreateThis.
   if (call->mir()->isConstructing()) {
     Label notPrimitive;
     masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
                              &notPrimitive);
-    masm.loadValue(Address(masm.getStackPointer(), unusedStack),
+    size_t thisvOffset =
+        JitFrameLayout::offsetOfThis() - JitFrameLayout::bytesPoppedAfterCall();
+    masm.loadValue(Address(masm.getStackPointer(), thisvOffset),
                    JSReturnOperand);
 #ifdef DEBUG
     masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
@@ -6287,6 +6285,11 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
 #endif
     masm.bind(&notPrimitive);
   }
+
+  // Restore stack pointer.
+  masm.setFramePushed(frameSize());
+  emitRestoreStackPointerFromFP();
+
 }
 
 void JitRuntime::generateIonGenericCallArgumentsShift(
@@ -6392,6 +6395,9 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
   // ****************************
   // * Functions with jit entry *
   // ****************************
+
+  generateIonGenericHandleUnderflow(masm, isConstructing, &vmCall);
+
   masm.loadJitCodeRaw(calleeReg, scratch2);
 
   // Construct the JitFrameLayout.
@@ -6401,24 +6407,7 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
   masm.push(returnAddrReg);
 #endif
 
-  // Check whether we need a rectifier frame.
-  Label noRectifier;
-  masm.loadFunctionArgCount(calleeReg, scratch);
-  masm.branch32(Assembler::BelowOrEqual, scratch, argcReg, &noRectifier);
-  {
-    // Tail-call the arguments rectifier.
-    // Because all trampolines are created at the same time,
-    // we can't create a TrampolinePtr for the arguments rectifier,
-    // because it hasn't been linked yet. We can, however, directly
-    // encode its offset.
-    Label rectifier;
-    bindLabelToOffset(&rectifier, argumentsRectifierOffset_);
-
-    masm.jump(&rectifier);
-  }
-
   // Tail call the jit entry.
-  masm.bind(&noRectifier);
   masm.jump(scratch2);
 
   // ********************
@@ -6463,6 +6452,139 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
   masm.push(returnAddrReg);
 #endif
   masm.jump(&invokeFunctionVMEntry);
+}
+
+void JitRuntime::generateIonGenericHandleUnderflow(MacroAssembler& masm,
+                                                   bool isConstructing,
+                                                   Label* vmCall) {
+  Register calleeReg = IonGenericCallCalleeReg;
+  Register argcReg = IonGenericCallArgcReg;
+  AllocatableGeneralRegisterSet regs(IonGenericCallScratchRegs());
+  Register numMissing = regs.takeAny();
+  Register src = regs.takeAny();
+  Register dest = regs.takeAny();
+
+  // On x86 we have fewer registers than we'd like, so we generate
+  // slightly less efficient code.
+  Register srcEnd, scratch;
+  bool mustSpill = false;
+  if (regs.empty()) {
+    srcEnd = numMissing;
+    scratch = calleeReg;
+    mustSpill = true;
+  } else {
+    srcEnd = regs.takeAny();
+    scratch = regs.takeAny();
+  }
+
+  // Compute fun->nargs - argc. If it's positive, it's the number of
+  // undefined args we must push.
+  Label noUnderflow;
+  masm.loadFunctionArgCount(calleeReg, numMissing);
+  masm.sub32(argcReg, numMissing);
+  masm.branch32(Assembler::LessThanOrEqual, numMissing, Imm32(0), &noUnderflow);
+
+  // Ensure that we don't adjust the stack pointer by more than a page.
+  masm.branch32(Assembler::Above, numMissing, Imm32(JIT_ARGS_LENGTH_MAX),
+                vmCall);
+
+  // If numMissing is even, we want to make the following transformation:
+  //
+  //  INITIAL                               FINAL
+  //     [newTarget] (iff isConstructing)   [newTarget] (iff isConstructing)
+  //     [argN]                             [undefined]
+  //     ...                                [undefined] (...)
+  //     [arg1]                             [argN]
+  //     [arg0]                             ...
+  //     [this] <- sp aligned               [arg1]
+  //                                        [arg0]
+  //                                        [this] -> moved down numMissing
+  //                                                   slots
+  //
+  // If numMissing is odd, we must also insert padding:
+  //     [newTarget] (iff isConstructing)   (padding)
+  //     [argN]                             [newTarget] (iff isConstructing)
+  //     ...                                [undefined]
+  //     [arg1]                             [argN]
+  //     [arg0]                             ...
+  //     [this] <- sp aligned               [arg1]
+  //                                        [arg0]
+  //                                        [this] -> moved down numMissing+1
+  //                                                   slots
+  //
+  // Note that |newTarget|, if it exists, must be between the padding and the
+  // undefined args. It does not move down along with the actual args.
+
+  // The first step is to copy the memory from [this] through [argN] into the
+  // correct position. The source of the copy is the current stack pointer.
+  masm.moveStackPtrTo(src);
+
+  // Compute how far the args must be moved and adjust the stack pointer.
+  // If numMissing is even, this is numMissing slots. If numMissing is odd,
+  // this is numMissing+1 slots. We can compute this as (numMissing + 1) & ~1.
+  masm.add32(Imm32(1), numMissing, dest);
+  masm.and32(Imm32(~1), dest);
+  masm.lshift32(Imm32(3), dest);
+  masm.subFromStackPtr(dest);
+  masm.moveStackPtrTo(dest);
+
+  // We also set up a register pointing to the last copied argument. On x86
+  // we don't have enough registers, so we spill the calleeReg and numMissing.
+  if (mustSpill) {
+    masm.push(calleeReg);
+    masm.push(numMissing);
+  }
+  masm.computeEffectiveAddress(BaseValueIndex(src, argcReg), srcEnd);
+
+  // The stack currently looks like this:
+  //
+  //   [newTarget]
+  //   [argN] <-- srcEnd
+  //   ...
+  //   [arg0]
+  //   [this] <-- src
+  //   ...
+  //   ...    <-- dest
+  //   [spill?]
+  //   [spill?]
+
+  // Loop to move the arguments.
+  Label argLoop;
+  masm.bind(&argLoop);
+  masm.copy64(Address(src, 0), Address(dest, 0), scratch);
+  masm.addPtr(Imm32(sizeof(Value)), src);
+  masm.addPtr(Imm32(sizeof(Value)), dest);
+  masm.branchPtr(Assembler::BelowOrEqual, src, srcEnd, &argLoop);
+
+  if (mustSpill) {
+    // We must restore numMissing now, so that we can test if it's odd.
+    // The copy64 below still needs calleeReg as a scratch register.
+    masm.pop(numMissing);
+  }
+
+  if (isConstructing) {
+    // If numMissing is odd, we must move newTarget down by one slot.
+    Label skip;
+    masm.branchTest32(Assembler::Zero, numMissing, Imm32(1), &skip);
+    Address newTargetSrc(src, 0);
+    Address newTargetDest(src, -int32_t(sizeof(Value)));
+    masm.copy64(newTargetSrc, newTargetDest, scratch);
+    masm.bind(&skip);
+  }
+
+  if (mustSpill) {
+    masm.pop(calleeReg);
+  }
+
+  // Loop to fill the remaining numMissing slots with UndefinedValue.
+  // We do this last so that we can safely clobber numMissing.
+  Label undefLoop;
+  masm.bind(&undefLoop);
+  BaseValueIndex undefSlot(dest, numMissing, -int32_t(sizeof(Value)));
+  masm.storeValue(UndefinedValue(), undefSlot);
+  masm.branchSub32(Assembler::NonZero, Imm32(1), numMissing, &undefLoop);
+
+  masm.bind(&noUnderflow);
 }
 
 void JitRuntime::generateIonGenericCallNativeFunction(MacroAssembler& masm,
