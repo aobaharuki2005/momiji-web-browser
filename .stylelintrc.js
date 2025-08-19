@@ -270,6 +270,7 @@ module.exports = {
       },
     ],
     "stylelint-plugin-mozilla/no-base-design-tokens": true,
+    "stylelint-plugin-mozilla/use-border-radius-tokens": true,
   },
 
   overrides: [
