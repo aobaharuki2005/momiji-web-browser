@@ -88,7 +88,7 @@
 #  include "gfxAndroidPlatform.h"
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
-#  include "mozilla/jni/Utils.h"  // for IsFennec
+#  include "mozilla/java/HardwareCodecCapabilityUtilsWrappers.h"
 #endif
 
 #ifdef XP_WIN
@@ -3104,6 +3104,11 @@ void gfxPlatform::InitHardwareVideoConfig() {
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_ANDROID) || defined(XP_WIN)
   CODEC_HW_FEATURE_SETUP(H264)
   CODEC_HW_FEATURE_SETUP(HEVC)
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+  gfxVars::SetVP9HwDecodeIsAccelerated(
+      java::HardwareCodecCapabilityUtils::HasHWVP9(false /* aIsEncoder */));
 #endif
 
 #undef CODEC_HW_FEATURE_SETUP
