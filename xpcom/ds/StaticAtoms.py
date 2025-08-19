@@ -2511,6 +2511,8 @@ STATIC_ATOMS = [
     Atom("DirectoryService_Appdata", "AppData"),
     Atom("DirectoryService_LocalAppdata", "LocalAppData"),
     Atom("DirectoryService_WinCookiesDirectory", "CookD"),
+    Atom("DirectoryService_OneDrivePersonalDirectory", "OneDrPD"),
+    Atom("DirectoryService_OneDriveBusinessDirectoryList", "OneDrBDL"),
     Atom("_ua_view_transition_fade_out", "-ua-view-transition-fade-out"),
     Atom("_ua_view_transition_fade_in", "-ua-view-transition-fade-in"),
     Atom("_ua_mix_blend_mode_plus_lighter", "-ua-mix-blend-mode-plus-lighter"),
