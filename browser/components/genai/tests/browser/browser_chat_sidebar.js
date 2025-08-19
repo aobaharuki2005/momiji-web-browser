@@ -325,3 +325,29 @@ add_task(async function test_keyboard_shortcut() {
     "Already opened"
   );
 });
+
+/**
+ * Check Picture in Picture actors are not attached in sidebar chatbot
+ */
+add_task(async function test_pip_actor_not_chat_sidebar() {
+  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+    const wgp = browser.browsingContext.currentWindowGlobal;
+    const actor = wgp.getActor("PictureInPictureToggle");
+    ok(actor, "PiP toggle actor exist in tab content");
+
+    await SidebarController.show("viewGenaiChatSidebar");
+
+    const sidebarBrowser = SidebarController.browser.browsingContext;
+
+    // PiP actors are registered only for the "browsers" group
+    // Note: Use isContent instead of getActor()
+    // Calling getActor() in the non tab content would throw.
+    is(
+      sidebarBrowser.isContent,
+      false,
+      "PiP toggle actor shouldn't apply in chrome context"
+    );
+
+    await SidebarController.hide();
+  });
+});
