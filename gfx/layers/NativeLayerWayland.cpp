@@ -106,10 +106,19 @@ void NativeLayerRootWayland::Init() {
   if (!gfx::gfxVars::UseDMABufSurfaceExport()) {
     RefPtr<DMABufFormats> formats = WaylandDisplayGet()->GetDMABufFormats();
     if (formats) {
-      mDRMFormat = formats->GetFormat(GBM_FORMAT_ARGB8888,
-                                      /* aScanoutFormat */ true);
+      if (!(mDRMFormat = formats->GetFormat(GBM_FORMAT_ARGB8888,
+                                            /* aScanoutFormat */ true))) {
+        LOGVERBOSE(
+            "NativeLayerRootWayland::Init() missing scanout format, use global "
+            "one");
+        mDRMFormat = formats->GetFormat(GBM_FORMAT_ARGB8888,
+                                        /* aScanoutFormat */ false);
+      }
     }
     if (!mDRMFormat) {
+      LOGVERBOSE(
+          "NativeLayerRootWayland::Init() fallback to format without "
+          "modifiers");
       mDRMFormat = new DRMFormat(GBM_FORMAT_ARGB8888);
     }
   }
