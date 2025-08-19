@@ -127,14 +127,14 @@ export default class IPProtectionContentElement extends MozLitElement {
   /**
    * Returns the formatted connection duration time string as HH:MM:SS (hours, minutes, seconds).
    *
-   * @param {Date} startMS
+   * @param {number} startMS
    *  The timestamp in milliseconds since a connection to the proxy was made.
    * @returns {string}
    *  The formatted time in HH:MM:SS.
    */
   #getFormattedTime(startMS) {
     let duration = window.Temporal.Duration.from({
-      milliseconds: Date.now() - startMS,
+      milliseconds: Math.ceil(Cu.now() - startMS),
     }).round({ smallestUnit: "seconds", largestUnit: "hours" });
 
     let formatter = new Intl.DurationFormat("en-US", {
