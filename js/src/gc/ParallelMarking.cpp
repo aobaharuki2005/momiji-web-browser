@@ -72,7 +72,6 @@ bool ParallelMarker::mark(const SliceBudget& sliceBudget) {
   gcstats::AutoPhase ap(gc->stats(), gcstats::PhaseKind::PARALLEL_MARK);
 
   MOZ_ASSERT(workerCount() <= MaxParallelWorkers);
-  mozilla::Maybe<ParallelMarkTask> tasks[MaxParallelWorkers];
 
   for (size_t i = 0; i < workerCount(); i++) {
     GCMarker* marker = gc->markers[i].get();
@@ -99,8 +98,7 @@ bool ParallelMarker::mark(const SliceBudget& sliceBudget) {
 
   // Run the parallel tasks, using the main thread for the first one.
   for (size_t i = 1; i < workerCount(); i++) {
-    ParallelMarkTask& task = *tasks[i];
-    gc->startTask(task, lock);
+    gc->startTask(*tasks[i], lock);
   }
   tasks[0]->runFromMainThread(lock);
   tasks[0]->recordDuration();  // Record stats as if it used a helper thread.
