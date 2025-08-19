@@ -171,6 +171,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   mozilla::StyleMathVariant mMathVariant;
   // math-style support (used for MathML displaystyle)
   mozilla::StyleMathStyle mMathStyle;
+  // math-shift support (used for MathML cramped mode)
+  mozilla::StyleMathShift mMathShift;
 
   // Was mLanguage set based on a lang attribute in the document?
   bool mExplicitLanguage = false;

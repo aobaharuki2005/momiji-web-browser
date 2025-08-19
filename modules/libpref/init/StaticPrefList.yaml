@@ -10924,6 +10924,12 @@
 #endif
   mirror: always
 
+# Whether to enable support for the math-shift CSS property.
+- name: mathml.math_shift.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to disable the MathML3 support for the mathvariant attribute. For
 # MathML Core, support is restricted to the <mi> element and to value "normal".
 # Corresponding automatic italicization on single-char <mi> element is also
