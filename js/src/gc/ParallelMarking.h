@@ -31,9 +31,7 @@ class ParallelMarker;
 using ParallelTaskBitset = mozilla::BitSet<MaxParallelWorkers, uint32_t>;
 
 // A helper thread task that performs parallel marking.
-class alignas(TypicalCacheLineSize) ParallelMarkTask
-    : public GCParallelTask,
-      public mozilla::DoublyLinkedListElement<ParallelMarkTask> {
+class alignas(TypicalCacheLineSize) ParallelMarkTask : public GCParallelTask {
  public:
   friend class ParallelMarker;
 
@@ -88,7 +86,8 @@ class MOZ_STACK_CLASS ParallelMarker {
  public:
   static bool mark(GCRuntime* gc, const JS::SliceBudget& sliceBudget);
 
-  bool hasWaitingTasks() { return waitingTaskCount != 0; }
+  bool hasWaitingTasks() const { return !waitingTasks.IsEmpty(); }
+
   void donateWorkFrom(GCMarker* src);
 
  private:
@@ -109,6 +108,7 @@ class MOZ_STACK_CLASS ParallelMarker {
   bool isTaskInWaitingList(const ParallelMarkTask* task,
                            const AutoLockHelperThreadState& lock) const;
 #endif
+  ParallelMarkTask* takeWaitingTask();
 
   bool hasActiveTasks(const AutoLockHelperThreadState& lock) const {
     return !activeTasks.ref().IsEmpty();
@@ -126,11 +126,11 @@ class MOZ_STACK_CLASS ParallelMarker {
 
   mozilla::Maybe<ParallelMarkTask> tasks[MaxParallelWorkers];
 
-  using ParallelMarkTaskList = mozilla::DoublyLinkedList<ParallelMarkTask>;
-  HelperThreadLockData<ParallelMarkTaskList> waitingTasks;
-
-  using AtomicCount = ParallelMarkTask::AtomicCount;
-  AtomicCount waitingTaskCount;
+  // waitingTasks is written to with the lock held but can be read without.
+  using WaitingTaskSet =
+      mozilla::BitSet<MaxParallelWorkers,
+                      mozilla::Atomic<uint32_t, mozilla::Relaxed>>;
+  WaitingTaskSet waitingTasks;
 
   HelperThreadLockData<ParallelTaskBitset> activeTasks;
 
@@ -138,7 +138,7 @@ class MOZ_STACK_CLASS ParallelMarker {
 };
 
 inline ParallelMarkTask::AtomicCount& ParallelMarkTask::waitingTaskCountRef() {
-  return pm->waitingTaskCount;
+  return pm->waitingTasks.Storage()[0];
 }
 
 }  // namespace gc

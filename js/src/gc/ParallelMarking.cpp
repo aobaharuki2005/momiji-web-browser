@@ -106,8 +106,7 @@ bool ParallelMarker::mark(const SliceBudget& sliceBudget) {
     gc->joinTask(*tasks[i], lock);
   }
 
-  MOZ_ASSERT(waitingTasks.ref().isEmpty());
-  MOZ_ASSERT(waitingTaskCount == 0);
+  MOZ_ASSERT(!hasWaitingTasks());
   MOZ_ASSERT(!hasActiveTasks(lock));
 
   return !hasWork(color);
@@ -275,20 +274,31 @@ void ParallelMarker::addTaskToWaitingList(
   MOZ_ASSERT(!task->hasWork());
   MOZ_ASSERT(hasActiveTasks(lock));
   MOZ_ASSERT(!isTaskInWaitingList(task, lock));
-  MOZ_ASSERT(waitingTaskCount < workerCount() - 1);
 
-  waitingTasks.ref().pushBack(task);
-  waitingTaskCount++;
+  uint32_t id = task->id;
+  MOZ_ASSERT(id < workerCount());
+  MOZ_ASSERT(!waitingTasks[id]);
+  waitingTasks[id] = true;
 }
 
 #ifdef DEBUG
 bool ParallelMarker::isTaskInWaitingList(
     const ParallelMarkTask* task, const AutoLockHelperThreadState& lock) const {
-  // The const cast is because ElementProbablyInList is not const.
-  return const_cast<ParallelMarkTaskList&>(waitingTasks.ref())
-      .ElementProbablyInList(const_cast<ParallelMarkTask*>(task));
+  uint32_t id = task->id;
+  MOZ_ASSERT(id < workerCount());
+  return waitingTasks[id];
 }
 #endif
+
+ParallelMarkTask* ParallelMarker::takeWaitingTask() {
+  MOZ_ASSERT(hasWaitingTasks());
+  uint32_t id = waitingTasks.FindFirst();
+  MOZ_ASSERT(id < workerCount());
+
+  MOZ_ASSERT(waitingTasks[id]);
+  waitingTasks[id] = false;
+  return &*tasks[id];
+}
 
 void ParallelMarker::setTaskActive(ParallelMarkTask* task,
                                    const AutoLockHelperThreadState& lock) {
@@ -310,11 +320,8 @@ void ParallelMarker::setTaskInactive(ParallelMarkTask* task,
   activeTasks.ref()[id] = false;
 
   if (!hasActiveTasks(lock)) {
-    while (!waitingTasks.ref().isEmpty()) {
-      ParallelMarkTask* task = waitingTasks.ref().popFront();
-      MOZ_ASSERT(waitingTaskCount != 0);
-      waitingTaskCount--;
-      task->resumeOnFinish(lock);
+    while (hasWaitingTasks()) {
+      takeWaitingTask()->resumeOnFinish(lock);
     }
   }
 }
@@ -332,7 +339,7 @@ void ParallelMarker::donateWorkFrom(GCMarker* src) {
   }
 
   // Check there are tasks waiting for work while holding the lock.
-  if (waitingTaskCount == 0) {
+  if (!hasWaitingTasks()) {
     gHelperThreadLock.unlock();
     if (profiler.enabled()) {
       profiler.markEvent("Parallel marking donate failed", "no tasks waiting");
@@ -340,9 +347,8 @@ void ParallelMarker::donateWorkFrom(GCMarker* src) {
     return;
   }
 
-  // Take the first waiting task off the list.
-  ParallelMarkTask* waitingTask = waitingTasks.ref().popFront();
-  waitingTaskCount--;
+  // Take a waiting task off the list.
+  ParallelMarkTask* waitingTask = takeWaitingTask();
 
   // |task| is not running so it's safe to move work to it.
   MOZ_ASSERT(waitingTask->isWaiting);
