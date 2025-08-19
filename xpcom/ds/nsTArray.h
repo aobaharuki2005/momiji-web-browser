@@ -3064,7 +3064,7 @@ class MOZ_NON_MEMMOVABLE MOZ_GSL_OWNER AutoTArray : public nsTArray<E> {
       // Switch back to our auto-buffer.
       auto* header = reinterpret_cast<Header*>(&mAutoBuf);
       base_type::relocation_type::RelocateNonOverlappingRegionWithHeader(
-        header, this->mHdr, length, sizeof(value_type));
+          header, this->mHdr, length, sizeof(value_type));
       header->mCapacity = N;
       header->mIsAutoBuffer = true;
       nsTArrayFallibleAllocator::Free(this->mHdr);
