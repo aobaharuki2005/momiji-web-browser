@@ -580,6 +580,22 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Used to determine users who have interacted with any links from the Terms of Use prompt.
+     */
+    var hasClickedTermOfUsePromptLink by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_terms_clicked_link),
+        default = false,
+    )
+
+    /**
+     * Used to determine users who clicked the "remind me later" action.
+     */
+    var hasClickedTermOfUsePromptRemindMeLater by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_terms_clicked_remind_me_later),
+        default = false,
+    )
+
+    /**
      * The daily usage ping is not normally tied to normal telemetry.  We set the default value to
      * [isTelemetryEnabled] because this setting was added in early 2025 and we want to make
      * sure that users who upgrade and had telemetry disabled don't start sending the

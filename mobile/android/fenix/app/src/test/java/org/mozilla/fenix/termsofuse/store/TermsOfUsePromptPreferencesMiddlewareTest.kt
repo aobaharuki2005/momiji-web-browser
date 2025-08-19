@@ -85,17 +85,64 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
     }
 
     @Test
+    fun `WHEN the OnRemindMeLaterClicked action is received THEN the preference will be updated`() {
+        assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
+        assertFalse(settings.hasClickedTermOfUsePromptLink)
+        middleware.invoke(
+            context = context,
+            next = {},
+            action = TermsOfUsePromptAction.OnRemindMeLaterClicked(Surface.HOMEPAGE_NEW_TAB),
+        )
+        assertTrue(settings.hasClickedTermOfUsePromptRemindMeLater)
+        assertTrue(settings.hasClickedTermOfUsePromptLink)
+    }
+
+    @Test
+    fun `WHEN the OnLearnMoreClicked action is received THEN the preference will be updated`() {
+        assertFalse(settings.hasClickedTermOfUsePromptLink)
+        middleware.invoke(
+            context = context,
+            next = {},
+            action = TermsOfUsePromptAction.OnLearnMoreClicked(Surface.HOMEPAGE_NEW_TAB),
+        )
+
+        assertTrue(settings.hasClickedTermOfUsePromptLink)
+    }
+
+    @Test
+    fun `WHEN the OnPrivacyNoticeClicked action is received THEN the preference will be updated`() {
+        assertFalse(settings.hasClickedTermOfUsePromptLink)
+        middleware.invoke(
+            context = context,
+            next = {},
+            action = TermsOfUsePromptAction.OnPrivacyNoticeClicked(Surface.HOMEPAGE_NEW_TAB),
+        )
+
+        assertTrue(settings.hasClickedTermOfUsePromptLink)
+    }
+
+    @Test
+    fun `WHEN the OnTermsOfUseClicked action is received THEN the preference will be updated`() {
+        assertFalse(settings.hasClickedTermOfUsePromptLink)
+        middleware.invoke(
+            context = context,
+            next = {},
+            action = TermsOfUsePromptAction.OnTermsOfUseClicked(Surface.HOMEPAGE_NEW_TAB),
+        )
+
+        assertTrue(settings.hasClickedTermOfUsePromptLink)
+    }
+
+    @Test
     fun `WHEN action is noop THEN the repository settings are not updated`() {
         assertNoOpAction(TermsOfUsePromptAction.OnImpression(Surface.HOMEPAGE_NEW_TAB))
-        assertNoOpAction(TermsOfUsePromptAction.OnLearnMoreClicked(Surface.HOMEPAGE_NEW_TAB))
-        assertNoOpAction(TermsOfUsePromptAction.OnPrivacyNoticeClicked(Surface.HOMEPAGE_NEW_TAB))
-        assertNoOpAction(TermsOfUsePromptAction.OnTermsOfUseClicked(Surface.HOMEPAGE_NEW_TAB))
-        assertNoOpAction(TermsOfUsePromptAction.OnPromptDismissed)
     }
 
     private fun assertNoOpAction(action: TermsOfUsePromptAction) {
         assertFalse(settings.hasAcceptedTermsOfService)
         assertFalse(settings.hasPostponedAcceptingTermsOfUse)
+        assertFalse(settings.hasClickedTermOfUsePromptLink)
+        assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
 
         middleware.invoke(
             context = context,
@@ -105,5 +152,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
 
         assertFalse(settings.hasAcceptedTermsOfService)
         assertFalse(settings.hasPostponedAcceptingTermsOfUse)
+        assertFalse(settings.hasClickedTermOfUsePromptLink)
+        assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
     }
 }
