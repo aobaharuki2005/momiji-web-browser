@@ -2684,10 +2684,10 @@ void nsFocusManager::Focus(
     // if the window isn't visible, for instance because it is a hidden tab,
     // update the current focus and scroll it into view but don't do anything
     // else
-    if (RefPtr elementToFocus = FlushAndCheckIfFocusable(aElement, aFlags)) {
-      aWindow->SetFocusedElement(elementToFocus, focusMethod);
+    if (aElement) {
+      aWindow->SetFocusedElement(aElement, focusMethod);
       if (aFocusChanged) {
-        ScrollIntoView(presShell, elementToFocus, aFlags);
+        ScrollIntoView(presShell, aElement, aFlags);
       }
     }
     return;
@@ -2762,21 +2762,14 @@ void nsFocusManager::Focus(
     }
   }
 
-  const RefPtr<Element> elementToFocus =
-      [&]() MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION -> Element* {
+  const RefPtr<Element> elementToFocus = [&]() -> Element* {
     if (!aElement || !aElement->IsInComposedDoc() ||
         aElement->GetComposedDoc() != aWindow->GetExtantDoc()) {
       // Element moved documents, don't focus it to prevent redirecting focus to
       // the wrong window.
       return nullptr;
     }
-    if (aBlurredElementInfo) {
-      // Don't flush if moving focus. Caller already computed the right element
-      // to move the focus to, and the element's focusability may depend on the
-      // :focus state itself that we're about to set.
-      return aElement;
-    }
-    return FlushAndCheckIfFocusable(aElement, aFlags);
+    return aElement;
   }();
   if (elementToFocus && !mFocusedElement &&
       GetFocusedBrowsingContext() == aWindow->GetBrowsingContext()) {
