@@ -4,56 +4,56 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAboutProtocolUtils.h"
-#include "nsArray.h"
 #include "nsContentSecurityManager.h"
-#include "nsContentSecurityUtils.h"
-#include "nsContentPolicyUtils.h"
-#include "nsEscape.h"
-#include "nsDataHandler.h"
-#include "nsIChannel.h"
-#include "nsIContentPolicy.h"
-#include "nsIHttpChannelInternal.h"
-#include "nsINode.h"
-#include "nsIStreamListener.h"
-#include "nsILoadInfo.h"
-#include "nsIMIMEService.h"
-#include "nsIOService.h"
-#include "nsContentUtils.h"
-#include "nsCORSListenerProxy.h"
-#include "nsIParentChannel.h"
-#include "nsIRedirectHistoryEntry.h"
-#include "nsIXULRuntime.h"
-#include "nsNetUtil.h"
-#include "nsReadableUtils.h"
-#include "nsSandboxFlags.h"
-#include "nsScriptSecurityManager.h"
-#include "nsIXPConnect.h"
 
+#include "js/RegExp.h"
+#include "jsapi.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/nsMixedContentBlocker.h"
-#include "mozilla/dom/BrowserChild.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/PolicyContainer.h"
-#include "mozilla/extensions/WebExtensionPolicy.h"
-#include "mozilla/glean/DomSecurityMetrics.h"
 #include "mozilla/Components.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_content.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_security.h"
-#include "xpcpublic.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/PolicyContainer.h"
+#include "mozilla/dom/nsMixedContentBlocker.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
+#include "mozilla/glean/DomSecurityMetrics.h"
+#include "nsAboutProtocolUtils.h"
+#include "nsArray.h"
+#include "nsCORSListenerProxy.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentSecurityUtils.h"
+#include "nsContentUtils.h"
+#include "nsDataHandler.h"
+#include "nsEscape.h"
+#include "nsIChannel.h"
+#include "nsIContentPolicy.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsILoadInfo.h"
+#include "nsIMIMEService.h"
+#include "nsINode.h"
+#include "nsIOService.h"
+#include "nsIParentChannel.h"
+#include "nsIRedirectHistoryEntry.h"
+#include "nsIStreamListener.h"
+#include "nsIXPConnect.h"
+#include "nsIXULRuntime.h"
 #include "nsMimeTypes.h"
-
-#include "jsapi.h"
-#include "js/RegExp.h"
+#include "nsNetUtil.h"
+#include "nsReadableUtils.h"
+#include "nsSandboxFlags.h"
+#include "nsScriptSecurityManager.h"
+#include "xpcpublic.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -358,10 +358,17 @@ static nsresult DoCORSChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo,
     return NS_OK;
   }
 
-  // We use the triggering principal here, rather than the loading principal
-  // to ensure that anonymous CORS content in the browser resources and in
-  // WebExtensions is allowed to load.
-  nsIPrincipal* principal = aLoadInfo->TriggeringPrincipal();
+  nsIPrincipal* principal = aLoadInfo->GetLoadingPrincipal();
+  if (StaticPrefs::content_cors_use_triggering_principal()) {
+    // We use the triggering principal here, rather than the loading principal,
+    // to ensure that WebExtensions can reuse their own resources from content
+    // that they inject into a page.
+    //
+    // TODO(dholbert): Is there actually a legitimate reason that WebExtensions
+    // might need this (as opposed to exposing their resources for use in
+    // web-content via the 'web_accessible_resources' manifest field)?
+    principal = aLoadInfo->TriggeringPrincipal();
+  }
   RefPtr<nsCORSListenerProxy> corsListener = new nsCORSListenerProxy(
       aInAndOutListener, principal,
       aLoadInfo->GetCookiePolicy() == nsILoadInfo::SEC_COOKIES_INCLUDE);

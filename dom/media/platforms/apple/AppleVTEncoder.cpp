@@ -16,7 +16,6 @@
 #include "AnnexB.h"
 #include "H264.h"
 #include "ImageContainer.h"
-
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ImageUtils.h"
 

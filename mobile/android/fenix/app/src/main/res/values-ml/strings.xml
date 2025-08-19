@@ -1199,6 +1199,8 @@
   <string name="preference_simple_toolbar">എളുപ്പം</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">വലുതാക്കിയതു്</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">ടാബു പട്ട കാണിക്കുമ്പോൾ വിലാസപ്പട്ട മുകളിലുണ്ടാവണം.</string>
   <!--
     App icon Preferences
 
@@ -1394,6 +1396,12 @@
   <string name="tabs_header_normal_tabs_title">ടാബുകള്‍</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">സമന്വയം</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">പുതിയ ടാബു്</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">പുതിയ സ്വകാര്യ ടാബു്</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">ടാബുകൾ സമന്വയിപ്പിക്കുക</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">ടാബ് ചേര്‍ക്കുക</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -2859,6 +2867,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">കുറുക്കുവഴികൾ</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">എല്ലാ കുറുക്കുവഴികൾ കാണിക്കുക</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">കുറുക്കുവഴി പരിധി എത്തി</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

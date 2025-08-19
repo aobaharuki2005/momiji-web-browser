@@ -17,6 +17,45 @@ pub fn get_device_uid(
     }
 }
 
+pub fn get_device_from_devid(
+    devid: ffi::cubeb_devid,
+) -> std::result::Result<AudioDeviceID, OSStatus> {
+    debug_assert_running_serially();
+    if devid.is_null() {
+        return Ok(kAudioObjectUnknown);
+    }
+
+    let devid_cstr = unsafe { CStr::from_ptr(devid as _) };
+    let mut devid_cfsr = cfstringref_from_string(devid_cstr.to_str().unwrap());
+
+    let mut device_id: AudioDeviceID = kAudioObjectUnknown;
+
+    let mut translation_value = AudioValueTranslation {
+        mInputData: &mut devid_cfsr as *mut CFStringRef as *mut c_void,
+        mInputDataSize: mem::size_of::<CFStringRef>() as u32,
+        mOutputData: &mut device_id as *mut AudioDeviceID as *mut c_void,
+        mOutputDataSize: mem::size_of::<AudioDeviceID>() as u32,
+    };
+
+    let address = get_property_address(
+        Property::HardwareDeviceForUID,
+        DeviceType::INPUT | DeviceType::OUTPUT,
+    );
+
+    let mut translation_size: usize = mem::size_of::<AudioValueTranslation>();
+    let ret = audio_object_get_property_data(
+        kAudioObjectSystemObject,
+        &address,
+        &mut translation_size,
+        &mut translation_value,
+    );
+    if ret != NO_ERR {
+        return Err(ret);
+    }
+
+    Ok(device_id)
+}
+
 pub fn get_devices() -> Vec<AudioObjectID> {
     debug_assert_running_serially();
     let mut size: usize = 0;
@@ -403,6 +442,7 @@ pub enum Property {
     DeviceUID,
     HardwareDefaultInputDevice,
     HardwareDefaultOutputDevice,
+    HardwareDeviceForUID,
     HardwareDevices,
     ModelUID,
     StreamLatency,
@@ -428,6 +468,7 @@ impl From<Property> for AudioObjectPropertySelector {
             Property::DeviceUID => kAudioDevicePropertyDeviceUID,
             Property::HardwareDefaultInputDevice => kAudioHardwarePropertyDefaultInputDevice,
             Property::HardwareDefaultOutputDevice => kAudioHardwarePropertyDefaultOutputDevice,
+            Property::HardwareDeviceForUID => kAudioHardwarePropertyDeviceForUID,
             Property::HardwareDevices => kAudioHardwarePropertyDevices,
             Property::ModelUID => kAudioDevicePropertyModelUID,
             Property::StreamLatency => kAudioStreamPropertyLatency,

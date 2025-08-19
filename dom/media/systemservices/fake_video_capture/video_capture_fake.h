@@ -22,7 +22,7 @@ class VideoCaptureFake : public webrtc::videocapturemodule::VideoCaptureImpl {
  public:
   explicit VideoCaptureFake(nsISerialEventTarget* aTarget);
 
-  static rtc::scoped_refptr<webrtc::VideoCaptureModule> Create(
+  static webrtc::scoped_refptr<webrtc::VideoCaptureModule> Create(
       nsISerialEventTarget* aTarget);
 
   // Implementation of VideoCaptureImpl.

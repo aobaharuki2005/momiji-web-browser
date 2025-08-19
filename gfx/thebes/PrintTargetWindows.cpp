@@ -7,7 +7,9 @@
 
 #include "cairo-win32.h"
 #include "mozilla/gfx/HelpersCairo.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "nsCoord.h"
+#include "nsIContentAnalysis.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -74,6 +76,20 @@ nsresult PrintTargetWindows::BeginPrinting(const nsAString& aTitle,
   docinfo.lpszDatatype = nullptr;
   docinfo.fwType = 0;
 
+  // StartDocW has a bug where it abandons the operation if we lose focus
+  // before it presents a file dialog in print-to-file cases.  This happens
+  // in some cases where a connected content-analysis agent presents a
+  // dialog about the print permission *before* StartDocW can open its
+  // file dialog.  We prevent applications (but not the user) from interfering
+  // with window activation until the print job is submitted.  See bug 1980225.
+  // This is currently gated on a pref which should be removed if this is kept.
+  bool lockSfw =
+      StaticPrefs::
+          browser_contentanalysis_windows_lock_foreground_window_on_print() &&
+      nsIContentAnalysis::MightBeActive();
+  if (lockSfw) {
+    ::LockSetForegroundWindow(LSFW_LOCK);
+  }
   // If the user selected Microsoft Print to PDF or XPS Document Printer, then
   // the following StartDoc call will put up a dialog window to prompt the
   // user to provide the name and location of the file to be saved.  A zero or
@@ -83,6 +99,10 @@ nsresult PrintTargetWindows::BeginPrinting(const nsAString& aTitle,
   // case.
   // XXX We should perhaps introduce a new NS_ERROR_USER_CANCELLED errer.
   int result = ::StartDocW(mDC, &docinfo);
+  if (lockSfw) {
+    ::LockSetForegroundWindow(LSFW_UNLOCK);
+  }
+
   if (result <= 0) {
     if (::GetLastError() == ERROR_CANCELLED) {
       return NS_ERROR_ABORT;

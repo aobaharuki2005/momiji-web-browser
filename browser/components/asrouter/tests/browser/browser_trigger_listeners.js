@@ -663,3 +663,23 @@ add_task(async function test_elementClicked_trigger() {
   buttonClickTrigger.uninit();
   document.documentElement.removeChild(button);
 });
+
+add_task(async function test_ipprotection_ready() {
+  const sandbox = sinon.createSandbox();
+  const receivedTrigger = new Promise(resolve => {
+    sandbox.stub(ASRouter, "sendTriggerMessage").callsFake(({ id }) => {
+      if (id === "ipProtectionReady") {
+        resolve(true);
+      }
+    });
+  });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ipProtection.enabled", true]],
+  });
+
+  let ipProtectionReadyTrigger = await receivedTrigger;
+  Assert.ok(ipProtectionReadyTrigger, "ipProtectionReady trigger sent");
+
+  sandbox.restore();
+});

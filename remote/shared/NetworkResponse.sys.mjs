@@ -9,6 +9,28 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 /**
+ * Forward the encodedResponseBody built by the NetworkResponse to devtools'
+ * decodeResponseChunks helper.
+ *
+ * @param {object} encodedResponseBody
+ *     A custom "encoded response body" object containing all the properties
+ *     required to decode the body.
+ * @returns {string}
+ *     The decoded response body as a string (either text or base64).
+ */
+async function decodeReponseBody(encodedResponseBody) {
+  return lazy.NetworkUtils.decodeResponseChunks(
+    encodedResponseBody.encodedData,
+    {
+      charset: encodedResponseBody.charset,
+      encoding: encodedResponseBody.encoding,
+      compressionEncodings: encodedResponseBody.compressionEncodings,
+      encodedBodySize: encodedResponseBody.encodedBodySize,
+    }
+  );
+}
+
+/**
  * The NetworkResponse class is a wrapper around the internal channel which
  * provides getters and methods closer to fetch's response concept
  * (https://fetch.spec.whatwg.org/#concept-response).
@@ -22,6 +44,7 @@ export class NetworkResponse {
   #isCachedResource;
   #isDataURL;
   #headersTransmittedSize;
+  #responseBodyReady;
   #status;
   #statusMessage;
   #totalTransmittedSize;
@@ -53,6 +76,7 @@ export class NetworkResponse {
     this.#fromServiceWorker = fromServiceWorker;
     this.#isCachedResource = isCachedResource;
     this.#isDataURL = this.#channel instanceof Ci.nsIDataChannel;
+    this.#responseBodyReady = Promise.withResolvers();
     this.#wrappedChannel = ChannelWrapper.get(channel);
 
     this.#decodedBodySize = 0;
@@ -136,6 +160,25 @@ export class NetworkResponse {
     );
   }
 
+  async readResponseBody() {
+    return this.#responseBodyReady.promise;
+  }
+
+  setResponseContent(responseContent) {
+    // Extract the properties necessary to decode the response body later on.
+    const encodedResponseBody = {
+      charset: responseContent.contentCharset,
+      compressionEncodings: responseContent.compressionEncodings,
+      encodedData: responseContent.encodedData,
+      encodedBodySize: responseContent.encodedBodySize,
+      encoding: responseContent.encoding,
+      getDecodedResponseBody: async () =>
+        decodeReponseBody(encodedResponseBody),
+    };
+
+    this.#responseBodyReady.resolve(encodedResponseBody);
+  }
+
   /**
    * Set a response header
    *
@@ -211,6 +254,21 @@ export class NetworkResponse {
       statusMessage: this.statusMessage,
       totalTransmittedSize: this.totalTransmittedSize,
     };
+  }
+
+  /**
+   * Check if this response will lead to a redirect.
+   */
+  willRedirect() {
+    // See static helper on nsHttpChannel:WillRedirect
+    // https://searchfox.org/mozilla-central/rev/6b4cb595d05ac38e2cfc493e3b81fe4c97a71f12/netwerk/protocol/http/nsHttpChannel.cpp#283-288
+    const isRedirectStatus =
+      this.#status == 301 ||
+      this.#status == 302 ||
+      this.#status == 303 ||
+      this.#status == 307 ||
+      this.#status == 308;
+    return isRedirectStatus && this.#channel.getResponseHeader("Location");
   }
 
   #getComputedMimeType() {

@@ -124,8 +124,6 @@ describe("DiscoveryStreamFeed", () => {
 
     fakePktApi = {
       isUserLoggedIn: () => false,
-      getRecentSavesCache: () => null,
-      getRecentSaves: () => null,
     };
     globals.set("pktApi", fakePktApi);
   });
@@ -294,55 +292,17 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#setupPocketState", () => {
-    it("should setup logged in state and recent saves with cache", async () => {
+    it("should setup logged in state", async () => {
       fakePktApi.isUserLoggedIn = () => true;
-      fakePktApi.getRecentSavesCache = () => [1, 2, 3];
       sandbox.spy(feed.store, "dispatch");
       await feed.setupPocketState({});
-      assert.calledTwice(feed.store.dispatch);
+      assert.calledOnce(feed.store.dispatch);
       assert.calledWith(
         feed.store.dispatch.firstCall,
         ac.OnlyToOneContent(
           {
             type: at.DISCOVERY_STREAM_POCKET_STATE_SET,
             data: { isUserLoggedIn: true },
-          },
-          {}
-        )
-      );
-      assert.calledWith(
-        feed.store.dispatch.secondCall,
-        ac.OnlyToOneContent(
-          {
-            type: at.DISCOVERY_STREAM_RECENT_SAVES,
-            data: { recentSaves: [1, 2, 3] },
-          },
-          {}
-        )
-      );
-    });
-    it("should setup logged in state and recent saves without cache", async () => {
-      fakePktApi.isUserLoggedIn = () => true;
-      fakePktApi.getRecentSaves = ({ success }) => success([1, 2, 3]);
-      sandbox.spy(feed.store, "dispatch");
-      await feed.setupPocketState({});
-      assert.calledTwice(feed.store.dispatch);
-      assert.calledWith(
-        feed.store.dispatch.firstCall,
-        ac.OnlyToOneContent(
-          {
-            type: at.DISCOVERY_STREAM_POCKET_STATE_SET,
-            data: { isUserLoggedIn: true },
-          },
-          {}
-        )
-      );
-      assert.calledWith(
-        feed.store.dispatch.secondCall,
-        ac.OnlyToOneContent(
-          {
-            type: at.DISCOVERY_STREAM_RECENT_SAVES,
-            data: { recentSaves: [1, 2, 3] },
           },
           {}
         )
@@ -2172,7 +2132,6 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             region: "CA",
             pocketConfig: {
-              recentSavesEnabled: true,
               hideDescriptions: false,
               hideDescriptionsRegions: "US,CA,GB",
               compactImages: true,
@@ -2181,8 +2140,6 @@ describe("DiscoveryStreamFeed", () => {
               titleLines: "1",
               descLines: "1",
               readTime: true,
-              saveToPocketCard: false,
-              saveToPocketCardRegions: "US,CA,GB",
             },
           },
         },
@@ -2194,9 +2151,7 @@ describe("DiscoveryStreamFeed", () => {
         utmContent: "branchId",
       });
       assert.deepEqual(feed.store.dispatch.secondCall.args[0].data, {
-        recentSavesEnabled: true,
         pocketButtonEnabled: true,
-        saveToPocketCard: true,
         hideDescriptions: true,
         compactImages: true,
         imageGradient: true,
@@ -2645,16 +2600,6 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.calledOnce(feed.onPrefChange);
     });
-    it("should fire onCollectionsChanged when collections pref changes", async () => {
-      sandbox.stub(feed, "onCollectionsChanged").returns(Promise.resolve());
-
-      await feed.onAction({
-        type: at.PREF_CHANGED,
-        data: { name: "discoverystream.sponsored-collections.enabled" },
-      });
-
-      assert.calledOnce(feed.onCollectionsChanged);
-    });
     it("should re enable stories when top stories is turned on", async () => {
       sandbox.stub(feed, "refreshAll").returns(Promise.resolve());
       feed.loaded = true;
@@ -2728,16 +2673,6 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({ type: at.SYSTEM_TICK });
       assert.calledWith(feed.refreshAll, { updateOpenTabs: false });
-    });
-  });
-
-  describe("#onCollectionsChanged", () => {
-    it("should call loadLayout when Pocket config changes", async () => {
-      sandbox.stub(feed, "loadLayout").callsFake(dispatch => dispatch("foo"));
-      sandbox.stub(feed.store, "dispatch");
-      await feed.onCollectionsChanged();
-      assert.calledOnce(feed.loadLayout);
-      assert.calledWith(feed.store.dispatch, ac.AlsoToPreloaded("foo"));
     });
   });
 

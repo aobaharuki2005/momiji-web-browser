@@ -11,7 +11,7 @@
 
 #import <objc/message.h>
 
-#include "nsChildView.h"
+#include "nsCocoaWindow.h"
 #include "SDKDeclarations.h"
 #include "mozilla/StaticPrefs_widget.h"
 
@@ -98,7 +98,7 @@ static NSVisualEffectBlendingMode VisualEffectBlendingModeForVibrancyType(
 @end
 
 
-VibrancyManager::VibrancyManager(const nsChildView& aCoordinateConverter,
+VibrancyManager::VibrancyManager(const nsCocoaWindow& aCoordinateConverter,
                                  NSView* aContainerView)
     : mCoordinateConverter(aCoordinateConverter),
       mContainerView(aContainerView) {}

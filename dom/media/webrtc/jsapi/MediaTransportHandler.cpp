@@ -3,25 +3,26 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaTransportHandler.h"
+
 #include "MediaTransportHandlerIPC.h"
-#include "transport/sigslot.h"
 #include "transport/nricemediastream.h"
 #include "transport/nriceresolver.h"
+#include "transport/sigslot.h"
 #include "transport/transportflow.h"
-#include "transport/transportlayerice.h"
 #include "transport/transportlayerdtls.h"
+#include "transport/transportlayerice.h"
 #include "transport/transportlayersrtp.h"
 
 // Config stuff
-#include "mozilla/dom/RTCConfigurationBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/dom/RTCConfigurationBinding.h"
 
 // Parsing STUN/TURN URIs
 #include "nsIURI.h"
+#include "nsIURLParser.h"
 #include "nsNetUtil.h"
 #include "nsURLHelper.h"
-#include "nsIURLParser.h"
 
 // Logging stuff
 #include "common/browser_logging/CSFLog.h"
@@ -30,23 +31,18 @@
 #include "transport/rlogconnector.h"
 
 // DTLS
-#include "sdp/SdpAttribute.h"
-
-#include "transport/runnable_utils.h"
-
-#include "mozilla/Algorithm.h"
-
-#include "mozilla/dom/RTCStatsReportBinding.h"
-
-#include "nss.h"                // For NSS_NoDB_Init
-#include "mozilla/PublicSSL.h"  // For psm::InitializeCipherSuite
-
-#include "nsISocketTransportService.h"
-#include "nsDNSService2.h"
-
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
+
+#include "mozilla/Algorithm.h"
+#include "mozilla/PublicSSL.h"  // For psm::InitializeCipherSuite
+#include "mozilla/dom/RTCStatsReportBinding.h"
+#include "nsDNSService2.h"
+#include "nsISocketTransportService.h"
+#include "nss.h"  // For NSS_NoDB_Init
+#include "sdp/SdpAttribute.h"
+#include "transport/runnable_utils.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "mozilla/ProfilerMarkers.h"
@@ -183,6 +179,8 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   uint32_t mMinDtlsVersion = 0;
   uint32_t mMaxDtlsVersion = 0;
   bool mForceNoHost = false;
+  bool mAllowLoopback = false;
+  bool mAllowLinkLocal = false;
   Maybe<NrIceCtx::NatSimulatorConfig> mNatConfig;
 
   std::set<std::string> mSignaledAddresses;
@@ -458,10 +456,6 @@ nsresult MediaTransportHandler::ConvertIceServers(
 
 static NrIceCtx::GlobalConfig GetGlobalConfig() {
   NrIceCtx::GlobalConfig config;
-  config.mAllowLinkLocal =
-      Preferences::GetBool("media.peerconnection.ice.link_local", false);
-  config.mAllowLoopback =
-      Preferences::GetBool("media.peerconnection.ice.loopback", false);
   config.mTcpEnabled =
       Preferences::GetBool("media.peerconnection.ice.tcp", false);
   config.mStunClientMaxTransmits = Preferences::GetInt(
@@ -578,6 +572,10 @@ void MediaTransportHandlerSTS::CreateIceCtx(const std::string& aName) {
         mForceNoHost =
             Preferences::GetBool("media.peerconnection.ice.no_host", false);
         mNatConfig = GetNatConfig();
+        mAllowLoopback =
+            Preferences::GetBool("media.peerconnection.ice.loopback", false);
+        mAllowLinkLocal =
+            Preferences::GetBool("media.peerconnection.ice.link_local", false);
 
         MOZ_RELEASE_ASSERT(STSShutdownHandler::Instance());
         STSShutdownHandler::Instance()->Register(this);
@@ -641,6 +639,9 @@ nsresult MediaTransportHandlerSTS::SetIceConfig(
         if (config.mPolicy == NrIceCtx::ICE_POLICY_ALL && mForceNoHost) {
           config.mPolicy = NrIceCtx::ICE_POLICY_NO_HOST;
         }
+
+        config.mAllowLoopback = mAllowLoopback;
+        config.mAllowLinkLocal = mAllowLinkLocal;
         config.mNatSimulatorConfig = mNatConfig;
 
         nsresult rv;

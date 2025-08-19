@@ -178,11 +178,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
         suggestion.score = DEFAULT_SUGGESTION_SCORE;
       }
 
-      // Step 2: Apply relevancy ranking. For now we only do this for Merino
-      // suggestions, but we may expand it in the future.
-      if (suggestion.source == "merino") {
-        await this.#applyRanking(suggestion);
-      }
+      // Step 2: Apply relevancy ranking.
+      await this.#applyRanking(suggestion);
 
       // Step 3: Apply score overrides defined in `quickSuggestScoreMap`. It
       // maps telemetry types to scores.
@@ -287,6 +284,18 @@ class ProviderQuickSuggest extends UrlbarProvider {
     for (let backend of lazy.QuickSuggest.enabledBackends) {
       backend.onSearchSessionEnd(queryContext, controller, details);
     }
+  }
+
+  /**
+   * This is called only for dynamic result types.
+   *
+   * @param {UrlbarResult} result The result whose view will be updated.
+   * @returns {object} An object of view template.
+   */
+  getViewTemplate(result) {
+    return lazy.QuickSuggest.getFeatureByResult(result)?.getViewTemplate?.(
+      result
+    );
   }
 
   /**

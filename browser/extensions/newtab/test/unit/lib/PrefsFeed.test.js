@@ -196,6 +196,7 @@ describe("PrefsFeed", () => {
     sandbox
       .stub(global.NimbusFeatures.newtabWidgets, "getAllVariables")
       .returns({
+        enabled: true,
         listsEnabled: true,
         timerEnabled: false,
       });
@@ -209,6 +210,7 @@ describe("PrefsFeed", () => {
         data: {
           name: "widgetsConfig",
           value: {
+            enabled: true,
             listsEnabled: true,
             timerEnabled: false,
           },

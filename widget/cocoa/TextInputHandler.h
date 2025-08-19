@@ -18,11 +18,10 @@
 #include "nsTArray.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "WritingModes.h"
 
-class nsChildView;
+class nsCocoaWindow;
 
 namespace mozilla {
 namespace widget {
@@ -521,20 +520,20 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
    *                              sub classes should return from this method
    *                              without cleaning up.
    */
-  virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget);
+  virtual bool OnDestroyWidget(nsCocoaWindow* aDestroyingWidget);
 
  protected:
   // The creator of this instance, client and its text event dispatcher.
   // These members must not be nullptr after initialized until
   // OnDestroyWidget() is called.
-  nsChildView* mWidget;  // [WEAK]
+  nsCocoaWindow* mWidget;  // [WEAK]
   RefPtr<TextEventDispatcher> mDispatcher;
 
   // The native view for mWidget.
   // This view handles the actual text inputting.
   NSView<mozView>* mView;  // [STRONG]
 
-  TextInputHandlerBase(nsChildView* aWidget, NSView<mozView>* aNativeView);
+  TextInputHandlerBase(nsCocoaWindow* aWidget, NSView<mozView>* aNativeView);
   virtual ~TextInputHandlerBase();
 
   bool Destroyed() { return !mWidget; }
@@ -903,12 +902,12 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
 
 /**
  * IMEInputHandler manages:
- *   1. The IME/keyboard layout statement of nsChildView.
- *   2. The IME composition statement of nsChildView.
+ *   1. The IME/keyboard layout statement of nsCocoaWindow.
+ *   2. The IME composition statement of nsCocoaWindow.
  * And also provides the methods which controls the current IME transaction of
  * the instance.
  *
- * Note that an nsChildView handles one or more NSView's events.  E.g., even if
+ * Note that an nsCocoaWindow handles one or more NSView's events.  E.g., even if
  * a text editor on XUL panel element, the input events handled on the parent
  * (or its ancestor) widget handles it (the native focus is set to it).  The
  * actual focused view is notified by OnFocusChangeInGecko.
@@ -928,7 +927,7 @@ class IMEInputHandler : public TextInputHandlerBase {
                             uint32_t aIndexOfKeypress, void* aData) override;
 
  public:
-  virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget) override;
+  virtual bool OnDestroyWidget(nsCocoaWindow* aDestroyingWidget) override;
 
   virtual void OnFocusChangeInGecko(bool aFocus);
 
@@ -1075,8 +1074,9 @@ class IMEInputHandler : public TextInputHandlerBase {
   nsString mOriginalTextForTextSubstitution;
   NSTextCheckingResult* mCandidatedTextSubstitutionResult;
   bool mProcessTextSubstitution;
+  bool mBlockDismissTextSubstitutionPanel = false;
 
-  IMEInputHandler(nsChildView* aWidget, NSView<mozView>* aNativeView);
+  IMEInputHandler(nsCocoaWindow* aWidget, NSView<mozView>* aNativeView);
   virtual ~IMEInputHandler();
 
   void ResetTimer();
@@ -1116,22 +1116,12 @@ class IMEInputHandler : public TextInputHandlerBase {
 
  private:
   // If mIsIMEComposing is true, the composition string is stored here.
-  NSString* mIMECompositionString = nullptr;
-  // Store the composition start offset which is considered before dispatching
-  // eCompositionStart.
-  Maybe<uint32_t> mIMECompositionStartBeforeStart;
-  // Store the composition start in content.  This may be different from
-  // mIMECompositionBeforeStart if the web app changed the text after
-  // dispatching eCompositionStart.
-  Maybe<uint32_t> mIMECompositionStartInContent;
+  NSString* mIMECompositionString;
+  // If mIsIMEComposing is true, the start offset of the composition string.
+  uint32_t mIMECompositionStart;
 
   NSRange mMarkedRange;
   NSRange mSelectedRange;
-
-  // Store the override of mSelectedRange during a composition.  For avoiding
-  // IME to be confused at text changes before the composition, this keeps the
-  // selected range as in the composition string.
-  Maybe<NSRange> mSelectedRangeOverride;
 
   NSRange mRangeForWritingMode;  // range within which mWritingMode applies
   mozilla::WritingMode mWritingMode;
@@ -1276,7 +1266,7 @@ class TextInputHandler : public IMEInputHandler {
   static CFArrayRef CreateAllKeyboardLayoutList();
   static void DebugPrintAllKeyboardLayouts();
 
-  TextInputHandler(nsChildView* aWidget, NSView<mozView>* aNativeView);
+  TextInputHandler(nsCocoaWindow* aWidget, NSView<mozView>* aNativeView);
   virtual ~TextInputHandler();
 
   /**

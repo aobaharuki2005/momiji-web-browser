@@ -481,7 +481,10 @@ export class UrlbarView {
           icon: "chrome://branding/content/icon32.png",
         }
       ),
-      { rowLabel: this.#rowLabel(row) }
+      {
+        rowLabel: this.#rowLabel(row),
+        richSuggestionIconSize: 32,
+      }
     );
     this.#updateRow(row, tip);
     this.#updateIndices();
@@ -1228,7 +1231,8 @@ export class UrlbarView {
       results = results.slice(1);
     }
     let rowIndex = 0;
-    let resultIndex = 0;
+    // Make a copy of results, as we'll consume it along the way.
+    let resultsToInsert = results.slice();
     let visibleSpanCount = 0;
     let seenMisplacedResult = false;
     let seenSearchSuggestion = false;
@@ -1236,17 +1240,14 @@ export class UrlbarView {
     // Update each row with the next new result until we either encounter a row
     // that can't be updated or run out of new results. At that point, mark
     // remaining rows as stale.
-    while (
-      rowIndex < this.#rows.children.length &&
-      resultIndex < results.length
-    ) {
+    while (rowIndex < this.#rows.children.length && resultsToInsert.length) {
       let row = this.#rows.children[rowIndex];
       if (this.#isElementVisible(row)) {
         visibleSpanCount += lazy.UrlbarUtils.getSpanForResult(row.result);
       }
 
       if (!seenMisplacedResult) {
-        let result = results[resultIndex];
+        let result = resultsToInsert[0];
         seenSearchSuggestion =
           seenSearchSuggestion ||
           (!row.result.heuristic && this.#resultIsSearchSuggestion(row.result));
@@ -1254,7 +1255,7 @@ export class UrlbarView {
           this.#rowCanUpdateToResult(rowIndex, result, seenSearchSuggestion)
         ) {
           // We can replace the row's current result with the new one.
-          resultIndex++;
+          resultsToInsert.shift();
 
           if (result.isHiddenExposure) {
             // Don't increment `rowIndex` because we're not actually updating
@@ -1296,8 +1297,7 @@ export class UrlbarView {
     }
 
     // Add remaining results, if we have fewer rows than results.
-    for (; resultIndex < results.length; ++resultIndex) {
-      let result = results[resultIndex];
+    for (let result of resultsToInsert) {
       if (
         !seenMisplacedResult &&
         result.hasSuggestedIndex &&
@@ -1392,7 +1392,7 @@ export class UrlbarView {
     // These are used to cleanup result specific entities when row contents are
     // cleared to reuse the row for a different result.
     item._sharedAttributes = new Set(
-      [...item.attributes].map(v => v.name).concat(["stale", "id"])
+      [...item.attributes].map(v => v.name).concat(["stale", "id", "hidden"])
     );
     item._sharedClassList = new Set(item.classList);
 
@@ -1582,7 +1582,7 @@ export class UrlbarView {
     return classes;
   }
 
-  #createRowContentForRichSuggestion(item) {
+  #createRowContentForRichSuggestion(item, result) {
     item._content.toggleAttribute("selectable", true);
 
     let favicon = this.#createElement("img");
@@ -1628,6 +1628,16 @@ export class UrlbarView {
     body.appendChild(description);
     item._elements.set("description", description);
 
+    if (result.payload.descriptionLearnMoreTopic) {
+      let learnMoreLink = this.#createElement("a");
+      learnMoreLink.dataset.url = this.window.getHelpLinkURL(
+        result.payload.descriptionLearnMoreTopic
+      );
+      learnMoreLink.setAttribute("data-l10n-name", "learn-more-link");
+      learnMoreLink.toggleAttribute("selectable");
+      description.appendChild(learnMoreLink);
+    }
+
     let bottom = this.#createElement("div");
     bottom.className = "urlbarView-row-body-bottom";
     body.appendChild(bottom);
@@ -1635,6 +1645,11 @@ export class UrlbarView {
   }
 
   #addRowButtons(item, result) {
+    let container = this.#createElement("div");
+    container.className = "urlbarView-row-buttons";
+    item._elements.set("buttons", container);
+    item.appendChild(container);
+
     for (let i = 0; i < result.payload.buttons?.length; i++) {
       let button = result.payload.buttons[i];
       // We hold the name to each button data in payload to enable to get the
@@ -1698,7 +1713,7 @@ export class UrlbarView {
     item._buttons.set(name, button);
 
     if (!menu) {
-      item.appendChild(button);
+      item._elements.get("buttons").appendChild(button);
       return;
     }
 
@@ -1719,12 +1734,9 @@ export class UrlbarView {
       id: "urlbar-splitbutton-dropmarker",
     });
     dropmarker.setAttribute("role", "button");
-    let icon = this.#createElement("img");
-    icon.src = "chrome://global/skin/icons/arrow-down-12.svg";
-    dropmarker.appendChild(icon);
     container.appendChild(dropmarker);
 
-    item.appendChild(container);
+    item._elements.get("buttons").appendChild(container);
   }
 
   #createSecondaryAction(action, global = false) {
@@ -1803,6 +1815,8 @@ export class UrlbarView {
           oldResult.payload.userContextId
         ) &&
         result.type != oldResultType) ||
+      !!result.payload.descriptionLearnMoreTopic !=
+        !!oldResult.payload.descriptionLearnMoreTopic ||
       result.testForceNewContent;
 
     if (needsNewContent) {
@@ -2233,7 +2247,10 @@ export class UrlbarView {
   }
 
   #updateRowForRichSuggestion(item, result) {
-    this.#setRowSelectable(item, true);
+    this.#setRowSelectable(
+      item,
+      result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP
+    );
 
     let favicon = item._elements.get("favicon");
     if (result.richSuggestionIconSize) {
@@ -2348,13 +2365,7 @@ export class UrlbarView {
    *   an l10n object for the label's l10n string: `{ id, args }`
    */
   #updateRowLabel(item, isVisible, currentLabel) {
-    let label;
-    if (isVisible) {
-      label = this.#rowLabel(item, currentLabel);
-      if (label && lazy.ObjectUtils.deepEqual(label, currentLabel)) {
-        label = null;
-      }
-    }
+    let label = isVisible ? this.#rowLabel(item, currentLabel) : null;
 
     // When the row-inner is selected, screen readers won't naturally read the
     // label because it's a pseudo-element of the row, not the row-inner. To
@@ -2363,13 +2374,17 @@ export class UrlbarView {
     // have this element.
     let groupAriaLabel = item._elements.get("groupAriaLabel");
 
-    if (!label) {
+    if (
+      !label ||
+      item.result.hideRowLabel ||
+      lazy.ObjectUtils.deepEqual(label, currentLabel)
+    ) {
       this.#l10nCache.removeElementL10n(item, { attribute: "label" });
       if (groupAriaLabel) {
         groupAriaLabel.remove();
         item._elements.delete("groupAriaLabel");
       }
-      return null;
+      return label;
     }
 
     this.#l10nCache.setElementL10n(item, {
@@ -2409,10 +2424,7 @@ export class UrlbarView {
    *   returns an l10n object for the label's l10n string: `{ id, args }`
    */
   #rowLabel(row, currentLabel) {
-    if (
-      !lazy.UrlbarPrefs.get("groupLabels.enabled") ||
-      row.result.hideRowLabel
-    ) {
+    if (!lazy.UrlbarPrefs.get("groupLabels.enabled")) {
       return null;
     }
 
@@ -2506,7 +2518,8 @@ export class UrlbarView {
   }
 
   #setRowVisibility(row, visible) {
-    row.style.display = visible ? "" : "none";
+    row.toggleAttribute("hidden", !visible);
+
     if (
       !visible &&
       row.result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP &&
@@ -2537,7 +2550,7 @@ export class UrlbarView {
       return false;
     }
     let row = this.#getRowFromElement(element);
-    return row && row.style.display != "none";
+    return row && !row.hasAttribute("hidden");
   }
 
   #removeStaleRows() {

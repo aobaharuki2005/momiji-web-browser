@@ -43,8 +43,8 @@ export class SuggestFeature {
   }
 
   /**
-   * @returns {string | null}
-   *   If there is a feature-specific pref that is controlled by the user and
+   * @returns {Array}
+   *   If there are feature-specific prefs that are controlled by the user and
    *   toggles the feature on and off, the subclass should override this getter
    *   and return its name. It should also be included in `enablingPreferences`.
    *   The name should be recognized by `UrlbarPrefs`, i.e., it should be
@@ -62,8 +62,8 @@ export class SuggestFeature {
    *   `suggest.quicksuggest.sponsored` or `suggest.quicksuggest.nonsponsored`.
    *   If the feature has no such pref, this getter should return null.
    */
-  get primaryUserControlledPreference() {
-    return null;
+  get primaryUserControlledPreferences() {
+    return [];
   }
 
   /**
@@ -384,11 +384,11 @@ export class SuggestBackend extends SuggestFeature {
    *
    * @param {string} searchString
    *   The search string.
-   * @param {object} options
+   * @param {object} [options]
    *   Options object.
-   * @param {UrlbarQueryContext} options.queryContext
+   * @param {UrlbarQueryContext} [options.queryContext]
    *   The query context.
-   * @param {Array} options.types
+   * @param {?Array} [options.types]
    *   This is only intended to be used in special circumstances and normally
    *   should not be specified. Array of suggestion types to query. By default
    *   all enabled suggestion types are queried.
@@ -397,7 +397,7 @@ export class SuggestBackend extends SuggestFeature {
    *   suggestions matched or suggestions can't be fetched for any reason.
    * @abstract
    */
-  async query(searchString, { queryContext, types }) {
+  async query(searchString, { queryContext, types = null } = {}) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 

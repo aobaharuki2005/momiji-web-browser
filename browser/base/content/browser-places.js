@@ -35,7 +35,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
-  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
+  PanelMultiView:
+    "moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs",
   RecentlyClosedTabsAndWindowsMenuUtils:
     "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.sys.mjs",
 });
@@ -1801,11 +1802,7 @@ var BookmarkingUI = {
         // The page action panel element may not have been created yet.
         continue;
       }
-      if (starred) {
-        element.setAttribute("starred", "true");
-      } else {
-        element.removeAttribute("starred");
-      }
+      element.toggleAttribute("starred", starred);
     }
 
     if (!this.starBox) {

@@ -7,12 +7,12 @@
 #ifndef DOM_MEDIA_SYSTEMSERVICES_FAKEVIDEOSOURCE_H_
 #define DOM_MEDIA_SYSTEMSERVICES_FAKEVIDEOSOURCE_H_
 
+#include "MediaEventSource.h"
+#include "PerformanceRecorder.h"
 #include "mozilla/EventTargetCapability.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ThreadSafety.h"
-#include "MediaEventSource.h"
-#include "PerformanceRecorder.h"
 
 class nsITimer;
 

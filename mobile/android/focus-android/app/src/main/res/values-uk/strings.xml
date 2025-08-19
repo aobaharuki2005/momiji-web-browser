@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s надає вам контроль.</p> <p>Використовуйте його як приватний браузер: <ul> <li>Шукайте і переглядайте безпосередньо в програмі</li> <li>Блокуйте стеження (або змініть налаштування, щоб дозволити його)</li> <li>Видаляйте файли cookie, а також історію пошуку та перегляду</li> </ul> </p> <p>%1$s створено в Mozilla. Наша місія – розвивати здоровий та відкритий Інтернет.<br/> <a href=\"%2$s\">Докладніше</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">Докладніше</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Приватність і безпека</string>
   <!-- Preference summary for settings related to privacy and security -->

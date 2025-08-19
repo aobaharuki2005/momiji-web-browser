@@ -17,6 +17,7 @@ add_setup(async function () {
     set: [
       ["browser.urlbar.suggest.quickactions", false],
       ["browser.urlbar.scotchBonnet.enableOverride", false],
+      ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
     ],
   });
 
@@ -279,6 +280,36 @@ add_task(async function tabOnTopSites() {
   }
 });
 
+add_task(async function tabActionsSearchMode() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.searchRestrictKeywords.featureGate", true]],
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "@actions",
+  });
+  EventUtils.synthesizeKey("KEY_Enter");
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
+    isPreview: false,
+    entry: "keywordoffer",
+    restrictType: "keyword",
+  });
+  await expectTabThroughResults();
+
+  // We have to reopen the view to exit search mode.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+  await UrlbarTestUtils.exitSearchMode(window);
+
+  await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
+});
+
 async function expectTabThroughResults(options = { reverse: false }) {
   let resultCount = UrlbarTestUtils.getResultCount(window);
   Assert.greater(resultCount, 0, "There should be results");
@@ -342,6 +373,9 @@ async function waitForFocusOnNextFocusableElement(reverse = false) {
     "sidebar.revamp",
     false
   );
+  let sidebarLauncherVisible =
+    sidebarRevampEnabled &&
+    BrowserTestUtils.isVisible(document.querySelector("sidebar-main"));
   if (
     !Services.prefs.getBoolPref("browser.toolbars.keyboard_navigation", true)
   ) {
@@ -349,7 +383,7 @@ async function waitForFocusOnNextFocusableElement(reverse = false) {
     return BrowserTestUtils.waitForCondition(
       () =>
         document.activeElement ==
-        (!sidebarRevampEnabled ? gBrowser.selectedBrowser : sidebar)
+        (!sidebarLauncherVisible ? gBrowser.selectedBrowser : sidebar)
     );
   }
   let urlbar = document.getElementById("urlbar-container");

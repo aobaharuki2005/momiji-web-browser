@@ -148,11 +148,11 @@ const FEATURES = {
   AddonSuggestions:
     "resource:///modules/urlbar/private/AddonSuggestions.sys.mjs",
   AmpSuggestions: "resource:///modules/urlbar/private/AmpSuggestions.sys.mjs",
-  FakespotSuggestions:
-    "resource:///modules/urlbar/private/FakespotSuggestions.sys.mjs",
   DynamicSuggestions:
     "resource:///modules/urlbar/private/DynamicSuggestions.sys.mjs",
   ImpressionCaps: "resource:///modules/urlbar/private/ImpressionCaps.sys.mjs",
+  MarketSuggestions:
+    "resource:///modules/urlbar/private/MarketSuggestions.sys.mjs",
   MDNSuggestions: "resource:///modules/urlbar/private/MDNSuggestions.sys.mjs",
   SuggestBackendMerino:
     "resource:///modules/urlbar/private/SuggestBackendMerino.sys.mjs",
@@ -517,19 +517,20 @@ class _QuickSuggest {
     // Clear the user value of each feature's primary user-controlled pref if
     // its value is `false`.
     for (let [name, feature] of this.#featuresByName) {
-      let pref = feature.primaryUserControlledPreference;
-      // This should never throw, but try-catch to avoid breaking the entire
-      // loop if `UrlbarPrefs` doesn't recognize a pref in one iteration.
-      try {
-        if (pref && !lazy.UrlbarPrefs.get(pref)) {
-          lazy.UrlbarPrefs.clear(pref);
+      for (let pref of feature.primaryUserControlledPreferences) {
+        // This should never throw, but try-catch to avoid breaking the entire
+        // loop if `UrlbarPrefs` doesn't recognize a pref in one iteration.
+        try {
+          if (pref && !lazy.UrlbarPrefs.get(pref)) {
+            lazy.UrlbarPrefs.clear(pref);
+          }
+        } catch (error) {
+          this.logger.error("Error clearing primaryEnablingPreference", {
+            "feature.name": name,
+            pref,
+            error,
+          });
         }
-      } catch (error) {
-        this.logger.error("Error clearing primaryEnablingPreference", {
-          "feature.name": name,
-          pref,
-          error,
-        });
       }
     }
 
@@ -552,23 +553,27 @@ class _QuickSuggest {
     // Return true if any feature's primary user-controlled pref is `false` on
     // the user branch.
     for (let [name, feature] of this.#featuresByName) {
-      let pref = feature.primaryUserControlledPreference;
-      // This should never throw, but try-catch to avoid breaking the entire
-      // loop if `UrlbarPrefs` doesn't recognize a pref in one iteration.
-      try {
-        if (
-          pref &&
-          !lazy.UrlbarPrefs.get(pref) &&
-          lazy.UrlbarPrefs.hasUserValue(pref)
-        ) {
-          return true;
+      for (let pref of feature.primaryUserControlledPreferences) {
+        // This should never throw, but try-catch to avoid breaking the entire
+        // loop if `UrlbarPrefs` doesn't recognize a pref in one iteration.
+        try {
+          if (
+            pref &&
+            !lazy.UrlbarPrefs.get(pref) &&
+            lazy.UrlbarPrefs.hasUserValue(pref)
+          ) {
+            return true;
+          }
+        } catch (error) {
+          this.logger.error(
+            "Error accessing primaryUserControlledPreferences",
+            {
+              "feature.name": name,
+              pref,
+              error,
+            }
+          );
         }
-      } catch (error) {
-        this.logger.error("Error accessing primaryUserControlledPreference", {
-          "feature.name": name,
-          pref,
-          error,
-        });
       }
     }
 
@@ -628,7 +633,7 @@ class _QuickSuggest {
 
     for (let f of features) {
       f.update();
-      if (pref == f.primaryUserControlledPreference) {
+      if (f.primaryUserControlledPreferences.includes(pref)) {
         isPrimaryUserControlledPref = true;
       }
     }

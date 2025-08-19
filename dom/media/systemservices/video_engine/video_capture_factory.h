@@ -7,10 +7,9 @@
 #ifndef MOZILLA_VIDEO_CAPTURE_FACTORY_H_
 #define MOZILLA_VIDEO_CAPTURE_FACTORY_H_
 
+#include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_factory.h"
 #include "modules/video_capture/video_capture_options.h"
-#include "modules/video_capture/video_capture.h"
-
 #include "mozilla/MozPromise.h"
 
 namespace mozilla::camera {
@@ -37,7 +36,7 @@ class VideoCaptureFactory : webrtc::VideoCaptureOptions::Callback {
       int32_t aId, mozilla::camera::CaptureDeviceType aType);
 
   struct CreateVideoCaptureResult {
-    rtc::scoped_refptr<webrtc::VideoCaptureModule> mCapturer;
+    webrtc::scoped_refptr<webrtc::VideoCaptureModule> mCapturer;
     // Pointer to the DesktopCaptureImpl instance if mCapturer is of this type.
     // nullptr otherwise.
     webrtc::DesktopCaptureImpl* mDesktopImpl = nullptr;

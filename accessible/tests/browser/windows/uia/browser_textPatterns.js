@@ -2223,11 +2223,25 @@ addUiaTask(
  */
 addUiaTask(
   `
+<style>
+  @font-face {
+    font-family: Ahem;
+    src: url(${CURRENT_CONTENT_DIR}e10s/fonts/Ahem.sjs);
+  }
+  textarea {
+    font: 10px/10px Ahem;
+    width: 10px;
+    height: 80px;
+  }
+</style>
 <div id="editable" contenteditable role="textbox">
   <div id="ce0">a</div>
   <div id="ce1"><br></div>
   <div id="ce2">b</div>
 </div>
+<textarea id="textarea">ab
+
+</textarea>
   `,
   async function testTextRangeGetBoundingRectanglesCaret(browser, docAcc) {
     info("Focusing editable");
@@ -2237,7 +2251,7 @@ addUiaTask(
     editable.takeFocus();
     await moved;
     await runPython(`
-      global text
+      global doc, text
       doc = getDocUia()
       editable = findUiaByDomId(doc, "editable")
       text = getUiaPattern(editable, "Text")
@@ -2246,6 +2260,7 @@ addUiaTask(
       `text.GetSelection().GetElement(0).GetBoundingRectangles()`
     );
     testTextPos(ce0, 0, [uiaRects[0], uiaRects[1]], COORDTYPE_SCREEN_RELATIVE);
+    let [prevX, prevY] = uiaRects;
 
     info("ArrowRight to end of line");
     moved = waitForEvent(EVENT_TEXT_CARET_MOVED, ce0);
@@ -2254,8 +2269,8 @@ addUiaTask(
     uiaRects = await runPython(
       `text.GetSelection().GetElement(0).GetBoundingRectangles()`
     );
-    // Bug 1966812: We would ideally return a rect here.
-    is(uiaRects.length, 0, "GetBoundingRectangles returned nothing");
+    Assert.greater(uiaRects[0], prevX, "x > prevX");
+    is(uiaRects[1], prevY, "y == prevY");
 
     info("ArrowRight to line feed on blank line");
     const ce1 = findAccessibleChildByID(docAcc, "ce1");
@@ -2276,6 +2291,101 @@ addUiaTask(
       `text.GetSelection().GetElement(0).GetBoundingRectangles()`
     );
     testTextPos(ce2, 0, [uiaRects[0], uiaRects[1]], COORDTYPE_SCREEN_RELATIVE);
+    [prevX, prevY] = uiaRects;
+
+    info("ArrowRight to end of line");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, ce2);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    await moved;
+    uiaRects = await runPython(
+      `text.GetSelection().GetElement(0).GetBoundingRectangles()`
+    );
+    Assert.greater(uiaRects[0], prevX, "x > prevX");
+    is(uiaRects[1], prevY, "y == prevY");
+
+    info("Focusing textarea");
+    const textarea = findAccessibleChildByID(docAcc, "textarea");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    textarea.takeFocus();
+    await moved;
+    await runPython(`
+      global text
+      textarea = findUiaByDomId(doc, "textarea")
+      text = getUiaPattern(textarea, "Text")
+    `);
+    uiaRects = await runPython(
+      `text.GetSelection().GetElement(0).GetBoundingRectangles()`
+    );
+    testTextPos(
+      textarea,
+      0,
+      [uiaRects[0], uiaRects[1]],
+      COORDTYPE_SCREEN_RELATIVE
+    );
+    [prevX, prevY] = uiaRects;
+
+    info("ArrowRight to end of line");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    await moved;
+    uiaRects = await runPython(
+      `text.GetSelection().GetElement(0).GetBoundingRectangles()`
+    );
+    Assert.greater(uiaRects[0], prevX, "x > prevX");
+    is(uiaRects[1], prevY, "y == prevY");
+
+    info("ArrowRight to b");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    await moved;
+    uiaRects = await runPython(
+      `text.GetSelection().GetElement(0).GetBoundingRectangles()`
+    );
+    testTextPos(
+      textarea,
+      1,
+      [uiaRects[0], uiaRects[1]],
+      COORDTYPE_SCREEN_RELATIVE
+    );
+
+    info("ArrowRight to line feed");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    await moved;
+    uiaRects = await runPython(
+      `text.GetSelection().GetElement(0).GetBoundingRectangles()`
+    );
+    testTextPos(
+      textarea,
+      2,
+      [uiaRects[0], uiaRects[1]],
+      COORDTYPE_SCREEN_RELATIVE
+    );
+
+    info("ArrowRight to line feed on first blank line");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    await moved;
+    uiaRects = await runPython(
+      `text.GetSelection().GetElement(0).GetBoundingRectangles()`
+    );
+    testTextPos(
+      textarea,
+      3,
+      [uiaRects[0], uiaRects[1]],
+      COORDTYPE_SCREEN_RELATIVE
+    );
+    [prevX, prevY] = uiaRects;
+
+    info("ArrowRight to second blank line (end of textarea)");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    await moved;
+    uiaRects = await runPython(
+      `text.GetSelection().GetElement(0).GetBoundingRectangles()`
+    );
+    is(uiaRects[0], prevX, "x == prevX");
+    Assert.greater(uiaRects[1], prevY, "y > prevY");
   },
   // The IA2 -> UIA proxy doesn't support this.
   { uiaEnabled: true, uiaDisabled: false }

@@ -432,9 +432,6 @@ endif # WINNT && clang-cl
 ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
 endif
-ifdef MOZ_POST_PROGRAM_COMMAND
-	$(MOZ_POST_PROGRAM_COMMAND) $@
-endif
 	$(call BUILDSTATUS,END_Program $(@F))
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS) $(call mkdir_deps,$(DEPTH)/dist/host/bin)
@@ -476,9 +473,6 @@ endif # WINNT && clang-cl
 
 ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
-endif
-ifdef MOZ_POST_PROGRAM_COMMAND
-	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
 	$(call BUILDSTATUS,END_Program $(@F))
 

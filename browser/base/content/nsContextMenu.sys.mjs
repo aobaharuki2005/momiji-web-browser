@@ -7,6 +7,8 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserSearchTelemetry:
+    "moz-src:///browser/components/search/BrowserSearchTelemetry.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   ContextualIdentityService:
@@ -22,6 +24,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
+  SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
+  SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.sys.mjs",
@@ -59,6 +63,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "PDFJS_ENABLE_COMMENT",
+  "pdfjs.enableComment",
+  false
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "QueryStringStripper",
@@ -73,6 +84,20 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "TEXT_FRAGMENTS_ENABLED",
+  "dom.text_fragments.enabled",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "TEXT_FRAGMENTS_SHOW_CONTEXT_MENU",
+  "dom.text_fragments.create_text_fragment.enabled",
+  false
+);
+
 const PASSWORD_FIELDNAME_HINTS = ["current-password", "new-password"];
 const USERNAME_FIELDNAME_HINT = "username";
 
@@ -84,6 +109,13 @@ export class nsContextMenu {
    * @type {Promise<{sourceLanguage: string, targetLanguage: string}>}
    */
   #translationsLangPairPromise;
+
+  /**
+   * The value of the `main-context-menu-new-feature-badge` l10n string. Fetched
+   * lazily.
+   * @type {string}
+   */
+  #newFeatureBadgeL10nString;
 
   constructor(aXulMenu, aIsShift) {
     this.window = aXulMenu.ownerGlobal;
@@ -305,6 +337,7 @@ export class nsContextMenu {
     }
 
     this.hasTextFragments = context.hasTextFragments;
+    this.textDirectiveTarget = context.textDirectiveTarget;
     this.textFragmentURL = null;
   } // setContext
 
@@ -378,10 +411,12 @@ export class nsContextMenu {
       this.showItem(id, this.inPDFEditor);
     }
 
+    const hasSelectedText = this.pdfEditorStates?.hasSelectedText ?? false;
     this.showItem(
-      "context-pdfjs-highlight-selection",
-      this.pdfEditorStates?.hasSelectedText
+      "context-pdfjs-comment-selection",
+      lazy.PDFJS_ENABLE_COMMENT && hasSelectedText
     );
+    this.showItem("context-pdfjs-highlight-selection", hasSelectedText);
 
     if (!this.inPDFEditor) {
       return;
@@ -428,13 +463,16 @@ export class nsContextMenu {
 
   initTextFragmentItems() {
     const shouldShow =
-      Services.prefs.getBoolPref(
-        "dom.text_fragments.create_text_fragment.enabled",
-        false
-      ) &&
+      lazy.TEXT_FRAGMENTS_SHOW_CONTEXT_MENU &&
+      lazy.TEXT_FRAGMENTS_ENABLED &&
       lazy.STRIP_ON_SHARE_ENABLED &&
-      !(this.inPDFViewer || this.inFrame || this.onEditable) &&
-      this.isContentSelected;
+      !(
+        this.inPDFViewer ||
+        this.inFrame ||
+        this.onEditable ||
+        this.browser.currentURI.schemeIs("view-source")
+      ) &&
+      this.textDirectiveTarget;
     this.showItem("context-copy-link-to-highlight", shouldShow);
     this.showItem("context-copy-clean-link-to-highlight", shouldShow);
 
@@ -791,6 +829,8 @@ export class nsContextMenu {
       "context-viewimagedesc",
       this.onImage && this.imageDescURL !== ""
     );
+
+    this.showAndFormatVisualSearchContextItem();
 
     // Set as Desktop background depends on whether an image was clicked on,
     // and only works if we have a shell service.
@@ -1456,6 +1496,7 @@ export class nsContextMenu {
       policyContainer: this.policyContainer,
       frameID: this.contentData.frameID,
       hasValidUserGestureActivation: true,
+      textDirectiveUserActivation: true,
     };
     for (let p in extra) {
       params[p] = extra[p];
@@ -1485,7 +1526,10 @@ export class nsContextMenu {
   _getGlobalHistoryOptions() {
     if (this.isSponsoredLink) {
       return {
-        globalHistoryOptions: { triggeringSponsoredURL: this.linkURL },
+        globalHistoryOptions: {
+          triggeringSponsoredURL: this.linkURL,
+          triggeringSource: "newtab",
+        },
       };
     } else if (this.browser.hasAttribute("triggeringSponsoredURL")) {
       return {
@@ -1496,6 +1540,7 @@ export class nsContextMenu {
           triggeringSponsoredURLVisitTimeMS: this.browser.getAttribute(
             "triggeringSponsoredURLVisitTimeMS"
           ),
+          triggeringSource: this.browser.getAttribute("triggeringSource"),
         },
       };
     }
@@ -2736,55 +2781,44 @@ export class nsContextMenu {
 
   // Formats the 'Search <engine> for "<selection or link text>"' context menu.
   showAndFormatSearchContextItem() {
+    let selectedText = this.isTextSelected
+      ? this.selectedText
+      : this.linkTextStr;
+
     let { document } = this.window;
     let menuItem = document.getElementById("context-searchselect");
     let menuItemPrivate = document.getElementById(
       "context-searchselect-private"
     );
-    if (!Services.search.hasSuccessfullyInitialized) {
-      menuItem.hidden = true;
-      menuItemPrivate.hidden = true;
-      return;
-    }
-    const docIsPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
-      this.browser
-    );
-    const privatePref = "browser.search.separatePrivateDefault.ui.enabled";
-    let showSearchSelect =
-      !this.inAboutDevtoolsToolbox &&
-      (this.isTextSelected || this.onLink) &&
-      !this.onImage;
-    // Don't show the private search item when we're already in a private
-    // browsing window.
-    let showPrivateSearchSelect =
-      showSearchSelect &&
-      !docIsPrivate &&
-      Services.prefs.getBoolPref(privatePref);
 
-    menuItem.hidden = !showSearchSelect;
-    menuItemPrivate.hidden = !showPrivateSearchSelect;
+    let opts = {
+      isContextRelevant: (this.isTextSelected || this.onLink) && !this.onImage,
+      searchTerms: selectedText,
+      searchUrlType: lazy.SearchUtils.URL_TYPE.SEARCH,
+    };
+    this.#updateSearchMenuitem({
+      ...opts,
+      menuitem: menuItem,
+    });
+    this.#updateSearchMenuitem({
+      ...opts,
+      menuitem: menuItemPrivate,
+      isPrivateSearchMenuitem: true,
+    });
+
     let frameSeparator = document.getElementById("frame-sep");
 
-    // Add a divider between "Search X for Y" and "This Frame", and between "Search X for Y" and "Check Spelling",
-    // but no divider in other cases.
+    // Add a divider between "Search X for Y" and "This Frame", and between
+    // "Search X for Y" and "Check Spelling", but no divider in other cases.
     frameSeparator.toggleAttribute(
       "ensureHidden",
-      !showSearchSelect && this.inFrame
+      menuItem.hidden && this.inFrame
     );
+
     // If we're not showing the menu items, we can skip formatting the labels.
-    if (!showSearchSelect) {
+    if (menuItem.hidden && menuItemPrivate.hidden) {
       return;
     }
-
-    let selectedText = this.isTextSelected
-      ? this.selectedText
-      : this.linkTextStr;
-
-    // Store searchTerms in context menu item so we know what to search onclick
-    menuItem.searchTerms = menuItemPrivate.searchTerms = selectedText;
-    menuItem.principal = menuItemPrivate.principal = this.principal;
-    menuItem.policyContainer = menuItemPrivate.policyContainer =
-      this.policyContainer;
 
     // Copied to alert.js' prefillAlertInfo().
     // If the JS character after our truncation point is a trail surrogate,
@@ -2802,17 +2836,22 @@ export class nsContextMenu {
     // format "Search <engine> for <selection>" string to show in menu
     let engineName = Services.search.defaultEngine.name;
     let privateEngineName = Services.search.defaultPrivateEngine.name;
-    menuItem.usePrivate = docIsPrivate;
-    let menuLabel = gNavigatorBundle.getFormattedString("contextMenuSearch", [
-      docIsPrivate ? privateEngineName : engineName,
-      selectedText,
-    ]);
-    menuItem.label = menuLabel;
-    menuItem.accessKey = gNavigatorBundle.getString(
-      "contextMenuSearch.accesskey"
-    );
+    if (!menuItem.hidden) {
+      const docIsPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
+        this.browser
+      );
 
-    if (showPrivateSearchSelect) {
+      let menuLabel = gNavigatorBundle.getFormattedString("contextMenuSearch", [
+        docIsPrivate ? privateEngineName : engineName,
+        selectedText,
+      ]);
+      menuItem.label = menuLabel;
+      menuItem.accessKey = gNavigatorBundle.getString(
+        "contextMenuSearch.accesskey"
+      );
+    }
+
+    if (!menuItemPrivate.hidden) {
       let otherEngine = engineName != privateEngineName;
       let accessKey = "contextMenuPrivateSearch.accesskey";
       if (otherEngine) {
@@ -2830,11 +2869,168 @@ export class nsContextMenu {
     }
   }
 
+  #updateSearchMenuitem({
+    menuitem,
+    isContextRelevant,
+    searchTerms,
+    searchUrlType,
+    isPrivateSearchMenuitem = false,
+  }) {
+    if (!menuitem) {
+      return;
+    }
+    if (!Services.search.hasSuccessfullyInitialized) {
+      menuitem.hidden = true;
+      return;
+    }
+
+    let isBrowserPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
+      this.browser
+    );
+    let engine =
+      isBrowserPrivate || isPrivateSearchMenuitem
+        ? Services.search.defaultPrivateEngine
+        : Services.search.defaultEngine;
+
+    menuitem.hidden =
+      !isContextRelevant ||
+      this.inAboutDevtoolsToolbox ||
+      !engine?.supportsResponseType(searchUrlType) ||
+      // Don't show the private search item when we're already in a private
+      // browsing window.
+      (isPrivateSearchMenuitem &&
+        (isBrowserPrivate ||
+          !Services.prefs.getBoolPref(
+            "browser.search.separatePrivateDefault.ui.enabled"
+          )));
+
+    if (!menuitem.hidden) {
+      let url = engine.wrappedJSObject.getURLOfType(searchUrlType);
+      if (
+        url?.acceptedContentTypes &&
+        (!this.contentData?.contentType ||
+          !url.acceptedContentTypes.includes(this.contentData.contentType))
+      ) {
+        menuitem.hidden = true;
+      }
+    }
+
+    if (!menuitem.hidden) {
+      menuitem.engine = engine;
+      menuitem.searchTerms = searchTerms;
+      menuitem.principal = this.principal;
+      menuitem.policyContainer = this.policyContainer;
+      menuitem.usePrivate = isPrivateSearchMenuitem || isBrowserPrivate;
+    }
+  }
+
+  /**
+   * Shows or hides as appropriate the visual search context menu item:
+   * "Search Image with {engine}".
+   */
+  showAndFormatVisualSearchContextItem() {
+    let menuitem = this.window.document.getElementById("context-visual-search");
+    this.#updateSearchMenuitem({
+      menuitem,
+      isContextRelevant:
+        this.onImage &&
+        this.imageInfo?.currentSrc &&
+        // Google Lens seems not to support images encoded as data URIs on its
+        // GET endpoint, so we hide the visual search item for them. If we ever
+        // add support for its POST endpoint or another visual engine that does
+        // support data URIs, we should revisit this.
+        !this.imageInfo.currentSrc.startsWith("data:") &&
+        Services.prefs.getBoolPref("browser.search.visualSearch.featureGate"),
+      searchTerms: this.imageInfo?.currentSrc,
+      searchUrlType: lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH,
+    });
+
+    if (!menuitem.hidden) {
+      let visualSearchUrl = menuitem.engine.wrappedJSObject.getURLOfType(
+        lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH
+      );
+      this.window.document.l10n.setAttributes(
+        menuitem,
+        "main-context-menu-visual-search",
+        {
+          engine: visualSearchUrl.displayName || menuitem.engine.name,
+        }
+      );
+      this.#setNewFeatureBadge(menuitem, visualSearchUrl.isNew());
+      lazy.BrowserSearchTelemetry.recordSapImpression(
+        this.browser,
+        menuitem.engine,
+        "contextmenu_visual"
+      );
+    }
+  }
+
+  /**
+   * Loads a search engine SERP based on the data that this class previously
+   * attached to `event.target`, which is expected to be a context menu item.
+   *
+   * @param {object} options
+   *   Options objects.
+   * @param {Event} options.event
+   *   The event on a context menu item that triggered the search.
+   * @param {SearchUtils.URL_TYPE} options.searchUrlType
+   *   A `SearchUtils.URL_TYPE` value indicating the type of search that should
+   *   be performed. A falsey value is equivalent to
+   *   `SearchUtils.URL_TYPE.SEARCH` and will perform a usual web search.
+   */
+  loadSearch({ event, searchUrlType = null }) {
+    let { engine, searchTerms, usePrivate, principal, policyContainer } =
+      event.target;
+    lazy.SearchUIUtils.loadSearchFromContext({
+      event,
+      engine,
+      policyContainer,
+      searchUrlType,
+      usePrivate,
+      window: this.window,
+      searchText: searchTerms,
+      triggeringPrincipal: principal,
+    });
+  }
+
   createContainerMenu(aEvent) {
     let createMenuOptions = {
       isContextMenu: true,
       excludeUserContextId: this.contentData.userContextId,
     };
     return this.window.createUserContextMenu(aEvent, createMenuOptions);
+  }
+
+  /**
+   * Sets or removes the `badge` attribute on a menuitem. If it should be set,
+   * it will be set to the value of the `main-context-menu-new-feature-badge`
+   * l10n string. If the string has already been cached, the badge is set
+   * synchronously, so there won't be any visual pop-in. Otherwise the string is
+   * first fetched and cached, and then the badge is set asynchronously.
+   *
+   * This method is async but only for ease of implementation. It doesn't need
+   * to be awaited unless you need to block until the badge is set.
+   *
+   * @param {Element}
+   *   The menuitem that should be badged.
+   */
+  async #setNewFeatureBadge(menuitem, shouldShow) {
+    if (!shouldShow) {
+      menuitem.removeAttribute("badge");
+      return;
+    }
+
+    if (this.#newFeatureBadgeL10nString) {
+      menuitem.setAttribute("badge", this.#newFeatureBadgeL10nString);
+      return;
+    }
+
+    let value = await this.window.document.l10n.formatValue(
+      "main-context-menu-new-feature-badge"
+    );
+    if (value) {
+      this.#newFeatureBadgeL10nString = value;
+      this.#setNewFeatureBadge(menuitem, shouldShow);
+    }
   }
 }

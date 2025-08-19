@@ -4,7 +4,8 @@ ChromeUtils.defineESModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
+  AttributionCode:
+    "moz-src:///browser/components/attribution/AttributionCode.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   CFRMessageProvider: "resource:///modules/asrouter/CFRMessageProvider.sys.mjs",
@@ -20,11 +21,55 @@ ChromeUtils.defineESModuleGetters(this, {
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
-  ShellService: "resource:///modules/ShellService.sys.mjs",
+  ShellService: "moz-src:///browser/components/shell/ShellService.sys.mjs",
+  Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
 });
+
+const { DefaultBrowserCheck } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/DefaultBrowserCheck.sys.mjs"
+);
+
+const testFeatureCallout = {
+  id: "TEST_MESSAGE",
+  template: "feature_callout",
+  content: {
+    id: "TEST_MESSAGE",
+    template: "multistage",
+    backdrop: "transparent",
+    transitions: false,
+    screens: [
+      {
+        id: "TEST_MESSAGE_1",
+        anchors: [
+          { selector: "#PanelUI-menu-button", arrow_position: "top-end" },
+        ],
+        content: {
+          position: "callout",
+          title: {
+            raw: "Test title",
+          },
+          subtitle: {
+            raw: "Test subtitle",
+          },
+          primary_button: {
+            label: {
+              raw: "Done",
+            },
+            action: {
+              navigate: true,
+            },
+          },
+        },
+      },
+    ],
+  },
+  priority: 1,
+  targeting: "true",
+  trigger: { id: "defaultBrowserCheck" },
+};
 
 function sendFormAutofillMessage(name, data) {
   let actor =
@@ -64,6 +109,20 @@ async function removeAutofillRecords() {
     await observePromise;
   }
 }
+
+add_task(async function setup_pref_env() {
+  // Let the harness know these prefs are test-managed so it won't warn about
+  // changes
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.search.region", ""],
+      ["distribution.iniFile.exists.value", false],
+      ["distribution.iniFile.exists.appversion", ""],
+      ["extensions.webextensions.uuids", "{}"],
+      ["browser.shell.mostRecentDefaultPromptSeen", 0],
+    ],
+  });
+});
 
 // ASRouterTargeting.findMatchingMessage
 add_task(async function find_matching_message() {
@@ -536,7 +595,7 @@ add_task(async function checkAddonsInfo() {
   Assert.strictEqual(
     installedAddons,
     false,
-    "should correctly return hasInstalledAddons"
+    "should correctly return hasInstalledAddons before"
   );
 
   const xpi = AddonTestUtils.createTempWebExtensionFile({
@@ -636,7 +695,13 @@ add_task(async function checkAddonsInfo() {
     "should correctly provide `installDate` property from full data"
   );
 
-  ok(hasInstalledAddons, "should correctly return hasInstalledAddons");
+  ok(hasInstalledAddons, "should correctly return hasInstalledAddons after");
+
+  // Clean up the installed test addon
+  let testAddonObj = await AddonManager.getAddonByID(FAKE_ID);
+  if (testAddonObj) {
+    await testAddonObj.uninstall();
+  }
 });
 
 add_task(async function checkFrecentSites() {
@@ -1335,6 +1400,9 @@ add_task(async function test_distributionId() {
     "test",
     "Should return the correct distribution Id"
   );
+
+  // clean up default branch distribution.id
+  Services.prefs.getDefaultBranch(null).deleteBranch("distribution.id");
 });
 
 add_task(async function test_fxViewButtonAreaType_default() {
@@ -2021,6 +2089,79 @@ add_task(async function check_activeNotifications_newtabMessages() {
   Services.obs.removeObserver(testObserver, "newtab-message-query");
 });
 
+add_task(async function activeNotifications_default_prompt_shown() {
+  let sb = sinon.createSandbox();
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
+  sb.stub(DefaultBrowserCheck, "willCheckDefaultBrowser").returns(true);
+  const promptSpy = sb.spy(DefaultBrowserCheck, "prompt");
+
+  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+
+  Assert.equal(promptSpy.callCount, 1, "default prompt should be called");
+
+  is(
+    await ASRouterTargeting.Environment.activeNotifications,
+    true,
+    "activeNotifications should be true if the set to default prompt is being shown"
+  );
+  await BrowserTestUtils.closeWindow(win);
+  sb.restore();
+});
+
+add_task(async function activeNotifications_feature_callout_shown() {
+  let sb = sinon.createSandbox();
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
+  let callout = await FeatureCalloutBroker.showFeatureCallout(
+    win.gBrowser.selectedBrowser,
+    testFeatureCallout
+  );
+  ok(callout, "Callout shown");
+
+  is(
+    await ASRouterTargeting.Environment.activeNotifications,
+    true,
+    "activeNotifications should be true if a feature callout is being shown"
+  );
+  await BrowserTestUtils.closeWindow(win);
+  sb.restore();
+});
+
+add_task(async function activeNotifications_spotlight_shown() {
+  let sb = sinon.createSandbox();
+  const IMPORT_SCREEN = {
+    id: "AW_IMPORT",
+    content: {
+      primary_button: {
+        label: "import",
+        action: {
+          navigate: true,
+          type: "SHOW_MIGRATION_WIZARD",
+        },
+      },
+    },
+  };
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
+  Spotlight.showSpotlightDialog(win.gBrowser.selectedBrowser, {
+    content: { modal: "tab", screens: [IMPORT_SCREEN] },
+  });
+
+  await TestUtils.waitForCondition(
+    () => win.document.readyState === "complete",
+    "Waiting for spotlight dialog to finish loading"
+  );
+
+  is(
+    await ASRouterTargeting.Environment.activeNotifications,
+    true,
+    "activeNotifications should be true if a spotlight is being shown"
+  );
+  await BrowserTestUtils.closeWindow(win);
+  sb.restore();
+});
+
 add_task(async function check_unhandledCampaignAction() {
   is(
     typeof ASRouterTargeting.Environment.unhandledCampaignAction,
@@ -2043,7 +2184,30 @@ add_task(async function check_unhandledCampaignAction() {
       },
     },
     {
-      title: "supported and unhandled set default browser campaign action",
+      title:
+        "supported (pin and set default) and unhandled set default browser campaign action",
+      attributionData: {
+        campaign: "pin_and_default",
+      },
+      expected: "PIN_AND_DEFAULT",
+      after: () => {
+        QueryCache.queries.UnhandledCampaignAction.expire();
+      },
+    },
+    {
+      title:
+        "supported (pin to taskbar) and unhandled set default browser campaign action",
+      attributionData: {
+        campaign: "pin_firefox_to_taskbar",
+      },
+      expected: "PIN_FIREFOX_TO_TASKBAR",
+      after: () => {
+        QueryCache.queries.UnhandledCampaignAction.expire();
+      },
+    },
+    {
+      title:
+        "supported (set default) and unhandled set default browser campaign action",
       attributionData: {
         campaign: "set_default_browser",
       },
@@ -2053,7 +2217,8 @@ add_task(async function check_unhandledCampaignAction() {
       },
     },
     {
-      title: "supported and handled set default browser campaign action",
+      title:
+        "supported (set default) and handled set default browser campaign action",
       attributionData: {
         campaign: "set_default_browser",
       },

@@ -10,6 +10,7 @@ const VISIBILITY_SETTING_PREF = "sidebar.visibility";
 const SIDEBAR_TOOLS = "sidebar.main.tools";
 const VERTICAL_TABS_PREF = "sidebar.verticalTabs";
 const INSTALLED_EXTENSIONS = "sidebar.installed.extensions";
+const PINNED_PROMO_PREF = "sidebar.verticalTabs.dragToPinPromo.dismissed";
 
 // New panels that are ready to be introduced to new sidebar users should be added to this list;
 // ensure your feature flag is enabled at the same time you do this and that its the same value as
@@ -18,9 +19,11 @@ const DEFAULT_LAUNCHER_TOOLS = "aichat,syncedtabs,history,bookmarks";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  CustomizableUI:
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   SidebarState: "moz-src:///browser/components/sidebar/SidebarState.sys.mjs",
 });
 XPCOMUtils.defineLazyPreferenceGetter(lazy, "sidebarNimbus", "sidebar.nimbus");
@@ -46,7 +49,17 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "sidebarRevampEnabled",
   "sidebar.revamp",
   false,
-  () => SidebarManager.updateDefaultTools()
+  (pref, oldVal, newVal) => {
+    SidebarManager.updateDefaultTools();
+
+    if (!newVal) {
+      // Disable vertical tabs if revamped sidebar is turned off
+      Services.prefs.setBoolPref("sidebar.verticalTabs", false);
+    } else if (newVal && !lazy.verticalTabsEnabled) {
+      // horizontal tabs with sidebar.revamp must have visibility of "hide-sidebar"
+      Services.prefs.setStringPref(VISIBILITY_SETTING_PREF, "hide-sidebar");
+    }
+  }
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(lazy, "sidebarTools", SIDEBAR_TOOLS, "");
@@ -63,6 +76,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "sidebar.new-sidebar.has-used",
   false,
   () => SidebarManager.updateDefaultTools()
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "dragToPinPromoDismissed",
+  PINNED_PROMO_PREF,
+  false
 );
 
 export const SidebarManager = {
@@ -117,6 +137,9 @@ export const SidebarManager = {
       this.updateDefaultTools.bind(this)
     );
     this.updateDefaultTools();
+    lazy.SessionStore.promiseAllWindowsRestored.then(() => {
+      this.checkForPinnedTabs();
+    });
 
     // if there's no user visibility pref, we may need to update it to the default value for the tab orientation
     const shouldResetVisibility = !Services.prefs.prefHasUserValue(
@@ -126,6 +149,20 @@ export const SidebarManager = {
       lazy.verticalTabsEnabled,
       shouldResetVisibility
     );
+  },
+
+  /**
+   * Ensure the drag-to-pin promo card is not displayed to existing users who already have pinned tabs.
+   */
+  checkForPinnedTabs() {
+    if (!lazy.dragToPinPromoDismissed) {
+      for (let win of lazy.BrowserWindowTracker.getOrderedWindows()) {
+        if (win.gBrowser.pinnedTabCount > 0) {
+          Services.prefs.setBoolPref(PINNED_PROMO_PREF, true);
+          return;
+        }
+      }
+    }
   },
 
   /**

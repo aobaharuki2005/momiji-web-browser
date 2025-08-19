@@ -6,8 +6,8 @@
 
 #include "FakeVideoSource.h"
 
-#include "mozilla/SyncRunnable.h"
 #include "ImageContainer.h"
+#include "mozilla/SyncRunnable.h"
 
 #ifdef MOZ_WEBRTC
 #  include "common/YuvStamper.h"

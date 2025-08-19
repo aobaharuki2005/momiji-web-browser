@@ -1082,7 +1082,6 @@ class DefaultTabsTrayControllerTest {
         var appStateModeUpdate: BrowsingMode? = null
         browsingModeManager = DefaultBrowsingModeManager(
             intent = null,
-            store = browserStore,
             settings = settings,
             onModeChange = { updatedMode ->
                 appStateModeUpdate = updatedMode
@@ -1227,13 +1226,9 @@ class DefaultTabsTrayControllerTest {
             },
         ).handleBookmarkSelectedTabsClicked()
 
+        verify { trayStore.dispatch(TabsTrayAction.BookmarkSelectedTabs(1)) }
         coVerify(exactly = 1) { bookmarksStorage.addItem(eq(BookmarkRoot.Mobile.id), any(), any(), any()) }
         assertTrue(showBookmarkSnackbarInvoked)
-
-        assertNotNull(TabsTray.bookmarkSelectedTabs.testGetValue())
-        val snapshot = TabsTray.bookmarkSelectedTabs.testGetValue()!!
-        assertEquals(1, snapshot.size)
-        assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
     }
 
     @Test
@@ -1252,13 +1247,9 @@ class DefaultTabsTrayControllerTest {
             },
         ).handleBookmarkSelectedTabsClicked()
 
+        verify { trayStore.dispatch(TabsTrayAction.BookmarkSelectedTabs(1)) }
         coVerify(exactly = 1) { bookmarksStorage.addItem(eq(parentGuid), any(), any(), any()) }
         assertTrue(showBookmarkSnackbarInvoked)
-
-        assertNotNull(TabsTray.bookmarkSelectedTabs.testGetValue())
-        val snapshot = TabsTray.bookmarkSelectedTabs.testGetValue()!!
-        assertEquals(1, snapshot.size)
-        assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
     }
 
     @Test
@@ -1275,13 +1266,9 @@ class DefaultTabsTrayControllerTest {
             },
         ).handleBookmarkSelectedTabsClicked()
 
+        verify { trayStore.dispatch(TabsTrayAction.BookmarkSelectedTabs(2)) }
         coVerify(exactly = 2) { bookmarksStorage.addItem(eq(BookmarkRoot.Mobile.id), any(), any(), any()) }
         assertTrue(showBookmarkSnackbarInvoked)
-
-        assertNotNull(TabsTray.bookmarkSelectedTabs.testGetValue())
-        val snapshot = TabsTray.bookmarkSelectedTabs.testGetValue()!!
-        assertEquals(1, snapshot.size)
-        assertEquals("2", snapshot.single().extra?.getValue("tab_count"))
     }
 
     @Test
@@ -1300,13 +1287,9 @@ class DefaultTabsTrayControllerTest {
             },
         ).handleBookmarkSelectedTabsClicked()
 
+        verify { trayStore.dispatch(TabsTrayAction.BookmarkSelectedTabs(2)) }
         coVerify(exactly = 2) { bookmarksStorage.addItem(eq(parentGuid), any(), any(), any()) }
         assertTrue(showBookmarkSnackbarInvoked)
-
-        assertNotNull(TabsTray.bookmarkSelectedTabs.testGetValue())
-        val snapshot = TabsTray.bookmarkSelectedTabs.testGetValue()!!
-        assertEquals(1, snapshot.size)
-        assertEquals("2", snapshot.single().extra?.getValue("tab_count"))
     }
 
     @Test

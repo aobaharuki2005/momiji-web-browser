@@ -14,9 +14,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/search/BrowserSearchTelemetry.sys.mjs",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
-  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  CustomizableUI:
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   ExtensionSearchHandler:
     "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
+  ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -68,8 +70,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+ChromeUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.UrlbarUtils.getLogger({ prefix: "Input" })
+);
+
 const DEFAULT_FORM_HISTORY_NAME = "searchbar-history";
-const SEARCH_BUTTON_CLASS = "urlbar-search-button";
 
 const UNLIMITED_MAX_RESULTS = 99;
 
@@ -92,35 +97,10 @@ export class UrlbarInput {
    */
   constructor(options = {}) {
     this.textbox = options.textbox;
-
     this.window = this.textbox.ownerGlobal;
-    this.isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(this.window);
     this.document = this.window.document;
-
-    // Create the panel to contain results.
-    this.textbox.appendChild(
-      this.window.MozXULElement.parseXULToFragment(`
-        <vbox class="urlbarView"
-              context=""
-              role="group"
-              tooltip="aHTMLTooltip">
-          <html:div class="urlbarView-body-outer">
-            <html:div class="urlbarView-body-inner">
-              <html:div id="urlbar-results"
-                        class="urlbarView-results"
-                        role="listbox"/>
-            </html:div>
-          </html:div>
-          <menupopup class="urlbarView-result-menu"
-                     consumeoutsideclicks="false"/>
-          <hbox class="search-one-offs"
-                includecurrentengine="true"
-                disabletab="true"/>
-        </vbox>
-      `)
-    );
+    this.isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(this.window);
     this.panel = this.textbox.querySelector(".urlbarView");
-
     this.controller = new lazy.UrlbarController({
       input: this,
       eventTelemetryCategory: options.eventTelemetryCategory,
@@ -201,7 +181,6 @@ export class UrlbarInput {
     this._searchModeIndicatorClose = this._searchModeIndicator.querySelector(
       "#urlbar-search-mode-indicator-close"
     );
-    this._searchModeLabel = this.querySelector("#urlbar-label-search-mode");
 
     ChromeUtils.defineLazyGetter(this, "valueFormatter", () => {
       return new lazy.UrlbarValueFormatter(this);
@@ -321,10 +300,6 @@ export class UrlbarInput {
 
     this.editor.newlineHandling =
       Ci.nsIEditor.eNewlinesStripSurroundingWhitespace;
-
-    ChromeUtils.defineLazyGetter(this, "logger", () =>
-      lazy.UrlbarUtils.getLogger({ prefix: "Input" })
-    );
   }
 
   /**
@@ -525,7 +500,7 @@ export class UrlbarInput {
       valid =
         !dueToSessionRestore &&
         (!this.window.isBlankPageURL(uri.spec) ||
-          uri.schemeIs("moz-extension") ||
+          lazy.ExtensionUtils.isExtensionUrl(uri) ||
           isInitialPageControlledByWebContent);
     } else if (
       this.window.isInitialPage(value) &&
@@ -1035,7 +1010,7 @@ export class UrlbarInput {
    */
   pickElement(element, event) {
     let result = this.view.getResultFromElement(element);
-    this.logger.debug(
+    lazy.logger.debug(
       `pickElement ${element} with event ${event?.type}, result: ${result}`
     );
     if (!result) {
@@ -1124,6 +1099,7 @@ export class UrlbarInput {
     let openParams = {
       allowInheritPrincipal: false,
       globalHistoryOptions: {
+        triggeringSource: "urlbar",
         triggeringSearchEngine: result.payload?.engine,
         triggeringSponsoredURL: result.payload?.isSponsored
           ? result.payload.url
@@ -1132,13 +1108,8 @@ export class UrlbarInput {
       private: this.isPrivate,
     };
 
-    if (
-      resultUrl &&
-      result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP &&
-      where == "current"
-    ) {
-      // Open non-tip help links in a new tab unless the user held a modifier.
-      // TODO (bug 1696232): Do this for tip help links, too.
+    if (resultUrl && where == "current") {
+      // Open help links in a new tab.
       where = "tab";
     }
 
@@ -3222,11 +3193,7 @@ export class UrlbarInput {
       result,
       element,
       searchString: this._lastSearchString,
-      selType:
-        element.dataset.command == "help" &&
-        result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
-          ? "tiphelp"
-          : element.dataset.command,
+      selType: element.dataset.command,
     });
 
     if (element.dataset.command == "manage") {
@@ -3245,9 +3212,8 @@ export class UrlbarInput {
     }
 
     let where = this._whereToOpen(event);
-    if (result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP && where == "current") {
-      // Open non-tip help links in a new tab unless the user held a modifier.
-      // TODO (bug 1696232): Do this for tip help links, too.
+    if (element.dataset.command == "help" && where == "current") {
+      // Open help links in a new tab.
       where = "tab";
     }
 
@@ -3627,7 +3593,7 @@ export class UrlbarInput {
             .filter(Boolean)
             .join("@");
         } catch (ex) {
-          this.logger.error("Should only try to untrim valid URLs");
+          lazy.logger.error("Should only try to untrim valid URLs");
         }
         if (!this.#selectedText.startsWith(prePathMinusPort)) {
           selectionStart += offset;
@@ -3842,9 +3808,7 @@ export class UrlbarInput {
     }
 
     this._searchModeIndicatorTitle.textContent = "";
-    this._searchModeLabel.textContent = "";
     this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
-    this._searchModeLabel.removeAttribute("data-l10n-id");
 
     if (!engineName && !source) {
       try {
@@ -3860,7 +3824,6 @@ export class UrlbarInput {
     if (engineName) {
       // Set text content for the search mode indicator.
       this._searchModeIndicatorTitle.textContent = engineName;
-      this._searchModeLabel.textContent = engineName;
       this.document.l10n.setAttributes(
         this.inputField,
         isGeneralPurposeEngine
@@ -3879,7 +3842,6 @@ export class UrlbarInput {
       let sourceName = lazy.UrlbarUtils.getResultSourceName(source);
       let l10nID = `urlbar-search-mode-${sourceName}`;
       this.document.l10n.setAttributes(this._searchModeIndicatorTitle, l10nID);
-      this.document.l10n.setAttributes(this._searchModeLabel, l10nID);
       this.document.l10n.setAttributes(this.inputField, messageIDs[sourceName]);
     }
 
@@ -4112,8 +4074,8 @@ export class UrlbarInput {
     }
 
     const engine = Services.search.getEngineByName(engineName);
-    if (!engine.isAppProvided) {
-      // Set the engine name to an empty string for non-default engines, which'll
+    if (!engine.isConfigEngine) {
+      // Set the engine name to an empty string for non-config-engines, which'll
       // make sure we display the default placeholder string.
       engineName = "";
     }
@@ -4175,7 +4137,7 @@ export class UrlbarInput {
   }
 
   _on_blur(event) {
-    this.logger.debug("Blur Event");
+    lazy.logger.debug("Blur Event");
     // We cannot count every blur events after a missed engagement as abandoment
     // because the user may have clicked on some view element that executes
     // a command causing a focus change. For example opening preferences from
@@ -4251,8 +4213,7 @@ export class UrlbarInput {
   _on_click(event) {
     if (
       event.target == this.inputField ||
-      event.target == this._inputContainer ||
-      event.target.classList.contains(SEARCH_BUTTON_CLASS)
+      event.target == this._inputContainer
     ) {
       this._maybeSelectAll();
       this.#maybeUntrimUrl();
@@ -4286,7 +4247,7 @@ export class UrlbarInput {
   }
 
   _on_focus(event) {
-    this.logger.debug("Focus Event");
+    lazy.logger.debug("Focus Event");
     if (!this._hideFocus) {
       this.toggleAttribute("focused", true);
     }
@@ -4366,8 +4327,7 @@ export class UrlbarInput {
 
         if (
           event.target != this.inputField &&
-          event.target != this._inputContainer &&
-          !event.target.classList.contains(SEARCH_BUTTON_CLASS)
+          event.target != this._inputContainer
         ) {
           break;
         }
@@ -4393,18 +4353,13 @@ export class UrlbarInput {
           this.inputField.setSelectionRange(0, 0);
         }
 
-        if (event.target.classList.contains(SEARCH_BUTTON_CLASS)) {
-          this._preventClickSelectsAll = true;
-          this.search(lazy.UrlbarTokenizer.RESTRICT.SEARCH);
-        } else {
-          // Do not suppress the focus border if we are already focused. If we
-          // did, we'd hide the focus border briefly then show it again if the
-          // user has Top Sites disabled, creating a flashing effect.
-          this.view.autoOpen({
-            event,
-            suppressFocusBorder: !hasFocus,
-          });
-        }
+        // Do not suppress the focus border if we are already focused. If we
+        // did, we'd hide the focus border briefly then show it again if the
+        // user has Top Sites disabled, creating a flashing effect.
+        this.view.autoOpen({
+          event,
+          suppressFocusBorder: !hasFocus,
+        });
         break;
       }
       case this.window:

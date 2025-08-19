@@ -256,6 +256,13 @@ already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayerForColor(
   return layer.forget();
 }
 
+already_AddRefed<NativeLayerCA>
+NativeLayerRootCA::CreateLayerForSurfacePresentation(const IntSize& aSize,
+                                                     bool aIsOpaque) {
+  RefPtr<NativeLayerCA> layer = new NativeLayerCA(aSize, aIsOpaque);
+  return layer.forget();
+}
+
 void NativeLayerRootCA::AppendLayer(NativeLayer* aLayer) {
   MutexAutoLock lock(mMutex);
 
@@ -680,10 +687,14 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
     // assert this instead of if-ing it, to ensure that we always have a
     // return value from this clause.
 #ifdef DEBUG
-    auto textureHost = topLayer->mTextureHost;
-    MOZ_ASSERT(textureHost);
-    MacIOSurface* macIOSurface = textureHost->GetSurface();
-    CFTypeRefPtr<IOSurfaceRef> surface = macIOSurface->GetIOSurfaceRef();
+    CFTypeRefPtr<IOSurfaceRef> surface;
+    if (auto textureHost = topLayer->mTextureHost) {
+      MacIOSurface* macIOSurface = textureHost->GetSurface();
+      surface = macIOSurface->GetIOSurfaceRef();
+    } else {
+      surface = topLayer->mSurfaceToPresent;
+    }
+    MOZ_ASSERT(surface);
     OSType pixelFormat = IOSurfaceGetPixelFormat(surface.get());
     MOZ_ASSERT(
         !(pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
@@ -895,6 +906,9 @@ NativeLayerCA::NativeLayerCA(gfx::DeviceColor aColor)
   mColor.AssignUnderCreateRule(CGColorCreateForDeviceColor(aColor));
 }
 
+NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque)
+    : mMutex("NativeLayerCA"), mSize(aSize), mIsOpaque(aIsOpaque) {}
+
 NativeLayerCA::~NativeLayerCA() {
 #ifdef NIGHTLY_BUILD
   if (mHasEverAttachExternalImage &&
@@ -936,9 +950,23 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
 
   mDisplayRect = IntRect(IntPoint{}, mSize);
 
-  bool oldSpecializeVideo = mSpecializeVideo;
-  mSpecializeVideo = ShouldSpecializeVideo(lock);
-  bool changedSpecializeVideo = (mSpecializeVideo != oldSpecializeVideo);
+  bool isHDR = false;
+  MacIOSurface* macIOSurface = texture->GetSurface();
+  if (macIOSurface->GetYUVColorSpace() == gfx::YUVColorSpace::BT2020) {
+    // BT2020 colorSpace is a signifier of HDR.
+    isHDR = true;
+  }
+
+  if (macIOSurface->GetColorDepth() == gfx::ColorDepth::COLOR_10) {
+    // 10-bit color is a signifier of HDR.
+    isHDR = true;
+  }
+  mIsHDR = isHDR;
+
+  bool specializeVideo = ShouldSpecializeVideo(lock);
+  bool changedSpecializeVideo = (mSpecializeVideo != specializeVideo);
+  mSpecializeVideo = specializeVideo;
+
 #ifdef NIGHTLY_BUILD
   if (changedSpecializeVideo &&
       StaticPrefs::gfx_core_animation_specialize_video_log()) {
@@ -947,18 +975,26 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
         this);
   }
 #endif
-  bool oldIsDRM = mIsDRM;
-  mIsDRM = aExternalImage->IsFromDRMSource();
-  bool changedIsDRM = (mIsDRM != oldIsDRM);
 
-
-  ForAllRepresentations([&](Representation& r) {
-    r.mMutatedFrontSurface = true;
-    r.mMutatedDisplayRect |= changedSizeAndDisplayRect;
-    r.mMutatedSize |= changedSizeAndDisplayRect;
-    r.mMutatedSpecializeVideo |= changedSpecializeVideo;
-    r.mMutatedIsDRM |= changedIsDRM;
-  });
+  if(@available(macOS 10.15, *)) {
+    bool isDRM = aExternalImage->IsFromDRMSource();
+    bool changedIsDRM = (mIsDRM != isDRM);
+    mIsDRM = isDRM;
+    ForAllRepresentations([&](Representation& r) {
+      r.mMutatedFrontSurface = true;
+      r.mMutatedDisplayRect |= changedSizeAndDisplayRect;
+      r.mMutatedSize |= changedSizeAndDisplayRect;
+      r.mMutatedSpecializeVideo |= changedSpecializeVideo;
+      r.mMutatedIsDRM |= changedIsDRM;
+    });
+  } else {
+    ForAllRepresentations([&](Representation& r) {
+      r.mMutatedFrontSurface = true;
+      r.mMutatedDisplayRect |= changedSizeAndDisplayRect;
+      r.mMutatedSize |= changedSizeAndDisplayRect;
+      r.mMutatedSpecializeVideo |= changedSpecializeVideo;
+    }); 
+  }
 }
 
 GpuFence* NativeLayerCA::GetGpuFence() {
@@ -1265,7 +1301,11 @@ void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
   aOutputStream << "\" ";
 
   CFTypeRefPtr<IOSurfaceRef> surface;
-  if (mSurfaceHandler) {
+  if (mSurfaceToPresent) {
+    surface = mSurfaceToPresent;
+    aOutputStream << "alt=\"presented surface 0x" << std::hex
+                  << int(IOSurfaceGetID(surface.get())) << "\" ";
+  } else if (mSurfaceHandler) {
     if (auto frontSurface = mSurfaceHandler->FrontSurface()) {
       surface = frontSurface->mSurface;
       aOutputStream << "alt=\"regular surface 0x" << std::hex
@@ -1314,6 +1354,73 @@ gfx::IntRect NativeLayerCA::CurrentSurfaceDisplayRect() {
     return mSurfaceHandler->DisplayRect();
   }
   return mDisplayRect;
+}
+
+void NativeLayerCA::SetDisplayRect(const gfx::IntRect& aDisplayRect) {
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(!mSurfaceHandler, "Setting display rect will have no effect.");
+  mDisplayRect = aDisplayRect;
+}
+
+void NativeLayerCA::SetSurfaceToPresent(CFTypeRefPtr<IOSurfaceRef> aSurfaceRef,
+                                        gfx::IntSize& aSize, bool aIsDRM,
+                                        bool aIsHDR) {
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(!mSurfaceHandler,
+             "Shouldn't call this for layers that manage their own surfaces.");
+  MOZ_ASSERT(!mTextureHost,
+             "Shouldn't call this for layers that get external surfaces.");
+
+  bool changedSurface = (mSurfaceToPresent != aSurfaceRef);
+  mSurfaceToPresent = aSurfaceRef;
+
+  bool changedSizeAndDisplayRect = (mSize != aSize);
+  mSize = aSize;
+  mDisplayRect = IntRect(IntPoint{}, mSize);
+
+  // Figure out if the surface is a video.
+  if (mSurfaceToPresent) {
+    auto pixelFormat = IOSurfaceGetPixelFormat(mSurfaceToPresent.get());
+    bool hasAlpha = !mIsOpaque;
+    auto surfaceFormat =
+        MacIOSurface::SurfaceFormatForPixelFormat(pixelFormat, hasAlpha);
+    mTextureHostIsVideo = gfx::Info(surfaceFormat)->isYuv;
+  } else {
+    mTextureHostIsVideo = false;
+  }
+  
+  mIsHDR = aIsHDR;
+
+  bool specializeVideo = ShouldSpecializeVideo(lock);
+  bool changedSpecializeVideo = (mSpecializeVideo != specializeVideo);
+  mSpecializeVideo = specializeVideo;
+
+#ifdef NIGHTLY_BUILD
+  if (changedSpecializeVideo &&
+      StaticPrefs::gfx_core_animation_specialize_video_log()) {
+    NSLog(
+        @"VIDEO_LOG: SetSurfaceToPresent: %p is forcing a video layer rebuild.",
+        this);
+  }
+#endif
+  if(@available(macOS 10.15, *)) {
+    bool changedIsDRM = (mIsDRM != aIsDRM);
+    mIsDRM = aIsDRM;
+    ForAllRepresentations([&](Representation& r) {
+      r.mMutatedFrontSurface |= changedSurface;
+      r.mMutatedSize |= changedSizeAndDisplayRect;
+      r.mMutatedDisplayRect |= changedSizeAndDisplayRect;
+      r.mMutatedSpecializeVideo |= changedSpecializeVideo;
+      r.mMutatedIsDRM |= changedIsDRM;
+    });
+  } else {
+    ForAllRepresentations([&](Representation& r) {
+      r.mMutatedFrontSurface |= changedSurface;
+      r.mMutatedSize |= changedSizeAndDisplayRect;
+      r.mMutatedDisplayRect |= changedSizeAndDisplayRect;
+      r.mMutatedSpecializeVideo |= changedSpecializeVideo;
+    });
+  }
 }
 
 NativeLayerCA::Representation::Representation()
@@ -1454,7 +1561,9 @@ bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
   IntRect displayRect = mDisplayRect;
   bool surfaceIsFlipped = mSurfaceIsFlipped;
 
-  if (mSurfaceHandler) {
+  if (mSurfaceToPresent) {
+    surface = mSurfaceToPresent;
+  } else if (mSurfaceHandler) {
     if (auto frontSurface = mSurfaceHandler->FrontSurface()) {
       surface = frontSurface->mSurface;
     }

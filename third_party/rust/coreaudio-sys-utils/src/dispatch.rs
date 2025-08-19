@@ -32,14 +32,14 @@ pub fn run_serially<F, B>(work: F) -> B
 where
     F: FnOnce() -> B,
 {
-    get_serial_queue_singleton().run_sync(|| work()).unwrap()
+    get_serial_queue_singleton().run_sync(work).unwrap()
 }
 
 pub fn run_serially_forward_panics<F, B>(work: F) -> B
 where
     F: panic::UnwindSafe + FnOnce() -> B,
 {
-    match run_serially(|| panic::catch_unwind(|| work())) {
+    match run_serially(|| panic::catch_unwind(work)) {
         Ok(res) => res,
         Err(e) => panic::resume_unwind(e),
     }
@@ -117,8 +117,8 @@ impl Queue {
     {
         let guard = self.queue.lock().unwrap();
         let should_cancel = self.get_should_cancel(*guard);
-        let (closure, executor) = Self::create_closure_and_executor(|| {
-            if should_cancel.map_or(false, |v| v.load(Ordering::SeqCst)) {
+        let (closure, executor) = Self::create_closure_and_executor(move || {
+            if should_cancel.is_some_and(|v| v.load(Ordering::SeqCst)) {
                 return;
             }
             work();
@@ -140,8 +140,8 @@ impl Queue {
         let when = unsafe { dispatch_time(DISPATCH_TIME_NOW.into(), nanos) };
         let guard = self.queue.lock().unwrap();
         let should_cancel = self.get_should_cancel(*guard);
-        let (closure, executor) = Self::create_closure_and_executor(|| {
-            if should_cancel.map_or(false, |v| v.load(Ordering::SeqCst)) {
+        let (closure, executor) = Self::create_closure_and_executor(move || {
+            if should_cancel.is_some_and(|v| v.load(Ordering::SeqCst)) {
                 return;
             }
             work();
@@ -159,14 +159,15 @@ impl Queue {
         let mut res: Option<B> = None;
         let cex: Option<(*mut c_void, dispatch_function_t)>;
         {
+            let res = &mut res;
             let guard = self.queue.lock().unwrap();
             queue = Some(*guard);
             let should_cancel = self.get_should_cancel(*guard);
-            cex = Some(Self::create_closure_and_executor(|| {
-                if should_cancel.map_or(false, |v| v.load(Ordering::SeqCst)) {
+            cex = Some(Self::create_closure_and_executor(move || {
+                if should_cancel.is_some_and(|v| v.load(Ordering::SeqCst)) {
                     return;
                 }
-                res = Some(work());
+                *res = Some(work());
             }));
         }
         let (closure, executor) = cex.unwrap();
@@ -188,6 +189,7 @@ impl Queue {
         let mut res: Option<B> = None;
         let cex: Option<(*mut c_void, dispatch_function_t)>;
         {
+            let res = &mut res;
             let guard = self.queue.lock().unwrap();
             queue = Some(*guard);
             let should_cancel = self.get_should_cancel(*guard);
@@ -195,8 +197,8 @@ impl Queue {
                 should_cancel.is_some(),
                 "dispatch context should be allocated!"
             );
-            cex = Some(Self::create_closure_and_executor(|| {
-                res = Some(work());
+            cex = Some(Self::create_closure_and_executor(move || {
+                *res = Some(work());
                 should_cancel
                     .expect("dispatch context should be allocated!")
                     .store(true, Ordering::SeqCst);
@@ -209,15 +211,15 @@ impl Queue {
         res
     }
 
-    fn get_should_cancel(&self, queue: dispatch_queue_t) -> Option<&mut AtomicBool> {
+    fn get_should_cancel(&self, queue: dispatch_queue_t) -> Option<&AtomicBool> {
         if !self.owned.load(Ordering::SeqCst) {
             return None;
         }
         unsafe {
             let context =
                 dispatch_get_context(mem::transmute::<dispatch_queue_t, dispatch_object_t>(queue))
-                    as *mut AtomicBool;
-            context.as_mut()
+                    as *const AtomicBool;
+            context.as_ref()
         }
     }
 

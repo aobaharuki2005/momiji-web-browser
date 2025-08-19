@@ -503,6 +503,7 @@ const TEST_GLOBAL = {
     "newtabSmartShortcuts",
     "newtabInferredPersonalization",
     "newtabWidgets",
+    "newtabOhttpImages",
     "cookieBannerHandling",
   ]),
   TelemetryEnvironment: {

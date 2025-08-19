@@ -95,6 +95,11 @@ export class UrlbarResult {
         this.payloadHighlights[name] = [];
       }
     }
+
+    if (this.type == lazy.UrlbarUtils.RESULT_TYPE.TIP) {
+      this.isRichSuggestion = true;
+      this.richSuggestionIconSize = 24;
+    }
   }
 
   /**

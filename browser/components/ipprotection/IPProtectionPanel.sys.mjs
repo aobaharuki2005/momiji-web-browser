@@ -2,23 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  IPProtectionService:
+    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+  IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
+});
+
+import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
+
 /**
  * Manages updates for a IP Protection panelView in a given browser window.
  */
 export class IPProtectionPanel {
-  static HEADER_TAGNAME = "ipprotection-header";
   static CONTENT_TAGNAME = "ipprotection-content";
-  static HEADER_ROOT_ELEMENT = "#PanelUI-ipprotection-header";
-  static CONTENT_ROOT_ELEMENT = "#PanelUI-ipprotection-content";
   static CUSTOM_ELEMENTS_SCRIPT =
     "chrome://browser/content/ipprotection/ipprotection-customelements.js";
 
   static PANEL_ID = "PanelUI-ipprotection";
   static TITLE_L10N_ID = "ipprotection-title";
 
-  // TODO: this is temporary URL. Update it once finalized (Bug 1972462).
-  static HELP_PAGE_URL =
-    "https://support.mozilla.org/en-US/products/firefox-private-network-vpn";
   /**
    * Loads the ipprotection custom element script
    * into a given window.
@@ -45,6 +49,16 @@ export class IPProtectionPanel {
    *  The timestamp in milliseconds since IP Protection was enabled
    * @property {boolean} isSignedIn
    *  True if signed in to account
+   * @property {object} location
+   *  Data about the server location the proxy is connected to
+   * @property {string} location.name
+   *  The location country name
+   * @property {string} location.code
+   *  The location country code
+   * @property {"generic" | ""} error
+   *  The error type as a string if an error occurred, or empty string if there are no errors.
+   * @property {"alpha"} variant
+   * The feature variant type as a string.
    */
 
   /**
@@ -52,7 +66,6 @@ export class IPProtectionPanel {
    */
   state = {};
   panel = null;
-  header = null;
 
   /**
    * Check the state of the enclosing panel to see if
@@ -73,21 +86,35 @@ export class IPProtectionPanel {
    *
    * @param {Window} window
    *   Window containing the panelView to manage.
+   * @param {string} variant
+   *   Variant of the panel that should be used.
    */
-  constructor(window) {
+  constructor(window, variant = "") {
     this.handleEvent = this.#handleEvent.bind(this);
 
-    // TODO: let proxy assign our starting values (Bug 1976021)
+    let {
+      isSignedIn,
+      isActive: isProtectionEnabled,
+      activatedAt: protectionEnabledSince,
+    } = lazy.IPProtectionService;
+
     this.state = {
-      // TODO: Add logic for determining sign-in state once we have details about the proxy - Bug 1976094
-      isSignedIn: true,
-      isProtectionEnabled: false,
-      protectionEnabledSince: null,
+      isSignedIn,
+      isProtectionEnabled,
+      protectionEnabledSince,
+      location: {
+        name: "United States",
+        code: "us",
+      },
+      error: "",
+      variant,
     };
 
     if (window) {
       IPProtectionPanel.loadCustomElements(window);
     }
+
+    this.#addProxyListeners();
   }
 
   /**
@@ -129,16 +156,18 @@ export class IPProtectionPanel {
     panelEl.requestUpdate();
   }
 
-  // TODO: actually connect to proxy, hardcode for now (Bug 1976021)
-  #startProxy() {}
+  #startProxy() {
+    lazy.IPProtectionService.start();
+  }
 
-  // TODO: actually disconnect from proxy, hardcode for now (Bug 1976021)
-  #stopProxy() {}
+  #stopProxy() {
+    lazy.IPProtectionService.stop();
+  }
 
   showHelpPage() {
     let win = this.panel.ownerGlobal;
     if (win && !Cu.isInAutomation) {
-      win.openWebLinkIn(IPProtectionPanel.HELP_PAGE_URL, "tab");
+      win.openWebLinkIn(LINKS.SUPPORT_URL, "tab");
       this.close();
     }
   }
@@ -154,10 +183,6 @@ export class IPProtectionPanel {
    *   The panelView element from the CustomizableUI widget callback.
    */
   showing(panelView) {
-    if (!this.header) {
-      this.#createHeader(panelView);
-    }
-
     if (this.panel) {
       this.updateState();
     } else {
@@ -170,7 +195,9 @@ export class IPProtectionPanel {
    *
    * Disables updates to the panel.
    */
-  hiding() {}
+  hiding() {
+    this.destroy();
+  }
 
   /**
    * Creates a panel component in a panelView.
@@ -179,38 +206,17 @@ export class IPProtectionPanel {
    */
   #createPanel(panelView) {
     let { ownerDocument } = panelView;
-    let contentRootEl = panelView.querySelector(
-      IPProtectionPanel.CONTENT_ROOT_ELEMENT
-    );
 
     let contentEl = ownerDocument.createElement(
       IPProtectionPanel.CONTENT_TAGNAME
     );
     this.panel = contentEl;
 
+    contentEl.dataset.capturesFocus = "true";
+
     this.#addPanelListeners(ownerDocument);
 
-    contentRootEl.appendChild(contentEl);
-  }
-
-  /**
-   * Creates the header for the panel component in the panelView.
-   *
-   * @param {XULBrowserElement} panelView
-   *  The panelView element that the panel header is in.
-   */
-  #createHeader(panelView) {
-    let headerRootEl = panelView.querySelector(
-      IPProtectionPanel.HEADER_ROOT_ELEMENT
-    );
-
-    let headerEl = panelView.ownerDocument.createElement(
-      IPProtectionPanel.HEADER_TAGNAME
-    );
-    headerEl.titleId = IPProtectionPanel.TITLE_L10N_ID;
-    this.header = headerEl;
-
-    headerRootEl.appendChild(headerEl);
+    panelView.appendChild(contentEl);
   }
 
   /**
@@ -225,18 +231,32 @@ export class IPProtectionPanel {
   }
 
   /**
+   * Start flow for signing in and then opening the panel on success
+   */
+  async startLoginFlow() {
+    let window = this.panel.ownerGlobal;
+    let browser = window.gBrowser;
+    this.close();
+    let isSignedIn = await lazy.IPProtectionService.startLoginFlow(browser);
+    if (isSignedIn) {
+      lazy.IPProtection.openPanel(window);
+    }
+  }
+
+  /**
    * Remove added elements and listeners.
    */
   destroy() {
-    if (this.header) {
-      this.header.remove();
-      this.header = null;
-    }
     if (this.panel) {
       this.panel.remove();
       this.#removePanelListeners(this.panel.ownerDocument);
       this.panel = null;
     }
+  }
+
+  uninit() {
+    this.destroy();
+    this.#removeProxyListeners();
   }
 
   #addPanelListeners(doc) {
@@ -245,6 +265,7 @@ export class IPProtectionPanel {
     doc.addEventListener("IPProtection:UserEnable", this.handleEvent);
     doc.addEventListener("IPProtection:UserDisable", this.handleEvent);
     doc.addEventListener("IPProtection:ShowHelpPage", this.handleEvent);
+    doc.addEventListener("IPProtection:SignIn", this.handleEvent);
   }
 
   #removePanelListeners(doc) {
@@ -253,6 +274,45 @@ export class IPProtectionPanel {
     doc.removeEventListener("IPProtection:UserEnable", this.handleEvent);
     doc.removeEventListener("IPProtection:UserDisable", this.handleEvent);
     doc.removeEventListener("IPProtection:ShowHelpPage", this.handleEvent);
+    doc.removeEventListener("IPProtection:SignIn", this.handleEvent);
+  }
+
+  #addProxyListeners() {
+    lazy.IPProtectionService.addEventListener(
+      "IPProtectionService:SignedIn",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.addEventListener(
+      "IPProtectionService:SignedOut",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.addEventListener(
+      "IPProtectionService:Started",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.addEventListener(
+      "IPProtectionService:Stopped",
+      this.handleEvent
+    );
+  }
+
+  #removeProxyListeners() {
+    lazy.IPProtectionService.removeEventListener(
+      "IPProtectionService:SignedIn",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.removeEventListener(
+      "IPProtectionService:SignedOut",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.removeEventListener(
+      "IPProtectionService:Started",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.removeEventListener(
+      "IPProtectionService:Stopped",
+      this.handleEvent
+    );
   }
 
   #handleEvent(event) {
@@ -266,6 +326,26 @@ export class IPProtectionPanel {
       this.#stopProxy();
     } else if (event.type == "IPProtection:ShowHelpPage") {
       this.showHelpPage();
+    } else if (event.type == "IPProtectionService:SignedIn") {
+      this.setState({
+        isSignedIn: true,
+      });
+    } else if (event.type == "IPProtectionService:SignedOut") {
+      this.setState({
+        isSignedIn: false,
+      });
+    } else if (event.type == "IPProtectionService:Started") {
+      this.setState({
+        isProtectionEnabled: true,
+        protectionEnabledSince: event.detail?.activatedAt,
+      });
+    } else if (event.type == "IPProtectionService:Stopped") {
+      this.setState({
+        isProtectionEnabled: false,
+        protectionEnabledSince: null,
+      });
+    } else if (event.type == "IPProtection:SignIn") {
+      this.startLoginFlow();
     }
   }
 }

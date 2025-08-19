@@ -6,13 +6,21 @@ loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - toolchain
+    - post-balrog-dummy
+    - post-beetmover-dummy
+    - release-balrog-submit-toplevel
 
 transforms:
+    - gecko_taskgraph.transforms.release:run_on_releases
+    - gecko_taskgraph.transforms.release_deps:transforms
     - gecko_taskgraph.transforms.update_test:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
 task-defaults:
+    shipping-phase: promote
+    shipping-product: firefox
+    run-on-releases: [release, release-rc]
     treeherder:
         kind: other
         tier: 2

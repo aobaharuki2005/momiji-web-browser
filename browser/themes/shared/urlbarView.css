@@ -154,6 +154,11 @@
   border-radius: calc(var(--urlbarView-row-gutter) + var(--toolbarbutton-border-radius));
   background-clip: padding-box;
 
+  /* Must hide the overflowing rows while the view is updating */
+  &[hidden] {
+    display: none !important;
+  }
+
   &[row-selectable]:not([selected]):hover {
     background-color: var(--urlbarView-hover-background);
   }
@@ -334,8 +339,8 @@
 
 .urlbarView-type-icon {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: var(--icon-size-xsmall);
+  height: var(--icon-size-xsmall);
   align-self: center;
   margin-top: var(--urlbarView-favicon-width);
   margin-inline-start: calc(var(--urlbarView-icon-margin-start) + var(--urlbarView-favicon-width) - 6px);
@@ -365,8 +370,8 @@
       justify-content: center;
       align-items: center;
       border-radius: 50%;
-      width: 12px;
-      height: 12px;
+      width: var(--icon-size-xsmall);
+      height: var(--icon-size-xsmall);
       font-size: 10px;
     }
 
@@ -381,6 +386,13 @@
 }
 
 /* Buttons */
+
+.urlbarView-row-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  flex-wrap: wrap;
+}
 
 .urlbarView-button {
   display: inline-block;
@@ -427,14 +439,14 @@
   background-image: url("chrome://global/skin/icons/more.svg");
   background-color: var(--button-background-color);
 
-  .urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-inner + &:not([open]):empty {
+  .urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-buttons > &:not([open]):first-child:empty {
     display: none;
   }
 
   /* Labeled result menu button */
 
   &:not(:empty) {
-    .urlbarView-results:not([wrap]) > .urlbarView-row > & {
+    .urlbarView-results:not([wrap]) > .urlbarView-row > .urlbarView-row-buttons > & {
       display: inline-flex;
       align-items: center;
       border-radius: var(--urlbarView-result-button-size);
@@ -447,7 +459,7 @@
       }
     }
 
-    .urlbarView-results[wrap] > .urlbarView-row > & {
+    .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-buttons > & {
       /* Hide the label in narrow windows. */
       font-size: 0;
     }
@@ -456,7 +468,8 @@
 
 /* Button with label, e.g. tip button */
 
-.urlbarView-button:where(:not(:empty):not(.urlbarView-button-result-menu)) {
+.urlbarView-button:where(:not(:empty):not(.urlbarView-button-result-menu)),
+.urlbarView-splitbutton-dropmarker {
   border-radius: var(--toolbarbutton-border-radius);
   padding: 0.5em 1em;
   margin-inline-end: 1.4em;
@@ -469,7 +482,7 @@
   flex-basis: initial;
   flex-shrink: 0;
 
-  &:not(:hover) {
+  &:not(:hover, [open]) {
     background-color: var(--button-background-color);
   }
 
@@ -489,7 +502,11 @@
   }
 }
 
-/* Split Buton component */
+/* Split Button component */
+.urlbarView-splitbutton {
+  display: flex;
+}
+
 .urlbarView-splitbutton-main {
   margin-inline-start: 0;
   /* Make the cap to the dropmarker */
@@ -499,6 +516,7 @@
 }
 
 .urlbarView-splitbutton-dropmarker {
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   border-start-start-radius: 0;
   border-end-start-radius: 0;
   padding-inline: 0;
@@ -506,81 +524,6 @@
   border-inline-start: none;
   -moz-context-properties: fill;
   fill: currentColor;
-}
-
-/* Tip rows */
-
-.urlbarView-row[type="tip"] {
-  padding-block: 18px;
-  border-block: 0;
-  border-radius: 0;
-
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--urlbarView-separator-color);
-    margin-bottom: 4px;
-  }
-
-  &:not(:first-child) {
-    border-top: 1px solid var(--urlbarView-separator-color);
-    margin-top: 4px;
-  }
-
-  /* For tips with row labels, move the entire row down by an additional
-     var(--urlbarView-labeled-tip-margin-top-extra) so there's more space
-     between the tip's top border and the label. They're too close otherwise.
-     The row label must also be adjusted; see the row label rules. */
-  &[label] {
-    margin-top: calc(var(--urlbarView-labeled-row-margin-top) + var(--urlbarView-labeled-tip-margin-top-extra));
-  }
-
-  > .urlbarView-row-inner {
-    min-height: 32px;
-    align-items: center;
-
-    /* Add space between the tip title (and the rest of row-inner) and its
-       button. */
-    margin-inline-end: 1.8em;
-
-    > .urlbarView-no-wrap > .urlbarView-title-separator,
-    > .urlbarView-url {
-      display: none;
-    }
-
-    > .urlbarView-no-wrap > .urlbarView-title {
-      white-space: normal;
-    }
-  }
-
-  .urlbarView-results[wrap] > & {
-    display: block;
-    text-align: end;
-
-    > .urlbarView-row-inner {
-      display: block;
-      text-align: start;
-    }
-
-    > .urlbarView-button {
-      margin-top: 1em;
-      margin-bottom: var(--urlbarView-item-block-padding);
-    }
-  }
-
-  &:not([tip-type="dismissalAcknowledgment"]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
-    width: 24px;
-    height: 24px;
-    margin-inline-end: 12px;
-    flex-basis: 24px;
-    flex-grow: 0;
-  }
-
-  &[tip-type="dismissalAcknowledgment"] {
-    padding-block: 6px;
-
-    &:last-child {
-      padding-block-end: max(0px, 6px - var(--urlbarView-results-padding));
-    }
-  }
 }
 
 /* Row label (a.k.a. group label) */
@@ -1006,6 +949,107 @@
   color: var(--urlbarView-secondary-text-color);
 }
 
+/* Tip rows. Tip result inherits rich suggestion. */
+
+.urlbarView-row[type="tip"] {
+  padding-block: 18px;
+  border-block: 0;
+  border-radius: 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--urlbarView-separator-color);
+    margin-bottom: 4px;
+  }
+
+  &:not(:first-child) {
+    border-top: 1px solid var(--urlbarView-separator-color);
+    margin-top: 4px;
+  }
+
+  /* For tips with row labels, move the entire row down by an additional
+     var(--urlbarView-labeled-tip-margin-top-extra) so there's more space
+     between the tip's top border and the label. They're too close otherwise.
+     The row label must also be adjusted; see the row label rules. */
+  &[label] {
+    margin-top: calc(var(--urlbarView-labeled-row-margin-top) + var(--urlbarView-labeled-tip-margin-top-extra));
+  }
+
+  > .urlbarView-row-inner {
+    min-height: 32px;
+    align-items: center;
+
+    /* Add space between the tip title (and the rest of row-inner) and its
+       button. */
+    margin-inline-end: 1.8em;
+
+    .urlbarView-row[tip-type="realtime_opt_in"] > & > .urlbarView-favicon {
+      width: 98px;
+      height: 86px;
+      flex-basis: 98px;
+    }
+
+    > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
+      flex-shrink: unset;
+
+      > .urlbarView-title {
+        white-space: normal;
+      }
+
+      > :not(.urlbarView-title) {
+        display: none;
+      }
+    }
+
+    > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-url {
+      display: none;
+    }
+
+    > .urlbarView-row-body > .urlbarView-row-body-description {
+      /* Keep padding so the entire selected outline for learn more link */
+      padding-block: 4px;
+
+      > a {
+        white-space: nowrap;
+      }
+
+      > a[selected] {
+        border-radius: var(--border-radius-small);
+        outline: var(--focus-outline);
+        outline-offset: var(--link-focus-outline-offset);
+      }
+    }
+  }
+
+  .urlbarView-results[wrap] > & {
+    display: block;
+    text-align: end;
+
+    > .urlbarView-row-inner {
+      display: flex;
+      text-align: start;
+    }
+
+    > .urlbarView-row-buttons {
+      > .urlbarView-button,
+      > .urlbarView-splitbutton {
+        margin-block: 1em var(--urlbarView-item-block-padding);
+        margin-inline: 4px 0;
+      }
+      > :last-child {
+        margin-inline-end: 4px;
+      }
+    }
+
+    &[tip-type="dismissalAcknowledgment"] {
+      padding-block: 6px;
+
+      &:last-child {
+        padding-block-end: max(0px, 6px - var(--urlbarView-results-padding));
+      }
+    }
+  }
+}
+
 /* Sponsored Firefox Suggest rows */
 
 .urlbarView-row[type$="_adm_sponsored"][icon-size="16"] > .urlbarView-row-inner {
@@ -1198,6 +1242,59 @@
     > .urlbarView-action-btn-label {
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+  }
+}
+
+/* Market suggestions */
+
+.urlbarView-dynamic-market-item {
+  display: flex;
+  align-items: center;
+  padding-inline-end: var(--space-large);
+
+  --market-todays-change-perc-plus-color: light-dark(var(--color-green-60), var(--color-green-20));
+  --market-todays-change-perc-minus-color: light-dark(var(--color-red-70), var(--color-red-40));
+
+  &:hover,
+  &[selected] {
+    --market-todays-change-perc-plus-color: light-dark(var(--color-green-20), var(--color-green-60));
+    --market-todays-change-perc-minus-color: light-dark(var(--color-red-40), var(--color-red-70));
+  }
+
+  > .urlbarView-market-image {
+    /* The image size for realtime suggestion is larger than others by design */
+    width: 52px;
+    height: 52px;
+    margin-block: var(--space-small);
+    margin-inline-end: var(--space-small);
+  }
+
+  > .urlbarView-market-description {
+    display: flex;
+    flex-direction: column;
+    text-align: start;
+    grid-row-gap: var(--space-xxsmall);
+
+    > .urlbarView-market-name {
+      font-weight: var(--font-weight-bold);
+    }
+
+    > .urlbarView-market-todays-change-perc {
+      font-weight: var(--font-weight-bold);
+      font-size: var(--urlbarView-small-font-size);
+    }
+
+    > .urlbarView-market-todays-change-perc-plus {
+      color: var(--market-todays-change-perc-plus-color);
+    }
+
+    > .urlbarView-market-todays-change-perc-minus {
+      color: var(--market-todays-change-perc-minus-color);
+    }
+
+    > .urlbarView-market-last-price {
+      font-size: var(--urlbarView-small-font-size);
     }
   }
 }

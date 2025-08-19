@@ -33,6 +33,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
+/**
+ * @import {SuggestProvider} from "resource:///modules/urlbar/private/SuggestFeature.sys.mjs"
+ * @import {
+ *   GeonameAlternates, Geoname, GeonameMatch, GeonameType, Suggestion
+ * } from "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustSuggest.sys.mjs"
+ */
+
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "timerManager",
@@ -83,8 +90,8 @@ const gSuggestionTypesByCtor = new WeakMap();
  * [6] https://searchfox.org/mozilla-central/source/toolkit/components/uniffi-bindgen-gecko-js/config.toml
  */
 export class SuggestBackendRust extends SuggestBackend {
-  constructor(...args) {
-    super(...args);
+  constructor() {
+    super();
     this.#ingestQueue = new lazy.TaskQueue();
 
     // The remote settings server URL returned by `Utils.SERVER_URL` comes from
@@ -148,15 +155,15 @@ export class SuggestBackendRust extends SuggestBackend {
    *
    * @param {string} searchString
    *   The search string.
-   * @param {object} options
+   * @param {object} [options]
    *   Options object.
-   * @param {UrlbarQueryContext} options._queryContext
+   * @param {UrlbarQueryContext} [options._queryContext]
    *   The query context.
-   * @param {Array} options.types
+   * @param {?Array} [options.types]
    *   This is only intended to be used in special circumstances and normally
    *   should not be specified. Array of suggestion types to query. By default
    *   all enabled suggestion types are queried.
-   * @returns {Array}
+   * @returns {Promise<Array>}
    *   Matching Rust suggestions.
    */
   async query(searchString, { _queryContext, types = null } = {}) {
@@ -267,9 +274,9 @@ export class SuggestBackendRust extends SuggestBackend {
    *
    * @param {SuggestProvider} feature
    *   A feature that manages Rust suggestion types.
-   * @param {object} options
+   * @param {object} [options]
    *   Options object.
-   * @param {bool} options.evenIfFresh
+   * @param {boolean} [options.evenIfFresh]
    *   Set to true to force ingest for all the feature's suggestion types, even
    *   ones that aren't stale.
    */
@@ -384,7 +391,7 @@ export class SuggestBackendRust extends SuggestBackend {
   /**
    * Returns whether any dismissals are recorded.
    *
-   * @returns {boolean}
+   * @returns {Promise<boolean>}
    *   Whether any suggestions have been dismissed.
    */
   async anyDismissedSuggestions() {
@@ -417,14 +424,14 @@ export class SuggestBackendRust extends SuggestBackend {
    *
    * @param {string} searchString
    *   The string to match against geonames.
-   * @param {bool} matchNamePrefix
+   * @param {boolean} matchNamePrefix
    *   Whether prefix matching is performed on names excluding abbreviations and
    *   airport codes.
    * @param {GeonameType} geonameType
    *   Restricts returned geonames to a type.
    * @param {Array} filter
    *   Restricts returned geonames to certain cities or regions. Optional.
-   * @returns {Array}
+   * @returns {Promise<GeonameMatch[]>}
    *   Array of `GeonameMatch` objects. An empty array if there are no matches.
    */
   async fetchGeonames(searchString, matchNamePrefix, geonameType, filter) {
@@ -451,7 +458,7 @@ export class SuggestBackendRust extends SuggestBackend {
    *
    * @param {Geoname} geoname
    *   A `Geoname` object returned from `fetchGeonames()`.
-   * @returns {GeonameAlternates}
+   * @returns {Promise<GeonameAlternates>}
    *   A `GeonameAlternates` object containing the alternates for the geoname,
    *   its administrative divisions, and its country. See the Rust component for
    *   details.

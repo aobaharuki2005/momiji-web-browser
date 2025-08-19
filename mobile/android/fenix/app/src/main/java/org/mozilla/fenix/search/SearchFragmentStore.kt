@@ -431,6 +431,11 @@ sealed class SearchFragmentAction : Action {
      * Signals the current [Environment] is not valid anymore.
      */
     data object EnvironmentCleared : SearchFragmentAction()
+
+    /**
+     * Action indicating the user allowed to show suggestions in private mode.
+     */
+    data object PrivateSuggestionsCardAccepted : SearchFragmentAction()
 }
 
 /**
@@ -626,6 +631,7 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
         is SearchFragmentAction.EnvironmentCleared,
         is SearchFragmentAction.SearchStarted,
         is SearchFragmentAction.SuggestionClicked,
+        is SearchFragmentAction.PrivateSuggestionsCardAccepted,
         is SearchFragmentAction.SuggestionSelected,
             -> {
             // no-op. Expected to be handled in middlewares.

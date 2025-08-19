@@ -7,6 +7,18 @@ import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import { actionCreators as ac } from "common/Actions.mjs";
 import { AdBannerContextMenu } from "../AdBannerContextMenu/AdBannerContextMenu";
+import { PromoCard } from "../PromoCard/PromoCard.jsx";
+
+const PREF_SECTIONS_ENABLED = "discoverystream.sections.enabled";
+const PREF_OHTTP_UNIFIED_ADS = "unifiedAds.ohttp.enabled";
+const PREF_CONTEXTUAL_ADS = "discoverystream.sections.contextualAds.enabled";
+const PREF_USER_INFERRED_PERSONALIZATION =
+  "discoverystream.sections.personalization.inferred.user.enabled";
+const PREF_SYSTEM_INFERRED_PERSONALIZATION =
+  "discoverystream.sections.personalization.inferred.enabled";
+const PREF_REPORT_ADS_ENABLED = "discoverystream.reportAds.enabled";
+const PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
+const PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
 
 /**
  * A new banner ad that appears between rows of stories: leaderboard or billboard size.
@@ -47,11 +59,21 @@ export const AdBanner = ({
       height: undefined,
     };
   };
+  const promoCardEnabled =
+    spoc.format === "billboard" &&
+    prefs[PREF_PROMOCARD_ENABLED] &&
+    prefs[PREF_PROMOCARD_VISIBLE];
 
-  const sectionsEnabled = prefs["discoverystream.sections.enabled"];
-  const showAdReporting = prefs["discoverystream.reportAds.enabled"];
+  const sectionsEnabled = prefs[PREF_SECTIONS_ENABLED];
+  const ohttpEnabled = prefs[PREF_OHTTP_UNIFIED_ADS];
+  const contextualAds = prefs[PREF_CONTEXTUAL_ADS];
+  const inferredPersonalization =
+    prefs[PREF_USER_INFERRED_PERSONALIZATION] &&
+    prefs[PREF_SYSTEM_INFERRED_PERSONALIZATION];
+  const showAdReporting = prefs[PREF_REPORT_ADS_ENABLED];
+  const ohttpImagesEnabled = prefs.ohttpImagesConfig?.enabled;
   const [menuActive, setMenuActive] = useState(false);
-  const adBannerWrapperClassName = `ad-banner-wrapper ${menuActive ? "active" : ""}`;
+  const adBannerWrapperClassName = `ad-banner-wrapper ${menuActive ? "active" : ""} ${promoCardEnabled ? "promo-card" : ""}`;
 
   const { width: imgWidth, height: imgHeight } = getDimensions(spoc.format);
 
@@ -88,6 +110,24 @@ export const AdBanner = ({
   // using clamp to make sure its between valid values (1-9)
   const clampedRow = Math.max(1, Math.min(9, row));
 
+  const secureImage =
+    ohttpImagesEnabled &&
+    ohttpEnabled &&
+    contextualAds &&
+    inferredPersonalization &&
+    sectionsEnabled;
+
+  let rawImageSrc = spoc.raw_image_src;
+
+  // Wraps the image URL with the moz-cached-ohttp:// protocol.
+  // This enables Firefox to load resources over Oblivious HTTP (OHTTP),
+  // providing privacy-preserving resource loading.
+  // Applied only when inferred personalization is enabled.
+  // See: https://firefox-source-docs.mozilla.org/browser/components/mozcachedohttp/docs/index.html
+  if (secureImage) {
+    rawImageSrc = `moz-cached-ohttp://newtab-image/?url=${encodeURIComponent(spoc.raw_image_src)}`;
+  }
+
   return (
     <aside className={adBannerWrapperClassName} style={{ gridRow: clampedRow }}>
       <div className={`ad-banner-inner ${spoc.format}`}>
@@ -97,6 +137,7 @@ export const AdBanner = ({
           title={spoc.title || spoc.sponsor || spoc.alt_text}
           onLinkClick={onLinkClick}
           dispatch={dispatch}
+          isSponsored={true}
         >
           <ImpressionStats
             flightId={spoc.flight_id}
@@ -118,7 +159,7 @@ export const AdBanner = ({
           />
           <div className="ad-banner-content">
             <img
-              src={spoc.raw_image_src}
+              src={rawImageSrc}
               alt={spoc.alt_text}
               loading="eager"
               width={imgWidth}
@@ -143,6 +184,7 @@ export const AdBanner = ({
           />
         </div>
       </div>
+      {promoCardEnabled && <PromoCard />}
     </aside>
   );
 };

@@ -53,6 +53,8 @@ def set_task_configuration(config, tasks):
                 worker_type = os
                 platform = worker_type
 
+            this_task.setdefault("attributes", {})
+            this_task["attributes"]["build_platform"] = get_build_platform(platform)
             this_task["name"] = f"{platform}-firefox"
             this_task["description"] = f"Test updates on {platform}"
             this_task["worker-type"] = worker_type
@@ -93,7 +95,7 @@ def parametrize_by_locale_and_source_version(config, tasks):
             this_task["name"] = f'{this_task["name"]}-locale-{locale}'
             this_task["index"][
                 "job-name"
-            ] = f'{this_task["index"]["job-name"]}-locale-{locale}"'
+            ] = f'{this_task["index"]["job-name"]}-locale-{locale}'
             this_task["treeherder"]["symbol"] = infix_treeherder_symbol(
                 this_task["treeherder"]["symbol"], locale
             )
@@ -127,3 +129,12 @@ def parametrize_by_locale_and_source_version(config, tasks):
             task["treeherder"]["symbol"], "bkg"
         )
         yield task
+
+
+def get_build_platform(platform):
+    build_platforms = {
+        "win": "win64-shippable",
+        "t-o": "macosx64-shippable",
+        "lin": "linux64-shippable",
+    }
+    return build_platforms[platform[:3]]

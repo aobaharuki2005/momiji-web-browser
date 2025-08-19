@@ -8,14 +8,14 @@
 #define mozilla_CamerasParent_h
 
 #include "CamerasChild.h"
-#include "mozilla/Atomics.h"
-#include "mozilla/camera/PCamerasParent.h"
-#include "mozilla/media/MediaUtils.h"
-#include "mozilla/ipc/Shmem.h"
-#include "mozilla/ShmemPool.h"
 #include "api/video/video_sink_interface.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_defines.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/ShmemPool.h"
+#include "mozilla/camera/PCamerasParent.h"
+#include "mozilla/ipc/Shmem.h"
+#include "mozilla/media/MediaUtils.h"
 #include "video/render/incoming_video_stream.h"
 
 class WebrtcLogSinkHandle;
@@ -30,7 +30,7 @@ namespace mozilla::camera {
 class CamerasParent;
 class VideoEngine;
 
-class CallbackHelper : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   CallbackHelper(CaptureEngine aCapEng, uint32_t aStreamId,
                  CamerasParent* aParent)

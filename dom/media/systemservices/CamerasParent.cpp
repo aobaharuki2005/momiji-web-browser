@@ -7,37 +7,36 @@
 #include "CamerasParent.h"
 
 #include <atomic>
+
 #include "CamerasTypes.h"
 #include "MediaEngineSource.h"
 #include "PerformanceRecorder.h"
 #include "VideoEngine.h"
 #include "VideoFrameUtils.h"
-
+#include "api/video/video_frame_buffer.h"
 #include "common/browser_logging/WebRtcLog.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/ProfilerMarkers.h"
-#include "mozilla/Unused.h"
-#include "mozilla/Services.h"
 #include "mozilla/Logging.h"
-#include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/PBackgroundParent.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
-#include "mozilla/dom/WindowGlobalParent.h"
-#include "mozilla/media/MediaUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerMarkers.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_permissions.h"
+#include "mozilla/Unused.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/PBackgroundParent.h"
+#include "mozilla/media/MediaUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIThread.h"
-#include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 #include "video_engine/desktop_capture_impl.h"
 #include "video_engine/video_capture_factory.h"
-
-#include "api/video/video_frame_buffer.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
 
 #if defined(_WIN32)
 #  include <process.h>
@@ -1016,7 +1015,8 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
               if (!error) {
                 if (cbh) {
                   cap.VideoCapture()->RegisterCaptureDataCallback(
-                      static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(
+                      static_cast<
+                          webrtc::VideoSinkInterface<webrtc::VideoFrame>*>(
                           *cbh));
                   if (auto* event = cap.CaptureEndedEvent();
                       event && !(*cbh)->mConnectedToCaptureEnded) {
@@ -1111,7 +1111,8 @@ void CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
                                           VideoEngine::CaptureEntry& cap) {
           if (cap.VideoCapture()) {
             cap.VideoCapture()->DeRegisterCaptureDataCallback(
-                static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(cbh));
+                static_cast<webrtc::VideoSinkInterface<webrtc::VideoFrame>*>(
+                    cbh));
             cap.VideoCapture()->StopCaptureIfAllClientsClose();
 
             sDeviceUniqueIDs.erase(aCaptureId);

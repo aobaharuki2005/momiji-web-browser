@@ -12,15 +12,14 @@
 #define AttrArray_h___
 
 #include "mozilla/Attributes.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/BindgenUniquePtr.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Span.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
-
-#include "nscore.h"
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
 #include "nsCaseTreatment.h"
+#include "nscore.h"
 
 namespace mozilla {
 class AttributeStyles;

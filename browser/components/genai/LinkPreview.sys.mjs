@@ -604,7 +604,6 @@ export const LinkPreview = {
     const doc = win.document;
     const onboardingCard = doc.createElement("link-preview-card-onboarding");
     onboardingCard.style.width = "100%";
-    onboardingCard.onboardingType = lazy.longPress ? "longPress" : "shiftKey";
 
     // Telemetry for onboarding card view
     Glean.genaiLinkpreview.onboardingCard.record({
