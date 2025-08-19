@@ -9,7 +9,6 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Typeface
 import android.net.Uri
-import android.os.Build
 import android.text.SpannableString
 import android.text.style.StyleSpan
 import androidx.annotation.VisibleForTesting
@@ -24,7 +23,6 @@ import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
@@ -33,7 +31,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.getRootView
-import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -114,15 +111,11 @@ class QrScannerDelegate(
             activity.isPermissionGranted(Manifest.permission.CAMERA) -> qrFeature.scan()
 
             else -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    ActivityCompat.requestPermissions(
-                        activity,
-                        arrayOf(Manifest.permission.CAMERA),
-                        REQUEST_CODE_CAMERA_PERMISSIONS,
-                    )
-                } else {
-                    buildPermissionDialog().show()
-                }
+                ActivityCompat.requestPermissions(
+                    activity,
+                    arrayOf(Manifest.permission.CAMERA),
+                    REQUEST_CODE_CAMERA_PERMISSIONS,
+                )
             }
         }
     }
@@ -138,17 +131,7 @@ class QrScannerDelegate(
                 appStore.dispatch(AppAction.QrScannerAction.QrScannerDismissed)
             }
             setPositiveButton(R.string.camera_permissions_needed_positive_button_text) { dialog: DialogInterface, _ ->
-                val intent: Intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                } else {
-                    SupportUtils.createCustomTabIntent(
-                        activity,
-                        SupportUtils.getSumoURLForTopic(
-                            activity,
-                            SupportUtils.SumoTopic.QR_CAMERA_ACCESS,
-                            ),
-                        )
-                }
+                val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 val uri = Uri.fromParts("package", activity.packageName, null)
                 intent.data = uri
                 dialog.cancel()

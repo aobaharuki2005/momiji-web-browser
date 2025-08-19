@@ -4,7 +4,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="SplashScreen" parent="SplashScreenThemeBase"/>
+    <style name="SplashScreen" parent="SplashScreenThemeBase">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/animated_splash_screen</item>
+    </style>
 
     <style name="SplashScreenThemeBase" parent="Theme.SplashScreen">
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
@@ -353,7 +355,12 @@
         <item name="cardBackgroundColor">?attr/layer2</item>
     </style>
 
-    <style name="PrivateTheme" parent="PrivateThemeBase" />
+    <style name="PrivateTheme" parent="PrivateThemeBase">
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarColor">?attr/layer1</item>
+    </style>
 
     <!-- Fade animation for theme switching -->
     <style name="WindowAnimationTransition" parent="android:Animation.Activity">
@@ -632,7 +639,12 @@
         <item name="android:textColorHint">@color/search_view_hint_color</item>
     </style>
 
-    <style name="BottomSheetPrivate" parent="@style/BottomSheetBasePrivate" />
+    <style name="BottomSheetPrivate" parent="BottomSheetBasePrivate">
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarColor">?attr/layer1</item>
+    </style>
 
     <style name="BottomSheet" parent="@style/BottomSheetBase" />
 

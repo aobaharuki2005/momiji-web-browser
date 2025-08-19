@@ -30,7 +30,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.appservices.autofill.AutofillApiException
 import mozilla.components.browser.state.action.SystemAction
-import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
@@ -379,13 +378,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
 
         fun queueMetrics() {
-            if (SDK_INT >= Build.VERSION_CODES.O) { // required by StorageStatsMetrics.
-                queue.runIfReadyOrQueue {
-                    // Because it may be slow to capture the storage stats, it might be preferred to
-                    // create a WorkManager task for this metric, however, I ran out of
-                    // implementation time and WorkManager is harder to test.
-                    StorageStatsMetrics.report(this.applicationContext)
-                }
+            queue.runIfReadyOrQueue {
+                // Because it may be slow to capture the storage stats, it might be preferred to
+                // create a WorkManager task for this metric, however, I ran out of
+                // implementation time and WorkManager is harder to test.
+                StorageStatsMetrics.report(this.applicationContext)
             }
         }
 

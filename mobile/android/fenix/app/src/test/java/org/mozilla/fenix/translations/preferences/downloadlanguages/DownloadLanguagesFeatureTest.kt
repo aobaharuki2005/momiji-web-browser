@@ -73,7 +73,6 @@ class DownloadLanguagesFeatureTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.N])
     fun `GIVEN wifi is connected WHEN wifi changes to not connected and restrictBackgroundStatus is RESTRICT_BACKGROUND_STATUS_ENABLED THEN onDataSaverAndWifiChanged callback should return true`() {
         every { connectivityManager.restrictBackgroundStatus } returns
             ConnectivityManagerCompat.RESTRICT_BACKGROUND_STATUS_ENABLED
@@ -86,7 +85,6 @@ class DownloadLanguagesFeatureTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.N])
     fun `GIVEN wifi is connected WHEN wifi changes to not connected and restrictBackgroundStatus is RESTRICT_BACKGROUND_STATUS_WHITELISTED THEN onDataSaverAndWifiChanged callback should return true`() {
         every { connectivityManager.restrictBackgroundStatus } returns
             ConnectivityManagerCompat.RESTRICT_BACKGROUND_STATUS_WHITELISTED
@@ -99,7 +97,6 @@ class DownloadLanguagesFeatureTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.N])
     fun `GIVEN wifi is connected WHEN wifi changes to connected and restrictBackgroundStatus is RESTRICT_BACKGROUND_STATUS_WHITELISTED THEN onDataSaverAndWifiChanged callback should return false`() {
         every { connectivityManager.restrictBackgroundStatus } returns
             ConnectivityManagerCompat.RESTRICT_BACKGROUND_STATUS_WHITELISTED
@@ -112,7 +109,6 @@ class DownloadLanguagesFeatureTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.N])
     fun `GIVEN wifi is connected WHEN wifi changes to connected and restrictBackgroundStatus is RESTRICT_BACKGROUND_STATUS_DISABLED THEN onDataSaverAndWifiChanged callback should return false`() {
         every { connectivityManager.restrictBackgroundStatus } returns
             ConnectivityManagerCompat.RESTRICT_BACKGROUND_STATUS_DISABLED
