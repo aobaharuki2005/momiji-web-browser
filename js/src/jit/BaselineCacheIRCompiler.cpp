@@ -2966,11 +2966,36 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
   return true;
 }
 
+// Temporary function to allow partial migration.
+static bool NeedsRectifier(CallFlags flags) {
+  switch (flags.getArgFormat()) {
+    case CallFlags::Standard:
+      return false;
+    default:
+      return true;
+  }
+}
+
 void BaselineCacheIRCompiler::pushArguments(Register argcReg,
                                             Register calleeReg,
                                             Register scratch, Register scratch2,
                                             CallFlags flags, uint32_t argcFixed,
                                             bool isJitCall) {
+  if (!NeedsRectifier(flags)) {
+      if (isJitCall) {
+        // If we're calling jitcode, we have to align the stack and ensure that
+        // enough arguments are being passed, filling in any missing arguments
+        // with `undefined`. `newTarget` should be pushed after alignment padding
+        // but before the `undefined` values, so we also handle it here.
+        prepareForArguments(argcReg, calleeReg, scratch, scratch2, flags,
+                            argcFixed);
+      } else if (flags.isConstructing()) {
+        // If we're not calling jitcode, push newTarget now so that the shared
+        // paths below can assume it's already pushed.
+        pushNewTarget();
+      }
+  }
+
   switch (flags.getArgFormat()) {
     case CallFlags::Standard:
       pushStandardArguments(argcReg, scratch, scratch2, argcFixed, isJitCall,
@@ -3074,7 +3099,18 @@ void BaselineCacheIRCompiler::pushNewTarget() {
   masm.pushValue(Address(FramePointer, BaselineStubFrameLayout::Size()));
 }
 
-void BaselineCacheIRCompiler::pushStandardArguments(
+static uint32_t ArgsOffsetFromFP(bool isConstructing) {
+  // The arguments are on the stack just above the stub frame. If we are
+  // constructing, we have to skip newTarget.
+  uint32_t offset = BaselineStubFrameLayout::Size();
+  if (isConstructing) {
+    offset += sizeof(Value);
+  }
+  return offset;
+}
+
+// Temporary helper to enable partial migration
+void BaselineCacheIRCompiler::pushStandardArgumentsForFunCall(
     Register argcReg, Register scratch, Register scratch2, uint32_t argcFixed,
     bool isJitCall, bool isConstructing) {
   MOZ_ASSERT(enteredStubFrame_);
@@ -3137,6 +3173,57 @@ void BaselineCacheIRCompiler::pushStandardArguments(
       masm.branchSub32(Assembler::NonZero, Imm32(1), countReg, &loop);
     }
     masm.bind(&done);
+  }
+}
+
+void BaselineCacheIRCompiler::pushStandardArguments(
+    Register argcReg, Register scratch, Register scratch2, uint32_t argcFixed,
+    bool isJitCall, bool isConstructing) {
+  MOZ_ASSERT(enteredStubFrame_);
+
+  // The arguments to the call IC were pushed on the stack from left to right,
+  // meaning that the first argument is at the highest address and the last
+  // argument is at the lowest address. Our callee needs them to be in the
+  // opposite order, so we duplicate them now.
+
+  int additionalArgc = 1 + !isJitCall;  // this + maybe callee
+  uint32_t argsOffset = ArgsOffsetFromFP(isConstructing);
+
+  if (argcFixed < MaxUnrolledArgCopy) {
+    // For small argc, we unroll the argument pushing loop.
+
+#ifdef DEBUG
+    Label ok;
+    masm.branch32(Assembler::Equal, argcReg, Imm32(argcFixed), &ok);
+    masm.assumeUnreachable("Invalid argcFixed value");
+    masm.bind(&ok);
+#endif
+
+    size_t numCopiedValues = argcFixed + additionalArgc;
+    for (size_t i = 0; i < numCopiedValues; ++i) {
+      masm.pushValue(Address(FramePointer, argsOffset + i * sizeof(Value)));
+    }
+  } else {
+    MOZ_ASSERT(argcFixed == MaxUnrolledArgCopy);
+
+    // Compute pointers to the start and end of the arguments area.
+    Register argPtr = scratch;
+    Register argEnd = scratch2;
+    masm.computeEffectiveAddress(Address(FramePointer, argsOffset), argPtr);
+    BaseValueIndex endAddr(FramePointer, argcReg,
+                           argsOffset + additionalArgc * sizeof(Value));
+    masm.computeEffectiveAddress(endAddr, argEnd);
+
+    // Push all values, starting at the last one.
+    // We always push at least one value (`this`), so we don't need
+    // a loop guard.
+    Label loop;
+    masm.bind(&loop);
+    {
+      masm.pushValue(Address(argPtr, 0));
+      masm.addPtr(Imm32(sizeof(Value)), argPtr);
+      masm.branchPtr(Assembler::Below, argPtr, argEnd, &loop);
+    }
   }
 }
 
@@ -3242,8 +3329,8 @@ void BaselineCacheIRCompiler::pushFunCallArguments(
     // See below for why we subtract 1 from argcFixed.
     argcFixed -= 1;
     masm.sub32(Imm32(1), argcReg);
-    pushStandardArguments(argcReg, scratch, scratch2, argcFixed, isJitCall,
-                          /*isConstructing =*/false);
+    pushStandardArgumentsForFunCall(argcReg, scratch, scratch2, argcFixed,
+                                    isJitCall, /*isConstructing =*/false);
   } else {
     Label zeroArgs, done;
     masm.branchTest32(Assembler::Zero, argcReg, argcReg, &zeroArgs);
@@ -3265,8 +3352,8 @@ void BaselineCacheIRCompiler::pushFunCallArguments(
     // everything works out correctly.
     masm.sub32(Imm32(1), argcReg);
 
-    pushStandardArguments(argcReg, scratch, scratch2, argcFixed, isJitCall,
-                          /*isConstructing =*/false);
+    pushStandardArgumentsForFunCall(argcReg, scratch, scratch2, argcFixed,
+                                    isJitCall, /*isConstructing =*/false);
 
     masm.jump(&done);
     masm.bind(&zeroArgs);
@@ -3836,18 +3923,20 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
   masm.PushCalleeToken(calleeReg, isConstructing);
   masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, argcReg, scratch);
 
-  // Handle arguments underflow.
-  Label noUnderflow;
-  masm.loadFunctionArgCount(calleeReg, calleeReg);
-  masm.branch32(Assembler::AboveOrEqual, argcReg, calleeReg, &noUnderflow);
-  {
-    // Call the arguments rectifier.
-    TrampolinePtr argumentsRectifier =
-        cx_->runtime()->jitRuntime()->getArgumentsRectifier();
-    masm.movePtr(argumentsRectifier, code);
-  }
+  if (NeedsRectifier(flags)) {
+    // Handle arguments underflow.
+    Label noUnderflow;
+    masm.loadFunctionArgCount(calleeReg, calleeReg);
+    masm.branch32(Assembler::AboveOrEqual, argcReg, calleeReg, &noUnderflow);
+    {
+      // Call the arguments rectifier.
+      TrampolinePtr argumentsRectifier =
+          cx_->runtime()->jitRuntime()->getArgumentsRectifier();
+      masm.movePtr(argumentsRectifier, code);
+    }
 
-  masm.bind(&noUnderflow);
+    masm.bind(&noUnderflow);
+  }
   masm.callJit(code);
 
   // If this is a constructing call, and the callee returns a non-object,
@@ -3942,18 +4031,21 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
   masm.PushCalleeToken(calleeReg, isConstructing);
   masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, argcReg, scratch);
 
-  // Handle arguments underflow.
-  Label noUnderflow;
-  masm.loadFunctionArgCount(calleeReg, calleeReg);
-  masm.branch32(Assembler::AboveOrEqual, argcReg, calleeReg, &noUnderflow);
+  if (NeedsRectifier(flags)) {
+    // Handle arguments underflow.
+    Label noUnderflow;
+    masm.loadFunctionArgCount(calleeReg, calleeReg);
+    masm.branch32(Assembler::AboveOrEqual, argcReg, calleeReg, &noUnderflow);
 
-  // Call the trial-inlining arguments rectifier.
-  ArgumentsRectifierKind kind = ArgumentsRectifierKind::TrialInlining;
-  TrampolinePtr argumentsRectifier =
-      cx_->runtime()->jitRuntime()->getArgumentsRectifier(kind);
-  masm.movePtr(argumentsRectifier, codeReg);
+    // Call the trial-inlining arguments rectifier.
+    ArgumentsRectifierKind kind = ArgumentsRectifierKind::TrialInlining;
+    TrampolinePtr argumentsRectifier =
+        cx_->runtime()->jitRuntime()->getArgumentsRectifier(kind);
+    masm.movePtr(argumentsRectifier, codeReg);
 
-  masm.bind(&noUnderflow);
+    masm.bind(&noUnderflow);
+  }
+
   masm.callJit(codeReg);
 
   // If this is a constructing call, and the callee returns a non-object,
