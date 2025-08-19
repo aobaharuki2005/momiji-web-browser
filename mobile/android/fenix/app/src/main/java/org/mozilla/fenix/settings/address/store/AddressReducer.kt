@@ -13,7 +13,7 @@ fun addressReducer(state: AddressState, action: AddressAction): AddressState {
     return when (action) {
         ViewAppeared -> state.update {
             val countryCode = country
-                .ifBlank { state.region.home }
+                .ifBlank { state.region?.home }
                 .takeIf { it in state.availableCountries.keys } ?: DEFAULT_COUNTRY
 
             val subRegions = state.availableCountries[countryCode]?.subregions ?: listOf()

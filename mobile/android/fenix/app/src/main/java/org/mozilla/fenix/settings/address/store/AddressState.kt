@@ -40,7 +40,7 @@ data class AddressState(
     val guidToUpdate: String?,
     val address: UpdatableAddressFields,
     val deleteDialog: DialogState = DialogState.Inert,
-    val region: RegionState = RegionState.Default,
+    val region: RegionState? = RegionState.Default,
     val availableCountries: Map<String, Country> = AddressUtils.countries,
 ) : State {
     /**
@@ -51,12 +51,17 @@ data class AddressState(
          * Creates a new [AddressState] with [UpdatableAddressFields] pre-filled with the values from
          * [Address].
          *
+         * @param region The current [RegionState] of a user.
          * @param address [Address] for creating the [UpdatableAddressFields].
          */
-        fun initial(address: Address? = null): AddressState {
+        fun initial(
+            region: RegionState,
+            address: Address? = null,
+            ): AddressState {
             return AddressState(
                 guidToUpdate = address?.guid,
-                UpdatableAddressFields(
+                region = region,
+                address = UpdatableAddressFields(
                     name = address?.name ?: "",
                     organization = address?.organization ?: "",
                     streetAddress = address?.streetAddress ?: "",
