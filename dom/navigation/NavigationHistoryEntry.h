@@ -49,6 +49,8 @@ class NavigationHistoryEntry final : public DOMEventTargetHelper {
 
   nsStructuredCloneContainer* GetNavigationState() const;
 
+  void ResetIndexForDisposal();
+
  private:
   ~NavigationHistoryEntry();
 
