@@ -134,7 +134,7 @@ ParallelMarkTask::ParallelMarkTask(ParallelMarker* pm, GCMarker* marker,
       color(*marker, color),
       budget(budget),
       id(id) {
-  marker->enterParallelMarkingMode(pm);
+  marker->enterParallelMarkingMode();
 }
 
 ParallelMarkTask::~ParallelMarkTask() {
@@ -188,7 +188,7 @@ bool ParallelMarkTask::tryMarking(AutoLockHelperThreadState& lock) {
     AutoUnlockHelperThreadState unlock(lock);
 
     AutoAddTimeDuration time(markTime.ref());
-    finished = marker->markCurrentColorInParallel(budget);
+    finished = marker->markCurrentColorInParallel(this, budget);
 
     GeckoProfilerRuntime& profiler = gc->rt->geckoProfiler();
     if (profiler.enabled()) {
@@ -320,6 +320,8 @@ void ParallelMarker::setTaskInactive(ParallelMarkTask* task,
     }
   }
 }
+
+void ParallelMarkTask::donateWork() { pm->donateWorkFrom(marker); }
 
 void ParallelMarker::donateWorkFrom(GCMarker* src) {
   GeckoProfilerRuntime& profiler = gc->rt->geckoProfiler();
