@@ -6399,7 +6399,6 @@ dependencies = [
  "to_shmem_derive",
  "toml",
  "uluru",
- "unicode-bidi",
  "void",
  "walkdir",
 ]
