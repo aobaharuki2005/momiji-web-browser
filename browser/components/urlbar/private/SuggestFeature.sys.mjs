@@ -195,6 +195,17 @@ export class SuggestProvider extends SuggestFeature {
   }
 
   /**
+   * @returns {Array}
+   *   If the feature manages dynamic Rust suggestions, its `rustSuggestionType`
+   *   getter should return "Dynamic", and it should override
+   *   `dynamicRustSuggestionTypes` to return an array of the dynamic type
+   *   names as defined by `suggestion_type` in the remote settings records.
+   */
+  get dynamicRustSuggestionTypes() {
+    return [];
+  }
+
+  /**
    * @returns {object|null}
    *   If the feature manages suggestions served by the Rust component that
    *   require provider constraints, the subclass should override this getter
@@ -203,6 +214,11 @@ export class SuggestProvider extends SuggestFeature {
    *   feature is enabled.
    */
   get rustProviderConstraints() {
+    if (this.dynamicRustSuggestionTypes?.length) {
+      return {
+        dynamicSuggestionTypes: this.dynamicRustSuggestionTypes,
+      };
+    }
     return null;
   }
 

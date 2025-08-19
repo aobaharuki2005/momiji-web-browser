@@ -150,6 +150,8 @@ const FEATURES = {
   AmpSuggestions: "resource:///modules/urlbar/private/AmpSuggestions.sys.mjs",
   DynamicSuggestions:
     "resource:///modules/urlbar/private/DynamicSuggestions.sys.mjs",
+  ImportantDatesSuggestions:
+    "resource:///modules/urlbar/private/ImportantDatesSuggestions.sys.mjs",
   ImpressionCaps: "resource:///modules/urlbar/private/ImpressionCaps.sys.mjs",
   MarketSuggestions:
     "resource:///modules/urlbar/private/MarketSuggestions.sys.mjs",
@@ -260,7 +262,10 @@ class _QuickSuggest {
    *   each feature's `rustSuggestionType`.
    */
   get rustFeatures() {
-    return new Set(this.#featuresByRustSuggestionType.values());
+    return new Set([
+      ...this.#featuresByRustSuggestionType.values(),
+      ...this.#featuresByDynamicRustSuggestionType.values(),
+    ]);
   }
 
   /**
@@ -317,10 +322,16 @@ class _QuickSuggest {
         this.#featuresByMerinoProvider.set(feature.merinoProvider, feature);
       }
       if (feature.rustSuggestionType) {
-        this.#featuresByRustSuggestionType.set(
-          feature.rustSuggestionType,
-          feature
-        );
+        if (feature.dynamicRustSuggestionTypes?.length) {
+          for (let t of feature.dynamicRustSuggestionTypes) {
+            this.#featuresByDynamicRustSuggestionType.set(t, feature);
+          }
+        } else {
+          this.#featuresByRustSuggestionType.set(
+            feature.rustSuggestionType,
+            feature
+          );
+        }
       }
       if (feature.mlIntent) {
         this.#featuresByMlIntent.set(feature.mlIntent, feature);
@@ -356,36 +367,6 @@ class _QuickSuggest {
    */
   getFeature(name) {
     return this.#featuresByName.get(name);
-  }
-
-  /**
-   * Returns a Suggest feature by the name of the Merino provider that serves
-   * its suggestions (as defined by `feature.merinoProvider`). Not all features
-   * correspond to a Merino provider.
-   *
-   * @param {string} provider
-   *   The name of a Merino provider.
-   * @returns {SuggestProvider}
-   *   The feature object, an instance of a subclass of `SuggestProvider`, or
-   *   null if no feature corresponds to the Merino provider.
-   */
-  getFeatureByMerinoProvider(provider) {
-    return this.#featuresByMerinoProvider.get(provider);
-  }
-
-  /**
-   * Returns a Suggest feature by the type of Rust suggestion it manages (as
-   * defined by `feature.rustSuggestionType`). Not all features correspond to a
-   * Rust suggestion type.
-   *
-   * @param {string} type
-   *   The name of a Rust suggestion type.
-   * @returns {SuggestProvider}
-   *   The feature object, an instance of a subclass of `SuggestProvider`, or
-   *   null if no feature corresponds to the type.
-   */
-  getFeatureByRustSuggestionType(type) {
-    return this.#featuresByRustSuggestionType.get(type);
   }
 
   /**
@@ -432,15 +413,26 @@ class _QuickSuggest {
    *     The name of the intent as determined by `MLSuggest`
    *   rust:
    *     The name of the suggestion type as defined in Rust
+   *
+   * @param {string} options.suggestionType
+   *   This value is only relevant to dynamic Rust suggestions. It is
+   *   `suggestion.suggestionType` value, the dynamic Rust suggestion type.
    * @returns {SuggestProvider}
    *   The feature instance or null if none was found.
    */
-  getFeatureBySource({ source, provider }) {
+  getFeatureBySource({ source, provider, suggestionType }) {
     switch (source) {
       case "merino":
-        return this.getFeatureByMerinoProvider(provider);
+        return this.#featuresByMerinoProvider.get(provider);
       case "rust":
-        return this.getFeatureByRustSuggestionType(provider);
+        if (provider == "Dynamic" && suggestionType) {
+          let dynamicFeature =
+            this.#featuresByDynamicRustSuggestionType.get(suggestionType);
+          if (dynamicFeature) {
+            return dynamicFeature;
+          }
+        }
+        return this.#featuresByRustSuggestionType.get(provider);
       case "ml":
         return this.getFeatureByMlIntent(provider);
     }
@@ -981,9 +973,10 @@ class _QuickSuggest {
     }
 
     if (this.rustBackend) {
-      // Make sure to await any queued ingests before re-initializing.  Otherwise there could be a race
-      // between when that ingestion finishes and when the test finishes and calls
-      // `SharedRemoteSettingsService.updateServer()` to reset the remote settings server.
+      // Make sure to await any queued ingests before re-initializing. Otherwise
+      // there could be a race between when that ingestion finishes and when the
+      // test finishes and calls `SharedRemoteSettingsService.updateServer()` to
+      // reset the remote settings server.
       await this.rustBackend.ingestPromise;
     }
 
@@ -1001,6 +994,11 @@ class _QuickSuggest {
 
   // Maps from Rust suggestion types to Suggest feature instances.
   #featuresByRustSuggestionType = new Map();
+
+  // Maps from dynamic Rust suggestion types to Suggest feature instances.
+  // Features that manage a dynamic Rust suggestion type will be in this map
+  // instead of `#featuresByRustSuggestionType`.
+  #featuresByDynamicRustSuggestionType = new Map();
 
   // Maps from ML intent strings to Suggest feature instances.
   #featuresByMlIntent = new Map();

@@ -58,6 +58,7 @@ const EXPECTED_AAA_RESULT = makeExpectedResult({
   title: "aaa title",
   url: "https://example.com/aaa",
   telemetryType: "aaa",
+  suggestionType: "aaa",
 });
 
 const EXPECTED_BBB_RESULT = makeExpectedResult({
@@ -65,6 +66,7 @@ const EXPECTED_BBB_RESULT = makeExpectedResult({
   url: "https://example.com/bbb",
   isSponsored: true,
   telemetryType: "bbb_telemetry_type",
+  suggestionType: "bbb",
   isBestMatch: true,
   suggestedIndex: 1,
   isSuggestedIndexRelativeToGroup: false,
@@ -382,8 +384,13 @@ add_task(async function badSuggestions() {
       suggestion_type: "bad",
       attachment: [
         // Include a good suggestion so we can verify this record was actually
-        // ingested.
-        REMOTE_SETTINGS_RECORDS[0].attachment[0],
+        // ingested. Change the keyword so we don't confuse ourselves by
+        // searching for an "aaa" keyword and getting a urlbar result whose
+        // telemetry type and dynamic suggestion type is "bad".
+        {
+          ...REMOTE_SETTINGS_RECORDS[0].attachment[0],
+          keywords: ["good actually"],
+        },
         // `data` is missing -- Rust actually allows this since `data` is
         // defined as `Option<serde_json::Value>`, but desktop doesn't.
         {
@@ -422,7 +429,7 @@ add_task(async function badSuggestions() {
   await withSuggestionTypesPref("bad", async () => {
     // Verify the good suggestion was ingested.
     await check_results({
-      context: createContext("aaa keyword", {
+      context: createContext("good actually", {
         providers: [UrlbarProviderQuickSuggest.name],
         isPrivate: false,
       }),
@@ -432,6 +439,7 @@ add_task(async function badSuggestions() {
           payload: {
             ...EXPECTED_AAA_RESULT.payload,
             telemetryType: "bad",
+            suggestionType: "bad",
           },
         },
       ],
@@ -493,6 +501,7 @@ function makeExpectedResult({
   title,
   url,
   telemetryType,
+  suggestionType,
   isSponsored = false,
   isBestMatch = false,
   suggestedIndex = -1,
@@ -512,6 +521,7 @@ function makeExpectedResult({
       url,
       isSponsored,
       telemetryType,
+      suggestionType,
       displayUrl: url.replace(/^https:\/\//, ""),
       source: "rust",
       provider: "Dynamic",

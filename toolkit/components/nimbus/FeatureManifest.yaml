@@ -276,6 +276,12 @@ urlbar:
       description: >-
         Feature gate that controls whether all aspects of the Fakespot suggestion
         feature are exposed to the user.
+    importantDatesFeatureGate:
+      type: boolean
+      fallbackPref: browser.urlbar.importantDates.featureGate
+      description: >-
+        Feature gate that controls whether all aspects of the important dates
+        suggestion feature are exposed to the user.
     keywordExposureResults:
       type: string
       setPref:

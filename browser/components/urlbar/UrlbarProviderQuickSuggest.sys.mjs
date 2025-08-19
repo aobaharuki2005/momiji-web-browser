@@ -359,9 +359,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // Set important properties that every Suggest result should have. See
     // `QuickSuggest.getFeatureBySource()` for `source` and `provider` values.
     // If the suggestion isn't managed by a feature, then it's from Merino and
-    // `is_sponsored` is true if it's sponsored. (Merino uses snake_case.)
+    // we assume `is_sponsored` is set appropriately. (Merino uses snake_case.)
     result.payload.source = suggestion.source;
     result.payload.provider = suggestion.provider;
+    if (suggestion.suggestionType) {
+      // `suggestionType` is defined only for dynamic Rust suggestions and is
+      // the dynamic type. Avoid adding an undefined property to other payloads.
+      result.payload.suggestionType = suggestion.suggestionType;
+    }
     result.payload.telemetryType = this.#getSuggestionTelemetryType(suggestion);
     result.payload.isSponsored = feature
       ? feature.isSuggestionSponsored(suggestion)

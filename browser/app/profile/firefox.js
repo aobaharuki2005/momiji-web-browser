@@ -752,6 +752,13 @@ pref("browser.urlbar.update2.engineAliasRefresh", true);
 // settings.
 pref("browser.urlbar.market.minKeywordLength", 0);
 
+// Feature gate pref for important-dates suggestions in the urlbar.
+pref("browser.urlbar.importantDates.featureGate", false);
+
+// If `browser.urlbar.importantDates.featureGate` is true, this controls whether
+// important-dates suggestions are turned on.
+pref("browser.urlbar.suggest.importantDates", true);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
