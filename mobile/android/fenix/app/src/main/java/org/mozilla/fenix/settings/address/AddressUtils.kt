@@ -31,8 +31,7 @@ internal const val DEFAULT_COUNTRY = "US"
  * @property subregionTitleResource The string resource for the subregion title.
  * @property subregions THe list of subregions.
  */
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-internal data class Country(
+data class Country(
     val countryCode: String,
     val displayName: String,
     @param:StringRes val subregionTitleResource: Int,
