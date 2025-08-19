@@ -15,12 +15,10 @@ import org.mozilla.fenix.compose.snackbar.Snackbar
 import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.downloads.getCannotOpenFileErrorMessage
 import org.mozilla.fenix.downloads.listscreen.di.DownloadUIMiddlewareProvider
-import org.mozilla.fenix.downloads.listscreen.di.DownloadUIMiddlewareProvider.provideUndoDelayProvider
 import org.mozilla.fenix.downloads.listscreen.store.DownloadUIAction
 import org.mozilla.fenix.downloads.listscreen.store.DownloadUIState
 import org.mozilla.fenix.downloads.listscreen.store.DownloadUIStore
 import org.mozilla.fenix.downloads.listscreen.store.FileItem
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -43,7 +41,6 @@ class DownloadFragment : ComposeFragment() {
         FirefoxTheme {
             DownloadsScreen(
                 downloadsStore = downloadStore,
-                undoDelayProvider = provideUndoDelayProvider(requireContext().settings()),
                 onItemClick = { openItem(it) },
                 onNavigationIconClick = {
                     if (downloadStore.state.mode is DownloadUIState.Mode.Editing) {

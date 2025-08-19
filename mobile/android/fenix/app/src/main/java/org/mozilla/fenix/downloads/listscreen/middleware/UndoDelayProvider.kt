@@ -31,7 +31,7 @@ class DefaultUndoDelayProvider(settings: Settings) : UndoDelayProvider {
      * Constants for the [DefaultUndoDelayProvider]
      */
     companion object {
-        private const val UNDO_DELAY = 3000L
-        private const val ACCESSIBLE_UNDO_DELAY = 15000L
+        private const val UNDO_DELAY = 4000L
+        private const val ACCESSIBLE_UNDO_DELAY = 10000L
     }
 }
