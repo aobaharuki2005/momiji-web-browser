@@ -334,6 +334,28 @@ vec4 pattern_fragment(vec4 color) {
     return color;
 }
 
-// TODO: swgl span fast paths.
+#if defined(SWGL_DRAW_SPAN)
+void swgl_drawSpanRGBA8() {
+    if (v_gradient_header.x != GRADIENT_KIND_RADIAL) {
+        return;
+    }
+
+    int stop_count = v_gradient_header.y;
+    int offsets_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(v_gradient_header.z),
+                                             stop_count);
+    int colors_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(v_gradient_header.w),
+                                            stop_count);
+    if (offsets_addr < 0 || colors_addr < 0) {
+        return;
+    }
+
+    vec2 pos = v_interpolated_data.xy;
+    float start_radius = v_flat_data.z;
+    bool repeat = (v_gradient_header.y >> 24) != 0.0;
+
+    swgl_commitRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
+                                            stop_count, repeat, pos, start_radius);
+}
+#endif
 
 #endif
