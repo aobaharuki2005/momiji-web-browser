@@ -159,6 +159,7 @@ import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
 import org.mozilla.fenix.snackbar.SnackbarBinding
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
+import org.mozilla.fenix.termsofuse.store.Surface
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.utils.showAddSearchWidgetPromptIfSupported
@@ -1160,7 +1161,7 @@ class HomeFragment : Fragment() {
 
         if (requireComponents.termsOfUseManager.shouldShowTermsOfUsePromptOnHomepage()) {
             findNavController().navigate(
-                BrowserFragmentDirections.actionGlobalTermsOfUseDialog(),
+                BrowserFragmentDirections.actionGlobalTermsOfUseDialog(Surface.HOMEPAGE_NEW_TAB),
             )
         }
     }

@@ -59,6 +59,7 @@ import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
+import org.mozilla.fenix.termsofuse.store.Surface
 import org.mozilla.fenix.theme.ThemeManager
 
 /**
@@ -550,7 +551,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         if (requireComponents.termsOfUseManager.shouldShowTermsOfUsePromptOnBrowserFragment()) {
             findNavController().navigate(
-                BrowserFragmentDirections.actionGlobalTermsOfUseDialog(),
+                BrowserFragmentDirections.actionGlobalTermsOfUseDialog(Surface.BROWSER),
             )
         }
     }

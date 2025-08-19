@@ -34,22 +34,30 @@ import mozilla.components.compose.base.button.TextButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
-import org.mozilla.fenix.termsofuse.store.Surface
-import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptAction
-import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptStore
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * The terms of service prompt
+ * The terms of service prompt.
+ *
+ * @param onDismiss The callback to invoke when the prompt is dismissed.
+ * @param onDismissRequest The callback to invoke when the user clicks outside of the bottom sheet,
+ * after sheet animates to Hidden. See [ModalBottomSheet].
+ * @param onAcceptClicked The callback to invoke when the user accepts the prompt.
+ * @param onRemindMeLaterClicked The callback to invoke when the user clicks "Remind me later".
+ * @param onTermsOfUseClicked The callback to invoke when the user clicks on the terms of use link.
+ * @param onPrivacyNoticeClicked The callback to invoke when the user clicks on the privacy notice link.
+ * @param onLearnMoreClicked The callback to invoke when the user clicks on the learn more link.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TermsOfUseBottomSheet(
-    store: TermsOfUsePromptStore,
-    onDismiss: () -> Unit = {},
-    onTermsOfUseClicked: () -> Unit = {},
-    onPrivacyNoticeClicked: () -> Unit = {},
-    onLearnMoreClicked: () -> Unit = {},
+    onDismiss: () -> Unit,
+    onDismissRequest: () -> Unit,
+    onAcceptClicked: () -> Unit,
+    onRemindMeLaterClicked: () -> Unit,
+    onTermsOfUseClicked: () -> Unit,
+    onPrivacyNoticeClicked: () -> Unit,
+    onLearnMoreClicked: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -60,9 +68,11 @@ fun TermsOfUseBottomSheet(
     }
 
     BottomSheet(
-        store = store,
         sheetState = sheetState,
         onDismiss = onDismiss,
+        onDismissRequest = onDismissRequest,
+        onAcceptClicked = onAcceptClicked,
+        onRemindMeLaterClicked = onRemindMeLaterClicked,
         onTermsOfUseClicked = onTermsOfUseClicked,
         onPrivacyNoticeClicked = onPrivacyNoticeClicked,
         onLearnMoreClicked = onLearnMoreClicked,
@@ -72,24 +82,24 @@ fun TermsOfUseBottomSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomSheet(
-    store: TermsOfUsePromptStore,
     sheetState: SheetState,
     onDismiss: () -> Unit = {},
+    onDismissRequest: () -> Unit = {},
+    onAcceptClicked: () -> Unit = {},
+    onRemindMeLaterClicked: () -> Unit = {},
     onTermsOfUseClicked: () -> Unit = {},
     onPrivacyNoticeClicked: () -> Unit = {},
     onLearnMoreClicked: () -> Unit = {},
 ) {
     ModalBottomSheet(
-        onDismissRequest = {
-            store.dispatch(TermsOfUsePromptAction.OnPromptManuallyDismissed(Surface.HOMEPAGE_NEW_TAB))
-            onDismiss()
-        },
+        onDismissRequest = { onDismissRequest() },
         sheetState = sheetState,
     ) {
         BottomSheetContent(
-            store = store,
             sheetState = sheetState,
             onDismiss = onDismiss,
+            onAcceptClicked = onAcceptClicked,
+            onRemindMeLaterClicked = onRemindMeLaterClicked,
             onTermsOfUseClicked = onTermsOfUseClicked,
             onPrivacyNoticeClicked = onPrivacyNoticeClicked,
             onLearnMoreClicked = onLearnMoreClicked,
@@ -100,9 +110,10 @@ private fun BottomSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomSheetContent(
-    store: TermsOfUsePromptStore,
     sheetState: SheetState,
     onDismiss: () -> Unit,
+    onAcceptClicked: () -> Unit = {},
+    onRemindMeLaterClicked: () -> Unit = {},
     onTermsOfUseClicked: () -> Unit = {},
     onPrivacyNoticeClicked: () -> Unit = {},
     onLearnMoreClicked: () -> Unit = {},
@@ -148,7 +159,8 @@ private fun BottomSheetContent(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.terms_of_use_prompt_accept),
         ) {
-            store.dispatch(TermsOfUsePromptAction.OnAcceptClicked(Surface.HOMEPAGE_NEW_TAB))
+            onAcceptClicked()
+
             coroutineScope.launch {
                 sheetState.hide()
             }.invokeOnCompletion {
@@ -164,7 +176,8 @@ private fun BottomSheetContent(
             upperCaseText = false,
             textColor = MaterialTheme.colorScheme.primary,
             onClick = {
-                store.dispatch(TermsOfUsePromptAction.OnRemindMeLaterClicked(Surface.HOMEPAGE_NEW_TAB))
+                onRemindMeLaterClicked()
+
                 coroutineScope.launch {
                     sheetState.hide()
                 }.invokeOnCompletion {
@@ -244,11 +257,6 @@ private fun TermsOfUseBottomSheetPreview() {
     }
 
     FirefoxTheme {
-        BottomSheet(
-            store = TermsOfUsePromptStore(
-                middleware = emptyList(),
-            ),
-            sheetState = sheetState,
-        )
+        BottomSheet(sheetState = sheetState)
     }
 }

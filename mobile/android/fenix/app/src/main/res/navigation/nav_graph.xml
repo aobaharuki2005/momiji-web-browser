@@ -337,7 +337,12 @@
 
     <dialog
         android:id="@+id/termsOfUseDialogFragment"
-        android:name="org.mozilla.fenix.termsofuse.ui.TermsOfUseBottomSheetFragment" />
+        android:name="org.mozilla.fenix.termsofuse.ui.TermsOfUseBottomSheetFragment">
+        <argument
+            android:name="surface"
+            app:argType="org.mozilla.fenix.termsofuse.store.Surface"
+            app:nullable="false" />
+    </dialog>
 
     <dialog
         android:id="@+id/searchDialogFragment"

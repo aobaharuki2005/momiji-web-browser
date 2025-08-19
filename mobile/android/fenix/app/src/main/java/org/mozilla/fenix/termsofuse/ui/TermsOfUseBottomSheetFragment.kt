@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
+import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.lazyStore
@@ -24,9 +25,11 @@ import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptTelemetryMiddleware
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * [BottomSheetDialogFragment] wrapper for the compose [TermsOfUseBottomSheet]
+ * [BottomSheetDialogFragment] wrapper for the compose [TermsOfUseBottomSheet].
  */
 class TermsOfUseBottomSheetFragment : BottomSheetDialogFragment() {
+
+    private val args by navArgs<TermsOfUseBottomSheetFragmentArgs>()
 
     private val termsOfUsePromptStore by lazyStore {
         TermsOfUsePromptStore(
@@ -47,6 +50,8 @@ class TermsOfUseBottomSheetFragment : BottomSheetDialogFragment() {
             setOnShowListener {
                 val bottomSheet = findViewById<View?>(R.id.design_bottom_sheet)
                 bottomSheet?.setBackgroundResource(android.R.color.transparent)
+
+                termsOfUsePromptStore.dispatch(TermsOfUsePromptAction.OnImpression(args.surface))
             }
         }
 
@@ -58,9 +63,21 @@ class TermsOfUseBottomSheetFragment : BottomSheetDialogFragment() {
         setContent {
             FirefoxTheme {
                 TermsOfUseBottomSheet(
-                    store = termsOfUsePromptStore,
-                    onDismiss = {
+                    onDismiss = { dismiss() },
+                    onDismissRequest = {
+                        termsOfUsePromptStore.dispatch(
+                            TermsOfUsePromptAction.OnPromptManuallyDismissed(args.surface),
+                        )
+
                         dismiss()
+                    },
+                    onAcceptClicked = {
+                        termsOfUsePromptStore.dispatch(TermsOfUsePromptAction.OnAcceptClicked(args.surface))
+                    },
+                    onRemindMeLaterClicked = {
+                        termsOfUsePromptStore.dispatch(
+                            TermsOfUsePromptAction.OnRemindMeLaterClicked(args.surface),
+                        )
                     },
                     onTermsOfUseClicked = {
                         SupportUtils.launchSandboxCustomTab(
