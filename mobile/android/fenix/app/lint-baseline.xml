@@ -804,16 +804,7 @@
             column="9"/>
     </issue>
 
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(Log::class)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/ext/LogTest.kt"
-            line="24"
-            column="9"/>
-    </issue>
+
 
     <issue
         id="NoStaticMocking"
@@ -3342,17 +3333,6 @@
         <location
             file="src/test/java/org/mozilla/fenix/settings/advanced/LocaleSettingsControllerTest.kt"
             line="46"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Config)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/ext/LogTest.kt"
-            line="25"
             column="9"/>
     </issue>
 

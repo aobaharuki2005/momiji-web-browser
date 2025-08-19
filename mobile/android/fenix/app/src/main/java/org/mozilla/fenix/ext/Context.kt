@@ -18,6 +18,7 @@ import android.view.accessibility.AccessibilityManager
 import androidx.annotation.DimenRes
 import androidx.annotation.StringRes
 import mozilla.components.compose.base.theme.layout.AcornWindowSize
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
@@ -74,10 +75,10 @@ fun Context.getStringWithArgSafe(@StringRes resId: Int, formatArg: String): Stri
         format(getString(resId), formatArg)
     } catch (e: IllegalArgumentException) {
         // fallback to <en> string
-        logDebug(
-            "L10n",
+        Logger("L10n").debug(
             "String: " + resources.getResourceEntryName(resId) +
                 " not properly formatted in: " + LocaleManager.getSelectedLocale(this).language,
+            e,
         )
         val config = resources.configuration
         config.setLocale(Locale.Builder().setLanguage("en").build())
