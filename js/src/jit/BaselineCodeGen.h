@@ -147,6 +147,13 @@ class BaselineCodeGen {
     return callVM<Fn, fn>(RetAddrEntry::Kind::NonOpCallVM, phase);
   }
 
+  template <typename T>
+  void emitGuardedCallPreBarrierAnyZone(const T& address, MIRType type,
+                                        Register scratch) {
+    MOZ_ASSERT_IF(handler.realmIndependentJitcode(), !masm.maybeRealm());
+    masm.guardedCallPreBarrierAnyZone(address, type, scratch);
+  }
+
   // ifDebuggee should be a function emitting code for when the script is a
   // debuggee script. ifNotDebuggee (if present) is called to emit code for
   // non-debuggee scripts.

@@ -4013,22 +4013,27 @@ bool BaselineCompilerCodeGen::emit_SetAliasedVar() {
   // Keep rvalue in R0.
   frame.popRegsAndSync(1);
   Register objReg = R2.scratchReg();
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  MOZ_ASSERT(!regs.has(FramePointer));
+  regs.take(R0);
+  regs.take(R2);
+  Register temp = regs.takeAny();
+  Register temp2 = regs.takeAny();
 
   getEnvironmentCoordinateObject(objReg);
-  Address address =
-      getEnvironmentCoordinateAddressFromObject(objReg, R1.scratchReg());
-  masm.guardedCallPreBarrier(address, MIRType::Value);
+  Address address = getEnvironmentCoordinateAddressFromObject(objReg, temp);
+  emitGuardedCallPreBarrierAnyZone(address, MIRType::Value, temp2);
   masm.storeValue(R0, address);
   frame.push(R0);
 
-  // Only R0 is live at this point.
-  // Scope coordinate object is already in R2.scratchReg().
-  Register temp = R1.scratchReg();
+  // Only R0 and R2 are live at this point.
+  // R2.scratchReg() has the scope coordinate object.
 
   Label skipBarrier;
   masm.branchPtrInNurseryChunk(Assembler::Equal, objReg, temp, &skipBarrier);
   masm.branchValueIsNurseryCell(Assembler::NotEqual, R0, temp, &skipBarrier);
 
+  // Uses R2.scratchReg() as input
   masm.call(&postBarrierSlot_);  // Won't clobber R0
 
   masm.bind(&skipBarrier);
@@ -4087,7 +4092,7 @@ bool BaselineInterpreterCodeGen::emit_SetAliasedVar() {
 
   // Pre-barrier and store.
   Address slotAddr(scratch2, 0);
-  masm.guardedCallPreBarrierAnyZone(slotAddr, MIRType::Value, scratch3);
+  emitGuardedCallPreBarrierAnyZone(slotAddr, MIRType::Value, scratch3);
   masm.storeValue(R2, slotAddr);
 
   // Post barrier.
@@ -4426,7 +4431,7 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
     frame.push(R0);
   } else {
     Register temp = R1.scratchReg();
-    masm.guardedCallPreBarrierAnyZone(argAddr, MIRType::Value, temp);
+    emitGuardedCallPreBarrierAnyZone(argAddr, MIRType::Value, temp);
     masm.loadValue(frame.addressOfStackValue(-1), R0);
     masm.storeValue(R0, argAddr);
 
@@ -4481,8 +4486,8 @@ bool BaselineInterpreterCodeGen::emitFormalArgAccess(JSOp op) {
       masm.loadValue(argAddr, R0);
       frame.push(R0);
     } else {
-      masm.guardedCallPreBarrierAnyZone(argAddr, MIRType::Value,
-                                        R0.scratchReg());
+      emitGuardedCallPreBarrierAnyZone(argAddr, MIRType::Value,
+                                       R0.scratchReg());
       masm.loadValue(frame.addressOfStackValue(-1), R0);
       masm.storeValue(R0, argAddr);
 
@@ -5288,7 +5293,7 @@ bool BaselineCodeGen<Handler>::emit_TakeDisposeCapability() {
   masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
   Address capAddr(R0.scratchReg(),
                   DisposableEnvironmentObject::offsetOfDisposeCapability());
-  masm.guardedCallPreBarrierAnyZone(capAddr, MIRType::Value, R2.scratchReg());
+  emitGuardedCallPreBarrierAnyZone(capAddr, MIRType::Value, R2.scratchReg());
   masm.loadValue(capAddr, R1);
   masm.storeValue(UndefinedValue(), capAddr);
 
@@ -6148,7 +6153,7 @@ bool BaselineCodeGen<Handler>::emitSuspend(JSOp op) {
     Address envChainSlot(
         genObj, AbstractGeneratorObject::offsetOfEnvironmentChainSlot());
     masm.loadPtr(frame.addressOfEnvironmentChain(), envObj);
-    masm.guardedCallPreBarrierAnyZone(envChainSlot, MIRType::Value, temp);
+    emitGuardedCallPreBarrierAnyZone(envChainSlot, MIRType::Value, temp);
     masm.storeValue(JSVAL_TYPE_OBJECT, envObj, envChainSlot);
 
     Label skipBarrier;
@@ -6503,8 +6508,8 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
     masm.bind(&loop);
     {
       masm.pushValue(Address(scratch2, 0));
-      masm.guardedCallPreBarrierAnyZone(Address(scratch2, 0), MIRType::Value,
-                                        scratch1);
+      emitGuardedCallPreBarrierAnyZone(Address(scratch2, 0), MIRType::Value,
+                                       scratch1);
       masm.addPtr(Imm32(sizeof(Value)), scratch2);
       masm.branchSub32(Assembler::NonZero, Imm32(1), initLength, &loop);
     }
@@ -6737,7 +6742,7 @@ bool BaselineCodeGen<Handler>::emit_InitHomeObject() {
   // Set HOMEOBJECT_SLOT
   Register temp = R1.scratchReg();
   Address addr(func, FunctionExtended::offsetOfMethodHomeObjectSlot());
-  masm.guardedCallPreBarrierAnyZone(addr, MIRType::Value, temp);
+  emitGuardedCallPreBarrierAnyZone(addr, MIRType::Value, temp);
   masm.storeValue(R0, addr);
 
   Label skipBarrier;
