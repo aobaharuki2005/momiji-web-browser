@@ -1838,6 +1838,21 @@ float RemoteAccessible::Opacity() const {
   return 1.0f;
 }
 
+WritingMode RemoteAccessible::GetWritingMode() const {
+  if (RequestDomainsIfInactive(CacheDomain::Style)) {
+    return WritingMode();
+  }
+
+  if (mCachedFields) {
+    if (auto wm =
+            mCachedFields->GetAttribute<WritingMode>(CacheKey::WritingMode)) {
+      return *wm;
+    }
+  }
+
+  return WritingMode();
+}
+
 void RemoteAccessible::LiveRegionAttributes(nsAString* aLive,
                                             nsAString* aRelevant,
                                             Maybe<bool>* aAtomic,

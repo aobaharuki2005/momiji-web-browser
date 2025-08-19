@@ -209,6 +209,8 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
 
   virtual float Opacity() const override;
 
+  virtual WritingMode GetWritingMode() const override;
+
   virtual void LiveRegionAttributes(nsAString* aLive, nsAString* aRelevant,
                                     Maybe<bool>* aAtomic,
                                     nsAString* aBusy) const override;

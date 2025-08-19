@@ -745,6 +745,8 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual float Opacity() const override;
 
+  virtual WritingMode GetWritingMode() const override;
+
   virtual void DOMNodeID(nsString& aID) const override;
 
   virtual void DOMNodeClass(nsString& aClass) const override;

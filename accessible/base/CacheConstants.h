@@ -261,6 +261,8 @@ class CacheKey {
   // The list of Accessibles in the viewport used for hit testing and on-screen
   // determination.
   static constexpr nsStaticAtom* Viewport = nsGkAtoms::viewport;
+  // Computed writing mode
+  static constexpr nsStaticAtom* WritingMode = nsGkAtoms::writing_mode;
 };
 
 // Return true if the given cache domains are already active.
