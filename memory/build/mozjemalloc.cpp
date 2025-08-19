@@ -993,43 +993,31 @@ class ArenaCollection {
 
   using Tree = RedBlackTree<arena_t, ArenaTreeTrait>;
 
-  struct Iterator {
+  struct Iterator : Tree::Iterator {
     explicit Iterator(Tree* aTree, Tree* aSecondTree,
                       Tree* aThirdTree = nullptr)
-        : mFirstIterator(aTree),
+        : Tree::Iterator(aTree),
           mSecondTree(aSecondTree),
           mThirdTree(aThirdTree) {}
 
-    Tree::Iterator::Item<Iterator> begin() {
-      MaybeNextTree();
-      // We need to convert from Tree::Iterator::Item<Tree::Iterator> to
-      // Tree::Iterator::Item<Iterator> so use mFirstIterator.begin() to find
-      // the first item and pass it to the constructor.
-      Tree::Iterator::Item<Tree::Iterator> item = mFirstIterator.begin();
-      return Tree::Iterator::Item<Iterator>(this, *item);
+    Item<Iterator> begin() {
+      return Item<Iterator>(this, *Tree::Iterator::begin());
     }
 
-    Tree::Iterator::Item<Iterator> end() {
-      return Tree::Iterator::Item<Iterator>(this, nullptr);
-    }
+    Item<Iterator> end() { return Item<Iterator>(this, nullptr); }
 
     arena_t* Next() {
-      MaybeNextTree();
-      return mFirstIterator.Next();
+      arena_t* result = Tree::Iterator::Next();
+      if (!result && mSecondTree) {
+        new (this) Iterator(mSecondTree, mThirdTree);
+        result = *Tree::Iterator::begin();
+      }
+      return result;
     }
 
    private:
-    Tree::Iterator mFirstIterator;
     Tree* mSecondTree;
     Tree* mThirdTree;
-
-    void MaybeNextTree() {
-      while (!mFirstIterator.NotDone() && mSecondTree) {
-        mFirstIterator = mSecondTree->iter();
-        mSecondTree = mThirdTree;
-        mThirdTree = nullptr;
-      }
-    }
   };
 
   Iterator iter() MOZ_REQUIRES(mLock) {
