@@ -1685,9 +1685,24 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetterShared(
     masm.switchToObjectRealm(callee, scratch);
   }
 
+  Label noUnderflow, doneAlignment;
+  masm.loadFunctionArgCount(callee, scratch);
+  masm.branch32(Assembler::BelowOrEqual, scratch, Imm32(1), &noUnderflow);
+
+  masm.alignJitStackBasedOnNArgs(scratch, /*countIncludesThis*/ false);
+
+  Label loop;
+  masm.bind(&loop);
+  masm.Push(UndefinedValue());
+  masm.sub32(Imm32(1), scratch);
+  masm.branch32(Assembler::Above, scratch, Imm32(1), &loop);
+  masm.jump(&doneAlignment);
+
   // Align the stack such that the JitFrameLayout is aligned on
   // JitStackAlignment.
+  masm.bind(&noUnderflow);
   masm.alignJitStackBasedOnNArgs(1, /*countIncludesThis = */ false);
+  masm.bind(&doneAlignment);
 
   // Setter is called with 1 argument, and |receiver| as thisv. Note that we use
   // Push, not push, so that callJit will align the stack properly on ARM.
@@ -1719,22 +1734,6 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetterShared(
     masm.loadJitCodeRaw(callee, code);
   }
 
-  // Handle arguments underflow. The rhs value is no longer needed and
-  // can be used as scratch.
-  Label noUnderflow;
-  Register scratch2 = val.scratchReg();
-  masm.loadFunctionArgCount(callee, scratch2);
-  masm.branch32(Assembler::BelowOrEqual, scratch2, Imm32(1), &noUnderflow);
-
-  // Call the arguments rectifier.
-  ArgumentsRectifierKind kind = isInlined
-                                    ? ArgumentsRectifierKind::TrialInlining
-                                    : ArgumentsRectifierKind::Normal;
-  TrampolinePtr argumentsRectifier =
-      cx_->runtime()->jitRuntime()->getArgumentsRectifier(kind);
-  masm.movePtr(argumentsRectifier, code);
-
-  masm.bind(&noUnderflow);
   masm.callJit(code);
 
   stubFrame.leave(masm);
