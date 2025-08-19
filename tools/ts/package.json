@@ -7,15 +7,12 @@
     "kdljs": "0.3.0",
     "jest": "30.0.5",
     "peggy": "5.0.6",
-    "print-diff": "2.0.0",
-    "ts-patch": "3.3.0",
-    "typescript": "5.9.2"
+    "print-diff": "2.0.0"
   },
   "overrides": {
     "globals": "13.24.0"
   },
   "scripts": {
-    "prepare": "ts-patch install -s",
     "postinstall": "npm explore @typescript/dom-lib-generator -- tsc --typeRoots ../../@types",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   }
