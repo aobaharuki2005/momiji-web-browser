@@ -2999,6 +2999,53 @@ void BaselineCacheIRCompiler::pushArguments(Register argcReg,
   }
 }
 
+void BaselineCacheIRCompiler::prepareForArguments(
+    Register argcReg, Register calleeReg, Register scratch, Register scratch2,
+    CallFlags flags, uint32_t argcFixed) {
+  bool isConstructing = flags.isConstructing();
+
+  // We will align the stack based on an argument count that doesn't include
+  // |this| or |newTarget|. We only care about the parity of the count, so
+  // if we are constructing (and therefore passing both) we can compute
+  // alignment as if |this| was included.
+  bool countIncludesThis = isConstructing;
+
+  // Check for arguments underflow. If we aren't passing enough arguments,
+  // fill in missing arguments with `undefined`.
+  Label noUnderflow, done;
+  masm.loadFunctionArgCount(calleeReg, scratch);
+  masm.branch32(Assembler::AboveOrEqual, argcReg, scratch, &noUnderflow);
+
+  masm.alignJitStackBasedOnNArgs(scratch, countIncludesThis);
+
+  // Push newTarget, if necessary
+  if (isConstructing) {
+    pushNewTarget();
+  }
+
+  // Push `undefined` in a loop
+  Label loop;
+  masm.bind(&loop);
+  masm.Push(UndefinedValue());
+  masm.sub32(Imm32(1), scratch);
+  masm.branch32(Assembler::Above, scratch, argcReg, &loop);
+  masm.jump(&done);
+
+  masm.bind(&noUnderflow);
+
+  if (argcFixed < MaxUnrolledArgCopy) {
+    masm.alignJitStackBasedOnNArgs(argcFixed, countIncludesThis);
+  } else {
+    masm.alignJitStackBasedOnNArgs(argcReg, countIncludesThis);
+  }
+
+  if (isConstructing) {
+    pushNewTarget();
+  }
+
+  masm.bind(&done);
+}
+
 void BaselineCacheIRCompiler::pushNewTarget() {
   // When it's time to push `newTarget`, the stack looks like this
   // (higher addresses at the top):
