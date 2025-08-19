@@ -14279,6 +14279,24 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aExpired, uint32_t aCacheKey,
         loadingEntry->mContiguousEntries.AppendElement(*mActiveEntry);
         navigation->InitializeHistoryEntries(loadingEntry->mContiguousEntries,
                                              mActiveEntry.get());
+
+        MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+                    "Before creating NavigationActivation, "
+                    "triggeringEntry={}, triggeringType={}",
+                    fmt::ptr(loadingEntry->mTriggeringEntry
+                                 .map([](auto& entry) { return &entry; })
+                                 .valueOr(nullptr)),
+                    loadingEntry->mTriggeringNavigationType
+                        .map([](NavigationType type) {
+                          return fmt::format(FMT_STRING("{}"), type);
+                        })
+                        .valueOr("none"));
+        if (loadingEntry->mTriggeringEntry &&
+            loadingEntry->mTriggeringNavigationType) {
+          navigation->CreateNavigationActivationFrom(
+              &*loadingEntry->mTriggeringEntry,
+              *loadingEntry->mTriggeringNavigationType);
+        }
       }
     }
   }

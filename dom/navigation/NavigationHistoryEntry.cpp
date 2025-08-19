@@ -25,9 +25,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NavigationHistoryEntry)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NavigationHistoryEntry::NavigationHistoryEntry(
-    nsIGlobalObject* aGlobal, const SessionHistoryInfo* aSHInfo, int64_t aIndex)
+    nsIGlobalObject* aGlobal, const class SessionHistoryInfo* aSHInfo,
+    int64_t aIndex)
     : DOMEventTargetHelper(aGlobal),
-      mSHInfo(MakeUnique<SessionHistoryInfo>(*aSHInfo)),
+      mSHInfo(MakeUnique<class SessionHistoryInfo>(*aSHInfo)),
       mIndex(aIndex) {}
 
 NavigationHistoryEntry::~NavigationHistoryEntry() = default;
@@ -130,12 +131,12 @@ void NavigationHistoryEntry::SetState(nsStructuredCloneContainer* aState) {
 }
 
 bool NavigationHistoryEntry::IsSameEntry(
-    const SessionHistoryInfo* aSHInfo) const {
+    const class SessionHistoryInfo* aSHInfo) const {
   return mSHInfo->NavigationId() == aSHInfo->NavigationId();
 }
 
 bool NavigationHistoryEntry::SharesDocumentWith(
-    const SessionHistoryInfo& aSHInfo) const {
+    const class SessionHistoryInfo& aSHInfo) const {
   return mSHInfo->SharesDocumentWith(aSHInfo);
 }
 
