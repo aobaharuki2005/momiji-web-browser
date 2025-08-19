@@ -8,7 +8,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   ObliviousHTTP: "resource://gre/modules/ObliviousHTTP.sys.mjs",
-  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
   PersistentCache: "resource://newtab/lib/PersistentCache.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -453,18 +452,6 @@ export class DiscoveryStreamFeed {
         },
       })
     );
-  }
-
-  async setupPocketState(target) {
-    let dispatch = action =>
-      this.store.dispatch(ac.OnlyToOneContent(action, target));
-    const isUserLoggedIn = lazy.pktApi.isUserLoggedIn();
-    dispatch({
-      type: at.DISCOVERY_STREAM_POCKET_STATE_SET,
-      data: {
-        isUserLoggedIn,
-      },
-    });
   }
 
   uninitPrefs() {
@@ -2837,9 +2824,6 @@ export class DiscoveryStreamFeed {
             })
           )
         );
-        break;
-      case at.DISCOVERY_STREAM_POCKET_STATE_INIT:
-        this.setupPocketState(action.meta.fromTarget);
         break;
       case at.DISCOVERY_STREAM_PERSONALIZATION_UPDATED:
         if (this.personalized) {
