@@ -1257,6 +1257,20 @@ void HTMLCanvasElement::InvalidateCanvasPlaceholder(uint32_t aWidth,
   MOZ_ASSERT(!rv.Failed());
 }
 
+static bool InvalidateCanvasData(nsIFrame* aFrame, uint32_t aKey) {
+  RefPtr data = GetWebRenderUserData<WebRenderCanvasData>(aFrame, aKey);
+  if (!data) {
+    return false;
+  }
+  CanvasRenderer* renderer = data->GetCanvasRenderer();
+  if (!renderer) {
+    return false;
+  }
+  renderer->SetDirty();
+  aFrame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
+  return true;
+}
+
 void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
   // Cache the current ImageContainer to avoid contention on the mutex.
   if (mOffscreenDisplay) {
@@ -1266,23 +1280,23 @@ void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
   // We don't need to flush anything here; if there's no frame or if
   // we plan to reframe we don't need to invalidate it anyway.
   nsIFrame* frame = GetPrimaryFrame();
-  if (!frame) return;
+  if (!frame) {
+    return;
+  }
 
   // When using layers-free WebRender, we cannot invalidate the layer (because
   // there isn't one). Instead, we mark the CanvasRenderer dirty and scheduling
   // an empty transaction which is effectively equivalent.
-  CanvasRenderer* renderer = nullptr;
-  const auto key = static_cast<uint32_t>(DisplayItemType::TYPE_CANVAS);
-  RefPtr<WebRenderCanvasData> data =
-      GetWebRenderUserData<WebRenderCanvasData>(frame, key);
-  if (data) {
-    renderer = data->GetCanvasRenderer();
+  bool invalidated = false;
+  for (auto* item : frame->DisplayItems()) {
+    if (item->GetType() == DisplayItemType::TYPE_CANVAS) {
+      invalidated |= InvalidateCanvasData(frame, item->GetPerFrameKey());
+    }
   }
-
-  if (renderer) {
-    renderer->SetDirty();
-    frame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
-  } else {
+  invalidated =
+      invalidated ||
+      InvalidateCanvasData(frame, uint32_t(DisplayItemType::TYPE_CANVAS));
+  if (!invalidated) {
     if (damageRect) {
       CSSIntSize size = GetWidthHeight();
       if (size.width != 0 && size.height != 0) {
@@ -1305,9 +1319,7 @@ void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
    * invalidating a canvas will feed into heuristics and cause JIT code to be
    * kept around longer, for smoother animations.
    */
-  nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow();
-
-  if (win) {
+  if (nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow()) {
     if (JSObject* obj = win->AsGlobal()->GetGlobalJSObject()) {
       js::NotifyAnimationActivity(obj);
     }
