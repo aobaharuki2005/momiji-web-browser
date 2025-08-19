@@ -7,6 +7,7 @@
 #include "mozilla/dom/NavigationActivation.h"
 
 #include "mozilla/dom/NavigationActivationBinding.h"
+#include "mozilla/dom/NavigationHistoryEntry.h"
 
 namespace mozilla::dom {
 

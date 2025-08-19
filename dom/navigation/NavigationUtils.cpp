@@ -7,6 +7,7 @@
 #include "mozilla/dom/NavigationUtils.h"
 
 #include "mozilla/dom/NavigationBinding.h"
+#include "nsDocShellLoadTypes.h"
 
 namespace mozilla::dom {
 
@@ -21,6 +22,47 @@ NavigationUtils::NavigationHistoryBehavior(NavigationType aNavigationType) {
       break;
   }
   return Nothing();
+}
+
+/* static */
+NavigationType NavigationUtils::NavigationTypeFromLoadType(uint32_t aLoadType) {
+  MOZ_ASSERT(IsValidLoadType(aLoadType));
+
+  switch (aLoadType) {
+    case LOAD_HISTORY:
+      return NavigationType::Traverse;
+
+    case LOAD_NORMAL:
+    case LOAD_NORMAL_BYPASS_CACHE:
+    case LOAD_NORMAL_BYPASS_PROXY:
+    case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
+    case LOAD_PUSHSTATE:
+    case LOAD_LINK:
+    case LOAD_STOP_CONTENT:
+    case LOAD_ERROR_PAGE:
+    case LOAD_BYPASS_HISTORY:
+      return NavigationType::Push;
+
+    case LOAD_RELOAD_NORMAL:
+    case LOAD_RELOAD_CHARSET_CHANGE:
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE:
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_PROXY:
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+    case LOAD_REFRESH:
+      return NavigationType::Reload;
+
+    case LOAD_STOP_CONTENT_AND_REPLACE:
+    case LOAD_NORMAL_REPLACE:
+    case LOAD_REFRESH_REPLACE:
+    case LOAD_REPLACE_BYPASS_CACHE:
+      return NavigationType::Replace;
+
+    default:
+      // This is an invalid load type. Return "push" as a default.
+      return NavigationType::Push;
+  }
 }
 
 }  // namespace mozilla::dom
