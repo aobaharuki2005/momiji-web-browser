@@ -2973,6 +2973,7 @@ static bool NeedsRectifier(CallFlags flags) {
     case CallFlags::Spread:
     case CallFlags::FunApplyArray:
     case CallFlags::FunApplyNullUndefined:
+    case CallFlags::FunApplyArgsObj:
       return false;
     default:
       return true;
@@ -3372,19 +3373,15 @@ void BaselineCacheIRCompiler::pushFunApplyArgsObj(Register argcReg,
                                                   Register scratch2,
                                                   bool isJitCall) {
   MOZ_ASSERT(enteredStubFrame_);
+  // If there are no arguments, we can skip the loop entirely.
+  Label emptyArgs;
+  masm.branchTest32(Assembler::Zero, argcReg, argcReg, &emptyArgs);
 
-  // Load the arguments object off the stack before aligning.
+  // Load ArgumentsData
   Register argsReg = scratch;
+  uint32_t argsOffset = ArgsOffsetFromFP(/*isConstructing*/ false);
   masm.unboxObject(Address(FramePointer, BaselineStubFrameLayout::Size()),
                    argsReg);
-
-  // Align the stack such that the JitFrameLayout is aligned on the
-  // JitStackAlignment.
-  if (isJitCall) {
-    masm.alignJitStackBasedOnNArgs(argcReg, /*countIncludesThis =*/false);
-  }
-
-  // Load ArgumentsData.
   masm.loadPrivate(Address(argsReg, ArgumentsObject::getDataSlotOffset()),
                    argsReg);
 
@@ -3393,15 +3390,12 @@ void BaselineCacheIRCompiler::pushFunApplyArgsObj(Register argcReg,
   Register currReg = scratch2;
   Address argsStartAddr(argsReg, ArgumentsData::offsetOfArgs());
   masm.computeEffectiveAddress(argsStartAddr, argsReg);
-  BaseValueIndex argsEndAddr(argsReg, argcReg);
+  BaseValueIndex argsEndAddr(argsReg, argcReg, -int32_t(sizeof(Value)));
   masm.computeEffectiveAddress(argsEndAddr, currReg);
 
   // Loop until all arguments have been pushed.
-  Label done, loop;
+  Label loop;
   masm.bind(&loop);
-  masm.branchPtr(Assembler::Equal, currReg, argsReg, &done);
-  masm.subPtr(Imm32(sizeof(Value)), currReg);
-
   Address currArgAddr(currReg, 0);
 #ifdef DEBUG
   // Arguments are forwarded to the call object if they are closed over.
@@ -3412,13 +3406,13 @@ void BaselineCacheIRCompiler::pushFunApplyArgsObj(Register argcReg,
   masm.bind(&notForwarded);
 #endif
   masm.pushValue(currArgAddr);
+  masm.subPtr(Imm32(sizeof(Value)), currReg);
+  masm.branchPtr(Assembler::AboveOrEqual, currReg, argsReg, &loop);
 
-  masm.jump(&loop);
-  masm.bind(&done);
+  masm.bind(&emptyArgs);
 
   // Push arg0 as |this| for call
-  masm.pushValue(
-      Address(FramePointer, BaselineStubFrameLayout::Size() + sizeof(Value)));
+  masm.pushValue(Address(FramePointer, argsOffset + sizeof(Value)));
 
   // Push |callee| if needed.
   if (!isJitCall) {
