@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import hashlib
+import json
 import logging
 import os
 import sys
@@ -45,6 +46,7 @@ def mozconfig(test_dir, objdir):
                 ac_add_options --enable-artifact-builds
                 ac_add_options --target=arm
                 mk_add_options MOZ_OBJDIR="{objdir}"
+                export GRADLE_FLAGS="-PbuildMetrics -PbuildMetricsFileSuffix=test"
             """
         )
     )
@@ -116,19 +118,70 @@ def hashes(objdir, pattern, targets={**AARS, **APKS}):
     return target_to_hash, hash_to_target
 
 
+def get_test_run_build_metrics(objdir):
+    """Find and load the build-metrics JSON file for our test run."""
+    log_dir = objdir / "gradle" / "build" / "metrics"
+    if not log_dir.exists():
+        return None
+
+    suffix = "test"
+    build_metrics_file = log_dir / f"build-metrics-{suffix}.json"
+
+    try:
+        with build_metrics_file.open(encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning(f"Failed to load build metrics from {build_metrics_file}: {e}")
+        return None
+
+
+def assert_task_outcomes(objdir, ordered_expected_task_statuses):
+    """Takes a list of (task_name, expected_status) tuples and verifies that they appear
+    in the build metrics in the same order with the expected statuses.
+    """
+    # Get build metrics and fail if not found
+    build_metrics = get_test_run_build_metrics(objdir)
+    assert build_metrics is not None, "Build metrics JSON not found"
+    assert "tasks" in build_metrics, "Build metrics missing 'tasks' section"
+
+    # Extract tasks from metrics in order
+    metrics_tasks = build_metrics.get("tasks", [])
+    expected_task_names = {task_name for task_name, _ in ordered_expected_task_statuses}
+    task_order = [
+        task.get("path")
+        for task in metrics_tasks
+        if task.get("path") in expected_task_names
+    ]
+    expected_order = [task_name for task_name, _ in ordered_expected_task_statuses]
+
+    # Check that all expected tasks were found
+    missing_tasks = expected_task_names - set(task_order)
+    assert not missing_tasks, f"Tasks not found in build metrics: {missing_tasks}"
+
+    # Check order matches expectation
+    assert (
+        task_order == expected_order
+    ), f"Task execution order mismatch. Expected: {expected_order}, Got: {task_order}"
+
+    # Check statuses for each task
+    task_lookup = {task.get("path"): task for task in metrics_tasks}
+    for task_name, expected_status in ordered_expected_task_statuses:
+        task_info = task_lookup[task_name]
+        actual_status = task_info.get("status")
+        assert (
+            actual_status == expected_status
+        ), f"Task {task_name} had status '{actual_status}', expected '{expected_status}'"
+
+
 def test_artifact_build(objdir, mozconfig, run_mach):
     (returncode, output) = run_mach(["build"])
 
-    assert "> Task :machBuildFaster SKIPPED" in output
-    assert "Skipping task :machBuildFaster because: within `mach build`" in output
-    assert "> Task :machStagePackage SKIPPED" in output
-    assert "Skipping task :machStagePackage because: within `mach build`" in output
     assert returncode == 0
 
     # Order matters, since `mach build stage-package` depends on the
     # outputs of `mach build faster`.
-    assert output.index("> Task :machBuildFaster SKIPPED") < output.index(
-        "> Task :machStagePackage SKIPPED"
+    assert_task_outcomes(
+        objdir, [(":machBuildFaster", "SKIPPED"), (":machStagePackage", "SKIPPED")]
     )
 
     _, omnijar_hash_to = hashes(objdir, "assets/omni.ja")
@@ -138,13 +191,11 @@ def test_artifact_build(objdir, mozconfig, run_mach):
     (returncode, output) = run_mach(["gradle", "geckoview_example:assembleDebug"])
 
     assert returncode == 0
-    assert "Executing task :machBuildFaster" in output
-    assert "Executing task :machStagePackage" in output
 
     # Order matters, since `mach build stage-package` depends on the
     # outputs of `mach build faster`.
-    assert output.index("Executing task :machBuildFaster") < output.index(
-        "Executing task :machStagePackage"
+    assert_task_outcomes(
+        objdir, [(":machBuildFaster", "EXECUTED"), (":machStagePackage", "EXECUTED")]
     )
 
     _, omnijar_hash_to = hashes(objdir, "assets/omni.ja")
