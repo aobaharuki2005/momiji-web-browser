@@ -2975,39 +2975,22 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
   return true;
 }
 
-// Temporary function to allow partial migration.
-static bool NeedsRectifier(CallFlags flags) {
-  switch (flags.getArgFormat()) {
-    case CallFlags::Standard:
-    case CallFlags::Spread:
-    case CallFlags::FunApplyArray:
-    case CallFlags::FunApplyNullUndefined:
-    case CallFlags::FunApplyArgsObj:
-    case CallFlags::FunCall:
-      return false;
-    default:
-      return true;
-  }
-}
-
 void BaselineCacheIRCompiler::pushArguments(Register argcReg,
                                             Register calleeReg,
                                             Register scratch, Register scratch2,
                                             CallFlags flags, uint32_t argcFixed,
                                             bool isJitCall) {
-  if (!NeedsRectifier(flags)) {
-      if (isJitCall) {
-        // If we're calling jitcode, we have to align the stack and ensure that
-        // enough arguments are being passed, filling in any missing arguments
-        // with `undefined`. `newTarget` should be pushed after alignment padding
-        // but before the `undefined` values, so we also handle it here.
-        prepareForArguments(argcReg, calleeReg, scratch, scratch2, flags,
-                            argcFixed);
-      } else if (flags.isConstructing()) {
-        // If we're not calling jitcode, push newTarget now so that the shared
-        // paths below can assume it's already pushed.
-        pushNewTarget();
-      }
+  if (isJitCall) {
+    // If we're calling jitcode, we have to align the stack and ensure that
+    // enough arguments are being passed, filling in any missing arguments
+    // with `undefined`. `newTarget` should be pushed after alignment padding
+    // but before the `undefined` values, so we also handle it here.
+    prepareForArguments(argcReg, calleeReg, scratch, scratch2, flags,
+                        argcFixed);
+  } else if (flags.isConstructing()) {
+    // If we're not calling jitcode, push newTarget now so that the shared
+    // paths below can assume it's already pushed.
+    pushNewTarget();
   }
 
   switch (flags.getArgFormat()) {
@@ -3809,20 +3792,6 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
   masm.PushCalleeToken(calleeReg, isConstructing);
   masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, argcReg, scratch);
 
-  if (NeedsRectifier(flags)) {
-    // Handle arguments underflow.
-    Label noUnderflow;
-    masm.loadFunctionArgCount(calleeReg, calleeReg);
-    masm.branch32(Assembler::AboveOrEqual, argcReg, calleeReg, &noUnderflow);
-    {
-      // Call the arguments rectifier.
-      TrampolinePtr argumentsRectifier =
-          cx_->runtime()->jitRuntime()->getArgumentsRectifier();
-      masm.movePtr(argumentsRectifier, code);
-    }
-
-    masm.bind(&noUnderflow);
-  }
   masm.callJit(code);
 
   // If this is a constructing call, and the callee returns a non-object,
@@ -3916,21 +3885,6 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
   // properly on ARM.
   masm.PushCalleeToken(calleeReg, isConstructing);
   masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, argcReg, scratch);
-
-  if (NeedsRectifier(flags)) {
-    // Handle arguments underflow.
-    Label noUnderflow;
-    masm.loadFunctionArgCount(calleeReg, calleeReg);
-    masm.branch32(Assembler::AboveOrEqual, argcReg, calleeReg, &noUnderflow);
-
-    // Call the trial-inlining arguments rectifier.
-    ArgumentsRectifierKind kind = ArgumentsRectifierKind::TrialInlining;
-    TrampolinePtr argumentsRectifier =
-        cx_->runtime()->jitRuntime()->getArgumentsRectifier(kind);
-    masm.movePtr(argumentsRectifier, codeReg);
-
-    masm.bind(&noUnderflow);
-  }
 
   masm.callJit(codeReg);
 
