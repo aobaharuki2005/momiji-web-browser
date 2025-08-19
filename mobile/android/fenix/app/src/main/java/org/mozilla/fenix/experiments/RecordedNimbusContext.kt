@@ -61,6 +61,8 @@ class RecordedNimbusContext(
     val deviceModel: String = Build.MODEL,
     val userAcceptedTou: Boolean,
     val noShortcutsStoriesMkt: Boolean,
+    val userClickedTouPromptLink: Boolean,
+    val userClickedTouPromptRemindMeLater: Boolean,
 ) : RecordedContext {
     /**
      * [getEventQueries] is called by the Nimbus SDK Rust code to retrieve the map of event
@@ -101,6 +103,8 @@ class RecordedNimbusContext(
                 deviceModel = deviceModel,
                 userAcceptedTou = userAcceptedTou,
                 noShortcutsStoriesMkt = noShortcutsStoriesMkt,
+                userClickedTouPromptLink = userClickedTouPromptLink,
+                userClickedTouPromptRemindMeLater = userClickedTouPromptRemindMeLater,
             ),
         )
         Pings.nimbus.submit()
@@ -146,6 +150,8 @@ class RecordedNimbusContext(
                 "device_model" to deviceModel,
                 "user_accepted_tou" to userAcceptedTou,
                 "no_shortcuts_stories_mkt" to noShortcutsStoriesMkt,
+                "user_clicked_tou_prompt_link" to userClickedTouPromptLink,
+                "user_clicked_tou_prompt_remind_me_later" to userClickedTouPromptRemindMeLater,
             ),
         )
         return obj
@@ -193,6 +199,8 @@ class RecordedNimbusContext(
                 region = calculatedAttributes.region,
                 userAcceptedTou = settings.hasAcceptedTermsOfService,
                 noShortcutsStoriesMkt = settings.noShortcutsStoriesMkt,
+                userClickedTouPromptLink = settings.hasClickedTermOfUsePromptLink,
+                userClickedTouPromptRemindMeLater = settings.hasClickedTermOfUsePromptRemindMeLater,
             )
         }
 
@@ -236,6 +244,8 @@ class RecordedNimbusContext(
                 region = "US",
                 userAcceptedTou = true,
                 noShortcutsStoriesMkt = true,
+                userClickedTouPromptLink = true,
+                userClickedTouPromptRemindMeLater = true,
             )
         }
     }

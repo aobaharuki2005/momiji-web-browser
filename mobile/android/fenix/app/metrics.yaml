@@ -12937,16 +12937,22 @@ nimbus_system:
           type: boolean
         no_shortcuts_stories_mkt:
           type: boolean
+        user_clicked_tou_prompt_link:
+          type: boolean
+        user_clicked_tou_prompt_remind_me_later:
+          type: boolean
     description: |
       The Nimbus context object that is recorded to Glean
     bugs:
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1898552'
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1970135'
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1970165'
+      - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1981877'
     data_reviews:
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1898552#c3'
       - 'https://phabricator.services.mozilla.com/D258942'
       - 'https://phabricator.services.mozilla.com/D259407'
+      - 'https://phabricator.services.mozilla.com/D260845'
     data_sensitivity:
       - interaction
     notification_emails:

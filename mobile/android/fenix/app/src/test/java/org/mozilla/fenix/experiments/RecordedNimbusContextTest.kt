@@ -71,6 +71,8 @@ class RecordedNimbusContextTest {
                 put("device_model", Build.MODEL)
                 put("user_accepted_tou", true)
                 put("no_shortcuts_stories_mkt", true)
+                put("user_clicked_tou_prompt_link", true)
+                put("user_clicked_tou_prompt_remind_me_later", true)
             },
             contextAsJson,
         )
@@ -114,6 +116,8 @@ class RecordedNimbusContextTest {
                 put("region", "US")
                 put("userAcceptedTou", true)
                 put("noShortcutsStoriesMkt", true)
+                put("userClickedTouPromptLink", true)
+                put("userClickedTouPromptRemindMeLater", true)
             },
             recordedValue?.jsonObject,
         )
