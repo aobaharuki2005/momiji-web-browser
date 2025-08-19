@@ -4,12 +4,9 @@
 
 package org.mozilla.fenix.compose.snackbar
 
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarData
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import org.mozilla.fenix.compose.core.Action
-import org.mozilla.fenix.compose.snackbar.SnackbarState.Type
+import mozilla.components.compose.base.snackbar.Snackbar
 import androidx.compose.material3.SnackbarHost as MaterialSnackbarHost
 
 /**
@@ -24,39 +21,12 @@ fun SnackbarHost(
     snackbarHostState: AcornSnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
-    // We need separate hosts for the different use cases/styles until we migrate to material 3
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1925333
     MaterialSnackbarHost(
         hostState = snackbarHostState.defaultSnackbarHostState,
         modifier = modifier,
     ) { snackbarData ->
         Snackbar(
-            snackbarState = SnackbarState(
-                message = snackbarData.visuals.message,
-                type = Type.Default,
-                action = snackbarData.action,
-            ),
-        )
-    }
-
-    MaterialSnackbarHost(
-        hostState = snackbarHostState.warningSnackbarHostState,
-        modifier = modifier,
-    ) { snackbarData ->
-        Snackbar(
-            snackbarState = SnackbarState(
-                message = snackbarData.visuals.message,
-                type = Type.Warning,
-                action = snackbarData.action,
-            ),
+            snackbarData = snackbarData,
         )
     }
 }
-
-private val SnackbarData.action: Action?
-    get() = visuals.actionLabel?.let {
-        Action(
-            label = it,
-            onClick = this::performAction,
-        )
-    }
