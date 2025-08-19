@@ -32,12 +32,8 @@ export class DynamicSuggestions extends SuggestProvider {
     return ["quicksuggest.dynamicSuggestionTypes"];
   }
 
-  get additionalEnablingPredicate() {
+  get shouldEnable() {
     return !!this.dynamicRustSuggestionTypes.length;
-  }
-
-  get primaryUserControlledPreferences() {
-    return ["suggest.realtimeOptIn"];
   }
 
   get rustSuggestionType() {
@@ -94,9 +90,6 @@ export class DynamicSuggestions extends SuggestProvider {
     if (result.isHiddenExposure) {
       return this.#makeExposureResult(suggestion, payload);
     }
-    if (payload.type == "realtime_opt_in") {
-      return this.#makeRealtimeOptInResult(suggestion, payload);
-    }
 
     let isSponsored = !!payload.isSponsored;
     if (
@@ -125,11 +118,6 @@ export class DynamicSuggestions extends SuggestProvider {
   }
 
   onEngagement(_queryContext, controller, details, _searchString) {
-    if (details.result.payload?.type == "realtime_opt_in") {
-      this.#onRealtimeOptInEngagement(controller, details);
-      return;
-    }
-
     switch (details.selType) {
       case "manage":
         // "manage" is handled by UrlbarInput, no need to do anything here.
@@ -168,127 +156,5 @@ export class DynamicSuggestions extends SuggestProvider {
         exposureTelemetry: lazy.UrlbarUtils.EXPOSURE_TELEMETRY.HIDDEN,
       }
     );
-  }
-
-  #makeRealtimeOptInResult(suggestion, payload) {
-    let realtimeType = suggestion.data.result.realtimeType;
-
-    if (!this.#shouldRealtimeOptInDisplay(realtimeType)) {
-      return null;
-    }
-
-    let notNowTypes = lazy.UrlbarPrefs.get(
-      "quicksuggest.realtimeOptIn.notNowTypes"
-    );
-    let splitButtonMain = notNowTypes.has(realtimeType)
-      ? {
-          command: "dismiss",
-          l10n: { id: "urlbar-result-realtime-opt-in-dismiss" },
-        }
-      : {
-          command: "not_now",
-          l10n: { id: "urlbar-result-realtime-opt-in-not-now" },
-        };
-
-    let result = { ...suggestion.data.result };
-    delete result.payload;
-
-    return Object.assign(
-      new lazy.UrlbarResult(
-        lazy.UrlbarUtils.RESULT_TYPE.TIP,
-        lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        {
-          ...payload,
-          buttons: [
-            {
-              command: "opt_in",
-              l10n: { id: "urlbar-result-realtime-opt-in-allow" },
-            },
-            {
-              ...splitButtonMain,
-              menu: [
-                {
-                  name: "not_interested",
-                  l10n: {
-                    id: "urlbar-result-realtime-opt-in-dismiss-all",
-                  },
-                },
-              ],
-            },
-          ],
-        }
-      ),
-      { ...result }
-    );
-  }
-
-  #shouldRealtimeOptInDisplay(realtimeType) {
-    if (
-      !lazy.UrlbarPrefs.get("suggest.realtimeOptIn") ||
-      lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled")
-    ) {
-      return false;
-    }
-
-    let dismissTypes = lazy.UrlbarPrefs.get(
-      "quicksuggest.realtimeOptIn.dismissTypes"
-    );
-    if (dismissTypes.has(realtimeType)) {
-      return false;
-    }
-
-    let notNowTimeSeconds = lazy.UrlbarPrefs.get(
-      "quicksuggest.realtimeOptIn.notNowTimeSeconds"
-    );
-    if (!notNowTimeSeconds) {
-      return true;
-    }
-
-    let notNowReshowAfterPeriodDays = lazy.UrlbarPrefs.get(
-      "quicksuggest.realtimeOptIn.notNowReshowAfterPeriodDays"
-    );
-
-    let timeSecs = notNowReshowAfterPeriodDays * 24 * 60 * 60;
-    return Date.now() / 1000 - notNowTimeSeconds > timeSecs;
-  }
-
-  #onRealtimeOptInEngagement(controller, details) {
-    switch (details.selType) {
-      case "opt_in":
-        lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
-        controller.input.startQuery({ allowAutofill: false });
-        break;
-      case "not_now": {
-        lazy.UrlbarPrefs.set(
-          "quicksuggest.realtimeOptIn.notNowTimeSeconds",
-          Date.now() / 1000
-        );
-        lazy.UrlbarPrefs.add(
-          "quicksuggest.realtimeOptIn.notNowTypes",
-          details.result.realtimeType
-        );
-        controller.removeResult(details.result);
-        break;
-      }
-      case "dismiss": {
-        lazy.UrlbarPrefs.add(
-          "quicksuggest.realtimeOptIn.dismissTypes",
-          details.result.realtimeType
-        );
-        details.result.acknowledgeDismissalL10n = {
-          id: "urlbar-result-dismissal-acknowledgment-market",
-        };
-        controller.removeResult(details.result);
-        break;
-      }
-      case "not_interested": {
-        lazy.UrlbarPrefs.set("suggest.realtimeOptIn", false);
-        details.result.acknowledgeDismissalL10n = {
-          id: "urlbar-result-dismissal-acknowledgment-all",
-        };
-        controller.removeResult(details.result);
-        break;
-      }
-    }
   }
 }

@@ -27,6 +27,7 @@ add_setup(async function () {
       },
     ],
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],

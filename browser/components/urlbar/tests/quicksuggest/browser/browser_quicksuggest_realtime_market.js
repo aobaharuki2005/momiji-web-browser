@@ -106,6 +106,7 @@ add_task(async function ui_single() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_SINGLE,
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],
@@ -121,6 +122,11 @@ add_task(async function ui_single() {
   );
   Assert.ok(result.isBestMatch);
   Assert.ok(result.hideRowLabel);
+
+  Assert.ok(
+    element.row.querySelector(".urlbarView-button-result-menu"),
+    "The row should have a result menu button"
+  );
 
   let items = element.row.querySelectorAll(".urlbarView-dynamic-market-item");
   Assert.equal(items.length, 1);
@@ -141,6 +147,7 @@ add_task(async function ui_multi() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_MULTI,
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],
@@ -174,6 +181,7 @@ add_task(async function activate() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_MULTI,
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],
@@ -214,6 +222,7 @@ add_task(async function no_image() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_NO_SPECIFIC_IMAGE,
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],
