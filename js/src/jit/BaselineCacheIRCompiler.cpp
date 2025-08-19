@@ -2972,6 +2972,7 @@ static bool NeedsRectifier(CallFlags flags) {
     case CallFlags::Standard:
     case CallFlags::Spread:
     case CallFlags::FunApplyArray:
+    case CallFlags::FunApplyNullUndefined:
       return false;
     default:
       return true;
@@ -3279,14 +3280,9 @@ void BaselineCacheIRCompiler::pushFunApplyNullUndefinedArguments(
 
   MOZ_ASSERT(enteredStubFrame_);
 
-  // Align the stack such that the JitFrameLayout is aligned on the
-  // JitStackAlignment.
-  if (isJitCall) {
-    masm.alignJitStackBasedOnNArgs(0, /*countIncludesThis =*/false);
-  }
-
   // Push |this|.
-  size_t thisvOffset = BaselineStubFrameLayout::Size() + 1 * sizeof(Value);
+  size_t thisvOffset =
+      ArgsOffsetFromFP(/*isConstructing*/ false) + sizeof(Value);
   masm.pushValue(Address(FramePointer, thisvOffset));
 
   // Push |callee| if needed.
