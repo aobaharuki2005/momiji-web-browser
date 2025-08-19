@@ -2376,15 +2376,18 @@ nsRect nsDisplayImage::GetDestRectViewTransition() const {
   // destRect with respect to the captured element's inkOverflowRect.
   nsPoint inkOverflowOffset;
   nsSize inkOverflowBoxSize, borderBoxSize;
+  Maybe<nsRect> activeRect;
 
   if (image->Style()->GetPseudoType() == PseudoStyleType::viewTransitionOld) {
     inkOverflowOffset = vt->GetOldInkOverflowOffset(name).value();
     inkOverflowBoxSize = vt->GetOldInkOverflowBoxSize(name).value();
     borderBoxSize = vt->GetOldBorderBoxSize(name).value();
+    activeRect = vt->GetOldActiveRect(name);
   } else {
     inkOverflowOffset = vt->GetNewInkOverflowOffset(name).value();
     inkOverflowBoxSize = vt->GetNewInkOverflowBoxSize(name).value();
     borderBoxSize = vt->GetNewBorderBoxSize(name).value();
+    activeRect = vt->GetNewActiveRect(name);
   }
 
   if (borderBoxSize.IsEmpty()) {
@@ -2411,8 +2414,15 @@ nsRect nsDisplayImage::GetDestRectViewTransition() const {
   auto scaledWidth = std::round(widthRatio * destRect.Width());
   auto scaledHeight = std::round(heightRatio * destRect.Height());
 
-  return nsRect(destRect.TopLeft() + inkOverflowOffset,
-                nsSize(scaledWidth, scaledHeight));
+  destRect = nsRect(destRect.TopLeft() + inkOverflowOffset,
+                    nsSize(scaledWidth, scaledHeight));
+
+
+  if (activeRect) {
+    destRect = destRect.Intersect(activeRect.value());
+  }
+
+  return destRect;
 }
 
 nsRegion nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
