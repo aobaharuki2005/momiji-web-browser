@@ -6344,8 +6344,9 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
 
   Register calleeReg = IonGenericCallCalleeReg;
   Register argcReg = IonGenericCallArgcReg;
-  Register scratch = IonGenericCallScratch;
-  Register scratch2 = IonGenericCallScratch2;
+  AllocatableGeneralRegisterSet regs(IonGenericCallScratchRegs());
+  Register scratch = regs.takeAny();
+  Register scratch2 = regs.takeAny();
 
 #ifndef JS_USE_LINK_REGISTER
   Register returnAddrReg = IonGenericCallReturnAddrReg;
@@ -6468,9 +6469,10 @@ void JitRuntime::generateIonGenericCallNativeFunction(MacroAssembler& masm,
                                                       bool isConstructing) {
   Register calleeReg = IonGenericCallCalleeReg;
   Register argcReg = IonGenericCallArgcReg;
-  Register scratch = IonGenericCallScratch;
-  Register scratch2 = IonGenericCallScratch2;
-  Register contextReg = IonGenericCallScratch3;
+  AllocatableGeneralRegisterSet regs(IonGenericCallScratchRegs());
+  Register scratch = regs.takeAny();
+  Register scratch2 = regs.takeAny();
+  Register contextReg = regs.takeAny();
 #ifndef JS_USE_LINK_REGISTER
   Register returnAddrReg = IonGenericCallReturnAddrReg;
 #endif
@@ -6533,9 +6535,10 @@ void JitRuntime::generateIonGenericCallFunCall(MacroAssembler& masm,
                                                Label* entry, Label* vmCall) {
   Register calleeReg = IonGenericCallCalleeReg;
   Register argcReg = IonGenericCallArgcReg;
-  Register scratch = IonGenericCallScratch;
-  Register scratch2 = IonGenericCallScratch2;
-  Register scratch3 = IonGenericCallScratch3;
+  AllocatableGeneralRegisterSet regs(IonGenericCallScratchRegs());
+  Register scratch = regs.takeAny();
+  Register scratch2 = regs.takeAny();
+  Register scratch3 = regs.takeAny();
 
   Label notFunCall;
   masm.branchPtr(Assembler::NotEqual,
@@ -6590,9 +6593,10 @@ void JitRuntime::generateIonGenericCallBoundFunction(MacroAssembler& masm,
                                                      Label* vmCall) {
   Register calleeReg = IonGenericCallCalleeReg;
   Register argcReg = IonGenericCallArgcReg;
-  Register scratch = IonGenericCallScratch;
-  Register scratch2 = IonGenericCallScratch2;
-  Register scratch3 = IonGenericCallScratch3;
+  AllocatableGeneralRegisterSet regs(IonGenericCallScratchRegs());
+  Register scratch = regs.takeAny();
+  Register scratch2 = regs.takeAny();
+  Register scratch3 = regs.takeAny();
 
   masm.branchTestObjClass(Assembler::NotEqual, calleeReg,
                           &BoundFunctionObject::class_, scratch, calleeReg,
