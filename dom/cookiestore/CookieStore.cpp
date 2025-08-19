@@ -183,15 +183,30 @@ bool ValidateCookieDomain(nsIPrincipal* aPrincipal, const nsAString& aName,
   return true;
 }
 
-bool ValidateCookiePath(const nsAString& aPath, Promise* aPromise) {
+bool ValidateCookiePath(nsIURI* aURI, const nsAString& aPath,
+                        nsAString& aRetPath, Promise* aPromise) {
+  MOZ_ASSERT(aURI);
   MOZ_ASSERT(aPromise);
 
-  if (!aPath.IsEmpty() && aPath[0] != '/') {
+  aRetPath = aPath;
+
+  if (aRetPath.IsEmpty()) {
+    nsAutoCString pathFromURI;
+    nsresult rv = aURI->GetFilePath(pathFromURI);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aPromise->MaybeRejectWithNotAllowedError("Permission denied");
+      return false;
+    }
+
+    CopyUTF8toUTF16(pathFromURI, aRetPath);
+  }
+
+  if (aRetPath[0] != '/') {
     aPromise->MaybeRejectWithTypeError("Cookie path must start with '/'");
     return false;
   }
 
-  if (aPath.Length() > 1024) {
+  if (aRetPath.Length() > 1024) {
     aPromise->MaybeRejectWithTypeError(
         "Cookie domain size cannot be greater than 1024 bytes");
     return false;
@@ -417,6 +432,8 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
   NS_DispatchToCurrentThread(NS_NewRunnableFunction(
       __func__, [self = RefPtr(this), promise = RefPtr(promise), aOptions,
                  cookiePrincipal = RefPtr(cookiePrincipal.get())]() {
+        nsCOMPtr<nsIURI> cookieURI = cookiePrincipal->GetURI();
+
         nsString name(TrimTabAndSpace(aOptions.mName));
         nsString value(TrimTabAndSpace(aOptions.mValue));
 
@@ -430,12 +447,12 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
           return;
         }
 
-        if (!ValidateCookiePath(aOptions.mPath, promise)) {
+        nsString path;
+        if (!ValidateCookiePath(cookieURI, aOptions.mPath, path, promise)) {
           return;
         }
 
-        if (!ValidateCookieNamePrefix(name, value, domain, aOptions.mPath,
-                                      promise)) {
+        if (!ValidateCookieNamePrefix(name, value, domain, path, promise)) {
           return;
         }
 
@@ -470,7 +487,6 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
         self->mNotificationWatcher->ResolvePromiseWhenNotified(operationID,
                                                                promise);
 
-        nsCOMPtr<nsIURI> cookieURI = cookiePrincipal->GetURI();
         RefPtr<CookieStoreChild::SetRequestPromise> ipcPromise =
             self->mActor->SendSetRequest(
                 mozilla::WrapNotNull(cookieURI.get()),
@@ -479,7 +495,7 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
                 name, value,
                 // If expires is not set, it's a session cookie.
                 aOptions.mExpires.IsNull(), ComputeExpiry(aOptions), domain,
-                aOptions.mPath, SameSiteToConst(aOptions.mSameSite),
+                path, SameSiteToConst(aOptions.mSameSite),
                 aOptions.mPartitioned, operationID);
         if (NS_WARN_IF(!ipcPromise)) {
           promise->MaybeResolveWithUndefined();
@@ -555,6 +571,7 @@ already_AddRefed<Promise> CookieStore::Delete(
   NS_DispatchToCurrentThread(NS_NewRunnableFunction(
       __func__, [self = RefPtr(this), promise = RefPtr(promise), aOptions,
                  cookiePrincipal = RefPtr(cookiePrincipal.get())]() {
+        nsCOMPtr<nsIURI> cookieURI = cookiePrincipal->GetURI();
         nsString name(TrimTabAndSpace(aOptions.mName));
 
         nsString domain;
@@ -563,12 +580,12 @@ already_AddRefed<Promise> CookieStore::Delete(
           return;
         }
 
-        if (!ValidateCookiePath(aOptions.mPath, promise)) {
+        nsString path;
+        if (!ValidateCookiePath(cookieURI, aOptions.mPath, path, promise)) {
           return;
         }
 
-        if (!ValidateCookieNamePrefix(name, u""_ns, domain, aOptions.mPath,
-                                      promise)) {
+        if (!ValidateCookieNamePrefix(name, u""_ns, domain, path, promise)) {
           return;
         }
 
@@ -602,14 +619,12 @@ already_AddRefed<Promise> CookieStore::Delete(
 
         self->mNotificationWatcher->ResolvePromiseWhenNotified(operationID,
                                                                promise);
-        nsCOMPtr<nsIURI> cookieURI = cookiePrincipal->GetURI();
         RefPtr<CookieStoreChild::DeleteRequestPromise> ipcPromise =
             self->mActor->SendDeleteRequest(
                 mozilla::WrapNotNull(cookieURI.get()),
                 cookiePrincipal->OriginAttributesRef(), thirdPartyContext,
                 partitionForeign, usingStorageAccess, isOn3PCBExceptionList,
-                name, domain, aOptions.mPath, aOptions.mPartitioned,
-                operationID);
+                name, domain, path, aOptions.mPartitioned, operationID);
         if (NS_WARN_IF(!ipcPromise)) {
           promise->MaybeResolveWithUndefined();
           return;
