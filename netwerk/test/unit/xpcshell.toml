@@ -322,6 +322,7 @@ skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'", # Bug 1589327
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1589327
 ]
+
 ["test_bug1830022.js"]
 prefs = ["network.http.idempotencyKey.enabled=true"]
 
@@ -699,6 +700,7 @@ head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.
 ["test_http3.js"]
 run-sequentially = "http3server"
 skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix", # Bug 1807931
@@ -709,6 +711,7 @@ skip-if = [
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'",
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
 ]
 
 ["test_http3_421.js"]
@@ -745,6 +748,7 @@ skip-if = [
 ["test_http3_direct_proxy.js"]
 run-sequentially = "node server exceptions dont replay well"
 skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1808049
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1808049
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1808049
@@ -763,6 +767,7 @@ skip-if = [
 ["test_http3_early_hint_listener.js"]
 run-sequentially = "http3server"
 skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1808049
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1808049
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1808049
@@ -800,6 +805,7 @@ skip-if = [
 ["test_http3_large_post.js"]
 run-sequentially = "http3server"
 skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'",
@@ -829,6 +835,7 @@ skip-if = [
 ["test_http3_prio_disabled.js"]
 run-sequentially = "http3server"
 skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1807931
@@ -847,21 +854,23 @@ skip-if = [
   "verify",
 ]
 
+["test_http3_server_not_existing.js"]
+run-sequentially = "node server exceptions dont replay well"
+
 ["test_http3_timings.js"]
 run-sequentially = "node server exceptions dont replay well"
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
+  "os == 'android' && android_version == '34' && processor == 'x86_64'",
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'",
 ]
 
-["test_http3_server_not_existing.js"]
-run-sequentially = "node server exceptions dont replay well"
-
 ["test_http3_trans_close.js"]
 run-sequentially = "http3server"
 skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix", # Bug 1807931
@@ -870,6 +879,7 @@ skip-if = [
 ["test_http3_version1.js"]
 run-sequentially = "node server exceptions dont replay well"
 skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'",
@@ -952,14 +962,14 @@ run-sequentially = "node server exceptions dont replay well"
 
 ["test_inhibit_caching.js"]
 
+["test_invalid_cookie_fix.js"]
+
 ["test_ioservice.js"]
 
 ["test_ip_address_space_lna_glean.js"]
 
 ["test_ip_space_glean.js"]
 skip-if = ["os == 'android' && android_version == '24' && processor == 'x86_64'"]
-
-["test_invalid_cookie_fix.js"]
 
 ["test_large_port.js"]
 
@@ -1093,6 +1103,7 @@ skip-if = [
 ["test_progress_no_proxy_and_proxy.js"]
 run-sequentially = "node server exceptions dont replay well"
 skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'",
@@ -1286,7 +1297,10 @@ skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && 
 
 ["test_tls13_disabled.js"]
 run-sequentially = "node server exceptions dont replay well"
-skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix"] # Bug 1808048
+skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
+  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix", # Bug 1808048
+]
 
 ["test_tls_flags.js"]
 
@@ -1448,7 +1462,10 @@ run-sequentially = "node server exceptions dont replay well"
 
 ["test_websocket_with_h3_active.js"]
 run-sequentially = "node server exceptions dont replay well"
-skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix'"] # Bug 1808049
+skip-if = [
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
+  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix'", # Bug 1808049
+]
 
 ["test_webtransport_simple.js"]
 run-if = ["!socketprocess_networking"] # This test will be fixed in bug 1796556

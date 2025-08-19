@@ -112,6 +112,8 @@ xpcshell:
                     .*-asan.*/opt: 4
                     .*-ccov.*: 8
                     .*-tsan(-qr)?/opt: 10
+                    android-em-14.*/debug: 16
+                    android-em-14.*/opt: 8
                     android.*/debug: 10
                     android.*/opt: 5
                     macosx.*: 2
