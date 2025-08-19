@@ -31,7 +31,7 @@ add_task(async function () {
   info("Open the toolbox");
   const toolbox = await gDevTools.showToolboxForTab(gBrowser.selectedTab);
 
-  const onScreenshotDownloaded = waitUntilDownload();
+  const onScreenshotDownloaded = waitUntilScreenshot();
   toolbox.doc.querySelector("#command-button-screenshot").click();
   const filePath = await onScreenshotDownloaded;
 
@@ -104,7 +104,7 @@ add_task(async function () {
     privateBrowser.selectedTab
   );
 
-  const onPrivateScreenshotDownloaded = waitUntilDownload({
+  const onPrivateScreenshotDownloaded = waitUntilScreenshot({
     isWindowPrivate: true,
   });
   privateToolbox.doc.querySelector("#command-button-screenshot").click();

@@ -15,7 +15,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   const screenshotButton = document.getElementById("screenshot-button");
   screenshotButton.click();
 
-  const whenScreenshotSucceeded = waitUntilDownload();
+  const whenScreenshotSucceeded = waitUntilScreenshot();
 
   const filePath = await whenScreenshotSucceeded;
   const image = new Image();

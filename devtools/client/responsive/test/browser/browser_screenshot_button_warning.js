@@ -29,7 +29,7 @@ addRDMTask(
     await waitForDevicePixelRatio(ui, dpr);
 
     info("Click the screenshot button");
-    const onScreenshotDownloaded = waitUntilDownload();
+    const onScreenshotDownloaded = waitUntilScreenshot();
     const screenshotButton = document.getElementById("screenshot-button");
     screenshotButton.click();
 

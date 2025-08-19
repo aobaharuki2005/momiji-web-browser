@@ -233,11 +233,11 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
 
     // 3) Finally, we turn the reference into a regular smart pointer.
     RefPtr<HttpChannelChild> channel = dont_AddRef(this);
-    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
         "~HttpChannelChild>DoNotifyListener",
         [chan = std::move(channel)] { chan->DoNotifyListener(false); }));
-    // If NS_DispatchToCurrentThread failed then we're going to leak the
-    // runnable, and thus the channel, so there's no need to do anything else.
+    // If NS_DispatchToMainThread failed then we're going to leak the runnable,
+    // and thus the channel, so there's no need to do anything else.
     return mRefCnt;
   }
 
