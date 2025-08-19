@@ -459,12 +459,7 @@ class EmulationModule extends RootBiDiModule {
   _setLocaleForBrowsingContext(options) {
     const { context, locale } = options;
 
-    // TODO: Bug 1979026. Locale override only works for top-level contexts,
-    // but iframe contexts will inherit the override if they
-    // are created at that moment. We need this workaround
-    // until the platform bug is fixed and the cross-origin iframes
-    // can inherit the overridden locale automatically.
-    context.top.languageOverride = locale;
+    context.languageOverride = locale;
   }
 
   #getBrowsingContext(contextId) {
