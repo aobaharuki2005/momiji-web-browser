@@ -49,10 +49,6 @@ class NavigationHistoryEntry final : public DOMEventTargetHelper {
 
   nsStructuredCloneContainer* GetNavigationState() const;
 
-  class SessionHistoryInfo* SessionHistoryInfo() { return mSHInfo.get(); }
-
-  void ResetIndexForDisposal();
-
  private:
   ~NavigationHistoryEntry();
 
@@ -61,7 +57,7 @@ class NavigationHistoryEntry final : public DOMEventTargetHelper {
   bool HasActiveDocument() const;
 
   // https://html.spec.whatwg.org/#nhe-she
-  UniquePtr<class SessionHistoryInfo> mSHInfo;
+  UniquePtr<SessionHistoryInfo> mSHInfo;
   int64_t mIndex;
 };
 

@@ -17,8 +17,6 @@ class NavigationUtils {
  public:
   static Maybe<enum NavigationHistoryBehavior> NavigationHistoryBehavior(
       NavigationType aNavigationType);
-
-  static NavigationType NavigationTypeFromLoadType(uint32_t aLoadType);
 };
 
 }  // namespace mozilla::dom

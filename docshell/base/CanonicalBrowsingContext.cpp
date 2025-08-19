@@ -19,7 +19,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/Navigation.h"
-#include "mozilla/dom/NavigationUtils.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
@@ -69,7 +68,6 @@
 using namespace mozilla::ipc;
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
-extern mozilla::LazyLogModule gNavigationLog;
 extern mozilla::LazyLogModule gSHLog;
 extern mozilla::LazyLogModule gSHIPBFCacheLog;
 
@@ -651,19 +649,6 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
             });
       }
     }
-
-    loadingInfo->mTriggeringEntry =
-        mActiveEntry ? Some(mActiveEntry->Info()) : Nothing();
-    MOZ_LOG_FMT(gNavigationLog, LogLevel::Verbose, "Triggering entry was {}.",
-                fmt::ptr(loadingInfo->mTriggeringEntry
-                             .map([](auto& entry) { return &entry; })
-                             .valueOr(nullptr)));
-
-    loadingInfo->mTriggeringNavigationType = Some(
-        NavigationUtils::NavigationTypeFromLoadType(aLoadState->LoadType()));
-    MOZ_LOG_FMT(gNavigationLog, LogLevel::Verbose,
-                "Triggering navigation type was {}.",
-                loadingInfo->mTriggeringNavigationType.value());
   }
 
   MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(loadingInfo->mLoadId)->mEntry ==
