@@ -169,4 +169,6 @@ nsStructuredCloneContainer* NavigationHistoryEntry::GetNavigationState() const {
   return mSHInfo->GetNavigationState();
 }
 
+void NavigationHistoryEntry::ResetIndexForDisposal() { mIndex = -1; }
+
 }  // namespace mozilla::dom

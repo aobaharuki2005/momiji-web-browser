@@ -325,6 +325,10 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
     mOngoingAPIMethodTracker->NotifyAboutCommittedToEntry(currentEntry);
   }
 
+  for (auto& entry : disposedEntries) {
+    entry->ResetIndexForDisposal();
+  }
+
   // Steps 9-12.
   {
     nsAutoMicroTask mt;
