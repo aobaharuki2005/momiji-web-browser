@@ -42,10 +42,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -115,9 +111,13 @@ import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.button.FloatingActionButton
+import org.mozilla.fenix.compose.core.Action
 import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.SelectableFaviconListItem
 import org.mozilla.fenix.compose.list.SelectableIconListItem
+import org.mozilla.fenix.compose.snackbar.AcornSnackbarHostState
+import org.mozilla.fenix.compose.snackbar.SnackbarHost
+import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionClicked
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionSelected
 import org.mozilla.fenix.search.SearchFragmentState
@@ -238,7 +238,7 @@ private fun BookmarksList(
         }
     }
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = remember { AcornSnackbarHostState() }
 
     val view = LocalView.current
     val focusManager = LocalFocusManager.current
@@ -257,29 +257,38 @@ private fun BookmarksList(
         is BookmarksSnackbarState.UndoDeletion -> stringResource(R.string.bookmark_undo_deletion)
         else -> null
     }
+    val action: Action? = snackbarActionLabel?.let {
+        Action(
+            label = snackbarActionLabel,
+            onClick = {
+                store.dispatch(SnackbarAction.Undo)
+            },
+        )
+    }
 
     LaunchedEffect(state.bookmarksSnackbarState) {
         when (state.bookmarksSnackbarState) {
             BookmarksSnackbarState.None -> return@LaunchedEffect
             is BookmarksSnackbarState.UndoDeletion -> scope.launch {
-                val result = snackbarHostState.showSnackbar(
-                    message = snackbarMessage,
-                    actionLabel = snackbarActionLabel,
-                    duration = SnackbarDuration.Short,
+                snackbarHostState.showSnackbar(
+                    snackbarState = SnackbarState(
+                        message = snackbarMessage,
+                        action = action,
+                        onDismiss = {
+                            store.dispatch(SnackbarAction.Dismissed)
+                        },
+                    ),
                 )
-                if (result == SnackbarResult.Dismissed) {
-                    store.dispatch(SnackbarAction.Dismissed)
-                } else if (result == SnackbarResult.ActionPerformed) {
-                    store.dispatch(SnackbarAction.Undo)
-                }
             }
             BookmarksSnackbarState.CantEditDesktopFolders -> scope.launch {
-                val result = snackbarHostState.showSnackbar(
-                    message = snackbarMessage,
+                snackbarHostState.showSnackbar(
+                    snackbarState = SnackbarState(
+                        message = snackbarMessage,
+                        onDismiss = {
+                            store.dispatch(SnackbarAction.Dismissed)
+                        },
+                    ),
                 )
-                if (result == SnackbarResult.Dismissed) {
-                    store.dispatch(SnackbarAction.Dismissed)
-                }
             }
         }
     }
@@ -324,8 +333,8 @@ private fun BookmarksList(
         snackbarHost = {
             Box(modifier = Modifier.fillMaxWidth()) {
                 SnackbarHost(
-                    hostState = snackbarHostState,
                     modifier = Modifier.align(Alignment.BottomCenter),
+                    snackbarHostState = snackbarHostState,
                 )
             }
         },

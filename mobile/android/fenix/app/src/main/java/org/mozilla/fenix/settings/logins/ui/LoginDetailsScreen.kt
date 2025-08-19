@@ -21,8 +21,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -53,13 +51,16 @@ import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.list.TextListItem
+import org.mozilla.fenix.compose.snackbar.AcornSnackbarHostState
+import org.mozilla.fenix.compose.snackbar.SnackbarHost
+import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.theme.FirefoxTheme
 
 @Composable
 internal fun LoginDetailsScreen(store: LoginsStore) {
     val state by store.observeAsState(store.state) { it }
     val detailState = state.loginsLoginDetailState ?: return
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = remember { AcornSnackbarHostState() }
 
     val deletionDialogState = state.loginDeletionDialogState
     if (deletionDialogState is LoginDeletionDialogState.Presenting) {
@@ -80,7 +81,7 @@ internal fun LoginDetailsScreen(store: LoginsStore) {
         containerColor = FirefoxTheme.colors.layer1,
         snackbarHost = {
             SnackbarHost(
-                hostState = snackbarHostState,
+                snackbarHostState = snackbarHostState,
                 modifier = Modifier.imePadding(),
             )
         },
@@ -229,7 +230,7 @@ private fun LoginDetailsUrl(store: LoginsStore, url: String) {
 @Composable
 private fun LoginDetailsUsername(
     store: LoginsStore,
-    snackbarHostState: SnackbarHostState,
+    snackbarHostState: AcornSnackbarHostState,
     username: String,
 ) {
     val usernameSnackbarText = stringResource(R.string.logins_username_copied)
@@ -268,7 +269,7 @@ private fun LoginDetailsUsername(
 @Composable
 private fun LoginDetailsPassword(
     store: LoginsStore,
-    snackbarHostState: SnackbarHostState,
+    snackbarHostState: AcornSnackbarHostState,
     password: String,
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
@@ -366,11 +367,13 @@ private fun LoginDeletionDialog(
 private fun showTextCopiedSnackbar(
     message: String,
     coroutineScope: CoroutineScope,
-    snackbarHostState: SnackbarHostState,
+    snackbarHostState: AcornSnackbarHostState,
 ) {
     coroutineScope.launch {
         snackbarHostState.showSnackbar(
-            message = message,
+            snackbarState = SnackbarState(
+                message = message,
+            ),
         )
     }
 }

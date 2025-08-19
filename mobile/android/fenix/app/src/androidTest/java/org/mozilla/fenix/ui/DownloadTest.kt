@@ -9,6 +9,7 @@ import android.os.Build.VERSION.SDK_INT
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.intent.rule.IntentsRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -179,7 +180,7 @@ class DownloadTest : TestSetup() {
             verifyDownloadedFileExistsInDownloadsList(activityTestRule, "smallZip.zip")
             clickDownloadItemMenuIcon(activityTestRule, "smallZip.zip")
             deleteDownloadedItem(activityTestRule, "smallZip.zip")
-            clickSnackbarButton(activityTestRule, "Undo")
+            clickSnackbarButton(activityTestRule, "UNDO")
             verifyDownloadedFileExistsInDownloadsList(activityTestRule, "smallZip.zip")
             clickDownloadItemMenuIcon(activityTestRule, "smallZip.zip")
             deleteDownloadedItem(activityTestRule, "smallZip.zip")
@@ -212,7 +213,7 @@ class DownloadTest : TestSetup() {
             openMultiSelectMoreOptionsMenu(activityTestRule)
             clickMultiSelectRemoveButton(activityTestRule)
             clickMultiSelectDeleteDialogButton(activityTestRule)
-            clickSnackbarButton(activityTestRule, "Undo")
+            clickSnackbarButton(activityTestRule, "UNDO")
             verifyDownloadedFileExistsInDownloadsList(activityTestRule, firstDownloadedFile)
             verifyDownloadedFileExistsInDownloadsList(activityTestRule, secondDownloadedFile)
             longClickDownloadedItem(activityTestRule, firstDownloadedFile)
