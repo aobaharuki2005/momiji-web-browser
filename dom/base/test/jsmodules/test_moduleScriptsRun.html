@@ -16,5 +16,8 @@
   }
 </script>
 <script type="module" src="module_setRan.mjs"></script>
-<script type="module">inlineModuleRan = true;</script>
+<script type="module">
+  /* global inlineModuleRan */
+  inlineModuleRan = true;
+  </script>
 <body onload='testLoaded()'></body>

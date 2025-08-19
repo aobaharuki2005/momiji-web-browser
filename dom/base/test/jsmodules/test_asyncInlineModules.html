@@ -26,12 +26,14 @@
   }
 </script>
 <script type="module" async>
+  /* global results */
   results.push(1);
 </script>
 <script type="module" async>
   import "./module_simple2.mjs";
 </script>
 <script type="module" async>
+  /* global results */
   results.push(3);
 </script>
 <body onload='testLoaded()'></body>

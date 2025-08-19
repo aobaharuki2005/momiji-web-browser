@@ -691,7 +691,6 @@ export default [
       "dom/animation/test/**",
       "dom/base/test/**",
       "dom/base/test/unit/test_serializers_entities*.js",
-      "dom/base/test/jsmodules/**",
       "dom/canvas/test/**",
       "dom/events/test/**",
       "dom/file/tests/**",

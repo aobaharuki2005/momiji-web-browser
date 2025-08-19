@@ -23,6 +23,7 @@
 </script>
 <script type="module" onerror="eventCount++">
 import "./nonExistentModule.mjs";
+/* global wasRun */
 wasRun = true;
 </script>
 <body onload='testError()'></body>
