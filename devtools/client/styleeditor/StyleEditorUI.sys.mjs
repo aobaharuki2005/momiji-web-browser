@@ -1658,7 +1658,13 @@ export class StyleEditorUI extends EventEmitter {
         continue;
       }
 
-      if (resource.name === "will-navigate") {
+      if (
+        resource.name === "will-navigate" &&
+        // When selecting a document in the Browser Toolbox iframe picker, we're getting
+        // a will-navigate event. In such case, we don't want to clear the list (see Bug 1981937)
+        (!this.targetCommand.descriptorFront.isBrowserProcessDescriptor ||
+          !resource.isFrameSwitching)
+      ) {
         this.#startLoadingStyleSheets();
         this.#clear();
       } else if (resource.name === "dom-complete") {
