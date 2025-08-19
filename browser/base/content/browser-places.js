@@ -1256,7 +1256,10 @@ var PlacesToolbarHelper = {
         let { preferredURI } = Services.uriFixup.getFixupURIInfo(entry.url);
         let menuitem = document.createXULElement("menuitem");
         menuitem.setAttribute("label", entry.name);
-        menuitem.setAttribute("image", "page-icon:" + preferredURI.spec);
+        menuitem.setAttribute(
+          "image",
+          "page-icon:" + encodeURI(preferredURI.spec)
+        );
         menuitem.classList.add(
           "menuitem-iconic",
           "menuitem-with-favicon",
