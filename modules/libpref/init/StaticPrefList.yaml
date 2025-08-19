@@ -3652,7 +3652,7 @@
 # Enable ParentNode.moveBefore().
 - name: dom.movebefore.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to dispatch mutation events.
