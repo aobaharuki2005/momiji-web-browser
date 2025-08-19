@@ -1252,7 +1252,7 @@ TEST(TArray, test_swap)
 
     a.SwapElements(b);
 
-    CHECK_NOT_USING_AUTO(a);
+    CHECK_IS_USING_AUTO(a);
     CHECK_NOT_USING_AUTO(b);
     CHECK_ARRAY(b, data1);
     CHECK_EQ_INT(a.Length(), size_t(0));

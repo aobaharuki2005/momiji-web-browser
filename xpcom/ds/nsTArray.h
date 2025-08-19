@@ -269,7 +269,7 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase {
 struct nsTArrayHeader {
   uint32_t mLength;
   uint32_t mCapacity : 31;
-  uint32_t mIsAutoBuffer : 1;
+  uint32_t mIsAutoArray : 1;
 };
 
 extern "C" {
@@ -492,12 +492,14 @@ class nsTArray_base {
   // Tries to resize the storage to the minimum required amount. If this fails,
   // the array is left as-is.
   // @param aElemSize  The size of an array element.
-  void ShrinkCapacity(size_type aElemSize);
+  // @param aElemAlign The alignment in bytes of an array element.
+  void ShrinkCapacity(size_type aElemSize, size_t aElemAlign);
 
   // Resizes the storage to 0. This may only be called when Length() is already
   // 0.
   // @param aElemSize  The size of an array element.
-  void ShrinkCapacityToZero(size_type aElemSize);
+  // @param aElemAlign The alignment in bytes of an array element.
+  void ShrinkCapacityToZero(size_type aElemSize, size_t aElemAlign);
 
   // This method may be called to resize a "gap" in the array by shifting
   // elements around.  It updates mLength appropriately.  If the resulting
@@ -506,9 +508,10 @@ class nsTArray_base {
   // @param aOldLen    The current length of the gap.
   // @param aNewLen    The desired length of the gap.
   // @param aElemSize  The size of an array element.
+  // @param aElemAlign The alignment in bytes of an array element.
   template <typename ActualAlloc>
   void ShiftData(index_type aStart, size_type aOldLen, size_type aNewLen,
-                 size_type aElemSize);
+                 size_type aElemSize, size_t aElemAlign);
 
   // This method may be called to swap elements from the end of the array to
   // fill a "gap" in the array. If the resulting array has zero elements, then
@@ -516,8 +519,10 @@ class nsTArray_base {
   // @param aStart     The starting index of the gap.
   // @param aCount     The length of the gap.
   // @param aElemSize  The size of an array element.
+  // @param aElemAlign The alignment in bytes of an array element.
   template <typename ActualAlloc>
-  void SwapFromEnd(index_type aStart, size_type aCount, size_type aElemSize);
+  void SwapFromEnd(index_type aStart, size_type aCount, size_type aElemSize,
+                   size_t aElemAlign);
 
   // This method increments the length member of the array's header.
   // Note that mHdr may actually be sEmptyTArrayHeader in the case where a
@@ -539,34 +544,70 @@ class nsTArray_base {
   //               greater than the current length of the array.
   // @param aCount the number of slots to insert
   // @param aElementSize the size of an array element.
+  // @param aElemAlign the alignment in bytes of an array element.
   template <typename ActualAlloc>
   typename ActualAlloc::ResultTypeProxy InsertSlotsAt(index_type aIndex,
                                                       size_type aCount,
-                                                      size_type aElementSize);
+                                                      size_type aElementSize,
+                                                      size_t aElemAlign);
 
   template <typename ActualAlloc, class Allocator>
   typename ActualAlloc::ResultTypeProxy SwapArrayElements(
-      nsTArray_base<Allocator, RelocationStrategy>& aOther,
-      size_type aElemSize);
+      nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
+      size_t aElemAlign);
 
   template <class Allocator>
   void MoveConstructNonAutoArray(
-      nsTArray_base<Allocator, RelocationStrategy>& aOther,
-      size_type aElemSize);
+      nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
+      size_t aElemAlign);
 
   template <class Allocator>
   void MoveInit(nsTArray_base<Allocator, RelocationStrategy>& aOther,
-                size_type aElemSize);
+                size_type aElemSize, size_t aElemAlign);
 
-  // Helper function for move construction and SwapArrayElements.
-  // Takes the storage from the nsTArray as a non-auto Header pointer.
-  // If the array is holding a reference to an AutoTArray buffer,
-  // it will be moved to the heap before being returned.
+  // This is an RAII class used in SwapArrayElements.
+  class IsAutoArrayRestorer {
+   public:
+    IsAutoArrayRestorer(nsTArray_base<Alloc, RelocationStrategy>& aArray,
+                        size_t aElemAlign);
+    ~IsAutoArrayRestorer();
+
+   private:
+    nsTArray_base<Alloc, RelocationStrategy>& mArray;
+    size_t mElemAlign;
+    bool mIsAuto;
+  };
+
+  // Helper function for SwapArrayElements. Ensures that if the array
+  // is an AutoTArray that it doesn't use the built-in buffer.
   template <typename ActualAlloc>
-  Header* TakeHeaderForMove(size_type aElemSize);
+  bool EnsureNotUsingAutoArrayBuffer(size_type aElemSize);
 
-  // Returns whether we're using our auto-array inline buffer.
-  bool UsesAutoArrayBuffer() const { return mHdr->mIsAutoBuffer; }
+  // Returns true if this nsTArray is an AutoTArray with a built-in buffer.
+  bool IsAutoArray() const { return mHdr->mIsAutoArray; }
+
+  // Returns a Header for the built-in buffer of this AutoTArray.
+  Header* GetAutoArrayBuffer(size_t aElemAlign) {
+    MOZ_ASSERT(IsAutoArray(), "Should be an auto array to call this");
+    return GetAutoArrayBufferUnsafe(aElemAlign);
+  }
+  const Header* GetAutoArrayBuffer(size_t aElemAlign) const {
+    MOZ_ASSERT(IsAutoArray(), "Should be an auto array to call this");
+    return GetAutoArrayBufferUnsafe(aElemAlign);
+  }
+
+  // Returns a Header for the built-in buffer of this AutoTArray, but doesn't
+  // assert that we are an AutoTArray.
+  Header* GetAutoArrayBufferUnsafe(size_t aElemAlign) {
+    return const_cast<Header*>(
+        static_cast<const nsTArray_base<Alloc, RelocationStrategy>*>(this)
+            ->GetAutoArrayBufferUnsafe(aElemAlign));
+  }
+  const Header* GetAutoArrayBufferUnsafe(size_t aElemAlign) const;
+
+  // Returns true if this is an AutoTArray and it currently uses the
+  // built-in buffer to store its elements.
+  bool UsesAutoArrayBuffer() const;
 
   // The array's elements (prefixed with a Header).  This pointer is never
   // null.  If the array is empty, then this will point to sEmptyTArrayHeader.
@@ -1026,10 +1067,11 @@ class nsTArray_Impl
   template <typename Allocator>
   explicit nsTArray_Impl(nsTArray_Impl<E, Allocator>&& aOther) noexcept {
     // We cannot be a (Copyable)AutoTArray because that overrides this ctor.
-    MOZ_ASSERT(!this->UsesAutoArrayBuffer());
+    MOZ_ASSERT(!this->IsAutoArray());
 
     // This does not use SwapArrayElements because that's unnecessarily complex.
-    this->MoveConstructNonAutoArray(aOther, sizeof(value_type));
+    this->MoveConstructNonAutoArray(aOther, sizeof(value_type),
+                                    alignof(value_type));
   }
 
   // The array's copy-constructor performs a 'deep' copy of the given array.
@@ -1074,7 +1116,7 @@ class nsTArray_Impl
   self_type& operator=(self_type&& aOther) {
     if (this != &aOther) {
       Clear();
-      this->MoveInit(aOther, sizeof(value_type));
+      this->MoveInit(aOther, sizeof(value_type), alignof(value_type));
     }
     return *this;
   }
@@ -1120,7 +1162,7 @@ class nsTArray_Impl
   template <typename Allocator>
   self_type& operator=(nsTArray_Impl<E, Allocator>&& aOther) {
     Clear();
-    this->MoveInit(aOther, sizeof(value_type));
+    this->MoveInit(aOther, sizeof(value_type), alignof(value_type));
     return *this;
   }
 
@@ -1439,7 +1481,7 @@ class nsTArray_Impl
   template <class Allocator>
   void Assign(nsTArray_Impl<E, Allocator>&& aOther) {
     Clear();
-    this->MoveInit(aOther, sizeof(value_type));
+    this->MoveInit(aOther, sizeof(value_type), alignof(value_type));
   }
 
   // This method call the destructor on each element of the array, empties it,
@@ -1914,7 +1956,7 @@ class nsTArray_Impl
 
   void Clear() {
     ClearAndRetainStorage();
-    base_type::ShrinkCapacityToZero(sizeof(value_type));
+    base_type::ShrinkCapacityToZero(sizeof(value_type), alignof(value_type));
   }
 
   // This method removes elements based on the return value of the
@@ -1979,8 +2021,8 @@ class nsTArray_Impl
     // The only case this might fail were if someone called this with a
     // AutoTArray upcast to nsTArray_Impl, under the conditions mentioned in the
     // overload for AutoTArray below.
-    this->template SwapArrayElements<InfallibleAlloc>(aOther,
-                                                      sizeof(value_type));
+    this->template SwapArrayElements<InfallibleAlloc>(
+        aOther, sizeof(value_type), alignof(value_type));
   }
 
   template <size_t N>
@@ -1990,8 +2032,8 @@ class nsTArray_Impl
     // small inline sizes, and crash in the rare case of a small OOM error.
     static_assert(!std::is_same_v<Alloc, FallibleAlloc> ||
                   sizeof(E) * N <= 1024);
-    this->template SwapArrayElements<InfallibleAlloc>(aOther,
-                                                      sizeof(value_type));
+    this->template SwapArrayElements<InfallibleAlloc>(
+        aOther, sizeof(value_type), alignof(value_type));
   }
 
   template <class Allocator>
@@ -2000,8 +2042,8 @@ class nsTArray_Impl
     // Allocation might fail if Alloc==FallibleAlloc and
     // Allocator==InfallibleAlloc and aOther uses auto storage.
     return FallibleAlloc::Result(
-        this->template SwapArrayElements<FallibleAlloc>(aOther,
-                                                        sizeof(value_type)));
+        this->template SwapArrayElements<FallibleAlloc>(
+            aOther, sizeof(value_type), alignof(value_type)));
   }
 
  private:
@@ -2277,7 +2319,7 @@ class nsTArray_Impl
   template <typename ActualAlloc>
   value_type* InsertElementsAtInternal(index_type aIndex, size_type aCount) {
     if (!ActualAlloc::Successful(this->template InsertSlotsAt<ActualAlloc>(
-            aIndex, aCount, sizeof(value_type)))) {
+            aIndex, aCount, sizeof(value_type), alignof(value_type)))) {
       return nullptr;
     }
 
@@ -2320,7 +2362,7 @@ class nsTArray_Impl
   }
 
   // This method may be called to minimize the memory used by this array.
-  void Compact() { ShrinkCapacity(sizeof(value_type)); }
+  void Compact() { ShrinkCapacity(sizeof(value_type), alignof(value_type)); }
 
   //
   // Sorting
@@ -2464,8 +2506,8 @@ auto nsTArray_Impl<E, Alloc>::ReplaceElementsAtInternal(index_type aStart,
     return nullptr;
   }
   DestructRange(aStart, aCount);
-  this->template ShiftData<ActualAlloc>(aStart, aCount, aArrayLen,
-                                        sizeof(value_type));
+  this->template ShiftData<ActualAlloc>(
+      aStart, aCount, aArrayLen, sizeof(value_type), alignof(value_type));
   AssignRange(aStart, aArrayLen, aArray);
   return Elements() + aStart;
 }
@@ -2489,8 +2531,8 @@ template <typename E, class Alloc>
 void nsTArray_Impl<E, Alloc>::RemoveElementsAtUnsafe(index_type aStart,
                                                      size_type aCount) {
   DestructRange(aStart, aCount);
-  this->template ShiftData<InfallibleAlloc>(aStart, aCount, 0,
-                                            sizeof(value_type));
+  this->template ShiftData<InfallibleAlloc>(
+      aStart, aCount, 0, sizeof(value_type), alignof(value_type));
 }
 
 template <typename E, class Alloc>
@@ -2509,8 +2551,8 @@ void nsTArray_Impl<E, Alloc>::UnorderedRemoveElementsAt(index_type aStart,
   // replace them from the end. See the docs on the declaration of this
   // function.
   DestructRange(aStart, aCount);
-  this->template SwapFromEnd<InfallibleAlloc>(aStart, aCount,
-                                              sizeof(value_type));
+  this->template SwapFromEnd<InfallibleAlloc>(
+      aStart, aCount, sizeof(value_type), alignof(value_type));
 }
 
 template <typename E, class Alloc>
@@ -2553,7 +2595,7 @@ auto nsTArray_Impl<E, Alloc>::InsertElementsAtInternal(index_type aIndex,
                                                        const Item& aItem)
     -> value_type* {
   if (!ActualAlloc::Successful(this->template InsertSlotsAt<ActualAlloc>(
-          aIndex, aCount, sizeof(value_type)))) {
+          aIndex, aCount, sizeof(value_type), alignof(value_type)))) {
     return nullptr;
   }
 
@@ -2580,7 +2622,8 @@ auto nsTArray_Impl<E, Alloc>::InsertElementAtInternal(index_type aIndex)
           Length() + 1, sizeof(value_type)))) {
     return nullptr;
   }
-  this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(value_type));
+  this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(value_type),
+                                        alignof(value_type));
   value_type* elem = Elements() + aIndex;
   elem_traits::Construct(elem);
   return elem;
@@ -2600,7 +2643,8 @@ auto nsTArray_Impl<E, Alloc>::InsertElementAtInternal(index_type aIndex,
           Length() + 1, sizeof(value_type)))) {
     return nullptr;
   }
-  this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(value_type));
+  this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(value_type),
+                                        alignof(value_type));
   value_type* elem = Elements() + aIndex;
   elem_traits::Construct(elem, std::forward<Item>(aItem));
   return elem;
@@ -2631,8 +2675,8 @@ auto nsTArray_Impl<E, Alloc>::AppendElementsInternal(
   if (Length() == 0) {
     // XXX This might still be optimized. If aArray uses auto-storage but we
     // won't, we might better retain our storage if it's sufficiently large.
-    this->ShrinkCapacityToZero(sizeof(value_type));
-    this->MoveInit(aArray, sizeof(value_type));
+    this->ShrinkCapacityToZero(sizeof(value_type), alignof(value_type));
+    this->MoveInit(aArray, sizeof(value_type), alignof(value_type));
     return Elements();
   }
 
@@ -2645,7 +2689,8 @@ auto nsTArray_Impl<E, Alloc>::AppendElementsInternal(
   relocation_type::RelocateNonOverlappingRegion(
       Elements() + len, aArray.Elements(), otherLen, sizeof(value_type));
   this->IncrementLength(otherLen);
-  aArray.template ShiftData<ActualAlloc>(0, otherLen, 0, sizeof(value_type));
+  aArray.template ShiftData<ActualAlloc>(0, otherLen, 0, sizeof(value_type),
+                                         alignof(value_type));
   return Elements() + len;
 }
 
@@ -3010,18 +3055,18 @@ class MOZ_NON_MEMMOVABLE MOZ_GSL_OWNER AutoTArray : public nsTArray<E> {
 
   AutoTArray(self_type&& aOther) : nsTArray<E>() {
     Init();
-    this->MoveInit(aOther, sizeof(value_type));
+    this->MoveInit(aOther, sizeof(value_type), alignof(value_type));
   }
 
   explicit AutoTArray(base_type&& aOther) : mAlign() {
     Init();
-    this->MoveInit(aOther, sizeof(value_type));
+    this->MoveInit(aOther, sizeof(value_type), alignof(value_type));
   }
 
   template <typename Allocator>
   explicit AutoTArray(nsTArray_Impl<value_type, Allocator>&& aOther) {
     Init();
-    this->MoveInit(aOther, sizeof(value_type));
+    this->MoveInit(aOther, sizeof(value_type), alignof(value_type));
   }
 
   MOZ_IMPLICIT AutoTArray(std::initializer_list<E> aIL) : mAlign() {
@@ -3048,32 +3093,6 @@ class MOZ_NON_MEMMOVABLE MOZ_GSL_OWNER AutoTArray : public nsTArray<E> {
     return result;
   }
 
-  // Clears ourself, and ensures that we end up pointer to our auto-buffer
-  // again.
-  void Clear() {
-    base_type::Clear();
-    Init();
-  }
-
-  void Compact() {
-    if (base_type::HasEmptyHeader() || base_type::UsesAutoArrayBuffer()) {
-      return;
-    }
-    auto length = base_type::Length();
-    if (N >= length) {
-      // Switch back to our auto-buffer.
-      auto* header = reinterpret_cast<Header*>(&mAutoBuf);
-      base_type::relocation_type::RelocateNonOverlappingRegionWithHeader(
-          header, this->mHdr, length, sizeof(value_type));
-      header->mCapacity = N;
-      header->mIsAutoBuffer = true;
-      nsTArrayFallibleAllocator::Free(this->mHdr);
-      this->mHdr = header;
-      return;
-    }
-    base_type::Compact();
-  }
-
  private:
   // nsTArray_base casts itself as an nsAutoArrayBase in order to get a pointer
   // to mAutoBuf.
@@ -3089,7 +3108,11 @@ class MOZ_NON_MEMMOVABLE MOZ_GSL_OWNER AutoTArray : public nsTArray<E> {
     *phdr = reinterpret_cast<Header*>(&mAutoBuf);
     (*phdr)->mLength = 0;
     (*phdr)->mCapacity = N;
-    (*phdr)->mIsAutoBuffer = true;
+    (*phdr)->mIsAutoArray = 1;
+
+    MOZ_ASSERT(base_type::GetAutoArrayBuffer(alignof(value_type)) ==
+                   reinterpret_cast<Header*>(&mAutoBuf),
+               "GetAutoArrayBuffer needs to be fixed");
   }
 
   // Declare mAutoBuf aligned to the maximum of the header's alignment and
