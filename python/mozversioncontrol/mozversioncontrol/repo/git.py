@@ -638,6 +638,7 @@ class GitRepository(Repository):
                 "watchman is not installed. Please install `watchman` and "
                 "re-run `./mach vcs-setup` to enable faster git commands."
             )
+            return
 
         print("Ensuring watchman is properly configured...")
 
