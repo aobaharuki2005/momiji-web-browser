@@ -70,6 +70,8 @@
 }
 
 .button {
+  box-sizing: border-box;
+  width: 100%;
   align-items: center;
   justify-content: space-between;
   font-family: inherit;
