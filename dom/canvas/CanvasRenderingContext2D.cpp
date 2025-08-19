@@ -5517,7 +5517,8 @@ static already_AddRefed<SourceSurface> ExtractSubrect(SourceSurface* aSurface,
   gfx::Rect roundedOutSourceRect = *aSourceRect;
   roundedOutSourceRect.RoundOut();
   gfx::IntRect roundedOutSourceRectInt;
-  if (!roundedOutSourceRect.ToIntRect(&roundedOutSourceRectInt)) {
+  if (!roundedOutSourceRect.ToIntRect(&roundedOutSourceRectInt) ||
+      roundedOutSourceRectInt.IsEmpty()) {
     RefPtr<SourceSurface> surface(aSurface);
     return surface.forget();
   }
