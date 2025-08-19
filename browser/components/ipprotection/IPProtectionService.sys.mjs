@@ -7,7 +7,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  // eslint-disable-next-line mozilla/valid-lazy
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
   // eslint-disable-next-line mozilla/valid-lazy
   IPPChannelFilter: "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs",
@@ -15,6 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 import { SIGNIN_DATA } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
@@ -44,7 +44,11 @@ class IPProtectionServiceSingleton extends EventTarget {
   activatedAt = null;
   deactivatedAt = null;
   sessionLength = 0;
-  isSignedIn = false;
+  isSignedIn = null;
+  isEnrolled = null;
+  isEligible = null;
+
+  guardian = null;
 
   #inited = false;
   #hasWidget = false;
@@ -52,7 +56,11 @@ class IPProtectionServiceSingleton extends EventTarget {
   constructor() {
     super();
 
+    this.guardian = new lazy.GuardianClient();
+
     this.updateEnabled = this.#updateEnabled.bind(this);
+    this.updateSignInStatus = this.#updateSignInStatus.bind(this);
+    this.updateEligibility = this.#updateEligibility.bind(this);
   }
 
   /**
@@ -63,13 +71,12 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    this.updateSignInStatus();
-    this.addSignInStateObserver();
+    this.#addSignInStateObserver();
+    this.#addEligibilityListeners();
 
-    if (!this.#hasWidget) {
-      lazy.IPProtection.init();
-      this.#hasWidget = true;
-    }
+    this.#updateSignInStatus();
+    this.#updateEligibility();
+    this.#updateEnrollment();
 
     this.#inited = true;
   }
@@ -90,24 +97,27 @@ class IPProtectionServiceSingleton extends EventTarget {
       this.stop(false);
     }
 
-    this.isSignedIn = false;
+    this.#removeEligibilityListeners();
 
     this.#hasWidget = false;
     this.#inited = false;
   }
 
   /**
-   * Start the proxy if the user is signed in.
+   * Start the proxy if the user is eligible.
    *
    * TODO: Add logic to start the proxy connection.
    *
    * @param {boolean} userAction
    * True if started by user action, false if system action
    */
-  start(userAction = true) {
-    if (!this.isSignedIn) {
+  async start(userAction = true) {
+    let { isSignedIn, isEnrolled, isActive } = this;
+
+    if (!isSignedIn || !isEnrolled || isActive) {
       return;
     }
+
     this.isActive = true;
     this.activatedAt = Cu.now();
     this.dispatchEvent(
@@ -155,6 +165,41 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
+   * Checks if a user has signed in.
+   *
+   * @returns {boolean}
+   */
+  #isSignedIn() {
+    let { status } = lazy.UIState.get();
+    return status == lazy.UIState.STATUS_SIGNED_IN;
+  }
+
+  /**
+   * Checks if the user has enrolled with FxA to use the proxy.
+   *
+   * @returns {Promise<boolean>}
+   */
+  async #isEnrolled() {
+    if (!this.isSignedIn) {
+      return false;
+    }
+
+    let isEnrolled = await this.guardian.isLinkedToGuardian();
+
+    return isEnrolled;
+  }
+
+  /**
+   * Check if this device is in the experiment with a variant branch.
+   *
+   * @returns {boolean}
+   */
+  #isEligible() {
+    let inExperiment = lazy.NimbusFeatures.ipProtection.getEnrollmentMetadata();
+    return inExperiment?.branch && inExperiment.branch !== "control";
+  }
+
+  /**
    * Checks whether the feature pref is enabled and
    * will init or uninit the IPProtectionService instance.
    */
@@ -166,10 +211,18 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
   }
 
+  #addEligibilityListeners() {
+    lazy.NimbusFeatures.ipProtection.onUpdate(this.updateEligibility);
+  }
+
+  #removeEligibilityListeners() {
+    lazy.NimbusFeatures.ipProtection.offUpdate(this.updateEligibility);
+  }
+
   /**
    * Adds an observer for the FxA sign-in state.
    */
-  addSignInStateObserver() {
+  #addSignInStateObserver() {
     let manager = this;
     this.fxaObserver = {
       QueryInterface: ChromeUtils.generateQI([
@@ -188,13 +241,26 @@ class IPProtectionServiceSingleton extends EventTarget {
   /**
    * Updates the `isSignedIn` property based on the UIState status.
    *
+   * If the status has changed, will update if the new user is enrolled
+   * or clear enrollment.
+   *
    * Dispatch events when the sign-in state changes:
    *  - "IPProtectionService:SignedIn"
    *  - "IPProtectionService:SignedOut"
    */
-  updateSignInStatus() {
-    let { status } = lazy.UIState.get();
-    this.isSignedIn = status == lazy.UIState.STATUS_SIGNED_IN;
+  async #updateSignInStatus() {
+    let isSignedIn = this.#isSignedIn();
+
+    if (this.isSignedIn == isSignedIn) {
+      return;
+    }
+
+    this.isSignedIn = isSignedIn;
+
+    if (!this.#inited) {
+      return;
+    }
+
     if (this.isSignedIn) {
       this.dispatchEvent(
         new CustomEvent("IPProtectionService:SignedIn", {
@@ -202,6 +268,7 @@ class IPProtectionServiceSingleton extends EventTarget {
           composed: true,
         })
       );
+      await this.#updateEnrollment();
     } else {
       this.dispatchEvent(
         new CustomEvent("IPProtectionService:SignedOut", {
@@ -209,7 +276,89 @@ class IPProtectionServiceSingleton extends EventTarget {
           composed: true,
         })
       );
+      this.isEnrolled = false;
     }
+  }
+
+  /**
+   * Checks if a device is enrolled in an experiment that
+   * allow using the VPN and if so adds the widget.
+   *
+   * If a user is signed in, checks if they are or can be
+   * enrolled.
+   *
+   * @returns {Promise<void>}
+   */
+  async #updateEligibility() {
+    this.isEligible = this.#isEligible();
+
+    if (!this.isEligible) {
+      return;
+    }
+
+    if (!this.#hasWidget) {
+      lazy.IPProtection.init();
+      this.#hasWidget = true;
+    }
+
+    if (this.#inited && this.isSignedIn) {
+      this.#updateEnrollment();
+    }
+  }
+
+  /**
+   * Checks if a users FxA account has been enrolled to use the proxy and
+   * updates the enrolled pref.
+   *
+   * If no user is signed in, the enrolled pref will set to false.
+   *
+   * If the user is not enrolled but meets the other conditions to use
+   * the VPN they will be enrolled now.
+   *
+   * @returns {Promise<void>}
+   */
+  async #updateEnrollment() {
+    this.isEnrolled = await this.#isEnrolled();
+
+    if (this.isEnrolled && !this.#hasWidget) {
+      lazy.IPProtection.init();
+      this.#hasWidget = true;
+      return;
+    }
+
+    if (
+      !this.isEnrolled &&
+      this.#hasWidget &&
+      this.isEligible &&
+      this.isSignedIn
+    ) {
+      this.isEnrolled = await this.#enroll();
+    }
+  }
+
+  /**
+   * Enrolls a users FxA account to use the proxy if they are eligible and not already
+   * enrolled then updates the enrollment status.
+   *
+   * If they are enrolled, updates the enrollment status.
+   *
+   * If the user is already enrolled, this will do nothing.
+   *
+   * @returns {Promise<boolean | null>}
+   */
+  async #enroll() {
+    let { isSignedIn, isEnrolled, isEligible } = this;
+    if (!isSignedIn) {
+      return null;
+    }
+
+    if (isEnrolled || !isEligible) {
+      return null;
+    }
+
+    let enrollment = await this.guardian.enroll();
+    this.isEnrolled = enrollment?.ok;
+    return this.isEnrolled;
   }
 
   async startLoginFlow(browser) {

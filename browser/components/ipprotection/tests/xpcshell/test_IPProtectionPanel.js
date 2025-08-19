@@ -34,6 +34,14 @@ class FakeIPProtectionPanelElement {
   }
 }
 
+add_setup(async function () {
+  IPProtectionService.init();
+
+  registerCleanupFunction(async () => {
+    IPProtectionService.uninit();
+  });
+});
+
 /**
  * Tests that we can set a state and pass it to a fake element.
  */
@@ -119,6 +127,9 @@ add_task(async function test_IPProtectionPanel_signedIn() {
   sandbox.stub(UIState, "get").returns({
     status: UIState.STATUS_SIGNED_IN,
   });
+  sandbox
+    .stub(IPProtectionService.guardian, "isLinkedToGuardian")
+    .returns(false);
 
   let ipProtectionPanel = new IPProtectionPanel();
   let fakeElement = new FakeIPProtectionPanelElement();
@@ -203,7 +214,6 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
   fakeElement.isConnected = true;
 
   // Set to signed in
-  IPProtectionService.isSignedIn = true;
   ipProtectionPanel.setState({
     isSignedIn: true,
   });
@@ -213,6 +223,9 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
     IPProtectionService,
     "IPProtectionService:Started"
   );
+
+  IPProtectionService.isSignedIn = true;
+  IPProtectionService.isEnrolled = true;
 
   IPProtectionService.start();
 
