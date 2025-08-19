@@ -10,20 +10,10 @@ const { UIState } = ChromeUtils.importESModule(
   "resource://services-sync/UIState.sys.mjs"
 );
 
-add_setup(async function () {
-  IPProtectionService.uninit();
-
-  registerCleanupFunction(async () => {
-    IPProtectionService.init();
-  });
-});
-
 /**
  * Tests that starting the service gets a started event.
  */
 add_task(async function test_IPProtectionService_start() {
-  IPProtectionService.init();
-
   Assert.ok(
     !IPProtectionService.isActive,
     "IP Protection service should not be active initially"
@@ -36,7 +26,6 @@ add_task(async function test_IPProtectionService_start() {
 
   // Simulate signing in to the account
   IPProtectionService.isSignedIn = true;
-  IPProtectionService.isEnrolled = true;
   IPProtectionService.start();
 
   let startedEvent = await startedEventPromise;
@@ -55,16 +44,12 @@ add_task(async function test_IPProtectionService_start() {
     IPProtectionService.activatedAt,
     "Event should contain the activation timestamp"
   );
-
-  IPProtectionService.uninit();
 });
 
 /**
  * Tests that stopping the service gets start and stop events.
  */
 add_task(async function test_IPProtectionService_stop() {
-  IPProtectionService.init();
-
   let startedEventPromise = waitForEvent(
     IPProtectionService,
     "IPProtectionService:Started"
@@ -72,7 +57,6 @@ add_task(async function test_IPProtectionService_stop() {
 
   // Simulate signing in to the account
   IPProtectionService.isSignedIn = true;
-  IPProtectionService.isEnrolled = true;
   IPProtectionService.start();
 
   await startedEventPromise;
@@ -108,15 +92,10 @@ add_task(async function test_IPProtectionService_stop() {
  * Tests that a signed in status sends a SignedIn event.
  */
 add_task(async function test_IPProtectionService_updateSignInStatus_signedIn() {
-  IPProtectionService.init();
-
   let sandbox = sinon.createSandbox();
   sandbox.stub(UIState, "get").returns({
     status: UIState.STATUS_SIGNED_IN,
   });
-  sandbox
-    .stub(IPProtectionService.guardian, "isLinkedToGuardian")
-    .returns(false);
 
   let signedInEventPromise = waitForEvent(
     IPProtectionService,
@@ -129,7 +108,6 @@ add_task(async function test_IPProtectionService_updateSignInStatus_signedIn() {
 
   Assert.ok(IPProtectionService.isSignedIn, "Should be signed in after update");
 
-  IPProtectionService.uninit();
   sandbox.restore();
 });
 
@@ -138,17 +116,10 @@ add_task(async function test_IPProtectionService_updateSignInStatus_signedIn() {
  */
 add_task(
   async function test_IPProtectionService_updateSignInStatus_signedOut() {
-    IPProtectionService.init();
-
-    IPProtectionService.isSignedIn = true;
-
     let sandbox = sinon.createSandbox();
     sandbox.stub(UIState, "get").returns({
       status: UIState.STATUS_NOT_CONFIGURED,
     });
-    sandbox
-      .stub(IPProtectionService.guardian, "isLinkedToGuardian")
-      .returns(true);
 
     let signedOutEventPromise = waitForEvent(
       IPProtectionService,
@@ -164,7 +135,6 @@ add_task(
       "Should not be signed in after update"
     );
 
-    IPProtectionService.uninit();
     sandbox.restore();
   }
 );

@@ -47,11 +47,6 @@ add_task(async function user_toggle_on_and_off() {
 
   Assert.ok(content, "Panel content should be present");
 
-  setupService({
-    isSignedIn: true,
-    isEnrolled: true,
-  });
-  IPProtectionService.isEnrolled = true;
   content.state.isSignedIn = true;
   content.requestUpdate();
   await content.updateComplete;
@@ -90,8 +85,6 @@ add_task(async function user_toggle_on_and_off() {
   Assert.equal(toggledEvents[1].extra.userAction, "true");
 
   Services.fog.testResetFOG();
-  IPProtectionService.isEnrolled = false;
-  cleanupService();
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
@@ -125,12 +118,6 @@ add_task(async function toggle_off_on_shutdown() {
 
   let content = panelView.querySelector(IPProtectionPanel.CONTENT_TAGNAME);
   Assert.ok(content, "Panel content should be present");
-
-  setupService({
-    isSignedIn: true,
-    isEnrolled: true,
-  });
-  IPProtectionService.isEnrolled = true;
   content.state.isSignedIn = true;
   content.requestUpdate();
   await content.updateComplete;
@@ -166,7 +153,6 @@ add_task(async function toggle_off_on_shutdown() {
 
   Services.fog.testResetFOG();
   // Re-initialize to avoid breaking tests that follow
-  cleanupService();
   lazy.IPProtectionService.init();
   let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(

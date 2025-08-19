@@ -3,9 +3,11 @@ support-files = [
   "head.js",
 ]
 
-["browser_IPPChannelFilter.js"]
+prefs = [
+  "browser.ipProtection.enabled=true",
+]
 
-["browser_IPProtectionService.js"]
+["browser_IPPChannelFilter.js"]
 
 ["browser_guardian_client.js"]
 
