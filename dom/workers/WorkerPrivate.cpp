@@ -2857,12 +2857,12 @@ WorkerPrivate::WorkerPrivate(
           chromeRealmOptions, UsesSystemPrincipal(), mIsSecureContext,
           ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC),
           ShouldResistFingerprinting(RFPTarget::JSMathFdlibm),
-          ShouldResistFingerprinting(RFPTarget::JSLocale));
+          ShouldResistFingerprinting(RFPTarget::JSLocale), VoidCString());
       xpc::InitGlobalObjectOptions(
           contentRealmOptions, UsesSystemPrincipal(), mIsSecureContext,
           ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC),
           ShouldResistFingerprinting(RFPTarget::JSMathFdlibm),
-          ShouldResistFingerprinting(RFPTarget::JSLocale));
+          ShouldResistFingerprinting(RFPTarget::JSLocale), VoidCString());
 
       // Check if it's a privileged addon executing in order to allow access
       // to SharedArrayBuffer

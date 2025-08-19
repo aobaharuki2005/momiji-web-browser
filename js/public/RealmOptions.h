@@ -299,11 +299,34 @@ class JS_PUBLIC_API RealmBehaviors {
     return *this;
   }
 
+  RefPtr<LocaleString> localeOverride() const { return localeOverride_; }
+  RealmBehaviors& setLocaleOverride(const char* locale) {
+    if (locale) {
+      const size_t size = strlen(locale) + 1;
+
+      js::AutoEnterOOMUnsafeRegion oomUnsafe;
+      char* memoryPtr = js_pod_malloc<char>(sizeof(LocaleString) + size);
+      if (!memoryPtr) {
+        oomUnsafe.crash("RealmBehaviors::setLocaleOverride");
+      }
+
+      char* localePtr = memoryPtr + sizeof(LocaleString);
+      memcpy(localePtr, locale, size);
+
+      localeOverride_ = new (memoryPtr) LocaleString(localePtr);
+    } else {
+      localeOverride_ = nullptr;
+    }
+
+    return *this;
+  };
+
  private:
   mozilla::Maybe<RTPCallerTypeToken> rtpCallerType;
   bool discardSource_ = false;
   bool clampAndJitterTime_ = true;
   bool isNonLive_ = false;
+  RefPtr<LocaleString> localeOverride_;
 };
 
 /**
@@ -346,6 +369,9 @@ extern JS_PUBLIC_API const RealmCreationOptions& RealmCreationOptionsRef(
 extern JS_PUBLIC_API const RealmBehaviors& RealmBehaviorsRef(Realm* realm);
 
 extern JS_PUBLIC_API const RealmBehaviors& RealmBehaviorsRef(JSContext* cx);
+
+extern JS_PUBLIC_API void SetRealmLocaleOverride(Realm* realm,
+                                                 const char* locale);
 
 extern JS_PUBLIC_API void SetRealmNonLive(Realm* realm);
 

@@ -270,6 +270,9 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetTopInnerSizeForRFP(GetTopInnerSizeForRFP());
   txn.SetIPAddressSpace(GetIPAddressSpace());
 
+  // Reapply language override to update the corresponding realm.
+  txn.SetLanguageOverride(GetLanguageOverride());
+
   // Propagate some settings on BrowsingContext replacement so they're not lost
   // on bfcached navigations. These are important for GeckoView (see bug
   // 1781936).

@@ -1803,6 +1803,10 @@ const JS::RealmBehaviors& JS::RealmBehaviorsRef(JSContext* cx) {
   return cx->realm()->behaviors();
 }
 
+void JS::SetRealmLocaleOverride(Realm* realm, const char* locale) {
+  realm->setLocaleOverride(locale);
+}
+
 void JS::SetRealmNonLive(Realm* realm) { realm->setNonLive(); }
 
 void JS::SetRealmReduceTimerPrecisionCallerType(Realm* realm,

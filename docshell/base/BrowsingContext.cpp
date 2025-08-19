@@ -3092,31 +3092,33 @@ void BrowsingContext::DidSet(FieldIndex<IDX_ForcedColorsOverride>,
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_LanguageOverride>,
-                             nsString&& aOldValue) {
+                             nsCString&& aOldValue) {
   MOZ_ASSERT(IsTop());
+
+  const nsCString& languageOverride = GetLanguageOverride();
 
   PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
     RefPtr<WindowContext> windowContext =
         aBrowsingContext->GetCurrentWindowContext();
 
     if (nsCOMPtr<nsPIDOMWindowInner> window = windowContext->GetInnerWindow()) {
-      AutoJSAPI jsapi;
-      if (jsapi.Init(window)) {
-        JSContext* context = jsapi.cx();
+      JSObject* global = nsGlobalWindowInner::Cast(window)->GetGlobalJSObject();
+      JS::Realm* realm = JS::GetObjectRealmOrNull(global);
 
-        if (mDefaultLocale == nullptr) {
+      if (mDefaultLocale == nullptr) {
+        AutoJSAPI jsapi;
+        if (jsapi.Init(window)) {
+          JSContext* context = jsapi.cx();
           mDefaultLocale = JS_GetDefaultLocale(context);
         }
+      }
 
-        JSRuntime* runtime = JS_GetRuntime(context);
-        if (GetLanguageOverride().IsEmpty()) {
-          JS_SetDefaultLocale(runtime, mDefaultLocale.get());
-
-          mDefaultLocale = nullptr;
-        } else {
-          JS_SetDefaultLocale(
-              runtime, NS_ConvertUTF16toUTF8(GetLanguageOverride()).get());
-        }
+      if (languageOverride.IsEmpty()) {
+        JS::SetRealmLocaleOverride(realm, mDefaultLocale.get());
+        mDefaultLocale = nullptr;
+      } else {
+        JS::SetRealmLocaleOverride(realm,
+                                   PromiseFlatCString(languageOverride).get());
       }
     }
   });

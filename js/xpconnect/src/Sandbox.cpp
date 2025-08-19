@@ -1299,6 +1299,19 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
     realmOptions.behaviors().setClampAndJitterTime(false);
   }
 
+  if (obj) {
+    nsGlobalWindowInner* window =
+        WindowOrNull(js::UncheckedUnwrap(obj->GetGlobalJSObject(), false));
+    if (window) {
+      const nsCString& localeOverride =
+          window->GetBrowsingContext()->Top()->GetLanguageOverride();
+      if (!localeOverride.IsEmpty()) {
+        realmOptions.behaviors().setLocaleOverride(
+            PromiseFlatCString(localeOverride).get());
+      }
+    }
+  }
+
   const JSClass* clasp = &SandboxClass;
 
   RootedObject sandbox(

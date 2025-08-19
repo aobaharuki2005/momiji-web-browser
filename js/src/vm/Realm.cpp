@@ -530,6 +530,10 @@ void Realm::clearScriptCounts() { zone()->clearScriptCounts(this); }
 void Realm::clearScriptLCov() { zone()->clearScriptLCov(this); }
 
 const char* Realm::getLocale() const {
+  if (RefPtr<LocaleString> locale = behaviors_.localeOverride()) {
+    return locale->chars();
+  }
+
   if (RefPtr<LocaleString> locale = creationOptions_.locale()) {
     return locale->chars();
   }

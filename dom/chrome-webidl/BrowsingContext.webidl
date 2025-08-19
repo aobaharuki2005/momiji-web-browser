@@ -220,7 +220,8 @@ interface BrowsingContext {
   // Enable media query medium override, for DevTools.
   [SetterThrows] attribute DOMString mediumOverride;
 
-  [SetterThrows] attribute DOMString languageOverride;
+  // Language emulation for WebDriver BiDi and DevTools.
+  [SetterThrows] attribute UTF8String languageOverride;
 
   // Color-scheme simulation, for DevTools.
   [SetterThrows] attribute PrefersColorSchemeOverride prefersColorSchemeOverride;

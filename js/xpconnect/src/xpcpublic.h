@@ -715,7 +715,8 @@ void SetPrefableCompileOptions(JS::PrefableCompileOptions& options);
 void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
                              bool aIsSystemPrincipal, bool aSecureContext,
                              bool aForceUTC, bool aAlwaysUseFdlibm,
-                             bool aLocaleEnUS);
+                             bool aLocaleEnUS,
+                             const nsACString& aLanguageOverride);
 
 class ErrorBase {
  public:
