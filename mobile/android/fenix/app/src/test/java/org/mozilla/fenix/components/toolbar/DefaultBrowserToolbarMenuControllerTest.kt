@@ -567,33 +567,6 @@ class DefaultBrowserToolbarMenuControllerTest {
     }
 
     @Test
-    fun `GIVEN a shortcut page is open WHEN remove from shortcuts is pressed THEN show snackbar`() = runTestOnMain {
-        val snackbarMessage = "Site removed"
-        val item = ToolbarMenu.Item.RemoveFromTopSites
-        val removePinnedSiteUseCase: TopSitesUseCases.RemoveTopSiteUseCase =
-            mockk(relaxed = true)
-        val topSite: TopSite = mockk()
-        every { topSite.url } returns selectedTab.content.url
-        coEvery { pinnedSiteStorage.getPinnedSites() } returns listOf(topSite)
-        every { topSitesUseCase.removeTopSites } returns removePinnedSiteUseCase
-        every {
-            snackbarParent.context.getString(R.string.snackbar_top_site_removed)
-        } returns snackbarMessage
-
-        val controller = createController(scope = this, store = browserStore)
-        assertNull(Events.browserMenuAction.testGetValue())
-
-        controller.handleToolbarItemInteraction(item)
-
-        assertNotNull(Events.browserMenuAction.testGetValue())
-        val snapshot = Events.browserMenuAction.testGetValue()!!
-        assertEquals(1, snapshot.size)
-        assertEquals("remove_from_top_sites", snapshot.single().extra?.getValue("item"))
-
-        verify { appStore.dispatch(ShortcutAction.ShortcutRemoved) }
-    }
-
-    @Test
     fun `WHEN addon extensions menu item is pressed THEN navigate to addons manager`() = runTest {
         val item = ToolbarMenu.Item.AddonsManager
 

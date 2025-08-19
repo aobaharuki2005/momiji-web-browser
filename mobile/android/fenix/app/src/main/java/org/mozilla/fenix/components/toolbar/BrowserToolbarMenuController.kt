@@ -416,8 +416,6 @@ class DefaultBrowserToolbarMenuController(
                             }
                         }.join()
                     }
-
-                    appStore.dispatch(ShortcutAction.ShortcutRemoved)
                 }
             }
             is ToolbarMenu.Item.ReportBrokenSite -> {

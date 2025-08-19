@@ -403,11 +403,6 @@ sealed class AppAction : Action {
          * [ShortcutAction] dispatched when a shortcut is added.
          */
         data object ShortcutAdded : ShortcutAction()
-
-        /**
-         * [ShortcutAction] dispatched when a shortcut is removed.
-         */
-        data object ShortcutRemoved : ShortcutAction()
     }
 
     /**

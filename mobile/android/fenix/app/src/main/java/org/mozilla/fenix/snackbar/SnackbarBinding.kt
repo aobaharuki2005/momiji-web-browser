@@ -109,14 +109,6 @@ class SnackbarBinding(
                         appStore.dispatch(SnackbarAction.SnackbarShown)
                     }
 
-                    is SnackbarState.ShortcutRemoved -> {
-                        snackbarDelegate.show(
-                            text = R.string.snackbar_top_site_removed,
-                            duration = Snackbar.LENGTH_LONG,
-                        )
-                        appStore.dispatch(SnackbarAction.SnackbarShown)
-                    }
-
                     is SnackbarState.DeletingBrowserDataInProgress -> {
                         snackbarDelegate.show(
                             text = R.string.deleting_browsing_data_in_progress,

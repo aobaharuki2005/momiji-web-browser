@@ -36,11 +36,6 @@ sealed class SnackbarState {
     data object ShortcutAdded : SnackbarState()
 
     /**
-     * Display a snackbar of the removed shortcut.
-     */
-    data object ShortcutRemoved : SnackbarState()
-
-    /**
      * Display a snackbar when deleting browsing data before quitting.
      */
     data object DeletingBrowserDataInProgress : SnackbarState()

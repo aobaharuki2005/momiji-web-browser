@@ -1912,7 +1912,7 @@
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">UNDO</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">Site removed</string>
+    <string name="snackbar_top_site_removed" moz:removedIn="144" tools:ignore="UnusedResources">Site removed</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         %1$s is the name of the app (for example "Firefox"), %2$s is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Allow %1$s to open %2$s</string>

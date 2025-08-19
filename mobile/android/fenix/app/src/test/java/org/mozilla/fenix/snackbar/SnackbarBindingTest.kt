@@ -65,7 +65,6 @@ import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.ShareTabsFai
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.ShareToAppFailed
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.SharedTabsSuccessfully
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.ShortcutAdded
-import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.ShortcutRemoved
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.SiteDataCleared
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.TranslationInProgress
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.UserAccountAuthenticated
@@ -266,24 +265,6 @@ class SnackbarBindingTest {
         assertEquals(None(ShortcutAdded), appStore.state.snackbarState)
         verify(snackbarDelegate).show(
             text = R.string.snackbar_added_to_shortcuts,
-            duration = LENGTH_LONG,
-            isError = false,
-        )
-    }
-
-    @Test
-    fun `WHEN the shortcut removed state action is dispatched THEN display the appropriate snackbar`() = runTestOnMain {
-        val binding = buildSnackbarBinding()
-        binding.start()
-
-        appStore.dispatch(
-            AppAction.ShortcutAction.ShortcutRemoved,
-        )
-        waitForStoreToSettle()
-
-        assertEquals(None(ShortcutRemoved), appStore.state.snackbarState)
-        verify(snackbarDelegate).show(
-            text = R.string.snackbar_top_site_removed,
             duration = LENGTH_LONG,
             isError = false,
         )

@@ -374,7 +374,7 @@ class MainMenuTestCompose : TestSetup() {
         }.openThreeDotMenu(composeTestRule) {
             openMoreMenu()
         }.clickRemoveFromShortcutsButton {
-            verifySnackBarText(getStringResource(R.string.snackbar_top_site_removed))
+            composeTestRule.waitForIdle()
         }.goToHomescreen(composeTestRule) {
             verifyNotExistingTopSiteItem(composeTestRule, testPage.title)
         }
