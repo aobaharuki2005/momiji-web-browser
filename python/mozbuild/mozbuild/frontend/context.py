@@ -1689,7 +1689,7 @@ VARIABLES = {
         """,
     ),
     "MOZ_SRC_FILES": (
-        ContextDerivedTypedList(SourcePath),
+        ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList),
         list,
         """This variable contains a list of files that need to be accessible
         under the "moz-src" protocol. They are copied to the moz-src portion
