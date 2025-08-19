@@ -2283,7 +2283,8 @@ var SidebarController = {
       document.addEventListener("popupshown", this);
       document.addEventListener("popuphidden", this);
       // Reset user-preferred height
-      this.sidebarMain.buttonGroup.style.height = this._state.launcherExpanded
+      this.sidebarMain.buttonsWrapper.style.height = this._state
+        .launcherExpanded
         ? ""
         : "0";
     } else {

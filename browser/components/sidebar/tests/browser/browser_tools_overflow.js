@@ -56,7 +56,7 @@ async function mouseMoveInChunksVertical(el, deltaY, numberOfChunks) {
 }
 
 function getToolsHeight({ SidebarController } = window) {
-  return SidebarController.sidebarMain.buttonGroup.clientHeight;
+  return SidebarController.sidebarMain.buttonsWrapper.clientHeight;
 }
 
 async function resetToolsHeight() {
@@ -66,7 +66,7 @@ async function resetToolsHeight() {
   await SidebarController.sidebarMain.updateComplete;
   await SidebarController.waitUntilStable();
   await BrowserTestUtils.waitForMutationCondition(
-    SidebarController.sidebarMain.buttonGroup,
+    SidebarController.sidebarMain.buttonsWrapper,
     { attributes: true, attributeFilter: ["overflowing"] },
     () => !SidebarController.sidebarMain.shouldShowOverflowButton
   );
@@ -96,7 +96,7 @@ add_task(async function test_resize_of_tools() {
   await SidebarController.sidebarMain.updateComplete;
   await SidebarController.waitUntilStable();
   await BrowserTestUtils.waitForMutationCondition(
-    SidebarController.sidebarMain.buttonGroup,
+    SidebarController.sidebarMain.buttonsWrapper,
     { attributes: true, attributeFilter: ["overflowing"] },
     () => SidebarController.sidebarMain.shouldShowOverflowButton
   );
@@ -145,7 +145,7 @@ add_task(async function test_overflow_menu() {
   await SidebarController.sidebarMain.updateComplete;
   await SidebarController.waitUntilStable();
   await BrowserTestUtils.waitForMutationCondition(
-    SidebarController.sidebarMain.buttonGroup,
+    SidebarController.sidebarMain.buttonsWrapper,
     { attributes: true, attributeFilter: ["overflowing"] },
     () => SidebarController.sidebarMain.shouldShowOverflowButton
   );
@@ -217,7 +217,7 @@ add_task(async function test_overflow_menu_with_keyboard() {
   await SidebarController.sidebarMain.updateComplete;
   await SidebarController.waitUntilStable();
   await BrowserTestUtils.waitForMutationCondition(
-    SidebarController.sidebarMain.buttonGroup,
+    SidebarController.sidebarMain.buttonsWrapper,
     { attributes: true, attributeFilter: ["overflowing"] },
     () => SidebarController.sidebarMain.shouldShowOverflowButton
   );
@@ -299,9 +299,7 @@ add_task(async function test_tools_overflow() {
   sidebar.expanded = true;
   await sidebar.updateComplete;
 
-  let toolsAndExtensionsButtonGroup = sidebar.shadowRoot.querySelector(
-    ".tools-and-extensions"
-  );
+  let toolsAndExtensionsButtonGroup = sidebar.buttonGroup;
   Assert.strictEqual(
     toolsAndExtensionsButtonGroup.getAttribute("orientation"),
     "horizontal",
