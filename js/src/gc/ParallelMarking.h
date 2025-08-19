@@ -39,15 +39,18 @@ using ParallelTaskBitset = mozilla::BitSet<MaxParallelWorkers, uint32_t>;
 // tasks with enough work may donate work to a waiting task and resume it.
 class MOZ_STACK_CLASS ParallelMarker {
  public:
-  explicit ParallelMarker(GCRuntime* gc);
+  static bool mark(GCRuntime* gc, const JS::SliceBudget& sliceBudget);
 
-  bool mark(const JS::SliceBudget& sliceBudget);
+  explicit ParallelMarker(GCRuntime* gc, MarkColor color);
 
   bool hasWaitingTasks() { return waitingTaskCount != 0; }
   void donateWorkFrom(GCMarker* src);
 
  private:
-  bool markOneColor(MarkColor color, const JS::SliceBudget& sliceBudget);
+  static bool markOneColor(GCRuntime* gc, MarkColor color,
+                           const JS::SliceBudget& sliceBudget);
+
+  bool mark(const JS::SliceBudget& sliceBudget);
 
   bool hasWork(MarkColor color) const;
 
@@ -81,6 +84,8 @@ class MOZ_STACK_CLASS ParallelMarker {
   AtomicCount waitingTaskCount;
 
   HelperThreadLockData<ParallelTaskBitset> activeTasks;
+
+  const MarkColor color;
 };
 
 // A helper thread task that performs parallel marking.

@@ -3314,8 +3314,7 @@ IncrementalProgress GCRuntime::markUntilBudgetExhausted(
     MOZ_ASSERT(reportTime);
     MOZ_ASSERT(!isBackgroundMarking());
 
-    ParallelMarker pm(this);
-    if (!pm.mark(sliceBudget)) {
+    if (!ParallelMarker::mark(this, sliceBudget)) {
       return NotFinished;
     }
 

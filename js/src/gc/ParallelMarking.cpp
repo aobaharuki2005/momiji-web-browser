@@ -31,22 +31,12 @@ class AutoAddTimeDuration {
   ~AutoAddTimeDuration() { result_ += TimeSince(start_); }
 };
 
-ParallelMarker::ParallelMarker(GCRuntime* gc) : gc(gc) {}
-
-size_t ParallelMarker::workerCount() const { return gc->markers.length(); }
-
-bool ParallelMarker::mark(const SliceBudget& sliceBudget) {
-  MOZ_ASSERT(workerCount() <= gc->getMaxParallelThreads());
-
-  if (markOneColor(MarkColor::Black, sliceBudget) == NotFinished) {
+/* static */
+bool ParallelMarker::mark(GCRuntime* gc, const SliceBudget& sliceBudget) {
+  if (!markOneColor(gc, MarkColor::Black, sliceBudget) ||
+      !markOneColor(gc, MarkColor::Gray, sliceBudget)) {
     return false;
   }
-  MOZ_ASSERT(!hasWork(MarkColor::Black));
-
-  if (markOneColor(MarkColor::Gray, sliceBudget) == NotFinished) {
-    return false;
-  }
-  MOZ_ASSERT(!hasWork(MarkColor::Gray));
 
   // Handle any delayed marking, which is not performed in parallel.
   if (gc->hasDelayedMarking()) {
@@ -56,9 +46,24 @@ bool ParallelMarker::mark(const SliceBudget& sliceBudget) {
   return true;
 }
 
-bool ParallelMarker::markOneColor(MarkColor color,
+/* static */
+bool ParallelMarker::markOneColor(GCRuntime* gc, MarkColor color,
                                   const SliceBudget& sliceBudget) {
-  // Run a marking slice and return whether the stack is now empty.
+  ParallelMarker pm(gc, color);
+  return pm.mark(sliceBudget);
+}
+
+ParallelMarker::ParallelMarker(GCRuntime* gc, MarkColor color)
+    : gc(gc), color(color) {
+  // There should always be enough parallel tasks to run our marking work.
+  MOZ_ASSERT(workerCount() <= gc->getMaxParallelThreads());
+}
+
+size_t ParallelMarker::workerCount() const { return gc->markers.length(); }
+
+bool ParallelMarker::mark(const SliceBudget& sliceBudget) {
+  // Run a marking slice for a single color and return whether the stack is now
+  // empty.
 
   if (!hasWork(color)) {
     return true;
@@ -92,9 +97,6 @@ bool ParallelMarker::markOneColor(MarkColor color,
     }
   }
 
-  // There should always be enough parallel tasks to run our marking work.
-  MOZ_RELEASE_ASSERT(gc->maxParallelThreads >= workerCount());
-
   // Run the parallel tasks, using the main thread for the first one.
   for (size_t i = 1; i < workerCount(); i++) {
     ParallelMarkTask& task = *tasks[i];
@@ -106,11 +108,9 @@ bool ParallelMarker::markOneColor(MarkColor color,
     gc->joinTask(*tasks[i], lock);
   }
 
-#ifdef DEBUG
   MOZ_ASSERT(waitingTasks.ref().isEmpty());
   MOZ_ASSERT(waitingTaskCount == 0);
   MOZ_ASSERT(!hasActiveTasks(lock));
-#endif
 
   return !hasWork(color);
 }
