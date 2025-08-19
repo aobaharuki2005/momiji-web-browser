@@ -242,8 +242,6 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
 
     shaders.insert("ps_quad_textured", vec![base_prim_features.finish()]);
 
-    shaders.insert("ps_quad_gradient", vec![base_prim_features.finish()]);
-
     shaders.insert("ps_quad_radial_gradient", vec![base_prim_features.finish()]);
 
     shaders.insert("ps_quad_conic_gradient", vec![base_prim_features.finish()]);
@@ -260,3 +258,4 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
 
     shaders
 }
+

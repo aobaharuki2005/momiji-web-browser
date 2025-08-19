@@ -2150,18 +2150,6 @@ pub extern "C" fn wr_window_new(
         false
     };
 
-    let precise_radial_gradients = if software {
-        static_prefs::pref!("gfx.webrender.precise-radial-gradients-swgl")
-    } else {
-        static_prefs::pref!("gfx.webrender.precise-radial-gradients")
-    };
-
-    let precise_conic_gradients = if software {
-        static_prefs::pref!("gfx.webrender.precise-conic-gradients-swgl")
-    } else {
-        static_prefs::pref!("gfx.webrender.precise-conic-gradients")
-    };
-
     let opts = WebRenderOptions {
         enable_aa: true,
         enable_subpixel_aa,
@@ -2217,8 +2205,6 @@ pub extern "C" fn wr_window_new(
         low_quality_pinch_zoom,
         max_shared_surface_size,
         enable_dithering,
-        precise_radial_gradients,
-        precise_conic_gradients,
         ..Default::default()
     };
 
