@@ -102,6 +102,7 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
+import org.mozilla.fenix.bookmarks.BookmarksTestTag.BOOKMARK_TOOLBAR
 import org.mozilla.fenix.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_TITLE_TEXT_FIELD
 import org.mozilla.fenix.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_URL_TEXT_FIELD
 import org.mozilla.fenix.components.AppStore
@@ -586,6 +587,10 @@ private fun BookmarksListTopBar(
 
     Box {
         TopAppBar(
+            modifier = Modifier.semantics {
+                testTagsAsResourceId = true
+                testTag = BOOKMARK_TOOLBAR
+            },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = backgroundColor),
             title = {
                 Text(

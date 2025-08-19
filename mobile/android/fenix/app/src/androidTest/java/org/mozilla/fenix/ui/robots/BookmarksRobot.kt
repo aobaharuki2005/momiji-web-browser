@@ -4,8 +4,9 @@ import android.util.Log
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
-import androidx.compose.ui.test.hasAnySibling
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.longClick
@@ -19,6 +20,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import org.mozilla.fenix.R
 import org.mozilla.fenix.bookmarks.BookmarksTestTag.ADD_BOOKMARK_FOLDER_NAME_TEXT_FIELD
+import org.mozilla.fenix.bookmarks.BookmarksTestTag.BOOKMARK_TOOLBAR
 import org.mozilla.fenix.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_TITLE_TEXT_FIELD
 import org.mozilla.fenix.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_URL_TEXT_FIELD
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
@@ -31,9 +33,10 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
     @OptIn(ExperimentalTestApi::class)
     fun verifyEmptyBookmarksMenuView() {
         Log.i(TAG, "verifyBookmarksMenuView: Waiting for bookmarks header to exist.")
-        composeTestRule.waitUntilExactlyOneExists(
-            hasText("Bookmarks")
-                .and(hasAnySibling(hasContentDescription("Navigate back"))),
+        composeTestRule.waitUntilAtLeastOneExists(
+            hasTestTag(BOOKMARK_TOOLBAR)
+                .and(hasAnyDescendant(hasText("Bookmarks")))
+                .and(hasAnyDescendant(hasContentDescription("Navigate back"))),
         )
         Log.i(TAG, "verifyBookmarksMenuView: Waited for bookmarks header to exist.")
         Log.i(TAG, "verifyBookmarksMenuView: Trying to verify the empty bookmarks list is displayed.")
