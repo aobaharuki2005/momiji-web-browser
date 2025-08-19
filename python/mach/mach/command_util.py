@@ -297,7 +297,7 @@ class DecoratorVisitor(ast.NodeVisitor):
             kwarg_dict = {}
 
             for name, arg in zip(["command", "subcommand"], decorator.args):
-                kwarg_dict[name] = arg.s
+                kwarg_dict[name] = arg.value
 
             for keyword in decorator.keywords:
                 if keyword.arg not in relevant_kwargs:
