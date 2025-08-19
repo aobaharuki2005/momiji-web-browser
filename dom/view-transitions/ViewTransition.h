@@ -127,10 +127,8 @@ class ViewTransition final : public nsISupports, public nsWrapperCache {
       nsIFrame* aFrame, layers::RenderRootStateManager*,
       wr::IpcResourceUpdateQueue&) const;
   void UpdateActiveRectForCapturedFrame(
-      nsIFrame* capturedFrame,
-      const gfx::MatrixScales& aInheritedScale,
-      nsRect& aOutCapturedRect
-  );
+      nsIFrame* capturedFrame, const gfx::MatrixScales& aInheritedScale,
+      nsRect& aOutCapturedRect);
 
   Element* FindPseudo(const PseudoStyleRequest&) const;
 

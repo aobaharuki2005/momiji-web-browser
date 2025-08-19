@@ -2417,7 +2417,6 @@ nsRect nsDisplayImage::GetDestRectViewTransition() const {
   destRect = nsRect(destRect.TopLeft() + inkOverflowOffset,
                     nsSize(scaledWidth, scaledHeight));
 
-
   if (activeRect) {
     destRect = destRect.Intersect(activeRect.value());
   }
