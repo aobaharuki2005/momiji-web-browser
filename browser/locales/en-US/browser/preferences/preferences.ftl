@@ -2,13 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-do-not-track-removal = We no longer support the “Do Not Track” signal
+do-not-track-removal2 =
+    .label = We no longer support the “Do Not Track” signal
 
 global-privacy-control-description =
     .label = Tell websites not to sell or share my data
     .accesskey = s
 
 non-technical-privacy-header = Website Privacy Preferences
+
+non-technical-privacy-label =
+     .aria-label = { non-technical-privacy-header }
 
 # Do not translate.
 # "Global Privacy Control" or "GPC" are a web platform feature name and abbreviation

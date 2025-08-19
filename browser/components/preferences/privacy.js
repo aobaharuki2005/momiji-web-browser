@@ -195,8 +195,9 @@ Preferences.addAll([
   { id: "privacy.clearOnShutdown.siteSettings", type: "bool" },
   { id: "privacy.clearOnShutdown_v2.siteSettings", type: "bool" },
 
-  // Do not track
+  // Do not track and Global Privacy Control
   { id: "privacy.donottrackheader.enabled", type: "bool" },
+  { id: "privacy.globalprivacycontrol.functionality.enabled", type: "bool" },
 
   // Global Privacy Control
   { id: "privacy.globalprivacycontrol.enabled", type: "bool" },
@@ -307,6 +308,30 @@ if (AppConstants.MOZ_CRASHREPORTER) {
     type: "bool",
   });
 }
+
+Preferences.addSetting({
+  id: "gpcFunctionalityEnabled",
+  pref: "privacy.globalprivacycontrol.functionality.enabled",
+});
+Preferences.addSetting({
+  id: "gpcEnabled",
+  pref: "privacy.globalprivacycontrol.enabled",
+  deps: ["gpcFunctionalityEnabled"],
+  visible: ({ gpcFunctionalityEnabled }) => {
+    return gpcFunctionalityEnabled.value;
+  },
+});
+Preferences.addSetting({
+  id: "dntHeaderEnabled",
+  pref: "privacy.donottrackheader.enabled",
+});
+Preferences.addSetting({
+  id: "dntRemoval",
+  deps: ["dntHeaderEnabled"],
+  visible: ({ dntHeaderEnabled }) => {
+    return dntHeaderEnabled.value;
+  },
+});
 
 function setEventListener(aId, aEventType, aCallback) {
   document
@@ -942,10 +967,49 @@ var gPrivacyPane = {
   },
 
   /**
+   * Hides non technical privacy section when all controls within are hidden.
+   */
+  updateNonTechnicalPrivacySectionVisibility() {
+    let allDisabled =
+      !Preferences.get("privacy.globalprivacycontrol.functionality.enabled")
+        .value && !Preferences.get("privacy.donottrackheader.enabled").value;
+    let nonTechnicalPrivacyGroup = document.getElementById(
+      "nonTechnicalPrivacyGroup"
+    );
+    if (allDisabled) {
+      nonTechnicalPrivacyGroup.style.display = "none";
+    } else {
+      nonTechnicalPrivacyGroup.style.display = "";
+    }
+  },
+
+  /**
+   * Sets up listeners to control non technical privacy section visibility.
+   */
+  initNonTechnicalPrivacySection() {
+    // When prefs change that can cause all settings in the section to be hidden
+    // update visibility state of the entire section.
+    Preferences.get("privacy.globalprivacycontrol.functionality.enabled").on(
+      "change",
+      gPrivacyPane.updateNonTechnicalPrivacySectionVisibility.bind(gPrivacyPane)
+    );
+    Preferences.get("privacy.donottrackheader.enabled").on(
+      "change",
+      gPrivacyPane.updateNonTechnicalPrivacySectionVisibility.bind(gPrivacyPane)
+    );
+    // Initial visiblity state.
+    gPrivacyPane.updateNonTechnicalPrivacySectionVisibility();
+  },
+
+  /**
    * Sets up the UI for the number of days of history to keep, and updates the
    * label of the "Clear Now..." button.
    */
   init() {
+    initSettingGroup("nonTechnicalPrivacy");
+
+    this.initNonTechnicalPrivacySection();
+
     this._updateSanitizeSettingsButton();
     this.initDeleteOnCloseBox();
     this.syncSanitizationPrefsWithDeleteOnClose();
@@ -1082,7 +1146,6 @@ var gPrivacyPane = {
 
     this._pane = document.getElementById("panePrivacy");
 
-    this._initGlobalPrivacyControlUI();
     this._initPasswordGenerationUI();
     this._initRelayIntegrationUI();
     this._initMasterPasswordUI();
@@ -3020,34 +3083,6 @@ var gPrivacyPane = {
       features: "resizable=no",
       closingCallback: this._initMasterPasswordUI.bind(this),
     });
-  },
-
-  /**
-   * Set up the initial state for the GPC/DNT UI.
-   * The GPC part should only appear if the functionality is
-   * enabled.
-   */
-  _initGlobalPrivacyControlUI() {
-    let gpcEnabledPrefValue = Services.prefs.getBoolPref(
-      "privacy.globalprivacycontrol.functionality.enabled",
-      false
-    );
-    let dntEnabledPrefValue = Services.prefs.getBoolPref(
-      "privacy.donottrackheader.enabled",
-      false
-    );
-    document.getElementById("doNotTrackBox").hidden = !dntEnabledPrefValue;
-    // We can't rely on the hidden attribute for groupboxes because the pane
-    // hiding/showing code can interfere (and fires after this).
-    if (gpcEnabledPrefValue) {
-      document
-        .getElementById("nonTechnicalPrivacyGroup")
-        .removeAttribute("style");
-    } else {
-      document
-        .getElementById("nonTechnicalPrivacyGroup")
-        .setAttribute("style", "display: none !important");
-    }
   },
 
   /**

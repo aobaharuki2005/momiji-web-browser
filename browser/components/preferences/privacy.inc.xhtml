@@ -383,24 +383,7 @@
 </groupbox>
 <groupbox id="nonTechnicalPrivacyGroup" data-category="panePrivacy" hidden="true">
   <label id="nonTechnicalPrivacyHeader"><html:h2 data-l10n-id="non-technical-privacy-header"/></label>
-  <vbox id="nonTechnicalPrivacyBox">
-    <hbox id="globalPrivacyControlBox" flex="1" align="center">
-      <checkbox id="globalPrivacyControlCheckbox"
-              class="tail-with-learn-more"
-              preference="privacy.globalprivacycontrol.enabled"
-              data-l10n-id="global-privacy-control-description"
-              search-l10n-ids="global-privacy-control-search" />
-      <html:a is="moz-support-link"
-          id="globalPrivacyControlLearnMoreLink"
-          support-page="global-privacy-control" />
-    </hbox>
-    <hbox id="doNotTrackBox" flex="1" align="center" hidden="true">
-      <html:a is="moz-support-link"
-          id="doNotTrackRemoval"
-          support-page="how-do-i-turn-do-not-track-feature"
-          data-l10n-id="do-not-track-removal" />
-    </hbox>
-  </vbox>
+  <html:setting-group groupid="nonTechnicalPrivacy"/>
 </groupbox>
 
 <!-- Site Data -->
