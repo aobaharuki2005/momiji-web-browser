@@ -270,40 +270,34 @@ class WeakMap : public WeakMapBase {
     return p;
   }
 
-  template <typename KeyInput, typename ValueInput>
-  [[nodiscard]] bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+  [[nodiscard]] bool add(AddPtr& p, const Key& k, const Value& v) {
     MOZ_ASSERT(gc::ToMarkable(k));
-    keyWriteBarrier(std::forward<KeyInput>(k));
-    return map().add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
+    keyWriteBarrier(k);
+    return map().add(p, k, v);
   }
 
-  template <typename KeyInput, typename ValueInput>
-  [[nodiscard]] bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+  [[nodiscard]] bool relookupOrAdd(AddPtr& p, const Key& k, const Value& v) {
     MOZ_ASSERT(gc::ToMarkable(k));
-    keyWriteBarrier(std::forward<KeyInput>(k));
-    return map().relookupOrAdd(p, std::forward<KeyInput>(k),
-                               std::forward<ValueInput>(v));
+    keyWriteBarrier(k);
+    return map().relookupOrAdd(p, k, v);
   }
 
-  template <typename KeyInput, typename ValueInput>
-  [[nodiscard]] bool put(KeyInput&& k, ValueInput&& v) {
+  [[nodiscard]] bool put(const Key& k, const Value& v) {
     MOZ_ASSERT(gc::ToMarkable(k));
-    keyWriteBarrier(std::forward<KeyInput>(k));
-    return map().put(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
+    keyWriteBarrier(k);
+    return map().put(k, v);
   }
 
-  template <typename KeyInput, typename ValueInput>
-  [[nodiscard]] bool putNew(KeyInput&& k, ValueInput&& v) {
+  [[nodiscard]] bool putNew(const Key& k, const Value& v) {
     MOZ_ASSERT(gc::ToMarkable(k));
-    keyWriteBarrier(std::forward<KeyInput>(k));
-    return map().putNew(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
+    keyWriteBarrier(k);
+    return map().putNew(k, v);
   }
 
-  template <typename KeyInput, typename ValueInput>
-  void putNewInfallible(KeyInput&& k, ValueInput&& v) {
+  void putNewInfallible(const Key& k, const Value& v) {
     MOZ_ASSERT(gc::ToMarkable(k));
-    keyWriteBarrier(std::forward<KeyInput>(k));
-    map().putNewInfallible(std::forward(k), std::forward<KeyInput>(k));
+    keyWriteBarrier(k);
+    map().putNewInfallible(k, k);
   }
 
   void clear() {
@@ -313,9 +307,8 @@ class WeakMap : public WeakMapBase {
   }
 
 #ifdef DEBUG
-  template <typename KeyInput, typename ValueInput>
-  bool hasEntry(KeyInput&& key, ValueInput&& value) {
-    Ptr p = map().lookup(std::forward<KeyInput>(key));
+  bool hasEntry(const Key& key, const Value& value) {
+    Ptr p = map().lookup(key);
     return p && p->value() == value;
   }
 #endif
