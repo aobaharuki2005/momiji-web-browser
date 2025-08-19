@@ -205,5 +205,25 @@ def test_artifact_build(objdir, mozconfig, run_mach):
     assert omnijar_hash_orig == omnijar_hash_new
 
 
+def test_minify_fenix_incremental_build(objdir, mozconfig, run_mach):
+    """Verify that minifyFenixReleaseWithR8 is UP-TO-DATE on a subsequent
+    run when there are no code changes.
+    """
+
+    # Ensure a clean state
+    (returncode, output) = run_mach(["gradle", ":fenix:cleanMinifyFenixReleaseWithR8"])
+    assert returncode == 0
+
+    (returncode, output) = run_mach(["gradle", ":fenix:minifyFenixReleaseWithR8"])
+    assert returncode == 0
+
+    assert_task_outcomes(objdir, [(":fenix:minifyFenixReleaseWithR8", "EXECUTED")])
+
+    (returncode, output) = run_mach(["gradle", ":fenix:minifyFenixReleaseWithR8"])
+    assert returncode == 0
+
+    assert_task_outcomes(objdir, [(":fenix:minifyFenixReleaseWithR8", "UP-TO-DATE")])
+
+
 if __name__ == "__main__":
     mozunit.main()
