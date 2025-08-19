@@ -94,7 +94,6 @@ async function test_save_change(testData) {
     );
   }
 
-  const formProcessedPromise = listenForTestNotification("FormProcessed");
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -105,9 +104,6 @@ async function test_save_change(testData) {
     async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
-      info("Waiting for form-processed message");
-      await formProcessedPromise;
-
       // Update the form with credentials from the test case.
       info(`update form with username: ${username}, password: ${password}`);
       await changeContentFormValues(browser, {
@@ -117,10 +113,7 @@ async function test_save_change(testData) {
 
       // Submit the form with the new credentials. This will cause the doorhanger
       // notification to be displayed.
-      let formSubmittedPromise = listenForTestNotification([
-        "FormProcessed",
-        "ShowDoorhanger",
-      ]);
+      let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
       await SpecialPowers.spawn(browser, [], async function () {
         let doc = this.content.document;
         doc.getElementById("form-basic").submit();

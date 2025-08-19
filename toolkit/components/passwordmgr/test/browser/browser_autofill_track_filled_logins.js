@@ -87,10 +87,7 @@ add_task(async function test() {
       }
     );
 
-    let processedPromise = listenForTestNotification([
-      "FormProcessed",
-      "ShowDoorhanger",
-    ]);
+    let processedPromise = listenForTestNotification("ShowDoorhanger");
     SpecialPowers.spawn(tab.linkedBrowser, [], () => {
       content.document.getElementById("form-basic").submit();
     });

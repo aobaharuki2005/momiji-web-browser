@@ -79,6 +79,7 @@ add_task(async function test_edit_username() {
     }
 
     let formFilledPromise = listenForTestNotification("FormProcessed");
+
     await BrowserTestUtils.withNewTab(
       {
         gBrowser,
@@ -87,9 +88,7 @@ add_task(async function test_edit_username() {
           "passwordmgr/test/browser/form_basic.html",
       },
       async function (browser) {
-        info("Waiting for form-processed message");
         await formFilledPromise;
-
         await initForm(browser, {
           "#form-basic-username": testCase.usernameInPage,
         });
@@ -113,10 +112,7 @@ add_task(async function test_edit_username() {
         // Submit the form in the content page with the credentials from the test
         // case. This will cause the doorhanger notification to be displayed.
         info("Submitting the form");
-        let formSubmittedPromise = listenForTestNotification([
-          "FormProcessed",
-          "ShowDoorhanger",
-        ]);
+        let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
         let promiseShown = BrowserTestUtils.waitForEvent(
           PopupNotifications.panel,
           "popupshown",

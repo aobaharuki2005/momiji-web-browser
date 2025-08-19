@@ -93,6 +93,7 @@ add_task(async function test_edit_password() {
     }
 
     let formFilledPromise = listenForTestNotification("FormProcessed");
+
     await BrowserTestUtils.withNewTab(
       {
         gBrowser,
@@ -128,10 +129,7 @@ add_task(async function test_edit_password() {
         // Submit the form in the content page with the credentials from the test
         // case. This will cause the doorhanger notification to be displayed.
         info("Submitting the form");
-        let formSubmittedPromise = listenForTestNotification([
-          "FormProcessed",
-          "ShowDoorhanger",
-        ]);
+        let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
         let promiseShown = BrowserTestUtils.waitForEvent(
           PopupNotifications.panel,
           "popupshown",
