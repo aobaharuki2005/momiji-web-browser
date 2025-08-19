@@ -2651,9 +2651,8 @@ var DownloadAddonInstall = class extends AddonInstall {
       return;
     }
 
-    logger.debug("Download of " + this.sourceURI.spec + " completed.");
-
     if (Components.isSuccessCode(aStatus)) {
+      logger.debug(`Download of ${this.sourceURI.spec} completed.`);
       if (
         !(aRequest instanceof Ci.nsIHttpChannel) ||
         aRequest.requestSucceeded
