@@ -464,7 +464,7 @@ android-em-14-x86_64/debug-isolated-process:
     test-sets:
         - android14-x86_64-tests
 
-#android-em-14-x86/opt:
+# android-em-14-x86/opt:
 #    build-platform: android-x86/opt
 #    test-sets:
 #        - android-x86-tests
