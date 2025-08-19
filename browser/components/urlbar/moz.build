@@ -68,6 +68,7 @@ EXTRA_JS_MODULES["urlbar/private"] += [
     "private/AmpSuggestions.sys.mjs",
     "private/DynamicSuggestions.sys.mjs",
     "private/GeolocationUtils.sys.mjs",
+    "private/ImportantDatesSuggestions.sys.mjs",
     "private/ImpressionCaps.sys.mjs",
     "private/MarketSuggestions.sys.mjs",
     "private/MDNSuggestions.sys.mjs",

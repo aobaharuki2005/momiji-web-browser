@@ -153,6 +153,9 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // future.
   ["groupLabels.enabled", true],
 
+  // Feature gate pref for important-dates suggestions in the urlbar.
+  ["importantDates.featureGate", false],
+
   // Set default intent threshold value of 0.5
   ["intentThreshold", [0.5, "float"]],
 
@@ -460,6 +463,10 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
 
   // Whether results will include the user's history.
   ["suggest.history", true],
+
+  // If `browser.urlbar.importantDates.featureGate` is true, this controls
+  // whether important-dates suggestions are turned on.
+  ["suggest.importantDates", true],
 
   // Whether results will include Market suggestions.
   ["suggest.market", true],

@@ -13,15 +13,19 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
-const SHOW_COUNTDOWN_THRESHOLD_DAYS = 30;
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
 /**
- * A feature for dynamic suggestions served by the Suggest Rust component.
- * Dynamic Rust suggestions are not statically typed except for a few core
- * properties, so they can be used to serve many different types of suggestions
- * without any Rust changes. They are also used for hidden-exposure suggestions
- * (potential exposures).
+ * A feature that manages the dynamic Rust suggestion types defined in the
+ * `quickSuggestDynamicSuggestionTypes` Nimbus variable or its related pref
+ * `quicksuggest.dynamicSuggestionTypes`. Dynamic Rust suggestions are not
+ * statically typed except for a few core properties, so they can be used to
+ * serve many different types of suggestions without any Rust changes. They are
+ * also used for hidden-exposure suggestions (potential exposures).
+ *
+ * This feature only manages the types defined in the variable or pref. Other
+ * features can manage dynamic suggestion types that are *not* defined in the
+ * variable or pref by extending `SuggestProvider` as usual and overriding the
+ * `dynamicRustSuggestionTypes` getter. That makes it possible for a feature to
+ * use dynamic suggestions as an implementation detail.
  */
 export class DynamicSuggestions extends SuggestProvider {
   get enablingPreferences() {
@@ -29,7 +33,7 @@ export class DynamicSuggestions extends SuggestProvider {
   }
 
   get additionalEnablingPredicate() {
-    return !!this.dynamicSuggestionTypes.size;
+    return !!this.dynamicRustSuggestionTypes.length;
   }
 
   get primaryUserControlledPreferences() {
@@ -40,15 +44,9 @@ export class DynamicSuggestions extends SuggestProvider {
     return "Dynamic";
   }
 
-  get rustProviderConstraints() {
-    return {
-      dynamicSuggestionTypes: [...this.dynamicSuggestionTypes],
-    };
-  }
-
-  get dynamicSuggestionTypes() {
+  get dynamicRustSuggestionTypes() {
     // UrlbarPrefs converts this pref to a `Set` of type strings.
-    return lazy.UrlbarPrefs.get("quicksuggest.dynamicSuggestionTypes");
+    return [...lazy.UrlbarPrefs.get("quicksuggest.dynamicSuggestionTypes")];
   }
 
   isSuggestionSponsored(suggestion) {
@@ -110,11 +108,6 @@ export class DynamicSuggestions extends SuggestProvider {
       return null;
     }
 
-    if (result.isImportantDate) {
-      // @ts-ignore
-      return this.#makeDateResult(payload);
-    }
-
     let resultProperties = { ...result };
     delete resultProperties.payload;
     return Object.assign(
@@ -128,187 +121,6 @@ export class DynamicSuggestions extends SuggestProvider {
         })
       ),
       resultProperties
-    );
-  }
-
-  /**
-   * @typedef DatePayload
-   *   The shape of an important dates suggestion payload.
-   * @property {(string | [string, string])[]} dates
-   *   An array of dates or date tuples in the format "YYYY-MM-DD".
-   *   For a date tuple, the first value represents the start and the second
-   *   the end date. This is assumed to be ordered oldest to newest.
-   * @property {string} name
-   *   The name of the event.
-   */
-
-  /**
-   * Returns a string about the date of an event that can be displayed.
-   *
-   * @param {string | [string, string]} dateStr
-   *   A string in the format "YYYY-MM-DD" representing a single
-   *   day or a tuple of strings representing start and end days.
-   * @returns {string}
-   *   A localized string about the date of the event.
-   */
-  #formatDateOrRange(dateStr) {
-    if (Array.isArray(dateStr)) {
-      let format = new Intl.DateTimeFormat(Services.locale.appLocaleAsBCP47, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      let startDate = new Date(dateStr[0] + "T00:00");
-      let endDate = new Date(dateStr[1] + "T00:00");
-      return format.formatRange(startDate, endDate);
-    }
-
-    let format = new Intl.DateTimeFormat(Services.locale.appLocaleAsBCP47, {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    let date = new Date(dateStr + "T00:00");
-    return format.format(date);
-  }
-
-  /**
-   * Returns a l10n object about the name of and time until an event
-   * that can be used as the description of a urlbar result.
-   *
-   * @param {string | [string, string]} dateStr
-   *   A string in the format "YYYY-MM-DD" representing a single
-   *   day or a tuple of strings representing start and end days.
-   * @param {string} name
-   *   The name of the event.
-   * @returns {?object}
-   *   A l10n object or null if the event is in the past.
-   */
-  #formatDateCountdown(dateStr, name) {
-    if (Array.isArray(dateStr)) {
-      let daysUntilStart = this.#getDaysUntil(dateStr[0]);
-      let daysUntilEnd = this.#getDaysUntil(dateStr[1]);
-      if (daysUntilEnd < 0) {
-        throw new Error("Date lies in the past.");
-      }
-      if (daysUntilStart > 0) {
-        return {
-          id: "urlbar-result-dates-countdown-range",
-          args: { daysUntilStart, name },
-        };
-      }
-      if (daysUntilEnd > 0) {
-        return {
-          id: "urlbar-result-dates-ongoing",
-          args: { daysUntilEnd, name },
-        };
-      }
-      return {
-        id: "urlbar-result-dates-ends-today",
-        args: { name },
-      };
-    }
-
-    let daysUntil = this.#getDaysUntil(dateStr);
-    if (daysUntil < 0) {
-      throw new Error("Date lies in the past.");
-    }
-    if (daysUntil > 0) {
-      return {
-        id: "urlbar-result-dates-countdown",
-        args: { daysUntilStart: daysUntil, name },
-      };
-    }
-    return {
-      id: "urlbar-result-dates-today",
-      args: { name },
-    };
-  }
-
-  /**
-   * Returns the number of days until the specified date.
-   *
-   * @param {string} dateStr
-   *   A string in the format "YYYY-MM-DD".
-   * @returns {number}
-   *   The time until the input date in days.
-   */
-  #getDaysUntil(dateStr) {
-    let now = new Date();
-    now.setHours(0, 0, 0, 0);
-    let date = new Date(dateStr + "T00:00");
-
-    let msUntil = date.getTime() - now.getTime();
-    // Round to account for potential DST.
-    return Math.round(msUntil / MS_PER_DAY);
-  }
-
-  /**
-   * Creates a urlbar result from an important dates payload.
-   *
-   * @param {DatePayload} payload
-   *   The important dates payload.
-   * @returns {?UrlbarResult}
-   *   A urlbar result or null if all instances are in the past.
-   */
-  #makeDateResult(payload) {
-    let eventDateOrRange = payload.dates.find(
-      // Find first entry where the end date is in the future.
-      // This is always the upcoming occurrence since dates is ordered by time.
-      d => this.#getDaysUntil(Array.isArray(d) ? d[1] : d) >= 0
-    );
-    if (!eventDateOrRange) {
-      // All instances of the event are in the past.
-      return null;
-    }
-
-    let daysUntilStart = this.#getDaysUntil(
-      Array.isArray(eventDateOrRange) ? eventDateOrRange[0] : eventDateOrRange
-    );
-
-    let description, descriptionL10n;
-    if (daysUntilStart > SHOW_COUNTDOWN_THRESHOLD_DAYS) {
-      description = payload.name;
-    } else {
-      descriptionL10n = {
-        ...this.#formatDateCountdown(eventDateOrRange, payload.name),
-        cacheable: true,
-        excludeArgsFromCacheKey: true,
-      };
-    }
-
-    let dateString = this.#formatDateOrRange(eventDateOrRange);
-    let [url] = lazy.UrlbarUtils.getSearchQueryUrl(
-      Services.search.defaultEngine,
-      payload.name
-    );
-    return Object.assign(
-      new lazy.UrlbarResult(
-        lazy.UrlbarUtils.RESULT_TYPE.URL,
-        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-        {
-          title: dateString,
-          description,
-          descriptionL10n,
-          url,
-          icon: "chrome://browser/skin/calendar-24.svg",
-          helpUrl: lazy.QuickSuggest.HELP_URL,
-          isManageable: true,
-          isBlockable: true,
-        },
-        {
-          title: [
-            // Make whole title bold.
-            [0, dateString.length],
-          ],
-        }
-      ),
-      {
-        isBestMatch: true,
-        hideRowLabel: true,
-        richSuggestionIconSize: 24,
-      }
     );
   }
 
