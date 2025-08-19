@@ -10,7 +10,7 @@ add_setup(async function () {
         // eslint-disable-next-line mozilla/valid-lazy
         collection: lazy.QuickSuggestTestUtils.RS_COLLECTION.OTHER,
         type: "dynamic-suggestions",
-        suggestion_type: "realtime_opt_in",
+        suggestion_type: "market",
         attachment: [
           {
             keywords: ["stock"],
@@ -34,7 +34,7 @@ add_setup(async function () {
         ],
       },
     ],
-    prefs: [["quicksuggest.dynamicSuggestionTypes", "realtime_opt_in"]],
+    prefs: [["market.featureGate", true]],
   });
 
   registerCleanupFunction(() => {
@@ -60,10 +60,10 @@ add_task(async function opt_in() {
     assertEngagementTelemetry([
       {
         engagement_type: "opt_in",
-        selected_result: "rust_realtime_opt_in",
+        selected_result: "rust_market",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,rust_realtime_opt_in",
+        results: "search_engine,rust_market",
       },
     ]);
   });
@@ -83,10 +83,10 @@ add_task(async function not_now_and_dismiss() {
     assertEngagementTelemetry([
       {
         engagement_type: "not_now",
-        selected_result: "rust_realtime_opt_in",
+        selected_result: "rust_market",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,rust_realtime_opt_in",
+        results: "search_engine,rust_market",
       },
     ]);
 
@@ -113,10 +113,10 @@ add_task(async function not_now_and_dismiss() {
     assertEngagementTelemetry([
       {
         engagement_type: "dismiss",
-        selected_result: "rust_realtime_opt_in",
+        selected_result: "rust_market",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,rust_realtime_opt_in",
+        results: "search_engine,rust_market",
       },
     ]);
   });
@@ -155,10 +155,10 @@ add_task(async function not_interested() {
     assertEngagementTelemetry([
       {
         engagement_type: "not_interested",
-        selected_result: "rust_realtime_opt_in",
+        selected_result: "rust_market",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,rust_realtime_opt_in",
+        results: "search_engine,rust_market",
       },
     ]);
   });

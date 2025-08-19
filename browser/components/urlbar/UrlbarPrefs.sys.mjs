@@ -167,6 +167,9 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // than `NONE`.
   ["keywordExposureResults", ""],
 
+  // Feature gate pref for stock market suggestions in the urlbar.
+  ["market.featureGate", false],
+
   // The minimum prefix length of a market keyword the user must type to
   // trigger the suggestion. 0 means the min length should be taken from Nimbus
   // or remote settings.
@@ -647,9 +650,9 @@ const PREF_OTHER_DEFAULTS = new Map([
 // defaults are the values of their fallbacks.
 const NIMBUS_DEFAULTS = {
   addonsShowLessFrequentlyCap: 0,
-  marketMinKeywordLength: null,
-  marketShowLessFrequentlyCap: null,
   quickSuggestScoreMap: null,
+  realtimeMinKeywordLength: null,
+  realtimeShowLessFrequentlyCap: null,
   weatherKeywordsMinimumLength: null,
   weatherShowLessFrequentlyCap: null,
   yelpMinKeywordLength: null,

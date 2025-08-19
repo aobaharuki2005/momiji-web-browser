@@ -4,7 +4,7 @@
 const OFFLINE_REMOTE_SETTINGS = [
   {
     type: "dynamic-suggestions",
-    suggestion_type: "realtime_opt_in",
+    suggestion_type: "market",
     attachment: [
       {
         keywords: ["stock"],
@@ -12,7 +12,8 @@ const OFFLINE_REMOTE_SETTINGS = [
           result: {
             isBestMatch: true,
             hideRowLabel: true,
-            realtimeType: "market",
+            // The purpose of `testAttribute` is to make sure arbitrary `result`
+            // properties in the RS data get copied to the `UrlbarResult`.
             testAttribute: "market-test",
             payload: {
               type: "realtime_opt_in",
@@ -28,28 +29,6 @@ const OFFLINE_REMOTE_SETTINGS = [
           },
         },
       },
-      {
-        keywords: ["sports"],
-        data: {
-          result: {
-            isBestMatch: true,
-            hideRowLabel: true,
-            realtimeType: "sports",
-            testAttribute: "sports-test",
-            payload: {
-              type: "realtime_opt_in",
-              icon: "chrome://browser/skin/illustrations/market-opt-in.svg",
-              titleL10n: {
-                id: "urlbar-result-market-opt-in-title",
-              },
-              descriptionL10n: {
-                id: "urlbar-result-market-opt-in-description",
-              },
-              descriptionLearnMoreTopic: "test",
-            },
-          },
-        },
-      },
     ],
   },
 ];
@@ -58,7 +37,6 @@ const TEST_MERINO_SINGLE = [
   {
     provider: "polygon",
     is_sponsored: false,
-    score: 0,
     custom_details: {
       polygon: {
         values: [
@@ -80,26 +58,42 @@ add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: OFFLINE_REMOTE_SETTINGS,
     merinoSuggestions: TEST_MERINO_SINGLE,
-  });
-  await UrlbarTestUtils.initNimbusFeature({
-    quickSuggestDynamicSuggestionTypes: "realtime_opt_in",
+    prefs: [["market.featureGate", true]],
   });
 
-  registerCleanupFunction(() => {
+  registerCleanupFunction(async () => {
     UrlbarPrefs.clear("suggest.realtimeOptIn");
     UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
+
+    // Make sure all ingest is done before finishing.
+    await QuickSuggestTestUtils.forceSync();
   });
 });
 
 add_task(async function opt_in() {
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "Sanity check: MarketSuggestions is enabled initially"
+  );
+
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
+
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains enabled after disabling quicksuggest.dataCollection.enabled"
+  );
 
   let { element, result } = await openRealtimeSuggestion({ input: "stock" });
   Assert.ok(result.isBestMatch);
   Assert.ok(result.hideRowLabel);
-  Assert.equal(result.realtimeType, "market");
+  Assert.equal(result.payload.suggestionType, "market");
   Assert.equal(result.testAttribute, "market-test");
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP);
+
+  Assert.ok(
+    !element.row.querySelector(".urlbarView-button-result-menu"),
+    "The opt-in row should not have a result menu button"
+  );
 
   info(
     "Click allow button that changes dataCollection pref and starts new query with same keyword"
@@ -119,15 +113,35 @@ add_task(async function opt_in() {
 
   await UrlbarTestUtils.promisePopupClose(window);
 
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains enabled opting in"
+  );
+
   UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
+
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains enabled after clearing quicksuggest.dataCollection.enabled"
+  );
 });
 
 add_task(async function dismiss() {
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "Sanity check: MarketSuggestions is enabled initially"
+  );
+
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowTimeSeconds");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowTypes");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.dismissTypes");
   UrlbarPrefs.set("quicksuggest.realtimeOptIn.notNowReshowAfterPeriodDays", 3);
+
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains enabled after resetting prefs"
+  );
 
   info("Check the initial dismiss button state");
   let { element } = await openRealtimeSuggestion({ input: "stock" });
@@ -153,6 +167,10 @@ add_task(async function dismiss() {
     UrlbarPrefs.get("quicksuggest.realtimeOptIn.dismissTypes").size,
     0
   );
+  Assert.ok(
+    !QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions is disabled after clicking Not now"
+  );
   info("Not now button works");
   await UrlbarTestUtils.promisePopupClose(window);
 
@@ -168,9 +186,22 @@ add_task(async function dismiss() {
   await assertOptInVisibility({ input: "stock", expectedVisibility: false });
   info("Simulate the passage of two days");
   moveNotNowTimeSecondsEalier(notNowTimeSeconds, 2);
+  Assert.ok(
+    !QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains disabled after simulating passage of two days"
+  );
   await assertOptInVisibility({ input: "stock", expectedVisibility: false });
   info("Simulate the passage of three days");
   moveNotNowTimeSecondsEalier(notNowTimeSeconds, 3);
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions becomes enabled after simulating passage of three days"
+  );
+
+  // Suggest will ingest the Rust suggestions for `MarketSuggestions` after it
+  // became enabled, so wait for that to finish before continuing.
+  await QuickSuggestTestUtils.forceSync();
+
   await assertOptInVisibility({ input: "stock", expectedVisibility: true });
   notNowTimeSeconds = UrlbarPrefs.get(
     "quicksuggest.realtimeOptIn.notNowTimeSeconds"
@@ -204,6 +235,10 @@ add_task(async function dismiss() {
       UrlbarPrefs.get("quicksuggest.realtimeOptIn.notNowTypes").has("market"),
     "notNowTypes does not change"
   );
+  Assert.ok(
+    !QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions becomes disabled after clicking Dismiss"
+  );
   info("Dismiss button works");
   await UrlbarTestUtils.promisePopupClose(window);
 
@@ -213,85 +248,129 @@ add_task(async function dismiss() {
   moveNotNowTimeSecondsEalier(notNowTimeSeconds, 1000);
   await assertOptInVisibility({ input: "stock", expectedVisibility: false });
 
+  Assert.ok(
+    !QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains disabled simulating passage of 1000 days"
+  );
+
   UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowTimeSeconds");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowTypes");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.dismissTypes");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowReshowAfterPeriodDays");
+
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions becomes enabled after clearing prefs"
+  );
+
+  // Suggest will ingest the Rust suggestions for `MarketSuggestions` after it
+  // became enabled, so wait for that to finish before continuing.
+  await QuickSuggestTestUtils.forceSync();
 });
 
 add_task(async function dismiss_with_another_type() {
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "Sanity check: MarketSuggestions is enabled initially"
+  );
+
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowTimeSeconds");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowTypes");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.dismissTypes");
   UrlbarPrefs.set("quicksuggest.realtimeOptIn.notNowReshowAfterPeriodDays", 3);
 
-  info("Sanity check - both types shoud be shown");
-  await assertOptInVisibility({ input: "stock", expectedVisibility: true });
-  await assertOptInVisibility({ input: "sports", expectedVisibility: true });
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains enabled after resetting prefs"
+  );
 
-  info("Simulate user clicks 'Not now' for Market suggestion");
-  UrlbarPrefs.set("quicksuggest.realtimeOptIn.notNowTypes", "market");
+  info("Sanity check - market shoud be shown");
+  await assertOptInVisibility({ input: "stock", expectedVisibility: true });
+
+  info("Simulate user clicks 'Not now' for sports suggestion");
+  UrlbarPrefs.add("quicksuggest.realtimeOptIn.notNowTypes", "sports");
+
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains enabled simulating 'Not now' for sports"
+  );
+
   let { element: marketElement } = await openRealtimeSuggestion({
     input: "stock",
   });
   let marketDismissButton = marketElement.row.querySelector(
     ".urlbarView-button-1"
   );
-  Assert.equal(marketDismissButton.dataset.command, "dismiss");
+  Assert.equal(marketDismissButton.dataset.command, "not_now");
   Assert.equal(
     marketDismissButton.dataset.l10nId,
-    "urlbar-result-realtime-opt-in-dismiss"
-  );
-  await UrlbarTestUtils.promisePopupClose(window);
-  let { element: sportsElement } = await openRealtimeSuggestion({
-    input: "sports",
-  });
-  let sportsDismissButton = sportsElement.row.querySelector(
-    ".urlbarView-button-1"
-  );
-  Assert.equal(sportsDismissButton.dataset.command, "not_now");
-  Assert.equal(
-    sportsDismissButton.dataset.l10nId,
     "urlbar-result-realtime-opt-in-not-now"
   );
   await UrlbarTestUtils.promisePopupClose(window);
 
-  info("Simulate user clicks 'Dismiss' for Market suggestion");
-  UrlbarPrefs.set("quicksuggest.realtimeOptIn.dismissTypes", "market");
-  await assertOptInVisibility({ input: "stock", expectedVisibility: false });
-  await assertOptInVisibility({ input: "sports", expectedVisibility: true });
+  info("Simulate user clicks 'Dismiss' for sports suggestion");
+  UrlbarPrefs.set("quicksuggest.realtimeOptIn.dismissTypes", "sports");
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains enabled simulating 'Dismiss' for sports"
+  );
+  await assertOptInVisibility({ input: "stock", expectedVisibility: true });
 
-  info("Click 'Not now' for sports suggestion");
-  sportsElement = (await openRealtimeSuggestion({ input: "sports" })).element;
-  sportsDismissButton = sportsElement.row.querySelector(".urlbarView-button-1");
-  EventUtils.synthesizeMouseAtCenter(sportsDismissButton, {});
+  info("Click 'Not now' for market suggestion");
+  marketElement = (await openRealtimeSuggestion({ input: "stock" })).element;
+  marketDismissButton = marketElement.row.querySelector(".urlbarView-button-1");
+  EventUtils.synthesizeMouseAtCenter(marketDismissButton, {});
   await TestUtils.waitForCondition(
     () =>
-      UrlbarPrefs.get("quicksuggest.realtimeOptIn.notNowTypes").has("sports"),
+      UrlbarPrefs.get("quicksuggest.realtimeOptIn.notNowTypes").has("market"),
     "Wait until quicksuggest.realtimeOptIn.notNowTypes pref changes"
   );
+
+  Assert.ok(
+    !QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions becomes disabled after clicking 'Not now'"
+  );
+
   let notNowTimeSeconds = UrlbarPrefs.get(
     "quicksuggest.realtimeOptIn.notNowTimeSeconds"
   );
   Assert.notEqual(notNowTimeSeconds, 0);
   await assertOptInVisibility({ input: "stock", expectedVisibility: false });
-  await assertOptInVisibility({ input: "sports", expectedVisibility: false });
 
   info("Simulate the passage of three days");
   moveNotNowTimeSecondsEalier(notNowTimeSeconds, 3);
-  await assertOptInVisibility({ input: "stock", expectedVisibility: false });
-  await assertOptInVisibility({ input: "sports", expectedVisibility: true });
+
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions becomes enabled after simulating passage of three days"
+  );
+
+  // Suggest will ingest the Rust suggestions for `MarketSuggestions` after it
+  // became enabled, so wait for that to finish before continuing.
+  await QuickSuggestTestUtils.forceSync();
+
+  await assertOptInVisibility({ input: "stock", expectedVisibility: true });
 
   UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowTimeSeconds");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowTypes");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.dismissTypes");
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowReshowAfterPeriodDays");
+
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions remains enabled after clearing prefs"
+  );
 });
 
 add_task(async function not_interested() {
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "Sanity check: MarketSuggestions is enabled initially"
+  );
+
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
   UrlbarPrefs.set("suggest.realtimeOptIn", true);
 
@@ -306,7 +385,7 @@ add_task(async function not_interested() {
   EventUtils.synthesizeMouseAtCenter(dropmarker, {});
   await onPopupShown;
 
-  info("Activate the reject item");
+  info("Activate the not_interested item");
   const onPopupHidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
   const targetMenuItem = popup.querySelector("menuitem");
   if (AppConstants.platform == "macosx") {
@@ -321,14 +400,26 @@ add_task(async function not_interested() {
     () => !UrlbarPrefs.get("suggest.realtimeOptIn"),
     "Wait until suggest.realtimeOptIn pref changes"
   );
-  info("Dismiss all item works");
+  Assert.ok(
+    !QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions becomes disabled after clicking not_interested menu item"
+  );
+  info("not_interested item works");
 
-  info("Any realtime type suggestoin never be shown");
+  info("Any realtime type suggestion never be shown");
   await assertOptInVisibility({ input: "stock", expectedVisibility: false });
-  await assertOptInVisibility({ input: "sports", expectedVisibility: false });
 
   UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
   UrlbarPrefs.clear("suggest.realtimeOptIn");
+
+  Assert.ok(
+    QuickSuggest.getFeature("MarketSuggestions").isEnabled,
+    "MarketSuggestions becomes enabled after clearing prefs"
+  );
+
+  // Suggest will ingest the Rust suggestions for `MarketSuggestions` after it
+  // became enabled, so wait for that to finish before continuing.
+  await QuickSuggestTestUtils.forceSync();
 });
 
 async function openRealtimeSuggestion({ input }) {

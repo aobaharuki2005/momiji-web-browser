@@ -26,17 +26,15 @@ export class SuggestFeature {
   /**
    * @returns {Array}
    *   If the feature is conditioned on any prefs or Nimbus variables, the
-   *   subclass should override this getter and return their names in this array
-   *   so that `update()` and `enable()` can be called when they change. Names
-   *   should be recognized by `UrlbarPrefs`, i.e., pref names should be
-   *   relative to the `browser.urlbar.` branch. For Nimbus variables with
-   *   fallback prefs, include only the variable name.
+   *   subclass should override this getter and return their names in this
+   *   array. When one of these prefs or variables changes, Suggest will call
+   *   `feature.update()`, which checks `feature.shouldEnable`. If the value of
+   *   `shouldEnable` is different from the feature's current enabled status,
+   *   then `feature.update()` calls `feature.enable()`.
    *
-   *   When Suggest determines whether the feature should be enabled, it will
-   *   call `UrlbarPrefs.get()` on each name in this array and disable the
-   *   feature if any are falsey. If any of the prefs or variables are not
-   *   booleans, the subclass may also need to override
-   *   `additionalEnablingPredicate` to perform additional checks on them.
+   *   Pref and variable names should be recognized by `UrlbarPrefs`. i.e., pref
+   *   names should be relative to the `browser.urlbar.` branch. For Nimbus
+   *   variables with fallback prefs, include only the variable name.
    */
   get enablingPreferences() {
     return [];
@@ -44,23 +42,22 @@ export class SuggestFeature {
 
   /**
    * @returns {Array}
-   *   If there are feature-specific prefs that are controlled by the user and
-   *   toggles the feature on and off, the subclass should override this getter
-   *   and return its name. It should also be included in `enablingPreferences`.
-   *   The name should be recognized by `UrlbarPrefs`, i.e., it should be
-   *   relative to the `browser.urlbar.` branch.
+   *   If there are any feature-specific prefs that are exposed to the user and
+   *   allow the feature to be toggled on or off, the subclass should override
+   *   this getter and return their names. They should also be included in
+   *   `enablingPreferences`. The names should be recognized by `UrlbarPrefs`,
+   *   i.e., they should be relative to the `browser.urlbar.` branch.
    *
-   *   If the feature is a `SuggestProvider`, typically this should be the pref
-   *   that's named `suggest.mySuggestionType` and set to `false` when the user
-   *   dismisses the entire suggestion type, i.e., the relevant
-   *   `browser.urlbar.suggest.` pref.
+   *   If the feature is a `SuggestProvider`, typically this should include the
+   *   pref that's named `suggest.mySuggestionType` and set to `false` when the
+   *   user dismisses the entire suggestion type, i.e., the relevant
+   *   These prefs should be controlled by the user, so they should never
+   *   include the feature's `featureGate` pref.
    *
-   *   The pref should be controlled by the user, so it should never be the
-   *   feature's feature-gate pref.
-   *
-   *   The pref should control this feature specifically, so it should never be
-   *   `suggest.quicksuggest.sponsored` or `suggest.quicksuggest.nonsponsored`.
-   *   If the feature has no such pref, this getter should return null.
+   *   These prefs should control this feature specifically, so they should
+   *   never include `suggest.quicksuggest.sponsored` or
+   *   `suggest.quicksuggest.nonsponsored`. If the feature has no such prefs,
+   *   this getter should return an empty array.
    */
   get primaryUserControlledPreferences() {
     return [];
@@ -68,19 +65,14 @@ export class SuggestFeature {
 
   /**
    * @returns {boolean}
-   *   If the feature is conditioned on any predicate other than the prefs and
-   *   Nimbus variables in `enablingPreferences`, the subclass should override
-   *   this getter and return whether the feature should be enabled. It may also
-   *   need to override this getter if any of the prefs or variables in
-   *   `enablingPreferences` are not booleans so that it can perform additional
-   *   checks on them. (The predicate does not need to check prefs and variables
-   *   in `enablingPreferences` that are booleans.)
+   *   Whether the feature should be enabled, assuming Suggest is enabled. This
+   *   base implementation returns true if every pref in `enablingPreferences`
+   *   is truthy. The subclass should override it if it needs different logic.
    *
-   *   This getter will be called only when Suggest is enabled and all prefs and
-   *   variables in `enablingPreferences` are truthy.
+   *   This getter will be called only when Suggest is enabled.
    */
-  get additionalEnablingPredicate() {
-    return true;
+  get shouldEnable() {
+    return this.enablingPreferences.every(p => lazy.UrlbarPrefs.get(p));
   }
 
   /**
@@ -94,17 +86,6 @@ export class SuggestFeature {
   enable(enabled) {}
 
   // Methods not designed for overriding below
-
-  /**
-   * @returns {boolean}
-   *   Whether the feature should be enabled, assuming Suggest is enabled.
-   */
-  get shouldEnable() {
-    return (
-      this.enablingPreferences.every(p => lazy.UrlbarPrefs.get(p)) &&
-      this.additionalEnablingPredicate
-    );
-  }
 
   /**
    * @returns {ConsoleInstance}
