@@ -160,9 +160,7 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
   // If the object is in the nursery, the buffer will be freed by the next
   // nursery GC. Free the data slot pointer if the object has no inline data.
   size_t nbytes = RoundUp(byteLength, sizeof(Value));
-  Nursery& nursery = cx->nursery();
-  if (tarray->isTenured() && !tarray->hasInlineElements() &&
-      !nursery.isInside(tarray->elements())) {
+  if (tarray->isTenured() && tarray->hasMallocedElements(cx)) {
     js_free(tarray->elements());
     RemoveCellMemory(tarray, nbytes, MemoryUse::TypedArrayElements);
   }
@@ -301,6 +299,10 @@ void FixedLengthTypedArrayObject::setInlineElements() {
   char* dataSlot = reinterpret_cast<char*>(this) + dataOffset();
   *reinterpret_cast<void**>(dataSlot) =
       this->fixedData(FixedLengthTypedArrayObject::FIXED_DATA_START);
+}
+
+bool FixedLengthTypedArrayObject::hasMallocedElements(JSContext* cx) const {
+  return !hasInlineElements() && !cx->nursery().isInside(elements());
 }
 
 /* Helper clamped uint8_t type */
