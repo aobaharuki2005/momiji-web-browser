@@ -72,7 +72,7 @@ bool ParallelMarker::markOneColor(MarkColor color,
 
   for (size_t i = 0; i < workerCount(); i++) {
     GCMarker* marker = gc->markers[i].get();
-    tasks[i].emplace(this, marker, color, sliceBudget);
+    tasks[i].emplace(this, marker, color, i, sliceBudget);
 
     // Attempt to populate empty mark stacks.
     //
@@ -127,12 +127,14 @@ bool ParallelMarker::hasWork(MarkColor color) const {
 }
 
 ParallelMarkTask::ParallelMarkTask(ParallelMarker* pm, GCMarker* marker,
-                                   MarkColor color, const SliceBudget& budget)
+                                   MarkColor color, uint32_t id,
+                                   const SliceBudget& budget)
     : GCParallelTask(pm->gc, gcstats::PhaseKind::PARALLEL_MARK, GCUse::Marking),
       pm(pm),
       marker(marker),
       color(*marker, color),
-      budget(budget) {
+      budget(budget),
+      id(id) {
   marker->enterParallelMarkingMode(pm);
 }
 

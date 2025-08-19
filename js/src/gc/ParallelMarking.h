@@ -88,7 +88,7 @@ class alignas(TypicalCacheLineSize) ParallelMarkTask
   friend class ParallelMarker;
 
   ParallelMarkTask(ParallelMarker* pm, GCMarker* marker, MarkColor color,
-                   const JS::SliceBudget& budget);
+                   uint32_t id, const JS::SliceBudget& budget);
   ~ParallelMarkTask();
 
   void run(AutoLockHelperThreadState& lock) override;
@@ -111,6 +111,8 @@ class alignas(TypicalCacheLineSize) ParallelMarkTask
   AutoSetMarkColor color;
   JS::SliceBudget budget;
   ConditionVariable resumed;
+
+  const uint32_t id;
 
   HelperThreadLockData<bool> isWaiting;
 
