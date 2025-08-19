@@ -1003,17 +1003,23 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       break;
     }
     case DisplayItemType::TYPE_BLEND_CONTAINER: {
-      aContext->GetDrawTarget()->PushLayer(false, 1.0, nullptr,
-                                           mozilla::gfx::Matrix(), aItemBounds);
-      GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
-         aItem->GetPerFrameKey());
-      aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      auto* bc = static_cast<nsDisplayBlendContainer*>(aItem);
+      const bool flatten = bc->ShouldFlattenAway(mDisplayListBuilder);
+      if (!flatten) {
+        aContext->GetDrawTarget()->PushLayer(
+            false, 1.0, nullptr, mozilla::gfx::Matrix(), aItemBounds);
+        GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
+           aItem->GetPerFrameKey());
+        aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      }
       aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
                              aContext, aRecorder, aRootManager, aResources);
-      aContext->GetDrawTarget()->PopLayer();
-      GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
-         aItem->GetPerFrameKey());
-      aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      if (!flatten) {
+        aContext->GetDrawTarget()->PopLayer();
+        GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
+           aItem->GetPerFrameKey());
+        aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      }
       break;
     }
     case DisplayItemType::TYPE_MASK: {
