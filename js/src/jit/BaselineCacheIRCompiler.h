@@ -77,6 +77,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   void pushArguments(Register argcReg, Register calleeReg, Register scratch,
                      Register scratch2, CallFlags flags, uint32_t argcFixed,
                      bool isJitCall);
+  void pushNewTarget();
   void pushStandardArguments(Register argcReg, Register scratch,
                              Register scratch2, uint32_t argcFixed,
                              bool isJitCall, bool isConstructing);

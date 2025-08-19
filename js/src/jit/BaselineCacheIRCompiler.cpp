@@ -2999,6 +2999,34 @@ void BaselineCacheIRCompiler::pushArguments(Register argcReg,
   }
 }
 
+void BaselineCacheIRCompiler::pushNewTarget() {
+  // When it's time to push `newTarget`, the stack looks like this
+  // (higher addresses at the top):
+  //
+  // .                        .
+  // +------------------------+
+  // | callee                 |
+  // | this                   |
+  // | arg0                   | <= pushed on caller's expression stack
+  // | arg1                   |
+  // | ...                    |
+  // | argN                   |
+  // | newTarget              | <---- we want to copy this
+  // +------------------------+
+  // | frame descriptor       | <= BaselineStubFrame
+  // | return address         |
+  // | caller frame pointer   | <-- frame pointer points here
+  // +------------------------+
+  // | stub ptr               |
+  // | InlinedICScript?       |
+  // | (alignment padding?)   | <-- stack pointer points here
+  // +------------------------+
+  //
+  // `newTarget` is the last argument pushed, so it's immediately above the
+  // stub frame on the stack.
+  masm.pushValue(Address(FramePointer, BaselineStubFrameLayout::Size()));
+}
+
 void BaselineCacheIRCompiler::pushStandardArguments(
     Register argcReg, Register scratch, Register scratch2, uint32_t argcFixed,
     bool isJitCall, bool isConstructing) {
@@ -3093,7 +3121,7 @@ void BaselineCacheIRCompiler::pushArrayArguments(Register argcReg,
 
   // Push newTarget, if necessary
   if (isConstructing) {
-    masm.pushValue(Address(FramePointer, BaselineStubFrameLayout::Size()));
+    pushNewTarget();
   }
 
   // Push arguments: set up endReg to point to &array[argc]
