@@ -545,3 +545,26 @@ add_task(
     cleanup();
   }
 );
+
+add_task(async function test_backend_field_sent_as_part_of_telemetry() {
+  let { tab, cleanup } = await setup();
+  let tabgroupEditor = document.getElementById("tab-group-editor");
+  let tabgroupPanel = tabgroupEditor.panel;
+  let nameField = tabgroupPanel.querySelector("#tab-group-name");
+
+  await openCreatePanel(tabgroupPanel, tab);
+  nameField.focus();
+  nameField.value = "Random Non-ML Label"; // user label matching suggested label
+  tabgroupEditor.mlLabel = ""; // empty label
+  tabgroupPanel.querySelector("#tab-group-editor-button-create").click();
+  let panelHidden = BrowserTestUtils.waitForPopupEvent(tabgroupPanel, "hidden");
+  await panelHidden;
+
+  const events = Glean.tabgroup.smartTabTopic.testGetValue();
+  Assert.equal(
+    events[0].extra.backend,
+    "onnx-native",
+    "Check that the field is present in the telemetry"
+  );
+  cleanup();
+});
