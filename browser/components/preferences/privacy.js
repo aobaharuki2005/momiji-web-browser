@@ -1328,8 +1328,28 @@ var gPrivacyPane = {
         privateBrowsingPref.value;
     }
 
-    setSyncFromPrefListener("contentBlockingBaselineExceptionsCustom", () =>
-      this.readBaselineExceptionState()
+    setEventListener(
+      "contentBlockingBaselineExceptionsStrict",
+      "change",
+      gPrivacyPane.onBaselineCheckboxChange
+    );
+
+    setEventListener(
+      "contentBlockingBaselineExceptionsCustom",
+      "change",
+      gPrivacyPane.onBaselineCheckboxChange
+    );
+
+    setEventListener(
+      "contentBlockingConvenienceExceptionsStrict",
+      "change",
+      gPrivacyPane.maybeNotifyUserToReload
+    );
+
+    setEventListener(
+      "contentBlockingConvenienceExceptionsCustom",
+      "change",
+      gPrivacyPane.maybeNotifyUserToReload
     );
 
     /* init HTTPS-Only mode */
@@ -1422,6 +1442,15 @@ var gPrivacyPane = {
     // If any relevant content blocking pref changes, show a warning that the changes will
     // not be implemented until they refresh their tabs.
     for (let pref of CONTENT_BLOCKING_PREFS) {
+      // Skip registering change listeners for baseline and convenience allow list prefs.
+      // Their UI is handled in gPrivacyPane.onBaselineCheckboxChange to prevent redundant reload
+      // warnings when user toggles the checkboxes.
+      if (
+        pref == "privacy.trackingprotection.allow_list.baseline.enabled" ||
+        pref == "privacy.trackingprotection.allow_list.convenience.enabled"
+      ) {
+        continue;
+      }
       Preferences.get(pref).on("change", gPrivacyPane.maybeNotifyUserToReload);
       // If the value changes, run populateCategoryContents, since that change might have been
       // triggered by a default value changing in the standard category.
@@ -3642,20 +3671,69 @@ var gPrivacyPane = {
   },
 
   /**
-   * Checks the "privacy.trackingprotection.allow_list.baseline.enabled" pref.
-   * If the baseline is disabled, update the convenience exceptions pref to false, as convenience
-   * exceptions are only allowed when the baseline is enabled.
+   * Handles change events on baseline and convenience exception checkboxes for content blocking preferences.
+   *
+   * - For baseline checkboxes: If the user attempts to uncheck, shows a confirmation dialog.
+   *   If confirmed, disables the baseline allow list preference.
+   * - For other cases: Toggles the checkbox and updates the corresponding preference.
+   *
+   * @param {Event} event - The change event triggered by the checkbox.
    */
-  readBaselineExceptionState() {
-    const isBaselineEnabled = Preferences.get(
-      "privacy.trackingprotection.allow_list.baseline.enabled"
-    ).value;
+  async onBaselineCheckboxChange(event) {
+    // Ignore events from nested checkboxes
+    if (event.target.slot === "nested") {
+      return;
+    }
 
-    // If the baseline is disabled, disable the convenience exceptions preference.
-    if (!isBaselineEnabled) {
+    // If the user is checking the checkbox, don't show a confirmation prompt.
+    if (event.target.checked) {
+      this.maybeNotifyUserToReload();
+      return;
+    }
+
+    let [title, body, okButtonText, cancelButtonText] =
+      await document.l10n.formatValues([
+        { id: "content-blocking-baseline-uncheck-warning-dialog-title" },
+        { id: "content-blocking-baseline-uncheck-warning-dialog-body" },
+        { id: "content-blocking-baseline-uncheck-warning-dialog-ok-button" },
+        {
+          id: "content-blocking-baseline-uncheck-warning-dialog-cancel-button",
+        },
+      ]);
+
+    let flags =
+      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_1 +
+      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
+      Services.prompt.BUTTON_POS_0_DEFAULT;
+
+    const result = await Services.prompt.asyncConfirmEx(
+      window.browsingContext,
+      Services.prompt.MODAL_TYPE_CONTENT,
+      title,
+      body,
+      flags,
+      cancelButtonText,
+      okButtonText,
+      null,
+      null,
+      false,
+      {
+        useTitle: true,
+      }
+    );
+
+    const propertyBag = result.QueryInterface(Ci.nsIPropertyBag2);
+
+    if (propertyBag.get("buttonNumClicked") == 1) {
+      // User confirmed, set the checkbox to false.
+      event.target.checked = false;
+      this.maybeNotifyUserToReload();
+    } else {
+      // User cancelled, set the checkbox and the baseline pref to true.
+      event.target.checked = true;
       Services.prefs.setBoolPref(
-        "privacy.trackingprotection.allow_list.convenience.enabled",
-        false
+        "privacy.trackingprotection.allow_list.baseline.enabled",
+        true
       );
     }
   },

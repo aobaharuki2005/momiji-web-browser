@@ -183,7 +183,10 @@ UrlClassifierExceptionListService.prototype = {
         "privacy.trackingprotection.allow_list.convenience.enabled"
       );
       Glean.contentblocking.tpAllowlistBaselineEnabled.set(baseline);
-      Glean.contentblocking.tpAllowlistConvenienceEnabled.set(convenience);
+      // If baseline is false, having convenience as true has no effect, so we treat it as false.
+      Glean.contentblocking.tpAllowlistConvenienceEnabled.set(
+        baseline ? convenience : false
+      );
     }
   },
 

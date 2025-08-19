@@ -1383,6 +1383,11 @@ content-blocking-convenience-label = Fix minor site issues
 
 content-blocking-exceptions-subheader = Fix site issues
 
+content-blocking-baseline-uncheck-warning-dialog-title = Are you sure you want to turn off fixes?
+content-blocking-baseline-uncheck-warning-dialog-body = This setting helps fix the most common site problems. If you turn it off, some sites may not work, and { -brand-short-name } won’t be able to help troubleshoot those issues.
+content-blocking-baseline-uncheck-warning-dialog-ok-button = Turn fixes off
+content-blocking-baseline-uncheck-warning-dialog-cancel-button = Keep fixes on
+
 content-blocking-reload-description = You will need to reload your tabs to apply these changes.
 content-blocking-reload-tabs-button =
   .label = Reload All Tabs
