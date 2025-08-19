@@ -8,7 +8,6 @@
 
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
-#include "gc/ParallelWork.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/HelperThreadState.h"
 #include "vm/Runtime.h"
@@ -85,11 +84,11 @@ bool ParallelMarker::markOneColor(MarkColor color,
 
   AutoLockHelperThreadState lock;
 
-  MOZ_ASSERT(activeTasks == 0);
+  MOZ_ASSERT(!hasActiveTasks(lock));
   for (size_t i = 0; i < workerCount(); i++) {
     ParallelMarkTask& task = *tasks[i];
     if (task.hasWork()) {
-      incActiveTasks(&task, lock);
+      setTaskActive(&task, lock);
     }
   }
 
@@ -110,7 +109,7 @@ bool ParallelMarker::markOneColor(MarkColor color,
 #ifdef DEBUG
   MOZ_ASSERT(waitingTasks.ref().isEmpty());
   MOZ_ASSERT(waitingTaskCount == 0);
-  MOZ_ASSERT(activeTasks == 0);
+  MOZ_ASSERT(!hasActiveTasks(lock));
 #endif
 
   return !hasWork(color);
@@ -199,7 +198,7 @@ bool ParallelMarkTask::tryMarking(AutoLockHelperThreadState& lock) {
   }
 
   MOZ_ASSERT_IF(finished, !hasWork());
-  pm->decActiveTasks(this, lock);
+  pm->setTaskInactive(this, lock);
 
   return finished;
 }
@@ -258,7 +257,7 @@ void ParallelMarkTask::resume() {
     // Increment the active task count before donateWorkFrom() returns so this
     // can't reach zero before the waiting task runs again.
     if (hasWork()) {
-      pm->incActiveTasks(this, lock);
+      pm->setTaskActive(this, lock);
     }
   }
 
@@ -293,21 +292,26 @@ bool ParallelMarker::isTaskInWaitingList(
 }
 #endif
 
-void ParallelMarker::incActiveTasks(ParallelMarkTask* task,
-                                    const AutoLockHelperThreadState& lock) {
+void ParallelMarker::setTaskActive(ParallelMarkTask* task,
+                                   const AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(task->hasWork());
-  MOZ_ASSERT(activeTasks < workerCount());
 
-  activeTasks++;
+  uint32_t id = task->id;
+  MOZ_ASSERT(id < workerCount());
+  MOZ_ASSERT(!activeTasks.ref()[id]);
+  activeTasks.ref()[id] = true;
 }
 
-void ParallelMarker::decActiveTasks(ParallelMarkTask* task,
-                                    const AutoLockHelperThreadState& lock) {
-  MOZ_ASSERT(activeTasks != 0);
+void ParallelMarker::setTaskInactive(ParallelMarkTask* task,
+                                     const AutoLockHelperThreadState& lock) {
+  MOZ_ASSERT(hasActiveTasks(lock));
 
-  activeTasks--;
+  uint32_t id = task->id;
+  MOZ_ASSERT(id < workerCount());
+  MOZ_ASSERT(activeTasks.ref()[id]);
+  activeTasks.ref()[id] = false;
 
-  if (activeTasks == 0) {
+  if (!hasActiveTasks(lock)) {
     while (!waitingTasks.ref().isEmpty()) {
       ParallelMarkTask* task = waitingTasks.ref().popFront();
       MOZ_ASSERT(waitingTaskCount != 0);

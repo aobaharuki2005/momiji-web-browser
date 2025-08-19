@@ -8,6 +8,7 @@
 #define gc_ParallelMarking_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/BitSet.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/TimeStamp.h"
 
@@ -25,6 +26,8 @@ class AutoLockHelperThreadState;
 namespace gc {
 
 class ParallelMarkTask;
+
+using ParallelTaskBitset = mozilla::BitSet<MaxParallelWorkers, uint32_t>;
 
 // Per-runtime parallel marking state.
 //
@@ -60,12 +63,12 @@ class MOZ_STACK_CLASS ParallelMarker {
 #endif
 
   bool hasActiveTasks(const AutoLockHelperThreadState& lock) const {
-    return activeTasks;
+    return !activeTasks.ref().IsEmpty();
   }
-  void incActiveTasks(ParallelMarkTask* task,
-                      const AutoLockHelperThreadState& lock);
-  void decActiveTasks(ParallelMarkTask* task,
-                      const AutoLockHelperThreadState& lock);
+  void setTaskActive(ParallelMarkTask* task,
+                     const AutoLockHelperThreadState& lock);
+  void setTaskInactive(ParallelMarkTask* task,
+                       const AutoLockHelperThreadState& lock);
 
   size_t workerCount() const;
 
@@ -77,7 +80,7 @@ class MOZ_STACK_CLASS ParallelMarker {
   HelperThreadLockData<ParallelMarkTaskList> waitingTasks;
   AtomicCount waitingTaskCount;
 
-  HelperThreadLockData<size_t> activeTasks;
+  HelperThreadLockData<ParallelTaskBitset> activeTasks;
 };
 
 // A helper thread task that performs parallel marking.
