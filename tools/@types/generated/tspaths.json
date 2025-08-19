@@ -83,6 +83,9 @@
       "chrome://browser/content/ipprotection/ipprotection-header.mjs": [
         "browser/components/ipprotection/content/ipprotection-header.mjs"
       ],
+      "chrome://browser/content/ipprotection/ipprotection-message-bar.mjs": [
+        "browser/components/ipprotection/content/ipprotection-message-bar.mjs"
+      ],
       "chrome://browser/content/ipprotection/ipprotection-signedout.mjs": [
         "browser/components/ipprotection/content/ipprotection-signedout.mjs"
       ],
@@ -136,9 +139,6 @@
       ],
       "chrome://browser/content/tabbrowser/tab-hover-preview.mjs": [
         "browser/components/tabbrowser/content/tab-hover-preview.mjs"
-      ],
-      "chrome://browser/content/tabbrowser/tabgroup-hover-preview.mjs": [
-        "browser/components/tabbrowser/content/tabgroup-hover-preview.mjs"
       ],
       "chrome://browser/content/translations/TranslationsPanelShared.sys.mjs": [
         "browser/components/translations/content/TranslationsPanelShared.sys.mjs"
@@ -1304,6 +1304,12 @@
       "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs": [
         "browser/components/firefoxview/firefox-view-tabs-setup-manager.sys.mjs"
       ],
+      "resource:///modules/ipprotection/GuardianClient.sys.mjs": [
+        "browser/components/ipprotection/GuardianClient.sys.mjs"
+      ],
+      "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs": [
+        "browser/components/ipprotection/IPPChannelFilter.sys.mjs"
+      ],
       "resource:///modules/ipprotection/IPProtection.sys.mjs": [
         "browser/components/ipprotection/IPProtection.sys.mjs"
       ],
@@ -1456,6 +1462,9 @@
       ],
       "resource:///modules/urlbar/private/MLSuggest.sys.mjs": [
         "browser/components/urlbar/private/MLSuggest.sys.mjs"
+      ],
+      "resource:///modules/urlbar/private/RealtimeSuggestProvider.sys.mjs": [
+        "browser/components/urlbar/private/RealtimeSuggestProvider.sys.mjs"
       ],
       "resource:///modules/urlbar/private/SuggestBackendRust.sys.mjs": [
         "browser/components/urlbar/private/SuggestBackendRust.sys.mjs"
@@ -6532,6 +6541,9 @@
       ],
       "resource://newtab/common/Reducers.sys.mjs": [
         "browser/extensions/newtab/common/Reducers.sys.mjs"
+      ],
+      "resource://newtab/data/content/activity-stream.bundle.js": [
+        "browser/extensions/newtab/data/content/activity-stream.bundle.js"
       ],
       "resource://newtab/lib/AboutPreferences.sys.mjs": [
         "browser/extensions/newtab/lib/AboutPreferences.sys.mjs"
