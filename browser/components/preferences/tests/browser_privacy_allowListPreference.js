@@ -119,11 +119,12 @@ add_task(
     let doc = gBrowser.contentDocument;
     doc.getElementById(ETP_STRICT_ID).click();
 
-    await clickCheckboxAndWaitForPrefChange(
+    await clickCheckboxWithConfirmDialog(
       doc,
       STRICT_BASELINE_CHECKBOX_ID,
       BASELINE_PREF,
-      false
+      false,
+      1
     );
 
     Assert.ok(
@@ -194,11 +195,12 @@ add_task(async function test_custom_mode_inherits_last_mode() {
     convenienceCheckboxStrict,
     "The convenience checkbox in Strict mode must be visible for this test."
   );
-  await clickCheckboxAndWaitForPrefChange(
+  await clickCheckboxWithConfirmDialog(
     doc,
     STRICT_BASELINE_CHECKBOX_ID,
     BASELINE_PREF,
-    false
+    false,
+    1
   );
   doc.getElementById(ETP_CUSTOM_ID).click();
   let baselineCheckboxCustom = doc.getElementById(CUSTOM_BASELINE_CHECKBOX_ID);
@@ -225,11 +227,12 @@ add_task(async function test_checkbox_state_persists_after_reload() {
   });
   let doc = gBrowser.contentDocument;
   doc.getElementById(ETP_STRICT_ID).click();
-  await clickCheckboxAndWaitForPrefChange(
+  await clickCheckboxWithConfirmDialog(
     doc,
     STRICT_BASELINE_CHECKBOX_ID,
     BASELINE_PREF,
-    false
+    false,
+    1
   );
   is(
     doc.getElementById(STRICT_BASELINE_CHECKBOX_ID).checked,
@@ -257,11 +260,12 @@ add_task(async function test_switching_modes_resets_checkboxes() {
   let standardRadio = doc.getElementById(ETP_STANDARD_ID);
   standardRadio.click();
   doc.getElementById(ETP_STRICT_ID).click();
-  await clickCheckboxAndWaitForPrefChange(
+  await clickCheckboxWithConfirmDialog(
     doc,
     STRICT_BASELINE_CHECKBOX_ID,
     BASELINE_PREF,
-    false
+    false,
+    1
   );
   is(
     doc.getElementById(STRICT_BASELINE_CHECKBOX_ID).checked,
@@ -300,11 +304,12 @@ add_task(async function test_convenience_cannot_be_enabled_if_baseline_false() {
     "The convenience checkbox should be enabled when the baseline checkbox is checked."
   );
 
-  await clickCheckboxAndWaitForPrefChange(
+  await clickCheckboxWithConfirmDialog(
     doc,
     STRICT_BASELINE_CHECKBOX_ID,
     BASELINE_PREF,
-    false
+    false,
+    1
   );
 
   is(
@@ -330,34 +335,22 @@ add_task(async function test_prefs_update_when_toggling_checkboxes_in_custom() {
   });
   let doc = gBrowser.contentDocument;
   doc.getElementById(ETP_CUSTOM_ID).click();
-  let baselineCheckbox = doc.getElementById(CUSTOM_BASELINE_CHECKBOX_ID);
-  let convenienceCheckbox = doc.getElementById(CUSTOM_CONVENIENCE_CHECKBOX_ID);
 
-  // Uncheck both checkboxes if they are checked, to establish a baseline.
-  if (baselineCheckbox.checked) {
-    await clickCheckboxAndWaitForPrefChange(
-      doc,
-      CUSTOM_BASELINE_CHECKBOX_ID,
-      BASELINE_PREF,
-      false
-    );
-  }
-  if (convenienceCheckbox.checked) {
-    await clickCheckboxAndWaitForPrefChange(
-      doc,
-      CUSTOM_CONVENIENCE_CHECKBOX_ID,
-      CONVENIENCE_PREF,
-      false
-    );
-  }
+  await clickCheckboxWithConfirmDialog(
+    doc,
+    CUSTOM_BASELINE_CHECKBOX_ID,
+    BASELINE_PREF,
+    false,
+    1
+  );
 
   Assert.ok(
     !Services.prefs.getBoolPref(BASELINE_PREF),
     "The baseline pref should be false after being unchecked in Custom mode."
   );
   Assert.ok(
-    !Services.prefs.getBoolPref(CONVENIENCE_PREF),
-    "The convenience pref should be false after being unchecked in Custom mode."
+    Services.prefs.getBoolPref(CONVENIENCE_PREF),
+    "The convenience pref should be unchanged after baseline unchecked in Custom mode."
   );
 
   // Check both boxes and verify the preferences are updated.
@@ -367,19 +360,9 @@ add_task(async function test_prefs_update_when_toggling_checkboxes_in_custom() {
     BASELINE_PREF,
     true
   );
-  await clickCheckboxAndWaitForPrefChange(
-    doc,
-    CUSTOM_CONVENIENCE_CHECKBOX_ID,
-    CONVENIENCE_PREF,
-    true
-  );
   Assert.ok(
     Services.prefs.getBoolPref(BASELINE_PREF),
     "The baseline pref should be true after being checked in Custom mode."
-  );
-  Assert.ok(
-    Services.prefs.getBoolPref(CONVENIENCE_PREF),
-    "The convenience pref should be true after being checked in Custom mode."
   );
   await cleanUp();
 });
@@ -410,11 +393,12 @@ add_task(async function test_reload_button_shows_after_prefs_changed_strict() {
     "The strict reload button must be hidden after clicking it"
   );
 
-  await clickCheckboxAndWaitForPrefChange(
+  await clickCheckboxWithConfirmDialog(
     doc,
     STRICT_BASELINE_CHECKBOX_ID,
     BASELINE_PREF,
-    false
+    false,
+    1
   );
 
   is_element_visible(
@@ -452,11 +436,12 @@ add_task(async function test_reload_button_shows_after_prefs_changed_custom() {
     "The custom reload button must be hidden when switching from strict"
   );
 
-  await clickCheckboxAndWaitForPrefChange(
+  await clickCheckboxWithConfirmDialog(
     doc,
     CUSTOM_BASELINE_CHECKBOX_ID,
     BASELINE_PREF,
-    false
+    false,
+    1
   );
 
   is_element_visible(
@@ -474,3 +459,218 @@ add_task(async function test_reload_button_shows_after_prefs_changed_custom() {
   BrowserTestUtils.removeTab(tab);
   await cleanUp();
 });
+
+add_task(async function test_baseline_checkbox_dialog_cancel() {
+  await setup();
+  await openPreferencesViaOpenPreferencesAPI("privacy", {
+    leaveOpen: true,
+  });
+  let doc = gBrowser.contentDocument;
+  doc.getElementById(ETP_STRICT_ID).click();
+
+  // Initially, baseline should be checked
+  let baselineCheckbox = doc.getElementById(STRICT_BASELINE_CHECKBOX_ID);
+  is(
+    baselineCheckbox.checked,
+    true,
+    "The baseline checkbox should be checked initially."
+  );
+
+  await clickCheckboxWithConfirmDialog(
+    doc,
+    STRICT_BASELINE_CHECKBOX_ID,
+    BASELINE_PREF,
+    true,
+    0
+  );
+
+  // Verify the checkbox is still checked and pref is still true
+  is(
+    baselineCheckbox.checked,
+    true,
+    "The baseline checkbox should remain checked after canceling dialog."
+  );
+  Assert.ok(
+    Services.prefs.getBoolPref(BASELINE_PREF),
+    "The baseline pref should remain true after canceling dialog."
+  );
+
+  await cleanUp();
+});
+
+add_task(async function test_baseline_checkbox_dialog_confirm() {
+  await setup();
+  await openPreferencesViaOpenPreferencesAPI("privacy", {
+    leaveOpen: true,
+  });
+  let doc = gBrowser.contentDocument;
+  doc.getElementById(ETP_STRICT_ID).click();
+
+  let baselineCheckbox = doc.getElementById(STRICT_BASELINE_CHECKBOX_ID);
+  is(
+    baselineCheckbox.checked,
+    true,
+    "The baseline checkbox should be checked initially."
+  );
+
+  await clickCheckboxWithConfirmDialog(
+    doc,
+    STRICT_BASELINE_CHECKBOX_ID,
+    BASELINE_PREF,
+    false,
+    1
+  );
+
+  is(
+    baselineCheckbox.checked,
+    false,
+    "The baseline checkbox should be unchecked after confirming dialog."
+  );
+  Assert.ok(
+    !Services.prefs.getBoolPref(BASELINE_PREF),
+    "The baseline pref should be false after confirming dialog."
+  );
+
+  Assert.ok(
+    !Services.prefs.getBoolPref(CONVENIENCE_PREF),
+    "The convenience pref should be false when baseline is disabled."
+  );
+
+  await cleanUp();
+});
+
+add_task(async function test_custom_baseline_checkbox_dialog_cancel() {
+  await setup();
+  await openPreferencesViaOpenPreferencesAPI("privacy", {
+    leaveOpen: true,
+  });
+  let doc = gBrowser.contentDocument;
+  doc.getElementById(ETP_CUSTOM_ID).click();
+
+  let baselineCheckbox = doc.getElementById(CUSTOM_BASELINE_CHECKBOX_ID);
+  is(
+    baselineCheckbox.checked,
+    true,
+    "The custom baseline checkbox should be checked initially."
+  );
+
+  await clickCheckboxWithConfirmDialog(
+    doc,
+    CUSTOM_BASELINE_CHECKBOX_ID,
+    BASELINE_PREF,
+    true,
+    0
+  );
+
+  is(
+    baselineCheckbox.checked,
+    true,
+    "The custom baseline checkbox should remain checked after canceling dialog."
+  );
+  Assert.ok(
+    Services.prefs.getBoolPref(BASELINE_PREF),
+    "The baseline pref should remain true after canceling dialog."
+  );
+
+  Assert.ok(
+    Services.prefs.getBoolPref(CONVENIENCE_PREF),
+    "The convenience pref should remain true when baseline is enabled."
+  );
+
+  await cleanUp();
+});
+
+add_task(async function test_custom_baseline_checkbox_dialog_confirm() {
+  await setup();
+  await openPreferencesViaOpenPreferencesAPI("privacy", {
+    leaveOpen: true,
+  });
+  let doc = gBrowser.contentDocument;
+  doc.getElementById(ETP_CUSTOM_ID).click();
+
+  let baselineCheckbox = doc.getElementById(CUSTOM_BASELINE_CHECKBOX_ID);
+  is(
+    baselineCheckbox.checked,
+    true,
+    "The custom baseline checkbox should be checked initially."
+  );
+
+  await clickCheckboxWithConfirmDialog(
+    doc,
+    CUSTOM_BASELINE_CHECKBOX_ID,
+    BASELINE_PREF,
+    false,
+    1
+  );
+
+  is(
+    baselineCheckbox.checked,
+    false,
+    "The custom baseline checkbox should be unchecked after confirming dialog."
+  );
+  Assert.ok(
+    !Services.prefs.getBoolPref(BASELINE_PREF),
+    "The baseline pref should be false after confirming dialog."
+  );
+
+  let convenienceCheckbox = doc.getElementById(CUSTOM_CONVENIENCE_CHECKBOX_ID);
+  is(
+    convenienceCheckbox.checked,
+    true,
+    "The custom convenience checkbox should be unchanged when baseline is disabled."
+  );
+  Assert.ok(
+    Services.prefs.getBoolPref(CONVENIENCE_PREF),
+    "The convenience pref should be unchanged when baseline is disabled."
+  );
+
+  await cleanUp();
+});
+
+add_task(
+  async function test_reload_does_not_show_after_baseline_checkbox_dialog_cancel() {
+    await SpecialPowers.pushPrefEnv({
+      set: [[CB_CATEGORY_PREF, "strict"]],
+    });
+    Assert.ok(
+      Services.prefs.getBoolPref(BASELINE_PREF),
+      "The baseline preference should be initially true."
+    );
+    Assert.ok(
+      !Services.prefs.getBoolPref(CONVENIENCE_PREF),
+      "The convenience preference should be initially false."
+    );
+    await openPreferencesViaOpenPreferencesAPI("privacy", {
+      leaveOpen: true,
+    });
+    let doc = gBrowser.contentDocument;
+
+    let reloadButton = doc.querySelector(
+      "#contentBlockingOptionStrict .content-blocking-warning.reload-tabs .reload-tabs-button"
+    );
+    is_element_hidden(
+      reloadButton,
+      "The reload button should be hidden initially in Strict mode."
+    );
+
+    await clickCheckboxWithConfirmDialog(
+      doc,
+      STRICT_BASELINE_CHECKBOX_ID,
+      BASELINE_PREF,
+      true,
+      0
+    );
+
+    Assert.ok(
+      Services.prefs.getBoolPref(BASELINE_PREF),
+      "The baseline pref should remain true after canceling dialog."
+    );
+
+    is_element_hidden(
+      reloadButton,
+      "The reload button should be hidden after canceling the checkbox dialog."
+    );
+
+    await cleanUp();
+  }
+);
