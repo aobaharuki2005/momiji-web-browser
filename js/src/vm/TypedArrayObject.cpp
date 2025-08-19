@@ -143,30 +143,48 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
   size_t byteLength = tarray->byteLength();
 
   AutoRealm ar(cx, tarray);
-  ArrayBufferObject* buffer =
-      ArrayBufferObject::createZeroed(cx, tarray->byteLength());
-  if (!buffer) {
-    return false;
+
+  ArrayBufferObject* buffer;
+  if (tarray->hasMallocedElements(cx)) {
+    // Allocate a new array buffer and transfer our malloced buffer to it
+    // without copying.
+    buffer =
+        ArrayBufferObject::createFromTypedArrayMallocedElements(cx, tarray);
+    if (!buffer) {
+      return false;
+    }
+  } else {
+    buffer = ArrayBufferObject::createZeroed(cx, byteLength);
+    if (!buffer) {
+      return false;
+    }
+
+    // tarray is not shared, because if it were it would have a buffer.
+    memcpy(buffer->dataPointer(), tarray->dataPointerUnshared(), byteLength);
+
+    // If the object is in the nursery, the buffer will be freed by the next
+    // nursery GC. Free the data slot pointer if the object has no inline data.
+    //
+    // Note: we checked hasMallocedElements above, but allocating the array
+    // buffer object might have triggered a GC and this can malloc typed array
+    // elements if the typed array was in the nursery.
+    if (tarray->isTenured() && tarray->hasMallocedElements(cx)) {
+      size_t nbytes = RoundUp(byteLength, sizeof(Value));
+      js_free(tarray->elements());
+      RemoveCellMemory(tarray, nbytes, MemoryUse::TypedArrayElements);
+    }
+
+    tarray->setFixedSlot(TypedArrayObject::DATA_SLOT,
+                         PrivateValue(buffer->dataPointer()));
   }
+
+  MOZ_ASSERT(tarray->elements() == buffer->dataPointer());
 
   buffer->pinLength(tarray->isLengthPinned());
 
   // Attaching the first view to an array buffer is infallible.
   MOZ_ALWAYS_TRUE(buffer->addView(cx, tarray));
 
-  // tarray is not shared, because if it were it would have a buffer.
-  memcpy(buffer->dataPointer(), tarray->dataPointerUnshared(), byteLength);
-
-  // If the object is in the nursery, the buffer will be freed by the next
-  // nursery GC. Free the data slot pointer if the object has no inline data.
-  size_t nbytes = RoundUp(byteLength, sizeof(Value));
-  if (tarray->isTenured() && tarray->hasMallocedElements(cx)) {
-    js_free(tarray->elements());
-    RemoveCellMemory(tarray, nbytes, MemoryUse::TypedArrayElements);
-  }
-
-  tarray->setFixedSlot(TypedArrayObject::DATA_SLOT,
-                       PrivateValue(buffer->dataPointer()));
   tarray->setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*buffer));
 
   return true;
