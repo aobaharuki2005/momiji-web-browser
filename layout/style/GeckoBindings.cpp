@@ -134,40 +134,21 @@ const nsINode* Gecko_GetFlattenedTreeParentNode(const nsINode* aNode) {
 }
 
 void Gecko_GetAnonymousContentForElement(const Element* aElement,
-                                         nsIContent** aStackBuffer,
-                                         size_t aStackBufferCap,
-                                         size_t* aStackBufferLen,
-                                         nsTArray<nsIContent*>* aExcessArray) {
+                                         nsTArray<nsIContent*>* aArray) {
   MOZ_ASSERT(aElement->MayHaveAnonymousChildren());
-  MOZ_ASSERT(*aStackBufferLen == 0);
-  MOZ_ASSERT(aStackBufferCap > 2, "We do unchecked appends for common pseudos");
   if (aElement->HasProperties()) {
     if (auto* marker = nsLayoutUtils::GetMarkerPseudo(aElement)) {
-      aStackBuffer[(*aStackBufferLen)++] = marker;
+      aArray->AppendElement(marker);
     }
     if (auto* before = nsLayoutUtils::GetBeforePseudo(aElement)) {
-      aStackBuffer[(*aStackBufferLen)++] = before;
+      aArray->AppendElement(before);
     }
     if (auto* after = nsLayoutUtils::GetAfterPseudo(aElement)) {
-      aStackBuffer[(*aStackBufferLen)++] = after;
+      aArray->AppendElement(after);
     }
   }
-  AutoTArray<nsIContent*, 5> elements;
   nsContentUtils::AppendNativeAnonymousChildren(
-      aElement, elements, nsIContent::eSkipDocumentLevelNativeAnonymousContent);
-  size_t nacChildren = elements.Length();
-  if (!nacChildren) {
-    return;  // Nothing else to do.
-  }
-
-  // If we fit in the stack buffer, copy there, otherwise use aExcessArray.
-  if (nacChildren <= aStackBufferCap - *aStackBufferLen) {
-    PodCopy(aStackBuffer + *aStackBufferLen, elements.Elements(), nacChildren);
-    *aStackBufferLen += nacChildren;
-  } else {
-    aExcessArray->SwapElements(elements);
-  }
-  MOZ_DIAGNOSTIC_ASSERT(*aStackBufferLen <= aStackBufferCap);
+      aElement, *aArray, nsIContent::eSkipDocumentLevelNativeAnonymousContent);
 }
 
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent) {
