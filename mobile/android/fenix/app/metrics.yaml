@@ -2127,6 +2127,226 @@ onboarding:
       tags:
         - Onboarding
 
+terms_of_use:
+  impression:
+    type: event
+    description: The Terms of Use prompt was displayed to the user.
+    extra_keys:
+      tou_version:
+        type: quantity
+        description: The Terms of Use version, e.g., 1, 2. No semantic versioning.
+        unit: version
+      surface:
+        type: string
+        description: The surface on which the Terms of Use prompt was displayed, e.g. Homescreen, Browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+  impression_count:
+    type: counter
+    lifetime: application
+    description: Records the number of Terms of Use prompt impressions the user has had.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+  accepted:
+    type: event
+    description: The user accepted the Terms of Use.
+    extra_keys:
+      tou_version:
+        type: quantity
+        description: The version of the Terms of Use the user accepted.
+        unit: version
+      surface:
+        type: string
+        description: The surface on which the Terms of Use prompt was displayed, e.g. Homescreen, Browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+  version:
+    type: quantity
+    lifetime: application
+    description: The version of the Terms of Use the user accepted.
+    unit: version
+    send_in_pings:
+      - metrics
+    notification_emails:
+      - android-probes@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    expires: never
+
+  date:
+    type: datetime
+    lifetime: application
+    description: The timestamp when the user accepted the Terms of Use.
+    time_unit: millisecond
+    send_in_pings:
+      - metrics
+    notification_emails:
+      - android-probes@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    expires: never
+
+  remind_me_later_click:
+    type: event
+    description: The user clicked the 'remind me later' link on the Terms of Use prompt.
+    extra_keys:
+      tou_version:
+        type: quantity
+        description: The Terms of Use version, e.g., 1, 2. No semantic versioning.
+        unit: version
+      surface:
+        type: string
+        description: The surface on which the Terms of Use prompt was displayed, e.g. Homescreen, Browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+  remind_me_later_count:
+    type: counter
+    lifetime: application
+    description: Records the number of times the user clicked 'remind me later' on the Terms of Use prompt.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+  learn_more_click:
+    type: event
+    description: The user clicked the 'learn more' link on the Terms of Use prompt.
+    extra_keys:
+      tou_version:
+        type: quantity
+        description: The Terms of Use version, e.g., 1, 2. No semantic versioning.
+        unit: version
+      surface:
+        type: string
+        description: The surface on which the Terms of Use prompt was displayed, e.g. Homescreen, Browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+  privacy_notice_click:
+    type: event
+    description: The user clicked the 'privacy notice' link on the Terms of Use prompt.
+    extra_keys:
+      tou_version:
+        type: quantity
+        description: The Terms of Use version, e.g., 1, 2. No semantic versioning.
+        unit: version
+      surface:
+        type: string
+        description: The surface on which the Terms of Use prompt was displayed, e.g. Homescreen, Browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+  terms_of_use_click:
+    type: event
+    description: The user clicked the 'terms of use' link on the Terms of Use prompt.
+    extra_keys:
+      tou_version:
+        type: quantity
+        description: The Terms of Use version, e.g., 1, 2. No semantic versioning.
+        unit: version
+      surface:
+        type: string
+        description: The surface on which the Terms of Use prompt was displayed, e.g. Homescreen, Browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+  dismiss:
+    type: event
+    description: The user dismissed the Terms of Use prompt.
+    extra_keys:
+      tou_version:
+        type: quantity
+        description: The Terms of Use version, e.g., 1, 2. No semantic versioning.
+        unit: version
+      surface:
+        type: string
+        description: The surface on which the Terms of Use prompt was displayed, e.g. Homescreen, Browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+  dismiss_count:
+    type: counter
+    lifetime: application
+    description: Records the number of times the user dismissed the Terms of Use prompt.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1963720
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D260153
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
 private_browsing_locked:
   feature_enabled:
     type: event
