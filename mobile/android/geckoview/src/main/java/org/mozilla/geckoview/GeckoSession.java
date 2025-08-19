@@ -2659,6 +2659,18 @@ public class GeckoSession {
   }
 
   /**
+   * Flushes the current {@link GeckoSession} state. This method triggers an asynchronous operation
+   * to flush the session state maintained by Gecko. The flush ensures that the most recent session
+   * data (such as navigation history and other stateful information) is captured and made available
+   * for persistence or inspection. Note: Since the operation is asynchronous, the flush may not
+   * complete immediately after this method returns.
+   */
+  @AnyThread
+  public void flushSessionState() {
+    mEventDispatcher.dispatch("GeckoView:FlushSessionState", null);
+  }
+
+  /**
    * Set this GeckoSession as active or inactive, which represents if the session is currently
    * visible or not. Setting a GeckoSession to inactive will significantly reduce its memory
    * footprint, but should only be done if the GeckoSession is not currently visible. Note that a
@@ -2675,7 +2687,7 @@ public class GeckoSession {
     mEventDispatcher.dispatch("GeckoView:SetActive", msg);
 
     if (!active) {
-      mEventDispatcher.dispatch("GeckoView:FlushSessionState", null);
+      flushSessionState();
       ThreadUtils.postToUiThreadDelayed(mNotifyMemoryPressure, NOTIFY_MEMORY_PRESSURE_DELAY_MS);
     } else {
       // Delete any pending memory pressure events since we're active again.

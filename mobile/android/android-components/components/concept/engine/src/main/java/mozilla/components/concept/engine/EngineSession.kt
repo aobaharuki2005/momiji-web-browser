@@ -947,6 +947,20 @@ abstract class EngineSession(
     abstract fun restoreState(state: EngineSessionState): Boolean
 
     /**
+     * Flushes the session state of the engine session.
+     *
+     * This method triggers an asynchronous flush of the current
+     * session state. The most recent state is not returned directly
+     * by this call. Instead, the updated session state will be
+     * delivered asynchronously through the observer callbacks:
+     *
+     * [EngineSession.Observer.onStateUpdated]
+     *
+     * [EngineSession.Observer.onHistoryStateChanged]
+     */
+    abstract fun flushSessionState()
+
+    /**
      * Updates the tracking protection [policy] for this engine session.
      * If you want to disable tracking protection use [TrackingProtectionPolicy.none].
      *

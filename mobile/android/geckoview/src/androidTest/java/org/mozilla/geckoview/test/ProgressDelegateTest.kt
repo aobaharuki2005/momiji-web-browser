@@ -713,4 +713,28 @@ class ProgressDelegateTest : BaseSessionTest() {
             lessThan(80),
         )
     }
+
+    @Test fun flushSessionStateTriggersSessionStateChange() {
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        var oldState: GeckoSession.SessionState? = null
+
+        sessionRule.waitUntilCalled(object : ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onSessionStateChange(session: GeckoSession, sessionState: GeckoSession.SessionState) {
+                oldState = sessionState
+            }
+        })
+
+        assertThat("State should not be null", oldState, notNullValue())
+
+        mainSession.flushSessionState()
+
+        sessionRule.waitUntilCalled(object : ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onSessionStateChange(session: GeckoSession, sessionState: GeckoSession.SessionState) {
+            }
+        })
+    }
 }

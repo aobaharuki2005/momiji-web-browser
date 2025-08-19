@@ -1166,6 +1166,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<Boolean> containsFormData();
     method @AnyThread @NonNull public GeckoResult<Boolean> didPrintPageContent();
     method @AnyThread public void exitFullScreen();
+    method @AnyThread public void flushSessionState();
     method @NonNull @UiThread public SessionAccessibility getAccessibility();
     method @Nullable @UiThread public Autofill.Delegate getAutofillDelegate();
     method @NonNull @UiThread public Autofill.Session getAutofillSession();
