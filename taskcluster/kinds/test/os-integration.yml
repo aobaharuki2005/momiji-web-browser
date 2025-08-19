@@ -16,7 +16,7 @@
       - android-em-7.0-x86_64-qr/debug
       - android-em-14-x86_64-lite/opt
       - android-em-14-x86_64/debug
-      - linux1804-64-qr/debug
+      - linux2404-64/debug
       - macosx1015-64-qr/debug
       - macosx1500-aarch64/debug
       - macosx1470-64/debug
@@ -66,7 +66,7 @@
 # asan
 - kind: test
   test_platform:
-      - linux1804-64-asan-qr/opt
+      - linux2404-64-asan/opt
   unittest_suite: *unittest-suites
   unittest_variant:
       - null
