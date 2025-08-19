@@ -2904,8 +2904,12 @@ line7</textarea>
  * Test the TextRange pattern's FindText method.
  */
 addUiaTask(
-  `<div id="container"><b>abc</b>TEST<div id="inner">def</div>TEST<p>ghi</p></div>`,
-  async function testTextRangeFromChild() {
+  `
+<div id="container"><b>abc</b>TEST<div id="inner">def</div>TEST<p>ghi</p></div>
+<textarea id="textarea">This is a test.</textarea>
+  `,
+  async function testTextRangeFindText() {
+    info("container tests");
     await runPython(`
       global doc, docText, container, range
       doc = getDocUia()
@@ -2978,6 +2982,50 @@ addUiaTask(
       subrange = range.FindText("test", False, True)
       `);
     is(await runPython(`subrange.GetText(-1)`), "TEST", "range text correct");
+
+    info("textarea tests");
+    await runPython(`
+      global range
+      textarea = findUiaByDomId(doc, "textarea")
+      range = docText.RangeFromChild(textarea)
+    `);
+    is(
+      await runPython(`range.GetText(-1)`),
+      "This is a test.",
+      "doc returned correct range for textarea"
+    );
+
+    info("Finding 'is', searching from the start");
+    await runPython(`
+      global subrange
+      subrange = range.FindText("is", False, False)
+      `);
+    is(await runPython(`subrange.GetText(-1)`), "is", "range text correct");
+    info("Expanding to word");
+    await runPython(`subrange.ExpandToEnclosingUnit(TextUnit_Word)`);
+    is(await runPython(`subrange.GetText(-1)`), "This ", "range text correct");
+
+    info("Creating range for 'is a test.'");
+    await runPython(`
+      global partRange
+      partRange = range.Clone()
+      partRange.MoveEndpointByRange(TextPatternRangeEndpoint_Start, subrange, TextPatternRangeEndpoint_End)
+    `);
+    is(
+      await runPython(`partRange.GetText(-1)`),
+      "is a test.",
+      "range text correct"
+    );
+
+    info("Finding 'is', searching forward in 'is a test.'");
+    await runPython(`
+      global subrange
+      subrange = partRange.FindText("is", False, False)
+    `);
+    is(await runPython(`subrange.GetText(-1)`), "is", "range text correct");
+    info("Expanding to word");
+    await runPython(`subrange.ExpandToEnclosingUnit(TextUnit_Word)`);
+    is(await runPython(`subrange.GetText(-1)`), "is ", "range text correct");
   },
   { uiaEnabled: true, uiaDisabled: true }
 );
