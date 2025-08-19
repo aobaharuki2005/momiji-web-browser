@@ -2270,7 +2270,7 @@ TEST_F(APZCOverscrollTester, ProgrammaticScroll) {
   apzc->NotifyLayersUpdated(metadata, /*aIsFirstPaint=*/false,
                             /*aThisLayerTreeUpdated=*/true);
 
-  apzc->AssertStateIsSmoothMsdScroll();
+  apzc->AssertInSmoothMsdScroll();
 
   while (SampleAnimationOneFrame()) {
     EXPECT_FALSE(apzc->IsOverscrolled());

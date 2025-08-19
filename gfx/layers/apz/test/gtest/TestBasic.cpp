@@ -457,7 +457,7 @@ class APZCSmoothScrollTester : public APZCBasicTester {
     apzc->NotifyLayersUpdated(metadata, false, true);
 
     // Sample the smooth scroll animation until we get past y=500.
-    apzc->AssertStateIsSmoothScroll();
+    apzc->AssertInSmoothScroll();
     float y = 0;
     while (y < 500) {
       SampleAnimationOneFrame();
@@ -476,7 +476,7 @@ class APZCSmoothScrollTester : public APZCBasicTester {
     // Verify the relative scroll was applied but didn't cancel the animation.
     float y2 = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
     ASSERT_EQ(y2, y - 400);
-    apzc->AssertStateIsSmoothScroll();
+    apzc->AssertInSmoothScroll();
 
     // Sample the animation again and check that it respected the relative
     // scroll.
@@ -515,7 +515,7 @@ class APZCSmoothScrollTester : public APZCBasicTester {
 
     // Send a wheel event to trigger smooth scrolling by 5 lines (= 500 pixels).
     SmoothWheel(apzc, ScreenIntPoint(50, 50), ScreenPoint(0, 5), mcc->Time());
-    apzc->AssertStateIsWheelScroll();
+    apzc->AssertInWheelScroll();
 
     // Sample the wheel scroll animation until we get past y=200.
     float y = 0;
@@ -538,7 +538,7 @@ class APZCSmoothScrollTester : public APZCBasicTester {
     // destination of y=600.
     float y2 = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
     ASSERT_EQ(y2, y + 100);
-    apzc->AssertStateIsWheelScroll();
+    apzc->AssertInWheelScroll();
 
     // Sample the animation until we get past y=400.
     while (y < 400) {
@@ -576,7 +576,7 @@ class APZCSmoothScrollTester : public APZCBasicTester {
 
     // First wheel event, smooth scroll destination is y=500.
     SmoothWheel(apzc, ScreenIntPoint(50, 50), ScreenPoint(0, 5), mcc->Time());
-    apzc->AssertStateIsWheelScroll();
+    apzc->AssertInWheelScroll();
 
     // Sample until we get past y=200.
     float y = 0;
@@ -596,7 +596,7 @@ class APZCSmoothScrollTester : public APZCBasicTester {
     apzc->NotifyLayersUpdated(metadata, false, true);
     float y2 = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
     ASSERT_EQ(y2, y + 1000);
-    apzc->AssertStateIsWheelScroll();
+    apzc->AssertInWheelScroll();
 
     // Sample until we get past y=1300.
     while (y < 1300) {
@@ -648,7 +648,7 @@ class APZCSmoothScrollTester : public APZCBasicTester {
     TimeStamp futureTimeStamp = mcc->Time() + TimeDuration::FromSeconds(60);
     SmoothWheel(apzc, ScreenIntPoint(50, 50), ScreenPoint(0, 5),
                 futureTimeStamp);
-    apzc->AssertStateIsWheelScroll();
+    apzc->AssertInWheelScroll();
 
     // Sample the animation 10 frames (a shorter overall duration than the
     // timestamp skew).
