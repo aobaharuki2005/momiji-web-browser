@@ -249,7 +249,7 @@ add_task(async function test_edit_profile_theme() {
   );
   await lightTheme.enable();
 
-  let expectedThemeId = "firefox-compact-dark@mozilla.org";
+  let expectedThemeId = "default-theme@mozilla.org";
 
   is(
     null,
@@ -274,11 +274,18 @@ add_task(async function test_edit_profile_theme() {
 
         await editProfileCard.updateComplete;
 
-        let darkThemeCard = editProfileCard.themeCards[5];
-        EventUtils.synthesizeMouseAtCenter(darkThemeCard, {}, content);
+        let defaultThemeCard = editProfileCard.themesPicker.querySelector(
+          "moz-visual-picker-item[value='default-theme@mozilla.org']"
+        );
+
+        Assert.ok(
+          !defaultThemeCard.checked,
+          "Default theme chip should not be selected"
+        );
+        EventUtils.synthesizeMouseAtCenter(defaultThemeCard, {}, content);
 
         await ContentTaskUtils.waitForCondition(
-          () => darkThemeCard.checked,
+          () => defaultThemeCard.checked,
           "Waiting for the new theme chip to be selected"
         );
 
@@ -562,13 +569,18 @@ add_task(async function test_theme_picker_arrow_key_support() {
         // Select and focus the light theme to get started.
         EventUtils.synthesizeMouseAtCenter(themeCards[0], {}, content);
         themeCards[0].focus();
+
+        await ContentTaskUtils.waitForCondition(
+          () => themeCards[0].checked,
+          "Wait for theme card to be checked"
+        );
         let selectedTheme = editProfileCard.shadowRoot.querySelector(
           "#themes > moz-visual-picker-item[checked]"
         );
         Assert.equal(
-          "firefox-compact-light@mozilla.org",
+          themeCards[0].value,
           selectedTheme.value,
-          "Light theme was selected"
+          "Gray theme was selected"
         );
         Assert.equal(
           editProfileCard.shadowRoot.activeElement,
@@ -661,7 +673,14 @@ add_task(async function test_edit_profile_system_theme() {
 
         await editProfileCard.updateComplete;
 
-        let defaultThemeCard = editProfileCard.themeCards[9];
+        let defaultThemeCard = editProfileCard.themesPicker.querySelector(
+          "moz-visual-picker-item[value='default-theme@mozilla.org']"
+        );
+
+        Assert.ok(
+          !defaultThemeCard.checked,
+          "Default theme chip should not be selected"
+        );
         EventUtils.synthesizeMouseAtCenter(defaultThemeCard, {}, content);
 
         await ContentTaskUtils.waitForCondition(

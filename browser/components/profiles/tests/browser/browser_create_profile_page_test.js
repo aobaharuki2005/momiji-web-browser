@@ -277,7 +277,7 @@ add_task(async function test_new_profile_theme() {
   );
   await lightTheme.enable();
 
-  let expectedThemeId = "firefox-compact-dark@mozilla.org";
+  let expectedThemeId = "default-theme@mozilla.org";
 
   is(
     null,
@@ -305,17 +305,19 @@ add_task(async function test_new_profile_theme() {
         // Fill in the input so we don't hit the beforeunload warning
         newProfileCard.nameInput.value = "test";
 
-        let darkThemeCard = newProfileCard.themeCards[5];
+        let defaultThemeCard = newProfileCard.themesPicker.querySelector(
+          "moz-visual-picker-item[value='default-theme@mozilla.org']"
+        );
 
         Assert.ok(
-          !darkThemeCard.checked,
-          "Dark theme chip should not be selected"
+          !defaultThemeCard.checked,
+          "Default theme chip should not be selected"
         );
-        EventUtils.synthesizeMouseAtCenter(darkThemeCard, {}, content);
+        EventUtils.synthesizeMouseAtCenter(defaultThemeCard, {}, content);
 
         await newProfileCard.updateComplete;
         await ContentTaskUtils.waitForCondition(
-          () => darkThemeCard.checked,
+          () => defaultThemeCard.checked,
           "Waiting for the new theme chip to be selected"
         );
 
