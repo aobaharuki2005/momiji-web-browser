@@ -813,8 +813,10 @@ class TextPropertyEditor {
     // Update the rule property highlight.
     this.ruleView._updatePropertyHighlight(this);
 
-    // Restore focus back to the element whose markup was recreated above.
-    if (focusedElSelector) {
+    // Restore focus back to the element whose markup was recreated above, if
+    // the focus is still in the current document (avoid stealing the focus, see
+    // Bug 1911627).
+    if (this.doc.hasFocus() && focusedElSelector) {
       const elementToFocus = this.doc.querySelector(focusedElSelector);
       if (elementToFocus) {
         elementToFocus.focus();
