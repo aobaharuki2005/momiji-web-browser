@@ -19,6 +19,7 @@ async function setup({
   enableSmartTab = true,
   optIn = true,
   userEnabled = true,
+  mlSwitchEnabled = true,
   labelReason = "DEFAULT",
 } = {}) {
   await SpecialPowers.pushPrefEnv({
@@ -27,6 +28,7 @@ async function setup({
       ["browser.tabs.groups.smart.enabled", enableSmartTab],
       ["browser.tabs.groups.smart.optin", optIn],
       ["browser.tabs.groups.smart.userEnabled", userEnabled],
+      ["browser.ml.enable", mlSwitchEnabled],
     ],
   });
   sinon
@@ -509,3 +511,37 @@ add_task(async function test_enabling_smart_tab_bool_prefs() {
   );
   cleanup();
 });
+
+add_task(
+  async function test_master_ml_switch_off_should_not_show_ui_and_send_events() {
+    let { tab, cleanup } = await setup({ mlSwitchEnabled: false });
+    let tabgroupEditor = document.getElementById("tab-group-editor");
+    let tabgroupPanel = tabgroupEditor.panel;
+    let nameField = tabgroupPanel.querySelector("#tab-group-name");
+
+    await openCreatePanel(tabgroupPanel, tab);
+    // below should not be visible
+    const isVisible = tabgroupPanel
+      .querySelector("#tab-group-create-suggestions-button")
+      .checkVisibility();
+    Assert.ok(!isVisible, "ML button should be hidden if master switch if off");
+
+    nameField.focus();
+    nameField.value = "Random Non-ML Label"; // user label matching suggested label
+    tabgroupEditor.mlLabel = "Random Non-ML Label"; // suggested label
+    tabgroupPanel.querySelector("#tab-group-editor-button-create").click();
+    let panelHidden = BrowserTestUtils.waitForPopupEvent(
+      tabgroupPanel,
+      "hidden"
+    );
+    tabgroupPanel.querySelector("#tab-group-editor-button-create"); // save
+    await panelHidden;
+
+    Assert.equal(
+      Glean.tabgroup.smartTabTopic.testGetValue() ?? "none",
+      "none",
+      "No event if the feature is off"
+    );
+    cleanup();
+  }
+);
