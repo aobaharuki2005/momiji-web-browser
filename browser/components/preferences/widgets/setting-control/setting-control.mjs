@@ -161,8 +161,6 @@ export class SettingControl extends MozLitElement {
 
   /**
    * The default properties that a control accepts.
-   * Note: for the disabled property, a setting can either be locked,
-   * or controlled by an extension but not both.
    */
   getPropertyMapping(config) {
     const props = {
@@ -173,10 +171,7 @@ export class SettingControl extends MozLitElement {
       ".parentDisabled": this.parentDisabled,
       ".control": this,
       "data-subcategory": config.subcategory,
-      "?disabled":
-        this.setting.disabled ||
-        this.setting.locked ||
-        this.isControlledByExtension(),
+      "?disabled": this.setting.disabled || this.setting.locked,
       ...config.controlAttrs,
     };
 
@@ -217,22 +212,6 @@ export class SettingControl extends MozLitElement {
     this.setting.userChange(this.controlValue(el));
   }
 
-  async disableExtension() {
-    this.setting.disableControllingExtension();
-  }
-
-  isControlledByExtension() {
-    return (
-      this.setting.controllingExtensionInfo.id &&
-      this.setting.controllingExtensionInfo.name
-    );
-  }
-  get extensionName() {
-    return this.setting.controllingExtensionInfo.name;
-  }
-  get extensionMessageId() {
-    return this.setting.controllingExtensionInfo.l10nId;
-  }
   render() {
     // Allow the Setting to override the static config if necessary.
     this.config = this.setting.getControlConfig(this.config);
@@ -279,19 +258,7 @@ export class SettingControl extends MozLitElement {
     let controlProps = this.getPropertyMapping(config);
 
     let tag = unsafeStatic(config.control || "moz-checkbox");
-    let messageBar;
-    if (this.isControlledByExtension()) {
-      let args = { name: this.extensionName };
-      messageBar = html`<moz-message-bar
-        class="extension-controlled-message-bar"
-        .messageL10nId=${this.extensionMessageId}
-        .messageL10nArgs=${args}
-      >
-      </moz-message-bar>`;
-    }
-    return staticHtml`
-    ${messageBar}
-    <${tag}
+    return staticHtml`<${tag}
       ${spread(controlProps)}
       ${ref(this.controlRef)}
     >${controlChildren}${nestedSettings}</${tag}>`;
