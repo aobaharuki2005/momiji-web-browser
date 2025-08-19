@@ -4378,6 +4378,9 @@ main section {
   transform: translateY(-50%);
   inset-inline-start: var(--space-xlarge);
 }
+.lists .add-task-container .icon.icon-add.icon-disabled {
+  fill: var(--text-color-disabled);
+}
 .lists .add-task-container .add-task-input {
   background: var(--button-background-color);
   padding-block: var(--space-small);
@@ -4392,6 +4395,11 @@ main section {
 }
 .lists .add-task-container .add-task-input:focus::placeholder {
   color: var(--newtab-text-primary-color);
+}
+.lists .add-task-container .add-task-input:disabled {
+  background-color: var(--button-background-color-ghost);
+  color: var(--text-color-disabled);
+  outline: var(--border-width) solid var(--border-color-interactive-disabled);
 }
 .lists fieldset {
   padding: 0 var(--space-medium);
