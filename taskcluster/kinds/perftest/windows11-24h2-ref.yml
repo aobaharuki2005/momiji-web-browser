@@ -52,6 +52,8 @@ ml-summarizer-perf:
             - qwen2.5-0.5-instruct
             - distilbart-cnn-12-6
     description: Run ML Models Perf Tests
+    worker:
+        max-run-time: 3000
     treeherder:
         symbol: perftest(ml-sum-perf)
         tier: 2
