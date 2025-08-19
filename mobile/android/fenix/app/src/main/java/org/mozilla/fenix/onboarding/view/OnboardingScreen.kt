@@ -2,12 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package org.mozilla.fenix.onboarding.view
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding

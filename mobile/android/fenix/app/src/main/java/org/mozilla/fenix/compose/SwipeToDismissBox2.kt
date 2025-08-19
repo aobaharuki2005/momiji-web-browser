@@ -7,7 +7,6 @@ package org.mozilla.fenix.compose
 import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
@@ -100,7 +99,6 @@ enum class SwipeToDismissDirections {
  * @property isRtl Whether the device language is a RTL language.
  * @property enabled Whether the swipe gesture is enabled.
  */
-@OptIn(ExperimentalFoundationApi::class)
 class SwipeToDismissState2(
     density: Density,
     decayAnimationSpec: DecayAnimationSpec<Float>,
@@ -159,7 +157,6 @@ class SwipeToDismissState2(
         }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1957790
 @Suppress("DEPRECATION")
 private fun Modifier.anchoredHorizontalDraggable(
@@ -216,7 +213,6 @@ private fun isReallyHorizontal(x: Float, y: Float) =
  * when the content is swiped. You can/should use the [state] to have different backgrounds on each side.
  * @param dismissContent The content that can be dismissed.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SwipeToDismissBox2(
     state: SwipeToDismissState2,
@@ -337,7 +333,6 @@ private fun SwipeToDismissBoxPreview() {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SwipeableItem(
     text: String,

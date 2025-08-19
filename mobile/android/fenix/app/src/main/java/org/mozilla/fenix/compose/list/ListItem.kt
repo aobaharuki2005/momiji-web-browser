@@ -7,7 +7,6 @@ package org.mozilla.fenix.compose.list
 import android.content.res.Configuration
 import android.widget.Toast
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -781,7 +780,6 @@ private fun SelectableItemIcon(
  * @param beforeListItemAction Optional Composable for adding UI before the list item.
  * @param afterListItemAction Optional Composable for adding UI to the end of the list item.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ListItem(
     label: String,

@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.tabstray.ui.tabitems
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -127,7 +126,6 @@ fun TabGridItem(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Suppress("LongMethod")
 @Composable
 private fun TabContent(

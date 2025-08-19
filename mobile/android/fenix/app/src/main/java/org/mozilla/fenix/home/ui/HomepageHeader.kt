@@ -18,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -67,7 +66,6 @@ fun HomepageHeader(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun WordmarkLogo() {
     Image(
@@ -83,7 +81,6 @@ private fun WordmarkLogo() {
     )
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun WordmarkText() {
     Image(
@@ -98,7 +95,6 @@ private fun WordmarkText() {
     )
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun PrivateBrowsingButton(
     browsingMode: BrowsingMode,

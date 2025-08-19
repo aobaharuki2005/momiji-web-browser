@@ -6,7 +6,6 @@ package org.mozilla.fenix.downloads.listscreen
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -400,7 +399,6 @@ private fun DownloadsScreenContent(
 
 @Composable
 @Suppress("LongParameterList")
-@OptIn(ExperimentalFoundationApi::class)
 private fun DownloadsContent(
     items: List<DownloadListItem>,
     mode: Mode,

@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.rememberSplineBasedDecay
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
@@ -107,7 +105,6 @@ class Snackbar private constructor(
          * @param snackBarParentView The [View] to embed the Snackbar in.
          * @param snackbarState [SnackbarState] containing the data parameters of the Snackbar.
          */
-        @OptIn(ExperimentalFoundationApi::class)
         fun make(
             snackBarParentView: View,
             snackbarState: SnackbarState,
@@ -262,7 +259,6 @@ class Snackbar private constructor(
  * @param snackbarState The data to display within the Snackbar.
  * @param modifier The [Modifier] used to configure the Snackbar layout.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun Snackbar(
     snackbarState: SnackbarState,

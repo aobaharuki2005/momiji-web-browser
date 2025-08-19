@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.topsites
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -36,7 +35,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -127,7 +125,6 @@ fun TopSites(
  * menu item.
  * @param onTopSitesItemBound Invoked during the composition of a top site item.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 @Suppress("LongParameterList", "LongMethod")
 fun TopSites(
@@ -303,7 +300,6 @@ data class TopSiteColors(
  * @param onTopSitesItemBound Invoked during the composition of a top site item.
  */
 @Suppress("LongMethod", "LongParameterList", "Deprecation") // https://bugzilla.mozilla.org/show_bug.cgi?id=1927713
-@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun TopSiteItem(
     topSite: TopSite,
@@ -419,7 +415,6 @@ fun TopSiteItem(
  * @param topSite The [TopSite] to display.
  * @param backgroundColor The background [Color] of the card.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun TopSiteFaviconCard(
     topSite: TopSite,

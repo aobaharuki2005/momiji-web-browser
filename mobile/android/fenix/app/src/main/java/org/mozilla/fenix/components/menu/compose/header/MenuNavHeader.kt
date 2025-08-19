@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components.menu.compose.header
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -136,7 +135,6 @@ internal fun MenuNavHeader(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MenuNavItem(
     state: MenuItemState = MenuItemState.ENABLED,

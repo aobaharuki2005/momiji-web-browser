@@ -29,7 +29,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,7 +71,6 @@ private const val PROBLEM_DESCRIPTION_MAX_LINES = 5
  *
  * @param store [WebCompatReporterStore] used to manage the state of the Web Compat Reporter feature.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Suppress("LongMethod")
 @Composable
 fun WebCompatReporter(

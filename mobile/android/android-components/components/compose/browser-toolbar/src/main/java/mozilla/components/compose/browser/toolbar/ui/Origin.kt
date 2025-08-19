@@ -8,7 +8,6 @@ import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.content.res.Configuration.UI_MODE_TYPE_NORMAL
 import android.view.SoundEffectConstants
 import androidx.annotation.StringRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -79,7 +78,6 @@ private const val FADE_LENGTH = 66
  * @param onInteraction [BrowserToolbarInteraction] to be dispatched when this layout is interacted with.
  * @param onInteraction Callback for handling [BrowserToolbarEvent]s on user interactions.
  */
-@OptIn(ExperimentalFoundationApi::class) // for combinedClickable
 @Composable
 @Suppress("LongMethod")
 internal fun Origin(

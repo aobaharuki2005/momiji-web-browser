@@ -12,7 +12,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -27,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -81,7 +79,6 @@ private const val POCKET_STORIES_UTM_VALUE = "pocket-newtab-android"
  * @param backgroundColor The background [Color] of the story.
  * @param onStoryClick Callback for when the user taps on this story.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PocketStory(
     @PreviewParameter(PocketStoryProvider::class) story: PocketRecommendedStory,
@@ -148,7 +145,6 @@ fun PocketStory(
  * @param backgroundColor The background [Color] of the story.
  * @param onStoryClick Callback for when the user taps on this story.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PocketSponsoredStory(
     story: PocketSponsoredStory,
@@ -219,7 +215,6 @@ fun PocketSponsoredStory(
  * @param backgroundColor The background [Color] of the sponsored content.
  * @param onClick Callback for when the user taps on the sponsored content.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SponsoredContent(
     sponsoredContent: SponsoredContent,
@@ -283,7 +278,6 @@ fun SponsoredContent(
  * @param backgroundColor The background [Color] of the recommendation.
  * @param onClick Callback for when the user taps on the recommendation.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ContentRecommendation(
     recommendation: ContentRecommendation,
@@ -338,7 +332,6 @@ fun ContentRecommendation(
  * @param onStoryShown Callback for when a certain story is visible to the user.
  * @param onStoryClicked Callback for when the user taps on a recommended story.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Suppress("CyclomaticComplexMethod", "LongMethod")
 @Composable
 fun PocketStories(
@@ -536,7 +529,6 @@ private fun alignColumnToTitlePadding(screenWidth: Dp, contentPadding: Dp) =
  * @param categoryColors The color set defined by [SelectableChipColors] used to style Pocket categories.
  * @param onCategoryClick Callback for when the user taps a category.
  */
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun PocketStoriesCategories(
     categories: List<PocketRecommendedStoriesCategory>,

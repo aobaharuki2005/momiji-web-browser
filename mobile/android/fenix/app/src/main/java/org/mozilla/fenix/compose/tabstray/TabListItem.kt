@@ -6,7 +6,6 @@ package org.mozilla.fenix.compose.tabstray
 
 import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.rememberSplineBasedDecay
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -76,7 +75,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onClick Callback to handle when item is clicked.
  * @param onLongClick Optional callback to handle when item is long clicked.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TabListItem(
     tab: TabSessionState,
@@ -131,7 +129,6 @@ fun TabListItem(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Suppress("LongMethod", "LongParameterList")
 @Composable
 private fun TabContent(

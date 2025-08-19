@@ -5,7 +5,6 @@
 package org.mozilla.fenix.compose.tabstray
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -122,7 +121,6 @@ fun TabGridItem(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Suppress("LongMethod")
 @Composable
 private fun TabContent(

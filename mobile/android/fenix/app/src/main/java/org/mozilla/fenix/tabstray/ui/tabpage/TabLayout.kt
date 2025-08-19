@@ -6,7 +6,6 @@ package org.mozilla.fenix.tabstray.ui.tabpage
 
 import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.rememberSplineBasedDecay
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -165,7 +164,6 @@ fun TabLayout(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun TabGrid(
@@ -280,7 +278,6 @@ private fun TabGrid(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun TabList(
