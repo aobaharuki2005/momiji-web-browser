@@ -42,7 +42,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         middleware.invoke(
             context = context,
             next = {},
-            action = TermsOfUsePromptAction.OnAcceptClicked,
+            action = TermsOfUsePromptAction.OnAcceptClicked(Surface.HOMEPAGE_NEW_TAB),
         )
 
         assertTrue(settings.hasAcceptedTermsOfService)
@@ -54,7 +54,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         middleware.invoke(
             context = context,
             next = {},
-            action = TermsOfUsePromptAction.OnNotNowClicked,
+            action = TermsOfUsePromptAction.OnRemindMeLaterClicked(Surface.HOMEPAGE_NEW_TAB),
         )
 
         assertTrue(settings.hasPostponedAcceptingTermsOfUse)
@@ -66,7 +66,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         middleware.invoke(
             context = context,
             next = {},
-            action = TermsOfUsePromptAction.OnPromptManuallyDismissed,
+            action = TermsOfUsePromptAction.OnPromptManuallyDismissed(Surface.HOMEPAGE_NEW_TAB),
         )
 
         assertTrue(settings.hasPostponedAcceptingTermsOfUse)
@@ -82,5 +82,28 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         )
 
         assertTrue(settings.lastTermsOfUsePromptTimeInMillis > 0)
+    }
+
+    @Test
+    fun `WHEN action is noop THEN the repository settings are not updated`() {
+        assertNoOpAction(TermsOfUsePromptAction.OnImpression(Surface.HOMEPAGE_NEW_TAB))
+        assertNoOpAction(TermsOfUsePromptAction.OnLearnMoreClicked(Surface.HOMEPAGE_NEW_TAB))
+        assertNoOpAction(TermsOfUsePromptAction.OnPrivacyNoticeClicked(Surface.HOMEPAGE_NEW_TAB))
+        assertNoOpAction(TermsOfUsePromptAction.OnTermsOfUseClicked(Surface.HOMEPAGE_NEW_TAB))
+        assertNoOpAction(TermsOfUsePromptAction.OnPromptDismissed)
+    }
+
+    private fun assertNoOpAction(action: TermsOfUsePromptAction) {
+        assertFalse(settings.hasAcceptedTermsOfService)
+        assertFalse(settings.hasPostponedAcceptingTermsOfUse)
+
+        middleware.invoke(
+            context = context,
+            next = {},
+            action = action,
+        )
+
+        assertFalse(settings.hasAcceptedTermsOfService)
+        assertFalse(settings.hasPostponedAcceptingTermsOfUse)
     }
 }

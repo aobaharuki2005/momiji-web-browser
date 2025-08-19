@@ -34,6 +34,7 @@ import mozilla.components.compose.base.button.TextButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
+import org.mozilla.fenix.termsofuse.store.Surface
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptAction
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptStore
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -80,7 +81,7 @@ private fun BottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = {
-            store.dispatch(TermsOfUsePromptAction.OnPromptManuallyDismissed)
+            store.dispatch(TermsOfUsePromptAction.OnPromptManuallyDismissed(Surface.HOMEPAGE_NEW_TAB))
             onDismiss()
         },
         sheetState = sheetState,
@@ -147,7 +148,7 @@ private fun BottomSheetContent(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.terms_of_use_prompt_accept),
         ) {
-            store.dispatch(TermsOfUsePromptAction.OnAcceptClicked)
+            store.dispatch(TermsOfUsePromptAction.OnAcceptClicked(Surface.HOMEPAGE_NEW_TAB))
             coroutineScope.launch {
                 sheetState.hide()
             }.invokeOnCompletion {
@@ -163,7 +164,7 @@ private fun BottomSheetContent(
             upperCaseText = false,
             textColor = MaterialTheme.colorScheme.primary,
             onClick = {
-                store.dispatch(TermsOfUsePromptAction.OnNotNowClicked)
+                store.dispatch(TermsOfUsePromptAction.OnRemindMeLaterClicked(Surface.HOMEPAGE_NEW_TAB))
                 coroutineScope.launch {
                     sheetState.hide()
                 }.invokeOnCompletion {

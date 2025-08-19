@@ -20,6 +20,7 @@ import org.mozilla.fenix.termsofuse.store.DefaultTermsOfUsePromptRepository
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptAction
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptPreferencesMiddleware
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptStore
+import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptTelemetryMiddleware
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -35,6 +36,7 @@ class TermsOfUseBottomSheetFragment : BottomSheetDialogFragment() {
                         settings = requireContext().settings(),
                     ),
                 ),
+                TermsOfUsePromptTelemetryMiddleware(),
             ),
         )
     }
