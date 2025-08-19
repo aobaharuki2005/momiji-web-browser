@@ -201,21 +201,19 @@ private fun OnboardingPagePreview() {
             pageState = OnboardingPageState(
                 imageRes = R.drawable.ic_notification_permission,
                 title = stringResource(
-                    id = R.string.onboarding_home_welcome_title_2,
-                    formatArgs = arrayOf(stringResource(R.string.app_name)),
+                    id = R.string.juno_onboarding_default_browser_title_nimbus_2,
                 ),
                 description = stringResource(
-                    id = R.string.onboarding_home_welcome_description,
-                    formatArgs = arrayOf(stringResource(R.string.app_name)),
+                    id = R.string.juno_onboarding_default_browser_description_nimbus_3,
                 ),
                 primaryButton = Action(
                     text = stringResource(
-                        id = R.string.onboarding_home_get_started_button,
+                        id = R.string.juno_onboarding_default_browser_positive_button,
                     ),
                     onClick = {},
                 ),
                 secondaryButton = Action(
-                    text = stringResource(id = R.string.onboarding_home_skip_button),
+                    text = stringResource(id = R.string.juno_onboarding_default_browser_negative_button),
                     onClick = {},
                 ),
                 onRecordImpressionEvent = {},

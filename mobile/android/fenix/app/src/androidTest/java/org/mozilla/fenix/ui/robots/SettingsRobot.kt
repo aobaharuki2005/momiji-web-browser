@@ -355,31 +355,6 @@ class SettingsRobot {
         Log.i(TAG, "verifyExternalDownloadsButton: Verified that the \"Downloads\" button is visible")
     }
 
-    fun verifyExternalDownloadManagerToggle(enabled: Boolean) {
-        onView(withId(R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(R.string.preferences_external_download_manager)),
-            ),
-        )
-        Log.i(TAG, "verifyExternalDownloadManagerToggle: Trying to verify that the \"External download manager\" toggle is enabled: $enabled")
-        onView(withText(R.string.preferences_external_download_manager))
-            .check(
-                matches(
-                    hasCousin(
-                        allOf(
-                            withClassName(endsWith("Switch")),
-                            if (enabled) {
-                                isChecked()
-                            } else {
-                                isNotChecked()
-                            },
-                        ),
-                    ),
-                ),
-            )
-        Log.i(TAG, "verifyExternalDownloadManagerToggle: Verified that the \"External download manager\" toggle is enabled: $enabled")
-    }
-
     fun verifyLeakCanaryToggle(enabled: Boolean) {
         onView(withId(R.id.recycler_view)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(

@@ -4,7 +4,9 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 143.0 (In Development)
+# 144.0 (In Development)
+
+# 143.0
 * **feature-downloads**:
   * `AbstractFetchDownloadService.onDestroy` will now cancel all non-completed downloads. [Bug 1977393](https://bugzilla.mozilla.org/show_bug.cgi?id=1977393)
 * **concept-engine** and **browser-engine-gecko**
