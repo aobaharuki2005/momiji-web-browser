@@ -15,7 +15,9 @@
 
 <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <script>
+  // eslint-disable-next-line no-unused-vars
   var wasRun = false;
+  // eslint-disable-next-line no-unused-vars
   var hasThrown = false;
   window.onerror = handleError;
 
@@ -40,6 +42,7 @@
 <script>
   SimpleTest.waitForExplicitFinish();
 
+  // eslint-disable-next-line no-unused-vars
   function testLoaded() {
     ok(wasRun, "Check inline module has run.");
     ok(hasThrown, "Check inline module has thrown.");

@@ -7,6 +7,7 @@
 <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <script>
+// eslint-disable-next-line no-unused-vars
 let gotMsg = false;
 window.onerror = function(event, src, lineno, colno, error) {
   info("error: " + error.message);
@@ -32,6 +33,7 @@ the import map.
 <script>
   SimpleTest.waitForExplicitFinish();
 
+  // eslint-disable-next-line no-unused-vars
   function testLoaded() {
     ok(gotMsg, "Should have thrown a SyntaxError.");
     SimpleTest.finish();

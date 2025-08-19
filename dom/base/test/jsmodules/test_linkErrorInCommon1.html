@@ -15,6 +15,7 @@
     }
   }
 
+  // eslint-disable-next-line no-unused-vars
   function testError() {
     ok(runCount == 0, 'Check no modules were executed');
     ok(hadSyntaxError, 'Check that an error was reported');
@@ -22,10 +23,12 @@
   }
 </script>
 <script type="module">
+  // eslint-disable-next-line no-unused-vars
   import { missing } from "./module_simple1.mjs";
   runCount++;
 </script>
 <script type="module">
+  // eslint-disable-next-line no-unused-vars
   import { missing } from "./module_simple1.mjs";
   runCount++;
 </script>
