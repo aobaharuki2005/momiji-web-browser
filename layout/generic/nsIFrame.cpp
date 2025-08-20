@@ -2033,6 +2033,12 @@ nscoord nsIFrame::OneEmInAppUnits() const {
       .ToAppUnits();
 }
 
+RubyMetrics nsIFrame::RubyMetrics() const {
+  RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
+  return mozilla::RubyMetrics{fm->EmAscent(), fm->EmDescent()};
+}
+
 ComputedStyle* nsIFrame::GetAdditionalComputedStyle(int32_t aIndex) const {
   MOZ_ASSERT(aIndex >= 0, "invalid index number");
   return nullptr;

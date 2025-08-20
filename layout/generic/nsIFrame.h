@@ -179,6 +179,18 @@ enum class LayoutFrameType : uint8_t {
 #undef FRAME_TYPE
 };
 
+// Stores ascent and descent metrics to be used for Ruby annotation positioning
+// (potentially different from line-box or font ascent and descent).
+struct RubyMetrics {
+  nscoord mAscent = 0;
+  nscoord mDescent = 0;
+
+  void CombineWith(const RubyMetrics& aOther) {
+    mAscent = std::max(mAscent, aOther.mAscent);
+    mDescent = std::max(mDescent, aOther.mDescent);
+  }
+};
+
 }  // namespace mozilla
 
 enum nsSelectionAmount {
@@ -1703,6 +1715,15 @@ class nsIFrame : public nsQueryFrame {
    * Returns one em unit, adjusted for font inflation if needed, in app units.
    */
   nscoord OneEmInAppUnits() const;
+
+  /**
+   * Returns the ascent/descent metrics to be used for CSS Ruby positioning
+   * (if the "normalize metrics" option is enabled). These are derived from the
+   * first available font's "trimmed ascent" and "trimmed descent", where any
+   * internal leading included in the font's metrics has been trimmed equally
+   * from top and bottom, such that the trimmed values total 1em.
+   */
+  virtual mozilla::RubyMetrics RubyMetrics() const;
 
   /**
    * `GetNaturalBaselineBOffset`, but determines the baseline sharing group
