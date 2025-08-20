@@ -28,6 +28,7 @@ import mozilla.components.browser.menu.view.StickyItemPlacement
 import mozilla.components.browser.menu.view.StickyItemsLinearLayoutManager
 import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.support.ktx.android.view.isRTL
+import mozilla.components.support.ktx.android.view.onNextGlobalLayout
 
 /**
  * A popup menu composed of BrowserMenuItem objects.
@@ -196,7 +197,21 @@ open class BrowserMenu internal constructor(
         endOfMenuAlwaysVisible: Boolean,
         layoutManager: LinearLayoutManager,
     ) {
-        layoutManager.stackFromEnd = endOfMenuAlwaysVisible
+        // In devices with Android 6 and below stackFromEnd is not working properly,
+        // as a result, we have to provided a backwards support.
+        // See: https://github.com/mozilla-mobile/android-components/issues/3211
+        if (endOfMenuAlwaysVisible && Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
+            scrollOnceToTheBottom(this)
+        } else {
+            layoutManager.stackFromEnd = endOfMenuAlwaysVisible
+        }
+    }
+
+    @VisibleForTesting
+    internal fun scrollOnceToTheBottom(recyclerView: RecyclerView) {
+        recyclerView.onNextGlobalLayout {
+            recyclerView.adapter?.let { recyclerView.scrollToPosition(it.itemCount - 1) }
+        }
     }
 
     fun dismiss() {

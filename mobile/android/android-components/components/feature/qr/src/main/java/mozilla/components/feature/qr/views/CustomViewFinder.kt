@@ -11,6 +11,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Rect
+import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
@@ -204,13 +205,25 @@ class CustomViewFinder @JvmOverloads constructor(
         }
 
         scanMessageLayout =
-            StaticLayout.Builder.obtain(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                StaticLayout.Builder.obtain(
                     scanMessage,
                     0,
                     scanMessage.length,
                     messageTextPaint,
                     viewFinderRectangle.width(),
                 ).setAlignment(Layout.Alignment.ALIGN_CENTER).build()
+            } else {
+                StaticLayout(
+                    scanMessage,
+                    messageTextPaint,
+                    viewFinderRectangle.width(),
+                    Layout.Alignment.ALIGN_CENTER,
+                    1.0f,
+                    0.0f,
+                    true,
+                )
+            }
 
         messageResource = scanMessageId
     }

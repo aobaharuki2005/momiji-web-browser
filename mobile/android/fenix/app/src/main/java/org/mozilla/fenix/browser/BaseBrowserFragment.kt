@@ -2550,7 +2550,11 @@ abstract class BaseBrowserFragment :
     }
 
     private fun openManageStorageSettings() {
-        val intent = Intent(StorageManager.ACTION_MANAGE_STORAGE)
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(StorageManager.ACTION_MANAGE_STORAGE)
+        } else {
+            Intent("android.intent.action.INTERNAL_STORAGE_SETTINGS")
+        }
 
         if (intent.resolveActivity(requireContext().packageManager) != null) {
             requireContext().startActivity(intent)

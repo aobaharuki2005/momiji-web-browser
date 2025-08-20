@@ -89,6 +89,15 @@ class DownloadNotificationTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `setCompatGroup will not set the group`() {
+        val notificationBuilder = NotificationCompat.Builder(testContext, "")
+            .setCompatGroup("myGroup").build()
+
+        assertNotEquals("myGroup", notificationBuilder.group)
+    }
+
+    @Test
     fun getStatusDescription() {
         val pausedText = testContext.getString(R.string.mozac_feature_downloads_paused_notification_text)
         val completedText = testContext.getString(R.string.mozac_feature_downloads_completed_notification_text2)

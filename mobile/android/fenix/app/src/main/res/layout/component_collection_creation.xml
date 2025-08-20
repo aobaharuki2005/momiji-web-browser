@@ -131,7 +131,8 @@
         android:textColor="?attr/textPrimary"
         android:textSize="16sp"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:targetApi="o" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_button_bar_layout"

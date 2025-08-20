@@ -6,6 +6,7 @@ package mozilla.components.lib.crash.handler
 
 import android.app.Service
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
@@ -47,19 +48,21 @@ class CrashHandlerService : Service() {
         intent: Intent,
         scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     ) {
-        val channel = CrashNotification.ensureChannelExists(this)
-        val notification = NotificationCompat.Builder(this, channel)
-            .setContentTitle(
-                getString(R.string.mozac_lib_gathering_crash_data_in_progress),
-            )
-            .setSmallIcon(R.drawable.mozac_lib_crash_notification)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setCategory(NotificationCompat.CATEGORY_ERROR)
-            .setAutoCancel(true)
-            .build()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = CrashNotification.ensureChannelExists(this)
+            val notification = NotificationCompat.Builder(this, channel)
+                .setContentTitle(
+                    getString(R.string.mozac_lib_gathering_crash_data_in_progress),
+                )
+                .setSmallIcon(R.drawable.mozac_lib_crash_notification)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setCategory(NotificationCompat.CATEGORY_ERROR)
+                .setAutoCancel(true)
+                .build()
 
-        val notificationId = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
-        startForeground(notificationId, notification)
+            val notificationId = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
+            startForeground(notificationId, notification)
+        }
 
         scope.launch {
             intent.extras?.let { extras ->

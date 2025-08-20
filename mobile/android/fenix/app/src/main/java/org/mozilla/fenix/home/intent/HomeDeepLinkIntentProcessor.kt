@@ -8,6 +8,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.provider.Settings
 import androidx.navigation.NavController
@@ -139,11 +141,20 @@ class HomeDeepLinkIntentProcessor(
 
     private fun notificationSettings(context: Context, channel: String? = null) =
         Intent().apply {
-            action = channel?.let {
-                putExtra(Settings.EXTRA_CHANNEL_ID, it)
-                Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS
-            } ?: Settings.ACTION_APP_NOTIFICATION_SETTINGS
-            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            when {
+                SDK_INT >= Build.VERSION_CODES.O -> {
+                    action = channel?.let {
+                        putExtra(Settings.EXTRA_CHANNEL_ID, it)
+                        Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS
+                    } ?: Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                }
+                else -> {
+                    action = "android.settings.APP_NOTIFICATION_SETTINGS"
+                    putExtra("app_package", context.packageName)
+                    putExtra("app_uid", context.applicationInfo.uid)
+                }
+            }
         }
 
     private fun showShareSheet(deepLink: Uri, navController: NavController) {

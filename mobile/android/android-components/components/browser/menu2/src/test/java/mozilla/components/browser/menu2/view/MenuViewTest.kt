@@ -61,8 +61,20 @@ class MenuViewTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.O])
-    fun `setVisibleSide changes stackFromEnd`() {
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `setVisibleSide will be forwarded to scrollOnceToTheBottom on devices with Android M and below`() {
+        doNothing().`when`(menuView).scrollOnceToTheBottom(any())
+
+        menuView.setVisibleSide(Side.END)
+        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+
+        assertFalse(layoutManager.stackFromEnd)
+        verify(menuView).scrollOnceToTheBottom(any())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `setVisibleSide changes stackFromEnd on devices with Android N and above`() {
         doNothing().`when`(menuView).scrollOnceToTheBottom(any())
 
         menuView.setVisibleSide(Side.END)

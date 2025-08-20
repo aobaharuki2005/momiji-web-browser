@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi
 /**
  * [AudioFocusController] implementation for Android API 26+.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 internal class AudioFocusControllerV26(
     private val audioManager: AudioManager,
     listener: AudioManager.OnAudioFocusChangeListener,

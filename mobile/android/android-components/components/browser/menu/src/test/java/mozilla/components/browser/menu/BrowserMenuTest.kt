@@ -173,6 +173,28 @@ class BrowserMenuTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `endOfMenuAlwaysVisible will be forwarded to scrollOnceToTheBottom on devices with Android M and below`() {
+        val items = listOf(
+            SimpleBrowserMenuItem("Hello") {},
+            SimpleBrowserMenuItem("World") {},
+        )
+
+        val adapter = BrowserMenuAdapter(testContext, items)
+        val menu = spy(BrowserMenu(adapter))
+        doNothing().`when`(menu).scrollOnceToTheBottom(any())
+
+        val anchor = Button(testContext)
+        val popup = menu.show(anchor, endOfMenuAlwaysVisible = true)
+
+        val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
+        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+
+        assertFalse(layoutManager.stackFromEnd)
+        verify(menu).scrollOnceToTheBottom(any())
+    }
+
+    @Test
     fun `invalidate will be forwarded to recyclerview adapter`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},

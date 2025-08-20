@@ -18,10 +18,12 @@ internal interface RawStructure {
     fun createNavigator(): AutofillNodeNavigator<*, AutofillId>
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 internal fun AssistStructure.toRawStructure(): RawStructure {
     return AssistStructureWrapper(this)
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 private class AssistStructureWrapper(
     private val actual: AssistStructure,
 ) : RawStructure {

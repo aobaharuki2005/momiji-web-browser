@@ -39,6 +39,7 @@ import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import junit.framework.AssertionFailedError
+import mozilla.components.support.utils.PendingIntentUtils
 import mozilla.components.support.utils.ext.getApplicationInfoCompat
 import okio.Buffer
 import org.hamcrest.Matchers
@@ -230,7 +231,7 @@ object TestHelper {
         val appContext = getInstrumentation()
             .targetContext
             .applicationContext
-        val pendingIntent = PendingIntent.getActivity(appContext, 0, Intent(), PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getActivity(appContext, 0, Intent(), PendingIntentUtils.defaultFlags)
 
         val customTabColorSchemeBuilder = CustomTabColorSchemeParams.Builder()
         customTabColorSchemeBuilder.setToolbarColor(Color.MAGENTA)

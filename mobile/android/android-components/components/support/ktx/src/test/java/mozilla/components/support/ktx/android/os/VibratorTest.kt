@@ -17,7 +17,6 @@ import org.mockito.Mockito.verify
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.O])
 class VibratorTest {
 
     private lateinit var vibrator: Vibrator
@@ -27,10 +26,20 @@ class VibratorTest {
         vibrator = mock()
     }
 
+    @Config(sdk = [Build.VERSION_CODES.O])
     @Test
-    fun `vibrateOneShot uses VibrationEffect`() {
+    fun `vibrateOneShot uses VibrationEffect on new APIs`() {
         vibrator.vibrateOneShot(50L)
 
         verify(vibrator).vibrate(VibrationEffect.createOneShot(50L, DEFAULT_AMPLITUDE))
+    }
+
+    @Suppress("Deprecation")
+    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
+    @Test
+    fun `vibrateOneShot uses vibrate on new APIs`() {
+        vibrator.vibrateOneShot(100L)
+
+        verify(vibrator).vibrate(100L)
     }
 }

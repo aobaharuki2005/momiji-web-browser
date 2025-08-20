@@ -6,6 +6,7 @@ package org.mozilla.fenix.ext
 
 import android.content.res.Resources
 import android.graphics.Rect
+import android.os.Build
 import android.view.TouchDelegate
 import android.view.View
 import androidx.annotation.DimenRes
@@ -16,6 +17,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.utils.ext.bottom
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 
 /**
@@ -80,8 +82,12 @@ fun View.getRectWithScreenLocation(): Rect {
  * if the view is not attached.
  */
 fun View.getWindowInsets(): WindowInsetsCompat? {
-    return rootWindowInsets?.let {
-        WindowInsetsCompat.toWindowInsetsCompat(it)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        rootWindowInsets?.let {
+            WindowInsetsCompat.toWindowInsetsCompat(it)
+        }
+    } else {
+        null
     }
 }
 
@@ -93,8 +99,14 @@ fun View.getWindowInsets(): WindowInsetsCompat? {
  * is added) when it becomes available
  */
 fun View.isKeyboardVisible(): Boolean {
-    // Since we have insets, we don't need to guess what the keyboard height is.
-    val minimumKeyboardHeight = 0
+    // Since we have insets in M and above, we don't need to guess what the keyboard height is.
+    // Otherwise, we make a guess at the minimum height of the keyboard to account for the
+    // navigation bar.
+    val minimumKeyboardHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        0
+    } else {
+        pixelSizeFor(R.dimen.minimum_keyboard_height)
+    }
     return getKeyboardHeight() > minimumKeyboardHeight
 }
 

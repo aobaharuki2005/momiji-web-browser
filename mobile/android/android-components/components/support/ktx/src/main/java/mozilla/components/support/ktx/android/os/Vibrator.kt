@@ -19,5 +19,10 @@ import androidx.annotation.RequiresPermission
  */
 @RequiresPermission(VIBRATE)
 fun Vibrator.vibrateOneShot(milliseconds: Long) {
-    vibrate(VibrationEffect.createOneShot(milliseconds, DEFAULT_AMPLITUDE))
+    if (SDK_INT >= Build.VERSION_CODES.O) {
+        vibrate(VibrationEffect.createOneShot(milliseconds, DEFAULT_AMPLITUDE))
+    } else {
+        @Suppress("Deprecation")
+        vibrate(milliseconds)
+    }
 }

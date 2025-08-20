@@ -14,6 +14,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.drawable.Icon
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.BADGE_ICON_NONE
@@ -76,7 +78,7 @@ class WebAppSiteControlsFeature(
      * Starts loading the [notificationIcon] on create.
      */
     override fun onCreate(owner: LifecycleOwner) {
-        if (manifest != null && icons != null) {
+        if (SDK_INT >= Build.VERSION_CODES.M && manifest != null && icons != null) {
             val request = manifest.toMonochromeIconRequest()
             if (request.resources.isNotEmpty()) {
                 notificationIcon = icons.loadIcon(request)
@@ -143,11 +145,18 @@ class WebAppSiteControlsFeature(
      * Build the notification with site controls to be displayed while the web app is active.
      */
     private fun buildNotification(icon: Bitmap?): Notification {
-        val channelId = ensureChannelExists()
-        val builder = Notification.Builder(applicationContext, channelId).apply {
-            setBadgeIconType(BADGE_ICON_NONE)
+        val builder = if (SDK_INT >= Build.VERSION_CODES.O) {
+            val channelId = ensureChannelExists()
+            Notification.Builder(applicationContext, channelId).apply {
+                setBadgeIconType(BADGE_ICON_NONE)
+            }
+        } else {
+            @Suppress("Deprecation")
+            Notification.Builder(applicationContext).apply {
+                setPriority(Notification.PRIORITY_MIN)
+            }
         }
-        if (icon != null) {
+        if (icon != null && SDK_INT >= Build.VERSION_CODES.M) {
             builder.setSmallIcon(Icon.createWithBitmap(icon))
         } else {
             builder.setSmallIcon(R.drawable.ic_pwa)
@@ -166,15 +175,17 @@ class WebAppSiteControlsFeature(
      * Returns the channel id to be used for notifications.
      */
     private fun ensureChannelExists(): String {
-        val notificationManager: NotificationManager = applicationContext.getSystemService()!!
+        if (SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager: NotificationManager = applicationContext.getSystemService()!!
 
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            applicationContext.getString(R.string.mozac_feature_pwa_site_controls_notification_channel),
-            NotificationManager.IMPORTANCE_MIN,
-        )
+            val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                applicationContext.getString(R.string.mozac_feature_pwa_site_controls_notification_channel),
+                NotificationManager.IMPORTANCE_MIN,
+            )
 
-        notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(channel)
+        }
 
         return NOTIFICATION_CHANNEL_ID
     }

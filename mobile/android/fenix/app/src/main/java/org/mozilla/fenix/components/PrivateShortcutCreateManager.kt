@@ -141,7 +141,7 @@ class PrivateShortcutCreateManager(
             .setIntent(createPrivateHomeActivityIntent(context))
             .build()
 
-        val createPrivateShortcutIntentFlags = IntentUtils.DEFAULT_PENDING_INTENT_FLAGS or
+        val createPrivateShortcutIntentFlags = IntentUtils.defaultIntentPendingFlags or
             PendingIntent.FLAG_UPDATE_CURRENT
 
         val homeScreenIntent = Intent(Intent.ACTION_MAIN)

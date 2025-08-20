@@ -34,6 +34,7 @@ import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
+import mozilla.components.support.utils.PendingIntentUtils
 import mozilla.components.support.utils.ext.stopForegroundCompat
 import java.util.Locale
 
@@ -91,9 +92,11 @@ abstract class AbstractPrivateNotificationService(
             this,
             NOTIFICATION_CHANNEL,
             onSetupChannel = {
-                enableLights(false)
-                enableVibration(false)
-                setShowBadge(false)
+                if (SDK_INT >= Build.VERSION_CODES.O) {
+                    enableLights(false)
+                    enableVibration(false)
+                    setShowBadge(false)
+                }
             },
         )
     }
@@ -165,7 +168,7 @@ abstract class AbstractPrivateNotificationService(
                 this,
                 0,
                 intent,
-                PendingIntent.FLAG_IMMUTABLE or FLAG_ONE_SHOT,
+                PendingIntentUtils.defaultFlags or FLAG_ONE_SHOT,
             )
         }
 

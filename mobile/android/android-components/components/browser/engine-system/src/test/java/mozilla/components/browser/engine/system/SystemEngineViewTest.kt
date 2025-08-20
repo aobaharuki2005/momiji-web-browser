@@ -1389,6 +1389,36 @@ class SystemEngineViewTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun captureThumbnailOnPreO() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val engineView = SystemEngineView(activity)
+        val webView = mock<WebView>()
+
+        whenever(webView.width).thenReturn(100)
+        whenever(webView.height).thenReturn(200)
+
+        engineView.session = mock()
+
+        whenever(engineView.session!!.webView).thenReturn(webView)
+
+        var thumbnail: Bitmap? = null
+
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+        verify(webView).draw(any())
+        assertNotNull(thumbnail)
+
+        engineView.session = null
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+
+        assertNull(thumbnail)
+    }
+
+    @Test
     @Config(sdk = [Build.VERSION_CODES.O], shadows = [PixelCopyShadow::class])
     fun captureThumbnailOnPostO() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
@@ -1508,6 +1538,55 @@ class SystemEngineViewTest {
             it.substring(it.length - 10)
         }
         assertTrue((request as PromptRequest.Authentication).message.endsWith(noRealmMessageTail))
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    @Suppress("Deprecation")
+    fun `onReceivedHttpAuthRequest takes credentials from WebView`() {
+        val engineSession = SystemEngineSession(testContext)
+        val engineView = SystemEngineView(testContext)
+        var request: PromptRequest? = null
+
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest
+                }
+            },
+        )
+
+        engineSession.webView = spy(engineSession.webView)
+        engineView.render(engineSession)
+
+        // use captor as getWebViewClient() is available only from Oreo
+        // and this test runs on N to not use WebViewDatabase
+        val captor = argumentCaptor<WebViewClient>()
+        verify(engineSession.webView).webViewClient = captor.capture()
+        val webViewClient = captor.value
+
+        val host = "mozilla.org"
+        val realm = "realm"
+        val userName = "user123"
+        val password = "pass@123"
+
+        val validCredentials = arrayOf(userName, password)
+        whenever(engineSession.webView.getHttpAuthUsernamePassword(host, realm)).thenReturn(validCredentials)
+        webViewClient.onReceivedHttpAuthRequest(engineSession.webView, mock(), host, realm)
+        assertEquals((request as PromptRequest.Authentication).userName, userName)
+        assertEquals((request as PromptRequest.Authentication).password, password)
+
+        val nullCredentials = null
+        whenever(engineSession.webView.getHttpAuthUsernamePassword(host, realm)).thenReturn(nullCredentials)
+        webViewClient.onReceivedHttpAuthRequest(engineSession.webView, mock(), host, realm)
+        assertEquals((request as PromptRequest.Authentication).userName, "")
+        assertEquals((request as PromptRequest.Authentication).password, "")
+
+        val credentialsWithNulls = arrayOf<String?>(null, null)
+        whenever(engineSession.webView.getHttpAuthUsernamePassword(host, realm)).thenReturn(credentialsWithNulls)
+        webViewClient.onReceivedHttpAuthRequest(engineSession.webView, mock(), host, realm)
+        assertEquals((request as PromptRequest.Authentication).userName, "")
+        assertEquals((request as PromptRequest.Authentication).password, "")
     }
 
     @Test

@@ -13,6 +13,7 @@ import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.navigation.NavDestination
@@ -137,12 +138,15 @@ fun Activity.openSetDefaultBrowserOption(
                 }
             }
         }
-        else -> {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
             navigateToDefaultBrowserAppsSettings(
                 useCustomTab = useCustomTab,
                 from = from,
                 flags = flags,
             )
+        }
+        else -> {
+            openDefaultBrowserSumoPage(useCustomTab, from, flags)
         }
     }
 }
@@ -168,6 +172,7 @@ fun Context.isDefaultBrowserPromptSupported(): Boolean {
     return false
 }
 
+@RequiresApi(Build.VERSION_CODES.N)
 private fun Activity.navigateToDefaultBrowserAppsSettings(
     from: BrowserDirection,
     flags: EngineSession.LoadUrlFlags,

@@ -9,13 +9,16 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.os.Build
 import android.service.autofill.Dataset
 import android.widget.inline.InlinePresentationSpec
+import androidx.annotation.RequiresApi
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.R
 import mozilla.components.feature.autofill.handler.MAX_LOGINS
 import mozilla.components.feature.autofill.structure.ParsedStructure
 
+@RequiresApi(Build.VERSION_CODES.O)
 internal data class SearchDatasetBuilder(
     val parsedStructure: ParsedStructure,
 ) : DatasetBuilder {

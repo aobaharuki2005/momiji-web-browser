@@ -77,7 +77,7 @@ class PrivateShortcutCreateManagerTest {
                 context = testContext,
                 requestCode = 0,
                 intent = capture(intent),
-                flags = IntentUtils.DEFAULT_PENDING_INTENT_FLAGS or PendingIntent.FLAG_UPDATE_CURRENT,
+                flags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT,
             )
         } returns mockPendingIntent
 

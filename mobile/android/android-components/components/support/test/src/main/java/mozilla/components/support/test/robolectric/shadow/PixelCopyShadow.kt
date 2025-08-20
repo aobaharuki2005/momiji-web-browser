@@ -17,7 +17,8 @@ import org.robolectric.annotation.Implements
 /**
  * Shadow for [PixelCopy] API.
  */
-@Implements(PixelCopy::class)
+@Implements(PixelCopy::class, minSdk = Build.VERSION_CODES.N)
+@RequiresApi(Build.VERSION_CODES.N)
 class PixelCopyShadow {
 
     companion object {

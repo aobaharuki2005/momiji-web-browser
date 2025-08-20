@@ -684,7 +684,24 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `color filter is cleared when securityIconColor changes to transparent`() {
+    fun `color filter is set with transparent when securityIconColor changes to transparent and api version is lower than 23`() {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)
+        val (_, displayToolbar) = createDisplayToolbar()
+
+        assertNull(displayToolbar.views.siteInfoIndicator.colorFilter)
+
+        displayToolbar.colors = displayToolbar.colors.copy(
+            siteInfoIconSecure = Color.TRANSPARENT,
+            siteInfoIconInsecure = Color.TRANSPARENT,
+        )
+
+        assertNotNull(displayToolbar.views.siteInfoIndicator.colorFilter)
+    }
+
+    @Test
+    fun `color filter is cleared when securityIconColor changes to transparent and api version is bigger than 22`() {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 23)
+
         val (_, displayToolbar) = createDisplayToolbar()
 
         assertNull(displayToolbar.views.siteInfoIndicator.colorFilter)

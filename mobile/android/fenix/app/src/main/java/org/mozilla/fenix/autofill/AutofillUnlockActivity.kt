@@ -13,6 +13,7 @@ import org.mozilla.fenix.ext.components
 /**
  * Activity responsible for unlocking the autofill service by asking the user to verify.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 class AutofillUnlockActivity : AbstractAutofillUnlockActivity() {
     override val configuration: AutofillConfiguration by lazy { components.autofillConfiguration }
 }

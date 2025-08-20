@@ -10,8 +10,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_NONE
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -28,6 +31,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_RESUME
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_TRY_AGAIN
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
+import mozilla.components.support.utils.PendingIntentUtils
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
@@ -226,13 +230,18 @@ internal object DownloadNotification {
      * Verifies that app notifications, channel notifications, and group notifications are enabled.
      */
     fun isChannelEnabled(context: Context): Boolean {
-        val notificationManager: NotificationManager = context.getSystemService()!!
-        if (!notificationManager.areNotificationsEnabled()) return false
+        return if (SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager: NotificationManager = context.getSystemService()!!
+            if (!notificationManager.areNotificationsEnabled()) return false
 
-        val channelId = ensureChannelExists(context)
-        val channel = notificationManager.getNotificationChannel(channelId)
-        if (channel.importance == IMPORTANCE_NONE) return false
-        return true
+            val channelId = ensureChannelExists(context)
+            val channel = notificationManager.getNotificationChannel(channelId)
+            if (channel.importance == IMPORTANCE_NONE) return false
+
+            true
+        } else {
+            NotificationManagerCompat.from(context).areNotificationsEnabled()
+        }
     }
 
     /**
@@ -241,17 +250,19 @@ internal object DownloadNotification {
      * Returns the channel id to be used for download notifications.
      */
     private fun ensureChannelExists(context: Context): String {
-        val notificationManager: NotificationManager = context.getSystemService()!!
+        if (SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager: NotificationManager = context.getSystemService()!!
 
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            context.applicationContext.getString(R.string.mozac_feature_downloads_notification_channel),
-            NotificationManager.IMPORTANCE_LOW,
-        )
+            val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                context.applicationContext.getString(R.string.mozac_feature_downloads_notification_channel),
+                NotificationManager.IMPORTANCE_LOW,
+            )
 
-        notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(channel)
 
-        notificationManager.deleteNotificationChannel(LEGACY_NOTIFICATION_CHANNEL_ID)
+            notificationManager.deleteNotificationChannel(LEGACY_NOTIFICATION_CHANNEL_ID)
+        }
 
         return NOTIFICATION_CHANNEL_ID
     }
@@ -267,7 +278,7 @@ internal object DownloadNotification {
                 downloadFilePath = downloadState.filePath,
                 downloadContentType = downloadState.contentType,
             ),
-            PendingIntent.FLAG_IMMUTABLE,
+            PendingIntentUtils.defaultFlags,
         )
 
     private fun getPauseAction(context: Context, downloadStateId: String): NotificationCompat.Action {
@@ -325,14 +336,19 @@ internal object DownloadNotification {
             context.applicationContext,
             Random.nextInt(),
             intent,
-            PendingIntent.FLAG_IMMUTABLE,
+            PendingIntentUtils.defaultFlags,
         )
     }
 }
 
 @VisibleForTesting
-internal fun NotificationCompat.Builder.setCompatGroup(groupKey: String): NotificationCompat.Builder =
-    setGroup(groupKey)
+internal fun NotificationCompat.Builder.setCompatGroup(groupKey: String): NotificationCompat.Builder {
+    return if (SDK_INT >= Build.VERSION_CODES.N) {
+        setGroup(groupKey)
+    } else {
+        this
+    }
+}
 
 private fun DownloadState.getPercent(): Int? =
     progress?.let { progress ->

@@ -5,6 +5,7 @@
 package mozilla.components.support.remotesettings
 
 import android.content.Context
+import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -73,7 +74,9 @@ class DefaultRemoteSettingsSyncScheduler(
     }
 
     private fun getWorkerConstraints() = Constraints.Builder().apply {
-        setRequiresDeviceIdle(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            setRequiresDeviceIdle(true)
+        }
     }.setRequiresBatteryNotLow(true)
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
