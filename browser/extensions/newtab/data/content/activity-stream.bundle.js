@@ -14469,6 +14469,7 @@ const WallpaperCategories = (0,external_ReactRedux_namespaceObject.connect)(stat
   };
 })(_WallpaperCategories);
 ;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/ContentSection/ContentSection.jsx
+function ContentSection_extends() { return ContentSection_extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, ContentSection_extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14540,7 +14541,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     if (drawerRef) {
       let drawerHeight = parseFloat(window.getComputedStyle(drawerRef)?.height) || 0;
       if (isOpen) {
-        drawerRef.style.marginTop = "var(--space-large)";
+        drawerRef.style.marginTop = "var(--space-small)";
       } else {
         drawerRef.style.marginTop = `-${drawerHeight + 3}px`;
       }
@@ -14705,15 +14706,18 @@ class ContentSection extends (external_React_default()).PureComponent {
     }))))))), pocketRegion && /*#__PURE__*/external_React_default().createElement("div", {
       id: "pocket-section",
       className: "section"
-    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", ContentSection_extends({
       id: "pocket-toggle",
       pressed: pocketEnabled || null,
       onToggle: this.onPreferenceSelect,
       "aria-describedby": "custom-pocket-subtitle",
       "data-preference": "feeds.section.topstories",
-      "data-eventSource": "TOP_STORIES",
+      "data-eventSource": "TOP_STORIES"
+    }, mayHaveInferredPersonalization ? {
+      label: "Stories"
+    } : {
       "data-l10n-id": "newtab-custom-stories-toggle"
-    }, /*#__PURE__*/external_React_default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       slot: "nested"
     }, (mayHaveInferredPersonalization || mayHaveTopicSections) && /*#__PURE__*/external_React_default().createElement("div", {
       className: "more-info-pocket-wrapper"
@@ -14735,7 +14739,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }), /*#__PURE__*/external_React_default().createElement("label", {
       className: "customize-menu-checkbox-label",
       htmlFor: "inferred-personalization"
-    }, "Recommendations inferred from your activity with the feed")), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
+    }, "Personalized stories based on your activity")), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
       exitEventFired: exitEventFired
     }))))))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
