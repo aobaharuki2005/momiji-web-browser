@@ -119,13 +119,23 @@ class LoginsReducerTest {
                 timeLastUsed = System.currentTimeMillis(),
             )
         }
+        val itemsList = items.toMutableList()
+        itemsList.add(
+            LoginItem(
+                guid = "7",
+                url = "7 uri",
+                username = "user7-url",
+                password = "pass7",
+                timeLastUsed = System.currentTimeMillis(),
+            ),
+        )
 
-        val state = LoginsState.default.copy(loginItems = items)
+        val state = LoginsState.default.copy(loginItems = itemsList)
 
-        val filterUrl = loginsReducer(state, SearchLogins("url", items))
+        val filterUrl = loginsReducer(state, SearchLogins("url", itemsList))
         assertEquals("url", filterUrl.searchText)
-        assertEquals(4, filterUrl.loginItems.size)
-        assertEquals(listOf(items[0], items[2], items[4], items[6]), filterUrl.loginItems)
+        assertEquals(5, filterUrl.loginItems.size)
+        assertEquals(listOf(itemsList[0], itemsList[2], itemsList[4], itemsList[6], itemsList[7]), filterUrl.loginItems)
     }
 
     @Test
