@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,20 +26,19 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CollectionInfo
 import androidx.compose.ui.semantics.collectionInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -256,8 +254,6 @@ private fun LoginsListTopBar(
                         style = FirefoxTheme.typography.headline6,
                         text = stringResource(R.string.preferences_passwords_saved_logins_2),
                     )
-                } else {
-                    SearchBar(text = text, store = store)
                 }
             },
             navigationIcon = {
@@ -312,66 +308,48 @@ private fun LoginsListTopBar(
                             tint = iconColor,
                         )
                     }
-                }
-            },
-        )
-    }
-}
-
-private val IconButtonHeight = 48.dp
-
-@Composable
-private fun SearchBar(
-    text: String,
-    store: LoginsStore,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    keyboardActions: KeyboardActions = KeyboardActions.Default,
-) {
-    val focusRequester = FocusRequester()
-    SideEffect {
-        focusRequester.requestFocus()
-    }
-
-    Box {
-        TextField(
-            value = text,
-            placeholder = stringResource(R.string.preferences_passwords_saved_logins_search_2),
-            onValueChange = {
-                store.dispatch(SearchLogins(searchText = it, loginItems = store.state.loginItems))
-            },
-            errorText = "",
-            modifier = Modifier
-                .background(color = FirefoxTheme.colors.layer1)
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
-            minHeight = IconButtonHeight,
-            trailingIcons = {
-                if (text.isNotBlank()) {
-                    IconButton(
-                        onClick = {
-                            store.dispatch(
-                                SearchLogins(
-                                    searchText = "",
-                                    loginItems = store.state.loginItems,
-                                ),
-                            )
-                        },
-                        contentDescription = null,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.mozac_ic_cross_24),
-                            contentDescription = null,
-                            tint = FirefoxTheme.colors.iconPrimary,
+                } else {
+                    Box {
+                        TextField(
+                            value = text,
+                            placeholder = stringResource(R.string.preferences_passwords_saved_logins_search_2),
+                            onValueChange = {
+                                store.dispatch(SearchLogins(it, store.state.loginItems))
+                            },
+                            errorText = "",
+                            modifier = Modifier
+                                .background(color = FirefoxTheme.colors.layer1)
+                                .fillMaxWidth(),
+                            trailingIcons = {
+                                if (text.isNotBlank()) {
+                                    IconButton(
+                                        onClick = {
+                                            store.dispatch(
+                                                SearchLogins(
+                                                    "",
+                                                    store.state.loginItems,
+                                                ),
+                                            )
+                                        },
+                                        contentDescription = null,
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.mozac_ic_cross_24),
+                                            contentDescription = null,
+                                            tint = iconColor,
+                                        )
+                                    }
+                                }
+                            },
+                            colors = TextFieldColors.default(
+                                placeholderColor = FirefoxTheme.colors.textPrimary,
+                                cursorColor = Color.DarkGray,
+                            ),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         )
                     }
                 }
             },
-            colors = TextFieldColors.default(
-                placeholderColor = FirefoxTheme.colors.textPrimary,
-                cursorColor = FirefoxTheme.colors.layerAccent,
-            ),
-            keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
         )
     }
 }
