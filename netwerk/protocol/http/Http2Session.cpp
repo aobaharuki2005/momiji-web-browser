@@ -2759,7 +2759,6 @@ nsresult Http2Session::ReadyToProcessDataFrame(
              newState == DISCARDING_DATA_FRAME_PADDING);
   ChangeDownstreamState(newState);
 
-  glean::spdy::chunk_recvd.Accumulate(mInputFrameDataSize >> 10);
   mLastDataReadEpoch = mLastReadEpoch;
 
   if (!mInputFrameID) {

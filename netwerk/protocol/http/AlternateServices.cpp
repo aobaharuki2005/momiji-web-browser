@@ -120,7 +120,6 @@ void AltSvcMapping::ProcessHeader(
 
   LOG(("Alt-Svc Response Header %s\n", buf.get()));
   ParsedHeaderValueListList parsedAltSvc(buf);
-  int32_t numEntriesInHeader = parsedAltSvc.mValues.Length();
 
   nsTArray<RefPtr<AltSvcMapping>> h3Mappings;
   nsTArray<RefPtr<AltSvcMapping>> otherMappings;
@@ -143,8 +142,6 @@ void AltSvcMapping::ProcessHeader(
       if (!pairIndex) {
         if (currentName.EqualsLiteral("clear")) {
           clearEntry = true;
-          --numEntriesInHeader;  // Only want to keep track of actual alt-svc
-                                 // maps, not clearing
           break;
         }
 
@@ -259,11 +256,6 @@ void AltSvcMapping::ProcessHeader(
 
   std::for_each(otherMappings.begin(), otherMappings.end(),
                 doUpdateAltSvcMapping);
-
-  if (numEntriesInHeader) {  // Ignore headers that were just "alt-svc: clear"
-    glean::http::altsvc_entries_per_header.AccumulateSingleSample(
-        numEntriesInHeader);
-  }
 }
 
 AltSvcMapping::AltSvcMapping(nsIDataStorage* storage, int32_t epoch,

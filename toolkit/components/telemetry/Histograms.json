@@ -1853,16 +1853,6 @@
     "kind": "boolean",
     "description": "Whether a HTTP transaction was routed via Alt-Svc or not."
   },
-  "HTTP_ALTSVC_ENTRIES_PER_HEADER": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "bug_numbers": [1499149],
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "kind": "enumerated",
-    "n_values": 5,
-    "description": "How many alt-svc productions were seen in a single Alt-Svc header"
-  },
   "HTTP_ALTSVC_MAPPING_CHANGED_TARGET": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -2075,23 +2065,6 @@
     "n_buckets": 100,
     "bug_numbers": [1866739, 1858256],
     "description": "The upload throughput for http/3 requests larger than 100MB. Measured in megabits per second, Mbps."
-  },
-  "NETWORK_RACE_CACHE_WITH_NETWORK_USAGE_2": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
-    "bug_numbers": [1377340],
-    "kind": "categorical",
-    "labels": [
-      "NetworkNoRace",
-      "CacheNoRace",
-      "NetworkRace",
-      "CacheRace",
-      "NetworkDelayedRace",
-      "CacheDelayedRace"
-    ],
-    "description": "Whether we raced network with the cache."
   },
   "NETWORK_RACE_CACHE_WITH_NETWORK_SAVED_TIME": {
     "record_in_processes": ["main", "content"],
@@ -2572,16 +2545,6 @@
     "n_buckets": 250,
     "description": "SPDY: Streams recevied per connection"
   },
-  "SPDY_CHUNK_RECVD": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 100,
-    "description": "SPDY: Recvd Chunk Size (rounded to KB)"
-  },
   "SPDY_SYN_SIZE": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
@@ -2973,17 +2936,6 @@
     "high": 5000,
     "n_buckets": 100,
     "description": "Time from submission to dispatch of HTTP2 transaction that has received a respone from a server that addretizes HTTP3 support (ms)"
-  },
-  "HTTP_SAW_QUIC_ALT_PROTOCOL_2": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1605099],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "enumerated",
-    "n_values": 3,
-    "description": "Does a response has a h3(1), other quic(2) or non(0) alt-protocol advertisement."
   },
   "HTTP3_CONNECTION_CLOSE_CODE_3": {
     "record_in_processes": ["main", "socket"],
