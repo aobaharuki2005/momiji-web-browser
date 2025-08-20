@@ -556,6 +556,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Returns true if the terms of use feature flag is enabled
+     */
+    var isTermsOfUsePromptEnabled by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_terms_prompt_enabled),
+        default = { FxNimbus.features.termsOfUsePrompt.value().enabled },
+        featureFlag = true,
+    )
+
+    /**
      * Timestamp in milliseconds when the terms of use prompt was last shown to the user.
      * A value of 0L indicates that the prompt has never been shown.
      */

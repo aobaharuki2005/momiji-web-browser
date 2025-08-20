@@ -33,6 +33,7 @@ class TermsOfUseManager(private val settings: Settings) {
      *
      * This function returns `true` if:
      * - The user has not accepted the Terms of Use.
+     * - The terms of use prompt feature flag is enabled.
      * - The user has not postponed accepting the Terms of Use or it's been at least 5 days since they did.
      * - This is the first time checking to see if we should show the prompt since starting the app
      *   OR the [ignoreFirstCheckSinceStartingApp] flag is true (we should ignore this when checking from homepage).
@@ -48,6 +49,7 @@ class TermsOfUseManager(private val settings: Settings) {
         currentTimeInMillis: Long = System.currentTimeMillis(),
     ): Boolean {
         if (settings.hasAcceptedTermsOfService) return false
+        if (!settings.isTermsOfUsePromptEnabled) return false
 
         val isFirstCheck = isFirstCheckSinceStartingApp
         isFirstCheckSinceStartingApp = false
