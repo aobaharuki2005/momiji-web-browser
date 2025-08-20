@@ -8,7 +8,6 @@ This file contains functions used for telemetry.
 
 import os
 import platform
-import subprocess
 import sys
 
 import distro
@@ -151,7 +150,7 @@ def get_distro_and_version():
         return "macos", platform.mac_ver()[0]
     elif sys.platform.startswith("win32") or sys.platform.startswith("msys"):
         ver = sys.getwindowsversion()
-        return "windows", f"{ver.major}.{ver.minor}.{ver.build}"
+        return "windows", "%s.%s.%s" % (ver.major, ver.minor, ver.build)
     else:
         return sys.platform, ""
 
@@ -161,7 +160,7 @@ def get_shell_info():
 
     return (
         True if "vscode" in os.getenv("TERM_PROGRAM", "") else False,
-        bool(os.getenv("SSH_CLIENT", "")),
+        bool(os.getenv("SSH_CLIENT", False)),
     )
 
 
@@ -175,7 +174,11 @@ def get_vscode_running():
                 # On Windows we have "Code.exe"
                 # On MacOS we have "Code Helper (Renderer)"
                 # On Linux we have ""
-                if proc.name in ("Code.exe", "Code Helper (Renderer)", "code"):
+                if (
+                    proc.name == "Code.exe"
+                    or proc.name == "Code Helper (Renderer)"
+                    or proc.name == "code"
+                ):
                     return True
             except Exception:
                 # may not be able to access process info for all processes
@@ -184,96 +187,5 @@ def get_vscode_running():
         # On some platforms, sometimes, the generator throws an
         # exception preventing us to enumerate.
         return False
-
-    return False
-
-
-def _is_process_running(process_name: str) -> bool:
-    """Check if a process is running using pgrep."""
-    try:
-        result = subprocess.run(
-            ["pgrep", "-fc", process_name],
-            capture_output=True,
-            check=False,
-        )
-        return result.returncode == 0
-    except subprocess.CalledProcessError:
-        return False
-
-
-def get_fleet_running() -> bool:
-    """Try to determine if FleetDM endpoint management tool is running on the machine.
-
-    If we can't make a determination, return False.
-    """
-    system = platform.system()
-    if system == "Darwin":
-        return _is_process_running("osqueryd")
-    elif system == "Windows":
-        try:
-            out = subprocess.check_output(
-                ["sc", "query", "Fleet osquery"], stderr=subprocess.DEVNULL, text=True
-            )
-            for line in out.splitlines():
-                if "STATE" in line and "RUNNING" in line:
-                    return True
-        except subprocess.CalledProcessError:
-            pass
-    elif system == "Linux":
-        try:
-            result = subprocess.run(
-                ["systemctl", "is-active", "osqueryd"],
-                capture_output=True,
-                check=False,
-            )
-            if result.returncode == 0:
-                return True
-        except subprocess.CalledProcessError:
-            pass
-        return _is_process_running("osqueryd")
-    return False
-
-
-def get_crowdstrike_running() -> bool:
-    """Try to determine if CrowdStrike security software is running on the machine.
-
-    If we can't make a determination, return False.
-    """
-    system = platform.system()
-    if system == "Darwin":
-        try:
-            out = subprocess.check_output(
-                ["systemextensionsctl", "list"], stderr=subprocess.DEVNULL, text=True
-            )
-            for line in out.splitlines():
-                if (
-                    "com.crowdstrike.falcon.Agent" in line
-                    and "activated enabled" in line.lower()
-                ):
-                    return True
-        except subprocess.CalledProcessError:
-            pass
-    elif system == "Windows":
-        try:
-            out = subprocess.check_output(
-                ["sc", "query", "CSFalconService"], stderr=subprocess.DEVNULL, text=True
-            )
-            for line in out.splitlines():
-                if "STATE" in line and "RUNNING" in line:
-                    return True
-        except subprocess.CalledProcessError:
-            pass
-    elif system == "Linux":
-        try:
-            result = subprocess.run(
-                ["systemctl", "is-active", "falcon-sensor"],
-                capture_output=True,
-                check=False,
-            )
-            if result.returncode == 0:
-                return True
-        except subprocess.CalledProcessError:
-            pass
-        return _is_process_running("falcon-sensor")
 
     return False

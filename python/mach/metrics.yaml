@@ -218,29 +218,3 @@ mach.system:
     expires: never
     send_in_pings:
       - usage
-  fleet_running:
-    type: boolean
-    description: True if FleetDM endpoint management tool is running.
-    lifetime: application
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1982531
-    data_reviews:
-      - TBD
-    notification_emails:
-      - build-telemetry@mozilla.com
-    expires: never
-    send_in_pings:
-      - usage
-  crowdstrike_running:
-    type: boolean
-    description: True if CrowdStrike security software is running.
-    lifetime: application
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1982531
-    data_reviews:
-      - TBD
-    notification_emails:
-      - build-telemetry@mozilla.com
-    expires: never
-    send_in_pings:
-      - usage

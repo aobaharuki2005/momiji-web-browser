@@ -269,7 +269,7 @@ def initialize(topsrcdir, args=()):
             return
 
         _finalize_telemetry_glean(
-            context.telemetry, handler.name == "bootstrap", success, Path(topsrcdir)
+            context.telemetry, handler.name == "bootstrap", success
         )
 
     def populate_context(key=None):
@@ -415,19 +415,17 @@ def initialize(topsrcdir, args=()):
     return driver
 
 
-def _finalize_telemetry_glean(telemetry, is_bootstrap, success, topsrcdir):
+def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
     """Submit telemetry collected by Glean.
 
     Finalizes some metrics (command success state and duration, system information) and
     requests Glean to send the collected data.
     """
 
-    from mach.telemetry import MACH_METRICS_PATH, resolve_is_employee_by_credentials
+    from mach.telemetry import MACH_METRICS_PATH
     from mozbuild.telemetry import (
         get_cpu_brand,
-        get_crowdstrike_running,
         get_distro_and_version,
-        get_fleet_running,
         get_psutil_stats,
         get_shell_info,
         get_vscode_running,
@@ -452,11 +450,6 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success, topsrcdir):
     system_metrics.vscode_terminal.set(vscode_terminal)
     system_metrics.ssh_connection.set(ssh_connection)
     system_metrics.vscode_running.set(get_vscode_running())
-
-    # Only collect Fleet and CrowdStrike metrics for Mozilla employees
-    if resolve_is_employee_by_credentials(topsrcdir):
-        system_metrics.fleet_running.set(get_fleet_running())
-        system_metrics.crowdstrike_running.set(get_crowdstrike_running())
 
     has_psutil, logical_cores, physical_cores, memory_total = get_psutil_stats()
     if has_psutil:
