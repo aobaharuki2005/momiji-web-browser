@@ -1682,30 +1682,19 @@ def compiler(
 
         # If you want to bump the version check here ensure the version
         # is known for Xcode in get_compiler_info.
-        if info.type == "clang" and info.version < "8.0":
+        # This version can be no higher than the version used in
+        # src/bootstrap/src/core/build_steps/llvm.rs's check_llvm_version in the source
+        # code of the minimum supported Rust version.
+        if info.type == "clang" and info.version < "17.0":
             raise FatalCheckError(
-                "Only clang/llvm 8.0 or newer is supported (found version %s)."
+                "Only clang/llvm 17.0 or newer is supported (found version %s)."
                 % info.version
             )
 
-        if host_or_target.kernel == "WASI":
-            if info.type != "clang":
-                raise FatalCheckError(
-                    "Only clang is supported for %s" % host_or_target.alias
-                )
-            if info.version < "8.0":
-                raise FatalCheckError(
-                    "Only clang/llvm 8.0 or newer is supported for %s (found version %s)."
-                    % (host_or_target.alias, info.version)
-                )
-
-        if host_or_target.os == "Android":
-            # Need at least clang 13 for compiler-rt/libunwind being the default.
-            if info.type == "clang" and info.version < "13.0":
-                raise FatalCheckError(
-                    "Only clang/llvm 13.0 or newer is supported for %s (found version %s)."
-                    % (host_or_target.alias, info.version)
-                )
+        if host_or_target.kernel == "WASI" and info.type != "clang":
+            raise FatalCheckError(
+                "Only clang is supported for %s" % host_or_target.alias
+            )
 
         if host_or_target.os == "WINNT" and info.type == "gcc":
             raise FatalCheckError(
