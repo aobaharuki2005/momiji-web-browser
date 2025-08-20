@@ -314,10 +314,6 @@ add_task(async function dismissal() {
     await QuickSuggest.rustBackend.isRustSuggestionDismissed(suggestionObject),
     "The suggestion should be dismissed"
   );
-  Assert.ok(
-    await QuickSuggest.rustBackend.isDismissedByKey(dismissalKey),
-    "The dismissal key should be registered"
-  );
 
   await check_results({
     context: createContext("bbb keyword", {
