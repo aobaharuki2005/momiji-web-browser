@@ -1888,8 +1888,8 @@ LayoutDeviceIntRect TextLeafPoint::InsertionPointBounds() const {
       delta *= -1;
     }
     if (delta > 0) {
-      // Previous character is to the end (eg. right in ltr) of the current one, or
-      // next character is to the start (eg. left in ltr) of the current one.
+      // Previous character is to the end (eg. right in ltr) of the current one,
+      // or next character is to the start (eg. left in ltr) of the current one.
       // Align the caret to the end of the current character.
       currentStart += currentLength - caretLength;
     }
