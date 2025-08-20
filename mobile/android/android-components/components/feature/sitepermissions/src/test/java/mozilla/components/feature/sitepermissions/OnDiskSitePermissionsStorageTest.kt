@@ -249,8 +249,6 @@ class OnDiskSitePermissionsStorageTest {
 
     private fun mockDatabase(dao: SitePermissionsDao) = object : SitePermissionsDatabase() {
         override fun sitePermissionsDao() = dao
-
-        override fun createOpenHelper(config: DatabaseConfiguration): SupportSQLiteOpenHelper = mock()
         override fun createInvalidationTracker(): InvalidationTracker = mock()
         override fun clearAllTables() = Unit
     }
