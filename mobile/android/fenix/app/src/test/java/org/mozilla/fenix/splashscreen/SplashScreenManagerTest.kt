@@ -4,27 +4,21 @@
 package org.mozilla.fenix.splashscreen
 
 import androidx.core.splashscreen.SplashScreen
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class SplashScreenManagerTest {
-    private val coroutineScope = TestScope()
 
-    @Before
-    fun setup() {
-        Dispatchers.setMain(StandardTestDispatcher(coroutineScope.testScheduler))
-    }
+    @get:Rule
+    val mainCoroutineRule = MainCoroutineRule()
 
     @Test
     fun `GIVEN a device that does not support a splash screen WHEN maybeShowSplashScreen is called THEN we should get a did not show the splash screen result`() {
@@ -115,7 +109,7 @@ class SplashScreenManagerTest {
         splashScreenManager.showSplashScreen()
 
         Assert.assertNull(result)
-        coroutineScope.advanceUntilIdle()
+        advanceUntilIdle()
         Assert.assertTrue(result is SplashScreenManagerResult.OperationFinished)
     }
 
@@ -143,7 +137,7 @@ class SplashScreenManagerTest {
         splashScreenManager.showSplashScreen()
 
         Assert.assertNull(result)
-        coroutineScope.advanceUntilIdle()
+        advanceUntilIdle()
         Assert.assertTrue(result is SplashScreenManagerResult.TimeoutExceeded)
     }
 
@@ -173,7 +167,7 @@ class SplashScreenManagerTest {
             onSplashScreenFinished = onSplashScreenFinished,
             storage = storage,
             isDeviceSupported = isDeviceSupported,
-            scope = coroutineScope,
+            scope = mainCoroutineRule.scope,
         )
     }
 }

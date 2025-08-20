@@ -17,11 +17,6 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat.getColor
 import androidx.core.view.forEach
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
@@ -49,12 +44,14 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.anyInt
@@ -66,9 +63,12 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.robolectric.annotation.Config
 
-@ExperimentalCoroutinesApi // UnconfinedTestDispatcher
 @RunWith(AndroidJUnit4::class)
 class CustomTabsToolbarFeatureTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     @Test
     fun `start without sessionId invokes nothing`() {
         val store = BrowserStore()
@@ -1809,9 +1809,6 @@ class CustomTabsToolbarFeatureTest {
 
     @Test
     fun `show title only if not empty`() {
-        val dispatcher = UnconfinedTestDispatcher()
-        Dispatchers.setMain(dispatcher)
-
         val tab = createCustomTab(
             "https://www.mozilla.org",
             id = "mozilla",
@@ -1851,15 +1848,10 @@ class CustomTabsToolbarFeatureTest {
         ).joinBlocking()
 
         assertEquals("Internet for people, not profit - Mozilla", toolbar.title)
-
-        Dispatchers.resetMain()
     }
 
     @Test
     fun `Will use URL as title if title was shown once and is now empty`() {
-        val dispatcher = UnconfinedTestDispatcher()
-        Dispatchers.setMain(dispatcher)
-
         val tab = createCustomTab(
             "https://www.mozilla.org",
             id = "mozilla",
