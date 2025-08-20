@@ -47,13 +47,13 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.button.FloatingActionButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.modifier.thenConditional
 import mozilla.components.compose.base.text.Text
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.button.FloatingActionButton
 import org.mozilla.fenix.compose.core.Action
 import org.mozilla.fenix.compose.list.ExpandableListHeader
 import org.mozilla.fenix.compose.snackbar.AcornSnackbarHostState

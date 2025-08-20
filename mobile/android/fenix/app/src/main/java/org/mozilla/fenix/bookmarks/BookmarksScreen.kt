@@ -87,6 +87,7 @@ import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.button.FloatingActionButton
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.textfield.TextFieldColors
 import mozilla.components.compose.base.theme.AcornTheme
@@ -110,7 +111,6 @@ import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.MenuItem
-import org.mozilla.fenix.compose.button.FloatingActionButton
 import org.mozilla.fenix.compose.core.Action
 import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.SelectableFaviconListItem
