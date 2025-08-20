@@ -316,6 +316,32 @@ class TextPropertyEditor {
           if (event.target === this.valueContainer) {
             this.valueSpan.click();
           }
+
+          if (event.target.classList.contains("ruleview-variable-link")) {
+            const isRuleInStartingStyle =
+              this.ruleEditor.rule.isInStartingStyle();
+            const rulePseudoElement = this.ruleEditor.rule.pseudoElement;
+            this.ruleView.highlightProperty(event.target.dataset.variableName, {
+              ruleValidator: rule => {
+                // If the associated rule is not in starting style, the variable
+                // definition can't be in a starting style rule.
+                // Note that if the rule is in starting style, then the variable
+                // definition might be in a starting style rule, or in a regular one.
+                if (!isRuleInStartingStyle && rule.isInStartingStyle()) {
+                  return false;
+                }
+
+                if (
+                  rule.pseudoElement &&
+                  rulePseudoElement !== rule.pseudoElement
+                ) {
+                  return false;
+                }
+
+                return true;
+              },
+            });
+          }
         },
         { signal: this.abortController.signal }
       );
