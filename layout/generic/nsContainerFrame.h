@@ -909,6 +909,12 @@ class nsContainerFrame : public nsSplittableFrame {
       nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
       uint16_t aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
 
+  /**
+   * Helper for ruby frames that want to accumulate the max ascent/descent of
+   * their children.
+   */
+  mozilla::RubyMetrics RubyMetricsIncludingChildren() const;
+
   // ==========================================================================
 
 #ifdef DEBUG

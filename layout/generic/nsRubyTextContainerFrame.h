@@ -49,6 +49,8 @@ class nsRubyTextContainerFrame final : public nsContainerFrame {
     return HasAnyStateBits(NS_RUBY_TEXT_CONTAINER_IS_SPAN);
   }
 
+  mozilla::RubyMetrics RubyMetrics() const override;
+
  protected:
   friend nsContainerFrame* NS_NewRubyTextContainerFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
