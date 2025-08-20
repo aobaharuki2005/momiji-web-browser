@@ -4938,13 +4938,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect,
 }
 
 void nsCocoaWindow::Destroy() {
-  // Make sure that no composition is in progress while disconnecting
-  // ourselves from the view. This has to be held through the call
-  // to nsBaseWidget::Destroy (which calls ::DestroyCompositor), and
-  // that is called at the very end. So grab the lock now and keep it
-  // for the entire scope.
-  MutexAutoLock lock(mCompositingLock);
-
   if (mOnDestroyCalled) {
     return;
   }
@@ -4961,7 +4954,12 @@ void nsCocoaWindow::Destroy() {
   // (Bug 891424)
   Show(false);
 
-  [mChildView widgetDestroyed];
+  {
+    // Make sure that no composition is in progress while disconnecting
+    // ourselves from the view.
+    MutexAutoLock lock(mCompositingLock);
+    [mChildView widgetDestroyed];
+  }
 
   TearDownView();  // Safe if called twice.
   if (mFullscreenTransitionAnimation) {
