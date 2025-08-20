@@ -345,9 +345,6 @@ MOZ_DEFINE_BOOL_PRETTY_PRINTER(DoneOrIgnored, Done, Ignored);
 MOZ_DEFINE_BOOL_PRETTY_PRINTER(HandledOrIgnored, Handled, Ignored);
 MOZ_DEFINE_BOOL_PRETTY_PRINTER(DoneOrCanceled, Done, Canceled);
 MOZ_DEFINE_BOOL_PRETTY_PRINTER(HandledOrCanceled, Handled, Canceled);
-
-// FIXME: Replace all users of GetBoolName with TrueOrFalse.
-MOZ_DEFINE_BOOL_PRETTY_PRINTER(GetBoolName, true, false);
 }  // namespace mozilla
 
 #endif  // mozilla_logging_h
