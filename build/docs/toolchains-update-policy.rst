@@ -54,3 +54,29 @@ single minimum LLVM version covers both Rust and C/C++ compilation.
 This approach strikes a balance between the constraints faced by downstreams in
 acquiring and maintaining toolchains, and our own need to use reasonably modern
 compilers for C and C++ code.
+
+libstdc++
+=========
+
+*We build stable Firefox with a libstdc++ that allows to provide the necessary
+binary compatibility*
+
+The binary compatibility is defined by the Firefox system requirements on Linux.
+Those can be adjusted but a balance must be made between the breadth of systems
+supported by Firefox builds, and the desired C++ features on the development
+side. As of writing there isn't a policy describing exactly how the system
+requirements are updated, yet.
+
+Tricks may be put in place to guarantee the required binary compatibility with
+older versions of libstdc++ than the one used to build.
+(see `build/unix/stdc++compat`)
+
+GCC
+===
+
+*The Minimum Supported GCC Version matches the version of libstdc++ above*
+
+GCC and libstdc++ are, generally speaking, coupled, and it can be difficult to
+use a version of GCC that doesn't match the version of libstdc++. As such, we
+don't support building with a version of GCC older than the version of
+libstdc++ Firefox is built against by default (from the development sysroot).
