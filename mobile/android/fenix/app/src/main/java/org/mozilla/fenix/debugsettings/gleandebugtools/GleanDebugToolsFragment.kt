@@ -5,6 +5,10 @@
 package org.mozilla.fenix.debugsettings.gleandebugtools
 
 import android.content.Intent
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
@@ -15,25 +19,25 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
+import androidx.fragment.compose.content
 import androidx.navigation.fragment.findNavController
 import mozilla.telemetry.glean.Glean
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.lazyStore
-import org.mozilla.fenix.compose.ComposeFragment
 import org.mozilla.fenix.debugsettings.gleandebugtools.ui.GleanDebugToolsScreen
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * [ComposeFragment] for displaying the Glean Debug Tools in the about:glean page.
+ * [Fragment] for displaying the Glean Debug Tools in the about:glean page.
  */
-class GleanDebugToolsFragment : ComposeFragment() {
+class GleanDebugToolsFragment : Fragment() {
 
     private val store by lazyStore {
         GleanDebugToolsStore(
@@ -67,8 +71,11 @@ class GleanDebugToolsFragment : ComposeFragment() {
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    override fun UI() {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View? = content {
         FirefoxTheme {
             Scaffold(
                 topBar = {
