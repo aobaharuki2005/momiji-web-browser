@@ -1315,6 +1315,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         persistDefaultIfNotExists = true,
     )
 
+    var shouldShowSimpleToolbarCustomization by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_simple_toolbar_customization),
+        default = { FxNimbus.features.toolbarRedesignOption.value().showSimpleCustomization },
+    )
+
+    var shouldShowExpandedToolbarCustomization by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_expanded_toolbar_customization),
+        default = { FxNimbus.features.toolbarRedesignOption.value().showExpandedCustomization },
+    )
+
     val toolbarPosition: ToolbarPosition
         get() = if (isTabStripEnabled) {
             ToolbarPosition.TOP

@@ -85,6 +85,10 @@
     <string name="preferences_debug_settings_composable_toolbar" translatable="false">Enable Composable Toolbar</string>
     <!-- Label for enabling the redesigned toolbar options -->
     <string name="preferences_debug_settings_toolbar_redesign" translatable="false">Enable Redesigned Toolbar Options</string>
+    <!-- Label for enabling the redesigned simple toolbar -->
+    <string name="preferences_debug_settings_simple_toolbar_customization">Enable simple toolbar customization</string>
+    <!-- Label for enabling the redesigned expanded toolbar -->
+    <string name="preferences_debug_settings_expanded_toolbar_customization">Enable expanded toolbar customization</string>
     <!-- Label for a longer description of the redesigned toolbar depending on the composable toolbar feature -->
     <string name="preferences_debug_settings_toolbar_redesign_summary" translatable="false">This needs the Composable Toolbar feature enabled</string>
     <!-- Label for toggling Remote Crash Pull -->

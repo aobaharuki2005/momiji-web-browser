@@ -83,9 +83,59 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
                             }
                         }
                     }
+                    requirePreference<SwitchPreference>(R.string.pref_key_enable_simple_toolbar_customization).apply {
+                        isEnabled = newOption
+                        when (newOption) {
+                            true -> {
+                                summary = null
+                            }
+
+                            false -> {
+                                isChecked = false
+                                summary = getString(R.string.preferences_debug_settings_toolbar_redesign_summary)
+                                context.settings().shouldShowSimpleToolbarCustomization = false
+                            }
+                        }
+                    }
+                    requirePreference<SwitchPreference>(R.string.pref_key_enable_expanded_toolbar_customization).apply {
+                        isEnabled = newOption
+                        when (newOption) {
+                            true -> {
+                                summary = null
+                            }
+
+                            false -> {
+                                isChecked = false
+                                summary = getString(R.string.preferences_debug_settings_toolbar_redesign_summary)
+                                context.settings().shouldShowExpandedToolbarCustomization = false
+                            }
+                        }
+                    }
                 }
                 true
             }
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_simple_toolbar_customization).apply {
+            isVisible = Config.channel.isDebug
+            isChecked = context.settings().shouldShowSimpleToolbarCustomization
+            isEnabled = context.settings().shouldUseComposableToolbar
+            summary = when (context.settings().shouldUseComposableToolbar) {
+                true -> null
+                false -> getString(R.string.preferences_debug_settings_toolbar_redesign_summary)
+            }
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_expanded_toolbar_customization).apply {
+            isVisible = Config.channel.isDebug
+            isChecked = context.settings().shouldShowExpandedToolbarCustomization
+            isEnabled = context.settings().shouldUseComposableToolbar
+            summary = when (context.settings().shouldUseComposableToolbar) {
+                true -> null
+                false -> getString(R.string.preferences_debug_settings_toolbar_redesign_summary)
+            }
+            onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_enable_toolbar_redesign).apply {
