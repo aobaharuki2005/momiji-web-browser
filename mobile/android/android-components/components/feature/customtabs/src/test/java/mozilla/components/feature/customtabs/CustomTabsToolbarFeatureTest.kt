@@ -9,6 +9,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
+import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.FrameLayout
@@ -251,7 +252,9 @@ class CustomTabsToolbarFeatureTest {
             loadUrlUseCase = SessionUseCases(store).loadUrl,
         )
         val window: Window = mock()
-        `when`(window.decorView).thenReturn(mock())
+        val decorView: View = mock()
+        `when`(decorView.findViewById<View>(anyInt())).thenReturn(mock())
+        `when`(window.decorView).thenReturn(decorView)
         `when`(window.context).thenReturn(testContext)
         `when`(window.insetsController).thenReturn(mock())
 
@@ -293,7 +296,9 @@ class CustomTabsToolbarFeatureTest {
             loadUrlUseCase = SessionUseCases(store).loadUrl,
         )
         val window: Window = mock()
-        `when`(window.decorView).thenReturn(mock())
+        val decorView: View = mock()
+        `when`(decorView.findViewById<View>(anyInt())).thenReturn(mock())
+        `when`(window.decorView).thenReturn(decorView)
         `when`(window.context).thenReturn(testContext)
         `when`(window.insetsController).thenReturn(mock())
         val initialDisplayToolbarColors = toolbar.display.colors
@@ -404,7 +409,9 @@ class CustomTabsToolbarFeatureTest {
             loadUrlUseCase = SessionUseCases(store).loadUrl,
         )
         val window: Window = mock()
-        `when`(window.decorView).thenReturn(mock())
+        val decorView: View = mock()
+        `when`(decorView.findViewById<View>(anyInt())).thenReturn(mock())
+        `when`(window.decorView).thenReturn(decorView)
         `when`(window.context).thenReturn(testContext)
         `when`(window.insetsController).thenReturn(mock())
 
@@ -450,7 +457,9 @@ class CustomTabsToolbarFeatureTest {
             loadUrlUseCase = SessionUseCases(store).loadUrl,
         )
         val window: Window = mock()
-        `when`(window.decorView).thenReturn(mock())
+        val decorView: View = mock()
+        `when`(decorView.findViewById<View>(anyInt())).thenReturn(mock())
+        `when`(window.decorView).thenReturn(decorView)
         `when`(window.context).thenReturn(testContext)
         `when`(window.insetsController).thenReturn(mock())
 
@@ -543,7 +552,9 @@ class CustomTabsToolbarFeatureTest {
             loadUrlUseCase = SessionUseCases(store).loadUrl,
         )
         val window: Window = mock()
-        `when`(window.decorView).thenReturn(mock())
+        val decorView: View = mock()
+        `when`(decorView.findViewById<View>(anyInt())).thenReturn(mock())
+        `when`(window.decorView).thenReturn(decorView)
         `when`(window.context).thenReturn(testContext)
         `when`(window.insetsController).thenReturn(mock())
 
@@ -590,7 +601,9 @@ class CustomTabsToolbarFeatureTest {
             loadUrlUseCase = SessionUseCases(store).loadUrl,
         )
         val window: Window = mock()
-        `when`(window.decorView).thenReturn(mock())
+        val decorView: View = mock()
+        `when`(decorView.findViewById<View>(anyInt())).thenReturn(mock())
+        `when`(window.decorView).thenReturn(decorView)
         `when`(window.context).thenReturn(testContext)
         `when`(window.insetsController).thenReturn(mock())
 
