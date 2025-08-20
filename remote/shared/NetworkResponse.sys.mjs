@@ -147,6 +147,21 @@ export class NetworkResponse {
   }
 
   /**
+   * Check if this response will lead to a redirect.
+   */
+  get willRedirect() {
+    // See static helper on nsHttpChannel:WillRedirect
+    // https://searchfox.org/mozilla-central/rev/6b4cb595d05ac38e2cfc493e3b81fe4c97a71f12/netwerk/protocol/http/nsHttpChannel.cpp#283-288
+    const isRedirectStatus =
+      this.#status == 301 ||
+      this.#status == 302 ||
+      this.#status == 303 ||
+      this.#status == 307 ||
+      this.#status == 308;
+    return isRedirectStatus && this.#channel.getResponseHeader("Location");
+  }
+
+  /**
    * Clear a response header from the responses's headers list.
    *
    * @param {string} name
@@ -253,22 +268,8 @@ export class NetworkResponse {
       status: this.status,
       statusMessage: this.statusMessage,
       totalTransmittedSize: this.totalTransmittedSize,
+      willRedirect: this.willRedirect,
     };
-  }
-
-  /**
-   * Check if this response will lead to a redirect.
-   */
-  willRedirect() {
-    // See static helper on nsHttpChannel:WillRedirect
-    // https://searchfox.org/mozilla-central/rev/6b4cb595d05ac38e2cfc493e3b81fe4c97a71f12/netwerk/protocol/http/nsHttpChannel.cpp#283-288
-    const isRedirectStatus =
-      this.#status == 301 ||
-      this.#status == 302 ||
-      this.#status == 303 ||
-      this.#status == 307 ||
-      this.#status == 308;
-    return isRedirectStatus && this.#channel.getResponseHeader("Location");
   }
 
   #getComputedMimeType() {
