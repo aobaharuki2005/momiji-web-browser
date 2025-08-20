@@ -1057,6 +1057,8 @@ class TextPropertyEditor {
       this.element.classList.add("unused");
       if (!this.unusedState) {
         this.#createUnusedWarningIcon();
+      } else {
+        this.unusedState.hidden = false;
       }
     }
   }
