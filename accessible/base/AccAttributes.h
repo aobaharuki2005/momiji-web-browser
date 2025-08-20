@@ -12,7 +12,6 @@
 #include "nsTHashMap.h"
 #include "nsStringFwd.h"
 #include "mozilla/gfx/Matrix.h"
-#include "mozilla/WritingModes.h"
 
 class nsVariant;
 
@@ -108,7 +107,7 @@ class AccAttributes {
               CSSCoord, FontSize, Color, DeleteEntry, UniquePtr<nsString>,
               RefPtr<AccAttributes>, uint64_t, UniquePtr<AccGroupInfo>,
               UniquePtr<gfx::Matrix4x4>, nsTArray<uint64_t>,
-              nsTArray<TextOffsetAttribute>, WritingMode>;
+              nsTArray<TextOffsetAttribute>>;
   static_assert(sizeof(AttrValueType) <= 16);
   using AtomVariantMap = nsTHashMap<RefPtr<nsAtom>, AttrValueType>;
 

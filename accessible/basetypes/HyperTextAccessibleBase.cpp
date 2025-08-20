@@ -244,7 +244,7 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
 
   index_t startOffset = ConvertMagicOffset(aStartOffset);
   index_t endOffset = ConvertMagicOffset(aEndOffset);
-  if (!startOffset.IsValid() || startOffset > endOffset) {
+  if (!startOffset.IsValid() || startOffset >= endOffset) {
     return LayoutDeviceIntRect();
   }
 
@@ -257,8 +257,12 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
     return LayoutDeviceIntRect();
   }
 
-  TextLeafRange range(startPoint, endPoint);
-  result = range.Bounds();
+  if (endPoint == startPoint) {
+    result = startPoint.CharBounds();
+  } else {
+    TextLeafRange range(startPoint, endPoint);
+    result = range.Bounds();
+  }
 
   // Calls to TextLeafRange::Bounds() will construct screen coordinates.
   // Perform any additional conversions here.

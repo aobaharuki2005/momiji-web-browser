@@ -4057,13 +4057,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(CacheKey::Opacity, DeleteEntry());
     }
 
-    WritingMode wm = GetWritingMode();
-    if (wm.GetBits()) {
-      fields->SetAttribute(CacheKey::WritingMode, wm);
-    } else if (IsUpdatePush(CacheDomain::Style)) {
-      fields->SetAttribute(CacheKey::WritingMode, DeleteEntry());
-    }
-
     if (frame &&
         frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
         nsLayoutUtils::IsReallyFixedPos(frame)) {
@@ -4456,14 +4449,6 @@ float LocalAccessible::Opacity() const {
   }
 
   return 1.0f;
-}
-
-WritingMode LocalAccessible::GetWritingMode() const {
-  if (nsIFrame* frame = GetFrame()) {
-    return WritingMode(frame->Style());
-  }
-
-  return WritingMode();
 }
 
 void LocalAccessible::DOMNodeID(nsString& aID) const {

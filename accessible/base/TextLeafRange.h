@@ -166,7 +166,7 @@ class TextLeafPoint final {
    * Returns a rect (in dev pixels) describing position and size of
    * the character at mOffset in mAcc. This rect is screen-relative.
    */
-  LayoutDeviceIntRect CharBounds() const;
+  LayoutDeviceIntRect CharBounds();
 
   /**
    * Returns true if the given point (in screen coords) is contained
@@ -252,10 +252,6 @@ class TextLeafPoint final {
    * such that the resulting rect contains only one character.
    */
   LayoutDeviceIntRect ComputeBoundsFromFrame() const;
-
-  LayoutDeviceIntRect InsertionPointBounds() const;
-
-  friend class TextLeafRange;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TextLeafPoint::BoundaryFlags)
