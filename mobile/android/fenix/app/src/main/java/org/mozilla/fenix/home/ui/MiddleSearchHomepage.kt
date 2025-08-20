@@ -76,6 +76,10 @@ internal fun MiddleSearchHomepage(
                 with(state) {
                     when (this) {
                         is HomepageState.Private -> {
+                            LaunchedEffect(key1 = state) {
+                                onMiddleSearchBarVisibilityChanged(false)
+                            }
+
                             Box(modifier = Modifier.padding(horizontal = horizontalMargin)) {
                                 PrivateBrowsingDescription(
                                     onLearnMoreClick = interactor::onLearnMoreClicked,
