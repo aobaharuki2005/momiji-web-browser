@@ -5,6 +5,8 @@ permalink: /changelog/
 ---
 
 # 144.0 (In Development)
+* **support-ktx**
+  * 🆕 New `Window.setSystemBarsBackground()` allows to still theme the status bar, navigation bar and other insets background in landscape mode even when edge-to-edge is enabled and Android doesn't theme these anymore. [Bug 1981861](https://bugzilla.mozilla.org/show_bug.cgi?id=1981861)
 
 # 143.0
 * **feature-downloads**:
