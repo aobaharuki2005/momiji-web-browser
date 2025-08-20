@@ -2613,6 +2613,9 @@ class nsINode : public mozilla::dom::EventTarget {
 
 NON_VIRTUAL_ADDREF_RELEASE(nsINode)
 
+template <>
+struct fmt::formatter<nsINode> : ostream_formatter {};
+
 inline nsINode* mozilla::dom::EventTarget::GetAsNode() {
   return IsNode() ? AsNode() : nullptr;
 }
