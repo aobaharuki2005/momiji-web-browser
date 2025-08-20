@@ -219,6 +219,22 @@ function computeButton(aEvent) {
   return aEvent.type == "contextmenu" ? 2 : 0;
 }
 
+function computeButtons(aEvent, utils) {
+  if (typeof aEvent.buttons != "undefined") {
+    return aEvent.buttons;
+  }
+
+  if (typeof aEvent.button != "undefined") {
+    return utils.MOUSE_BUTTONS_NOT_SPECIFIED;
+  }
+
+  if (typeof aEvent.type != "undefined" && aEvent.type != "mousedown") {
+    return utils.MOUSE_BUTTONS_NO_BUTTON;
+  }
+
+  return utils.MOUSE_BUTTONS_NOT_SPECIFIED;
+}
+
 /**
  * Send a mouse event to the node aTarget (aTarget can be an id, or an
  * actual node) . The "event" passed in to aEvent is just a JavaScript
@@ -758,26 +774,53 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window) {
       "isWidgetEventSynthesized" in aEvent
         ? aEvent.isWidgetEventSynthesized
         : false;
+    // The following blocks check for the existence of synthesizeMouseEvent on
+    // the Window wrapper, which was added in 144 via bug 1977774. As EventUtils
+    // is used my mochitest-browser, and is part of the newtab train-hop
+    // compatibility testing mechanism, we need to ensure that this is still
+    // compatible with 143 and 142. We fallback to the old nsIDOMWindowUtils
+    // mechanism if we cannot find the synthesizeMouseEvent on the Window.
+    //
+    // This newtab train-hop compatibility shim can be removed once Firefox 144
+    // makes it to the release channel (bug 1983936).
     if ("type" in aEvent && aEvent.type) {
-      defaultPrevented = _EU_maybeWrap(aWindow).synthesizeMouseEvent(
-        aEvent.type,
-        left,
-        top,
-        {
-          identifier: id,
+      if (_EU_maybeWrap(aWindow).sythesizeMouseEvent) {
+        defaultPrevented = _EU_maybeWrap(aWindow).synthesizeMouseEvent(
+          aEvent.type,
+          left,
+          top,
+          {
+            identifier: id,
+            button,
+            buttons: aEvent.buttons,
+            clickCount,
+            modifiers,
+            pressure,
+            inputSource,
+          },
+          {
+            isDOMEventSynthesized,
+            isWidgetEventSynthesized,
+          }
+        );
+      } else {
+        defaultPrevented = utils.sendMouseEvent(
+          aEvent.type,
+          left,
+          top,
           button,
-          buttons: aEvent.buttons,
           clickCount,
           modifiers,
+          false,
           pressure,
           inputSource,
-        },
-        {
           isDOMEventSynthesized,
           isWidgetEventSynthesized,
-        }
-      );
-    } else {
+          computeButtons(aEvent, utils),
+          id
+        );
+      }
+    } else if (_EU_maybeWrap(aWindow).synthesizeMouseEvent) {
       _EU_maybeWrap(aWindow).synthesizeMouseEvent(
         "mousedown",
         left,
@@ -813,6 +856,37 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window) {
           isDOMEventSynthesized,
           isWidgetEventSynthesized,
         }
+      );
+    } else {
+      utils.sendMouseEvent(
+        "mousedown",
+        left,
+        top,
+        button,
+        clickCount,
+        modifiers,
+        false,
+        pressure,
+        inputSource,
+        isDOMEventSynthesized,
+        isWidgetEventSynthesized,
+        computeButtons(Object.assign({ type: "mousedown" }, aEvent), utils),
+        id
+      );
+      utils.sendMouseEvent(
+        "mouseup",
+        left,
+        top,
+        button,
+        clickCount,
+        modifiers,
+        false,
+        pressure,
+        inputSource,
+        isDOMEventSynthesized,
+        isWidgetEventSynthesized,
+        computeButtons(Object.assign({ type: "mouseup" }, aEvent), utils),
+        id
       );
     }
   }
