@@ -2262,8 +2262,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvEndDragSession(
     DRAGSERVICE_LOGD(
         "[%p] %s | dragSession: %p | aDoneDrag: %s | aUserCancelled: %s | "
         "aDragEndPoint: (%d, %d) | aKeyModifiers: %u | aDropEffect: %u",
-        this, __FUNCTION__, dragSession.get(), GetBoolName(aDoneDrag),
-        GetBoolName(aUserCancelled), static_cast<int>(aDragEndPoint.x),
+        this, __FUNCTION__, dragSession.get(), TrueOrFalse(aDoneDrag),
+        TrueOrFalse(aUserCancelled), static_cast<int>(aDragEndPoint.x),
         static_cast<int>(aDragEndPoint.y), aKeyModifiers, aDropEffect);
 
     if (aUserCancelled) {
@@ -2328,7 +2328,7 @@ mozilla::ipc::IPCResult
 BrowserChild::RecvDispatchToDropTargetAndResumeEndDragSession(
     bool aShouldDrop, nsTHashSet<nsString>&& aAllowedFilesPaths) {
   DRAGSERVICE_LOGD("[%p] %s | aShouldDrop: %s", this, __FUNCTION__,
-                   GetBoolName(aShouldDrop));
+                   TrueOrFalse(aShouldDrop));
   nsCOMPtr<nsIDragSession> dragSession = GetDragSession();
   MOZ_ASSERT(dragSession);
   RefPtr<nsIWidget> widget = mPuppetWidget;

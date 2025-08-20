@@ -66,8 +66,8 @@ nsNativeDragSource::Release(void) {
 STDMETHODIMP
 nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState) {
   LOGD("%s | fEsc: %s | grfKeyState: %lu | grfKeyState has button: %s",
-       __FUNCTION__, GetBoolName(fEsc), grfKeyState,
-       GetBoolName((grfKeyState & MK_LBUTTON) || (grfKeyState & MK_RBUTTON)));
+       __FUNCTION__, TrueOrFalse(fEsc), grfKeyState,
+       TrueOrFalse((grfKeyState & MK_LBUTTON) || (grfKeyState & MK_RBUTTON)));
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (dragService) {
