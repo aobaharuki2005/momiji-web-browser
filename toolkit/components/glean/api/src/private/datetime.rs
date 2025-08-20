@@ -273,31 +273,6 @@ impl Datetime for DatetimeMetric {
 
     /// **Exported for test purposes.**
     ///
-    /// Gets the currently stored value as a Datetime.
-    ///
-    /// The precision of this value is truncated to the `time_unit` precision.
-    ///
-    /// This doesn't clear the stored value.
-    ///
-    /// # Arguments
-    ///
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
-    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
-        &self,
-        ping_name: S,
-    ) -> Option<glean::Datetime> {
-        let ping_name = ping_name.into().map(|s| s.to_string());
-        match self {
-            DatetimeMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
-            DatetimeMetric::Child(_) => {
-                panic!("Cannot get test value for DatetimeMetric in non-main process!")
-            }
-        }
-    }
-
-    /// **Exported for test purposes.**
-    ///
     /// Gets the number of recorded errors for the given metric and error type.
     ///
     /// # Arguments
@@ -315,6 +290,30 @@ impl Datetime for DatetimeMetric {
             DatetimeMetric::Child(_) => panic!(
                 "Cannot get the number of recorded errors for DatetimeMetric in non-main process!"
             ),
+        }
+    }
+}
+
+#[inherent]
+impl glean::TestGetValue<glean::Datetime> for DatetimeMetric {
+    /// **Exported for test purposes.**
+    ///
+    /// Gets the currently stored value as a Datetime.
+    ///
+    /// The precision of this value is truncated to the `time_unit` precision.
+    ///
+    /// This doesn't clear the stored value.
+    ///
+    /// # Arguments
+    ///
+    /// * `ping_name` - represents the optional name of the ping to retrieve the
+    ///   metric for. Defaults to the first value in `send_in_pings`.
+    pub fn test_get_value(&self, ping_name: Option<String>) -> Option<glean::Datetime> {
+        match self {
+            DatetimeMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
+            DatetimeMetric::Child(_) => {
+                panic!("Cannot get test value for DatetimeMetric in non-main process!")
+            }
         }
     }
 }
@@ -340,7 +339,7 @@ mod test {
         let expected: glean::Datetime = DateTime::parse_from_rfc3339("2020-05-07T11:58:00+05:00")
             .unwrap()
             .into();
-        assert_eq!(expected, metric.test_get_value("test-ping").unwrap());
+        assert_eq!(expected, metric.test_get_value(Some("test-ping".to_string())).unwrap());
     }
 
     #[test]
@@ -354,7 +353,7 @@ mod test {
         let expected: glean::Datetime = DateTime::parse_from_rfc3339("2020-05-07T11:58:00+05:00")
             .unwrap()
             .into();
-        assert_eq!(expected, metric.test_get_value("test-ping").unwrap());
+        assert_eq!(expected, metric.test_get_value(Some("test-ping".to_string())).unwrap());
     }
 
     #[test]
@@ -388,6 +387,6 @@ mod test {
         let expected: glean::Datetime = DateTime::parse_from_rfc3339("2020-10-13T16:41:00+05:00")
             .unwrap()
             .into();
-        assert_eq!(expected, parent_metric.test_get_value("test-ping").unwrap());
+        assert_eq!(expected, parent_metric.test_get_value(Some("test-ping".to_string())).unwrap());
     }
 }
