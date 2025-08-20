@@ -951,6 +951,13 @@ class StorageModule extends RootBiDiModule {
           };
           break;
 
+        case "domain":
+          cookie.domain = storedCookie.host;
+          if (cookie.domain.length && cookie.domain[0] === ".") {
+            cookie.domain = cookie.domain.slice(1);
+          }
+          break;
+
         default:
           cookie[serializedName] = storedCookie[cookieName];
       }
