@@ -694,8 +694,8 @@ bool MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(
        aWidget, msgName, aWParam, aLParam, wheelEvent.mRefPoint.x.value,
        wheelEvent.mRefPoint.y.value, wheelEvent.mDeltaX, wheelEvent.mDeltaY,
        wheelEvent.mLineOrPageDeltaX, wheelEvent.mLineOrPageDeltaY,
-       TrueOrFalse(wheelEvent.IsShift()), TrueOrFalse(wheelEvent.IsControl()),
-       TrueOrFalse(wheelEvent.IsAlt()), TrueOrFalse(wheelEvent.IsMeta())));
+       GetBoolName(wheelEvent.IsShift()), GetBoolName(wheelEvent.IsControl()),
+       GetBoolName(wheelEvent.IsAlt()), GetBoolName(wheelEvent.IsMeta())));
 
   aWidget->DispatchWheelEvent(&wheelEvent);
   return true;
@@ -844,10 +844,10 @@ bool MouseScrollHandler::LastEventInfo::InitWheelEvent(
        "mAccumulatedDelta: %d",
        aWidget, aWheelEvent.mRefPoint.x.value, aWheelEvent.mRefPoint.y.value,
        aWheelEvent.mDeltaX, aWheelEvent.mDeltaY, aWheelEvent.mLineOrPageDeltaX,
-       aWheelEvent.mLineOrPageDeltaY, TrueOrFalse(aWheelEvent.IsShift()),
-       TrueOrFalse(aWheelEvent.IsControl()), TrueOrFalse(aWheelEvent.IsAlt()),
-       TrueOrFalse(aWheelEvent.IsMeta()),
-       TrueOrFalse(aWheelEvent.mAllowToOverrideSystemScrollSpeed),
+       aWheelEvent.mLineOrPageDeltaY, GetBoolName(aWheelEvent.IsShift()),
+       GetBoolName(aWheelEvent.IsControl()), GetBoolName(aWheelEvent.IsAlt()),
+       GetBoolName(aWheelEvent.IsMeta()),
+       GetBoolName(aWheelEvent.mAllowToOverrideSystemScrollSpeed),
        mAccumulatedDelta));
 
   return (delta != 0);
@@ -1058,10 +1058,10 @@ void MouseScrollHandler::UserPrefs::Init() {
            "mOverriddenVerticalScrollAmount=%d, "
            "mOverriddenHorizontalScrollAmount=%d, "
            "mMouseScrollTransactionTimeout=%d",
-           TrueOrFalse(mScrollMessageHandledAsWheelMessage),
-           TrueOrFalse(mEnableSystemSettingCache),
-           TrueOrFalse(mForceEnableSystemSettingCache),
-           TrueOrFalse(mEmulateToMakeWindowUnderCursorForeground),
+           GetBoolName(mScrollMessageHandledAsWheelMessage),
+           GetBoolName(mEnableSystemSettingCache),
+           GetBoolName(mForceEnableSystemSettingCache),
+           GetBoolName(mEmulateToMakeWindowUnderCursorForeground),
            mOverriddenVerticalScrollAmount, mOverriddenHorizontalScrollAmount,
            mMouseScrollTransactionTimeout));
 }
@@ -1102,14 +1102,14 @@ bool MouseScrollHandler::Device::GetWorkaroundPref(const char* aPrefName,
             ("MouseScroll::Device::GetWorkaroundPref(): Preferences::GetInt() "
              "failed,"
              " aPrefName=\"%s\", aValueIfAutomatic=%s",
-             aPrefName, TrueOrFalse(aValueIfAutomatic)));
+             aPrefName, GetBoolName(aValueIfAutomatic)));
     return aValueIfAutomatic;
   }
 
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
           ("MouseScroll::Device::GetWorkaroundPref(): Succeeded, "
            "aPrefName=\"%s\", aValueIfAutomatic=%s, lHackValue=%d",
-           aPrefName, TrueOrFalse(aValueIfAutomatic), lHackValue));
+           aPrefName, GetBoolName(aValueIfAutomatic), lHackValue));
 
   switch (lHackValue) {
     case 0:  // disabled
@@ -1136,7 +1136,7 @@ void MouseScrollHandler::Device::Init() {
 
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
           ("MouseScroll::Device::Init(): sFakeScrollableWindowNeeded=%s",
-           TrueOrFalse(sFakeScrollableWindowNeeded)));
+           GetBoolName(sFakeScrollableWindowNeeded)));
 }
 
 /******************************************************************************
@@ -1195,7 +1195,7 @@ void MouseScrollHandler::Device::Elantech::Init() {
       gMouseScrollLog, LogLevel::Info,
       ("MouseScroll::Device::Elantech::Init(): version=%d, sUseSwipeHack=%s, "
        "sUsePinchHack=%s",
-       version, TrueOrFalse(sUseSwipeHack), TrueOrFalse(sUsePinchHack)));
+       version, GetBoolName(sUseSwipeHack), GetBoolName(sUsePinchHack)));
 }
 
 /* static */
@@ -1559,7 +1559,7 @@ nsresult MouseScrollHandler::SynthesizingEvent::Synthesize(
        "x: %d, y: %d }, aWnd=0x%p, aMessage=0x%04X, aWParam=0x%08zX, "
        "aLParam=0x%08" PRIXLPTR ", synthesizing=%s, mStatus=%s",
        aCursorPoint.x, aCursorPoint.y, aWnd, aMessage, aWParam, aLParam,
-       TrueOrFalse(!!GetActiveInstance()), GetStatusName()));
+       GetBoolName(!!GetActiveInstance()), GetStatusName()));
 
   if (mStatus != NOT_SYNTHESIZING) {
     return NS_ERROR_NOT_AVAILABLE;

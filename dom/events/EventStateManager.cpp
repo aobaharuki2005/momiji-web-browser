@@ -143,6 +143,13 @@ using namespace dom;
 // performance.
 LazyLogModule gMouseCursorUpdates("MouseCursorUpdates");
 
+#ifdef DEBUG
+#  define MOZ_LOG_IF_DEBUG(_module, _level, _args) \
+    MOZ_LOG(_module, _level, _args)
+#else
+#  define MOZ_LOG_IF_DEBUG(_module, _level, _args)
+#endif
+
 static const LayoutDeviceIntPoint kInvalidRefPoint =
     LayoutDeviceIntPoint(-1, -1);
 
@@ -4868,7 +4875,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                      nsIFrame* aTargetFrame,
                                      nsEventStatus* aStatus) {
   if (!PointerEventHandler::IsLastPointerId(aEvent->pointerId)) {
-    MOZ_LOG_DEBUG_ONLY(
+    MOZ_LOG_IF_DEBUG(
         gMouseCursorUpdates, LogLevel::Verbose,
         ("EventStateManager::UpdateCursor(aEvent=${pointerId=%u, source=%s, "
          "message=%s, reason=%s}): Stopped updating cursor for the pointer "
@@ -4891,15 +4898,15 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     if (auto* fl = f->FrameLoader();
         fl && fl->IsRemoteFrame() && f->ContentReactsToPointerEvents()) {
       // The sub-frame will update the cursor if needed.
-      MOZ_LOG_DEBUG_ONLY(
+      MOZ_LOG_IF_DEBUG(
           gMouseCursorUpdates, LogLevel::Verbose,
           ("EventStateManager::UpdateCursor(aEvent=${pointerId=%u, source=%s, "
            "message=%s, reason=%s}): Stopped updating cursor for the pointer "
            "because of over a remote frame, ESM: %p, in-process root "
            "PresShell: %p",
            aEvent->pointerId, InputSourceToString(aEvent->mInputSource).get(),
-           ToChar(aEvent->mMessage), RealOrSynthesized(aEvent->IsReal()), this,
-           GetRootPresShell()));
+           ToChar(aEvent->mMessage), aEvent->IsReal() ? "Real" : "Synthesized",
+           this, GetRootPresShell()));
       return;
     }
   }
@@ -4952,7 +4959,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
               aTargetFrame->GetNearestWidget(), false);
     gLastCursorSourceFrame = aTargetFrame;
     gLastCursorUpdateTime = TimeStamp::NowLoRes();
-    MOZ_LOG_DEBUG_ONLY(
+    MOZ_LOG_IF_DEBUG(
         gMouseCursorUpdates, LogLevel::Info,
         ("EventStateManager::UpdateCursor(aEvent=${pointerId=%u, source=%s, "
          "message=%s, reason=%s}): Updated the cursor to %u, ESM: %p, "
@@ -7759,3 +7766,5 @@ void EventStateManager::NotifyContentWillBeRemovedForGesture(
 }
 
 }  // namespace mozilla
+
+#undef MOZ_LOG_IF_DEBUG
