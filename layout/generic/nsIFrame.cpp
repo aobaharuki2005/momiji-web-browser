@@ -2036,7 +2036,7 @@ nscoord nsIFrame::OneEmInAppUnits() const {
 RubyMetrics nsIFrame::RubyMetrics() const {
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
-  return mozilla::RubyMetrics{fm->EmAscent(), fm->EmDescent()};
+  return mozilla::RubyMetrics{fm->TrimmedAscent(), fm->TrimmedDescent()};
 }
 
 ComputedStyle* nsIFrame::GetAdditionalComputedStyle(int32_t aIndex) const {

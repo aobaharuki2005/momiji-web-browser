@@ -233,12 +233,14 @@ nscoord nsFontMetrics::EmHeight() const {
   return ROUND_TO_TWIPS(GetMetrics(this).emHeight);
 }
 
-nscoord nsFontMetrics::EmAscent() const {
-  return ROUND_TO_TWIPS(GetMetrics(this).emAscent);
+nscoord nsFontMetrics::TrimmedAscent() const {
+  const auto& m = GetMetrics(this);
+  return ROUND_TO_TWIPS(std::max(0.0, m.maxAscent - m.internalLeading / 2));
 }
 
-nscoord nsFontMetrics::EmDescent() const {
-  return ROUND_TO_TWIPS(GetMetrics(this).emDescent);
+nscoord nsFontMetrics::TrimmedDescent() const {
+  const auto& m = GetMetrics(this);
+  return ROUND_TO_TWIPS(std::max(0.0, m.maxDescent - m.internalLeading / 2));
 }
 
 nscoord nsFontMetrics::MaxHeight() const {
