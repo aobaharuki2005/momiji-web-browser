@@ -2540,15 +2540,7 @@ GeckoDriver.prototype.getCookies = async function () {
   await this._handleUserPrompts();
 
   let { hostname, pathname } = this._getCurrentURL({ top: false });
-  return [
-    ...lazy.cookie.iter(hostname, this.getBrowsingContext(), pathname),
-  ].map(cookie => {
-    if (cookie.domain.length && cookie.domain[0] === ".") {
-      cookie.domain = cookie.domain.slice(1);
-    }
-
-    return cookie;
-  });
+  return [...lazy.cookie.iter(hostname, this.getBrowsingContext(), pathname)];
 };
 
 /**
