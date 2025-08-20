@@ -9,8 +9,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
 import com.google.android.material.snackbar.Snackbar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
-import mozilla.components.compose.base.snackbar.SnackbarData
-import mozilla.components.compose.base.snackbar.SnackbarVisuals
 import org.mozilla.fenix.compose.core.Action
 import org.mozilla.fenix.compose.snackbar.SnackbarState.Type
 
@@ -99,22 +97,6 @@ data class SnackbarState(
         val text: String,
         val textOverflow: TextOverflow = TextOverflow.Ellipsis,
     )
-
-    /**
-     * Converts this [SnackbarState] into [SnackbarData] used to display a Snackbar.
-     */
-    fun toSnackbarData(): SnackbarData {
-        return SnackbarData(
-            visuals = SnackbarVisuals(
-                message = message,
-                subMessage = subMessage?.text,
-                actionLabel = action?.label,
-                duration = toSnackbarDuration(),
-            ),
-            dismiss = onDismiss,
-            performAction = action?.onClick ?: {},
-        )
-    }
 }
 
 /**
