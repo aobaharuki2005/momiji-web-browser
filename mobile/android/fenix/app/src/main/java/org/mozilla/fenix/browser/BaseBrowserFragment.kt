@@ -224,6 +224,7 @@ import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComposable
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
+import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
 import org.mozilla.fenix.snackbar.SnackbarBinding
 import org.mozilla.fenix.tabstray.Page
@@ -561,6 +562,9 @@ abstract class BaseBrowserFragment :
             tabCollectionStorage = requireComponents.core.tabCollectionStorage,
             topSitesStorage = requireComponents.core.topSitesStorage,
             pinnedSiteStorage = requireComponents.core.pinnedSiteStorage,
+            deleteAndQuit = { activity: HomeActivity ->
+                deleteAndQuit(activity, activity.lifecycleScope)
+            },
         )
 
         _browserToolbarInteractor = DefaultBrowserToolbarInteractor(

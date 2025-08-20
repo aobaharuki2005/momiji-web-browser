@@ -7,9 +7,6 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Intent
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
@@ -19,12 +16,8 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.spyk
-import io.mockk.unmockkObject
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.CoroutineScope
@@ -56,7 +49,6 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -87,7 +79,6 @@ import org.mozilla.fenix.compose.snackbar.Snackbar
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixGleanTestRule
-import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.webcompat.WEB_COMPAT_REPORTER_URL
 import org.robolectric.RobolectricTestRunner
@@ -145,18 +136,11 @@ class DefaultBrowserToolbarMenuControllerTest {
 
     private lateinit var browserStore: BrowserStore
     private lateinit var selectedTab: TabSessionState
+    private var deleteAndQuitCalled = false
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-
-        mockkStatic(
-            "org.mozilla.fenix.settings.deletebrowsingdata.DeleteAndQuitKt",
-        )
-        every { deleteAndQuit(any(), any()) } just Runs
-
-        mockkObject(Snackbar.Companion)
-        every { Snackbar.make(any(), any()) } returns snackbar
 
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
         every { activity.components.useCases.customTabsUseCases } returns customTabUseCases
@@ -180,12 +164,6 @@ class DefaultBrowserToolbarMenuControllerTest {
                 selectedTabId = selectedTab.id,
             ),
         )
-    }
-
-    @After
-    fun tearDown() {
-        unmockkStatic("org.mozilla.fenix.settings.deletebrowsingdata.DeleteAndQuitKt")
-        unmockkObject(Snackbar.Companion)
     }
 
     @Test
@@ -296,18 +274,13 @@ class DefaultBrowserToolbarMenuControllerTest {
 
     @Test
     fun `WHEN quit menu item is pressed THEN menu item is handled correctly`() = runTest {
-        mockkStatic("androidx.lifecycle.LifecycleOwnerKt") {
-            val lifecycleScope: LifecycleCoroutineScope = mockk(relaxed = true)
-            every { any<LifecycleOwner>().lifecycleScope } returns lifecycleScope
+        val item = ToolbarMenu.Item.Quit
 
-            val item = ToolbarMenu.Item.Quit
+        val controller = createController(scope = mockk(), store = browserStore)
 
-            val controller = createController(scope = lifecycleScope, store = browserStore)
+        controller.handleToolbarItemInteraction(item)
 
-            controller.handleToolbarItemInteraction(item)
-
-            verify { deleteAndQuit(activity, lifecycleScope) }
-        }
+        assertTrue(deleteAndQuitCalled)
     }
 
     @Test
@@ -749,7 +722,7 @@ class DefaultBrowserToolbarMenuControllerTest {
     @Test
     fun `IF one or more collection exists WHEN Save To Collection menu item is pressed THEN navigate to save collection page`() = runTest {
         val item = ToolbarMenu.Item.SaveToCollection
-        val cachedTabCollections: List<TabCollection> = mockk(relaxed = true)
+        val cachedTabCollections: List<TabCollection> = listOf(mockk(relaxed = true))
         every { tabCollectionStorage.cachedTabCollections } returns cachedTabCollections
 
         val controller = createController(scope = this, store = browserStore)
@@ -993,6 +966,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         sessionFeature = sessionFeatureWrapper,
         topSitesStorage = topSitesStorage,
         pinnedSiteStorage = pinnedSiteStorage,
+        deleteAndQuit = { _ -> deleteAndQuitCalled = true },
     ).apply {
         ioScope = scope
     }
