@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -34,6 +35,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -147,7 +150,12 @@ private fun AppIconOption(
         modifier = Modifier
             .fillMaxWidth()
             .height(ListItemHeight)
-            .clickable { onClick() },
+            .selectable(
+                selected = selected,
+                role = Role.RadioButton,
+                onClick = { onClick() },
+            )
+            .semantics(mergeDescendants = true) {},
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(
@@ -155,6 +163,7 @@ private fun AppIconOption(
             onClick = {
                 onClick()
             },
+            modifier = Modifier.clearAndSetSemantics {},
         )
 
         AppIcon(appIcon)
