@@ -45,7 +45,7 @@
   <!-- Content description for close button while in multiselect mode in tab tray -->
   <string name="tab_tray_close_multiselect_content_description">Փակել բազմակի ընտրման կերպը</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
-  <string name="tab_tray_collection_button_multiselect_content_description">Պահպանել ընտրված ներդիրները հավաքածուում</string>
+  <string name="tab_tray_collection_button_multiselect_content_description">Պահել ընտրված ներդիրները հավաքածուում</string>
   <!--
     Home - Bookmarks
 
@@ -250,13 +250,13 @@
   <!-- Browser menu button that reopens a private tab as a regular tab -->
   <string name="browser_menu_open_in_regular_tab">Բացել կանոնավոր ներդիրում</string>
   <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-  <string name="browser_menu_add_to_homescreen">Ավելացնել տնային էկրանին</string>
+  <string name="browser_menu_add_to_homescreen">Հավելել տնային էկրանին</string>
   <!-- Browser menu toggle that adds a PWA of the site on the device home screen. -->
-  <string name="browser_menu_add_app_to_homescreen">Հավելել հավելվածը տնային էկրանին</string>
+  <string name="browser_menu_add_app_to_homescreen">Հավելվածը տնային էկրանին</string>
   <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-  <string name="browser_menu_add_to_homescreen_2" moz:removedIn="141" tools:ignore="UnusedResources">Ավելացնել տնային էկրանին…</string>
+  <string name="browser_menu_add_to_homescreen_2" moz:removedIn="141" tools:ignore="UnusedResources">Հավելել տնային էկրանին…</string>
   <!-- Browser menu toggle that adds a PWA of the site on the device home screen. -->
-  <string name="browser_menu_add_app_to_homescreen_2" moz:removedIn="141" tools:ignore="UnusedResources">Հավելել հավելվածը տնային էկրանին…</string>
+  <string name="browser_menu_add_app_to_homescreen_2" moz:removedIn="141" tools:ignore="UnusedResources">Հավելվածը տնային էկրանին</string>
   <!-- Text for notifying users that Xiaomi devices require additional permissions to add to home screen -->
   <string name="browser_menu_add_to_homescreen_xiaomi">Xiaomi սարքերին կարող են անհրաժեշտ լինել լրացուցիչ թույլտվություններ՝ հիմնական էկրանին դյուրանցումներ ավելացնելու համար: Խնդրում ենք ստուգել ձեր կարգավորումները:</string>
   <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -270,7 +270,7 @@
   <!-- Browser menu button that saves the current tab to a collection -->
   <string name="browser_menu_save_to_collection" moz:removedIn="141" tools:ignore="UnusedResources">Պահել հավաքածույում…</string>
   <!-- Browser menu button that saves the current tab to a collection -->
-  <string name="browser_menu_save_to_collection_2">Պահպանել հավաքածուում</string>
+  <string name="browser_menu_save_to_collection_2">Պահել հավաքածուում</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Տարածել</string>
   <!-- Browser menu button that open a share menu to share the current site -->
@@ -391,9 +391,9 @@
   <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
   <string name="browser_menu_translate_page_2">Թարգմանել էջը</string>
   <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
-  <string name="browser_menu_webcompat_reporter">Զեկուցել կայքի խոտանումը…</string>
+  <string name="browser_menu_webcompat_reporter">Զեկուցել խոտանումը…</string>
   <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
-  <string name="browser_menu_webcompat_reporter_2">Զեկուցել խոտանված կայքի մասին</string>
+  <string name="browser_menu_webcompat_reporter_2">Զեկուցել կայքի խոտանումը</string>
   <!--
     Browser menu label that is displayed when the current page has been translated by the translation feature.
     %1$s is the name of the language that page was translated to (e.g. English).
@@ -444,7 +444,7 @@
 
     Content description for the Home screen button on the browser toolbar
   -->
-  <string name="browser_toolbar_home">Հիմնական էկրան</string>
+  <string name="browser_toolbar_home">Տնային էկրան</string>
   <!--
     Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
     history and go back to the home screen.
@@ -2615,7 +2615,7 @@
   <!-- Snackbar message shown after an URL has been copied to clipboard. -->
   <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL-ը պատճենվեց սեղմատախտակին</string>
   <!-- Title text for the Add To Homescreen dialog -->
-  <string name="add_to_homescreen_title">Ավելացնել տնային էկրանին</string>
+  <string name="add_to_homescreen_title">Հավելել տնային էկրանին</string>
   <!-- Cancel button text for the Add to Homescreen dialog -->
   <string name="add_to_homescreen_cancel">Չեղարկել</string>
   <!-- Add button text for the Add to Homescreen dialog -->

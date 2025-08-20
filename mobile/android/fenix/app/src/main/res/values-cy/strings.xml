@@ -1474,7 +1474,7 @@
   <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
   <string name="tab_manager_floating_action_button_new_private_tab">Tab preifat newydd</string>
   <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
-  <string name="tab_manager_floating_action_button_sync_tabs">Cysoni tabiau</string>
+  <string name="tab_manager_floating_action_button_sync_tabs">Cydweddu tabiau</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Ychwanegu tab</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1795,7 +1795,7 @@
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">Roedd yn rhaid i %s ailgychwyn</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title_2">chwalodd %s. Anfon adroddiad?</string>
+  <string name="unsubmitted_crash_dialog_title_2">Chwalodd %s. Anfon adroddiad?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Mae gennych adroddiad chwalu heb ei anfon yn ymwneud â chwaliadau sy\'n cael eu hymchwilio. Bydd ei anfon yn ein helpu i wella %1$s. Bydd cau\'r hysbysiad hwn yn anwybyddu\'r adroddiad hwn.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1805,7 +1805,7 @@
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Cau</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
-  <string name="unsubmitted_crash_dialog_negative_button_2">GAU</string>
+  <string name="unsubmitted_crash_dialog_negative_button_2">CAU</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Peidio dangos eto</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
@@ -1813,7 +1813,7 @@
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Anfonwch adroddiad chwalu</string>
   <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
-  <string name="unsubmitted_crash_dialog_body">Mae adroddiadau damwain yn ein helpu i wneud diagnosis a thrwsio problemau gyda\'r porwr. Gall adroddiadau gynnwys data personol neu sensitif. %s</string>
+  <string name="unsubmitted_crash_dialog_body">Mae adroddiadau chwalu\'n helpu ni i wneud diagnosis a thrwsio problemau gyda\'r porwr. Gall adroddiadau gynnwys data personol neu sensitif. %s</string>
   <string name="unsubmitted_crash_dialog_learn_more">Dysgu rhagor</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Dysgu Rhagor</string>
@@ -3864,7 +3864,7 @@
     Second part of the terms of use pop up prompt
     %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
   -->
-  <string name="terms_of_use_prompt_message_2">Cymerwch eiliad i adolygu a derbyn. %1$s.</string>
+  <string name="terms_of_use_prompt_message_2">Cymerwch eiliad i ddarllen a derbyn. %1$s.</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Amodau Defnydd</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
