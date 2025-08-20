@@ -3731,7 +3731,12 @@ class Document : public nsINode,
   // call it just before the document loses its window.
   void SendPageUseCounters();
 
+  void RecordASMJSExecutionTime();
+
   void SetUseCounter(UseCounter aUseCounter) {
+    if (aUseCounter == eUseCounter_custom_JS_use_asm) {
+      RecordASMJSExecutionTime();
+    }
     mUseCounters[aUseCounter] = true;
   }
 
@@ -5205,6 +5210,9 @@ class Document : public nsINode,
   // The channel that failed to load and resulted in an error page.
   // This only applies to error pages. Might be null.
   nsCOMPtr<nsIChannel> mFailedChannel;
+
+  // Timer for delayed ASMJS execution time recording
+  nsCOMPtr<nsITimer> mASMJSExecutionTimer;
 
   // if this document is part of a multipart document,
   // the ID can be used to distinguish it from the other parts.
