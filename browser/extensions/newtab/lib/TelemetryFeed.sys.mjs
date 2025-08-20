@@ -240,9 +240,7 @@ export class TelemetryFeed {
   }
 
   browserOpenNewtabStart() {
-    // This shim can be removed once Firefox 144 makes it to the release
-    // channel.
-    let now = ChromeUtils.now?.() || Cu.now();
+    let now = ChromeUtils.now();
     this._browserOpenNewtabStart = Math.round(this.processStartTs + now);
 
     ChromeUtils.addProfilerMarker(
