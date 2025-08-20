@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,9 +50,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.mozilla.fenix.compose.snackbar.AcornSnackbarHostState
-import org.mozilla.fenix.compose.snackbar.SnackbarHost
-import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -278,7 +277,7 @@ fun SwipeToDismissBox2(
 @Preview
 @Preview(locale = "ar", name = "RTL")
 private fun SwipeToDismissBoxPreview() {
-    val snackbarState = remember { AcornSnackbarHostState() }
+    val snackbarState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
     FirefoxTheme {
@@ -291,7 +290,7 @@ private fun SwipeToDismissBoxPreview() {
                     enableDismissFromEndToStart = false,
                     onSwipeToEnd = {
                         coroutineScope.launch {
-                            snackbarState.showSnackbar(SnackbarState(message = "Dismiss"))
+                            snackbarState.showSnackbar(message = "Dismiss")
                         }
                     },
                 )
@@ -303,7 +302,7 @@ private fun SwipeToDismissBoxPreview() {
                     text = "<- Swipe to left",
                     onSwipeToStart = {
                         coroutineScope.launch {
-                            snackbarState.showSnackbar(SnackbarState(message = "Dismiss"))
+                            snackbarState.showSnackbar(message = "Dismiss")
                         }
                     },
                 )
@@ -314,19 +313,19 @@ private fun SwipeToDismissBoxPreview() {
                     text = "<- Swipe both ways ->",
                     onSwipeToStart = {
                         coroutineScope.launch {
-                            snackbarState.showSnackbar(SnackbarState(message = "Dismiss"))
+                            snackbarState.showSnackbar(message = "Dismiss")
                         }
                     },
                     onSwipeToEnd = {
                         coroutineScope.launch {
-                            snackbarState.showSnackbar(SnackbarState(message = "Dismiss"))
+                            snackbarState.showSnackbar(message = "Dismiss")
                         }
                     },
                 )
             }
 
             SnackbarHost(
-                snackbarHostState = snackbarState,
+                hostState = snackbarState,
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
