@@ -20,17 +20,19 @@ async function testVal(aExpected, overflowSide = null) {
     "Selection sanity check"
   );
 
-  let urlbarScheme = gURLBar.querySelector("#urlbar-scheme");
-
   gURLBar.focus();
   Assert.equal(
     document.activeElement,
     gURLBar.inputField,
     "URL Bar should be focused"
   );
-  Assert.equal(urlbarScheme.value, "", "Check the scheme value");
   Assert.equal(
-    getComputedStyle(urlbarScheme).visibility,
+    gURLBar.valueFormatter.scheme.value,
+    "",
+    "Check the scheme value"
+  );
+  Assert.equal(
+    getComputedStyle(gURLBar.valueFormatter.scheme).visibility,
     "hidden",
     "Check the scheme box visibility"
   );
@@ -55,7 +57,11 @@ async function testVal(aExpected, overflowSide = null) {
     scheme = "";
   }
 
-  Assert.equal(urlbarScheme.value, scheme, "Check the scheme value after blur");
+  Assert.equal(
+    gURLBar.valueFormatter.scheme.value,
+    scheme,
+    "Check the scheme value after blur"
+  );
   let isOverflowed =
     gURLBar.inputField.scrollWidth > gURLBar.inputField.clientWidth;
   Assert.equal(isOverflowed, !!overflowSide, "Check The input field overflow");
@@ -68,7 +74,7 @@ async function testVal(aExpected, overflowSide = null) {
     let side = gURLBar.getAttribute("domaindir") == "ltr" ? "right" : "left";
     Assert.equal(side, overflowSide, "Check the overflow side");
     Assert.equal(
-      getComputedStyle(urlbarScheme).visibility,
+      getComputedStyle(gURLBar.valueFormatter.scheme).visibility,
       scheme && isOverflowed && overflowSide == "left" ? "visible" : "hidden",
       "Check the scheme box visibility"
     );
@@ -85,7 +91,7 @@ async function testVal(aExpected, overflowSide = null) {
 
     Assert.equal(side, overflowSide, "Check the overflow side");
     Assert.equal(
-      getComputedStyle(urlbarScheme).visibility,
+      getComputedStyle(gURLBar.valueFormatter.scheme).visibility,
       scheme && isOverflowed && overflowSide == "left" ? "visible" : "hidden",
       "Check the scheme box visibility"
     );

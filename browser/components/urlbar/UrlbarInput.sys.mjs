@@ -92,10 +92,10 @@ export class UrlbarInput {
   /**
    * @param {object} options
    *   The initial options for UrlbarInput.
-   * @param {HTMLDivElement} options.textbox
+   * @param {object} options.textbox
    *   The container element.
    */
-  constructor(options) {
+  constructor(options = {}) {
     this.textbox = options.textbox;
     this.window = this.textbox.ownerGlobal;
     this.document = this.window.document;
@@ -128,8 +128,6 @@ export class UrlbarInput {
     this._enableAutofillPlaceholder = true;
 
     // Forward certain methods and properties.
-    // Note if you are extending these, you'll also need to extend the inline
-    // type definitions.
     const CONTAINER_METHODS = [
       "getAttribute",
       "hasAttribute",
@@ -170,9 +168,7 @@ export class UrlbarInput {
       });
     }
 
-    this.inputField = /** @type {HTMLInputElement} */ (
-      this.querySelector(".urlbar-input")
-    );
+    this.inputField = this.querySelector(".urlbar-input");
     this._inputContainer = this.querySelector(".urlbar-input-container");
     this._identityBox = this.querySelector(".identity-box");
     this._revertButton = this.querySelector(".urlbar-revert-button");
@@ -185,6 +181,14 @@ export class UrlbarInput {
     this._searchModeIndicatorClose = this._searchModeIndicator.querySelector(
       "#urlbar-search-mode-indicator-close"
     );
+
+    ChromeUtils.defineLazyGetter(this, "valueFormatter", () => {
+      return new lazy.UrlbarValueFormatter(this);
+    });
+
+    ChromeUtils.defineLazyGetter(this, "addSearchEngineHelper", () => {
+      return new AddSearchEngineHelper(this);
+    });
 
     // If the toolbar is not visible in this window or the urlbar is readonly,
     // we'll stop here, so that most properties of the input object are valid,
@@ -298,83 +302,6 @@ export class UrlbarInput {
       Ci.nsIEditor.eNewlinesStripSurroundingWhitespace;
   }
 
-  #lazy = XPCOMUtils.declareLazy({
-    valueFormatter: () => new lazy.UrlbarValueFormatter(this),
-    addSearchEngineHelper: () => new AddSearchEngineHelper(this),
-  });
-
-  /**
-   * Manages the Add Search Engine contextual menu entries.
-   */
-  get addSearchEngineHelper() {
-    return this.#lazy.addSearchEngineHelper;
-  }
-
-  /**
-   * @type {typeof HTMLDivElement.prototype.getAttribute}
-   */
-  getAttribute;
-
-  /**
-   * @type {typeof HTMLDivElement.prototype.hasAttribute}
-   */
-  hasAttribute;
-
-  /**
-   * @type {typeof HTMLDivElement.prototype.querySelector}
-   */
-  querySelector;
-
-  /**
-   * @type {typeof HTMLDivElement.prototype.setAttribute}
-   */
-  setAttribute;
-
-  /**
-   * @type {typeof HTMLDivElement.prototype.removeAttribute}
-   */
-  removeAttribute;
-
-  /**
-   * @type {typeof HTMLDivElement.prototype.toggleAttribute}
-   */
-  toggleAttribute;
-
-  /**
-   * @type {typeof HTMLInputElement.prototype.addEventListener}
-   */
-  addEventListener;
-
-  /**
-   * @type {typeof HTMLInputElement.prototype.blur}
-   */
-  blur;
-
-  /**
-   * @type {typeof HTMLInputElement.prototype.removeEventListener}
-   */
-  removeEventListener;
-
-  /**
-   * @type {typeof HTMLInputElement.prototype.placeholder}
-   */
-  placeholder;
-
-  /**
-   * @type {typeof HTMLInputElement.prototype.readOnly}
-   */
-  readOnly;
-
-  /**
-   * @type {typeof HTMLInputElement.prototype.selectionStart}
-   */
-  selectionStart;
-
-  /**
-   * @type {typeof HTMLInputElement.prototype.selectionEnd}
-   */
-  selectionEnd;
-
   /**
    * Called when a urlbar or urlbar related pref changes.
    *
@@ -398,7 +325,7 @@ export class UrlbarInput {
   formatValue() {
     // The editor may not exist if the toolbar is not visible.
     if (this.editor) {
-      this.#lazy.valueFormatter.update();
+      this.valueFormatter.update();
     }
   }
 
@@ -3135,7 +3062,7 @@ export class UrlbarInput {
     // Only trim value if the directionality doesn't change to RTL and we're not
     // showing a strikeout https protocol.
     return lazy.UrlbarUtils.isTextDirectionRTL(trimmedValue, this.window) ||
-      this.#lazy.valueFormatter.willShowFormattedMixedContentProtocol(val)
+      this.valueFormatter.willShowFormattedMixedContentProtocol(val)
       ? val
       : trimmedValue;
   }
@@ -4309,7 +4236,7 @@ export class UrlbarInput {
   }
 
   _on_contextmenu(event) {
-    this.#lazy.addSearchEngineHelper.refreshContextMenu(event);
+    this.addSearchEngineHelper.refreshContextMenu(event);
 
     // Context menu opened via keyboard shortcut.
     if (!event.button) {

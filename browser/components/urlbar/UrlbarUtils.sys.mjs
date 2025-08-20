@@ -3000,7 +3000,22 @@ export class UrlbarProvider {
    *
    * @param {UrlbarResult} _result
    *   The menu will be shown for this result.
-   * @returns {?UrlbarResultCommand[]}
+   * @returns {Array}
+   *   If the result doesn't have any commands, this should return null.
+   *   Otherwise it should return an array of command objects that look like:
+   *   `{ name, l10n, children}`
+   *
+   *   {string} name
+   *     The name of the command. Must be specified unless `children` is
+   *     present. When a command is picked, its name will be passed as
+   *     `details.selType` to `onEngagement()`. The special name "separator"
+   *     will create a menu separator.
+   *   {object} l10n
+   *     An l10n object for the command's label: `{ id, args }`
+   *     Must be specified unless `name` is "separator".
+   *   {array} children
+   *     If specified, a submenu will be created with the given child commands.
+   *     Each object in the array must be a command object.
    */
   getResultCommands(_result) {
     return null;
