@@ -63,10 +63,33 @@ class CustomTabColorsDelegateTest {
 
         assertEquals(
             CustomTabColors(
-                defaultColorSchemeParams.toolbarColor,
-                defaultColorSchemeParams.navigationBarColor,
-                defaultColorSchemeParams.navigationBarDividerColor,
-                Color.BLACK,
+                toolbarColor = defaultColorSchemeParams.toolbarColor,
+                statusBarColor = defaultColorSchemeParams.toolbarColor,
+                navigationBarColor = defaultColorSchemeParams.navigationBarColor,
+                navigationBarDividerColor = defaultColorSchemeParams.navigationBarDividerColor,
+                readableColor = Color.BLACK,
+            ),
+            browserScreenStore.state.customTabColors,
+        )
+    }
+
+    @Test
+    fun `GIVEN no navigation bar color configured WHEN computing the color scheme THEN use the toolbar color for the navigation bar also`() {
+        updateCustomColorsConfiguration(
+            ColorSchemes(
+                defaultColorSchemeParams = defaultColorSchemeParams.copy(
+                    navigationBarColor = null,
+                ),
+            ),
+        )
+
+        assertEquals(
+            CustomTabColors(
+                toolbarColor = defaultColorSchemeParams.toolbarColor,
+                statusBarColor = defaultColorSchemeParams.toolbarColor,
+                navigationBarColor = defaultColorSchemeParams.toolbarColor,
+                navigationBarDividerColor = defaultColorSchemeParams.navigationBarDividerColor,
+                readableColor = Color.BLACK,
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -87,10 +110,11 @@ class CustomTabColorsDelegateTest {
 
         assertEquals(
             CustomTabColors(
-                lightColorSchemeParams.toolbarColor,
-                lightColorSchemeParams.navigationBarColor,
-                lightColorSchemeParams.navigationBarDividerColor,
-                Color.WHITE,
+                toolbarColor = lightColorSchemeParams.toolbarColor,
+                statusBarColor = lightColorSchemeParams.toolbarColor,
+                navigationBarColor = lightColorSchemeParams.navigationBarColor,
+                navigationBarDividerColor = lightColorSchemeParams.navigationBarDividerColor,
+                readableColor = Color.WHITE,
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -110,10 +134,11 @@ class CustomTabColorsDelegateTest {
 
         assertEquals(
             CustomTabColors(
-                defaultColorSchemeParams.toolbarColor,
-                defaultColorSchemeParams.navigationBarColor,
-                defaultColorSchemeParams.navigationBarDividerColor,
-                Color.BLACK,
+                toolbarColor = defaultColorSchemeParams.toolbarColor,
+                statusBarColor = defaultColorSchemeParams.toolbarColor,
+                navigationBarColor = defaultColorSchemeParams.navigationBarColor,
+                navigationBarDividerColor = defaultColorSchemeParams.navigationBarDividerColor,
+                readableColor = Color.BLACK,
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -134,10 +159,11 @@ class CustomTabColorsDelegateTest {
 
         assertEquals(
             CustomTabColors(
-                darkColorSchemeParams.toolbarColor,
-                darkColorSchemeParams.navigationBarColor,
-                darkColorSchemeParams.navigationBarDividerColor,
-                Color.WHITE,
+                toolbarColor = darkColorSchemeParams.toolbarColor,
+                statusBarColor = darkColorSchemeParams.toolbarColor,
+                navigationBarColor = darkColorSchemeParams.navigationBarColor,
+                navigationBarDividerColor = darkColorSchemeParams.navigationBarDividerColor,
+                readableColor = Color.WHITE,
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -157,10 +183,11 @@ class CustomTabColorsDelegateTest {
 
         assertEquals(
             CustomTabColors(
-                defaultColorSchemeParams.toolbarColor,
-                defaultColorSchemeParams.navigationBarColor,
-                defaultColorSchemeParams.navigationBarDividerColor,
-                Color.BLACK,
+                toolbarColor = defaultColorSchemeParams.toolbarColor,
+                statusBarColor = defaultColorSchemeParams.toolbarColor,
+                navigationBarColor = defaultColorSchemeParams.navigationBarColor,
+                navigationBarDividerColor = defaultColorSchemeParams.navigationBarDividerColor,
+                readableColor = Color.BLACK,
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -180,10 +207,11 @@ class CustomTabColorsDelegateTest {
 
         assertEquals(
             CustomTabColors(
-                lightColorSchemeParams.toolbarColor,
-                lightColorSchemeParams.navigationBarColor,
-                lightColorSchemeParams.navigationBarDividerColor,
-                Color.WHITE,
+                toolbarColor = lightColorSchemeParams.toolbarColor,
+                statusBarColor = lightColorSchemeParams.toolbarColor,
+                navigationBarColor = lightColorSchemeParams.navigationBarColor,
+                navigationBarDividerColor = lightColorSchemeParams.navigationBarDividerColor,
+                readableColor = Color.WHITE,
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -203,10 +231,11 @@ class CustomTabColorsDelegateTest {
 
         assertEquals(
             CustomTabColors(
-                darkColorSchemeParams.toolbarColor,
-                darkColorSchemeParams.navigationBarColor,
-                darkColorSchemeParams.navigationBarDividerColor,
-                Color.WHITE,
+                toolbarColor = darkColorSchemeParams.toolbarColor,
+                statusBarColor = darkColorSchemeParams.toolbarColor,
+                navigationBarColor = darkColorSchemeParams.navigationBarColor,
+                navigationBarDividerColor = darkColorSchemeParams.navigationBarDividerColor,
+                readableColor = Color.WHITE,
             ),
             browserScreenStore.state.customTabColors,
         )

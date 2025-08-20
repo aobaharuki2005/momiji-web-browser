@@ -28,14 +28,16 @@ data class BrowserScreenState(
  * Custom colors configuration when browsing in custom tab.
  *
  * @property toolbarColor Background color for the toolbar.
- * @property systemBarsColor Background color for the system bars - status bar and navigation bar.
+ * @property statusBarColor Background color for the system's status bar.
+ * @property navigationBarColor Background color for the system's navigation bar.
  * @property navigationBarDividerColor Color for the thin line separating the
  * system navigation bar from the application's UI.
  * @property readableColor Color for text or icons shown in the toolbar with enough contrast to be easily readable.
  */
 data class CustomTabColors(
     @param:ColorInt val toolbarColor: Int? = null,
-    @param:ColorInt val systemBarsColor: Int? = null,
+    @param:ColorInt val statusBarColor: Int? = null,
+    @param:ColorInt val navigationBarColor: Int? = null,
     @param:ColorInt val navigationBarDividerColor: Int? = null,
     @param:ColorInt val readableColor: Int? = null,
 )

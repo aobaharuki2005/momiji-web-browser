@@ -67,7 +67,8 @@ fun BrowserScreenStore.updateCustomTabsColors(
         CustomTabColorsUpdated(
             CustomTabColors(
                 toolbarColor = colorSchemeParams.toolbarColor,
-                systemBarsColor = colorSchemeParams.navigationBarColor,
+                statusBarColor = colorSchemeParams.toolbarColor,
+                navigationBarColor = colorSchemeParams.navigationBarColor ?: colorSchemeParams.toolbarColor,
                 navigationBarDividerColor = colorSchemeParams.navigationBarDividerColor,
                 readableColor = readableColor,
             ),
