@@ -22,7 +22,7 @@ enum class ArraySortResult : uint32_t {
   Failure,
   Done,
   CallJS,
-  CallJSSameRealmNoUnderflow
+  CallJSSameRealmNoRectifier
 };
 
 enum class ArraySortKind {
@@ -47,7 +47,7 @@ class alignas(8) ArraySortData {
   enum class ComparatorKind : uint8_t {
     Unoptimized,
     JS,
-    JSSameRealmNoUnderflow,
+    JSSameRealmNoRectifier,
   };
 
   // Insertion sort is used if the length is <= InsertionSortMaxLength.

@@ -37,7 +37,7 @@ void ArraySortData::init(JSObject* obj, JSObject* comparator, ValueVector&& vec,
       return ComparatorKind::Unoptimized;
     }
     if (fun->realm() == cx->realm() && fun->nargs() <= ComparatorActualArgs) {
-      return ComparatorKind::JSSameRealmNoUnderflow;
+      return ComparatorKind::JSSameRealmNoRectifier;
     }
     return ComparatorKind::JS;
   };
@@ -90,8 +90,8 @@ MaybeYieldToComparator(ArraySortData* d, const Value& x, const Value& y) {
   auto kind = d->comparatorKind();
   if (MOZ_LIKELY(kind != ArraySortData::ComparatorKind::Unoptimized)) {
     d->setComparatorArgs(x, y);
-    return (kind == ArraySortData::ComparatorKind::JSSameRealmNoUnderflow)
-               ? ArraySortResult::CallJSSameRealmNoUnderflow
+    return (kind == ArraySortData::ComparatorKind::JSSameRealmNoRectifier)
+               ? ArraySortResult::CallJSSameRealmNoRectifier
                : ArraySortResult::CallJS;
   }
   return CallComparatorSlow(d, x, y);

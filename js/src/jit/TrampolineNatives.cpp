@@ -90,8 +90,6 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm,
       -int32_t(FrameSize) + ArraySortData::offsetOfDescriptor();
   constexpr int32_t ComparatorThisOffset =
       -int32_t(FrameSize) + ArraySortData::offsetOfComparatorThis();
-  constexpr int32_t ComparatorArgsOffset =
-      -int32_t(FrameSize) + ArraySortData::offsetOfComparatorArgs();
 
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
@@ -186,41 +184,9 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm,
     masm.branch32(Assembler::BelowOrEqual, temp0,
                   Imm32(ArraySortData::ComparatorActualArgs), &noUnderflow);
     {
-      // If the comparator expects more than two arguments, we must
-      // push additional undefined values.
-      if (JitStackValueAlignment > 1) {
-        // If we're adding an odd number of arguments, we may have
-        // to adjust stack alignment.
-        static_assert(!(ArraySortData::ComparatorActualArgs & 1));
-        MOZ_ASSERT(JitStackValueAlignment == 2);
-        Label aligned;
-        masm.branchTest32(Assembler::Zero, temp0, Imm32(1), &aligned);
-        masm.subFromStackPtr(Imm32(sizeof(Value)));
-        masm.bind(&aligned);
-      }
-
-      // Push `undefined` arguments.
-      Label loop;
-      masm.bind(&loop);
-      masm.pushValue(UndefinedValue());
-      masm.sub32(Imm32(1), temp0);
-      masm.branch32(Assembler::GreaterThan, temp0,
-                    Imm32(ArraySortData::ComparatorActualArgs), &loop);
-
-      // Copy the existing arguments, this, callee, and descriptor, then call.
-      masm.push(
-          Address(FramePointer, ComparatorArgsOffset + int32_t(sizeof(Value))));
-      masm.push(Address(FramePointer, ComparatorArgsOffset));
-      masm.push(Address(FramePointer, ComparatorThisOffset));
-      masm.push(Address(FramePointer, ComparatorOffset));
-      masm.push(Address(FramePointer, DescriptorOffset));
-      masm.callJit(temp1);
-
-      // Restore the expected stack pointer.
-      masm.computeEffectiveAddress(Address(FramePointer, -int32_t(FrameSize)),
-                                   temp0);
-      masm.moveToStackPtr(temp0);
-
+      Label rectifier;
+      bindLabelToOffset(&rectifier, argumentsRectifierOffset_);
+      masm.call(&rectifier);
       masm.jump(&restoreRealm);
     }
     masm.bind(&noUnderflow);
@@ -261,7 +227,7 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm,
                 Imm32(int32_t(ArraySortResult::Failure)), masm.failureLabel());
   masm.freeStack(ExitFrameLayout::SizeWithFooter());
   masm.branch32(Assembler::Equal, ReturnReg,
-                Imm32(int32_t(ArraySortResult::CallJSSameRealmNoUnderflow)),
+                Imm32(int32_t(ArraySortResult::CallJSSameRealmNoRectifier)),
                 &jitCallFast);
   masm.branch32(Assembler::Equal, ReturnReg,
                 Imm32(int32_t(ArraySortResult::CallJS)), &jitCallSlow);
