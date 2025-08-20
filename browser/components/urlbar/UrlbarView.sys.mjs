@@ -1007,9 +1007,16 @@ export class UrlbarView {
    *   achieved using the `children` property described below.  Each object in
    *   the structure may include the following properties:
    *
-   *   {string} name
-   *     The name of the object.  It is required for all objects in the
-   *     structure except the root object and serves two important functions:
+   *   {string} tag
+   *     The tag name of the object.  It is required for all objects in the
+   *     structure except the root object and declares the kind of element that
+   *     will be created for the object: span, div, img, etc.
+   *   {string} [name]
+   *     The name of the object. This value is required if you need to update
+   *     the object's DOM element at query time. It's also helpful but not
+   *     required if you need to style the element. When defined, it serves two
+   *     important functions:
+   *
    *     (1) The element created for the object will automatically have a class
    *         named `urlbarView-dynamic-${dynamicType}-${name}`, where
    *         `dynamicType` is the name of the dynamic result type.  The element
@@ -1018,6 +1025,7 @@ export class UrlbarView {
    *         in CSS.
    *     (2) The name is used when updating the view.  See
    *         UrlbarProvider.getViewUpdate().
+   *
    *     Names must be unique within a view template, but they don't need to be
    *     globally unique.  i.e., two different view templates can use the same
    *     names, and other DOM elements can use the same names in their IDs and
@@ -1025,10 +1033,6 @@ export class UrlbarView {
    *     with name `data` will get the ID `urlbarView-row-{unique number}-data`.
    *     If there is no name provided for the root element, the root element
    *     will not get an ID.
-   *   {string} tag
-   *     The tag name of the object.  It is required for all objects in the
-   *     structure except the root object and declares the kind of element that
-   *     will be created for the object: span, div, img, etc.
    *   {object} [attributes]
    *     An optional mapping from attribute names to values.  For each
    *     name-value pair, an attribute is added to the element created for the
@@ -1572,13 +1576,13 @@ export class UrlbarView {
     }
     if (template.name) {
       parentNode.setAttribute("name", template.name);
+      parentNode.classList.add(`urlbarView-dynamic-${type}-${template.name}`);
       elementsByName.set(template.name, parentNode);
     }
 
     // Recurse into children.
     for (let childTemplate of template.children || []) {
       let child = this.#createElement(childTemplate.tag);
-      child.classList.add(`urlbarView-dynamic-${type}-${childTemplate.name}`);
       parentNode.appendChild(child);
       this.#buildViewForDynamicType(
         type,
