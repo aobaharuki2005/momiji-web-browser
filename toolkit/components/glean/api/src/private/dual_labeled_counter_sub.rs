@@ -84,6 +84,27 @@ impl Counter for DualLabeledCounterSubMetric {
 
     /// **Test-only API.**
     ///
+    /// Get the currently stored value as an integer.
+    /// This doesn't clear the stored value.
+    ///
+    /// ## Arguments
+    ///
+    /// * `ping_name` - the storage name to look into.
+    ///
+    /// ## Return value
+    ///
+    /// Returns the stored value or `None` if nothing stored.
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<i32> {
+        match self {
+            DualLabeledCounterSubMetric::Parent(p) => p.test_get_value(ping_name),
+            DualLabeledCounterSubMetric::Child { id, .. } => {
+                panic!("Cannot get test value for {:?} in non-parent process!", id)
+            }
+        }
+    }
+
+    /// **Test-only API.**
+    ///
     /// Gets the number of recorded errors for the given metric and error type.
     ///
     /// # Arguments
@@ -102,30 +123,6 @@ impl Counter for DualLabeledCounterSubMetric {
                 "Cannot get the number of recorded errors for {:?} in non-parent process!",
                 id
             ),
-        }
-    }
-}
-
-#[inherent]
-impl glean::TestGetValue<i32> for DualLabeledCounterSubMetric {
-    /// **Test-only API.**
-    ///
-    /// Get the currently stored value as an integer.
-    /// This doesn't clear the stored value.
-    ///
-    /// ## Arguments
-    ///
-    /// * `ping_name` - the storage name to look into.
-    ///
-    /// ## Return value
-    ///
-    /// Returns the stored value or `None` if nothing stored.
-    pub fn test_get_value(&self, ping_name: Option<String>) -> Option<i32> {
-        match self {
-            DualLabeledCounterSubMetric::Parent(p) => p.test_get_value(ping_name),
-            DualLabeledCounterSubMetric::Child { id, .. } => {
-                panic!("Cannot get test value for {:?} in non-parent process!", id)
-            }
         }
     }
 }
@@ -158,7 +155,7 @@ mod test {
             1,
             metric
                 .get("a_key", "a_category")
-                .test_get_value(Some("test-ping".to_string()))
+                .test_get_value("test-ping")
                 .unwrap()
         );
     }
@@ -228,7 +225,7 @@ mod test {
             45,
             parent_metric
                 .get(key, category)
-                .test_get_value(Some("test-ping".to_string()))
+                .test_get_value("test-ping")
                 .unwrap(),
             "Values from the 'processes' should be summed"
         );

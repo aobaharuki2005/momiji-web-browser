@@ -225,11 +225,10 @@ where
     pub fn merge(&mut self, other: &Self) {
         assert_eq!(self.bucketing, other.bucketing);
 
-        self.sum = self.sum.saturating_add(other.sum);
-        self.count = self.count.saturating_add(other.count);
+        self.sum += other.sum;
+        self.count += other.count;
         for (&bucket, &count) in &other.values {
-            let entry = self.values.entry(bucket).or_insert(0);
-            *entry = entry.saturating_add(count)
+            *self.values.entry(bucket).or_insert(0) += count;
         }
     }
 }
@@ -262,11 +261,10 @@ where
                 && matches!(other.bucketing, LinearOrExponential::Exponential(_))
             )
         );
-        self.sum = self.sum.saturating_add(other.sum);
-        self.count = self.count.saturating_add(other.count);
+        self.sum += other.sum;
+        self.count += other.count;
         for (&bucket, &count) in &other.values {
-            let entry = self.values.entry(bucket).or_insert(0);
-            *entry = entry.saturating_add(count);
+            *self.values.entry(bucket).or_insert(0) += count;
         }
     }
 }
