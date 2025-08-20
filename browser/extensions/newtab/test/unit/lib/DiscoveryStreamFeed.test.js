@@ -32,6 +32,7 @@ describe("DiscoveryStreamFeed", () => {
   let fetchStub;
   let clock;
   let fakeNewTabUtils;
+  let fakePktApi;
   let globals;
 
   const setPref = (name, value) => {
@@ -120,6 +121,11 @@ describe("DiscoveryStreamFeed", () => {
       getOHTTPConfig: () => {},
       ohttpRequest: () => {},
     });
+
+    fakePktApi = {
+      isUserLoggedIn: () => false,
+    };
+    globals.set("pktApi", fakePktApi);
   });
 
   afterEach(() => {
@@ -281,6 +287,25 @@ describe("DiscoveryStreamFeed", () => {
         "https://relay.url",
         fakeOhttpConfig,
         DUMMY_ENDPOINT
+      );
+    });
+  });
+
+  describe("#setupPocketState", () => {
+    it("should setup logged in state", async () => {
+      fakePktApi.isUserLoggedIn = () => true;
+      sandbox.spy(feed.store, "dispatch");
+      await feed.setupPocketState({});
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(
+        feed.store.dispatch.firstCall,
+        ac.OnlyToOneContent(
+          {
+            type: at.DISCOVERY_STREAM_POCKET_STATE_SET,
+            data: { isUserLoggedIn: true },
+          },
+          {}
+        )
       );
     });
   });
@@ -2461,6 +2486,17 @@ describe("DiscoveryStreamFeed", () => {
         },
         type: at.SET_PREF,
       });
+    });
+  });
+
+  describe("#onAction: DISCOVERY_STREAM_POCKET_STATE_INIT", async () => {
+    it("should call setupPocketState", async () => {
+      sandbox.spy(feed, "setupPocketState");
+      feed.onAction({
+        type: at.DISCOVERY_STREAM_POCKET_STATE_INIT,
+        meta: { fromTarget: {} },
+      });
+      assert.calledOnce(feed.setupPocketState);
     });
   });
 

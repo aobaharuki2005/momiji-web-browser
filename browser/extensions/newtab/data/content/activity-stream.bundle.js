@@ -146,6 +146,8 @@ for (const type of [
   "DISCOVERY_STREAM_PERSONALIZATION_RESET",
   "DISCOVERY_STREAM_PERSONALIZATION_TOGGLE",
   "DISCOVERY_STREAM_PERSONALIZATION_UPDATED",
+  "DISCOVERY_STREAM_POCKET_STATE_INIT",
+  "DISCOVERY_STREAM_POCKET_STATE_SET",
   "DISCOVERY_STREAM_PREFS_SETUP",
   "DISCOVERY_STREAM_RETRY_FEED",
   "DISCOVERY_STREAM_SPOCS_CAPS",
@@ -201,6 +203,7 @@ for (const type of [
   "PLACES_LINKS_DELETED",
   "PLACES_LINK_BLOCKED",
   "POCKET_CTA",
+  "POCKET_LOGGED_IN",
   "POCKET_THUMBS_DOWN",
   "POCKET_THUMBS_UP",
   "POCKET_WAITING_FOR_SPOC",
@@ -7550,6 +7553,7 @@ const INITIAL_STATE = {
   },
   Sections: [],
   Pocket: {
+    isUserLoggedIn: null,
     pocketCta: {},
     waitingForSpoc: true,
   },
@@ -7588,6 +7592,7 @@ const INITIAL_STATE = {
       utmCampaign: undefined,
       utmContent: undefined,
     },
+    isUserLoggedIn: false,
     showTopicSelection: false,
     report: {
       visible: false,
@@ -8093,6 +8098,8 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   switch (action.type) {
     case actionTypes.POCKET_WAITING_FOR_SPOC:
       return { ...prevState, waitingForSpoc: action.data };
+    case actionTypes.POCKET_LOGGED_IN:
+      return { ...prevState, isUserLoggedIn: !!action.data };
     case actionTypes.POCKET_CTA:
       return {
         ...prevState,
@@ -8237,6 +8244,11 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         titleLines: action.data.titleLines,
         descLines: action.data.descLines,
         readTime: action.data.readTime,
+      };
+    case actionTypes.DISCOVERY_STREAM_POCKET_STATE_SET:
+      return {
+        ...prevState,
+        isUserLoggedIn: action.data.isUserLoggedIn,
       };
     case actionTypes.SHOW_PRIVACY_INFO:
       return {

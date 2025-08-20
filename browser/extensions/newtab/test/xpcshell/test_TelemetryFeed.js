@@ -1201,6 +1201,16 @@ add_task(async function test_onAction_basic_actions() {
         "TelemetryFeed.createUserEvent called once"
       );
       Assert.ok(
+        instance.createUserEvent.calledWith({
+          type: actionTypes.DISCOVERY_STREAM_USER_EVENT,
+          data: {
+            value: {
+              pocket_logged_in_status: Glean.pocket.isSignedIn.testGetValue(),
+            },
+          },
+        })
+      );
+      Assert.ok(
         instance.utEvents.sendUserEvent.calledOnce,
         "TelemetryFeed.utEvents.sendUserEvent called once"
       );

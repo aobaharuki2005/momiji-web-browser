@@ -63,6 +63,7 @@ export const INITIAL_STATE = {
   },
   Sections: [],
   Pocket: {
+    isUserLoggedIn: null,
     pocketCta: {},
     waitingForSpoc: true,
   },
@@ -101,6 +102,7 @@ export const INITIAL_STATE = {
       utmCampaign: undefined,
       utmContent: undefined,
     },
+    isUserLoggedIn: false,
     showTopicSelection: false,
     report: {
       visible: false,
@@ -606,6 +608,8 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   switch (action.type) {
     case at.POCKET_WAITING_FOR_SPOC:
       return { ...prevState, waitingForSpoc: action.data };
+    case at.POCKET_LOGGED_IN:
+      return { ...prevState, isUserLoggedIn: !!action.data };
     case at.POCKET_CTA:
       return {
         ...prevState,
@@ -750,6 +754,11 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         titleLines: action.data.titleLines,
         descLines: action.data.descLines,
         readTime: action.data.readTime,
+      };
+    case at.DISCOVERY_STREAM_POCKET_STATE_SET:
+      return {
+        ...prevState,
+        isUserLoggedIn: action.data.isUserLoggedIn,
       };
     case at.SHOW_PRIVACY_INFO:
       return {
