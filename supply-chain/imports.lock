@@ -272,15 +272,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "64.5.4"
-when = "2025-07-29"
+version = "65.0.0"
+when = "2025-08-18"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "64.5.4"
-when = "2025-07-29"
+version = "65.0.0"
+when = "2025-08-18"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -2854,6 +2854,13 @@ who = "Kagami Sascha Rosylight <krosylight@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.18.4 -> 0.19.0"
 notes = "Maintained by Mozilla, no addition of unsafe blocks"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.rkv]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.19.0 -> 0.20.0"
+notes = "Removed all LMDB-specific code, added malloc_size_of integration"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.scroll]]
