@@ -869,17 +869,12 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       loadInfoArgs.triggeringThirdPartyClassificationFlags(),
       loadInfoArgs.contentPolicyType(),
       static_cast<LoadTainting>(loadInfoArgs.tainting()),
-      loadInfoArgs.blockAllMixedContent(),
-      loadInfoArgs.upgradeInsecureRequests(),
-      loadInfoArgs.browserUpgradeInsecureRequests(),
-      loadInfoArgs.browserDidUpgradeInsecureRequests(),
-      loadInfoArgs.browserWouldUpgradeInsecureRequests(),
-      loadInfoArgs.forceAllowDataURI(),
-      loadInfoArgs.allowInsecureRedirectToDataURI(),
-      loadInfoArgs.skipContentPolicyCheckForWebRequest(),
-      loadInfoArgs.originalFrameSrcLoad(),
-      loadInfoArgs.forceInheritPrincipalDropped(), loadInfoArgs.innerWindowID(),
-      loadInfoArgs.browsingContextID(), loadInfoArgs.frameBrowsingContextID(),
+
+#define DEFINE_ARGUMENT(_t, _n, name, _d) loadInfoArgs.name(),
+      LOADINFO_FOR_EACH_FIELD(DEFINE_ARGUMENT, LOADINFO_DUMMY_SETTER)
+#undef DEFINE_ARGUMENT
+
+          loadInfoArgs.frameBrowsingContextID(),
       loadInfoArgs.initialSecurityCheckDone(),
       loadInfoArgs.isInThirdPartyContext(), isThirdPartyContextToTopWindow,
       loadInfoArgs.isOn3PCBExceptionList(), loadInfoArgs.isFormSubmission(),

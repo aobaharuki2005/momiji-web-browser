@@ -726,23 +726,12 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
           rhs.mTriggeringThirdPartyClassificationFlags),
       mInternalContentPolicyType(rhs.mInternalContentPolicyType),
       mTainting(rhs.mTainting),
-      mBlockAllMixedContent(rhs.mBlockAllMixedContent),
-      mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests),
-      mBrowserUpgradeInsecureRequests(rhs.mBrowserUpgradeInsecureRequests),
-      mBrowserDidUpgradeInsecureRequests(
-          rhs.mBrowserDidUpgradeInsecureRequests),
-      mBrowserWouldUpgradeInsecureRequests(
-          rhs.mBrowserWouldUpgradeInsecureRequests),
-      mForceAllowDataURI(rhs.mForceAllowDataURI),
-      mAllowInsecureRedirectToDataURI(rhs.mAllowInsecureRedirectToDataURI),
-      mSkipContentPolicyCheckForWebRequest(
-          rhs.mSkipContentPolicyCheckForWebRequest),
-      mOriginalFrameSrcLoad(rhs.mOriginalFrameSrcLoad),
-      mForceInheritPrincipalDropped(rhs.mForceInheritPrincipalDropped),
-      mInnerWindowID(rhs.mInnerWindowID),
-      mBrowsingContextID(rhs.mBrowsingContextID),
-      mWorkerAssociatedBrowsingContextID(
-          rhs.mWorkerAssociatedBrowsingContextID),
+#define DEFINE_INIT(_t, name, _n, _d) m##name(rhs.m##name),
+      LOADINFO_FOR_EACH_FIELD(DEFINE_INIT, LOADINFO_DUMMY_SETTER)
+#undef DEFINE_INIT
+
+          mWorkerAssociatedBrowsingContextID(
+              rhs.mWorkerAssociatedBrowsingContextID),
       mFrameBrowsingContextID(rhs.mFrameBrowsingContextID),
       mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone),
       mIsThirdPartyContext(rhs.mIsThirdPartyContext),
@@ -819,14 +808,11 @@ LoadInfo::LoadInfo(
     uint32_t aTriggeringFirstPartyClassificationFlags,
     uint32_t aTriggeringThirdPartyClassificationFlags,
     nsContentPolicyType aContentPolicyType, LoadTainting aTainting,
-    bool aBlockAllMixedContent, bool aUpgradeInsecureRequests,
-    bool aBrowserUpgradeInsecureRequests,
-    bool aBrowserDidUpgradeInsecureRequests,
-    bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
-    bool aAllowInsecureRedirectToDataURI,
-    bool aSkipContentPolicyCheckForWebRequest, bool aOriginalFrameSrcLoad,
-    bool aForceInheritPrincipalDropped, uint64_t aInnerWindowID,
-    uint64_t aBrowsingContextID, uint64_t aFrameBrowsingContextID,
+#define DEFINE_PARAMETER(type, name, _n, _d) type a##name,
+    LOADINFO_FOR_EACH_FIELD(DEFINE_PARAMETER, LOADINFO_DUMMY_SETTER)
+#undef DEFINE_PARAMETER
+
+        uint64_t aFrameBrowsingContextID,
     bool aInitialSecurityCheckDone, bool aIsThirdPartyContext,
     const Maybe<bool>& aIsThirdPartyContextToTopWindow,
     bool aIsOn3PCBExceptionList, bool aIsFormSubmission, bool aIsGETRequest,
@@ -885,21 +871,12 @@ LoadInfo::LoadInfo(
           aTriggeringThirdPartyClassificationFlags),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(aTainting),
-      mBlockAllMixedContent(aBlockAllMixedContent),
-      mUpgradeInsecureRequests(aUpgradeInsecureRequests),
-      mBrowserUpgradeInsecureRequests(aBrowserUpgradeInsecureRequests),
-      mBrowserDidUpgradeInsecureRequests(aBrowserDidUpgradeInsecureRequests),
-      mBrowserWouldUpgradeInsecureRequests(
-          aBrowserWouldUpgradeInsecureRequests),
-      mForceAllowDataURI(aForceAllowDataURI),
-      mAllowInsecureRedirectToDataURI(aAllowInsecureRedirectToDataURI),
-      mSkipContentPolicyCheckForWebRequest(
-          aSkipContentPolicyCheckForWebRequest),
-      mOriginalFrameSrcLoad(aOriginalFrameSrcLoad),
-      mForceInheritPrincipalDropped(aForceInheritPrincipalDropped),
-      mInnerWindowID(aInnerWindowID),
-      mBrowsingContextID(aBrowsingContextID),
-      mFrameBrowsingContextID(aFrameBrowsingContextID),
+
+#define DEFINE_INIT(_t, name, _n, _d) m##name(a##name),
+      LOADINFO_FOR_EACH_FIELD(DEFINE_INIT, LOADINFO_DUMMY_SETTER)
+#undef DEFINE_INIT
+
+          mFrameBrowsingContextID(aFrameBrowsingContextID),
       mInitialSecurityCheckDone(aInitialSecurityCheckDone),
       mIsThirdPartyContext(aIsThirdPartyContext),
       mIsThirdPartyContextToTopWindow(aIsThirdPartyContextToTopWindow),
@@ -1550,106 +1527,22 @@ nsContentPolicyType LoadInfo::InternalContentPolicyType() {
   return mInternalContentPolicyType;
 }
 
-NS_IMETHODIMP
-LoadInfo::GetBlockAllMixedContent(bool* aResult) {
-  *aResult = mBlockAllMixedContent;
-  return NS_OK;
-}
+#define DEFINE_GETTER(type, name, _n, _d)            \
+  NS_IMETHODIMP LoadInfo::Get##name(type* a##name) { \
+    *a##name = m##name;                              \
+    return NS_OK;                                    \
+  }
 
-NS_IMETHODIMP
-LoadInfo::GetUpgradeInsecureRequests(bool* aResult) {
-  *aResult = mUpgradeInsecureRequests;
-  return NS_OK;
-}
+#define DEFINE_SETTER(type, name)                   \
+  NS_IMETHODIMP LoadInfo::Set##name(type a##name) { \
+    m##name = a##name;                              \
+    return NS_OK;                                   \
+  }
 
-NS_IMETHODIMP
-LoadInfo::GetBrowserUpgradeInsecureRequests(bool* aResult) {
-  *aResult = mBrowserUpgradeInsecureRequests;
-  return NS_OK;
-}
+LOADINFO_FOR_EACH_FIELD(DEFINE_GETTER, DEFINE_SETTER);
 
-NS_IMETHODIMP
-LoadInfo::GetBrowserDidUpgradeInsecureRequests(bool* aResult) {
-  *aResult = mBrowserDidUpgradeInsecureRequests;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetBrowserWouldUpgradeInsecureRequests(bool* aResult) {
-  *aResult = mBrowserWouldUpgradeInsecureRequests;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetForceAllowDataURI(bool aForceAllowDataURI) {
-  MOZ_ASSERT(!mForceAllowDataURI ||
-                 mInternalContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
-             "can only allow data URI navigation for TYPE_DOCUMENT");
-  mForceAllowDataURI = aForceAllowDataURI;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetForceAllowDataURI(bool* aForceAllowDataURI) {
-  *aForceAllowDataURI = mForceAllowDataURI;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetAllowInsecureRedirectToDataURI(
-    bool aAllowInsecureRedirectToDataURI) {
-  mAllowInsecureRedirectToDataURI = aAllowInsecureRedirectToDataURI;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetAllowInsecureRedirectToDataURI(
-    bool* aAllowInsecureRedirectToDataURI) {
-  *aAllowInsecureRedirectToDataURI = mAllowInsecureRedirectToDataURI;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetSkipContentPolicyCheckForWebRequest(bool aSkip) {
-  mSkipContentPolicyCheckForWebRequest = aSkip;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetSkipContentPolicyCheckForWebRequest(bool* aSkip) {
-  *aSkip = mSkipContentPolicyCheckForWebRequest;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetOriginalFrameSrcLoad(bool aOriginalFrameSrcLoad) {
-  mOriginalFrameSrcLoad = aOriginalFrameSrcLoad;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetOriginalFrameSrcLoad(bool* aOriginalFrameSrcLoad) {
-  *aOriginalFrameSrcLoad = mOriginalFrameSrcLoad;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetForceInheritPrincipalDropped(bool* aResult) {
-  *aResult = mForceInheritPrincipalDropped;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetInnerWindowID(uint64_t* aResult) {
-  *aResult = mInnerWindowID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetBrowsingContextID(uint64_t* aResult) {
-  *aResult = mBrowsingContextID;
-  return NS_OK;
-}
+#undef DEFINE_GETTER
+#undef DEFINE_SETTER
 
 NS_IMETHODIMP
 LoadInfo::GetWorkerAssociatedBrowsingContextID(uint64_t* aResult) {
@@ -2029,13 +1922,6 @@ void LoadInfo::SetUpgradeInsecureRequests(bool aValue) {
 
 void LoadInfo::SetBrowserUpgradeInsecureRequests() {
   mBrowserUpgradeInsecureRequests = true;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetBrowserDidUpgradeInsecureRequests(
-    bool aBrowserDidUpgradeInsecureRequests) {
-  mBrowserDidUpgradeInsecureRequests = aBrowserDidUpgradeInsecureRequests;
-  return NS_OK;
 }
 
 void LoadInfo::SetBrowserWouldUpgradeInsecureRequests() {

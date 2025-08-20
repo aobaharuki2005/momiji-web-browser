@@ -10,6 +10,7 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "nsContentUtils.h"
 #include "nsIRedirectHistoryEntry.h"
+#include "LoadInfo.h"
 
 using namespace mozilla::dom;
 
@@ -348,93 +349,20 @@ nsContentPolicyType TRRLoadInfo::InternalContentPolicyType() {
   return mInternalContentPolicyType;
 }
 
-NS_IMETHODIMP
-TRRLoadInfo::GetBlockAllMixedContent(bool* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+#define DEFINE_GETTER(type, name, _n, _d)               \
+  NS_IMETHODIMP TRRLoadInfo::Get##name(type* a##name) { \
+    return NS_ERROR_NOT_IMPLEMENTED;                    \
+  }
 
-NS_IMETHODIMP
-TRRLoadInfo::GetUpgradeInsecureRequests(bool* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+#define DEFINE_SETTER(type, name)                      \
+  NS_IMETHODIMP TRRLoadInfo::Set##name(type a##name) { \
+    return NS_ERROR_NOT_IMPLEMENTED;                   \
+  }
 
-NS_IMETHODIMP
-TRRLoadInfo::GetBrowserUpgradeInsecureRequests(bool* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+LOADINFO_FOR_EACH_FIELD(DEFINE_GETTER, DEFINE_SETTER);
 
-NS_IMETHODIMP
-TRRLoadInfo::GetBrowserDidUpgradeInsecureRequests(bool* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetBrowserDidUpgradeInsecureRequests(
-    bool aBrowserDidUpgradeInsecureRequests) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetBrowserWouldUpgradeInsecureRequests(bool* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetForceAllowDataURI(bool aForceAllowDataURI) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetForceAllowDataURI(bool* aForceAllowDataURI) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetAllowInsecureRedirectToDataURI(
-    bool aAllowInsecureRedirectToDataURI) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetAllowInsecureRedirectToDataURI(
-    bool* aAllowInsecureRedirectToDataURI) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetSkipContentPolicyCheckForWebRequest(bool aSkip) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetSkipContentPolicyCheckForWebRequest(bool* aSkip) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetOriginalFrameSrcLoad(bool aOriginalFrameSrcLoad) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetOriginalFrameSrcLoad(bool* aOriginalFrameSrcLoad) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetForceInheritPrincipalDropped(bool* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetInnerWindowID(uint64_t* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetBrowsingContextID(uint64_t* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+#undef DEFINE_GETTER
+#undef DEFINE_SETTER
 
 NS_IMETHODIMP
 TRRLoadInfo::GetWorkerAssociatedBrowsingContextID(uint64_t* aResult) {
