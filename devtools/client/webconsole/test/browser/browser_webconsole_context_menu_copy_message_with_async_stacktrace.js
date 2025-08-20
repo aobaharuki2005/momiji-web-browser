@@ -8,7 +8,6 @@
 
 const httpServer = createTestHTTPServer();
 httpServer.registerPathHandler(`/`, function (request, response) {
-  response.setHeader("Content-Type", "text/html");
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.write(`<script type="text/javascript" src="test.js"></script>`);
 });

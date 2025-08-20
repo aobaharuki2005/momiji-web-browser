@@ -7,7 +7,6 @@
 const httpServer = createTestHTTPServer();
 httpServer.registerPathHandler(`/`, function (request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
-  response.setHeader("Content-Type", "text/html");
   response.write(`
     <html>
       <head>
