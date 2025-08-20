@@ -145,27 +145,30 @@ pub struct Database {
 }
 
 impl MallocSizeOf for Database {
-    fn size_of(&self, ops: &mut malloc_size_of::MallocSizeOfOps) -> usize {
+    fn size_of(&self, _ops: &mut malloc_size_of::MallocSizeOfOps) -> usize {
         // TODO(bug 1960592): Fill in gaps.
 
+        /*
         let mut n = 0;
 
-        n += self.rkv.size_of(ops);
-        n += self.user_store.size_of(ops);
-        n += self.ping_store.size_of(ops);
-        n += self.application_store.size_of(ops);
+        n += 0; // self.rkv.size_of(ops) -- not implemented.
+        n += 0; // self.user_store.size_of(ops) -- not implemented.
 
         n += self
             .ping_lifetime_data
             .as_ref()
-            .map(|data| {
+            .map(|_data| {
                 // TODO(bug 1960592): servo's malloc_size_of implements it for BTreeMap.
-                let lock = data.read().unwrap();
-                (*lock).size_of(ops)
+                //let lock = data.read().unwrap();
+                //(*lock).size_of(ops)
+                0
             })
             .unwrap_or(0);
 
         n
+        */
+
+        0
     }
 }
 

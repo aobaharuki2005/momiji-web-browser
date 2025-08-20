@@ -7,7 +7,6 @@
 //! whole.
 
 use super::*;
-use ::glean::TestGetValue;
 use crate::config::{test::MINIDUMP_PRUNE_SAVE_COUNT, Config};
 use crate::settings::Settings;
 use crate::std::{

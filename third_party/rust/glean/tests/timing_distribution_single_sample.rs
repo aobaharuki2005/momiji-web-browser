@@ -10,7 +10,7 @@
 
 mod common;
 
-use glean::{ConfigurationBuilder, ErrorType, TestGetValue};
+use glean::{ConfigurationBuilder, ErrorType};
 use std::time::Duration;
 
 /// A timing_distribution

@@ -23,13 +23,6 @@ bitflags! {
     }
 }
 
-#[cfg(feature = "malloc-size-of")]
-impl malloc_size_of::MallocSizeOf for EnvironmentFlagsImpl {
-    fn size_of(&self, _ops: &mut malloc_size_of::MallocSizeOfOps) -> usize {
-        0
-    }
-}
-
 impl BackendFlags for EnvironmentFlagsImpl {
     fn empty() -> EnvironmentFlagsImpl {
         EnvironmentFlagsImpl::empty()
@@ -68,13 +61,6 @@ bitflags! {
         const DUP_SORT = 0b0000_0001;
         #[cfg(feature = "db-int-key")]
         const INTEGER_KEY = 0b0000_0010;
-    }
-}
-
-#[cfg(feature = "malloc-size-of")]
-impl malloc_size_of::MallocSizeOf for DatabaseFlagsImpl {
-    fn size_of(&self, _ops: &mut malloc_size_of::MallocSizeOfOps) -> usize {
-        0
     }
 }
 
