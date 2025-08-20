@@ -1113,10 +1113,12 @@ bool GLBlitHelper::Blit(const java::GeckoSurfaceTexture::Ref& surfaceTexture,
   MOZ_DIAGNOSTIC_ASSERT(transform.Is2D());
   const auto transform3 = MatrixToMat3(transform.As2D());
 
+  // The origin is top-left here due to the transform supplied in the surface.
   const auto srcOrigin = OriginPos::TopLeft;
   const bool yFlip = (srcOrigin != destOrigin);
   const auto& prog = GetDrawBlitProg(
-      {kFragHeader_TexExt, {kFragSample_OnePlane, kFragConvert_None}});
+      {kFragHeader_TexExt,
+       {kFragSample_OnePlane, kFragConvert_None, GetAlphaMixin(convertAlpha)}});
   const DrawBlitProg::BaseArgs baseArgs = {transform3, yFlip, fbSize, destRect,
                                            texSize};
   prog.Draw(baseArgs, nullptr);
@@ -1142,14 +1144,14 @@ bool GLBlitHelper::Blit(EGLImage image, EGLSync fence,
   ScopedTexture tex(mGL);
   ScopedBindTexture bindTex(mGL, tex.Texture(), target);
 
-  mGL->TexParams_SetClampNoMips();
+  mGL->TexParams_SetClampNoMips(target);
   mGL->fEGLImageTargetTexture2D(target, image);
 
-  const auto srcOrigin = OriginPos::TopLeft;
+  const auto srcOrigin = OriginPos::BottomLeft;
   const bool yFlip = (srcOrigin != destOrigin);
   const auto& prog = GetDrawBlitProg(
       {target == LOCAL_GL_TEXTURE_2D ? kFragHeader_Tex2D : kFragHeader_TexExt,
-       {kFragSample_OnePlane, kFragConvert_None}});
+       {kFragSample_OnePlane, kFragConvert_None, GetAlphaMixin(convertAlpha)}});
   const DrawBlitProg::BaseArgs baseArgs = {SubRectMat3(0, 0, 1, 1), yFlip,
                                            fbSize, destRect, texSize};
   prog.Draw(baseArgs);
@@ -1184,12 +1186,12 @@ bool GLBlitHelper::BlitPlanarYCbCr(const PlanarYCbCrData& yuvData,
 
   if (!mYuvUploads[0]) {
     mGL->fGenTextures(3, mYuvUploads);
-    const ScopedBindTexture bindTex(mGL, mYuvUploads[0]);
-    mGL->TexParams_SetClampNoMips();
+    const ScopedBindTexture bindTex(mGL, mYuvUploads[0], LOCAL_GL_TEXTURE_2D);
+    mGL->TexParams_SetClampNoMips(LOCAL_GL_TEXTURE_2D);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mYuvUploads[1]);
-    mGL->TexParams_SetClampNoMips();
+    mGL->TexParams_SetClampNoMips(LOCAL_GL_TEXTURE_2D);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mYuvUploads[2]);
-    mGL->TexParams_SetClampNoMips();
+    mGL->TexParams_SetClampNoMips(LOCAL_GL_TEXTURE_2D);
   }
 
   // --
@@ -1769,12 +1771,12 @@ bool GLBlitHelper::BlitYCbCrImageToDMABuf(const PlanarYCbCrData& yuvData,
 
   if (!mYuvUploads[0]) {
     mGL->fGenTextures(3, mYuvUploads);
-    const ScopedBindTexture bindTex(mGL, mYuvUploads[0]);
-    mGL->TexParams_SetClampNoMips();
+    const ScopedBindTexture bindTex(mGL, mYuvUploads[0], LOCAL_GL_TEXTURE_2D);
+    mGL->TexParams_SetClampNoMips(LOCAL_GL_TEXTURE_2D);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mYuvUploads[1]);
-    mGL->TexParams_SetClampNoMips();
+    mGL->TexParams_SetClampNoMips(LOCAL_GL_TEXTURE_2D);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mYuvUploads[2]);
-    mGL->TexParams_SetClampNoMips();
+    mGL->TexParams_SetClampNoMips(LOCAL_GL_TEXTURE_2D);
   }
 
   // --
