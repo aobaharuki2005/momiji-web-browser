@@ -43,4 +43,9 @@ interface PocketStoriesInteractor {
      * of the clicked story.
      */
     fun onStoryClicked(storyClicked: PocketStory, storyPosition: Triple<Int, Int, Int>)
+
+    /**
+     * Callback when an user clicks on the "Discover more" nutton for stories on the homepage.
+     */
+    fun onDiscoverMoreClicked()
 }

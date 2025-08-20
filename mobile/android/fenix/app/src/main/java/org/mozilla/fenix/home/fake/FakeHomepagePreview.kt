@@ -102,6 +102,8 @@ internal object FakeHomepagePreview {
                 storyPosition: Triple<Int, Int, Int>,
             ) { /* no op */ }
 
+            override fun onDiscoverMoreClicked() { /* no op */ }
+
             override fun onMenuItemTapped(item: SearchSelectorMenu.Item) { /* no op */ }
 
             override fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean {
@@ -398,6 +400,7 @@ internal object FakeHomepagePreview {
         categoryColors = SelectableChipColors.buildColors(),
         textColor = FirefoxTheme.colors.textPrimary,
         linkTextColor = FirefoxTheme.colors.textAccent,
+        showDiscoverMoreButton = false,
     )
 
     internal fun contentRecommendation(index: Int = 0): ContentRecommendation =
