@@ -49,8 +49,13 @@ class IPProtectionServiceSingleton extends EventTarget {
   isSignedIn = null;
   isEnrolled = null;
   isEligible = null;
+  isEntitled = null;
+  isSubscribed = null;
+  hasProxyPass = null;
 
   guardian = null;
+  #entitlement = null;
+  #pass = null;
 
   #inited = false;
   #hasWidget = false;
@@ -101,6 +106,16 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.#removeEligibilityListeners();
 
+    this.isSignedIn = null;
+    this.isEnrolled = null;
+    this.isEligible = null;
+    this.isEntitled = null;
+    this.isSubscribed = null;
+    this.hasProxyPass = null;
+
+    this.#entitlement = null;
+    this.#pass = null;
+
     this.#hasWidget = false;
     this.#inited = false;
   }
@@ -114,10 +129,20 @@ class IPProtectionServiceSingleton extends EventTarget {
    * True if started by user action, false if system action
    */
   async start(userAction = true) {
-    let { isSignedIn, isEnrolled, isActive } = this;
+    let { isSignedIn, isEnrolled, isEntitled, isActive } = this;
 
-    if (!isSignedIn || !isEnrolled || isActive) {
+    if (!isSignedIn || !isEnrolled || !isEntitled || isActive) {
       return;
+    }
+
+    // If the current proxy pass is valid,
+    // no need to re-authenticate.
+    if (!this.#pass?.isValid()) {
+      this.#pass = await this.#getProxyPass();
+      if (!this.#pass) {
+        return;
+      }
+      this.hasProxyPass = true;
     }
 
     this.isActive = true;
@@ -359,16 +384,23 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (this.isEnrolled && !this.#hasWidget) {
       lazy.IPProtection.init();
       this.#hasWidget = true;
-      return;
-    }
-
-    if (
+    } else if (
       !this.isEnrolled &&
       this.#hasWidget &&
       this.isEligible &&
       this.isSignedIn
     ) {
       this.isEnrolled = await this.#enroll();
+    }
+
+    if (this.isEnrolled) {
+      await this.#updateEntitlement();
+    } else {
+      this.#entitlement = null;
+      this.#pass = null;
+      this.isEntitled = null;
+      this.isSubscribed = null;
+      this.hasProxyPass = null;
     }
   }
 
@@ -394,7 +426,47 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     let enrollment = await this.guardian.enroll();
     this.isEnrolled = enrollment?.ok;
+
     return this.isEnrolled;
+  }
+
+  /**
+   * Update the entitlement and isEntitled + isSubscribed statues.
+   */
+  async #updateEntitlement() {
+    this.#entitlement = await this.#getEntitlement();
+    if (this.#entitlement) {
+      this.isEntitled = !!this.#entitlement.uid;
+      this.isSubscribed = this.#entitlement.subscribed;
+    }
+  }
+
+  /**
+   * Gets the entitlement information for the user.
+   *
+   * @returns {Promise<Entitlement|null>} - The entitlement object or null if not entitled.
+   */
+  async #getEntitlement() {
+    let { error, status, entitlement } = await this.guardian.fetchUserInfo();
+    if (error || status != 200 || !entitlement) {
+      return null;
+    }
+
+    return entitlement;
+  }
+
+  /**
+   * Fetches a new ProxyPass.
+   *
+   * @returns {Promise<ProxyPass|null>} - the proxy pass if it available.
+   */
+  async #getProxyPass() {
+    let { error, status, pass } = await this.guardian.fetchProxyPass();
+    if (error || !pass || status != 200) {
+      return null;
+    }
+
+    return pass;
   }
 
   async startLoginFlow(browser) {

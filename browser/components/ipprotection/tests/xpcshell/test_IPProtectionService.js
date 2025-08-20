@@ -42,6 +42,15 @@ add_setup(async function () {
 add_task(async function test_IPProtectionService_start() {
   IPProtectionService.init();
 
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").returns({
+    status: 200,
+    error: undefined,
+    pass: {
+      isValid: () => true,
+    },
+  });
+
   Assert.ok(
     !IPProtectionService.isActive,
     "IP Protection service should not be active initially"
@@ -55,6 +64,7 @@ add_task(async function test_IPProtectionService_start() {
   // Simulate signing in to the account
   IPProtectionService.isSignedIn = true;
   IPProtectionService.isEnrolled = true;
+  IPProtectionService.isEntitled = true;
   IPProtectionService.start();
 
   let startedEvent = await startedEventPromise;
@@ -75,33 +85,18 @@ add_task(async function test_IPProtectionService_start() {
   );
 
   IPProtectionService.uninit();
+  sandbox.restore();
 });
 
 /**
- * Tests that stopping the service gets start and stop events.
+ * Tests that stopping the service gets stop events.
  */
 add_task(async function test_IPProtectionService_stop() {
   IPProtectionService.init();
 
-  let startedEventPromise = waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:Started"
-  );
-
   // Simulate signing in to the account
-  IPProtectionService.isSignedIn = true;
-  IPProtectionService.isEnrolled = true;
-  IPProtectionService.start();
-
-  await startedEventPromise;
-  Assert.ok(
-    IPProtectionService.isActive,
-    "IP Protection service should be active after starting"
-  );
-  Assert.ok(
-    IPProtectionService.activatedAt,
-    "IP Protection service should have an activation timestamp"
-  );
+  IPProtectionService.isActive = true;
+  IPProtectionService.activatedAt = Cu.now();
 
   let stoppedEventPromise = waitForEvent(
     IPProtectionService,

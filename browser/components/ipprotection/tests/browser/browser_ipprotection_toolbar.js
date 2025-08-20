@@ -72,6 +72,7 @@ add_task(async function toolbar_icon_status() {
     isEnrolled: true,
   });
   IPProtectionService.isEnrolled = true;
+  IPProtectionService.isEntitled = true;
   content.state.isSignedIn = true;
   content.requestUpdate();
   await content.updateComplete;
@@ -106,6 +107,7 @@ add_task(async function toolbar_icon_status() {
 
   cleanupService();
   IPProtectionService.isEnrolled = false;
+  IPProtectionService.isEntitled = false;
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");

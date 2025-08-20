@@ -117,6 +117,104 @@ add_task(
   }
 );
 
+/**
+ *  Tests the entitlement updates when in the experiment.
+ */
+add_task(
+  async function test_IPProtectionService_updateEntitlement_in_experiment() {
+    setupService({
+      isEnrolled: false,
+      isSignedIn: true,
+      canEnroll: true,
+    });
+
+    let cleanupAlpha = await setupExperiment({
+      enabled: true,
+      variant: "alpha",
+    });
+
+    await waitForWidgetAdded();
+
+    await IPProtectionService.updateSignInStatus();
+
+    Assert.equal(
+      IPProtectionService.isEntitled,
+      true,
+      "Entitlement set the user as entitled"
+    );
+
+    cleanupService();
+    await cleanupAlpha();
+  }
+);
+
+/**
+ * Tests the entitlement updates when not in the experiment.
+ */
+add_task(async function test_IPProtectionService_updateEntitlement() {
+  setupService({
+    isSignedIn: true,
+    isEnrolled: true,
+  });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ipProtection.enabled", true]],
+  });
+
+  await waitForWidgetAdded();
+
+  Assert.equal(
+    IPProtectionService.isEntitled,
+    true,
+    "Entitlement set the user as entitled"
+  );
+
+  cleanupService();
+  await SpecialPowers.popPrefEnv();
+});
+
+/**
+ * Tests a user with a valid proxy pass and can start the proxy.
+ */
+add_task(async function test_IPProtectionService_proxyPass() {
+  setupService({
+    isSignedIn: true,
+    canEnroll: true,
+  });
+  let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
+
+  IPProtectionService.isSignedIn = false;
+  await IPProtectionService.updateSignInStatus();
+
+  Assert.ok(IPProtectionService.isEnrolled, "User should be enrolled");
+  Assert.equal(IPProtectionService.isEntitled, true, "User should be entitled");
+
+  let content = await openPanel();
+
+  Assert.ok(
+    BrowserTestUtils.isVisible(content),
+    "ipprotection content component should be present"
+  );
+  Assert.ok(
+    content.connectionToggleEl,
+    "Status card connection toggle should be present"
+  );
+
+  let startedEventPromise = BrowserTestUtils.waitForEvent(
+    IPProtectionService,
+    "IPProtectionService:Started"
+  );
+  content.connectionToggleEl.click();
+
+  await startedEventPromise;
+
+  Assert.ok(IPProtectionService.hasProxyPass, "User has a proxyPass");
+
+  await closePanel();
+  await cleanupAlpha();
+  cleanupService();
+});
+
 add_task(async function test_ipprotection_ready() {
   setupService({
     isSignedIn: true,
