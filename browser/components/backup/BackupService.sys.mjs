@@ -153,7 +153,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "minimumTimeBetweenBackupsSeconds",
   MINIMUM_TIME_BETWEEN_BACKUPS_SECONDS_PREF_NAME,
-  3600 /* 1 hour */
+  86400 /* 1 day */
 );
 
 XPCOMUtils.defineLazyServiceGetter(
