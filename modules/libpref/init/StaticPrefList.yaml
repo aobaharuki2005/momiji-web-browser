@@ -10175,6 +10175,12 @@
   value: false
   mirror: always
 
+# Do we normalize font metrics to a block-size of 1em for ruby positioning?
+- name: layout.css.ruby.normalize-metrics
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 - name: layout.css.scroll-behavior.damping-ratio
   type: AtomicFloat
   value: 1.0f
