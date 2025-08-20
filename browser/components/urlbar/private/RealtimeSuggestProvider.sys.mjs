@@ -26,6 +26,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export class RealtimeSuggestProvider extends SuggestProvider {
   // The following methods must be overridden.
 
+  /**
+   * The type of the realtime suggestion provider.
+   *
+   * @type {string}
+   */
   get realtimeType() {
     throw new Error("Trying to access the base class, must be overridden");
   }
@@ -307,6 +312,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       return null;
     }
 
+    /** @type {UrlbarResultCommand[]} */
     let commands = [
       {
         name: "not_interested",

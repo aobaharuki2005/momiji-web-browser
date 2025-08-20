@@ -312,6 +312,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
     );
   }
 
+  /**
+   * Gets the list of commands that should be shown in the result menu for a
+   * given result from the provider. All commands returned by this method should
+   * be handled by implementing `onEngagement()` with the possible exception of
+   * commands automatically handled by the urlbar, like "help".
+   *
+   * @param {UrlbarResult} result
+   *   The menu will be shown for this result.
+   */
   getResultCommands(result) {
     return lazy.QuickSuggest.getFeatureByResult(result)?.getResultCommands?.(
       result
