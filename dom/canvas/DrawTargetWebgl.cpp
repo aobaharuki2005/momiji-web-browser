@@ -2636,10 +2636,13 @@ bool SharedContextWebgl::DrawRectAccel(
     rectXform.PreMultiply(*aRectXform);
   }
 
-  if (aOptions.mCompositionOp == CompositionOp::OP_SOURCE && aTransformed &&
-      aClipped &&
-      (HasClipMask() || !rectXform.PreservesAxisAlignedRectangles() ||
-       !rectXform.TransformBounds(aRect).Contains(Rect(mClipAARect)) ||
+  if (aOptions.mCompositionOp == CompositionOp::OP_SOURCE && aClipped &&
+      (HasClipMask() ||
+       !(aTransformed
+             ? rectXform.PreservesAxisAlignedRectangles() &&
+                   rectXform.TransformBounds(aRect).Contains(mClipAARect)
+             : aRect.IsEqualEdges(Rect(mClipRect)) ||
+                   aRect.Contains(mClipAARect)) ||
        (aPattern.GetType() == PatternType::SURFACE &&
         !IsAlignedRect(aTransformed, rectXform, aRect)))) {
     // Clear outside the mask region for masks that are not bounded by clip.
