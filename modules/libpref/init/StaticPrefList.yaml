@@ -15400,6 +15400,14 @@
   value: true
   mirror: always
 
+# If true, it will include extra tags to be sniffed by nsUnknownDecoder
+# These tags were previously sniffed by Firefox for legacy/webcompat but
+# are not part of the MIME sniffing spec.
+- name: network.mimesniff.extra_moz_html_tags
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # The maximum count that we allow socket prrocess to crash. If this count is
 # reached, we won't use networking over socket process.
 - name: network.max_socket_process_failed_count
