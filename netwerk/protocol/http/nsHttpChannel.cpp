@@ -10857,7 +10857,7 @@ void nsHttpChannel::SetOriginHeader() {
     return;
   }
 
-  // Step 1. Let serializedOrigin be the result of byte-serializing a request
+  // Step 2. Let serializedOrigin be the result of byte-serializing a request
   // origin with request.
   nsAutoCString serializedOrigin;
   nsCOMPtr<nsIURI> uri;
@@ -10882,7 +10882,7 @@ void nsHttpChannel::SetOriginHeader() {
     }
   }
 
-  // Step 2. If request’s response tainting is "cors" or request’s mode is
+  // Step 3. If request’s response tainting is "cors" or request’s mode is
   // "websocket", then append (`Origin`, serializedOrigin) to request’s header
   // list.
   //
@@ -10893,13 +10893,13 @@ void nsHttpChannel::SetOriginHeader() {
     return;
   }
 
-  // Step 3. Otherwise, if request’s method is neither `GET` nor `HEAD`, then:
+  // Step 4. Otherwise, if request’s method is neither `GET` nor `HEAD`, then:
   if (mRequestHead.IsGet() || mRequestHead.IsHead()) {
     return;
   }
 
   if (!serializedOrigin.EqualsLiteral("null")) {
-    // Step 3.1. (Implemented by ReferrerInfo::ShouldSetNullOriginHeader)
+    // Step 4.1. (Implemented by ReferrerInfo::ShouldSetNullOriginHeader)
     if (ReferrerInfo::ShouldSetNullOriginHeader(this, uri)) {
       serializedOrigin.AssignLiteral("null");
     } else if (StaticPrefs::network_http_sendOriginHeader() == 1) {
@@ -10913,7 +10913,7 @@ void nsHttpChannel::SetOriginHeader() {
     }
   }
 
-  // Step 3.2. Append (`Origin`, serializedOrigin) to request’s header list.
+  // Step 4.2. Append (`Origin`, serializedOrigin) to request’s header list.
   MOZ_ALWAYS_SUCCEEDS(mRequestHead.SetHeader(nsHttp::Origin, serializedOrigin,
                                              false /* merge */));
 }
