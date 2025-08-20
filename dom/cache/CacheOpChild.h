@@ -7,13 +7,12 @@
 #ifndef mozilla_dom_cache_CacheOpChild_h
 #define mozilla_dom_cache_CacheOpChild_h
 
-#include "mozilla/RefPtr.h"
-#include "mozilla/dom/cache/ActorChild.h"
-#include "mozilla/dom/cache/PCacheOpChild.h"
-#include "mozilla/dom/cache/TypeUtils.h"
-#include "mozilla/dom/cache/BoundStorageKey.h"
 #include "mozilla/InitializedOnce.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/cache/ActorChild.h"
+#include "mozilla/dom/cache/BoundStorageKey.h"
+#include "mozilla/dom/cache/PCacheOpChild.h"
+#include "mozilla/dom/cache/TypeUtils.h"
 
 class nsIGlobalObject;
 
@@ -32,10 +31,10 @@ class CacheOpChild final : public PCacheOpChild,
   NS_INLINE_DECL_REFCOUNTING(CacheOpChild, override)
 
  private:
-
   // CacheOpChild can be used by Cache, CacheStorage and BoundStorageKey APIs.
   // It can handle two promise types; where Cache works with dom::Promise,
-  // BoundStorageKey APIs works with MozPromise (represented by CacheStoragePromise below)
+  // BoundStorageKey APIs works with MozPromise (represented by
+  // CacheStoragePromise below)
   using PromiseType =
       Variant<RefPtr<mozilla::dom::Promise>, RefPtr<CacheStoragePromise>>;
 
@@ -48,7 +47,8 @@ class CacheOpChild final : public PCacheOpChild,
                nsISupports* aParent, RefPtr<Promise>& aPromise,
                ActorChild* aParentActor);
 
-  // Below overload is used by BoundStorageKey APIs; passing in CacheStoragePromise
+  // Below overload is used by BoundStorageKey APIs; passing in
+  // CacheStoragePromise
   CacheOpChild(SafeRefPtr<CacheWorkerRef> aWorkerRef, nsIGlobalObject* aGlobal,
                nsISupports* aParent, RefPtr<CacheStoragePromise>& aPromise,
                ActorChild* aParentActor);
@@ -78,9 +78,9 @@ class CacheOpChild final : public PCacheOpChild,
   template <CacheOpResult::Type OP_TYPE, typename ResponseType>
   void HandleAndSettle(ResponseType&&);
 
-  // generic settle overload which routes the control to one of two SettlePromise
-  // method overloads below depending if we are resolving for native JS promise vs
-  // MozPromise
+  // generic settle overload which routes the control to one of two
+  // SettlePromise method overloads below depending if we are resolving for
+  // native JS promise vs MozPromise
   template <CacheOpResult::Type OP_TYPE, typename ResultType>
   void Settle(ResultType&& aRes, ErrorResult&& aRv = ErrorResult(NS_OK));
 
