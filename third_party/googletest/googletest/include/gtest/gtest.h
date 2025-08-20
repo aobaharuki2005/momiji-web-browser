@@ -73,8 +73,6 @@
 #include "gtest/internal/gtest-internal.h"
 #include "gtest/internal/gtest-string.h"
 
-#include "mozilla/Attributes.h"
-
 GTEST_DISABLE_MSC_WARNINGS_PUSH_(4251 \
 /* class A needs to have dll-interface to be used by clients of class B */)
 
@@ -327,7 +325,7 @@ class GTEST_API_ Test {
   //
   // DO NOT OVERRIDE THIS FUNCTION DIRECTLY IN A USER PROGRAM.
   // Instead, use the TEST or TEST_F macro.
-  MOZ_CAN_RUN_SCRIPT virtual void TestBody() = 0;
+  virtual void TestBody() = 0;
 
   // Sets up, executes, and tears down the test.
   void Run();
@@ -1612,6 +1610,8 @@ GTEST_API_ AssertionResult DoubleNearPredFormat(const char* expr1,
                                                 double val1, double val2,
                                                 double abs_error);
 
+using GoogleTest_NotSupported_OnFunctionReturningNonVoid = void;
+
 // INTERNAL IMPLEMENTATION - DO NOT USE IN USER CODE.
 // A class that enables one to stream messages to assertion macros
 class GTEST_API_ AssertHelper {
@@ -1623,7 +1623,8 @@ class GTEST_API_ AssertHelper {
 
   // Message assignment is a semantic trick to enable assertion
   // streaming; see the GTEST_MESSAGE_ macro below.
-  void operator=(const Message& message) const;
+  GoogleTest_NotSupported_OnFunctionReturningNonVoid operator=(
+      const Message& message) const;
 
  private:
   // We put our data in a struct so that the size of the AssertHelper class can
