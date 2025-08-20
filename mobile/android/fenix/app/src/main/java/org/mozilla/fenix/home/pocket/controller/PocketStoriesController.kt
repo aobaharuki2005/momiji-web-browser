@@ -21,8 +21,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.ContentRecommendationsAction
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
-import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.mars.MARSUseCases
 import org.mozilla.fenix.home.pocket.PocketImpression
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -66,11 +64,6 @@ interface PocketStoriesController {
      * of the clicked story.
      */
     fun handleStoryClicked(storyClicked: PocketStory, storyPosition: Triple<Int, Int, Int>)
-
-    /**
-     * Callback for when the user clicks on the "Discover more" button.
-     */
-    fun handleDiscoverMoreClicked()
 }
 
 /**
@@ -254,12 +247,5 @@ internal class DefaultPocketStoriesController(
                 }
             }
         }
-    }
-
-    override fun handleDiscoverMoreClicked() {
-        navController.nav(
-            R.id.homeFragment,
-            HomeFragmentDirections.actionHomeFragmentToStoriesFragment(),
-        )
     }
 }

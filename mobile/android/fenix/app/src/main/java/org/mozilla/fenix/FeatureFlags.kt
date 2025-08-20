@@ -57,7 +57,7 @@ object FeatureFlags {
     val composableToolbar = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables the "Discover more" stories screen.
+     * Enables the custom review pre-prompt.
      */
-    const val DISCOVER_MORE_STORIES = false
+    const val CUSTOM_REVIEW_PROMPT_ENABLED = true
 }

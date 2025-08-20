@@ -36,9 +36,7 @@ import org.mozilla.fenix.components.appstate.AppAction.ContentRecommendationsAct
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.recommendations.ContentRecommendationsState
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.helpers.FenixGleanTestRule
-import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.mars.MARSUseCases
 import org.mozilla.fenix.home.pocket.controller.DefaultPocketStoriesController
 import org.mozilla.fenix.utils.Settings
@@ -567,20 +565,6 @@ class DefaultPocketStoriesControllerTest {
                 searchTermOrURL = story.url,
                 newTab = false,
                 private = false,
-            )
-        }
-    }
-
-    @Test
-    fun `WHEN the discover more button is clicked THEN navigate to the discover more stories screen`() {
-        val controller = createController()
-
-        controller.handleDiscoverMoreClicked()
-
-        verify {
-            navController.nav(
-                R.id.homeFragment,
-                HomeFragmentDirections.actionHomeFragmentToStoriesFragment(),
             )
         }
     }

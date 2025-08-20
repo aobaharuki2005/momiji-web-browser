@@ -373,10 +373,6 @@ class SessionControlInteractor(
         pocketStoriesController.handleStoryClicked(storyClicked, storyPosition)
     }
 
-    override fun onDiscoverMoreClicked() {
-        pocketStoriesController.handleDiscoverMoreClicked()
-    }
-
     override fun reportSessionMetrics(state: AppState) {
         controller.handleReportSessionMetrics(state)
     }

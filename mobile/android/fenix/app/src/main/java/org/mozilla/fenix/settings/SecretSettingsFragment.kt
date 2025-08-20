@@ -192,12 +192,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_discover_more_stories).apply {
-            isVisible = Config.channel.isNightlyOrDebug
-            isChecked = context.settings().enableDiscoverMoreStories
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_enable_unified_trust_panel).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().enableUnifiedTrustPanel

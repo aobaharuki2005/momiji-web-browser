@@ -2228,14 +2228,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates if the Homepage "Discover more" stories is enabled.
-     */
-    var enableDiscoverMoreStories by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_discover_more_stories),
-        default = FeatureFlags.DISCOVER_MORE_STORIES,
-    )
-
-    /**
      * Indicates if the Unified Trust Panel is enabled.
      */
     var enableUnifiedTrustPanel by booleanPreference(
