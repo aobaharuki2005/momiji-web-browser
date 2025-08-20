@@ -680,11 +680,14 @@ export class UrlbarView {
     queryOptions.autofillIgnoresSelection = true;
     queryOptions.event.interactionType = "returned";
 
-    // A search tip can be cached in results if it was shown but ignored
-    // by the user. Don't open the panel if a search tip is present or it
-    // will cause a flicker since it'll be quickly overwritten (Bug 1812261).
+    // Opening the panel now will show the rows from the previous query, so to
+    // avoid flicker, open it only if the search string hasn't changed. Also
+    // check for a tip to avoid search tip flicker (bug 1812261). If we don't
+    // open the panel here, we'll open it when the view receives results from
+    // the new query.
     if (
       this.#queryContext?.results?.length &&
+      this.#queryContext.searchString == this.input.value &&
       this.#queryContext.results[0].type != lazy.UrlbarUtils.RESULT_TYPE.TIP
     ) {
       this.#openPanel();
