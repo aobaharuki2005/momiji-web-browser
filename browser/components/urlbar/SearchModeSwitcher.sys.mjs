@@ -51,7 +51,9 @@ export class SearchModeSwitcher {
 
     lazy.UrlbarPrefs.addObserver(this);
 
-    this.#popup = input.querySelector(".searchmode-switcher-popup");
+    this.#popup = /** @type {XULPopupElement} */ (
+      input.querySelector(".searchmode-switcher-popup")
+    );
 
     this.#toolbarbutton = input.querySelector(".searchmode-switcher");
 
@@ -137,12 +139,12 @@ export class SearchModeSwitcher {
       return;
     }
     if (event.type == "popupshowing") {
-      this.#toolbarbutton.setAttribute("aria-expanded", true);
+      this.#toolbarbutton.setAttribute("aria-expanded", "true");
       this.#onPopupShowing();
       return;
     }
     if (event.type == "popuphiding") {
-      this.#toolbarbutton.setAttribute("aria-expanded", false);
+      this.#toolbarbutton.setAttribute("aria-expanded", "false");
       return;
     }
     if (event.type == "keydown") {
@@ -271,8 +273,9 @@ export class SearchModeSwitcher {
     }
 
     let iconUrl = icon ? `url(${icon})` : null;
-    this.#input.querySelector(
-      ".searchmode-switcher-icon"
+    /** @type {HTMLImageElement} */ (
+      this.#input.querySelector(".searchmode-switcher-icon")
+      // @ts-expect-error Bug 1982726 - CSS2Properties aren't available as TypeScript types
     ).style.listStyleImage = iconUrl;
 
     if (label) {
@@ -416,7 +419,6 @@ export class SearchModeSwitcher {
         }
       );
 
-      menuitem.restrict = restrict;
       this.#popup.insertBefore(menuitem, separator);
     }
 
