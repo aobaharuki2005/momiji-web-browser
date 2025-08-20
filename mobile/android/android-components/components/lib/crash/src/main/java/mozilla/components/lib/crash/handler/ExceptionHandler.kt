@@ -25,6 +25,7 @@ class ExceptionHandler(
 
     @SuppressLint("LogUsage") // We do not want to use our custom logger while handling the crash
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
+        var throwable = throwable
         Log.e(TAG, "Uncaught exception handled: ", throwable)
 
         if (crashing) {
@@ -45,11 +46,18 @@ class ExceptionHandler(
                     breadcrumbs = crashReporter.crashBreadcrumbsCopy(),
                 ),
             )
-
-            defaultExceptionHandler?.uncaughtException(thread, throwable)
         } catch (e: Exception) {
             Log.e(TAG, "Crash reporter has crashed.", e)
+            // Send to the default exception handler so system-level crash
+            // reporters can hopefully collect these errors and report them to
+            // us by other means. We don't call the default exception handler
+            // here because that would probably result in more than one crash
+            // UI being shown by the Android Runtime, which would be confusing
+            // to users (and may not actually work as intended, anyway).
+            e.addSuppressed(throwable)
+            throwable = e
         } finally {
+            defaultExceptionHandler?.uncaughtException(thread, throwable)
             terminateProcess()
         }
     }
