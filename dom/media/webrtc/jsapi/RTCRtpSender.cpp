@@ -2250,7 +2250,7 @@ void RTCRtpSender::SetTransform(RTCRtpScriptTransform* aTransform,
 }
 
 bool RTCRtpSender::GenerateKeyFrame(const Maybe<std::string>& aRid) {
-  if (!mTransform || !mPipeline || !mSenderTrack) {
+  if (!mTransform || !mPipeline) {
     return false;
   }
 
