@@ -143,6 +143,9 @@ class InfoBarNotification {
                   err
                 );
               }
+              if (linkActions[name].dismiss) {
+                this.notification?.dismiss();
+              }
             }
           });
         }

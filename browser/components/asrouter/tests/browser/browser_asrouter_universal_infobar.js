@@ -12,6 +12,12 @@ const { CFRMessageProvider } = ChromeUtils.importESModule(
 const { ASRouter } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
+const { SpecialMessageActions } = ChromeUtils.importESModule(
+  "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
+);
+const { RemoteL10n } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/RemoteL10n.sys.mjs"
+);
 
 const UNIVERSAL_MESSAGE = {
   id: "universal-infobar",
@@ -382,4 +388,114 @@ add_task(async function test_universalInfobar_skips_taskbar_window() {
   win.document.documentElement.removeAttribute("taskbartab");
   cleanupInfobars();
   sandbox.restore();
+});
+
+add_task(async function universal_inline_anchor_dismiss_multiple_windows() {
+  const sandbox = sinon.createSandbox();
+  const win1 = BrowserWindowTracker.getTopWindow();
+  const browser1 = win1.gBrowser.selectedBrowser;
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  const browser2 = win2.gBrowser.selectedBrowser;
+
+  sandbox.stub(InfoBar, "maybeLoadCustomElement");
+  sandbox.stub(InfoBar, "maybeInsertFTL");
+
+  sandbox.stub(InfoBar, "showNotificationAllWindows").callsFake(async notif => {
+    await notif.showNotification(browser1);
+  });
+
+  sandbox
+    .stub(RemoteL10n, "formatLocalizableText")
+    .resolves('<a data-l10n-name="test">Open</a>');
+
+  const handle = sandbox.stub(SpecialMessageActions, "handleAction");
+
+  const message = {
+    id: "TEST_UNIVERSAL_INLINE_DISMISS_TWO_WINS",
+    content: {
+      type: "universal",
+      text: { string_id: "test" },
+      linkUrls: { test: "https://example.com/u" },
+      linkActions: {
+        test: {
+          type: "SET_PREF",
+          data: { pref: { name: "embedded-link-sma", value: true } },
+          dismiss: true,
+        },
+      },
+      buttons: [],
+    },
+  };
+
+  const dispatch1 = sandbox.stub();
+  const dispatch2 = sandbox.stub();
+
+  await InfoBar.showInfoBarMessage(browser1, message, dispatch1);
+
+  await InfoBar.showInfoBarMessage(
+    browser2,
+    message,
+    dispatch2,
+    true // universal in new window
+  );
+
+  const getNotification1 = () =>
+    win1.gNotificationBox.getNotificationWithValue(message.id);
+  const getNotification2 = () =>
+    win2.gNotificationBox.getNotificationWithValue(message.id);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getNotification1(),
+    "Infobar present in window 1"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !!getNotification2(),
+    "Infobar present in window 2"
+  );
+
+  // Ignore impression pings.
+  dispatch1.resetHistory();
+  dispatch2.resetHistory();
+
+  const link = getNotification1().messageText.querySelector(
+    'a[data-l10n-name="test"]'
+  );
+  Assert.ok(link, "Inline anchor exists in window 1");
+  EventUtils.synthesizeMouseAtCenter(link, {}, win1);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !getNotification1(),
+    "Infobar removed in window 1"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getNotification2(),
+    "Infobar removed in window 2"
+  );
+
+  Assert.equal(handle.callCount, 2, "Two SMAs handled (OPEN_URL and SET_PREF)");
+
+  Assert.ok(
+    dispatch1.calledWith(
+      sinon.match({
+        type: "INFOBAR_TELEMETRY",
+        data: sinon.match.has("event", "DISMISSED"),
+      })
+    ),
+    "DISMISSED telemetry send from Infobar where link was clicked"
+  );
+
+  Assert.ok(
+    !dispatch2.calledWith(
+      sinon.match({
+        type: "INFOBAR_TELEMETRY",
+        data: sinon.match.has("event", "DISMISSED"),
+      })
+    ),
+    "DISMISSED telemetry was not sent from other instance of the Infobar"
+  );
+
+  // Cleanup
+  win2.close();
+  sandbox.restore();
+  cleanupInfobars();
 });
