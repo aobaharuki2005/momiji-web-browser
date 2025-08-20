@@ -134,6 +134,14 @@
   <string name="mozac_feature_addons_permissions_geolocation_description_for_update">Mengakses lokasi Anda.</string>
   <!-- Description for the "history" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_history_description_for_update">Mengakses riwayat penjelajahan.</string>
+  <!-- Description for the "management" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_management_description_for_update">Memantau penggunaan ekstensi dan mengelola tema.</string>
+  <!-- Description for the "nativeMessaging" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_native_messaging_description_for_update">Bertukar pesan dengan aplikasi selain yang ini.</string>
+  <!-- Description for the "notifications" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_notifications_description_for_update">Tampilkan notifikasi untuk Anda.</string>
+  <!-- Description for the "pkcs11" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_pkcs11_description_for_update">Menyediakan layanan otentikasi kriptografis.</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">Skrip yang tidak diverifikasi dapat menimbulkan risiko keamanan dan privasi. Hanya jalankan skrip dari ekstensi atau sumber yang Anda percayai.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
@@ -174,6 +182,14 @@
   <string name="mozac_feature_addons_permissions_data_collection_authenticationInfo_long_description">Berbagi informasi autentikasi dengan pengembang ekstensi</string>
   <!-- Long description for the bookmarksInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_bookmarksInfo_long_description">Berbagi informasi markah dengan pengembang ekstensi</string>
+  <!-- Long description for the financialAndPaymentInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_financialAndPaymentInfo_long_description">Bagikan informasi keuangan dan pembayaran dengan pengembang ekstensi</string>
+  <!-- Long description for the healthInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_healthInfo_long_description">Bagikan informasi kesehatan dengan pengembang ekstensi</string>
+  <!-- Long description for the locationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_locationInfo_long_description">Bagikan informasi lokasi dengan pengembang ekstensi</string>
+  <!-- Long description for the personalCommunications data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personalCommunications_long_description">Bagikan komunikasi pribadi dengan pengembang ekstensi</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">Versi</string>
   <!-- The author of an add-on. -->
