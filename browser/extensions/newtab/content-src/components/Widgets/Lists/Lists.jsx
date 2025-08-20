@@ -30,7 +30,6 @@ const USER_ACTION_TYPES = {
 };
 
 const PREF_WIDGETS_LISTS_MAX_LISTS = "widgets.lists.maxLists";
-const PREF_WIDGETS_LISTS_MAX_LISTITEMS = "widgets.lists.maxListItems";
 
 function Lists({ dispatch }) {
   const prefs = useSelector(state => state.Prefs.values);
@@ -496,20 +495,6 @@ function Lists({ dispatch }) {
   const maxListsCount = Math.max(1, prefs[PREF_WIDGETS_LISTS_MAX_LISTS]);
   const isAtMaxListsLimit = currentListsCount >= maxListsCount;
 
-  // Enforce maximum count limits to list items
-  // The maximum applies to the total number of items (both incomplete and completed items)
-  const currentSelectedListItemsCount =
-    selectedList?.tasks.length + selectedList?.completed.length;
-
-  // Ensure a minimum of 1, but allow higher values from prefs
-  const maxListItemsCount = Math.max(
-    1,
-    prefs[PREF_WIDGETS_LISTS_MAX_LISTITEMS]
-  );
-
-  const isAtMaxListItemsLimit =
-    currentSelectedListItemsCount >= maxListItemsCount;
-
   return (
     <article
       className="lists"
@@ -574,9 +559,7 @@ function Lists({ dispatch }) {
         </panel-list>
       </div>
       <div className="add-task-container">
-        <span
-          className={`icon icon-add ${isAtMaxListItemsLimit ? "icon-disabled" : ""}`}
-        />
+        <span className="icon icon-add" />
         <input
           ref={inputRef}
           onBlur={() => saveTask()}
@@ -587,7 +570,6 @@ function Lists({ dispatch }) {
           onKeyDown={handleKeyDown}
           type="text"
           maxLength={100}
-          disabled={isAtMaxListItemsLimit}
         />
       </div>
       <div className="task-list-wrapper">

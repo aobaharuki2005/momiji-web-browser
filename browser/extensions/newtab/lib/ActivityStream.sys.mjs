@@ -909,14 +909,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "widgets.lists.maxListItems",
-    {
-      title:
-        "Maximum number of items that can be created on an individual list",
-      value: 100,
-    },
-  ],
-  [
     "widgets.system.lists.enabled",
     {
       title: "Enables the to-do lists widget experiment in Nimbus",
