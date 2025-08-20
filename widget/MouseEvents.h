@@ -11,6 +11,7 @@
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Event.h"
@@ -437,6 +438,10 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
    */
   static bool IsMiddleClickPasteEnabled();
 };
+
+// Used for logging WidgetMouseEvent::IsReal() (or
+// !WidgetMouseEvent::IsSynthesized())
+MOZ_DEFINE_BOOL_PRETTY_PRINTER(RealOrSynthesized, Real, Synthesized);
 
 /******************************************************************************
  * mozilla::WidgetDragEvent
