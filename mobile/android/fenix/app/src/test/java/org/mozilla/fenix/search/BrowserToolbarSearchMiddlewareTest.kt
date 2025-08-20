@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.search
 
-import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.Lifecycle.State.RESUMED
 import androidx.lifecycle.LifecycleOwner
@@ -17,9 +16,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.android.asCoroutineDispatcher
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.AwesomeBarAction.EngagementFinished
 import mozilla.components.browser.state.action.SearchAction.ApplicationSearchEnginesLoaded
 import mozilla.components.browser.state.search.RegionState
@@ -477,8 +473,6 @@ class BrowserToolbarSearchMiddlewareTest {
 
     @Test
     fun `WHEN the search engines are updated in BrowserStore THEN update the search selector and search providers`() {
-        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
-
         val browserStore = BrowserStore()
         val (_, store) = buildMiddlewareAndAddToStore(browserStore = browserStore)
         store.dispatch(ToggleEditMode(true))
@@ -495,8 +489,6 @@ class BrowserToolbarSearchMiddlewareTest {
 
     @Test
     fun `GIVEN a search engine is already selected WHEN the search engines are updated in BrowserStore THEN don't change the selected search engine`() {
-        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
-
         val selectedSearchEngine = fakeSearchState().applicationSearchEngines.first().copy(id = "test")
         val appStore = AppStore(
             AppState(

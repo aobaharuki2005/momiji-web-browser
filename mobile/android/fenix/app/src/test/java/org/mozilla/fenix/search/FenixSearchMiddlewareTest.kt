@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.search
 
-import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.Lifecycle.State.RESUMED
 import androidx.navigation.NavController
@@ -15,9 +14,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.android.asCoroutineDispatcher
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.action.AwesomeBarAction.EngagementFinished
 import mozilla.components.browser.state.action.BrowserAction
@@ -451,7 +447,6 @@ class FenixSearchMiddlewareTest {
 
     @Test
     fun `WHEN the user selects a specific search engine THEN update the search engine to be used for future searches and record telemetry`() {
-        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
         val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine
         val searchEngineClicked = SearchEngine(
             id = BOOKMARKS_SEARCH_ENGINE_ID,
