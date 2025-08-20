@@ -12,7 +12,6 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.feature.search.widget.AppSearchWidgetProvider
 import mozilla.components.feature.search.widget.BaseVoiceSearchActivity
 import mozilla.components.feature.search.widget.SearchWidgetConfig
-import mozilla.components.support.utils.PendingIntentUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.IntentReceiverActivity
 import org.mozilla.focus.ext.components
@@ -51,7 +50,7 @@ class SearchWidgetProvider : AppSearchWidgetProvider() {
             context,
             REQUEST_CODE_NEW_TAB,
             textSearchIntent,
-            PendingIntentUtils.defaultFlags or
+            PendingIntent.FLAG_IMMUTABLE or
                 PendingIntent.FLAG_UPDATE_CURRENT,
         )
     }

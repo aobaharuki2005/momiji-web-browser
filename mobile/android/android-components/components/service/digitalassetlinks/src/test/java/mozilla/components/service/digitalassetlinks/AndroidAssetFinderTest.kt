@@ -125,58 +125,6 @@ class AndroidAssetFinderTest {
         )
     }
 
-    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
-    @Suppress("Deprecation")
-    @Test
-    fun `test getAndroidAppAsset on deprecated SDK`() {
-        val signature = mock<Signature>()
-        packageInfo.signatures = arrayOf(signature)
-        doReturn("01:BB:AA:10:30").`when`(assetFinder).getCertificateSHA256Fingerprint(signature)
-
-        assertEquals(
-            listOf(AssetDescriptor.Android("com.test.app", "01:BB:AA:10:30")),
-            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList(),
-        )
-    }
-
-    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
-    @Suppress("Deprecation")
-    @Test
-    fun `test getAndroidAppAsset with multiple signatures on deprecated SDK`() {
-        val signature1 = mock<Signature>()
-        val signature2 = mock<Signature>()
-        packageInfo.signatures = arrayOf(signature1, signature2)
-        doReturn("01:BB:AA:10:30").`when`(assetFinder).getCertificateSHA256Fingerprint(signature1)
-        doReturn("FF:CC:AA:99:77").`when`(assetFinder).getCertificateSHA256Fingerprint(signature2)
-
-        assertEquals(
-            listOf(
-                AssetDescriptor.Android("org.test.app", "01:BB:AA:10:30"),
-                AssetDescriptor.Android("org.test.app", "FF:CC:AA:99:77"),
-            ),
-            assetFinder.getAndroidAppAsset("org.test.app", packageManager).toList(),
-        )
-    }
-
-    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
-    @Suppress("Deprecation")
-    @Test
-    fun `test getAndroidAppAsset is lazily computed`() {
-        val signature1 = mock<Signature>()
-        val signature2 = mock<Signature>()
-        packageInfo.signatures = arrayOf(signature1, signature2)
-        doReturn("01:BB:AA:10:30").`when`(assetFinder).getCertificateSHA256Fingerprint(signature1)
-        doReturn("FF:CC:AA:99:77").`when`(assetFinder).getCertificateSHA256Fingerprint(signature2)
-
-        val result = assetFinder.getAndroidAppAsset("android.package", packageManager).first()
-        assertEquals(
-            AssetDescriptor.Android("android.package", "01:BB:AA:10:30"),
-            result,
-        )
-
-        verify(assetFinder, times(1)).getCertificateSHA256Fingerprint(any())
-    }
-
     @Test
     fun `test byteArrayToHexString`() {
         val array = byteArrayOf(0xaa.toByte(), 0xbb.toByte(), 0xcc.toByte(), 0x10, 0x20, 0x30, 0x01, 0x02)

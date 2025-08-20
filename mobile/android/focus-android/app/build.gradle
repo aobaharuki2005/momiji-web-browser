@@ -35,9 +35,9 @@ android {
 
     defaultConfig {
         applicationId "org.mozilla"
-        minSdkVersion = config.minSdkVersion
+        minSdkVersion config.minSdkVersion
         compileSdk = config.compileSdkVersion
-        targetSdkVersion = config.targetSdkVersion
+        targetSdkVersion config.targetSdkVersion
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
         // The versionName is dynamically overridden for all the build variants at build time.
@@ -180,6 +180,14 @@ android {
         // Nightly
         focusNightly.root = 'src/focusNightly'
         klarNightly.root = 'src/klarNightly'
+    }
+
+    packaging {
+        if (!isAppBundle) {
+            jniLibs {
+                useLegacyPackaging = true
+            }
+        }
     }
 
     namespace = 'org.mozilla.focus'
