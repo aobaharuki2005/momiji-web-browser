@@ -41,16 +41,6 @@ CocoaCompositorWidget::GetNativeLayerRoot() {
   return mNativeLayerRoot;
 }
 
-already_AddRefed<gfx::DrawTarget>
-CocoaCompositorWidget::StartRemoteDrawingInRegion(
-    const LayoutDeviceIntRegion& aInvalidRegion) {
-  return nullptr;
-}
-
-void CocoaCompositorWidget::EndRemoteDrawingInRegion(
-    gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
-}
-
 LayoutDeviceIntSize CocoaCompositorWidget::GetClientSize() {
   return mClientSize;
 }
