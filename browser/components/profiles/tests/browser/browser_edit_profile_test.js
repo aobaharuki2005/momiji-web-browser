@@ -241,23 +241,15 @@ add_task(async function test_edit_profile_theme() {
   }
   let profile = await setup();
 
-  let defaultTheme = await lazy.AddonManager.getAddonByID(
-    "default-theme@mozilla.org"
-  );
-  await defaultTheme.enable();
-
   // Set the profile to the built-in light theme to avoid theme randomization
   // by the new profile card and make the built-in dark theme card available
   // to be clicked.
   let lightTheme = await lazy.AddonManager.getAddonByID(
     "firefox-compact-light@mozilla.org"
   );
-
-  let profileUpdated = TestUtils.topicObserved("sps-profiles-updated");
   await lightTheme.enable();
-  await profileUpdated;
 
-  let expectedThemeId = "default-theme@mozilla.org";
+  let expectedThemeId = "firefox-compact-dark@mozilla.org";
 
   is(
     null,
@@ -282,18 +274,11 @@ add_task(async function test_edit_profile_theme() {
 
         await editProfileCard.updateComplete;
 
-        let defaultThemeCard = editProfileCard.themesPicker.querySelector(
-          "moz-visual-picker-item[value='default-theme@mozilla.org']"
-        );
-
-        Assert.ok(
-          !defaultThemeCard.checked,
-          "Default theme chip should not be selected"
-        );
-        EventUtils.synthesizeMouseAtCenter(defaultThemeCard, {}, content);
+        let darkThemeCard = editProfileCard.themeCards[5];
+        EventUtils.synthesizeMouseAtCenter(darkThemeCard, {}, content);
 
         await ContentTaskUtils.waitForCondition(
-          () => defaultThemeCard.checked,
+          () => darkThemeCard.checked,
           "Waiting for the new theme chip to be selected"
         );
 
@@ -323,9 +308,7 @@ add_task(async function test_edit_profile_theme() {
   lightTheme = await lazy.AddonManager.getAddonByID(
     "firefox-compact-light@mozilla.org"
   );
-  profileUpdated = TestUtils.topicObserved("sps-profiles-updated");
   await lightTheme.enable();
-  await profileUpdated;
 });
 
 add_task(async function test_edit_profile_explore_more_themes() {
@@ -579,18 +562,13 @@ add_task(async function test_theme_picker_arrow_key_support() {
         // Select and focus the light theme to get started.
         EventUtils.synthesizeMouseAtCenter(themeCards[0], {}, content);
         themeCards[0].focus();
-
-        await ContentTaskUtils.waitForCondition(
-          () => themeCards[0].checked,
-          "Wait for theme card to be checked"
-        );
         let selectedTheme = editProfileCard.shadowRoot.querySelector(
           "#themes > moz-visual-picker-item[checked]"
         );
         Assert.equal(
-          themeCards[0].value,
+          "firefox-compact-light@mozilla.org",
           selectedTheme.value,
-          "Gray theme was selected"
+          "Light theme was selected"
         );
         Assert.equal(
           editProfileCard.shadowRoot.activeElement,
@@ -656,9 +634,7 @@ add_task(async function test_edit_profile_system_theme() {
   let lightTheme = await lazy.AddonManager.getAddonByID(
     "firefox-compact-light@mozilla.org"
   );
-  let profileUpdated = TestUtils.topicObserved("sps-profiles-updated");
   await lightTheme.enable();
-  await profileUpdated;
 
   let expectedThemeId = "default-theme@mozilla.org";
 
@@ -685,14 +661,7 @@ add_task(async function test_edit_profile_system_theme() {
 
         await editProfileCard.updateComplete;
 
-        let defaultThemeCard = editProfileCard.themesPicker.querySelector(
-          "moz-visual-picker-item[value='default-theme@mozilla.org']"
-        );
-
-        Assert.ok(
-          !defaultThemeCard.checked,
-          "Default theme chip should not be selected"
-        );
+        let defaultThemeCard = editProfileCard.themeCards[9];
         EventUtils.synthesizeMouseAtCenter(defaultThemeCard, {}, content);
 
         await ContentTaskUtils.waitForCondition(
@@ -739,9 +708,7 @@ add_task(async function test_edit_profile_system_theme() {
   lightTheme = await lazy.AddonManager.getAddonByID(
     "firefox-compact-light@mozilla.org"
   );
-  profileUpdated = TestUtils.topicObserved("sps-profiles-updated");
   await lightTheme.enable();
-  await profileUpdated;
 });
 
 add_task(async function test_edit_link_keyboard_accessibility() {

@@ -1321,7 +1321,7 @@ class SelectableProfileServiceClass extends EventEmitter {
    * @param {SelectableProfile} aSelectableProfile The SelectableProfile to be updated
    */
   async updateProfile(aSelectableProfile) {
-    let profileObj = aSelectableProfile.toDbObject();
+    let profileObj = await aSelectableProfile.toDbObject();
 
     await this.#connection.execute(
       `UPDATE Profiles

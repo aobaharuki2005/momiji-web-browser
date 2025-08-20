@@ -396,7 +396,7 @@ export class SelectableProfile {
    *
    * @returns {object} An object with only fields need for the database
    */
-  toDbObject() {
+  async toDbObject() {
     let profileObj = {
       id: this.id,
       path: this.#path,
