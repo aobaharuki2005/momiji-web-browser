@@ -11,10 +11,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.FloatingActionButtonElevation
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,9 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.theme.AcornTheme
+import androidx.compose.material3.FloatingActionButton as M3FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults as M3FloatingActionButtonDefaults
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -37,8 +38,9 @@ import mozilla.components.ui.icons.R as iconsR
  * @param modifier [Modifier] to be applied to the action button.
  * @param contentDescription The content description to describe the icon.
  * @param label Text to be displayed next to the icon.
- * @param elevation [FloatingActionButtonElevation] used to resolve the elevation for this FAB in different states.
- * This controls the size of the shadow below the FAB.
+ * @param colors The [FloatingActionButtonColors] used to color this FAB.
+ * @param elevation [FloatingActionButtonElevation] used to resolve the elevation for this FAB in
+ * different states. This controls the size of the shadow below the FAB.
  * @param onClick Invoked when the button is clicked.
  */
 @Composable
@@ -47,17 +49,15 @@ fun FloatingActionButton(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
     label: String? = null,
-    elevation: FloatingActionButtonElevation = FloatingActionButtonDefaults.elevation(
-        defaultElevation = 5.dp,
-        pressedElevation = 5.dp,
-    ),
+    colors: FloatingActionButtonColors = FloatingActionButtonDefaults.colorsPrimary(),
+    elevation: FloatingActionButtonElevation = M3FloatingActionButtonDefaults.elevation(),
     onClick: () -> Unit,
 ) {
-    FloatingActionButton(
+    M3FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = AcornTheme.colors.actionPrimary,
-        contentColor = AcornTheme.colors.textActionPrimary,
+        containerColor = colors.containerColor,
+        contentColor = colors.contentColor,
         elevation = elevation,
     ) {
         Row(
@@ -85,7 +85,7 @@ fun FloatingActionButton(
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun FloatingActionButtonPreview() {
     var label by remember { mutableStateOf<String?>("LABEL") }
@@ -95,6 +95,47 @@ private fun FloatingActionButtonPreview() {
             FloatingActionButton(
                 label = label,
                 icon = painterResource(iconsR.drawable.mozac_ic_plus_24),
+                onClick = {
+                    label = if (label == null) "LABEL" else null
+                },
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun SurfaceFloatingActionButtonPreview() {
+    var label by remember { mutableStateOf<String?>("LABEL") }
+
+    AcornTheme {
+        Box(Modifier.wrapContentSize()) {
+            FloatingActionButton(
+                label = label,
+                icon = painterResource(iconsR.drawable.mozac_ic_plus_24),
+                colors = FloatingActionButtonDefaults.colorsSurface(),
+                onClick = {
+                    label = if (label == null) "LABEL" else null
+                },
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun CustomFloatingActionButtonPreview() {
+    var label by remember { mutableStateOf<String?>("LABEL") }
+
+    AcornTheme {
+        Box(Modifier.wrapContentSize()) {
+            FloatingActionButton(
+                label = label,
+                icon = painterResource(iconsR.drawable.mozac_ic_plus_24),
+                colors = FloatingActionButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary,
+                ),
                 onClick = {
                     label = if (label == null) "LABEL" else null
                 },
