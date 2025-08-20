@@ -3,12 +3,30 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
+);
+const { ExtensionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ExtensionXPCShellUtils.sys.mjs"
+);
 const { IPProtectionService } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
 );
 const { UIState } = ChromeUtils.importESModule(
   "resource://services-sync/UIState.sys.mjs"
 );
+
+do_get_profile();
+
+AddonTestUtils.init(this);
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "1"
+);
+
+ExtensionTestUtils.init(this);
 
 /**
  * Tests that starting the service gets a started event.
@@ -86,6 +104,73 @@ add_task(async function test_IPProtectionService_stop() {
   );
 
   IPProtectionService.uninit();
+});
+
+/**
+ * Tests the add-on manager interaction
+ */
+add_task(async function test_IPProtectionService_addon() {
+  Services.prefs.setBoolPref("xpinstall.signatures.required", false);
+  Services.prefs.setBoolPref("extensions.install.requireBuiltInCerts", false);
+
+  await AddonTestUtils.promiseStartupManager();
+
+  Assert.ok(
+    Services.prefs.getBoolPref("browser.ipProtection.enabled"),
+    "IP-Protection is enabled"
+  );
+
+  IPProtectionService.addVPNAddonObserver();
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      manifest_version: 2,
+      name: "Test VPN",
+      version: "1.0",
+      applications: { gecko: { id: "vpn@mozilla.com" } },
+    },
+  });
+
+  await extension.startup();
+
+  Assert.ok(
+    !Services.prefs.getBoolPref("browser.ipProtection.enabled"),
+    "IP-Protection is disabled"
+  );
+  Services.prefs.setBoolPref("browser.ipProtection.enabled", true);
+  Assert.ok(
+    Services.prefs.getBoolPref("browser.ipProtection.enabled"),
+    "IP-Protection is re-enabled"
+  );
+
+  await extension.unload();
+
+  IPProtectionService.removeVPNAddonObserver();
+
+  const extension2 = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      manifest_version: 2,
+      name: "Test VPN",
+      version: "2.0",
+      applications: { gecko: { id: "vpn@mozilla.com" } },
+    },
+  });
+
+  await extension2.startup();
+
+  Assert.ok(
+    Services.prefs.getBoolPref("browser.ipProtection.enabled"),
+    "IP-Protection pref does not change without listener"
+  );
+
+  await extension2.unload();
+
+  await AddonTestUtils.promiseShutdownManager();
+
+  Services.prefs.clearUserPref("xpinstall.signatures.required");
+  Services.prefs.clearUserPref("extensions.install.requireBuiltInCerts");
 });
 
 /**

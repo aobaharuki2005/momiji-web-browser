@@ -7,6 +7,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   // eslint-disable-next-line mozilla/valid-lazy
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
   // eslint-disable-next-line mozilla/valid-lazy
@@ -20,6 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 import { SIGNIN_DATA } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 const ENABLED_PREF = "browser.ipProtection.enabled";
+const VPN_ADDON_ID = "vpn@mozilla.com";
 
 /**
  * A singleton service that manages proxy integration and backend functionality.
@@ -65,6 +67,7 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.updateSignInStatus();
     this.addSignInStateObserver();
+    this.addVPNAddonObserver();
 
     if (!this.#hasWidget) {
       lazy.IPProtection.init();
@@ -82,10 +85,9 @@ class IPProtectionServiceSingleton extends EventTarget {
       lazy.IPProtection.uninit();
     }
 
-    if (this.fxaObserver) {
-      Services.obs.removeObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
-      this.fxaObserver = null;
-    }
+    this.removeSignInStateObserver();
+    this.removeVPNAddonObserver();
+
     if (this.isActive) {
       this.stop(false);
     }
@@ -183,6 +185,40 @@ class IPProtectionServiceSingleton extends EventTarget {
     };
 
     Services.obs.addObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
+  }
+
+  /**
+   * Removes the FxA sign-in state observer
+   */
+  removeSignInStateObserver() {
+    if (this.fxaObserver) {
+      Services.obs.removeObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
+      this.fxaObserver = null;
+    }
+  }
+
+  /**
+   * Adds an observer to monitor the VPN add-on installation
+   */
+  addVPNAddonObserver() {
+    this.addonVPNListener = {
+      onInstallEnded(install, addon) {
+        if (addon.id === VPN_ADDON_ID) {
+          Services.prefs.setBoolPref(ENABLED_PREF, false);
+        }
+      },
+    };
+
+    lazy.AddonManager.addInstallListener(this.addonVPNListener);
+  }
+
+  /**
+   * Removes the VPN add-on installation observer
+   */
+  removeVPNAddonObserver() {
+    if (this.addonVPNListener) {
+      lazy.AddonManager.removeInstallListener(this.addonVPNListener);
+    }
   }
 
   /**
