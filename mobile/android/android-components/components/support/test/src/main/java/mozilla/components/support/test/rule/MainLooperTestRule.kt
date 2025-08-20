@@ -4,6 +4,7 @@
 
 package mozilla.components.support.test.rule
 
+import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
 import android.os.Looper.getMainLooper
@@ -83,7 +84,8 @@ import org.robolectric.shadows.ShadowLooper
  * time or a specific [TestDispatcher]), consider using [MainCoroutineRule] alongside or instead of this rule
  * if your primary concern is coroutine testing rather than direct Looper interactions.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class) // resetMain, setMain
+@SuppressLint("NoDispatchersSetMainInTests")
 class MainLooperTestRule : TestWatcher() {
 
     private val mainLooper = getMainLooper()

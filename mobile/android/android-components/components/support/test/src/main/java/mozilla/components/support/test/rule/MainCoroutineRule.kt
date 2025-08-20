@@ -4,6 +4,7 @@
 
 package mozilla.components.support.test.rule
 
+import android.annotation.SuppressLint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,6 +57,7 @@ import org.junit.runner.Description
  * For more control over the execution order,you can provide a [StandardTestDispatcher].
  */
 @OptIn(ExperimentalCoroutinesApi::class) // resetMain, setMain, UnconfinedTestDispatcher
+@SuppressLint("NoDispatchersSetMainInTests")
 class MainCoroutineRule(val testDispatcher: TestDispatcher = UnconfinedTestDispatcher()) : TestWatcher() {
     /**
      * Get a [TestScope] that integrates with `runTest` and can be passed as an argument
