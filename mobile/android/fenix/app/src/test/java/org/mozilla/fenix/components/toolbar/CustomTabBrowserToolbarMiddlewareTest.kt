@@ -15,9 +15,7 @@ import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
@@ -41,8 +39,7 @@ import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.components.support.test.rule.runTestOnMain
+import mozilla.components.support.test.rule.MainLooperTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -64,7 +61,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class CustomTabBrowserToolbarMiddlewareTest {
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
+    val mainLooperRule = MainLooperTestRule()
 
     private val customTabId = "test"
     private val customTab: CustomTabSessionState = mockk(relaxed = true) {
@@ -280,8 +277,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN the website is insecure WHEN the conection becomes secure THEN update appropriate security indicator`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `GIVEN the website is insecure WHEN the conection becomes secure THEN update appropriate security indicator`() = runTest {
         val customTab = createCustomTab(url = "URL", id = customTabId)
         val browserStore = BrowserStore(
             BrowserState(customTabs = listOf(customTab)),
@@ -298,14 +294,14 @@ class CustomTabBrowserToolbarMiddlewareTest {
             onClick = SiteInfoClicked,
         )
         val toolbarStore = buildStore(middleware)
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var toolbarPageActions = toolbarStore.state.displayState.pageActionsStart
         assertEquals(1, toolbarPageActions.size)
         var securityIndicator = toolbarPageActions[0]
         assertEquals(expectedInsecureIndicator, securityIndicator)
 
         browserStore.dispatch(UpdateSecurityInfoAction(customTabId, SecurityInfoState(true))).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         toolbarPageActions = toolbarStore.state.displayState.pageActionsStart
         assertEquals(1, toolbarPageActions.size)
         securityIndicator = toolbarPageActions[0]
@@ -313,8 +309,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `WHEN the website title changes THEN update the shown page origin`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `WHEN the website title changes THEN update the shown page origin`() = runTest {
         val customTab = createCustomTab(title = "Title", url = "URL", id = customTabId)
         val browserStore = BrowserStore(
             BrowserState(customTabs = listOf(customTab)),
@@ -328,19 +323,18 @@ class CustomTabBrowserToolbarMiddlewareTest {
         )
 
         val toolbarStore = buildStore(middleware)
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var pageOrigin = toolbarStore.state.displayState.pageOrigin
         assertEquals(expectedDetails, pageOrigin)
 
         browserStore.dispatch(UpdateTitleAction(customTabId, "UpdatedTitle")).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         pageOrigin = toolbarStore.state.displayState.pageOrigin
         assertEquals(expectedDetails.copy(title = "UpdatedTitle"), pageOrigin)
     }
 
     @Test
-    fun `GIVEN no title available WHEN the website url changes THEN update the shown page origin`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `GIVEN no title available WHEN the website url changes THEN update the shown page origin`() = runTest {
         val customTab = createCustomTab(url = "URL", id = customTabId)
         val browserStore = BrowserStore(
             BrowserState(customTabs = listOf(customTab)),
@@ -354,19 +348,18 @@ class CustomTabBrowserToolbarMiddlewareTest {
         )
 
         val toolbarStore = buildStore(middleware)
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var pageOrigin = toolbarStore.state.displayState.pageOrigin
         assertEquals(expectedDetails, pageOrigin)
 
         browserStore.dispatch(UpdateUrlAction(customTabId, "UpdatedURL")).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         pageOrigin = toolbarStore.state.displayState.pageOrigin
         assertEquals(expectedDetails.copy(url = "UpdatedURL"), pageOrigin)
     }
 
     @Test
-    fun `GIVEN a title previously available WHEN the website url changes THEN update the shown page origin`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `GIVEN a title previously available WHEN the website url changes THEN update the shown page origin`() = runTest {
         val customTab = createCustomTab(title = "Title", url = "URL", id = customTabId)
         val browserStore = BrowserStore(
             BrowserState(customTabs = listOf(customTab)),
@@ -380,12 +373,12 @@ class CustomTabBrowserToolbarMiddlewareTest {
         )
 
         val toolbarStore = buildStore(middleware)
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var pageOrigin = toolbarStore.state.displayState.pageOrigin
         assertEquals(expectedDetails, pageOrigin)
 
         browserStore.dispatch(UpdateUrlAction(customTabId, "UpdatedURL")).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         pageOrigin = toolbarStore.state.displayState.pageOrigin
         assertEquals(
             expectedDetails.copy(
@@ -398,7 +391,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN an url with an ip address for the domain WHEN showing displaying the page origin THEN correctly infer the ip address as the domain`() = runTestOnMain {
+    fun `GIVEN an url with an ip address for the domain WHEN showing displaying the page origin THEN correctly infer the ip address as the domain`() = runTest {
         val customTab = createCustomTab(title = "Title", url = "http://127.0.0.1/test", id = customTabId)
         val browserStore = BrowserStore(
             BrowserState(customTabs = listOf(customTab)),
@@ -412,7 +405,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         )
 
         val toolbarStore = buildStore(middleware)
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         val pageOrigin = toolbarStore.state.displayState.pageOrigin
         assertEquals(expectedPageOrigin, pageOrigin)
     }
@@ -459,8 +452,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN a bottom toolbar WHEN the loading progress changes THEN update the progress bar`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `GIVEN a bottom toolbar WHEN the loading progress changes THEN update the progress bar`() = runTest {
         every { settings.shouldUseBottomToolbar } returns true
         val customTab = createCustomTab(url = "test", id = customTabId)
         val browserStore = BrowserStore(
@@ -472,7 +464,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
 
         browserStore.dispatch(UpdateProgressAction(customTabId, 50)).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals(
             ProgressBarConfig(
                 progress = 50,
@@ -482,7 +474,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         )
 
         browserStore.dispatch(UpdateProgressAction(customTabId, 80)).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals(
             ProgressBarConfig(
                 progress = 80,
@@ -493,8 +485,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN a top toolbar WHEN the loading progress changes THEN update the progress bar`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `GIVEN a top toolbar WHEN the loading progress changes THEN update the progress bar`() = runTest {
         every { settings.shouldUseBottomToolbar } returns false
         val customTab = createCustomTab(url = "test", id = customTabId)
         val browserStore = BrowserStore(
@@ -506,7 +497,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
 
         browserStore.dispatch(UpdateProgressAction(customTabId, 22)).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals(
             ProgressBarConfig(
                 progress = 22,
@@ -516,7 +507,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         )
 
         browserStore.dispatch(UpdateProgressAction(customTabId, 67)).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals(
             ProgressBarConfig(
                 progress = 67,

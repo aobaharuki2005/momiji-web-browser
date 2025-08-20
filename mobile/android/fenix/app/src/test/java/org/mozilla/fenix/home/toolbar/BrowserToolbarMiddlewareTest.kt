@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.toolbar
 
 import android.content.Context
-import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -16,10 +15,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.android.asCoroutineDispatcher
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.SearchAction.ApplicationSearchEnginesLoaded
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TabListAction.RemoveTabAction
@@ -53,8 +49,7 @@ import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.components.support.test.rule.runTestOnMain
+import mozilla.components.support.test.rule.MainLooperTestRule
 import mozilla.components.support.utils.ClipboardHandler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -103,7 +98,7 @@ import mozilla.components.ui.icons.R as iconsR
 @RunWith(AndroidJUnit4::class)
 class BrowserToolbarMiddlewareTest {
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
+    val mainLooperRule = MainLooperTestRule()
 
     private val appState: AppState = mockk(relaxed = true) {
         every { orientation } returns Portrait
@@ -116,14 +111,14 @@ class BrowserToolbarMiddlewareTest {
     private val browsingModeManager = SimpleBrowsingModeManager(Normal)
 
     @Before
-    fun setup() = runTestOnMain {
+    fun setup() = runTest {
         every { testContext.settings().shouldUseExpandedToolbar } returns false
         every { testContext.settings().isTabStripEnabled } returns false
         every { testContext.settings().tabManagerEnhancementsEnabled } returns false
     }
 
     @Test
-    fun `WHEN initializing the toolbar THEN add browser end actions`() = runTestOnMain {
+    fun `WHEN initializing the toolbar THEN add browser end actions`() = runTest {
         val middleware = BrowserToolbarMiddleware(
             appStore,
             browserStore,
@@ -142,7 +137,7 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `WHEN initializing the toolbar AND should use expanded toolbar THEN add browser end actions`() = runTestOnMain {
+    fun `WHEN initializing the toolbar AND should use expanded toolbar THEN add browser end actions`() = runTest {
         every { testContext.settings().shouldUseExpandedToolbar } returns true
         mockkStatic(Context::isTallWindow) {
             every { any<Context>().isTallWindow() } returns true
@@ -156,7 +151,7 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `WHEN initializing the navigation bar AND should use expanded toolbar THEN add navigation bar actions`() = runTestOnMain {
+    fun `WHEN initializing the navigation bar AND should use expanded toolbar THEN add navigation bar actions`() = runTest {
         every { testContext.settings().shouldUseExpandedToolbar } returns true
         mockkStatic(Context::isTallWindow) {
             every { any<Context>().isTallWindow() } returns true
@@ -183,7 +178,7 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `WHEN initializing the navigation bar AND should use expanded toolbar AND orientation is landscape THEN add no navigation bar actions`() = runTestOnMain {
+    fun `WHEN initializing the navigation bar AND should use expanded toolbar AND orientation is landscape THEN add no navigation bar actions`() = runTest {
         every { testContext.settings().shouldUseExpandedToolbar } returns true
         every { appState.orientation } returns Landscape
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
@@ -195,7 +190,7 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN normal browsing mode WHEN initializing the toolbar THEN show the number of normal tabs in the tabs counter button`() = runTestOnMain {
+    fun `GIVEN normal browsing mode WHEN initializing the toolbar THEN show the number of normal tabs in the tabs counter button`() = runTest {
         val browsingModeManager = SimpleBrowsingModeManager(Normal)
         val browserStore = BrowserStore(
             initialState = BrowserState(
@@ -215,7 +210,7 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN private browsing mode WHEN initializing the toolbar THEN show the number of private tabs in the tabs counter button`() = runTestOnMain {
+    fun `GIVEN private browsing mode WHEN initializing the toolbar THEN show the number of private tabs in the tabs counter button`() = runTest {
         val browsingModeManager = SimpleBrowsingModeManager(Private)
         val browserStore = BrowserStore(
             initialState = BrowserState(
@@ -269,8 +264,7 @@ class BrowserToolbarMiddlewareTest {
     // Testing updated configuration
 
     @Test
-    fun `GIVEN in portrait WHEN changing to landscape THEN show browser end actions`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `GIVEN in portrait WHEN changing to landscape THEN show browser end actions`() = runTest {
         val appStore = AppStore(
             initialState = AppState(
                 orientation = Portrait,
@@ -278,12 +272,12 @@ class BrowserToolbarMiddlewareTest {
         )
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
         val toolbarStore = buildStore(middleware)
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
 
         appStore.dispatch(AppAction.OrientationChange(Landscape)).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
@@ -294,8 +288,7 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN in landscape WHEN changing to portrait THEN show all browser end actions`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `GIVEN in landscape WHEN changing to portrait THEN show all browser end actions`() = runTest {
         val appStore = AppStore(
             initialState = AppState(
                 orientation = Landscape,
@@ -304,7 +297,7 @@ class BrowserToolbarMiddlewareTest {
 
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
         val toolbarStore = buildStore(middleware)
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
         val tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
@@ -313,15 +306,14 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(expectedMenuButton(), menuButton)
 
         appStore.dispatch(AppAction.OrientationChange(Portrait)).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
     }
 
     @Test
-    fun `GIVEN in normal browsing WHEN the number of normal opened tabs is modified THEN update the tab counter`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `GIVEN in normal browsing WHEN the number of normal opened tabs is modified THEN update the tab counter`() = runTest {
         val browsingModeManager = SimpleBrowsingModeManager(Normal)
         val browserStore = BrowserStore()
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
@@ -329,7 +321,7 @@ class BrowserToolbarMiddlewareTest {
             middleware = middleware,
             browsingModeManager = browsingModeManager,
         )
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
         var tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
@@ -339,7 +331,7 @@ class BrowserToolbarMiddlewareTest {
         val newPrivateTab = createTab("test.com", private = true)
         browserStore.dispatch(AddTabAction(newNormalTab)).joinBlocking()
         browserStore.dispatch(AddTabAction(newPrivateTab)).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
@@ -348,8 +340,7 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN in private browsing WHEN the number of private opened tabs is modified THEN update the tab counter`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
+    fun `GIVEN in private browsing WHEN the number of private opened tabs is modified THEN update the tab counter`() = runTest {
         val browsingModeManager = SimpleBrowsingModeManager(Private)
         val initialNormalTab = createTab("test.com", private = false)
         val initialPrivateTab = createTab("test.com", private = true)
@@ -363,14 +354,14 @@ class BrowserToolbarMiddlewareTest {
             middleware = middleware,
             browsingModeManager = browsingModeManager,
         )
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
         var tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
         assertEqualsToolbarButton(expectedToolbarButton(1, true), tabCounterButton)
 
         browserStore.dispatch(RemoveTabAction(initialPrivateTab.id)).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
@@ -575,7 +566,6 @@ class BrowserToolbarMiddlewareTest {
     @Test
     fun `WHEN the selected search engine changes THEN update the search selector`() {
         val appStore = AppStore()
-        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
 
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
         val toolbarStore = buildStore(middleware)
@@ -592,8 +582,6 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN a search engine is already selected WHEN the search engine configuration changes THEN don't change the selected search engine`() {
-        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
-
         val selectedSearchEngine = SearchEngine("test", "Test", mock(), type = APPLICATION)
         val otherSearchEngine = SearchEngine("other", "Other", mock(), type = APPLICATION)
         val appStore = AppStore(
