@@ -4005,7 +4005,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
 
   // --
 
-  void TexParams_SetClampNoMips(GLenum target = LOCAL_GL_TEXTURE_2D) {
+  void TexParams_SetClampNoMips(GLenum target) {
     fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
     fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
     fTexParameteri(target, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
