@@ -1656,18 +1656,15 @@ class AsyncPanZoomController {
   void StartOverscrollAnimation(const ParentLayerPoint& aVelocity,
                                 SideBits aOverscrollSideBits);
 
-  // Start a smooth-scrolling animation to the given destination, with physics
-  // based on the prefs for the indicated origin.
+  // Start a smooth-scrolling animation to the given destination.
+  // |aAnimationKind| must be |Smooth| or |SmoothMsd|
+  // |aOrigin| is only used with |Smooth| (for |SmoothMsd|,
+  // |ScrollOrigin::NotSpecified| may be passed).
   void SmoothScrollTo(CSSSnapDestination&& aDestination,
                       ScrollTriggeredByScript aTriggeredByScript,
-                      const ScrollOrigin& aOrigin);
+                      ScrollAnimationKind aAnimationKind, ScrollOrigin aOrigin);
 
   ParentLayerPoint ConvertDestinationToDelta(CSSPoint& aDestination) const;
-
-  // Start a smooth-scrolling animation to the given destination, with MSD
-  // physics that is suited for scroll-snapping.
-  void SmoothMsdScrollTo(CSSSnapDestination&& aDestination,
-                         ScrollTriggeredByScript aTriggeredByScript);
 
   // Returns whether overscroll is allowed during an event.
   bool AllowScrollHandoffInCurrentBlock() const;

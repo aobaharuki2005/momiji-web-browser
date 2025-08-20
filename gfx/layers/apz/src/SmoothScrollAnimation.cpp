@@ -21,18 +21,12 @@ namespace layers {
 
 /*static*/
 already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::Create(
-    AsyncPanZoomController& aApzc, ScrollOrigin aOrigin) {
+    AsyncPanZoomController& aApzc, ScrollAnimationKind aKind,
+    ScrollOrigin aOrigin) {
+  MOZ_ASSERT(aKind == ScrollAnimationKind::Smooth ||
+             aKind == ScrollAnimationKind::SmoothMsd);
   RefPtr<SmoothScrollAnimation> result =
-      new SmoothScrollAnimation(ScrollAnimationKind::Smooth, aApzc, aOrigin);
-  return result.forget();
-}
-/*static*/
-already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::CreateMsd(
-    AsyncPanZoomController& aApzc) {
-  // Note: the ScrollOrigin is not used for SmoothMsd animations, hence it's
-  // fine to use NotSpecified.
-  RefPtr<SmoothScrollAnimation> result = new SmoothScrollAnimation(
-      ScrollAnimationKind::SmoothMsd, aApzc, ScrollOrigin::NotSpecified);
+      new SmoothScrollAnimation(aKind, aApzc, aOrigin);
   return result.forget();
 }
 
@@ -105,6 +99,18 @@ SmoothScrollAnimation::SmoothScrollAnimation(ScrollAnimationKind aKind,
         mFinalDestination,
         apz::ComputeBezierAnimationSettingsForOrigin(aOrigin));
   }
+}
+
+bool SmoothScrollAnimation::CanExtend(ScrollOrigin aOrigin) const {
+  MOZ_ASSERT(mKind == ScrollAnimationKind::Smooth ||
+             mKind == ScrollAnimationKind::SmoothMsd);
+  if (mKind == ScrollAnimationKind::SmoothMsd) {
+    // We do not track the origin of SmoothMsd animations, so
+    // always allow extending.
+    return true;
+  }
+  // Otherwise, the origin must match.
+  return aOrigin == mOrigin;
 }
 
 SmoothScrollAnimation* SmoothScrollAnimation::AsSmoothScrollAnimation() {
