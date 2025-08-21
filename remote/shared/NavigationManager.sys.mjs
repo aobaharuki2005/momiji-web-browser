@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -18,24 +17,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/listeners/PromptListener.sys.mjs",
   registerWebDriverDocumentInsertedActor:
     "chrome://remote/content/shared/js-process-actors/WebDriverDocumentInsertedActor.sys.mjs",
-  registerWebProgressListenerActor:
-    "chrome://remote/content/shared/js-window-actors/WebProgressListenerActor.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   truncate: "chrome://remote/content/shared/Format.sys.mjs",
-  unregisterWebProgressListenerActor:
-    "chrome://remote/content/shared/js-window-actors/WebProgressListenerActor.sys.mjs",
   unregisterWebDriverDocumentInsertedActor:
     "chrome://remote/content/shared/js-process-actors/WebDriverDocumentInsertedActor.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "useParentWebProgressListener",
-  "remote.parent-navigation.enabled",
-  false
-);
 
 /**
  * @typedef {object} BrowsingContextDetails
@@ -72,12 +60,6 @@ export const NavigationState = {
  * The NavigationRegistry is responsible for monitoring all navigations happening
  * in the browser.
  *
- * It relies on a JSWindowActor pair called WebProgressListener{Parent|Child},
- * found under remote/shared/js-window-actors. As a simple overview, the
- * WebProgressListenerChild will monitor navigations in all window globals using
- * content process WebProgressListener, and will forward each relevant update to
- * the WebProgressListenerParent
- *
  * The NavigationRegistry singleton holds the map of navigations, from navigable
  * to NavigationInfo. It will also be called by WebProgressListenerParent
  * whenever a navigation event happens.
@@ -97,8 +79,8 @@ class NavigationRegistry extends EventEmitter {
   #contextListener;
   #managers;
   #navigations;
-  #parentWebProgressListener;
   #promptListener;
+  #webProgressListener;
 
   constructor() {
     super();
@@ -109,9 +91,7 @@ class NavigationRegistry extends EventEmitter {
     // Maps navigable id to NavigationInfo.
     this.#navigations = new Map();
 
-    if (lazy.useParentWebProgressListener) {
-      this.#parentWebProgressListener = new lazy.ParentWebProgressListener();
-    }
+    this.#webProgressListener = new lazy.ParentWebProgressListener();
 
     this.#contextListener = new lazy.BrowsingContextListener();
     this.#contextListener.on("attached", this.#onContextAttached);
@@ -146,19 +126,14 @@ class NavigationRegistry extends EventEmitter {
   }
 
   /**
-   * Start monitoring navigations in all browsing contexts. This will register
-   * the WebProgressListener JSWindowActor and will initialize them in all
-   * existing browsing contexts.
+   * Start monitoring navigations in all browsing contexts.
    */
   startMonitoring(listener) {
     if (this.#managers.size == 0) {
-      if (lazy.useParentWebProgressListener) {
-        this.#parentWebProgressListener.startListening();
-      } else {
-        lazy.registerWebProgressListenerActor();
-      }
       lazy.registerWebDriverDocumentInsertedActor();
+
       this.#contextListener.startListening();
+      this.#webProgressListener.startListening();
       this.#promptListener.startListening();
     }
 
@@ -166,8 +141,8 @@ class NavigationRegistry extends EventEmitter {
   }
 
   /**
-   * Stop monitoring navigations. This will unregister the WebProgressListener
-   * JSWindowActor and clear the information collected about navigations so far.
+   * Stop monitoring navigations. This will clear the information collected
+   * about navigations so far.
    */
   stopMonitoring(listener) {
     if (!this.#managers.has(listener)) {
@@ -177,22 +152,17 @@ class NavigationRegistry extends EventEmitter {
     this.#managers.delete(listener);
     if (this.#managers.size == 0) {
       this.#contextListener.stopListening();
+      this.#webProgressListener.stopListening();
       this.#promptListener.stopListening();
-      if (lazy.useParentWebProgressListener) {
-        this.#parentWebProgressListener.stopListening();
-      } else {
-        lazy.unregisterWebProgressListenerActor();
-      }
+
       lazy.unregisterWebDriverDocumentInsertedActor();
+
       // Clear the map.
       this.#navigations = new Map();
     }
   }
 
   /**
-   * Called when a fragment navigation is recorded from the
-   * WebProgressListener actors.
-   *
    * This entry point is only intended to be called from
    * WebProgressListenerParent, to avoid setting up observers or listeners,
    * which are unnecessary since NavigationManager has to be a singleton.
@@ -830,7 +800,7 @@ export function registerNavigationId(data) {
  * The NavigationManager exposes the NavigationRegistry data via a class which
  * needs to be individually instantiated by each consumer. This allow to track
  * how many consumers need navigation data at any point so that the
- * NavigationRegistry can register or unregister the underlying JSWindowActors
+ * NavigationRegistry can register or unregister the underlying listeners/actors
  * correctly.
  *
  * @fires navigation-started
