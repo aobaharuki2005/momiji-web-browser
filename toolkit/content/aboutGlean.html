@@ -128,6 +128,33 @@
           </li>
         </ul>
       </div>
+      <div id="metrics-table" class="tab" hidden="true">
+        <h2 data-l10n-id="about-glean-metrics-table-header"></h2>
+        <div id="metrics-table-controls">
+          <div class="input">
+            <label for="filter-metrics" data-l10n-id="about-glean-label-for-filter-metrics"></label>
+            <input type="text" name="filter-metrics" id="filter-metrics" pattern="[a-zA-Z0-9\-]*">
+            <small data-l10n-id="about-glean-description-for-filter-metrics"></small>
+          </div>
+          <button name="load-all" id="load-all" data-l10n-id="about-glean-button-load-all"></button>
+        </div>
+        <hr>
+        <div id="metrics-table-instance" hidden="true">
+          <table>
+            <thead>
+              <tr>
+                <th data-d3-cell="actions" data-l10n-id="about-glean-metrics-table-header-actions"></th>
+                <th data-d3-cell="category" data-l10n-id="about-glean-metrics-table-header-category"></th>
+                <th data-d3-cell="name" data-l10n-id="about-glean-metrics-table-header-name"></th>
+                <th data-d3-cell="type" data-l10n-id="about-glean-metrics-table-header-type"></th>
+                <th data-d3-cell="value" data-l10n-id="about-glean-metrics-table-header-value"></th>
+              </tr>
+            </thead>
+            <tbody id="metrics-table-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
     <moz-message-bar type="success" id="feedback" data-l10n-id="about-glean-feedback-settings-only"></moz-message-bar>
   </body>
