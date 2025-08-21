@@ -3,6 +3,10 @@ support-files = [
   "head.js",
 ]
 
+prefs = [
+  "dom.security.https_first=false",
+]
+
 ["browser_IPPChannelFilter.js"]
 
 ["browser_IPProtectionService.js"]
@@ -29,3 +33,5 @@ support-files = [
 skip-if = ["devedition"]
 
 ["browser_ipprotection_upgrade.js"]
+
+["browser_ipprotection_usage.js"]
