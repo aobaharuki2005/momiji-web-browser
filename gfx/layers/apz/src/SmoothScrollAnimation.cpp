@@ -10,6 +10,7 @@
 #include "ScrollAnimationMSDPhysics.h"
 #include "ScrollPositionUpdate.h"
 #include "Units.h"
+#include "mozilla/RelativeTo.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "nsLayoutUtils.h"
 
@@ -22,11 +23,11 @@ namespace layers {
 /*static*/
 already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::Create(
     AsyncPanZoomController& aApzc, ScrollAnimationKind aKind,
-    ScrollOrigin aOrigin) {
+    ViewportType aViewportToScroll, ScrollOrigin aOrigin) {
   MOZ_ASSERT(aKind == ScrollAnimationKind::Smooth ||
              aKind == ScrollAnimationKind::SmoothMsd);
   RefPtr<SmoothScrollAnimation> result =
-      new SmoothScrollAnimation(aKind, aApzc, aOrigin);
+      new SmoothScrollAnimation(aKind, aApzc, aViewportToScroll, aOrigin);
   return result.forget();
 }
 
@@ -34,8 +35,8 @@ already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::Create(
 already_AddRefed<SmoothScrollAnimation>
 SmoothScrollAnimation::CreateForKeyboard(AsyncPanZoomController& aApzc,
                                          ScrollOrigin aOrigin) {
-  RefPtr<SmoothScrollAnimation> result =
-      new SmoothScrollAnimation(ScrollAnimationKind::Keyboard, aApzc, aOrigin);
+  RefPtr<SmoothScrollAnimation> result = new SmoothScrollAnimation(
+      ScrollAnimationKind::Keyboard, aApzc, ViewportType::Visual, aOrigin);
   return result.forget();
 }
 
@@ -58,7 +59,8 @@ already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::CreateForWheel(
     AsyncPanZoomController& aApzc,
     ScrollWheelInput::ScrollDeltaType aDeltaType) {
   RefPtr<SmoothScrollAnimation> result = new SmoothScrollAnimation(
-      ScrollAnimationKind::Wheel, aApzc, OriginForDeltaType(aDeltaType));
+      ScrollAnimationKind::Wheel, aApzc, ViewportType::Visual,
+      OriginForDeltaType(aDeltaType));
   MOZ_ASSERT(nsLayoutUtils::IsSmoothScrollingEnabled(),
              "We shouldn't be creating a WheelScrollAnimation if smooth "
              "scrolling is disabled");
@@ -69,11 +71,13 @@ already_AddRefed<SmoothScrollAnimation> SmoothScrollAnimation::CreateForWheel(
 
 SmoothScrollAnimation::SmoothScrollAnimation(ScrollAnimationKind aKind,
                                              AsyncPanZoomController& aApzc,
+                                             ViewportType aViewportToScroll,
                                              ScrollOrigin aOrigin)
     : mKind(aKind),
+      mViewportToScroll(aViewportToScroll),
       mApzc(aApzc),
       mFinalDestination(
-          CSSPoint::ToAppUnits(aApzc.Metrics().GetVisualScrollOffset())),
+          CSSPoint::ToAppUnits(GetViewportOffset(aApzc.Metrics()))),
       mOrigin(aOrigin),
       mTriggeredByScript(ScrollTriggeredByScript::No) {
   // ScrollAnimationBezierPhysics (despite its name) handles the case of
@@ -171,6 +175,13 @@ void SmoothScrollAnimation::Update(TimeStamp aTime,
   mAnimationPhysics->Update(aTime, mFinalDestination, aCurrentVelocity);
 }
 
+CSSPoint SmoothScrollAnimation::GetViewportOffset(
+    const FrameMetrics& aMetrics) const {
+  return mViewportToScroll == ViewportType::Visual
+             ? aMetrics.GetVisualScrollOffset()
+             : aMetrics.GetLayoutScrollOffset();
+}
+
 bool SmoothScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
                                      const TimeDuration& aDelta) {
   TimeStamp now = mApzc.GetFrameTime().Time();
@@ -184,14 +195,13 @@ bool SmoothScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
   // function as normal.
   bool finished = mAnimationPhysics->IsFinished(now);
   nsPoint sampledDest = mAnimationPhysics->PositionAt(now);
-  ParentLayerPoint displacement = (CSSPoint::FromAppUnits(sampledDest) -
-                                   aFrameMetrics.GetVisualScrollOffset()) *
-                                  zoom;
+  const CSSPoint cssDisplacement =
+      CSSPoint::FromAppUnits(sampledDest) - GetViewportOffset(aFrameMetrics);
 
   if (finished) {
     mApzc.mX.SetVelocity(0);
     mApzc.mY.SetVelocity(0);
-  } else if (!IsZero(displacement / zoom)) {
+  } else if (!IsZero(cssDisplacement)) {
     // Convert velocity from AppUnits/Seconds to ParentLayerCoords/Milliseconds
     nsSize velocity = mAnimationPhysics->VelocityAt(now);
     ParentLayerPoint velocityPL =
@@ -199,37 +209,54 @@ bool SmoothScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
     mApzc.mX.SetVelocity(velocityPL.x / 1000.0);
     mApzc.mY.SetVelocity(velocityPL.y / 1000.0);
   }
-  // Note: we ignore overscroll for generic animations.
-  ParentLayerPoint adjustedOffset, overscroll;
-  mApzc.mX.AdjustDisplacement(
-      displacement.x, adjustedOffset.x, overscroll.x,
-      mDirectionForcedToOverscroll == Some(ScrollDirection::eHorizontal));
-  mApzc.mY.AdjustDisplacement(
-      displacement.y, adjustedOffset.y, overscroll.y,
-      mDirectionForcedToOverscroll == Some(ScrollDirection::eVertical));
-  // If we expected to scroll, but there's no more scroll range on either axis,
-  // then end the animation early. Note that the initial displacement could be 0
-  // if the compositor ran very quickly (<1ms) after the animation was created.
-  // When that happens we want to make sure the animation continues.
-  SSA_LOG(
-      "Sampling SmoothScrollAnimation: time %f finished %d sampledDest %s "
-      "adjustedOffset %s overscroll %s",
-      (now - TimeStamp::ProcessCreation()).ToMilliseconds(), finished,
-      ToString(CSSPoint::FromAppUnits(sampledDest)).c_str(),
-      ToString(adjustedOffset).c_str(), ToString(overscroll).c_str());
-  if (!IsZero(displacement / zoom) && IsZero(adjustedOffset / zoom)) {
-    // Nothing more to do - end the animation.
-    finished = true;
+  if (mViewportToScroll == ViewportType::Visual) {
+    // Note: we ignore overscroll for generic animations.
+    const ParentLayerPoint displacement = cssDisplacement * zoom;
+    ParentLayerPoint adjustedOffset, overscroll;
+    mApzc.mX.AdjustDisplacement(
+        displacement.x, adjustedOffset.x, overscroll.x,
+        mDirectionForcedToOverscroll == Some(ScrollDirection::eHorizontal));
+    mApzc.mY.AdjustDisplacement(
+        displacement.y, adjustedOffset.y, overscroll.y,
+        mDirectionForcedToOverscroll == Some(ScrollDirection::eVertical));
+    // If we expected to scroll, but there's no more scroll range on either
+    // axis, then end the animation early. Note that the initial displacement
+    // could be 0 if the compositor ran very quickly (<1ms) after the animation
+    // was created. When that happens we want to make sure the animation
+    // continues.
+    SSA_LOG(
+        "Sampling SmoothScrollAnimation: time %f finished %d sampledDest %s "
+        "adjustedOffset %s overscroll %s",
+        (now - TimeStamp::ProcessCreation()).ToMilliseconds(), finished,
+        ToString(CSSPoint::FromAppUnits(sampledDest)).c_str(),
+        ToString(adjustedOffset).c_str(), ToString(overscroll).c_str());
+    if (!IsZero(cssDisplacement) && IsZero(adjustedOffset / zoom)) {
+      // Nothing more to do - end the animation.
+      finished = true;
+    } else {
+      mApzc.ScrollBy(adjustedOffset / zoom);
+    }
   } else {
-    mApzc.ScrollBy(adjustedOffset / zoom);
+    // Use a slightly simplified implementation for ViewportType::Layout.
+    // For example, we don't need to handle mDirectionForcedToOverscroll in this
+    // case.
+    MOZ_ASSERT(mDirectionForcedToOverscroll.isNothing());
+    MOZ_ASSERT(!mApzc.IsPhysicallyOverscrolled());
+    CSSPoint offsetBefore = GetViewportOffset(aFrameMetrics);
+    mApzc.ScrollByAndClamp(mViewportToScroll, cssDisplacement);
+    CSSPoint offsetAfter = GetViewportOffset(aFrameMetrics);
+    CSSPoint amountScrolled = offsetAfter - offsetBefore;
+    if (!IsZero(cssDisplacement) && IsZero(amountScrolled)) {
+      finished = true;
+    }
   }
   if (finished && mKind == ScrollAnimationKind::SmoothMsd) {
     // Set the scroll offset to the exact destination. If we allow the scroll
     // offset to end up being a bit off from the destination, we can get
     // artefacts like "scroll to the next snap point in this direction"
     // scrolling to the snap point we're already supposed to be at.
-    mApzc.ClampAndSetVisualScrollOffset(
-        CSSPoint::FromAppUnits(mFinalDestination));
+    mApzc.ScrollToAndClamp(mViewportToScroll,
+                           CSSPoint::FromAppUnits(mFinalDestination));
   }
   return !finished;
 }

@@ -4215,7 +4215,7 @@ void AsyncPanZoomController::SmoothScrollTo(
   SetState(SMOOTH_SCROLL);
 
   RefPtr<SmoothScrollAnimation> animation =
-      SmoothScrollAnimation::Create(*this, aAnimationKind, aOrigin);
+      SmoothScrollAnimation::Create(*this, aAnimationKind, ViewportType::Visual, aOrigin);
   animation->UpdateDestinationAndSnapTargets(
       GetFrameTime().Time(), destination, velocity,
       std::move(aDestination.mTargetIds), aTriggeredByScript);
