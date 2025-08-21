@@ -175,7 +175,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     win.openWebLinkIn(LINKS.PRODUCT_URL + "#pricing", "tab");
     // Close the panel
     this.dispatchEvent(
-      new CustomEvent("IPProtection:Close", { bubbles: true })
+      new CustomEvent("IPProtection:ClickUpgrade", { bubbles: true })
     );
 
     Glean.ipprotection.clickUpgradeButton.record();

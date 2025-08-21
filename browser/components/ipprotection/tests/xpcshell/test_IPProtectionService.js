@@ -16,6 +16,14 @@ const { UIState } = ChromeUtils.importESModule(
   "resource://services-sync/UIState.sys.mjs"
 );
 
+ChromeUtils.defineLazyGetter(this, "fxAccounts", () => {
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
+  ).getFxAccountsSingleton();
+});
+
+const VPN_ID = "e6eb0d1e856335fc";
+
 do_get_profile();
 
 AddonTestUtils.init(this);
@@ -246,5 +254,108 @@ add_task(
 
     IPProtectionService.uninit();
     sandbox.restore();
+  }
+);
+
+/**
+ * Tests that updateHasUpgradedStatus returns true if a linked VPN is found
+ * and sends an event.
+ */
+add_task(
+  async function test_IPProtectionService_updateHasUpgradedStatus_has_vpn_linked() {
+    const sandbox = sinon.createSandbox();
+    sandbox
+      .stub(fxAccounts, "getSignedInUser")
+      .returns({ email: "foo@example.com" });
+    sandbox.stub(fxAccounts, "listAttachedOAuthClients").resolves([
+      {
+        id: VPN_ID,
+        lastAccessedDaysAgo: 2,
+      },
+    ]);
+
+    let hasUpgradedEventPromise = waitForEvent(
+      IPProtectionService,
+      "IPProtectionService:UpdateHasUpgraded"
+    );
+
+    IPProtectionService.updateHasUpgradedStatus();
+
+    await hasUpgradedEventPromise;
+
+    Assert.ok(IPProtectionService.hasUpgraded, "hasUpgraded should be true");
+
+    sandbox.restore();
+  }
+);
+
+/**
+ * Tests that updateHasUpgradedStatus returns false if no linked VPN is found and
+ * sends an event.
+ */
+add_task(
+  async function test_IPProtectionService_updateHasUpgradedStatus_no_vpn_linked() {
+    const sandbox = sinon.createSandbox();
+    sandbox
+      .stub(fxAccounts, "getSignedInUser")
+      .returns({ email: "foo@example.com" });
+    sandbox.stub(fxAccounts, "listAttachedOAuthClients").resolves([]);
+
+    let hasUpgradedEventPromise = waitForEvent(
+      IPProtectionService,
+      "IPProtectionService:UpdateHasUpgraded"
+    );
+
+    IPProtectionService.updateHasUpgradedStatus();
+
+    await hasUpgradedEventPromise;
+
+    Assert.ok(!IPProtectionService.hasUpgraded, "hasUpgraded should be false");
+
+    sandbox.restore();
+  }
+);
+
+/**
+ * Tests that updateHasUpgradedStatus returns false when signed out and sends
+ * an event.
+ */
+add_task(
+  async function test_IPProtectionService_updateHasUpgradedStatus_signed_out() {
+    IPProtectionService.init();
+
+    let sandbox = sinon.createSandbox();
+    sandbox.stub(UIState, "get").returns({
+      status: UIState.STATUS_NOT_CONFIGURED,
+    });
+    sandbox
+      .stub(IPProtectionService.guardian, "isLinkedToGuardian")
+      .returns(true);
+
+    IPProtectionService.isSignedIn = true;
+    // Start with hasUpgraded is true
+    IPProtectionService.hasUpgraded = true;
+
+    let signedOutEventPromise = waitForEvent(
+      IPProtectionService,
+      "IPProtectionService:SignedOut"
+    );
+    let hasUpgradedEventPromise = waitForEvent(
+      IPProtectionService,
+      "IPProtectionService:UpdateHasUpgraded"
+    );
+
+    IPProtectionService.updateSignInStatus();
+
+    await signedOutEventPromise;
+    await hasUpgradedEventPromise;
+
+    Assert.ok(
+      !IPProtectionService.hasUpgraded,
+      "hasUpgraded should be false in after signing out"
+    );
+
+    sandbox.restore();
+    IPProtectionService.uninit();
   }
 );
