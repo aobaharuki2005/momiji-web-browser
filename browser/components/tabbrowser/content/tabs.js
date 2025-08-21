@@ -2804,8 +2804,12 @@
         this.#checkWithinPinnedContainerBounds({
           firstMovingTabScreen,
           lastMovingTabScreen,
-          pinnedTabsStartEdge: startBound,
-          pinnedTabsEndEdge: this.arrowScrollbox[screenAxis],
+          pinnedTabsStartEdge: this.#rtlMode
+            ? endEdge(this.arrowScrollbox)
+            : this[screenAxis],
+          pinnedTabsEndEdge: this.#rtlMode
+            ? endEdge(this)
+            : this.arrowScrollbox[screenAxis],
           translate,
           draggedTab,
         });
