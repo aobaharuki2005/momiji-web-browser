@@ -806,7 +806,9 @@ class MainMenuTestCompose : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            verifyPageContent(genericURL.content)
         }.openThreeDotMenu(composeTestRule) {
+            verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
         }.clickDiscoverMoreExtensionsButton(composeTestRule) {
             verifyUrl("addons.mozilla.org/en-US/android")
