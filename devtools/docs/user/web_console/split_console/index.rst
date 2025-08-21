@@ -24,3 +24,9 @@ When you use the split console with the debugger, the console's scope is the cur
 
 .. image:: split-console-show-debug.png
   :class: center
+
+Note that you also can disable the split console altogether, open settings in the :ref:`Toolbar <tools-toolbox-toolbar>` menu, and uncheck Enable Split Console under Web Console
+
+.. image:: split-console-disable-feature.png
+  :alt: Screenshot showing the settings item of the Toolbar menu and the Enable Split Console checkbox in the settings
+  :class: center
