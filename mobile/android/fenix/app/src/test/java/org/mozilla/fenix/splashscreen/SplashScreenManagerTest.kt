@@ -5,11 +5,9 @@ package org.mozilla.fenix.splashscreen
 
 import androidx.core.splashscreen.SplashScreen
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -17,11 +15,8 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SplashScreenManagerTest {
 
-    @get:Rule
-    val mainCoroutineRule = MainCoroutineRule()
-
     @Test
-    fun `WHEN a user has already seen the splash screen THEN do not show splash screen`() {
+    fun `WHEN a user has already seen the splash screen THEN do not show splash screen`() = runTest {
         val storage = object : SplashScreenStorage {
             override var isFirstSplashScreenShown = true
         }
@@ -38,7 +33,7 @@ class SplashScreenManagerTest {
     }
 
     @Test
-    fun `WHEN the splash screen has not been shown yet THEN show the splash screen`() {
+    fun `WHEN the splash screen has not been shown yet THEN show the splash screen`() = runTest {
         var splashScreenShown = false
         val splashScreenManager = buildSplashScreen(
             showSplashScreen = { _ -> splashScreenShown = true },
@@ -50,7 +45,7 @@ class SplashScreenManagerTest {
     }
 
     @Test
-    fun `WHEN a user has not seen the splash screen THEN show splash screen and update storage`() {
+    fun `WHEN a user has not seen the splash screen THEN show splash screen and update storage`() = runTest {
         var splashScreenShown = false
         val storage = object : SplashScreenStorage {
             override var isFirstSplashScreenShown = false
@@ -62,6 +57,7 @@ class SplashScreenManagerTest {
 
         Assert.assertFalse(splashScreenShown)
         Assert.assertFalse(storage.isFirstSplashScreenShown)
+
         splashScreenManager.showSplashScreen()
 
         Assert.assertTrue(splashScreenShown)
@@ -92,7 +88,7 @@ class SplashScreenManagerTest {
         splashScreenManager.showSplashScreen()
 
         Assert.assertNull(result)
-        advanceUntilIdle()
+        this.testScheduler.advanceUntilIdle()
         Assert.assertTrue(result is SplashScreenManagerResult.OperationFinished)
     }
 
@@ -120,11 +116,11 @@ class SplashScreenManagerTest {
         splashScreenManager.showSplashScreen()
 
         Assert.assertNull(result)
-        advanceUntilIdle()
+        this.testScheduler.advanceUntilIdle()
         Assert.assertTrue(result is SplashScreenManagerResult.TimeoutExceeded)
     }
 
-    private fun buildSplashScreen(
+    private fun TestScope.buildSplashScreen(
         splashScreenOperation: SplashScreenOperation = object : SplashScreenOperation {
             override val type: String
                 get() = "test"
@@ -143,12 +139,13 @@ class SplashScreenManagerTest {
         },
     ): SplashScreenManager {
         return SplashScreenManager(
-            splashScreenTimeout = splashScreenTimeout,
             splashScreenOperation = splashScreenOperation,
+            splashScreenTimeout = splashScreenTimeout,
+            storage = storage,
+            scope = this,
+            coroutineContext = this.coroutineContext,
             showSplashScreen = showSplashScreen,
             onSplashScreenFinished = onSplashScreenFinished,
-            storage = storage,
-            scope = mainCoroutineRule.scope,
         )
     }
 }
