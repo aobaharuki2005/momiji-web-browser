@@ -615,21 +615,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
-    /**
-     * Migrate the topic specific engine to the first general or custom search engine available.
-     */
-    private fun migrateTopicSpecificSearchEngines() {
-        components.core.store.state.search.selectedOrDefaultSearchEngine.let { currentSearchEngine ->
-            if (currentSearchEngine?.isGeneral == false) {
-                components.core.store.state.search.searchEngines.firstOrNull { nextSearchEngine ->
-                    nextSearchEngine.isGeneral
-                }?.let {
-                    components.useCases.searchUseCases.selectSearchEngine(it)
-                }
-            }
-        }
-    }
-
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     private fun warmBrowsersCache() {
         // We avoid blocking the main thread for BrowsersCache on startup by loading it on
@@ -839,8 +824,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         name.set("custom")
                     }
                 }
-
-                migrateTopicSpecificSearchEngines()
             }
         }
 
