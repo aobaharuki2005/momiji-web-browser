@@ -5200,40 +5200,64 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
       this, fm->GetThebesFontGroup(), computedStyle, styleText);
   info->advance = info->textRun->GetAdvanceWidth();
 
+  bool normalizeRubyMetrics = StaticPrefs::layout_css_ruby_normalize_metrics();
+
   // Calculate the baseline offset
   LogicalSide side = styleText->TextEmphasisSide(aWM, StyleFont()->mLanguage);
   LogicalSize frameSize = GetLogicalSize(aWM);
   // The overflow rect is inflated in the inline direction by half
   // advance of the emphasis mark on each side, so that even if a mark
   // is drawn for a zero-width character, it won't be clipped.
-  LogicalRect overflowRect(aWM, -info->advance / 2,
-                           /* BStart to be computed below */ 0,
-                           frameSize.ISize(aWM) + info->advance,
-                           fm->MaxAscent() + fm->MaxDescent());
+  LogicalRect overflowRect(
+      aWM, -info->advance / 2, /* BStart to be computed below */ 0,
+      frameSize.ISize(aWM) + info->advance,
+      normalizeRubyMetrics ? fm->TrimmedAscent() + fm->TrimmedDescent()
+                           : fm->MaxAscent() + fm->MaxDescent());
   RefPtr<nsFontMetrics> baseFontMetrics =
       isTextCombined
           ? nsLayoutUtils::GetInflatedFontMetricsForFrame(GetParent())
           : do_AddRef(aProvider.GetFontMetrics());
   // When the writing mode is vertical-lr the line is inverted, and thus
   // the ascent and descent are swapped.
-  nscoord absOffset = (side == LogicalSide::BStart) != aWM.IsLineInverted()
-                          ? baseFontMetrics->MaxAscent() + fm->MaxDescent()
-                          : baseFontMetrics->MaxDescent() + fm->MaxAscent();
+  bool startSideOrInvertedLine =
+      (side == LogicalSide::BStart) != aWM.IsLineInverted();
+  nscoord absOffset;
+  if (normalizeRubyMetrics) {
+    absOffset = startSideOrInvertedLine
+                    ? baseFontMetrics->TrimmedAscent() + fm->TrimmedDescent()
+                    : baseFontMetrics->TrimmedDescent() + fm->TrimmedAscent();
+  } else {
+    absOffset = startSideOrInvertedLine
+                    ? baseFontMetrics->MaxAscent() + fm->MaxDescent()
+                    : baseFontMetrics->MaxDescent() + fm->MaxAscent();
+  }
   RubyBlockLeadings leadings;
   if (nsRubyFrame* ruby = FindFurthestInlineRubyAncestor(this)) {
     leadings = ruby->GetBlockLeadings();
+    if (normalizeRubyMetrics) {
+      // Adjust absOffset to account for any ruby annotations that effectively
+      // added to the trimmed height of the base text.
+      auto [ascent, descent] = ruby->RubyMetrics();
+      absOffset = std::max(absOffset, side == LogicalSide::BStart
+                                          ? ascent + fm->TrimmedDescent()
+                                          : descent + fm->TrimmedAscent());
+    }
   }
   if (side == LogicalSide::BStart) {
-    info->baselineOffset = -absOffset - leadings.mStart;
+    info->baselineOffset =
+        normalizeRubyMetrics ? -absOffset : -absOffset - leadings.mStart;
     overflowRect.BStart(aWM) = -overflowRect.BSize(aWM) - leadings.mStart;
   } else {
     MOZ_ASSERT(side == LogicalSide::BEnd);
-    info->baselineOffset = absOffset + leadings.mEnd;
+    info->baselineOffset =
+        normalizeRubyMetrics ? absOffset : absOffset + leadings.mEnd;
     overflowRect.BStart(aWM) = frameSize.BSize(aWM) + leadings.mEnd;
   }
   // If text combined, fix the gap between the text frame and its parent.
   if (isTextCombined) {
-    nscoord gap = (baseFontMetrics->MaxHeight() - frameSize.BSize(aWM)) / 2;
+    nscoord height = normalizeRubyMetrics ? baseFontMetrics->EmHeight()
+                                          : baseFontMetrics->MaxHeight();
+    nscoord gap = (height - frameSize.BSize(aWM)) / 2;
     overflowRect.BStart(aWM) += gap * (side == LogicalSide::BStart ? -1 : 1);
   }
 
