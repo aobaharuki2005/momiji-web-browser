@@ -1239,7 +1239,8 @@ class ScrollContainerFrame : public nsContainerFrame,
   // scroll to either).
   void ApzSmoothScrollTo(const nsPoint& aDestination, ScrollMode, ScrollOrigin,
                          ScrollTriggeredByScript,
-                         UniquePtr<ScrollSnapTargetIds> aSnapTargetIds);
+                         UniquePtr<ScrollSnapTargetIds> aSnapTargetIds,
+                         ViewportType aViewportToScroll);
 
   // Check whether APZ can scroll in the provided directions, keeping in mind
   // that APZ currently cannot scroll along axes which are overflow:hidden.

@@ -2504,7 +2504,8 @@ void ScrollContainerFrame::ScrollToWithOrigin(nsPoint aScrollPosition,
 
       if (canHandoffToApz) {
         ApzSmoothScrollTo(mDestination, ScrollMode::SmoothMsd, aParams.mOrigin,
-                          aParams.mTriggeredByScript, std::move(snapTargetIds));
+                          aParams.mTriggeredByScript, std::move(snapTargetIds),
+                          ViewportType::Layout);
         return;
       }
 
@@ -2535,7 +2536,8 @@ void ScrollContainerFrame::ScrollToWithOrigin(nsPoint aScrollPosition,
   if (!mAsyncScroll) {
     if (isSmoothScroll && canHandoffToApz) {
       ApzSmoothScrollTo(mDestination, ScrollMode::Smooth, aParams.mOrigin,
-                        aParams.mTriggeredByScript, std::move(snapTargetIds));
+                        aParams.mTriggeredByScript, std::move(snapTargetIds),
+                        ViewportType::Layout);
       return;
     }
 
@@ -7837,7 +7839,8 @@ void ScrollContainerFrame::AsyncScrollbarDragRejected() {
 void ScrollContainerFrame::ApzSmoothScrollTo(
     const nsPoint& aDestination, ScrollMode aMode, ScrollOrigin aOrigin,
     ScrollTriggeredByScript aTriggeredByScript,
-    UniquePtr<ScrollSnapTargetIds> aSnapTargetIds) {
+    UniquePtr<ScrollSnapTargetIds> aSnapTargetIds,
+    ViewportType aViewportToScroll) {
   if (mApzSmoothScrollDestination == Some(aDestination)) {
     // If we already sent APZ a smooth-scroll request to this
     // destination (i.e. it was the last request
@@ -7860,7 +7863,7 @@ void ScrollContainerFrame::ApzSmoothScrollTo(
   mApzSmoothScrollDestination = Some(aDestination);
   AppendScrollUpdate(ScrollPositionUpdate::NewSmoothScroll(
       aMode, aOrigin, aDestination, aTriggeredByScript,
-      std::move(aSnapTargetIds), ViewportType::Visual));
+      std::move(aSnapTargetIds), aViewportToScroll));
 
   nsIContent* content = GetContent();
   if (!DisplayPortUtils::HasNonMinimalNonZeroDisplayPort(content)) {
@@ -7936,7 +7939,8 @@ bool ScrollContainerFrame::SmoothScrollVisual(
                     aUpdateType == FrameMetrics::eRestore
                         ? ScrollOrigin::Restore
                         : ScrollOrigin::Other,
-                    ScrollTriggeredByScript::No, std::move(snapTargetIds));
+                    ScrollTriggeredByScript::No, std::move(snapTargetIds),
+                    ViewportType::Visual);
   return true;
 }
 
