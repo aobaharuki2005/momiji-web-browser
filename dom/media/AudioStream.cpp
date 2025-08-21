@@ -247,7 +247,6 @@ nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo)
   params.layout = static_cast<uint32_t>(mChannelMap);
   params.format = CubebUtils::ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   params.prefs = CubebUtils::GetDefaultStreamPrefs(CUBEB_DEVICE_TYPE_OUTPUT);
-  params.input_params = CUBEB_INPUT_PROCESSING_PARAM_NONE;
 
   // This is noop if MOZ_DUMP_AUDIO is not set.
   mDumpFile.Open("AudioStream", mOutChannels, mAudioClock.GetInputRate());

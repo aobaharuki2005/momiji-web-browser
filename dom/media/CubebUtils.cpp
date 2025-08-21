@@ -891,7 +891,6 @@ bool EstimatedLatencyDefaultDevices(double* aMean, double* aStdDev,
   output_params.channels = 2;
   output_params.layout = CUBEB_LAYOUT_UNDEFINED;
   output_params.prefs = GetDefaultStreamPrefs(CUBEB_DEVICE_TYPE_OUTPUT);
-  output_params.input_params = CUBEB_INPUT_PROCESSING_PARAM_NONE;
 
   latencyFrames = GetCubebMTGLatencyInFrames(&output_params);
 
@@ -901,7 +900,6 @@ bool EstimatedLatencyDefaultDevices(double* aMean, double* aStdDev,
   input_params.channels = 1;
   input_params.layout = CUBEB_LAYOUT_UNDEFINED;
   input_params.prefs = GetDefaultStreamPrefs(CUBEB_DEVICE_TYPE_INPUT);
-  input_params.input_params = CUBEB_INPUT_PROCESSING_PARAM_NONE;
 
   cubeb_stream* stm;
   rv = cubeb_stream_init(handle->Context(), &stm,
