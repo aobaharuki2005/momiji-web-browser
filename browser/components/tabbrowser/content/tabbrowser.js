@@ -9571,7 +9571,13 @@ var TabContextMenu = {
   },
 
   addTabsToSavedGroup(groupId) {
-    SessionStore.addTabsToSavedGroup(groupId, this.contextTabs);
+    SessionStore.addTabsToSavedGroup(
+      groupId,
+      this.contextTabs,
+      gBrowser.TabMetrics.userTriggeredContext(
+        gBrowser.TabMetrics.METRIC_SOURCE.TAB_MENU
+      )
+    );
     this.closeContextTabs();
   },
 

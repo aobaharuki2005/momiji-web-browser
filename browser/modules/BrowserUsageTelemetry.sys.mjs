@@ -504,7 +504,7 @@ export let BrowserUsageTelemetry = {
    */
 
   /** @type {Map<string, TabMovementsRecord>} */
-  _tabMovementsBySource: new Map(),
+  _tabMovementsBySegment: new Map(),
 
   init() {
     this._lastRecordTabCount = 0;
@@ -1525,21 +1525,35 @@ export let BrowserUsageTelemetry = {
       return;
     }
 
-    let tabMovementsRecord = this._tabMovementsBySource.get(telemetrySource);
+    let groupType = "";
+    if (event.target.group) {
+      groupType = event.target.group.collapsed
+        ? lazy.TabMetrics.METRIC_GROUP_TYPE.COLLAPSED
+        : lazy.TabMetrics.METRIC_GROUP_TYPE.EXPANDED;
+    }
+
+    let segmentKey = [telemetrySource, groupType].join(",");
+
+    let tabMovementsRecord = this._tabMovementsBySegment.get(segmentKey);
     if (!tabMovementsRecord) {
       let deferredTask = new lazy.DeferredTask(() => {
-        Glean.tabgroup.addTab.record({
-          source: telemetrySource,
-          tabs: tabMovementsRecord.numberAddedToTabGroup,
-          layout: lazy.sidebarVerticalTabs ? "vertical" : "horizontal",
-        });
-        this._tabMovementsBySource.delete(telemetrySource);
+        if (tabMovementsRecord.numberAddedToTabGroup) {
+          Glean.tabgroup.addTab.record({
+            source: telemetrySource,
+            tabs: tabMovementsRecord.numberAddedToTabGroup,
+            layout: lazy.sidebarVerticalTabs
+              ? lazy.TabMetrics.METRIC_TABS_LAYOUT.VERTICAL
+              : lazy.TabMetrics.METRIC_TABS_LAYOUT.HORIZONTAL,
+            group_type: groupType,
+          });
+        }
+        this._tabMovementsBySegment.delete(segmentKey);
       }, 0);
       tabMovementsRecord = {
         deferredTask,
         numberAddedToTabGroup: 0,
       };
-      this._tabMovementsBySource.set(telemetrySource, tabMovementsRecord);
+      this._tabMovementsBySegment.set(segmentKey, tabMovementsRecord);
       this._updateTabMovementsRecord(tabMovementsRecord, event);
       deferredTask.arm();
     } else {

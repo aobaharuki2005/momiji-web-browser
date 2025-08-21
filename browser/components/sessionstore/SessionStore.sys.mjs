@@ -842,10 +842,16 @@ export var SessionStore = {
    *
    * @param {string} tabGroupId - The ID of the group to save to
    * @param {MozTabbrowserTab[]} tabs - The list of tabs to add to the group
+   * @param {TabMetricsContext} [metricsContext]
+   *   Optional context to record for metrics purposes.
    * @returns {SavedTabGroupStateData}
    */
-  addTabsToSavedGroup(tabGroupId, tabs) {
-    return SessionStoreInternal.addTabsToSavedGroup(tabGroupId, tabs);
+  addTabsToSavedGroup(tabGroupId, tabs, metricsContext) {
+    return SessionStoreInternal.addTabsToSavedGroup(
+      tabGroupId,
+      tabs,
+      metricsContext
+    );
   },
 
   /**
@@ -8143,9 +8149,10 @@ var SessionStoreInternal = {
   /**
    * @param {string} tabGroupId
    * @param {MozTabbrowserTab[]} tabs
+   * @param {TabMetricsContext} [metricsContext]
    * @returns {SavedTabGroupStateData}
    */
-  addTabsToSavedGroup(tabGroupId, tabs) {
+  addTabsToSavedGroup(tabGroupId, tabs, metricsContext) {
     let tabGroupState = this.getSavedTabGroup(tabGroupId);
     if (!tabGroupState) {
       throw new Error(`No tab group found with id ${tabGroupId}`);
@@ -8166,6 +8173,17 @@ var SessionStoreInternal = {
       updateTabGroupId: tabGroupId,
     });
     tabGroupState.tabs.push(...newTabState);
+
+    let isVerticalMode = win.gBrowser.tabContainer.verticalMode;
+    Glean.tabgroup.addTab.record({
+      source:
+        metricsContext?.telemetrySource || TabMetrics.METRIC_SOURCE.UNKNOWN,
+      tabs: tabs.length,
+      layout: isVerticalMode
+        ? TabMetrics.METRIC_TABS_LAYOUT.VERTICAL
+        : TabMetrics.METRIC_TABS_LAYOUT.HORIZONTAL,
+      group_type: TabMetrics.METRIC_GROUP_TYPE.SAVED,
+    });
 
     this._notifyOfSavedTabGroupsChange();
     return tabGroupState;
