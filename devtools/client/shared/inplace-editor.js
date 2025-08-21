@@ -239,25 +239,6 @@ function editableItem(options, callback) {
     true
   );
 
-  // Ugly workaround - the element is focused on mousedown but
-  // the editor is activated on click/mouseup.  This leads
-  // to an ugly flash of the focus ring before showing the editor.
-  // So hide the focus ring while the mouse is down.
-  element.addEventListener("mousedown", function (evt) {
-    if (!isValidTargetForEditableItemCallback(evt.target)) {
-      return;
-    }
-
-    const cleanup = function () {
-      element.style.removeProperty("outline-style");
-      element.removeEventListener("mouseup", cleanup);
-      element.removeEventListener("mouseout", cleanup);
-    };
-    element.style.setProperty("outline-style", "none");
-    element.addEventListener("mouseup", cleanup);
-    element.addEventListener("mouseout", cleanup);
-  });
-
   // Mark the element editable field for tab
   // navigation while editing.
   element._editable = true;
