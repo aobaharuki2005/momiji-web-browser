@@ -114,8 +114,9 @@ object LocaleManager {
         private const val PREFERENCE_FILE = "mozac_support_base_locale_manager_preference"
         private var currentLocal: String? = null
 
+        @SuppressLint("NewApi")
         fun getLocale(context: Context): String? {
-            return if (currentLocal == null) {
+            return if (currentLocal == null && !android.os.Process.isIsolated()) {
                 val settings = getSharedPreferences(context)
                 val key = context.getString(R.string.mozac_support_base_locale_preference_key_locale)
                 currentLocal = settings.getString(key, null)
