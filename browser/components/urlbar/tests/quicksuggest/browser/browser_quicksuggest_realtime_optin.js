@@ -20,9 +20,12 @@ const OFFLINE_REMOTE_SETTINGS = [
               icon: "chrome://browser/skin/illustrations/market-opt-in.svg",
               titleL10n: {
                 id: "urlbar-result-market-opt-in-title",
+                cacheable: true,
               },
               descriptionL10n: {
                 id: "urlbar-result-market-opt-in-description",
+                cacheable: true,
+                parseMarkup: true,
               },
               descriptionLearnMoreTopic: "firefox-suggest",
             },
@@ -147,10 +150,7 @@ add_task(async function dismiss() {
   let { element } = await openRealtimeSuggestion({ input: "stock" });
   let dismissButton = element.row.querySelector(".urlbarView-button-1");
   Assert.equal(dismissButton.dataset.command, "not_now");
-  Assert.equal(
-    dismissButton.dataset.l10nId,
-    "urlbar-result-realtime-opt-in-not-now"
-  );
+  Assert.equal(dismissButton.textContent, "Not now");
 
   info("Check 'Not now' button behavior");
   EventUtils.synthesizeMouseAtCenter(dismissButton, {});
@@ -213,10 +213,7 @@ add_task(async function dismiss() {
   element = (await openRealtimeSuggestion({ input: "stock" })).element;
   dismissButton = element.row.querySelector(".urlbarView-button-1");
   Assert.equal(dismissButton.dataset.command, "dismiss");
-  Assert.equal(
-    dismissButton.dataset.l10nId,
-    "urlbar-result-realtime-opt-in-dismiss"
-  );
+  Assert.equal(dismissButton.textContent, "Dismiss");
 
   info("Check 'Dismiss' button behavior");
   EventUtils.synthesizeMouseAtCenter(dismissButton, {});
@@ -304,10 +301,7 @@ add_task(async function dismiss_with_another_type() {
     ".urlbarView-button-1"
   );
   Assert.equal(marketDismissButton.dataset.command, "not_now");
-  Assert.equal(
-    marketDismissButton.dataset.l10nId,
-    "urlbar-result-realtime-opt-in-not-now"
-  );
+  Assert.equal(marketDismissButton.textContent, "Not now");
   await UrlbarTestUtils.promisePopupClose(window);
 
   info("Simulate user clicks 'Dismiss' for sports suggestion");

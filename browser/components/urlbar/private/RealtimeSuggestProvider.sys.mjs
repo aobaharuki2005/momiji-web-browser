@@ -267,11 +267,17 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     let splitButtonMain = notNowTypes.has(this.realtimeType)
       ? {
           command: "dismiss",
-          l10n: { id: "urlbar-result-realtime-opt-in-dismiss" },
+          l10n: {
+            id: "urlbar-result-realtime-opt-in-dismiss",
+            cacheable: true,
+          },
         }
       : {
           command: "not_now",
-          l10n: { id: "urlbar-result-realtime-opt-in-not-now" },
+          l10n: {
+            id: "urlbar-result-realtime-opt-in-not-now",
+            cacheable: true,
+          },
         };
 
     let result = { ...suggestion.data.result };
@@ -286,7 +292,10 @@ export class RealtimeSuggestProvider extends SuggestProvider {
           buttons: [
             {
               command: "opt_in",
-              l10n: { id: "urlbar-result-realtime-opt-in-allow" },
+              l10n: {
+                id: "urlbar-result-realtime-opt-in-allow",
+                cacheable: true,
+              },
             },
             {
               ...splitButtonMain,

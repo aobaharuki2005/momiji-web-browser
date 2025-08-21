@@ -1647,11 +1647,7 @@ export class UrlbarView {
 
     if (result.payload.descriptionLearnMoreTopic) {
       let learnMoreLink = this.#createElement("a");
-      learnMoreLink.dataset.url = this.window.getHelpLinkURL(
-        result.payload.descriptionLearnMoreTopic
-      );
       learnMoreLink.setAttribute("data-l10n-name", "learn-more-link");
-      learnMoreLink.toggleAttribute("selectable");
       description.appendChild(learnMoreLink);
     }
 
@@ -1832,8 +1828,6 @@ export class UrlbarView {
           oldResult.payload.userContextId
         ) &&
         result.type != oldResultType) ||
-      !!result.payload.descriptionLearnMoreTopic !=
-        !!oldResult.payload.descriptionLearnMoreTopic ||
       result.testForceNewContent;
 
     if (needsNewContent) {
@@ -2293,6 +2287,20 @@ export class UrlbarView {
         description,
         result.payload.descriptionL10n
       );
+
+      if (result.payload.descriptionLearnMoreTopic) {
+        let learnMoreLink = description.querySelector(
+          "[data-l10n-name=learn-more-link]"
+        );
+        if (learnMoreLink) {
+          learnMoreLink.toggleAttribute("selectable");
+          learnMoreLink.dataset.url = this.window.getHelpLinkURL(
+            result.payload.descriptionLearnMoreTopic
+          );
+        } else {
+          console.warn("learn-more-link was not found");
+        }
+      }
     } else {
       this.#l10nCache.removeElementL10n(description);
       if (result.payload.description) {
