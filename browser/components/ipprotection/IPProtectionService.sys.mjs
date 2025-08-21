@@ -11,6 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
   // eslint-disable-next-line mozilla/valid-lazy
   IPPChannelFilter: "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs",
+  IPProtectionUsage:
+    "resource:///modules/ipprotection/IPProtectionUsage.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
@@ -116,6 +118,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (this.isActive) {
       this.stop(false);
     }
+    this.usageObserver.stop();
 
     this.#removeEligibilityListeners();
 
@@ -160,6 +163,10 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.isActive = true;
     this.activatedAt = Cu.now();
+
+    this.usageObserver.start();
+    // TODO: call usageObeserver.addIsolationKey(connection.isolationKey);
+    // To make sure the proxied channels are tracked.
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Started", {
         bubbles: true,
@@ -538,6 +545,14 @@ class IPProtectionServiceSingleton extends EventTarget {
   async startLoginFlow(browser) {
     return lazy.SpecialMessageActions.fxaSignInFlow(SIGNIN_DATA, browser);
   }
+
+  get usageObserver() {
+    if (!this.#usageObserver) {
+      this.#usageObserver = new lazy.IPProtectionUsage();
+    }
+    return this.#usageObserver;
+  }
+  #usageObserver = null;
 }
 
 const IPProtectionService = new IPProtectionServiceSingleton();
