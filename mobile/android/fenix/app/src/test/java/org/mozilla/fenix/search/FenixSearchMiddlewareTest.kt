@@ -134,7 +134,7 @@ class FenixSearchMiddlewareTest {
         }
         every { middleware.buildSearchSuggestionsProvider(any()) } returns expectedSearchSuggestionsProvider
 
-        store.dispatch(SearchStarted(preselectedSearchEngine, wasEngineSelectedByUser, isSearchInPrivateMode))
+        store.dispatch(SearchStarted(preselectedSearchEngine, wasEngineSelectedByUser, isSearchInPrivateMode, false))
 
         verify { engine.speculativeCreateSession(isSearchInPrivateMode) }
         assertEquals(expectedSearchSuggestionsProvider, middleware.suggestionsProvidersBuilder)
@@ -156,6 +156,7 @@ class FenixSearchMiddlewareTest {
                 selectedSearchEngine = preselectedSearchEngine,
                 isUserSelected = true,
                 inPrivateMode = false,
+                searchStartedForCurrentUrl = false,
             ),
         )
 
@@ -175,6 +176,7 @@ class FenixSearchMiddlewareTest {
                 selectedSearchEngine = preselectedSearchEngine,
                 isUserSelected = false,
                 inPrivateMode = false,
+                searchStartedForCurrentUrl = false,
             ),
         )
 
@@ -186,7 +188,7 @@ class FenixSearchMiddlewareTest {
         val (middleware, store) = buildMiddlewareAndAddToSearchStore()
         every { middleware.buildSearchSuggestionsProvider(any()) } returns mockk(relaxed = true)
 
-        store.dispatch(SearchStarted(null, false, false))
+        store.dispatch(SearchStarted(null, false, false, false))
 
         assertNull(UnifiedSearch.engineSelected.testGetValue())
     }
@@ -207,7 +209,7 @@ class FenixSearchMiddlewareTest {
         every { middleware.buildSearchSuggestionsProvider(any()) } returns expectedSearchSuggestionsProvider
 
         store.dispatch(SearchFragmentAction.UpdateQuery("test"))
-        store.dispatch(SearchStarted(preselectedSearchEngine, wasEngineSelectedByUser, isSearchInPrivateMode))
+        store.dispatch(SearchStarted(preselectedSearchEngine, wasEngineSelectedByUser, isSearchInPrivateMode, false))
 
         verify { engine.speculativeCreateSession(isSearchInPrivateMode) }
         assertEquals(expectedSearchSuggestionsProvider, middleware.suggestionsProvidersBuilder)
@@ -233,7 +235,7 @@ class FenixSearchMiddlewareTest {
         every { middleware.buildSearchSuggestionsProvider(any()) } returns expectedSearchSuggestionsProvider
 
         store.dispatch(SearchFragmentAction.UpdateQuery("test"))
-        store.dispatch(SearchStarted(null, wasEngineSelectedByUser, isSearchInPrivateMode))
+        store.dispatch(SearchStarted(null, wasEngineSelectedByUser, isSearchInPrivateMode, false))
         store.waitUntilIdle()
 
         verify { engine.speculativeCreateSession(isSearchInPrivateMode) }
@@ -265,6 +267,49 @@ class FenixSearchMiddlewareTest {
         every { settings.shouldShowSearchSuggestions } returns true
 
         store.dispatch(SearchProvidersUpdated(listOf(mockk())))
+
+        searchActionsCaptor.assertLastAction(SearchSuggestionsVisibilityUpdated::class) {
+            assertTrue(it.visible)
+        }
+    }
+
+    @Test
+    fun `GIVEN trending searches are enabled WHEN search starts starts for the current webpage THEN show new search suggestions`() {
+        val (_, store) = buildMiddlewareAndAddToSearchStore()
+        every { settings.trendingSearchSuggestionsEnabled } returns true
+        every { settings.isTrendingSearchesVisible } returns true
+        every { settings.shouldShowSearchSuggestions } returns true
+        val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine
+
+        store.dispatch(SearchStarted(defaultSearchEngine, false, false, true)).joinBlocking()
+
+        searchActionsCaptor.assertLastAction(SearchSuggestionsVisibilityUpdated::class) {
+            assertTrue(it.visible)
+        }
+    }
+
+    @Test
+    fun `GIVEN recent search suggestions are enabled WHEN search starts starts for the current webpage THEN show new search suggestions`() {
+        val (_, store) = buildMiddlewareAndAddToSearchStore()
+        every { settings.shouldShowRecentSearchSuggestions } returns true
+        every { settings.shouldShowSearchSuggestions } returns true
+        val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine
+
+        store.dispatch(SearchStarted(defaultSearchEngine, false, false, true)).joinBlocking()
+
+        searchActionsCaptor.assertLastAction(SearchSuggestionsVisibilityUpdated::class) {
+            assertTrue(it.visible)
+        }
+    }
+
+    @Test
+    fun `GIVEN shortcuts suggestions are enabled WHEN search starts starts for the current webpage THEN show new search suggestions`() {
+        val (_, store) = buildMiddlewareAndAddToSearchStore()
+        every { settings.shouldShowShortcutSuggestions } returns true
+        every { settings.shouldShowSearchSuggestions } returns true
+        val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine
+
+        store.dispatch(SearchStarted(defaultSearchEngine, false, false, true)).joinBlocking()
 
         searchActionsCaptor.assertLastAction(SearchSuggestionsVisibilityUpdated::class) {
             assertTrue(it.visible)
@@ -354,7 +399,7 @@ class FenixSearchMiddlewareTest {
         }
         every { middleware.buildSearchSuggestionsProvider(any()) } returns expectedSearchSuggestionsProvider
 
-        store.dispatch(SearchStarted(null, false, false)) // this triggers observing the search engine updates
+        store.dispatch(SearchStarted(null, false, false, false)) // this triggers observing the search engine updates
 
         searchActionsCaptor.assertLastAction(SearchShortcutEngineSelected::class) {
             assertEquals(newSearchEngineSelection, it.engine)
@@ -458,7 +503,7 @@ class FenixSearchMiddlewareTest {
         val (_, store) = buildMiddlewareAndAddToSearchStore(appStore = appStore)
 
         appStore.dispatch(AppAction.SearchAction.SearchStarted())
-        store.dispatch(SearchStarted(defaultSearchEngine, false, false)).joinBlocking()
+        store.dispatch(SearchStarted(defaultSearchEngine, false, false, false)).joinBlocking()
         appStore.dispatch(SearchEngineSelected(searchEngineClicked, true)).joinBlocking()
         shadowOf(Looper.getMainLooper()).idle()
 
@@ -648,7 +693,7 @@ class FenixSearchMiddlewareTest {
         region = RegionState("US", "US"),
         regionSearchEngines = listOf(
             SearchEngine("engine-a", "Engine A", mockk(), type = SearchEngine.Type.BUNDLED),
-            SearchEngine("engine-b", "Engine B", mockk(), type = SearchEngine.Type.BUNDLED),
+            SearchEngine("engine-b", "Engine B", mockk(), type = SearchEngine.Type.BUNDLED, trendingUrl = "test"),
             SearchEngine("engine-c", "Engine C", mockk(), type = SearchEngine.Type.BUNDLED),
         ),
         customSearchEngines = listOf(

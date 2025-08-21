@@ -19,6 +19,7 @@ val EMPTY_SEARCH_FRAGMENT_STATE = SearchFragmentState(
     defaultEngine = null,
     searchSuggestionsProviders = emptyList(),
     searchSuggestionsOrientedAtBottom = false,
+    searchStartedForCurrentUrl = false,
     shouldShowSearchSuggestions = false,
     showSearchSuggestions = false,
     showSearchSuggestionsHint = false,
