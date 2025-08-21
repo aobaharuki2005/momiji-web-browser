@@ -35,6 +35,7 @@ linux64/opt:
         tooltool-downloads: public
     run-on-projects: ['integration']
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang
@@ -378,6 +379,7 @@ linux64/debug:
         mozconfig-variant: debug
         tooltool-downloads: public
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang

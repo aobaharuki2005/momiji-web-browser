@@ -105,6 +105,7 @@ android-x86/opt:
         actions: [get-secrets, build]
         custom-build-variant-cfg: x86
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang
@@ -212,6 +213,7 @@ android-arm/opt:
         actions: [get-secrets, build]
         custom-build-variant-cfg: arm
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang
@@ -319,6 +321,7 @@ android-aarch64/opt:
         actions: [get-secrets, build]
         custom-build-variant-cfg: aarch64
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang
@@ -450,6 +453,7 @@ android-x86_64/opt:
         actions: [get-secrets, build]
         custom-build-variant-cfg: x86_64
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang

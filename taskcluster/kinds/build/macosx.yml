@@ -56,6 +56,7 @@ macosx64/debug:
         custom-build-variant-cfg: cross-debug
         mozconfig-variant: debug
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang
@@ -151,6 +152,7 @@ macosx64/opt:
             - builds/releng_base_mac_64_cross_builds.py
     run-on-projects: ['integration']
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang

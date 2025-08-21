@@ -88,6 +88,7 @@ win32/opt:
             mozconfig_platform: win32
     run-on-projects: ['integration']
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang
@@ -189,6 +190,7 @@ win64/debug:
         extra-config:
             mozconfig_platform: win64
     use-sccache: true
+    use-python: "3.11"
     fetches:
         toolchain:
             - linux64-clang
