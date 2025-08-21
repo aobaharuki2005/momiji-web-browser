@@ -308,12 +308,9 @@ async function navigate(
 
   // Load a blank page first to ensure that tests don't hang.
   // I don't know why this is needed, but it appears to be necessary.
-  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, BLANK_PAGE);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-
+  await loadBlankPage();
   const loadTargetPage = async () => {
-    BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url);
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await loadNewPage(gBrowser.selectedBrowser, url);
 
     if (downloadHandler) {
       await FullPageTranslationsTestUtils.assertTranslationsButton(
