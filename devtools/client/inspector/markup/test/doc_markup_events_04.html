@@ -59,6 +59,10 @@
         document.documentElement.addEventListener("click", function(foo2, bar2) {
           alert("documentElement event listener clicked");
         });
+
+        document.addEventListener("user-defined", function () {
+          alert("User defined event");
+        });
       }
 
       function Es6Method(hehe) {

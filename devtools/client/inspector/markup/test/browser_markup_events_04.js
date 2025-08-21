@@ -39,6 +39,16 @@ const TEST_DATA = [
         attributes: ["Bubbling"],
         handler: "function onload(event) {\n" + "  init();\n" + "}",
       },
+      {
+        // Bug 1977628: non-supported, or user defined events are flagged as "User Defined"
+        type: "user-defined",
+        filename: TEST_URL + ":63:59",
+        attributes: ["User-defined", "Bubbling"],
+        handler:
+          "function () {\n" +
+          `          alert("User defined event");\n` +
+          "        }",
+      },
     ],
   },
   {
@@ -105,7 +115,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":81:29",
+        filename: TEST_URL + ":85:29",
         attributes: ["Bubbling"],
         handler:
           "function(event) {\n" +
