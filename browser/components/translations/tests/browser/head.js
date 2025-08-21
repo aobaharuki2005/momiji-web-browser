@@ -451,30 +451,42 @@ class TranslationsBencher {
   static METRIC_TOKENS_PER_SECOND = "tokens-per-second";
 
   /**
-   * The metric base name for peak memory usage in the inference process.
-   *
-   * We often see a spike in memory usage when models initialize that eventually
-   * stabilizes as the inference process continues running. As such, it is important
-   * that we collect two memory metrics during our benchmarks.
-   *
-   * @see {TranslationsBencher.METRIC_STABILIZED_MEMORY_USAGE}
+   * The metric base name for peak memory usage in the parent process.
+   * The TranslationsBencher records this at a sampled interval reporting
+   * the maximum recorded memory recorded during the benchmark.
    *
    * @type {string}
    */
-  static METRIC_PEAK_MEMORY_USAGE = "peak-memory-usage";
+  static METRIC_PEAK_PARENT_PROCESS_MEMORY_USAGE =
+    "peak-parent-process-memory-usage";
 
   /**
-   * The metric base name for stabilized memory usage in the inference process.
-   *
-   * We often see a spike in memory usage when models initialize that eventually
-   * stabilizes as the inference process continues running. As such, it is important
-   * that we collect two memory metrics during our benchmarks.
-   *
-   * @see {TranslationsBencher.METRIC_PEAK_MEMORY_USAGE}
+   * The metric base name for stabilized memory usage in the parent process.
+   * The TranslationsBencher records this just after finishing the final translation.
    *
    * @type {string}
    */
-  static METRIC_STABILIZED_MEMORY_USAGE = "stabilized-memory-usage";
+  static METRIC_STABILIZED_PARENT_PROCESS_MEMORY_USAGE =
+    "stabilized-parent-process-memory-usage";
+
+  /**
+   * The metric base name for peak memory usage in the inference process.
+   * The TranslationsBencher records this at a sampled interval reporting
+   * the maximum recorded memory recorded during the benchmark.
+   *
+   * @type {string}
+   */
+  static METRIC_PEAK_INFERENCE_PROCESS_MEMORY_USAGE =
+    "peak-inference-process-memory-usage";
+
+  /**
+   * The metric base name for stabilized memory usage in the inference process,
+   * The TranslationsBencher records this just after finishing the final translation.
+   *
+   * @type {string}
+   */
+  static METRIC_STABILIZED_INFERENCE_PROCESS_MEMORY_USAGE =
+    "stabilized-inference-process-memory-usage";
 
   /**
    * The metric base name for total translation time.
@@ -560,11 +572,18 @@ class TranslationsBencher {
    */
   static PeakMemorySampler = class {
     /**
-     * The peak recorded memory in mebibytes (MiB).
+     * The peak recorded memory in mebibytes (MiB) for the parent process.
      *
      * @type {number}
      */
-    #peakMemoryMiB = 0;
+    #peakParentMemoryMiB = 0;
+
+    /**
+     * The peak recorded memory in mebibytes (MiB) for the inference process.
+     *
+     * @type {number}
+     */
+    #peakInferenceMemoryMiB = 0;
 
     /**
      * The interval id for the memory sample timer.
@@ -590,21 +609,26 @@ class TranslationsBencher {
     }
 
     /**
-     * Collects the current inference process memory usage and updates
-     * the peak memory measurement if the current usage exceeds the previous peak.
+     * Collects the current memory usage for both the parent and inference processes
+     * and updates the peak memory measurements if the current usage exceeds the
+     * previously recorded peaks.
      *
      * @returns {Promise<void>}
      */
     async #collectMemorySample() {
-      const currentMemoryMiB =
-        await TranslationsBencher.#getInferenceProcessTotalMemoryUsage();
-      if (currentMemoryMiB > this.#peakMemoryMiB) {
-        this.#peakMemoryMiB = currentMemoryMiB;
+      const { parentMemoryMiB, inferenceMemoryMiB } =
+        await TranslationsBencher.#getTotalMemoryUsageByProcess();
+
+      if (parentMemoryMiB > this.#peakParentMemoryMiB) {
+        this.#peakParentMemoryMiB = parentMemoryMiB;
+      }
+      if (inferenceMemoryMiB > this.#peakInferenceMemoryMiB) {
+        this.#peakInferenceMemoryMiB = inferenceMemoryMiB;
       }
     }
 
     /**
-     * Starts the interval timer to begin sampling a new peak memory usage.
+     * Starts the interval timer to begin sampling new peak memory usage values.
      */
     start() {
       if (this.#intervalId !== null) {
@@ -613,7 +637,8 @@ class TranslationsBencher {
         );
       }
 
-      this.#peakMemoryMiB = 0;
+      this.#peakParentMemoryMiB = 0;
+      this.#peakInferenceMemoryMiB = 0;
       this.#intervalId = setInterval(() => {
         this.#collectMemorySample().catch(console.error);
       }, this.#interval);
@@ -637,7 +662,7 @@ class TranslationsBencher {
     /**
      * Returns the peak recorded memory usage in mebibytes (MiB).
      *
-     * @returns {number}
+     * @returns {{ peakParentMemoryMiB: number, peakInferenceMemoryMiB: number }}
      */
     getPeakRecordedMemoryUsage() {
       if (this.#intervalId) {
@@ -646,7 +671,10 @@ class TranslationsBencher {
         );
       }
 
-      return this.#peakMemoryMiB;
+      return {
+        peakParentMemoryMiB: this.#peakParentMemoryMiB,
+        peakInferenceMemoryMiB: this.#peakInferenceMemoryMiB,
+      };
     }
   };
 
@@ -805,15 +833,28 @@ class TranslationsBencher {
 
       peakMemorySampler.stop();
 
-      const peakMemoryMiB = peakMemorySampler.getPeakRecordedMemoryUsage();
-      const stabilizedMemoryMiB =
-        await TranslationsBencher.#getInferenceProcessTotalMemoryUsage();
+      const { peakParentMemoryMiB, peakInferenceMemoryMiB } =
+        peakMemorySampler.getPeakRecordedMemoryUsage();
+
+      const { parentMemoryMiB, inferenceMemoryMiB } =
+        await TranslationsBencher.#getTotalMemoryUsageByProcess();
 
       journal.pushMetrics([
-        [TranslationsBencher.METRIC_PEAK_MEMORY_USAGE, peakMemoryMiB],
         [
-          TranslationsBencher.METRIC_STABILIZED_MEMORY_USAGE,
-          stabilizedMemoryMiB,
+          TranslationsBencher.METRIC_PEAK_PARENT_PROCESS_MEMORY_USAGE,
+          peakParentMemoryMiB,
+        ],
+        [
+          TranslationsBencher.METRIC_STABILIZED_PARENT_PROCESS_MEMORY_USAGE,
+          parentMemoryMiB,
+        ],
+        [
+          TranslationsBencher.METRIC_PEAK_INFERENCE_PROCESS_MEMORY_USAGE,
+          peakInferenceMemoryMiB,
+        ],
+        [
+          TranslationsBencher.METRIC_STABILIZED_INFERENCE_PROCESS_MEMORY_USAGE,
+          inferenceMemoryMiB,
         ],
       ]);
 
@@ -1012,13 +1053,57 @@ class TranslationsBencher {
   }
 
   /**
-   * Returns the total memory used by the inference process in mebibytes (MiB).
+   * Returns the total memory used by both the parent process and the inference
+   * process in mebibytes (MiB).
    *
-   * @returns {Promise<number>} The total memory usage in mebibytes.
+   * @returns {Promise<{ parentMemoryMiB: number, inferenceMemoryMiB: number }>}
+   *          The total memory usage for each process in mebibytes.
    */
-  static async #getInferenceProcessTotalMemoryUsage() {
-    const inferenceProcessInfo = await fetchInferenceProcessInfo();
-    return bytesToMebibytes(inferenceProcessInfo.memory);
+  static async #getTotalMemoryUsageByProcess() {
+    const { parentInfo, inferenceInfo } =
+      await TranslationsBencher.#fetchProcessesInfo();
+    return {
+      parentMemoryMiB: bytesToMebibytes(parentInfo.memory),
+      inferenceMemoryMiB: bytesToMebibytes(inferenceInfo.memory),
+    };
+  }
+
+  /**
+   * Returns the process info for both the parent process and inference process.
+   *
+   * @returns {Promise<{ parentInfo: { pid: number, memory: number, cpuTime: number, cpuCycleCount: number },
+   *                     inferenceInfo: { pid: number, memory: number, cpuTime: number, cpuCycleCount: number } }>}
+   */
+  static async #fetchProcessesInfo() {
+    let info = await ChromeUtils.requestProcInfo();
+
+    const parentInfo = {
+      pid: info.pid,
+      memory: info.memory,
+      cpuTime: info.cpuTime,
+      cpuCycleCount: info.cpuCycleCount,
+    };
+
+    let inferenceInfo = {};
+    for (const child of info.children) {
+      // At the time of writing, there is only a single inference process.
+      // If we one day spawn multiple inference processes, this code will
+      // need to be revised.
+      if (child.type === "inference") {
+        inferenceInfo = {
+          pid: child.pid,
+          memory: child.memory,
+          cpuTime: child.cpuTime,
+          cpuCycleCount: child.cpuCycleCount,
+        };
+        break;
+      }
+    }
+
+    return {
+      parentInfo,
+      inferenceInfo,
+    };
   }
 }
 

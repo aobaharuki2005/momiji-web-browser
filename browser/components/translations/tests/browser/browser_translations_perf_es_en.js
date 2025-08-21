@@ -39,13 +39,25 @@ const perfMetadata = {
           lowerIsBetter: false,
         },
         {
-          name: "peak-memory-usage",
+          name: "peak-parent-process-memory-usage",
           unit: "MiB",
           shouldAlert: true,
           lowerIsBetter: true,
         },
         {
-          name: "stabilized-memory-usage",
+          name: "stabilized-parent-process-memory-usage",
+          unit: "MiB",
+          shouldAlert: true,
+          lowerIsBetter: true,
+        },
+        {
+          name: "peak-inference-process-memory-usage",
+          unit: "MiB",
+          shouldAlert: true,
+          lowerIsBetter: true,
+        },
+        {
+          name: "stabilized-inference-process-memory-usage",
           unit: "MiB",
           shouldAlert: true,
           lowerIsBetter: true,
