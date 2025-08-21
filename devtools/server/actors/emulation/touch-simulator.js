@@ -151,7 +151,7 @@ class TouchSimulator {
 
         this.startX = evt.pageX;
         this.startY = evt.pageY;
-        this.previousScreenY = this.startY;
+        this.previousScreenY = evt.screenY;
 
         type = "touchstart";
         break;
