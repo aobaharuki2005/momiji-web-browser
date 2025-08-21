@@ -1590,7 +1590,10 @@ export let BrowserUsageTelemetry = {
 
   _onTabSelect(event) {
     if (event.target.group) {
-      Glean.tabgroup.tabInteractions.activate.add();
+      let interaction = event.target.group.collapsed
+        ? Glean.tabgroup.tabInteractions.activate_collapsed
+        : Glean.tabgroup.tabInteractions.activate_expanded;
+      interaction.add();
     }
     if (event.target.pinned) {
       const counter = lazy.sidebarVerticalTabs

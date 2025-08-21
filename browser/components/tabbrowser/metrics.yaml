@@ -407,7 +407,8 @@ tabgroup:
     data_sensitivity:
       - interaction
     labels:
-      - activate
+      - activate_expanded
+      - activate_collapsed
       - add
       - duplicate
       - new
