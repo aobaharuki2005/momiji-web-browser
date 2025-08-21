@@ -51,6 +51,12 @@ const perfMetadata = {
           lowerIsBetter: true,
         },
         {
+          name: "post-gc-parent-process-memory-usage",
+          unit: "MiB",
+          shouldAlert: true,
+          lowerIsBetter: true,
+        },
+        {
           name: "peak-inference-process-memory-usage",
           unit: "MiB",
           shouldAlert: true,
@@ -58,6 +64,12 @@ const perfMetadata = {
         },
         {
           name: "stabilized-inference-process-memory-usage",
+          unit: "MiB",
+          shouldAlert: true,
+          lowerIsBetter: true,
+        },
+        {
+          name: "post-gc-inference-process-memory-usage",
           unit: "MiB",
           shouldAlert: true,
           lowerIsBetter: true,

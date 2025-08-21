@@ -462,12 +462,23 @@ class TranslationsBencher {
 
   /**
    * The metric base name for stabilized memory usage in the parent process.
-   * The TranslationsBencher records this just after finishing the final translation.
+   * The TranslationsBencher records this just after finishing the final translation,
+   * but before destroying the engine and running GC.
    *
    * @type {string}
    */
   static METRIC_STABILIZED_PARENT_PROCESS_MEMORY_USAGE =
     "stabilized-parent-process-memory-usage";
+
+  /**
+   * The metric base name for the memory usage in the parent process after
+   * translation has completed, and after running cycle collection and
+   * garbage collection.
+   *
+   * @type {string}
+   */
+  static METRIC_POST_GC_PARENT_PROCESS_MEMORY_USAGE =
+    "post-gc-parent-process-memory-usage";
 
   /**
    * The metric base name for peak memory usage in the inference process.
@@ -481,12 +492,23 @@ class TranslationsBencher {
 
   /**
    * The metric base name for stabilized memory usage in the inference process,
-   * The TranslationsBencher records this just after finishing the final translation.
+   * The TranslationsBencher records this just after finishing the final translation,
+   * but before running GC.
    *
    * @type {string}
    */
   static METRIC_STABILIZED_INFERENCE_PROCESS_MEMORY_USAGE =
     "stabilized-inference-process-memory-usage";
+
+  /**
+   * The metric base name for the memory usage in the inference process after
+   * translation has completed, and after running cycle collection and garbage
+   * garbage collection.
+   *
+   * @type {string}
+   */
+  static METRIC_POST_GC_INFERENCE_PROCESS_MEMORY_USAGE =
+    "post-gc-inference-process-memory-usage";
 
   /**
    * The metric base name for total translation time.
@@ -839,6 +861,25 @@ class TranslationsBencher {
       const { parentMemoryMiB, inferenceMemoryMiB } =
         await TranslationsBencher.#getTotalMemoryUsageByProcess();
 
+      // Force cycle collection and garbage collection.
+      Services.obs.notifyObservers(null, "child-cc-request");
+      Services.obs.notifyObservers(null, "child-gc-request");
+      window.windowUtils.cycleCollect();
+      Cu.forceGC();
+
+      const { inferenceMemoryMiB: postGCInferenceMiB } =
+        await TranslationsBencher.#getTotalMemoryUsageByProcess();
+
+      // Destroy the TranslationsEngine, then force cycle collection and garbage collection again.
+      await EngineProcess.destroyTranslationsEngine();
+      Services.obs.notifyObservers(null, "child-cc-request");
+      Services.obs.notifyObservers(null, "child-gc-request");
+      window.windowUtils.cycleCollect();
+      Cu.forceGC();
+
+      const { parentMemoryMiB: postGCParentMiB } =
+        await TranslationsBencher.#getTotalMemoryUsageByProcess();
+
       journal.pushMetrics([
         [
           TranslationsBencher.METRIC_PEAK_PARENT_PROCESS_MEMORY_USAGE,
@@ -849,12 +890,20 @@ class TranslationsBencher {
           parentMemoryMiB,
         ],
         [
+          TranslationsBencher.METRIC_POST_GC_PARENT_PROCESS_MEMORY_USAGE,
+          postGCParentMiB,
+        ],
+        [
           TranslationsBencher.METRIC_PEAK_INFERENCE_PROCESS_MEMORY_USAGE,
           peakInferenceMemoryMiB,
         ],
         [
           TranslationsBencher.METRIC_STABILIZED_INFERENCE_PROCESS_MEMORY_USAGE,
           inferenceMemoryMiB,
+        ],
+        [
+          TranslationsBencher.METRIC_POST_GC_INFERENCE_PROCESS_MEMORY_USAGE,
+          postGCInferenceMiB,
         ],
       ]);
 
