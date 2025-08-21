@@ -20,6 +20,8 @@ struct nsRoleMapEntry;
 class nsIURI;
 
 namespace mozilla {
+class WritingMode;
+
 namespace a11y {
 
 class AccAttributes;
@@ -405,6 +407,8 @@ class Accessible {
   virtual already_AddRefed<nsAtom> DisplayStyle() const = 0;
 
   virtual float Opacity() const = 0;
+
+  virtual WritingMode GetWritingMode() const = 0;
 
   /**
    * Get the live region attributes (if any) for this single Accessible. This
