@@ -7860,7 +7860,7 @@ void ScrollContainerFrame::ApzSmoothScrollTo(
   mApzSmoothScrollDestination = Some(aDestination);
   AppendScrollUpdate(ScrollPositionUpdate::NewSmoothScroll(
       aMode, aOrigin, aDestination, aTriggeredByScript,
-      std::move(aSnapTargetIds)));
+      std::move(aSnapTargetIds), ViewportType::Visual));
 
   nsIContent* content = GetContent();
   if (!DisplayPortUtils::HasNonMinimalNonZeroDisplayPort(content)) {

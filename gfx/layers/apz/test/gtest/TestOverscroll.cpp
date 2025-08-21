@@ -7,6 +7,7 @@
 #include "APZCBasicTester.h"
 #include "APZCTreeManagerTester.h"
 #include "APZTestCommon.h"
+#include "mozilla/RelativeTo.h"
 #include "mozilla/ScrollPositionUpdate.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
@@ -2263,7 +2264,7 @@ TEST_F(APZCOverscrollTester, ProgrammaticScroll) {
   scrollUpdates.AppendElement(ScrollPositionUpdate::NewSmoothScroll(
       ScrollMode::SmoothMsd, ScrollOrigin::Other,
       CSSPoint::ToAppUnits(CSSPoint(0, 100000)), ScrollTriggeredByScript::Yes,
-      nullptr));
+      nullptr, ViewportType::Visual));
   metadata.SetScrollUpdates(scrollUpdates);
   metadata.GetMetrics().SetScrollGeneration(
       scrollUpdates.LastElement().GetGeneration());
