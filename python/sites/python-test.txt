@@ -19,7 +19,7 @@ pypi:sphinxcontrib-applehelp==1.0.4
 pypi:sphinxcontrib-htmlhelp==2.0.1
 pypi:sphinxcontrib-mermaid==1.0.0
 pypi:werkzeug==2.1.2
-pypi:zstandard==0.23.0
+pypi:zstandard==0.24.0
 vendored:testing/web-platform/tests/tools/third_party/h2/src
 vendored:testing/web-platform/tests/tools/third_party/hpack/src
 vendored:testing/web-platform/tests/tools/third_party/html5lib
