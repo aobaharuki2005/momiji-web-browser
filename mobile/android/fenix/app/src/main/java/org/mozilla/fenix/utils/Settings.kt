@@ -688,7 +688,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     val shortcutSuggestionsEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_shortcuts_suggestions),
-        default = true,
+        default = false,
     )
 
     /**

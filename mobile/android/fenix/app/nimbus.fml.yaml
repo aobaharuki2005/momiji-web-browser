@@ -685,11 +685,11 @@ features:
         description: >
           Whether or not to enable trending searches.
         type: Boolean
-        default: false
+        default: true
       max-suggestions:
         description: The number of maximum suggestions.
         type: Int
-        default: 4
+        default: 5
 
   recent-searches:
     description: Enables recent searches.
@@ -698,11 +698,11 @@ features:
         description: >
           Whether or not to enable recent searches.
         type: Boolean
-        default: false
+        default: true
       max-suggestions:
         description: The number of maximum suggestions.
         type: Int
-        default: 4
+        default: 5
 
   top-sites-suggestions:
     description: Enables top sites suggestions.
@@ -711,11 +711,11 @@ features:
         description: >
           Whether or not to enable top sites suggestions.
         type: Boolean
-        default: false
+        default: true
       max-suggestions:
         description: The number of maximum suggestions.
         type: Int
-        default: 4
+        default: 2
 
   search-suggestions-on-homepage:
     description: Enables search suggestions on homepage.
