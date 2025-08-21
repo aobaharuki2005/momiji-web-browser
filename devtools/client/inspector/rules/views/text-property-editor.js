@@ -1052,7 +1052,10 @@ class TextPropertyEditor {
     }
 
     if (this.#shouldShowFilterProperty) {
-      this.#createFilterPropertyButton();
+      if (!this.filterProperty) {
+        this.#createFilterPropertyButton();
+      }
+      this.filterProperty.hidden = false;
     } else if (this.filterProperty) {
       this.filterProperty.hidden = true;
     }
