@@ -471,11 +471,12 @@ Navigation::CreateSerializedStateAndMaybeSetEarlyErrorResult(
 void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
                           const NavigationNavigateOptions& aOptions,
                           NavigationResult& aResult) {
-  // 3. Let document be this's relevant global object's associated Document.
+  // 4. Let document be this's relevant global object's associated Document.
   const RefPtr<Document> document = GetAssociatedDocument();
   if (!document) {
     return;
   }
+
   // 1. Let urlRecord be the result of parsing a URL given url, relative to
   //    this's relevant settings object.
   RefPtr<nsIURI> urlRecord;
@@ -489,7 +490,17 @@ void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
     SetEarlyErrorResult(aCx, aResult, std::move(rv));
     return;
   }
-  // 4. If options["history"] is "push", and the navigation must be a replace
+
+  // 3. If urlRecord's scheme is "javascript", then return an early error result
+  //    for a "NotSupportedError" DOMException.
+  if (urlRecord->SchemeIs("javascript")) {
+    ErrorResult rv;
+    rv.ThrowNotSupportedError("The javascript: protocol is not supported");
+    SetEarlyErrorResult(aCx, aResult, std::move(rv));
+    return;
+  }
+
+  // 5. If options["history"] is "push", and the navigation must be a replace
   //    given urlRecord and document, then return an early error result for a
   //    "NotSupportedError" DOMException.
   if (aOptions.mHistory == NavigationHistoryBehavior::Push &&
@@ -500,8 +511,8 @@ void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
     return;
   }
 
-  // 5. Let state be options["state"], if it exists; otherwise, undefined.
-  // 6. Let serializedState be StructuredSerializeForStorage(state). If this
+  // 6. Let state be options["state"], if it exists; otherwise, undefined.
+  // 7. Let serializedState be StructuredSerializeForStorage(state). If this
   //    throws an exception, then return an early error result for that
   //    exception.
   nsCOMPtr<nsIStructuredCloneContainer> serializedState =
@@ -511,29 +522,30 @@ void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
     return;
   }
 
-  // 7. If document is not fully active, then return an early error result for
+  // 8. If document is not fully active, then return an early error result for
   //    an "InvalidStateError" DOMException.
   if (!CheckIfDocumentIsFullyActiveAndMaybeSetEarlyErrorResult(aCx, document,
                                                                aResult)) {
     return;
   }
 
-  // 8. If document's unload counter is greater than 0, then return an early
+  // 9. If document's unload counter is greater than 0, then return an early
   //    error result for an "InvalidStateError" DOMException.
   if (!CheckDocumentUnloadCounterAndMaybeSetEarlyErrorResult(aCx, document,
                                                              aResult)) {
     return;
   }
 
-  // 9. Let info be options["info"], if it exists; otherwise, undefined.
-  // 10. Let apiMethodTracker be the result of maybe setting the upcoming
-  //    non-traverse API method tracker for this given info and serializedState.
+  // 10. Let info be options["info"], if it exists; otherwise, undefined.
+  // 11. Let apiMethodTracker be the result of maybe setting the upcoming
+  //     non-traverse API method tracker for this given info and
+  //     serializedState.
   JS::Rooted<JS::Value> info(aCx, aOptions.mInfo);
   RefPtr<NavigationAPIMethodTracker> apiMethodTracker =
       MaybeSetUpcomingNonTraverseAPIMethodTracker(info, serializedState);
   MOZ_ASSERT(apiMethodTracker);
 
-  // 11. Navigate document's node navigable to urlRecord using document, with
+  // 12. Navigate document's node navigable to urlRecord using document, with
   //     historyHandling set to options["history"] and navigationAPIState set to
   //     serializedState.
 
@@ -543,7 +555,7 @@ void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
                /* per spec, error handling defaults to false */ IgnoreErrors(),
                aOptions.mHistory);
 
-  // 12. If this's upcoming non-traverse API method tracker is apiMethodTracker,
+  // 13. If this's upcoming non-traverse API method tracker is apiMethodTracker,
   //     then:
   if (mUpcomingNonTraverseAPIMethodTracker == apiMethodTracker) {
     // Note: If the upcoming non-traverse API method tracker is still
@@ -551,15 +563,16 @@ void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
     //       before ever getting to the inner navigate event firing algorithm
     //       which would promote that upcoming API method tracker to ongoing.
     //
-    // 12.1 Set this's upcoming non-traverse API method tracker to null.
+    // 13.1 Set this's upcoming non-traverse API method tracker to null.
     mUpcomingNonTraverseAPIMethodTracker = nullptr;
-    // 12.2 Return an early error result for an "AbortError" DOMException.
+    // 13.2 Return an early error result for an "AbortError" DOMException.
     ErrorResult rv;
     rv.ThrowAbortError("Navigation aborted.");
     SetEarlyErrorResult(aCx, aResult, std::move(rv));
     return;
   }
-  // 13. Return a navigation API method tracker-derived result for
+
+  // 14. Return a navigation API method tracker-derived result for
   //     apiMethodTracker.
   CreateResultFromAPIMethodTracker(apiMethodTracker, aResult);
 }
