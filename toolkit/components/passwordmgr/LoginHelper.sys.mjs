@@ -396,6 +396,7 @@ export const LoginHelper = {
   showAutoCompleteFooter: null,
   showAutoCompleteImport: null,
   testOnlyUserHasInteractedWithDocument: null,
+  testOnlyNotWaitForPaint: null,
   userInputRequiredToCapture: null,
   captureInputChanges: null,
   OS_AUTH_FOR_PASSWORDS_BOOL_PREF,
@@ -505,6 +506,12 @@ export const LoginHelper = {
     );
     this.relatedRealmsEnabled = Services.prefs.getBoolPref(
       "signon.relatedRealms.enabled"
+    );
+    // TODO: Remove this preference (Bug 1984225)
+    // Used by geckoview junit test because no paint event is fired in junit test.
+    this.testOnlyNotWaitForPaint = Services.prefs.getBoolPref(
+      "signon.testOnlyNotWaitForPaint",
+      false
     );
   },
 
