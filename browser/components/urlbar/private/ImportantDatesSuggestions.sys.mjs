@@ -53,7 +53,7 @@ export class ImportantDatesSuggestions extends SuggestProvider {
     return this.dynamicRustSuggestionTypes[0];
   }
 
-  makeResult(queryContext, suggestion, _searchString) {
+  async makeResult(_queryContext, suggestion, _searchString) {
     if (
       !suggestion.data?.result?.payload ||
       typeof suggestion.data.result.payload != "object"
