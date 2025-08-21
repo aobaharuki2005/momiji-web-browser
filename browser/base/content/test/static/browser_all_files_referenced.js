@@ -178,9 +178,6 @@ var allowlist = [
     isFromDevTools: true,
   },
 
-  // used by devtools/client/memory/index.xhtml
-  { file: "chrome://global/content/third_party/d3/d3.js" },
-
   // SpiderMonkey parser API, currently unused in browser/ and toolkit/
   { file: "resource://gre/modules/reflect.sys.mjs" },
 
