@@ -18,7 +18,7 @@ artifact=$(basename "$TOOLCHAIN_ARTIFACT")
 dxc_folder=${artifact%.tar.*}
 
 
-dxc_src_dir="$HOME/fetches/DirectXShaderCompiler"
+dxc_src_dir="$MOZ_FETCHES_DIR/DirectXShaderCompiler"
 cd "$dxc_src_dir"
 
 # Configure and build.
