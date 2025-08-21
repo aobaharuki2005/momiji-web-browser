@@ -6,13 +6,13 @@ set -x -e -v
 
 export MOZ_DXC_TARGET_ARCH=$1
 
+export VSINSTALLDIR="$MOZ_FETCHES_DIR/vs"
+
 # Detect a windows SDK version by looking at the directory names in
 # "Windows Kits/10/Include/". At the time of writing this comment, there
 # is one, but we pick the first result in alphabetical order in to reduce
 # the risk of breakage if the vs-toolchain job changes.
-export MOZ_DXC_WIN10_SDK_VERSION=`ls fetches/vs/Windows\ Kits/10/Include/ | sort | head -n 1`
-
-export VSINSTALLDIR="$MOZ_FETCHES_DIR/vs"
+export MOZ_DXC_WIN10_SDK_VERSION=`ls "$VSINSTALLDIR/Windows Kits/10/Include/" | sort | head -n 1`
 
 artifact=$(basename "$TOOLCHAIN_ARTIFACT")
 dxc_folder=${artifact%.tar.*}
