@@ -20,6 +20,14 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
     return "polygon";
   }
 
+  makeMerinoResult(queryContext, suggestion, searchString) {
+    if (!suggestion.custom_details?.polygon?.values?.length) {
+      return null;
+    }
+
+    return super.makeMerinoResult(queryContext, suggestion, searchString);
+  }
+
   getViewTemplate(result) {
     return {
       children: result.payload.polygon.values.map((v, i) => {
