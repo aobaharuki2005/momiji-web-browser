@@ -552,9 +552,14 @@ newtab-trending-searches-dismiss = Hide trending searches
 
 ## Strings for task / to-do list productivity widget
 
-newtab-widget-lists-default-list-title = Task list
+newtab-widget-lists-name-label-default =
+    .label = Task list
+newtab-widget-lists-name-placeholder-default =
+    .placeholder = Task list
 # The placeholder value of the name field for a newly created list
-newtab-widget-lists-default-list-new = New list
+newtab-widget-lists-name-placeholder-new =
+    .placeholder = New list
+
 # "Add one" means adding a new task to the list (e.g., "Walk the dog")
 newtab-widget-lists-empty-cta = The possibilities are endless. Add one.
 # A simple label next to the default list name letting users know this is a new / beta feature

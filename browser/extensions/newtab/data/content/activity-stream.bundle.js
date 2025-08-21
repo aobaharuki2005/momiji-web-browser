@@ -7664,7 +7664,7 @@ const INITIAL_STATE = {
     // Default state of an empty task list
     lists: {
       taskList: {
-        label: "Task List",
+        label: "",
         tasks: [],
         completed: [],
       },
@@ -12323,7 +12323,7 @@ function Lists({
     const newLists = {
       ...lists,
       [id]: {
-        label: "New list",
+        label: "",
         tasks: [],
         completed: []
       }
@@ -12359,7 +12359,7 @@ function Lists({
       if (Object.keys(updatedLists)?.length === 0) {
         updatedLists = {
           [crypto.randomUUID()]: {
-            label: "New list",
+            label: "",
             tasks: [],
             completed: []
           }
@@ -12466,6 +12466,13 @@ function Lists({
   // Ensure a minimum of 1, but allow higher values from prefs
   const maxListItemsCount = Math.max(1, prefs[PREF_WIDGETS_LISTS_MAX_LISTITEMS]);
   const isAtMaxListItemsLimit = currentSelectedListItemsCount >= maxListItemsCount;
+
+  // Figure out if the selected list is the first (default) or a new one.
+  // Index 0 → use "Task list"; any later index → use "New list".
+  // Fallback to 0 if the selected id isn’t found.
+  const listKeys = Object.keys(lists);
+  const selectedIndex = Math.max(0, listKeys.indexOf(selected));
+  const listNamePlaceholder = currentListsCount > 1 && selectedIndex !== 0 ? "newtab-widget-lists-name-placeholder-new" : "newtab-widget-lists-name-placeholder-default";
   return /*#__PURE__*/external_React_default().createElement("article", {
     className: "lists",
     ref: el => {
@@ -12479,15 +12486,20 @@ function Lists({
     isEditing: isEditing,
     setIsEditing: setIsEditing,
     type: "list",
-    maxLength: 30
+    maxLength: 30,
+    dataL10nId: listNamePlaceholder
   }, /*#__PURE__*/external_React_default().createElement("moz-select", {
     ref: selectRef,
     value: selected
-  }, Object.entries(lists).map(([key, list]) => /*#__PURE__*/external_React_default().createElement("moz-option", {
+  }, Object.entries(lists).map(([key, list]) => /*#__PURE__*/external_React_default().createElement("moz-option", Lists_extends({
     key: key,
-    value: key,
+    value: key
+    // On the first/initial list, use default name
+  }, list.label ? {
     label: list.label
-  })))), !isEditing && /*#__PURE__*/external_React_default().createElement("moz-badge", {
+  } : {
+    "data-l10n-id": "newtab-widget-lists-name-label-default"
+  }))))), !isEditing && /*#__PURE__*/external_React_default().createElement("moz-badge", {
     "data-l10n-id": "newtab-widget-lists-label-new"
   }), /*#__PURE__*/external_React_default().createElement("moz-button", {
     className: "lists-panel-button",
@@ -12689,10 +12701,14 @@ function EditableText({
   onSave,
   children,
   type,
+  dataL10nId = null,
   maxLength = 100
 }) {
   const [tempValue, setTempValue] = (0,external_React_namespaceObject.useState)(value);
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
+
+  // True if tempValue is empty, null/undefined, or only whitespace
+  const showPlaceholder = (tempValue ?? "").trim() === "";
   (0,external_React_namespaceObject.useEffect)(() => {
     if (isEditing) {
       inputRef.current?.focus();
@@ -12713,7 +12729,7 @@ function EditableText({
     onSave(tempValue.trim());
     setIsEditing(false);
   }
-  return isEditing ? /*#__PURE__*/external_React_default().createElement("input", {
+  return isEditing ? /*#__PURE__*/external_React_default().createElement("input", Lists_extends({
     className: `edit-${type}`,
     ref: inputRef,
     type: "text",
@@ -12722,7 +12738,10 @@ function EditableText({
     onChange: event => setTempValue(event.target.value),
     onBlur: handleOnBlur,
     onKeyDown: handleKeyDown
-  }) : [children];
+    // Note that if a user has a custom name set, it will override the placeholder
+  }, showPlaceholder && dataL10nId ? {
+    "data-l10n-id": dataL10nId
+  } : {})) : [children];
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/FocusTimer/FocusTimer.jsx

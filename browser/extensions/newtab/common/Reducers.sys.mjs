@@ -177,7 +177,7 @@ export const INITIAL_STATE = {
     // Default state of an empty task list
     lists: {
       taskList: {
-        label: "Task List",
+        label: "",
         tasks: [],
         completed: [],
       },
