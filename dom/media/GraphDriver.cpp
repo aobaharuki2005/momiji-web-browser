@@ -599,6 +599,7 @@ void AudioCallbackDriver::Init(const nsCString& aStreamName) {
       CubebUtils::RouteOutputAsVoice()) {
     output.prefs |= static_cast<cubeb_stream_prefs>(CUBEB_STREAM_PREF_VOICE);
   }
+  output.input_params = CUBEB_INPUT_PROCESSING_PARAM_NONE;
 
   uint32_t latencyFrames = CubebUtils::GetCubebMTGLatencyInFrames(&output);
 
@@ -642,6 +643,7 @@ void AudioCallbackDriver::Init(const nsCString& aStreamName) {
   if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE) {
     input.prefs |= static_cast<cubeb_stream_prefs>(CUBEB_STREAM_PREF_VOICE);
   }
+  input.input_params = CUBEB_INPUT_PROCESSING_PARAM_NONE;
 
   cubeb_stream* stream = nullptr;
   const char* streamName =
