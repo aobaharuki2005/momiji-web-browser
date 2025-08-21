@@ -31,6 +31,9 @@ task-defaults:
     run:
         extra-config:
             max_build_output_timeout: 3600
+    worker:
+        env:
+            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
 
 tasks:
     linux64-searchfox/debug:
