@@ -395,6 +395,21 @@ class HostCompileFlags(BaseCompileFlags):
         return self._context.config.substs.get("HOST_OPTIMIZE_FLAGS") or []
 
 
+class HostLinkFlags(BaseCompileFlags):
+    def __init__(self, context):
+        self._context = context
+
+        self.flag_variables = (
+            (
+                "HOST_LDFLAGS",
+                context.config.substs.get("HOST_LDFLAGS"),
+                ("HOST_LDFLAGS",),
+            ),
+            ("MOZBUILD", None, ("HOST_LDFLAGS",)),
+        )
+        BaseCompileFlags.__init__(self, context)
+
+
 class AsmFlags(BaseCompileFlags):
     def __init__(self, context):
         self._context = context
@@ -2439,6 +2454,13 @@ VARIABLES = {
         See ``DEFINES`` for specifics.
         """,
     ),
+    "HOST_LINK_FLAGS": (
+        HostLinkFlags,
+        dict,
+        """Recipe for host linker flags for this context. Not to be manipulated
+        directly.
+        """,
+    ),
     "WASM_CFLAGS": (
         List,
         list,
@@ -2528,6 +2550,17 @@ VARIABLES = {
 
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
+           appear in the moz.build file.
+        """,
+    ),
+    "HOST_LDFLAGS": (
+        List,
+        list,
+        """Flags passed to the host linker when linking all of the libraries and
+           executables declared in this directory.
+
+           Note that the ordering of flags matters here; these flags will be
+           added to the linker's command line in the same order as they
            appear in the moz.build file.
         """,
     ),
