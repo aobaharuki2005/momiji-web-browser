@@ -13,7 +13,7 @@
   <!-- Title of a dialog for a local network access request. %1$s is the domain name of the website -->
   <string name="mozac_feature_sitepermissions_local_network_access_title">Разрешаване на %1$s за достъп до приложения и услуги от устройства, свързани към вашата локална мрежа?</string>
   <!-- Title of a dialog for a local device access request. %1$s is the domain name of the website -->
-  <string name="mozac_feature_sitepermissions_local_device_access_title">Разрешаване на %1$s до други приложения и услуги на това устройство?</string>
+  <string name="mozac_feature_sitepermissions_local_device_access_title">Разрешаване на достъпа на \u0020%1$s до други приложения и услуги на това устройство?</string>
   <!--
     Option in a dialog for requesting a microphone permission, this option will give access to
     the first microphone

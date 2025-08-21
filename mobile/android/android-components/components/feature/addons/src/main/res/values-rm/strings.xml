@@ -87,8 +87,6 @@
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">Scripts betg verifitgads pon periclitar la segirezza e la protecziun da datas. Exequescha sulettamain scripts dad extensiuns u funtaunas da las qualas ti ta fidas.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
-  <string name="mozac_feature_addons_permissions_required_data_collection_description" moz:removedIn="141" tools:ignore="UnusedResources">Il sviluppader declera che questa extensiun rimnia il suandant: %1$s.</string>
-  <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
   <string name="mozac_feature_addons_permissions_required_data_collection_description_2">Il sviluppader declera che questa extensiun rimnia il suandant: %1$s</string>
   <!-- The sentence used when the developer of an extension has explicitly stated that they do not collect any data collection. -->
   <string name="mozac_feature_addons_permissions_none_required_data_collection_description">Il sviluppader declera che questa extensiun na pretendia nagina collecziun da datas.</string>
@@ -165,8 +163,6 @@
   <!-- Indicates the add-on is enabled. -->
   <string name="mozac_feature_addons_settings_on">Activà</string>
   <!-- Indicates the add-on is allowed in private browsing mode. -->
-  <string name="mozac_feature_addons_settings_allow_in_private_browsing" moz:removedIn="141" tools:ignore="UnusedResources">Permetter en il modus privat</string>
-  <!-- Indicates the add-on is allowed in private browsing mode. -->
   <string name="mozac_feature_addons_settings_allow_in_private_browsing_2">Permetter che l’extensiun vegnia exequida en il modus privat</string>
   <!-- Indicates the add-on is allowed in private browsing mode. -->
   <string name="mozac_feature_addons_settings_run_in_private_browsing">Exequir en il modus privat</string>
@@ -193,8 +189,6 @@
   <!-- This is a button to report an add-on. -->
   <string name="mozac_feature_addons_report">Rapportar</string>
   <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_permissions_dialog_title" moz:removedIn="141" tools:ignore="UnusedResources">Agiuntar %1$s?</string>
-  <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_permissions_dialog_title_2">Agiuntar %1$s</string>
   <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_optional_permissions_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%1$s dumonda ulteriuras autorisaziuns.</string>
@@ -202,8 +196,6 @@
   <string name="mozac_feature_addons_optional_permissions_with_data_collection_dialog_title">%1$s dumonda ulteriurs parameters</string>
   <!-- This is the title of a dialog that asks the users to grant optional data collection permissions only. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_optional_permissions_with_data_collection_only_dialog_title">%1$s dumonda da rimnar ulteriuras datas</string>
-  <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
-  <string name="mozac_feature_addons_permissions_dialog_subtitle" moz:removedIn="141" tools:ignore="UnusedResources">Basegna l\'autorisaziun per:</string>
   <!-- Heading for the permissions section in the add-on install dialog. -->
   <string name="mozac_feature_addons_permissions_dialog_heading_required_permissions">Autorisaziuns necessarias:</string>
   <!-- Heading for the data collection permissions section in the add-on install dialog. -->
