@@ -422,6 +422,8 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   static uint32_t CollapseMaxTouchPoints(uint32_t aMaxTouchPoints);
 
+  static Maybe<RFPTarget> TextToRFPTarget(const nsAString& aText);
+
  private:
   nsresult Init();
 
@@ -434,8 +436,6 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   void PrefChanged(const char* aPref);
   static void PrefChanged(const char* aPref, void* aSelf);
-
-  static Maybe<RFPTarget> TextToRFPTarget(const nsAString& aText);
 
   // --------------------------------------------------------------------------
 
