@@ -593,15 +593,17 @@ browser.searchinit:
       - https://bugzil.la/1846899
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
+      - https://bugzil.la/1984248
     data_reviews:
       - https://bugzil.la/1789438
       - https://bugzil.la/1811158
       - https://bugzil.la/1846899
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
+      - https://bugzil.la/1984248
     notification_emails:
       - fx-search-telemetry@mozilla.com
-    expires: 145
+    expires: 151
     unit: engines
     telemetry_mirror: BROWSER_SEARCHINIT_SECURE_OPENSEARCH_ENGINE_COUNT
 
@@ -618,15 +620,17 @@ browser.searchinit:
       - https://bugzil.la/1846899
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
+      - https://bugzil.la/1984248
     data_reviews:
       - https://bugzil.la/1789438
       - https://bugzil.la/1811158
       - https://bugzil.la/1846899
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
+      - https://bugzil.la/1984248
     notification_emails:
       - fx-search-telemetry@mozilla.com
-    expires: 145
+    expires: 151
     unit: engines
     telemetry_mirror: BROWSER_SEARCHINIT_INSECURE_OPENSEARCH_ENGINE_COUNT
 
@@ -643,15 +647,17 @@ browser.searchinit:
       - https://bugzil.la/1846899
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
+      - https://bugzil.la/1984248
     data_reviews:
       - https://bugzil.la/1789438
       - https://bugzil.la/1811158
       - https://bugzil.la/1846899
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
+      - https://bugzil.la/1984248
     notification_emails:
       - fx-search-telemetry@mozilla.com
-    expires: 145
+    expires: 151
     unit: updates
     telemetry_mirror: BROWSER_SEARCHINIT_SECURE_OPENSEARCH_UPDATE_COUNT
 
@@ -668,15 +674,17 @@ browser.searchinit:
       - https://bugzil.la/1846899
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
+      - https://bugzil.la/1984248
     data_reviews:
       - https://bugzil.la/1789438
       - https://bugzil.la/1811158
       - https://bugzil.la/1846899
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
+      - https://bugzil.la/1984248
     notification_emails:
       - fx-search-telemetry@mozilla.com
-    expires: 145
+    expires: 151
     unit: updates
     telemetry_mirror: BROWSER_SEARCHINIT_INSECURE_OPENSEARCH_UPDATE_COUNT
 
