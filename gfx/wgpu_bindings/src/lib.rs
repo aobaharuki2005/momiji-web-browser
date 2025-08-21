@@ -269,6 +269,7 @@ enum Message<'a> {
         id::QueueId,
         Cow<'a, [id::CommandBufferId]>,
         Cow<'a, [id::TextureId]>,
+        Cow<'a, [crate::ExternalTextureSourceId]>,
     ),
     QueueOnSubmittedWorkDone(id::QueueId),
 
