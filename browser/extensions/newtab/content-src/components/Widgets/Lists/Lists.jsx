@@ -491,15 +491,9 @@ function Lists({ dispatch }) {
 
   // Enforce maximum count limits to lists
   const currentListsCount = Object.keys(lists).length;
-  let maxListsCount = prefs[PREF_WIDGETS_LISTS_MAX_LISTS];
-
-  function isAtMaxListsLimit() {
-    // Edge case if user sets max limit to `0`
-    if (maxListsCount < 1) {
-      maxListsCount = 1;
-    }
-    return currentListsCount >= maxListsCount;
-  }
+  // Ensure a minimum of 1, but allow higher values from prefs
+  const maxListsCount = Math.max(1, prefs[PREF_WIDGETS_LISTS_MAX_LISTS]);
+  const isAtMaxListsLimit = currentListsCount >= maxListsCount;
 
   return (
     <article
