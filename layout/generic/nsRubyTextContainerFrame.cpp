@@ -172,6 +172,12 @@ RubyMetrics nsRubyTextContainerFrame::RubyMetrics() const {
       continue;
     }
     mozilla::RubyMetrics m = f->RubyMetrics();
+    const LogicalMargin borderPadding = f->GetLogicalUsedBorderAndPadding(wm);
+    m.mAscent += borderPadding.BStart(wm);
+    m.mDescent += borderPadding.BEnd(wm);
+    const LogicalMargin margin = f->GetLogicalUsedMargin(wm);
+    m.mAscent += margin.BStart(wm);
+    m.mDescent += margin.BEnd(wm);
     result.CombineWith(m);
     foundAnyFrames = true;
   }

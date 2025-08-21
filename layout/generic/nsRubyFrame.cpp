@@ -324,16 +324,20 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
 
     nscoord textEmHeight = 0;
     nscoord ascentDelta = 0;
+    nscoord bStartMargin = 0;
     if (normalizeRubyMetrics) {
       auto [ascent, descent] = textContainer->RubyMetrics();
+      const auto* firstChild = textContainer->PrincipalChildList().FirstChild();
       textEmHeight = ascent + descent;
       nscoord textBlockStartAscent =
-          textMetrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE
-              ? textContainer->PrincipalChildList()
-                    .FirstChild()
-                    ->GetLogicalBaseline(lineWM)
+          firstChild && textMetrics.BlockStartAscent() ==
+                            ReflowOutput::ASK_FOR_BASELINE
+              ? firstChild->GetLogicalBaseline(lineWM)
               : textMetrics.BlockStartAscent();
       ascentDelta = textBlockStartAscent - ascent;
+      bStartMargin =
+          firstChild ? firstChild->GetLogicalUsedMargin(lineWM).BStart(lineWM)
+                     : 0;
     }
 
     const LogicalSize size = textMetrics.Size(lineWM);
@@ -407,7 +411,8 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
       } else if (logicalSide == LogicalSide::BEnd) {
         if (normalizeRubyMetrics) {
           position.I(lineWM) = offsetRect.IStart(lineWM);
-          position.B(lineWM) = offsetRect.BEnd(lineWM) - ascentDelta;
+          position.B(lineWM) =
+              offsetRect.BEnd(lineWM) - ascentDelta - bStartMargin;
           offsetRect.BSize(lineWM) += textEmHeight;
           rubyMetrics.mDescent += textEmHeight;
         } else {
