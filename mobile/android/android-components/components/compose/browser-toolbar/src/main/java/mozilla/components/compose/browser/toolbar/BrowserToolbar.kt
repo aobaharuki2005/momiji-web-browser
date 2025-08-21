@@ -40,7 +40,7 @@ fun BrowserToolbar(
     if (uiState.isEditMode()) {
         BrowserEditToolbar(
             query = uiState.editState.query,
-            showQueryAsPreselected = uiState.editState.showQueryAsPreselected,
+            isQueryPrefilled = uiState.editState.isQueryPrefilled,
             gravity = uiState.gravity,
             autocompleteProviders = uiState.editState.autocompleteProviders,
             editActionsStart = uiState.editState.editActionsStart,

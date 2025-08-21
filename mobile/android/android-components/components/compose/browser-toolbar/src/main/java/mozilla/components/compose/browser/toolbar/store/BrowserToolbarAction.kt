@@ -119,10 +119,11 @@ sealed class BrowserEditToolbarAction : BrowserToolbarAction {
      * Updates the text of the toolbar that is currently being edited (in "edit" mode).
      *
      * @property query The text in the toolbar that is being edited.
+     * @property isQueryPrefilled Whether [query] is prefilled and not user entered.
      */
     data class SearchQueryUpdated(
         val query: String,
-        val showAsPreselected: Boolean = false,
+        val isQueryPrefilled: Boolean = false,
     ) : BrowserEditToolbarAction()
 
     /**

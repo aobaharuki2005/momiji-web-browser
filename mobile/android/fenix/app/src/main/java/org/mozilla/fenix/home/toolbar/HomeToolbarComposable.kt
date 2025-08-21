@@ -220,7 +220,7 @@ internal class HomeToolbarComposable(
                 toolbarStore.dispatch(
                     SearchQueryUpdated(
                         query = it.getUrl() ?: "",
-                        showAsPreselected = true,
+                        isQueryPrefilled = true,
                     ),
                 )
             }
