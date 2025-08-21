@@ -70,7 +70,7 @@
   -->
   <string name="menu_trackers_blocked_subtitle">Изключването на тази функция би могла да реши някои проблеми със сайта</string>
   <!-- Menu item: This is the label for turning off content blocking for the current website. -->
-  <string name="menu_content_blocking">Блокиране на съдържанието</string>
+  <string name="menu_content_blocking">Блокиране на съдържание</string>
   <!-- This is the subtitle content blocking toggle -->
   <string name="menu_content_blocking_subtitle">Изключете, за да поправите някои сайтове</string>
   <!--
