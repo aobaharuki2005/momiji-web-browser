@@ -65,8 +65,7 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   void UnregisterDevice(RawId aDeviceId);
 
   void QueueSubmit(RawId aSelfId, RawId aDeviceId,
-                   nsTArray<RawId>& aCommandBuffers,
-                   const nsTArray<RawId>& aUsedExternalTextureSources);
+                   nsTArray<RawId>& aCommandBuffers);
   void NotifyWaitForSubmit(RawId aTextureId);
 
   static void JsWarning(nsIGlobalObject* aGlobal, const nsACString& aMessage);

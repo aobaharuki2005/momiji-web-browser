@@ -561,16 +561,13 @@ void WebGPUChild::ClearActorState() {
   }
 }
 
-void WebGPUChild::QueueSubmit(
-    RawId aSelfId, RawId aDeviceId, nsTArray<RawId>& aCommandBuffers,
-    const nsTArray<RawId>& aUsedExternalTextureSources) {
+void WebGPUChild::QueueSubmit(RawId aSelfId, RawId aDeviceId,
+                              nsTArray<RawId>& aCommandBuffers) {
   ffi::wgpu_client_queue_submit(
       GetClient(), aDeviceId, aSelfId,
       {aCommandBuffers.Elements(), aCommandBuffers.Length()},
       {mSwapChainTexturesWaitingForSubmit.Elements(),
-       mSwapChainTexturesWaitingForSubmit.Length()},
-      {aUsedExternalTextureSources.Elements(),
-       aUsedExternalTextureSources.Length()});
+       mSwapChainTexturesWaitingForSubmit.Length()});
   mSwapChainTexturesWaitingForSubmit.Clear();
 
   PROFILER_MARKER_UNTYPED("WebGPU: QueueSubmit", GRAPHICS_WebGPU);

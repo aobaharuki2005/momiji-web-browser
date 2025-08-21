@@ -115,12 +115,7 @@ void Queue::Submit(
     }
   }
 
-  nsTArray<RawId> externalTextureSourceIds;
-  for (auto& externalTexture : externalTextures) {
-    externalTextureSourceIds.AppendElement(externalTexture->Source()->mId);
-  }
-
-  mBridge->QueueSubmit(mId, mParent->mId, list, externalTextureSourceIds);
+  mBridge->QueueSubmit(mId, mParent->mId, list);
 
   if (!externalTextures.IsEmpty()) {
     for (const auto& externalTexture : externalTextures) {

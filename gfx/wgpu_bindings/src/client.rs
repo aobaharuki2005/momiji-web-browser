@@ -885,14 +885,12 @@ pub extern "C" fn wgpu_client_queue_submit(
     queue_id: id::QueueId,
     command_buffers: FfiSlice<'_, id::CommandBufferId>,
     swap_chain_textures: FfiSlice<'_, id::TextureId>,
-    external_texture_sources: FfiSlice<'_, crate::ExternalTextureSourceId>,
 ) {
     let message = Message::QueueSubmit(
         device_id,
         queue_id,
         Cow::Borrowed(unsafe { command_buffers.as_slice() }),
         Cow::Borrowed(unsafe { swap_chain_textures.as_slice() }),
-        Cow::Borrowed(unsafe { external_texture_sources.as_slice() }),
     );
     client.queue_message(&message);
 }

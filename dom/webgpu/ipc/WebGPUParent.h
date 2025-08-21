@@ -95,7 +95,7 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUParent, override)
 
  public:
-  explicit WebGPUParent(const dom::ContentParentId& aContentId);
+  explicit WebGPUParent();
 
   void PostAdapterRequestDevice(RawId aDeviceId);
   void BufferUnmap(RawId aDeviceId, RawId aBufferId, bool aFlush);
@@ -108,8 +108,7 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
       const ExternalTextureSourceDescriptor& aDesc);
   void QueueSubmit(RawId aQueueId, RawId aDeviceId,
                    Span<const RawId> aCommandBuffers,
-                   Span<const RawId> aTextureIds,
-                   Span<const RawId> aExternalTextureSourceIds);
+                   Span<const RawId> aTextureIds);
   void DeviceCreateSwapChain(RawId aDeviceId, RawId aQueueId,
                              const layers::RGBDescriptor& aDesc,
                              const nsTArray<RawId>& aBufferIds,
@@ -225,8 +224,6 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
   /// Includes entries about mappedAtCreation, MAP_READ and MAP_WRITE buffers,
   /// regardless of their state.
   std::unordered_map<RawId, BufferMapData> mSharedMemoryMap;
-
-  const dom::ContentParentId mContentId;
 
  private:
   static void DeviceLostCallback(uint8_t* aUserData, uint8_t aReason,
