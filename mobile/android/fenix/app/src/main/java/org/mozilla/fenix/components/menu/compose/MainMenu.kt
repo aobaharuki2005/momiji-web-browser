@@ -50,7 +50,6 @@ import androidx.compose.ui.semantics.collectionInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
@@ -179,31 +178,29 @@ fun MainMenu(
 ) {
     MenuFrame(
         header = {
-            MenuNavHeader(
-                state = if (accessPoint == MenuAccessPoint.Home) {
-                    MenuItemState.DISABLED
-                } else {
-                    MenuItemState.ENABLED
-                },
-                goBackState = if (canGoBack && accessPoint != MenuAccessPoint.Home) {
-                    MenuItemState.ENABLED
-                } else {
-                    MenuItemState.DISABLED
-                },
-                goForwardState = if (canGoForward && accessPoint != MenuAccessPoint.Home) {
-                    MenuItemState.ENABLED
-                } else {
-                    MenuItemState.DISABLED
-                },
-                isSiteLoading = accessPoint != MenuAccessPoint.Home && isSiteLoading,
-                onBackButtonClick = onBackButtonClick,
-                onForwardButtonClick = onForwardButtonClick,
-                onRefreshButtonClick = onRefreshButtonClick,
-                onStopButtonClick = onStopButtonClick,
-                onShareButtonClick = onShareButtonClick,
-                isExtensionsExpanded = isExtensionsExpanded,
-                isMoreMenuExpanded = isMoreMenuExpanded,
-            )
+            if (accessPoint != MenuAccessPoint.Home) {
+                MenuNavHeader(
+                    state = MenuItemState.ENABLED,
+                    goBackState = if (canGoBack) {
+                        MenuItemState.ENABLED
+                    } else {
+                        MenuItemState.DISABLED
+                    },
+                    goForwardState = if (canGoForward) {
+                        MenuItemState.ENABLED
+                    } else {
+                        MenuItemState.DISABLED
+                    },
+                    isSiteLoading = isSiteLoading,
+                    onBackButtonClick = onBackButtonClick,
+                    onForwardButtonClick = onForwardButtonClick,
+                    onRefreshButtonClick = onRefreshButtonClick,
+                    onStopButtonClick = onStopButtonClick,
+                    onShareButtonClick = onShareButtonClick,
+                    isExtensionsExpanded = isExtensionsExpanded,
+                    isMoreMenuExpanded = isMoreMenuExpanded,
+                )
+            }
         },
         scrollState = scrollState,
     ) {
