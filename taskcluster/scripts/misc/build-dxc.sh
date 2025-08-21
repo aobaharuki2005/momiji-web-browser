@@ -18,11 +18,13 @@ artifact=$(basename "$TOOLCHAIN_ARTIFACT")
 dxc_folder=${artifact%.tar.*}
 
 
-cd "$HOME/fetches/DirectXShaderCompiler"
+dxc_src_dir="$HOME/fetches/DirectXShaderCompiler"
+cd "$dxc_src_dir"
 
 # Configure and build.
-mkdir build
-cd build
+dxc_build_dir="$dxc_src_dir/build"
+mkdir $dxc_build_dir
+cd $dxc_build_dir
 
 # Note: it is important that LLVM_ENABLE_ASSERTIONS remains enabled.
 
