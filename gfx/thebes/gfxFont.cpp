@@ -4302,8 +4302,12 @@ void gfxFont::CalculateDerivedMetrics(Metrics& aMetrics) {
   }
 
   aMetrics.maxHeight = aMetrics.maxAscent + aMetrics.maxDescent;
-  aMetrics->internalLeading =
-      std::max(0.0, aMetrics->maxHeight - aMetrics->emHeight);
+
+  if (aMetrics.maxHeight - aMetrics.emHeight > 0.0) {
+    aMetrics.internalLeading = aMetrics.maxHeight - aMetrics.emHeight;
+  } else {
+    aMetrics.internalLeading = 0.0;
+  }
 
   aMetrics.emAscent =
       aMetrics.maxAscent * aMetrics.emHeight / aMetrics.maxHeight;
@@ -4669,12 +4673,9 @@ void gfxFont::CreateVerticalMetrics() {
 
   // Somewhat arbitrary values for now, subject to future refinement...
   metrics->spaceWidth = metrics->aveCharWidth;
+  metrics->maxHeight = metrics->maxAscent + metrics->maxDescent;
   metrics->xHeight = metrics->emHeight / 2;
   metrics->capHeight = metrics->maxAscent;
-
-  metrics->maxHeight = metrics->maxAscent + metrics->maxDescent;
-  metrics->internalLeading =
-      std::max(0.0, metrics->maxHeight - metrics->emHeight);
 
   if (metrics->zeroWidth < 0.0) {
     metrics->zeroWidth = metrics->aveCharWidth;
