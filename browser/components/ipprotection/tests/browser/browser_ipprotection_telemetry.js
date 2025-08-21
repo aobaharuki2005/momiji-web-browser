@@ -52,6 +52,7 @@ add_task(async function user_toggle_on_and_off() {
     isEnrolled: true,
   });
   IPProtectionService.isEnrolled = true;
+  IPProtectionService.isEntitled = true;
   content.state.isSignedIn = true;
   content.requestUpdate();
   await content.updateComplete;
@@ -91,6 +92,7 @@ add_task(async function user_toggle_on_and_off() {
 
   Services.fog.testResetFOG();
   IPProtectionService.isEnrolled = false;
+  IPProtectionService.isEntitled = false;
   cleanupService();
 
   // Close the panel
@@ -131,6 +133,7 @@ add_task(async function toggle_off_on_shutdown() {
     isEnrolled: true,
   });
   IPProtectionService.isEnrolled = true;
+  IPProtectionService.isEntitled = true;
   content.state.isSignedIn = true;
   content.requestUpdate();
   await content.updateComplete;

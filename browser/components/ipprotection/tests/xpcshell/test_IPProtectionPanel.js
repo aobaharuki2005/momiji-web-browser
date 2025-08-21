@@ -130,6 +130,13 @@ add_task(async function test_IPProtectionPanel_signedIn() {
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .returns(false);
+  sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").returns({
+    status: 200,
+    error: undefined,
+    pass: {
+      isValid: () => true,
+    },
+  });
 
   let ipProtectionPanel = new IPProtectionPanel();
   let fakeElement = new FakeIPProtectionPanelElement();
@@ -213,6 +220,15 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
   ipProtectionPanel.panel = fakeElement;
   fakeElement.isConnected = true;
 
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").returns({
+    status: 200,
+    error: undefined,
+    pass: {
+      isValid: () => true,
+    },
+  });
+
   // Set to signed in
   ipProtectionPanel.setState({
     isSignedIn: true,
@@ -226,6 +242,7 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
 
   IPProtectionService.isSignedIn = true;
   IPProtectionService.isEnrolled = true;
+  IPProtectionService.isEntitled = true;
 
   IPProtectionService.start();
 
@@ -263,6 +280,7 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
     false,
     "isProtectionEnabled should be false in the fake elements state"
   );
+  sandbox.restore();
 });
 
 /**

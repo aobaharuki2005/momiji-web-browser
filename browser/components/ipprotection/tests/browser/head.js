@@ -200,6 +200,22 @@ let DEFAULT_SERVICE_STATUS = {
   isSignedIn: false,
   isEnrolled: false,
   canEnroll: true,
+  entitlement: {
+    status: 200,
+    error: undefined,
+    entitlement: {
+      subscribed: false,
+      uid: 42,
+      created_at: "2023-01-01T12:00:00.000Z",
+    },
+  },
+  proxyPass: {
+    status: 200,
+    error: undefined,
+    pass: {
+      isValid: () => true,
+    },
+  },
 };
 /* exported DEFAULT_SERVICE_STATUS */
 
@@ -207,6 +223,8 @@ let STUBS = {
   UIState: undefined,
   isLinkedToGuardian: undefined,
   enroll: undefined,
+  fetchUserInfo: undefined,
+  fetchProxyPass: undefined,
 };
 /* exported STUBS */
 
@@ -237,11 +255,25 @@ function setupStubs(stubs = STUBS) {
     "isLinkedToGuardian"
   );
   stubs.enroll = setupSandbox.stub(IPProtectionService.guardian, "enroll");
+  stubs.fetchUserInfo = setupSandbox.stub(
+    IPProtectionService.guardian,
+    "fetchUserInfo"
+  );
+  stubs.fetchProxyPass = setupSandbox.stub(
+    IPProtectionService.guardian,
+    "fetchProxyPass"
+  );
 }
 /* exported setupStubs */
 
 function setupService(
-  { isSignedIn, isEnrolled, canEnroll } = DEFAULT_SERVICE_STATUS,
+  {
+    isSignedIn,
+    isEnrolled,
+    canEnroll,
+    entitlement,
+    proxyPass,
+  } = DEFAULT_SERVICE_STATUS,
   stubs = STUBS
 ) {
   if (typeof isSignedIn != "undefined") {
@@ -260,6 +292,14 @@ function setupService(
     stubs.enroll.returns({
       ok: canEnroll,
     });
+  }
+
+  if (typeof entitlement != "undefined") {
+    stubs.fetchUserInfo.returns(entitlement);
+  }
+
+  if (typeof proxyPass != "undefined") {
+    stubs.fetchProxyPass.returns(proxyPass);
   }
 }
 /* exported setupService */
