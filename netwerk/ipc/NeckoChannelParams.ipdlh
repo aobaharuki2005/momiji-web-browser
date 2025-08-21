@@ -567,6 +567,7 @@ struct RedirectToRealChannelArgs {
   nsCString? originalUriString;
   EarlyHintConnectArgs[] earlyHints;
   uint32_t earlyHintLinkType;
+  nullable nsIReferrerInfo referrerInfo;
 };
 
 struct TimingStructArgs {

@@ -51,6 +51,7 @@
 #include "nsIBrowser.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsINetworkInterceptController.h"
 #include "nsIStreamConverterService.h"
 #include "nsIViewSourceChannel.h"
 #include "nsImportModule.h"
@@ -1690,6 +1691,18 @@ void DocumentLoadListener::SerializeRedirectData(
   // can't use baseChannel here.
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel)) {
     MOZ_ALWAYS_SUCCEEDS(httpChannel->GetChannelId(&aArgs.channelId()));
+
+    // propagated the channel's referrerInfo back to child if the redirection
+    // is caused by ServiceWorker interception.
+    if (nsCOMPtr<nsIInterceptedChannel> interceptedChannel =
+            do_QueryInterface(mChannel)) {
+      nsCOMPtr<nsIReferrerInfo> referrerInfo;
+      MOZ_ALWAYS_SUCCEEDS(
+          httpChannel->GetReferrerInfo(getter_AddRefs(referrerInfo)));
+      if (referrerInfo) {
+        aArgs.referrerInfo() = referrerInfo;
+      }
+    }
   }
 
   aArgs.redirectMode() = nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW;
