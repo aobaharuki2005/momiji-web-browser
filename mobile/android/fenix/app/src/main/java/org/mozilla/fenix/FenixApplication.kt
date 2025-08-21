@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix
 
+import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
@@ -193,10 +194,14 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
+    @SuppressLint("NewApi")
     @VisibleForTesting
     protected open fun setupInAllProcesses() {
-        setupCrashReporting()
-
+        // See Bug 1969818: Crash reporting requires updates to be compatible with
+        // isolated content process.
+        if (!android.os.Process.isIsolated()) {
+            setupCrashReporting()
+        }
         // We want the log messages of all builds to go to Android logcat
         Log.addSink(FenixLogSink(logsDebug = Config.channel.isDebug, AndroidLogSink()))
     }
