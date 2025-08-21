@@ -1047,15 +1047,6 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource(
                        nullptr,     // loadGroup
                        nullptr,     // aCallbacks
                        loadFlags);  // aLoadFlags
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    auto workerRef = mWorkerRef.Lock();
-
-    if (*workerRef) {
-      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-      loadInfo->SetIsInThirdPartyContext(
-          (*workerRef)->Private()->IsThirdPartyContext());
-    }
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
