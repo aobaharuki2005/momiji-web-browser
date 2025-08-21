@@ -42,6 +42,8 @@ class nsRubyFrame final : public nsInlineFrame {
 
   mozilla::RubyBlockLeadings GetBlockLeadings() const { return mLeadings; }
 
+  mozilla::RubyMetrics RubyMetrics() const override { return mRubyMetrics; }
+
  protected:
   friend nsContainerFrame* NS_NewRubyFrame(mozilla::PresShell* aPresShell,
                                            ComputedStyle* aStyle);
@@ -60,6 +62,9 @@ class nsRubyFrame final : public nsInlineFrame {
   // The leadings required to put the annotations. They are dummy-
   // initialized to 0, and get meaningful values at first reflow.
   mozilla::RubyBlockLeadings mLeadings;
+
+  // Accumulated normalized-ascent/descent metrics used for ruby positioning.
+  mozilla::RubyMetrics mRubyMetrics;
 };
 
 #endif /* nsRubyFrame_h___ */
