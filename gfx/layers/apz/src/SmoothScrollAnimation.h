@@ -51,6 +51,7 @@ class SmoothScrollAnimation : public AsyncPanZoomAnimation {
     return mTriggeredByScript == ScrollTriggeredByScript::Yes;
   }
   ScrollAnimationKind Kind() const { return mKind; }
+  ViewportType ViewportToScroll() const { return mViewportToScroll; }
   ScrollSnapTargetIds TakeSnapTargetIds() { return std::move(mSnapTargetIds); }
   ScrollOrigin GetScrollOrigin() const;
   static ScrollOrigin GetScrollOriginForAction(
@@ -71,8 +72,8 @@ class SmoothScrollAnimation : public AsyncPanZoomAnimation {
   }
 
   // If we need to perform an animation of the same kind and the specified
-  // origin, can we extend this existing animation?
-  bool CanExtend(ScrollOrigin aOrigin) const;
+  // parameters, can we extend this existing animation?
+  bool CanExtend(ViewportType aViewportToScroll, ScrollOrigin aOrigin) const;
 
  private:
   SmoothScrollAnimation(ScrollAnimationKind aKind,

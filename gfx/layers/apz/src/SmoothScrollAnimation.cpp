@@ -105,9 +105,14 @@ SmoothScrollAnimation::SmoothScrollAnimation(ScrollAnimationKind aKind,
   }
 }
 
-bool SmoothScrollAnimation::CanExtend(ScrollOrigin aOrigin) const {
+bool SmoothScrollAnimation::CanExtend(ViewportType aViewportToScroll,
+                                      ScrollOrigin aOrigin) const {
   MOZ_ASSERT(mKind == ScrollAnimationKind::Smooth ||
              mKind == ScrollAnimationKind::SmoothMsd);
+  // The viewport type must always match.
+  if (aViewportToScroll != mViewportToScroll) {
+    return false;
+  }
   if (mKind == ScrollAnimationKind::SmoothMsd) {
     // We do not track the origin of SmoothMsd animations, so
     // always allow extending.

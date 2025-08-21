@@ -2214,7 +2214,8 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
     APZC_LOG("%p keyboard scrolling to snap point %s\n", this,
              ToString(destination).c_str());
     SmoothScrollTo(std::move(*snapDestination), ScrollTriggeredByScript::No,
-                   ScrollAnimationKind::SmoothMsd, ScrollOrigin::NotSpecified);
+                   ScrollAnimationKind::SmoothMsd, ViewportType::Visual,
+                   ScrollOrigin::NotSpecified);
     return nsEventStatus_eConsumeDoDefault;
   }
 
@@ -2708,7 +2709,7 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
         APZC_LOG("%p wheel scrolling to snap point %s\n", this,
                  ToString(startPosition).c_str());
         SmoothScrollTo(std::move(*snapDestination), ScrollTriggeredByScript::No,
-                       ScrollAnimationKind::SmoothMsd,
+                       ScrollAnimationKind::SmoothMsd, ViewportType::Visual,
                        ScrollOrigin::NotSpecified);
         break;
       }
@@ -4178,7 +4179,8 @@ ParentLayerPoint AsyncPanZoomController::ConvertDestinationToDelta(
 void AsyncPanZoomController::SmoothScrollTo(
     CSSSnapDestination&& aDestination,
     ScrollTriggeredByScript aTriggeredByScript,
-    ScrollAnimationKind aAnimationKind, ScrollOrigin aOrigin) {
+    ScrollAnimationKind aAnimationKind, ViewportType aViewportToScroll,
+    ScrollOrigin aOrigin) {
   MOZ_ASSERT(aAnimationKind == ScrollAnimationKind::Smooth ||
              aAnimationKind == ScrollAnimationKind::SmoothMsd);
   MOZ_ASSERT_IF(aAnimationKind == ScrollAnimationKind::Smooth,
@@ -4197,7 +4199,7 @@ void AsyncPanZoomController::SmoothScrollTo(
   if (InScrollAnimation(aAnimationKind)) {
     RefPtr<SmoothScrollAnimation> animation(
         mAnimation->AsSmoothScrollAnimation());
-    if (animation->CanExtend(aOrigin)) {
+    if (animation->CanExtend(aViewportToScroll, aOrigin)) {
       APZC_LOG("%p updating destination on existing animation\n", this);
       animation->UpdateDestinationAndSnapTargets(
           GetFrameTime().Time(), destination, velocity,
@@ -4215,7 +4217,7 @@ void AsyncPanZoomController::SmoothScrollTo(
   SetState(SMOOTH_SCROLL);
 
   RefPtr<SmoothScrollAnimation> animation =
-      SmoothScrollAnimation::Create(*this, aAnimationKind, ViewportType::Visual, aOrigin);
+      SmoothScrollAnimation::Create(*this, aAnimationKind, aViewportToScroll, aOrigin);
   animation->UpdateDestinationAndSnapTargets(
       GetFrameTime().Time(), destination, velocity,
       std::move(aDestination.mTargetIds), aTriggeredByScript);
@@ -5846,7 +5848,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
               : ScrollAnimationKind::Smooth;
       SmoothScrollTo(
           CSSSnapDestination{destination, scrollUpdate.GetSnapTargetIds()},
-          scrollUpdate.GetScrollTriggeredByScript(), animationKind,
+          scrollUpdate.GetScrollTriggeredByScript(), animationKind, scrollUpdate.GetViewportType(),
           scrollUpdate.GetOrigin());
       continue;
     }
@@ -6912,6 +6914,7 @@ void AsyncPanZoomController::ScrollSnapNear(const CSSPoint& aDestination,
                ToString(snapDestination->mPosition).c_str());
       SmoothScrollTo(std::move(*snapDestination), ScrollTriggeredByScript::No,
                      ScrollAnimationKind::SmoothMsd,
+                     ViewportType::Visual,
                      ScrollOrigin::NotSpecified);
     }
   }
@@ -6971,7 +6974,8 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
     SetDelayedTransformEnd(false);
 
     SmoothScrollTo(std::move(*snapDestination), ScrollTriggeredByScript::No,
-                   ScrollAnimationKind::SmoothMsd, ScrollOrigin::NotSpecified);
+                   ScrollAnimationKind::SmoothMsd,
+                   ViewportType::Visual, ScrollOrigin::NotSpecified);
   }
 }
 
