@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,12 +42,12 @@ import kotlinx.coroutines.launch
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.PrimaryButton
 import mozilla.components.compose.base.snackbar.Snackbar
+import mozilla.components.compose.base.snackbar.SnackbarVisuals
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.SnackbarBehavior
 import org.mozilla.fenix.compose.SwipeToDismissBox2
 import org.mozilla.fenix.compose.SwipeToDismissState2
 import org.mozilla.fenix.compose.core.Action
-import org.mozilla.fenix.compose.snackbar.SnackbarState.Type
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import com.google.android.material.snackbar.Snackbar as MaterialSnackbar
@@ -237,9 +240,8 @@ class Snackbar private constructor(
 @Composable
 @Suppress("LongMethod")
 private fun SnackbarHostPreview() {
-    val snackbarHostState = remember { AcornSnackbarHostState() }
-    var defaultSnackbarClicks by remember { mutableIntStateOf(0) }
-    var warningSnackbarClicks by remember { mutableIntStateOf(0) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    var snackbarClicks by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
 
     FirefoxTheme {
@@ -255,60 +257,23 @@ private fun SnackbarHostPreview() {
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     scope.launch {
-                        snackbarHostState.showSnackbar(
-                            snackbarState = SnackbarState(
-                                message = "Default snackbar",
-                                subMessage = SnackbarState.SubMessage("Default subMessage"),
-                                duration = SnackbarState.Duration.Preset.Short,
-                                type = Type.Default,
-                                action = Action(
-                                    label = "click me",
-                                    onClick = {
-                                        defaultSnackbarClicks++
-                                    },
-                                ),
-                                onDismiss = {},
+                        val result = snackbarHostState.showSnackbar(
+                            visuals = SnackbarVisuals(
+                                message = "Snackbar",
+                                subMessage = "SubMessage",
+                                actionLabel = "click me",
                             ),
                         )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                PrimaryButton(
-                    text = "Show warning snackbar",
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            snackbarState = SnackbarState(
-                                message = "Warning snackbar",
-                                subMessage = SnackbarState.SubMessage("Default subMessage"),
-                                duration = SnackbarState.Duration.Preset.Short,
-                                type = Type.Warning,
-                                action = Action(
-                                    label = "click me",
-                                    onClick = {
-                                        warningSnackbarClicks++
-                                    },
-                                ),
-                                onDismiss = {},
-                            ),
-                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            snackbarClicks++
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Default snackbar action clicks: $defaultSnackbarClicks",
-                    color = FirefoxTheme.colors.textPrimary,
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Warning snackbar action clicks: $warningSnackbarClicks",
+                    text = "Snackbar action clicks: $snackbarClicks",
                     color = FirefoxTheme.colors.textPrimary,
                 )
 
@@ -316,7 +281,7 @@ private fun SnackbarHostPreview() {
             }
 
             SnackbarHost(
-                snackbarHostState = snackbarHostState,
+                hostState = snackbarHostState,
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
