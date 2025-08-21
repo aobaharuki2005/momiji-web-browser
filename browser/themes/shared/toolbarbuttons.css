@@ -223,6 +223,10 @@ toolbar .toolbaritem-combined-buttons {
       content: "";
       border-inline-start: 1px solid currentColor;
     }
+
+    toolbar & {
+      color: light-dark(color-mix(in srgb, currentColor 20%, transparent), color-mix(in srgb, currentColor 30%, transparent));
+    }
   }
 
   > separator:has(+ toolbarbutton:not([disabled]):hover),
@@ -231,8 +235,11 @@ toolbar .toolbaritem-combined-buttons {
   }
 }
 
-toolbar .toolbaritem-combined-buttons > separator {
-  color: light-dark(color-mix(in srgb, currentColor 20%, transparent), color-mix(in srgb, currentColor 30%, transparent));
+.toolbarbutton-combined-buttons-dropmarker {
+  appearance: none;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
 }
 
 /* Toolbar button animations */
