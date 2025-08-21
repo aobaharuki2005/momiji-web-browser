@@ -152,11 +152,6 @@ class Navigation final : public DOMEventTargetHelper {
   // https://html.spec.whatwg.org/multipage/nav-history-apis.html#has-entries-and-events-disabled
   bool HasEntriesAndEventsDisabled() const;
 
-  void ScheduleEventsFromNavigation(
-      NavigationType aType,
-      const RefPtr<NavigationHistoryEntry>& aPreviousEntry,
-      nsTArray<RefPtr<NavigationHistoryEntry>>&& aDisposedEntries);
-
   MOZ_CAN_RUN_SCRIPT
   nsresult FireEvent(const nsAString& aName);
 

@@ -336,40 +336,26 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
     AutoEntryScript aes(GetOwnerGlobal(),
                         "UpdateEntriesForSameDocumentNavigation");
 
-    ScheduleEventsFromNavigation(aNavigationType, oldCurrentEntry,
-                                 std::move(disposedEntries));
+    NavigationCurrentEntryChangeEventInit init;
+    init.mFrom = oldCurrentEntry;
+    init.mNavigationType.SetValue(aNavigationType);
+    RefPtr event = NavigationCurrentEntryChangeEvent::Constructor(
+        this, u"currententrychange"_ns, init);
+    DispatchEvent(*event);
+
+    for (const auto& entry : disposedEntries) {
+      RefPtr<Event> event = NS_NewDOMEvent(entry, nullptr, nullptr);
+      event->InitEvent(u"dispose"_ns, false, false);
+      event->SetTrusted(true);
+      event->SetTarget(entry);
+      entry->DispatchEvent(*event);
+    }
   }
 }
 
 // https://html.spec.whatwg.org/#update-the-navigation-api-entries-for-reactivation
 void Navigation::UpdateForReactivation(SessionHistoryInfo* aReactivatedEntry) {
   // NAV-TODO
-}
-
-void Navigation::ScheduleEventsFromNavigation(
-    NavigationType aType, const RefPtr<NavigationHistoryEntry>& aPreviousEntry,
-    nsTArray<RefPtr<NavigationHistoryEntry>>&& aDisposedEntries) {
-  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-      "mozilla::dom::Navigation::ScheduleEventsFromNavigation",
-      [self = RefPtr(this), previousEntry = RefPtr(aPreviousEntry),
-       disposedEntries = std::move(aDisposedEntries), aType]() {
-        if (previousEntry) {
-          NavigationCurrentEntryChangeEventInit init;
-          init.mFrom = previousEntry;
-          init.mNavigationType.SetValue(aType);
-          RefPtr event = NavigationCurrentEntryChangeEvent::Constructor(
-              self, u"currententrychange"_ns, init);
-          self->DispatchEvent(*event);
-        }
-
-        for (const auto& entry : disposedEntries) {
-          RefPtr<Event> event = NS_NewDOMEvent(entry, nullptr, nullptr);
-          event->InitEvent(u"dispose"_ns, false, false);
-          event->SetTrusted(true);
-          event->SetTarget(entry);
-          entry->DispatchEvent(*event);
-        }
-      }));
 }
 
 // https://html.spec.whatwg.org/#navigation-api-early-error-result
