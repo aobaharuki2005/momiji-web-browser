@@ -375,13 +375,6 @@ android-ndk-rs:
         repo: https://github.com/jamienicol/android-ndk-rs
         revision: 595f4e14a78371e3ab59b12f7bd8131f2ec5b4a1
 
-clang-8.0:
-    description: clang 8.0.0 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: d2298e74235598f15594fe2c99bbac870a507c59
-
 clang-14:
     description: clang 14.0.5 source code
     fetch:
