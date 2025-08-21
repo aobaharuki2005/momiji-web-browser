@@ -151,7 +151,7 @@ class FenixSearchMiddleware(
                 next(action)
 
                 updateSearchProviders(context)
-                maybeShowFxSuggestions(context)
+                maybeShowSearchSuggestions(context, context.state.query)
             }
 
             is SearchProvidersUpdated -> {
@@ -232,40 +232,21 @@ class FenixSearchMiddleware(
     }
 
     /**
-     * Check if new firefox suggestions (trending, recent searches or search engines suggestions)
-     * should be shown based on the current search query.
-     */
-    private fun maybeShowFxSuggestions(context: MiddlewareContext<SearchFragmentState, SearchFragmentAction>) {
-        val shouldShowSuggestions = context.state.run {
-            (showTrendingSearches || showRecentSearches || showShortcutsSuggestions) &&
-                (query.isNotEmpty() || FxNimbus.features.searchSuggestionsOnHomepage.value().enabled) &&
-                    isSearchSuggestionsFeatureEnabled()
-        }
-        context.dispatch(SearchSuggestionsVisibilityUpdated(shouldShowSuggestions))
-
-        val showPrivatePrompt = with(context.state) {
-            !settings.showSearchSuggestionsInPrivateOnboardingFinished &&
-                    environment?.browsingModeManager?.mode?.isPrivate == true &&
-                    !isSearchSuggestionsFeatureEnabled() && !showSearchShortcuts && url != query
-        }
-
-        context.dispatch(
-            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
-                showPrivatePrompt,
-            ),
-        )
-    }
-
-    /**
      * Check if new search suggestions should be shown based on the current search query.
      */
     private fun maybeShowSearchSuggestions(
         context: MiddlewareContext<SearchFragmentState, SearchFragmentAction>,
         query: String,
     ) {
-        val shouldShowSuggestions = with(context.state) {
+        val shouldShowTrendingSearches = context.state.run {
+            (showTrendingSearches || showRecentSearches || showShortcutsSuggestions) &&
+                (query.isNotEmpty() || FxNimbus.features.searchSuggestionsOnHomepage.value().enabled) &&
+                isSearchSuggestionsFeatureEnabled()
+        }
+        val shouldShowSearchSuggestions = with(context.state) {
             (url != query && query.isNotBlank() || showSearchShortcuts) && isSearchSuggestionsFeatureEnabled()
         }
+        val shouldShowSuggestions = shouldShowTrendingSearches || shouldShowSearchSuggestions
 
         context.dispatch(SearchSuggestionsVisibilityUpdated(shouldShowSuggestions))
 
