@@ -1722,8 +1722,12 @@ class nsIFrame : public nsQueryFrame {
    * first available font's "trimmed ascent" and "trimmed descent", where any
    * internal leading included in the font's metrics has been trimmed equally
    * from top and bottom, such that the trimmed values total 1em.
+   *
+   * @param aRubyMetricsFactor scale to be applied to the em-normalized
+   * "trimmed" metrics, to adjust how tightly ruby annotations are positioned
+   * around the base text.
    */
-  virtual mozilla::RubyMetrics RubyMetrics() const;
+  virtual mozilla::RubyMetrics RubyMetrics(float aRubyMetricsFactor) const;
 
   /**
    * `GetNaturalBaselineBOffset`, but determines the baseline sharing group

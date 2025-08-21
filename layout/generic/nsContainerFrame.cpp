@@ -2994,7 +2994,8 @@ void nsOverflowContinuationTracker::EndFinish(nsIFrame* aChild) {
   }
 }
 
-RubyMetrics nsContainerFrame::RubyMetricsIncludingChildren() const {
+RubyMetrics nsContainerFrame::RubyMetricsIncludingChildren(
+    float aRubyMetricsFactor) const {
   mozilla::RubyMetrics result;
   WritingMode containerWM = GetWritingMode();
   bool foundAnyFrames = false;
@@ -3003,12 +3004,12 @@ RubyMetrics nsContainerFrame::RubyMetricsIncludingChildren() const {
     if (wm.IsOrthogonalTo(containerWM) || f->IsPlaceholderFrame()) {
       continue;
     }
-    mozilla::RubyMetrics m = f->RubyMetrics();
+    mozilla::RubyMetrics m = f->RubyMetrics(aRubyMetricsFactor);
     result.CombineWith(m);
     foundAnyFrames = true;
   }
   if (!foundAnyFrames) {
-    result = nsIFrame::RubyMetrics();
+    result = nsIFrame::RubyMetrics(aRubyMetricsFactor);
   }
   return result;
 }

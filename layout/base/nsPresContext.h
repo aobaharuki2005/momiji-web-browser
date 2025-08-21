@@ -1132,6 +1132,18 @@ class nsPresContext : public nsISupports,
     return mMarkPaintTimingStart;
   }
 
+  // Are we using normalized ruby-positioning metrics? This will fetch and
+  // cache the pref if not already initialized.
+  bool NormalizeRubyMetrics();
+
+  // Get the scaling factor to apply to em-normalized font ascent/descent. This
+  // should only be used if NormalizeRubyMetrics() has returned true, otherwise
+  // its return value may be meaningless.
+  float RubyPositioningFactor() const {
+    MOZ_ASSERT(mRubyPositioningFactor > 0.0f);
+    return mRubyPositioningFactor;
+  }
+
  protected:
   // May be called multiple times (unlink, destructor)
   void Destroy();
@@ -1196,10 +1208,13 @@ class nsPresContext : public nsISupports,
 
   float mTextZoom;  // Text zoom, defaults to 1.0
   float mFullZoom;  // Page zoom, defaults to 1.0
+
   gfxSize mLastFontInflationScreenSize;
 
   int32_t mCurAppUnitsPerDevPixel;
   int32_t mAutoQualityMinFontSizePixelsPref;
+
+  float mRubyPositioningFactor = -1.0f;  // negative indicates uninitialized
 
   nsCOMPtr<nsITheme> mTheme;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;

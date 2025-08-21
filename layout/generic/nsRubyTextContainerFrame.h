@@ -54,7 +54,7 @@ class nsRubyTextContainerFrame final : public nsContainerFrame {
   // of the annotations will take these into account.
   // This relies on GetUsed{Margin,Border,Padding} of the children, so they
   // should be reflowed before querying the container's RubyMetrics.
-  mozilla::RubyMetrics RubyMetrics() const override;
+  mozilla::RubyMetrics RubyMetrics(float aRubyMetricsFactor) const override;
 
  protected:
   friend nsContainerFrame* NS_NewRubyTextContainerFrame(

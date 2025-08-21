@@ -1681,10 +1681,12 @@ void nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
 }
 
 static nscoord GetBSizeOfEmphasisMarks(nsIFrame* aSpanFrame, float aInflation) {
-  bool normalizeRubyMetrics = StaticPrefs::layout_css_ruby_normalize_metrics();
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsOfEmphasisMarks(
       aSpanFrame->Style(), aSpanFrame->PresContext(), aInflation);
-  return normalizeRubyMetrics ? fm->EmHeight() : fm->MaxHeight();
+  return aSpanFrame->PresContext()->NormalizeRubyMetrics()
+             ? (fm->TrimmedAscent() + fm->TrimmedDescent()) *
+                   aSpanFrame->PresContext()->RubyPositioningFactor()
+             : fm->MaxHeight();
 }
 
 void nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
@@ -1707,17 +1709,20 @@ void nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
     nscoord bsize = GetBSizeOfEmphasisMarks(spanFrame, aInflation);
     LogicalSide side = aStyleText->TextEmphasisSide(
         mRootSpan->mWritingMode, spanFrame->StyleFont()->mLanguage);
-    if (StaticPrefs::layout_css_ruby_normalize_metrics()) {
+    if (spanFrame->PresContext()->NormalizeRubyMetrics()) {
       // Add extra leading for emphasis marks only if their bsize exceeds the
       // space built in to the font (difference between its max ascent/descent
       // and the em-normalized metrics that are used to position the mark).
       RefPtr fm = nsLayoutUtils::GetInflatedFontMetricsForFrame(spanFrame);
+      float factor = spanFrame->PresContext()->RubyPositioningFactor();
       if (side == LogicalSide::BStart) {
-        requiredStartLeading +=
-            std::max(0, bsize - (fm->MaxAscent() - fm->TrimmedAscent()));
+        requiredStartLeading += std::max(
+            0, bsize - (fm->MaxAscent() -
+                        nscoord(NS_round(factor * fm->TrimmedAscent()))));
       } else {
-        requiredEndLeading +=
-            std::max(0, bsize - (fm->MaxDescent() - fm->TrimmedDescent()));
+        requiredEndLeading += std::max(
+            0, bsize - (fm->MaxDescent() -
+                        nscoord(NS_round(factor * fm->TrimmedDescent()))));
       }
     } else {
       if (side == LogicalSide::BStart) {
@@ -2337,8 +2342,9 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
 
         if (mStyleText->HasEffectiveTextEmphasis()) {
           nscoord fontMaxHeight =
-              StaticPrefs::layout_css_ruby_normalize_metrics()
-                  ? fm->EmHeight()
+              mPresContext->NormalizeRubyMetrics()
+                  ? mPresContext->RubyPositioningFactor() *
+                        (fm->TrimmedAscent() + fm->TrimmedDescent())
                   : fm->MaxHeight();
           nscoord emphasisHeight =
               GetBSizeOfEmphasisMarks(spanFrame, inflation);

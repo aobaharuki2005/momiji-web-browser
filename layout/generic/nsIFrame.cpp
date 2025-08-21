@@ -2033,10 +2033,12 @@ nscoord nsIFrame::OneEmInAppUnits() const {
       .ToAppUnits();
 }
 
-RubyMetrics nsIFrame::RubyMetrics() const {
+RubyMetrics nsIFrame::RubyMetrics(float aRubyMetricsFactor) const {
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
-  return mozilla::RubyMetrics{fm->TrimmedAscent(), fm->TrimmedDescent()};
+  return mozilla::RubyMetrics{
+      nscoord(NS_round(fm->TrimmedAscent() * aRubyMetricsFactor)),
+      nscoord(NS_round(fm->TrimmedDescent() * aRubyMetricsFactor))};
 }
 
 ComputedStyle* nsIFrame::GetAdditionalComputedStyle(int32_t aIndex) const {

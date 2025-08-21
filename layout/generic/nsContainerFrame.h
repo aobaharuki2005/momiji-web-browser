@@ -913,7 +913,8 @@ class nsContainerFrame : public nsSplittableFrame {
    * Helper for ruby frames that want to accumulate the max ascent/descent of
    * their children.
    */
-  mozilla::RubyMetrics RubyMetricsIncludingChildren() const;
+  mozilla::RubyMetrics RubyMetricsIncludingChildren(
+      float aRubyMetricsFactor) const;
 
   // ==========================================================================
 

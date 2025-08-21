@@ -285,13 +285,15 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   // This seems to be roughly what Chrome does, and with many fonts it gives
   // a better result (ruby closer to the base text) than using the font's
   // declared metrics, if its ascent/descent incorporate lots of extra space.
-  bool normalizeRubyMetrics = StaticPrefs::layout_css_ruby_normalize_metrics();
+  bool normalizeRubyMetrics = aPresContext->NormalizeRubyMetrics();
+  float rubyMetricsFactor =
+      normalizeRubyMetrics ? aPresContext->RubyPositioningFactor() : 0.0f;
   mozilla::RubyMetrics rubyMetrics;
 
   if (normalizeRubyMetrics) {
-    // Get base container's ascent & descent, normalized to 1em overall extent,
-    // and adjust offsetRect to match.
-    rubyMetrics = aBaseContainer->RubyMetrics();
+    // Get base container's ascent & descent, normalized to 1em (scaled by the
+    // ruby positioning factor) overall extent, and adjust offsetRect to match.
+    rubyMetrics = aBaseContainer->RubyMetrics(rubyMetricsFactor);
     offsetRect.BStart(lineWM) +=
         baseMetrics.BlockStartAscent() - rubyMetrics.mAscent;
     offsetRect.BSize(lineWM) = rubyMetrics.mAscent + rubyMetrics.mDescent;
@@ -326,7 +328,7 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     nscoord ascentDelta = 0;
     nscoord bStartMargin = 0;
     if (normalizeRubyMetrics) {
-      auto [ascent, descent] = textContainer->RubyMetrics();
+      auto [ascent, descent] = textContainer->RubyMetrics(rubyMetricsFactor);
       const auto* firstChild = textContainer->PrincipalChildList().FirstChild();
       textEmHeight = ascent + descent;
       nscoord textBlockStartAscent =

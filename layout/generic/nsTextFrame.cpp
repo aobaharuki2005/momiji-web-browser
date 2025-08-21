@@ -5200,7 +5200,9 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
       this, fm->GetThebesFontGroup(), computedStyle, styleText);
   info->advance = info->textRun->GetAdvanceWidth();
 
-  bool normalizeRubyMetrics = StaticPrefs::layout_css_ruby_normalize_metrics();
+  bool normalizeRubyMetrics = PresContext()->NormalizeRubyMetrics();
+  float rubyMetricsFactor =
+      normalizeRubyMetrics ? PresContext()->RubyPositioningFactor() : 0.0f;
 
   // Calculate the baseline offset
   LogicalSide side = styleText->TextEmphasisSide(aWM, StyleFont()->mLanguage);
@@ -5211,8 +5213,9 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
   LogicalRect overflowRect(
       aWM, -info->advance / 2, /* BStart to be computed below */ 0,
       frameSize.ISize(aWM) + info->advance,
-      normalizeRubyMetrics ? fm->TrimmedAscent() + fm->TrimmedDescent()
-                           : fm->MaxAscent() + fm->MaxDescent());
+      normalizeRubyMetrics
+          ? rubyMetricsFactor * (fm->TrimmedAscent() + fm->TrimmedDescent())
+          : fm->MaxAscent() + fm->MaxDescent());
   RefPtr<nsFontMetrics> baseFontMetrics =
       isTextCombined
           ? nsLayoutUtils::GetInflatedFontMetricsForFrame(GetParent())
@@ -5226,6 +5229,7 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
     absOffset = startSideOrInvertedLine
                     ? baseFontMetrics->TrimmedAscent() + fm->TrimmedDescent()
                     : baseFontMetrics->TrimmedDescent() + fm->TrimmedAscent();
+    absOffset *= rubyMetricsFactor;
   } else {
     absOffset = startSideOrInvertedLine
                     ? baseFontMetrics->MaxAscent() + fm->MaxDescent()
@@ -5237,7 +5241,7 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
     if (normalizeRubyMetrics) {
       // Adjust absOffset to account for any ruby annotations that effectively
       // added to the trimmed height of the base text.
-      auto [ascent, descent] = ruby->RubyMetrics();
+      auto [ascent, descent] = ruby->RubyMetrics(rubyMetricsFactor);
       absOffset = std::max(absOffset, side == LogicalSide::BStart
                                           ? ascent + fm->TrimmedDescent()
                                           : descent + fm->TrimmedAscent());
@@ -5255,8 +5259,11 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
   }
   // If text combined, fix the gap between the text frame and its parent.
   if (isTextCombined) {
-    nscoord height = normalizeRubyMetrics ? baseFontMetrics->EmHeight()
-                                          : baseFontMetrics->MaxHeight();
+    nscoord height =
+        normalizeRubyMetrics
+            ? rubyMetricsFactor * (baseFontMetrics->TrimmedAscent() +
+                                   baseFontMetrics->TrimmedDescent())
+            : baseFontMetrics->MaxHeight();
     nscoord gap = (height - frameSize.BSize(aWM)) / 2;
     overflowRect.BStart(aWM) += gap * (side == LogicalSide::BStart ? -1 : 1);
   }

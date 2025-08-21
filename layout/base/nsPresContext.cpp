@@ -335,7 +335,7 @@ static const char* gExactCallbackPrefs[] = {
     "layout.css.devPixelsPerPx",
     "layout.css.dpi",
     "layout.css.letter-spacing.model",
-    "layout.css.ruby.normalize-metrics",
+    "layout.css.ruby.normalize-metrics-factor",
     "layout.css.text-transform.uppercase-eszett.enabled",
     "privacy.trackingprotection.enabled",
     nullptr,
@@ -599,8 +599,12 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
 
   if (prefName.EqualsLiteral(
           "layout.css.text-transform.uppercase-eszett.enabled") ||
-      prefName.EqualsLiteral("layout.css.letter-spacing.model") ||
-      prefName.EqualsLiteral("layout.css.ruby.normalize-metrics")) {
+      prefName.EqualsLiteral("layout.css.letter-spacing.model")) {
+    changeHint |= NS_STYLE_HINT_REFLOW;
+  }
+
+  if (prefName.EqualsLiteral("layout.css.ruby.normalize-metrics-factor")) {
+    mRubyPositioningFactor = -1;  // mark as uninitialized
     changeHint |= NS_STYLE_HINT_REFLOW;
   }
 
@@ -623,6 +627,23 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   }
 
   InvalidatePaintedLayers();
+}
+
+bool nsPresContext::NormalizeRubyMetrics() {
+  if (mRubyPositioningFactor < 0.0f) {
+    // Expected pref values are 0 or [100..200], treated as a percentage.
+    // We store the value divided by 100, to use as a scaling factor.
+    mRubyPositioningFactor =
+        StaticPrefs::layout_css_ruby_normalize_metrics_factor() / 100.0f;
+    // Clamp to the range of reasonable values.
+    if (mRubyPositioningFactor <= 0.0f) {
+      mRubyPositioningFactor = 0.0f;
+    } else {
+      mRubyPositioningFactor =
+          std::max(1.0f, std::min(2.0f, mRubyPositioningFactor));
+    }
+  }
+  return mRubyPositioningFactor > 0.0f;
 }
 
 nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
