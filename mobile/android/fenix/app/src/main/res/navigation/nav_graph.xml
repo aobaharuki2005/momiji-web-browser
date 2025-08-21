@@ -293,6 +293,9 @@
         <action
             android:id="@+id/action_homeFragment_to_shortcutsFragment"
             app:destination="@id/shortcutsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_storiesFragment"
+            app:destination="@id/storiesFragment" />
     </fragment>
 
     <fragment
@@ -304,6 +307,10 @@
             app:popUpTo="@id/shortcutsFragment"
             app:popUpToInclusive="true" />
     </fragment>
+
+    <fragment
+        android:id="@+id/storiesFragment"
+        android:name="org.mozilla.fenix.home.pocket.StoriesFragment" />
 
     <dialog
         android:id="@+id/researchSurfaceDialogFragment"

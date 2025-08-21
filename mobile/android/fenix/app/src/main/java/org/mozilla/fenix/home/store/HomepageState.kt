@@ -184,7 +184,7 @@ internal sealed class HomepageState {
                             browserState = components.core.store.state,
                             browsingModeManager = browsingModeManager,
                         ),
-                        pocketState = PocketState.build(appState),
+                        pocketState = PocketState.build(appState = appState, settings = settings),
                         showTopSites = settings.showTopSitesFeature && topSites.isNotEmpty(),
                         showRecentTabs = shouldShowRecentTabs(settings),
                         showBookmarks = settings.showBookmarksHomeFeature && bookmarks.isNotEmpty(),
