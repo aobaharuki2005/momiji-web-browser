@@ -380,4 +380,92 @@ describe("<Lists>", () => {
     // with 2 existing lists, and maxLists is set to 2, it should be disabled
     assert.strictEqual(createListBtn.prop("disabled"), true);
   });
+
+  it("disables add-task input when at maximum list items limit", () => {
+    // total items = tasks + completed = 3
+    const state = {
+      ...mockState,
+      ListsWidget: {
+        selected: "test-list",
+        lists: {
+          "test-list": {
+            label: "test",
+            tasks: [
+              { id: "1", value: "task 1", completed: false, isUrl: false },
+              { id: "2", value: "task 2", completed: false, isUrl: false },
+            ],
+            completed: [
+              { id: "c1", value: "done", completed: true, isUrl: false },
+            ],
+          },
+        },
+      },
+      Prefs: {
+        ...mockState.Prefs,
+        values: {
+          ...mockState.Prefs?.values,
+          // At limit (3), so input should be disabled and icon greyed
+          "widgets.lists.maxListItems": 3,
+        },
+      },
+    };
+
+    const localWrapper = mount(
+      <WrapWithProvider state={state}>
+        <Lists dispatch={dispatch} />
+      </WrapWithProvider>
+    );
+
+    const input = localWrapper.find("input.add-task-input").at(0);
+    const addIcon = localWrapper
+      .find(".add-task-container .icon.icon-add")
+      .at(0);
+
+    assert.strictEqual(
+      input.prop("disabled"),
+      true,
+      "Expected add-task input to be disabled at the maximum list items limit"
+    );
+    assert.strictEqual(
+      addIcon.hasClass("icon-disabled"),
+      true,
+      "Expected add icon to have icon-disabled class at the maximum list items limit"
+    );
+  });
+
+  it("enables add-task input when at maximum list items limit", () => {
+    // with 3 items in current list, and maxLists coerced to 1, it should be enabled
+    const state = {
+      ...mockState,
+      Prefs: {
+        ...mockState.Prefs,
+        values: {
+          ...mockState.Prefs?.values,
+          "widgets.lists.maxListItems": 5,
+        },
+      },
+    };
+
+    const localWrapper = mount(
+      <WrapWithProvider state={state}>
+        <Lists dispatch={dispatch} />
+      </WrapWithProvider>
+    );
+
+    const input = localWrapper.find("input.add-task-input").at(0);
+    const addIcon = localWrapper
+      .find(".add-task-container .icon.icon-add")
+      .at(0);
+
+    assert.strictEqual(
+      input.prop("disabled"),
+      false,
+      "Expected input to be enabled when under limit"
+    );
+    assert.strictEqual(
+      addIcon.hasClass("icon-disabled"),
+      false,
+      "Expected add icon not to be greyed when under limit"
+    );
+  });
 });
