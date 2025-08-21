@@ -162,7 +162,6 @@ DIRS += [
     "executable",
 ]
 
-if CONFIG["ENABLE_TESTS"]:
-    TEST_DIRS += [
-        "tests/gtest",
-    ]
+TEST_DIRS += [
+    "tests/gtest",
+]

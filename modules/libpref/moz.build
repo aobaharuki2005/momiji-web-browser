@@ -7,8 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Preferences: Backend")
 
-if CONFIG["ENABLE_TESTS"]:
-    DIRS += ["test/gtest"]
+TEST_DIRS += ["test/gtest"]
 
 XPCSHELL_TESTS_MANIFESTS += [
     "test/unit/xpcshell.toml",

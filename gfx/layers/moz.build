@@ -520,9 +520,7 @@ FINAL_LIBRARY = "xul"
 if CONFIG["MOZ_DEBUG"]:
     DEFINES["D3D_DEBUG_INFO"] = True
 
-if CONFIG["ENABLE_TESTS"]:
-    DIRS += ["apz/test/gtest"]
-    DIRS += ["apz/test/gtest/mvm"]
+TEST_DIRS += ["apz/test/gtest", "apz/test/gtest/mvm"]
 
 MOCHITEST_MANIFESTS += ["apz/test/mochitest/mochitest.toml"]
 BROWSER_CHROME_MANIFESTS += [

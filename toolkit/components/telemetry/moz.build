@@ -29,10 +29,7 @@ SPHINX_TREES["/toolkit/components/telemetry"] = "docs"
 with Files("docs/**"):
     SCHEDULES.exclusive = ["docs"]
 
-if CONFIG["ENABLE_TESTS"]:
-    DIRS += ["tests/gtest"]
-
-TEST_DIRS += ["tests", "dap/ffi-gtest"]
+TEST_DIRS += ["tests/gtest", "tests", "dap/ffi-gtest"]
 
 XPCSHELL_TESTS_MANIFESTS += [
     "dap/tests/xpcshell/xpcshell.toml",
