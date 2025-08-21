@@ -943,7 +943,7 @@ pub extern "C" fn wgpu_vkimage_create_with_dma_buf(
 
             instance.get_physical_device_format_properties2(
                 physical_device,
-                vk::Format::R8G8B8A8_UNORM,
+                vk::Format::B8G8R8A8_UNORM,
                 &mut format_properties_2,
             );
             drm_format_modifier_props_list.drm_format_modifier_count
@@ -965,7 +965,7 @@ pub extern "C" fn wgpu_vkimage_create_with_dma_buf(
 
         instance.get_physical_device_format_properties2(
             physical_device,
-            vk::Format::R8G8B8A8_UNORM,
+            vk::Format::B8G8R8A8_UNORM,
             &mut format_properties_2,
         );
 
@@ -976,7 +976,7 @@ pub extern "C" fn wgpu_vkimage_create_with_dma_buf(
             let support = is_dmabuf_supported(
                 instance,
                 physical_device,
-                vk::Format::R8G8B8A8_UNORM,
+                vk::Format::B8G8R8A8_UNORM,
                 modifier_prop.drm_format_modifier,
                 usage_flags,
             );
@@ -1014,7 +1014,10 @@ pub extern "C" fn wgpu_vkimage_create_with_dma_buf(
         let vk_info = vk::ImageCreateInfo::default()
             .flags(flags)
             .image_type(vk::ImageType::TYPE_2D)
-            .format(vk::Format::R8G8B8A8_UNORM)
+            // Bug 1971883: Rather than hard-coding this format, we should use
+            // whatever format was negotiated between `GPUCanvasContext.configure`
+            // and the GPU process.
+            .format(vk::Format::B8G8R8A8_UNORM)
             .extent(extent)
             .mip_levels(1)
             .array_layers(1)
@@ -1674,7 +1677,10 @@ impl Global {
             let vk_info = vk::ImageCreateInfo::default()
                 .flags(vk::ImageCreateFlags::ALIAS)
                 .image_type(vk::ImageType::TYPE_2D)
-                .format(vk::Format::R8G8B8A8_UNORM)
+                // Bug 1971883: Rather than hard-coding this format, we should use
+                // whatever format was negotiated between `GPUCanvasContext.configure`
+                // and the GPU process.
+                .format(vk::Format::B8G8R8A8_UNORM)
                 .extent(extent)
                 .mip_levels(1)
                 .array_layers(1)
