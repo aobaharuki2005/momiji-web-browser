@@ -1681,9 +1681,10 @@ void nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
 }
 
 static nscoord GetBSizeOfEmphasisMarks(nsIFrame* aSpanFrame, float aInflation) {
+  bool normalizeRubyMetrics = StaticPrefs::layout_css_ruby_normalize_metrics();
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsOfEmphasisMarks(
       aSpanFrame->Style(), aSpanFrame->PresContext(), aInflation);
-  return fm->MaxHeight();
+  return normalizeRubyMetrics ? fm->EmHeight() : fm->MaxHeight();
 }
 
 void nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
@@ -1706,12 +1707,26 @@ void nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
     nscoord bsize = GetBSizeOfEmphasisMarks(spanFrame, aInflation);
     LogicalSide side = aStyleText->TextEmphasisSide(
         mRootSpan->mWritingMode, spanFrame->StyleFont()->mLanguage);
-    if (side == LogicalSide::BStart) {
-      requiredStartLeading += bsize;
+    if (StaticPrefs::layout_css_ruby_normalize_metrics()) {
+      // Add extra leading for emphasis marks only if their bsize exceeds the
+      // space built in to the font (difference between its max ascent/descent
+      // and the em-normalized metrics that are used to position the mark).
+      RefPtr fm = nsLayoutUtils::GetInflatedFontMetricsForFrame(spanFrame);
+      if (side == LogicalSide::BStart) {
+        requiredStartLeading +=
+            std::max(0, bsize - (fm->MaxAscent() - fm->TrimmedAscent()));
+      } else {
+        requiredEndLeading +=
+            std::max(0, bsize - (fm->MaxDescent() - fm->TrimmedDescent()));
+      }
     } else {
-      MOZ_ASSERT(side == LogicalSide::BEnd,
-                 "emphasis marks must be in block axis");
-      requiredEndLeading += bsize;
+      if (side == LogicalSide::BStart) {
+        requiredStartLeading += bsize;
+      } else {
+        MOZ_ASSERT(side == LogicalSide::BEnd,
+                   "emphasis marks must be in block axis");
+        requiredEndLeading += bsize;
+      }
     }
   }
 
@@ -2321,7 +2336,10 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
         nscoord blockEnd = blockStart + minimumLineBSize;
 
         if (mStyleText->HasEffectiveTextEmphasis()) {
-          nscoord fontMaxHeight = fm->MaxHeight();
+          nscoord fontMaxHeight =
+              StaticPrefs::layout_css_ruby_normalize_metrics()
+                  ? fm->EmHeight()
+                  : fm->MaxHeight();
           nscoord emphasisHeight =
               GetBSizeOfEmphasisMarks(spanFrame, inflation);
           nscoord delta = fontMaxHeight + emphasisHeight - minimumLineBSize;
