@@ -851,7 +851,7 @@ class TextPropertyEditor {
   };
 
   #onStartEditing = () => {
-    this.element.classList.remove("ruleview-overridden");
+    this.element.classList.remove("ruleview-overridden", "ruleview-invalid");
     this.enable.style.visibility = "hidden";
     if (this.filterProperty) {
       this.filterProperty.hidden = true;
@@ -1026,6 +1026,8 @@ class TextPropertyEditor {
     this.enable.checked = this.prop.enabled;
 
     if (this.#shouldShowWarning) {
+      this.element.classList.add("ruleview-invalid");
+
       if (!this.warning) {
         this.#createWarningIcon();
       } else {
@@ -1034,8 +1036,11 @@ class TextPropertyEditor {
       this.warning.title = !this.#isNameValid()
         ? l10n("rule.warningName.title")
         : l10n("rule.warning.title");
-    } else if (this.warning) {
-      this.warning.hidden = true;
+    } else {
+      this.element.classList.remove("ruleview-invalid");
+      if (this.warning) {
+        this.warning.hidden = true;
+      }
     }
 
     if (!this.editing && this.#isInvalidAtComputedValueTime()) {

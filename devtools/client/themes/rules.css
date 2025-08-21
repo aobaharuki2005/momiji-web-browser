@@ -636,7 +636,8 @@
   margin-left: 0;
 }
 
-.ruleview-overridden {
+.ruleview-overridden,
+.ruleview-invalid {
   text-decoration: line-through solid var(--theme-text-color-inactive);
 }
 
@@ -789,7 +790,12 @@
 
 .ruleview-rule:is(.unmatched, [unmatched="true"]) .ruleview-selector,
 .ruleview-selector.unmatched,
-.ruleview-property:is(.inactive-css, .ruleview-overridden) :is(.ruleview-propertyname, .ruleview-propertyvalue) {
+/* prettier-ignore */
+.ruleview-property:is(
+  .inactive-css,
+  .ruleview-overridden,
+  .ruleview-invalid
+) :is(.ruleview-propertyname, .ruleview-propertyvalue) {
   color: var(--theme-text-color-inactive);
 }
 
