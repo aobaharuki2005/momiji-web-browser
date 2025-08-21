@@ -11,6 +11,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
   // eslint-disable-next-line mozilla/valid-lazy
   IPPChannelFilter: "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs",
+  getDefaultLocation:
+    "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
+  selectServer:
+    "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
   IPProtectionUsage:
     "resource:///modules/ipprotection/IPProtectionUsage.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
@@ -66,11 +70,11 @@ class IPProtectionServiceSingleton extends EventTarget {
   isEntitled = null;
   isSubscribed = null;
   hasProxyPass = null;
+  location = null;
 
   guardian = null;
   #entitlement = null;
   #pass = null;
-
   #inited = false;
   #hasWidget = false;
 
@@ -160,6 +164,10 @@ class IPProtectionServiceSingleton extends EventTarget {
       }
       this.hasProxyPass = true;
     }
+
+    this.location = await lazy.getDefaultLocation();
+    // eslint-disable-next-line no-unused-vars
+    const _server = await lazy.selectServer(this.location?.city);
 
     this.isActive = true;
     this.activatedAt = Cu.now();

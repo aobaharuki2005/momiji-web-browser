@@ -11,6 +11,8 @@ prefs = [
 
 ["test_IPProtectionPanel.js"]
 
+["test_IPProtectionServerlist.js"]
+
 ["test_IPProtectionService.js"]
 
 ["test_IPProtectionUsage.js"]
