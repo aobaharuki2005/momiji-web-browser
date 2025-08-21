@@ -110,6 +110,31 @@ class TabbedBrowsingTest : TestSetup() {
         }
     }
 
+    @Test
+    fun closingAndUndoCloseTabTest() {
+        val url1 = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val url2 = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(url1.url) {
+            waitForPageToLoad()
+        }.goToHomescreen(composeTestRule) {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(url2.url) {
+            waitForPageToLoad()
+        }.openTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1", "Test_Page_2")
+            swipeTabLeft("Test_Page_2")
+            verifySnackBarText("Tab closed")
+            clickSnackbarButton(composeTestRule, "UNDO")
+            verifyExistingOpenTabs("Test_Page_1", "Test_Page_2")
+
+            swipeTabLeft("Test_Page_2")
+            verifySnackBarText("Tab closed")
+            verifyExistingOpenTabs("Test_Page_1")
+        }
+    }
+
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/903604
     @Test
     fun swipeToCloseTabsTest() {
