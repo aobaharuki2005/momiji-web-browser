@@ -8,7 +8,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -26,8 +25,6 @@ import org.mozilla.fenix.home.pocket.PocketImpression
 
 @RunWith(AndroidJUnit4::class)
 class HomeTelemetryMiddlewareTest {
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
 
     @get:Rule
     val gleanTestRule = FenixGleanTestRule(testContext)
