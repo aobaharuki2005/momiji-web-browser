@@ -98,6 +98,14 @@ mapping:
             - ${folder_prefix}${product}-${version}-android-x86_64
         from:
             - signing-apk
+    target.universal.apk:
+        <<: *default
+        description: "Android universal package"
+        pretty_name: ${product}-${version}.${locale}.android-universal.apk
+        destinations:
+            - ${folder_prefix}${product}-${version}-android
+        from:
+            - signing-apk
     target.aab:
         <<: *default
         description: "Android app bundle"
