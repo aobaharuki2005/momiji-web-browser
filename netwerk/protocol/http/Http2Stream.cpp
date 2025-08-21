@@ -35,6 +35,7 @@ Http2Stream::~Http2Stream() {}
 void Http2Stream::CloseStream(nsresult reason) {
   mTransaction->Close(reason);
   mSession = nullptr;
+  mClosed = true;
 }
 
 uint32_t Http2Stream::GetWireStreamId() {

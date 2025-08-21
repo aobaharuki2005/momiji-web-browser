@@ -207,6 +207,8 @@ class Http2StreamBase : public nsISupports,
     }
   }
 
+  bool Closed() const { return mClosed; }
+
  protected:
   virtual ~Http2StreamBase();
   friend class DeleteHttp2StreamBase;
@@ -299,6 +301,8 @@ class Http2StreamBase : public nsISupports,
   // problems with the google servers. Connect does rely on stream
   // close by setting this to the max value.
   int64_t mRequestBodyLenRemaining{0};
+
+  bool mClosed{false};
 
  private:
   friend class mozilla::DefaultDelete<Http2StreamBase>;

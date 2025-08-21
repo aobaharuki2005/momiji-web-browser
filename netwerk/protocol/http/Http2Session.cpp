@@ -169,6 +169,7 @@ Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
     : mSocketTransport(aSocketTransport),
       mSegmentReader(nullptr),
       mSegmentWriter(nullptr),
+      kMaxStreamID(StaticPrefs::network_http_http2_max_stream_id()),
       mNextStreamID(3)  // 1 is reserved for Updgrade handshakes
       ,
       mConcurrentHighWater(0),
@@ -420,7 +421,10 @@ uint32_t Http2Session::RoomForMoreConcurrent() {
 }
 
 bool Http2Session::RoomForMoreStreams() {
-  if (mNextStreamID + mStreamTransactionHash.Count() * 2 > kMaxStreamID) {
+  if (mNextStreamID + mStreamTransactionHash.Count() * 2 +
+          mTunnelStreams.Length() >
+      kMaxStreamID) {
+    mShouldGoAway = true;
     return false;
   }
 
@@ -523,7 +527,9 @@ uint32_t Http2Session::RegisterStreamID(Http2StreamBase* stream,
   // We've used up plenty of ID's on this session. Start
   // moving to a new one before there is a crunch involving
   // server push streams or concurrent non-registered submits
-  if (aNewID >= kMaxStreamID) mShouldGoAway = true;
+  if (aNewID >= kMaxStreamID) {
+    mShouldGoAway = true;
+  }
 
   // integrity check
   if (mStreamIDHash.Contains(aNewID)) {
@@ -791,7 +797,7 @@ void Http2Session::DontReuse() {
   }
 
   mShouldGoAway = true;
-  if (!mClosed && !mStreamTransactionHash.Count()) {
+  if (!mClosed && IsDone()) {
     Close(NS_OK);
   }
 }
@@ -1386,7 +1392,13 @@ void Http2Session::CleanupStream(Http2StreamBase* aStream, nsresult aResult,
 
   mTunnelStreams.RemoveElement(aStream);
 
-  if (mShouldGoAway && !mStreamTransactionHash.Count()) Close(NS_OK);
+  if (mNeedsCleanup == aStream) {
+    mNeedsCleanup = nullptr;
+  }
+
+  if (mShouldGoAway && IsDone()) {
+    Close(NS_OK);
+  }
 }
 
 void Http2Session::CleanupStream(uint32_t aID, nsresult aResult,
@@ -3122,9 +3134,14 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
     if (!mInputFrameDataStream) {
       return NS_ERROR_UNEXPECTED;
     }
-    uint32_t streamID = mInputFrameDataStream->StreamID();
+
+    RefPtr<Http2StreamBase> refStream = mInputFrameDataStream.get();
+    uint32_t streamID = refStream->StreamID();
     mSegmentWriter = writer;
-    rv = mInputFrameDataStream->WriteSegments(this, count, countWritten);
+    rv = refStream->WriteSegments(this, count, countWritten);
+    if (refStream->Closed() && NS_SUCCEEDED(rv)) {
+      rv = NS_BASE_STREAM_CLOSED;
+    }
     mSegmentWriter = nullptr;
 
     mLastDataReadEpoch = mLastReadEpoch;
@@ -3270,7 +3287,9 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
   MOZ_ASSERT(NS_FAILED(rv) || mDownstreamState != BUFFERING_CONTROL_FRAME,
              "Control Handler returned OK but did not change state");
 
-  if (mShouldGoAway && !mStreamTransactionHash.Count()) Close(NS_OK);
+  if (mShouldGoAway && IsDone()) {
+    Close(NS_OK);
+  }
   return rv;
 }
 
@@ -4038,7 +4057,9 @@ void Http2Session::SetProxyConnectFailed() {
   MOZ_ASSERT(false, "Http2Session::SetProxyConnectFailed()");
 }
 
-bool Http2Session::IsDone() { return !mStreamTransactionHash.Count(); }
+bool Http2Session::IsDone() {
+  return !mStreamTransactionHash.Count() && mTunnelStreams.IsEmpty();
+}
 
 nsresult Http2Session::Status() {
   MOZ_ASSERT(false, "Http2Session::Status()");

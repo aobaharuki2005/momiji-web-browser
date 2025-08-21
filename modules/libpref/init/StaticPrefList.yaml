@@ -14936,6 +14936,13 @@
   value: false
   mirror: always
 
+# According to RFC 9113, the maximum stream ID is 0x80000000.
+# However, we've been using a smaller value since the beginning.
+- name: network.http.http2.max_stream_id
+  type: RelaxedAtomicInt32
+  value: 0x7800000
+  mirror: always
+
 - name: network.http.move_to_pending_list_after_network_change
   type: RelaxedAtomicBool
   value: true

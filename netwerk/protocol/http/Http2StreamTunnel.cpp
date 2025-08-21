@@ -105,6 +105,7 @@ void Http2StreamTunnel::CloseStream(nsresult aReason) {
     mOutput->OnSocketReady(aReason);
     mInput->OnSocketReady(aReason);
   }
+  mClosed = true;
 }
 
 NS_IMETHODIMP
@@ -112,7 +113,6 @@ Http2StreamTunnel::Close(nsresult aReason) {
   LOG(("Http2StreamTunnel::Close this=%p", this));
   RefPtr<Http2Session> session = Session();
   if (NS_SUCCEEDED(mCondition)) {
-    mSession = nullptr;
     if (NS_SUCCEEDED(aReason)) {
       aReason = NS_BASE_STREAM_CLOSED;
     }
@@ -120,6 +120,9 @@ Http2StreamTunnel::Close(nsresult aReason) {
     mInput->CloseWithStatus(aReason);
     // Let the session pickup that the stream has been closed.
     mCondition = aReason;
+    // Clear the session in the end to make sure that CleanupStream() can be
+    // called in CloseWithStatus().
+    mSession = nullptr;
   }
   return NS_OK;
 }
