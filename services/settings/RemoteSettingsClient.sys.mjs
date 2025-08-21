@@ -1378,9 +1378,14 @@ export class RemoteSettingsClient extends EventEmitter {
       lazy.ClientEnvironmentBase,
       this.identifier
     );
-    const dataPromises = data.map(e => filter.filterEntry(e));
-    const results = await Promise.all(dataPromises);
-    return results.filter(Boolean);
+    const results = [];
+    for (const entry of data) {
+      const filteredEntry = await filter.filterEntry(entry);
+      if (filteredEntry) {
+        results.push(filteredEntry);
+      }
+    }
+    return results;
   }
 
   /**

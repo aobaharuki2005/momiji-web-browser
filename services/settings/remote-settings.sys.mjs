@@ -95,6 +95,7 @@ class JexlFilter {
   constructor(environment, collectionName) {
     this._environment = environment;
     this._collectionName = collectionName;
+    this._cachedResultForExpression = new Map();
     this._context = {
       env: environment,
     };
@@ -111,18 +112,20 @@ class JexlFilter {
     if (!filter_expression) {
       return entry;
     }
-    let result;
-    try {
-      result = await lazy.FilterExpressions.eval(
-        filter_expression,
-        this._context
-      );
-    } catch (e) {
-      console.error(
-        e,
-        "Full expression: " + filter_expression,
-        this._collectionName
-      );
+    let result = this._cachedResultForExpression.get(filter_expression);
+    if (result === undefined) {
+      try {
+        result = Boolean(
+          await lazy.FilterExpressions.eval(filter_expression, this._context)
+        );
+      } catch (e) {
+        console.error(
+          e,
+          "Full expression: " + filter_expression,
+          this._collectionName
+        );
+      }
+      this._cachedResultForExpression.set(filter_expression, result);
     }
     return result ? entry : null;
   }
