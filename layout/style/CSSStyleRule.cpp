@@ -371,16 +371,20 @@ already_AddRefed<nsINodeList> CSSStyleRule::QuerySelectorAll(nsINode& aRoot) {
   AutoTArray<const StyleLockedStyleRule*, 8> rules;
   AutoTArray<StyleScopeRuleData, 1> scopes;
   CollectStyleRules(*this, /* aDesugared = */ true, rules, &scopes);
+  auto contentList = MakeRefPtr<nsSimpleContentList>(&aRoot);
   if (scopes.IsEmpty()) {
     StyleSelectorList* list = Servo_StyleRule_GetSelectorList(&rules);
-
-    auto contentList = MakeRefPtr<nsSimpleContentList>(&aRoot);
     Servo_SelectorList_QueryAll(&aRoot, list, contentList.get(),
                                 /* useInvalidation */ false);
     Servo_SelectorList_Drop(list);
-    return contentList.forget();
+  } else {
+    // TODO(dshin): This division is annoying, but `querySelectorAll` path has
+    // fast-path options that we can take advantage of.
+    Servo_SelectorList_QueryAllWithScope(&aRoot, &rules, &scopes,
+                                         contentList.get());
   }
-  return MakeRefPtr<nsSimpleContentList>(&aRoot).forget();
+
+  return contentList.forget();
 }
 
 StylePropertyMap* CSSStyleRule::StyleMap() {

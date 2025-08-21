@@ -8,6 +8,8 @@ support-files = ["GentiumPlus-R.woff"]
 
 ["test_CSSStyleRule_querySelectorAll.html"]
 
+["test_CSSStyleRule_querySelectorAll_scope.html"]
+
 ["test_bug467669.xhtml"]
 support-files = ["test_bug467669.css"]
 
