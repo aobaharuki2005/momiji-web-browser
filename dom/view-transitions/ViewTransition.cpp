@@ -709,8 +709,7 @@ static StyleLockedDeclarationBlock* EnsureRule(
 static nsTArray<Keyframe> BuildGroupKeyframes(
     Document* aDoc, const CSSToCSSMatrix4x4Flagged& aTransform,
     const nsSize& aSize, const StyleOwnedSlice<StyleFilter>& aBackdropFilters) {
-  nsTArray<Keyframe> result;
-  auto& firstKeyframe = *result.AppendElement();
+  Keyframe firstKeyframe;
   firstKeyframe.mOffset = Some(0.0);
   PropertyValuePair transform{
       AnimatedPropertyID(eCSSProperty_transform),
@@ -742,7 +741,7 @@ static nsTArray<Keyframe> BuildGroupKeyframes(
   firstKeyframe.mPropertyValues.AppendElement(std::move(height));
   firstKeyframe.mPropertyValues.AppendElement(std::move(backdropFilters));
 
-  auto& lastKeyframe = *result.AppendElement();
+  Keyframe lastKeyframe;
   lastKeyframe.mOffset = Some(1.0);
   lastKeyframe.mPropertyValues.AppendElement(
       PropertyValuePair{AnimatedPropertyID(eCSSProperty_transform)});
@@ -752,6 +751,10 @@ static nsTArray<Keyframe> BuildGroupKeyframes(
       PropertyValuePair{AnimatedPropertyID(eCSSProperty_height)});
   lastKeyframe.mPropertyValues.AppendElement(
       PropertyValuePair{AnimatedPropertyID(eCSSProperty_backdrop_filter)});
+
+  nsTArray<Keyframe> result;
+  result.AppendElement(std::move(firstKeyframe));
+  result.AppendElement(std::move(lastKeyframe));
   return result;
 }
 
