@@ -296,7 +296,7 @@ bool BaselineCompiler::compileImpl() {
 
 bool BaselineCompiler::finishCompile(JSContext* cx) {
   Rooted<JSScript*> script(cx, handler.script());
-  bool isRealmIndependentJitCodeShared =
+  bool isSelfHostedJitCodeShared =
       JS::Prefs::experimental_self_hosted_cache() && script->selfHosted();
 
   UniquePtr<BaselineScript> baselineScript(
@@ -304,7 +304,7 @@ bool BaselineCompiler::finishCompile(JSContext* cx) {
   JitCode* code = nullptr;
   {
     mozilla::Maybe<AutoAllocInAtomsZone> ar;
-    if (isRealmIndependentJitCodeShared) {
+    if (isSelfHostedJitCodeShared) {
       ar.emplace(cx);
     }
 
@@ -368,7 +368,7 @@ bool BaselineCompiler::finishCompile(JSContext* cx) {
     UniqueJitcodeGlobalEntry entry;
     JitSpew(JitSpew_Profiling,
             "Added JitcodeGlobalEntry for baseline %sscript %s:%u:%u (%p)",
-            isRealmIndependentJitCodeShared ? "shared realm-independent " : "",
+            isSelfHostedJitCodeShared ? "shared self-hosted " : "",
             script->filename(), script->lineno(),
             script->column().oneOriginValue(), baselineScript.get());
 
@@ -378,8 +378,8 @@ bool BaselineCompiler::finishCompile(JSContext* cx) {
       return false;
     }
 
-    if (isRealmIndependentJitCodeShared) {
-      entry = MakeJitcodeGlobalEntry<RealmIndependentSharedEntry>(
+    if (isSelfHostedJitCodeShared) {
+      entry = MakeJitcodeGlobalEntry<SelfHostedSharedEntry>(
           cx, code, code->raw(), code->rawEnd(), std::move(str));
     } else {
       uint64_t realmId = script->realm()->creationOptions().profilerRealmID();
