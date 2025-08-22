@@ -30,6 +30,16 @@
 
 
 /*
+ * buffer
+ */
+extern "C" void *
+_hb_harfrust_buffer_create_rs (void);
+
+extern "C" void
+_hb_harfrust_buffer_destroy_rs (void *data);
+
+
+/*
  * shaper face data
  */
 
@@ -75,13 +85,13 @@ _hb_harfrust_shaper_font_data_destroy (hb_harfrust_font_data_t *data)
   _hb_harfrust_shaper_font_data_destroy_rs (data);
 }
 
+
 /*
  * shape plan
  */
 
 extern "C" void *
 _hb_harfrust_shape_plan_create_rs (const void *font_data,
-				   const void *face_data,
 				   hb_script_t script,
 				   hb_language_t language,
 				   hb_direction_t direction);
@@ -98,12 +108,13 @@ extern "C" hb_bool_t
 _hb_harfrust_shape_rs (const void         *font_data,
 		       const void         *face_data,
 		       const void         *rs_shape_plan,
+		       const void         *rs_buffer,
 		       hb_font_t          *font,
 		       hb_buffer_t        *buffer,
 		       const hb_feature_t *features,
 		       unsigned int        num_features);
 
-static hb_user_data_key_t hr_shape_plan_key = {0};
+static hb_user_data_key_t hb_object_key = {0};
 
 hb_bool_t
 _hb_harfrust_shape (hb_shape_plan_t    *shape_plan,
@@ -115,28 +126,46 @@ _hb_harfrust_shape (hb_shape_plan_t    *shape_plan,
   const hb_harfrust_font_data_t *font_data = font->data.harfrust;
   const hb_harfrust_face_data_t *face_data = font->face->data.harfrust;
 
+retry_buffer:
+  void *hr_buffer = hb_buffer_get_user_data (buffer, &hb_object_key);
+  if (unlikely (!hr_buffer))
+  {
+    hr_buffer = _hb_harfrust_buffer_create_rs ();
+    if (unlikely (!hr_buffer))
+      return false;
+
+    if (!hb_buffer_set_user_data (buffer,
+				  &hb_object_key,
+				  hr_buffer,
+				  _hb_harfrust_buffer_destroy_rs,
+				  false))
+    {
+      _hb_harfrust_buffer_destroy_rs (hr_buffer);
+      goto retry_buffer;
+    }
+  }
+
   void *hr_shape_plan = nullptr;
 
   if (!num_features)
   {
-  retry:
-    hr_shape_plan = hb_shape_plan_get_user_data (shape_plan,
-						 &hr_shape_plan_key);
+  retry_shape_plan:
+    hr_shape_plan = hb_shape_plan_get_user_data (shape_plan, &hb_object_key);
     if (unlikely (!hr_shape_plan))
     {
-      hr_shape_plan = _hb_harfrust_shape_plan_create_rs (font_data, face_data,
+      hr_shape_plan = _hb_harfrust_shape_plan_create_rs (font_data,
 							 shape_plan->key.props.script,
 							 shape_plan->key.props.language,
 							 shape_plan->key.props.direction);
       if (hr_shape_plan &&
 	  !hb_shape_plan_set_user_data (shape_plan,
-				       &hr_shape_plan_key,
+				       &hb_object_key,
 				       hr_shape_plan,
 				       _hb_harfrust_shape_plan_destroy_rs,
 				       false))
       {
         _hb_harfrust_shape_plan_destroy_rs (hr_shape_plan);
-	goto retry;
+	goto retry_shape_plan;
       }
     }
   }
@@ -144,6 +173,7 @@ _hb_harfrust_shape (hb_shape_plan_t    *shape_plan,
   return _hb_harfrust_shape_rs (font_data,
 				face_data,
 				hr_shape_plan,
+				hr_buffer,
 				font,
 				buffer,
 				features,
