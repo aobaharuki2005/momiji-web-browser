@@ -160,7 +160,19 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
   SETTER(Maybe<dom::RequestMode>, RequestMode)                                 \
                                                                                \
   GETTER(bool, IsMetaRefresh, isMetaRefresh, false)                            \
-  SETTER(bool, IsMetaRefresh)
+  SETTER(bool, IsMetaRefresh)                                                  \
+                                                                               \
+  GETTER(bool, IsFromProcessingFrameAttributes,                                \
+         isFromProcessingFrameAttributes, false)                               \
+                                                                               \
+  GETTER(bool, IsMediaRequest, isMediaRequest, false)                          \
+  SETTER(bool, IsMediaRequest)                                                 \
+                                                                               \
+  GETTER(bool, IsMediaInitialRequest, isMediaInitialRequest, false)            \
+  SETTER(bool, IsMediaInitialRequest)                                          \
+                                                                               \
+  GETTER(bool, IsFromObjectOrEmbed, isFromObjectOrEmbed, false)                \
+  SETTER(bool, IsFromObjectOrEmbed)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -486,18 +498,6 @@ class LoadInfo final : public nsILoadInfo {
   // before use it.
   bool mOverriddenFingerprintingSettingsIsSet = false;
 #endif
-
-  // Is true if this load was triggered by processing the attributes of the
-  // browsing context container.
-  // See nsILoadInfo.isFromProcessingFrameAttributes
-  bool mIsFromProcessingFrameAttributes = false;
-
-  // See nsILoadInfo.isMediaRequest and nsILoadInfo.isMediaInitialRequest.
-  bool mIsMediaRequest = false;
-  bool mIsMediaInitialRequest = false;
-
-  // See nsILoadInfo.isFromObjectOrEmbed
-  bool mIsFromObjectOrEmbed = false;
 
   // The cross origin embedder policy that the loading need to respect.
   // If the value is nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP, CORP checking

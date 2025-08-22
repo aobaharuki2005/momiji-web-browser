@@ -753,10 +753,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mOverriddenFingerprintingSettingsIsSet(
           rhs.mOverriddenFingerprintingSettingsIsSet),
 #endif
-      mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
-      mIsMediaRequest(rhs.mIsMediaRequest),
-      mIsMediaInitialRequest(rhs.mIsMediaInitialRequest),
-      mIsFromObjectOrEmbed(rhs.mIsFromObjectOrEmbed),
       mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy),
       mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
           rhs.mIsOriginTrialCoepCredentiallessEnabledForTopLevel),
@@ -1909,53 +1905,6 @@ LoadInfo::GetIsTopLevelLoad(bool* aResult) {
 
 void LoadInfo::SetIsFromProcessingFrameAttributes() {
   mIsFromProcessingFrameAttributes = true;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsFromProcessingFrameAttributes(
-    bool* aIsFromProcessingFrameAttributes) {
-  MOZ_ASSERT(aIsFromProcessingFrameAttributes);
-  *aIsFromProcessingFrameAttributes = mIsFromProcessingFrameAttributes;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsMediaRequest(bool aIsMediaRequest) {
-  mIsMediaRequest = aIsMediaRequest;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsMediaRequest(bool* aIsMediaRequest) {
-  MOZ_ASSERT(aIsMediaRequest);
-  *aIsMediaRequest = mIsMediaRequest;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsMediaInitialRequest(bool aIsMediaInitialRequest) {
-  mIsMediaInitialRequest = aIsMediaInitialRequest;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsMediaInitialRequest(bool* aIsMediaInitialRequest) {
-  MOZ_ASSERT(aIsMediaInitialRequest);
-  *aIsMediaInitialRequest = mIsMediaInitialRequest;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsFromObjectOrEmbed(bool aIsFromObjectOrEmbed) {
-  mIsFromObjectOrEmbed = aIsFromObjectOrEmbed;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsFromObjectOrEmbed(bool* aIsFromObjectOrEmbed) {
-  MOZ_ASSERT(aIsFromObjectOrEmbed);
-  *aIsFromObjectOrEmbed = mIsFromObjectOrEmbed;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

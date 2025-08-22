@@ -895,22 +895,6 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       loadInfoArgs.isNewWindowTarget(),
       loadInfoArgs.userNavigationInvolvement());
 
-  if (loadInfoArgs.isFromProcessingFrameAttributes()) {
-    loadInfo->SetIsFromProcessingFrameAttributes();
-  }
-
-  if (loadInfoArgs.isMediaRequest()) {
-    loadInfo->SetIsMediaRequest(true);
-
-    if (loadInfoArgs.isMediaInitialRequest()) {
-      loadInfo->SetIsMediaInitialRequest(true);
-    }
-  }
-
-  if (loadInfoArgs.isFromObjectOrEmbed()) {
-    loadInfo->SetIsFromObjectOrEmbed(true);
-  }
-
   loadInfo.forget(outLoadInfo);
   return NS_OK;
 }

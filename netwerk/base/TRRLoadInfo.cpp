@@ -486,42 +486,6 @@ TRRLoadInfo::GetIsTopLevelLoad(bool* aResult) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetIsFromProcessingFrameAttributes(
-    bool* aIsFromProcessingFrameAttributes) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetIsMediaRequest(bool aIsMediaRequest) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetIsMediaRequest(bool* aIsMediaRequest) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetIsMediaInitialRequest(bool aIsMediaInitialRequest) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetIsMediaInitialRequest(bool* aIsMediaInitialRequest) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetIsFromObjectOrEmbed(bool aIsFromObjectOrEmbed) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetIsFromObjectOrEmbed(bool* aIsFromObjectOrEmbed) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetResultPrincipalURI(nsIURI** aURI) {
   nsCOMPtr<nsIURI> uri = mResultPrincipalURI;
   uri.forget(aURI);
