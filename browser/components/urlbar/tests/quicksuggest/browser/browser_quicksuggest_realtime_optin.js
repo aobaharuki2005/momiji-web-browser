@@ -73,7 +73,15 @@ add_setup(async function () {
   });
 });
 
-add_task(async function opt_in() {
+add_task(async function optIn_mouse() {
+  await doOptInTest(false);
+});
+
+add_task(async function optIn_keyboard() {
+  await doOptInTest(true);
+});
+
+async function doOptInTest(useKeyboard) {
   Assert.ok(
     QuickSuggest.getFeature("MarketSuggestions").isEnabled,
     "Sanity check: MarketSuggestions is enabled initially"
@@ -101,8 +109,33 @@ add_task(async function opt_in() {
   info(
     "Click allow button that changes dataCollection pref and starts new query with same keyword"
   );
+
   let allowButton = element.row.querySelector(".urlbarView-button-0");
-  EventUtils.synthesizeMouseAtCenter(allowButton, {});
+  if (!useKeyboard) {
+    info("Picking allow button with mouse");
+    EventUtils.synthesizeMouseAtCenter(allowButton, {});
+  } else {
+    info("Picking allow button with keyboard");
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    if (
+      UrlbarTestUtils.getSelectedElement(window).dataset.l10nName ==
+      "learn-more-link"
+    ) {
+      EventUtils.synthesizeKey("KEY_Tab");
+    }
+    Assert.equal(
+      UrlbarTestUtils.getSelectedElement(window),
+      allowButton,
+      "The allow button should be selected after pressing Down"
+    );
+    Assert.equal(
+      gURLBar.value,
+      "stock",
+      "Input value should be the query's search string"
+    );
+    EventUtils.synthesizeKey("KEY_Enter");
+  }
+
   await UrlbarTestUtils.promiseSearchComplete(window);
   let { result: merinoResult } = await UrlbarTestUtils.getDetailsOfResultAt(
     window,
@@ -127,7 +160,7 @@ add_task(async function opt_in() {
     QuickSuggest.getFeature("MarketSuggestions").isEnabled,
     "MarketSuggestions remains enabled after clearing quicksuggest.dataCollection.enabled"
   );
-});
+}
 
 add_task(async function dismiss() {
   Assert.ok(

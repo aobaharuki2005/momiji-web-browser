@@ -2218,6 +2218,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
             command: {
               type: "string",
             },
+            input: {
+              type: "string",
+            },
             menu: {
               type: "array",
               items: {
