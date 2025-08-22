@@ -610,15 +610,6 @@ TRRLoadInfo::SetChannelCreationOriginalURI(nsIURI* aURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-TRRLoadInfo::SetRequestBlockingReason(uint32_t aReason) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP
-TRRLoadInfo::GetRequestBlockingReason(uint32_t* aReason) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void TRRLoadInfo::SetClientInfo(const ClientInfo& aClientInfo) {}
 
 const Maybe<ClientInfo>& TRRLoadInfo::GetClientInfo() { return mClientInfo; }

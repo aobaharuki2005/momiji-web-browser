@@ -742,7 +742,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mAncestorPrincipals(rhs.mAncestorPrincipals.Clone()),
       mAncestorBrowsingContextIDs(rhs.mAncestorBrowsingContextIDs.Clone()),
       mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders.Clone()),
-      mRequestBlockingReason(rhs.mRequestBlockingReason),
       mForcePreflight(rhs.mForcePreflight),
       mIsPreflight(rhs.mIsPreflight),
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
@@ -830,8 +829,7 @@ LoadInfo::LoadInfo(
     nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
     nsILoadInfo::IPAddressSpace aIPAddressSpace,
     const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
-    bool aIsMetaRefresh, uint32_t aRequestBlockingReason,
-    nsINode* aLoadingContext,
+    bool aIsMetaRefresh, nsINode* aLoadingContext,
     nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
     bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
     nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
@@ -880,7 +878,6 @@ LoadInfo::LoadInfo(
       mAncestorPrincipals(std::move(aAncestorPrincipals)),
       mAncestorBrowsingContextIDs(aAncestorBrowsingContextIDs.Clone()),
       mCorsUnsafeHeaders(aCorsUnsafeHeaders.Clone()),
-      mRequestBlockingReason(aRequestBlockingReason),
       mForcePreflight(aForcePreflight),
       mIsPreflight(aIsPreflight),
       mLoadTriggeredFromExternal(aLoadTriggeredFromExternal),
@@ -2209,17 +2206,6 @@ LoadInfo::GetChannelCreationOriginalURI(nsIURI** aURI) {
 NS_IMETHODIMP
 LoadInfo::SetChannelCreationOriginalURI(nsIURI* aURI) {
   mChannelCreationOriginalURI = aURI;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetRequestBlockingReason(uint32_t aReason) {
-  mRequestBlockingReason = aReason;
-  return NS_OK;
-}
-NS_IMETHODIMP
-LoadInfo::GetRequestBlockingReason(uint32_t* aReason) {
-  *aReason = mRequestBlockingReason;
   return NS_OK;
 }
 

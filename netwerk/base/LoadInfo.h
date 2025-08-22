@@ -104,7 +104,11 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
   SETTER(bool, IsGETRequest)                                                   \
                                                                                \
   GETTER(bool, SendCSPViolationEvents, sendCSPViolationEvents, true)           \
-  SETTER(bool, SendCSPViolationEvents)
+  SETTER(bool, SendCSPViolationEvents)                                         \
+                                                                               \
+  GETTER(uint32_t, RequestBlockingReason, requestBlockingReason,               \
+         BLOCKING_REASON_NONE)                                                 \
+  SETTER(uint32_t, RequestBlockingReason)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -324,8 +328,7 @@ class LoadInfo final : public nsILoadInfo {
            nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
            nsILoadInfo::IPAddressSpace aIPAddressSpace,
            const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
-           bool aIsMetaRefresh, uint32_t aRequestBlockingReason,
-           nsINode* aLoadingContext,
+           bool aIsMetaRefresh, nsINode* aLoadingContext,
            nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
            bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
            nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
@@ -423,7 +426,6 @@ class LoadInfo final : public nsILoadInfo {
   nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
   nsTArray<uint64_t> mAncestorBrowsingContextIDs;
   nsTArray<nsCString> mCorsUnsafeHeaders;
-  uint32_t mRequestBlockingReason = BLOCKING_REASON_NONE;
   bool mForcePreflight = false;
   bool mIsPreflight = false;
   bool mLoadTriggeredFromExternal = false;
