@@ -816,7 +816,6 @@ mochitest-media:
             socketprocess+no-fission:
                 by-test-platform:
                     .*hw-ref.*: []
-                    android-em-14.*/debug: []  # Bug 1984064
                     android-em.*/debug: ['autoland', 'mozilla-central']
                     android-hw-.*-aarch64(-qr)?/debug: built-projects
                     linux1804-64(-qr)?/debug: ['mozilla-central']
@@ -843,7 +842,6 @@ mochitest-media:
             webrender-sw+no-fission:
                 by-test-platform:
                     .*hw-ref.*: []
-                    android-em-14.*/debug: []  # Bug 1984064
                     android-em.*/debug: ['autoland', 'mozilla-central']
                     linux1804-64(-qr)?/.*: ['mozilla-central']
                     linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
@@ -864,7 +862,6 @@ mochitest-media:
                     android-hw-.*/opt: []
                     .*hw-ref.*: []
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
-                    android-em-14.*/debug: []  # Bug 1984064
                     android-em.*/debug-isolated-process: []
                     android.*: built-projects
                     linux1804-64(-qr)?/.*: ['mozilla-central']
@@ -898,7 +895,6 @@ mochitest-media:
                     .*hw-ref.*: []
                     android-hw.*/opt: []
                     android-em.*/debug-isolated-process: []
-                    android-em-14.*/debug: []  # Bug 1984064
                     android.*: built-projects
                     linux.*-asan/opt: []
                     linux.*-ccov/opt: []
