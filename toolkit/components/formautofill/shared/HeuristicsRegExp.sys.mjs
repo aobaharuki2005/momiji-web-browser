@@ -61,7 +61,7 @@ export const HeuristicsRegExp = {
         "città" + // it-IT
         "|miasto|miejscowosc|miejscowość", //pl-PL
       "address-housenumber":
-        "(house|building)\\s*number|hausnummer|haus|house[a-z\-]*n(r|o)" +
+        "(house|building)[\\s\-]*number|hausnummer|haus|house[a-z\-]*n(r|o)" +
         "|n[úu]mero" +
         "|domu", // pl-PL
       "address-level3":
