@@ -637,19 +637,6 @@ TRRLoadInfo::GetInternalContentPolicyType(nsContentPolicyType* aResult) {
   *aResult = mInternalContentPolicyType;
   return NS_OK;
 }
-
-NS_IMETHODIMP
-TRRLoadInfo::GetAllowDeprecatedSystemRequests(
-    bool* aAllowDeprecatedSystemRequests) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetAllowDeprecatedSystemRequests(
-    bool aAllowDeprecatedSystemRequests) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP
 TRRLoadInfo::GetIsUserTriggeredSave(bool* aIsUserTriggeredSave) {
   return NS_ERROR_NOT_IMPLEMENTED;

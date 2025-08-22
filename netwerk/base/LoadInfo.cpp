@@ -745,7 +745,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
       mCspNonce(rhs.mCspNonce),
       mIntegrityMetadata(rhs.mIntegrityMetadata),
-      mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
       mIsInDevToolsContext(rhs.mIsInDevToolsContext),
       mParserCreatedScript(rhs.mParserCreatedScript),
       mRequestMode(rhs.mRequestMode),
@@ -805,8 +804,8 @@ LoadInfo::LoadInfo(
     const nsTArray<nsCString>& aCorsUnsafeHeaders,
     bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
     const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
-    bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
-    bool aParserCreatedScript, Maybe<RequestMode> aRequestMode,
+    bool aIsInDevToolsContext, bool aParserCreatedScript,
+    Maybe<RequestMode> aRequestMode,
     nsILoadInfo::StoragePermissionState aStoragePermission,
     nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
     nsILoadInfo::IPAddressSpace aIPAddressSpace,
@@ -864,7 +863,6 @@ LoadInfo::LoadInfo(
       mCspNonce(aCspNonce),
       mIntegrityMetadata(aIntegrityMetadata),
       mIsSameDocumentNavigation(aIsSameDocumentNavigation),
-      mAllowDeprecatedSystemRequests(aAllowDeprecatedSystemRequests),
       mIsInDevToolsContext(aIsInDevToolsContext),
       mParserCreatedScript(aParserCreatedScript),
       mRequestMode(aRequestMode),
@@ -1906,20 +1904,6 @@ LoadInfo::GetIsSameDocumentNavigation(bool* aIsSameDocumentNavigation) {
 NS_IMETHODIMP
 LoadInfo::SetIsSameDocumentNavigation(bool aIsSameDocumentNavigation) {
   mIsSameDocumentNavigation = aIsSameDocumentNavigation;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetAllowDeprecatedSystemRequests(
-    bool* aAllowDeprecatedSystemRequests) {
-  *aAllowDeprecatedSystemRequests = mAllowDeprecatedSystemRequests;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetAllowDeprecatedSystemRequests(
-    bool aAllowDeprecatedSystemRequests) {
-  mAllowDeprecatedSystemRequests = aAllowDeprecatedSystemRequests;
   return NS_OK;
 }
 

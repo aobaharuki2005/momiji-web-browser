@@ -144,7 +144,11 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
                                                                                \
   GETTER(bool, TextDirectiveUserActivation, textDirectiveUserActivation,       \
          false)                                                                \
-  SETTER(bool, TextDirectiveUserActivation)
+  SETTER(bool, TextDirectiveUserActivation)                                    \
+                                                                               \
+  GETTER(bool, AllowDeprecatedSystemRequests, allowDeprecatedSystemRequests,   \
+         false)                                                                \
+  SETTER(bool, AllowDeprecatedSystemRequests)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -351,8 +355,8 @@ class LoadInfo final : public nsILoadInfo {
            const nsTArray<nsCString>& aCorsUnsafeHeaders,
            bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
            const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
-           bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
-           bool aParserCreatedScript, Maybe<dom::RequestMode> aRequestMode,
+           bool aIsInDevToolsContext, bool aParserCreatedScript,
+           Maybe<dom::RequestMode> aRequestMode,
            nsILoadInfo::StoragePermissionState aStoragePermission,
            nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
            nsILoadInfo::IPAddressSpace aIPAddressSpace,
@@ -459,7 +463,6 @@ class LoadInfo final : public nsILoadInfo {
   nsString mCspNonce;
   nsString mIntegrityMetadata;
   bool mIsSameDocumentNavigation = false;
-  bool mAllowDeprecatedSystemRequests = false;
   bool mIsUserTriggeredSave = false;
   bool mIsInDevToolsContext = false;
   bool mParserCreatedScript = false;
