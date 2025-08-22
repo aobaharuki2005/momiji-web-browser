@@ -231,6 +231,10 @@
             let anchorBounds = getBounds(anchorElement);
             let panelBounds = getBounds(this);
             let clientWidth = document.scrollingElement.clientWidth;
+            let panelHeight =
+              this.scrollHeight > panelBounds.height
+                ? this.scrollHeight
+                : panelBounds.height;
 
             resolve({
               anchorBottom: anchorBounds.bottom,
@@ -238,7 +242,7 @@
               anchorLeft: anchorBounds.left,
               anchorTop: anchorBounds.top,
               anchorWidth: anchorBounds.width,
-              panelHeight: panelBounds.height,
+              panelHeight,
               panelWidth: panelBounds.width,
               winHeight: innerHeight,
               winScrollX: scrollX,
