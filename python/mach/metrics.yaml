@@ -82,7 +82,7 @@ mach:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1894154
     data_reviews:
-      - TBD
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1894154
     notification_emails:
       - build-telemetry@mozilla.com
       - ahochheiden@mozilla.com
@@ -225,7 +225,7 @@ mach.system:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1982531
     data_reviews:
-      - TBD
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1982531
     notification_emails:
       - build-telemetry@mozilla.com
     expires: never
@@ -238,7 +238,7 @@ mach.system:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1982531
     data_reviews:
-      - TBD
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1982531
     notification_emails:
       - build-telemetry@mozilla.com
     expires: never
