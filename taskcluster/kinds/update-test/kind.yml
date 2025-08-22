@@ -48,7 +48,7 @@ tasks:
                 VERSION_LOG_FILENAME: update-test-version-info.log
         os:
             - win11-64-24h2-source
-            - win10-64-2009
+            - win10-64-2009-source
             - t-osx-1500-m4
             - t-osx-1400-r8
             - t-osx-1015-r8
