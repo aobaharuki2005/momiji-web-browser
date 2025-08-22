@@ -339,7 +339,7 @@ function Lists({ dispatch }) {
     const newLists = {
       ...lists,
       [id]: {
-        label: "New list",
+        label: "",
         tasks: [],
         completed: [],
       },
@@ -377,7 +377,7 @@ function Lists({ dispatch }) {
       if (Object.keys(updatedLists)?.length === 0) {
         updatedLists = {
           [crypto.randomUUID()]: {
-            label: "New list",
+            label: "",
             tasks: [],
             completed: [],
           },
@@ -510,6 +510,17 @@ function Lists({ dispatch }) {
   const isAtMaxListItemsLimit =
     currentSelectedListItemsCount >= maxListItemsCount;
 
+  // Figure out if the selected list is the first (default) or a new one.
+  // Index 0 → use "Task list"; any later index → use "New list".
+  // Fallback to 0 if the selected id isn’t found.
+  const listKeys = Object.keys(lists);
+  const selectedIndex = Math.max(0, listKeys.indexOf(selected));
+
+  const listNamePlaceholder =
+    currentListsCount > 1 && selectedIndex !== 0
+      ? "newtab-widget-lists-name-placeholder-new"
+      : "newtab-widget-lists-name-placeholder-default";
+
   return (
     <article
       className="lists"
@@ -525,10 +536,20 @@ function Lists({ dispatch }) {
           setIsEditing={setIsEditing}
           type="list"
           maxLength={30}
+          dataL10nId={listNamePlaceholder}
         >
           <moz-select ref={selectRef} value={selected}>
             {Object.entries(lists).map(([key, list]) => (
-              <moz-option key={key} value={key} label={list.label} />
+              <moz-option
+                key={key}
+                value={key}
+                // On the first/initial list, use default name
+                {...(list.label
+                  ? { label: list.label }
+                  : {
+                      "data-l10n-id": "newtab-widget-lists-name-label-default",
+                    })}
+              />
             ))}
           </moz-select>
         </EditableText>
@@ -795,10 +816,14 @@ function EditableText({
   onSave,
   children,
   type,
+  dataL10nId = null,
   maxLength = 100,
 }) {
   const [tempValue, setTempValue] = useState(value);
   const inputRef = useRef(null);
+
+  // True if tempValue is empty, null/undefined, or only whitespace
+  const showPlaceholder = (tempValue ?? "").trim() === "";
 
   useEffect(() => {
     if (isEditing) {
@@ -833,6 +858,8 @@ function EditableText({
       onChange={event => setTempValue(event.target.value)}
       onBlur={handleOnBlur}
       onKeyDown={handleKeyDown}
+      // Note that if a user has a custom name set, it will override the placeholder
+      {...(showPlaceholder && dataL10nId ? { "data-l10n-id": dataL10nId } : {})}
     />
   ) : (
     [children]
