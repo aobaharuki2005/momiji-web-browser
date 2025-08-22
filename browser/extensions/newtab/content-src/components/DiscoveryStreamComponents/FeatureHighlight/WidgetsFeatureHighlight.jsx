@@ -14,10 +14,14 @@ function WidgetsFeatureHighlight({ handleDismiss, handleBlock, dispatch }) {
       arrowPosition="arrow-top-center"
       openedOverride={true}
       showButtonIcon={false}
-      feature={messageData.content.feature}
+      feature={messageData?.content?.feature}
       modalClassName="widget-highlight-wrapper"
       message={
         <div className="widget-highlight">
+          <img
+            src="chrome://newtab/content/data/content/assets/widget-message.png"
+            alt=""
+          />
           <h3 data-l10n-id="newtab-widget-message-title" />
           <p data-l10n-id="newtab-widget-message-copy" />
         </div>

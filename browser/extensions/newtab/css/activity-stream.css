@@ -4299,7 +4299,16 @@ main section {
 }
 
 .feature-highlight .feature-highlight-modal.widget-highlight-wrapper {
-  width: 370px;
+  width: auto;
+  border-radius: var(--border-radius-medium);
+}
+.feature-highlight .feature-highlight-modal.widget-highlight-wrapper .content-wrapper {
+  margin: 0;
+  padding: var(--space-medium);
+}
+.feature-highlight .feature-highlight-modal.widget-highlight-wrapper .widget-highlight img {
+  border-radius: var(--border-radius-medium);
+  margin-block-end: var(--space-small);
 }
 .feature-highlight .feature-highlight-modal.widget-highlight-wrapper .widget-highlight h3 {
   margin-block: 0 var(--space-xsmall);
@@ -4310,11 +4319,12 @@ main section {
   font-size: var(--font-size-root);
 }
 .feature-highlight .feature-highlight-modal.widget-highlight-wrapper .message-icon {
-  margin-inline: var(--space-medium);
+  display: none;
 }
 .feature-highlight .feature-highlight-modal.widget-highlight-wrapper moz-button {
-  margin-inline-end: var(--space-small);
-  margin-block-start: var(--space-small);
+  position: absolute;
+  inset-inline-end: var(--space-medium);
+  inset-block-start: var(--space-medium);
 }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public

@@ -13257,11 +13257,14 @@ function WidgetsFeatureHighlight({
     arrowPosition: "arrow-top-center",
     openedOverride: true,
     showButtonIcon: false,
-    feature: messageData.content.feature,
+    feature: messageData?.content?.feature,
     modalClassName: "widget-highlight-wrapper",
     message: /*#__PURE__*/React.createElement("div", {
       className: "widget-highlight"
-    }, /*#__PURE__*/React.createElement("h3", {
+    }, /*#__PURE__*/React.createElement("img", {
+      src: "chrome://newtab/content/data/content/assets/widget-message.png",
+      alt: ""
+    }), /*#__PURE__*/React.createElement("h3", {
       "data-l10n-id": "newtab-widget-message-title"
     }), /*#__PURE__*/React.createElement("p", {
       "data-l10n-id": "newtab-widget-message-copy"
