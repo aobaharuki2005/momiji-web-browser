@@ -227,7 +227,7 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm,
                 Imm32(int32_t(ArraySortResult::Failure)), masm.failureLabel());
   masm.freeStack(ExitFrameLayout::SizeWithFooter());
   masm.branch32(Assembler::Equal, ReturnReg,
-                Imm32(int32_t(ArraySortResult::CallJSSameRealmNoRectifier)),
+                Imm32(int32_t(ArraySortResult::CallJSSameRealmNoUnderflow)),
                 &jitCallFast);
   masm.branch32(Assembler::Equal, ReturnReg,
                 Imm32(int32_t(ArraySortResult::CallJS)), &jitCallSlow);
