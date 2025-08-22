@@ -115,7 +115,7 @@ else:
     # clang-plugin.dll needs to be deterministic for sccache hashes
     HOST_LDFLAGS += ["-brepro"]
 
-DIRS += [
+TEST_DIRS += [
     "tests",
 ]
 
