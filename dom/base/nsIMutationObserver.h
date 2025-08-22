@@ -7,7 +7,10 @@
 #ifndef nsIMutationObserver_h
 #define nsIMutationObserver_h
 
+#include <ostream>
+
 #include "mozilla/Assertions.h"
+#include "mozilla/DbgMacro.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "nsISupports.h"
 
@@ -32,6 +35,13 @@ enum class MutationEffectOnScript : bool {
   KeepTrustWorthiness,
   DropTrustWorthiness,
 };
+
+inline std::ostream& operator<<(
+    std::ostream& aStream, MutationEffectOnScript aMutationEffectOnScript) {
+  return aStream << (static_cast<bool>(aMutationEffectOnScript)
+                         ? "DropTrustWorthiness"
+                         : "KeepTrustWorthiness");
+}
 
 /**
  * Information details about a characterdata change.  Basically, we
@@ -95,6 +105,9 @@ struct CharacterDataChangeInfo {
    * Used for splitText() and normalize(), otherwise null.
    */
   Details* mDetails = nullptr;
+
+  MOZ_DEFINE_DBG(CharacterDataChangeInfo, mAppend, mChangeStart, mChangeEnd,
+                 mReplaceLength, mMutationEffectOnScript, mDetails);
 };
 
 /**
