@@ -50,7 +50,6 @@ const NETWORK_EVENT_TYPES = {
   REQUEST_POSTDATA: "requestPostData",
   RESPONSE_CACHE: "responseCache",
   RESPONSE_CONTENT: "responseContent",
-  RESPONSE_CONTENT_COMPLETE: "responseContentComplete",
   RESPONSE_COOKIES: "responseCookies",
   RESPONSE_HEADERS: "responseHeaders",
   RESPONSE_START: "responseStart",
@@ -797,8 +796,7 @@ function handleDataChannel(channel, networkEventActor) {
   // not be considered as insecure either. Set empty string as security
   // state.
   networkEventActor.addSecurityInfo({ state: "" });
-  networkEventActor.addResponseContent(response);
-  networkEventActor.addResponseContentComplete({});
+  networkEventActor.addResponseContent(response, {});
 }
 
 /**

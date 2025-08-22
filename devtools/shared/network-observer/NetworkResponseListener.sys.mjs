@@ -141,13 +141,6 @@ export class NetworkResponseListener {
    */
   #responseBodyLimit = 0;
   /**
-   * Is true after the events which should be added at the start of a response
-   * are added. This is only used for overridden requests.
-   *
-   * @type {Boolean}
-   */
-  #sentStartEvents = false;
-  /**
    * The response will be written into the outputStream of this nsIPipe.
    * Both ends of the pipe must be blocking.
    *
@@ -373,9 +366,21 @@ export class NetworkResponseListener {
       // Accessing `alternativeDataType` for some SW requests throws.
     }
     if (isOptimizedContent) {
-      const data = this.#getContentFromCache();
-      this.#getResponseContent(data);
-      this.#getResponseContentComplete();
+      let charset;
+      try {
+        charset = this.#request.contentCharset;
+      } catch (e) {
+        // Accessing the charset sometimes throws NS_ERROR_NOT_AVAILABLE when
+        // reloading the page
+      }
+      if (!charset) {
+        charset = this.#httpActivity.charset;
+      }
+      lazy.NetworkHelper.loadFromCache(
+        this.#httpActivity.url,
+        charset,
+        this.#onComplete.bind(this)
+      );
       return;
     }
 
@@ -466,7 +471,7 @@ export class NetworkResponseListener {
    * Fetches cache information from CacheEntry
    * @private
    */
-  async #getCacheInformation() {
+  async #fetchCacheInformation() {
     // TODO: This method is async and #httpActivity is nullified in the #destroy
     // method of this class. Backup httpActivity to avoid errors here.
     const httpActivity = this.#httpActivity;
@@ -491,8 +496,9 @@ export class NetworkResponseListener {
     this.#sink.outputStream.close();
   }
 
+  // nsIProgressEventSink implementation
+
   /**
-   * For the nsIProgressEventSink implementation
    * Handle progress event as data is transferred.  This is used to record the
    * size on the wire, which may be compressed / encoded.
    */
@@ -504,61 +510,73 @@ export class NetworkResponseListener {
     this.#forwardNotification(Ci.nsIProgressEventSink, "onProgress", arguments);
   }
 
-  /**
-   * For the nsIProgressEventSink implementation
-   * This is used to get the status information
-   */
   onStatus() {
     this.#forwardNotification(Ci.nsIProgressEventSink, "onStatus", arguments);
   }
 
   /**
    * Clean up the response listener once the response input stream is closed.
-   * This is called from from onInputStreamReady() when the stream is closed.
-   *
+   * This is called from onStopRequest() or from onInputStreamReady() when the
+   * stream is closed.
    * @return void
    */
-  #dataComplete() {
+  onStreamClose() {
     if (!this.#httpActivity) {
       return;
     }
-
     // Remove our listener from the request input stream.
     this.setAsyncListener(this.#sink.inputStream, null);
 
-    if (this.#httpActivity.responseStatus == 304) {
-      this.#getCacheInformation().then(() => {
-        this.#getResponseContentComplete();
-      });
-    } else {
-      this.#getResponseContentComplete();
+    const responseStatus = this.#httpActivity.responseStatus;
+    if (responseStatus == 304) {
+      this.#fetchCacheInformation();
     }
 
-    // Clear the data stored locally on this instance.
-    this.#receivedEncodedChunks = [];
-    this.#receivedData = "";
-    this.#uconv = null;
+    if (!this.#httpActivity.discardResponseBody && this.#receivedData.length) {
+      this.#uconv = null;
+      this.#onComplete(this.#receivedData);
+    } else if (
+      !this.#httpActivity.discardResponseBody &&
+      this.#receivedEncodedChunks.length
+    ) {
+      this.#onComplete(this.#receivedEncodedChunks);
+    } else if (
+      !this.#httpActivity.discardResponseBody &&
+      responseStatus == 304
+    ) {
+      // Response is cached, so we load it from cache.
+      let charset;
+      try {
+        charset = this.#request.contentCharset;
+      } catch (e) {
+        // Accessing the charset sometimes throws NS_ERROR_NOT_AVAILABLE when
+        // reloading the page
+      }
+      if (!charset) {
+        charset = this.#httpActivity.charset;
+      }
+      lazy.NetworkHelper.loadFromCache(
+        this.#httpActivity.url,
+        charset,
+        this.#onComplete.bind(this)
+      );
+    } else {
+      this.#onComplete();
+    }
   }
 
-  async #dataChunkAvailable() {
-    if (!this.#httpActivity) {
-      return;
-    }
-
-    if (this.#httpActivity.discardResponseBody) {
-      this.#getResponseContent("");
-      return;
-    }
-
-    let data = "";
-    if (this.#receivedData.length) {
-      data = this.#receivedData;
-    } else if (this.#receivedEncodedChunks.length) {
-      data = this.#receivedEncodedChunks;
-    } else if (this.#httpActivity.responseStatus == 304) {
-      data = await this.#getContentFromCache();
-    }
+  /**
+   * Handler for when the response completes. This function cleans up the
+   * response listener.
+   *
+   * @param {(string|array)=} data
+   *        Optional, the received data coming from the response listener or
+   *        from the cache.
+   */
+  #onComplete(data) {
+    // Make sure all the security and response content info are sent
     this.#getResponseContent(data);
+    this.#onSecurityInfo.then(() => this.#destroy());
   }
 
   /**
@@ -568,24 +586,6 @@ export class NetworkResponseListener {
     const response = {
       mimeType: "",
     };
-    // For overridden scripts, we will not get the usual start notification
-    // for the request, so we add event timings and response start here.
-    // Note: These events should be added once per overridden request
-    if (this.#httpActivity.isOverridden && !this.#sentStartEvents) {
-      const timings = lazy.NetworkTimings.extractHarTimings(this.#httpActivity);
-      this.#httpActivity.owner.addEventTimings(
-        timings.total,
-        timings.timings,
-        timings.offsets
-      );
-
-      this.#httpActivity.owner.addResponseStart({
-        channel: this.#httpActivity.channel,
-        fromCache: this.#httpActivity.fromCache,
-        rawHeaders: "",
-      });
-      this.#sentStartEvents = true;
-    }
 
     response.bodySize = this.#bodySize;
     response.size = this.#receivedBodySize;
@@ -630,10 +630,11 @@ export class NetworkResponseListener {
       response.text = text;
       response.decodedBodySize = this.#receivedBodySize;
     }
-    this.#httpActivity.owner.addResponseContent(response);
-  }
 
-  #getResponseContentComplete() {
+    // Clear the data stored locally on this instance.
+    this.#receivedEncodedChunks = [];
+    this.#receivedData = "";
+
     // Check any errors or blocking scenarios which happen late in the cycle
     // e.g If a host is not found (NS_ERROR_UNKNOWN_HOST) or CORS blocking.
     const { blockingExtension, blockedReason } =
@@ -642,35 +643,28 @@ export class NetworkResponseListener {
         this.#httpActivity.fromCache
       );
 
-    this.#httpActivity.owner.addResponseContentComplete({
-      blockedReason,
-      blockingExtension,
+    if (this.#httpActivity.isOverridden) {
+      // For overridden scripts, we will not get the usual start notification
+      // for the request, so we add event timings and response start here.
+      const timings = lazy.NetworkTimings.extractHarTimings(this.#httpActivity);
+      this.#httpActivity.owner.addEventTimings(
+        timings.total,
+        timings.timings,
+        timings.offsets
+      );
+
+      this.#httpActivity.owner.addResponseStart({
+        channel: this.#httpActivity.channel,
+        fromCache: this.#httpActivity.fromCache,
+        rawHeaders: "",
+      });
+    }
+
+    this.#httpActivity.owner.addResponseContent(response, {
       discardResponseBody: this.#httpActivity.discardResponseBody,
       truncated: this.#truncated,
-    });
-
-    // Make sure all the security and response content info are sent
-    this.#onSecurityInfo.then(() => this.#destroy());
-  }
-
-  async #getContentFromCache() {
-    return new Promise(resolve => {
-      // Response is cached, so we load it from cache.
-      let charset;
-      try {
-        charset = this.#request.contentCharset;
-      } catch (e) {
-        // Accessing the charset sometimes throws NS_ERROR_NOT_AVAILABLE when
-        // reloading the page
-      }
-      if (!charset) {
-        charset = this.#httpActivity.charset;
-      }
-      lazy.NetworkHelper.loadFromCache(
-        this.#httpActivity.url,
-        charset,
-        resolve
-      );
+      blockedReason,
+      blockingExtension,
     });
   }
 
@@ -682,7 +676,6 @@ export class NetworkResponseListener {
     this.#converter = null;
     this.#request = null;
     this.#uconv = null;
-    this.#sentStartEvents = false;
   }
 
   /**
@@ -693,7 +686,7 @@ export class NetworkResponseListener {
    *        The sink input stream from which data is coming.
    * @returns void
    */
-  async onInputStreamReady(stream) {
+  onInputStreamReady(stream) {
     if (!(stream instanceof Ci.nsIAsyncInputStream) || !this.#httpActivity) {
       return;
     }
@@ -708,25 +701,22 @@ export class NetworkResponseListener {
 
     if (available != -1) {
       if (available != 0) {
-        const converter = this.#converter ? this.#converter : this;
-        converter.onDataAvailable(
-          this.#request,
-          stream,
-          this.#offset,
-          available
-        );
+        if (this.#converter) {
+          this.#converter.onDataAvailable(
+            this.#request,
+            stream,
+            this.#offset,
+            available
+          );
+        } else {
+          this.onDataAvailable(this.#request, stream, this.#offset, available);
+        }
       }
-      await this.#dataChunkAvailable();
       this.#offset += available;
       this.setAsyncListener(stream, this);
     } else {
-      // Make sure the response content event is sent at least once
-      if (this.#offset == 0) {
-        await this.#dataChunkAvailable();
-      } else {
-        this.#offset = 0;
-      }
-      this.#dataComplete();
+      this.onStreamClose();
+      this.#offset = 0;
     }
   }
 

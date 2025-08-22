@@ -639,32 +639,13 @@ class NetworkEventActor extends Actor {
   }
 
   /**
-   * Add network response content end.
-   *
-   * @param object
-   */
-  addResponseContentComplete({ blockedReason, blockingExtension }) {
-    // Ignore calls when this actor is already destroyed
-    if (this.isDestroyed()) {
-      return;
-    }
-
-    this._onEventUpdate(
-      lazy.NetworkUtils.NETWORK_EVENT_TYPES.RESPONSE_CONTENT_COMPLETE,
-      {
-        blockedReason,
-        blockingExtension,
-      }
-    );
-  }
-
-  /**
    * Add network response content.
    *
    * @param object content
    *        The response content.
+   * @param object
    */
-  addResponseContent(content) {
+  addResponseContent(content, { blockedReason, blockingExtension }) {
     // Ignore calls when this actor is already destroyed
     if (this.isDestroyed()) {
       return;
@@ -683,6 +664,8 @@ class NetworkEventActor extends Actor {
         mimeType: content.mimeType,
         contentSize: content.size,
         transferredSize: content.transferredSize,
+        blockedReason,
+        blockingExtension,
       }
     );
   }

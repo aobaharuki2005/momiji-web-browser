@@ -747,8 +747,7 @@ export class NetworkObserver {
       // not be considered as insecure either. Set empty string as security
       // state.
       owner.addSecurityInfo({ state: "" });
-      owner.addResponseContent(response);
-      owner.addResponseContentComplete({});
+      owner.addResponseContent(response, {});
     }
   );
 

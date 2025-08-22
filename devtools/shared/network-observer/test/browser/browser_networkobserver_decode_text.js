@@ -55,9 +55,7 @@ async function testDecodingResponseContent({ decodeResponseBodies }) {
   info("Wait for all network events to be received");
   await BrowserTestUtils.waitForCondition(() => events.length >= 1);
   is(events.length, 1, "Received the expected number of network events");
-  await BrowserTestUtils.waitForCondition(
-    () => events[0].hasResponseContentComplete
-  );
+  await BrowserTestUtils.waitForCondition(() => events[0].hasResponseContent);
 
   is(
     events[0].isContentEncoded,
@@ -79,9 +77,7 @@ async function testDecodingResponseContent({ decodeResponseBodies }) {
   await BrowserTestUtils.waitForCondition(() => events.length >= 2);
   is(events.length, 2, "Received the expected number of network events");
 
-  await BrowserTestUtils.waitForCondition(
-    () => events[1].hasResponseContentComplete
-  );
+  await BrowserTestUtils.waitForCondition(() => events[1].hasResponseContent);
 
   is(
     events[1].isContentEncoded,

@@ -231,13 +231,15 @@ class NetworkEventContentWatcher {
         {} /* offsets */
       );
       networkEventActor.addServerTimings({});
-      networkEventActor.addResponseContent({
-        mimeType: channel.contentType,
-        size: channel.contentLength,
-        text: "",
-        transferredSize: 0,
-      });
-      networkEventActor.addResponseContentComplete({});
+      networkEventActor.addResponseContent(
+        {
+          mimeType: channel.contentType,
+          size: channel.contentLength,
+          text: "",
+          transferredSize: 0,
+        },
+        {}
+      );
     } else if (type == RESOURCE_TYPES.DATA_CHANNEL) {
       lazy.NetworkUtils.handleDataChannel(channel, networkEventActor);
     }

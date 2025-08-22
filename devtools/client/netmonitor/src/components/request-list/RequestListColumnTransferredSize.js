@@ -29,8 +29,6 @@ const UPDATED_TRANSFERRED_PROPS = [
   "fromCache",
   "isRacing",
   "fromServiceWorker",
-  "blockedReason",
-  "blockingExtension",
 ];
 
 class RequestListColumnTransferredSize extends Component {
