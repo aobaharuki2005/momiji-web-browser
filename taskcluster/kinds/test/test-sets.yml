@@ -32,6 +32,21 @@ web-platform-tests:
     - web-platform-tests-webcodecs
     - web-platform-tests-eme
 
+1804-tsan:
+    - web-platform-tests
+    - web-platform-tests-canvas
+    - mochitest-devtools-chrome
+
+web-platform-tests-2404-tsan:
+    # - web-platform-tests
+    - web-platform-tests-crashtest
+    - web-platform-tests-print-reftest
+    - web-platform-tests-reftest
+    - web-platform-tests-wdspec
+    # - web-platform-tests-canvas
+    - web-platform-tests-webcodecs
+    - web-platform-tests-eme
+
 web-platform-tests-backlog:
     - web-platform-tests-backlog
     - web-platform-tests-reftest-backlog
@@ -185,6 +200,39 @@ linux-tests:
     - mochitest-chrome
     - mochitest-chrome-gpu
     - mochitest-devtools-chrome
+    - mochitest-media
+    - mochitest-plain
+    - mochitest-plain-gpu
+    - mochitest-remote
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
+    - reftest
+    - telemetry-tests-client
+    - test-verify
+    - test-verify-gpu
+    - test-verify-wpt
+    - xpcshell
+
+linux-2404-tsan-tests:
+    - cppunittest
+    - crashtest
+    - firefox-ui-functional
+    - gtest
+    # - jittest  # See comment in linux-ccov-tests set.
+    - jsreftest
+    - marionette
+    - marionette-unittest
+    - mochitest-a11y
+    - mochitest-browser-a11y
+    - mochitest-browser-chrome
+    - mochitest-browser-media
+    - mochitest-browser-translations
+    - mochitest-browser-newtab-trainhop-beta
+    - mochitest-chrome
+    - mochitest-chrome-gpu
+    # - mochitest-devtools-chrome
     - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu

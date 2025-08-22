@@ -638,7 +638,10 @@ web-platform-tests-crashtest:
     description: "Web platform crashtests run"
     schedules-component: web-platform-tests-crashtest
     treeherder-symbol: W(Wc)
-    chunks: 1
+    chunks:
+        by-test-platform:
+            .*-tsan.*: 4
+            default: 1
     mozharness:
         extra-options:
             - --test-type=crashtest

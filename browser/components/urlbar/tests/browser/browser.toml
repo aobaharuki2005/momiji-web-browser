@@ -672,6 +672,7 @@ skip-if = [
 ["browser_switchToTab_fullUrl_repeatedKeydown.js"]
 
 ["browser_tabKeyBehavior.js"]
+skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && tsan"] # Bug 1813675
 
 ["browser_tabMatchesInAwesomebar.js"]
 support-files = ["moz.png"]
