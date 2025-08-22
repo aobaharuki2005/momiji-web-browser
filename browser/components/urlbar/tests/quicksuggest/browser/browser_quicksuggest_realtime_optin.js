@@ -8,29 +8,6 @@ const OFFLINE_REMOTE_SETTINGS = [
     attachment: [
       {
         keywords: ["stock"],
-        data: {
-          result: {
-            isBestMatch: true,
-            hideRowLabel: true,
-            // The purpose of `testAttribute` is to make sure arbitrary `result`
-            // properties in the RS data get copied to the `UrlbarResult`.
-            testAttribute: "market-test",
-            payload: {
-              type: "realtime_opt_in",
-              icon: "chrome://browser/skin/illustrations/market-opt-in.svg",
-              titleL10n: {
-                id: "urlbar-result-market-opt-in-title",
-                cacheable: true,
-              },
-              descriptionL10n: {
-                id: "urlbar-result-market-opt-in-description",
-                cacheable: true,
-                parseMarkup: true,
-              },
-              descriptionLearnMoreTopic: "firefox-suggest",
-            },
-          },
-        },
       },
     ],
   },
@@ -98,7 +75,6 @@ async function doOptInTest(useKeyboard) {
   Assert.ok(result.isBestMatch);
   Assert.ok(result.hideRowLabel);
   Assert.equal(result.payload.suggestionType, "market");
-  Assert.equal(result.testAttribute, "market-test");
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP);
 
   Assert.ok(
@@ -117,16 +93,17 @@ async function doOptInTest(useKeyboard) {
   } else {
     info("Picking allow button with keyboard");
     EventUtils.synthesizeKey("KEY_ArrowDown");
-    if (
-      UrlbarTestUtils.getSelectedElement(window).dataset.l10nName ==
-      "learn-more-link"
-    ) {
-      EventUtils.synthesizeKey("KEY_Tab");
-    }
+    // TODO: The tip buttons should be selected first probably.
+    Assert.equal(
+      UrlbarTestUtils.getSelectedElement(window).dataset.l10nName,
+      "learn-more-link",
+      "The learn-more link should be selected after pressing Down"
+    );
+    EventUtils.synthesizeKey("KEY_Tab");
     Assert.equal(
       UrlbarTestUtils.getSelectedElement(window),
       allowButton,
-      "The allow button should be selected after pressing Down"
+      "The allow button should be selected after pressing Tab"
     );
     Assert.equal(
       gURLBar.value,
