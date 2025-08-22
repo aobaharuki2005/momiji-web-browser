@@ -483,7 +483,9 @@ abstract class AbstractFetchDownloadService : Service() {
 
         downloadJobs.values.forEach { state ->
             notificationManager.cancel(state.foregroundServiceId)
-            cancelDownloadJob(state)
+            if (state.status != COMPLETED && state.status != CANCELLED) {
+                cancelDownloadJob(state)
+            }
         }
         notificationManager.cancel(NOTIFICATION_DOWNLOAD_GROUP_ID)
     }

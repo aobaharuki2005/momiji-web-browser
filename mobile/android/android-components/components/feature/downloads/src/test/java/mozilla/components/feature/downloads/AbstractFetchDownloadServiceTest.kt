@@ -1555,6 +1555,53 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
+    fun `WHEN clearAllDownloadsNotificationsAndJobs is called THEN all completed and cancelled downloads are unaffected`() = runTest(testsDispatcher) {
+        val completedDownload = DownloadState(
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = COMPLETED,
+        )
+        val completedDownloadState = DownloadJobState(
+            state = completedDownload,
+            foregroundServiceId = Random.nextInt(),
+            status = COMPLETED,
+            job = CoroutineScope(IO).launch {
+                @Suppress("ControlFlowWithEmptyBody")
+                while (true) { }
+            },
+        )
+
+        val cancelledDownload = DownloadState(
+            id = "2",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = CANCELLED,
+        )
+        val cancelledDownloadState = DownloadJobState(
+            state = cancelledDownload,
+            foregroundServiceId = Random.nextInt(),
+            status = CANCELLED,
+            job = CoroutineScope(IO).launch {
+                @Suppress("ControlFlowWithEmptyBody")
+                while (true) { }
+            },
+        )
+
+        service.downloadJobs[completedDownload.id] = completedDownloadState
+        service.downloadJobs[cancelledDownload.id] = cancelledDownloadState
+
+        val expected = mapOf(
+            Pair(completedDownload.id, completedDownloadState.copy()),
+            Pair(cancelledDownload.id, cancelledDownloadState.copy()),
+        )
+
+        service.clearAllDownloadsNotificationsAndJobs()
+
+        assertEquals(expected, service.downloadJobs)
+    }
+
+    @Test
     fun `onDestroy will remove all download notifications, jobs and will call unregisterNotificationActionsReceiver`() = runTest(testsDispatcher) {
         service.registerNotificationActionsReceiver()
 
