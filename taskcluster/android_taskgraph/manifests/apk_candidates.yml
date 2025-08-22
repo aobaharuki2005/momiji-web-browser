@@ -106,6 +106,10 @@ mapping:
             - ${folder_prefix}${product}-${version}-android
         from:
             - signing-apk
+        only_for_platforms:
+            - fenix-nightly
+            - fenix-beta
+            - fenix-release
     target.aab:
         <<: *default
         description: "Android app bundle"
