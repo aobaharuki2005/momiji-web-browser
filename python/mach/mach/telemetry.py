@@ -112,7 +112,7 @@ def resolve_setting_from_arcconfig(topsrcdir: Path, setting):
             ["git", "rev-parse", "--git-common-dir"],
             cwd=str(topsrcdir),
             universal_newlines=True,
-        )
+        ).rstrip()
         git_path = Path(git_path)
 
     for arcconfig_path in [
