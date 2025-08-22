@@ -13355,7 +13355,7 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
 #if defined(JS_CODEGEN_ARM64)
   if (op.getBoolOption("no-fjcvtzs")) {
     vixl::CPUFeatures fjcvtzs(vixl::CPUFeatures::kJSCVT);
-    fjcvtzs.DisableGlobally();
+    jit::ARM64Flags::DisableCPUFeatures(fjcvtzs);
   }
 #endif
 #ifndef __wasi__
