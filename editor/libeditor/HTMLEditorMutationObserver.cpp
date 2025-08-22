@@ -6,6 +6,7 @@
 #include "HTMLEditor.h"
 
 #include "EditAction.h"
+#include "EditorDOMAPIWrapper.h"
 #include "EditorUtils.h"
 #include "HTMLEditorNestedClasses.h"
 
@@ -13,12 +14,16 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "mozInlineSpellChecker.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsIMutationObserver.h"
 #include "nsINode.h"
 #include "nsRange.h"
@@ -27,6 +32,207 @@
 namespace mozilla {
 
 using namespace dom;
+
+/******************************************************************************
+ * DOM mutation logger
+ ******************************************************************************/
+
+// - HTMLEditorMutation:3: Logging only mutations in editable containers which
+// is not expected.
+// - HTMLEditorMutation:4: Logging only mutations in editable containers which
+// is either expected or not expected.
+// - HTMLEditorMutation:5: Logging any mutations including in
+// non-editable containers.
+LazyLogModule gHTMLEditorMutationLog("HTMLEditorMutation");
+
+LogLevel HTMLEditor::MutationLogLevelOf(
+    nsIContent* aContent,
+    const CharacterDataChangeInfo* aCharacterDataChangeInfo,
+    DOMMutationType aDOMMutationType) const {
+  // Should be called only when the "info" level is enabled at least since we
+  // shouldn't add any new unnecessary calls in the hot paths when the logging
+  // is disabled.
+  MOZ_ASSERT(MOZ_LOG_TEST(gHTMLEditorMutationLog, LogLevel::Info));
+
+  if (MOZ_UNLIKELY(!aContent->IsInComposedDoc())) {
+    return LogLevel::Disabled;
+  }
+  Element* const containerElement = aContent->GetAsElementOrParentElement();
+  if (!containerElement || !containerElement->IsEditable()) {
+    return MOZ_LOG_TEST(gHTMLEditorMutationLog, LogLevel::Verbose)
+               ? LogLevel::Verbose
+               : LogLevel::Disabled;
+  }
+  if (!mRunningDOMAPIWrapper) {
+    return LogLevel::Info;
+  }
+  switch (aDOMMutationType) {
+    case DOMMutationType::ContentAppended:
+      return mRunningDOMAPIWrapper->IsExpectedContentAppended(aContent)
+                 ? LogLevel::Debug
+                 : LogLevel::Info;
+    case DOMMutationType::ContentInserted:
+      return mRunningDOMAPIWrapper->IsExpectedContentInserted(aContent)
+                 ? LogLevel::Debug
+                 : LogLevel::Info;
+    case DOMMutationType::ContentWillBeRemoved:
+      return mRunningDOMAPIWrapper->IsExpectedContentWillBeRemoved(aContent)
+                 ? LogLevel::Debug
+                 : LogLevel::Info;
+    case DOMMutationType::CharacterDataChanged:
+      MOZ_ASSERT(aCharacterDataChangeInfo);
+      return mRunningDOMAPIWrapper->IsExpectedCharacterDataChanged(
+                 aContent, *aCharacterDataChangeInfo)
+                 ? LogLevel::Debug
+                 : LogLevel::Info;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid DOMMutationType value");
+      return LogLevel::Disabled;
+  }
+}
+
+// - HTMLEditorAttrMutation:3: Logging only mutations of editable element which
+// is not expected.
+// - HTMLEditorAttrMutation:4: Logging only mutations of editable element which
+// is either expected or not expected.
+// - HTMLEditorAttrMutation:5: Logging any mutations including non-editable
+// elements' attributes.
+LazyLogModule gHTMLEditorAttrMutationLog("HTMLEditorAttrMutation");
+
+LogLevel HTMLEditor::AttrMutationLogLevelOf(
+    Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
+    int32_t aModType, const nsAttrValue* aOldValue) const {
+  // Should be called only when the "info" level is enabled at least since we
+  // shouldn't add any new unnecessary calls in the hot paths when the logging
+  // is disabled.
+  MOZ_ASSERT(MOZ_LOG_TEST(gHTMLEditorAttrMutationLog, LogLevel::Info));
+  if (MOZ_UNLIKELY(!aElement->IsInComposedDoc())) {
+    return LogLevel::Disabled;
+  }
+  if (!aElement->IsEditable()) {
+    return MOZ_LOG_TEST(gHTMLEditorAttrMutationLog, LogLevel::Verbose)
+               ? LogLevel::Verbose
+               : LogLevel::Disabled;
+  }
+  if (!mRunningDOMAPIWrapper) {
+    return LogLevel::Info;
+  }
+  return mRunningDOMAPIWrapper->IsExpectedAttributeChanged(
+             aElement, aNameSpaceID, aAttribute, aModType, aOldValue)
+             ? LogLevel::Debug
+             : LogLevel::Info;
+}
+
+void HTMLEditor::MaybeLogContentAppended(nsIContent* aFirstNewContent) const {
+  const LogLevel logLevel = MutationLogLevelOf(
+      aFirstNewContent, nullptr, DOMMutationType::ContentAppended);
+  if (logLevel == LogLevel::Disabled) {
+    return;
+  }
+  MOZ_LOG(
+      gHTMLEditorMutationLog, logLevel,
+      ("%p %s ContentAppended: %s (previousSibling=%s, nextSibling=%s)", this,
+       logLevel == LogLevel::Debug ? "HTMLEditor  " : "SomebodyElse",
+       NodeToString(aFirstNewContent).get(),
+       NodeToString(aFirstNewContent ? aFirstNewContent->GetPreviousSibling()
+                                     : nullptr)
+           .get(),
+       NodeToString(aFirstNewContent ? aFirstNewContent->GetNextSibling()
+                                     : nullptr)
+           .get()));
+}
+
+void HTMLEditor::MaybeLogContentInserted(nsIContent* aChild) const {
+  const LogLevel logLevel =
+      MutationLogLevelOf(aChild, nullptr, DOMMutationType::ContentInserted);
+  if (logLevel == LogLevel::Disabled) {
+    return;
+  }
+  MOZ_LOG(gHTMLEditorMutationLog, logLevel,
+          ("%p %s ContentInserted: %s (previousSibling=%s, nextSibling=%s)",
+           this, logLevel == LogLevel::Debug ? "HTMLEditor  " : "SomebodyElse",
+           NodeToString(aChild).get(),
+           NodeToString(aChild ? aChild->GetPreviousSibling() : nullptr).get(),
+           NodeToString(aChild ? aChild->GetNextSibling() : nullptr).get()));
+}
+
+void HTMLEditor::MaybeLogContentWillBeRemoved(nsIContent* aChild) const {
+  const LogLevel logLevel = MutationLogLevelOf(
+      aChild, nullptr, DOMMutationType::ContentWillBeRemoved);
+  if (logLevel == LogLevel::Disabled) {
+    return;
+  }
+  MOZ_LOG(
+      gHTMLEditorMutationLog, logLevel,
+      ("%p %s ContentWillBeRemoved: %s (previousSibling=%s, nextSibling=%s)",
+       this, logLevel == LogLevel::Debug ? "HTMLEditor  " : "SomebodyElse",
+       NodeToString(aChild).get(),
+       NodeToString(aChild ? aChild->GetPreviousSibling() : nullptr).get(),
+       NodeToString(aChild ? aChild->GetNextSibling() : nullptr).get()));
+}
+
+void HTMLEditor::MaybeLogCharacterDataChanged(
+    nsIContent* aContent, const CharacterDataChangeInfo& aInfo) const {
+  const LogLevel logLevel = MutationLogLevelOf(
+      aContent, &aInfo, DOMMutationType::CharacterDataChanged);
+  if (logLevel == LogLevel::Disabled) {
+    return;
+  }
+  nsAutoString data;
+  aContent->GetCharacterDataBuffer()->AppendTo(data);
+  MarkSelectionAndShrinkLongString shrunkenData(
+      data, aInfo.mChangeStart, aInfo.mChangeStart + aInfo.mReplaceLength);
+  MakeHumanFriendly(shrunkenData);
+  MOZ_LOG(
+      gHTMLEditorMutationLog, logLevel,
+      ("%p %s CharacterDataChanged: %s, data=\"%s\", (length=%u), aInfo=%s",
+       this, logLevel == LogLevel::Debug ? "HTMLEditor  " : "SomebodyElse",
+       ToString(*aContent).c_str(), NS_ConvertUTF16toUTF8(shrunkenData).get(),
+       aContent->Length(), ToString(aInfo).c_str()));
+}
+
+void HTMLEditor::MaybeLogAttributeChanged(Element* aElement,
+                                          int32_t aNameSpaceID,
+                                          nsAtom* aAttribute, int32_t aModType,
+                                          const nsAttrValue* aOldValue) const {
+  const LogLevel logLevel = AttrMutationLogLevelOf(
+      aElement, aNameSpaceID, aAttribute, aModType, aOldValue);
+  if (logLevel == LogLevel::Disabled) {
+    return;
+  }
+  nsAutoString value;
+  aElement->GetAttr(aAttribute, value);
+  MOZ_LOG(
+      gHTMLEditorAttrMutationLog, logLevel,
+      ("%p %s AttributeChanged: %s of %s %s", this,
+       logLevel == LogLevel::Debug ? "HTMLEditor  " : "SomebodyElse",
+       nsAutoAtomCString(aAttribute).get(), NodeToString(aElement).get(),
+       aModType == dom::MutationEvent_Binding::REMOVAL
+           ? "Removed"
+           : nsPrintfCString("to \"%s\"", NS_ConvertUTF16toUTF8(value).get())
+                 .get()));
+}
+
+/******************************************************************************
+ * mozilla::HTMLEditor - Start/end of a DOM API call to modify the DOM
+ ******************************************************************************/
+
+const AutoDOMAPIWrapperBase* HTMLEditor::OnDOMAPICallStart(
+    const AutoDOMAPIWrapperBase& aWrapperBase) {
+  const AutoDOMAPIWrapperBase* const prevRunner = mRunningDOMAPIWrapper;
+  mRunningDOMAPIWrapper = &aWrapperBase;
+  MOZ_LOG(gHTMLEditorMutationLog, LogLevel::Warning,
+          (">>>> %p Calling DOM API: %s", this,
+           ToString(*mRunningDOMAPIWrapper).c_str()));
+  return prevRunner;
+}
+
+void HTMLEditor::OnDOMAPICallEnd(const AutoDOMAPIWrapperBase* aPrevWrapper) {
+  MOZ_LOG(gHTMLEditorMutationLog, LogLevel::Warning,
+          ("<<<< %p Called DOM API: %s", this,
+           ToString(mRunningDOMAPIWrapper->Type()).c_str()));
+  mRunningDOMAPIWrapper = aPrevWrapper;
+}
 
 /******************************************************************************
  * mozilla::HTMLEditor - mutation observers/handlers
@@ -136,6 +342,15 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
     return;
   }
 
+  if (MOZ_LOG_TEST(gHTMLEditorMutationLog, LogLevel::Info)) {
+    if (aContentNodeIs == ContentNodeIs::Appended) {
+      MaybeLogContentAppended(aChild);
+    } else {
+      MOZ_ASSERT(aContentNodeIs == ContentNodeIs::Inserted);
+      MaybeLogContentInserted(aChild);
+    }
+  }
+
   // XXX Why do we need this? This method is a helper of mutation observer.
   //     So, the callers of mutation observer should guarantee that this won't
   //     be deleted at least during the call.
@@ -216,6 +431,10 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentWillBeRemoved(
     return;
   }
 
+  if (MOZ_LOG_TEST(gHTMLEditorMutationLog, LogLevel::Info)) {
+    MaybeLogContentWillBeRemoved(aChild);
+  }
+
   // XXX Why do we need to do this?  This method is a mutation observer's
   //     method.  Therefore, the caller should guarantee that this won't be
   //     deleted during the call.
@@ -261,8 +480,13 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentWillBeRemoved(
 // nsStubMutationObserver::CharacterDataChanged override
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::CharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
+  if (!IsInObservedSubtree(aContent)) {
+    return;
+  }
+  if (MOZ_LOG_TEST(gHTMLEditorMutationLog, LogLevel::Info)) {
+    MaybeLogCharacterDataChanged(aContent, aInfo);
+  }
   if (!mInlineSpellChecker || !aContent->IsEditable() ||
-      !IsInObservedSubtree(aContent) ||
       GetTopLevelEditSubAction() != EditSubAction::eNone) {
     return;
   }
@@ -287,6 +511,17 @@ nsresult HTMLEditor::RunOrScheduleOnModifyDocument(
   // Be aware, if OnModifyDocument() may be called synchronously, the
   // editor might have been destroyed here.
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
+}
+
+// nsStubMutationObserver::AttributeChanged override
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::AttributeChanged(
+    Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
+    int32_t aModType, const nsAttrValue* aOldValue) {
+  if (MOZ_LOG_TEST(gHTMLEditorAttrMutationLog, LogLevel::Info) &&
+      IsInObservedSubtree(aElement)) {
+    MaybeLogAttributeChanged(aElement, aNameSpaceID, aAttribute, aModType,
+                             aOldValue);
+  }
 }
 
 nsresult HTMLEditor::OnModifyDocument(const DocumentModifiedEvent& aRunner) {

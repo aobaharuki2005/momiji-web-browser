@@ -56,6 +56,7 @@ class ResizerSelectionListener;
 class Runnable;
 template <class T>
 class OwningNonNull;
+enum class LogLevel;
 namespace dom {
 class AbstractRange;
 class Blob;
@@ -102,6 +103,7 @@ class HTMLEditor final : public EditorBase,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   // nsIHTMLEditor methods
   NS_DECL_NSIHTMLEDITOR
@@ -1053,6 +1055,22 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult SetPositionToAbsolute(Element& aElement);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SetPositionToStatic(Element& aElement);
+
+  /**
+   * Called when aRunner starts calling a DOM API to modify the DOM.
+   *
+   * @return The previous runner if the DOM API calls are unfortunately nested.
+   */
+  [[nodiscard]] const AutoDOMAPIWrapperBase* OnDOMAPICallStart(
+      const AutoDOMAPIWrapperBase& aRunner);
+
+  /**
+   * Called when aRunner ends calling a DOM API to modify the DOM.
+   *
+   * @param aPrevRunner Must be set to the result of the preceding
+   *                    OnDOMMutationStart() call.
+   */
+  void OnDOMAPICallEnd(const AutoDOMAPIWrapperBase* aPrevRunner);
 
   class DocumentModifiedEvent;
 
@@ -2767,6 +2785,28 @@ class HTMLEditor final : public EditorBase,
 
  protected:  // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
+
+  enum class DOMMutationType {
+    ContentAppended,
+    ContentInserted,
+    ContentWillBeRemoved,
+    CharacterDataChanged,
+  };
+  [[nodiscard]] LogLevel MutationLogLevelOf(
+      nsIContent* aContent,
+      const CharacterDataChangeInfo* aCharacterDataChangeInfo,
+      DOMMutationType aDOMMutationType) const;
+  [[nodiscard]] LogLevel AttrMutationLogLevelOf(
+      Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
+      int32_t aModType, const nsAttrValue* aOldValue) const;
+
+  void MaybeLogContentAppended(nsIContent*) const;
+  void MaybeLogContentInserted(nsIContent*) const;
+  void MaybeLogContentWillBeRemoved(nsIContent*) const;
+  void MaybeLogCharacterDataChanged(nsIContent*,
+                                    const CharacterDataChangeInfo&) const;
+  void MaybeLogAttributeChanged(Element*, int32_t, nsAtom*, int32_t,
+                                const nsAttrValue*) const;
 
   /**
    * InitEditorContentAndSelection() may insert `<br>` elements and padding
@@ -4517,6 +4557,10 @@ class HTMLEditor final : public EditorBase,
   // This is set only when HandleInsertText appended a collapsible white-space.
   RefPtr<dom::Text> mLastCollapsibleWhiteSpaceAppendedTextNode;
 
+  // While this instance or its helper class updates the DOM with a DOM API,
+  // this is set to the wrapper class to call the DOM API.
+  const AutoDOMAPIWrapperBase* mRunningDOMAPIWrapper = nullptr;
+
   bool mCRInParagraphCreatesParagraph;
 
   // resizing
@@ -4622,6 +4666,8 @@ class HTMLEditor final : public EditorBase,
   friend class AutoClonedRangeArray;   // RangeUpdaterRef,
                                        // SplitNodeWithTransaction,
                                        // SplitInlineAncestorsAtRangeBoundaries
+  friend class AutoDOMAPIWrapperBase;  // OnDOMAPICallEnd,
+                                       // OnDOMAPICallStart,
   friend class AutoClonedSelectionRangeArray;  // RangeUpdaterRef,
   friend class AutoSelectionRestore;
   friend class AutoSelectionSetterAfterTableEdit;  // SetSelectionAfterEdit

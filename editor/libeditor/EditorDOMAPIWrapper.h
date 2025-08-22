@@ -7,6 +7,7 @@
 #define EditorDOMAPIWrapper_h
 
 #include "EditorBase.h"  // for EditorBase
+#include "HTMLEditor.h"  // for HTMLEditor
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -24,6 +25,80 @@
 #include "nsStyledElement.h"
 
 namespace mozilla {
+
+static void MakeHumanFriendly(nsAutoString& aStr) {
+  aStr.ReplaceSubstring(u"\n", u"\\n");
+  aStr.ReplaceSubstring(u"\r", u"\\r");
+  aStr.ReplaceSubstring(u"\t", u"\\t");
+  aStr.ReplaceSubstring(u"\f", u"\\f");
+  aStr.ReplaceSubstring(u"\u00A0", u"&nbsp;");
+  for (char16_t ch = 0; ch <= 0x20; ch++) {
+    aStr.ReplaceSubstring(
+        nsDependentSubstring(&ch, 1),
+        NS_ConvertASCIItoUTF16(nsPrintfCString("&#x%X04", ch)));
+  }
+}
+
+static void MakeHumanFriendly(nsAutoCString& aStr) {
+  aStr.ReplaceSubstring("\n", "\\n");
+  aStr.ReplaceSubstring("\r", "\\r");
+  aStr.ReplaceSubstring("\t", "\\t");
+  aStr.ReplaceSubstring("\f", "\\f");
+  aStr.ReplaceSubstring("\u00A0", "&nbsp;");
+  for (char ch = 0; ch <= 0x20; ch++) {
+    aStr.ReplaceSubstring(nsDependentCSubstring(&ch, 1),
+                          nsPrintfCString("&#x%X04", ch));
+  }
+}
+
+class NodeToString : public nsAutoCString {
+ public:
+  explicit NodeToString(const nsINode* aNode) {
+    if (!aNode) {
+      Assign("null");
+      return;
+    }
+    if (const dom::CharacterData* const characterData =
+            dom::CharacterData::FromNode(aNode)) {
+      nsAutoString data;
+      characterData->AppendTextTo(data);
+      if (data.Length() > 10) {
+        data.Truncate(10);
+        data.Append(u"...");
+      }
+      MakeHumanFriendly(data);
+      Assign(nsPrintfCString("%s, data=\"%s\" (length=%zu)",
+                             ToString(*characterData).c_str(),
+                             NS_ConvertUTF16toUTF8(data).get(), data.Length()));
+      return;
+    }
+    Assign(ToString(*aNode).c_str());
+  }
+};
+
+class MarkSelectionAndShrinkLongString : public nsAutoString {
+ public:
+  MarkSelectionAndShrinkLongString(const nsAutoString& aString,
+                                   uint32_t aStartOffset, uint32_t aEndOffset)
+      : nsAutoString(aString) {
+    if (aStartOffset <= aString.Length() && aEndOffset <= aString.Length() &&
+        aStartOffset <= aEndOffset) {
+      Insert(u']', aEndOffset);
+      Insert(u'[', aStartOffset);
+      if (aString.Length() > 30) {
+        if (aEndOffset + 10 <= Length()) {
+          Replace(aEndOffset + 6, Length(), u"...");
+        }
+        if (aStartOffset > 8) {
+          Replace(0, aStartOffset - 5, u"...");
+        }
+      }
+    } else if (aString.Length() > 30) {
+      Truncate(30);
+      Append(u"...");
+    }
+  }
+};
 
 /**
  * The base class of wrappers of DOM API which modifies the DOM.  Editor should
@@ -82,6 +157,38 @@ class MOZ_STACK_CLASS AutoDOMAPIWrapperBase {
     CSSDeclaration_RemoveProperty,
   };
 
+  friend std::ostream& operator<<(std::ostream& aStream, DOMAPI aType) {
+    switch (aType) {
+      case DOMAPI::nsINode_AppendChild:
+        return aStream << "nsINode::AppendChild";
+      case DOMAPI::nsINode_InsertBefore:
+        return aStream << "nsINode::InsertBefore";
+      case DOMAPI::nsINode_Remove:
+        return aStream << "nsINode::Remove";
+      case DOMAPI::nsINode_RemoveChild:
+        return aStream << "nsINode::RemoveChild";
+      case DOMAPI::Element_SetAttr:
+        return aStream << "Element::SetAttr";
+      case DOMAPI::Element_UnsetAttr:
+        return aStream << "Element::UnsetAttr";
+      case DOMAPI::CharacterData_DeleteData:
+        return aStream << "CharacterData::DeleteData";
+      case DOMAPI::CharacterData_InsertData:
+        return aStream << "CharacterData::InsertData";
+      case DOMAPI::CharacterData_ReplaceData:
+        return aStream << "CharacterData::ReplaceData";
+      case DOMAPI::CharacterData_SetData:
+        return aStream << "CharacterData::SetData";
+      case DOMAPI::CSSDeclaration_SetProperty:
+        return aStream << "nsICSSDeclaration::SetProperty";
+      case DOMAPI::CSSDeclaration_RemoveProperty:
+        return aStream << "nsICSSDeclaration::DeleteProperty";
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid DOMAPI value");
+        return aStream << "<invalid value>";
+    }
+  }
+
   [[nodiscard]] DOMAPI Type() const { return *mType; }
 
 #ifdef DEBUG
@@ -89,10 +196,35 @@ class MOZ_STACK_CLASS AutoDOMAPIWrapperBase {
 #endif
 
  protected:
-  void StartToCall(DOMAPI aCallingAPI) { mType.emplace(aCallingAPI); }
-
   MOZ_CAN_RUN_SCRIPT explicit AutoDOMAPIWrapperBase(EditorBase& aEditorBase)
       : mEditorBase(aEditorBase) {}
+
+  class MOZ_STACK_CLASS AutoNotifyEditorOfAPICall final {
+   public:
+    MOZ_CAN_RUN_SCRIPT AutoNotifyEditorOfAPICall(AutoDOMAPIWrapperBase& aBase,
+                                                 DOMAPI aCallingAPI)
+        : mBase(aBase) {
+      aBase.mType.emplace(aCallingAPI);
+      if (HTMLEditor* const htmlEditor = mBase.mEditorBase.GetAsHTMLEditor()) {
+        mPrevBase = htmlEditor->OnDOMAPICallStart(mBase);
+      } else {
+        mPrevBase = nullptr;
+      }
+    }
+    ~AutoNotifyEditorOfAPICall() {
+      if (HTMLEditor* const htmlEditor = mBase.mEditorBase.GetAsHTMLEditor()) {
+        htmlEditor->OnDOMAPICallEnd(mPrevBase);
+      }
+    }
+
+   private:
+    const AutoDOMAPIWrapperBase& mBase;
+    const AutoDOMAPIWrapperBase* mPrevBase;
+  };
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const AutoDOMAPIWrapperBase& aWrapperBase);
+
   MOZ_KNOWN_LIVE EditorBase& mEditorBase;
   Maybe<DOMAPI> mType;
 };
@@ -131,7 +263,7 @@ class MOZ_STACK_CLASS AutoNodeAPIWrapper : public AutoDOMAPIWrapperBase {
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AppendChild(nsIContent& aChild) {
     mChild = &aChild;
-    StartToCall(DOMAPI::nsINode_AppendChild);
+    AutoNotifyEditorOfAPICall notifier(*this, DOMAPI::nsINode_AppendChild);
     IgnoredErrorResult error;
     MOZ_KnownLive(mNode)->AppendChild(aChild, error);
     error.WouldReportJSException();
@@ -149,7 +281,7 @@ class MOZ_STACK_CLASS AutoNodeAPIWrapper : public AutoDOMAPIWrapperBase {
   InsertBefore(nsIContent& aChild, nsIContent* aReferenceChild) {
     mChild = &aChild;
     mReference = aReferenceChild;
-    StartToCall(DOMAPI::nsINode_InsertBefore);
+    AutoNotifyEditorOfAPICall notifier(*this, DOMAPI::nsINode_InsertBefore);
     IgnoredErrorResult error;
     MOZ_KnownLive(mNode)->InsertBefore(aChild, aReferenceChild, error);
     error.WouldReportJSException();
@@ -165,7 +297,7 @@ class MOZ_STACK_CLASS AutoNodeAPIWrapper : public AutoDOMAPIWrapperBase {
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveChild(nsIContent& aChild) {
     mChild = &aChild;
-    StartToCall(DOMAPI::nsINode_RemoveChild);
+    AutoNotifyEditorOfAPICall notifier(*this, DOMAPI::nsINode_RemoveChild);
     IgnoredErrorResult error;
     MOZ_KnownLive(mNode)->RemoveChild(aChild, error);
     error.WouldReportJSException();
@@ -183,7 +315,7 @@ class MOZ_STACK_CLASS AutoNodeAPIWrapper : public AutoDOMAPIWrapperBase {
     mChild = nsIContent::FromNode(mNode);
     MOZ_ASSERT(mChild);
     mNode = mChild->GetParentNode();
-    StartToCall(DOMAPI::nsINode_Remove);
+    AutoNotifyEditorOfAPICall notifier(*this, DOMAPI::nsINode_Remove);
     MOZ_KnownLive(mChild)->Remove();
     if (NS_WARN_IF(mEditorBase.Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
@@ -230,6 +362,31 @@ class MOZ_STACK_CLASS AutoNodeAPIWrapper : public AutoDOMAPIWrapperBase {
            aChild == mChild;
   }
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const AutoNodeAPIWrapper& aWrapper) {
+    aStream << aWrapper.Type() << "(";
+    switch (aWrapper.Type()) {
+      case DOMAPI::nsINode_AppendChild:
+        aStream << "parent: " << NodeToString(aWrapper.mNode).get()
+                << ", new child: " << NodeToString(aWrapper.mChild).get();
+        break;
+      case DOMAPI::nsINode_InsertBefore:
+        aStream << "parent: " << NodeToString(aWrapper.mNode).get()
+                << ", new child: " << NodeToString(aWrapper.mChild).get()
+                << ", reference node: "
+                << NodeToString(aWrapper.mReference).get();
+        break;
+      case DOMAPI::nsINode_Remove:
+      case DOMAPI::nsINode_RemoveChild:
+        aStream << "parent: " << NodeToString(aWrapper.mNode).get()
+                << ", removing node: " << NodeToString(aWrapper.mChild).get();
+        break;
+      default:
+        break;
+    }
+    return aStream << ")";
+  }
+
  protected:
   // nullptr if nsINode::Remove() is called when no parent.
   nsINode* mNode;
@@ -273,7 +430,7 @@ class MOZ_STACK_CLASS AutoElementAttrAPIWrapper : public AutoDOMAPIWrapperBase {
                                                     bool aNotify) {
     mAttr = aAttr;
     mNewValuePtr = &aNewValue;
-    StartToCall(DOMAPI::Element_SetAttr);
+    AutoNotifyEditorOfAPICall notifier(*this, DOMAPI::Element_SetAttr);
     nsresult rv =
         mElement.SetAttr(kNameSpaceID_None, aAttr, aNewValue, aNotify);
     // Don't keep storing the pointer, nobody can guarantee the lifetime.
@@ -291,7 +448,7 @@ class MOZ_STACK_CLASS AutoElementAttrAPIWrapper : public AutoDOMAPIWrapperBase {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult UnsetAttr(nsAtom* aAttr,
                                                       bool aNotify) {
     mAttr = aAttr;
-    StartToCall(DOMAPI::Element_UnsetAttr);
+    AutoNotifyEditorOfAPICall notifier(*this, DOMAPI::Element_UnsetAttr);
     nsresult rv = mElement.UnsetAttr(kNameSpaceID_None, mAttr, aNotify);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
@@ -333,6 +490,28 @@ class MOZ_STACK_CLASS AutoElementAttrAPIWrapper : public AutoDOMAPIWrapperBase {
       default:
         return false;
     }
+  }
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const AutoElementAttrAPIWrapper& aWrapper) {
+    aStream << aWrapper.Type()
+            << "(element: " << NodeToString(&aWrapper.mElement).get()
+            << ", attr: " << nsAutoAtomCString(aWrapper.mAttr).get();
+    switch (aWrapper.Type()) {
+      case DOMAPI::Element_SetAttr: {
+        MOZ_ASSERT(aWrapper.mNewValuePtr);
+        nsAutoString newValue(aWrapper.mNewValuePtr ? *aWrapper.mNewValuePtr
+                                                    : EmptyString());
+        MakeHumanFriendly(newValue);
+        aStream << ", new value=\"" << NS_ConvertUTF16toUTF8(newValue).get()
+                << "\"";
+        break;
+      }
+      case DOMAPI::Element_UnsetAttr:
+      default:
+        break;
+    }
+    return aStream << ")";
   }
 
  protected:
@@ -383,7 +562,7 @@ class MOZ_STACK_CLASS AutoCharacterDataAPIWrapper
                                                        uint32_t aLength) {
     mOffset = aOffset;
     mReplaceLength = aLength;
-    StartToCall(DOMAPI::CharacterData_DeleteData);
+    AutoNotifyEditorOfAPICall notifier(*this, DOMAPI::CharacterData_DeleteData);
     IgnoredErrorResult error;
     mCharacterData.DeleteData(mOffset, mReplaceLength, error);
     if (NS_WARN_IF(mEditorBase.Destroyed())) {
@@ -400,7 +579,7 @@ class MOZ_STACK_CLASS AutoCharacterDataAPIWrapper
                                                        const nsAString& aData) {
     mOffset = aOffset;
     mDataPtr = &aData;
-    StartToCall(DOMAPI::CharacterData_InsertData);
+    AutoNotifyEditorOfAPICall notifier(*this, DOMAPI::CharacterData_InsertData);
     IgnoredErrorResult error;
     mCharacterData.InsertData(mOffset, aData, error);
     // Don't keep storing the pointer, nobody can guarantee the lifetime.
@@ -420,7 +599,8 @@ class MOZ_STACK_CLASS AutoCharacterDataAPIWrapper
     mOffset = aOffset;
     mReplaceLength = aReplaceLength;
     mDataPtr = &aData;
-    StartToCall(DOMAPI::CharacterData_ReplaceData);
+    AutoNotifyEditorOfAPICall notifier(*this,
+                                       DOMAPI::CharacterData_ReplaceData);
     IgnoredErrorResult error;
     mCharacterData.ReplaceData(mOffset, mReplaceLength, aData, error);
     // Don't keep storing the pointer, nobody can guarantee the lifetime.
@@ -437,7 +617,7 @@ class MOZ_STACK_CLASS AutoCharacterDataAPIWrapper
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetData(const nsAString& aData) {
     mDataPtr = &aData;
-    StartToCall(DOMAPI::CharacterData_SetData);
+    AutoNotifyEditorOfAPICall notifier(*this, DOMAPI::CharacterData_SetData);
     IgnoredErrorResult error;
     mCharacterData.SetData(aData, error);
     // Don't keep storing the pointer, nobody can guarantee the lifetime.
@@ -503,6 +683,40 @@ class MOZ_STACK_CLASS AutoCharacterDataAPIWrapper
            IsExpectedResult(*mDataPtr);
   }
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const AutoCharacterDataAPIWrapper& aWrapper) {
+    nsAutoString data;
+    aWrapper.mCharacterData.AppendTextTo(data);
+    MarkSelectionAndShrinkLongString shrunkenData(
+        data, aWrapper.mOffset, aWrapper.mOffset + aWrapper.mReplaceLength);
+    MakeHumanFriendly(shrunkenData);
+    aStream << aWrapper.Type() << "(node: " << aWrapper.mCharacterData
+            << ", data=\"" << NS_ConvertUTF16toUTF8(shrunkenData).get()
+            << "\" (length=" << data.Length()
+            << "), offset: " << aWrapper.mOffset
+            << ", replace length: " << aWrapper.mReplaceLength;
+    switch (aWrapper.Type()) {
+      case DOMAPI::CharacterData_DeleteData:
+        break;
+      case DOMAPI::CharacterData_InsertData:
+      case DOMAPI::CharacterData_ReplaceData:
+      case DOMAPI::CharacterData_SetData: {
+        MOZ_ASSERT(aWrapper.mDataPtr);
+        nsAutoString newData(aWrapper.mDataPtr ? *aWrapper.mDataPtr
+                                               : EmptyString());
+        MakeHumanFriendly(newData);
+        aStream << ", inserting data=\"" << NS_ConvertUTF16toUTF8(newData).get()
+                << "\" (length="
+                << (aWrapper.mDataPtr ? aWrapper.mDataPtr->Length() : 0u)
+                << ")";
+        break;
+      }
+      default:
+        break;
+    }
+    return aStream << ")";
+  }
+
  protected:
   MOZ_KNOWN_LIVE CharacterData& mCharacterData;
   uint32_t mOffset = 0;
@@ -556,7 +770,8 @@ class MOZ_STACK_CLASS AutoCSSDeclarationAPIWrapper
     mPropertyNamePtr = &aPropertyName;
     mValuesPtr = &aValues;
     mPriorityPtr = &aPriority;
-    StartToCall(DOMAPI::CSSDeclaration_SetProperty);
+    AutoNotifyEditorOfAPICall notifier(*this,
+                                       DOMAPI::CSSDeclaration_SetProperty);
     IgnoredErrorResult error;
     mCSSDeclaration->SetProperty(aPropertyName, aValues, aPriority, error);
     // Don't keep storing the pointers, nobody can guarantee the lifetime.
@@ -578,7 +793,8 @@ class MOZ_STACK_CLASS AutoCSSDeclarationAPIWrapper
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   RemoveProperty(const nsACString& aPropertyName) {
     mPropertyNamePtr = &aPropertyName;
-    StartToCall(DOMAPI::CSSDeclaration_RemoveProperty);
+    AutoNotifyEditorOfAPICall notifier(*this,
+                                       DOMAPI::CSSDeclaration_RemoveProperty);
     IgnoredErrorResult error;
     mCSSDeclaration->RemoveProperty(aPropertyName, mRemovedValue, error);
     // Don't keep storing the pointers, nobody can guarantee the lifetime.
@@ -611,6 +827,36 @@ class MOZ_STACK_CLASS AutoCSSDeclarationAPIWrapper
             aModType == dom::MutationEvent_Binding::REMOVAL);
   }
 
+  friend std::ostream& operator<<(
+      std::ostream& aStream, const AutoCSSDeclarationAPIWrapper& aWrapper) {
+    MOZ_ASSERT(aWrapper.mPropertyNamePtr);
+    aStream << aWrapper.Type()
+            << "(element: " << NodeToString(&aWrapper.mStyledElement).get()
+            << ", property: \""
+            << (aWrapper.mPropertyNamePtr
+                    ? PromiseFlatCString(*aWrapper.mPropertyNamePtr).get()
+                    : "")
+            << "\"";
+    switch (aWrapper.Type()) {
+      case DOMAPI::CSSDeclaration_SetProperty: {
+        MOZ_ASSERT(aWrapper.mValuesPtr);
+        nsAutoCString values(aWrapper.mValuesPtr ? *aWrapper.mValuesPtr
+                                                 : EmptyCString());
+        MakeHumanFriendly(values);
+        aStream << ", values=\"" << values.get() << "\", priority=\""
+                << (aWrapper.mPriorityPtr
+                        ? PromiseFlatCString(*aWrapper.mPriorityPtr).get()
+                        : "")
+                << "\"";
+        break;
+      }
+      case DOMAPI::Element_UnsetAttr:
+      default:
+        break;
+    }
+    return aStream << ")";
+  }
+
  protected:
   MOZ_KNOWN_LIVE nsStyledElement& mStyledElement;
   MOZ_KNOWN_LIVE const OwningNonNull<nsICSSDeclaration> mCSSDeclaration;
@@ -622,6 +868,40 @@ class MOZ_STACK_CLASS AutoCSSDeclarationAPIWrapper
   const nsACString* mValuesPtr = nullptr;
   const nsACString* mPriorityPtr = nullptr;
 };
+
+inline std::ostream& operator<<(std::ostream& aStream,
+                                const AutoDOMAPIWrapperBase& aWrapperBase) {
+  switch (aWrapperBase.Type()) {
+    case AutoDOMAPIWrapperBase::DOMAPI::nsINode_AppendChild:
+    case AutoDOMAPIWrapperBase::DOMAPI::nsINode_InsertBefore:
+    case AutoDOMAPIWrapperBase::DOMAPI::nsINode_Remove:
+    case AutoDOMAPIWrapperBase::DOMAPI::nsINode_RemoveChild: {
+      const auto* runner = AutoNodeAPIWrapper::FromBase(&aWrapperBase);
+      return aStream << *runner;
+    }
+    case AutoDOMAPIWrapperBase::DOMAPI::Element_SetAttr:
+    case AutoDOMAPIWrapperBase::DOMAPI::Element_UnsetAttr: {
+      const auto* runner = AutoElementAttrAPIWrapper::FromBase(&aWrapperBase);
+      return aStream << *runner;
+    }
+    case AutoDOMAPIWrapperBase::DOMAPI::CharacterData_DeleteData:
+    case AutoDOMAPIWrapperBase::DOMAPI::CharacterData_InsertData:
+    case AutoDOMAPIWrapperBase::DOMAPI::CharacterData_ReplaceData:
+    case AutoDOMAPIWrapperBase::DOMAPI::CharacterData_SetData: {
+      const auto* runner = AutoCharacterDataAPIWrapper::FromBase(&aWrapperBase);
+      return aStream << *runner;
+    }
+    case AutoDOMAPIWrapperBase::DOMAPI::CSSDeclaration_SetProperty:
+    case AutoDOMAPIWrapperBase::DOMAPI::CSSDeclaration_RemoveProperty: {
+      const auto* runner =
+          AutoCSSDeclarationAPIWrapper::FromBase(&aWrapperBase);
+      return aStream << *runner;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid DOMAPI value");
+      return aStream << "<The wrapper has invalid DOMAPI value>";
+  }
+}
 
 }  // namespace mozilla
 
