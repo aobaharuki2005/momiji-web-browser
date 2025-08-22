@@ -468,7 +468,7 @@ def doctor(command_context, fix=False, verbose=False):
     )
 
 
-CLOBBER_CHOICES = {"objdir", "python", "gradle"}
+CLOBBER_CHOICES = {"objdir", "python", "gradle", "artifacts"}
 
 
 @Command(
@@ -503,6 +503,9 @@ def clobber(command_context, what, full=False):
 
     The `gradle` target will remove the "gradle" subdirectory of the object
     directory.
+
+    The `artifacts` target will remove cached artifact files from
+    ~/.mozbuild/package-frontend or $MOZBUILD_STATE_PATH/package-frontend.
 
     By default, the command clobbers the `objdir` and `python` targets.
     """
@@ -598,6 +601,16 @@ def clobber(command_context, what, full=False):
         shutil.rmtree(
             mozpath.join(command_context.topobjdir, "gradle"), ignore_errors=True
         )
+
+    if "artifacts" in what:
+        from mach.util import get_state_dir
+
+        state_dir = Path(get_state_dir(specific_to_topsrcdir=False))
+        artifact_cache_dir = state_dir / "package-frontend"
+
+        if artifact_cache_dir.exists():
+            print(f"Removing artifact cache directory: {artifact_cache_dir}")
+            shutil.rmtree(artifact_cache_dir, ignore_errors=True)
 
     return ret
 
