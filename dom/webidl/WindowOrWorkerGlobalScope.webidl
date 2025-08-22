@@ -88,10 +88,3 @@ partial interface mixin WindowOrWorkerGlobalScope {
   [Pref="dom.security.trusted_types.enabled"]
   readonly attribute TrustedTypePolicyFactory trustedTypes;
 };
-
-partial interface mixin WindowOrWorkerGlobalScope {
-  // A testing function to check if the given target is active in the current context.
-  // See valid targets at toolkit/components/resistfingerprinting/RFPTargets.inc
-  [Throws, Func="nsContentUtils::IsInAutomation"]
-  boolean isRFPTargetActive(DOMString aTargetName);
-};

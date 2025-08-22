@@ -493,17 +493,6 @@ bool nsIGlobalObject::ShouldResistFingerprinting(CallerType aCallerType,
          ShouldResistFingerprinting(aTarget);
 }
 
-bool nsIGlobalObject::IsRFPTargetActive(const nsAString& aTargetName,
-                                        mozilla::ErrorResult& aRv) {
-  Maybe<RFPTarget> target = mozilla::nsRFPService::TextToRFPTarget(aTargetName);
-  if (NS_WARN_IF(!target)) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
-
-  return ShouldResistFingerprinting(*target);
-}
-
 void nsIGlobalObject::ReportToConsole(
     uint32_t aErrorFlags, const nsCString& aCategory,
     nsContentUtils::PropertiesFile aFile, const nsCString& aMessageName,

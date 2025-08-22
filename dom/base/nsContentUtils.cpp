@@ -217,7 +217,6 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
-#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/2D.h"
@@ -3005,11 +3004,6 @@ void nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
 
   *aOutputWidth = resultWidth;
   *aOutputHeight = resultHeight;
-}
-
-bool nsContentUtils::IsInAutomation(JSContext* aCx, JSObject* aObj) {
-  return NS_IsMainThread() ? xpc::IsInAutomation()
-                           : dom::WorkerGlobalScope::IsInAutomation(aCx, aObj);
 }
 
 bool nsContentUtils::ThreadsafeIsCallerChrome() {
