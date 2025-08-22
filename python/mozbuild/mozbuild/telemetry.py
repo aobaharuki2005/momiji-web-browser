@@ -151,7 +151,7 @@ def get_distro_and_version():
         return "macos", platform.mac_ver()[0]
     elif sys.platform.startswith("win32") or sys.platform.startswith("msys"):
         ver = sys.getwindowsversion()
-        return "windows", "%s.%s.%s" % (ver.major, ver.minor, ver.build)
+        return "windows", f"{ver.major}.{ver.minor}.{ver.build}"
     else:
         return sys.platform, ""
 
@@ -161,7 +161,7 @@ def get_shell_info():
 
     return (
         True if "vscode" in os.getenv("TERM_PROGRAM", "") else False,
-        bool(os.getenv("SSH_CLIENT", False)),
+        bool(os.getenv("SSH_CLIENT", "")),
     )
 
 
@@ -175,11 +175,7 @@ def get_vscode_running():
                 # On Windows we have "Code.exe"
                 # On MacOS we have "Code Helper (Renderer)"
                 # On Linux we have ""
-                if (
-                    proc.name == "Code.exe"
-                    or proc.name == "Code Helper (Renderer)"
-                    or proc.name == "code"
-                ):
+                if proc.name in ("Code.exe", "Code Helper (Renderer)", "code"):
                     return True
             except Exception:
                 # may not be able to access process info for all processes
