@@ -10,7 +10,7 @@
 
 "use strict";
 
-const SPOOFED_HW_CONCURRENCY = 4;
+const SPOOFED_HW_CONCURRENCY = 2;
 
 const DEFAULT_HARDWARE_CONCURRENCY = navigator.hardwareConcurrency;
 

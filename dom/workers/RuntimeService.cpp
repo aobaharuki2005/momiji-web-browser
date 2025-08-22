@@ -1983,18 +1983,13 @@ void RuntimeService::MemoryPressureAllWorkers() {
   BroadcastAllWorkers([](auto& worker) { worker.MemoryPressure(); });
 }
 
-uint32_t RuntimeService::ClampedHardwareConcurrency(bool aRFPHardcoded,
-                                                    bool aRFPTiered) const {
-  // The Firefox Hardware Report says 34% of Firefox users have exactly 4 cores.
+uint32_t RuntimeService::ClampedHardwareConcurrency(
+    bool aShouldResistFingerprinting) const {
+  // The Firefox Hardware Report says 70% of Firefox users have exactly 2 cores.
   // When the resistFingerprinting pref is set, we want to blend into the crowd
-  // so spoof navigator.hardwareConcurrency = 4 to reduce user uniqueness. On
-  // OSX, the majority of Macs have 8 cores.
-  if (MOZ_UNLIKELY(aRFPHardcoded)) {
-#ifdef XP_MACOSX
-    return 8;
-#else
-    return 4;
-#endif
+  // so spoof navigator.hardwareConcurrency = 2 to reduce user uniqueness.
+  if (MOZ_UNLIKELY(aShouldResistFingerprinting)) {
+    return 2;
   }
 
   // This needs to be atomic, because multiple workers, and even mainthread,
@@ -2020,13 +2015,6 @@ uint32_t RuntimeService::ClampedHardwareConcurrency(bool aRFPHardcoded,
     }
     Unused << unclampedHardwareConcurrency.compareExchange(0,
                                                            numberOfProcessors);
-  }
-
-  if (MOZ_UNLIKELY(aRFPTiered)) {
-    if (unclampedHardwareConcurrency >= 8) {
-      return 8;
-    }
-    return 4;
   }
 
   return std::min(uint32_t(unclampedHardwareConcurrency),
