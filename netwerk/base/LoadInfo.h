@@ -154,7 +154,10 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
   SETTER(bool, IsInDevToolsContext)                                            \
                                                                                \
   GETTER(bool, ParserCreatedScript, parserCreatedScript, false)                \
-  SETTER(bool, ParserCreatedScript)
+  SETTER(bool, ParserCreatedScript)                                            \
+                                                                               \
+  GETTER(Maybe<dom::RequestMode>, RequestMode, requestMode, Nothing())         \
+  SETTER(Maybe<dom::RequestMode>, RequestMode)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -361,7 +364,6 @@ class LoadInfo final : public nsILoadInfo {
            const nsTArray<nsCString>& aCorsUnsafeHeaders,
            bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
            const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
-           Maybe<dom::RequestMode> aRequestMode,
            nsILoadInfo::StoragePermissionState aStoragePermission,
            nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
            nsILoadInfo::IPAddressSpace aIPAddressSpace,
@@ -469,7 +471,6 @@ class LoadInfo final : public nsILoadInfo {
   nsString mIntegrityMetadata;
   bool mIsSameDocumentNavigation = false;
   bool mIsUserTriggeredSave = false;
-  Maybe<dom::RequestMode> mRequestMode;
   nsILoadInfo::StoragePermissionState mStoragePermission =
       nsILoadInfo::NoStoragePermission;
   // IP Address space of the parent browsing context.

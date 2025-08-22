@@ -884,8 +884,7 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       loadInfoArgs.integrityMetadata(),
       // This function is only called for moving LoadInfo across processes.
       // Same-document navigation won't cross process boundaries.
-      /* aIsSameDocumentNavigation */ false,
-      loadInfoArgs.requestMode(), loadInfoArgs.storagePermission(),
+      /* aIsSameDocumentNavigation */ false, loadInfoArgs.storagePermission(),
       loadInfoArgs.parentIPAddressSpace(), loadInfoArgs.ipAddressSpace(),
       overriddenFingerprintingSettings, loadInfoArgs.isMetaRefresh(),
       loadingContext, loadInfoArgs.loadingEmbedderPolicy(),

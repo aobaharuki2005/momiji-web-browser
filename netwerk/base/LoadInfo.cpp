@@ -745,7 +745,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
       mCspNonce(rhs.mCspNonce),
       mIntegrityMetadata(rhs.mIntegrityMetadata),
-      mRequestMode(rhs.mRequestMode),
       mStoragePermission(rhs.mStoragePermission),
       mParentIPAddressSpace(rhs.mParentIPAddressSpace),
       mIPAddressSpace(rhs.mIPAddressSpace),
@@ -802,7 +801,6 @@ LoadInfo::LoadInfo(
     const nsTArray<nsCString>& aCorsUnsafeHeaders,
     bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
     const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
-    Maybe<RequestMode> aRequestMode,
     nsILoadInfo::StoragePermissionState aStoragePermission,
     nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
     nsILoadInfo::IPAddressSpace aIPAddressSpace,
@@ -860,7 +858,6 @@ LoadInfo::LoadInfo(
       mCspNonce(aCspNonce),
       mIntegrityMetadata(aIntegrityMetadata),
       mIsSameDocumentNavigation(aIsSameDocumentNavigation),
-      mRequestMode(aRequestMode),
       mStoragePermission(aStoragePermission),
       mParentIPAddressSpace(aParentIPAddressSpace),
       mIPAddressSpace(aIPAddressSpace),
@@ -1913,18 +1910,6 @@ LoadInfo::GetIsUserTriggeredSave(bool* aIsUserTriggeredSave) {
 NS_IMETHODIMP
 LoadInfo::SetIsUserTriggeredSave(bool aIsUserTriggeredSave) {
   mIsUserTriggeredSave = aIsUserTriggeredSave;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetRequestMode(Maybe<RequestMode>* aRequestMode) {
-  *aRequestMode = mRequestMode;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetRequestMode(Maybe<RequestMode> aRequestMode) {
-  mRequestMode = aRequestMode;
   return NS_OK;
 }
 

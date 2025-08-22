@@ -648,16 +648,6 @@ TRRLoadInfo::SetIsUserTriggeredSave(bool aIsUserTriggeredSave) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetRequestMode(Maybe<RequestMode>* aRequestMode) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetRequestMode(Maybe<RequestMode> aRequestMode) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetLoadingEmbedderPolicy(
     nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) {
   return NS_ERROR_NOT_IMPLEMENTED;
