@@ -882,8 +882,6 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       ancestorBrowsingContextIDs, loadInfoArgs.corsUnsafeHeaders(),
       loadInfoArgs.loadTriggeredFromExternal(), loadInfoArgs.cspNonce(),
       loadInfoArgs.integrityMetadata(),
-      loadInfoArgs.hasValidUserGestureActivation(),
-      loadInfoArgs.textDirectiveUserActivation(),
       // This function is only called for moving LoadInfo across processes.
       // Same-document navigation won't cross process boundaries.
       /* aIsSameDocumentNavigation */ false,

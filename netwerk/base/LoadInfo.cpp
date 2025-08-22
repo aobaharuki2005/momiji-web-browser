@@ -745,8 +745,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
       mCspNonce(rhs.mCspNonce),
       mIntegrityMetadata(rhs.mIntegrityMetadata),
-      mHasValidUserGestureActivation(rhs.mHasValidUserGestureActivation),
-      mTextDirectiveUserActivation(rhs.mTextDirectiveUserActivation),
       mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
       mIsInDevToolsContext(rhs.mIsInDevToolsContext),
       mParserCreatedScript(rhs.mParserCreatedScript),
@@ -806,8 +804,7 @@ LoadInfo::LoadInfo(
     const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
     const nsTArray<nsCString>& aCorsUnsafeHeaders,
     bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
-    const nsAString& aIntegrityMetadata, bool aHasValidUserGestureActivation,
-    bool aTextDirectiveUserActivation, bool aIsSameDocumentNavigation,
+    const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
     bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
     bool aParserCreatedScript, Maybe<RequestMode> aRequestMode,
     nsILoadInfo::StoragePermissionState aStoragePermission,
@@ -866,8 +863,6 @@ LoadInfo::LoadInfo(
       mLoadTriggeredFromExternal(aLoadTriggeredFromExternal),
       mCspNonce(aCspNonce),
       mIntegrityMetadata(aIntegrityMetadata),
-      mHasValidUserGestureActivation(aHasValidUserGestureActivation),
-      mTextDirectiveUserActivation(aTextDirectiveUserActivation),
       mIsSameDocumentNavigation(aIsSameDocumentNavigation),
       mAllowDeprecatedSystemRequests(aAllowDeprecatedSystemRequests),
       mIsInDevToolsContext(aIsInDevToolsContext),
@@ -1899,32 +1894,6 @@ LoadInfo::SetIntegrityMetadata(const nsAString& aIntegrityMetadata) {
   MOZ_ASSERT(!mInitialSecurityCheckDone,
              "setting the nonce is only allowed before any sec checks");
   mIntegrityMetadata = aIntegrityMetadata;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetHasValidUserGestureActivation(
-    bool* aHasValidUserGestureActivation) {
-  *aHasValidUserGestureActivation = mHasValidUserGestureActivation;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetHasValidUserGestureActivation(
-    bool aHasValidUserGestureActivation) {
-  mHasValidUserGestureActivation = aHasValidUserGestureActivation;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTextDirectiveUserActivation(bool* aTextDirectiveUserActivation) {
-  *aTextDirectiveUserActivation = mTextDirectiveUserActivation;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTextDirectiveUserActivation(bool aTextDirectiveUserActivation) {
-  mTextDirectiveUserActivation = aTextDirectiveUserActivation;
   return NS_OK;
 }
 

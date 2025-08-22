@@ -623,29 +623,6 @@ void TRRLoadInfo::SetContainerFeaturePolicyInfo(
     const FeaturePolicyInfo& aContainerFeaturePolicyInfo) {}
 
 NS_IMETHODIMP
-TRRLoadInfo::GetHasValidUserGestureActivation(
-    bool* aHasValidUserGestureActivation) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetHasValidUserGestureActivation(
-    bool aHasValidUserGestureActivation) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetTextDirectiveUserActivation(
-    bool* aTextDirectiveUserActivation) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetTextDirectiveUserActivation(bool aTextDirectiveUserActivation) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetIsSameDocumentNavigation(bool* aTextDirectiveUserActivation) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

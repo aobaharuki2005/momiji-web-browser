@@ -136,7 +136,15 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
   SETTER(uint32_t, HttpsOnlyStatus)                                            \
                                                                                \
   GETTER(bool, HstsStatus, httpsOnlyStatus, false)                             \
-  SETTER(bool, HstsStatus)
+  SETTER(bool, HstsStatus)                                                     \
+                                                                               \
+  GETTER(bool, HasValidUserGestureActivation, hasValidUserGestureActivation,   \
+         false)                                                                \
+  SETTER(bool, HasValidUserGestureActivation)                                  \
+                                                                               \
+  GETTER(bool, TextDirectiveUserActivation, textDirectiveUserActivation,       \
+         false)                                                                \
+  SETTER(bool, TextDirectiveUserActivation)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -342,9 +350,7 @@ class LoadInfo final : public nsILoadInfo {
            const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
            const nsTArray<nsCString>& aCorsUnsafeHeaders,
            bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
-           const nsAString& aIntegrityMetadata,
-           bool aHasValidUserGestureActivation,
-           bool aTextDirectiveUserActivation, bool aIsSameDocumentNavigation,
+           const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
            bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
            bool aParserCreatedScript, Maybe<dom::RequestMode> aRequestMode,
            nsILoadInfo::StoragePermissionState aStoragePermission,
@@ -452,8 +458,6 @@ class LoadInfo final : public nsILoadInfo {
   bool mLoadTriggeredFromExternal = false;
   nsString mCspNonce;
   nsString mIntegrityMetadata;
-  bool mHasValidUserGestureActivation = false;
-  bool mTextDirectiveUserActivation = false;
   bool mIsSameDocumentNavigation = false;
   bool mAllowDeprecatedSystemRequests = false;
   bool mIsUserTriggeredSave = false;
