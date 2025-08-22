@@ -35,7 +35,7 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.telemetry.glean.internal.ErrorType
+import mozilla.telemetry.glean.testing.ErrorType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
