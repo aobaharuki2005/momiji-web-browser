@@ -753,7 +753,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mOverriddenFingerprintingSettingsIsSet(
           rhs.mOverriddenFingerprintingSettingsIsSet),
 #endif
-      mIsMetaRefresh(rhs.mIsMetaRefresh),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
       mIsMediaRequest(rhs.mIsMediaRequest),
       mIsMediaInitialRequest(rhs.mIsMediaInitialRequest),
@@ -805,7 +804,7 @@ LoadInfo::LoadInfo(
     nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
     nsILoadInfo::IPAddressSpace aIPAddressSpace,
     const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
-    bool aIsMetaRefresh, nsINode* aLoadingContext,
+    nsINode* aLoadingContext,
     nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
     bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
     nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
@@ -862,7 +861,6 @@ LoadInfo::LoadInfo(
       mParentIPAddressSpace(aParentIPAddressSpace),
       mIPAddressSpace(aIPAddressSpace),
       mOverriddenFingerprintingSettings(aOverriddenFingerprintingSettings),
-      mIsMetaRefresh(aIsMetaRefresh),
       mLoadingEmbedderPolicy(aLoadingEmbedderPolicy),
       mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
           aIsOriginTrialCoepCredentiallessEnabledForTopLevel),
@@ -1338,18 +1336,6 @@ const Maybe<RFPTargetSet>& LoadInfo::GetOverriddenFingerprintingSettings() {
 void LoadInfo::SetOverriddenFingerprintingSettings(RFPTargetSet aTargets) {
   mOverriddenFingerprintingSettings.reset();
   mOverriddenFingerprintingSettings.emplace(aTargets);
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsMetaRefresh(bool* aIsMetaRefresh) {
-  *aIsMetaRefresh = mIsMetaRefresh;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsMetaRefresh(bool aIsMetaRefresh) {
-  mIsMetaRefresh = aIsMetaRefresh;
-  return NS_OK;
 }
 
 void LoadInfo::SetIncludeCookiesSecFlag() {

@@ -157,7 +157,10 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
   SETTER(bool, ParserCreatedScript)                                            \
                                                                                \
   GETTER(Maybe<dom::RequestMode>, RequestMode, requestMode, Nothing())         \
-  SETTER(Maybe<dom::RequestMode>, RequestMode)
+  SETTER(Maybe<dom::RequestMode>, RequestMode)                                 \
+                                                                               \
+  GETTER(bool, IsMetaRefresh, isMetaRefresh, false)                            \
+  SETTER(bool, IsMetaRefresh)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -368,7 +371,7 @@ class LoadInfo final : public nsILoadInfo {
            nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
            nsILoadInfo::IPAddressSpace aIPAddressSpace,
            const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
-           bool aIsMetaRefresh, nsINode* aLoadingContext,
+           nsINode* aLoadingContext,
            nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
            bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
            nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
@@ -483,7 +486,6 @@ class LoadInfo final : public nsILoadInfo {
   // before use it.
   bool mOverriddenFingerprintingSettingsIsSet = false;
 #endif
-  bool mIsMetaRefresh = false;
 
   // Is true if this load was triggered by processing the attributes of the
   // browsing context container.

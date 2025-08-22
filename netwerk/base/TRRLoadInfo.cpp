@@ -254,14 +254,6 @@ const Maybe<RFPTargetSet>& TRRLoadInfo::GetOverriddenFingerprintingSettings() {
 void TRRLoadInfo::SetOverriddenFingerprintingSettings(RFPTargetSet aTargets) {}
 
 NS_IMETHODIMP
-TRRLoadInfo::GetIsMetaRefresh(bool* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetIsMetaRefresh(bool aResult) { return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP
 TRRLoadInfo::GetForceInheritPrincipal(bool* aInheritPrincipal) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
