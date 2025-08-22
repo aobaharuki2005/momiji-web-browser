@@ -9,12 +9,12 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/dom/cache/BoundStorageKey.h"
+#include "mozilla/dom/cache/BoundStorageKeyCache.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
 #include "mozilla/dom/cache/CacheStreamControlChild.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"
-#include "mozilla/dom/cache/BoundStorageKey.h"
-#include "mozilla/dom/cache/BoundStorageKeyCache.h"
 
 namespace mozilla::dom {
 // XXX Move this to ToJSValue.h
@@ -142,7 +142,8 @@ void CacheOpChild::SettlePromise(
     // into their raw types here. Since this is internal private method and
     // based on it's usage yet; just expecting Undefined or null values here.
     MOZ_ASSERT(res.isNullOrUndefined());
-    target->Resolve(nullptr /*implicitly converts to false for boolean types */, __func__);
+    target->Resolve(nullptr /*implicitly converts to false for boolean types */,
+                    __func__);
   } else if constexpr (std::is_same_v<ValueType, StorageOpenResultType>) {
     // result would be of type CacheChild here and we need to properly wrap into
     // holder class BoundStorageKeyCache before resolving promise
@@ -163,8 +164,8 @@ void CacheOpChild::SettlePromise(ResultType&& aRes, ErrorResult&& aRv,
     using ValueType = typename std::decay_t<decltype(aRes)>;
 
     if constexpr (std::is_same_v<ValueType, StorageOpenResultType>) {
-      // result would be of type CacheChild here and we need to properly wrap into
-      // holder class Cache before resolving promise
+      // result would be of type CacheChild here and we need to properly wrap
+      // into holder class Cache before resolving promise
       auto&& res = std::forward<ResultType>(aRes);
       auto [cacheChild, ns] = res;
       auto* cache = new Cache(mGlobal, cacheChild, ns);
@@ -282,7 +283,8 @@ mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
     }
     case CacheOpResult::TCachePutAllResult: {
       // resolve with undefined
-      HandleAndSettle<CacheOpResult::TCachePutAllResult>(JS::UndefinedHandleValue);
+      HandleAndSettle<CacheOpResult::TCachePutAllResult>(
+          JS::UndefinedHandleValue);
       break;
     }
     case CacheOpResult::TCacheDeleteResult: {
