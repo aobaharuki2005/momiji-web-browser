@@ -44,6 +44,8 @@ const OS_PARAM_COUNT_DEF = "20"; // 20 results
 const OS_PARAM_START_INDEX_DEF = "1"; // start at 1st result
 const OS_PARAM_START_PAGE_DEF = "1"; // 1st page
 
+const PARAM_ACCEPT_LANGUAGES = "acceptLanguages";
+
 // A array of arrays containing parameters that we don't fully support, and
 // their default values. We will only send values for these parameters if
 // required, since our values are just really arbitrary "guesses" that should
@@ -161,6 +163,15 @@ function paramSubstitution(paramValue, searchTerms, queryCharset) {
     // {inputEncoding} is the second most common param.
     if (name == OS_PARAM_INPUT_ENCODING) {
       return queryCharset;
+    }
+
+    // Handle languages for URL results.
+    if (name == PARAM_ACCEPT_LANGUAGES) {
+      let languages = Services.prefs
+        .getComplexValue("intl.accept_languages", Ci.nsIPrefLocalizedString)
+        .data.replace(/\s+/g, "");
+
+      return languages || "";
     }
 
     // Handle the less common OpenSearch parameters we're confident about.
