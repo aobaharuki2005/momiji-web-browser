@@ -613,7 +613,7 @@ private fun BookmarksListTopBar(
                                 Icon(
                                     painter = painterResource(R.drawable.mozac_ic_filter),
                                     contentDescription = stringResource(
-                                        R.string.content_description_menu,
+                                        R.string.bookmark_sort_menu_content_desc,
                                     ),
                                     tint = iconColor,
                                 )

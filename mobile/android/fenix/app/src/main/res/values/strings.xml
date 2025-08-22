@@ -1573,6 +1573,8 @@
     <string name="bookmark_menu_delete_button">Delete</string>
     <!--Bookmark overflow menu save button -->
     <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Save</string>
+    <!-- Accessibility label for sorting options -->
+    <string name="bookmark_sort_menu_content_desc">Sorting options</string>
     <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
     <string name="bookmark_sort_menu_custom">Sort by custom order</string>
     <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
