@@ -447,16 +447,6 @@ const nsTArray<nsCString>& TRRLoadInfo::CorsUnsafeHeaders() {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetForcePreflight(bool* aForcePreflight) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetIsPreflight(bool* aIsPreflight) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::SetLoadTriggeredFromExternal(bool aLoadTriggeredFromExternal) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

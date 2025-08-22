@@ -108,7 +108,11 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
                                                                                \
   GETTER(uint32_t, RequestBlockingReason, requestBlockingReason,               \
          BLOCKING_REASON_NONE)                                                 \
-  SETTER(uint32_t, RequestBlockingReason)
+  SETTER(uint32_t, RequestBlockingReason)                                      \
+                                                                               \
+  GETTER(bool, ForcePreflight, forcePreflight, false)                          \
+                                                                               \
+  GETTER(bool, IsPreflight, isPreflight, false)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -312,8 +316,8 @@ class LoadInfo final : public nsILoadInfo {
            RedirectHistoryArray&& aRedirectChain,
            nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
            const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
-           const nsTArray<nsCString>& aCorsUnsafeHeaders, bool aForcePreflight,
-           bool aIsPreflight, bool aLoadTriggeredFromExternal,
+           const nsTArray<nsCString>& aCorsUnsafeHeaders,
+           bool aLoadTriggeredFromExternal,
            bool aServiceWorkerTaintingSynthesized,
            bool aDocumentHasUserInteracted,
            bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
@@ -426,8 +430,6 @@ class LoadInfo final : public nsILoadInfo {
   nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
   nsTArray<uint64_t> mAncestorBrowsingContextIDs;
   nsTArray<nsCString> mCorsUnsafeHeaders;
-  bool mForcePreflight = false;
-  bool mIsPreflight = false;
   bool mLoadTriggeredFromExternal = false;
   bool mServiceWorkerTaintingSynthesized = false;
   bool mDocumentHasUserInteracted = false;

@@ -742,8 +742,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mAncestorPrincipals(rhs.mAncestorPrincipals.Clone()),
       mAncestorBrowsingContextIDs(rhs.mAncestorBrowsingContextIDs.Clone()),
       mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders.Clone()),
-      mForcePreflight(rhs.mForcePreflight),
-      mIsPreflight(rhs.mIsPreflight),
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
       mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted),
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(
@@ -814,9 +812,9 @@ LoadInfo::LoadInfo(
     RedirectHistoryArray&& aRedirectChain,
     nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
     const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
-    const nsTArray<nsCString>& aCorsUnsafeHeaders, bool aForcePreflight,
-    bool aIsPreflight, bool aLoadTriggeredFromExternal,
-    bool aServiceWorkerTaintingSynthesized, bool aDocumentHasUserInteracted,
+    const nsTArray<nsCString>& aCorsUnsafeHeaders,
+    bool aLoadTriggeredFromExternal, bool aServiceWorkerTaintingSynthesized,
+    bool aDocumentHasUserInteracted,
     bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
     bool aNeedForCheckingAntiTrackingHeuristic, const nsAString& aCspNonce,
     const nsAString& aIntegrityMetadata, bool aSkipContentSniffing,
@@ -878,8 +876,6 @@ LoadInfo::LoadInfo(
       mAncestorPrincipals(std::move(aAncestorPrincipals)),
       mAncestorBrowsingContextIDs(aAncestorBrowsingContextIDs.Clone()),
       mCorsUnsafeHeaders(aCorsUnsafeHeaders.Clone()),
-      mForcePreflight(aForcePreflight),
-      mIsPreflight(aIsPreflight),
       mLoadTriggeredFromExternal(aLoadTriggeredFromExternal),
       mServiceWorkerTaintingSynthesized(aServiceWorkerTaintingSynthesized),
       mDocumentHasUserInteracted(aDocumentHasUserInteracted),
@@ -1835,12 +1831,6 @@ const nsTArray<nsCString>& LoadInfo::CorsUnsafeHeaders() {
   return mCorsUnsafeHeaders;
 }
 
-NS_IMETHODIMP
-LoadInfo::GetForcePreflight(bool* aForcePreflight) {
-  *aForcePreflight = mForcePreflight;
-  return NS_OK;
-}
-
 void LoadInfo::SetIsPreflight() {
   MOZ_ASSERT(GetSecurityMode() ==
              nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT);
@@ -1858,12 +1848,6 @@ void LoadInfo::SetBrowserUpgradeInsecureRequests() {
 
 void LoadInfo::SetBrowserWouldUpgradeInsecureRequests() {
   mBrowserWouldUpgradeInsecureRequests = true;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsPreflight(bool* aIsPreflight) {
-  *aIsPreflight = mIsPreflight;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
