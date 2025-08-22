@@ -109,7 +109,6 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
-  UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.sys.mjs",
   webrtcUI: "resource:///modules/webrtcUI.sys.mjs",

@@ -148,7 +148,6 @@
   "UrlbarProviderSearchTips",
   "UrlbarTokenizer",
   "UrlbarUtils",
-  "UrlbarValueFormatter",
   "Weave",
   "WebNavigationFrames",
   "webrtcUI",
