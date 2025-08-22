@@ -20,6 +20,7 @@
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/media/MediaUtils.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "nsDebug.h"
 #include "nsIGlobalObject.h"
@@ -151,6 +152,15 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
            "build configuration");
 #  endif
 #endif
+
+  // Check if WebGPU is blocked for this global's domain.
+  if (auto* uri = mOwner->GetBaseURI()) {
+    nsAutoCString host;
+    uri->GetAsciiHost(host);
+    rejectIf(media::HostnameInPref("dom.webgpu.blocked-domains", host),
+             "WebGPU is blocked for this domain by the "
+             "`dom.webgpu.blocked-domains` pref.");
+  }
 
   if (rejectionMessage) {
     promise->MaybeRejectWithNotSupportedError(ToCString(*rejectionMessage));
