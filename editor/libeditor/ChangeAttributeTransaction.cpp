@@ -5,8 +5,6 @@
 
 #include "ChangeAttributeTransaction.h"
 
-#include "EditorDOMAPIWrapper.h"
-
 #include "mozilla/Logging.h"
 #include "mozilla/ToString.h"
 #include "mozilla/dom/Element.h"  // for Element
@@ -20,31 +18,25 @@ using namespace dom;
 
 // static
 already_AddRefed<ChangeAttributeTransaction> ChangeAttributeTransaction::Create(
-    EditorBase& aEditorBase, Element& aElement, nsAtom& aAttribute,
-    const nsAString& aValue) {
+    Element& aElement, nsAtom& aAttribute, const nsAString& aValue) {
   RefPtr<ChangeAttributeTransaction> transaction =
-      new ChangeAttributeTransaction(aEditorBase, aElement, aAttribute,
-                                     &aValue);
+      new ChangeAttributeTransaction(aElement, aAttribute, &aValue);
   return transaction.forget();
 }
 
 // static
 already_AddRefed<ChangeAttributeTransaction>
-ChangeAttributeTransaction::CreateToRemove(EditorBase& aEditorBase,
-                                           Element& aElement,
+ChangeAttributeTransaction::CreateToRemove(Element& aElement,
                                            nsAtom& aAttribute) {
   RefPtr<ChangeAttributeTransaction> transaction =
-      new ChangeAttributeTransaction(aEditorBase, aElement, aAttribute,
-                                     nullptr);
+      new ChangeAttributeTransaction(aElement, aAttribute, nullptr);
   return transaction.forget();
 }
 
-ChangeAttributeTransaction::ChangeAttributeTransaction(EditorBase& aEditorBase,
-                                                       Element& aElement,
+ChangeAttributeTransaction::ChangeAttributeTransaction(Element& aElement,
                                                        nsAtom& aAttribute,
                                                        const nsAString* aValue)
     : EditTransactionBase(),
-      mEditorBase(&aEditorBase),
       mElement(&aElement),
       mAttribute(&aAttribute),
       mValue(aValue ? *aValue : u""_ns),
@@ -64,13 +56,12 @@ std::ostream& operator<<(std::ostream& aStream,
           << "\", mRemoveAttribute="
           << (aTransaction.mRemoveAttribute ? "true" : "false")
           << ", mAttributeWasSet="
-          << (aTransaction.mAttributeWasSet ? "true" : "false")
-          << ", mEditorBase=" << aTransaction.mEditorBase.get() << " }";
+          << (aTransaction.mAttributeWasSet ? "true" : "false") << " }";
   return aStream;
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeAttributeTransaction,
-                                   EditTransactionBase, mEditorBase, mElement)
+                                   EditTransactionBase, mElement)
 
 NS_IMPL_ADDREF_INHERITED(ChangeAttributeTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(ChangeAttributeTransaction, EditTransactionBase)
@@ -78,8 +69,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeAttributeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP ChangeAttributeTransaction::DoTransaction() {
-  MOZ_ASSERT(mEditorBase);
-
   // Need to get the current value of the attribute and save it, and set
   // mAttributeWasSet
   mAttributeWasSet = mElement->GetAttr(mAttribute, mUndoValue);
@@ -94,30 +83,17 @@ NS_IMETHODIMP ChangeAttributeTransaction::DoTransaction() {
           ("%p ChangeAttributeTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  const OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  const OwningNonNull<Element> element = *mElement;
   // Now set the attribute to the new value
   if (mRemoveAttribute) {
-    AutoElementAttrAPIWrapper elementWrapper(editorBase, element);
-    nsresult rv = elementWrapper.UnsetAttr(MOZ_KnownLive(mAttribute), true);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("AutoElementAttrAPIWrapper::UnsetAttr() failed");
-      return rv;
-    }
-    NS_WARNING_ASSERTION(
-        elementWrapper.IsExpectedResult(EmptyString()),
-        "Removing attribute caused other mutations, but ignored");
-    return NS_OK;
-  }
-
-  AutoElementAttrAPIWrapper elementWrapper(editorBase, element);
-  nsresult rv = elementWrapper.SetAttr(MOZ_KnownLive(mAttribute), mValue, true);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("AutoElementAttrAPIWrapper::SetAttr() failed");
+    OwningNonNull<Element> element = *mElement;
+    nsresult rv = element->UnsetAttr(kNameSpaceID_None, mAttribute, true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::UnsetAttr() failed");
     return rv;
   }
-  NS_WARNING_ASSERTION(elementWrapper.IsExpectedResult(mValue),
-                       "Setting attribute caused other mutations, but ignored");
+
+  OwningNonNull<Element> element = *mElement;
+  nsresult rv = element->SetAttr(kNameSpaceID_None, mAttribute, mValue, true);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::SetAttr() failed");
   return rv;
 }
 
@@ -126,34 +102,20 @@ NS_IMETHODIMP ChangeAttributeTransaction::UndoTransaction() {
           ("%p ChangeAttributeTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mElement)) {
+  if (NS_WARN_IF(!mElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  const OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  const OwningNonNull<Element> element = *mElement;
   if (mAttributeWasSet) {
-    AutoElementAttrAPIWrapper elementWrapper(editorBase, element);
+    OwningNonNull<Element> element = *mElement;
     nsresult rv =
-        elementWrapper.SetAttr(MOZ_KnownLive(mAttribute), mUndoValue, true);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("AutoElementAttrAPIWrapper::SetAttr() failed");
-      return rv;
-    }
-    NS_WARNING_ASSERTION(
-        elementWrapper.IsExpectedResult(mUndoValue),
-        "Setting attribute caused other mutations, but ignored");
-    return NS_OK;
-  }
-  AutoElementAttrAPIWrapper elementWrapper(editorBase, element);
-  nsresult rv = elementWrapper.UnsetAttr(MOZ_KnownLive(mAttribute), true);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("AutoElementAttrAPIWrapper::UnsetAttr() failed");
+        element->SetAttr(kNameSpaceID_None, mAttribute, mUndoValue, true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::SetAttr() failed");
     return rv;
   }
-  NS_WARNING_ASSERTION(
-      elementWrapper.IsExpectedResult(EmptyString()),
-      "Removing attribute caused other mutations, but ignored");
-  return NS_OK;
+  OwningNonNull<Element> element = *mElement;
+  nsresult rv = element->UnsetAttr(kNameSpaceID_None, mAttribute, true);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::UnsetAttr() failed");
+  return rv;
 }
 
 NS_IMETHODIMP ChangeAttributeTransaction::RedoTransaction() {
@@ -161,33 +123,20 @@ NS_IMETHODIMP ChangeAttributeTransaction::RedoTransaction() {
           ("%p ChangeAttributeTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mElement)) {
+  if (NS_WARN_IF(!mElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  const OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  const OwningNonNull<Element> element = *mElement;
   if (mRemoveAttribute) {
-    AutoElementAttrAPIWrapper elementWrapper(editorBase, element);
-    nsresult rv = elementWrapper.UnsetAttr(MOZ_KnownLive(mAttribute), true);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("AutoElementAttrAPIWrapper::UnsetAttr() failed");
-      return rv;
-    }
-    NS_WARNING_ASSERTION(
-        elementWrapper.IsExpectedResult(EmptyString()),
-        "Removing attribute caused other mutations, but ignored");
-    return NS_OK;
-  }
-
-  AutoElementAttrAPIWrapper elementWrapper(editorBase, element);
-  nsresult rv = elementWrapper.SetAttr(MOZ_KnownLive(mAttribute), mValue, true);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("AutoElementAttrAPIWrapper::SetAttr() failed");
+    OwningNonNull<Element> element = *mElement;
+    nsresult rv = element->UnsetAttr(kNameSpaceID_None, mAttribute, true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::UnsetAttr() failed");
     return rv;
   }
-  NS_WARNING_ASSERTION(elementWrapper.IsExpectedResult(mValue),
-                       "Setting attribute caused other mutations, but ignored");
-  return NS_OK;
+
+  OwningNonNull<Element> element = *mElement;
+  nsresult rv = element->SetAttr(kNameSpaceID_None, mAttribute, mValue, true);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::SetAttr() failed");
+  return rv;
 }
 
 }  // namespace mozilla

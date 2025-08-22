@@ -5,11 +5,10 @@
 
 #include "InsertNodeTransaction.h"
 
-#include "EditorBase.h"           // for EditorBase
-#include "EditorDOMAPIWrapper.h"  // For AutoNodeAPIWrapper
-#include "EditorDOMPoint.h"       // for EditorDOMPoint
-#include "HTMLEditor.h"           // for HTMLEditor
-#include "TextEditor.h"           // for TextEditor
+#include "EditorBase.h"      // for EditorBase
+#include "EditorDOMPoint.h"  // for EditorDOMPoint
+#include "HTMLEditor.h"      // for HTMLEditor
+#include "TextEditor.h"      // for TextEditor
 
 #include "mozilla/Logging.h"
 #include "mozilla/ToString.h"
@@ -114,10 +113,10 @@ NS_IMETHODIMP InsertNodeTransaction::DoTransaction() {
     }
   }
 
-  const OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  const OwningNonNull<nsIContent> contentToInsert = *mContentToInsert;
-  const OwningNonNull<nsINode> container = *mPointToInsert.GetContainer();
-  const nsCOMPtr<nsIContent> refChild = mPointToInsert.GetChild();
+  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  OwningNonNull<nsIContent> contentToInsert = *mContentToInsert;
+  OwningNonNull<nsINode> container = *mPointToInsert.GetContainer();
+  nsCOMPtr<nsIContent> refChild = mPointToInsert.GetChild();
   if (contentToInsert->IsElement()) {
     nsresult rv = editorBase->MarkElementDirty(
         MOZ_KnownLive(*contentToInsert->AsElement()));
@@ -128,14 +127,16 @@ NS_IMETHODIMP InsertNodeTransaction::DoTransaction() {
                          "EditorBase::MarkElementDirty() failed, but ignored");
   }
 
-  AutoNodeAPIWrapper nodeWrapper(editorBase, container);
-  nsresult rv = nodeWrapper.InsertBefore(contentToInsert, refChild);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("AutoNodeAPIWrapper::InsertBefore() failed");
-    return rv;
+  IgnoredErrorResult error;
+  container->InsertBefore(contentToInsert, refChild, error);
+  // InsertBefore() may call MightThrowJSException() even if there is no
+  // error. We don't need the flag here.
+  error.WouldReportJSException();
+  if (error.Failed()) {
+    NS_WARNING("nsINode::InsertBefore() failed");
+    return error.StealNSResult();
   }
-  NS_WARNING_ASSERTION(nodeWrapper.IsExpectedResult(),
-                       "Inserting a node caused other mutations, but ignored");
+
   return NS_OK;
 }
 
@@ -150,18 +151,12 @@ NS_IMETHODIMP InsertNodeTransaction::UndoTransaction() {
   }
   // XXX If the inserted node has been moved to different container node or
   //     just removed from the DOM tree, this always fails.
-  const OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  const OwningNonNull<nsINode> container = *mPointToInsert.GetContainer();
-  const OwningNonNull<nsIContent> contentToInsert = *mContentToInsert;
-  AutoNodeAPIWrapper nodeWrapper(editorBase, container);
-  nsresult rv = nodeWrapper.RemoveChild(contentToInsert);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("AutoNodeAPIWrapper::RemoveChild() failed");
-    return rv;
-  }
-  NS_WARNING_ASSERTION(nodeWrapper.IsExpectedResult(),
-                       "Removing a node caused other mutations, but ignored");
-  return NS_OK;
+  OwningNonNull<nsINode> container = *mPointToInsert.GetContainer();
+  OwningNonNull<nsIContent> contentToInsert = *mContentToInsert;
+  ErrorResult error;
+  container->RemoveChild(contentToInsert, error);
+  NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
+  return error.StealNSResult();
 }
 
 NS_IMETHODIMP InsertNodeTransaction::RedoTransaction() {

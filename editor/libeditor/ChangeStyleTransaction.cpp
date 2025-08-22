@@ -5,8 +5,6 @@
 
 #include "ChangeStyleTransaction.h"
 
-#include "EditorDOMAPIWrapper.h"
-#include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ToString.h"
@@ -29,29 +27,27 @@ using namespace dom;
 
 // static
 already_AddRefed<ChangeStyleTransaction> ChangeStyleTransaction::Create(
-    HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement, nsAtom& aProperty,
+    nsStyledElement& aStyledElement, nsAtom& aProperty,
     const nsAString& aValue) {
-  RefPtr<ChangeStyleTransaction> transaction = new ChangeStyleTransaction(
-      aHTMLEditor, aStyledElement, aProperty, aValue, false);
+  RefPtr<ChangeStyleTransaction> transaction =
+      new ChangeStyleTransaction(aStyledElement, aProperty, aValue, false);
   return transaction.forget();
 }
 
 // static
 already_AddRefed<ChangeStyleTransaction> ChangeStyleTransaction::CreateToRemove(
-    HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement, nsAtom& aProperty,
+    nsStyledElement& aStyledElement, nsAtom& aProperty,
     const nsAString& aValue) {
-  RefPtr<ChangeStyleTransaction> transaction = new ChangeStyleTransaction(
-      aHTMLEditor, aStyledElement, aProperty, aValue, true);
+  RefPtr<ChangeStyleTransaction> transaction =
+      new ChangeStyleTransaction(aStyledElement, aProperty, aValue, true);
   return transaction.forget();
 }
 
-ChangeStyleTransaction::ChangeStyleTransaction(HTMLEditor& aHTMLEditor,
-                                               nsStyledElement& aStyledElement,
+ChangeStyleTransaction::ChangeStyleTransaction(nsStyledElement& aStyledElement,
                                                nsAtom& aProperty,
                                                const nsAString& aValue,
                                                bool aRemove)
     : EditTransactionBase(),
-      mHTMLEditor(&aHTMLEditor),
       mStyledElement(&aStyledElement),
       mProperty(&aProperty),
       mRemoveProperty(aRemove),
@@ -75,15 +71,14 @@ std::ostream& operator<<(std::ostream& aStream,
           << ", mUndoAttributeWasSet="
           << (aTransaction.mUndoAttributeWasSet ? "true" : "false")
           << ", mRedoAttributeWasSet="
-          << (aTransaction.mRedoAttributeWasSet ? "true" : "false")
-          << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get() << " }";
+          << (aTransaction.mRedoAttributeWasSet ? "true" : "false") << " }";
   return aStream;
 }
 
 #define kNullCh ('\0')
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeStyleTransaction, EditTransactionBase,
-                                   mHTMLEditor, mStyledElement)
+                                   mStyledElement)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeStyleTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
@@ -135,14 +130,12 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
           ("%p ChangeStyleTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  MOZ_ASSERT(mHTMLEditor);
   if (NS_WARN_IF(!mStyledElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  const OwningNonNull<nsStyledElement> styledElement = *mStyledElement;
-  const nsCOMPtr<nsICSSDeclaration> cssDecl = styledElement->Style();
+  OwningNonNull<nsStyledElement> styledElement = *mStyledElement;
+  nsCOMPtr<nsICSSDeclaration> cssDecl = styledElement->Style();
 
   // FIXME(bug 1606994): Using atoms forces a string copy here which is not
   // great.
@@ -156,34 +149,32 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
   mUndoValue.Assign(values);
 
   if (mRemoveProperty) {
+    nsAutoCString returnString;
     if (mProperty == nsGkAtoms::text_decoration) {
       BuildTextDecorationValueToRemove(values, mValue, values);
       if (values.IsEmpty()) {
-        nsresult rv =
-            AutoCSSDeclarationAPIWrapper(htmlEditor, styledElement, cssDecl)
-                .RemoveProperty(propertyNameString);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("AutoCSSDeclarationAPIWrapper::RemoveProperty() failed");
-          return rv;
+        ErrorResult error;
+        cssDecl->RemoveProperty(propertyNameString, returnString, error);
+        if (MOZ_UNLIKELY(error.Failed())) {
+          NS_WARNING("nsICSSDeclaration::RemoveProperty() failed");
+          return error.StealNSResult();
         }
       } else {
+        ErrorResult error;
         nsAutoCString priority;
         cssDecl->GetPropertyPriority(propertyNameString, priority);
-        nsresult rv =
-            AutoCSSDeclarationAPIWrapper(htmlEditor, styledElement, cssDecl)
-                .SetProperty(propertyNameString, values, priority);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("AutoCSSDeclarationAPIWrapper::SetProperty() failed");
-          return rv;
+        cssDecl->SetProperty(propertyNameString, values, priority, error);
+        if (MOZ_UNLIKELY(error.Failed())) {
+          NS_WARNING("nsICSSDeclaration::SetProperty() failed");
+          return error.StealNSResult();
         }
       }
     } else {
-      nsresult rv =
-          AutoCSSDeclarationAPIWrapper(htmlEditor, styledElement, cssDecl)
-              .RemoveProperty(propertyNameString);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("AutoCSSDeclarationAPIWrapper::RemoveProperty() failed");
-        return rv;
+      ErrorResult error;
+      cssDecl->RemoveProperty(propertyNameString, returnString, error);
+      if (MOZ_UNLIKELY(error.Failed())) {
+        NS_WARNING("nsICSSDeclaration::RemoveProperty() failed");
+        return error.StealNSResult();
       }
     }
   } else {
@@ -194,27 +185,23 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
     } else {
       values.Assign(mValue);
     }
-    nsresult rv =
-        AutoCSSDeclarationAPIWrapper(htmlEditor, styledElement, cssDecl)
-            .SetProperty(propertyNameString, values, priority);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("AutoCSSDeclarationAPIWrapper::SetProperty() failed");
-      return rv;
+    ErrorResult error;
+    cssDecl->SetProperty(propertyNameString, values, priority, error);
+    if (MOZ_UNLIKELY(error.Failed())) {
+      NS_WARNING("nsICSSDeclaration::SetProperty() failed");
+      return error.StealNSResult();
     }
   }
 
   // Let's be sure we don't keep an empty style attribute
   uint32_t length = cssDecl->Length();
   if (!length) {
-    AutoElementAttrAPIWrapper elementWrapper(htmlEditor, styledElement);
-    nsresult rv = elementWrapper.UnsetAttr(nsGkAtoms::style, true);
+    nsresult rv =
+        styledElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
     if (NS_FAILED(rv)) {
-      NS_WARNING("AutoElementAttrAPIWrapper::UnsetAttr() failed");
+      NS_WARNING("Element::UnsetAttr(nsGkAtoms::style) failed");
       return rv;
     }
-    NS_WARNING_ASSERTION(
-        elementWrapper.IsExpectedResult(EmptyString()),
-        "Removing style attribute caused other mutations, but ignored");
   } else {
     mRedoAttributeWasSet = true;
   }
@@ -225,52 +212,44 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
 
 nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
                                           nsACString& aValue) {
-  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mStyledElement)) {
+  if (NS_WARN_IF(!mStyledElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  const OwningNonNull<nsStyledElement> styledElement = *mStyledElement;
+
   if (aAttributeWasSet) {
+    OwningNonNull<nsStyledElement> styledElement = *mStyledElement;
+
     // The style attribute was not empty, let's recreate the declaration
     nsAutoCString propertyNameString;
     mProperty->ToUTF8String(propertyNameString);
 
-    const nsCOMPtr<nsICSSDeclaration> cssDecl = styledElement->Style();
+    nsCOMPtr<nsICSSDeclaration> cssDecl = styledElement->Style();
 
     ErrorResult error;
     if (aValue.IsEmpty()) {
       // An empty value means we have to remove the property
-      nsresult rv =
-          AutoCSSDeclarationAPIWrapper(htmlEditor, styledElement, cssDecl)
-              .RemoveProperty(propertyNameString);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("AutoCSSDeclarationAPIWrapper::RemoveProperty() failed");
-        return rv;
+      nsAutoCString returnString;
+      cssDecl->RemoveProperty(propertyNameString, returnString, error);
+      if (MOZ_UNLIKELY(error.Failed())) {
+        NS_WARNING("nsICSSDeclaration::RemoveProperty() failed");
+        return error.StealNSResult();
       }
     }
     // Let's recreate the declaration as it was
     nsAutoCString priority;
     cssDecl->GetPropertyPriority(propertyNameString, priority);
-    nsresult rv =
-        AutoCSSDeclarationAPIWrapper(htmlEditor, styledElement, cssDecl)
-            .SetProperty(propertyNameString, aValue, priority);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("AutoCSSDeclarationAPIWrapper::SetProperty() failed");
-      return rv;
-    }
-    return NS_OK;
+    cssDecl->SetProperty(propertyNameString, aValue, priority, error);
+    NS_WARNING_ASSERTION(!error.Failed(),
+                         "nsICSSDeclaration::SetProperty() failed");
+    return error.StealNSResult();
   }
 
-  AutoElementAttrAPIWrapper elementWrapper(htmlEditor, styledElement);
-  nsresult rv = elementWrapper.UnsetAttr(nsGkAtoms::style, true);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("AutoElementAttrAPIWrapper::UnsetAttr() failed");
-    return rv;
-  }
-  NS_WARNING_ASSERTION(
-      elementWrapper.IsExpectedResult(EmptyString()),
-      "Removing style attribute caused other mutations, but ignored");
-  return NS_OK;
+  OwningNonNull<nsStyledElement> styledElement = *mStyledElement;
+  nsresult rv =
+      styledElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Element::UnsetAttr(nsGkAtoms::style) failed");
+  return rv;
 }
 
 NS_IMETHODIMP ChangeStyleTransaction::UndoTransaction() {

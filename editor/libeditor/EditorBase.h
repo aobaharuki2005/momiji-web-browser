@@ -1988,7 +1988,8 @@ class EditorBase : public nsIEditor,
    *
    * @param aElement    The element for which to insert formatting.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MarkElementDirty(Element& aElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  MarkElementDirty(Element& aElement) const;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   DoTransactionInternal(nsITransaction* aTransaction);
@@ -2823,7 +2824,7 @@ class EditorBase : public nsIEditor,
    * Should use SwitchTextDirectionTo() or ToggleTextDirection() instead.
    * This is a helper class of them.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult SetTextDirectionTo(TextDirection aTextDirection);
+  nsresult SetTextDirectionTo(TextDirection aTextDirection);
 
  protected:  // helper classes which may be used by friends
   /**
