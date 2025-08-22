@@ -2015,8 +2015,8 @@ class HTMLEditor final : public EditorBase,
    * @param aPointToInsert      The insertion point.  The container must not
    *                            be a data node like a text node.
    */
-  [[nodiscard]] nsresult MoveAllChildren(
-      nsINode& aContainer, const EditorRawDOMPoint& aPointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  MoveAllChildren(nsINode& aContainer, const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * MoveChildrenBetween() moves all children between aFirstChild and aLastChild
@@ -2034,9 +2034,9 @@ class HTMLEditor final : public EditorBase,
    * @param aPointToInsert      The insertion point.  The container must not
    *                            be a data node like a text node.
    */
-  [[nodiscard]] nsresult MoveChildrenBetween(
-      nsIContent& aFirstChild, nsIContent& aLastChild,
-      const EditorRawDOMPoint& aPointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  MoveChildrenBetween(nsIContent& aFirstChild, nsIContent& aLastChild,
+                      const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * MovePreviousSiblings() moves all siblings before aChild (i.e., aChild
@@ -2048,7 +2048,7 @@ class HTMLEditor final : public EditorBase,
    * @param aPointToInsert      The insertion point.  The container must not
    *                            be a data node like a text node.
    */
-  [[nodiscard]] nsresult MovePreviousSiblings(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MovePreviousSiblings(
       nsIContent& aChild, const EditorRawDOMPoint& aPointToInsert);
 
   /**
@@ -2060,7 +2060,7 @@ class HTMLEditor final : public EditorBase,
    * @param aPointToInsert      The insertion point.  The container must not
    *                            be a data node like a text node.
    */
-  [[nodiscard]] nsresult MoveInclusiveNextSiblings(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MoveInclusiveNextSiblings(
       nsIContent& aChild, const EditorRawDOMPoint& aPointToInsert);
 
   /**
@@ -4295,14 +4295,17 @@ class HTMLEditor final : public EditorBase,
   /**
    * HideAnonymousEditingUIs() forcibly hides all editing UIs (resizers,
    * inline-table-editing UI, absolute positioning UI).
+   *
+   * XXX This method is called by the CC, therefore, needs to be a boundary
+   * method.
    */
-  void HideAnonymousEditingUIs();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void HideAnonymousEditingUIs();
 
   /**
    * HideAnonymousEditingUIsIfUnnecessary() hides all editing UIs if some of
    * visible UIs are now unnecessary.
    */
-  void HideAnonymousEditingUIsIfUnnecessary();
+  MOZ_CAN_RUN_SCRIPT void HideAnonymousEditingUIsIfUnnecessary();
 
   /**
    * sets the z-index of an element.
@@ -4332,7 +4335,7 @@ class HTMLEditor final : public EditorBase,
   /**
    * hide the grabber if it shown.
    */
-  void HideGrabberInternal();
+  MOZ_CAN_RUN_SCRIPT void HideGrabberInternal();
 
   /**
    * CreateGrabberInternal() creates a grabber for moving aParentContent.
