@@ -41,12 +41,13 @@ export class GuardianClient {
    * Checks the current user's FxA account to see if it is linked to the Guardian service.
    * This should be used before attempting to check Entitlement info.
    *
+   * @param { boolean } onlyCached - if true only the cached clients will be checked.
    * @returns {Promise<boolean>}
    *  - True: The user is linked to the Guardian service, they might be a proxy user or have/had a VPN-Subscription.
    *          This needs to be followed up with a call to `fetchUserInfo()` to check if they are a proxy user.
    *  - False: The user is not linked to the Guardian service, they cannot be a proxy user.
    */
-  async isLinkedToGuardian() {
+  async isLinkedToGuardian(onlyCached = false) {
     const guardian_clientId = CLIENT_ID_MAP[this.#successURL.origin];
     if (!guardian_clientId) {
       throw new Error(
@@ -56,6 +57,9 @@ export class GuardianClient {
     const cached_clients = await lazy.fxAccounts.listAttachedOAuthClients();
     if (cached_clients.some(client => client.id === guardian_clientId)) {
       return true;
+    }
+    if (onlyCached) {
+      return false;
     }
     // If we don't have the client in the cache, we refresh it, just to be sure.
     const refreshed_clients =
