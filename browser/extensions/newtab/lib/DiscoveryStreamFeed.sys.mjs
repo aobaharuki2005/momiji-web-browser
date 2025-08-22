@@ -801,14 +801,6 @@ export class DiscoveryStreamFeed {
 
     pocketConfig.pocketStoriesHeadlineId = pocketStoriesHeadlineId;
 
-    let spocMessageVariant = "";
-    if (
-      pocketConfig.spocMessageVariant === "variant-a" ||
-      pocketConfig.spocMessageVariant === "variant-b"
-    ) {
-      spocMessageVariant = pocketConfig.spocMessageVariant;
-    }
-
     const prepConfArr = arr => {
       return arr
         ?.split(",")
@@ -876,9 +868,6 @@ export class DiscoveryStreamFeed {
       // For now button variants are for experimentation and English only.
       ctaButtonSponsors: this.locale.startsWith("en-") ? ctaButtonSponsors : [],
       ctaButtonVariant: this.locale.startsWith("en-") ? ctaButtonVariant : "",
-      spocMessageVariant: this.locale.startsWith("en-")
-        ? spocMessageVariant
-        : "",
       pocketStoriesHeadlineId: pocketConfig.pocketStoriesHeadlineId,
       widgetsEnabled,
     });
@@ -3072,7 +3061,6 @@ export class DiscoveryStreamFeed {
      `compactGrid` Reduce the number of pixels between the Pocket cards.
      `ctaButtonSponsors` An array of sponsors we want to show a cta button on the card for.
      `ctaButtonVariant` Sets the variant for the cta sponsor button.
-     `spocMessageVariant` Sets the variant for the sponsor message dialog.
 */
 getHardcodedLayout = ({
   spocsUrl = SPOCS_URL,
@@ -3092,7 +3080,6 @@ getHardcodedLayout = ({
   compactGrid = false,
   ctaButtonSponsors = [],
   ctaButtonVariant = "",
-  spocMessageVariant = "",
   pocketStoriesHeadlineId = "newtab-section-header-stories",
   widgetsEnabled = false,
 }) => ({
@@ -3149,9 +3136,6 @@ getHardcodedLayout = ({
             link_url: "",
             icon: "chrome://global/skin/icons/pocket.svg",
           },
-          properties: {
-            spocMessageVariant,
-          },
           styles: {
             ".ds-message": "margin-block-end: -20px",
           },
@@ -3166,7 +3150,6 @@ getHardcodedLayout = ({
             compactGrid,
             ctaButtonSponsors,
             ctaButtonVariant,
-            spocMessageVariant,
           },
           widgets: {
             positions: widgetPositions.map(position => {

@@ -558,21 +558,12 @@ export class BaseContent extends React.PureComponent {
     const { showTopicSelection } = DiscoveryStream;
     const mayShowTopicSelection =
       showTopicSelection && prefs["discoverystream.topicSelection.enabled"];
-    const { pocketConfig } = prefs;
 
     const isDiscoveryStream =
       props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     let filteredSections = props.Sections.filter(
       section => section.id !== "topstories"
     );
-
-    let spocMessageVariant = "";
-    if (
-      props.App.locale?.startsWith("en-") &&
-      pocketConfig?.spocMessageVariant === "variant-c"
-    ) {
-      spocMessageVariant = pocketConfig.spocMessageVariant;
-    }
 
     const pocketEnabled =
       prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
@@ -592,11 +583,9 @@ export class BaseContent extends React.PureComponent {
     };
 
     const pocketRegion = prefs["feeds.system.topstories"];
-    const mayHaveSponsoredStories = prefs["system.showSponsored"];
     const mayHaveInferredPersonalization =
       prefs[PREF_INFERRED_PERSONALIZATION_SYSTEM];
     const mayHaveWeather = prefs["system.showWeather"];
-    const { mayHaveSponsoredTopSites } = prefs;
     const supportUrl = prefs["support.url"];
 
     // Widgets experiment pref check
@@ -720,15 +709,12 @@ export class BaseContent extends React.PureComponent {
             activeWallpaper={activeWallpaper}
             pocketRegion={pocketRegion}
             mayHaveTopicSections={mayHavePersonalizedTopicSections}
-            mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
-            mayHaveSponsoredStories={mayHaveSponsoredStories}
             mayHaveInferredPersonalization={mayHaveInferredPersonalization}
             mayHaveWeather={mayHaveWeather}
             mayHaveTrendingSearch={mayHaveTrendingSearch}
             mayHaveWidgets={mayHaveWidgets}
             mayHaveTimerWidget={mayHaveTimerWidget}
             mayHaveListsWidget={mayHaveListsWidget}
-            spocMessageVariant={spocMessageVariant}
             showing={customizeMenuVisible}
           />
           {this.shouldShowOMCHighlight("CustomWallpaperHighlight") && (
@@ -795,7 +781,6 @@ export class BaseContent extends React.PureComponent {
                 <ErrorBoundary className="borderless-error">
                   <DiscoveryStreamBase
                     locale={props.App.locale}
-                    mayHaveSponsoredStories={mayHaveSponsoredStories}
                     firstVisibleTimestamp={this.state.firstVisibleTimestamp}
                   />
                 </ErrorBoundary>

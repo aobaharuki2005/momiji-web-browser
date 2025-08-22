@@ -2134,7 +2134,7 @@ add_task(async function test_handleDiscoveryStreamUserEvent_tooltip_click() {
   let sandbox = sinon.createSandbox();
   let instance = new TelemetryFeed();
   Services.fog.testResetFOG();
-  const feature = "SPONSORED_CONTENT_INFO";
+  const feature = "FEATURE_HIGHLIGHT_DEFAULT";
   let action = actionCreators.DiscoveryStreamUserEvent({
     event: "CLICK",
     source: "FEATURE_HIGHLIGHT",

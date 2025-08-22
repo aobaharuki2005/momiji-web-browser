@@ -8354,36 +8354,6 @@ main section {
   margin-block-end: var(--space-xsmall);
 }
 
-.sponsored-content-highlight {
-  float: inline-end;
-}
-.sponsored-content-highlight .sponsored-message-icon {
-  background-image: url("chrome://newtab/content/data/content/assets/sponsor-message-icon.svg");
-  background-size: 18px;
-  height: 18px;
-  width: 18px;
-}
-.sponsored-content-highlight .icon-help {
-  cursor: pointer;
-  height: 20px;
-  width: 20px;
-  background-size: 20px;
-  color: var(--icon-color);
-  vertical-align: text-bottom;
-}
-.lightWallpaper .sponsored-content-highlight .icon-help {
-  color-scheme: light;
-}
-.darkWallpaper .sponsored-content-highlight .icon-help {
-  color-scheme: dark;
-}
-.sponsored-content-highlight .feature-highlight-modal.inset-inline-start::after {
-  margin-inline-end: var(--space-medium);
-}
-.sponsored-content-highlight .feature-highlight-modal.inset-inline-end::after {
-  margin-inline-start: var(--space-small);
-}
-
 .wallpaper-feature-highlight .feature-highlight .feature-highlight-modal {
   --arrow-size: 24px;
   width: auto;

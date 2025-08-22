@@ -9,8 +9,6 @@ const DEFAULT_PROPS = {
     topSitesEnabled: true,
   },
   enabledWidgets: {},
-  mayHaveSponsoredTopSites: true,
-  mayHaveSponsoredStories: true,
   mayHaveWeather: true,
   pocketRegion: true,
   dispatch: sinon.stub(),
