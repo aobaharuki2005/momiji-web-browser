@@ -108,16 +108,29 @@ struct NavigationAPIMethodTracker final : public nsISupports {
     CleanUp();
   }
 
+  // https://html.spec.whatwg.org/#navigation-api-method-tracker-derived-result
+  void CreateResult(NavigationResult& aResult) {
+    // A navigation API method tracker-derived result for a navigation API
+    // method tracker is a NavigationResult dictionary instance given by
+    // «[ "committed" → apiMethodTracker's committed promise,
+    //    "finished" → apiMethodTracker's finished promise ]».
+    aResult.mCommitted.Reset();
+    aResult.mCommitted.Construct(OwningNonNull<Promise>(*mCommittedPromise));
+    aResult.mFinished.Reset();
+    aResult.mFinished.Construct(OwningNonNull<Promise>(*mFinishedPromise));
+  }
+
   RefPtr<Navigation> mNavigationObject;
   Maybe<nsID> mKey;
   JS::Heap<JS::Value> mInfo;
+
+ private:
+  ~NavigationAPIMethodTracker() { mozilla::DropJSObjects(this); };
+
   RefPtr<nsIStructuredCloneContainer> mSerializedState;
   RefPtr<NavigationHistoryEntry> mCommittedToEntry;
   RefPtr<Promise> mCommittedPromise;
   RefPtr<Promise> mFinishedPromise;
-
- private:
-  ~NavigationAPIMethodTracker() { mozilla::DropJSObjects(this); };
 };
 
 NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(NavigationAPIMethodTracker,
@@ -385,22 +398,6 @@ void Navigation::SetEarlyErrorResult(JSContext* aCx, NavigationResult& aResult,
   aResult.mFinished.Value()->MaybeReject(rootedExceptionValue);
 }
 
-// https://html.spec.whatwg.org/#navigation-api-method-tracker-derived-result
-static void CreateResultFromAPIMethodTracker(
-    NavigationAPIMethodTracker* aApiMethodTracker, NavigationResult& aResult) {
-  // A navigation API method tracker-derived result for a navigation API
-  // method tracker is a NavigationResult dictionary instance given by
-  // «[ "committed" → apiMethodTracker's committed promise,
-  //    "finished" → apiMethodTracker's finished promise ]».
-  MOZ_ASSERT(aApiMethodTracker);
-  aResult.mCommitted.Reset();
-  aResult.mCommitted.Construct(
-      OwningNonNull<Promise>(*aApiMethodTracker->mCommittedPromise));
-  aResult.mFinished.Reset();
-  aResult.mFinished.Construct(
-      OwningNonNull<Promise>(*aApiMethodTracker->mFinishedPromise));
-}
-
 bool Navigation::CheckIfDocumentIsFullyActiveAndMaybeSetEarlyErrorResult(
     JSContext* aCx, const Document* aDocument,
     NavigationResult& aResult) const {
@@ -560,7 +557,7 @@ void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
 
   // 14. Return a navigation API method tracker-derived result for
   //     apiMethodTracker.
-  CreateResultFromAPIMethodTracker(apiMethodTracker, aResult);
+  apiMethodTracker->CreateResult(aResult);
 }
 
 // https://html.spec.whatwg.org/#dom-navigation-reload
@@ -623,7 +620,7 @@ void Navigation::Reload(JSContext* aCx, const NavigationReloadOptions& aOptions,
 
   // 10. Return a navigation API method tracker-derived result for
   //     apiMethodTracker.
-  CreateResultFromAPIMethodTracker(apiMethodTracker, aResult);
+  apiMethodTracker->CreateResult(aResult);
 }
 
 namespace {
