@@ -29,6 +29,7 @@ add_task(async function user_toggle_on_and_off() {
   );
 
   lazy.IPProtectionService.isSignedIn = true;
+  await putServerInRemoteSettings();
 
   let panelShownPromise = waitForPanelEvent(document, "popupshown");
   let panelInitPromise = BrowserTestUtils.waitForEvent(
@@ -138,6 +139,7 @@ add_task(async function toggle_off_on_shutdown() {
   content.requestUpdate();
   await content.updateComplete;
   lazy.IPProtectionService.isSignedIn = true;
+  await putServerInRemoteSettings();
 
   let toggle = content.connectionToggleEl;
   Assert.ok(toggle, "Status card connection toggle should be present");
@@ -189,6 +191,7 @@ add_task(async function click_upgrade_button() {
   );
 
   lazy.IPProtectionService.isSignedIn = true;
+  await putServerInRemoteSettings();
 
   let panelShownPromise = waitForPanelEvent(document, "popupshown");
   let panelInitPromise = BrowserTestUtils.waitForEvent(

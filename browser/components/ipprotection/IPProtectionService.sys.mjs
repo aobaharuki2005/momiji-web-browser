@@ -71,12 +71,15 @@ class IPProtectionServiceSingleton extends EventTarget {
   isSubscribed = null;
   hasProxyPass = null;
   location = null;
+  /**@type {import("./IPPChannelFilter.sys.mjs").IPPChannelFilter | null} */
+  connection = null;
 
   guardian = null;
   #entitlement = null;
   #pass = null;
   #inited = false;
   #hasWidget = false;
+  #usageObserver = null;
 
   constructor() {
     super();
@@ -143,8 +146,6 @@ class IPProtectionServiceSingleton extends EventTarget {
   /**
    * Start the proxy if the user is eligible.
    *
-   * TODO: Add logic to start the proxy connection.
-   *
    * @param {boolean} userAction
    * True if started by user action, false if system action
    */
@@ -166,15 +167,24 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
 
     this.location = await lazy.getDefaultLocation();
-    // eslint-disable-next-line no-unused-vars
-    const _server = await lazy.selectServer(this.location?.city);
+    const server = await lazy.selectServer(this.location?.city);
+    if (this.connection?.active) {
+      this.connection.stop();
+    }
+
+    this.connection = lazy.IPPChannelFilter.create(
+      this.#pass.asBearerToken(),
+      server.hostname,
+      server.port
+    );
+    this.connection.start();
 
     this.isActive = true;
     this.activatedAt = Cu.now();
 
     this.usageObserver.start();
-    // TODO: call usageObeserver.addIsolationKey(connection.isolationKey);
-    // To make sure the proxied channels are tracked.
+    this.usageObserver.addIsolationKey(this.connection.isolationKey);
+
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Started", {
         bubbles: true,
@@ -193,8 +203,6 @@ class IPProtectionServiceSingleton extends EventTarget {
   /**
    * Stops the proxy.
    *
-   * TODO: Add logic to stop the proxy connection.
-   *
    * @param {boolean} userAction
    * True if started by user action, false if system action
    */
@@ -211,6 +219,8 @@ class IPProtectionServiceSingleton extends EventTarget {
     });
 
     this.activatedAt = null;
+    this.connection?.stop();
+    this.connection = null;
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Stopped", {
         bubbles: true,
@@ -553,14 +563,12 @@ class IPProtectionServiceSingleton extends EventTarget {
   async startLoginFlow(browser) {
     return lazy.SpecialMessageActions.fxaSignInFlow(SIGNIN_DATA, browser);
   }
-
   get usageObserver() {
     if (!this.#usageObserver) {
       this.#usageObserver = new lazy.IPProtectionUsage();
     }
     return this.#usageObserver;
   }
-  #usageObserver = null;
 }
 
 const IPProtectionService = new IPProtectionServiceSingleton();

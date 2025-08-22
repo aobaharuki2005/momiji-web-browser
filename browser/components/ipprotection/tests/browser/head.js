@@ -29,6 +29,13 @@ ChromeUtils.defineESModuleGetters(this, {
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 });
 
+const { ProxyPass } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/GuardianClient.sys.mjs"
+);
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
+);
+
 // Adapted from devtools/client/performance-new/test/browser/helpers.js
 function waitForPanelEvent(document, eventName) {
   return BrowserTestUtils.waitForEvent(document, eventName, false, event => {
@@ -212,9 +219,7 @@ let DEFAULT_SERVICE_STATUS = {
   proxyPass: {
     status: 200,
     error: undefined,
-    pass: {
-      isValid: () => true,
-    },
+    pass: makePass(),
   },
 };
 /* exported DEFAULT_SERVICE_STATUS */
@@ -234,6 +239,7 @@ add_setup(async function setupVPN() {
 
   setupService();
 
+  await putServerInRemoteSettings(DEFAULT_SERVICE_STATUS.serverList);
   IPProtectionService.init();
 
   if (DEFAULT_EXPERIMENT) {
@@ -341,3 +347,36 @@ async function cleanupExperiment() {
   }
 }
 /* exported cleanupExperiment */
+
+function makePass() {
+  const token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
+  return new ProxyPass(token, Date.now() + 31536000 * 1000);
+}
+/* exported makePass */
+
+async function putServerInRemoteSettings(
+  server = {
+    hostname: "test1.example.com",
+    port: 443,
+    quarantined: false,
+  }
+) {
+  const TEST_US_CITY = {
+    name: "Test City",
+    code: "TC",
+    servers: [server],
+  };
+  const US = {
+    name: "United States",
+    code: "US",
+    cities: [TEST_US_CITY],
+  };
+  const client = RemoteSettings("vpn-serverlist");
+  if (client && client.db) {
+    await client.db.clear();
+    await client.db.create(US);
+    await client.db.importChanges({}, Date.now());
+  }
+}
+/* exported putServerInRemoteSettings */

@@ -7,10 +7,6 @@ const { getDefaultLocation, selectServer } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs"
 );
 
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
-);
-
 const COLLECTION_NAME = "vpn-serverlist";
 
 const TEST_SERVER_1 = {
