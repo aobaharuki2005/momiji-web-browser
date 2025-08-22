@@ -476,8 +476,10 @@ void WaylandMonitor::Finish() {
   LOG_SCREEN("WaylandMonitor::Finish() [%p]", this);
 
   MozClearPointer(mOutput, wp_color_management_output_v1_destroy);
+  MozClearPointer(mDescription, wp_image_description_v1_destroy);
 
-  // We need to wait with WaylandMonitor
+  // We need to wait with WaylandMonitor release until mOutput/mDescription
+  // are deleted.
   AddRef();
   static const struct wl_callback_listener listener{
       [](void* aData, struct wl_callback* callback, uint32_t time) {
@@ -486,8 +488,6 @@ void WaylandMonitor::Finish() {
       }};
   wl_callback_add_listener(wl_display_sync(WaylandDisplayGetWLDisplay()),
                            &listener, this);
-
-  MozClearPointer(mDescription, wp_image_description_v1_destroy);
   mScreenGetter = nullptr;
 }
 
