@@ -2811,10 +2811,6 @@ main section {
   }
 }
 
-.has-weather.no-search .outer-wrapper {
-  padding-block-start: var(--space-xlarge);
-}
-
 .has-mobile-download-promo {
   --mobile-download-promo-width: var(--space-xxlarge);
 }
@@ -2834,9 +2830,6 @@ main section {
   }
 }
 
-.has-weather.has-search .outer-wrapper:not(.only-search) {
-  padding-block-start: var(--space-xlarge);
-}
 .has-weather.has-search .weatherDetailedSummaryRow {
   display: block;
 }

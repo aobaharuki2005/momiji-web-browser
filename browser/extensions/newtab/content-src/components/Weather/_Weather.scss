@@ -120,13 +120,6 @@
   }
 }
 
-// Edge case: users with weather enabled/search disabled
-.has-weather.no-search {
-  .outer-wrapper {
-    padding-block-start: var(--space-xlarge);
-  }
-}
-
 // Bug 1959189 - Show mobile QR code modal toggle next to weather widget
 .has-mobile-download-promo {
   --mobile-download-promo-width: var(--space-xxlarge);
@@ -151,10 +144,6 @@
 
 // Edge case: users with weather enabled/search enabled
 .has-weather.has-search {
-  .outer-wrapper:not(.only-search) {
-    padding-block-start: var(--space-xlarge);
-  }
-
   // Edge case: medium screens where we hide the weather icon and
   // detail info row for overlap issues
   .weatherDetailedSummaryRow {
