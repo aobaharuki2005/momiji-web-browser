@@ -735,10 +735,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone),
       mIsThirdPartyContext(rhs.mIsThirdPartyContext),
       mIsThirdPartyContextToTopWindow(rhs.mIsThirdPartyContextToTopWindow),
-      mIsOn3PCBExceptionList(rhs.mIsOn3PCBExceptionList),
-      mIsFormSubmission(rhs.mIsFormSubmission),
-      mIsGETRequest(rhs.mIsGETRequest),
-      mSendCSPViolationEvents(rhs.mSendCSPViolationEvents),
       mOriginAttributes(rhs.mOriginAttributes),
       mRedirectChainIncludingInternalRedirects(
           rhs.mRedirectChainIncludingInternalRedirects.Clone()),
@@ -814,8 +810,7 @@ LoadInfo::LoadInfo(
         bool aInitialSecurityCheckDone,
     bool aIsThirdPartyContext,
     const Maybe<bool>& aIsThirdPartyContextToTopWindow,
-    bool aIsOn3PCBExceptionList, bool aIsFormSubmission, bool aIsGETRequest,
-    bool aSendCSPViolationEvents, const OriginAttributes& aOriginAttributes,
+    const OriginAttributes& aOriginAttributes,
     RedirectHistoryArray&& aRedirectChainIncludingInternalRedirects,
     RedirectHistoryArray&& aRedirectChain,
     nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
@@ -878,10 +873,6 @@ LoadInfo::LoadInfo(
           mInitialSecurityCheckDone(aInitialSecurityCheckDone),
       mIsThirdPartyContext(aIsThirdPartyContext),
       mIsThirdPartyContextToTopWindow(aIsThirdPartyContextToTopWindow),
-      mIsOn3PCBExceptionList(aIsOn3PCBExceptionList),
-      mIsFormSubmission(aIsFormSubmission),
-      mIsGETRequest(aIsGETRequest),
-      mSendCSPViolationEvents(aSendCSPViolationEvents),
       mOriginAttributes(aOriginAttributes),
       mRedirectChainIncludingInternalRedirects(
           std::move(aRedirectChainIncludingInternalRedirects)),
@@ -1247,18 +1238,6 @@ LoadInfo::SetIsThirdPartyContextToTopWindow(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-LoadInfo::GetIsOn3PCBExceptionList(bool* aIsOn3PCBExceptionList) {
-  *aIsOn3PCBExceptionList = mIsOn3PCBExceptionList;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsOn3PCBExceptionList(bool aIsOn3PCBExceptionList) {
-  mIsOn3PCBExceptionList = aIsOn3PCBExceptionList;
-  return NS_OK;
-}
-
 static const uint32_t sCookiePolicyMask =
     nsILoadInfo::SEC_COOKIES_DEFAULT | nsILoadInfo::SEC_COOKIES_INCLUDE |
     nsILoadInfo::SEC_COOKIES_SAME_ORIGIN | nsILoadInfo::SEC_COOKIES_OMIT;
@@ -1472,42 +1451,6 @@ LoadInfo::GetDontFollowRedirects(bool* aResult) {
 NS_IMETHODIMP
 LoadInfo::GetLoadErrorPage(bool* aResult) {
   *aResult = (mSecurityFlags & nsILoadInfo::SEC_LOAD_ERROR_PAGE);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsFormSubmission(bool* aResult) {
-  *aResult = mIsFormSubmission;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsFormSubmission(bool aValue) {
-  mIsFormSubmission = aValue;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsGETRequest(bool* aResult) {
-  *aResult = mIsGETRequest;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsGETRequest(bool aValue) {
-  mIsGETRequest = aValue;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetSendCSPViolationEvents(bool* aResult) {
-  *aResult = mSendCSPViolationEvents;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetSendCSPViolationEvents(bool aValue) {
-  mSendCSPViolationEvents = aValue;
   return NS_OK;
 }
 

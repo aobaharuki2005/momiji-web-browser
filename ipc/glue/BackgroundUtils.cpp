@@ -876,8 +876,6 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
 
           loadInfoArgs.initialSecurityCheckDone(),
       loadInfoArgs.isInThirdPartyContext(), isThirdPartyContextToTopWindow,
-      loadInfoArgs.isOn3PCBExceptionList(), loadInfoArgs.isFormSubmission(),
-      loadInfoArgs.isGETRequest(), loadInfoArgs.sendCSPViolationEvents(),
       loadInfoArgs.originAttributes(),
       std::move(redirectChainIncludingInternalRedirects),
       std::move(redirectChain), std::move(ancestorPrincipals),
