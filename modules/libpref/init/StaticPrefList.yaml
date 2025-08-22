@@ -16125,6 +16125,11 @@
   value: true
   mirror: always
 
+- name: privacy.fingerprintingProtection.testing
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Enable/Disable fingerprinting protections that are enabled in
 # Enhanced Tracking Protection Standard mode.
 # bFPP cannot be enabled in only PBM, it is either enabled
