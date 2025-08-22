@@ -2678,6 +2678,11 @@ export class UrlbarInput {
         );
       case lazy.UrlbarUtils.RESULT_TYPE.RESTRICT:
         return result.payload.autofillKeyword + " ";
+      case lazy.UrlbarUtils.RESULT_TYPE.TIP:
+        if (element?.dataset.input) {
+          return element.dataset.input;
+        }
+        break;
     }
 
     // Always respect a set urlOverride property.

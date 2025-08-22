@@ -1727,7 +1727,16 @@ export class UrlbarView {
 
   #addRowButton(
     item,
-    { name, command, l10n, url, classList = [], attributes = {}, menu = null }
+    {
+      name,
+      command,
+      l10n,
+      url,
+      classList = [],
+      attributes = {},
+      menu = null,
+      input = null,
+    }
   ) {
     let button = this.#createElement("span");
     this.#updateElementForDynamicType(button, {
@@ -1744,6 +1753,7 @@ export class UrlbarView {
         name,
         command,
         url,
+        input,
       },
     });
 

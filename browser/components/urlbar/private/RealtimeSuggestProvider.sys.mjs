@@ -223,7 +223,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       case "merino":
         return this.makeMerinoResult(queryContext, suggestion, searchString);
       case "rust":
-        return this.makeOptInResult(suggestion);
+        return this.makeOptInResult(queryContext, suggestion);
     }
     return null;
   }
@@ -255,7 +255,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     );
   }
 
-  makeOptInResult(suggestion) {
+  makeOptInResult(queryContext, suggestion) {
     let notNowTypes = lazy.UrlbarPrefs.get(
       "quicksuggest.realtimeOptIn.notNowTypes"
     );
@@ -291,6 +291,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
                 id: "urlbar-result-realtime-opt-in-allow",
                 cacheable: true,
               },
+              input: queryContext.searchString,
             },
             {
               ...splitButtonMain,
