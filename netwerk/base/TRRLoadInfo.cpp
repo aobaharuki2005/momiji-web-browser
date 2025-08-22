@@ -375,11 +375,6 @@ TRRLoadInfo::SetWorkerAssociatedBrowsingContextID(uint64_t aResult) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetFrameBrowsingContextID(uint64_t* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetTargetBrowsingContextID(uint64_t* aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

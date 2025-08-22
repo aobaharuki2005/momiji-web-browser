@@ -732,7 +732,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
 
           mWorkerAssociatedBrowsingContextID(
               rhs.mWorkerAssociatedBrowsingContextID),
-      mFrameBrowsingContextID(rhs.mFrameBrowsingContextID),
       mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone),
       mIsThirdPartyContext(rhs.mIsThirdPartyContext),
       mIsThirdPartyContextToTopWindow(rhs.mIsThirdPartyContextToTopWindow),
@@ -812,8 +811,8 @@ LoadInfo::LoadInfo(
     LOADINFO_FOR_EACH_FIELD(DEFINE_PARAMETER, LOADINFO_DUMMY_SETTER)
 #undef DEFINE_PARAMETER
 
-        uint64_t aFrameBrowsingContextID,
-    bool aInitialSecurityCheckDone, bool aIsThirdPartyContext,
+        bool aInitialSecurityCheckDone,
+    bool aIsThirdPartyContext,
     const Maybe<bool>& aIsThirdPartyContextToTopWindow,
     bool aIsOn3PCBExceptionList, bool aIsFormSubmission, bool aIsGETRequest,
     bool aSendCSPViolationEvents, const OriginAttributes& aOriginAttributes,
@@ -876,8 +875,7 @@ LoadInfo::LoadInfo(
       LOADINFO_FOR_EACH_FIELD(DEFINE_INIT, LOADINFO_DUMMY_SETTER)
 #undef DEFINE_INIT
 
-          mFrameBrowsingContextID(aFrameBrowsingContextID),
-      mInitialSecurityCheckDone(aInitialSecurityCheckDone),
+          mInitialSecurityCheckDone(aInitialSecurityCheckDone),
       mIsThirdPartyContext(aIsThirdPartyContext),
       mIsThirdPartyContextToTopWindow(aIsThirdPartyContextToTopWindow),
       mIsOn3PCBExceptionList(aIsOn3PCBExceptionList),
@@ -1553,12 +1551,6 @@ LoadInfo::GetWorkerAssociatedBrowsingContextID(uint64_t* aResult) {
 NS_IMETHODIMP
 LoadInfo::SetWorkerAssociatedBrowsingContextID(uint64_t aID) {
   mWorkerAssociatedBrowsingContextID = aID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetFrameBrowsingContextID(uint64_t* aResult) {
-  *aResult = mFrameBrowsingContextID;
   return NS_OK;
 }
 

@@ -874,8 +874,7 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       LOADINFO_FOR_EACH_FIELD(DEFINE_ARGUMENT, LOADINFO_DUMMY_SETTER)
 #undef DEFINE_ARGUMENT
 
-          loadInfoArgs.frameBrowsingContextID(),
-      loadInfoArgs.initialSecurityCheckDone(),
+          loadInfoArgs.initialSecurityCheckDone(),
       loadInfoArgs.isInThirdPartyContext(), isThirdPartyContextToTopWindow,
       loadInfoArgs.isOn3PCBExceptionList(), loadInfoArgs.isFormSubmission(),
       loadInfoArgs.isGETRequest(), loadInfoArgs.sendCSPViolationEvents(),
