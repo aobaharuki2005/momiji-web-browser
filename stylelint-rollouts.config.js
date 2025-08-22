@@ -19,11 +19,7 @@ module.exports = [
     files: [
       "browser/base/content/sanitizeDialog.css",
       "browser/components/aboutlogins/content/components/confirmation-dialog.css",
-      "browser/components/aboutlogins/content/components/fxaccounts-button.css",
       "browser/components/aboutlogins/content/components/generic-dialog.css",
-      "browser/components/aboutlogins/content/components/login-alert.css",
-      "browser/components/aboutlogins/content/components/login-message-popup.css",
-      "browser/components/aboutlogins/content/components/menu-button.css",
       "browser/components/aboutlogins/content/components/remove-logins-dialog.css",
       "browser/components/aboutwelcome/content-src/aboutwelcome.scss",
       "browser/components/asrouter/content-src/components/ASRouterAdmin/ASRouterAdmin.scss",
