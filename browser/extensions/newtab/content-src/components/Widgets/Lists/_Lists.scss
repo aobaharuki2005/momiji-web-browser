@@ -58,6 +58,10 @@
       inset-block-start: 50%;
       transform: translateY(-50%);
       inset-inline-start: var(--space-xlarge);
+
+      &.icon-disabled {
+        fill: var(--text-color-disabled);
+      }
     }
 
     .add-task-input {
@@ -75,6 +79,12 @@
 
       &:focus::placeholder {
         color: var(--newtab-text-primary-color);
+      }
+
+      &:disabled {
+        background-color: var(--button-background-color-ghost);
+        color: var(--text-color-disabled);
+        outline: var(--border-width) solid var(--border-color-interactive-disabled);
       }
     }
   }
