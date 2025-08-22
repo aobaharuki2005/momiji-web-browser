@@ -83,6 +83,7 @@ xpcshell:
             no-fission:
                 by-test-platform:
                     android-em.*/debug-isolated-process: []
+                    android-em-14.*/debug: []  # Bug 1981209
                     android.*: built-projects
                     linux1804-64.*: ['mozilla-central']
                     linux2404-64.*: ['mozilla-central']
@@ -95,11 +96,13 @@ xpcshell:
             geckoview-no-fission-no-ship:
                 by-test-platform:
                     android-em.*/debug-isolated-process: []
+                    android-em-14.*/debug: []  # Bug 1981209
                     android-em.*: built-projects
                     default: []
             inc-origin-init: []
             default:
                 by-test-platform:
+                    android-em-14.*/debug: []  # Bug 1981209
                     android.*: built-projects
                     .*-wayland.*: []
                     windows.*-asan/opt: []  # No XPCShell on ASAN yet
