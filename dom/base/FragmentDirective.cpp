@@ -15,7 +15,6 @@
 #include "TextDirectiveFinder.h"
 #include "TextDirectiveUtil.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/CycleCollectedUniquePtr.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/dom/BrowsingContext.h"

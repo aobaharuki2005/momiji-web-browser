@@ -48,34 +48,30 @@ inline const ipc::ByteBuf* FromFFI(const ffi::WGPUByteBuf* x) {
 
 }  // namespace webgpu
 
+template <>
+class DefaultDelete<webgpu::ffi::WGPUClient> {
+ public:
+  void operator()(webgpu::ffi::WGPUClient* aPtr) const {
+    webgpu::ffi::wgpu_client_delete(aPtr);
+  }
+};
+
+template <>
+class DefaultDelete<webgpu::ffi::WGPUGlobal> {
+ public:
+  void operator()(webgpu::ffi::WGPUGlobal* aPtr) const {
+    webgpu::ffi::wgpu_server_delete(aPtr);
+  }
+};
+
+template <>
+class DefaultDelete<webgpu::ffi::WGPUMetalSharedEventHandle> {
+ public:
+  void operator()(webgpu::ffi::WGPUMetalSharedEventHandle* aPtr) const {
+    webgpu::ffi::wgpu_server_delete_metal_shared_event(aPtr);
+  }
+};
+
 }  // namespace mozilla
-
-namespace std {
-template <>
-struct default_delete<mozilla::webgpu::ffi::WGPUClient> {
- public:
-  void operator()(mozilla::webgpu::ffi::WGPUClient* aPtr) const {
-    mozilla::webgpu::ffi::wgpu_client_delete(aPtr);
-  }
-};
-
-template <>
-struct default_delete<mozilla::webgpu::ffi::WGPUGlobal> {
- public:
-  void operator()(mozilla::webgpu::ffi::WGPUGlobal* aPtr) const {
-    mozilla::webgpu::ffi::wgpu_server_delete(aPtr);
-  }
-};
-
-template <>
-struct default_delete<mozilla::webgpu::ffi::WGPUMetalSharedEventHandle> {
- public:
-  void operator()(
-      mozilla::webgpu::ffi::WGPUMetalSharedEventHandle* aPtr) const {
-    mozilla::webgpu::ffi::wgpu_server_delete_metal_shared_event(aPtr);
-  }
-};
-
-}  // namespace std
 
 #endif  // WGPU_h

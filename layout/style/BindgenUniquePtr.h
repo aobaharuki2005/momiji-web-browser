@@ -13,6 +13,9 @@
 
 namespace mozilla {
 
+template <typename T>
+class DefaultDelete;
+
 /// <div rustbindgen="true" replaces="mozilla::BindgenUniquePtr">
 template <typename T>
 struct BindgenUniquePtr_Simple {

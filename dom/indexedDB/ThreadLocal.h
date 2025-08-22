@@ -18,7 +18,7 @@ class IDBFactory;
 namespace indexedDB {
 
 class ThreadLocal {
-  friend DefaultDelete<ThreadLocal>;
+  friend class DefaultDelete<ThreadLocal>;
   friend IDBFactory;
 
   LoggingInfo mLoggingInfo;

@@ -165,7 +165,7 @@ class BackgroundChildImpl : public PBackgroundChild {
 };
 
 class BackgroundChildImpl::ThreadLocal final {
-  friend mozilla::DefaultDelete<ThreadLocal>;
+  friend class mozilla::DefaultDelete<ThreadLocal>;
 
  public:
   mozilla::UniquePtr<mozilla::dom::indexedDB::ThreadLocal>

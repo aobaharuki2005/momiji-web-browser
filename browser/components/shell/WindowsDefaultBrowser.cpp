@@ -61,7 +61,7 @@ static bool SettingsAppBelievesConnected() {
 
 bool GetAppRegName(mozilla::UniquePtr<wchar_t[]>& aAppRegName) {
   mozilla::UniquePtr<wchar_t[]> appDirStr;
-  bool success = mozilla::GetInstallDirectory(appDirStr);
+  bool success = GetInstallDirectory(appDirStr);
   if (!success) {
     return success;
   }

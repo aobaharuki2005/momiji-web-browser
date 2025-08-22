@@ -21,18 +21,14 @@ struct RefPtrTraits<intl::ffi::FluentResource> {
   }
 };
 
-}  // namespace mozilla
-
-namespace std {
-
 template <>
-struct default_delete<mozilla::intl::ffi::FluentBundleRc> {
+class DefaultDelete<intl::ffi::FluentBundleRc> {
  public:
-  void operator()(mozilla::intl::ffi::FluentBundleRc* aPtr) const {
+  void operator()(intl::ffi::FluentBundleRc* aPtr) const {
     fluent_bundle_destroy(aPtr);
   }
 };
 
-}  // namespace std
+}  // namespace mozilla
 
 #endif
