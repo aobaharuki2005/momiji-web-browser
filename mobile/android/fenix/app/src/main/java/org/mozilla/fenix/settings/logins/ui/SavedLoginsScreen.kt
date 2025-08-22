@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
@@ -135,12 +136,15 @@ private fun LoginsList(store: LoginsStore) {
             return@Scaffold
         }
 
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             LazyColumn(
                 modifier = Modifier
-                    .weight(1f, false)
                     .padding(paddingValues)
-                    .padding(vertical = 16.dp)
+                    .width(FirefoxTheme.layout.size.containerMaxWidth)
+                    .weight(1f, false)
                     .semantics {
                         collectionInfo =
                             CollectionInfo(rowCount = state.loginItems.size, columnCount = 1)
@@ -163,6 +167,7 @@ private fun LoginsList(store: LoginsStore) {
             }
 
             AddPasswordItem(
+                modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth),
                 onAddPasswordClicked = { store.dispatch(AddLoginAction.InitAdd) },
             )
         }
@@ -171,10 +176,12 @@ private fun LoginsList(store: LoginsStore) {
 
 @Composable
 private fun AddPasswordItem(
+    modifier: Modifier = Modifier,
     onAddPasswordClicked: () -> Unit,
 ) {
     IconListItem(
         label = stringResource(R.string.preferences_logins_add_login_2),
+        modifier = modifier,
         beforeIconPainter = painterResource(R.drawable.ic_new),
         onClick = { onAddPasswordClicked() },
     )
@@ -191,12 +198,14 @@ private fun EmptyList(
         modifier = modifier
             .padding(paddingValues)
             .fillMaxSize(),
-        contentAlignment = Alignment.TopStart,
+        contentAlignment = Alignment.TopCenter,
     ) {
         Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .width(FirefoxTheme.layout.size.containerMaxWidth),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = modifier.padding(16.dp),
         ) {
             Text(
                 text = String.format(
