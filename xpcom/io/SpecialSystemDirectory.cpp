@@ -21,7 +21,6 @@
 #  include <shlobj.h>
 #  include <knownfolders.h>
 #  include <guiddef.h>
-#  include "mozilla/glean/XpcomMetrics.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
 #  include "nsIWindowsRegKey.h"
 
@@ -572,9 +571,6 @@ nsresult GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
       nsresult rv = GetKnownFolder(FOLDERID_RoamingAppData, aFile);
       if (NS_FAILED(rv)) {
         rv = GetRegWindowsAppDataFolder(false, aFile);
-        mozilla::glean::system::special_directory_appdata_fallback
-            .Get("appdata"_ns)
-            .Set(NS_SUCCEEDED(rv));
       }
       return rv;
     }
@@ -582,9 +578,6 @@ nsresult GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
       nsresult rv = GetKnownFolder(FOLDERID_LocalAppData, aFile);
       if (NS_FAILED(rv)) {
         rv = GetRegWindowsAppDataFolder(true, aFile);
-        mozilla::glean::system::special_directory_appdata_fallback
-            .Get("localappdata"_ns)
-            .Set(NS_SUCCEEDED(rv));
       }
       return rv;
     }
