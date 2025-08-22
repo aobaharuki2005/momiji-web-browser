@@ -4,6 +4,12 @@
 
 import { RealtimeSuggestProvider } from "resource:///modules/urlbar/private/RealtimeSuggestProvider.sys.mjs";
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
+});
+
 /**
  * A feature that supports Market suggestions like stocks, indexes, and funds.
  */
@@ -25,12 +31,66 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
       return null;
     }
 
-    return super.makeMerinoResult(queryContext, suggestion, searchString);
+    let engine = lazy.UrlbarSearchUtils.getDefaultEngine(
+      queryContext.isPrivate
+    );
+    if (!engine) {
+      return null;
+    }
+
+    let result = super.makeMerinoResult(queryContext, suggestion, searchString);
+    if (!result) {
+      return null;
+    }
+
+    result.payload.engine = engine.name;
+
+    return result;
   }
 
   getViewTemplate(result) {
     return {
-      children: result.payload.polygon.values.map((v, i) => {
+      children: result.payload.polygon.values.map((_v, i) => ({
+        name: `item_${i}`,
+        tag: "span",
+        classList: ["urlbarView-button", "urlbarView-market-item"],
+        attributes: {
+          selectable: "",
+        },
+        children: [
+          {
+            name: `image_${i}`,
+            tag: "img",
+            classList: ["urlbarView-market-image"],
+          },
+          {
+            tag: "span",
+            classList: ["urlbarView-market-description"],
+            children: [
+              {
+                name: `name_${i}`,
+                tag: "span",
+                classList: ["urlbarView-market-name"],
+              },
+              {
+                name: `todays_change_perc_${i}`,
+                tag: "span",
+              },
+              {
+                name: `last_price_${i}`,
+                tag: "span",
+                classList: ["urlbarView-market-last-price"],
+              },
+            ],
+          },
+        ],
+      })),
+    };
+  }
+
+  getViewUpdate(result) {
+    return Object.fromEntries(
+      result.payload.polygon.values.flatMap((v, i) => {
         let todaysChangePercClassList = [
           "urlbarView-market-todays-change-perc",
         ];
@@ -45,66 +105,30 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
           );
         }
 
-        return {
-          name: "item",
-          tag: "span",
-          classList: ["urlbarView-button"],
-          attributes: {
-            selectable: "",
-            query: v.query,
+        return Object.entries({
+          [`item_${i}`]: {
+            dataset: {
+              query: v.query,
+            },
           },
-          children: [
-            {
-              name: `image_${i}`,
-              tag: "img",
-              classList: ["urlbarView-market-image"],
+          [`image_${i}`]: {
+            attributes: {
+              src: v.image_url || "chrome://global/skin/icons/search-glass.svg",
             },
-            {
-              tag: "span",
-              classList: ["urlbarView-market-description"],
-              children: [
-                {
-                  name: `name_${i}`,
-                  tag: "span",
-                  classList: ["urlbarView-market-name"],
-                },
-                {
-                  name: `todays_change_perc_${i}`,
-                  tag: "span",
-                  classList: todaysChangePercClassList,
-                },
-                {
-                  name: `last_price_${i}`,
-                  tag: "span",
-                  classList: ["urlbarView-market-last-price"],
-                },
-              ],
-            },
-          ],
-        };
-      }),
-    };
-  }
+          },
+          [`name_${i}`]: {
+            textContent: v.name,
+          },
 
-  getViewUpdate(result) {
-    return Object.assign(
-      {},
-      ...result.payload.polygon.values.map((v, i) => ({
-        [`image_${i}`]: {
-          attributes: {
-            src: v.image_url || "chrome://global/skin/icons/search-glass.svg",
+          [`todays_change_perc_${i}`]: {
+            textContent: `${v.todays_change_perc}%`,
+            classList: todaysChangePercClassList,
           },
-        },
-        [`name_${i}`]: {
-          textContent: v.name,
-        },
-        [`todays_change_perc_${i}`]: {
-          textContent: `${v.todays_change_perc}%`,
-        },
-        [`last_price_${i}`]: {
-          textContent: v.last_price,
-        },
-      }))
+          [`last_price_${i}`]: {
+            textContent: v.last_price,
+          },
+        });
+      })
     );
   }
 }

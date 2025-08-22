@@ -1054,6 +1054,7 @@ export class UrlbarInput {
       });
       return;
     }
+
     // When a one-off is selected, we restyle heuristic results to look like
     // search results. In the unlikely event that they are clicked, instead of
     // picking the results as usual, we confirm search mode, same as if the user
@@ -1093,6 +1094,7 @@ export class UrlbarInput {
     let isCanonized = this.setValueFromResult({
       result,
       event,
+      element,
       urlOverride: resultUrl,
     });
     let where = this._whereToOpen(event);
@@ -1130,7 +1132,7 @@ export class UrlbarInput {
 
     let { url, postData } = resultUrl
       ? { url: resultUrl, postData: null }
-      : lazy.UrlbarUtils.getUrlFromResult(result);
+      : lazy.UrlbarUtils.getUrlFromResult(result, { element });
     openParams.postData = postData;
 
     switch (result.type) {
@@ -1491,11 +1493,20 @@ export class UrlbarInput {
    *   The event that picked the result.
    * @param {string} [options.urlOverride]
    *   Normally the URL is taken from `result.payload.url`, but if `urlOverride`
-   *   is specified, it's used instead.
+   *   is specified, it's used instead. See `#getValueFromResult()`.
+   * @param {Element} [options.element]
+   *   The element that was selected or picked, if available. For results that
+   *   have multiple selectable children, the value may be taken from a child
+   *   element rather than the result. See `#getValueFromResult()`.
    * @returns {boolean}
    *   Whether the value has been canonized
    */
-  setValueFromResult({ result = null, event = null, urlOverride = null } = {}) {
+  setValueFromResult({
+    result = null,
+    event = null,
+    urlOverride = null,
+    element = null,
+  } = {}) {
     // Usually this is set by a previous input event, but in certain cases, like
     // when opening Top Sites on a loaded page, it wouldn't happen. To avoid
     // confusing the user, we always enforce it when a result changes our value.
@@ -1579,7 +1590,8 @@ export class UrlbarInput {
     }
 
     if (!result.autofill) {
-      this._setValue(this.#getValueFromResult(result, urlOverride), {
+      let value = this.#getValueFromResult(result, { urlOverride, element });
+      this._setValue(value, {
         actionType: this.#getActionTypeFromResult(result),
       });
     }
@@ -2632,12 +2644,18 @@ export class UrlbarInput {
    *
    * @param {UrlbarResult} result
    *   The result to extract the value from.
-   * @param {string | null} urlOverride
+   * @param {object} options
+   *   Options object.
+   * @param {string} [options.urlOverride]
    *   For results normally returning a url string, this allows to override
    *   it. A blank string may passed-in to clear the input.
+   * @param {Element} [options.element]
+   *   The element that was selected or picked, if available. For results that
+   *   have multiple selectable children, the value may be taken from a child
+   *   element rather than the result.
    * @returns {string} The value.
    */
-  #getValueFromResult(result, urlOverride = null) {
+  #getValueFromResult(result, { urlOverride = null, element = null } = {}) {
     switch (result.type) {
       case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
         return result.payload.input;
@@ -2652,7 +2670,12 @@ export class UrlbarInput {
       case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX:
         return result.payload.content;
       case lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC:
-        return result.payload.input || "";
+        return (
+          element?.dataset.query ||
+          result.payload.input ||
+          result.payload.query ||
+          ""
+        );
       case lazy.UrlbarUtils.RESULT_TYPE.RESTRICT:
         return result.payload.autofillKeyword + " ";
     }
