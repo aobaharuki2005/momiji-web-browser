@@ -745,8 +745,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
       mCspNonce(rhs.mCspNonce),
       mIntegrityMetadata(rhs.mIntegrityMetadata),
-      mIsInDevToolsContext(rhs.mIsInDevToolsContext),
-      mParserCreatedScript(rhs.mParserCreatedScript),
       mRequestMode(rhs.mRequestMode),
       mStoragePermission(rhs.mStoragePermission),
       mParentIPAddressSpace(rhs.mParentIPAddressSpace),
@@ -804,7 +802,6 @@ LoadInfo::LoadInfo(
     const nsTArray<nsCString>& aCorsUnsafeHeaders,
     bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
     const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
-    bool aIsInDevToolsContext, bool aParserCreatedScript,
     Maybe<RequestMode> aRequestMode,
     nsILoadInfo::StoragePermissionState aStoragePermission,
     nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
@@ -863,8 +860,6 @@ LoadInfo::LoadInfo(
       mCspNonce(aCspNonce),
       mIntegrityMetadata(aIntegrityMetadata),
       mIsSameDocumentNavigation(aIsSameDocumentNavigation),
-      mIsInDevToolsContext(aIsInDevToolsContext),
-      mParserCreatedScript(aParserCreatedScript),
       mRequestMode(aRequestMode),
       mStoragePermission(aStoragePermission),
       mParentIPAddressSpace(aParentIPAddressSpace),
@@ -1918,30 +1913,6 @@ LoadInfo::GetIsUserTriggeredSave(bool* aIsUserTriggeredSave) {
 NS_IMETHODIMP
 LoadInfo::SetIsUserTriggeredSave(bool aIsUserTriggeredSave) {
   mIsUserTriggeredSave = aIsUserTriggeredSave;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsInDevToolsContext(bool* aIsInDevToolsContext) {
-  *aIsInDevToolsContext = mIsInDevToolsContext;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsInDevToolsContext(bool aIsInDevToolsContext) {
-  mIsInDevToolsContext = aIsInDevToolsContext;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetParserCreatedScript(bool* aParserCreatedScript) {
-  *aParserCreatedScript = mParserCreatedScript;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetParserCreatedScript(bool aParserCreatedScript) {
-  mParserCreatedScript = aParserCreatedScript;
   return NS_OK;
 }
 

@@ -148,7 +148,13 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
                                                                                \
   GETTER(bool, AllowDeprecatedSystemRequests, allowDeprecatedSystemRequests,   \
          false)                                                                \
-  SETTER(bool, AllowDeprecatedSystemRequests)
+  SETTER(bool, AllowDeprecatedSystemRequests)                                  \
+                                                                               \
+  GETTER(bool, IsInDevToolsContext, isInDevToolsContext, false)                \
+  SETTER(bool, IsInDevToolsContext)                                            \
+                                                                               \
+  GETTER(bool, ParserCreatedScript, parserCreatedScript, false)                \
+  SETTER(bool, ParserCreatedScript)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -355,7 +361,6 @@ class LoadInfo final : public nsILoadInfo {
            const nsTArray<nsCString>& aCorsUnsafeHeaders,
            bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
            const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
-           bool aIsInDevToolsContext, bool aParserCreatedScript,
            Maybe<dom::RequestMode> aRequestMode,
            nsILoadInfo::StoragePermissionState aStoragePermission,
            nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
@@ -464,8 +469,6 @@ class LoadInfo final : public nsILoadInfo {
   nsString mIntegrityMetadata;
   bool mIsSameDocumentNavigation = false;
   bool mIsUserTriggeredSave = false;
-  bool mIsInDevToolsContext = false;
-  bool mParserCreatedScript = false;
   Maybe<dom::RequestMode> mRequestMode;
   nsILoadInfo::StoragePermissionState mStoragePermission =
       nsILoadInfo::NoStoragePermission;
