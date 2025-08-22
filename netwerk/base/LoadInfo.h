@@ -129,7 +129,14 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
   SETTER(bool, NeedForCheckingAntiTrackingHeuristic)                           \
                                                                                \
   GETTER(bool, SkipContentSniffing, skipContentSniffing, false)                \
-  SETTER(bool, SkipContentSniffing)
+  SETTER(bool, SkipContentSniffing)                                            \
+                                                                               \
+  GETTER(uint32_t, HttpsOnlyStatus, httpsOnlyStatus,                           \
+         nsILoadInfo::HTTPS_ONLY_UNINITIALIZED)                                \
+  SETTER(uint32_t, HttpsOnlyStatus)                                            \
+                                                                               \
+  GETTER(bool, HstsStatus, httpsOnlyStatus, false)                             \
+  SETTER(bool, HstsStatus)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -335,8 +342,8 @@ class LoadInfo final : public nsILoadInfo {
            const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
            const nsTArray<nsCString>& aCorsUnsafeHeaders,
            bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
-           const nsAString& aIntegrityMetadata, uint32_t aHttpsOnlyStatus,
-           bool aHstsStatus, bool aHasValidUserGestureActivation,
+           const nsAString& aIntegrityMetadata,
+           bool aHasValidUserGestureActivation,
            bool aTextDirectiveUserActivation, bool aIsSameDocumentNavigation,
            bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
            bool aParserCreatedScript, Maybe<dom::RequestMode> aRequestMode,
@@ -445,8 +452,6 @@ class LoadInfo final : public nsILoadInfo {
   bool mLoadTriggeredFromExternal = false;
   nsString mCspNonce;
   nsString mIntegrityMetadata;
-  uint32_t mHttpsOnlyStatus = nsILoadInfo::HTTPS_ONLY_UNINITIALIZED;
-  bool mHstsStatus = false;
   bool mHasValidUserGestureActivation = false;
   bool mTextDirectiveUserActivation = false;
   bool mIsSameDocumentNavigation = false;

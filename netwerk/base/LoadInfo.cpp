@@ -745,8 +745,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
       mCspNonce(rhs.mCspNonce),
       mIntegrityMetadata(rhs.mIntegrityMetadata),
-      mHttpsOnlyStatus(rhs.mHttpsOnlyStatus),
-      mHstsStatus(rhs.mHstsStatus),
       mHasValidUserGestureActivation(rhs.mHasValidUserGestureActivation),
       mTextDirectiveUserActivation(rhs.mTextDirectiveUserActivation),
       mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
@@ -808,8 +806,7 @@ LoadInfo::LoadInfo(
     const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
     const nsTArray<nsCString>& aCorsUnsafeHeaders,
     bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
-    const nsAString& aIntegrityMetadata, uint32_t aHttpsOnlyStatus,
-    bool aHstsStatus, bool aHasValidUserGestureActivation,
+    const nsAString& aIntegrityMetadata, bool aHasValidUserGestureActivation,
     bool aTextDirectiveUserActivation, bool aIsSameDocumentNavigation,
     bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
     bool aParserCreatedScript, Maybe<RequestMode> aRequestMode,
@@ -869,8 +866,6 @@ LoadInfo::LoadInfo(
       mLoadTriggeredFromExternal(aLoadTriggeredFromExternal),
       mCspNonce(aCspNonce),
       mIntegrityMetadata(aIntegrityMetadata),
-      mHttpsOnlyStatus(aHttpsOnlyStatus),
-      mHstsStatus(aHstsStatus),
       mHasValidUserGestureActivation(aHasValidUserGestureActivation),
       mTextDirectiveUserActivation(aTextDirectiveUserActivation),
       mIsSameDocumentNavigation(aIsSameDocumentNavigation),
@@ -1904,30 +1899,6 @@ LoadInfo::SetIntegrityMetadata(const nsAString& aIntegrityMetadata) {
   MOZ_ASSERT(!mInitialSecurityCheckDone,
              "setting the nonce is only allowed before any sec checks");
   mIntegrityMetadata = aIntegrityMetadata;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetHttpsOnlyStatus(uint32_t* aHttpsOnlyStatus) {
-  *aHttpsOnlyStatus = mHttpsOnlyStatus;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetHttpsOnlyStatus(uint32_t aHttpsOnlyStatus) {
-  mHttpsOnlyStatus = aHttpsOnlyStatus;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetHstsStatus(bool* aHstsStatus) {
-  *aHstsStatus = mHstsStatus;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetHstsStatus(bool aHstsStatus) {
-  mHstsStatus = aHstsStatus;
   return NS_OK;
 }
 
