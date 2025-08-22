@@ -3038,7 +3038,8 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
             ...(link.section ? {
               section: link.section,
               section_position: link.section_position,
-              is_section_followed: link.is_section_followed
+              is_section_followed: link.is_section_followed,
+              layout_name: link.sectionLayoutName
             } : {})
           })),
           firstVisibleTimestamp: props.firstVisibleTimestamp
@@ -3818,7 +3819,8 @@ class _DSCard extends (external_React_default()).PureComponent {
             ...(this.props.section ? {
               section: this.props.section,
               section_position: this.props.sectionPosition,
-              is_section_followed: this.props.sectionFollowed
+              is_section_followed: this.props.sectionFollowed,
+              layout_name: this.props.sectionLayoutName
             } : {})
           }
         }));
@@ -4269,7 +4271,8 @@ class _DSCard extends (external_React_default()).PureComponent {
         ...(this.props.section ? {
           section: this.props.section,
           section_position: this.props.sectionPosition,
-          is_section_followed: this.props.sectionFollowed
+          is_section_followed: this.props.sectionFollowed,
+          sectionLayoutName: this.props.sectionLayoutName
         } : {}),
         ...(!format && this.props.section ?
         // Note: sectionsCardsClassName is passed to ImpressionStats.jsx in order to calculate format
@@ -11665,7 +11668,8 @@ function CardSection({
     subtitle
   } = section;
   const {
-    responsiveLayouts
+    responsiveLayouts,
+    name: layoutName
   } = section.layout;
   const following = sectionPersonalization[sectionKey]?.isFollowed;
   const handleIntersection = (0,external_React_namespaceObject.useCallback)(() => {
@@ -11674,10 +11678,11 @@ function CardSection({
       data: {
         section: sectionKey,
         section_position: sectionPosition,
-        is_section_followed: following
+        is_section_followed: following,
+        layout_name: layoutName
       }
     }));
-  }, [dispatch, sectionKey, sectionPosition, following]);
+  }, [dispatch, sectionKey, sectionPosition, following, layoutName]);
 
   // Ref to hold the section element
   const sectionRefs = useIntersectionObserver(handleIntersection);
@@ -11851,6 +11856,7 @@ function CardSection({
       section: sectionKey,
       sectionPosition: sectionPosition,
       sectionFollowed: following,
+      sectionLayoutName: layoutName,
       isTimeSensitive: rec.isTimeSensitive
     });
     return index === 0 && shouldShowTrendingSearch && sectionKey === "top_stories_section" ? [card, /*#__PURE__*/external_React_default().createElement(TrendingSearches, {

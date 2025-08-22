@@ -1951,6 +1951,10 @@ pocket:
           If click belongs in a section, the numeric position of the section
         type: string
       is_section_followed: *is_section_followed
+      layout_name: &layout_name
+        description: >
+          description of the section layout
+        type: string
       content_redacted:
         description: >
           Are content details sent separately in the newtab_content ping
@@ -2021,6 +2025,7 @@ pocket:
           If click belongs in a section, the numeric position of the section
         type: string
       is_section_followed: *is_section_followed
+      layout_name: *layout_name
       event_source: *event_source
       content_redacted:
         description: >
@@ -2708,6 +2713,7 @@ newtab_content:
         description: >
           If click belongs in a section, if that section is followed
         type: boolean
+      layout_name: *layout_name
     send_in_pings:
       - newtab-content
 
