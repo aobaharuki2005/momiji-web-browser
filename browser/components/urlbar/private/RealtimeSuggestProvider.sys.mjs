@@ -380,13 +380,13 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       case "manage": {
         // "help" and "manage" are handled by UrlbarInput, no need to do
         // anything here.
-        return;
+        break;
       }
       case "not_interested": {
         lazy.UrlbarPrefs.set(this.suggestPref, false);
         result.acknowledgeDismissalL10n = this.acknowledgeDismissalL10n;
         controller.removeResult(result);
-        return;
+        break;
       }
       case "show_less_frequently": {
         controller.view.acknowledgeFeedback(result);
@@ -398,16 +398,9 @@ export class RealtimeSuggestProvider extends SuggestProvider {
           this.minKeywordLengthPref,
           searchString.length + 1
         );
-        return;
+        break;
       }
     }
-
-    let query = details.element.getAttribute("query");
-    let [url] = lazy.UrlbarUtils.getSearchQueryUrl(
-      Services.search.defaultEngine,
-      query
-    );
-    controller.browserWindow.openTrustedLinkIn(url, "current");
   }
 
   onOptInEngagement(queryContext, controller, details, _searchString) {

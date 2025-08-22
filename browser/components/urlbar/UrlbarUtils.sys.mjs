@@ -609,19 +609,32 @@ export var UrlbarUtils = {
    *
    * @param {UrlbarResult} result
    *   The result to extract from.
+   * @param {object} options
+   *   Options object.
+   * @param {Element} [options.element]
+   *   The element associated with the result that was selected or picked, if
+   *   available. For results that have multiple selectable children, the URL
+   *   may be taken from a child element rather than the result.
    * @returns {object}
    *   An object: `{ url, postData }`
    *   `url` will be null if the result doesn't have a URL. `postData` will be
    *   null if the result doesn't have post data.
    */
-  getUrlFromResult(result) {
-    if (result.type == this.RESULT_TYPE.SEARCH && result.payload.engine) {
-      const engine = Services.search.getEngineByName(result.payload.engine);
-      let [url, postData] = this.getSearchQueryUrl(
-        engine,
-        result.payload.suggestion || result.payload.query
-      );
-      return { url, postData };
+  getUrlFromResult(result, { element = null } = {}) {
+    if (
+      result.payload.engine &&
+      (result.type == this.RESULT_TYPE.SEARCH ||
+        result.type == this.RESULT_TYPE.DYNAMIC)
+    ) {
+      let query =
+        element?.dataset.query ||
+        result.payload.suggestion ||
+        result.payload.query;
+      if (query) {
+        const engine = Services.search.getEngineByName(result.payload.engine);
+        let [url, postData] = this.getSearchQueryUrl(engine, query);
+        return { url, postData };
+      }
     }
 
     return {
@@ -2978,6 +2991,13 @@ export class UrlbarProvider {
    *     A mapping from attribute names to values.  Each name-value pair results
    *     in an attribute being added to the element.  The `id` attribute is
    *     reserved and cannot be set by the provider.
+   *   {Array} [classList]
+   *     An array of CSS classes to set on the element. If this is defined, the
+   *     element's previous classes will be cleared first!
+   *   {object} [dataset]
+   *     Maps element dataset keys to values. Values should be strings with the
+   *     following exceptions: `undefined` is ignored, and `null` causes the key
+   *     to be removed from the dataset.
    *   {object} [style]
    *     A plain object that can be used to add inline styles to the element,
    *     like `display: none`.   `element.style` is updated for each name-value

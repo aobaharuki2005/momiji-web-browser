@@ -1248,7 +1248,7 @@
 
 /* Market suggestions */
 
-.urlbarView-dynamic-market-item {
+.urlbarView-market-item {
   display: flex;
   align-items: center;
   padding-inline-end: var(--space-large);
