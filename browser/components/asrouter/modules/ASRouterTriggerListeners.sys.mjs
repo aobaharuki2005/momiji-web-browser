@@ -1389,6 +1389,7 @@ export const ASRouterTriggerListeners = new Map([
               },
               location: "pdfjs",
               theme: { preset: "pdfjs", simulateContent: true },
+              suppressTransitions: true,
               cleanup: () => {
                 this._callouts.delete(win);
               },
@@ -1546,6 +1547,7 @@ export const ASRouterTriggerListeners = new Map([
               },
               location: "newtab",
               theme: { preset: "newtab", simulateContent: true },
+              suppressTransitions: true,
               cleanup: () => {
                 this._callouts.delete(win);
               },

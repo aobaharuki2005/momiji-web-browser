@@ -45,7 +45,7 @@ export class _FeatureCalloutBroker {
    * @param {FeatureCalloutOptions} config
    */
   makeFeatureCallout(config) {
-    const { win, pref, location, browser, theme } = config;
+    const { win, pref, location, browser, theme, suppressTransitions } = config;
     // Use an AbortController to clean up the unload listener in case the
     // callout is cleaned up before the window is unloaded.
     const controller = new AbortController();
@@ -63,6 +63,7 @@ export class _FeatureCalloutBroker {
         browser,
         listener: this.handleFeatureCalloutCallback.bind(this),
         theme,
+        suppressTransitions,
       }),
       cleanup,
       showing: false,

@@ -1444,7 +1444,6 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       role: ariaRole ?? "alertdialog",
       layout: content.layout,
       pos: content.position || "center",
-      tabIndex: "-1",
       "aria-labelledby": "mainContentHeader",
       ref: input => {
         this.mainContentHeader = input;

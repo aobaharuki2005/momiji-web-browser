@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PageEventManager: "resource:///modules/asrouter/PageEventManager.sys.mjs",
 });
 
-const TRANSITION_MS = 500;
+const TRANSITION_MS = 180;
 const CONTAINER_ID = "feature-callout";
 const CONTENT_BOX_ID = "multi-stage-message-root";
 const BUNDLE_SRC =
@@ -62,6 +62,7 @@ export class FeatureCallout {
     browser,
     listener,
     theme = {},
+    suppressTransitions = false,
   } = {}) {
     this.win = win;
     this.doc = win.document;
@@ -83,6 +84,7 @@ export class FeatureCallout {
     this.location = location;
     this.context = context;
     this.listener = listener;
+    this.suppressTransitions = suppressTransitions;
     this._initTheme(theme);
 
     this._handlePrefChange = this._handlePrefChange.bind(this);
@@ -264,10 +266,9 @@ export class FeatureCallout {
     }
 
     this.ready = false;
-    this._container?.classList.toggle(
-      "hidden",
-      this._container?.localName !== "panel"
-    );
+    if (this._container?.localName !== "panel") {
+      this._container?.setAttribute("animate", "cancel");
+    }
     this._pageEventManager?.emit({
       type: "touradvance",
       target: this._container,
@@ -348,10 +349,9 @@ export class FeatureCallout {
         return;
       }
       this.ready = false;
-      this._container?.classList.toggle(
-        "hidden",
-        this._container?.localName !== "panel"
-      );
+      if (this._container?.localName !== "panel") {
+        this._container?.setAttribute("animate", "cancel");
+      }
       this._pageEventManager?.emit({
         type: "touradvance",
         target: this._container,
@@ -1051,7 +1051,9 @@ export class FeatureCallout {
         this._setPanelMethods(this._container);
       } else {
         this._container = this.doc.createElement("div");
-        this._container?.classList.add("hidden");
+        if (this.suppressTransitions) {
+          this._container?.classList.add("suppress-transitions");
+        }
       }
       this._container.classList.add("featureCallout");
       if (hide_arrow) {
@@ -1561,8 +1563,6 @@ export class FeatureCallout {
       positioners[finalPosition].position();
       setArrowPosition(finalPosition);
     }
-
-    container.classList.remove("hidden");
   }
 
   /** Expose top level functions expected by the aboutwelcome bundle. */
@@ -1650,10 +1650,9 @@ export class FeatureCallout {
     this.content = null;
     this.currentScreen = null;
     // wait for fade out transition
-    this._container?.classList.toggle(
-      "hidden",
-      this._container?.localName !== "panel"
-    );
+    if (this._container?.localName !== "panel") {
+      this._container?.setAttribute("animate", "cancel");
+    }
     this._clearWindowFunctions();
     const onFadeOut = () => {
       this._container?.remove();
@@ -2085,8 +2084,18 @@ export class FeatureCallout {
                 passive: true,
               });
               this._positionCallout();
-            } else {
-              this._container.classList.remove("hidden");
+              this._container?.setAttribute("animate", "open");
+              this._container?.setAttribute("animating", "true");
+              this.win.requestAnimationFrame(() => {
+                this._container?.removeAttribute("animating");
+                if (
+                  this.suppressTransitions &&
+                  this._container?.classList.contains("suppress-transitions")
+                ) {
+                  this._container?.classList.remove("suppress-transitions");
+                  this.suppressTransitions = false;
+                }
+              });
             }
           };
           if (

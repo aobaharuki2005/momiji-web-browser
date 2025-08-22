@@ -51,6 +51,7 @@
   --arrow-corner-inset: calc(var(--arrow-corner-distance) + (var(--extra-width-from-rotation) / 2));
   --arrow-overlap-magnitude: 5px;
   --button-min-height: 24px;
+  --callout-animation-easing-function: var(--animation-easing-function, cubic-bezier(0.07, 0.95, 0, 1));
 }
 @media (prefers-color-scheme: dark) {
   #feature-callout {
@@ -343,10 +344,31 @@ panel#feature-callout::part(content) {
 }
 
 div#feature-callout {
-  transition: opacity 0.5s ease;
-}
-div#feature-callout.hidden {
+  transition-timing-function: var(--animation-easing-function), ease-out;
+  transition-property: transform, opacity;
+  will-change: transform, opacity;
   opacity: 0;
+}
+div#feature-callout:not(.suppress-transitions) {
+  transition-duration: 0.18s;
+}
+@media not (prefers-reduced-motion) {
+  div#feature-callout:not([hide-arrow]) {
+    transform: translateY(-70px);
+  }
+  div#feature-callout:not([hide-arrow]):where([arrow-position=bottom]) {
+    transform: translateY(70px);
+  }
+}
+div#feature-callout[animate=cancel] {
+  transform: none;
+}
+div#feature-callout[animate=open] {
+  opacity: 1;
+  transform: none;
+  transition-timing-function: var(--animation-easing-function), ease-in-out;
+}
+div#feature-callout[animating] {
   pointer-events: none;
 }
 
