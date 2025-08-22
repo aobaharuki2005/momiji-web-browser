@@ -37,7 +37,7 @@
   <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
   <string name="tab_manager_empty_private_tabs_page_description">%1$s no recordará tu historial ni tus cookies, pero se guardarán los nuevos marcadores.</string>
   <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
-  <string name="tab_manager_empty_normal_tabs_page_header">Creá una nueva pestaña para empezar a buscar</string>
+  <string name="tab_manager_empty_normal_tabs_page_header">Crear una nueva pestaña para empezar a buscar</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">Se seleccionó %1$d</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
