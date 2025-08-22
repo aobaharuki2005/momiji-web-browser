@@ -87,8 +87,6 @@
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">اسکریپت‌های تایید نشده می‌توانند خطرات امنیتی و حفظ حریم خصوصی ایجاد کنند. فقط اسکریپت‌هایی را از افزونه‌ها یا منابعی که به آن‌ها اعتماد دارید، اجرا کنید.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
-  <string name="mozac_feature_addons_permissions_required_data_collection_description" moz:removedIn="141" tools:ignore="UnusedResources">این افزونه به گفته توسعه‌دهنده، داده‌های زیر را جمع‌آوری می‌کند: %1$s.</string>
-  <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
   <string name="mozac_feature_addons_permissions_required_data_collection_description_2">این افزونه به گفته توسعه‌دهنده، داده‌های زیر را جمع‌آوری می‌کند: %1$s</string>
   <!-- The sentence used when the developer of an extension has explicitly stated that they do not collect any data collection. -->
   <string name="mozac_feature_addons_permissions_none_required_data_collection_description">توسعه‌دهنده اعلام کرده است که این افزونه نیازی به جمع‌آوری داده ندارد.</string>
@@ -121,8 +119,6 @@
   <!-- Indicates the add-on is enabled. -->
   <string name="mozac_feature_addons_settings_on">روشن</string>
   <!-- Indicates the add-on is allowed in private browsing mode. -->
-  <string name="mozac_feature_addons_settings_allow_in_private_browsing" moz:removedIn="141" tools:ignore="UnusedResources">اجازه دادن در حالت مرور خصوصی</string>
-  <!-- Indicates the add-on is allowed in private browsing mode. -->
   <string name="mozac_feature_addons_settings_run_in_private_browsing">اجرا کردن در حالت مرور خصوصی</string>
   <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
   <string name="mozac_feature_addons_not_allowed_in_private_browsing">در پنجره‌های ناشناس مجاز نیست</string>
@@ -146,12 +142,8 @@
   <string name="mozac_feature_addons_remove">حذف</string>
   <!-- This is a button to report an add-on. -->
   <string name="mozac_feature_addons_report">گزارش</string>
-  <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_permissions_dialog_title" moz:removedIn="141" tools:ignore="UnusedResources">اضافه کردن%1$s؟</string>
   <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_optional_permissions_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%1$s درخواست دسترسی‌های بیشتری را دارد.</string>
-  <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
-  <string name="mozac_feature_addons_permissions_dialog_subtitle" moz:removedIn="141" tools:ignore="UnusedResources">این نیازمند اجازه شماست برای :</string>
   <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
   <string name="mozac_feature_addons_optional_permissions_dialog_subtitle" moz:removedIn="142" tools:ignore="UnusedResources">می‌خواهد:</string>
   <!-- This is a button to add (install) an add-on . -->
