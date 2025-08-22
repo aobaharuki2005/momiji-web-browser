@@ -50,7 +50,7 @@
     width: 32px;
     height: 32px;
     border: 0;
-    border-radius: var(--border-radius-small);
+    border-radius: 4px;
     margin: 0;
     padding: 0;
     color: var(--button-text-color-ghost);

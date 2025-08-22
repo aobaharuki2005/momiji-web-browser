@@ -157,7 +157,7 @@
     background-color: #fff;
     background-position: center;
     border: 1px solid #b1b1b1;
-    border-radius: var(--border-radius-circle);
+    border-radius: 50%;
     content: "";
     display: inline-block;
     height: 16px;
@@ -561,7 +561,7 @@
     button.browser-style,
     select.browser-style,
     .browser-style > input[type="checkbox"] {
-      border-radius: var(--border-radius-small);
+      border-radius: 4px;
     }
 
     .panel-section-footer {

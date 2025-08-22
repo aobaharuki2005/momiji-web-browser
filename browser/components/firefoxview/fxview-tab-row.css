@@ -11,7 +11,7 @@
   grid-template-columns: subgrid;
   grid-column: span 9;
   align-items: stretch;
-  border-radius: var(--border-radius-small);
+  border-radius: 4px;
 }
 
 @media (forced-colors) {
@@ -27,7 +27,7 @@
   grid-template-columns: subgrid;
   grid-column: span 6;
   gap: 16px;
-  border-radius: var(--border-radius-small);
+  border-radius: 4px;
   align-items: center;
   padding: 4px 8px;
   user-select: none;

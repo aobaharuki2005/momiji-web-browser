@@ -391,7 +391,7 @@ p {
 /* stylelint-disable-next-line media-query-no-invalid */
 @media -moz-pref("browser.privatebrowsing.felt-privacy-v1") {
   .info-border {
-    border-radius: var(--border-radius-medium);
+    border-radius: 8px;
     margin-top: 64px;
     padding: 17px;
 

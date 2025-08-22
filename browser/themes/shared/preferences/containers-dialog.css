@@ -19,7 +19,7 @@
   outline-offset: 4px;
   min-block-size: 24px;
   min-inline-size: 24px;
-  border-radius: var(--border-radius-circle);
+  border-radius: 50%;
   padding: 2px;
   margin: 9px;
 }
