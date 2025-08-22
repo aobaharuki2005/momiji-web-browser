@@ -35,6 +35,9 @@ class FakeIPProtectionPanelElement {
 }
 
 add_setup(async function () {
+  // FxAccountsStorage.sys.mjs requires a profile directory.
+  do_get_profile();
+
   IPProtectionService.init();
 
   registerCleanupFunction(async () => {
