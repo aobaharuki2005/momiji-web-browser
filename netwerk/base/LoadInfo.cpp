@@ -745,7 +745,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
       mCspNonce(rhs.mCspNonce),
       mIntegrityMetadata(rhs.mIntegrityMetadata),
-      mSkipContentSniffing(rhs.mSkipContentSniffing),
       mHttpsOnlyStatus(rhs.mHttpsOnlyStatus),
       mHstsStatus(rhs.mHstsStatus),
       mHasValidUserGestureActivation(rhs.mHasValidUserGestureActivation),
@@ -809,12 +808,11 @@ LoadInfo::LoadInfo(
     const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
     const nsTArray<nsCString>& aCorsUnsafeHeaders,
     bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
-    const nsAString& aIntegrityMetadata, bool aSkipContentSniffing,
-    uint32_t aHttpsOnlyStatus, bool aHstsStatus,
-    bool aHasValidUserGestureActivation, bool aTextDirectiveUserActivation,
-    bool aIsSameDocumentNavigation, bool aAllowDeprecatedSystemRequests,
-    bool aIsInDevToolsContext, bool aParserCreatedScript,
-    Maybe<RequestMode> aRequestMode,
+    const nsAString& aIntegrityMetadata, uint32_t aHttpsOnlyStatus,
+    bool aHstsStatus, bool aHasValidUserGestureActivation,
+    bool aTextDirectiveUserActivation, bool aIsSameDocumentNavigation,
+    bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
+    bool aParserCreatedScript, Maybe<RequestMode> aRequestMode,
     nsILoadInfo::StoragePermissionState aStoragePermission,
     nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
     nsILoadInfo::IPAddressSpace aIPAddressSpace,
@@ -871,7 +869,6 @@ LoadInfo::LoadInfo(
       mLoadTriggeredFromExternal(aLoadTriggeredFromExternal),
       mCspNonce(aCspNonce),
       mIntegrityMetadata(aIntegrityMetadata),
-      mSkipContentSniffing(aSkipContentSniffing),
       mHttpsOnlyStatus(aHttpsOnlyStatus),
       mHstsStatus(aHstsStatus),
       mHasValidUserGestureActivation(aHasValidUserGestureActivation),
@@ -1907,18 +1904,6 @@ LoadInfo::SetIntegrityMetadata(const nsAString& aIntegrityMetadata) {
   MOZ_ASSERT(!mInitialSecurityCheckDone,
              "setting the nonce is only allowed before any sec checks");
   mIntegrityMetadata = aIntegrityMetadata;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetSkipContentSniffing(bool* aSkipContentSniffing) {
-  *aSkipContentSniffing = mSkipContentSniffing;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetSkipContentSniffing(bool aSkipContentSniffing) {
-  mSkipContentSniffing = aSkipContentSniffing;
   return NS_OK;
 }
 

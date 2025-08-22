@@ -489,16 +489,6 @@ TRRLoadInfo::SetIntegrityMetadata(const nsAString& aIntegrityMetadata) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetSkipContentSniffing(bool* aSkipContentSniffing) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetSkipContentSniffing(bool aSkipContentSniffing) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetIsTopLevelLoad(bool* aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

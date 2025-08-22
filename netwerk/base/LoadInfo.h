@@ -126,7 +126,10 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
                                                                                \
   GETTER(bool, NeedForCheckingAntiTrackingHeuristic,                           \
          needForCheckingAntiTrackingHeuristic, false)                          \
-  SETTER(bool, NeedForCheckingAntiTrackingHeuristic)
+  SETTER(bool, NeedForCheckingAntiTrackingHeuristic)                           \
+                                                                               \
+  GETTER(bool, SkipContentSniffing, skipContentSniffing, false)                \
+  SETTER(bool, SkipContentSniffing)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -331,9 +334,8 @@ class LoadInfo final : public nsILoadInfo {
            nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
            const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
            const nsTArray<nsCString>& aCorsUnsafeHeaders,
-           bool aLoadTriggeredFromExternal,
-           const nsAString& aCspNonce, const nsAString& aIntegrityMetadata,
-           bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus,
+           bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
+           const nsAString& aIntegrityMetadata, uint32_t aHttpsOnlyStatus,
            bool aHstsStatus, bool aHasValidUserGestureActivation,
            bool aTextDirectiveUserActivation, bool aIsSameDocumentNavigation,
            bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
@@ -443,7 +445,6 @@ class LoadInfo final : public nsILoadInfo {
   bool mLoadTriggeredFromExternal = false;
   nsString mCspNonce;
   nsString mIntegrityMetadata;
-  bool mSkipContentSniffing = false;
   uint32_t mHttpsOnlyStatus = nsILoadInfo::HTTPS_ONLY_UNINITIALIZED;
   bool mHstsStatus = false;
   bool mHasValidUserGestureActivation = false;
