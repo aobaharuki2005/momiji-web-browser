@@ -174,8 +174,6 @@ elif CONFIG["JS_CODEGEN_ARM64"]:
         "arm64/vixl/MozAssembler-vixl.cpp",
         "arm64/vixl/MozCpu-vixl.cpp",
         "arm64/vixl/MozInstructions-vixl.cpp",
-        "arm64/vixl/Operands-vixl.cpp",
-        "arm64/vixl/Registers-vixl.cpp",
         "arm64/vixl/Utils-vixl.cpp",
     ]
     vixl_werror_sources = [

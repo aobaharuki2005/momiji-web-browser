@@ -387,27 +387,20 @@ class SimSystemRegister {
   // It is not possible to set its value to anything other than 0.
   SimSystemRegister() : value_(0), write_ignore_mask_(0xffffffff) { }
 
-  uint32_t GetRawValue() const { return value_; }
   uint32_t RawValue() const {
-    return GetRawValue();
+    return value_;
   }
 
   void SetRawValue(uint32_t new_value) {
     value_ = (value_ & write_ignore_mask_) | (new_value & ~write_ignore_mask_);
   }
 
-  uint32_t ExtractBits(int msb, int lsb) const {
+  uint32_t Bits(int msb, int lsb) const {
     return ExtractUnsignedBitfield32(msb, lsb, value_);
   }
-  uint32_t Bits(int msb, int lsb) const {
-    return ExtractBits(msb, lsb);
-  }
 
-  int32_t ExtractSignedBits(int msb, int lsb) const {
-    return ExtractSignedBitfield32(msb, lsb, value_);
-  }
   int32_t SignedBits(int msb, int lsb) const {
-    return ExtractSignedBits(msb, lsb);
+    return ExtractSignedBitfield32(msb, lsb, value_);
   }
 
   void SetBits(int msb, int lsb, uint32_t bits);
@@ -416,8 +409,7 @@ class SimSystemRegister {
   static SimSystemRegister DefaultValueFor(SystemRegister id);
 
 #define DEFINE_GETTER(Name, HighBit, LowBit, Func)                            \
-  uint32_t Get##Name() const { return this->Func(HighBit, LowBit); }          \
-  uint32_t Name() const { return Get##Name(); }                               \
+  uint32_t Name() const { return Func(HighBit, LowBit); }              \
   void Set##Name(uint32_t bits) { SetBits(HighBit, LowBit, bits); }
 #define DEFINE_WRITE_IGNORE_MASK(Name, Mask)                                  \
   static const uint32_t Name##WriteIgnoreMask = ~static_cast<uint32_t>(Mask);

@@ -901,7 +901,7 @@ void Simulator::VisitAddSubShifted(const Instruction* instr) {
 
 
 void Simulator::VisitAddSubImmediate(const Instruction* instr) {
-  int64_t op2 = instr->ImmAddSub() << ((instr->GetImmAddSubShift() == 1) ? 12 : 0);
+  int64_t op2 = instr->ImmAddSub() << ((instr->ShiftAddSub() == 1) ? 12 : 0);
   AddSubHelper(instr, op2);
 }
 
@@ -2153,6 +2153,32 @@ void Simulator::VisitDataProcessing2Source(const Instruction* instr) {
 }
 
 
+// The algorithm used is adapted from the one described in section 8.2 of
+//   Hacker's Delight, by Henry S. Warren, Jr.
+// It assumes that a right shift on a signed integer is an arithmetic shift.
+// Type T must be either uint64_t or int64_t.
+template <typename T>
+static T MultiplyHigh(T u, T v) {
+  uint64_t u0, v0, w0;
+  T u1, v1, w1, w2, t;
+
+  VIXL_ASSERT(sizeof(u) == sizeof(u0));
+
+  u0 = u & 0xffffffff;
+  u1 = u >> 32;
+  v0 = v & 0xffffffff;
+  v1 = v >> 32;
+
+  w0 = u0 * v0;
+  t = u1 * v0 + (w0 >> 32);
+  w1 = t & 0xffffffff;
+  w2 = t >> 32;
+  w1 = u0 * v1 + w1;
+
+  return u1 * v1 + w2 + (w1 >> 32);
+}
+
+
 void Simulator::VisitDataProcessing3Source(const Instruction* instr) {
   unsigned reg_size = instr->SixtyFourBits() ? kXRegSize : kWRegSize;
 
@@ -2176,11 +2202,11 @@ void Simulator::VisitDataProcessing3Source(const Instruction* instr) {
     case UMADDL_x: result = xreg(instr->Ra()) + (rn_u32 * rm_u32); break;
     case UMSUBL_x: result = xreg(instr->Ra()) - (rn_u32 * rm_u32); break;
     case UMULH_x:
-      result = internal::MultiplyHigh<64>(reg<uint64_t>(instr->Rn()),
-                                          reg<uint64_t>(instr->Rm()));
+      result = MultiplyHigh(reg<uint64_t>(instr->Rn()),
+                            reg<uint64_t>(instr->Rm()));
       break;
     case SMULH_x:
-      result = internal::MultiplyHigh<64>(xreg(instr->Rn()), xreg(instr->Rm()));
+      result = MultiplyHigh(xreg(instr->Rn()), xreg(instr->Rm()));
       break;
     default: VIXL_UNIMPLEMENTED();
   }
