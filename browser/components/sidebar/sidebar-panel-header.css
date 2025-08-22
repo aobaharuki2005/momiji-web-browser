@@ -4,7 +4,17 @@
 
 @import url("chrome://global/skin/design-system/text-and-typography.css");
 
-.sidebar-panel-header {
+:host {
+  display: block;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  padding-block: var(--space-large);
+  margin-block-start: calc(var(--space-large) * -1);
+  background-color: var(--sidebar-background-color);
+}
+
+.sidebar-panel-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -12,7 +22,7 @@
   fill: currentColor;
   font-size: 15px;
 
-  h4 {
+  > h4 {
     margin-block: var(--space-large);
   }
 }

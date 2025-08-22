@@ -318,12 +318,12 @@ class SyncedTabsInSidebar extends SidebarPage {
           data-l10n-attrs="heading"
           view="viewTabsSidebar"
         >
+          <moz-input-search
+            data-l10n-id="firefoxview-search-text-box-tabs"
+            data-l10n-attrs="placeholder"
+            @MozInputSearch:search=${this.onSearchQuery}
+          ></moz-input-search>
         </sidebar-panel-header>
-        <moz-input-search
-          data-l10n-id="firefoxview-search-text-box-tabs"
-          data-l10n-attrs="placeholder"
-          @MozInputSearch:search=${this.onSearchQuery}
-        ></moz-input-search>
         ${when(
           messageCard,
           () => this.messageCardTemplate(messageCard),
