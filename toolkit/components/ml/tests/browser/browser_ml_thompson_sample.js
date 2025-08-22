@@ -1,5 +1,11 @@
 "use strict";
 
+// const { sinon } = ChromeUtils.importESModule(
+//   "resource://testing-common/Sinon.sys.mjs"
+// );
+
+// <reference path="head.js" />
+
 const {
   thompsonSampleSort,
   sortKeysValues,
