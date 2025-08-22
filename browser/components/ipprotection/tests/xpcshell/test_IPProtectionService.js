@@ -16,14 +16,6 @@ const { UIState } = ChromeUtils.importESModule(
   "resource://services-sync/UIState.sys.mjs"
 );
 
-ChromeUtils.defineLazyGetter(this, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
-  ).getFxAccountsSingleton();
-});
-
-const VPN_ID = "e6eb0d1e856335fc";
-
 do_get_profile();
 
 AddonTestUtils.init(this);
@@ -273,28 +265,36 @@ add_task(
  */
 add_task(
   async function test_IPProtectionService_updateHasUpgradedStatus_has_vpn_linked() {
+    IPProtectionService.init();
+
+    IPProtectionService.isSignedIn = true;
+
     const sandbox = sinon.createSandbox();
     sandbox
-      .stub(fxAccounts, "getSignedInUser")
-      .returns({ email: "foo@example.com" });
-    sandbox.stub(fxAccounts, "listAttachedOAuthClients").resolves([
-      {
-        id: VPN_ID,
-        lastAccessedDaysAgo: 2,
+      .stub(IPProtectionService.guardian, "isLinkedToGuardian")
+      .returns(true);
+    sandbox.stub(IPProtectionService.guardian, "fetchUserInfo").resolves({
+      status: 200,
+      error: null,
+      entitlement: {
+        subscribed: true,
+        uid: 42,
+        created_at: "2023-01-01T12:00:00.000Z",
       },
-    ]);
+    });
 
     let hasUpgradedEventPromise = waitForEvent(
       IPProtectionService,
       "IPProtectionService:UpdateHasUpgraded"
     );
 
-    IPProtectionService.updateHasUpgradedStatus();
+    await IPProtectionService.updateHasUpgradedStatus(true);
 
     await hasUpgradedEventPromise;
 
     Assert.ok(IPProtectionService.hasUpgraded, "hasUpgraded should be true");
 
+    IPProtectionService.uninit();
     sandbox.restore();
   }
 );
@@ -305,23 +305,32 @@ add_task(
  */
 add_task(
   async function test_IPProtectionService_updateHasUpgradedStatus_no_vpn_linked() {
+    IPProtectionService.init();
+
+    IPProtectionService.isSignedIn = true;
+
     const sandbox = sinon.createSandbox();
     sandbox
-      .stub(fxAccounts, "getSignedInUser")
-      .returns({ email: "foo@example.com" });
-    sandbox.stub(fxAccounts, "listAttachedOAuthClients").resolves([]);
+      .stub(IPProtectionService.guardian, "isLinkedToGuardian")
+      .returns(true);
+    sandbox.stub(IPProtectionService.guardian, "fetchUserInfo").resolves({
+      status: 404,
+      error: "invalid_response",
+      validEntitlement: false,
+    });
 
     let hasUpgradedEventPromise = waitForEvent(
       IPProtectionService,
       "IPProtectionService:UpdateHasUpgraded"
     );
 
-    IPProtectionService.updateHasUpgradedStatus();
+    await IPProtectionService.updateHasUpgradedStatus();
 
     await hasUpgradedEventPromise;
 
     Assert.ok(!IPProtectionService.hasUpgraded, "hasUpgraded should be false");
 
+    IPProtectionService.uninit();
     sandbox.restore();
   }
 );
@@ -334,6 +343,8 @@ add_task(
   async function test_IPProtectionService_updateHasUpgradedStatus_signed_out() {
     IPProtectionService.init();
 
+    IPProtectionService.isSignedIn = true;
+
     let sandbox = sinon.createSandbox();
     sandbox.stub(UIState, "get").returns({
       status: UIState.STATUS_NOT_CONFIGURED,
@@ -341,10 +352,15 @@ add_task(
     sandbox
       .stub(IPProtectionService.guardian, "isLinkedToGuardian")
       .returns(true);
-
-    IPProtectionService.isSignedIn = true;
-    // Start with hasUpgraded is true
-    IPProtectionService.hasUpgraded = true;
+    sandbox.stub(IPProtectionService.guardian, "fetchUserInfo").resolves({
+      status: 200,
+      error: null,
+      entitlement: {
+        subscribed: true,
+        uid: 42,
+        created_at: "2023-01-01T12:00:00.000Z",
+      },
+    });
 
     let signedOutEventPromise = waitForEvent(
       IPProtectionService,
@@ -365,7 +381,7 @@ add_task(
       "hasUpgraded should be false in after signing out"
     );
 
-    sandbox.restore();
     IPProtectionService.uninit();
+    sandbox.restore();
   }
 );
