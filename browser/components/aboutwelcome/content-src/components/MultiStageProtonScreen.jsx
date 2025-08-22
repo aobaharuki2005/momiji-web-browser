@@ -637,6 +637,7 @@ export class ProtonScreen extends React.PureComponent {
         role={ariaRole ?? "alertdialog"}
         layout={content.layout}
         pos={content.position || "center"}
+        tabIndex="-1"
         aria-labelledby="mainContentHeader"
         ref={input => {
           this.mainContentHeader = input;

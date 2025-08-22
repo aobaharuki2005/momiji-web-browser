@@ -91,10 +91,8 @@
   --arrow-corner-distance: 12px;
   --arrow-corner-inset: calc(var(--arrow-corner-distance) + (var(--extra-width-from-rotation) / 2));
   --arrow-overlap-magnitude: 5px;
-  // Default min-height for feature callout CTAs.
+  // Default min-height for feature callout ctas
   --button-min-height: 24px;
-  // Used for the fade animation when the callout is a div.
-  --callout-animation-easing-function: var(--animation-easing-function, cubic-bezier(0.07, 0.95, 0, 1));
 
   @at-root panel#{&} {
     --panel-color: var(--fc-color);
@@ -128,37 +126,10 @@
   }
 
   @at-root div#{&} {
-    transition-timing-function: var(--animation-easing-function), ease-out;
+    transition: opacity 0.5s ease;
 
-    &:not(.suppress-transitions) {
-      transition-duration: 0.18s;
-    }
-
-    transition-property: transform, opacity;
-    will-change: transform, opacity;
-    opacity: 0;
-
-    @media not (prefers-reduced-motion) {
-      &:not([hide-arrow]) {
-        transform: translateY(-70px);
-
-        &:where([arrow-position='bottom']) {
-          transform: translateY(70px);
-        }
-      }
-    }
-
-    &[animate='cancel'] {
-      transform: none;
-    }
-
-    &[animate='open'] {
-      opacity: 1;
-      transform: none;
-      transition-timing-function: var(--animation-easing-function), ease-in-out;
-    }
-
-    &[animating] {
+    &.hidden {
+      opacity: 0;
       pointer-events: none;
     }
   }
