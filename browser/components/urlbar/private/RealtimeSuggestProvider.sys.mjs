@@ -260,7 +260,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     );
   }
 
-  makeOptInResult(queryContext, suggestion) {
+  makeOptInResult(queryContext, _suggestion) {
     let notNowTypes = lazy.UrlbarPrefs.get(
       "quicksuggest.realtimeOptIn.notNowTypes"
     );
@@ -280,15 +280,24 @@ export class RealtimeSuggestProvider extends SuggestProvider {
           },
         };
 
-    let result = { ...suggestion.data.result };
-    delete result.payload;
-
     return Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.TIP,
         lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         {
-          ...suggestion.data.result.payload,
+          // This `type` is the tip type, required for `TIP` results.
+          type: "realtime_opt_in",
+          icon: "chrome://browser/skin/illustrations/market-opt-in.svg",
+          titleL10n: {
+            id: "urlbar-result-market-opt-in-title",
+            cacheable: true,
+          },
+          descriptionL10n: {
+            id: "urlbar-result-market-opt-in-description",
+            cacheable: true,
+            parseMarkup: true,
+          },
+          descriptionLearnMoreTopic: lazy.QuickSuggest.HELP_TOPIC,
           buttons: [
             {
               command: "opt_in",
@@ -312,7 +321,10 @@ export class RealtimeSuggestProvider extends SuggestProvider {
           ],
         }
       ),
-      { ...result }
+      {
+        isBestMatch: true,
+        hideRowLabel: true,
+      }
     );
   }
 

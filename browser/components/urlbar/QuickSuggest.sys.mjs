@@ -192,8 +192,16 @@ class _QuickSuggest {
   get HELP_URL() {
     return (
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "firefox-suggest"
+      this.HELP_TOPIC
     );
+  }
+
+  /**
+   * @returns {string}
+   *   The help URL topic for Suggest.
+   */
+  get HELP_TOPIC() {
+    return "firefox-suggest";
   }
 
   /**

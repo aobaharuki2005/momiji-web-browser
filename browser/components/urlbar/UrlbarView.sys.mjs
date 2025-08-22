@@ -39,9 +39,9 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 // Query selector for selectable elements in results.
-const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable]";
+const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable], a";
 const KEYBOARD_SELECTABLE_ELEMENT_SELECTOR =
-  "[role=button]:not([keyboard-inaccessible]), [selectable]";
+  "[role=button]:not([keyboard-inaccessible]), [selectable], a";
 
 const RESULT_MENU_COMMANDS = {
   DISMISS: "dismiss",
@@ -2345,7 +2345,6 @@ export class UrlbarView {
           "[data-l10n-name=learn-more-link]"
         );
         if (learnMoreLink) {
-          learnMoreLink.toggleAttribute("selectable");
           learnMoreLink.dataset.url = this.window.getHelpLinkURL(
             result.payload.descriptionLearnMoreTopic
           );
