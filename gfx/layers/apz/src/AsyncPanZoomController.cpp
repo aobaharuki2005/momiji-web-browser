@@ -4216,8 +4216,8 @@ void AsyncPanZoomController::SmoothScrollTo(
   CancelAnimation();
   SetState(SMOOTH_SCROLL);
 
-  RefPtr<SmoothScrollAnimation> animation =
-      SmoothScrollAnimation::Create(*this, aAnimationKind, aViewportToScroll, aOrigin);
+  RefPtr<SmoothScrollAnimation> animation = SmoothScrollAnimation::Create(
+      *this, aAnimationKind, aViewportToScroll, aOrigin);
   animation->UpdateDestinationAndSnapTargets(
       GetFrameTime().Time(), destination, velocity,
       std::move(aDestination.mTargetIds), aTriggeredByScript);
@@ -5848,8 +5848,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
               : ScrollAnimationKind::Smooth;
       SmoothScrollTo(
           CSSSnapDestination{destination, scrollUpdate.GetSnapTargetIds()},
-          scrollUpdate.GetScrollTriggeredByScript(), animationKind, scrollUpdate.GetViewportType(),
-          scrollUpdate.GetOrigin());
+          scrollUpdate.GetScrollTriggeredByScript(), animationKind,
+          scrollUpdate.GetViewportType(), scrollUpdate.GetOrigin());
       continue;
     }
 
@@ -6913,8 +6913,7 @@ void AsyncPanZoomController::ScrollSnapNear(const CSSPoint& aDestination,
       APZC_LOG("%p smooth scrolling to snap point %s\n", this,
                ToString(snapDestination->mPosition).c_str());
       SmoothScrollTo(std::move(*snapDestination), ScrollTriggeredByScript::No,
-                     ScrollAnimationKind::SmoothMsd,
-                     ViewportType::Visual,
+                     ScrollAnimationKind::SmoothMsd, ViewportType::Visual,
                      ScrollOrigin::NotSpecified);
     }
   }
@@ -6974,8 +6973,8 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
     SetDelayedTransformEnd(false);
 
     SmoothScrollTo(std::move(*snapDestination), ScrollTriggeredByScript::No,
-                   ScrollAnimationKind::SmoothMsd,
-                   ViewportType::Visual, ScrollOrigin::NotSpecified);
+                   ScrollAnimationKind::SmoothMsd, ViewportType::Visual,
+                   ScrollOrigin::NotSpecified);
   }
 }
 

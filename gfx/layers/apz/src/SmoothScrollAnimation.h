@@ -78,8 +78,7 @@ class SmoothScrollAnimation : public AsyncPanZoomAnimation {
  private:
   SmoothScrollAnimation(ScrollAnimationKind aKind,
                         AsyncPanZoomController& aApzc,
-                        ViewportType aViewportToScroll,
-                        ScrollOrigin aOrigin);
+                        ViewportType aViewportToScroll, ScrollOrigin aOrigin);
 
   void Update(TimeStamp aTime, const nsSize& aCurrentVelocity);
   CSSPoint GetViewportOffset(const FrameMetrics& aMetrics) const;

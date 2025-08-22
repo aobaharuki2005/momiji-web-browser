@@ -101,9 +101,7 @@ class ScrollPositionUpdate {
   // GetDelta is only valid for the PureRelative type; it asserts otherwise.
   CSSPoint GetDelta() const;
 
-  ViewportType GetViewportType() const {
-    return mViewportType;
-  }
+  ViewportType GetViewportType() const { return mViewportType; }
   ScrollTriggeredByScript GetScrollTriggeredByScript() const {
     return mTriggeredByScript;
   }
