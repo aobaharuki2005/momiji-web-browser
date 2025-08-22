@@ -5265,8 +5265,12 @@ gfxFloat nsLayoutUtils::GetMaybeSnappedBaselineY(nsIFrame* aFrame,
                                                  gfxContext* aContext,
                                                  nscoord aY, nscoord aAscent) {
   gfxFloat baseline = gfxFloat(aY) + aAscent;
-  // TODO: Remove this funciton when this pref is being removed.
+  // TODO: Remove this function when this pref is being removed.
   if (StaticPrefs::layout_disable_pixel_alignment()) {
+    return baseline;
+  }
+
+  if (aContext->CurrentMatrix().IsSingular()) {
     return baseline;
   }
 
@@ -5283,8 +5287,12 @@ gfxFloat nsLayoutUtils::GetMaybeSnappedBaselineX(nsIFrame* aFrame,
                                                  gfxContext* aContext,
                                                  nscoord aX, nscoord aAscent) {
   gfxFloat baseline = gfxFloat(aX) + aAscent;
-  // TODO: Remove this funciton when this pref is being removed.
+  // TODO: Remove this function when this pref is being removed.
   if (StaticPrefs::layout_disable_pixel_alignment()) {
+    return baseline;
+  }
+
+  if (aContext->CurrentMatrix().IsSingular()) {
     return baseline;
   }
 
