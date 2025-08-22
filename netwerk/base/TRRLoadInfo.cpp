@@ -457,12 +457,6 @@ TRRLoadInfo::GetLoadTriggeredFromExternal(bool* aLoadTriggeredFromExternal) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetServiceWorkerTaintingSynthesized(
-    bool* aServiceWorkerTaintingSynthesized) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetTainting(uint32_t* aTaintingOut) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -473,38 +467,6 @@ TRRLoadInfo::MaybeIncreaseTainting(uint32_t aTainting) {
 }
 
 void TRRLoadInfo::SynthesizeServiceWorkerTainting(LoadTainting aTainting) {}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetDocumentHasUserInteracted(bool* aDocumentHasUserInteracted) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetDocumentHasUserInteracted(bool aDocumentHasUserInteracted) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetAllowListFutureDocumentsCreatedFromThisRedirectChain(
-    bool* aValue) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetAllowListFutureDocumentsCreatedFromThisRedirectChain(
-    bool aValue) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetNeedForCheckingAntiTrackingHeuristic(bool* aValue) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetNeedForCheckingAntiTrackingHeuristic(bool aValue) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
 TRRLoadInfo::GetCspNonce(nsAString& aCspNonce) {

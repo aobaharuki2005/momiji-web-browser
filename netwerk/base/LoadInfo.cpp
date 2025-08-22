@@ -743,11 +743,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mAncestorBrowsingContextIDs(rhs.mAncestorBrowsingContextIDs.Clone()),
       mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders.Clone()),
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
-      mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted),
-      mAllowListFutureDocumentsCreatedFromThisRedirectChain(
-          rhs.mAllowListFutureDocumentsCreatedFromThisRedirectChain),
-      mNeedForCheckingAntiTrackingHeuristic(
-          rhs.mNeedForCheckingAntiTrackingHeuristic),
       mCspNonce(rhs.mCspNonce),
       mIntegrityMetadata(rhs.mIntegrityMetadata),
       mSkipContentSniffing(rhs.mSkipContentSniffing),
@@ -813,10 +808,7 @@ LoadInfo::LoadInfo(
     nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
     const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
     const nsTArray<nsCString>& aCorsUnsafeHeaders,
-    bool aLoadTriggeredFromExternal, bool aServiceWorkerTaintingSynthesized,
-    bool aDocumentHasUserInteracted,
-    bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
-    bool aNeedForCheckingAntiTrackingHeuristic, const nsAString& aCspNonce,
+    bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
     const nsAString& aIntegrityMetadata, bool aSkipContentSniffing,
     uint32_t aHttpsOnlyStatus, bool aHstsStatus,
     bool aHasValidUserGestureActivation, bool aTextDirectiveUserActivation,
@@ -877,12 +869,6 @@ LoadInfo::LoadInfo(
       mAncestorBrowsingContextIDs(aAncestorBrowsingContextIDs.Clone()),
       mCorsUnsafeHeaders(aCorsUnsafeHeaders.Clone()),
       mLoadTriggeredFromExternal(aLoadTriggeredFromExternal),
-      mServiceWorkerTaintingSynthesized(aServiceWorkerTaintingSynthesized),
-      mDocumentHasUserInteracted(aDocumentHasUserInteracted),
-      mAllowListFutureDocumentsCreatedFromThisRedirectChain(
-          aAllowListFutureDocumentsCreatedFromThisRedirectChain),
-      mNeedForCheckingAntiTrackingHeuristic(
-          aNeedForCheckingAntiTrackingHeuristic),
       mCspNonce(aCspNonce),
       mIntegrityMetadata(aIntegrityMetadata),
       mSkipContentSniffing(aSkipContentSniffing),
@@ -1866,14 +1852,6 @@ LoadInfo::GetLoadTriggeredFromExternal(bool* aLoadTriggeredFromExternal) {
 }
 
 NS_IMETHODIMP
-LoadInfo::GetServiceWorkerTaintingSynthesized(
-    bool* aServiceWorkerTaintingSynthesized) {
-  MOZ_ASSERT(aServiceWorkerTaintingSynthesized);
-  *aServiceWorkerTaintingSynthesized = mServiceWorkerTaintingSynthesized;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 LoadInfo::GetTainting(uint32_t* aTaintingOut) {
   MOZ_ASSERT(aTaintingOut);
   *aTaintingOut = static_cast<uint32_t>(mTainting);
@@ -1902,46 +1880,6 @@ void LoadInfo::SynthesizeServiceWorkerTainting(LoadTainting aTainting) {
 
   // Flag to prevent the tainting from being increased.
   mServiceWorkerTaintingSynthesized = true;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetDocumentHasUserInteracted(bool* aDocumentHasUserInteracted) {
-  MOZ_ASSERT(aDocumentHasUserInteracted);
-  *aDocumentHasUserInteracted = mDocumentHasUserInteracted;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetDocumentHasUserInteracted(bool aDocumentHasUserInteracted) {
-  mDocumentHasUserInteracted = aDocumentHasUserInteracted;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetAllowListFutureDocumentsCreatedFromThisRedirectChain(
-    bool* aValue) {
-  MOZ_ASSERT(aValue);
-  *aValue = mAllowListFutureDocumentsCreatedFromThisRedirectChain;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetAllowListFutureDocumentsCreatedFromThisRedirectChain(bool aValue) {
-  mAllowListFutureDocumentsCreatedFromThisRedirectChain = aValue;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetNeedForCheckingAntiTrackingHeuristic(bool* aValue) {
-  MOZ_ASSERT(aValue);
-  *aValue = mNeedForCheckingAntiTrackingHeuristic;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetNeedForCheckingAntiTrackingHeuristic(bool aValue) {
-  mNeedForCheckingAntiTrackingHeuristic = aValue;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

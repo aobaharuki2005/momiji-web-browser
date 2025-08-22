@@ -112,7 +112,21 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
                                                                                \
   GETTER(bool, ForcePreflight, forcePreflight, false)                          \
                                                                                \
-  GETTER(bool, IsPreflight, isPreflight, false)
+  GETTER(bool, IsPreflight, isPreflight, false)                                \
+                                                                               \
+  GETTER(bool, ServiceWorkerTaintingSynthesized,                               \
+         serviceWorkerTaintingSynthesized, false)                              \
+                                                                               \
+  GETTER(bool, DocumentHasUserInteracted, documentHasUserInteracted, false)    \
+  SETTER(bool, DocumentHasUserInteracted)                                      \
+                                                                               \
+  GETTER(bool, AllowListFutureDocumentsCreatedFromThisRedirectChain,           \
+         allowListFutureDocumentsCreatedFromThisRedirectChain, false)          \
+  SETTER(bool, AllowListFutureDocumentsCreatedFromThisRedirectChain)           \
+                                                                               \
+  GETTER(bool, NeedForCheckingAntiTrackingHeuristic,                           \
+         needForCheckingAntiTrackingHeuristic, false)                          \
+  SETTER(bool, NeedForCheckingAntiTrackingHeuristic)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -318,10 +332,6 @@ class LoadInfo final : public nsILoadInfo {
            const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
            const nsTArray<nsCString>& aCorsUnsafeHeaders,
            bool aLoadTriggeredFromExternal,
-           bool aServiceWorkerTaintingSynthesized,
-           bool aDocumentHasUserInteracted,
-           bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
-           bool aNeedForCheckingAntiTrackingHeuristic,
            const nsAString& aCspNonce, const nsAString& aIntegrityMetadata,
            bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus,
            bool aHstsStatus, bool aHasValidUserGestureActivation,
@@ -431,10 +441,6 @@ class LoadInfo final : public nsILoadInfo {
   nsTArray<uint64_t> mAncestorBrowsingContextIDs;
   nsTArray<nsCString> mCorsUnsafeHeaders;
   bool mLoadTriggeredFromExternal = false;
-  bool mServiceWorkerTaintingSynthesized = false;
-  bool mDocumentHasUserInteracted = false;
-  bool mAllowListFutureDocumentsCreatedFromThisRedirectChain = false;
-  bool mNeedForCheckingAntiTrackingHeuristic = false;
   nsString mCspNonce;
   nsString mIntegrityMetadata;
   bool mSkipContentSniffing = false;
