@@ -224,6 +224,10 @@ class IPProtectionServiceSingleton extends EventTarget {
       userAction,
       enabled: true,
     });
+
+    if (userAction) {
+      this.reloadCurrentTab();
+    }
   }
 
   /**
@@ -253,6 +257,20 @@ class IPProtectionServiceSingleton extends EventTarget {
         composed: true,
       })
     );
+
+    if (userAction) {
+      this.reloadCurrentTab();
+    }
+  }
+
+  /**
+   * Gets the current window and reloads the selected tab.
+   */
+  reloadCurrentTab() {
+    let win = Services.wm.getMostRecentBrowserWindow();
+    if (win) {
+      win.gBrowser.reloadTab(win.gBrowser.selectedTab);
+    }
   }
 
   /**

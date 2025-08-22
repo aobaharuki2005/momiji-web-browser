@@ -384,3 +384,61 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
   await cleanupAlpha();
   cleanupService();
 });
+
+function waitForTabReloaded(tab) {
+  return new Promise(resolve => {
+    gBrowser.addTabsProgressListener({
+      async onLocationChange(aBrowser) {
+        if (tab.linkedBrowser == aBrowser) {
+          gBrowser.removeTabsProgressListener(this);
+          await Promise.resolve();
+          resolve();
+        }
+      },
+    });
+  });
+}
+
+/**
+ * Tests a user start or stopping the proxy reloads the current tab.
+ */
+add_task(async function test_IPProtectionService_reload() {
+  setupService({
+    isSignedIn: true,
+    canEnroll: true,
+  });
+  let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
+
+  IPProtectionService.isSignedIn = false;
+  await IPProtectionService.updateSignInStatus();
+
+  Assert.ok(IPProtectionService.isEnrolled, "User should be enrolled");
+  Assert.equal(IPProtectionService.isEntitled, true, "User should be entitled");
+
+  let content = await openPanel();
+
+  Assert.ok(
+    BrowserTestUtils.isVisible(content),
+    "ipprotection content component should be present"
+  );
+  Assert.ok(
+    content.connectionToggleEl,
+    "Status card connection toggle should be present"
+  );
+
+  let tabReloaded = waitForTabReloaded(gBrowser.selectedTab);
+  content.connectionToggleEl.click();
+  await tabReloaded;
+
+  Assert.ok(IPProtectionService.isActive, "Proxy is active");
+
+  tabReloaded = waitForTabReloaded(gBrowser.selectedTab);
+  content.connectionToggleEl.click();
+  await tabReloaded;
+
+  Assert.ok(!IPProtectionService.isActive, "Proxy is not active");
+
+  await closePanel();
+  await cleanupAlpha();
+  cleanupService();
+});
