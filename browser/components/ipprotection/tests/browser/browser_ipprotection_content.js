@@ -234,6 +234,7 @@ add_task(async function test_ipprotection_events_on_toggle() {
   let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
 
   await setAndUpdateIsSignedIn(content, true);
+  IPProtectionService.isSignedIn = true;
 
   Assert.ok(
     BrowserTestUtils.isVisible(content),
@@ -249,6 +250,10 @@ add_task(async function test_ipprotection_events_on_toggle() {
     window,
     userEnableEventName
   );
+
+  IPProtectionService.isEnrolled = true;
+  IPProtectionService.isEntitled = true;
+
   content.connectionToggleEl.click();
 
   await enableEventPromise;
@@ -262,6 +267,10 @@ add_task(async function test_ipprotection_events_on_toggle() {
 
   await disableEventPromise;
   Assert.ok("Disable event was found after clicking the toggle");
+
+  IPProtectionService.isEnrolled = false;
+  IPProtectionService.isEntitled = false;
+  IPProtectionService.isSignedIn = false;
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { ERRORS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 const lazy = {};
 
@@ -249,7 +250,7 @@ class IPProtectionWidget {
    */
   #onBeforeCreated(doc) {
     let { ownerGlobal } = doc;
-    if (!this.#panels.has(ownerGlobal)) {
+    if (ownerGlobal && !this.#panels.has(ownerGlobal)) {
       let panel = new lazy.IPProtectionPanel(ownerGlobal, this.variant);
       this.#panels.set(ownerGlobal, panel);
     }
@@ -259,9 +260,18 @@ class IPProtectionWidget {
    * Gets the toolbaritem after the widget has been created and
    * adds content to the panel.
    *
-   * @param {XULElement} _toolbaritem - the widget toolbaritem.
+   * @param {XULElement} toolbaritem - the widget toolbaritem.
    */
-  #onCreated(_toolbaritem) {
+  #onCreated(toolbaritem) {
+    let isActive = lazy.IPProtectionService.isActive;
+    let isError =
+      lazy.IPProtectionService.hasError &&
+      lazy.IPProtectionService.errors.includes(ERRORS.GENERIC);
+    this.updateIconStatus(toolbaritem, {
+      isActive,
+      isError,
+    });
+
     this.readyTriggerIdleCallback = lazy.requestIdleCallback(
       this.sendReadyTrigger
     );
@@ -275,6 +285,11 @@ class IPProtectionWidget {
       "IPProtectionService:Stopped",
       this.handleEvent
     );
+
+    lazy.IPProtectionService.addEventListener(
+      "IPProtectionService:Error",
+      this.handleEvent
+    );
   }
 
   #onDestroyed() {
@@ -284,6 +299,10 @@ class IPProtectionWidget {
     );
     lazy.IPProtectionService.removeEventListener(
       "IPProtectionService:Stopped",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.removeEventListener(
+      "IPProtectionService:Error",
       this.handleEvent
     );
   }
@@ -308,11 +327,15 @@ class IPProtectionWidget {
   #handleEvent(event) {
     if (
       event.type == "IPProtectionService:Started" ||
-      event.type == "IPProtectionService:Stopped"
+      event.type == "IPProtectionService:Stopped" ||
+      event.type == "IPProtectionService:Error"
     ) {
+      let isError =
+        lazy.IPProtectionService.hasError &&
+        lazy.IPProtectionService.errors.includes(ERRORS.GENERIC);
       let status = {
         isActive: lazy.IPProtectionService.isActive,
-        isError: !!event.detail?.error,
+        isError,
       };
 
       let widget = lazy.CustomizableUI.getWidget(IPProtectionWidget.WIDGET_ID);

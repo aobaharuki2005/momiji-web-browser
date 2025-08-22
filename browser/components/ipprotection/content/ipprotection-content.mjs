@@ -3,7 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
-import { html, classMap } from "chrome://global/content/vendor/lit.all.mjs";
+import {
+  html,
+  classMap,
+  ifDefined,
+} from "chrome://global/content/vendor/lit.all.mjs";
 import {
   LINKS,
   ERRORS,
@@ -38,7 +42,7 @@ export default class IPProtectionContentElement extends MozLitElement {
   };
 
   static properties = {
-    state: { type: Object },
+    state: { type: Object, attribute: false },
     showAnimation: { type: Boolean, state: true },
     /**
      * _timeString is the current value shown on the panel,
@@ -48,6 +52,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     _timeString: { type: String, state: true },
     _showMessageBar: { type: Boolean, state: true },
     _messageDismissed: { type: Boolean, state: true },
+    _enabled: { type: Boolean, state: true },
   };
 
   constructor() {
@@ -62,6 +67,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     this.showAnimation = false;
     this._timeString = "";
     this._connectionTimeInterval = null;
+    this._enabled = null;
   }
 
   connectedCallback() {
@@ -168,6 +174,8 @@ export default class IPProtectionContentElement extends MozLitElement {
         new CustomEvent("IPProtection:UserDisable", { bubbles: true })
       );
     }
+
+    this._enabled = isEnabled;
   }
 
   handleUpgrade(event) {
@@ -226,6 +234,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     if (event.type === "ipprotection-message-bar:user-dismissed") {
       this._showMessageBar = false;
       this._messageDismissed = true;
+      this.state.error = "";
     }
   }
 
@@ -235,6 +244,17 @@ export default class IPProtectionContentElement extends MozLitElement {
     // If the only updates are time string changes, ignore them.
     if (changedProperties.size == 1 && changedProperties.has("_timeString")) {
       return;
+    }
+
+    // Set the toggle to the protection enabled state, if it hasn't just changed.
+    if (!changedProperties.has("_enabled")) {
+      this._enabled = this.state.isProtectionEnabled;
+    }
+
+    // Clear hiding messages and disable the toggle when if there is an error.
+    if (this.state.error) {
+      this._messageDismissed = false;
+      this._enabled = false;
     }
 
     /**
@@ -311,7 +331,7 @@ export default class IPProtectionContentElement extends MozLitElement {
           id="connection-toggle"
           data-l10n-id=${toggleL10nId}
           @click=${this.handleToggleConnect}
-          ?pressed=${this.state.isProtectionEnabled}
+          ?pressed=${ifDefined(this._enabled)}
           slot="actions"
         ></moz-toggle>
       </moz-box-item>

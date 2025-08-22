@@ -116,6 +116,53 @@ add_task(async function toolbar_icon_status() {
   await panelHiddenPromise;
 });
 
+/**
+ * Tests that the toolbar icon in a new window has the previous status.
+ */
+add_task(async function toolbar_icon_status_new_window() {
+  setupService({
+    isSignedIn: true,
+    isEnrolled: true,
+  });
+  // Mock signing in
+  IPProtectionService.isSignedIn = false;
+  await IPProtectionService.updateSignInStatus();
+
+  let content = await openPanel({
+    isSignedIn: true,
+  });
+
+  let vpnOnPromise = BrowserTestUtils.waitForEvent(
+    lazy.IPProtectionService,
+    "IPProtectionService:Started"
+  );
+  // Toggle the VPN on
+  content.connectionToggleEl.click();
+  await vpnOnPromise;
+
+  let button = document.getElementById(IPProtectionWidget.WIDGET_ID);
+  Assert.ok(
+    button.classList.contains("ipprotection-on"),
+    "Toolbar icon should now show connected status"
+  );
+
+  // Check the icon status is set for new windows
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow({
+    url: "about:newtab",
+  });
+  let newButton = newWindow.document.getElementById(
+    IPProtectionWidget.WIDGET_ID
+  );
+  Assert.ok(
+    newButton.classList.contains("ipprotection-on"),
+    "New toolbar icon should show connected status"
+  );
+  await BrowserTestUtils.closeWindow(newWindow);
+
+  await setPanelState();
+  cleanupService();
+});
+
 add_task(async function customize_toolbar_remove_widget() {
   let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
