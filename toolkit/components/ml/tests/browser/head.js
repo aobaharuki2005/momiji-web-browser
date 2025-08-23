@@ -220,11 +220,10 @@ const MODEL_RUN_LATENCY = "model-run-latency";
 const TOTAL_MEMORY_USAGE = "total-memory-usage";
 const COLD_START_PREFIX = "cold-start-";
 const PEAK_MEMORY_USAGE = "peak-memory-usage";
-const ITERATIONS = 4;
+const ITERATIONS = 10;
 const WHEN = "when";
 const MEMORY = "memory";
 const E2E_INIT_LATENCY = "e2e-init-latency";
-const E2E_RUN_LATENCY = "e2e-run-latency";
 const FIRST_TOKEN_LATENCY = "1st-token-latency";
 const DECODING_LATENCY = "decoding-latency";
 // Token speeds are apppropriate for comparing the speed of the same model.
@@ -521,8 +520,6 @@ async function runInference({
   let metrics = {};
   let timeToFirstToken;
   let startTime;
-  let runStartTime;
-  let runEndTime;
   let numGeneratedCharacters = 0;
   let numGeneratedTokens = 0;
   let numPromptCharacters = 0;
@@ -538,7 +535,6 @@ async function runInference({
     let currentTokenLen = 0;
     let currentCharLen = 0;
     startTime = performance.now();
-    runStartTime = startTime;
     const generator = engine.runWithGenerator(request);
 
     do {
@@ -566,8 +562,7 @@ async function runInference({
 
   try {
     const res = await run();
-    runEndTime = performance.now();
-    const decodingTime = runEndTime - startTime;
+    const decodingTime = performance.now() - startTime;
     metrics = fetchMetrics(res.metrics || [], isFirstRun);
     metrics[`${isFirstRun ? COLD_START_PREFIX : ""}${TOTAL_MEMORY_USAGE}`] =
       await getTotalMemoryUsage();
@@ -578,8 +573,6 @@ async function runInference({
       timeToFirstToken;
     metrics[`${isFirstRun ? COLD_START_PREFIX : ""}${DECODING_LATENCY}`] =
       decodingTime;
-    metrics[`${isFirstRun ? COLD_START_PREFIX : ""}${E2E_RUN_LATENCY}`] =
-      runEndTime - runStartTime;
     metrics[
       `${isFirstRun ? COLD_START_PREFIX : ""}${DECODING_CHARACTERS_SPEED}`
     ] = numGeneratedCharacters / (decodingTime / MS_PER_SEC);
@@ -667,7 +660,6 @@ async function perfTest({
       `${name}-${INITIALIZATION_LATENCY}`,
       `${name}-${MODEL_RUN_LATENCY}`,
       `${name}-${TOTAL_MEMORY_USAGE}`,
-      `${name}-${E2E_RUN_LATENCY}`,
       `${name}-${E2E_INIT_LATENCY}`,
       `${name}-${FIRST_TOKEN_LATENCY}`,
       `${name}-${DECODING_LATENCY}`,

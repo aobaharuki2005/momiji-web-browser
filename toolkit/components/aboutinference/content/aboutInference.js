@@ -1121,7 +1121,7 @@ async function runBenchmark() {
   benchmarkConsole.addText("Starting benchmark...\n");
   let backend = document.getElementById("benchmark.backend").value;
   if (backend === "all") {
-    backend = Object.values(lazy.BACKENDS);
+    backend = lazy.BACKENDS;
   } else {
     backend = [backend];
   }
@@ -1141,7 +1141,7 @@ async function runBenchmark() {
       name: "ner-small",
       inputArgs: ["Sarah lives in the United States of America"],
       runOptions: {},
-      compatibleBackends: [lazy.BACKENDS.onnx],
+      compatibleBackends: ["onnx"],
       pipelineOptions: {
         taskName: "token-classification",
         modelId: "Xenova/bert-base-NER",
@@ -1154,7 +1154,7 @@ async function runBenchmark() {
     {
       name: "feature-extraction-large",
       inputArgs: [repeatedSentences],
-      compatibleBackends: [lazy.BACKENDS.onnx],
+      compatibleBackends: ["onnx"],
       runOptions: { pooling: "mean", normalize: true },
       pipelineOptions: {
         taskName: "feature-extraction",
@@ -1167,7 +1167,7 @@ async function runBenchmark() {
     },
     {
       name: "image-to-text",
-      compatibleBackends: [lazy.BACKENDS.onnx],
+      compatibleBackends: ["onnx"],
       inputArgs: [
         "https://huggingface.co/datasets/mishig/sample_images/resolve/main/football-match.jpg",
       ],
@@ -1183,7 +1183,7 @@ async function runBenchmark() {
     },
     {
       name: "link-preview",
-      compatibleBackends: [lazy.BACKENDS.wllama],
+      compatibleBackends: ["wllama"],
       inputArgs: `Summarize this: ${TINY_ARTICLE}`,
       runOptions: {
         nPredict: 100,
@@ -1305,8 +1305,8 @@ window.onload = async function () {
   fillSelect("taskName", TASKS);
   fillSelect("numThreads", getNumThreadsArray());
   fillSelect("predefined", PREDEFINED);
-  fillSelect("benchmark.backend", ["all"].concat(Object.values(lazy.BACKENDS)));
-  fillSelect("backend", Object.values(lazy.BACKENDS));
+  fillSelect("benchmark.backend", ["all"].concat(lazy.BACKENDS));
+  fillSelect("backend", lazy.BACKENDS);
 
   document.getElementById("predefined").value = "feature-large";
   loadExample("feature-large");
