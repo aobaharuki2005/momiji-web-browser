@@ -78,10 +78,16 @@ llm_chat_template llm_chat_template_from_str(const std::string & name) {
 }
 
 llm_chat_template llm_chat_detect_template(const std::string & tmpl) {
+#if 0
     try {
         return llm_chat_template_from_str(tmpl);
     } catch (const std::out_of_range &) {
         // ignore
+    }
+#endif
+    auto chat_template = LLM_CHAT_TEMPLATES.find(tmpl);
+    if (chat_template != LLM_CHAT_TEMPLATES.end()) {
+        return chat_template->second;
     }
 
     auto tmpl_contains = [&tmpl](const char * haystack) -> bool {

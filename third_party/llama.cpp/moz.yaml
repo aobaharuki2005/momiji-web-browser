@@ -80,3 +80,4 @@ vendoring:
      - no-wstring.patch # same, charset conversion is too recent
      - get-terminate.patch # remove forbidden function usage, that we don't need
      - random_device.patch # use of std::random_device, also too recent on linux
+     - detect-chat-template.patch # don't crash on exception caught for control flow
