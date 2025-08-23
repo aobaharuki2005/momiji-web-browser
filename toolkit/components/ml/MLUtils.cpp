@@ -100,16 +100,15 @@ NS_IMETHODIMP MLUtils::GetOptimalCPUConcurrency(uint8_t* _retval) {
 }
 
 NS_IMETHODIMP MLUtils::CanUseLlamaCpp(bool* _retval) {
-
-  #ifdef __x86_64__
+#ifdef __x86_64__
   if (mozilla::supports_avx2()) {
     *_retval = true;
   }
-  #elif defined(__aarch64__)
+#elif defined(__aarch64__)
   *_retval = true;
-  #else
+#else
   *_retval = false;
-  #endif
+#endif
 
   return NS_OK;
 }
