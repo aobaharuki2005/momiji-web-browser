@@ -52,6 +52,20 @@ internal fun loginsReducer(state: LoginsState, action: LoginsAction) = when (act
     is LoginsListBackClicked -> state.respondToLoginsListBackClick()
     is AddLoginBackClicked -> state.respondToAddLoginBackClick()
     is EditLoginBackClicked -> state.respondToEditLoginBackClick()
+    is BiometricAuthenticationAction.AuthenticationSucceeded -> state.copy(
+        biometricAuthenticationState = BiometricAuthenticationState.Authorized,
+    )
+    is BiometricAuthenticationAction.AuthenticationInProgress -> state.copy(
+        biometricAuthenticationState = BiometricAuthenticationState.InProgress,
+    )
+    is BiometricAuthenticationAction.AuthenticationFailed -> state.copy(
+        biometricAuthenticationState = BiometricAuthenticationState.NonAuthorized,
+    )
+    is BiometricAuthenticationDialogAction -> state.copy(
+        biometricAuthenticationDialogState = BiometricAuthenticationDialogState(
+            action.shouldShowDialog,
+        ),
+    )
     ViewDisposed,
     is Init, LearnMoreAboutSync,
     -> state

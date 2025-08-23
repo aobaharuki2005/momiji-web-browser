@@ -122,6 +122,9 @@ internal class LoginsMiddleware(
             is EditLoginAction.SaveEditClicked -> {
                 context.store.handleEditLogin(loginItem = action.login)
             }
+            is BiometricAuthenticationAction.AuthenticationSucceeded,
+            is BiometricAuthenticationAction.AuthenticationInProgress,
+            is BiometricAuthenticationAction.AuthenticationFailed,
             is LoginsLoaded,
             is EditLoginAction.UsernameChanged,
             is EditLoginAction.PasswordChanged,
@@ -129,6 +132,7 @@ internal class LoginsMiddleware(
             is AddLoginAction.HostChanged,
             is AddLoginAction.UsernameChanged,
             is AddLoginAction.PasswordChanged,
+            is BiometricAuthenticationDialogAction,
             is DetailLoginMenuAction.DeleteLoginMenuItemClicked,
             is LoginDeletionDialogAction.CancelTapped,
             is ViewDisposed,

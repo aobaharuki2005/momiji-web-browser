@@ -44,6 +44,9 @@ import androidx.compose.ui.semantics.collectionInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -81,8 +84,22 @@ internal fun SavedLoginsScreen(
     val store = buildStore(navController)
 
     DisposableEffect(LocalLifecycleOwner.current) {
+        val observer = object : DefaultLifecycleObserver {
+            override fun onPause(owner: LifecycleOwner) {
+                super.onPause(owner)
+                store.dispatch(BiometricAuthenticationAction.AuthenticationFailed)
+            }
+
+            override fun onResume(owner: LifecycleOwner) {
+                super.onResume(owner)
+                store.dispatch(BiometricAuthenticationDialogAction(true))
+            }
+        }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
+
         onDispose {
             store.dispatch(ViewDisposed)
+            ProcessLifecycleOwner.get().lifecycle.removeObserver(observer)
         }
     }
 
@@ -131,6 +148,10 @@ private fun LoginsList(store: LoginsStore) {
         contentWindowInsets = WindowInsets(0.dp),
     ) { paddingValues ->
 
+        if (state.biometricAuthenticationDialogState.shouldShow) {
+            BiometricAuthenticationDialog(store = store)
+        }
+
         if (state.searchText.isNullOrEmpty() && state.loginItems.isEmpty()) {
             EmptyList(dispatcher = store::dispatch, paddingValues = paddingValues)
             return@Scaffold
@@ -140,29 +161,31 @@ private fun LoginsList(store: LoginsStore) {
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .width(FirefoxTheme.layout.size.containerMaxWidth)
-                    .weight(1f, false)
-                    .semantics {
-                        collectionInfo =
-                            CollectionInfo(rowCount = state.loginItems.size, columnCount = 1)
-                    },
-            ) {
-                itemsIndexed(state.loginItems) { _, item ->
+            if (state.biometricAuthenticationState == BiometricAuthenticationState.Authorized) {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .width(FirefoxTheme.layout.size.containerMaxWidth)
+                        .weight(1f, false)
+                        .semantics {
+                            collectionInfo =
+                                CollectionInfo(rowCount = state.loginItems.size, columnCount = 1)
+                        },
+                ) {
+                    itemsIndexed(state.loginItems) { _, item ->
 
-                    if (state.isGuidToDelete(item.guid)) {
-                        return@itemsIndexed
+                        if (state.isGuidToDelete(item.guid)) {
+                            return@itemsIndexed
+                        }
+
+                        SelectableFaviconListItem(
+                            label = item.url.trimmed(),
+                            url = item.url,
+                            isSelected = false,
+                            onClick = { store.dispatch(LoginClicked(item)) },
+                            description = item.username.trimmed(),
+                        )
                     }
-
-                    SelectableFaviconListItem(
-                        label = item.url.trimmed(),
-                        url = item.url,
-                        isSelected = false,
-                        onClick = { store.dispatch(LoginClicked(item)) },
-                        description = item.username.trimmed(),
-                    )
                 }
             }
 
