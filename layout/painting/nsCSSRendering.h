@@ -374,8 +374,7 @@ struct nsCSSRendering {
     ImageLayerClipState()
         : mHasRoundedCorners(false),
           mHasAdditionalBGClipArea(false),
-          mCustomClip(false) {
-    }
+          mCustomClip(false) {}
 
     bool IsValid() const;
   };

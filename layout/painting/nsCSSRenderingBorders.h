@@ -94,7 +94,8 @@ class nsCSSBorderRenderer final {
   nsCSSBorderRenderer(nsPresContext* aPresContext, DrawTarget* aDrawTarget,
                       const Rect& aDirtyRect, Rect& aOuterRect,
                       const mozilla::StyleBorderStyle* aBorderStyles,
-                      const Margin& aBorderWidths, RectCornerRadii& aBorderRadii,
+                      const Margin& aBorderWidths,
+                      RectCornerRadii& aBorderRadii,
                       const nscolor* aBorderColors, bool aBackfaceIsVisible,
                       const mozilla::Maybe<Rect>& aClipRect);
 
