@@ -158,14 +158,10 @@ dictionary LlamaModelOptions {
   long nGpuLayers = 0;
 
   /**
-   * Path the model in OPFS.
-   */
-  required UTF8String modelPath;
-
-  /**
    * Context configuration (e.g. nCtx, threads).
    */
   LlamaContextOptions context = {};
+
 };
 
 enum LlamaSamplerType {
@@ -393,7 +389,9 @@ dictionary LlamaChatOptions {
 
 [Func="LlamaRunner::InInferenceProcess", Exposed=(DedicatedWorker,Window)]
 interface LlamaRunner {
-  [Throws] constructor(LlamaModelOptions options);
+  [Throws] constructor();
+
+  [Throws] Promise<undefined> initialize(LlamaModelOptions options, Blob modelBlob);
 
   [Throws] Promise<UTF8String> formatChat(LlamaFormatChatOptions options);
 

@@ -631,7 +631,6 @@ class EngineDispatcher {
  * @param {string} config.featureId - The feature id
  * @param {string} config.sessionId - Shared across the same session.
  * @param {object} config.telemetryData - Additional telemetry data.
- * @param {boolean} config.returnFullPath - Return the absolute path on disk.
  * @returns {Promise} A promise that resolves to a Meta object containing the URL, response headers,
  * and model path.
  */
@@ -645,7 +644,6 @@ async function getModelFile({
   featureId,
   sessionId,
   telemetryData,
-  returnFullPath,
 }) {
   const [data, headers] = await getModelFileFn({
     engineId: engineId || lazy.DEFAULT_ENGINE_ID,
@@ -656,7 +654,6 @@ async function getModelFile({
     featureId,
     sessionId,
     telemetryData,
-    returnFullPath,
   });
   return new lazy.BasePromiseWorker.Meta([url, headers, data], {});
 }
@@ -696,11 +693,7 @@ class InferenceEngine {
 
     /** @type {BasePromiseWorker} */
     const worker = new lazy.BasePromiseWorker(workerUrl, workerOptions, {
-      getModelFile: async ({
-        url,
-        sessionId = "",
-        returnFullPath = false,
-      } = {}) =>
+      getModelFile: async ({ url, sessionId = "" } = {}) =>
         getModelFile({
           engineId: pipelineOptions.engineId,
           url,
@@ -709,7 +702,6 @@ class InferenceEngine {
           modelHubRootUrl: pipelineOptions.modelHubRootUrl,
           modelHubUrlTemplate: pipelineOptions.modelHubUrlTemplate,
           featureId: pipelineOptions.featureId,
-          returnFullPath,
           sessionId,
           // We have model, revision that are parsed for the url.
           // However, we want to save in telemetry the ones that are configured
