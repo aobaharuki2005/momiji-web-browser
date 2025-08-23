@@ -20,14 +20,20 @@ export const DEFAULT_ENGINE_ID = "default-engine";
  * @type {Array<string>}
  * @description Supported backends.
  */
-export const BACKENDS = ["onnx", "wllama", "onnx-native", "llama.cpp"];
+export const BACKENDS = Object.freeze({
+  onnx: "onnx",
+  wllama: "wllama",
+  onnxNative: "onnx-native",
+  llamaCpp: "llama.cpp",
+  bestLlama: "best-llama",
+});
 
 /**
  * @constant
  * @type {Array<string>}
  * @description Backends using WASM.
  */
-export const WASM_BACKENDS = ["onnx", "wllama"];
+export const WASM_BACKENDS = [BACKENDS.onnx, BACKENDS.wllama];
 
 /**
  * @constant
@@ -848,11 +854,14 @@ export class PipelineOptions {
         this.#validateIntegerRange(key, options[key], 1, 10000000);
       }
 
-      if (key === "backend" && !BACKENDS.includes(options[key])) {
+      if (
+        key === "backend" &&
+        !Object.values(BACKENDS).includes(options[key])
+      ) {
         throw new PipelineOptionsValidationError(
           key,
           options[key],
-          `Should be one of ${BACKENDS.join(", ")}`
+          `Should be one of ${Object.values(BACKENDS).join(", ")}`
         );
       }
 
