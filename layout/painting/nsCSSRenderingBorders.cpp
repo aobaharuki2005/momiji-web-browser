@@ -100,10 +100,7 @@ static bool IsZeroSize(const Size& sz) {
 
 /* static */
 bool nsCSSBorderRenderer::AllCornersZeroSize(const RectCornerRadii& corners) {
-  return IsZeroSize(corners[eCornerTopLeft]) &&
-         IsZeroSize(corners[eCornerTopRight]) &&
-         IsZeroSize(corners[eCornerBottomRight]) &&
-         IsZeroSize(corners[eCornerBottomLeft]);
+  return corners.IsEmpty();
 }
 
 static mozilla::Side GetHorizontalSide(Corner aCorner) {

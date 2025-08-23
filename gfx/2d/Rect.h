@@ -394,43 +394,54 @@ Maybe<Rect> UnionMaybeRects(const Maybe<Rect>& a, const Maybe<Rect>& b) {
   }
 }
 
-struct RectCornerRadii final {
+template <typename Coord, typename Size, typename Margin>
+struct BaseRectCornerRadii {
   Size radii[eCornerCount];
 
-  RectCornerRadii() = default;
+  BaseRectCornerRadii() = default;
 
-  explicit RectCornerRadii(Float radius) {
+  explicit BaseRectCornerRadii(Coord radius) {
     for (const auto i : mozilla::AllPhysicalCorners()) {
       radii[i].SizeTo(radius, radius);
     }
   }
 
-  RectCornerRadii(Float radiusX, Float radiusY) {
+  BaseRectCornerRadii(Coord radiusX, Coord radiusY) {
     for (const auto i : mozilla::AllPhysicalCorners()) {
       radii[i].SizeTo(radiusX, radiusY);
     }
   }
 
-  RectCornerRadii(Float tl, Float tr, Float br, Float bl) {
+  BaseRectCornerRadii(Coord tl, Coord tr, Coord br, Coord bl) {
     radii[eCornerTopLeft].SizeTo(tl, tl);
     radii[eCornerTopRight].SizeTo(tr, tr);
     radii[eCornerBottomRight].SizeTo(br, br);
     radii[eCornerBottomLeft].SizeTo(bl, bl);
   }
 
-  RectCornerRadii(const Size& tl, const Size& tr, const Size& br,
-                  const Size& bl) {
+  BaseRectCornerRadii(const Size& tl, const Size& tr, const Size& br,
+                      const Size& bl) {
     radii[eCornerTopLeft] = tl;
     radii[eCornerTopRight] = tr;
     radii[eCornerBottomRight] = br;
     radii[eCornerBottomLeft] = bl;
   }
 
-  const Size& operator[](size_t aCorner) const { return radii[aCorner]; }
+  const Size& operator[](Corner aCorner) const { return radii[aCorner]; }
+  Size& operator[](Corner aCorner) { return radii[aCorner]; }
 
-  Size& operator[](size_t aCorner) { return radii[aCorner]; }
+  const Coord& operator[](HalfCorner aCorner) const {
+    return reinterpret_cast<const Coord*>(&radii)[aCorner];
+  }
+  Coord& operator[](HalfCorner aCorner) {
+    return reinterpret_cast<Coord*>(&radii)[aCorner];
+  }
 
-  bool operator==(const RectCornerRadii& aOther) const {
+  bool operator!=(const BaseRectCornerRadii& aOther) const {
+    return !(*this == aOther);
+  }
+
+  bool operator==(const BaseRectCornerRadii& aOther) const {
     return TopLeft() == aOther.TopLeft() && TopRight() == aOther.TopRight() &&
            BottomRight() == aOther.BottomRight() &&
            BottomLeft() == aOther.BottomLeft();
@@ -442,27 +453,31 @@ struct RectCornerRadii final {
   }
 
   void Scale(Float aXScale, Float aYScale) {
-    for (const auto i : mozilla::AllPhysicalCorners()) {
-      radii[i].Scale(aXScale, aYScale);
+    for (auto& corner : radii) {
+      corner.Scale(aXScale, aYScale);
     }
   }
 
-  const Size TopLeft() const { return radii[eCornerTopLeft]; }
+  const Size& TopLeft() const { return radii[eCornerTopLeft]; }
   Size& TopLeft() { return radii[eCornerTopLeft]; }
 
-  const Size TopRight() const { return radii[eCornerTopRight]; }
+  const Size& TopRight() const { return radii[eCornerTopRight]; }
   Size& TopRight() { return radii[eCornerTopRight]; }
 
-  const Size BottomRight() const { return radii[eCornerBottomRight]; }
+  const Size& BottomRight() const { return radii[eCornerBottomRight]; }
   Size& BottomRight() { return radii[eCornerBottomRight]; }
 
-  const Size BottomLeft() const { return radii[eCornerBottomLeft]; }
+  const Size& BottomLeft() const { return radii[eCornerBottomLeft]; }
   Size& BottomLeft() { return radii[eCornerBottomLeft]; }
 
   bool IsEmpty() const {
     return TopLeft().IsEmpty() && TopRight().IsEmpty() &&
            BottomRight().IsEmpty() && BottomLeft().IsEmpty();
   }
+};
+
+struct RectCornerRadii final : public BaseRectCornerRadii<Float, Size, Margin> {
+  using BaseRectCornerRadii::BaseRectCornerRadii;
 };
 
 /* A rounded rectangle abstraction.

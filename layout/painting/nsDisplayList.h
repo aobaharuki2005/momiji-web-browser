@@ -2605,7 +2605,7 @@ class nsDisplayItem {
     nsRect bounds = GetBounds(aBuilder, &snap);
 
     if (!aGeometry->mBounds.IsEqualInterior(bounds)) {
-      nscoord radii[8];
+      nsRectCornerRadii radii;
       if (aGeometry->mHasRoundedCorners || Frame()->GetBorderRadii(radii)) {
         aInvalidRegion->Or(aGeometry->mBounds, bounds);
       } else {
@@ -4010,27 +4010,25 @@ class nsDisplayBorder : public nsPaintedDisplayItem {
                            borderBounds.Height()));
     }
 
-    nscoord radii[8];
+    nsRectCornerRadii radii;
     if (mFrame->GetBorderRadii(radii)) {
       if (border.left > 0 || border.top > 0) {
-        nsSize cornerSize(radii[eCornerTopLeftX], radii[eCornerTopLeftY]);
-        result.OrWith(nsRect(borderBounds.TopLeft(), cornerSize));
+        result.OrWith(nsRect(borderBounds.TopLeft(), radii.TopLeft()));
       }
       if (border.top > 0 || border.right > 0) {
-        nsSize cornerSize(radii[eCornerTopRightX], radii[eCornerTopRightY]);
+        const nsSize& cornerSize = radii.TopRight();
         result.OrWith(
             nsRect(borderBounds.TopRight() - nsPoint(cornerSize.width, 0),
                    cornerSize));
       }
       if (border.right > 0 || border.bottom > 0) {
-        nsSize cornerSize(radii[eCornerBottomRightX],
-                          radii[eCornerBottomRightY]);
+        const nsSize& cornerSize = radii.BottomRight();
         result.OrWith(nsRect(borderBounds.BottomRight() -
                                  nsPoint(cornerSize.width, cornerSize.height),
                              cornerSize));
       }
       if (border.bottom > 0 || border.left > 0) {
-        nsSize cornerSize(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]);
+        const nsSize& cornerSize = radii.BottomLeft();
         result.OrWith(
             nsRect(borderBounds.BottomLeft() - nsPoint(0, cornerSize.height),
                    cornerSize));
