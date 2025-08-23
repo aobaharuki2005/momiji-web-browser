@@ -243,6 +243,7 @@ web-platform-tests-reftest:
         - no-fission
         - webrender-sw+no-fission
         - webrender-sw
+        - draw-snapshot
     run-on-projects:
         by-variant:
             webrender-sw:
@@ -272,6 +273,10 @@ web-platform-tests-reftest:
                     linux2404-64-asan/opt: ['mozilla-central']
                     android.*: built-projects
                     default: []
+            draw-snapshot:
+                by-test-platform:
+                    linux2404.*/debug: built-projects
+                    default: []
             default:
                 by-test-platform:
                     android.*: []
@@ -283,6 +288,7 @@ web-platform-tests-reftest:
                 by-test-platform:
                     linux.*: 2
                     default: default
+            draw-snapshot: 2
             default:
                 by-test-platform:
                     android-em.*/debug-isolated-process: 3

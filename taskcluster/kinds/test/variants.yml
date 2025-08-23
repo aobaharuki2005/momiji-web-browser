@@ -495,10 +495,14 @@ draw-snapshot:
                     "linux" in task["test-platform"]
                     && "debug" in task["test-platform"]
                 )
-                    && "reftest" == task["try-name"]
+                && (
+                    "reftest" == task["try-name"]
+                    || "web-platform-tests-reftest" == task["try-name"]
+                )
                 '
     replace:
         virtualization: virtual
+    merge:
         mozharness:
             extra-options:
                 - "--setpref=reftest.use-draw-snapshot=true"
