@@ -676,7 +676,9 @@ uint64_t Navigator::HardwareConcurrency() {
 
   return rts->ClampedHardwareConcurrency(
       nsGlobalWindowInner::Cast(mWindow)->ShouldResistFingerprinting(
-          RFPTarget::NavigatorHWConcurrency));
+          RFPTarget::NavigatorHWConcurrency),
+      nsGlobalWindowInner::Cast(mWindow)->ShouldResistFingerprinting(
+          RFPTarget::NavigatorHWConcurrencyTiered));
 }
 
 namespace {
