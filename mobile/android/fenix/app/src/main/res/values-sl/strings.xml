@@ -36,6 +36,8 @@
   <string name="tab_manager_empty_private_tabs_page_header">Zasebno brskanje</string>
   <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
   <string name="tab_manager_empty_private_tabs_page_description">%1$s ne bo shranjeval zgodovine in piškotkov, novi zaznamki pa se bodo shranili.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Ustvarite nov zavihek za začetek iskanja</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d izbranih</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
