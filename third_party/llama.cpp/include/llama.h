@@ -422,6 +422,20 @@ extern "C" {
                                  size_t    n_paths,
               struct llama_model_params    params);
 
+    // Load the model from a buffer
+    // The buffer must contain a complete GGUF file
+    LLAMA_API struct llama_model * llama_model_load_from_buffer(
+                            const void * buffer,
+                                size_t   buffer_size,
+              struct llama_model_params   params);
+
+    // Load the model from a file handle
+    // The file handle must be positioned at the beginning of a complete GGUF file
+    // The caller is responsible for closing the file handle
+    LLAMA_API struct llama_model * llama_model_load_from_file_handle(
+                                  FILE * file,
+              struct llama_model_params   params);
+
     LLAMA_API void llama_model_save_to_file(
             const struct llama_model * model,
                         const char * path_model);
