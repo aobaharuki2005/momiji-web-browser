@@ -533,16 +533,6 @@ static inline wr::ComplexClipRegion ToComplexClipRegion(
   return ret;
 }
 
-static inline wr::LayoutSideOffsets ToBorderWidths(float top, float right,
-                                                   float bottom, float left) {
-  wr::LayoutSideOffsets bw;
-  bw.top = top;
-  bw.right = right;
-  bw.bottom = bottom;
-  bw.left = left;
-  return bw;
-}
-
 static inline wr::DeviceIntSideOffsets ToDeviceIntSideOffsets(int32_t top,
                                                               int32_t right,
                                                               int32_t bottom,
@@ -564,6 +554,21 @@ static inline wr::LayoutSideOffsets ToLayoutSideOffsets(float top, float right,
   offset.bottom = bottom;
   offset.left = left;
   return offset;
+}
+
+static inline wr::LayoutSideOffsets ToLayoutSideOffsets(
+    const gfx::Margin& aMargin) {
+  return ToLayoutSideOffsets(aMargin.top, aMargin.right, aMargin.bottom,
+                             aMargin.left);
+}
+
+static inline wr::LayoutSideOffsets ToBorderWidths(float top, float right,
+                                                   float bottom, float left) {
+  return ToLayoutSideOffsets(top, right, bottom, left);
+}
+
+static inline wr::LayoutSideOffsets ToBorderWidths(const gfx::Margin& aMargin) {
+  return ToLayoutSideOffsets(aMargin);
 }
 
 wr::RepeatMode ToRepeatMode(StyleBorderImageRepeatKeyword);

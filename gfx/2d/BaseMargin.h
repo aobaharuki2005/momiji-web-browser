@@ -120,9 +120,13 @@ struct BaseMargin {
     left = std::min(left, aMargin.left);
   }
 
-  bool IsAllZero() const {
-    return left == 0 && top == 0 && right == 0 && bottom == 0;
+  bool IsAll(Coord aCoord) const {
+    return left == aCoord && top == aCoord && right == aCoord &&
+           bottom == aCoord;
   }
+
+  bool IsAllZero() const { return IsAll(0); }
+  bool IsAllEqual() const { return IsAll(top); }
 
   // Overloaded operators. Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator

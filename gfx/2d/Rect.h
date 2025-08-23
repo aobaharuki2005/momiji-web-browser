@@ -90,6 +90,11 @@ struct MarginTyped
                                  int32_t(std::floor(this->bottom + 0.5f)),
                                  int32_t(std::floor(this->left + 0.5f)));
   }
+
+  MarginTyped<UnknownUnits, F> ToUnknownMargin() const {
+    return MarginTyped<UnknownUnits, F>(this->top.value, this->right.value,
+                                        this->bottom.value, this->left.value);
+  }
 };
 typedef MarginTyped<UnknownUnits> Margin;
 typedef MarginTyped<UnknownUnits, double> MarginDouble;
@@ -474,6 +479,10 @@ struct RoundedRect {
 
   RoundedRect(const Rect& aRect, const RectCornerRadii& aCorners)
       : rect(aRect), corners(aCorners) {}
+
+  void Deflate(const Margin& aMargin) {
+    Deflate(aMargin.top, aMargin.bottom, aMargin.left, aMargin.right);
+  }
 
   void Deflate(Float aTopWidth, Float aBottomWidth, Float aLeftWidth,
                Float aRightWidth) {
