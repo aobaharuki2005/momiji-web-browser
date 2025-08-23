@@ -2656,12 +2656,12 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   auto clipAxes = ShouldApplyOverflowClipping(StyleDisplay());
   if (!clipAxes.isEmpty()) {
     nsRect clipRect;
-    nscoord radii[8];
+    nsRectCornerRadii radii;
     bool haveRadii =
         ComputeOverflowClipRectRelativeToSelf(clipAxes, clipRect, radii);
     clipState.ClipContainingBlockDescendants(
         clipRect + aBuilder->ToReferenceFrame(this),
-        haveRadii ? radii : nullptr);
+        haveRadii ? &radii : nullptr);
   } else if (!isViewTransition) {
     // Allow overflow by default for view transitions, but not for other image
     // types, for historical reasons.

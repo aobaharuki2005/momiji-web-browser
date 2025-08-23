@@ -1294,7 +1294,7 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
 
   LayoutDeviceRect rect(aRect);
   auto devOffset = LayoutDevicePixel::FromAppUnits(cssOffset, a2d);
-  nscoord cssRadii[8] = {0};
+  nsRectCornerRadii cssRadii;
   if (!aFrame->GetBorderRadii(cssRadii)) {
     // The goal of this code is getting a 0px inner radius, but 2px outer
     // radius.
@@ -1304,9 +1304,7 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
     auto twoDevPixels = CSSCoord(2) * aDpiRatio;
     rect.Inflate(devOffset + twoDevPixels);
     devOffset = -twoDevPixels;
-    for (auto& r : cssRadii) {
-      r = radius;
-    }
+    cssRadii = nsRectCornerRadii(radius);
   }
 
   RectCornerRadii innerRadii;

@@ -112,7 +112,7 @@ class ScrollContainerFrame : public nsContainerFrame,
 
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
                       nsIFrame::Sides aSkipSides,
-                      nscoord aRadii[8]) const final;
+                      nsRectCornerRadii&) const final;
 
   nscoord IntrinsicISize(const IntrinsicSizeInput& aInput,
                          IntrinsicISizeType aType) override;
@@ -1098,7 +1098,7 @@ class ScrollContainerFrame : public nsContainerFrame,
       nsDisplayListBuilder*, nsDisplayListCollection&, bool aCreateAsyncZoom,
       bool aCapturedByViewTransition,
       AutoContainsBlendModeCapturer* aAsyncZoomBlendCapture,
-      const nsRect& aAsyncZoomClipRect, nscoord* aRadii);
+      const nsRect& aAsyncZoomClipRect, const nsRectCornerRadii* aRadii);
 
   void AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
                            const nsDisplayListSet& aLists, bool aCreateLayer,
