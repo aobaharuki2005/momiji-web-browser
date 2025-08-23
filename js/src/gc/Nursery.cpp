@@ -956,13 +956,6 @@ void* js::Nursery::reallocateBuffer(Zone* zone, Cell* cell, void* oldBuffer,
   return newBuffer;
 }
 
-void js::Nursery::freeBuffer(void* buffer, size_t nbytes) {
-  if (!isInside(buffer)) {
-    removeMallocedBuffer(buffer, nbytes);
-    js_free(buffer);
-  }
-}
-
 #ifdef DEBUG
 /* static */
 inline bool Nursery::checkForwardingPointerInsideNursery(void* ptr) {

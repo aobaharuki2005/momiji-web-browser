@@ -180,9 +180,6 @@ class Nursery {
   void* reallocateBuffer(JS::Zone* zone, gc::Cell* cell, void* oldBuffer,
                          size_t oldBytes, size_t newBytes);
 
-  // Free an object buffer.
-  void freeBuffer(void* buffer, size_t nbytes);
-
   // The maximum number of bytes allowed to reside in nursery buffers.
   static const size_t MaxNurseryBufferSize = 1024;
 
