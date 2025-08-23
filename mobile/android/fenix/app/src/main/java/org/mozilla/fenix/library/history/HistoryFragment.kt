@@ -622,11 +622,12 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     }
 
     private fun openRegularItem(item: History.Regular) = runIfFragmentIsAttached {
-        (activity as HomeActivity).openToBrowserAndLoad(
+        requireComponents.useCases.fenixBrowserUseCases.loadUrlOrSearch(
             searchTermOrURL = item.url,
-            newTab = true,
-            from = BrowserDirection.FromHistory,
+            newTab = requireComponents.settings.enableHomepageAsNewTab.not(),
+            private = (requireActivity() as HomeActivity).browsingModeManager.mode.isPrivate,
         )
+        findNavController().navigate(R.id.browserFragment)
     }
 
     private fun onDeleteInitiated(items: Set<History>) {
