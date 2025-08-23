@@ -1827,7 +1827,7 @@ nsRect nsIFrame::GetContentRect() const {
 bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
                                   const nsSize& aFrameSize,
                                   const nsSize& aBorderArea, Sides aSkipSides,
-                                  nsRectCornerRadii& aRadii) {
+                                  nscoord aRadii[8]) {
   // Percentages are relative to whichever side they're on.
   for (const auto i : mozilla::AllPhysicalHalfCorners()) {
     const LengthPercentage& c = aBorderRadius.Get(i);
@@ -1835,17 +1835,32 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
     aRadii[i] = std::max(0, c.Resolve(axis));
   }
 
-  if (aSkipSides.Intersects(SideBits::eTop | SideBits::eLeft)) {
-    aRadii.TopLeft() = {};
+  if (aSkipSides.Top()) {
+    aRadii[eCornerTopLeftX] = 0;
+    aRadii[eCornerTopLeftY] = 0;
+    aRadii[eCornerTopRightX] = 0;
+    aRadii[eCornerTopRightY] = 0;
   }
-  if (aSkipSides.Intersects(SideBits::eTop | SideBits::eRight)) {
-    aRadii.TopRight() = {};
+
+  if (aSkipSides.Right()) {
+    aRadii[eCornerTopRightX] = 0;
+    aRadii[eCornerTopRightY] = 0;
+    aRadii[eCornerBottomRightX] = 0;
+    aRadii[eCornerBottomRightY] = 0;
   }
-  if (aSkipSides.Intersects(SideBits::eBottom | SideBits::eLeft)) {
-    aRadii.BottomLeft() = {};
+
+  if (aSkipSides.Bottom()) {
+    aRadii[eCornerBottomRightX] = 0;
+    aRadii[eCornerBottomRightY] = 0;
+    aRadii[eCornerBottomLeftX] = 0;
+    aRadii[eCornerBottomLeftY] = 0;
   }
-  if (aSkipSides.Intersects(SideBits::eBottom | SideBits::eRight)) {
-    aRadii.BottomRight() = {};
+
+  if (aSkipSides.Left()) {
+    aRadii[eCornerBottomLeftX] = 0;
+    aRadii[eCornerBottomLeftY] = 0;
+    aRadii[eCornerTopLeftX] = 0;
+    aRadii[eCornerTopLeftY] = 0;
   }
 
   // css3-background specifies this algorithm for reducing
@@ -1853,8 +1868,8 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
   bool haveRadius = false;
   double ratio = 1.0f;
   for (const auto side : mozilla::AllPhysicalSides()) {
-    auto hc1 = SideToHalfCorner(side, false, true);
-    auto hc2 = SideToHalfCorner(side, true, true);
+    uint32_t hc1 = SideToHalfCorner(side, false, true);
+    uint32_t hc2 = SideToHalfCorner(side, true, true);
     nscoord length =
         SideIsVertical(side) ? aBorderArea.height : aBorderArea.width;
     nscoord sum = aRadii[hc1] + aRadii[hc2];
@@ -1875,8 +1890,7 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
   return haveRadius;
 }
 
-void nsIFrame::AdjustBorderRadii(nsRectCornerRadii& aRadii,
-                                 const nsMargin& aOffsets) {
+void nsIFrame::AdjustBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
   auto AdjustOffset = [](const uint32_t aRadius, const nscoord aOffset) {
     // Implement the cubic formula to adjust offset when aOffset > 0 and
     // aRadius / aOffset < 1.
@@ -1892,8 +1906,8 @@ void nsIFrame::AdjustBorderRadii(nsRectCornerRadii& aRadii,
 
   for (const auto side : mozilla::AllPhysicalSides()) {
     const nscoord offset = aOffsets.Side(side);
-    const auto hc1 = SideToHalfCorner(side, false, false);
-    const auto hc2 = SideToHalfCorner(side, true, false);
+    const uint32_t hc1 = SideToHalfCorner(side, false, false);
+    const uint32_t hc2 = SideToHalfCorner(side, true, false);
     if (aRadii[hc1] > 0) {
       const nscoord offset1 = AdjustOffset(aRadii[hc1], offset);
       aRadii[hc1] = std::max(0, aRadii[hc1] + offset1);
@@ -1917,8 +1931,9 @@ static inline bool RadiiAreDefinitelyZero(const BorderRadius& aBorderRadius) {
 /* virtual */
 bool nsIFrame::GetBorderRadii(const nsSize& aFrameSize,
                               const nsSize& aBorderArea, Sides aSkipSides,
-                              nsRectCornerRadii& aRadii) const {
+                              nscoord aRadii[8]) const {
   if (!mMayHaveRoundedCorners) {
+    memset(aRadii, 0, sizeof(nscoord) * 8);
     return false;
   }
 
@@ -1930,6 +1945,9 @@ bool nsIFrame::GetBorderRadii(const nsSize& aFrameSize,
     // In an ideal world, we might have a way for the them to tell us an
     // border radius, but since we don't, we're better off assuming
     // zero.
+    for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
+      aRadii[corner] = 0;
+    }
     return false;
   }
 
@@ -1947,33 +1965,38 @@ bool nsIFrame::GetBorderRadii(const nsSize& aFrameSize,
   return hasRadii;
 }
 
-bool nsIFrame::GetBorderRadii(nsRectCornerRadii& aRadii) const {
+bool nsIFrame::GetBorderRadii(nscoord aRadii[8]) const {
   nsSize sz = GetSize();
   return GetBorderRadii(sz, sz, GetSkipSides(), aRadii);
 }
 
-bool nsIFrame::GetMarginBoxBorderRadii(nsRectCornerRadii& aRadii) const {
+bool nsIFrame::GetMarginBoxBorderRadii(nscoord aRadii[8]) const {
   return GetBoxBorderRadii(aRadii, GetUsedMargin());
 }
 
-bool nsIFrame::GetPaddingBoxBorderRadii(nsRectCornerRadii& aRadii) const {
+bool nsIFrame::GetPaddingBoxBorderRadii(nscoord aRadii[8]) const {
   return GetBoxBorderRadii(aRadii, -GetUsedBorder());
 }
 
-bool nsIFrame::GetContentBoxBorderRadii(nsRectCornerRadii& aRadii) const {
+bool nsIFrame::GetContentBoxBorderRadii(nscoord aRadii[8]) const {
   return GetBoxBorderRadii(aRadii, -GetUsedBorderAndPadding());
 }
 
-bool nsIFrame::GetBoxBorderRadii(nsRectCornerRadii& aRadii,
+bool nsIFrame::GetBoxBorderRadii(nscoord aRadii[8],
                                  const nsMargin& aOffsets) const {
   if (!GetBorderRadii(aRadii)) {
     return false;
   }
   AdjustBorderRadii(aRadii, aOffsets);
-  return !aRadii.IsEmpty();
+  for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
+    if (aRadii[corner]) {
+      return true;
+    }
+  }
+  return false;
 }
 
-bool nsIFrame::GetShapeBoxBorderRadii(nsRectCornerRadii& aRadii) const {
+bool nsIFrame::GetShapeBoxBorderRadii(nscoord aRadii[8]) const {
   using Tag = StyleShapeOutside::Tag;
   auto& shapeOutside = StyleDisplay()->mShapeOutside;
   auto box = StyleShapeBox::MarginBox;
@@ -2776,17 +2799,17 @@ static void ApplyOverflowClipping(
     PhysicalAxes aClipAxes,
     DisplayListClipState::AutoClipMultiple& aClipState) {
   nsRect clipRect;
-  nsRectCornerRadii radii;
+  nscoord radii[8];
   bool haveRadii =
       aFrame->ComputeOverflowClipRectRelativeToSelf(aClipAxes, clipRect, radii);
   aClipState.ClipContainingBlockDescendantsExtra(
       clipRect + aBuilder->ToReferenceFrame(aFrame),
-      haveRadii ? &radii : nullptr);
+      haveRadii ? radii : nullptr);
 }
 
 bool nsIFrame::ComputeOverflowClipRectRelativeToSelf(
     const PhysicalAxes aClipAxes, nsRect& aOutRect,
-    nsRectCornerRadii& aOutRadii) const {
+    nscoord aOutRadii[8]) const {
   // Only 'clip' is handled here (and 'hidden' for table frames, and any
   // non-'visible' value for blocks in a paginated context).
   // We allow 'clip' to apply to any kind of frame. This is required by

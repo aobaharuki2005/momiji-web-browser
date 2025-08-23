@@ -2966,10 +2966,10 @@ static void SetBackgroundClipRegion(
   if (clip.mHasAdditionalBGClipArea) {
     aClipState.ClipContentDescendants(
         clip.mAdditionalBGClipArea, clip.mBGClipArea,
-        clip.mHasRoundedCorners ? &clip.mRadii : nullptr);
+        clip.mHasRoundedCorners ? clip.mRadii : nullptr);
   } else {
     aClipState.ClipContentDescendants(
-        clip.mBGClipArea, clip.mHasRoundedCorners ? &clip.mRadii : nullptr);
+        clip.mBGClipArea, clip.mHasRoundedCorners ? clip.mRadii : nullptr);
   }
 }
 
@@ -3200,7 +3200,7 @@ AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
       }
       if (clip.mHasRoundedCorners) {
         clipState.emplace(aBuilder);
-        clipState->ClipContentDescendants(clip.mBGClipArea, &clip.mRadii);
+        clipState->ClipContentDescendants(clip.mBGClipArea, clip.mRadii);
       }
     }
 
@@ -3367,7 +3367,7 @@ static bool RoundedBorderIntersectsRect(nsIFrame* aFrame,
     return false;
   }
 
-  nsRectCornerRadii radii;
+  nscoord radii[8];
   return !aFrame->GetBorderRadii(radii) ||
          nsLayoutUtils::RoundedRectIntersectsRect(
              nsRect(aFrameToReferenceFrame, aFrame->GetSize()), radii,
@@ -3381,7 +3381,7 @@ static bool RoundedBorderIntersectsRect(nsIFrame* aFrame,
 //
 // See also RoundedRectIntersectsRect.
 static bool RoundedRectContainsRect(const nsRect& aRoundedRect,
-                                    const nsRectCornerRadii& aRadii,
+                                    const nscoord aRadii[8],
                                     const nsRect& aContainedRect) {
   nsRegion rgn = nsLayoutUtils::RoundedRectIntersectRect(aRoundedRect, aRadii,
                                                          aContainedRect);
@@ -3538,7 +3538,7 @@ bool nsDisplayBackgroundImage::RenderingMightDependOnPositioningAreaSizeChange()
     return false;
   }
 
-  nsRectCornerRadii radii;
+  nscoord radii[8];
   if (mFrame->GetBorderRadii(radii)) {
     // A change in the size of the positioning area might change the position
     // of the rounded corners.
@@ -4313,7 +4313,7 @@ bool nsDisplayBoxShadowOuter::IsInvisibleInRect(const nsRect& aRect) const {
 
   // the visible region is entirely inside the border-rect, and box shadows
   // never render within the border-rect (unless there's a border radius).
-  nsRectCornerRadii twipsRadii;
+  nscoord twipsRadii[8];
   bool hasBorderRadii = mFrame->GetBorderRadii(twipsRadii);
   if (!hasBorderRadii) {
     return true;
@@ -4430,7 +4430,7 @@ void nsDisplayBoxShadowOuter::ComputeInvalidationRegion(
   if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
       !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
     nsRegion oldShadow, newShadow;
-    nsRectCornerRadii dontCare;
+    nscoord dontCare[8];
     bool hasBorderRadius = mFrame->GetBorderRadii(dontCare);
     if (hasBorderRadius) {
       // If we have rounded corners then we need to invalidate the frame area
@@ -8208,7 +8208,7 @@ static Maybe<wr::WrClipChainId> CreateSimpleClipRegion(
           ShapeUtils::ComputeInsetRect(shape.AsRect().rect, refBox) +
           aDisplayItem.ToReferenceFrame();
 
-      nsRectCornerRadii radii;
+      nscoord radii[8] = {0};
       if (ShapeUtils::ComputeRectRadii(shape.AsRect().round, refBox, rect,
                                        radii)) {
         clipId = aBuilder.DefineRoundedRectClip(
@@ -8238,7 +8238,7 @@ static Maybe<wr::WrClipChainId> CreateSimpleClipRegion(
                              nsPoint(radii.width, radii.height),
                          radii * 2);
 
-      nsRectCornerRadii ellipseRadii;
+      nscoord ellipseRadii[8];
       for (const auto corner : AllPhysicalHalfCorners()) {
         ellipseRadii[corner] =
             HalfCornerIsX(corner) ? radii.width : radii.height;

@@ -265,9 +265,9 @@ struct BlurCacheKey : public PLDHashEntryHdr {
     hash = AddToHash(
         hash, HashBytes(&aKey->mShadowColor.a, sizeof(aKey->mShadowColor.a)));
 
-    for (auto corner : mozilla::AllPhysicalCorners()) {
-      hash = AddToHash(hash, aKey->mCornerRadii[corner].width,
-                       aKey->mCornerRadii[corner].height);
+    for (int i = 0; i < 4; i++) {
+      hash = AddToHash(hash, aKey->mCornerRadii[i].width,
+                       aKey->mCornerRadii[i].height);
     }
 
     hash = AddToHash(hash, (uint32_t)aKey->mBackend);

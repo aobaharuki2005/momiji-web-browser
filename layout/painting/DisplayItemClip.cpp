@@ -24,24 +24,25 @@ namespace mozilla {
 
 void DisplayItemClip::SetTo(const nsRect& aRect) { SetTo(aRect, nullptr); }
 
-void DisplayItemClip::SetTo(const nsRect& aRect,
-                            const nsRectCornerRadii* aRadii) {
+void DisplayItemClip::SetTo(const nsRect& aRect, const nscoord* aRadii) {
   mHaveClipRect = true;
   mClipRect = aRect;
   if (aRadii) {
-    mRoundedClipRects.Clear();
-    mRoundedClipRects.AppendElement(RoundedRect{aRect, *aRadii});
+    mRoundedClipRects.SetLength(1);
+    mRoundedClipRects[0].mRect = aRect;
+    memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord) * 8);
   } else {
     mRoundedClipRects.Clear();
   }
 }
 
 void DisplayItemClip::SetTo(const nsRect& aRect, const nsRect& aRoundedRect,
-                            const nsRectCornerRadii* aRadii) {
+                            const nscoord* aRadii) {
   mHaveClipRect = true;
   mClipRect = aRect;
-  mRoundedClipRects.Clear();
-  mRoundedClipRects.AppendElement(RoundedRect{aRoundedRect, *aRadii});
+  mRoundedClipRects.SetLength(1);
+  mRoundedClipRects[0].mRect = aRoundedRect;
+  memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord) * 8);
 }
 
 bool DisplayItemClip::MayIntersect(const nsRect& aRect) const {
@@ -313,7 +314,8 @@ static void AccumulateRoundedRectDifference(
 
   // If the two rectangles are totally disjoint, just add them both - otherwise
   // we'd end up adding one big enclosing rect
-  if (!rect1.Intersects(rect2) || aR1.mRadii != aR2.mRadii) {
+  if (!rect1.Intersects(rect2) ||
+      memcmp(aR1.mRadii, aR2.mRadii, sizeof(aR1.mRadii))) {
     aOut->Or(*aOut, rect1.Intersect(aBounds));
     aOut->Or(*aOut, rect2.Intersect(aOtherBounds));
     return;
@@ -467,14 +469,12 @@ nsCString DisplayItemClip::ToString() const {
   if (mHaveClipRect) {
     str.AppendPrintf("%d,%d,%d,%d", mClipRect.x, mClipRect.y, mClipRect.width,
                      mClipRect.height);
-    for (const RoundedRect& r : mRoundedClipRects) {
-      str.AppendPrintf(
-          " [%d,%d,%d,%d corners %d,%d,%d,%d,%d,%d,%d,%d]", r.mRect.x,
-          r.mRect.y, r.mRect.width, r.mRect.height, r.mRadii.TopLeft().width,
-          r.mRadii.TopLeft().height, r.mRadii.TopRight().width,
-          r.mRadii.TopRight().height, r.mRadii.BottomLeft().width,
-          r.mRadii.BottomLeft().height, r.mRadii.BottomRight().width,
-          r.mRadii.BottomRight().height);
+    for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
+      const RoundedRect& r = mRoundedClipRects[i];
+      str.AppendPrintf(" [%d,%d,%d,%d corners %d,%d,%d,%d,%d,%d,%d,%d]",
+                       r.mRect.x, r.mRect.y, r.mRect.width, r.mRect.height,
+                       r.mRadii[0], r.mRadii[1], r.mRadii[2], r.mRadii[3],
+                       r.mRadii[4], r.mRadii[5], r.mRadii[6], r.mRadii[7]);
     }
   }
   return std::move(str);

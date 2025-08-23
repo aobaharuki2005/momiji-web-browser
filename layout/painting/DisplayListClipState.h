@@ -83,16 +83,15 @@ class DisplayListClipState {
    */
   void ClipContainingBlockDescendants(nsDisplayListBuilder* aBuilder,
                                       const nsRect& aRect,
-                                      const nsRectCornerRadii* aRadii,
+                                      const nscoord* aRadii,
                                       DisplayItemClipChain& aClipChainOnStack);
 
   void ClipContentDescendants(nsDisplayListBuilder* aBuilder,
-                              const nsRect& aRect,
-                              const nsRectCornerRadii* aRadii,
+                              const nsRect& aRect, const nscoord* aRadii,
                               DisplayItemClipChain& aClipChainOnStack);
   void ClipContentDescendants(nsDisplayListBuilder* aBuilder,
                               const nsRect& aRect, const nsRect& aRoundedRect,
-                              const nsRectCornerRadii* aRadii,
+                              const nscoord* aRadii,
                               DisplayItemClipChain& aClipChainOnStack);
 
   void InvalidateCurrentCombinedClipChain(
@@ -175,8 +174,8 @@ class DisplayListClipState::AutoSaveRestore {
    * mClipContainingBlockDescendants and sets mClipContainingBlockDescendants to
    * the result, stored in aClipOnStack.
    */
-  void ClipContainingBlockDescendants(
-      const nsRect& aRect, const nsRectCornerRadii* aRadii = nullptr) {
+  void ClipContainingBlockDescendants(const nsRect& aRect,
+                                      const nscoord* aRadii = nullptr) {
     NS_ASSERTION(!mRestored, "Already restored!");
     NS_ASSERTION(!mClipUsed, "mClip already used");
 #ifdef DEBUG
@@ -186,7 +185,7 @@ class DisplayListClipState::AutoSaveRestore {
   }
 
   void ClipContentDescendants(const nsRect& aRect,
-                              const nsRectCornerRadii* aRadii = nullptr) {
+                              const nscoord* aRadii = nullptr) {
     NS_ASSERTION(!mRestored, "Already restored!");
     NS_ASSERTION(!mClipUsed, "mClip already used");
 #ifdef DEBUG
@@ -196,7 +195,7 @@ class DisplayListClipState::AutoSaveRestore {
   }
 
   void ClipContentDescendants(const nsRect& aRect, const nsRect& aRoundedRect,
-                              const nsRectCornerRadii* aRadii = nullptr) {
+                              const nscoord* aRadii = nullptr) {
     NS_ASSERTION(!mRestored, "Already restored!");
     NS_ASSERTION(!mClipUsed, "mClip already used");
 #ifdef DEBUG
@@ -278,7 +277,7 @@ class DisplayListClipState::AutoClipMultiple : public AutoSaveRestore {
    * the result, stored in aClipOnStack.
    */
   void ClipContainingBlockDescendantsExtra(const nsRect& aRect,
-                                           const nsRectCornerRadii* aRadii) {
+                                           const nscoord* aRadii) {
     NS_ASSERTION(!mRestored, "Already restored!");
     NS_ASSERTION(!mExtraClipUsed, "mExtraClip already used");
 #ifdef DEBUG

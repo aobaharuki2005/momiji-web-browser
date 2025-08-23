@@ -612,8 +612,8 @@ class nsFloatManager::ShapeInfo {
 
   // Convert the half corner radii (nscoord[8]) to the special logical
   // coordinate space used in float manager.
-  static nsRectCornerRadii ConvertToFloatLogical(const nsRectCornerRadii&,
-                                                 WritingMode aWM);
+  static UniquePtr<nscoord[]> ConvertToFloatLogical(const nscoord aRadii[8],
+                                                    WritingMode aWM);
 
   // Some ShapeInfo subclasses may define their float areas in intervals.
   // Each interval is a rectangle that is one device pixel deep in the block
@@ -1034,13 +1034,10 @@ nscoord nsFloatManager::EllipseShapeInfo::LineRight(const nscoord aBStart,
 class nsFloatManager::RoundedBoxShapeInfo final
     : public nsFloatManager::ShapeInfo {
  public:
-  RoundedBoxShapeInfo(const nsRect& aRect, nsRectCornerRadii&& aRadii)
-      : mRect(aRect),
-        mRadii(std::move(aRadii)),
-        mHasRadii(!mRadii.IsEmpty()),
-        mShapeMargin(0) {}
+  RoundedBoxShapeInfo(const nsRect& aRect, UniquePtr<nscoord[]> aRadii)
+      : mRect(aRect), mRadii(std::move(aRadii)), mShapeMargin(0) {}
 
-  RoundedBoxShapeInfo(const nsRect& aRect, nsRectCornerRadii&& aRadii,
+  RoundedBoxShapeInfo(const nsRect& aRect, UniquePtr<nscoord[]> aRadii,
                       nscoord aShapeMargin, int32_t aAppUnitsPerDevPixel);
 
   nscoord LineLeft(const nscoord aBStart, const nscoord aBEnd) const override;
@@ -1055,8 +1052,8 @@ class nsFloatManager::RoundedBoxShapeInfo final
     return false;
   }
   bool MayNarrowInBlockDirection() const override {
-    // Only possible to narrow if there is radii.
-    return mHasRadii;
+    // Only possible to narrow if there are non-null mRadii.
+    return !!mRadii;
   }
 
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override {
@@ -1073,21 +1070,21 @@ class nsFloatManager::RoundedBoxShapeInfo final
     }
   }
 
-  static bool EachCornerHasBalancedRadii(const nsRectCornerRadii& aRadii) {
-    return aRadii.TopLeft().IsSquare() && aRadii.TopRight().IsSquare() &&
-           aRadii.BottomLeft().IsSquare() && aRadii.BottomRight().IsSquare();
+  static bool EachCornerHasBalancedRadii(const nscoord* aRadii) {
+    return (aRadii[eCornerTopLeftX] == aRadii[eCornerTopLeftY] &&
+            aRadii[eCornerTopRightX] == aRadii[eCornerTopRightY] &&
+            aRadii[eCornerBottomLeftX] == aRadii[eCornerBottomLeftY] &&
+            aRadii[eCornerBottomRightX] == aRadii[eCornerBottomRightY]);
   }
 
  private:
   // The rect of the rounded box shape in the float manager's coordinate
   // space.
   nsRect mRect;
-  // The half corner radii of the reference box. It's an nsRectCornerRadii
-  // in the float manager's coordinate space.
-  const nsRectCornerRadii mRadii;
-
-  // Whether there's a radii.
-  const bool mHasRadii;
+  // The half corner radii of the reference box. It's an nscoord[8] array
+  // in the float manager's coordinate space. If there are no radii, it's
+  // nullptr.
+  const UniquePtr<nscoord[]> mRadii;
 
   // A shape-margin value extends the boundaries of the float area. When our
   // first constructor is used, it is for the creation of rounded boxes that
@@ -1107,13 +1104,10 @@ class nsFloatManager::RoundedBoxShapeInfo final
 };
 
 nsFloatManager::RoundedBoxShapeInfo::RoundedBoxShapeInfo(
-    const nsRect& aRect, nsRectCornerRadii&& aRadii, nscoord aShapeMargin,
+    const nsRect& aRect, UniquePtr<nscoord[]> aRadii, nscoord aShapeMargin,
     int32_t aAppUnitsPerDevPixel)
-    : mRect(aRect),
-      mRadii(std::move(aRadii)),
-      mHasRadii(true),
-      mShapeMargin(aShapeMargin) {
-  MOZ_ASSERT(mShapeMargin > 0 && !EachCornerHasBalancedRadii(mRadii),
+    : mRect(aRect), mRadii(std::move(aRadii)), mShapeMargin(aShapeMargin) {
+  MOZ_ASSERT(mShapeMargin > 0 && !EachCornerHasBalancedRadii(mRadii.get()),
              "Slow constructor should only be used for for shape-margin > 0 "
              "and radii with elliptical corners.");
 
@@ -1151,7 +1145,7 @@ nsFloatManager::RoundedBoxShapeInfo::RoundedBoxShapeInfo(
 nscoord nsFloatManager::RoundedBoxShapeInfo::LineLeft(
     const nscoord aBStart, const nscoord aBEnd) const {
   if (mShapeMargin == 0) {
-    if (!mHasRadii) {
+    if (!mRadii) {
       return mRect.x;
     }
 
@@ -1184,7 +1178,7 @@ nscoord nsFloatManager::RoundedBoxShapeInfo::LineLeft(
 nscoord nsFloatManager::RoundedBoxShapeInfo::LineRight(
     const nscoord aBStart, const nscoord aBEnd) const {
   if (mShapeMargin == 0) {
-    if (!mHasRadii) {
+    if (!mRadii) {
       return mRect.XMost();
     }
 
@@ -2488,16 +2482,16 @@ nsFloatManager::ShapeInfo::CreateShapeBox(nsIFrame* const aFrame,
   // Inflate logicalShapeBoxRect by aShapeMargin.
   logicalShapeBoxRect.Inflate(aShapeMargin);
 
-  nsRectCornerRadii physicalRadii;
+  nscoord physicalRadii[8];
   bool hasRadii = aFrame->GetShapeBoxBorderRadii(physicalRadii);
   if (!hasRadii) {
     return MakeUnique<RoundedBoxShapeInfo>(logicalShapeBoxRect,
-                                           std::move(physicalRadii));
+                                           UniquePtr<nscoord[]>());
   }
 
   // Add aShapeMargin to each of the radii.
-  for (auto corner : AllPhysicalCorners()) {
-    physicalRadii[corner] += nsSize(aShapeMargin, aShapeMargin);
+  for (nscoord& r : physicalRadii) {
+    r += aShapeMargin;
   }
 
   return MakeUnique<RoundedBoxShapeInfo>(
@@ -2545,7 +2539,7 @@ nsFloatManager::ShapeInfo::CreateInset(const StyleBasicShape& aBasicShape,
 
   nsRect logicalInsetRect = ConvertToFloatLogical(
       LogicalRect(aWM, insetRect, aContainerSize), aWM, aContainerSize);
-  nsRectCornerRadii physicalRadii;
+  nscoord physicalRadii[8];
   bool hasRadii = ShapeUtils::ComputeRectRadii(aBasicShape.AsRect().round,
                                                physicalShapeBoxRect, insetRect,
                                                physicalRadii);
@@ -2554,7 +2548,7 @@ nsFloatManager::ShapeInfo::CreateInset(const StyleBasicShape& aBasicShape,
   if (aShapeMargin == 0) {
     if (!hasRadii) {
       return MakeUnique<RoundedBoxShapeInfo>(logicalInsetRect,
-                                             std::move(physicalRadii));
+                                             UniquePtr<nscoord[]>());
     }
     return MakeUnique<RoundedBoxShapeInfo>(
         logicalInsetRect, ConvertToFloatLogical(physicalRadii, aWM));
@@ -2566,16 +2560,20 @@ nsFloatManager::ShapeInfo::CreateInset(const StyleBasicShape& aBasicShape,
   // corners.
   if (!hasRadii) {
     logicalInsetRect.Inflate(aShapeMargin);
+    auto logicalRadii = MakeUnique<nscoord[]>(8);
+    for (int32_t i = 0; i < 8; ++i) {
+      logicalRadii[i] = aShapeMargin;
+    }
     return MakeUnique<RoundedBoxShapeInfo>(logicalInsetRect,
-                                           nsRectCornerRadii(aShapeMargin));
+                                           std::move(logicalRadii));
   }
 
   // If we have radii, and they have balanced/equal corners, we can inflate
   // both logicalInsetRect and all the radii and use the fast constructor.
   if (RoundedBoxShapeInfo::EachCornerHasBalancedRadii(physicalRadii)) {
     logicalInsetRect.Inflate(aShapeMargin);
-    for (auto corner : AllPhysicalCorners()) {
-      physicalRadii[corner] += nsSize(aShapeMargin, aShapeMargin);
+    for (nscoord& r : physicalRadii) {
+      r += aShapeMargin;
     }
     return MakeUnique<RoundedBoxShapeInfo>(
         logicalInsetRect, ConvertToFloatLogical(physicalRadii, aWM));
@@ -2839,9 +2837,10 @@ nsPoint nsFloatManager::ShapeInfo::ConvertToFloatLogical(
                  logicalPoint.B(aWM));
 }
 
-/* static */ nsRectCornerRadii nsFloatManager::ShapeInfo::ConvertToFloatLogical(
-    const nsRectCornerRadii& aRadii, WritingMode aWM) {
-  nsRectCornerRadii logicalRadii;
+/* static */ UniquePtr<nscoord[]>
+nsFloatManager::ShapeInfo::ConvertToFloatLogical(const nscoord aRadii[8],
+                                                 WritingMode aWM) {
+  UniquePtr<nscoord[]> logicalRadii(new nscoord[8]);
 
   // Get the physical side for line-left and line-right since border radii
   // are on the physical axis.

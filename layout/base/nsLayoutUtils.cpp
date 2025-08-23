@@ -1736,24 +1736,24 @@ void nsLayoutUtils::ConstrainToCoordValues(gfxFloat& aStart, gfxFloat& aSize) {
   }
 }
 
-nsRegion nsLayoutUtils::RoundedRectIntersectRect(
-    const nsRect& aRoundedRect, const nsRectCornerRadii& aRadii,
-    const nsRect& aContainedRect) {
+nsRegion nsLayoutUtils::RoundedRectIntersectRect(const nsRect& aRoundedRect,
+                                                 const nscoord aRadii[8],
+                                                 const nsRect& aContainedRect) {
   // rectFullHeight and rectFullWidth together will approximately contain
   // the total area of the frame minus the rounded corners.
   nsRect rectFullHeight = aRoundedRect;
-  nscoord xDiff = std::max(aRadii.TopLeft().width, aRadii.BottomLeft().width);
+  nscoord xDiff = std::max(aRadii[eCornerTopLeftX], aRadii[eCornerBottomLeftX]);
   rectFullHeight.x += xDiff;
   rectFullHeight.width -=
-      std::max(aRadii.TopRight().width, aRadii.BottomRight().width) + xDiff;
+      std::max(aRadii[eCornerTopRightX], aRadii[eCornerBottomRightX]) + xDiff;
   nsRect r1;
   r1.IntersectRect(rectFullHeight, aContainedRect);
 
   nsRect rectFullWidth = aRoundedRect;
-  nscoord yDiff = std::max(aRadii.TopLeft().height, aRadii.TopRight().height);
+  nscoord yDiff = std::max(aRadii[eCornerTopLeftY], aRadii[eCornerTopRightY]);
   rectFullWidth.y += yDiff;
   rectFullWidth.height -=
-      std::max(aRadii.BottomLeft().height, aRadii.BottomRight().height) + yDiff;
+      std::max(aRadii[eCornerBottomLeftY], aRadii[eCornerBottomRightY]) + yDiff;
   nsRect r2;
   r2.IntersectRect(rectFullWidth, aContainedRect);
 
@@ -1815,7 +1815,7 @@ static bool CheckCorner(nscoord aXOffset, nscoord aYOffset, nscoord aXRadius,
 }
 
 bool nsLayoutUtils::RoundedRectIntersectsRect(const nsRect& aRoundedRect,
-                                              const nsRectCornerRadii& aRadii,
+                                              const nscoord aRadii[8],
                                               const nsRect& aTestRect) {
   if (!aTestRect.Intersects(aRoundedRect)) {
     return false;
@@ -1832,14 +1832,14 @@ bool nsLayoutUtils::RoundedRectIntersectsRect(const nsRect& aRoundedRect,
   // Check whether the bottom-right corner of aTestRect is inside the
   // top left corner of aBounds when rounded by aRadii, etc.  If any
   // corner is not, then fail; otherwise succeed.
-  return CheckCorner(insets.left, insets.top, aRadii.TopLeft().width,
-                     aRadii.TopLeft().height) &&
-         CheckCorner(insets.right, insets.top, aRadii.TopRight().width,
-                     aRadii.TopRight().height) &&
-         CheckCorner(insets.right, insets.bottom, aRadii.BottomRight().width,
-                     aRadii.BottomRight().height) &&
-         CheckCorner(insets.left, insets.bottom, aRadii.BottomLeft().width,
-                     aRadii.BottomLeft().height);
+  return CheckCorner(insets.left, insets.top, aRadii[eCornerTopLeftX],
+                     aRadii[eCornerTopLeftY]) &&
+         CheckCorner(insets.right, insets.top, aRadii[eCornerTopRightX],
+                     aRadii[eCornerTopRightY]) &&
+         CheckCorner(insets.right, insets.bottom, aRadii[eCornerBottomRightX],
+                     aRadii[eCornerBottomRightY]) &&
+         CheckCorner(insets.left, insets.bottom, aRadii[eCornerBottomLeftX],
+                     aRadii[eCornerBottomLeftY]);
 }
 
 nsRect nsLayoutUtils::MatrixTransformRect(const nsRect& aBounds,

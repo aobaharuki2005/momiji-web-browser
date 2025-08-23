@@ -3674,7 +3674,7 @@ void ScrollContainerFrame::MaybeCreateTopLayerAndWrapRootItems(
     nsDisplayListBuilder* aBuilder, nsDisplayListCollection& aSet,
     bool aCreateAsyncZoom, bool aCapturedByViewTransition,
     AutoContainsBlendModeCapturer* aAsyncZoomBlendCapture,
-    const nsRect& aAsyncZoomClipRect, const nsRectCornerRadii* aRadii) {
+    const nsRect& aAsyncZoomClipRect, nscoord* aRadii) {
   if (!mIsRoot) {
     return;
   }
@@ -4033,7 +4033,7 @@ void ScrollContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsRect clipRect = scrollPortClip;
   // Our override of GetBorderRadii ensures we never have a radius at
   // the corners where we have a scrollbar.
-  nsRectCornerRadii radii;
+  nscoord radii[8];
   const bool haveRadii = GetPaddingBoxBorderRadii(radii);
   if (mIsRoot) {
     clipRect.SizeTo(nsLayoutUtils::CalculateCompositionSizeForFrame(
@@ -4070,10 +4070,10 @@ void ScrollContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         willBuildAsyncZoomContainer ? scrollPortClip : clipRect;
     if (mIsRoot) {
       clipState.ClipContentDescendants(clipRectForContents,
-                                       haveRadii ? &radii : nullptr);
+                                       haveRadii ? radii : nullptr);
     } else {
       clipState.ClipContainingBlockDescendants(clipRectForContents,
-                                               haveRadii ? &radii : nullptr);
+                                               haveRadii ? radii : nullptr);
     }
 
     Maybe<DisplayListClipState::AutoSaveRestore> contentBoxClipState;
@@ -4264,7 +4264,7 @@ void ScrollContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   MaybeCreateTopLayerAndWrapRootItems(
       aBuilder, set, willBuildAsyncZoomContainer, capturedByViewTransition,
-      &blendCapture, clipRect, haveRadii ? &radii : nullptr);
+      &blendCapture, clipRect, haveRadii ? radii : nullptr);
 
   // We want to call SetContainsNonMinimalDisplayPort if
   // mWillBuildScrollableLayer is true for any reason other than having a
@@ -6685,18 +6685,19 @@ void ScrollContainerFrame::LayoutScrollbars(ScrollReflowInput& aState,
   }
 }
 
-static void ReduceRadii(nscoord aXBorder, nscoord aYBorder, nsSize& aRadius) {
+static void ReduceRadii(nscoord aXBorder, nscoord aYBorder, nscoord& aXRadius,
+                        nscoord& aYRadius) {
   // In order to ensure that the inside edge of the border has no
   // curvature, we need at least one of its radii to be zero.
-  if (aRadius.width <= aXBorder || aRadius.height <= aYBorder) {
+  if (aXRadius <= aXBorder || aYRadius <= aYBorder) {
     return;
   }
 
   // For any corner where we reduce the radii, preserve the corner's shape.
-  double ratio = std::max(double(aXBorder) / aRadius.width,
-                          double(aYBorder) / aRadius.height);
-  aRadius.width *= ratio;
-  aRadius.height *= ratio;
+  double ratio =
+      std::max(double(aXBorder) / aXRadius, double(aYBorder) / aYRadius);
+  aXRadius *= ratio;
+  aYRadius *= ratio;
 }
 
 /**
@@ -6710,7 +6711,7 @@ static void ReduceRadii(nscoord aXBorder, nscoord aYBorder, nsSize& aRadius) {
 bool ScrollContainerFrame::GetBorderRadii(const nsSize& aFrameSize,
                                           const nsSize& aBorderArea,
                                           Sides aSkipSides,
-                                          nsRectCornerRadii& aRadii) const {
+                                          nscoord aRadii[8]) const {
   if (!nsContainerFrame::GetBorderRadii(aFrameSize, aBorderArea, aSkipSides,
                                         aRadii)) {
     return false;
@@ -6723,17 +6724,25 @@ bool ScrollContainerFrame::GetBorderRadii(const nsSize& aFrameSize,
   nsMargin border = GetUsedBorder();
 
   if (sb.left > 0 || sb.top > 0) {
-    ReduceRadii(border.left, border.top, aRadii.TopLeft());
+    ReduceRadii(border.left, border.top, aRadii[eCornerTopLeftX],
+                aRadii[eCornerTopLeftY]);
   }
+
   if (sb.top > 0 || sb.right > 0) {
-    ReduceRadii(border.right, border.top, aRadii.TopRight());
+    ReduceRadii(border.right, border.top, aRadii[eCornerTopRightX],
+                aRadii[eCornerTopRightY]);
   }
+
   if (sb.right > 0 || sb.bottom > 0) {
-    ReduceRadii(border.right, border.bottom, aRadii.BottomRight());
+    ReduceRadii(border.right, border.bottom, aRadii[eCornerBottomRightX],
+                aRadii[eCornerBottomRightY]);
   }
+
   if (sb.bottom > 0 || sb.left > 0) {
-    ReduceRadii(border.left, border.bottom, aRadii.BottomLeft());
+    ReduceRadii(border.left, border.bottom, aRadii[eCornerBottomLeftX],
+                aRadii[eCornerBottomLeftY]);
   }
+
   return true;
 }
 

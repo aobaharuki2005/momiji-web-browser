@@ -87,7 +87,7 @@ struct ShapeUtils final {
   // @param aRadii the returned radii in app units.
   // @return true if any of the radii is nonzero; false otherwise.
   static bool ComputeRectRadii(const StyleBorderRadius&, const nsRect& aRefBox,
-                               const nsRect& aRect, nsRectCornerRadii&);
+                               const nsRect& aRect, nscoord aRadii[8]);
 
   // Compute the vertices for a polygon.
   // @param aRefBox the reference box of the polygon.
@@ -135,11 +135,12 @@ struct ShapeUtils final {
   // Compute a gfx::path from a rectanglar shape (i.e. inset()/xywh()/rect())
   // and the round radii.
   // @param aRect the rect we computed from Compute{Inset}Rect().
-  // @param aRadii the radii of the rect or null.
+  // @param aRadii the radii of the rect. It should be an array with length 8.
+  //               If it's nullptr, we don't have the valid radii.
   // @param aRefBox the reference box of the rect.
   // @return The gfx::Path of this rect.
   static already_AddRefed<gfx::Path> BuildRectPath(const nsRect& aRect,
-                                                   const nsRectCornerRadii*,
+                                                   const nscoord aRadii[8],
                                                    const nsRect& aRefBox,
                                                    nscoord aAppUnitsPerPixel,
                                                    gfx::PathBuilder*);

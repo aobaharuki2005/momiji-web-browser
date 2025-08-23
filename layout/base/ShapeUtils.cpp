@@ -131,7 +131,7 @@ nsRect ShapeUtils::ComputeInsetRect(
 /* static */
 bool ShapeUtils::ComputeRectRadii(const StyleBorderRadius& aBorderRadius,
                                   const nsRect& aRefBox, const nsRect& aRect,
-                                  nsRectCornerRadii& aRadii) {
+                                  nscoord aRadii[8]) {
   return nsIFrame::ComputeBorderRadii(aBorderRadius, aRefBox.Size(),
                                       aRect.Size(), Sides(), aRadii);
 }
@@ -217,21 +217,22 @@ already_AddRefed<gfx::Path> ShapeUtils::BuildInsetPath(
     const StyleBasicShape& aShape, const nsRect& aRefBox,
     nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
   const nsRect insetRect = ComputeInsetRect(aShape.AsRect().rect, aRefBox);
-  nsRectCornerRadii appUnitsRadii;
+  nscoord appUnitsRadii[8];
   const bool hasRadii = ComputeRectRadii(aShape.AsRect().round, aRefBox,
                                          insetRect, appUnitsRadii);
-  return BuildRectPath(insetRect, hasRadii ? &appUnitsRadii : nullptr, aRefBox,
+  return BuildRectPath(insetRect, hasRadii ? appUnitsRadii : nullptr, aRefBox,
                        aAppUnitsPerPixel, aPathBuilder);
 }
 
 /* static */
 already_AddRefed<gfx::Path> ShapeUtils::BuildRectPath(
-    const nsRect& aRect, const nsRectCornerRadii* aRadii, const nsRect& aRefBox,
+    const nsRect& aRect, const nscoord aRadii[8], const nsRect& aRefBox,
     nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
   const gfx::Rect insetRectPixels = NSRectToRect(aRect, aAppUnitsPerPixel);
   if (aRadii) {
     gfx::RectCornerRadii corners;
-    nsCSSRendering::ComputePixelRadii(*aRadii, aAppUnitsPerPixel, &corners);
+    nsCSSRendering::ComputePixelRadii(aRadii, aAppUnitsPerPixel, &corners);
+
     AppendRoundedRectToPath(aPathBuilder, insetRectPixels, corners, true);
   } else {
     AppendRectToPath(aPathBuilder, insetRectPixels, true);

@@ -1294,7 +1294,7 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
 
   LayoutDeviceRect rect(aRect);
   auto devOffset = LayoutDevicePixel::FromAppUnits(cssOffset, a2d);
-  nsRectCornerRadii cssRadii;
+  nscoord cssRadii[8] = {0};
   if (!aFrame->GetBorderRadii(cssRadii)) {
     // The goal of this code is getting a 0px inner radius, but 2px outer
     // radius.
@@ -1304,7 +1304,9 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
     auto twoDevPixels = CSSCoord(2) * aDpiRatio;
     rect.Inflate(devOffset + twoDevPixels);
     devOffset = -twoDevPixels;
-    cssRadii = nsRectCornerRadii(radius);
+    for (auto& r : cssRadii) {
+      r = radius;
+    }
   }
 
   RectCornerRadii innerRadii;
@@ -1345,11 +1347,9 @@ void Theme::PaintAutoStyleOutline(
   auto DrawRect = [&](const sRGBColor& aColor) {
     RectCornerRadii outerRadii;
     if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
-      const LayoutDeviceMargin widths(
-          strokeWidth + aOffset, strokeWidth + aOffset, strokeWidth + aOffset,
-          strokeWidth + aOffset);
-      nsCSSBorderRenderer::ComputeOuterRadii(
-          aInnerRadii, widths.ToUnknownMargin(), &outerRadii);
+      const Float widths[4] = {strokeWidth + aOffset, strokeWidth + aOffset,
+                               strokeWidth + aOffset, strokeWidth + aOffset};
+      nsCSSBorderRenderer::ComputeOuterRadii(aInnerRadii, widths, &outerRadii);
       const auto dest = wr::ToLayoutRect(rect);
       const auto side =
           wr::ToBorderSide(ToDeviceColor(aColor), StyleBorderStyle::Solid);
@@ -1362,10 +1362,9 @@ void Theme::PaintAutoStyleOutline(
                                      {sides, 4}, wrRadius);
     } else {
       const LayoutDeviceCoord halfWidth = strokeWidth * 0.5f;
-      const LayoutDeviceMargin widths(halfWidth + aOffset, halfWidth + aOffset,
-                                      halfWidth + aOffset, halfWidth + aOffset);
-      nsCSSBorderRenderer::ComputeOuterRadii(
-          aInnerRadii, widths.ToUnknownMargin(), &outerRadii);
+      const Float widths[4] = {halfWidth + aOffset, halfWidth + aOffset,
+                               halfWidth + aOffset, halfWidth + aOffset};
+      nsCSSBorderRenderer::ComputeOuterRadii(aInnerRadii, widths, &outerRadii);
       LayoutDeviceRect dest(rect);
       dest.Deflate(halfWidth);
       RefPtr<Path> path =

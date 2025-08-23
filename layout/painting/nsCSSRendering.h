@@ -153,7 +153,7 @@ struct nsCSSRendering {
                                   const nsRect& aDirtyRect,
                                   float aOpacity = 1.0);
 
-  static void ComputePixelRadii(const nsRectCornerRadii& aRadii,
+  static void ComputePixelRadii(const nscoord* aAppUnitsRadii,
                                 nscoord aAppUnitsPerPixel,
                                 RectCornerRadii* oBorderRadii);
 
@@ -362,7 +362,7 @@ struct nsCSSRendering {
     nsRect mDirtyRectInAppUnits;
     gfxRect mDirtyRectInDevPx;
 
-    nsRectCornerRadii mRadii;
+    nscoord mRadii[8];
     RectCornerRadii mClippedRadii;
     bool mHasRoundedCorners;
     bool mHasAdditionalBGClipArea;
@@ -374,7 +374,9 @@ struct nsCSSRendering {
     ImageLayerClipState()
         : mHasRoundedCorners(false),
           mHasAdditionalBGClipArea(false),
-          mCustomClip(false) {}
+          mCustomClip(false) {
+      memset(mRadii, 0, sizeof(nscoord) * 8);
+    }
 
     bool IsValid() const;
   };
