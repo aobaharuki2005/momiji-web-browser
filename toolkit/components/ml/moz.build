@@ -15,7 +15,7 @@ with Files("**"):
 DIRS += ["actors"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
-    DIRS += ["../../../third_party/llama.cpp"]
+    DIRS += ["backends/llama"]
 
 BROWSER_CHROME_MANIFESTS += [
     "tests/browser/browser.toml",
