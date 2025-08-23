@@ -958,6 +958,25 @@ void* js::Nursery::reallocateBuffer(Zone* zone, Cell* cell, void* oldBuffer,
   return newBuffer;
 }
 
+void Nursery::freeBuffer(JS::Zone* zone, gc::Cell* cell, void* buffer,
+                         size_t bytes) {
+  MOZ_ASSERT(IsBufferAlloc(buffer) || isInside(buffer));
+  MOZ_ASSERT_IF(!IsInsideNursery(cell), IsBufferAlloc(buffer));
+  MOZ_ASSERT_IF(!IsInsideNursery(cell), !IsNurseryOwned(zone, buffer));
+
+  if (!IsBufferAlloc(buffer)) {
+    // The nursery cannot make use of the returned space.
+    return;
+  }
+
+  if (IsInsideNursery(cell)) {
+    MOZ_ASSERT(toSpace.mallocedBufferBytes >= bytes);
+    toSpace.mallocedBufferBytes -= bytes;
+  }
+
+  FreeBuffer(zone, buffer);
+}
+
 #ifdef DEBUG
 /* static */
 inline bool Nursery::checkForwardingPointerInsideNursery(void* ptr) {
