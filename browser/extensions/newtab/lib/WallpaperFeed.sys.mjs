@@ -4,7 +4,6 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
 });
@@ -54,14 +53,6 @@ export class WallpaperFeed {
    */
   RemoteSettings(...args) {
     return lazy.RemoteSettings(...args);
-  }
-
-  /**
-   * This thin wrapper around lazy.BasePromiseWorker makes it easier for us to write
-   * automated tests
-   */
-  BasePromiseWorker(...args) {
-    return new lazy.BasePromiseWorker(...args);
   }
 
   async wallpaperSetup(isStartup = false) {
@@ -243,15 +234,6 @@ export class WallpaperFeed {
 
   async wallpaperUpload(file) {
     try {
-      const customWallpaperThemeWorker = this.BasePromiseWorker(
-        "resource://newtab/lib/Wallpapers/WallpaperTheme.worker.mjs",
-        { type: "module" }
-      );
-      const wallpaperTheme = await customWallpaperThemeWorker.post(
-        "calculateTheme",
-        [file]
-      );
-      customWallpaperThemeWorker.terminate();
       const wallpaperDir = PathUtils.join(PathUtils.profileDir, "wallpaper");
 
       // create wallpaper directory if it does not exist
@@ -280,10 +262,6 @@ export class WallpaperFeed {
           type: at.WALLPAPERS_CUSTOM_SET,
           data: this.#customBackgroundObjectURL,
         })
-      );
-
-      this.store.dispatch(
-        ac.SetPref("newtabWallpapers.customWallpaper.theme", wallpaperTheme)
       );
 
       return filePath;
@@ -353,7 +331,7 @@ export class WallpaperFeed {
         this.wallpaperSeenEvent();
         break;
       case at.WALLPAPER_UPLOAD:
-        this.wallpaperUpload(action.data.file);
+        this.wallpaperUpload(action.data);
         break;
       case at.WALLPAPER_REMOVE_UPLOAD:
         await this.removeCustomWallpaper();
