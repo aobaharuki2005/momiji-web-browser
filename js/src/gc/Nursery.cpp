@@ -1936,7 +1936,8 @@ void js::Nursery::registerBuffer(void* buffer, size_t nbytes) {
  *    freed after nursery collection if it is malloced
  *  - memory accounting for the buffer needs to be updated
  */
-Nursery::WasBufferMoved js::Nursery::maybeMoveRawBufferOnPromotion(
+Nursery::WasBufferMoved
+js::Nursery::maybeMoveRawNurseryOrMallocBufferOnPromotion(
     void** bufferp, gc::Cell* owner, size_t bytesUsed, size_t bytesCapacity,
     MemoryUse use, arena_id_t arena) {
   MOZ_ASSERT(bytesUsed <= bytesCapacity);
