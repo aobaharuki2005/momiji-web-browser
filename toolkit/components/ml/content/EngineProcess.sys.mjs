@@ -20,7 +20,7 @@ export const DEFAULT_ENGINE_ID = "default-engine";
  * @type {Array<string>}
  * @description Supported backends.
  */
-export const BACKENDS = ["onnx", "wllama", "onnx-native"];
+export const BACKENDS = ["onnx", "wllama", "onnx-native", "llama.cpp"];
 
 /**
  * @constant
