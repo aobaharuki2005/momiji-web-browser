@@ -1301,6 +1301,11 @@ bool DCLayerTree::SupportsSwapChainTearing() {
     }
     return !!presentAllowTearing;
   }();
+
+  if (!StaticPrefs::gfx_webrender_swap_chain_allow_tearing_AtStartup()) {
+    return false;
+  }
+
   return supported;
 }
 
@@ -1580,6 +1585,9 @@ bool DCSwapChain::Initialize() {
   desc.AlphaMode =
       mIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
   desc.Flags = 0;
+  if (mDCLayerTree->SupportsSwapChainTearing()) {
+    desc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+  }
 
   hr = dxgiFactory->CreateSwapChainForComposition(device, &desc, nullptr,
                                                   getter_AddRefs(mSwapChain));
@@ -1721,7 +1729,11 @@ void DCSwapChain::Present(const wr::DeviceIntRect* aDirtyRects,
       params.DirtyRectsCount = rectsCount;
       params.pDirtyRects = rects.data();
 
-      hr = mSwapChain->Present1(0, 0, &params);
+      const UINT flags = mDCLayerTree->SupportsSwapChainTearing()
+                             ? DXGI_PRESENT_ALLOW_TEARING
+                             : 0;
+
+      hr = mSwapChain->Present1(0, flags, &params);
       if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) {
         gfxCriticalNote << "Present1 failed: " << gfx::hexa(hr);
       }

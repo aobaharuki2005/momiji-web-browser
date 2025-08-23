@@ -7777,6 +7777,10 @@
     type: RelaxedAtomicBool
     value: true
     mirror: always
+-   name: gfx.webrender.swap-chain-allow-tearing
+    type: bool
+    value: true
+    mirror: once
 #endif
 
 # Whether or not fallback to Software WebRender requires the GPU process.
