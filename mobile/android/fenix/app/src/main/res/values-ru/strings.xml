@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Открытые вами вкладки будут показаны здесь.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Ваши приватные вкладки будут показаны здесь.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Приватный просмотр</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s не будет запоминать ничего из вашей истории или кук, но новые закладки будут сохраняться.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Создайте новую вкладку, чтобы начать поиск</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">Выбрано: %1$d</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">Выйти из режима множественного выбора</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Сохранить выбранные вкладки в сборник</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Захватывайте вкладки с любого устройства</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Войдите, чтобы управлять синхронизированными вкладками со всех ваших устройств.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Войти</string>
   <!--
     Home - Bookmarks
 

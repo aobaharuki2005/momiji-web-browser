@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Opnu fliparnir þínir verða sýndir hér.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Opnu huliðsfliparnir þínir verða sýndir hér.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Huliðsvafur</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s man hvorki ferilinn þinn né vefkökur en ný bókamerki munu vistast.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Búa til nýjan flipa til að hefja leit</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d valið</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">Hætta í fjölvalsham</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Vista valda flipa í safn</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Sæktu flipa úr hvaða tæki sem er</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Skráðu þig inn til að stýra samstilltum flipum úr öllum tækjunum þínum.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Skrá inn</string>
   <!--
     Home - Bookmarks
 
@@ -333,6 +345,8 @@
   <string name="browser_menu_default_banner_subtitle_2">Hraður, persónulegur og hannaður fyrir þig.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Afgreiða</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">Hunsa kynningu</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
   <string name="browser_menu_recommended_extensions_content_description">Nánari upplýsingar</string>
   <!--
@@ -523,6 +537,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Ef þú deilir því hvernig þú uppgötvaðir Firefox og að þú notar hann, hjálpar þú við að kynna vafrann okkar fyrir fleirum.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Deila lágmarksgögnum með markaðstæknifélögum Mozilla. Þessi gögn eru aldrei seld eða notuð til að sýna þér auglýsingar.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Deila gögnum með markaðstæknifélögum Mozilla. Þessi gögn eru aldrei seld eða notuð til að sýna þér auglýsingar.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Hvernig við notum gögnin</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1092,6 +1108,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Frekari upplýsingar um notkunargögn</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Senda hrunskýrslur inn sjálfkrafa</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Skýrsla send</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Þetta gerir okkur kleift að greina og laga vandamál með vafrann. Slíkar skýrslur geta innihaldið persónuleg eða viðkvæm gögn.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1344,6 +1362,12 @@
   <string name="tabs_header_normal_tabs_title">Flipar</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">Samstiling</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">Nýr flipi</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">Nýr huliðsflipi</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">Samstilla flipa</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Bæta við flipa</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1584,6 +1608,10 @@
   <string name="webcompat_reporter_screen_title">Tilkynna bilað vefsvæði</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Hjálpaðu til við að gera %1$s betri fyrir alla. Starfsmenn Mozilla nota upplýsingarnar sem þú sendir til að laga vandamál varðandi vefsíður.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Skýrslan þín gerir okkur kleift að skilja og laga vandamál í %1$s til að gera það betra fyrir alla. Kanna nánar</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Skýrslan þín gerir okkur kleift að skilja og laga vandamál í %1$s til að gera það betra fyrir alla. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Kanna nánar</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1648,6 +1676,8 @@
   <string name="tab_crash_restore">Endurheimta flipa</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s þurfti að endurræsa</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s hrundi. Senda skýrslu?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Þú ert með ósenda hrunskýrslu sem tengist hrunum sem verið er að rannsaka. Ef þú sendir hana mun það hjálpa okkur að bæta %1$s. Ef þessari tilkynningu er lokað verður skýrslan hunsuð.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1656,10 +1686,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Senda hrunskýrslur inn sjálfkrafa</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Loka</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">LOKA</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Aldrei sýna þetta aftur</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">SENDA</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Senda hrunskýrslu</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Hrunskýrslur gera okkur kleift að greina og laga vandamál með vafrann. Slíkar skýrslur geta innihaldið persónuleg eða viðkvæm gögn. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Frekari upplýsingar</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Frekari upplýsingar</string>
   <!--
@@ -1814,6 +1851,10 @@
   <string name="clear_permissions_on_all_sites">Hreinsa heimildir á fyrir öll vefsvæði</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">Sjálfvirk spilun</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">Forrit á tæki og þjónustur</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">Tæki á staðarneti</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Myndavél</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2225,6 +2266,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Strangt</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Sterkari varnir gegn rekjurum og meiri afköst, en sumar síður virka kannski ekki eðlilega.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Leyfa %1$s að beita sjálfkrafa undantekningum sem nauðsynlegar eru til að koma í veg fyrir stórfelld rof á vefsvæðinu.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Einnig beita sjálfkrafa undantekningum sem eru aðeins nauðsynlegar til að laga minniháttar vandamál og gera aðgengileg ýmis þægindi.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Hvað er útilokað með strangari rekjaravörnum</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2519,6 +2564,8 @@
   <string name="saved_login_clear_username">Hreinsa notandanafn</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Hreinsa vélarheiti</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Valmynd fyrir innskráningarupplýsingar</string>
   <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
   <string name="login_details_navigate_back_button_content_description">Fara til baka</string>
   <!-- Edit text for the login detail menu edit button -->
@@ -2834,6 +2881,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">Flýtileiðir</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">Sýna allar flýtivísanir</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Hámarki flýtileiða náð</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -3601,6 +3653,8 @@
   <string name="setup_checklist_task_explore_extensions">Skoða forritsauka</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Settu upp leitargræju</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Skoða viðmótshluta leitar</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3665,4 +3719,32 @@
   <string name="review_prompt_feedback_header">Okkur þykir miður að þú eigir í vandræðum. Láttu okkur vita hvernig við getum bætt %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Skrifaðu umsögn</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Við erum með uppfærslu</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Við höfum bætt við %2$s %1$s og uppfært %3$s.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Vinsamlegast gefðu þér smá tíma til að fara yfir og samþykkja. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Notkunarskilmálum</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Upplýsingar um meðferð persónuupplýsinga</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Kanna nánar</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Samþykkja</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Minna mig á seinna</string>
 </resources>

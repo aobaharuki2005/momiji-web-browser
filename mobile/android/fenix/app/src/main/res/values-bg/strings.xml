@@ -2575,7 +2575,7 @@
   <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
   <string name="add_login_navigate_back_button_content_description">Връщане назад</string>
   <!-- Content description, used by tools like screenreaders, to press on the save new login button. -->
-  <string name="add_login_save_new_login_button_content_description">Запазете новото влизане</string>
+  <string name="add_login_save_new_login_button_content_description">Запазете детайлите за новото влизане</string>
   <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
   <string name="edit_login_navigate_back_button_content_description">Връщане назад</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
@@ -2820,7 +2820,7 @@
   <!-- Negative action of a dialog asking to delete login -->
   <string name="dialog_delete_negative">Отказ</string>
   <!-- The saved password options menu description. -->
-  <string name="login_options_menu_2">Опции за парола</string>
+  <string name="login_options_menu_2">Настройки за паролата</string>
   <!-- The editable text field for a website address. -->
   <string name="saved_login_hostname_description_3">Текстовото поле за редактиране на адреса на уебсайта.</string>
   <!-- The editable text field for a username. -->
@@ -2889,7 +2889,7 @@
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Пределът за преки пътища е достигнат</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
-  <string name="shortcut_max_limit_content">За да добавите нов пряк път, премахнете такъв. Докоснете и задръжте страницата и изберете премахване.</string>
+  <string name="shortcut_max_limit_content">За да добавите нов пряк път, премахнете вече същестствуващ. Докоснете и задръжте страницата и изберете премахване.</string>
   <!-- Confirmation dialog button text when top sites limit is reached. -->
   <string name="top_sites_max_limit_confirmation_button">Добре, разбрах</string>
   <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
@@ -2964,7 +2964,7 @@
 
     Default browser card title
   -->
-  <string name="default_browser_experiment_card_title">Сменете браузъра по подразбиране</string>
+  <string name="default_browser_experiment_card_title">Смяна на четеца по подразбиране</string>
   <!-- Default browser card text -->
   <string name="default_browser_experiment_card_text" tools:ignore="BrandUsage">Задайте Firefox като стандартно приложение за отваряне на страници, електронна поща и съобщения.</string>
   <!-- Content description for close button in collection placeholder. -->
@@ -2992,7 +2992,7 @@
 
     Paragraph explaining the grading system we use to classify the reliability of a product's reviews.
   -->
-  <string name="review_quality_check_info_review_grade_header" moz:removedIn="136" tools:ignore="UnusedResources"><![CDATA[Приписваме на отзивите за всеки продукт <b>буквична оценка</b> от A до F.]]></string>
+  <string name="review_quality_check_info_review_grade_header" moz:removedIn="136" tools:ignore="UnusedResources"><![CDATA[Ние поставяме на всяка рецензия за продукт <b>оценка</b> от A до F.]]></string>
   <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
   <string name="review_quality_check_explanation_body_adjusted_grading" moz:removedIn="136" tools:ignore="UnusedResources"><![CDATA[<b>Коригираната оценка</b> се основава само на отзиви, които смятаме за надеждни.]]></string>
   <!-- Paragraph explaining product review highlights. %s is the name of the retailer (e.g. Amazon). -->
@@ -3002,13 +3002,13 @@
 
     Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse".
   -->
-  <string name="a11y_action_label_collapse">срив</string>
+  <string name="a11y_action_label_collapse">сгъване</string>
   <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
   <string name="a11y_state_label_collapsed">свито</string>
   <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
-  <string name="a11y_action_label_expand">разгънете</string>
+  <string name="a11y_action_label_expand">разгъване</string>
   <!-- Current state for elements that can be expanded if interacting with them. Talkback will dictate this after a state change. -->
-  <string name="a11y_state_label_expanded">разширено</string>
+  <string name="a11y_state_label_expanded">разгънато</string>
   <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
   <string name="a11y_action_label_wallpaper_collection_learn_more">отворете връзката, за да научите повече за тази колекция</string>
   <!-- Content description for headings announced by accessibility service. %s is the text of the heading. Talkback will announce the text and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
@@ -3024,7 +3024,7 @@
 
     Title for the translation dialog that allows a user to translate the webpage.
   -->
-  <string name="translations_bottom_sheet_title">език. Превеждане на страницата?</string>
+  <string name="translations_bottom_sheet_title">Искате ли да преведете страницата?</string>
   <!--
     Title for the translation dialog after a translation was completed successfully.
     %1$s is the name of the language that the page was translated from, for example, "French".
@@ -3034,7 +3034,7 @@
   <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. %1$s is the name of the app (for example "Firefox"). -->
   <string name="translations_bottom_sheet_title_first_time">Опитайте поверителни преводи с %1$s</string>
   <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. %1$s is a link using translations_bottom_sheet_info_message_learn_more as text. -->
-  <string name="translations_bottom_sheet_info_message">За ваша поверителност, преводите никога не напускат устройството ви. Нови езици и подобрения очакват скоро! %1$s</string>
+  <string name="translations_bottom_sheet_info_message">За ваша поверителност, преводите никога не напускат устройството ви. Нови езици и подобрения се очакват скоро! %1$s</string>
   <!-- Text that links to additional information about the Firefox translations feature. -->
   <string name="translations_bottom_sheet_info_message_learn_more">Научете повече</string>
   <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
@@ -3083,7 +3083,7 @@
   -->
   <string name="translation_option_bottom_sheet_title_heading">Опции за превод</string>
   <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
-  <string name="translation_option_bottom_sheet_always_translate">Винаги предлагайте превод</string>
+  <string name="translation_option_bottom_sheet_always_translate">Винаги да се предлага превод</string>
   <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. %1$s is the language name, for example, "Spanish". -->
   <string name="translation_option_bottom_sheet_always_translate_in_language">%1$s винаги се превежда</string>
   <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. %1$s is the language name, for example, "Spanish". -->
@@ -3099,7 +3099,7 @@
   <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. %1$s is the name of the app (for example "Firefox"). -->
   <string name="translation_option_bottom_sheet_about_translations">Относно преводите от %1$s</string>
   <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
-  <string name="translation_option_bottom_sheet_close_content_description">Затваряне на листа Преводи</string>
+  <string name="translation_option_bottom_sheet_close_content_description">Затваряне на листа за преводи</string>
   <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
   <string name="translation_option_bottom_sheet_error_warning_text">Някои настройки временно не са налични.</string>
   <!--
@@ -3117,7 +3117,7 @@
   <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
   <string name="translation_settings_automatic_translation">Автоматичен превод</string>
   <!-- Button text for the button that will take the user to the never translate these sites dialog. On the never translate these sites dialog, the user can set if translations should never occur on certain websites. -->
-  <string name="translation_settings_automatic_never_translate_sites">Тези сайтове никога да не бъдат превеждани</string>
+  <string name="translation_settings_automatic_never_translate_sites">Без превод на тези сайтове</string>
   <!-- Button text for the button that will take the user to the download languages dialog. On the download languages dialog, the user can manage which languages they would like to download for translations. -->
   <string name="translation_settings_download_language">Изтегляне на езици</string>
   <!--

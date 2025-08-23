@@ -1367,7 +1367,7 @@
   <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
   <string name="tab_manager_floating_action_button_new_private_tab">Ny privat flik</string>
   <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
-  <string name="tab_manager_floating_action_button_sync_tabs">Synka flikar</string>
+  <string name="tab_manager_floating_action_button_sync_tabs">Synkronisera flikar</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Lägg till flik</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->

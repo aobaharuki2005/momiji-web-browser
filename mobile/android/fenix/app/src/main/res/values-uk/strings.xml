@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Тут з’являтимуться ваші відкриті вкладки.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Тут зʼявлятимуться ваші приватні вкладки.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Приватний перегляд</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s не запам’ятає вашу історію чи файли cookie, але нові закладки будуть збережені.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Створіть нову вкладку, щоб розпочати пошук</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">Вибрано %1$d</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">Вихід з режиму вибору</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Зберегти вибрані вкладки до збірки</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Отримайте вкладки з будь-якого пристрою</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Увійдіть, щоб керувати синхронізованими вкладками з усіх своїх пристроїв.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Увійти</string>
   <!--
     Home - Bookmarks
 
@@ -525,6 +537,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Коли ви розповідаєте про те, як ви відкрили для себе Firefox і що користуєтесь ним, ви допомагаєте нам представити наш браузер більшій кількості людей.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Діліться мінімальною кількістю даних з партнерами Mozilla з маркетингових технологій. Ці дані ніколи не продаються та не використовуються для показу вам реклами.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Діліться даними з маркетинговими технологічними партнерами Mozilla. Ці дані ніколи не продаються і не використовуються для показу вам реклами.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Як ми використовуємо дані</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1094,6 +1108,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Докладніше про щоденний сигнал використання</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Автоматично надсилати звіти про збої</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Звіт надіслано</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Це допомагає нам діагностувати й усувати проблеми з браузером. Звіти можуть містити особисті або конфіденційні дані.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1346,6 +1362,12 @@
   <string name="tabs_header_normal_tabs_title">Вкладки</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">Синхронізовані</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">Нова вкладка</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">Нова приватна вкладка</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">Синхронізувати вкладки</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Додати вкладку</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1588,6 +1610,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Допоможіть зробити %1$s кращим для всіх. Співробітники Mozilla використовують інформацію, яку ви надсилаєте, для усунення проблем з вебсайтами.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Ваш звіт допомагає нам проаналізувати й усунути проблеми в %1$s, щоб зробити його кращим для всіх. Докладніше</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Ваш звіт допомагає нам проаналізувати й усунути проблеми в %1$s, щоб зробити його кращим для всіх. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Докладніше</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1652,6 +1676,8 @@
   <string name="tab_crash_restore">Відновити вкладку</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s довелося перезапустити</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">Стався збій %s. Надіслати звіт?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">У вас є ненадісланий звіт про збій, який наразі досліджується. Надіславши його, ви допоможете нам покращити %1$s. Закривши це сповіщення, звіт буде проігноровано.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1660,10 +1686,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Автоматично надсилати звіти про збої</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Закрити</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ЗАКРИТИ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Більше не показувати</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">НАДІСЛАТИ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Надіслати звіт про збій</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Звіти про збої допомагають нам діагностувати й виправляти проблеми з браузером. Вони можуть містити особисті або конфіденційні дані. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Докладніше</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Докладніше</string>
   <!--
@@ -1818,6 +1851,10 @@
   <string name="clear_permissions_on_all_sites">Очистити дозволи на всіх сайтах</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">Автовідтворення</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">Програми та служби пристрою</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">Пристрої локальної мережі</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Камера</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2844,6 +2881,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">Ярлики</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">Показати всі ярлики</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Досягнуто обмеження кількості ярликів</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -3611,6 +3653,8 @@
   <string name="setup_checklist_task_explore_extensions">Ознайомтеся з розширеннями</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Встановіть віджет пошуку</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Ознайомтеся з віджетом пошуку</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3675,4 +3719,32 @@
   <string name="review_prompt_feedback_header">Нам шкода, що у вас виникли проблеми. Повідомте нам, як ми можемо покращити %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Залишити відгук</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Доступне оновлення</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Ми представили %2$s %1$s та оновили %3$s.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Знайдіть хвилинку, щоб переглянути і прийняти. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Умови користування</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Положення про приватність</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Докладніше</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Прийняти</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Нагадати пізніше</string>
 </resources>

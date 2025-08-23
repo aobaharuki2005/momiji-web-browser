@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Le schede aperte verranno mostrate qui.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Le schede anonime verranno mostrate qui.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Navigazione anonima</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s non salverà alcuna cronologia o cookie per questa finestra. I segnalibri aggiunti verranno comunque conservati sul dispositivo.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Apri una nuova scheda per cominciare a cercare</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d selezionate</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">Esci dalla modalità di selezione multipla</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Salva le schede selezionate in una raccolta</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Recupera le tue schede da qualsiasi dispositivo</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Accedi per gestire le schede sincronizzate da tutti i tuoi dispositivi.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Accedi</string>
   <!--
     Home - Bookmarks
 

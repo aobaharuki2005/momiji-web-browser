@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Avoimet välilehdet näkyvät tässä.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Yksityiset välilehdet näkyvät tässä.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Yksityinen selaus</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s ei tallenna historiaa tai evästeitäsi, mutta uudet kirjanmerkit tallennetaan.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Luo uusi välilehti aloittaaksesi haun</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d valittu</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">Poistu monivalintatilasta</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Tallenna valitut välilehdet kokoelmaan</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Nappaa välilehdet miltä tahansa laitteelta</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Kirjaudu sisään hallitaksesi synkronoituja välilehtiä kaikilla laitteillasi.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Kirjaudu sisään</string>
   <!--
     Home - Bookmarks
 

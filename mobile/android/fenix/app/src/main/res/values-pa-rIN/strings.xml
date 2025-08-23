@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">ਤੁਹਾਡੀਆਂ ਖੁੱਲ੍ਹੀਆਂ ਟੈਬਾਂ ਨੂੰ ਇੱਥੇ ਵਿਖਾਇਆ ਜਾਵੇਗਾ।</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">ਤੁਹਾਡੀਆਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਨੂੰ ਇੱਥੇ ਵਿਖਾਇਆ ਜਾਵੇਗਾ।</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s ਤੁਹਾਡੇ ਅਤੀਤ ਜਾਂ ਕੂਕੀਜ਼ ਨੂੰ ਯਾਦ ਨਹੀਂ ਰੱਖੇਗਾ, ਪਰ ਤੁਹਾਡੇ ਨਵੇਂ ਬੁੱਕਮਾਰਕਾਂ ਨੂੰ ਸੰਭਾਲਿਆ ਜਾਵੇਗਾ।</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">ਖੋਜ ਕਰਨ ਲਈ ਨਵੀਂ ਟੈਬ ਬਣਾਓ</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d ਚੁਣੀਆਂ</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">ਬਹੁ-ਚੋਣ ਢੰਗ ਵਿੱਚੋਂ ਬਾਹਰ ਜਾਓ</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">ਚੁਣੀਆਂ ਟੈਬਾਂ ਨੂੰ ਭੰਡਾਰ ਵਿੱਚ ਸੰਭਾਲੋ</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">ਕਿਸੇ ਵੀ ਡਿਵਾਈਸ ਤੋਂ ਟੈਬਾਂ ਲਵੋ</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">ਆਪਣੇ ਸਾਰੇ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">ਸਾਈਨ ਇਨ</string>
   <!--
     Home - Bookmarks
 
@@ -1350,6 +1362,12 @@
   <string name="tabs_header_normal_tabs_title">ਟੈਬਾਂ</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">ਸਿੰਕ</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">ਨਵੀਂ ਟੈਬ</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">ਨਵੀਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬ</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">ਟੈਬਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">ਟੈਬ ਜੋੜੋ</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1833,6 +1851,10 @@
   <string name="clear_permissions_on_all_sites">ਸਾਰੀਆਂ ਸਾਈਟਾਂ ‘ਤੇ ਇਜਾਜ਼ਤਾਂ ਸਾਫ਼ ਕਰੋ</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">ਆਪੇ-ਚਲਾਓ</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">ਡਿਵਾਈਸ ਐਪਾਂ ਅਤੇ ਸੇਵਾਵਾਂ</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">ਲੋਕਲ ਨੈੱਟਵਰਕ ਡਿਵਾਈਸ</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">ਕੈਮਰਾ</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2859,6 +2881,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">ਸ਼ਾਰਟਕੱਟ</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">ਸਭ ਸ਼ਾਰਟਕੱਟਾਂ ਨੂੰ ਵੇਖਾਓ</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">ਸ਼ਾਰਟਕੱਟ ਦੀ ਲਿਮਟ ਅੱਪੜੀ</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
