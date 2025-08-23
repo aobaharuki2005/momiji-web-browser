@@ -1139,8 +1139,9 @@ void ViewTransition::PerformPendingOperations() {
 
 // https://drafts.csswg.org/css-view-transitions/#snapshot-containing-block
 nsRect ViewTransition::SnapshotContainingBlockRect(nsPresContext* aPc) {
-  // FIXME: Bug 1960762. Tweak this for mobile OS.
-  return aPc ? aPc->GetVisibleArea() : nsRect();
+  return aPc ? nsRect(aPc->GetVisibleArea().TopLeft(),
+                      aPc->GetSizeForViewportUnits())
+             : nsRect();
 }
 
 // https://drafts.csswg.org/css-view-transitions/#snapshot-containing-block

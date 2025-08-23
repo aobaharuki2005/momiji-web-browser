@@ -16,6 +16,7 @@
 #include "mozilla/ReflowInput.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/ViewportFrame.h"
+#include "mozilla/dom/ViewTransition.h"
 #include "nsAtomicContainerFrame.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsContainerFrame.h"
@@ -203,8 +204,8 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
           return viewport->GetContainingBlockAdjustedForScrollbars(
               aReflowInput);
         }
-        // else, we would like to use the default containing block for
-        // ::-moz-snapshot-containing-block.
+        return dom::ViewTransition::SnapshotContainingBlockRect(
+            viewport->PresContext());
       }
       return aContainingBlock;
     }();
