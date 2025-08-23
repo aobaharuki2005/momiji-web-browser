@@ -739,7 +739,7 @@ security:
       - https://bugzil.la/1955578
     notification_emails:
       - tschuster@mozilla.com
-    expires: 145
+    expires: 148
     extra_keys:
       name:
         description: >
