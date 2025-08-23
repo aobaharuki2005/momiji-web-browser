@@ -1875,7 +1875,8 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
   return haveRadius;
 }
 
-void nsIFrame::AdjustBorderRadii(nsRectCornerRadii& aRadii, const nsMargin& aOffsets) {
+void nsIFrame::AdjustBorderRadii(nsRectCornerRadii& aRadii,
+                                 const nsMargin& aOffsets) {
   auto AdjustOffset = [](const uint32_t aRadius, const nscoord aOffset) {
     // Implement the cubic formula to adjust offset when aOffset > 0 and
     // aRadius / aOffset < 1.
