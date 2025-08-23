@@ -329,16 +329,16 @@ static_assert(sizeof(MapObject::Table::Entry) ==
               sizeof(MapObject::PreBarrieredTable::Entry));
 
 const JSClassOps MapObject::classOps_ = {
-    nullptr,   // addProperty
-    nullptr,   // delProperty
-    nullptr,   // enumerate
-    nullptr,   // newEnumerate
-    nullptr,   // resolve
-    nullptr,   // mayResolve
-    finalize,  // finalize
-    nullptr,   // call
-    nullptr,   // construct
-    trace,     // trace
+    nullptr,  // addProperty
+    nullptr,  // delProperty
+    nullptr,  // enumerate
+    nullptr,  // newEnumerate
+    nullptr,  // resolve
+    nullptr,  // mayResolve
+    nullptr,  // finalize
+    nullptr,  // call
+    nullptr,  // construct
+    trace,    // trace
 };
 
 const ClassSpec MapObject::classSpec_ = {
@@ -360,8 +360,7 @@ const JSClass MapObject::class_ = {
     "Map",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(MapObject::SlotCount) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_Map) | JSCLASS_BACKGROUND_FINALIZE |
-        JSCLASS_SKIP_NURSERY_FINALIZE,
+        JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
     &MapObject::classOps_, &MapObject::classSpec_, &MapObject::classExtension_};
 
 const JSClass MapObject::protoClass_ = {
@@ -639,7 +638,7 @@ MapObject* MapObject::create(JSContext* cx,
 
   gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
   MOZ_ASSERT(gc::GetGCKindSlots(allocKind) >= SlotCount);
-  MOZ_ASSERT(gc::IsBackgroundFinalized(allocKind));
+  MOZ_ASSERT(!gc::IsFinalizedKind(allocKind));
 
   AutoSetNewObjectMetadata metadata(cx);
   Rooted<SharedShape*> shape(cx, templateObj->sharedShape());
@@ -683,29 +682,6 @@ size_t MapObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
     size += nurseryKeys->sizeOfIncludingThis(mallocSizeOf);
   }
   return size;
-}
-
-void MapObject::finalize(JS::GCContext* gcx, JSObject* obj) {
-  MapObject* mapObj = &obj->as<MapObject>();
-  MOZ_ASSERT(!IsInsideNursery(mapObj));
-  MOZ_ASSERT(!UnbarrieredTable(mapObj).hasNurseryIterators());
-
-#ifdef DEBUG
-  // If we're finalizing a tenured map then it cannot contain nursery things,
-  // because we evicted the nursery at the start of collection and writing a
-  // nursery thing into the table would require it to be live, which means it
-  // would have been marked.
-  UnbarrieredTable(mapObj).forEachEntryUpTo(1000, [](auto& entry) {
-    Value key = entry.key;
-    MOZ_ASSERT_IF(key.isGCThing(), !IsInsideNursery(key.toGCThing()));
-    Value value = entry.value;
-    MOZ_ASSERT_IF(value.isGCThing(), !IsInsideNursery(value.toGCThing()));
-  });
-#endif
-
-  // Finalized tenured maps do not contain nursery GC things, so do not require
-  // post barriers. Pre barriers are not required for finalization.
-  UnbarrieredTable(mapObj).destroy(gcx);
 }
 
 size_t MapObject::objectMoved(JSObject* obj, JSObject* old) {
@@ -1230,16 +1206,16 @@ JSObject* SetIteratorObject::createResult(JSContext* cx) {
 /*** Set ********************************************************************/
 
 const JSClassOps SetObject::classOps_ = {
-    nullptr,   // addProperty
-    nullptr,   // delProperty
-    nullptr,   // enumerate
-    nullptr,   // newEnumerate
-    nullptr,   // resolve
-    nullptr,   // mayResolve
-    finalize,  // finalize
-    nullptr,   // call
-    nullptr,   // construct
-    trace,     // trace
+    nullptr,  // addProperty
+    nullptr,  // delProperty
+    nullptr,  // enumerate
+    nullptr,  // newEnumerate
+    nullptr,  // resolve
+    nullptr,  // mayResolve
+    nullptr,  // finalize
+    nullptr,  // call
+    nullptr,  // construct
+    trace,    // trace
 };
 
 const ClassSpec SetObject::classSpec_ = {
@@ -1261,8 +1237,7 @@ const JSClass SetObject::class_ = {
     "Set",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(SetObject::SlotCount) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_Set) | JSCLASS_BACKGROUND_FINALIZE |
-        JSCLASS_SKIP_NURSERY_FINALIZE,
+        JSCLASS_HAS_CACHED_PROTO(JSProto_Set),
     &SetObject::classOps_, &SetObject::classSpec_, &SetObject::classExtension_};
 
 const JSClass SetObject::protoClass_ = {
@@ -1390,7 +1365,7 @@ SetObject* SetObject::create(JSContext* cx,
 
   gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
   MOZ_ASSERT(gc::GetGCKindSlots(allocKind) >= SlotCount);
-  MOZ_ASSERT(gc::IsBackgroundFinalized(allocKind));
+  MOZ_ASSERT(!gc::IsFinalizedKind(allocKind));
 
   AutoSetNewObjectMetadata metadata(cx);
   Rooted<SharedShape*> shape(cx, templateObj->sharedShape());
@@ -1439,27 +1414,6 @@ size_t SetObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
     size += nurseryKeys->sizeOfIncludingThis(mallocSizeOf);
   }
   return size;
-}
-
-void SetObject::finalize(JS::GCContext* gcx, JSObject* obj) {
-  SetObject* setObj = &obj->as<SetObject>();
-  MOZ_ASSERT(!IsInsideNursery(setObj));
-  MOZ_ASSERT(!UnbarrieredTable(setObj).hasNurseryIterators());
-
-#ifdef DEBUG
-  // If we're finalizing a tenured set then it cannot contain nursery things,
-  // because we evicted the nursery at the start of collection and writing a
-  // nursery thing into the set would require it to be live, which means it
-  // would have been marked.
-  UnbarrieredTable(setObj).forEachEntryUpTo(1000, [](auto& entry) {
-    Value key = entry;
-    MOZ_ASSERT_IF(key.isGCThing(), !IsInsideNursery(key.toGCThing()));
-  });
-#endif
-
-  // Finalized tenured sets do not contain nursery GC things, so do not require
-  // post barriers. Pre barriers are not required for finalization.
-  UnbarrieredTable(setObj).destroy(gcx);
 }
 
 size_t SetObject::objectMoved(JSObject* obj, JSObject* old) {

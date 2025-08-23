@@ -207,7 +207,6 @@ class MapObject : public OrderedHashMapObject {
   static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JS::GCContext* gcx, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
   [[nodiscard]] static bool construct(JSContext* cx, unsigned argc, Value* vp);
@@ -339,7 +338,6 @@ class SetObject : public OrderedHashSetObject {
   static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JS::GCContext* gcx, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
   static bool construct(JSContext* cx, unsigned argc, Value* vp);
