@@ -12,7 +12,7 @@ JAR_MANIFESTS += ["jar.mn"]
 with Files("**"):
     BUG_COMPONENT = ("Core", "Machine Learning")
 
-DIRS += ["actors"]
+DIRS += ["actors", "../../../third_party/llama.cpp"]
 
 BROWSER_CHROME_MANIFESTS += [
     "tests/browser/browser.toml",
