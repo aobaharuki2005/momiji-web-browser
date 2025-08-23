@@ -36,6 +36,7 @@ vendoring:
 
   exclude:
     - "**"
+    - src/llama-quant.cpp
 
   include:
     - LICENSE
