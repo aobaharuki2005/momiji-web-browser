@@ -146,7 +146,7 @@ class Nursery {
   std::tuple<void*, bool> allocNurseryOrMallocBuffer(JS::Zone* zone,
                                                      size_t nbytes,
                                                      arena_id_t arenaId);
-  std::tuple<void*, bool> allocateBuffer(JS::Zone* zone, size_t nbytes);
+  void* allocateInternalBuffer(JS::Zone* zone, size_t nbytes);
 
   // Like allocNurseryOrMallocBuffer, but returns nullptr if the buffer can't
   // be allocated in the nursery.

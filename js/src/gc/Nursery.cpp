@@ -787,20 +787,11 @@ std::tuple<void*, bool> js::Nursery::allocNurseryOrMallocBuffer(
   return {buffer, bool(buffer)};
 }
 
-std::tuple<void*, bool> js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
+void* js::Nursery::allocateInternalBuffer(Zone* zone, size_t nbytes) {
   MOZ_ASSERT(nbytes > 0);
-  MOZ_ASSERT(nbytes <= SIZE_MAX - gc::CellAlignBytes);
-  nbytes = RoundUp(nbytes, gc::CellAlignBytes);
-
-  if (nbytes <= MaxNurseryBufferSize) {
-    void* buffer = allocate(nbytes);
-    if (buffer) {
-      return {buffer, false};
-    }
-  }
-
-  void* buffer = AllocBuffer(zone, nbytes, true);
-  return {buffer, bool(buffer)};
+  MOZ_ASSERT(nbytes <= MaxNurseryBufferSize);
+  MOZ_ASSERT(nbytes % CellAlignBytes == 0);
+  return allocate(nbytes);
 }
 
 void* js::Nursery::tryAllocateNurseryBuffer(JS::Zone* zone, size_t nbytes,
@@ -838,15 +829,26 @@ void* js::Nursery::allocateBuffer(Zone* zone, Cell* owner, size_t nbytes) {
   MOZ_ASSERT(owner);
   MOZ_ASSERT(zone == owner->zone());
   MOZ_ASSERT(nbytes > 0);
+  MOZ_ASSERT(nbytes <= SIZE_MAX - gc::CellAlignBytes);
+  nbytes = RoundUp(nbytes, gc::CellAlignBytes);
 
   if (!IsInsideNursery(owner)) {
     return AllocBuffer(zone, nbytes, false);
   }
 
-  auto [buffer, isExternal] = allocateBuffer(zone, nbytes);
-  if (isExternal) {
-    registerBuffer(buffer, nbytes);
+  if (nbytes <= MaxNurseryBufferSize) {
+    void* buffer = allocateInternalBuffer(zone, nbytes);
+    if (buffer) {
+      return buffer;
+    }
   }
+
+  void* buffer = AllocBuffer(zone, nbytes, true);
+  if (!buffer) {
+    return nullptr;
+  }
+
+  registerBuffer(buffer, nbytes);
   return buffer;
 }
 
