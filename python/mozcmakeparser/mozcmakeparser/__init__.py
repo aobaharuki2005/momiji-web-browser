@@ -1,10 +1,62 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import logging
+import os
+from colorama import Fore, Style, init
 from pyparsing import (CharsNotIn, Group, Forward, Literal, Suppress, Word,
                        QuotedString, ZeroOrMore, alphas, alphanums)
 from string import Template
 import re
+
+# Initialize colorama
+init(autoreset=True)
+
+# Define a custom formatter with colors and indentation
+class ColoredFormatter(logging.Formatter):
+    COLORS = {
+        "DEBUG": Fore.CYAN,
+        "INFO": Fore.GREEN,
+        "WARNING": Fore.YELLOW,
+        "ERROR": Fore.RED,
+        "CRITICAL": Fore.RED + Style.BRIGHT,
+    }
+
+    def format(self, record):
+        log_color = self.COLORS.get(record.levelname, "")
+        record.msg = f"{log_color}{record.msg}{Style.RESET_ALL}"
+        return super().format(record)
+
+
+logger = logging.getLogger("cmakeparser")
+logger.setLevel(logging.DEBUG)
+console_handler = logging.StreamHandler()
+# Change this to enable more logging
+console_handler.setLevel(logging.ERROR)
+formatter = ColoredFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+
+def log(level, message, indent=0):
+    indent_str = "  " * indent
+    logger.log(level, f"{indent_str}{message}")
+
+
+indentlevel = 0
+
+
+def debug(msg):
+    log(logging.DEBUG, msg, indentlevel)
+
+def info(msg):
+    log(logging.INFO, msg, indentlevel)
+
+def warn(msg):
+    log(logging.WARNING, msg, indentlevel)
+
+def error(msg):
+    log(logging.ERROR, msg, indentlevel)
 
 # Grammar for CMake
 comment = Literal('#') + ZeroOrMore(CharsNotIn('\n'))
@@ -36,8 +88,7 @@ def match_block(command, parsed, start):
             depth -= 1
         end = end + 1
         if end == len(parsed):
-            print('error: eof when trying to match block statement: %s'
-                  % parsed[start])
+            error(f"error: eof when trying to match block statement: {parsed[start]}")
     return end
 
 
@@ -87,7 +138,14 @@ def substs(variables, values):
     return new_values
 
 
-def evaluate(variables, cache_variables, parsed):
+def append(sources, source_file, pwd, flavor):
+     if flavor == "llama":
+         sources.append(os.path.join(*pwd, source_file))
+     else:
+         sources.append(source_file)
+
+
+def evaluate(variables, cache_variables, parsed, pwd, flavor):
     """Evaluate a list of parsed commands, returning sources to build"""
     i = 0
     sources = []
@@ -103,7 +161,7 @@ def evaluate(variables, cache_variables, parsed):
                 for value in argument.split():
                     variables[arguments[0]] = value
                     cont_eval, new_sources = evaluate(variables, cache_variables,
-                                                      parsed[i+1:end])
+                                                      parsed[i+1:end], pwd, flavor)
                     sources.extend(new_sources)
                     if not cont_eval:
                         return cont_eval, sources
@@ -117,7 +175,7 @@ def evaluate(variables, cache_variables, parsed):
                 if evaluate_boolean(variables, condition[0]):
                     cont_eval, new_sources = evaluate(variables,
                                                       cache_variables,
-                                                      condition[1])
+                                                      condition[1], pwd, flavor)
                     sources.extend(new_sources)
                     if not cont_eval:
                         return cont_eval, sources
@@ -126,9 +184,9 @@ def evaluate(variables, cache_variables, parsed):
             if arguments:
                 try:
                     print('including: %s' % arguments[0])
-                    sources.extend(parse(variables, cache_variables, arguments[0]))
+                    sources.extend(parse(variables, cache_variables, pwd, arguments[0], flavor))
                 except IOError:
-                    print('warning: could not include: %s' % arguments[0])
+                    warn('warning: could not include: %s' % arguments[0])
         elif command == 'list':
             try:
                 action = arguments[0]
@@ -176,6 +234,25 @@ def evaluate(variables, cache_variables, parsed):
             value = arguments[2]
             if variable not in variables:
                 variables[variable] = value
+        # Those two functions are also emulated
+        elif command == "ggml_add_backend":
+            # Find + evaluate a CMakeLists.txt in a particular subdir, if
+            # enabled
+            backend = arguments[0].lower()
+            if backend in variables["MOZ_GGML_BACKENDS"]:
+                subdir = "ggml-" + arguments[0].lower()
+                parse_target = os.path.join(*pwd, subdir + "/CMakeLists.txt")
+                sources.extend(parse(variables, cache_variables, pwd, parse_target))
+        elif command in ["ggml_add_cpu_backend_variant_impl"]:
+            # execute ggml/src/ggml-cpu/CMakeLists.txt in current dir
+            sources.extend(
+                parse(
+                    variables,
+                    cache_variables,
+                    pwd,
+                    os.path.join(*pwd, "ggml-cpu/CMakeLists.txt"),
+                )
+            )
         elif command == 'add_asm_library':
             try:
                 sources.extend(variables[arguments[1]].split(' '))
@@ -183,17 +260,31 @@ def evaluate(variables, cache_variables, parsed):
                 pass
         elif command == 'add_intrinsics_object_library':
             try:
-                sources.extend(variables[arguments[3]].split(' '))
+                source_files = variables[arguments[3]]
+                for source_file in source_files.split(" "):
+                    append(sources, source_file, pwd, flavor)
             except (IndexError, KeyError):
                 pass
-        elif command == 'add_library':
+        elif command == "add_library":
+            if len(arguments) != 3 or arguments[2] != "ggml":
+                for source in arguments[1:]:
+                    for source_file in source.split(" "):
+                        # ALIAS and OBJECT don't need to be handled in our case,
+                        # we simply need a list of source files.
+                        if source_file not in {"ALIAS", "OBJECT"}:
+                            append(sources, source_file, pwd, flavor)
+        elif command == "target_sources":
             for source in arguments[1:]:
-                sources.extend(source.split(' '))
-        elif command == 'target_sources':
-            for source in arguments[1:]:
-                sources.extend(source.split(' '))
+                for source_file in source.split(" "):
+                    if source_file != "PRIVATE":
+                        append(sources, source_file, pwd, flavor)
+        elif command == "add_subdirectory":
+            pwd.append(arguments[0])
+            parse_target = os.path.join(*pwd, "CMakeLists.txt")
+            sources.extend(parse(variables, cache_variables, pwd, parse_target, flavor))
+            pwd.pop()
         elif command == 'MOZDEBUG':
-            print('>>>> MOZDEBUG: %s' % ' '.join(arguments))
+            info('>>>> MOZDEBUG: %s' % ' '.join(arguments))
         i += 1
     return True, sources
 
@@ -287,7 +378,22 @@ def evaluate_boolean(variables, arguments):
     return lhs
 
 
-def parse(variables, cache_variables, filename):
+def parse(variables, cache_variables, pwd, filename, flavor):
+    """Parse a CMakeLists.txt file and extract source files.
+
+    Args:
+        variables (dict): Dictionary of CMake variables for substitution
+        (in/out)
+        cache_variables (list): List of variables that should be cached (not
+        set if already present)
+        pwd (list): Current working directory path components
+        filename (str): Path to the CMakeLists.txt file to parse
+        flavor (str): Parser flavor - either 'llama' or 'libaom', this
+        changes whether `cwd` is prefixed to the source file or not.
+
+    Returns:
+        list: List of source file paths extracted from the CMakeLists.txt
+    """
     parsed = cmake.parseFile(filename)
-    cont_eval, sources = evaluate(variables, cache_variables, parsed)
+    cont_eval, sources = evaluate(variables, cache_variables, parsed, pwd, flavor)
     return sources
