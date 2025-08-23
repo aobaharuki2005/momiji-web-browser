@@ -5,51 +5,6 @@ from pyparsing import (CharsNotIn, Group, Forward, Literal, Suppress, Word,
                        QuotedString, ZeroOrMore, alphas, alphanums)
 from string import Template
 import re
-import logging
-from colorama import Fore, Style, init
-import os
-
-# Initialize colorama
-init(autoreset=True)
-
-# Define a custom formatter with colors and indentation
-class ColoredFormatter(logging.Formatter):
-    COLORS = {
-        'DEBUG': Fore.CYAN,
-        'INFO': Fore.GREEN,
-        'WARNING': Fore.YELLOW,
-        'ERROR': Fore.RED,
-        'CRITICAL': Fore.RED + Style.BRIGHT,
-    }
-
-    def format(self, record):
-        log_color = self.COLORS.get(record.levelname, '')
-        record.msg = f"{log_color}{record.msg}{Style.RESET_ALL}"
-        return super().format(record)
-
-logger = logging.getLogger('cmakeparser')
-logger.setLevel(logging.DEBUG)
-console_handler = logging.StreamHandler()
-# Change this to enable more logging
-console_handler.setLevel(logging.ERROR)
-formatter = ColoredFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-
-def log(level, message, indent=0):
-    indent_str = '  ' * indent
-    logger.log(level, f"{indent_str}{message}")
-
-indentlevel = 0
-
-def debug(msg):
-  log(logging.DEBUG, msg, indentlevel)
-
-def info(msg):
-  log(logging.INFO, msg, indentlevel)
-
-def error(msg):
-  log(logging.ERROR, msg, indentlevel)
 
 # Grammar for CMake
 comment = Literal('#') + ZeroOrMore(CharsNotIn('\n'))
@@ -62,6 +17,7 @@ identifier = Word(alphas, alphanums+'_')
 command = Group(identifier + Literal('(') + ZeroOrMore(arguments) + Literal(')'))
 file_elements = command | Suppress(comment)
 cmake = ZeroOrMore(file_elements)
+
 
 def extract_arguments(parsed):
     """Extract the command arguments skipping the parentheses"""
@@ -80,7 +36,7 @@ def match_block(command, parsed, start):
             depth -= 1
         end = end + 1
         if end == len(parsed):
-            error('error: eof when trying to match block statement: %s'
+            print('error: eof when trying to match block statement: %s'
                   % parsed[start])
     return end
 
@@ -131,8 +87,7 @@ def substs(variables, values):
     return new_values
 
 
-def evaluate(variables, cache_variables, parsed, pwd):
-    global indentlevel
+def evaluate(variables, cache_variables, parsed):
     """Evaluate a list of parsed commands, returning sources to build"""
     i = 0
     sources = []
@@ -148,7 +103,7 @@ def evaluate(variables, cache_variables, parsed, pwd):
                 for value in argument.split():
                     variables[arguments[0]] = value
                     cont_eval, new_sources = evaluate(variables, cache_variables,
-                                                      parsed[i+1:end], pwd)
+                                                      parsed[i+1:end])
                     sources.extend(new_sources)
                     if not cont_eval:
                         return cont_eval, sources
@@ -162,19 +117,18 @@ def evaluate(variables, cache_variables, parsed, pwd):
                 if evaluate_boolean(variables, condition[0]):
                     cont_eval, new_sources = evaluate(variables,
                                                       cache_variables,
-                                                      condition[1], pwd)
+                                                      condition[1])
                     sources.extend(new_sources)
                     if not cont_eval:
                         return cont_eval, sources
                     break
-
-
         elif command == 'include':
             if arguments:
                 try:
-                    sources.extend(parse(variables, cache_variables, pwd, arguments[0]))
+                    print('including: %s' % arguments[0])
+                    sources.extend(parse(variables, cache_variables, arguments[0]))
                 except IOError:
-                    info('warning: could not include: %s' % arguments[0])
+                    print('warning: could not include: %s' % arguments[0])
         elif command == 'list':
             try:
                 action = arguments[0]
@@ -207,15 +161,15 @@ def evaluate(variables, cache_variables, parsed, pwd):
                 cache_variables.append(variable)
             except ValueError:
                 variables[variable] = ' '.join(values)
-        elif command in ['ggml_add_backend']:
-            backend = arguments[0].lower()
-            if backend in variables["MOZ_GGML_BACKENDS"]:
-              subdir = "ggml-" + arguments[0].lower()
-              parse_target = os.path.join(*pwd, subdir + '/CMakeLists.txt')
-              sources.extend(parse(variables, cache_variables, pwd, parse_target))
-        elif command in ['ggml_add_cpu_backend_variant_impl']:
-          # execute ggml/src/ggml-cpu/CMakeLists.txt in current dir
-          sources.extend(parse(variables, cache_variables, pwd, os.path.join(*pwd, "ggml-cpu/CMakeLists.txt")))
+        # we need to emulate the behavior of these function calls
+        # because we don't support interpreting them directly
+        # see bug 1492292
+        elif command in ['set_aom_config_var', 'set_aom_detect_var']:
+            variable = arguments[0]
+            value = arguments[1]
+            if variable not in variables:
+                variables[variable] = value
+            cache_variables.append(variable)
         elif command == 'set_aom_option_var':
             # option vars cannot go into cache_variables
             variable = arguments[0]
@@ -229,29 +183,17 @@ def evaluate(variables, cache_variables, parsed, pwd):
                 pass
         elif command == 'add_intrinsics_object_library':
             try:
-                source_files = variables[arguments[3]]
-                for source_file in source_files.split(' '):
-                  sources.append(os.path.join(*pwd, source_file))
+                sources.extend(variables[arguments[3]].split(' '))
             except (IndexError, KeyError):
                 pass
         elif command == 'add_library':
-            if len(arguments) != 3 or arguments[2] != "ggml":
-                for source in arguments[1:]:
-                    for source_file in source.split(' '):
-                      if source_file != "ALIAS" and source_file != "OBJECT":
-                        sources.append(os.path.join(*pwd, source_file))
+            for source in arguments[1:]:
+                sources.extend(source.split(' '))
         elif command == 'target_sources':
             for source in arguments[1:]:
-                for source_file in source.split(' '):
-                  if source_file != "PRIVATE":
-                    sources.append(os.path.join(*pwd, source_file))
-        elif command == 'add_subdirectory':
-            pwd.append(arguments[0])
-            parse_target = os.path.join(*pwd, 'CMakeLists.txt')
-            sources.extend(parse(variables, cache_variables, pwd, parse_target))
-            pwd.pop()
+                sources.extend(source.split(' '))
         elif command == 'MOZDEBUG':
-            info('>>>> MOZDEBUG: %s' % ' '.join(arguments))
+            print('>>>> MOZDEBUG: %s' % ' '.join(arguments))
         i += 1
     return True, sources
 
@@ -262,9 +204,6 @@ def evaluate_boolean(variables, arguments):
         return False
 
     argument = arguments[0]
-
-    if argument == "TARGET" and arguments[1] == "ggml":
-        return False # just enough for it to work for our purpose
 
     if argument == 'NOT':
         return not evaluate_boolean(variables, arguments[1:])
@@ -348,7 +287,7 @@ def evaluate_boolean(variables, arguments):
     return lhs
 
 
-def parse(variables, cache_variables, pwd, filename):
+def parse(variables, cache_variables, filename):
     parsed = cmake.parseFile(filename)
-    cont_eval, sources = evaluate(variables, cache_variables, parsed, pwd)
+    cont_eval, sources = evaluate(variables, cache_variables, parsed)
     return sources
