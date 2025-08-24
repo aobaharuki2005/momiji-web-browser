@@ -654,7 +654,6 @@ void nsChildView::BackingScaleFactorChanged() {
     mCompositorWidgetDelegate->NotifyClientSizeChanged(deviceIntRect.Size());
   }
 
-
   if (mWidgetListener && !mWidgetListener->GetAppWindow()) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
