@@ -969,7 +969,7 @@ bool nsBaseWidget::UseAPZ() const {
   }
 
   // Always use APZ for top-level windows. XXX what about Dialog?
-  if (mWindowType == WindowType::TopLevel) {
+  if (mWindowType == WindowType::TopLevel || mWindowType == WindowType::Child ) {
     return true;
   }
 
@@ -986,8 +986,8 @@ bool nsBaseWidget::UseAPZ() const {
     return mWindowType == WindowType::Dialog ||
            mWindowType == WindowType::Popup;
   }
-  
-  if (StaticPrefs::apz_popups_without_remote_enabled()) {
+
+  else if (StaticPrefs::apz_popups_without_remote_enabled()) {
     return mWindowType == WindowType::Popup;
   }
 

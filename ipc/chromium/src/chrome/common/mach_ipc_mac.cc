@@ -232,8 +232,8 @@ MachHandleProcessCheckIn(
   if (((pid_t) request.trailer.msgh_audit.val[5]) != child_pid) {
     CHROMIUM_LOG(ERROR) << "task_t was not sent by child process";
     return Err(LaunchError("audit_token_to_pid"));
-  }
-
+  } 
+  
   // Ensure the task_t corresponds to the newly spawned child process.
   pid_t task_pid = -1;
   kr = pid_for_task(request.data.name, &task_pid);

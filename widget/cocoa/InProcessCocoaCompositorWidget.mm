@@ -10,6 +10,7 @@
 
 #include "InProcessCocoaCompositorWidget.h"
 #include "nsCocoaWindow.h"
+#include "nsChildView.h"
 
 namespace mozilla {
 namespace widget {
@@ -26,14 +27,14 @@ RefPtr<CompositorWidget> CompositorWidget::CreateLocal(
   } else {
     return new InProcessCocoaCompositorWidget(
         aInitData.get_CocoaCompositorWidgetInitData(), aOptions,
-        static_cast<nsCocoaWindow*>(aWidget));
+        static_cast<nsChildView*>(aWidget));
   }
 }
 
 InProcessCocoaCompositorWidget::InProcessCocoaCompositorWidget(
     const CocoaCompositorWidgetInitData& aInitData,
-    const layers::CompositorOptions& aOptions, nsCocoaWindow* aWindow)
-    : CocoaCompositorWidget(aOptions), mWindow(aWindow) {
+    const layers::CompositorOptions& aOptions, nsChildView* aView)
+    : CocoaCompositorWidget(aOptions), mChildView(aView) {
 
   // Our base class, CocoaCompositorWidget, also has an Init method
   // which is necessary to complete construction. But that method
@@ -46,16 +47,16 @@ InProcessCocoaCompositorWidget::InProcessCocoaCompositorWidget(
 
 void InProcessCocoaCompositorWidget::ObserveVsync(VsyncObserver* aObserver) {
   if (RefPtr<CompositorVsyncDispatcher> cvd =
-          mWindow->GetCompositorVsyncDispatcher()) {
+          mChildView->GetCompositorVsyncDispatcher()) {
     cvd->SetCompositorVsyncObserver(aObserver);
   }
 }
 
-nsIWidget* InProcessCocoaCompositorWidget::RealWidget() { return mWindow; }
+nsIWidget* InProcessCocoaCompositorWidget::RealWidget() { return mChildView; }
 
 RefPtr<mozilla::layers::NativeLayerRoot>
 InProcessCocoaCompositorWidget::GetNativeLayerRoot() {
-  return mWindow->GetNativeLayerRoot();
+  return mChildView->GetNativeLayerRoot();
 }
 
 void InProcessCocoaCompositorWidget::NotifyClientSizeChanged(

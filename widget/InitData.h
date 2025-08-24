@@ -17,6 +17,8 @@ enum class WindowType : uint8_t {
   TopLevel,   // default top level window
   Dialog,     // top level window but usually handled differently by the OS
   Popup,      // used for combo boxes, etc
+  Child,      // child windows (contained inside a window on the
+              // desktop (has no border))
   Invisible,  // a special hidden window (not to be created by arbitrary code)
 };
 
@@ -74,7 +76,7 @@ enum class TransparencyMode : uint8_t {
 // Basic struct for widget initialization data.
 // @see Create member function of nsIWidget
 struct InitData {
-  WindowType mWindowType = WindowType::TopLevel; 
+  WindowType mWindowType = WindowType::Child; 
   BorderStyle mBorderStyle = BorderStyle::Default;
   PopupType mPopupHint = PopupType::Panel;
   PopupLevel mPopupLevel = PopupLevel::Top;

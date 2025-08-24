@@ -3267,10 +3267,14 @@ bool nsDocumentViewer::ShouldAttachToTopLevel() {
   }
 
   // TODO(emilio, bug 1919165): Unify this between macOS and other platforms?
+#ifdef XP_MACOSX
+  return false;
+#else
 #ifdef DEBUG
   nsIWidgetListener* parentListener = mParentWidget->GetWidgetListener();
   MOZ_ASSERT(!parentListener || !parentListener->GetView(),
              "Expect a top level widget");
+#endif
 #endif
   return true;
 }

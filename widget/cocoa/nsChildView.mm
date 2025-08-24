@@ -21,7 +21,9 @@
 #include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SwipeTracker.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/TextEventDispatcher.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
@@ -54,6 +56,8 @@
 #include "nsClipboard.h"
 #include "nsCursorManager.h"
 #include "nsWindowMap.h"
+#include "mozilla/layers/NativeLayerRootRemoteMacChild.h"
+#include "mozilla/layers/NativeLayerRootRemoteMacParent.h"
 #include "nsCocoaUtils.h"
 #include "nsMenuUtilsX.h"
 #include "nsMenuBarX.h"
@@ -68,6 +72,8 @@
 #include "GLTextureImage.h"
 #include "GLContextProvider.h"
 #include "GLContextCGL.h"
+#include "CocoaCompositorWidget.h"
+#include "CompositorWidgetChild.h"
 #include "OGLShaderProgram.h"
 #include "ScopedGLHelpers.h"
 #include "HeapCopyOfStackArray.h"
@@ -244,11 +250,10 @@ nsChildView::~nsChildView() {
       mOnDestroyCalled,
       "nsChildView object destroyed without calling Destroy()");
 
-  if (mContentLayer) {
-    mNativeLayerRoot->RemoveLayer(mContentLayer);  // safe if already removed
+  // Our NativeLayerRoot must be empty before it is destructed.
+  if (mNativeLayerRoot) {
+    mNativeLayerRoot->SetLayers({});
   }
-
-  DestroyCompositor();
 
   // An nsChildView object that was in use can be destroyed without Destroy()
   // ever being called on it.  So we also need to do a quick, safe cleanup
@@ -374,15 +379,12 @@ void nsChildView::Destroy() {
 
   // Stuff below may delete the last ref to this
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
   {
     // Make sure that no composition is in progress while disconnecting
     // ourselves from the view.
     MutexAutoLock lock(mCompositingLock);
-
     [mView widgetDestroyed];
   }
-
   nsBaseWidget::Destroy();
 
   NotifyWindowDestroyed();
@@ -637,12 +639,21 @@ void nsChildView::BackingScaleFactorChanged() {
     return;
   }
 
+  UpdateBounds();
   SuspendAsyncCATransactions();
   mBackingScaleFactor = newScale;
   NSRect frame = mView.frame;
+
+  if (mNativeLayerRoot) {
+    mNativeLayerRoot->SetBackingScale(mBackingScaleFactor);
+  }
   mBounds = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, newScale);
 
-  mNativeLayerRoot->SetBackingScale(mBackingScaleFactor);
+  if (mCompositorWidgetDelegate) {
+    auto deviceIntRect = GetClientBounds();
+    mCompositorWidgetDelegate->NotifyClientSizeChanged(deviceIntRect.Size());
+  }
+
 
   if (mWidgetListener && !mWidgetListener->GetAppWindow()) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
@@ -826,8 +837,9 @@ void nsChildView::UpdateFullscreen(bool aFullscreen) {
 nsresult nsChildView::SynthesizeNativeKeyEvent(
     int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
     uint32_t aModifierFlags, const nsAString& aCharacters,
-    const nsAString& aUnmodifiedCharacters, nsIObserver* aObserver) {
-  AutoObserverNotifier notifier(aObserver, "keyevent");
+    const nsAString& aUnmodifiedCharacters,
+    nsISynthesizedEventCallback* aCallback) {
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback); 
   return mTextInputHandler->SynthesizeNativeKeyEvent(
       aNativeKeyboardLayout, aNativeKeyCode, aModifierFlags, aCharacters,
       aUnmodifiedCharacters);
@@ -836,10 +848,10 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(
 nsresult nsChildView::SynthesizeNativeMouseEvent(
     LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
     MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
-    nsIObserver* aObserver) {
+    nsISynthesizedEventCallback* aCallback) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  AutoObserverNotifier notifier(aObserver, "mouseevent");
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback); 
 
   NSPoint pt =
       nsCocoaUtils::DevPixelsToCocoaPoints(aPoint, BackingScaleFactor());
@@ -941,10 +953,10 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(
 nsresult nsChildView::SynthesizeNativeMouseScrollEvent(
     mozilla::LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
     double aDeltaX, double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
-    uint32_t aAdditionalFlags, nsIObserver* aObserver) {
+    uint32_t aAdditionalFlags, nsISynthesizedEventCallback* aCallback) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback); 
 
   NSPoint pt =
       nsCocoaUtils::DevPixelsToCocoaPoints(aPoint, BackingScaleFactor());
@@ -998,10 +1010,10 @@ nsresult nsChildView::SynthesizeNativeMouseScrollEvent(
 nsresult nsChildView::SynthesizeNativeTouchPoint(
     uint32_t aPointerId, TouchPointerState aPointerState,
     mozilla::LayoutDeviceIntPoint aPoint, double aPointerPressure,
-    uint32_t aPointerOrientation, nsIObserver* aObserver) {
+    uint32_t aPointerOrientation, nsISynthesizedEventCallback* aCallback) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  AutoObserverNotifier notifier(aObserver, "touchpoint");
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback); 
 
   MOZ_ASSERT(NS_IsMainThread());
   if (aPointerState == TOUCH_HOVER) {
@@ -1440,6 +1452,106 @@ void nsChildView::HandleMainThreadCATransaction() {
   }
 
   MaybeScheduleUnsuspendAsyncCATransactions();
+}
+
+void nsChildView::CreateCompositor(int aWidth, int aHeight) {
+  // Eventually, we're going to call nsBaseWidget::CreateCompositor to do the
+  // real work. Before we do that, we need to prepare some internal state if
+  // we have a GPU process, and we think that we will be creating a remote
+  // compositor that will run in that process.
+
+  // Because there are some early exit failure cases, we use a MakeScopeExit
+  // to do the actual call to nsBaseWidget::CreateCompositor, which has to
+  // come last.
+  auto finishCompositorCreation =
+      MakeScopeExit([&] { nsBaseWidget::CreateCompositor(aWidth, aHeight); });
+
+  // Create NativeLayerRemoteMac endpoints, if there's a GPU process.
+
+  // Bug 1978432: We want this to run on something other than the main process.
+  auto* pm = mozilla::gfx::GPUProcessManager::Get();
+  mozilla::ipc::EndpointProcInfo gpuProcessInfo =
+      (pm ? pm->GPUEndpointProcInfo()
+          : mozilla::ipc::EndpointProcInfo::Invalid());
+
+  mozilla::ipc::EndpointProcInfo childProcessInfo =
+      gpuProcessInfo != mozilla::ipc::EndpointProcInfo::Invalid()
+          ? gpuProcessInfo
+          : mozilla::ipc::EndpointProcInfo::Current();
+
+  mozilla::ipc::Endpoint<PNativeLayerRemoteParent> parentEndpoint;
+  auto rv = PNativeLayerRemote::CreateEndpoints(
+      mozilla::ipc::EndpointProcInfo::Current(), childProcessInfo,
+      &mParentEndpoint, &mChildEndpoint);
+
+  if (NS_SUCCEEDED(rv)) {
+    // Create our mNativeLayerRootRemoteMacParent.
+    mNativeLayerRootRemoteMacParent =
+        new NativeLayerRootRemoteMacParent(mNativeLayerRoot);
+
+    // We want the rest to run on the compositor thread.
+    MOZ_ASSERT(CompositorThread());
+    CompositorThread()->Dispatch(NewRunnableMethod<int, int>(
+        "nsCocoaWindow::FinishCreateCompositor", this,
+        &nsChildView::FinishCreateCompositor, aWidth, aHeight));
+  }
+
+  nsBaseWidget::CreateCompositor(aWidth, aHeight);
+}
+
+void nsChildView::FinishCreateCompositor(int aWidth, int aHeight) {
+  MOZ_ASSERT(mNativeLayerRootRemoteMacParent);
+  MOZ_ALWAYS_TRUE(mParentEndpoint.Bind(mNativeLayerRootRemoteMacParent));
+  // If this Bind fails, there's not much we can do, except signal somehow
+  // that we want to retry with an in-process compositor.
+
+  // If everything has gone well, the mChildEndpoint will be used in
+  // GetCompositorWidgetInitData, to send the endpoint to the compositor
+  // widget. Later, the render thread will bind a NativeLayerRemoteMacChild
+  // to the child side of the endpoint. Once that is done, the compositor
+  // widget child actor can send messages to our parent actor, and we can
+  // update the real mNativeLayerRoot with the GPU surfaces.
+}
+
+void nsChildView::DestroyCompositor() {
+  // The main work here is to close the mNativeLayerRootRemoteMacParent.
+  // The call to Bind was done on the compositor thread, so we need to
+  // dispatch to that thread. Move the existing
+  // mNativeLayerRootRemoteMacParent out, leaving it null.
+  if (RefPtr<NativeLayerRootRemoteMacParent> actor =
+      std::move(mNativeLayerRootRemoteMacParent)) {
+    MOZ_ASSERT(CompositorThread());
+    CompositorThread()->Dispatch(
+        NewRunnableMethod("NativeLayerRootRemoteMacParent::Close", actor,
+          &NativeLayerRootRemoteMacParent::Close));
+  }
+
+  nsBaseWidget::DestroyCompositor();
+}
+
+void nsChildView::SetCompositorWidgetDelegate(
+    mozilla::widget::CompositorWidgetDelegate* aDelegate) {
+  if (aDelegate) {
+    mCompositorWidgetDelegate = aDelegate->AsPlatformSpecificDelegate();
+    MOZ_ASSERT(mCompositorWidgetDelegate,
+               "nsChildView::SetCompositorWidgetDelegate called with a "
+               "non-PlatformCompositorWidgetDelegate");
+  } else {
+    mCompositorWidgetDelegate = nullptr;
+  }
+}
+
+void nsChildView::GetCompositorWidgetInitData(
+    mozilla::widget::CompositorWidgetInitData* aInitData) {
+  auto deviceIntRect = GetClientBounds();
+  MOZ_ASSERT(mChildEndpoint.IsValid());
+  *aInitData = mozilla::widget::CocoaCompositorWidgetInitData(
+      deviceIntRect.Size(), std::move(mChildEndpoint));
+}
+
+mozilla::layers::CompositorBridgeChild*
+nsChildView::GetCompositorBridgeChild() const {
+  return mCompositorBridgeChild;
 }
 
 #pragma mark -
@@ -2428,8 +2540,10 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   //this call will ensure the GL context
   //will round our corners as we want, but at a cost
   //see comments about superview in nscocoawindow
-  mPixelHostingView.layer.cornerRadius=6.0f;
-  mPixelHostingView.layer.masksToBounds=YES;
+  if([self isCoveringTitlebar]) {
+    mPixelHostingView.layer.cornerRadius=6.0f;
+    mPixelHostingView.layer.masksToBounds=YES;
+  }
   if (mUsingOMTCompositor) {
     // Make sure the window's "drawRect" buffer does not interfere with our
     // OpenGL drawing's rounded corners.
@@ -2673,7 +2787,7 @@ static void DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius) {
 // such and let the OS (and other programs) know when it opens and closes
 // (this is how the OS knows to close other programs' context menus when
 // ours open).  We send the initial notification here, but others are sent
-// in nsCocoaWindow::Show().
+// in nsChildView::Show().
 - (void)maybeInitContextMenuTracking {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
@@ -3217,6 +3331,7 @@ static void DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius) {
 
   EventMessage msg = aEnter ? eMouseEnterIntoWidget : eMouseExitFromWidget;
   WidgetMouseEvent event(true, msg, mGeckoChild, WidgetMouseEvent::eReal);
+  [self convertCocoaMouseEvent:aEvent toGeckoEvent:&event];
   event.mRefPoint = mGeckoChild->CocoaPointsToDevPixels(localEventLocation);
   if (event.mMessage == eMouseExitFromWidget) {
     event.mExitFrom = Some(aExitFrom);

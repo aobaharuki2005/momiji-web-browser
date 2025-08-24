@@ -29,7 +29,7 @@
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 #include "nsCocoaFeatures.h"
-#include "nsCocoaWindow.h"
+#include "nsChildView.h"
 #include "nsToolkit.h"
 #include "TextInputHandler.h"
 #include "mozilla/BackgroundHangMonitor.h"
@@ -840,7 +840,7 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 
   if (!moreEvents) {
-    nsCocoaWindow::UpdateCurrentInputEventCount();
+    nsChildView::UpdateCurrentInputEventCount();
   }
 
   return moreEvents;

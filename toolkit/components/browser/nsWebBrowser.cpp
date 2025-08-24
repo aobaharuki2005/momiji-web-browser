@@ -60,6 +60,7 @@ nsWebBrowser::nsWebBrowser(int aItemType)
       mShouldEnableHistory(true),
       mWillChangeProcess(false),
       mProgressListener(nullptr),
+      mWidgetListenerDelegate(this),
       mBackgroundColor(0),
       mPersistCurrentState(nsIWebBrowserPersist::PERSIST_STATE_READY),
       mPersistResult(NS_OK),
@@ -72,8 +73,25 @@ nsWebBrowser::nsWebBrowser(int aItemType)
 nsWebBrowser::~nsWebBrowser() { InternalDestroy(); }
 
 nsIWidget* nsWebBrowser::EnsureWidget() {
-  MOZ_DIAGNOSTIC_ASSERT(mParentWidget);
-  return mParentWidget;
+  if (mParentWidget) {
+    return mParentWidget;
+  }
+
+  mInternalWidget = nsIWidget::CreateChildWindow();
+  if (NS_WARN_IF(!mInternalWidget)) {
+    return nullptr;
+  }
+
+  widget::InitData widgetInit;
+  widgetInit.mClipChildren = true;
+  widgetInit.mWindowType = widget::WindowType::Child;
+  LayoutDeviceIntRect bounds(0, 0, 0, 0);
+
+  mInternalWidget->SetWidgetListener(&mWidgetListenerDelegate);
+  NS_ENSURE_SUCCESS(mInternalWidget->Create(mParentWidget, bounds, &widgetInit),
+                    nullptr);
+
+  return mInternalWidget;
 }
 
 /* static */
@@ -145,6 +163,12 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
 }
 
 void nsWebBrowser::InternalDestroy() {
+  if (mInternalWidget) {
+    mInternalWidget->SetWidgetListener(nullptr);
+    mInternalWidget->Destroy();
+    mInternalWidget = nullptr;  // Force release here.
+  }
+
   SetDocShell(nullptr);
 
   if (mDocShellTreeOwner) {
@@ -918,6 +942,12 @@ nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aCX,
   int32_t doc_y = aY;
 
   // We also need to resize our widget then.
+  // Now reposition/ resize the doc
+  if (mInternalWidget) {
+    doc_x = doc_y = 0;
+    mInternalWidget->Resize(aX, aY, aCX, aCY,
+                            !!(aFlags & nsIBaseWindow::eRepaint));
+  }
   NS_ENSURE_SUCCESS(
       mDocShell->SetPositionAndSize(doc_x, doc_y, aCX, aCY, aFlags),
       NS_ERROR_FAILURE);
@@ -928,6 +958,23 @@ nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aCX,
 NS_IMETHODIMP
 nsWebBrowser::GetPositionAndSize(int32_t* aX, int32_t* aY, int32_t* aCX,
                                  int32_t* aCY) {
+  if (mInternalWidget) {
+    LayoutDeviceIntRect bounds = mInternalWidget->GetBounds();
+
+    if (aX) {
+      *aX = bounds.X();
+    }
+    if (aY) {
+      *aY = bounds.Y();
+    }
+    if (aCX) {
+      *aCX = bounds.Width();
+    }
+    if (aCY) {
+      *aCY = bounds.Height();
+    }
+    return NS_OK;
+  }
   // Can directly return this as it is the
   // same interface, thus same returns.
   return mDocShell->GetPositionAndSize(aX, aY, aCX, aCY);
@@ -991,6 +1038,9 @@ NS_IMETHODIMP
 nsWebBrowser::SetVisibility(bool aVisibility) {
   if (mDocShell) {
     NS_ENSURE_SUCCESS(mDocShell->SetVisibility(aVisibility), NS_ERROR_FAILURE);
+    if (mInternalWidget) {
+      mInternalWidget->Show(aVisibility);
+    }
   }
 
   return NS_OK;
@@ -998,11 +1048,19 @@ nsWebBrowser::SetVisibility(bool aVisibility) {
 
 NS_IMETHODIMP
 nsWebBrowser::GetEnabled(bool* aEnabled) {
+  if (mInternalWidget) {
+    *aEnabled = mInternalWidget->IsEnabled();
+    return NS_OK;
+  }
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsWebBrowser::SetEnabled(bool aEnabled) {
+  if (mInternalWidget) {
+    mInternalWidget->Enable(aEnabled);
+    return NS_OK;
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -1010,7 +1068,13 @@ NS_IMETHODIMP
 nsWebBrowser::GetMainWidget(nsIWidget** aMainWidget) {
   NS_ENSURE_ARG_POINTER(aMainWidget);
 
-  NS_IF_ADDREF(*aMainWidget = mParentWidget);
+  if (mInternalWidget) {
+    *aMainWidget = mInternalWidget;
+  } else {
+    *aMainWidget = mParentWidget;
+  }
+
+  NS_IF_ADDREF(*aMainWidget);
 
   return NS_OK;
 }
@@ -1075,6 +1139,43 @@ void nsWebBrowser::EnsureDocShellTreeOwner() {
   mDocShellTreeOwner->WebBrowser(this);
 }
 
+void nsWebBrowser::WindowActivated() {
+#if defined(DEBUG_smaug)
+  RefPtr<dom::Document> document = mDocShell->GetDocument();
+  nsAutoString documentURI;
+  document->GetDocumentURI(documentURI);
+  printf("nsWebBrowser::NS_ACTIVATE %p %s\n", (void*)this,
+         NS_ConvertUTF16toUTF8(documentURI).get());
+#endif
+  FocusActivate(nsFocusManager::GenerateFocusActionId());
+}
+
+void nsWebBrowser::WindowDeactivated() {
+#if defined(DEBUG_smaug)
+  RefPtr<dom::Document> document = mDocShell->GetDocument();
+  nsAutoString documentURI;
+  document->GetDocumentURI(documentURI);
+  printf("nsWebBrowser::NS_DEACTIVATE %p %s\n", (void*)this,
+         NS_ConvertUTF16toUTF8(documentURI).get());
+#endif
+  FocusDeactivate(nsFocusManager::GenerateFocusActionId());
+}
+
+bool nsWebBrowser::PaintWindow(nsIWidget* aWidget,
+                               LayoutDeviceIntRegion aRegion) {
+  WindowRenderer* renderer = aWidget->GetWindowRenderer();
+  NS_ASSERTION(renderer, "Must be in paint event");
+  if (FallbackRenderer* fallback = renderer->AsFallback()) {
+    if (fallback->BeginTransaction()) {
+      fallback->EndTransactionWithColor(aRegion.GetBounds().ToUnknownRect(),
+                                        ToDeviceColor(mBackgroundColor));
+    }
+    return true;
+  }
+  return false;
+}
+
+
 void nsWebBrowser::FocusActivate(uint64_t aActionId) {
   if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
     if (nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow()) {
@@ -1096,4 +1197,20 @@ void nsWebBrowser::SetWillChangeProcess() {
   if (mDocShell) {
     nsDocShell::Cast(mDocShell)->SetWillChangeProcess();
   }
+}
+
+void nsWebBrowser::WidgetListenerDelegate::WindowActivated() {
+  RefPtr<nsWebBrowser> holder = mWebBrowser;
+  holder->WindowActivated();
+}
+
+void nsWebBrowser::WidgetListenerDelegate::WindowDeactivated() {
+  RefPtr<nsWebBrowser> holder = mWebBrowser;
+  holder->WindowDeactivated();
+}
+
+bool nsWebBrowser::WidgetListenerDelegate::PaintWindow(
+    nsIWidget* aWidget, mozilla::LayoutDeviceIntRegion aRegion) {
+  RefPtr<nsWebBrowser> holder = mWebBrowser;
+  return holder->PaintWindow(aWidget, aRegion);
 }

@@ -51,6 +51,7 @@ void CocoaCompositorWidget::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
 }
 
+
 LayoutDeviceIntSize CocoaCompositorWidget::GetClientSize() {
   return mClientSize;
 }
