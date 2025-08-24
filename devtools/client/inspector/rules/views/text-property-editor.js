@@ -1020,7 +1020,10 @@ class TextPropertyEditor {
     }
 
     if (this.#shouldShowFilterProperty) {
-      this.#createFilterPropertyButton();
+      if (!this.filterProperty) {
+        this.#createFilterPropertyButton();
+      }
+      this.filterProperty.hidden = false;
     } else if (this.filterProperty) {
       this.filterProperty.hidden = true;
     }
@@ -1057,6 +1060,8 @@ class TextPropertyEditor {
       this.element.classList.add("unused");
       if (!this.unusedState) {
         this.#createUnusedWarningIcon();
+      } else {
+        this.unusedState.hidden = false;
       }
     }
   }

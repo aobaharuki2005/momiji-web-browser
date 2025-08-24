@@ -47,6 +47,12 @@ add_task(async function user_toggle_on_and_off() {
 
   Assert.ok(content, "Panel content should be present");
 
+  setupService({
+    isSignedIn: true,
+    isEnrolled: true,
+  });
+  IPProtectionService.isEnrolled = true;
+  IPProtectionService.isEntitled = true;
   content.state.isSignedIn = true;
   content.requestUpdate();
   await content.updateComplete;
@@ -85,6 +91,9 @@ add_task(async function user_toggle_on_and_off() {
   Assert.equal(toggledEvents[1].extra.userAction, "true");
 
   Services.fog.testResetFOG();
+  IPProtectionService.isEnrolled = false;
+  IPProtectionService.isEntitled = false;
+  cleanupService();
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
@@ -118,6 +127,13 @@ add_task(async function toggle_off_on_shutdown() {
 
   let content = panelView.querySelector(IPProtectionPanel.CONTENT_TAGNAME);
   Assert.ok(content, "Panel content should be present");
+
+  setupService({
+    isSignedIn: true,
+    isEnrolled: true,
+  });
+  IPProtectionService.isEnrolled = true;
+  IPProtectionService.isEntitled = true;
   content.state.isSignedIn = true;
   content.requestUpdate();
   await content.updateComplete;
@@ -143,7 +159,7 @@ add_task(async function toggle_off_on_shutdown() {
   Assert.equal(toggledEvents[0].extra.userAction, "true");
 
   // Simulate closing the window
-  lazy.IPProtectionService.uninit(true);
+  lazy.IPProtectionService.uninit();
   toggledEvents = Glean.ipprotection.toggled.testGetValue();
   Assert.equal(toggledEvents.length, 2, "should have recorded a second toggle");
   Assert.equal(toggledEvents[1].category, "ipprotection");
@@ -153,6 +169,7 @@ add_task(async function toggle_off_on_shutdown() {
 
   Services.fog.testResetFOG();
   // Re-initialize to avoid breaking tests that follow
+  cleanupService();
   lazy.IPProtectionService.init();
   let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(

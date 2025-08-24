@@ -383,9 +383,15 @@ static void CollectScriptTelemetry(ScriptLoadRequest* aRequest) {
   }
 }
 
-/* static */
-bool ScriptLoader::IsScriptEventHandler(ScriptKind kind,
-                                        nsIContent* aScriptElement) {
+// Helper method for checking if the script element is an event-handler
+// This means that it has both a for-attribute and a event-attribute.
+// Also, if the for-attribute has a value that matches "\s*window\s*",
+// and the event-attribute matches "\s*onload([ \(].*)?" then it isn't an
+// eventhandler. (both matches are case insensitive).
+// This is how IE seems to filter out a window's onload handler from a
+// <script for=... event=...> element.
+
+static bool IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement) {
   if (kind != ScriptKind::eClassic) {
     return false;
   }
@@ -400,12 +406,6 @@ bool ScriptLoader::IsScriptEventHandler(ScriptKind kind,
     return false;
   }
 
-  return ScriptLoader::IsScriptEventHandler(forAttr, eventAttr);
-}
-
-/* static */
-bool ScriptLoader::IsScriptEventHandler(const nsAString& forAttr,
-                                        const nsAString& eventAttr) {
   const nsAString& for_str =
       nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(forAttr);
   if (!for_str.LowerCaseEqualsLiteral("window")) {
@@ -1234,7 +1234,7 @@ bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement) {
   }
 
   // Step 13. Check that the script is not an eventhandler
-  if (ScriptLoader::IsScriptEventHandler(scriptKind, scriptContent)) {
+  if (IsScriptEventHandler(scriptKind, scriptContent)) {
     return false;
   }
 

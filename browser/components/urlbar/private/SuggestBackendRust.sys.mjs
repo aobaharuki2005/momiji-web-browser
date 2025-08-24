@@ -173,39 +173,34 @@ export class SuggestBackendRust extends SuggestBackend {
 
     this.logger.debug("Handling query", { searchString });
 
-    if (!types) {
-      types = this.#enabledSuggestionTypes;
-    } else {
-      types = types.map(type => {
-        let provider = this.#providerFromSuggestionType(type);
+    // Build a list of Rust providers to query and an object containing Rust
+    // provider constraints for all queried providers.
+    let uniqueProviders = new Set();
+    let allProviderConstraints = {};
+    let typeItems = types
+      ? types.map(type => ({ type }))
+      : this.#enabledSuggestionTypes;
+    for (let { feature, type, provider } of typeItems) {
+      if (!provider) {
+        provider = this.#providerFromSuggestionType(type);
         if (!provider) {
           throw new Error("Unknown Rust suggestion type: " + type);
         }
-        return { type, provider };
-      });
-    }
-
-    let providers = [];
-    let allProviderConstraints = {};
-    for (let { type, provider } of types) {
+      }
       this.logger.debug("Adding type to query", { type, provider });
-      providers.push(provider);
-
-      let providerConstraints =
-        lazy.QuickSuggest.getFeatureByRustSuggestionType(
-          type
-        ).rustProviderConstraints;
-      if (providerConstraints) {
-        allProviderConstraints = {
-          ...allProviderConstraints,
-          ...providerConstraints,
-        };
+      uniqueProviders.add(provider);
+      if (feature) {
+        allProviderConstraints = SuggestBackendRust.mergeProviderConstraints(
+          allProviderConstraints,
+          feature.rustProviderConstraints
+        );
       }
     }
 
+    // Do the query.
     const { suggestions, queryTimes } = await this.#store.queryWithMetrics(
       new lazy.SuggestionQuery({
-        providers,
+        providers: [...uniqueProviders],
         keyword: searchString,
         providerConstraints: new lazy.SuggestionProviderConstraints(
           allProviderConstraints
@@ -213,10 +208,12 @@ export class SuggestBackendRust extends SuggestBackend {
       })
     );
 
+    // Update query telemetry.
     for (let { label, value } of queryTimes) {
       Glean.suggest.queryTime[label].accumulateSingleSample(value);
     }
 
+    // Build the list of suggestions to return.
     let liftedSuggestions = [];
     for (let s of suggestions) {
       let type = getSuggestionType(s);
@@ -229,8 +226,11 @@ export class SuggestBackendRust extends SuggestBackend {
         continue;
       }
 
+      // Set `suggestion.source` and `provider`, which `QuickSuggest` uses to
+      // look up the feature that manages the suggestion.
       suggestion.source = "rust";
       suggestion.provider = type;
+
       if (suggestion.icon) {
         suggestion.icon_blob = new Blob([suggestion.icon], {
           type: suggestion.iconMimetype ?? "",
@@ -256,8 +256,8 @@ export class SuggestBackendRust extends SuggestBackend {
    * backend.
    *
    * @param {string} type
-   *   A Rust suggestion type name as defined in `suggest.udl`, e.g., "Amp",
-   *   "Wikipedia", "Mdn", etc. See also `SuggestProvider.rustSuggestionType`.
+   *   A suggestion type name as defined in Rust, e.g., "Amp", "Wikipedia",
+   *   "Mdn", etc.
    * @returns {object} config
    *   The config data for the type.
    */
@@ -289,19 +289,19 @@ export class SuggestBackendRust extends SuggestBackend {
     if (!this.isEnabled || !feature.isEnabled) {
       // Mark this type as stale so we'll ingest next time this method is
       // called.
-      this.#providerConstraintsByIngestedSuggestionType.delete(type);
+      this.#providerConstraintsOnLastIngestByFeature.delete(feature);
     } else {
       let providerConstraints = feature.rustProviderConstraints;
       if (
         evenIfFresh ||
-        !this.#providerConstraintsByIngestedSuggestionType.has(type) ||
+        !this.#providerConstraintsOnLastIngestByFeature.has(feature) ||
         !lazy.ObjectUtils.deepEqual(
           providerConstraints,
-          this.#providerConstraintsByIngestedSuggestionType.get(type)
+          this.#providerConstraintsOnLastIngestByFeature.get(feature)
         )
       ) {
-        this.#providerConstraintsByIngestedSuggestionType.set(
-          type,
+        this.#providerConstraintsOnLastIngestByFeature.set(
+          feature,
           providerConstraints
         );
         this.#ingestSuggestionType({ type, providerConstraints });
@@ -477,6 +477,48 @@ export class SuggestBackendRust extends SuggestBackend {
   }
 
   /**
+   * Merges two Rust provider constraints and returns a new object. The
+   * constraints should be plain JS objects appropriate for passing to the
+   * `SuggestionProviderConstraints` constructor.
+   *
+   * TODO: This should be a function in the Rust component.
+   *
+   * @param {object} a
+   *   The first constraints object.
+   * @param {object} b
+   *   The second constraints object.
+   * @returns {object}
+   *   A plain JS object resulting from merging `a` and `b`.
+   */
+  static mergeProviderConstraints(a, b) {
+    if (!a || !b) {
+      return a ?? b;
+    }
+
+    let merged = { ...a, ...b };
+
+    // Merge the `dynamicSuggestionTypes` arrays.
+    if (
+      a.hasOwnProperty("dynamicSuggestionTypes") ||
+      b.hasOwnProperty("dynamicSuggestionTypes")
+    ) {
+      if (!a.dynamicSuggestionTypes || !b.dynamicSuggestionTypes) {
+        merged.dynamicSuggestionTypes =
+          a.dynamicSuggestionTypes ?? b.dynamicSuggestionTypes;
+      } else {
+        // We only sort to make the behavior stable for tests.
+        merged.dynamicSuggestionTypes = [
+          ...new Set(
+            a.dynamicSuggestionTypes.concat(b.dynamicSuggestionTypes).sort()
+          ),
+        ];
+      }
+    }
+
+    return merged;
+  }
+
+  /**
    * @returns {string}
    *   The path of `suggest.sqlite`, where the Rust component stores ingested
    *   suggestions. It also stores dismissed suggestions, which is why we keep
@@ -495,6 +537,8 @@ export class SuggestBackendRust extends SuggestBackend {
    *   Each item in this array identifies an enabled Rust suggestion type and
    *   related data. Items have the following properties:
    *
+   *   {SuggestProvider} feature
+   *     The feature that manages the Rust suggestion type.
    *   {string} type
    *     A Rust suggestion type name as defined in Rust, e.g., "Amp",
    *     "Wikipedia", "Mdn", etc.
@@ -508,7 +552,7 @@ export class SuggestBackendRust extends SuggestBackend {
         let type = feature.rustSuggestionType;
         let provider = this.#providerFromSuggestionType(type);
         if (provider) {
-          items.push({ type, provider });
+          items.push({ feature, type, provider });
         }
       }
     }
@@ -602,7 +646,7 @@ export class SuggestBackendRust extends SuggestBackend {
 
   #uninit() {
     this.#store = null;
-    this.#providerConstraintsByIngestedSuggestionType.clear();
+    this.#providerConstraintsOnLastIngestByFeature.clear();
     this.#configsBySuggestionType.clear();
     lazy.timerManager.unregisterTimer(INGEST_TIMER_ID);
 
@@ -812,9 +856,9 @@ export class SuggestBackendRust extends SuggestBackend {
   // `SuggestStore.fetchProviderConfig()`.
   #configsBySuggestionType = new Map();
 
-  // Keeps track of suggestion types with fresh (non-stale) ingests. Maps
-  // ingested suggestion types to `feature.rustProviderConstraints`.
-  #providerConstraintsByIngestedSuggestionType = new Map();
+  // Keeps track of features with fresh (non-stale) ingests. Maps
+  // `SuggestProvider`s to their `rustProviderConstraints` on last ingest.
+  #providerConstraintsOnLastIngestByFeature = new Map();
 
   #ingestQueue;
   #shutdownBlocker;

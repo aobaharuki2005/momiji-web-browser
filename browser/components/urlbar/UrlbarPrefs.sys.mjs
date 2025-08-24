@@ -153,6 +153,9 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // future.
   ["groupLabels.enabled", true],
 
+  // Feature gate pref for important-dates suggestions in the urlbar.
+  ["importantDates.featureGate", false],
+
   // Set default intent threshold value of 0.5
   ["intentThreshold", [0.5, "float"]],
 
@@ -163,6 +166,9 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // telemetry. Only applies to results with an `exposureTelemetry` value other
   // than `NONE`.
   ["keywordExposureResults", ""],
+
+  // Feature gate pref for stock market suggestions in the urlbar.
+  ["market.featureGate", false],
 
   // The minimum prefix length of a market keyword the user must type to
   // trigger the suggestion. 0 means the min length should be taken from Nimbus
@@ -461,6 +467,10 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // Whether results will include the user's history.
   ["suggest.history", true],
 
+  // If `browser.urlbar.importantDates.featureGate` is true, this controls
+  // whether important-dates suggestions are turned on.
+  ["suggest.importantDates", true],
+
   // Whether results will include Market suggestions.
   ["suggest.market", true],
 
@@ -640,9 +650,9 @@ const PREF_OTHER_DEFAULTS = new Map([
 // defaults are the values of their fallbacks.
 const NIMBUS_DEFAULTS = {
   addonsShowLessFrequentlyCap: 0,
-  marketMinKeywordLength: null,
-  marketShowLessFrequentlyCap: null,
   quickSuggestScoreMap: null,
+  realtimeMinKeywordLength: null,
+  realtimeShowLessFrequentlyCap: null,
   weatherKeywordsMinimumLength: null,
   weatherShowLessFrequentlyCap: null,
   yelpMinKeywordLength: null,

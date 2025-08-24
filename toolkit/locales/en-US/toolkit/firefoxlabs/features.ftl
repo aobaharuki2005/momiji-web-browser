@@ -29,11 +29,8 @@ experimental-features-group-webpage-display =
   .label = Webpage Display
 experimental-features-group-customize-browsing =
   .label = Customize your browsing
-
-# Contextual Password Manager in sidebar
-experimental-features-contextual-password-manager =
-    .label = Passwords in the sidebar
-experimental-features-contextual-password-manager-description = Access your passwords right from the sidebar. No more searching around or resetting passwords when you’re trying to sign in. To use this feature, select passwords in the sidebar. Then go to your general settings and under browser layout, select show sidebar. Then, customize your sidebar by selecting passwords. If you try it, <a data-l10n-name="connect">let us know what you think</a>.
+experimental-features-group-productivity =
+  .label = Productivity
 
 # New Tab Custom Wallpapers
 experimental-features-custom-wallpaper =
@@ -79,3 +76,8 @@ experimental-features-newtab-widget-lists-description = Keep your to-do list top
 experimental-features-newtab-widget-timer =
     .label = Timer on { -firefox-home-brand-name }
 experimental-features-newtab-widget-timer-description = Set a timer to keep you focused, nudge you to stay on track, or remind you to recharge. <a data-l10n-name="connect">Share feedback</a>
+
+# Lists and Timer Widget (Combined)
+experimental-features-newtab-widget-lists-and-timer =
+    .label = Lists and timer on { -firefox-home-brand-name }
+experimental-features-newtab-widget-lists-and-timer-description = Keep your to-do list top-of-mind when you open a new tab. From packing lists to shopping lists, make your plans in { -brand-product-name }. Set a timer to keep you focused, nudge you to stay on track, or remind you to recharge. <a data-l10n-name="connect">Share feedback</a>

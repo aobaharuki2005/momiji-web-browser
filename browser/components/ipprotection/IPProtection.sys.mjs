@@ -65,13 +65,8 @@ class IPProtectionWidget {
 
   /**
    * Destroys the widget and prevents any updates.
-   *
-   * If only enabling pref has changed the panels
-   * WeakMap should not be cleared.
-   *
-   * @param {boolean} prefChange
    */
-  uninit(prefChange = false) {
+  uninit() {
     if (!this.#inited) {
       return;
     }
@@ -79,10 +74,6 @@ class IPProtectionWidget {
     this.#uninitPanels();
 
     lazy.CustomizableUI.removeListener(this);
-
-    if (!prefChange) {
-      this.#uninitPanels();
-    }
 
     this.#inited = false;
   }

@@ -34,6 +34,17 @@ class FakeIPProtectionPanelElement {
   }
 }
 
+add_setup(async function () {
+  // FxAccountsStorage.sys.mjs requires a profile directory.
+  do_get_profile();
+
+  IPProtectionService.init();
+
+  registerCleanupFunction(async () => {
+    IPProtectionService.uninit();
+  });
+});
+
 /**
  * Tests that we can set a state and pass it to a fake element.
  */
@@ -119,6 +130,16 @@ add_task(async function test_IPProtectionPanel_signedIn() {
   sandbox.stub(UIState, "get").returns({
     status: UIState.STATUS_SIGNED_IN,
   });
+  sandbox
+    .stub(IPProtectionService.guardian, "isLinkedToGuardian")
+    .returns(false);
+  sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").returns({
+    status: 200,
+    error: undefined,
+    pass: {
+      isValid: () => true,
+    },
+  });
 
   let ipProtectionPanel = new IPProtectionPanel();
   let fakeElement = new FakeIPProtectionPanelElement();
@@ -202,8 +223,16 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
   ipProtectionPanel.panel = fakeElement;
   fakeElement.isConnected = true;
 
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").returns({
+    status: 200,
+    error: undefined,
+    pass: {
+      isValid: () => true,
+    },
+  });
+
   // Set to signed in
-  IPProtectionService.isSignedIn = true;
   ipProtectionPanel.setState({
     isSignedIn: true,
   });
@@ -213,6 +242,10 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
     IPProtectionService,
     "IPProtectionService:Started"
   );
+
+  IPProtectionService.isSignedIn = true;
+  IPProtectionService.isEnrolled = true;
+  IPProtectionService.isEntitled = true;
 
   IPProtectionService.start();
 
@@ -250,6 +283,7 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
     false,
     "isProtectionEnabled should be false in the fake elements state"
   );
+  sandbox.restore();
 });
 
 /**

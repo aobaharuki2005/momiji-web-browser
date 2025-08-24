@@ -7767,7 +7767,7 @@ const INITIAL_STATE = {
     // Default state of an empty task list
     lists: {
       taskList: {
-        label: "Task List",
+        label: "",
         tasks: [],
         completed: [],
       },
@@ -12165,6 +12165,7 @@ const USER_ACTION_TYPES = {
   TASK_COMPLETE: "task_complete"
 };
 const PREF_WIDGETS_LISTS_MAX_LISTS = "widgets.lists.maxLists";
+const PREF_WIDGETS_LISTS_MAX_LISTITEMS = "widgets.lists.maxListItems";
 function Lists({
   dispatch
 }) {
@@ -12432,7 +12433,7 @@ function Lists({
     const newLists = {
       ...lists,
       [id]: {
-        label: "New list",
+        label: "",
         tasks: [],
         completed: []
       }
@@ -12468,7 +12469,7 @@ function Lists({
       if (Object.keys(updatedLists)?.length === 0) {
         updatedLists = {
           [crypto.randomUUID()]: {
-            label: "New list",
+            label: "",
             tasks: [],
             completed: []
           }
@@ -12564,14 +12565,24 @@ function Lists({
 
   // Enforce maximum count limits to lists
   const currentListsCount = Object.keys(lists).length;
-  let maxListsCount = prefs[PREF_WIDGETS_LISTS_MAX_LISTS];
-  function isAtMaxListsLimit() {
-    // Edge case if user sets max limit to `0`
-    if (maxListsCount < 1) {
-      maxListsCount = 1;
-    }
-    return currentListsCount >= maxListsCount;
-  }
+  // Ensure a minimum of 1, but allow higher values from prefs
+  const maxListsCount = Math.max(1, prefs[PREF_WIDGETS_LISTS_MAX_LISTS]);
+  const isAtMaxListsLimit = currentListsCount >= maxListsCount;
+
+  // Enforce maximum count limits to list items
+  // The maximum applies to the total number of items (both incomplete and completed items)
+  const currentSelectedListItemsCount = selectedList?.tasks.length + selectedList?.completed.length;
+
+  // Ensure a minimum of 1, but allow higher values from prefs
+  const maxListItemsCount = Math.max(1, prefs[PREF_WIDGETS_LISTS_MAX_LISTITEMS]);
+  const isAtMaxListItemsLimit = currentSelectedListItemsCount >= maxListItemsCount;
+
+  // Figure out if the selected list is the first (default) or a new one.
+  // Index 0 → use "Task list"; any later index → use "New list".
+  // Fallback to 0 if the selected id isn’t found.
+  const listKeys = Object.keys(lists);
+  const selectedIndex = Math.max(0, listKeys.indexOf(selected));
+  const listNamePlaceholder = currentListsCount > 1 && selectedIndex !== 0 ? "newtab-widget-lists-name-placeholder-new" : "newtab-widget-lists-name-placeholder-default";
   return /*#__PURE__*/external_React_default().createElement("article", {
     className: "lists",
     ref: el => {
@@ -12585,15 +12596,20 @@ function Lists({
     isEditing: isEditing,
     setIsEditing: setIsEditing,
     type: "list",
-    maxLength: 30
+    maxLength: 30,
+    dataL10nId: listNamePlaceholder
   }, /*#__PURE__*/external_React_default().createElement("moz-select", {
     ref: selectRef,
     value: selected
-  }, Object.entries(lists).map(([key, list]) => /*#__PURE__*/external_React_default().createElement("moz-option", {
+  }, Object.entries(lists).map(([key, list]) => /*#__PURE__*/external_React_default().createElement("moz-option", Lists_extends({
     key: key,
-    value: key,
+    value: key
+    // On the first/initial list, use default name
+  }, list.label ? {
     label: list.label
-  })))), !isEditing && /*#__PURE__*/external_React_default().createElement("moz-badge", {
+  } : {
+    "data-l10n-id": "newtab-widget-lists-name-label-default"
+  }))))), !isEditing && /*#__PURE__*/external_React_default().createElement("moz-badge", {
     "data-l10n-id": "newtab-widget-lists-label-new"
   }), /*#__PURE__*/external_React_default().createElement("moz-button", {
     className: "lists-panel-button",
@@ -12627,7 +12643,7 @@ function Lists({
   }))), /*#__PURE__*/external_React_default().createElement("div", {
     className: "add-task-container"
   }, /*#__PURE__*/external_React_default().createElement("span", {
-    className: "icon icon-add"
+    className: `icon icon-add ${isAtMaxListItemsLimit ? "icon-disabled" : ""}`
   }), /*#__PURE__*/external_React_default().createElement("input", {
     ref: inputRef,
     onBlur: () => saveTask(),
@@ -12637,7 +12653,8 @@ function Lists({
     className: "add-task-input",
     onKeyDown: handleKeyDown,
     type: "text",
-    maxLength: 100
+    maxLength: 100,
+    disabled: isAtMaxListItemsLimit
   })), /*#__PURE__*/external_React_default().createElement("div", {
     className: "task-list-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("moz-reorderable-list", {
@@ -12794,10 +12811,14 @@ function EditableText({
   onSave,
   children,
   type,
+  dataL10nId = null,
   maxLength = 100
 }) {
   const [tempValue, setTempValue] = (0,external_React_namespaceObject.useState)(value);
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
+
+  // True if tempValue is empty, null/undefined, or only whitespace
+  const showPlaceholder = (tempValue ?? "").trim() === "";
   (0,external_React_namespaceObject.useEffect)(() => {
     if (isEditing) {
       inputRef.current?.focus();
@@ -12818,7 +12839,7 @@ function EditableText({
     onSave(tempValue.trim());
     setIsEditing(false);
   }
-  return isEditing ? /*#__PURE__*/external_React_default().createElement("input", {
+  return isEditing ? /*#__PURE__*/external_React_default().createElement("input", Lists_extends({
     className: `edit-${type}`,
     ref: inputRef,
     type: "text",
@@ -12827,7 +12848,10 @@ function EditableText({
     onChange: event => setTempValue(event.target.value),
     onBlur: handleOnBlur,
     onKeyDown: handleKeyDown
-  }) : [children];
+    // Note that if a user has a custom name set, it will override the placeholder
+  }, showPlaceholder && dataL10nId ? {
+    "data-l10n-id": dataL10nId
+  } : {})) : [children];
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/FocusTimer/FocusTimer.jsx
@@ -14528,6 +14552,7 @@ const WallpaperCategories = (0,external_ReactRedux_namespaceObject.connect)(stat
   };
 })(_WallpaperCategories);
 ;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/ContentSection/ContentSection.jsx
+function ContentSection_extends() { return ContentSection_extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, ContentSection_extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14599,7 +14624,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     if (drawerRef) {
       let drawerHeight = parseFloat(window.getComputedStyle(drawerRef)?.height) || 0;
       if (isOpen) {
-        drawerRef.style.marginTop = "var(--space-large)";
+        drawerRef.style.marginTop = "var(--space-small)";
       } else {
         drawerRef.style.marginTop = `-${drawerHeight + 3}px`;
       }
@@ -14764,15 +14789,18 @@ class ContentSection extends (external_React_default()).PureComponent {
     }))))))), pocketRegion && /*#__PURE__*/external_React_default().createElement("div", {
       id: "pocket-section",
       className: "section"
-    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", ContentSection_extends({
       id: "pocket-toggle",
       pressed: pocketEnabled || null,
       onToggle: this.onPreferenceSelect,
       "aria-describedby": "custom-pocket-subtitle",
       "data-preference": "feeds.section.topstories",
-      "data-eventSource": "TOP_STORIES",
+      "data-eventSource": "TOP_STORIES"
+    }, mayHaveInferredPersonalization ? {
+      label: "Stories"
+    } : {
       "data-l10n-id": "newtab-custom-stories-toggle"
-    }, /*#__PURE__*/external_React_default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       slot: "nested"
     }, (mayHaveInferredPersonalization || mayHaveTopicSections) && /*#__PURE__*/external_React_default().createElement("div", {
       className: "more-info-pocket-wrapper"
@@ -14794,7 +14822,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }), /*#__PURE__*/external_React_default().createElement("label", {
       className: "customize-menu-checkbox-label",
       htmlFor: "inferred-personalization"
-    }, "Recommendations inferred from your activity with the feed")), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
+    }, "Personalized stories based on your activity")), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
       exitEventFired: exitEventFired
     }))))))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",

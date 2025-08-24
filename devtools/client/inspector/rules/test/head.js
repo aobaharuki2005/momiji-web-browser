@@ -898,10 +898,15 @@ async function checkDeclarationIsInactive(view, ruleIndex, declaration) {
   const declarations = await getPropertiesForRuleIndex(view, ruleIndex);
   const [[name, value]] = Object.entries(declaration);
   const dec = `${name}:${value}`;
-  const { used, warning } = declarations.get(dec);
+  const { used, warning, icon } = declarations.get(dec);
 
   ok(!used, `"${dec}" is inactive`);
   ok(warning, `"${dec}" has a warning`);
+  ok(
+    icon.classList.contains("ruleview-unused-warning"),
+    "Icon has expected icon"
+  );
+  is(icon.hidden, false, "Icon is visible");
 
   await checkInteractiveTooltip(
     view,

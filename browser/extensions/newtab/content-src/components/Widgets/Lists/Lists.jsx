@@ -30,6 +30,7 @@ const USER_ACTION_TYPES = {
 };
 
 const PREF_WIDGETS_LISTS_MAX_LISTS = "widgets.lists.maxLists";
+const PREF_WIDGETS_LISTS_MAX_LISTITEMS = "widgets.lists.maxListItems";
 
 function Lists({ dispatch }) {
   const prefs = useSelector(state => state.Prefs.values);
@@ -338,7 +339,7 @@ function Lists({ dispatch }) {
     const newLists = {
       ...lists,
       [id]: {
-        label: "New list",
+        label: "",
         tasks: [],
         completed: [],
       },
@@ -376,7 +377,7 @@ function Lists({ dispatch }) {
       if (Object.keys(updatedLists)?.length === 0) {
         updatedLists = {
           [crypto.randomUUID()]: {
-            label: "New list",
+            label: "",
             tasks: [],
             completed: [],
           },
@@ -491,15 +492,34 @@ function Lists({ dispatch }) {
 
   // Enforce maximum count limits to lists
   const currentListsCount = Object.keys(lists).length;
-  let maxListsCount = prefs[PREF_WIDGETS_LISTS_MAX_LISTS];
+  // Ensure a minimum of 1, but allow higher values from prefs
+  const maxListsCount = Math.max(1, prefs[PREF_WIDGETS_LISTS_MAX_LISTS]);
+  const isAtMaxListsLimit = currentListsCount >= maxListsCount;
 
-  function isAtMaxListsLimit() {
-    // Edge case if user sets max limit to `0`
-    if (maxListsCount < 1) {
-      maxListsCount = 1;
-    }
-    return currentListsCount >= maxListsCount;
-  }
+  // Enforce maximum count limits to list items
+  // The maximum applies to the total number of items (both incomplete and completed items)
+  const currentSelectedListItemsCount =
+    selectedList?.tasks.length + selectedList?.completed.length;
+
+  // Ensure a minimum of 1, but allow higher values from prefs
+  const maxListItemsCount = Math.max(
+    1,
+    prefs[PREF_WIDGETS_LISTS_MAX_LISTITEMS]
+  );
+
+  const isAtMaxListItemsLimit =
+    currentSelectedListItemsCount >= maxListItemsCount;
+
+  // Figure out if the selected list is the first (default) or a new one.
+  // Index 0 → use "Task list"; any later index → use "New list".
+  // Fallback to 0 if the selected id isn’t found.
+  const listKeys = Object.keys(lists);
+  const selectedIndex = Math.max(0, listKeys.indexOf(selected));
+
+  const listNamePlaceholder =
+    currentListsCount > 1 && selectedIndex !== 0
+      ? "newtab-widget-lists-name-placeholder-new"
+      : "newtab-widget-lists-name-placeholder-default";
 
   return (
     <article
@@ -516,10 +536,20 @@ function Lists({ dispatch }) {
           setIsEditing={setIsEditing}
           type="list"
           maxLength={30}
+          dataL10nId={listNamePlaceholder}
         >
           <moz-select ref={selectRef} value={selected}>
             {Object.entries(lists).map(([key, list]) => (
-              <moz-option key={key} value={key} label={list.label} />
+              <moz-option
+                key={key}
+                value={key}
+                // On the first/initial list, use default name
+                {...(list.label
+                  ? { label: list.label }
+                  : {
+                      "data-l10n-id": "newtab-widget-lists-name-label-default",
+                    })}
+              />
             ))}
           </moz-select>
         </EditableText>
@@ -565,7 +595,9 @@ function Lists({ dispatch }) {
         </panel-list>
       </div>
       <div className="add-task-container">
-        <span className="icon icon-add" />
+        <span
+          className={`icon icon-add ${isAtMaxListItemsLimit ? "icon-disabled" : ""}`}
+        />
         <input
           ref={inputRef}
           onBlur={() => saveTask()}
@@ -576,6 +608,7 @@ function Lists({ dispatch }) {
           onKeyDown={handleKeyDown}
           type="text"
           maxLength={100}
+          disabled={isAtMaxListItemsLimit}
         />
       </div>
       <div className="task-list-wrapper">
@@ -783,10 +816,14 @@ function EditableText({
   onSave,
   children,
   type,
+  dataL10nId = null,
   maxLength = 100,
 }) {
   const [tempValue, setTempValue] = useState(value);
   const inputRef = useRef(null);
+
+  // True if tempValue is empty, null/undefined, or only whitespace
+  const showPlaceholder = (tempValue ?? "").trim() === "";
 
   useEffect(() => {
     if (isEditing) {
@@ -821,6 +858,8 @@ function EditableText({
       onChange={event => setTempValue(event.target.value)}
       onBlur={handleOnBlur}
       onKeyDown={handleKeyDown}
+      // Note that if a user has a custom name set, it will override the placeholder
+      {...(showPlaceholder && dataL10nId ? { "data-l10n-id": dataL10nId } : {})}
     />
   ) : (
     [children]

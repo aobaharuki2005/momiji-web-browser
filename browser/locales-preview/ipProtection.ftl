@@ -68,9 +68,8 @@ get-vpn-button = Download
 
 ## Messages and errors
 
-# TODO: This is placeholder text. Error heading and message need to be finalized.
 ipprotection-message-generic-error =
-  .heading = Something went wrong
-  .message = An error occurred with your VPN connection. Please try again later.
+  .heading = Couldn’t connect to VPN
+  .message = Try again in a few minutes.
 
 ##

@@ -27,6 +27,7 @@ add_setup(async function () {
       },
     ],
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],
@@ -37,7 +38,7 @@ add_task(async function click() {
   await doTest(async () => {
     await openPopup("stock");
     let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-    let target = element.row.querySelector(".urlbarView-dynamic-market-item");
+    let target = element.row.querySelector(".urlbarView-market-item");
     let onLocationChange = BrowserTestUtils.waitForLocationChange(gBrowser);
     EventUtils.synthesizeMouseAtCenter(target, {});
     await onLocationChange;

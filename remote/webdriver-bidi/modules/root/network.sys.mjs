@@ -11,15 +11,16 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   CacheBehavior: "chrome://remote/content/shared/NetworkCacheManager.sys.mjs",
-  NetworkDecodedBodySizeMap:
-    "chrome://remote/content/shared/NetworkDecodedBodySizeMap.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   matchURLPattern:
     "chrome://remote/content/shared/webdriver/URLPattern.sys.mjs",
+  NetworkDecodedBodySizeMap:
+    "chrome://remote/content/shared/NetworkDecodedBodySizeMap.sys.mjs",
   NetworkListener:
     "chrome://remote/content/shared/listeners/NetworkListener.sys.mjs",
+  NetworkResponse: "chrome://remote/content/shared/NetworkResponse.sys.mjs",
   parseChallengeHeader:
     "chrome://remote/content/shared/ChallengeHeaderParser.sys.mjs",
   parseURLPattern:
@@ -2150,7 +2151,7 @@ class NetworkModule extends RootBiDiModule {
    *     The response object for which we want to collect the body.
    */
   async #maybeCollectNetworkResponseBody(request, response) {
-    if (response.willRedirect()) {
+    if (response.willRedirect) {
       return;
     }
 
@@ -2160,6 +2161,13 @@ class NetworkModule extends RootBiDiModule {
     );
 
     if (collectedData === null) {
+      return;
+    }
+
+    if (!(response instanceof lazy.NetworkResponse)) {
+      // Cached stencils do not return any response body.
+      // TODO: Handle response body for data URLs.
+      collectedData.networkDataCollected.resolve();
       return;
     }
 

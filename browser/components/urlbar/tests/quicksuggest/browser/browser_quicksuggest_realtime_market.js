@@ -106,6 +106,7 @@ add_task(async function ui_single() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_SINGLE,
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],
@@ -122,7 +123,12 @@ add_task(async function ui_single() {
   Assert.ok(result.isBestMatch);
   Assert.ok(result.hideRowLabel);
 
-  let items = element.row.querySelectorAll(".urlbarView-dynamic-market-item");
+  Assert.ok(
+    element.row.querySelector(".urlbarView-button-result-menu"),
+    "The row should have a result menu button"
+  );
+
+  let items = element.row.querySelectorAll(".urlbarView-market-item");
   Assert.equal(items.length, 1);
 
   let target = TEST_MERINO_SINGLE[0].custom_details.polygon.values[0];
@@ -133,7 +139,13 @@ add_task(async function ui_single() {
     lastPrice: target.last_price,
   });
 
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  let { query } = TEST_MERINO_SINGLE[0].custom_details.polygon.values[0];
+  Assert.ok(query, "Sanity check: query is defined");
+  Assert.equal(gURLBar.value, query, "Input value should be the query");
+
   await UrlbarTestUtils.promisePopupClose(window);
+  gURLBar.handleRevert();
   await cleanup();
 });
 
@@ -141,6 +153,7 @@ add_task(async function ui_multi() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_MULTI,
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],
@@ -152,7 +165,7 @@ add_task(async function ui_multi() {
   });
   let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
 
-  let items = element.row.querySelectorAll(".urlbarView-dynamic-market-item");
+  let items = element.row.querySelectorAll(".urlbarView-market-item");
   Assert.equal(items.length, 3);
 
   for (let i = 0; i < items.length; i++) {
@@ -164,9 +177,19 @@ add_task(async function ui_multi() {
       todaysChangePerc: target.todays_change_perc,
       lastPrice: target.last_price,
     });
+
+    EventUtils.synthesizeKey("KEY_Tab");
+    let { query } = TEST_MERINO_MULTI[0].custom_details.polygon.values[i];
+    Assert.ok(query, "Sanity check: query is defined at index " + i);
+    Assert.equal(
+      gURLBar.value,
+      query,
+      "Input value should be the query at index " + i
+    );
   }
 
   await UrlbarTestUtils.promisePopupClose(window);
+  gURLBar.handleRevert();
   await cleanup();
 });
 
@@ -174,6 +197,7 @@ add_task(async function activate() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_MULTI,
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],
@@ -186,7 +210,7 @@ add_task(async function activate() {
       value: "only match the Merino suggestion",
     });
     let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-    let items = element.row.querySelectorAll(".urlbarView-dynamic-market-item");
+    let items = element.row.querySelectorAll(".urlbarView-market-item");
 
     info("Activate the button");
     let target = TEST_MERINO_MULTI[0].custom_details.polygon.values[i];
@@ -214,6 +238,7 @@ add_task(async function no_image() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_NO_SPECIFIC_IMAGE,
     prefs: [
+      ["market.featureGate", true],
       ["suggest.market", true],
       ["suggest.quicksuggest.nonsponsored", true],
     ],
@@ -224,7 +249,7 @@ add_task(async function no_image() {
     value: "only match the Merino suggestion",
   });
   let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  let items = element.row.querySelectorAll(".urlbarView-dynamic-market-item");
+  let items = element.row.querySelectorAll(".urlbarView-market-item");
 
   for (let item of items) {
     let image = item.querySelector(".urlbarView-market-image");

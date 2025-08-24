@@ -39,9 +39,9 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 // Query selector for selectable elements in results.
-const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable]";
+const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable], a";
 const KEYBOARD_SELECTABLE_ELEMENT_SELECTOR =
-  "[role=button]:not([keyboard-inaccessible]), [selectable]";
+  "[role=button]:not([keyboard-inaccessible]), [selectable], a";
 
 const RESULT_MENU_COMMANDS = {
   DISMISS: "dismiss",
@@ -680,11 +680,14 @@ export class UrlbarView {
     queryOptions.autofillIgnoresSelection = true;
     queryOptions.event.interactionType = "returned";
 
-    // A search tip can be cached in results if it was shown but ignored
-    // by the user. Don't open the panel if a search tip is present or it
-    // will cause a flicker since it'll be quickly overwritten (Bug 1812261).
+    // Opening the panel now will show the rows from the previous query, so to
+    // avoid flicker, open it only if the search string hasn't changed. Also
+    // check for a tip to avoid search tip flicker (bug 1812261). If we don't
+    // open the panel here, we'll open it when the view receives results from
+    // the new query.
     if (
       this.#queryContext?.results?.length &&
+      this.#queryContext.searchString == this.input.value &&
       this.#queryContext.results[0].type != lazy.UrlbarUtils.RESULT_TYPE.TIP
     ) {
       this.#openPanel();
@@ -997,9 +1000,16 @@ export class UrlbarView {
    *   achieved using the `children` property described below.  Each object in
    *   the structure may include the following properties:
    *
-   *   {string} name
-   *     The name of the object.  It is required for all objects in the
-   *     structure except the root object and serves two important functions:
+   *   {string} tag
+   *     The tag name of the object.  It is required for all objects in the
+   *     structure except the root object and declares the kind of element that
+   *     will be created for the object: span, div, img, etc.
+   *   {string} [name]
+   *     The name of the object. This value is required if you need to update
+   *     the object's DOM element at query time. It's also helpful but not
+   *     required if you need to style the element. When defined, it serves two
+   *     important functions:
+   *
    *     (1) The element created for the object will automatically have a class
    *         named `urlbarView-dynamic-${dynamicType}-${name}`, where
    *         `dynamicType` is the name of the dynamic result type.  The element
@@ -1008,6 +1018,7 @@ export class UrlbarView {
    *         in CSS.
    *     (2) The name is used when updating the view.  See
    *         UrlbarProvider.getViewUpdate().
+   *
    *     Names must be unique within a view template, but they don't need to be
    *     globally unique.  i.e., two different view templates can use the same
    *     names, and other DOM elements can use the same names in their IDs and
@@ -1015,10 +1026,6 @@ export class UrlbarView {
    *     with name `data` will get the ID `urlbarView-row-{unique number}-data`.
    *     If there is no name provided for the root element, the root element
    *     will not get an ID.
-   *   {string} tag
-   *     The tag name of the object.  It is required for all objects in the
-   *     structure except the root object and declares the kind of element that
-   *     will be created for the object: span, div, img, etc.
    *   {object} [attributes]
    *     An optional mapping from attribute names to values.  For each
    *     name-value pair, an attribute is added to the element created for the
@@ -1460,41 +1467,78 @@ export class UrlbarView {
   }
 
   /**
-   * @param {Element} node
-   *   The element to set attributes on.
-   * @param {object} attributes
-   *   Attribute names to values mapping.  For each name-value pair, an
-   *   attribute is set on the element, except for `null` as a value which
-   *   signals an attribute should be removed, and `undefined` in which case
-   *   the attribute won't be set nor removed. The `id` attribute is reserved
-   *   and cannot be set here.
+   * Updates different aspects of an element given an update object. This method
+   * is designed to be used for elements in dynamic result type rows, but it can
+   * can be used for any element.
+   *
+   * @param {Element} element
+   *   The element to update.
+   * @param {object} update
+   *   An object that describes how the element should be updated. It can have
+   *   the following optional properties:
+   *
+   *   {object} attributes
+   *     Attribute names to values mapping. For each name-value pair, an
+   *     attribute is set on the element, except for `null` as a value which
+   *     signals an attribute should be removed, and `undefined` in which case
+   *     the attribute won't be set nor removed. The `id` attribute is reserved
+   *     and cannot be set here.
+   *   {object} dataset
+   *     Maps element dataset keys to values. Values should be strings with the
+   *     following exceptions: `undefined` is ignored, and `null` causes the key
+   *     to be removed from the dataset.
+   *   {Array} classList
+   *     An array of CSS classes to set on the element. If this is defined, the
+   *     element's previous classes will be cleared first!
+   *
    * @param {UrlbarResult} result
    *   The UrlbarResult displayed to the node. This is optional.
    */
-  #setDynamicAttributes(node, attributes, result) {
-    if (!attributes) {
-      return;
+  #updateElementForDynamicType(element, update, result = null) {
+    if (update.attributes) {
+      for (let [name, value] of Object.entries(update.attributes)) {
+        if (name == "id") {
+          // IDs are managed externally to ensure they are unique.
+          console.error(
+            `Not setting id="${value}", as dynamic attributes may not include IDs.`
+          );
+          continue;
+        }
+        if (value === undefined) {
+          continue;
+        }
+        if (value === null) {
+          element.removeAttribute(name);
+        } else if (typeof value == "boolean") {
+          element.toggleAttribute(name, value);
+        } else if (Blob.isInstance(value) && result) {
+          element.setAttribute(name, this.#getBlobUrlForResult(result, value));
+        } else {
+          element.setAttribute(name, value);
+        }
+      }
     }
-    for (let [name, value] of Object.entries(attributes)) {
-      if (name == "id") {
-        // IDs are managed externally to ensure they are unique.
-        console.error(
-          `Not setting id="${value}", as dynamic attributes may not include IDs.`
-        );
-        continue;
+
+    if (update.dataset) {
+      for (let [name, value] of Object.entries(update.dataset)) {
+        if (value === null) {
+          delete element.dataset[name];
+        } else if (value !== undefined) {
+          if (typeof value != "string") {
+            console.error(
+              `Trying to set a dataset value that is not a string`,
+              { element, value }
+            );
+          } else {
+            element.dataset[name] = value;
+          }
+        }
       }
-      if (value === undefined) {
-        continue;
-      }
-      if (value === null) {
-        node.removeAttribute(name);
-      } else if (typeof value == "boolean") {
-        node.toggleAttribute(name, value);
-      } else if (Blob.isInstance(value) && result) {
-        node.setAttribute(name, this.#getBlobUrlForResult(result, value));
-      } else {
-        node.setAttribute(name, value);
-      }
+    }
+
+    if (update.classList) {
+      element.classList = "";
+      element.classList.add(...update.classList);
     }
   }
 
@@ -1547,12 +1591,9 @@ export class UrlbarView {
     template,
     classes = new Set()
   ) {
-    // Set attributes on parentNode.
-    this.#setDynamicAttributes(parentNode, template.attributes);
+    this.#updateElementForDynamicType(parentNode, template);
 
-    // Add classes to parentNode's classList.
     if (template.classList) {
-      parentNode.classList.add(...template.classList);
       for (let c of template.classList) {
         classes.add(c);
       }
@@ -1560,15 +1601,16 @@ export class UrlbarView {
     if (template.overflowable) {
       parentNode.classList.add("urlbarView-overflowable");
     }
+
     if (template.name) {
       parentNode.setAttribute("name", template.name);
+      parentNode.classList.add(`urlbarView-dynamic-${type}-${template.name}`);
       elementsByName.set(template.name, parentNode);
     }
 
     // Recurse into children.
     for (let childTemplate of template.children || []) {
       let child = this.#createElement(childTemplate.tag);
-      child.classList.add(`urlbarView-dynamic-${type}-${childTemplate.name}`);
       parentNode.appendChild(child);
       this.#buildViewForDynamicType(
         type,
@@ -1630,11 +1672,7 @@ export class UrlbarView {
 
     if (result.payload.descriptionLearnMoreTopic) {
       let learnMoreLink = this.#createElement("a");
-      learnMoreLink.dataset.url = this.window.getHelpLinkURL(
-        result.payload.descriptionLearnMoreTopic
-      );
       learnMoreLink.setAttribute("data-l10n-name", "learn-more-link");
-      learnMoreLink.toggleAttribute("selectable");
       description.appendChild(learnMoreLink);
     }
 
@@ -1689,27 +1727,41 @@ export class UrlbarView {
 
   #addRowButton(
     item,
-    { name, command, l10n, url, attributes, menu, classList = [] }
+    {
+      name,
+      command,
+      l10n,
+      url,
+      classList = [],
+      attributes = {},
+      menu = null,
+      input = null,
+    }
   ) {
     let button = this.#createElement("span");
-    this.#setDynamicAttributes(button, attributes);
+    this.#updateElementForDynamicType(button, {
+      attributes: {
+        ...attributes,
+        role: "button",
+      },
+      classList: [
+        ...classList,
+        "urlbarView-button",
+        "urlbarView-button-" + name,
+      ],
+      dataset: {
+        name,
+        command,
+        url,
+        input,
+      },
+    });
+
     button.id = `${item.id}-button-${name}`;
-    button.classList.add(
-      "urlbarView-button",
-      "urlbarView-button-" + name,
-      ...classList
-    );
-    button.setAttribute("role", "button");
-    button.dataset.name = name;
     if (l10n) {
       this.#l10nCache.setElementL10n(button, l10n);
     }
-    if (command) {
-      button.dataset.command = command;
-    }
-    if (url) {
-      button.dataset.url = url;
-    }
+
     item._buttons.set(name, button);
 
     if (!menu) {
@@ -1815,8 +1867,6 @@ export class UrlbarView {
           oldResult.payload.userContextId
         ) &&
         result.type != oldResultType) ||
-      !!result.payload.descriptionLearnMoreTopic !=
-        !!oldResult.payload.descriptionLearnMoreTopic ||
       result.testForceNewContent;
 
     if (needsNewContent) {
@@ -2227,8 +2277,11 @@ export class UrlbarView {
 
     // Update each node in the view by name.
     for (let [nodeName, update] of Object.entries(viewUpdate)) {
+      if (!update) {
+        continue;
+      }
       let node = item.querySelector(`#${item.id}-${nodeName}`);
-      this.#setDynamicAttributes(node, update.attributes, result);
+      this.#updateElementForDynamicType(node, update, result);
       if (update.style) {
         for (let [styleName, value] of Object.entries(update.style)) {
           node.style[styleName] = value;
@@ -2276,6 +2329,19 @@ export class UrlbarView {
         description,
         result.payload.descriptionL10n
       );
+
+      if (result.payload.descriptionLearnMoreTopic) {
+        let learnMoreLink = description.querySelector(
+          "[data-l10n-name=learn-more-link]"
+        );
+        if (learnMoreLink) {
+          learnMoreLink.dataset.url = this.window.getHelpLinkURL(
+            result.payload.descriptionLearnMoreTopic
+          );
+        } else {
+          console.warn("learn-more-link was not found");
+        }
+      }
     } else {
       this.#l10nCache.removeElementL10n(description);
       if (result.payload.description) {
@@ -2624,7 +2690,7 @@ export class UrlbarView {
         // Clear the input when a button is selected.
         urlOverride = "";
       }
-      this.input.setValueFromResult({ result, urlOverride });
+      this.input.setValueFromResult({ result, urlOverride, element });
     } else {
       this.input.setResultForCurrentValue(result);
     }

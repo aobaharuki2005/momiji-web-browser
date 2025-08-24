@@ -487,7 +487,7 @@ var gMenuBuilder = {
       element.setAttribute("class", "menuitem-iconic");
     }
 
-    element.setAttribute("image", resolvedURL);
+    element.setAttribute("image", encodeURI(resolvedURL));
   },
 
   // Undo changes from setMenuItemIcon.

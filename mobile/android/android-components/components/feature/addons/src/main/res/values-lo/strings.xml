@@ -138,12 +138,26 @@
   <string name="mozac_feature_addons_permissions_history_description_for_update">ເຂົ້າເຖິງປະຫວັດການທ່ອງເວັບ.</string>
   <!-- Description for the "management" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_management_description_for_update">ຕິດຕາມການນຳໃຊ້ເອັກສເທັນຊັນ ແລະ ຈັດການເທມ</string>
+  <!-- Description for the "nativeMessaging" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_native_messaging_description_for_update">ແລກປ່ຽນຂໍ້ຄວາມກັບແອັບຯອື່ນນອກຈາກອັນນີ້.</string>
+  <!-- Description for the "notifications" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_notifications_description_for_update">ສະແດງການແຈ້ງເຕືອນໃຫ້ທ່ານ.</string>
+  <!-- Description for the "pkcs11" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_pkcs11_description_for_update">ໃຫ້ບໍລິການກວດສອບລະຫັດລັບ.</string>
+  <!-- Description for the "proxy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_proxy_description_for_update">ຄວບຄຸມການຕັ້ງຄ່າພຣັອກຊີຂອງຕົວທ່ອງເວັບ.</string>
+  <!-- Description for the "sessions" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_sessions_description_for_update">ເຂົ້າເຖິງແຖບທີ່ປິດບໍ່ດົນມານີ້.</string>
+  <!-- Description for the "tabHide" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_tab_hide_description_for_update">ເຊື່ອງ ແລະ ສະແດງແຖບຂອງຕົວທ່ອງເວັບ.</string>
   <!-- Description for the "topSites" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_top_sites_description_for_update">ເຂົ້າເຖິງປະຫວັດການທ່ອງເວັບ.</string>
+  <!-- Description for the "trialML" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_trial_ml_description_for_update">ດາວໂຫຼດ ແລະ ເປີດໃຊ້ຕົວແບບ AI ໃນອຸປະກອນຂອງທ່ານ.</string>
+  <!-- Description for the "userScripts" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_user_scripts_description_for_update">ອະນຸຍາດໃຫ້ສະຄຣິບບຸກຄົນທີ່ສາມທີ່ບໍ່ໄດ້ຢືນຢັນໃນການເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານ</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">ສະຄຣິບທີ່ບໍ່ໄດ້ຮັບການຢືນຢັນສາມາດສ້າງຄວາມສ່ຽງດ້ານຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ. ແລ່ນສະຄຣິບຈາກສ່ວນຂະຫຍາຍ ຫຼື ແຫຼ່ງທີ່ທ່ານເຊື່ອຖືເທົ່ານັ້ນ.</string>
-  <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
-  <string name="mozac_feature_addons_permissions_required_data_collection_description" moz:removedIn="141" tools:ignore="UnusedResources">ນັກພັດທະນາເວົ້າວ່າສ່ວນຂະຫຍາຍນີ້ລວບລວມ: %1$s.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
   <string name="mozac_feature_addons_permissions_required_data_collection_description_2">ນັກພັດທະນາເວົ້າວ່າສ່ວນຂະຫຍາຍນີ້ລວບລວມ: %1$s</string>
   <!-- The sentence used when the developer of an extension has explicitly stated that they do not collect any data collection. -->
@@ -182,8 +196,26 @@
   <string name="mozac_feature_addons_permissions_data_collection_authenticationInfo_long_description">ແບ່ງປັນຂໍ້ມູນການພິສູດຢືນຢັນກັບຜູ້ພັດທະນາສ່ວນຂະຫຍາຍ</string>
   <!-- Long description for the bookmarksInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_bookmarksInfo_long_description">ແບ່ງປັນຂໍ້ມູນບຸກມາກກັບຜູ້ພັດທະນາສ່ວນຂະຫຍາຍ</string>
+  <!-- Long description for the browsingActivity data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_long_description">ແບ່ງປັນການເຄື່ອນໄຫວການຊອກຫາກັບຜູ້ພັດທະນາສ່ວນຂະຫຍາຍ</string>
+  <!-- Long description for the financialAndPaymentInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_financialAndPaymentInfo_long_description">ແບ່ງປັນຂໍ້ມູນທາງດ້ານການເງິນ ແລະ ການຊຳລະກັບຜູ້ພັດທະນາການຂະຫຍາຍ</string>
+  <!-- Long description for the healthInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_healthInfo_long_description">ແບ່ງປັນຂໍ້ມູນສຸຂະພາບກັບຜູ້ພັດທະນາການຂະຫຍາຍ</string>
+  <!-- Long description for the locationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_locationInfo_long_description">ແບ່ງປັນຂໍ້ມູນສະຖານທີ່ກັບຜູ້ພັດທະນາສ່ວນຂະຫຍາຍ</string>
+  <!-- Long description for the personalCommunications data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personalCommunications_long_description">ແບ່ງປັນການສື່ສານສ່ວນຕົວກັບຜູ້ພັດທະນາການຂະຫຍາຍ</string>
+  <!-- Long description for the personallyIdentifyingInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personallyIdentifyingInfo_long_description">ແບ່ງປັນຂໍ້ມູນການລະບຸຕົວຕົນສ່ວນຕົວກັບຜູ້ພັດທະນາສ່ວນຂະຫຍາຍ</string>
   <!-- Long description for the searchTerms data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_searchTerms_long_description">ແບ່ງປັນຄໍາຄົ້ນຫາກັບຜູ້ພັດທະນາການຂະຫຍາຍ</string>
+  <!-- Long description for the technicalAndInteraction data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_technicalAndInteraction_long_description">ແບ່ງປັນຂໍ້ມູນດ້ານເຕັກນິກ ແລະ ການໂຕ້ຕອບກັບຜູ້ພັດທະນາສ່ວນຂະຫຍາຍ</string>
+  <!-- Long description for the websiteActivity data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_websiteActivity_long_description">ແບ່ງປັນກິດຈະກໍາເວັບໄຊທ໌ກັບຜູ້ພັດທະນາການຂະຫຍາຍ</string>
+  <!-- Long description for the websiteContent data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_websiteContent_long_description">ແບ່ງປັນເນື້ອຫາເວັບໄຊທ໌ກັບຜູ້ພັດທະນາການຂະຫຍາຍ</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">ເວີຊັນ</string>
   <!-- The author of an add-on. -->
@@ -203,7 +235,7 @@
   <!-- Indicates the add-on is enabled. -->
   <string name="mozac_feature_addons_settings_on">ເປີດ</string>
   <!-- Indicates the add-on is allowed in private browsing mode. -->
-  <string name="mozac_feature_addons_settings_allow_in_private_browsing" moz:removedIn="141" tools:ignore="UnusedResources">ອະນຸຍາດໃຫ້ຢູ່ໃນໂຫມດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
+  <string name="mozac_feature_addons_settings_allow_in_private_browsing_2">ອະນຸຍາດໃຫ້ສ່ວນຂະຫຍາຍດໍາເນີນການໃນຜົນການຄົ້ນຫາສ່ວນຕົວ</string>
   <!-- Indicates the add-on is allowed in private browsing mode. -->
   <string name="mozac_feature_addons_settings_run_in_private_browsing">ດໍາເນີນການໃນໂຫມດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
   <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
@@ -229,13 +261,9 @@
   <!-- This is a button to report an add-on. -->
   <string name="mozac_feature_addons_report">ລາຍງານ</string>
   <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_permissions_dialog_title" moz:removedIn="141" tools:ignore="UnusedResources">ເພີ່ມ %1$s?</string>
-  <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_permissions_dialog_title_2">ເພີ່ມ %1$s</string>
   <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_optional_permissions_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%1$s ຮ້ອງຂໍການອະນຸຍາດເພີ່ມເຕີມ.</string>
-  <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
-  <string name="mozac_feature_addons_permissions_dialog_subtitle" moz:removedIn="141" tools:ignore="UnusedResources">ຕ້ອງໄດ້ຮັບການອະນຸຍາດຈາກທ່ານເພື່ອ:</string>
   <!-- Heading for the permissions section in the add-on install dialog. -->
   <string name="mozac_feature_addons_permissions_dialog_heading_required_permissions">ການ​ອະ​ນຸ​ຍາດ​ທີ່​ຕ້ອງ​ການ​:</string>
   <!-- Heading for the data collection permissions section in the add-on install dialog. -->

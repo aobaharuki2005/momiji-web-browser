@@ -1331,13 +1331,26 @@ FaultingCodeOffset MacroAssemblerLOONG64::ma_fst_d(FloatRegister src,
 }
 
 void MacroAssemblerLOONG64::ma_pop(FloatRegister f) {
-  as_fld_d(f, StackPointer, 0);
+  if (f.isDouble()) {
+    as_fld_d(f, StackPointer, 0);
+  } else {
+    MOZ_ASSERT(f.isSingle(), "simd128 is not supported");
+    as_fld_s(f, StackPointer, 0);
+  }
+  // See also MacroAssemblerLOONG64::ma_push -- Free space for double even when
+  // storing a float.
   as_addi_d(StackPointer, StackPointer, sizeof(double));
 }
 
 void MacroAssemblerLOONG64::ma_push(FloatRegister f) {
+  // We allocate space for double even when storing a float.
   as_addi_d(StackPointer, StackPointer, -int32_t(sizeof(double)));
-  as_fst_d(f, StackPointer, 0);
+  if (f.isDouble()) {
+    as_fst_d(f, StackPointer, 0);
+  } else {
+    MOZ_ASSERT(f.isSingle(), "simd128 is not supported");
+    as_fst_s(f, StackPointer, 0);
+  }
 }
 
 void MacroAssemblerLOONG64::ma_li(Register dest, ImmGCPtr ptr) {
@@ -2657,6 +2670,8 @@ void MacroAssembler::Push(const ImmGCPtr ptr) {
 
 void MacroAssembler::Push(FloatRegister f) {
   push(f);
+  // See MacroAssemblerLOONG64::ma_push(FloatRegister) for why we use
+  // sizeof(double).
   adjustFrame(int32_t(sizeof(double)));
 }
 
@@ -2673,6 +2688,8 @@ void MacroAssembler::Pop(Register reg) {
 
 void MacroAssembler::Pop(FloatRegister f) {
   pop(f);
+  // See MacroAssemblerLOONG64::ma_pop(FloatRegister) for why we use
+  // sizeof(double).
   adjustFrame(-int32_t(sizeof(double)));
 }
 

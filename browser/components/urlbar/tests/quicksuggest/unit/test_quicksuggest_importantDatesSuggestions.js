@@ -85,13 +85,9 @@ add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: REMOTE_SETTINGS_RECORDS,
     prefs: [
-      [
-        "quicksuggest.dynamicSuggestionTypes",
-        "important_dates,other_suggestions",
-      ],
+      ["importantDates.featureGate", true],
+      ["quicksuggest.dynamicSuggestionTypes", "other_suggestions"],
       ["suggest.quicksuggest.nonsponsored", true],
-      ["suggest.quicksuggest.sponsored", true],
-      ["quicksuggest.ampTopPickCharThreshold", 0],
     ],
   });
   await Services.search.init();
@@ -226,6 +222,7 @@ add_task(async function testTwoSuggestions() {
     payload: {
       source: "rust",
       provider: "Dynamic",
+      suggestionType: "other_suggestions",
       title: "Top Pick Suggestion 1",
       url: "https://foo.com/",
       telemetryType: "other_suggestions",
@@ -311,6 +308,7 @@ function makeExpectedResult({
       telemetryType: "important_dates",
       source: "rust",
       provider: "Dynamic",
+      suggestionType: "important_dates",
       isManageable: true,
       isBlockable: true,
       helpUrl: QuickSuggest.HELP_URL,
