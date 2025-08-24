@@ -2885,7 +2885,7 @@
     Context description text for the "Show all" button in the shortcuts home screen section
     which navigates the user to a screen displaying all the shortcuts.
   -->
-  <string name="homepage_shortcuts_show_all_content_description">Всички клавишни комбинации</string>
+  <string name="homepage_shortcuts_show_all_content_description">Показване на всички преки пътища</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Пределът за преки пътища е достигнат</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -2981,6 +2981,13 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Истории</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">Открийте още истории</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">Връщане назад</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">Спонсорирано</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3177,7 +3184,7 @@
   -->
   <string name="download_languages_translations_toolbar_title_preference">Изтегляне на езици</string>
   <!-- Screen header presenting the download language preference feature. It will appear under the toolbar. %1$s is a link using download_languages_header_learn_more_preference as text ("Learn more"). Talkback will append this to say "Double tap to open link to learn more". -->
-  <string name="download_languages_header_preference">Изтеглете цялостни езици за по-бързи преводи, както и за преводи офлайн. %1$s</string>
+  <string name="download_languages_header_preference">Изтеглете цялостни езици за по-бързи преводи, както и за преводи извън мрежата. %1$s</string>
   <!-- Clickable text from the screen header that links to a website. -->
   <string name="download_languages_header_learn_more_preference">Научете повече</string>
   <!-- The subhead of the download language preference screen will appear above the pivot language. -->
@@ -3207,7 +3214,7 @@
   -->
   <string name="download_languages_item_content_description_download_in_progress_state">Спиране на изтеглянето на %1$s (%2$s)</string>
   <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
-  <string name="download_languages_item_content_description_not_downloaded_state">Изтегляния</string>
+  <string name="download_languages_item_content_description_not_downloaded_state">Изтегляне</string>
   <!-- The title of the warning card informs the user that an error has occurred when fetching the list of languages. -->
   <string name="download_languages_fetch_error_warning_text">Езиците не можаха да бъдат заредени. Моля, проверете отново по-късно.</string>
   <!--
@@ -3252,9 +3259,9 @@
   <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
   <string name="download_language_file_dialog_checkbox_text">Изтегляне винаги в режим за пестене на данни</string>
   <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
-  <string name="download_language_file_dialog_positive_button_text">Изтегляния</string>
+  <string name="download_language_file_dialog_positive_button_text">Изтегляне</string>
   <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
-  <string name="download_language_file_dialog_positive_button_text_all_languages">Изтеглете и преведете</string>
+  <string name="download_language_file_dialog_positive_button_text_all_languages">Изтегляне и превод</string>
   <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
   <string name="download_language_file_dialog_negative_button_text">Отказ</string>
   <!--
