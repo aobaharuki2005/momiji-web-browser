@@ -300,20 +300,6 @@ class SystemEngineView @JvmOverloads constructor(
             }
         }
 
-        @Deprecated("Deprecated in Java")
-        override fun onReceivedError(view: WebView, errorCode: Int, description: String?, failingUrl: String?) {
-            session?.let { session ->
-                val errorType = SystemEngineSession.webViewErrorToErrorType(errorCode)
-                session.settings.requestInterceptor?.onErrorRequest(
-                    session,
-                    errorType,
-                    failingUrl,
-                )?.apply {
-                    view.loadUrl(this.uri)
-                }
-            }
-        }
-
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
             session?.let { session ->
                 if (!request.isForMainFrame) {
