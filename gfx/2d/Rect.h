@@ -474,6 +474,39 @@ struct BaseRectCornerRadii {
     return TopLeft().IsEmpty() && TopRight().IsEmpty() &&
            BottomRight().IsEmpty() && BottomLeft().IsEmpty();
   }
+
+  void AdjustOutwards(const Margin& aMargin) { return Adjust<true>(aMargin); }
+  void AdjustInwards(const Margin& aMargin) { return Adjust<false>(-aMargin); }
+
+ private:
+  template <bool aOut>
+  void Adjust(const Margin& aMargin) {
+    constexpr Coord kZero(0);
+    constexpr auto C_TL = eCornerTopLeft;
+    constexpr auto C_TR = eCornerTopRight;
+    constexpr auto C_BL = eCornerBottomLeft;
+    constexpr auto C_BR = eCornerBottomRight;
+    // round the edges that have radii > 0.0 to start with
+    if (!aOut || (radii[C_TL].width > kZero && radii[C_TL].height > kZero)) {
+      radii[C_TL].width = std::max(kZero, radii[C_TL].width + aMargin.left);
+      radii[C_TL].height = std::max(kZero, radii[C_TL].height + aMargin.top);
+    }
+
+    if (!aOut || (radii[C_TR].width > kZero && radii[C_TR].height > kZero)) {
+      radii[C_TR].width = std::max(kZero, radii[C_TR].width + aMargin.right);
+      radii[C_TR].height = std::max(kZero, radii[C_TR].height + aMargin.top);
+    }
+
+    if (!aOut || (radii[C_BR].width > kZero && radii[C_BR].height > kZero)) {
+      radii[C_BR].width = std::max(kZero, radii[C_BR].width + aMargin.right);
+      radii[C_BR].height = std::max(kZero, radii[C_BR].height + aMargin.bottom);
+    }
+
+    if (!aOut || (radii[C_BL].width > kZero && radii[C_BL].height > kZero)) {
+      radii[C_BL].width = std::max(kZero, radii[C_BL].width + aMargin.left);
+      radii[C_BL].height = std::max(kZero, radii[C_BL].height + aMargin.bottom);
+    }
+  }
 };
 
 struct RectCornerRadii final : public BaseRectCornerRadii<Float, Size, Margin> {

@@ -2219,7 +2219,7 @@ void nsCSSRendering::GetImageLayerClip(
     aClipState->mBGClipArea.Deflate(border);
 
     if (haveRoundedCorners) {
-      nsIFrame::AdjustBorderRadii(aClipState->mRadii, -border);
+      aClipState->mRadii.AdjustInwards(border);
     }
   }
 

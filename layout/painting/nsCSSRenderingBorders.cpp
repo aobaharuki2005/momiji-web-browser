@@ -181,54 +181,16 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(
 void nsCSSBorderRenderer::ComputeInnerRadii(const RectCornerRadii& aRadii,
                                             const Margin& aBorderSizes,
                                             RectCornerRadii* aInnerRadiiRet) {
-  RectCornerRadii& iRadii = *aInnerRadiiRet;
-
-  iRadii[C_TL].width = std::max(0.f, aRadii[C_TL].width - aBorderSizes.left);
-  iRadii[C_TL].height = std::max(0.f, aRadii[C_TL].height - aBorderSizes.top);
-
-  iRadii[C_TR].width = std::max(0.f, aRadii[C_TR].width - aBorderSizes.right);
-  iRadii[C_TR].height = std::max(0.f, aRadii[C_TR].height - aBorderSizes.top);
-
-  iRadii[C_BR].width = std::max(0.f, aRadii[C_BR].width - aBorderSizes.right);
-  iRadii[C_BR].height =
-      std::max(0.f, aRadii[C_BR].height - aBorderSizes.bottom);
-
-  iRadii[C_BL].width = std::max(0.f, aRadii[C_BL].width - aBorderSizes.left);
-  iRadii[C_BL].height =
-      std::max(0.f, aRadii[C_BL].height - aBorderSizes.bottom);
+  *aInnerRadiiRet = aRadii;
+  aInnerRadiiRet->AdjustInwards(aBorderSizes);
 }
 
 /* static */
 void nsCSSBorderRenderer::ComputeOuterRadii(const RectCornerRadii& aRadii,
                                             const Margin& aBorderSizes,
                                             RectCornerRadii* aOuterRadiiRet) {
-  RectCornerRadii& oRadii = *aOuterRadiiRet;
-
-  // default all corners to sharp corners
-  oRadii = RectCornerRadii(0.f);
-
-  // round the edges that have radii > 0.0 to start with
-  if (aRadii[C_TL].width > 0.f && aRadii[C_TL].height > 0.f) {
-    oRadii[C_TL].width = std::max(0.f, aRadii[C_TL].width + aBorderSizes.left);
-    oRadii[C_TL].height = std::max(0.f, aRadii[C_TL].height + aBorderSizes.top);
-  }
-
-  if (aRadii[C_TR].width > 0.f && aRadii[C_TR].height > 0.f) {
-    oRadii[C_TR].width = std::max(0.f, aRadii[C_TR].width + aBorderSizes.right);
-    oRadii[C_TR].height = std::max(0.f, aRadii[C_TR].height + aBorderSizes.top);
-  }
-
-  if (aRadii[C_BR].width > 0.f && aRadii[C_BR].height > 0.f) {
-    oRadii[C_BR].width = std::max(0.f, aRadii[C_BR].width + aBorderSizes.right);
-    oRadii[C_BR].height =
-        std::max(0.f, aRadii[C_BR].height + aBorderSizes.bottom);
-  }
-
-  if (aRadii[C_BL].width > 0.f && aRadii[C_BL].height > 0.f) {
-    oRadii[C_BL].width = std::max(0.f, aRadii[C_BL].width + aBorderSizes.left);
-    oRadii[C_BL].height =
-        std::max(0.f, aRadii[C_BL].height + aBorderSizes.bottom);
-  }
+  *aOuterRadiiRet = aRadii;
+  aOuterRadiiRet->AdjustOutwards(aBorderSizes);
 }
 
 /*static*/ void ComputeBorderCornerDimensions(const Margin& aBorderWidths,

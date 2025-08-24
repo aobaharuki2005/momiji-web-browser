@@ -1875,36 +1875,6 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
   return haveRadius;
 }
 
-void nsIFrame::AdjustBorderRadii(nsRectCornerRadii& aRadii,
-                                 const nsMargin& aOffsets) {
-  auto AdjustOffset = [](const uint32_t aRadius, const nscoord aOffset) {
-    // Implement the cubic formula to adjust offset when aOffset > 0 and
-    // aRadius / aOffset < 1.
-    // https://drafts.csswg.org/css-shapes/#valdef-shape-box-margin-box
-    if (aOffset > 0) {
-      const double ratio = aRadius / double(aOffset);
-      if (ratio < 1.0) {
-        return nscoord(aOffset * (1.0 + std::pow(ratio - 1, 3)));
-      }
-    }
-    return aOffset;
-  };
-
-  for (const auto side : mozilla::AllPhysicalSides()) {
-    const nscoord offset = aOffsets.Side(side);
-    const auto hc1 = SideToHalfCorner(side, false, false);
-    const auto hc2 = SideToHalfCorner(side, true, false);
-    if (aRadii[hc1] > 0) {
-      const nscoord offset1 = AdjustOffset(aRadii[hc1], offset);
-      aRadii[hc1] = std::max(0, aRadii[hc1] + offset1);
-    }
-    if (aRadii[hc2] > 0) {
-      const nscoord offset2 = AdjustOffset(aRadii[hc2], offset);
-      aRadii[hc2] = std::max(0, aRadii[hc2] + offset2);
-    }
-  }
-}
-
 static inline bool RadiiAreDefinitelyZero(const BorderRadius& aBorderRadius) {
   for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
     if (!aBorderRadius.Get(corner).IsDefinitelyZero()) {
@@ -1953,24 +1923,27 @@ bool nsIFrame::GetBorderRadii(nsRectCornerRadii& aRadii) const {
 }
 
 bool nsIFrame::GetMarginBoxBorderRadii(nsRectCornerRadii& aRadii) const {
-  return GetBoxBorderRadii(aRadii, GetUsedMargin());
-}
-
-bool nsIFrame::GetPaddingBoxBorderRadii(nsRectCornerRadii& aRadii) const {
-  return GetBoxBorderRadii(aRadii, -GetUsedBorder());
-}
-
-bool nsIFrame::GetContentBoxBorderRadii(nsRectCornerRadii& aRadii) const {
-  return GetBoxBorderRadii(aRadii, -GetUsedBorderAndPadding());
-}
-
-bool nsIFrame::GetBoxBorderRadii(nsRectCornerRadii& aRadii,
-                                 const nsMargin& aOffsets) const {
   if (!GetBorderRadii(aRadii)) {
     return false;
   }
-  AdjustBorderRadii(aRadii, aOffsets);
-  return !aRadii.IsEmpty();
+  aRadii.AdjustOutwards(GetUsedMargin());
+  return true;
+}
+
+bool nsIFrame::GetPaddingBoxBorderRadii(nsRectCornerRadii& aRadii) const {
+  if (!GetBorderRadii(aRadii)) {
+    return false;
+  }
+  aRadii.AdjustInwards(GetUsedBorder());
+  return true;
+}
+
+bool nsIFrame::GetContentBoxBorderRadii(nsRectCornerRadii& aRadii) const {
+  if (!GetBorderRadii(aRadii)) {
+    return false;
+  }
+  aRadii.AdjustInwards(GetUsedBorderAndPadding());
+  return true;
 }
 
 bool nsIFrame::GetShapeBoxBorderRadii(nsRectCornerRadii& aRadii) const {
@@ -2834,7 +2807,11 @@ bool nsIFrame::ComputeOverflowClipRectRelativeToSelf(
     aOutRect.y = o.y;
     aOutRect.height = o.height;
   }
-  return GetBoxBorderRadii(aOutRadii, boxMargin);
+  if (!GetBorderRadii(aOutRadii)) {
+    return false;
+  }
+  aOutRadii.AdjustOutwards(boxMargin);
+  return true;
 }
 
 nsSize nsIFrame::OverflowClipMargin(PhysicalAxes aClipAxes) const {

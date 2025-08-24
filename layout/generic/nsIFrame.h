@@ -1675,22 +1675,6 @@ class nsIFrame : public nsQueryFrame {
                                  const nsSize& aBorderArea, Sides aSkipSides,
                                  nsRectCornerRadii&);
 
-  /*
-   * Given a set of border radii for one box (e.g., border box), convert
-   * it to the equivalent set of radii for another box (e.g., in to
-   * padding box, out to outline box) by reducing radii or increasing
-   * nonzero radii as appropriate.
-   *
-   * Indices into aRadii are the enum HalfCorner constants in gfx/2d/Types.h
-   *
-   * Note that insetting the radii is lossy, since it can turn nonzero radii
-   * into zero, and re-adjusting does not inflate zero radii.
-   *
-   * Therefore, callers should always adjust directly from the original value
-   * coming from style.
-   */
-  static void AdjustBorderRadii(nsRectCornerRadii&, const nsMargin& aOffsets);
-
   /**
    * Fill in border radii for this frame.  Return whether any are nonzero.
    * Indices into aRadii are the enum HalfCorner constants in gfx/2d/Types.h
@@ -1708,7 +1692,6 @@ class nsIFrame : public nsQueryFrame {
   bool GetMarginBoxBorderRadii(nsRectCornerRadii&) const;
   bool GetPaddingBoxBorderRadii(nsRectCornerRadii&) const;
   bool GetContentBoxBorderRadii(nsRectCornerRadii&) const;
-  bool GetBoxBorderRadii(nsRectCornerRadii&, const nsMargin& aOffset) const;
   bool GetShapeBoxBorderRadii(nsRectCornerRadii&) const;
 
   /**
