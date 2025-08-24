@@ -13557,7 +13557,7 @@
 # See Bug 1889130
 - name: network.socket.ip_addr_any.disabled
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Set true to allow resolving proxy for localhost
