@@ -5379,8 +5379,8 @@ bool nsDisplayViewTransitionCapture::CreateWebRenderCommands(
   nsPresContext* pc = mFrame->PresContext();
   nsIFrame* capturedFrame =
       mIsRoot ? pc->FrameConstructor()->GetRootElementStyleFrame() : mFrame;
-  auto captureRect = mIsRoot ? ViewTransition::SnapshotContainingBlockRect(pc)
-                             : mFrame->InkOverflowRectRelativeToSelf();
+  auto captureRect =
+      ViewTransition::CapturedInkOverflowRectForFrame(mFrame, mIsRoot);
   auto* vt = pc->Document()->GetActiveViewTransition();
   auto key = [&]() -> Maybe<wr::SnapshotImageKey> {
     if (NS_WARN_IF(!vt)) {

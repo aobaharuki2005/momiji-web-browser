@@ -101,12 +101,10 @@ class ViewTransition final : public nsISupports, public nsWrapperCache {
   // root. We find the pseudo element of this tree from this node.
   Element* GetViewTransitionTreeRoot() const;
 
-  Maybe<nsSize> GetOldInkOverflowBoxSize(nsAtom* aName) const;
-  Maybe<nsSize> GetNewInkOverflowBoxSize(nsAtom* aName) const;
+  Maybe<nsRect> GetOldInkOverflowRect(nsAtom* aName) const;
+  Maybe<nsRect> GetNewInkOverflowRect(nsAtom* aName) const;
   Maybe<nsSize> GetOldBorderBoxSize(nsAtom* aName) const;
   Maybe<nsSize> GetNewBorderBoxSize(nsAtom* aName) const;
-  Maybe<nsPoint> GetOldInkOverflowOffset(nsAtom* aName) const;
-  Maybe<nsPoint> GetNewInkOverflowOffset(nsAtom* aName) const;
   Maybe<nsRect> GetOldActiveRect(nsAtom* aName) const;
   Maybe<nsRect> GetNewActiveRect(nsAtom* aName) const;
   // Use this to generate the old state image key for use in a stacking context.
@@ -149,6 +147,7 @@ class ViewTransition final : public nsISupports, public nsWrapperCache {
   struct CapturedElement;
 
   static nsRect SnapshotContainingBlockRect(nsPresContext*);
+  static nsRect CapturedInkOverflowRectForFrame(nsIFrame*, bool aIsRoot);
   MOZ_CAN_RUN_SCRIPT void CallUpdateCallback(ErrorResult&);
 
  private:
