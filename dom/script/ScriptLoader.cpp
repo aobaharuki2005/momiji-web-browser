@@ -3525,7 +3525,7 @@ void ScriptLoader::FinishCollectingDelazifications(
     return;
   }
 
-  aRequest->SetStencil(stencil.forget());
+  MOZ_ASSERT(stencil == aRequest->GetStencil());
   return;
 }
 
