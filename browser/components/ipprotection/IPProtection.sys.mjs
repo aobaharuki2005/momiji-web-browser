@@ -104,6 +104,7 @@ class IPProtectionWidget {
   updateIconStatus(toolbaritem, status = { isActive: false, isError: false }) {
     let isActive = status.isActive;
     let isError = status.isError;
+    let l10nId = isError ? "ipprotection-button-error" : "ipprotection-button";
 
     if (isError) {
       toolbaritem.classList.remove("ipprotection-on");
@@ -115,6 +116,8 @@ class IPProtectionWidget {
       toolbaritem.classList.remove("ipprotection-error");
       toolbaritem.classList.remove("ipprotection-on");
     }
+
+    toolbaritem.setAttribute("data-l10n-id", l10nId);
   }
 
   /**
@@ -128,7 +131,7 @@ class IPProtectionWidget {
     const onDestroyed = this.#onDestroyed.bind(this);
     lazy.CustomizableUI.createWidget({
       id: IPProtectionWidget.WIDGET_ID,
-      l10nId: IPProtectionWidget.WIDGET_ID,
+      l10nId: "ipprotection-button",
       type: "view",
       viewId: IPProtectionWidget.PANEL_ID,
       overflows: false,
