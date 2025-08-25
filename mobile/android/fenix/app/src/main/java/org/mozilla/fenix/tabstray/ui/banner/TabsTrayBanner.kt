@@ -8,7 +8,7 @@ package org.mozilla.fenix.tabstray.ui.banner
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -228,7 +228,7 @@ private fun TabPageBanner(
         title = {
             TabRow(
                 selectedTabIndex = Page.pageToPosition(selectedPage),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxWidth(),
                 contentColor = MaterialTheme.colorScheme.primary,
                 divider = {},
                 indicator = { tabPositions ->
