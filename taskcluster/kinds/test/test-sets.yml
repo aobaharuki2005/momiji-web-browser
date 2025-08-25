@@ -569,7 +569,7 @@ android14-x86_64-tests:
     - web-platform-tests
     - web-platform-tests-crashtest
     - web-platform-tests-reftest
-    # - web-platform-tests-wdspec # Bug 1981210
+    - web-platform-tests-wdspec
     - web-platform-tests-webcodecs
     - web-platform-tests-eme
     - xpcshell
