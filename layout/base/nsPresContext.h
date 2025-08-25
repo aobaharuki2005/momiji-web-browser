@@ -1062,7 +1062,7 @@ class nsPresContext : public nsISupports,
 
   void FinishedContainerQueryUpdate();
 
-  void UpdateContainerQueryStylesAndAnchorPosLayout();
+  bool UpdateContainerQueryStyles();
 
   mozilla::intl::Bidi& BidiEngine();
 

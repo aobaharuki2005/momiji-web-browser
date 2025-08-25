@@ -759,12 +759,6 @@ class PresShell final : public nsStubDocumentObserver,
                                const nsIFrame* aPositionedFrame) const;
   void AddAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame);
   void RemoveAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame);
-  enum class AnchorPosUpdateResult {
-    NotApplicable,
-    Flushed,
-    NeedReflow,
-  };
-  AnchorPosUpdateResult UpdateAnchorPosLayout();
 
   inline void AddAnchorPosPositioned(nsIFrame* aFrame) {
     if (!mAnchorPosPositioned.Contains(aFrame)) {

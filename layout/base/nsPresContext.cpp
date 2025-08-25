@@ -1030,23 +1030,19 @@ void nsPresContext::FinishedContainerQueryUpdate() {
   mUpdatedContainerQueryContents.Clear();
 }
 
-void nsPresContext::UpdateContainerQueryStylesAndAnchorPosLayout() {
-  const auto result = PresShell()->UpdateAnchorPosLayout();
+bool nsPresContext::UpdateContainerQueryStyles() {
   if (mContainerQueryFrames.IsEmpty()) {
-    return;
+    return false;
   }
 
   AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Container Query Styles Update", LAYOUT);
   AUTO_PROFILER_MARKER_UNTYPED("UpdateContainerQueryStyles", LAYOUT, {});
 
-  using AnchorPosUpdateResult = PresShell::AnchorPosUpdateResult;
-  if (result == AnchorPosUpdateResult::NotApplicable ||
-      result == AnchorPosUpdateResult::NeedReflow) {
-    PresShell()->DoFlushLayout(/* aInterruptible = */ false);
-  }
+  PresShell()->DoFlushLayout(/* aInterruptible = */ false);
 
   AutoTArray<nsIFrame*, 8> framesToUpdate;
 
+  bool anyChanged = false;
   for (nsIFrame* frame : mContainerQueryFrames.IterFromShallowest()) {
     MOZ_ASSERT(frame->IsPrimaryFrame());
 
@@ -1101,7 +1097,9 @@ void nsPresContext::UpdateContainerQueryStylesAndAnchorPosLayout() {
     RestyleManager()->PostRestyleEvent(frame->GetContent()->AsElement(),
                                        RestyleHint::RestyleSubtree(),
                                        nsChangeHint(0));
+    anyChanged = true;
   }
+  return anyChanged;
 }
 
 void nsPresContext::DocumentCharSetChanged(NotNull<const Encoding*> aCharSet) {
