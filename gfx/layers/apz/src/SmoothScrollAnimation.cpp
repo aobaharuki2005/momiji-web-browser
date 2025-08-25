@@ -255,7 +255,7 @@ bool SmoothScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
       finished = true;
     }
   }
-  if (finished && mKind == ScrollAnimationKind::SmoothMsd) {
+  if (finished) {
     // Set the scroll offset to the exact destination. If we allow the scroll
     // offset to end up being a bit off from the destination, we can get
     // artefacts like "scroll to the next snap point in this direction"
