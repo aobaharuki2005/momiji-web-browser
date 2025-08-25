@@ -201,6 +201,27 @@ def get_platform(job):
 
 
 @transforms.add
+def split_use_python(config, jobs):
+    for job in jobs:
+        versions = job.get("use-python")
+        if versions is None or not isinstance(versions, list):
+            yield job
+        elif len(versions) == 1:
+            job["use-python"] = versions[0]
+            yield job
+        else:
+            for i, version in enumerate(versions, start=1):
+                versionned_job = job if i == len(versions) else deepcopy(job)
+                versionned_job["use-python"] = version
+                if "name" in job:
+                    versionned_job["name"] += f"-{version}"
+                if "label" in job:
+                    versionned_job["label"] += f"-{version}"
+                versionned_job["treeherder"]["symbol"] += f"{version}"
+                yield versionned_job
+
+
+@transforms.add
 def use_system_python(config, jobs):
     for job in jobs:
         taskcluster_python = job.pop("use-python", "system")
