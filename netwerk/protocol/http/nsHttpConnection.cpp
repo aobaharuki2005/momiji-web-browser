@@ -2519,7 +2519,7 @@ void nsHttpConnection::HandshakeDoneInternal() {
              !earlyDataAccepted,
              negotiatedNPN != mTlsHandshaker->EarlyNegotiatedALPN())))) {
       LOG(
-          ("nsHttpConection::HandshakeDone [this=%p] closing transaction "
+          ("nsHttpConnection::HandshakeDone [this=%p] closing transaction "
            "%p",
            this, mTransaction.get()));
       if (mTransaction) {
