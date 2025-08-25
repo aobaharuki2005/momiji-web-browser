@@ -297,6 +297,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_toolbox_view_source_style_editor_fallback.js"]
 
+["browser_toolbox_visibility.js"]
+
 ["browser_toolbox_watchedByDevTools.js"]
 
 ["browser_toolbox_window_global_debugging.js"]

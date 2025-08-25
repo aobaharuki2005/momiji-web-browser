@@ -50,12 +50,48 @@ class BaseInBrowserHost {
   constructor(hostTab, type) {
     this.hostTab = hostTab;
     this.type = type;
-    this.frame = null;
 
     this._gBrowser = this.hostTab.ownerGlobal.gBrowser;
     this._browserContainer = this._gBrowser.getBrowserContainer(
       this.hostTab.linkedBrowser
     );
+
+    // Reference to the <browser> element used to load DevTools.
+    // This is created by each subclass from create() method
+    this.frame = null;
+
+    Services.obs.addObserver(this, "browsing-context-active-change");
+  }
+
+  _createFrame() {
+    this.frame = createDevToolsFrame(
+      this.hostTab.ownerDocument,
+      this.type == "bottom"
+        ? "devtools-toolbox-bottom-iframe"
+        : "devtools-toolbox-side-iframe"
+    );
+  }
+
+  observe(subject, topic) {
+    if (topic != "browsing-context-active-change") {
+      return;
+    }
+    // Ignore any BrowsingContext which isn't the debugged tab's BrowsingContext
+    // (toolbox may be half destroyed and the linkedBrowser be null when moving a tab
+    // with DevTools to another window)
+    if (this.hostTab.linkedBrowser?.browsingContext != subject) {
+      return;
+    }
+
+    // In case this is called before create() is called
+    if (!this.frame) {
+      return;
+    }
+
+    // Update DevTools <browser> element's isActive according to the debugged <browser> element status.
+    // This helps activate/deactivate DevTools when changing tabs.
+    // It notably triggers visibilitychange events on DevTools documents.
+    this.frame.docShellIsActive = subject.isActive;
   }
 
   /**
@@ -72,6 +108,7 @@ class BaseInBrowserHost {
   setTitle() {}
 
   destroy() {
+    Services.obs.removeObserver(this, "browsing-context-active-change");
     this._gBrowser = null;
     this._browserContainer = null;
   }
@@ -103,10 +140,8 @@ class BottomHost extends BaseInBrowserHost {
     this.#splitter.setAttribute("resizebefore", "none");
     this.#splitter.setAttribute("resizeafter", "sibling");
 
-    this.frame = createDevToolsFrame(
-      ownerDocument,
-      "devtools-toolbox-bottom-iframe"
-    );
+    this._createFrame();
+
     this.frame.style.height =
       Math.min(
         Services.prefs.getIntPref(this.heightPref),
@@ -115,6 +150,7 @@ class BottomHost extends BaseInBrowserHost {
 
     this._browserContainer.appendChild(this.#splitter);
     this._browserContainer.appendChild(this.frame);
+    this.frame.docShellIsActive = true;
 
     focusTab(this.hostTab);
     return this.frame;
@@ -170,10 +206,8 @@ class SidebarHost extends BaseInBrowserHost {
     this.#splitter = ownerDocument.createXULElement("splitter");
     this.#splitter.setAttribute("class", "devtools-side-splitter");
 
-    this.frame = createDevToolsFrame(
-      ownerDocument,
-      "devtools-toolbox-side-iframe"
-    );
+    this._createFrame();
+
     this.frame.style.width =
       Math.min(
         Services.prefs.getIntPref(this.widthPref),
@@ -197,6 +231,7 @@ class SidebarHost extends BaseInBrowserHost {
       this.#browserPanel.insertBefore(this.frame, this._browserContainer);
       this.#browserPanel.insertBefore(this.#splitter, this._browserContainer);
     }
+    this.frame.docShellIsActive = true;
 
     focusTab(this.hostTab);
     return this.frame;
@@ -310,6 +345,7 @@ WindowHost.prototype = {
         win.document
           .getElementById("devtools-toolbox-window")
           .appendChild(this.frame);
+        this.frame.docShellIsActive = true;
 
         // The forceOwnRefreshDriver attribute is set to avoid Windows only issues with
         // CSS transitions when switching from docked to window hosts.
@@ -384,6 +420,7 @@ BrowserToolboxHost.prototype = {
     );
 
     this.doc.body.appendChild(this.frame);
+    this.frame.docShellIsActive = true;
 
     return this.frame;
   },
@@ -456,8 +493,6 @@ function focusTab(tab) {
 function createDevToolsFrame(doc, className) {
   const frame = doc.createXULElement("browser");
   frame.setAttribute("type", "content");
-  // Allows toggling docShellIsActive attribute
-  frame.setAttribute("manualactiveness", "true");
   frame.style.flex = "1 auto"; // Required to be able to shrink when the window shrinks
   frame.className = className;
 
@@ -469,6 +504,9 @@ function createDevToolsFrame(doc, className) {
     // document (for instance: Browser Toolbox).
     frame.tooltip = "aHTMLTooltip";
   }
+
+  // Allows toggling the `docShellIsActive` attribute
+  frame.setAttribute("manualactiveness", "true");
   return frame;
 }
 
