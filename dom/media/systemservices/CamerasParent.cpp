@@ -698,7 +698,7 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
 
   LOG_FUNCTION();
 
-  using Data = std::tuple<nsCString, nsCString, pid_t, bool, int>;
+  using Data = std::tuple<nsCString, nsCString, pid_t, int>;
   using Promise = MozPromise<Data, bool, true>;
   InvokeAsync(mVideoCaptureThread, __func__,
               [this, self = RefPtr(this), aCapEngine, aDeviceIndex] {
@@ -707,13 +707,12 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
                 nsCString name;
                 nsCString uniqueId;
                 pid_t devicePid = 0;
-                bool placeholder = false;
                 int error = -1;
                 if (auto devInfo = GetDeviceInfo(aCapEngine)) {
                   error = devInfo->GetDeviceName(
                       aDeviceIndex, deviceName, sizeof(deviceName),
                       deviceUniqueId, sizeof(deviceUniqueId), nullptr, 0,
-                      &devicePid, &placeholder);
+                      &devicePid);
                 }
 
                 if (error == 0) {
@@ -723,13 +722,13 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
 
                 return Promise::CreateAndResolve(
                     std::make_tuple(std::move(name), std::move(uniqueId),
-                                    devicePid, placeholder, error),
+                                    devicePid, error),
                     "CamerasParent::RecvGetCaptureDevice");
               })
       ->Then(
           mPBackgroundEventTarget, __func__,
           [this, self = RefPtr(this)](Promise::ResolveOrRejectValue&& aValue) {
-            const auto& [name, uniqueId, devicePid, placeholder, error] =
+            const auto& [name, uniqueId, devicePid, error] =
                 aValue.ResolveValue();
             if (mDestroyed) {
               return;
@@ -743,8 +742,7 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
 
             LOG("Returning %s name %s id (pid = %d)%s", name.get(),
                 uniqueId.get(), devicePid, (scary ? " (scary)" : ""));
-            Unused << SendReplyGetCaptureDevice(name, uniqueId, scary,
-                                                placeholder);
+            Unused << SendReplyGetCaptureDevice(name, uniqueId, scary);
           });
   return IPC_OK();
 }

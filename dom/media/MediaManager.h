@@ -87,16 +87,10 @@ class MediaDevice final {
    */
   enum class OsPromptable { No, Yes };
 
-  /**
-   * Whether source device is just a placeholder
-   */
-  enum class IsPlaceholder { No, Yes };
-
   MediaDevice(MediaEngine* aEngine, dom::MediaSourceEnum aMediaSource,
               const nsString& aRawName, const nsString& aRawID,
               const nsString& aRawGroupID, IsScary aIsScary,
-              const OsPromptable canRequestOsLevelPrompt,
-              const IsPlaceholder aIsPlaceholder = IsPlaceholder::No);
+              const OsPromptable canRequestOsLevelPrompt);
 
   MediaDevice(MediaEngine* aEngine,
               const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
@@ -118,7 +112,6 @@ class MediaDevice final {
   const bool mScary;
   const bool mCanRequestOsLevelPrompt;
   const bool mIsFake;
-  const bool mIsPlaceholder;
   const nsString mType;
   const nsString mRawID;
   const nsString mRawGroupID;
