@@ -36,7 +36,6 @@
 #include "NamespaceImports.h"
 
 #include "builtin/temporal/CalendarFields.h"
-#include "builtin/temporal/Crash.h"
 #include "builtin/temporal/Duration.h"
 #include "builtin/temporal/Era.h"
 #include "builtin/temporal/MonthCode.h"
@@ -937,7 +936,7 @@ static constexpr std::string_view IcuEraName(CalendarId calendar, EraCode era) {
       return era == EraCode::Standard ? "roc" : "broc";
     }
   }
-  JS_CONSTEXPR_CRASH("invalid era");
+  MOZ_CRASH("invalid era");
 }
 
 enum class CalendarError {
