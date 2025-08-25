@@ -54,10 +54,8 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a342f5eca8622c8b9
  system_wrappers/BUILD.gn                      |  4 +--
  test/BUILD.gn                                 |  6 ++--
  test/fuzzers/BUILD.gn                         |  4 +--
- tools/grit/BUILD.gn                           |  2 +-
- tools/grit/grit_rule.gni                      | 16 +++++------
  webrtc.gni                                    | 28 +++++++++----------
- 44 files changed, 114 insertions(+), 114 deletions(-)
+ 42 files changed, 105 insertions(+), 105 deletions(-)
 
 diff --git a/.gn b/.gn
 index fadb653f2f..8739a74909 100644
@@ -805,46 +803,6 @@ index acf6db2a6a..e042429b0e 100644
      }
    }
  }
-diff --git a/tools/grit/BUILD.gn b/tools/grit/BUILD.gn
-index 1cd3c75b55..a1c5e19021 100644
---- a/tools/grit/BUILD.gn
-+++ b/tools/grit/BUILD.gn
-@@ -6,7 +6,7 @@
- # directory. By depending on this, a target can force itself to be rebuilt if
- # grit itself changes.
- 
--import("//build/config/sanitizers/sanitizers.gni")
-+import("//chromium/build/config/sanitizers/sanitizers.gni")
- 
- action("grit_sources") {
-   depfile = "$target_out_dir/grit_sources.d"
-diff --git a/tools/grit/grit_rule.gni b/tools/grit/grit_rule.gni
-index fb107ef1a3..b718fa583d 100644
---- a/tools/grit/grit_rule.gni
-+++ b/tools/grit/grit_rule.gni
-@@ -86,14 +86,14 @@
- #     # You can also put deps here if the grit source depends on generated
- #     # files.
- #   }
--import("//build/config/chrome_build.gni")
--import("//build/config/chromeos/ui_mode.gni")
--import("//build/config/compiler/compiler.gni")
--import("//build/config/compute_inputs_for_analyze.gni")
--import("//build/config/crypto.gni")
--import("//build/config/features.gni")
--import("//build/config/sanitizers/sanitizers.gni")
--import("//build/config/ui.gni")
-+import("//chromium/build/config/chrome_build.gni")
-+import("//chromium/build/config/chromeos/ui_mode.gni")
-+import("//chromium/build/config/compiler/compiler.gni")
-+import("//chromium/build/config/compute_inputs_for_analyze.gni")
-+import("//chromium/build/config/crypto.gni")
-+import("//chromium/build/config/features.gni")
-+import("//chromium/build/config/sanitizers/sanitizers.gni")
-+import("//chromium/build/config/ui.gni")
- import("//build/toolchain/gcc_toolchain.gni")
- 
- declare_args() {
 diff --git a/webrtc.gni b/webrtc.gni
 index df16269eb4..51de7fba13 100644
 --- a/webrtc.gni
