@@ -7,6 +7,7 @@
 #include "VideoEngine.h"
 
 #include "libwebrtcglue/SystemTime.h"
+#include "system_wrappers/include/clock.h"
 #include "video_engine/desktop_capture_impl.h"
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -112,7 +113,8 @@ int VideoEngine::ReleaseVideoCapture(const int32_t aId) {
 }
 
 std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
-VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
+VideoEngine::GetOrCreateVideoCaptureDeviceInfo(
+    webrtc::VideoInputFeedBack* callBack) {
   LOG(("%s", __PRETTY_FUNCTION__));
   webrtc::Timestamp currentTime = webrtc::Timestamp::Micros(0);
 
@@ -153,14 +155,10 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
   }
 #endif
 
-  if (mDeviceInfo) {
-    mDeviceInfo->DeRegisterVideoInputFeedBack(this);
-  }
-
   mDeviceInfo = mVideoCaptureFactory->CreateDeviceInfo(mId, mCaptureDevType);
 
   if (mDeviceInfo && mCaptureDevType == CaptureDeviceType::Camera) {
-    mDeviceInfo->RegisterVideoInputFeedBack(this);
+    mDeviceInfo->RegisterVideoInputFeedBack(callBack);
   }
 
   LOG(("EXIT %s", __PRETTY_FUNCTION__));
@@ -169,12 +167,7 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
 
 void VideoEngine::ClearVideoCaptureDeviceInfo() {
   LOG(("%s", __PRETTY_FUNCTION__));
-  if (mDeviceInfo) {
-    mDeviceInfo->DeRegisterVideoInputFeedBack(this);
-    OnDeviceChange();
-  }
   mDeviceInfo.reset();
-  mVideoCaptureFactory->Invalidate();
 }
 
 already_AddRefed<VideoEngine> VideoEngine::Create(
@@ -237,8 +230,6 @@ int32_t VideoEngine::GenerateId() {
   static int sId = 0;
   return mId = sId++;
 }
-
-void VideoEngine::OnDeviceChange() { mDeviceChangeEvent.Notify(); }
 
 VideoEngine::VideoEngine(const CaptureDeviceType& aCaptureDeviceType,
                          RefPtr<VideoCaptureFactory> aVideoCaptureFactory)

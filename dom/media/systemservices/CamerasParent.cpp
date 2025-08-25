@@ -119,42 +119,8 @@ static int32_t sNumCamerasParents = 0;
 // CamerasParent instances. IPC background thread only.
 static StaticRefPtr<nsIThread> sVideoCaptureThread;
 // Main VideoCaptureFactory used to create and manage all capture related
-// objects. Created on IPC background thread, destroyed on main thread on
-// shutdown. Outlives the CamerasParent instances.
+// objects. IPC background thread only. Outlives the CamerasParent instances.
 static StaticRefPtr<VideoCaptureFactory> sVideoCaptureFactory;
-
-static void ClearCameraDeviceInfo() {
-  ipc::AssertIsOnBackgroundThread();
-  if (sVideoCaptureThread) {
-    MOZ_ASSERT(sEngines);
-    MOZ_ALWAYS_SUCCEEDS(sVideoCaptureThread->Dispatch(
-        NS_NewRunnableFunction(__func__, [engines = RefPtr(sEngines.get())] {
-          if (VideoEngine* engine = engines->ElementAt(CameraEngine)) {
-            engine->ClearVideoCaptureDeviceInfo();
-          }
-        })));
-  }
-}
-
-static inline nsCString FakeCameraPref() {
-  return nsDependentCString(
-      StaticPrefs::GetPrefName_media_getusermedia_camera_fake_force());
-}
-
-static void OnPrefChange(const char* aPref, void* aClosure) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(FakeCameraPref() == aPref);
-  if (!sVideoCaptureFactory) {
-    return;
-  }
-  nsCOMPtr<nsISerialEventTarget> backgroundTarget =
-      ipc::BackgroundParent::GetBackgroundThread();
-  if (!backgroundTarget) {
-    return;
-  }
-  MOZ_ALWAYS_SUCCEEDS(backgroundTarget->Dispatch(NS_NewRunnableFunction(
-      "CamerasParent::OnPrefChange", &ClearCameraDeviceInfo)));
-}
 
 static VideoCaptureFactory* EnsureVideoCaptureFactory() {
   ipc::AssertIsOnBackgroundThread();
@@ -165,13 +131,8 @@ static VideoCaptureFactory* EnsureVideoCaptureFactory() {
 
   sVideoCaptureFactory = MakeRefPtr<VideoCaptureFactory>();
   NS_DispatchToMainThread(
-      NS_NewRunnableFunction("CamerasParent::EnsureVideoCaptureFactory", []() {
-        Preferences::RegisterCallback(&OnPrefChange, FakeCameraPref());
-        RunOnShutdown([] {
-          sVideoCaptureFactory = nullptr;
-          Preferences::UnregisterCallback(&OnPrefChange, FakeCameraPref());
-        });
-      }));
+      NS_NewRunnableFunction("CamerasParent::EnsureVideoCaptureFactory",
+                             []() { ClearOnShutdown(&sVideoCaptureFactory); }));
   return sVideoCaptureFactory;
 }
 
@@ -441,8 +402,11 @@ void CamerasParent::CloseEngines() {
     Unused << ReleaseCapture(capEngine, streamNum);
   }
 
-  mDeviceChangeEventListener.DisconnectIfExists();
-  mDeviceChangeEventListenerConnected = false;
+  auto device_info = GetDeviceInfo(CameraEngine);
+  MOZ_ASSERT(device_info);
+  if (device_info) {
+    device_info->DeRegisterVideoInputFeedBack(this);
+  }
 }
 
 std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
@@ -454,15 +418,7 @@ CamerasParent::GetDeviceInfo(int aEngine) {
   if (!engine) {
     return nullptr;
   }
-  auto info = engine->GetOrCreateVideoCaptureDeviceInfo();
-
-  if (!mDeviceChangeEventListenerConnected && aEngine == CameraEngine) {
-    mDeviceChangeEventListener = engine->DeviceChangeEvent().Connect(
-        mVideoCaptureThread, this, &CamerasParent::OnDeviceChange);
-    mDeviceChangeEventListenerConnected = true;
-  }
-
-  return info;
+  return engine->GetOrCreateVideoCaptureDeviceInfo(this);
 }
 
 VideoEngine* CamerasParent::EnsureInitialized(int aEngine) {
@@ -698,7 +654,7 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
 
   LOG_FUNCTION();
 
-  using Data = std::tuple<nsCString, nsCString, pid_t, int>;
+  using Data = std::tuple<nsCString, nsCString, pid_t, bool, int>;
   using Promise = MozPromise<Data, bool, true>;
   InvokeAsync(mVideoCaptureThread, __func__,
               [this, self = RefPtr(this), aCapEngine, aDeviceIndex] {
@@ -707,12 +663,13 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
                 nsCString name;
                 nsCString uniqueId;
                 pid_t devicePid = 0;
+                bool placeholder = false;
                 int error = -1;
                 if (auto devInfo = GetDeviceInfo(aCapEngine)) {
                   error = devInfo->GetDeviceName(
                       aDeviceIndex, deviceName, sizeof(deviceName),
                       deviceUniqueId, sizeof(deviceUniqueId), nullptr, 0,
-                      &devicePid);
+                      &devicePid, &placeholder);
                 }
 
                 if (error == 0) {
@@ -722,13 +679,13 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
 
                 return Promise::CreateAndResolve(
                     std::make_tuple(std::move(name), std::move(uniqueId),
-                                    devicePid, error),
+                                    devicePid, placeholder, error),
                     "CamerasParent::RecvGetCaptureDevice");
               })
       ->Then(
           mPBackgroundEventTarget, __func__,
           [this, self = RefPtr(this)](Promise::ResolveOrRejectValue&& aValue) {
-            const auto& [name, uniqueId, devicePid, error] =
+            const auto& [name, uniqueId, devicePid, placeholder, error] =
                 aValue.ResolveValue();
             if (mDestroyed) {
               return;
@@ -742,7 +699,8 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
 
             LOG("Returning %s name %s id (pid = %d)%s", name.get(),
                 uniqueId.get(), devicePid, (scary ? " (scary)" : ""));
-            Unused << SendReplyGetCaptureDevice(name, uniqueId, scary);
+            Unused << SendReplyGetCaptureDevice(name, uniqueId, scary,
+                                                placeholder);
           });
   return IPC_OK();
 }
@@ -1283,7 +1241,17 @@ auto CamerasParent::RequestCameraAccess(bool aAllowPermissionRequest)
             "CamerasParent::RequestCameraAccess camera backend init handler",
             [](nsresult aRv) mutable {
               MOZ_ASSERT(NS_SUCCEEDED(aRv));
-              ClearCameraDeviceInfo();
+              if (sVideoCaptureThread) {
+                MOZ_ASSERT(sEngines);
+                MOZ_ALWAYS_SUCCEEDS(
+                    sVideoCaptureThread->Dispatch(NS_NewRunnableFunction(
+                        __func__, [engines = RefPtr(sEngines.get())] {
+                          if (VideoEngine* engine =
+                                  engines->ElementAt(CameraEngine)) {
+                            engine->ClearVideoCaptureDeviceInfo();
+                          }
+                        })));
+              }
               return CameraAccessRequestPromise::CreateAndResolve(
                   CamerasAccessStatus::Granted,
                   "CamerasParent::RequestCameraAccess camera backend init "

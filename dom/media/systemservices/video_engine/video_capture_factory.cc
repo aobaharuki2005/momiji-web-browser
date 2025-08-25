@@ -6,11 +6,11 @@
 
 #include "video_capture_factory.h"
 
-#include "VideoEngine.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "desktop_capture_impl.h"
 #include "fake_video_capture/device_info_fake.h"
 #include "fake_video_capture/video_capture_fake.h"
-#include "mozilla/StaticPrefs_media.h"
+#include "VideoEngine.h"
 
 #if defined(WEBRTC_USE_PIPEWIRE)
 #  include "video_engine/placeholder_device_info.h"
@@ -24,7 +24,12 @@
 
 namespace mozilla {
 
-VideoCaptureFactory::VideoCaptureFactory() {
+VideoCaptureFactory::VideoCaptureFactory()
+    :  // Disallow switching the fake camera backend on/off on the fly, since
+       // nothing guards us if it's switched between enumeration
+       // (CreateDeviceInfo) and instantiating a backend instance
+       // (CreateVideoCapture).
+      mUseFakeCamera(StaticPrefs::media_getusermedia_camera_fake_force()) {
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)) && !defined(WEBRTC_ANDROID)
   mVideoCaptureOptions = std::make_unique<webrtc::VideoCaptureOptions>();
   // In case pipewire is enabled, this acts as a fallback and can be always
@@ -49,10 +54,7 @@ VideoCaptureFactory::CreateDeviceInfo(
     int32_t aId, mozilla::camera::CaptureDeviceType aType) {
   if (aType == mozilla::camera::CaptureDeviceType::Camera) {
     std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> deviceInfo;
-    mUseFakeCamera = mUseFakeCamera.orElse([] {
-      return Some(StaticPrefs::media_getusermedia_camera_fake_force());
-    });
-    if (*mUseFakeCamera) {
+    if (mUseFakeCamera) {
       deviceInfo.reset(new webrtc::videocapturemodule::DeviceInfoFake());
       return deviceInfo;
     }
@@ -91,7 +93,7 @@ VideoCaptureFactory::CreateVideoCapture(
     mozilla::camera::CaptureDeviceType aType) {
   CreateVideoCaptureResult result;
   if (aType == mozilla::camera::CaptureDeviceType::Camera) {
-    if (mUseFakeCamera.valueOr(false)) {
+    if (mUseFakeCamera) {
       nsCOMPtr<nsISerialEventTarget> target;
       NS_CreateBackgroundTaskQueue("VideoCaptureFake::mTarget",
                                    getter_AddRefs(target));
@@ -248,7 +250,5 @@ void VideoCaptureFactory::OnInitialized(
       return;
   }
 }
-
-void VideoCaptureFactory::Invalidate() { mUseFakeCamera = Nothing(); }
 
 }  // namespace mozilla

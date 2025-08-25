@@ -67,11 +67,6 @@ class VideoCaptureFactory : webrtc::VideoCaptureOptions::Callback {
       MozPromise<CameraAvailability, nsresult, true>;
   RefPtr<UpdateCameraAvailabilityPromise> UpdateCameraAvailability();
 
-  /**
-   * Invalidate any runtime state tied to backend creation.
-   */
-  void Invalidate();
-
  private:
   ~VideoCaptureFactory() = default;
   // aka OnCameraBackendInitialized
@@ -90,9 +85,7 @@ class VideoCaptureFactory : webrtc::VideoCaptureOptions::Callback {
   using HasCameraDevicePromise = MozPromise<CameraAvailability, nsresult, true>;
   RefPtr<HasCameraDevicePromise> HasCameraDevice();
 
-  // Whether we have created fake camera device info. If true,
-  // CreateVideoCapture needs to create a fake capturer.
-  Maybe<bool> mUseFakeCamera;
+  const bool mUseFakeCamera;
   std::atomic<bool> mCameraBackendInitialized = false;
   CameraAvailability mCameraAvailability = Unknown;
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)) && !defined(WEBRTC_ANDROID)

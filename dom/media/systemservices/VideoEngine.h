@@ -8,12 +8,13 @@
 #define mozilla_VideoEngine_h
 
 #include <functional>
-#include <map>
 #include <memory>
 
-#include "MediaEventSource.h"
+#include "MediaEngine.h"
+#include "VideoFrameUtils.h"
 #include "modules/video_capture/video_capture.h"
 #include "mozilla/DefineEnum.h"
+#include "mozilla/media/MediaUtils.h"
 #include "video_engine/video_capture_factory.h"
 
 namespace webrtc {
@@ -27,7 +28,7 @@ MOZ_DEFINE_ENUM_CLASS_WITH_TOSTRING(CaptureDeviceType,
 
 // Historically the video engine was part of webrtc
 // it was removed (and reimplemented in Talk)
-class VideoEngine : public webrtc::VideoInputFeedBack {
+class VideoEngine {
  private:
   virtual ~VideoEngine();
 
@@ -64,7 +65,7 @@ class VideoEngine : public webrtc::VideoInputFeedBack {
    *   @see bug 1305212 https://bugzilla.mozilla.org/show_bug.cgi?id=1305212
    */
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
-  GetOrCreateVideoCaptureDeviceInfo();
+  GetOrCreateVideoCaptureDeviceInfo(webrtc::VideoInputFeedBack* callBack);
 
   /**
    * Destroys existing DeviceInfo.
@@ -92,20 +93,15 @@ class VideoEngine : public webrtc::VideoInputFeedBack {
   bool WithEntry(const int32_t entryCapnum,
                  const std::function<void(CaptureEntry& entry)>&& fn);
 
-  void OnDeviceChange() override;
-
-  MediaEventSource<void>& DeviceChangeEvent() { return mDeviceChangeEvent; }
-
  private:
   VideoEngine(const CaptureDeviceType& aCaptureDeviceType,
               RefPtr<VideoCaptureFactory> aVideoCaptureFactory);
   int32_t mId;
   const CaptureDeviceType mCaptureDevType;
-  const RefPtr<VideoCaptureFactory> mVideoCaptureFactory;
+  RefPtr<VideoCaptureFactory> mVideoCaptureFactory;
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> mDeviceInfo;
   std::map<int32_t, CaptureEntry> mCaps;
   std::map<int32_t, int32_t> mIdMap;
-  MediaEventProducer<void> mDeviceChangeEvent;
   // The validity period for non-camera capture device infos`
   webrtc::Timestamp mExpiryTime = webrtc::Timestamp::Micros(0);
   int32_t GenerateId();
