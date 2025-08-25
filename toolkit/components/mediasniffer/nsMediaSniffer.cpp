@@ -167,7 +167,7 @@ bool MatchesMP4(const uint8_t* aData, const uint32_t aLength,
 }
 
 static bool MatchesWebM(const uint8_t* aData, const uint32_t aLength) {
-  return nestegg_sniff((uint8_t*)aData, aLength);
+  return nestegg_sniff_webm((uint8_t*)aData, aLength);
 }
 
 // This function implements mp3 sniffing based on parsing
