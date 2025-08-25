@@ -45,7 +45,7 @@ web-platform-tests:
                     default: default
             default:
                 by-test-platform:
-                    android-em.*/debug-isolated-process: 3
+                    android-em.*/debug-isolated-process: 1
                     default: default
     chunks:
         by-variant:
@@ -291,7 +291,7 @@ web-platform-tests-reftest:
             draw-snapshot: 2
             default:
                 by-test-platform:
-                    android-em.*/debug-isolated-process: 3
+                    android-em.*/debug-isolated-process: 1
                     default: default
     mozharness:
         extra-options:

@@ -299,7 +299,7 @@ reftest:
                     default: default
             default:
                 by-test-platform:
-                    android-em.*/debug-isolated-process: 3
+                    android-em.*/debug-isolated-process: 1
                     default: default
 
 reftest-qr:
