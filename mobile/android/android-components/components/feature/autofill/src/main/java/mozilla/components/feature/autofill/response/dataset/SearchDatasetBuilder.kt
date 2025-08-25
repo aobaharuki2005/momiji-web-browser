@@ -19,8 +19,6 @@ import mozilla.components.feature.autofill.structure.ParsedStructure
 internal data class SearchDatasetBuilder(
     val parsedStructure: ParsedStructure,
 ) : DatasetBuilder {
-
-    @SuppressLint("NewApi")
     override fun build(
         context: Context,
         configuration: AutofillConfiguration,

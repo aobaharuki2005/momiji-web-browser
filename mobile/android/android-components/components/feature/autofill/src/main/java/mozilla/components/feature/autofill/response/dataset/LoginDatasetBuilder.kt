@@ -38,8 +38,6 @@ internal data class LoginDatasetBuilder(
     val needsConfirmation: Boolean,
     val requestOffset: Int = 0,
 ) : DatasetBuilder {
-
-    @SuppressLint("NewApi")
     override fun build(
         context: Context,
         configuration: AutofillConfiguration,

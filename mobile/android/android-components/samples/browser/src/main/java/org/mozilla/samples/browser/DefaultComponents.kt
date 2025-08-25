@@ -104,7 +104,6 @@ import mozilla.components.ui.icons.R as iconsR
 
 private const val DAY_IN_MINUTES = 24 * 60L
 
-@SuppressLint("NewApi")
 @Suppress("LargeClass")
 open class DefaultComponents(private val applicationContext: Context) {
     companion object {
