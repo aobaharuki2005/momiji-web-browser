@@ -9001,14 +9001,9 @@ static bool GetFuseState(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject fuseObj(cx);
-  RootedString intactStr(cx, NewStringCopyZ<CanGC>(cx, "intact"));
-  if (!intactStr) {
-    return false;
-  }
-
   RootedValue intactValue(cx);
 
-#define FUSE(Name, LowerName)                                                \
+#define REALM_FUSE(Name, LowerName)                                          \
   fuseObj = JS_NewPlainObject(cx);                                           \
   if (!fuseObj) {                                                            \
     return false;                                                            \
@@ -9022,40 +9017,26 @@ static bool GetFuseState(JSContext* cx, unsigned argc, Value* vp) {
     return false;                                                            \
   }
 
-  FOR_EACH_REALM_FUSE(FUSE)
-#undef FUSE
+  FOR_EACH_REALM_FUSE(REALM_FUSE)
+#undef REALM_FUSE
 
-  // Register hasSeenUndefinedFuse
-  fuseObj = JS_NewPlainObject(cx);
-  if (!fuseObj) {
-    return false;
-  }
-  intactValue.setBoolean(
-      cx->runtime()->hasSeenObjectEmulateUndefinedFuse.ref().intact());
-  if (!JS_DefineProperty(cx, fuseObj, "intact", intactValue,
-                         JSPROP_ENUMERATE)) {
-    return false;
-  }
-
-  if (!JS_DefineProperty(cx, returnObj, "hasSeenObjectEmulateUndefinedFuse",
-                         fuseObj, JSPROP_ENUMERATE)) {
-    return false;
+#define RUNTIME_FUSE(Name)                                                   \
+  fuseObj = JS_NewPlainObject(cx);                                           \
+  if (!fuseObj) {                                                            \
+    return false;                                                            \
+  }                                                                          \
+  intactValue.setBoolean(cx->runtime()->Name.ref().intact());                \
+  if (!JS_DefineProperty(cx, fuseObj, "intact", intactValue,                 \
+                         JSPROP_ENUMERATE)) {                                \
+    return false;                                                            \
+  }                                                                          \
+  if (!JS_DefineProperty(cx, returnObj, #Name, fuseObj, JSPROP_ENUMERATE)) { \
+    return false;                                                            \
   }
 
-  fuseObj = JS_NewPlainObject(cx);
-  if (!fuseObj) {
-    return false;
-  }
-  intactValue.setBoolean(
-      cx->runtime()->hasSeenArrayExceedsInt32LengthFuse.ref().intact());
-  if (!JS_DefineProperty(cx, fuseObj, "intact", intactValue,
-                         JSPROP_ENUMERATE)) {
-    return false;
-  }
-  if (!JS_DefineProperty(cx, returnObj, "hasSeenArrayExceedsInt32LengthFuse",
-                         fuseObj, JSPROP_ENUMERATE)) {
-    return false;
-  }
+  RUNTIME_FUSE(hasSeenObjectEmulateUndefinedFuse)
+  RUNTIME_FUSE(hasSeenArrayExceedsInt32LengthFuse)
+#undef RUNTIME_FUSE
 
   args.rval().setObject(*returnObj);
   return true;
