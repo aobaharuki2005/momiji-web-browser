@@ -108,7 +108,7 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig,
     case dom::GPUTextureFormat::Rgba16float:
       aRv.ThrowTypeError(
           "Canvas texture format `rgba16float` is not yet supported. "
-          "Subscribe to <https://bugzilla.mozilla.org/show_bug.cgi?id=1967329>"
+          "Subscribe to <https://bugzilla.mozilla.org/show_bug.cgi?id=1834395>"
           " for updates on its development in Firefox.");
       return;
     default:
