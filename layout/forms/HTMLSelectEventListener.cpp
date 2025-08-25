@@ -15,6 +15,7 @@
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/MouseEvent.h"
+#include "nsComboboxControlFrame.h"
 #include "nsListControlFrame.h"
 
 using namespace mozilla;
@@ -363,17 +364,18 @@ void HTMLSelectEventListener::ContentInserted(nsIContent* aChild,
 }
 
 void HTMLSelectEventListener::ComboboxMightHaveChanged() {
-  if (nsIFrame* f = mElement->GetPrimaryFrame()) {
-    PresShell* ps = f->PresShell();
-    // nsComoboxControlFrame::Reflow updates the selected text. AddOption /
-    // RemoveOption / etc takes care of keeping the displayed index up to date.
-    ps->FrameNeedsReflow(f, IntrinsicDirty::FrameAncestorsAndDescendants,
-                         NS_FRAME_IS_DIRTY);
+  nsIFrame* f = mElement->GetPrimaryFrame();
+  if (!f) {
+    return;
+  }
+  PresShell* ps = f->PresShell();
 #ifdef ACCESSIBILITY
-    if (nsAccessibilityService* acc = GetAccService()) {
-      acc->ScheduleAccessibilitySubtreeUpdate(ps, mElement);
-    }
+  if (nsAccessibilityService* acc = GetAccService()) {
+    acc->ScheduleAccessibilitySubtreeUpdate(ps, mElement);
+  }
 #endif
+  if (nsComboboxControlFrame* combobox = do_QueryFrame(f)) {
+    combobox->RedisplaySelectedText();
   }
 }
 
