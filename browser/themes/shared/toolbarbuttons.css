@@ -99,6 +99,7 @@
   #email-link-button,
   #screenshot-button,
   #nav-bar-overflow-button,
+  #taskbar-tabs-audio:is([soundplaying], [muted]),
   #fullscreen-button {
     display: revert;
   }

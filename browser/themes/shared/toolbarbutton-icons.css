@@ -339,3 +339,17 @@
     display: none;
   }
 }
+
+#taskbar-tabs-audio {
+  /* This is only visible in Taskbar Tabs windows; see ':root[taskbartab] toolbar' in
+   * toolbarbuttons.css. */
+  display: none;
+
+  &[soundplaying] {
+    list-style-image: url("chrome://global/skin/media/audio.svg");
+  }
+
+  &[muted] {
+    list-style-image: url("chrome://global/skin/media/audio-muted.svg");
+  }
+}

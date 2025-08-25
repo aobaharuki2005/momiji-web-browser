@@ -34,6 +34,9 @@ export const TaskbarTabsChrome = {
 
     // Create the decorative corner icon
     initCornerIcon(aWindow);
+
+    // Add a button to control muting/unmuting
+    initAudioButton(aWindow);
   },
 };
 
@@ -81,4 +84,28 @@ function initCornerIcon(aWindow) {
     updateCornerIcon();
   });
   updateCornerIcon();
+}
+
+function initAudioButton(aWindow) {
+  const audioButton = aWindow.document.getElementById("taskbar-tabs-audio");
+  const tab = aWindow.gBrowser.tabs[0];
+
+  tab.addEventListener("TabAttrModified", _ => {
+    audioButton.toggleAttribute(
+      "soundplaying",
+      tab.hasAttribute("soundplaying")
+    );
+
+    const muted = tab.hasAttribute("muted");
+    audioButton.toggleAttribute("muted", muted);
+    audioButton.toggleAttribute("checked", muted);
+    audioButton.setAttribute(
+      "data-l10n-id",
+      muted ? "taskbar-tab-audio-unmute" : "taskbar-tab-audio-mute"
+    );
+  });
+
+  audioButton.addEventListener("command", _ => {
+    tab.toggleMuteAudio();
+  });
 }
