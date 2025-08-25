@@ -3457,7 +3457,7 @@ pref("browser.contextual-services.contextId.rust-component.enabled", true);
 // Pref to enable the IP protection feature
 pref("browser.ipProtection.enabled", false);
 pref("browser.ipProtection.variant", "");
-
+pref("browser.ipProtection.log", false);
 pref("browser.ipProtection.guardian.endpoint", "https://vpn.mozilla.org/");
 
 // Pref to enable aboug:glean redesign.
