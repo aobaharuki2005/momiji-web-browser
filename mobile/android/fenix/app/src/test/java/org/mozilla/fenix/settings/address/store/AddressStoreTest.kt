@@ -74,7 +74,7 @@ class AddressStoreTest {
 
         val initialAddress = Address("BEEF", "Work", "Mozilla", "", "", "", "", "", "", "", "")
 
-        val store = makeStore(this, AddressState.initial(initialAddress)) {
+        val store = makeStore(this, AddressState.initial(address = initialAddress)) {
             copy(
                 navigateBack = { navigateBackCalled = true },
                 updateAddress = { guid, address -> updatedAddress = Pair(guid, address) },
@@ -97,14 +97,18 @@ class AddressStoreTest {
 
         val initialAddress = Address("BEEF", "Work", "Mozilla", "", "", "", "", "", "", "", "")
 
-        val store = makeStore(this, AddressState.initial(initialAddress)) {
+        val store = makeStore(this, AddressState.initial(address = initialAddress)) {
             copy(
                 navigateBack = { navigateBackCalled = true },
                 deleteAddress = { deletedGuid = it },
             )
         }
 
+        assertEquals(DialogState.Inert, store.state.deleteDialog)
         store.dispatch(DeleteTapped)
+
+        assertEquals(DialogState.Presenting, store.state.deleteDialog)
+        store.dispatch(DeleteDialogAction.DeleteTapped)
 
         val expected = "BEEF"
 

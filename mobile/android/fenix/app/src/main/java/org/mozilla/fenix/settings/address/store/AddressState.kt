@@ -10,6 +10,7 @@ import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.lib.state.State
 import org.mozilla.fenix.settings.address.AddressUtils
 import org.mozilla.fenix.settings.address.Country
+import org.mozilla.fenix.settings.address.DEFAULT_COUNTRY
 
 /**
  * Represents the state of the deletion dialog.
@@ -71,6 +72,9 @@ data class AddressState(
         }
     }
 }
+
+internal val AddressState.selectedCountry: Country?
+    get() = availableCountries[address.country.ifBlank { DEFAULT_COUNTRY }]
 
 internal val AddressState.isEditing: Boolean
     get() = guidToUpdate != null
