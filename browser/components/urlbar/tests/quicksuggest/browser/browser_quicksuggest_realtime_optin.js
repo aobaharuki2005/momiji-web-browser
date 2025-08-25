@@ -93,17 +93,10 @@ async function doOptInTest(useKeyboard) {
   } else {
     info("Picking allow button with keyboard");
     EventUtils.synthesizeKey("KEY_ArrowDown");
-    // TODO: The tip buttons should be selected first probably.
-    Assert.equal(
-      UrlbarTestUtils.getSelectedElement(window).dataset.l10nName,
-      "learn-more-link",
-      "The learn-more link should be selected after pressing Down"
-    );
-    EventUtils.synthesizeKey("KEY_Tab");
     Assert.equal(
       UrlbarTestUtils.getSelectedElement(window),
       allowButton,
-      "The allow button should be selected after pressing Tab"
+      "The allow button should be selected after pressing Down"
     );
     Assert.equal(
       gURLBar.value,

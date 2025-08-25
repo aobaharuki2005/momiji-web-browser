@@ -2836,9 +2836,7 @@ export class UrlbarView {
     }
 
     let next = row.nextElementSibling;
-    let selectables = [
-      ...row.querySelectorAll(KEYBOARD_SELECTABLE_ELEMENT_SELECTOR),
-    ];
+    let selectables = this.#getKeyboardSelectablesInRow(row);
     if (selectables.length) {
       let index = selectables.indexOf(element);
       if (index < selectables.length - 1) {
@@ -2870,9 +2868,7 @@ export class UrlbarView {
     }
 
     let previous = row.previousElementSibling;
-    let selectables = [
-      ...row.querySelectorAll(KEYBOARD_SELECTABLE_ELEMENT_SELECTOR),
-    ];
+    let selectables = this.#getKeyboardSelectablesInRow(row);
     if (selectables.length) {
       let index = selectables.indexOf(element);
       if (index < 0) {
@@ -2887,6 +2883,21 @@ export class UrlbarView {
     }
 
     return previous;
+  }
+
+  #getKeyboardSelectablesInRow(row) {
+    let selectables = [
+      ...row.querySelectorAll(KEYBOARD_SELECTABLE_ELEMENT_SELECTOR),
+    ];
+
+    // Sort links last. This assumes that any links in the row are informational
+    // and should be deprioritized with regard to selection compared to buttons
+    // and other elements.
+    selectables.sort(
+      (a, b) => Number(a.localName == "a") - Number(b.localName == "a")
+    );
+
+    return selectables;
   }
 
   /**

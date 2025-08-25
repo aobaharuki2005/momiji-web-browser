@@ -2751,11 +2751,13 @@ export class UrlbarInput {
         );
       case lazy.UrlbarUtils.RESULT_TYPE.RESTRICT:
         return result.payload.autofillKeyword + " ";
-      case lazy.UrlbarUtils.RESULT_TYPE.TIP:
-        if (element?.dataset.input) {
-          return element.dataset.input;
+      case lazy.UrlbarUtils.RESULT_TYPE.TIP: {
+        let value = element?.dataset.url || element?.dataset.input;
+        if (value) {
+          return value;
         }
         break;
+      }
     }
 
     // Always respect a set urlOverride property.
