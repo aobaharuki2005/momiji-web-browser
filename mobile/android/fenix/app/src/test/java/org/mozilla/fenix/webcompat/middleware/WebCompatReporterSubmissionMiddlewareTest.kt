@@ -257,6 +257,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
         job.join()
     }
 
+    @Test
     fun `WHEN the report is sent successfully THEN appState is updated`() {
         val store = createStore()
 
