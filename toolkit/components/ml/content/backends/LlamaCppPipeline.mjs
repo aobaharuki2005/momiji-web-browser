@@ -3,20 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * @typedef {import("../../content/Utils.sys.mjs").ProgressAndStatusCallbackParams} ProgressAndStatusCallbackParams
+ * @import {ProgressAndStatusCallbackParams} from "../../content/Utils.sys.mjs"
  */
 
-// import { Wllama } from "chrome://global/content/ml/wllama-module.mjs";
-/* eslint-disable-next-line mozilla/reject-import-system-module-from-non-system */
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+// The following globals are defined in dom/webidl/LlamaRunner.webidl
+/* global LlamaRunner,  */
 
 /* eslint-disable mozilla/reject-import-system-module-from-non-system */
 import {
   createFileUrl,
   Progress,
 } from "chrome://global/content/ml/Utils.sys.mjs";
-
-import { OPFS } from "chrome://global/content/ml/OPFS.sys.mjs";
 
 /**
  * Log level set by the pipeline.
@@ -35,22 +32,9 @@ const lazy = {};
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
   return console.createInstance({
     maxLogLevel: _logLevel, // we can't use maxLogLevelPref in workers.
-    prefix: "ML:LlamaPipeline",
+    prefix: "ML:LlamaCppPipeline",
   });
 });
-
-/**
- * Conditionally imports `wllama_module.mjs` or `wllama_module-dev.mjs` based on the build type.
- *
- * - The module is lazily loaded on first use in the `LlamaPipeline.initialize`.
- * - If running in Nightly, the non-minified (dev) version is used.
- * - Otherwise, the optimized production version is loaded.
- */
-let wllamaPromise = AppConstants.NIGHTLY_BUILD
-  ? import("chrome://global/content/ml/wllama-module-dev.mjs")
-  : import("chrome://global/content/ml/wllama-module.mjs");
-
-let wllamaModule = null;
 
 /**
  * Initializes the LlamaPipeline with the specified model and runtime configuration.
@@ -73,15 +57,17 @@ let wllamaModule = null;
  * @param {string} [options.kvCacheDtype="q8_0"] - Data type of the model weights (e.g., "q8_0" for 8-bit quantization).
  * @param {number} [options.numThreadsDecoding=0] - Number of threads to use for decoding (default: auto).
  *
- * @returns {Promise<LlamaPipeline>} A promise that resolves to an initialized LlamaPipeline instance.
+ * @returns {Promise<LlamaCppPipeline>} A promise that resolves to an initialized LlamaPipeline instance.
  */
-export class LlamaPipeline {
-  wllama = null;
+export class LlamaCppPipeline {
+  generator = null;
+  #options = {};
   #errorFactory = null;
 
-  constructor(wllama, errorFactory) {
-    this.wllama = wllama;
+  constructor(generator, options, errorFactory) {
+    this.generator = generator;
     this.#errorFactory = errorFactory;
+    this.#options = options;
   }
 
   static async initialize(
@@ -105,9 +91,6 @@ export class LlamaPipeline {
     } = {},
     errorFactory
   ) {
-    if (!wllamaModule) {
-      wllamaModule = await wllamaPromise;
-    }
     let startInitTime = performance.now();
 
     const modelFilePath = (
@@ -119,22 +102,11 @@ export class LlamaPipeline {
           urlTemplate: modelHubUrlTemplate,
           rootUrl: modelHubRootUrl,
         }),
+        returnFullPath: true,
       })
     ).ok[2];
 
-    lazy.console.debug("LlamaPipeline.initialize", { modelFilePath });
-
-    const wasmUrl = URL.createObjectURL(
-      new Blob([wasm], { type: "application/wasm" })
-    );
-
-    const configPaths = { "multi-thread/wllama.wasm": wasmUrl };
-
-    const wllama = new wllamaModule.Wllama(configPaths, {
-      logger: lazy.console,
-    });
-
-    const blobs = [await (await OPFS.getFileHandle(modelFilePath)).getFile()];
+    lazy.console.debug("Model path is", { modelFilePath });
 
     let options = {};
 
@@ -160,7 +132,7 @@ export class LlamaPipeline {
       options.n_threads_decoding = numThreadsDecoding;
     }
 
-    await wllama.loadModel(blobs, {
+    options = {
       n_ctx: numContext,
       useCache: false,
       n_gpu_layers: 0,
@@ -173,13 +145,23 @@ export class LlamaPipeline {
       cache_type_k: cacheType,
       cache_type_v: cacheType,
       ...options,
-    });
+      modelFilePath,
+    };
 
-    URL.revokeObjectURL(wasmUrl);
+    const generator = new LlamaRunner({
+      modelPath: modelFilePath,
+      useMmap,
+      useMlock,
+      context: {
+        nThreads: options.n_threads,
+        nThreadsBatch: options.n_threads_decoding,
+        nCtx: numContext,
+      },
+    });
 
     lazy.console.debug("Init time", performance.now() - startInitTime);
 
-    return new LlamaPipeline(wllama, errorFactory);
+    return new LlamaCppPipeline(generator, options, errorFactory);
   }
 
   /**
@@ -189,15 +171,11 @@ export class LlamaPipeline {
    * @param {string | string[]} options.prompt - The input prompt or an array of chat messages.
    * @param {number} [options.nPredict=100] - The number of tokens to generate.
    * @param {boolean} [options.skipPrompt=true] - If true, skips processing the prompt tokens.
-   * @param {int} [options.stopTokens=[]] - List of custom token IDs for stopping the generation.
-   * @param {int} [options.useCache=false] - If true, it skips re-evaluating the conversation history.
-   *                                         Specifically, if a new prompt shares the same prefix as a previous prompt,
-   *                                         the cached computation (kv-cache) for that prefix will be reused, avoiding redundant computation.
-   * @param {float} [options.temp=0] - The sampling temperature.
-   * @param {float} [options.topP=0] - The top probabilities to use for top-p sampling.
-   * @param {int} [options.topK=0] - The top-k tokens to use for top-k sampling.
-   * @param {object} [options.extraWllamaSamplingConfig={}] - Additional sampling settings. For details, refer to
-   *                                                    github.com/ngxson/wllama/blob/2.2.1/src/wllama.ts#L118
+   * @param {number} [options.stopTokens=[]] - List of custom token IDs for stopping the generation.
+   * @param {object} [options.context] - Generation context
+   * @param {object[]} [options.samplers] - List of samplers.
+   * @param {boolean} [options.stopOnEndOfGenerationTokens] - Wether to stop generations on model-specific eog tokens.
+   * @param {number} [options.minOutputBufferSize] - Buffer size for the generated tokens to be sent.
    * @param {string|null} [requestId=null] - An optional identifier for tracking the request.
    * @param {?function(ProgressAndStatusCallbackParams):void|null} [inferenceProgressCallback=null] - A callback function to track inference progress.
    *        It receives an object containing:
@@ -214,14 +192,13 @@ export class LlamaPipeline {
   async run(
     {
       prompt,
-      nPredict = 100,
+      nPredict,
       skipPrompt = true,
-      stopTokens = [],
-      useCache = false,
-      temp = 0,
-      topP = 0,
-      topK = 0,
-      ...extraWllamaSamplingConfig
+      samplers,
+      context,
+      stopTokens,
+      stopOnEndOfGenerationTokens,
+      minOutputBufferSize = 20,
     } = {},
     requestId = null,
     inferenceProgressCallback = null,
@@ -229,85 +206,68 @@ export class LlamaPipeline {
   ) {
     try {
       let startTime = performance.now();
-      let endPromptTime;
-      let isPromptDone = false;
+      let endPromptTime = null;
       let startPromptTime = startTime;
-      let startDecodingTime = startTime;
+      let startDecodingTime = null;
 
-      const textDecoder = new TextDecoder();
+      let output = "";
 
-      const configSampling = {
-        temp,
-        top_p: topP,
-        top_k: topK,
-        ...extraWllamaSamplingConfig,
-      };
+      lazy.console.error("Running this.generator.createGenerationStream");
 
-      let promptTokens = null;
+      let formattedPrompt = prompt;
 
       if (Array.isArray(prompt)) {
-        prompt = await this.wllama.formatChat(prompt, true);
+        lazy.console.error("received prompt", prompt);
+        formattedPrompt = await this.generator.formatChat({ messages: prompt });
+        lazy.console.error("formated prompt ", formattedPrompt);
       }
 
-      if (!skipPrompt && (port || inferenceProgressCallback)) {
-        promptTokens = await this.wllama.tokenize(prompt, true);
+      const stream = this.generator.createGenerationStream({
+        prompt: formattedPrompt,
+        maxGeneratedTokens: nPredict,
+        minOutputBufferSize,
+        context: {
+          nThreads: this.#options.n_threads,
+          nThreadsBatch: this.#options.n_threads_decoding,
+          ...(context || {}),
+        },
+        samplers,
+        stopTokens,
+        stopOnEndOfGenerationTokens,
+      });
+
+      for await (const chunk of stream) {
+        const isPrompt = chunk.phase == "prompt";
+
+        if (isPrompt && chunk.isPhaseCompleted) {
+          endPromptTime = performance.now();
+        } else if (!startDecodingTime) {
+          startDecodingTime = performance.now();
+        }
+
+        if (skipPrompt && isPrompt) {
+          continue;
+        }
+        output += chunk;
         port?.postMessage({
-          tokens: promptTokens,
+          tokens: chunk.tokens,
           ok: true,
-          isPrompt: true,
-          text: prompt,
+          isPrompt,
+          text: chunk.piece,
         });
 
         inferenceProgressCallback?.({
           ok: true,
           metadata: {
-            text: prompt,
-            tokens: promptTokens,
-            isPrompt: true,
+            text: chunk.piece,
+            tokens: chunk.tokens,
+            isPrompt,
             requestId,
           },
           type: Progress.ProgressType.INFERENCE,
           statusText: Progress.ProgressStatusText.IN_PROGRESS,
         });
       }
-
-      const output = await this.wllama.createCompletion(
-        promptTokens || prompt,
-        {
-          nPredict,
-          sampling: configSampling,
-          useCache,
-          stopTokens,
-          onNewToken: (token, piece, _currentText) => {
-            if (!isPromptDone) {
-              isPromptDone = true;
-              endPromptTime = performance.now();
-              startDecodingTime = endPromptTime;
-            }
-
-            const pieceText = textDecoder.decode(piece);
-
-            port?.postMessage({
-              tokens: [token],
-              ok: true,
-              isPrompt: false,
-              text: pieceText,
-            });
-
-            inferenceProgressCallback?.({
-              ok: true,
-              metadata: {
-                text: pieceText,
-                tokens: [token],
-                isPrompt: false,
-                requestId,
-              },
-              type: Progress.ProgressType.INFERENCE,
-              statusText: Progress.ProgressStatusText.IN_PROGRESS,
-            });
-          },
-        }
-      );
 
       const endTime = performance.now();
       lazy.console.debug("Decoding time", endTime - startDecodingTime);
