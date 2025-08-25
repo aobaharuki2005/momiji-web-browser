@@ -114,7 +114,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.#updateSignInStatus();
     this.updateHasUpgradedStatus();
     this.#updateEligibility();
-    this.#updateEnrollment();
+    this.#updateEnrollment(true /* onlyCached */);
 
     this.#inited = true;
   }
@@ -286,16 +286,17 @@ class IPProtectionServiceSingleton extends EventTarget {
   /**
    * Checks if the user has enrolled with FxA to use the proxy.
    *
+   * @param { boolean } onlyCached - if true only the cached clients will be checked.
    * @returns {Promise<boolean>}
    */
-  async #isEnrolled() {
+  async #isEnrolled(onlyCached) {
     if (!this.isSignedIn) {
       return false;
     }
 
     let isEnrolled;
     try {
-      isEnrolled = await this.guardian.isLinkedToGuardian();
+      isEnrolled = await this.guardian.isLinkedToGuardian(onlyCached);
     } catch (error) {
       this.#dispatchError(error?.message);
     }
@@ -519,10 +520,11 @@ class IPProtectionServiceSingleton extends EventTarget {
    * If the user is not enrolled but meets the other conditions to use
    * the VPN they will be enrolled now.
    *
+   * @param { boolean } onlyCached - if true only the cached clients will be checked.
    * @returns {Promise<void>}
    */
-  async #updateEnrollment() {
-    this.isEnrolled = await this.#isEnrolled();
+  async #updateEnrollment(onlyCached = false) {
+    this.isEnrolled = await this.#isEnrolled(onlyCached);
 
     if (this.isEnrolled && !this.#hasWidget) {
       lazy.IPProtection.init();
