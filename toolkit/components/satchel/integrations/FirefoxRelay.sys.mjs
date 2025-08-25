@@ -45,7 +45,7 @@ const gConfig = (function () {
 
 export const autocompleteUXTreatments = {
   control: {
-    image: "chrome://browser/content/logos/relay.svg",
+    image: "chrome://browser/content/asrouter/assets/glyph-mail-mask-16.svg",
     messageIds: [
       "firefox-relay-opt-in-title-1",
       "firefox-relay-opt-in-subtitle-1",
@@ -848,23 +848,18 @@ class RelayOffered {
 
 class RelayEnabled {
   async *autocompleteItemsAsync(origin, scenarioName, hasInput) {
-    if (
-      !hasInput &&
-      isSignup(scenarioName) &&
-      ((await hasFirefoxAccountAsync()) ||
-        Services.prefs.getBoolPref(gConfig.showToAllBrowsersPref, false))
-    ) {
+    if (!hasInput && isSignup(scenarioName)) {
+      const hasFxA = await hasFirefoxAccountAsync();
       const [title] = await formatMessages("firefox-relay-use-mask-title-1");
+
       yield new ParentAutocompleteOption(
-        "chrome://browser/content/logos/relay.svg",
+        "chrome://browser/content/asrouter/assets/glyph-mail-mask-16.svg",
         title,
-        "", // when the user has opted-in, there is no subtitle content
-        "PasswordManager:generateRelayUsername",
-        {
-          telemetry: {
-            flowId: gFlowId,
-          },
-        }
+        "", // no subtitle when enabled
+        hasFxA
+          ? "PasswordManager:generateRelayUsername"
+          : "PasswordManager:offerRelayIntegration",
+        { telemetry: { flowId: gFlowId } }
       );
       Glean.relayIntegration.shownFillUsername.record({
         value: gFlowId,
