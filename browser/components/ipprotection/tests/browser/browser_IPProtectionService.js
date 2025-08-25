@@ -8,6 +8,10 @@ const { ASRouter } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
 
+const { ERRORS } = ChromeUtils.importESModule(
+  "chrome://browser/content/ipprotection/ipprotection-constants.mjs"
+);
+
 // Don't add an experiment so we can test adding and removing it.
 DEFAULT_EXPERIMENT = null;
 
@@ -238,5 +242,94 @@ add_task(async function test_ipprotection_ready() {
   Assert.ok(ipProtectionReadyTrigger, "ipProtectionReady trigger sent");
 
   sandbox.restore();
+  cleanupService();
+});
+
+/**
+ * Tests showing an error and dismissing it on panel close.
+ */
+add_task(async function test_IPProtectionService_pass_errors() {
+  setupService({
+    isSignedIn: true,
+  });
+  let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
+
+  await IPProtectionService.updateSignInStatus();
+
+  let content = await openPanel();
+
+  let messageBarLoadedPromise = BrowserTestUtils.waitForMutationCondition(
+    content.shadowRoot,
+    { childList: true, subtree: true },
+    () => content.shadowRoot.querySelector("ipprotection-message-bar")
+  );
+  // Mock a failure
+  IPProtectionService.isEntitled = false;
+
+  content.connectionToggleEl.click();
+
+  Assert.ok(!IPProtectionService.isActive, "Proxy is not active");
+
+  await messageBarLoadedPromise;
+
+  let messageBar = content.shadowRoot.querySelector("ipprotection-message-bar");
+
+  Assert.ok(!content.connectionToggleEl.pressed, "Toggle is off");
+  Assert.ok(messageBar, "Message bar should be present");
+  Assert.equal(
+    content.state.error,
+    ERRORS.GENERIC,
+    "Should have a generic error"
+  );
+
+  let button = document.getElementById(IPProtectionWidget.WIDGET_ID);
+  Assert.ok(
+    button.classList.contains("ipprotection-error"),
+    "Toolbar icon should show the error status"
+  );
+
+  await closePanel();
+
+  Assert.equal(content.state.error, "", "Should have no error");
+
+  await cleanupAlpha();
+  cleanupService();
+});
+
+/**
+ * Tests retry after an error.
+ */
+add_task(async function test_IPProtectionService_retry_errors() {
+  setupService({
+    isSignedIn: true,
+    isEnrolled: false,
+    canEnroll: true,
+  });
+  let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
+
+  await IPProtectionService.updateSignInStatus();
+
+  let content = await openPanel();
+
+  // Mock a failure
+  IPProtectionService.isEnrolled = false;
+  IPProtectionService.hasError = true;
+
+  let startedEventPromise = BrowserTestUtils.waitForEvent(
+    IPProtectionService,
+    "IPProtectionService:Started"
+  );
+  content.connectionToggleEl.click();
+
+  await startedEventPromise;
+
+  Assert.ok(IPProtectionService.isActive, "Proxy is active");
+  Assert.ok(IPProtectionService.isEnrolled, "User is now enrolled");
+  Assert.ok(!IPProtectionService.hasError, "There is no longer an error");
+
+  IPProtectionService.stop();
+
+  await closePanel();
+  await cleanupAlpha();
   cleanupService();
 });

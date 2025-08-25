@@ -30,7 +30,10 @@ ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-import { SIGNIN_DATA } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
+import {
+  SIGNIN_DATA,
+  ERRORS,
+} from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 const ENABLED_PREF = "browser.ipProtection.enabled";
 const VPN_ADDON_ID = "vpn@mozilla.com";
@@ -54,6 +57,8 @@ const VPN_ID = "e6eb0d1e856335fc";
  * @fires event:"IPProtectionService:UpdateHasUpgraded"
  *  When the hasUpgraded property is updated.
  *  True if the user upgraded to a Mozilla VPN subscription.
+ * @fires event:"IPProtectionService:Error"
+ *  When there has been an error
  */
 class IPProtectionServiceSingleton extends EventTarget {
   static WIDGET_ID = "ipprotection-button";
@@ -70,9 +75,12 @@ class IPProtectionServiceSingleton extends EventTarget {
   isEntitled = null;
   isSubscribed = null;
   hasProxyPass = null;
+  hasError = null;
+
   location = null;
   /**@type {import("./IPPChannelFilter.sys.mjs").IPPChannelFilter | null} */
   connection = null;
+  errors = [];
 
   guardian = null;
   #entitlement = null;
@@ -135,9 +143,11 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.isEntitled = null;
     this.isSubscribed = null;
     this.hasProxyPass = null;
+    this.hasError = null;
 
     this.#entitlement = null;
     this.#pass = null;
+    this.errors = [];
 
     this.#hasWidget = false;
     this.#inited = false;
@@ -150,11 +160,27 @@ class IPProtectionServiceSingleton extends EventTarget {
    * True if started by user action, false if system action
    */
   async start(userAction = true) {
-    let { isSignedIn, isEnrolled, isEntitled, isActive } = this;
+    // Retry enrollment if the previous attempt failed.
+    if (this.hasError && !this.isEnrolled) {
+      await this.#updateEnrollment();
+    }
 
-    if (!isSignedIn || !isEnrolled || !isEntitled || isActive) {
+    // Retry getting entitlement if the previous attempt failed.
+    if (this.hasError && !this.isEntitled) {
+      await this.#updateEntitlement();
+    }
+
+    if (
+      !this.isSignedIn ||
+      !this.isEnrolled ||
+      !this.isEntitled ||
+      this.isActive
+    ) {
+      this.#dispatchError(ERRORS.GENERIC);
       return;
     }
+    this.hasError = false;
+    this.errors = [];
 
     // If the current proxy pass is valid,
     // no need to re-authenticate.
@@ -249,7 +275,12 @@ class IPProtectionServiceSingleton extends EventTarget {
       return false;
     }
 
-    let isEnrolled = await this.guardian.isLinkedToGuardian();
+    let isEnrolled;
+    try {
+      isEnrolled = await this.guardian.isLinkedToGuardian();
+    } catch (error) {
+      this.#dispatchError(error?.message);
+    }
 
     return isEnrolled;
   }
@@ -515,8 +546,17 @@ class IPProtectionServiceSingleton extends EventTarget {
       return null;
     }
 
-    let enrollment = await this.guardian.enroll();
+    let enrollment;
+    try {
+      enrollment = await this.guardian.enroll();
+    } catch (error) {
+      this.#dispatchError(error?.message);
+    }
+
     this.isEnrolled = enrollment?.ok;
+    if (enrollment?.error) {
+      this.#dispatchError(enrollment.error);
+    }
 
     return this.isEnrolled;
   }
@@ -538,8 +578,9 @@ class IPProtectionServiceSingleton extends EventTarget {
    * @returns {Promise<Entitlement|null>} - The entitlement object or null if not entitled.
    */
   async #getEntitlement() {
-    let { error, status, entitlement } = await this.guardian.fetchUserInfo();
-    if (error || status != 200 || !entitlement) {
+    let { error, entitlement } = await this.guardian.fetchUserInfo();
+    if (error) {
+      this.#dispatchError(error);
       return null;
     }
 
@@ -554,6 +595,7 @@ class IPProtectionServiceSingleton extends EventTarget {
   async #getProxyPass() {
     let { error, status, pass } = await this.guardian.fetchProxyPass();
     if (error || !pass || status != 200) {
+      this.#dispatchError(ERRORS.GENERIC);
       return null;
     }
 
@@ -568,6 +610,25 @@ class IPProtectionServiceSingleton extends EventTarget {
       this.#usageObserver = new lazy.IPProtectionUsage();
     }
     return this.#usageObserver;
+  }
+
+  /**
+   * Helper to dispatch error messages.
+   *
+   * @param {string} error - the error message to send.
+   */
+  #dispatchError(error = ERRORS.GENERIC) {
+    this.hasError = true;
+    this.errors.push(error);
+    this.dispatchEvent(
+      new CustomEvent("IPProtectionService:Error", {
+        bubbles: true,
+        composed: true,
+        detail: {
+          error,
+        },
+      })
+    );
   }
 }
 

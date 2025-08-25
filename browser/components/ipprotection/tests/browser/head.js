@@ -119,8 +119,9 @@ async function setPanelState(state = defaultState, win = window) {
     IPProtectionWidget.PANEL_ID
   );
   let content = panelView.querySelector(IPProtectionPanel.CONTENT_TAGNAME);
-
-  await content.updateComplete;
+  if (content) {
+    await content.updateComplete;
+  }
 }
 
 /* exported setPanelState */
