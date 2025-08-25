@@ -19,7 +19,7 @@ You can close the split console by pressing :kbd:`Esc` again, or by selecting th
 As usual, ``$0`` works as a shorthand for the element currently selected in the Inspector:
 
 .. image:: split-console-debugger.png
-  :alt: Screenshot showing the split console, visible at the bottom of the Debugger tab
+  :alt: Screenshot demonstrating how typing in $0 in the split console highlights the currently selected element on the page
   :class: center
 
 When you use the split console with the debugger, the console's scope is the currently executing stack frame. So if you hit a breakpoint in a function, the scope will be the function's scope. You'll get autocomplete for objects defined in the function, and can easily modify them on the fly:
