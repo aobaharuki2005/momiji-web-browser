@@ -12,6 +12,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -80,7 +81,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
 
     @Test
     fun `GIVEN the URL is not changed WHEN WebCompatInfo is retrieved successfully THEN all report broken site pings are submitted`() = runTest {
-        val store = createStore()
+        val store = createStore(enteredUrl = "https://www.mozilla.org")
 
         val job = Pings.brokenSiteReport.testBeforeNextSubmit {
             assertEquals(
@@ -113,12 +114,38 @@ class WebCompatReporterSubmissionMiddlewareTest {
             )
 
             assertEquals(
-                BrokenSiteReportBrowserInfo.AddonsObject(),
+                buildJsonArray {
+                    addJsonObject {
+                        put("id", "id.temp")
+                        put("name", "name1")
+                        put("temporary", true)
+                        put("version", "version1")
+                    }
+
+                    addJsonObject {
+                        put("id", "id.perm")
+                        put("name", "name2")
+                        put("temporary", false)
+                        put("version", "version2")
+                    }
+                },
                 BrokenSiteReportBrowserInfo.addons.testGetValue(),
             )
 
             assertEquals(
-                BrokenSiteReportBrowserInfo.ExperimentsObject(),
+                buildJsonArray {
+                    addJsonObject {
+                        put("branch", "branch1")
+                        put("kind", "kind1")
+                        put("slug", "slug1")
+                    }
+
+                    addJsonObject {
+                        put("branch", "branch2")
+                        put("kind", "kind2")
+                        put("slug", "slug2")
+                    }
+                },
                 BrokenSiteReportBrowserInfo.experiments.testGetValue(),
             )
 
@@ -240,7 +267,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
 
     @Test
     fun `GIVEN the URL is changed WHEN WebCompatInfo is retrieved successfully THEN only non tab related report broken site pings are submitted`() = runTest {
-        val store = createStore()
+        val store = createStore(enteredUrl = "https://example.com")
 
         val job = Pings.brokenSiteReport.testBeforeNextSubmit {
             assertNull(BrokenSiteReportTabInfoAntitracking.blockList.testGetValue())
@@ -251,16 +278,39 @@ class WebCompatReporterSubmissionMiddlewareTest {
             assertNull(BrokenSiteReportTabInfoAntitracking.hasTrackingContentBlocked.testGetValue())
             assertNull(BrokenSiteReportTabInfoAntitracking.isPrivateBrowsing.testGetValue())
 
-            assertNull(BrokenSiteReportBrowserInfo.addons.testGetValue())
-            assertNull(BrokenSiteReportBrowserInfo.experiments.testGetValue())
-
             assertEquals(
-                BrokenSiteReportBrowserInfo.AddonsObject(),
+                buildJsonArray {
+                    addJsonObject {
+                        put("id", "id.temp")
+                        put("name", "name1")
+                        put("temporary", true)
+                        put("version", "version1")
+                    }
+
+                    addJsonObject {
+                        put("id", "id.perm")
+                        put("name", "name2")
+                        put("temporary", false)
+                        put("version", "version2")
+                    }
+                },
                 BrokenSiteReportBrowserInfo.addons.testGetValue(),
             )
 
             assertEquals(
-                BrokenSiteReportBrowserInfo.ExperimentsObject(),
+                buildJsonArray {
+                    addJsonObject {
+                        put("branch", "branch1")
+                        put("kind", "kind1")
+                        put("slug", "slug1")
+                    }
+
+                    addJsonObject {
+                        put("branch", "branch2")
+                        put("kind", "kind2")
+                        put("slug", "slug2")
+                    }
+                },
                 BrokenSiteReportBrowserInfo.experiments.testGetValue(),
             )
 
@@ -288,16 +338,6 @@ class WebCompatReporterSubmissionMiddlewareTest {
             assertEquals(
                 """[{"id":"monitor1"},{"id":"monitor2"},{"id":"monitor3"}]""",
                 BrokenSiteReportBrowserInfoGraphics.monitorsJson.testGetValue(),
-            )
-
-            assertEquals(
-                BrokenSiteReportBrowserInfo.AddonsObject(),
-                BrokenSiteReportBrowserInfo.addons.testGetValue(),
-            )
-
-            assertEquals(
-                BrokenSiteReportBrowserInfo.ExperimentsObject(),
-                BrokenSiteReportBrowserInfo.experiments.testGetValue(),
             )
 
             assertEquals(
@@ -486,12 +526,13 @@ class WebCompatReporterSubmissionMiddlewareTest {
     }
 
     private fun createStore(
+        enteredUrl: String = "https://www.mozilla.org",
         service: WebCompatReporterRetrievalService = FakeWebCompatReporterRetrievalService(),
         webCompatReporterMoreInfoSender: WebCompatReporterMoreInfoSender = FakeWebCompatReporterMoreInfoSender(),
     ): WebCompatReporterStore {
         val engineSession: EngineSession = mock()
         val tab = createTab(
-            url = "https://www.mozilla.org",
+            url = "",
             id = "test-tab",
             engineSession = engineSession,
         )
@@ -504,8 +545,8 @@ class WebCompatReporterSubmissionMiddlewareTest {
 
         return WebCompatReporterStore(
             initialState = WebCompatReporterState(
-                tabUrl = "https://www.mozilla.org",
-                enteredUrl = "https://www.mozilla.org/en-US/firefox/new/",
+                tabUrl = "",
+                enteredUrl = enteredUrl,
                 reason = WebCompatReporterState.BrokenSiteReason.Slow,
                 problemDescription = "",
             ),
