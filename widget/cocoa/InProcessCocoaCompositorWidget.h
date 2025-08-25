@@ -9,7 +9,7 @@
 #include "CocoaCompositorWidget.h"
 #include "CompositorWidget.h"
 
-class nsChildView;
+class nsCocoaWindow;
 
 namespace mozilla {
 namespace widget {
@@ -20,7 +20,7 @@ class InProcessCocoaCompositorWidget final
  public:
   InProcessCocoaCompositorWidget(const CocoaCompositorWidgetInitData& aInitData,
                                  const layers::CompositorOptions& aOptions,
-                                 nsChildView* aWidget);
+                                 nsCocoaWindow* aWidget);
 
   // CompositorWidget overrides
 
@@ -34,7 +34,7 @@ class InProcessCocoaCompositorWidget final
   void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
 
  private:
-  nsChildView*  mChildView;
+  nsCocoaWindow*  mWindow;
 };
 
 }  // namespace widget
