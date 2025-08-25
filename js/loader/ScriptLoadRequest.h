@@ -250,6 +250,12 @@ class ScriptLoadRequest : public nsISupports,
   State mState;           // Are we still waiting for a load to complete?
   bool mFetchSourceOnly;  // Request source, not cached bytecode.
 
+  // Becomes true if this has source map url.
+  //
+  // Do not access directly.
+  // Use HasSourceMapURL(), SetSourceMapURL(), and GetSourceMapURL().
+  bool mHasSourceMapURL_;
+
   enum class CachingPlan : uint8_t {
     // This is not yet considered for caching.
     Uninitialized,
@@ -276,8 +282,23 @@ class ScriptLoadRequest : public nsISupports,
   RefPtr<mozilla::SubResourceNetworkMetadataHolder> mNetworkMetadata;
   const SRIMetadata mIntegrity;
   const nsCOMPtr<nsIURI> mReferrer;
-  mozilla::Maybe<nsString>
-      mSourceMapURL;  // Holds source map url for loaded scripts
+
+  // Holds source map url for loaded scripts.
+  //
+  // Do not access directly.
+  // Use HasSourceMapURL(), SetSourceMapURL(), and GetSourceMapURL().
+  nsString mMaybeSourceMapURL_;
+
+  bool HasSourceMapURL() const { return mHasSourceMapURL_; }
+  const nsString& GetSourceMapURL() const {
+    MOZ_ASSERT(mHasSourceMapURL_);
+    return mMaybeSourceMapURL_;
+  }
+  void SetSourceMapURL(const nsString& aSourceMapURL) {
+    MOZ_ASSERT(!mHasSourceMapURL_);
+    mMaybeSourceMapURL_ = aSourceMapURL;
+    mHasSourceMapURL_ = true;
+  }
 
   const nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;

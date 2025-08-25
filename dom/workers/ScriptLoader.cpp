@@ -1141,8 +1141,8 @@ nsresult WorkerScriptLoader::FillCompileOptionsForRequest(
   aOptions->setMutedErrors(
       aRequest->GetWorkerLoadContext()->mMutedErrorFlag.value());
 
-  if (aRequest->mSourceMapURL) {
-    aOptions->setSourceMapURL(aRequest->mSourceMapURL->get());
+  if (aRequest->HasSourceMapURL()) {
+    aOptions->setSourceMapURL(aRequest->GetSourceMapURL().get());
   }
 
   return NS_OK;

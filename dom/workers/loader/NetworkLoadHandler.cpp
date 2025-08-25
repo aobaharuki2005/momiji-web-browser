@@ -153,8 +153,8 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
 
     nsAutoCString sourceMapURL;
     if (nsContentUtils::GetSourceMapURL(httpChannel, sourceMapURL)) {
-      loadContext->mRequest->mSourceMapURL =
-          Some(NS_ConvertUTF8toUTF16(sourceMapURL));
+      loadContext->mRequest->SetSourceMapURL(
+          NS_ConvertUTF8toUTF16(sourceMapURL));
     }
   }
 

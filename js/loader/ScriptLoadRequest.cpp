@@ -83,6 +83,7 @@ ScriptLoadRequest::ScriptLoadRequest(
     : mKind(aKind),
       mState(State::CheckingCache),
       mFetchSourceOnly(false),
+      mHasSourceMapURL_(false),
       mReferrerPolicy(aReferrerPolicy),
       mFetchOptions(aFetchOptions),
       mIntegrity(aIntegrity),

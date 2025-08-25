@@ -2632,8 +2632,8 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   }
   aOptions->setIsRunOnce(true);
   aOptions->setNoScriptRval(true);
-  if (aRequest->mSourceMapURL) {
-    aOptions->setSourceMapURL(aRequest->mSourceMapURL->get());
+  if (aRequest->HasSourceMapURL()) {
+    aOptions->setSourceMapURL(aRequest->GetSourceMapURL().get());
   }
   if (aRequest->mOriginPrincipal) {
     nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalForRequest(aRequest);
@@ -4450,7 +4450,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
 
     nsAutoCString sourceMapURL;
     if (nsContentUtils::GetSourceMapURL(httpChannel, sourceMapURL)) {
-      aRequest->mSourceMapURL = Some(NS_ConvertUTF8toUTF16(sourceMapURL));
+      aRequest->SetSourceMapURL(NS_ConvertUTF8toUTF16(sourceMapURL));
     }
 
     nsCOMPtr<nsIClassifiedChannel> classifiedChannel = do_QueryInterface(req);
