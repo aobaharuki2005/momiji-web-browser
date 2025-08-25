@@ -36,18 +36,17 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -92,6 +91,8 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.FloatingActionButton
+import mozilla.components.compose.base.button.PrimaryButton
+import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.textfield.TextFieldColors
 import mozilla.components.compose.base.theme.AcornTheme
@@ -744,21 +745,17 @@ private fun WarnDialog(
             onDismissRequest = { store.dispatch(OpenTabsConfirmationDialogAction.CancelTapped) },
             confirmButton = {
                 TextButton(
+                    text = stringResource(R.string.open_all_warning_confirm),
                     onClick = { store.dispatch(OpenTabsConfirmationDialogAction.ConfirmTapped) },
-                ) {
-                    Text(
-                        text = stringResource(R.string.open_all_warning_confirm),
-                    )
-                }
+                    upperCaseText = false,
+                )
             },
             dismissButton = {
                 TextButton(
+                    text = stringResource(R.string.open_all_warning_cancel),
                     onClick = { store.dispatch(OpenTabsConfirmationDialogAction.CancelTapped) },
-                ) {
-                    Text(
-                        text = stringResource(R.string.open_all_warning_cancel),
-                    )
-                }
+                    upperCaseText = false,
+                )
             },
         )
     }
@@ -778,21 +775,15 @@ private fun AlertDialogDeletionWarning(
         onDismissRequest = onCancelTapped,
         confirmButton = {
             TextButton(
+                text = stringResource(R.string.bookmark_menu_delete_button),
                 onClick = onDeleteTapped,
-            ) {
-                Text(
-                    text = stringResource(R.string.bookmark_menu_delete_button).uppercase(),
-                )
-            }
+            )
         },
         dismissButton = {
             TextButton(
+                text = stringResource(R.string.bookmark_delete_negative),
                 onClick = onCancelTapped,
-            ) {
-                Text(
-                    text = stringResource(R.string.bookmark_delete_negative).uppercase(),
-                )
-            }
+            )
         },
     )
 }
@@ -983,21 +974,18 @@ private fun EmptyList(
                 textAlign = TextAlign.Center,
             )
             if (state is EmptyListState.NotAuthenticated) {
-                TextButton(
+                PrimaryButton(
+                    text = stringResource(R.string.bookmark_empty_list_guest_cta),
                     onClick = { dispatcher(SignIntoSyncClicked) },
-                    colors = ButtonDefaults.buttonColors(containerColor = FirefoxTheme.colors.actionPrimary),
-                    shape = RoundedCornerShape(4.dp),
+                    textColor = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier
                         .heightIn(36.dp)
-                        .fillMaxWidth(),
-                ) {
-                    Text(
-                        text = stringResource(R.string.bookmark_empty_list_guest_cta),
-                        color = FirefoxTheme.colors.textOnColorPrimary,
-                        style = FirefoxTheme.typography.button,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                        .fillMaxWidth()
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(4.dp),
+                        ),
+                )
             }
         }
     }
