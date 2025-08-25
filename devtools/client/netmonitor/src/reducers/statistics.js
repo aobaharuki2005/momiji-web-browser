@@ -18,6 +18,7 @@ const {
   ADD_REQUEST,
   UPDATE_REQUEST,
   CLEAR_REQUESTS,
+  OPEN_STATISTICS,
 } = require("resource://devtools/client/netmonitor/src/constants.js");
 
 function initStatisticsData() {
@@ -38,6 +39,9 @@ function initStatisticsData() {
  */
 function Statistics() {
   return {
+    // Tracks when the statistics panel is open so we only process requests
+    // for the reducer then.
+    mutableStatisticsOpen: false,
     // This list of requests is used to help process the statistics data.
     // Changes to this list should not trigger updates.
     mutableRequests: [],
@@ -56,11 +60,23 @@ function Statistics() {
  */
 function statisticsReducer(state = Statistics(), action) {
   switch (action.type) {
+    case OPEN_STATISTICS: {
+      if (state.mutableStatisticsOpen !== action.open) {
+        state.mutableStatisticsOpen = action.open;
+      }
+      return state;
+    }
     case ADD_REQUEST: {
+      if (!state.mutableStatisticsOpen) {
+        return state;
+      }
       return addRequest(state, action);
     }
 
     case UPDATE_REQUEST: {
+      if (!state.mutableStatisticsOpen) {
+        return state;
+      }
       const index = state.mutableRequests.findIndex(
         request => request.id === action.id
       );
@@ -80,6 +96,7 @@ function statisticsReducer(state = Statistics(), action) {
     case CLEAR_REQUESTS: {
       return {
         ...Statistics(),
+        mutableStatisticsOpen: state.mutableStatisticsOpen,
       };
     }
 
@@ -138,6 +155,7 @@ function updateStatisticsData(state, request) {
   state.mutableUsedRequests.add(request.id);
 
   return {
+    mutableStatisticsOpen: state.mutableStatisticsOpen,
     mutableRequests: state.mutableRequests,
     mutableUsedRequests: state.mutableUsedRequests,
     statisticsData: {
