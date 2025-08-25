@@ -369,13 +369,16 @@ tryselect:
             - 'tools/tryselect/**'
 
 mozbuild:
-    description: mozbuild unit tests
+    matrix:
+        python: ['3.9', '3.11']
+    description: mozbuild unit tests (python{matrix[python]})
     platform:
         - linux2404-64/opt
         - macosx1470-64/opt
         - windows11-64/opt
     treeherder:
-        symbol: mbu
+        symbol: mbu{matrix[python]}
+    use-python: "{matrix[python]}"
     run:
         using: python-test
         subsuite: mozbuild

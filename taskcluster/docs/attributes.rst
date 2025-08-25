@@ -553,3 +553,8 @@ Used by source tests to support chunking and specify a current chunk.
 total_chunks
 =============
 Used by source tests to support chunking and specify a total amount of chunks.
+
+matrix
+======
+Used to generate several tasks from a task, using the substitution given in the
+matrix.
