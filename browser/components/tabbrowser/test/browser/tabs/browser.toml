@@ -74,6 +74,8 @@ support-files = [
 support-files = ["file_double_close_tab.html"]
 tags = "vertical-tabs"
 
+["browser_drag_to_pin.js"]
+
 ["browser_e10s_about_page_triggeringprincipal.js"]
 https_first_disabled = true
 support-files = [
