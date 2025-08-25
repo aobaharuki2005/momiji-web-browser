@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.compose
+package mozilla.components.compose.base
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults.filterChipColors
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -21,8 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import org.mozilla.fenix.R
-import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.compose.base.theme.AcornTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Default layout of a selectable chip.
@@ -48,16 +49,16 @@ fun SelectableChip(
         label = {
             Text(
                 text = text,
-                color = FirefoxTheme.colors.textPrimary,
-                style = if (isSelected) FirefoxTheme.typography.headline8 else FirefoxTheme.typography.body2,
+                color = AcornTheme.colors.textPrimary,
+                style = if (isSelected) AcornTheme.typography.headline8 else AcornTheme.typography.body2,
             )
         },
         leadingIcon = if (isSelected) {
             {
                 Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_checkmark_16),
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_checkmark_16),
                     contentDescription = null,
-                    tint = FirefoxTheme.colors.iconPrimary,
+                    tint = AcornTheme.colors.iconPrimary,
                 )
             }
         } else {
@@ -89,6 +90,10 @@ data class SelectableChipColors(
     val labelColor: Color,
     val borderColor: Color,
 ) {
+
+    /**
+     * @see [SelectableChipColors]
+     */
     companion object {
 
         /**
@@ -97,11 +102,11 @@ data class SelectableChipColors(
         @Composable
         @ReadOnlyComposable
         fun buildColors(
-            selectedContainerColor: Color = FirefoxTheme.colors.actionChipSelected,
-            containerColor: Color = FirefoxTheme.colors.layer1,
-            selectedLabelColor: Color = FirefoxTheme.colors.textPrimary,
-            labelColor: Color = FirefoxTheme.colors.textPrimary,
-            borderColor: Color = FirefoxTheme.colors.borderPrimary,
+            selectedContainerColor: Color = AcornTheme.colors.actionChipSelected,
+            containerColor: Color = AcornTheme.colors.layer1,
+            selectedLabelColor: Color = AcornTheme.colors.textPrimary,
+            labelColor: Color = AcornTheme.colors.textPrimary,
+            borderColor: Color = AcornTheme.colors.borderPrimary,
         ) = SelectableChipColors(
             selectedContainerColor = selectedContainerColor,
             containerColor = containerColor,
@@ -126,11 +131,11 @@ private fun SelectableChipColors.toMaterialChipColors() = filterChipColors(
 @Composable
 @PreviewLightDark
 private fun SelectableChipPreview() {
-    FirefoxTheme {
+    AcornTheme {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(FirefoxTheme.colors.layer1),
+                .background(MaterialTheme.colorScheme.surface),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             SelectableChip(text = "ChirpOne", isSelected = false) {}
@@ -142,11 +147,11 @@ private fun SelectableChipPreview() {
 @Composable
 @PreviewLightDark
 private fun SelectableChipWithCustomColorsPreview() {
-    FirefoxTheme {
+    AcornTheme {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(FirefoxTheme.colors.layer1),
+                .background(MaterialTheme.colorScheme.surface),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             SelectableChip(
@@ -159,7 +164,8 @@ private fun SelectableChipWithCustomColorsPreview() {
                     labelColor = Color.Gray,
                     borderColor = Color.Red,
                 ),
-            ) {}
+                onClick = {},
+            )
 
             SelectableChip(
                 text = "Cyan",
@@ -171,7 +177,8 @@ private fun SelectableChipWithCustomColorsPreview() {
                     labelColor = Color.Gray,
                     borderColor = Color.Red,
                 ),
-            ) {}
+                onClick = {},
+            )
         }
     }
 }
