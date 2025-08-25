@@ -7,6 +7,7 @@
 #ifndef DOM_MEDIA_SYSTEMSERVICES_FAKE_VIDEO_CAPTURE_VIDEO_CAPTURE_FAKE_H_
 #define DOM_MEDIA_SYSTEMSERVICES_FAKE_VIDEO_CAPTURE_VIDEO_CAPTURE_FAKE_H_
 
+#include "MediaEventSource.h"
 #include "modules/video_capture/video_capture_impl.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ThreadSafety.h"
@@ -15,12 +16,16 @@ class nsISerialEventTarget;
 
 namespace mozilla {
 class FakeVideoSource;
+namespace layers {
+class Image;
+}
 }  // namespace mozilla
 
 namespace webrtc::videocapturemodule {
 class VideoCaptureFake : public webrtc::videocapturemodule::VideoCaptureImpl {
  public:
   explicit VideoCaptureFake(nsISerialEventTarget* aTarget);
+  ~VideoCaptureFake() override;
 
   static webrtc::scoped_refptr<webrtc::VideoCaptureModule> Create(
       nsISerialEventTarget* aTarget);
@@ -41,7 +46,11 @@ class VideoCaptureFake : public webrtc::videocapturemodule::VideoCaptureImpl {
       MOZ_EXCLUDES(api_lock_) override;
 
  private:
+  void OnGeneratedImage(const RefPtr<mozilla::layers::Image>& aImage);
+
+  const nsCOMPtr<nsISerialEventTarget> mTarget;
   const RefPtr<mozilla::FakeVideoSource> mSource;
+  mozilla::MediaEventListener mGeneratedImageListener;
 };
 }  // namespace webrtc::videocapturemodule
 
