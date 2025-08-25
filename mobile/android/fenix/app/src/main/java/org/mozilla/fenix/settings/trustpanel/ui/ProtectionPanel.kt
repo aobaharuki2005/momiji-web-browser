@@ -79,7 +79,6 @@ internal fun ProtectionPanel(
     onTrackerBlockedMenuClick: () -> Unit,
     onTrackingProtectionToggleClick: () -> Unit,
     onClearSiteDataMenuClick: () -> Unit,
-    onConnectionSecurityClick: () -> Unit,
     onPrivacySecuritySettingsClick: () -> Unit,
     onAutoplayValueClick: (AutoplayValue) -> Unit,
     onToggleablePermissionClick: (WebsitePermission.Toggleable) -> Unit,
@@ -141,14 +140,13 @@ internal fun ProtectionPanel(
                         id = R.string.connection_security_panel_verified_by,
                         websiteInfoState.certificateName,
                     ),
-                    onClick = onConnectionSecurityClick,
+                    maxDescriptionLines = 2,
                 )
             } else {
                 MenuItem(
                     label = stringResource(id = R.string.connection_security_panel_not_secure),
                     beforeIconPainter = painterResource(id = R.drawable.mozac_ic_lock_slash_critical_24),
                     state = MenuItemState.CRITICAL,
-                    onClick = onConnectionSecurityClick,
                 )
             }
         }
@@ -431,7 +429,6 @@ private fun ProtectionPanelPreview() {
                 onTrackerBlockedMenuClick = {},
                 onTrackingProtectionToggleClick = {},
                 onClearSiteDataMenuClick = {},
-                onConnectionSecurityClick = {},
                 onPrivacySecuritySettingsClick = {},
                 onAutoplayValueClick = {},
                 onToggleablePermissionClick = {},

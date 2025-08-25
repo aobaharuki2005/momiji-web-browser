@@ -63,7 +63,6 @@ import org.mozilla.fenix.settings.trustpanel.store.TrustPanelStore
 import org.mozilla.fenix.settings.trustpanel.store.WebsiteInfoState
 import org.mozilla.fenix.settings.trustpanel.store.WebsitePermission
 import org.mozilla.fenix.settings.trustpanel.ui.ClearSiteDataDialog
-import org.mozilla.fenix.settings.trustpanel.ui.ConnectionSecurityPanel
 import org.mozilla.fenix.settings.trustpanel.ui.ProtectionPanel
 import org.mozilla.fenix.settings.trustpanel.ui.TrackerCategoryDetailsPanel
 import org.mozilla.fenix.settings.trustpanel.ui.TrackersBlockedPanel
@@ -234,7 +233,6 @@ class TrustPanelFragment : BottomSheetDialogFragment() {
                 BackHandler {
                     when (contentState) {
                         Route.TrackersPanel,
-                        Route.ConnectionSecurityPanel,
                         -> contentState = Route.ProtectionPanel
 
                         Route.TrackerCategoryDetailsPanel,
@@ -279,9 +277,6 @@ class TrustPanelFragment : BottomSheetDialogFragment() {
                                     store.dispatch(TrustPanelAction.RequestClearSiteDataDialog)
                                     contentState = Route.ClearSiteDataDialog
                                 },
-                                onConnectionSecurityClick = {
-                                    contentState = Route.ConnectionSecurityPanel
-                                },
                                 onPrivacySecuritySettingsClick = {
                                     store.dispatch(TrustPanelAction.Navigate.PrivacySecuritySettings)
                                 },
@@ -319,15 +314,6 @@ class TrustPanelFragment : BottomSheetDialogFragment() {
                                 bucketedTrackers = bucketedTrackers,
                                 onBackButtonClick = {
                                     contentState = Route.TrackersPanel
-                                },
-                            )
-                        }
-
-                        Route.ConnectionSecurityPanel -> {
-                            ConnectionSecurityPanel(
-                                websiteInfoState = store.state.websiteInfoState,
-                                onBackButtonClick = {
-                                    contentState = Route.ProtectionPanel
                                 },
                             )
                         }
@@ -396,6 +382,5 @@ enum class Route {
     ProtectionPanel,
     TrackersPanel,
     TrackerCategoryDetailsPanel,
-    ConnectionSecurityPanel,
     ClearSiteDataDialog,
 }

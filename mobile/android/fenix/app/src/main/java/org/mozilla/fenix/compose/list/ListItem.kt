@@ -285,6 +285,7 @@ fun FaviconListItem(
  * @param descriptionTextColor [Color] to be applied to the description.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
+ * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
  * be clickable.
  * @param minHeight An optional minimum height for the list item.
@@ -311,6 +312,7 @@ fun IconListItem(
     descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
     maxLabelLines: Int = 1,
     description: String? = null,
+    maxDescriptionLines: Int = 1,
     enabled: Boolean = true,
     minHeight: Dp = LIST_ITEM_HEIGHT,
     onClick: (() -> Unit)? = null,
@@ -333,6 +335,7 @@ fun IconListItem(
         descriptionTextColor = descriptionTextColor,
         maxLabelLines = maxLabelLines,
         description = description,
+        maxDescriptionLines = maxDescriptionLines,
         enabled = enabled,
         minHeight = minHeight,
         onClick = onClick,

@@ -71,6 +71,7 @@ private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(4.dp)
  * @param labelModifier [Modifier] to be applied to the label.
  * @param beforeIconDescription Content description of the icon.
  * @param description An optional description text below the label.
+ * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param stateDescription Extra content description about state to be added after the label
  * and description.
  * @param state The state of the menu item to display.
@@ -93,6 +94,7 @@ internal fun MenuItem(
     labelModifier: Modifier = Modifier,
     beforeIconDescription: String? = null,
     description: String? = null,
+    maxDescriptionLines: Int = 1,
     stateDescription: String = "",
     state: MenuItemState = MenuItemState.ENABLED,
     descriptionState: MenuItemState = MenuItemState.ENABLED,
@@ -147,6 +149,7 @@ internal fun MenuItem(
         labelTextColor = labelTextColor,
         maxLabelLines = 2,
         description = description,
+        maxDescriptionLines = maxDescriptionLines,
         descriptionTextColor = descriptionTextColor,
         enabled = enabled,
         minHeight = if (description != null) {
