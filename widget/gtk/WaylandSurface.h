@@ -12,7 +12,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Atomics.h"
 #include "WaylandSurfaceLock.h"
-#include "mozilla/GRefPtr.h"
 
 /* Workaround for bug at wayland-util.h,
  * present in wayland-devel < 1.12
@@ -179,6 +178,7 @@ class WaylandSurface final {
                              const gfx::IntRegion& aRegion);
   void SetOpaqueLocked(const WaylandSurfaceLock& aProofOfLock);
   void ClearOpaqueRegionLocked(const WaylandSurfaceLock& aProofOfLock);
+  void OpaqueCallbackHandler();
 
   bool DisableUserInputLocked(const WaylandSurfaceLock& aProofOfLock);
   void InvalidateRegionLocked(const WaylandSurfaceLock& aProofOfLock,
@@ -409,6 +409,9 @@ class WaylandSurface final {
 
   // Frame callback handler called every frame
   FrameCallback mFrameCallbackHandler;
+
+  wl_region* mPendingOpaqueRegion = nullptr;
+  wl_callback* mOpaqueRegionFrameCallback = nullptr;
 
   // WaylandSurface is used from Compositor/Rendering/Main threads.
   mozilla::Mutex mMutex{"WaylandSurface"};
