@@ -57,8 +57,7 @@ class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
 
 class DeliverFrameRunnable;
 
-class CamerasParent final : public PCamerasParent,
-                            private webrtc::VideoInputFeedBack {
+class CamerasParent final : public PCamerasParent {
  public:
   using ShutdownMozPromise = media::ShutdownBlockingTicket::ShutdownMozPromise;
 
@@ -141,8 +140,7 @@ class CamerasParent final : public PCamerasParent,
   void StopCapture(const CaptureEngine& aCapEngine, int aCaptureId);
   int ReleaseCapture(const CaptureEngine& aCapEngine, int aCaptureId);
 
-  // VideoInputFeedBack
-  void OnDeviceChange() override;
+  void OnDeviceChange();
 
   // Creates a new DeviceInfo or returns an existing DeviceInfo for given
   // capture engine. Returns a nullptr in case capture engine failed to be
@@ -185,6 +183,11 @@ class CamerasParent final : public PCamerasParent,
 
   std::map<nsCString, std::map<uint32_t, webrtc::VideoCaptureCapability>>
       mAllCandidateCapabilities;
+
+  // Listener for the camera VideoEngine::DeviceChangeEvent(). Video capture
+  // thread only.
+  MediaEventListener mDeviceChangeEventListener;
+  bool mDeviceChangeEventListenerConnected = false;
 
   // While alive, ensure webrtc logging is hooked up to MOZ_LOG. Main thread
   // only.
