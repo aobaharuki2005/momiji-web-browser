@@ -285,13 +285,10 @@ mozilla::ipc::IPCResult CamerasChild::RecvReplyGetCaptureCapability(
   return IPC_OK();
 }
 
-int CamerasChild::GetCaptureDevice(CaptureEngine aCapEngine,
-                                   unsigned int list_number,
-                                   char* device_nameUTF8,
-                                   const unsigned int device_nameUTF8Length,
-                                   char* unique_idUTF8,
-                                   const unsigned int unique_idUTF8Length,
-                                   bool* scary) {
+int CamerasChild::GetCaptureDevice(
+    CaptureEngine aCapEngine, unsigned int list_number, char* device_nameUTF8,
+    const unsigned int device_nameUTF8Length, char* unique_idUTF8,
+    const unsigned int unique_idUTF8Length, bool* scary) {
   LOG(("%s", __PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod<CaptureEngine, unsigned int>(
