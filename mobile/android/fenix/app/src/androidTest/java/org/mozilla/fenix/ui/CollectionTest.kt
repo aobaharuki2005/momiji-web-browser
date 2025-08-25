@@ -67,6 +67,7 @@ class CollectionTest : TestSetup() {
             longClickTab(firstWebPage.title)
             selectTab(secondWebPage.title, numberOfSelectedTabs = 2)
             verifyTabsMultiSelectionCounter(2)
+        }.openThreeDotMenu {
         }.clickSaveCollection {
             typeCollectionNameAndSave(collectionName)
         }
@@ -434,6 +435,7 @@ class CollectionTest : TestSetup() {
             verifyTabsMultiSelectionCounter(1)
             selectTab(secondWebPage.title, numberOfSelectedTabs = 2)
             verifyTabsMultiSelectionCounter(2)
+        }.openThreeDotMenu {
         }.clickSaveCollection {
             typeCollectionNameAndSave(collectionName)
             verifySnackBarText("Collection saved!")

@@ -43,6 +43,8 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.menu.DropdownMenu
+import mozilla.components.compose.base.menu.MenuItem
+import mozilla.components.compose.base.text.Text
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Banner
 import org.mozilla.fenix.tabstray.Page
@@ -51,7 +53,6 @@ import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayState.Mode
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
-import org.mozilla.fenix.tabstray.ext.generateMultiSelectBannerMenuItems
 import org.mozilla.fenix.tabstray.ui.tabstray.TabsTray
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.max
@@ -350,8 +351,8 @@ private fun MultiSelectBanner(
     var showMenu by remember { mutableStateOf(false) }
     val menuItems = generateMultiSelectBannerMenuItems(
         shouldShowInactiveButton = shouldShowInactiveButton,
-        onBookmarkSelectedTabsClick = onBookmarkSelectedTabsClick,
-        onCloseSelectedTabsClick = onCloseSelectedTabsClick,
+        onShareSelectedTabs = onShareSelectedTabs,
+        onSaveToCollectionsClick = onSaveToCollectionsClick,
         onMakeSelectedTabsInactive = onMakeSelectedTabsInactive,
     )
 
@@ -377,32 +378,32 @@ private fun MultiSelectBanner(
         },
         actions = {
             IconButton(
-                onClick = onSaveToCollectionsClick,
-                modifier = Modifier.testTag(TabsTrayTestTag.COLLECTIONS_BUTTON),
+                onClick = onBookmarkSelectedTabsClick,
                 enabled = buttonsEnabled,
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_tab_collection),
+                    painter = painterResource(id = R.drawable.ic_bookmark_outline),
                     contentDescription = stringResource(
-                        id = R.string.tab_tray_collection_button_multiselect_content_description,
+                        id = R.string.tab_manager_multiselect_menu_item_bookmark_content_description,
                     ),
                 )
             }
 
             IconButton(
-                onClick = onShareSelectedTabs,
+                onClick = onCloseSelectedTabsClick,
                 enabled = buttonsEnabled,
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_share),
+                    painter = painterResource(id = R.drawable.mozac_ic_delete_24),
                     contentDescription = stringResource(
-                        id = R.string.tab_tray_multiselect_share_content_description,
+                        id = R.string.tab_manager_multiselect_menu_item_close_content_description,
                     ),
                 )
             }
 
             IconButton(
                 onClick = { showMenu = true },
+                modifier = Modifier.testTag(TabsTrayTestTag.THREE_DOT_BUTTON),
                 enabled = buttonsEnabled,
             ) {
                 DropdownMenu(
@@ -422,6 +423,34 @@ private fun MultiSelectBanner(
             actionIconContentColor = buttonTint,
         ),
     )
+}
+
+private fun generateMultiSelectBannerMenuItems(
+    shouldShowInactiveButton: Boolean,
+    onShareSelectedTabs: () -> Unit,
+    onSaveToCollectionsClick: () -> Unit,
+    onMakeSelectedTabsInactive: () -> Unit,
+): List<MenuItem> {
+    val menuItems = mutableListOf(
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.tab_manager_multiselect_menu_item_share),
+            onClick = onShareSelectedTabs,
+        ),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.tab_manager_multiselect_menu_item_add_to_collection),
+            testTag = TabsTrayTestTag.COLLECTIONS_BUTTON,
+            onClick = onSaveToCollectionsClick,
+        ),
+    )
+    if (shouldShowInactiveButton) {
+        menuItems.add(
+            MenuItem.TextItem(
+                text = Text.Resource(R.string.inactive_tabs_menu_item),
+                onClick = onMakeSelectedTabsInactive,
+            ),
+        )
+    }
+    return menuItems
 }
 
 @PreviewLightDark

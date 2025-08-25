@@ -338,6 +338,10 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
             selectTab(tab, numberOfSelectedTabs = tabTitles.indexOf(tab) + 1)
         }
 
+        Log.i(TAG, "createCollection: Trying to click the three dot button")
+        composeTestRule.threeDotButton().performClick()
+        Log.i(TAG, "createCollection: Clicked the three dot button")
+
         clickCollectionsButton(composeTestRule) {
             if (!firstCollection) {
                 clickAddNewCollection()
