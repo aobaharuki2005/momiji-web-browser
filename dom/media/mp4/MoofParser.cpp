@@ -139,13 +139,13 @@ class BlockingStream : public ByteStream,
     DDLINKCHILD("stream", aStream);
   }
 
-  bool ReadAt(int64_t offset, void* data, size_t size,
-              size_t* bytes_read) override {
+  nsresult ReadAt(int64_t offset, void* data, size_t size,
+                  size_t* bytes_read) override {
     return mStream->ReadAt(offset, data, size, bytes_read);
   }
 
-  bool CachedReadAt(int64_t offset, void* data, size_t size,
-                    size_t* bytes_read) override {
+  nsresult CachedReadAt(int64_t offset, void* data, size_t size,
+                        size_t* bytes_read) override {
     return mStream->ReadAt(offset, data, size, bytes_read);
   }
 
@@ -219,9 +219,9 @@ already_AddRefed<mozilla::MediaByteBuffer> MoofParser::Metadata() {
 
   RefPtr<BlockingStream> stream = new BlockingStream(mSource);
   size_t read;
-  bool rv = stream->ReadAt(moov.mStart, metadata->Elements(),
-                           moovLength.value(), &read);
-  if (!rv || read != moovLength.value()) {
+  nsresult rv = stream->ReadAt(moov.mStart, metadata->Elements(),
+                               moovLength.value(), &read);
+  if (NS_FAILED(rv) || read != moovLength.value()) {
     LOG_WARN(Moof, "Failed to read moov while trying to parse Metadata.");
     return nullptr;
   }

@@ -137,17 +137,17 @@ Orientation GetImageOrientation(const Mp4parseAvifInfo& aInfo) {
            static_cast<int>(mozRot), static_cast<int>(mozFlip)));
   return Orientation{mozRot, mozFlip};
 }
-bool AVIFDecoderStream::ReadAt(int64_t offset, void* data, size_t size,
-                               size_t* bytes_read) {
+nsresult AVIFDecoderStream::ReadAt(int64_t offset, void* data, size_t size,
+                                   size_t* bytes_read) {
   size = std::min(size, size_t(mBuffer->length() - offset));
 
   if (size <= 0) {
-    return false;
+    return NS_ERROR_DOM_MEDIA_RANGE_ERR;
   }
 
   memcpy(data, mBuffer->begin() + offset, size);
   *bytes_read = size;
-  return true;
+  return NS_OK;
 }
 
 bool AVIFDecoderStream::Length(int64_t* size) {

@@ -130,9 +130,9 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
   }
 
   size_t bytesRead;
-  if (!mIndex->mSource->ReadAt(sample->mOffset, writer->Data(), sample->Size(),
-                               &bytesRead) ||
-      bytesRead != sample->Size()) {
+  nsresult rv = mIndex->mSource->ReadAt(sample->mOffset, writer->Data(),
+                                        sample->Size(), &bytesRead);
+  if (NS_FAILED(rv) || bytesRead != sample->Size()) {
     return nullptr;
   }
 
@@ -210,9 +210,9 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     // The size comes from an 8 bit field
     AutoTArray<uint8_t, 256> cencAuxInfo;
     cencAuxInfo.SetLength(s->mCencRange.Length());
-    if (!mIndex->mSource->ReadAt(s->mCencRange.mStart, cencAuxInfo.Elements(),
-                                 cencAuxInfo.Length(), &bytesRead) ||
-        bytesRead != cencAuxInfo.Length()) {
+    rv = mIndex->mSource->ReadAt(s->mCencRange.mStart, cencAuxInfo.Elements(),
+                                 cencAuxInfo.Length(), &bytesRead);
+    if (NS_FAILED(rv) || bytesRead != cencAuxInfo.Length()) {
       return nullptr;
     }
     BufferReader reader(cencAuxInfo);

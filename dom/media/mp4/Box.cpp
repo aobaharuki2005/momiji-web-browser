@@ -65,8 +65,8 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
   }
 
   size_t bytes;
-  if (!mContext->mSource->CachedReadAt(aOffset, header, sizeof(header),
-                                       &bytes) ||
+  if (NS_FAILED(mContext->mSource->CachedReadAt(aOffset, header, sizeof(header),
+                                                &bytes)) ||
       bytes != sizeof(header)) {
     return;
   }
@@ -81,8 +81,8 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
                                   headerRange.mEnd + sizeof(bigLength));
     if ((mParent && !mParent->mRange.Contains(bigLengthRange)) ||
         !byteRange->Contains(bigLengthRange) ||
-        !mContext->mSource->CachedReadAt(aOffset + sizeof(header), bigLength,
-                                         sizeof(bigLength), &bytes) ||
+        NS_FAILED(mContext->mSource->CachedReadAt(
+            aOffset + sizeof(header), bigLength, sizeof(bigLength), &bytes)) ||
         bytes != sizeof(bigLength)) {
       return;
     }
@@ -139,8 +139,8 @@ nsTArray<uint8_t> Box::ReadCompleteBox() const {
   nsTArray<uint8_t> out(length);
   out.SetLength(length);
   size_t bytesRead = 0;
-  if (!mContext->mSource->CachedReadAt(mRange.mStart, out.Elements(), length,
-                                       &bytesRead) ||
+  if (NS_FAILED(mContext->mSource->CachedReadAt(mRange.mStart, out.Elements(),
+                                                length, &bytesRead)) ||
       bytesRead != length) {
     // Byte ranges are being reported incorrectly
     NS_WARNING("Read failed in mozilla::Box::ReadCompleteBox()");
@@ -166,8 +166,8 @@ bool Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const {
   }
   aDest->SetLength(length);
   size_t bytes;
-  if (!mContext->mSource->CachedReadAt(mChildOffset, aDest->Elements(),
-                                       aDest->Length(), &bytes) ||
+  if (NS_FAILED(mContext->mSource->CachedReadAt(mChildOffset, aDest->Elements(),
+                                                aDest->Length(), &bytes)) ||
       bytes != aDest->Length()) {
     // Byte ranges are being reported incorrectly
     NS_WARNING("Read failed in mozilla::Box::Read()");
@@ -200,7 +200,8 @@ ByteSlice Box::ReadAsSlice() {
 
   uint8_t* p = mContext->mAllocator.Allocate(size_t(length));
   size_t bytes;
-  if (!mContext->mSource->CachedReadAt(mChildOffset, p, length, &bytes) ||
+  if (NS_FAILED(
+          mContext->mSource->CachedReadAt(mChildOffset, p, length, &bytes)) ||
       bytes != length) {
     // Byte ranges are being reported incorrectly
     NS_WARNING("Read failed in mozilla::Box::ReadAsSlice()");
