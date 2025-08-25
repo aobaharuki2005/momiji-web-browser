@@ -44,8 +44,7 @@ enum RegisterID : uint8_t {
 
 enum HRegisterID { ah = rsp, ch = rbp, dh = rsi, bh = rdi };
 
-enum XMMRegisterID : uint8_t
-{
+enum XMMRegisterID : uint8_t {
   xmm0 = 0,
   xmm1,
   xmm2,
