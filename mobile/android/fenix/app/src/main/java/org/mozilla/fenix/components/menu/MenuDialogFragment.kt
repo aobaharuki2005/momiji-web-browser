@@ -480,8 +480,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     var shouldShowMenuBanner by
                     remember { mutableStateOf(settings.shouldShowMenuBanner) }
 
-                    var showBanner = shouldShowMenuBanner && !defaultBrowser
-
                     BackHandler {
                         this@MenuDialogFragment.dismissAllowingStateLoss()
                     }
@@ -566,7 +564,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     canGoForward = selectedTab?.content?.canGoForward ?: true,
                                     extensionsMenuItemDescription = extensionsMenuItemDescription,
                                     scrollState = scrollState,
-                                    showBanner = showBanner,
+                                    showBanner = shouldShowMenuBanner && !defaultBrowser,
                                     webExtensionMenuCount = webExtensionsCount,
                                     allWebExtensionsDisabled = allWebExtensionsDisabled,
                                     onMozillaAccountButtonClick = {
@@ -603,8 +601,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     onBannerClick = {
                                         store.dispatch(MenuAction.MenuBanner)
                                         (context as? Activity)?.openSetDefaultBrowserOption()
-                                        showBanner = false
-                                        shouldShowMenuBanner = false
                                     },
                                     onBannerDismiss = {
                                         store.dispatch(MenuAction.DismissMenuBanner)
