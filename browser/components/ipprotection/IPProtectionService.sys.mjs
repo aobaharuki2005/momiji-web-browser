@@ -458,6 +458,9 @@ class IPProtectionServiceSingleton extends EventTarget {
         })
       );
       this.isEnrolled = false;
+      if (this.isActive) {
+        this.stop();
+      }
       this.hasUpgraded = false;
       await this.updateHasUpgradedStatus(undefined, true /* skipCheck */);
     }

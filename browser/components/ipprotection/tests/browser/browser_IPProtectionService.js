@@ -333,3 +333,54 @@ add_task(async function test_IPProtectionService_retry_errors() {
   await cleanupAlpha();
   cleanupService();
 });
+
+/**
+ * Tests the proxy is stopped if user signs out with it active.
+ */
+add_task(async function test_IPProtectionService_stop_on_signout() {
+  setupService({
+    isSignedIn: true,
+    canEnroll: true,
+  });
+  let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
+
+  await IPProtectionService.updateSignInStatus();
+
+  let content = await openPanel();
+
+  Assert.ok(
+    BrowserTestUtils.isVisible(content),
+    "ipprotection content component should be present"
+  );
+  Assert.ok(
+    content.connectionToggleEl,
+    "Status card connection toggle should be present"
+  );
+
+  let startedEventPromise = BrowserTestUtils.waitForEvent(
+    IPProtectionService,
+    "IPProtectionService:Started"
+  );
+  content.connectionToggleEl.click();
+
+  await startedEventPromise;
+
+  Assert.ok(IPProtectionService.isActive, "Proxy is active");
+
+  let vpnOffPromise = BrowserTestUtils.waitForEvent(
+    IPProtectionService,
+    "IPProtectionService:Stopped"
+  );
+
+  setupService({
+    isSignedIn: false,
+  });
+  let signedOut = IPProtectionService.updateSignInStatus();
+  await Promise.all([signedOut, vpnOffPromise]);
+
+  Assert.ok(!IPProtectionService.isActive, "Proxy has stopped");
+
+  await closePanel();
+  await cleanupAlpha();
+  cleanupService();
+});
