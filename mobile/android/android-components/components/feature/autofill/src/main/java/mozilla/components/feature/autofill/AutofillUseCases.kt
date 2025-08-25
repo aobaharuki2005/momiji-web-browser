@@ -4,10 +4,8 @@
 
 package mozilla.components.feature.autofill
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.provider.Settings
 import android.view.autofill.AutofillManager
 import androidx.core.net.toUri

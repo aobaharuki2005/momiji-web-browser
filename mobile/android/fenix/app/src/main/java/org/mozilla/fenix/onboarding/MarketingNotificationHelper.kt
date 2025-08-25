@@ -7,7 +7,6 @@ package org.mozilla.fenix.onboarding
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
 import org.mozilla.fenix.R
 
 // Channel ID was not updated when it was renamed to marketing.  Thus, we'll have to continue

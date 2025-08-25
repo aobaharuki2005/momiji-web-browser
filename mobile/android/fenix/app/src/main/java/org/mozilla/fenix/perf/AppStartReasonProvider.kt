@@ -12,7 +12,6 @@ import android.os.Looper
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import mozilla.components.support.base.android.DefaultProcessInfoProvider
 import mozilla.components.support.base.android.ProcessInfoProvider
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.Metrics

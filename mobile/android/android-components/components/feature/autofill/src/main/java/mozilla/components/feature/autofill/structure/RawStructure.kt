@@ -5,9 +5,7 @@
 package mozilla.components.feature.autofill.structure
 
 import android.app.assist.AssistStructure
-import android.os.Build
 import android.view.autofill.AutofillId
-import androidx.annotation.RequiresApi
 
 /**
  * A raw view structure provided by an application - to be parsed into a [ParsedStructure].

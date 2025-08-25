@@ -4,7 +4,6 @@
 
 package mozilla.components.support.base.ext
 
-import android.os.Build
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationManagerCompat
 import junit.framework.TestCase.assertFalse
@@ -14,7 +13,6 @@ import mozilla.components.support.test.whenever
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
 class NotificationManagerCompatTest {

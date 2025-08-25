@@ -18,7 +18,6 @@ import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before

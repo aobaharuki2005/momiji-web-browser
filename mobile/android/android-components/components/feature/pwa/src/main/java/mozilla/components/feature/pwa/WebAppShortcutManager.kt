@@ -13,8 +13,6 @@ import android.content.Intent.CATEGORY_HOME
 import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.ShortcutManager
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.getSystemService
 import androidx.core.content.pm.ShortcutInfoCompat

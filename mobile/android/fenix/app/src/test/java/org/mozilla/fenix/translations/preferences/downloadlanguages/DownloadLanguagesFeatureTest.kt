@@ -4,7 +4,6 @@
 package org.mozilla.fenix.translations.preferences.downloadlanguages
 
 import android.net.ConnectivityManager
-import android.os.Build
 import androidx.core.net.ConnectivityManagerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
@@ -18,7 +17,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
-import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class DownloadLanguagesFeatureTest {

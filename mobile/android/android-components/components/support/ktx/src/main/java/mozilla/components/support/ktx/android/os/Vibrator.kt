@@ -5,8 +5,6 @@
 package mozilla.components.support.ktx.android.os
 
 import android.Manifest.permission.VIBRATE
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.VibrationEffect
 import android.os.VibrationEffect.DEFAULT_AMPLITUDE
 import android.os.Vibrator
