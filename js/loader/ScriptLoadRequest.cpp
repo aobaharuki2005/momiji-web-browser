@@ -62,8 +62,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mOriginPrincipal, mBaseURL,
                                   mLoadedScript, mCacheInfo, mLoadContext)
-  tmp->mScriptForBytecodeEncoding = nullptr;
-  tmp->DropBytecodeCacheReferences();
+  tmp->mScriptForCache = nullptr;
+  tmp->DropCacheReferences();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
@@ -72,7 +72,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptForBytecodeEncoding)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptForCache)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ScriptLoadRequest::ScriptLoadRequest(
@@ -110,7 +110,7 @@ void ScriptLoadRequest::Cancel() {
   }
 }
 
-void ScriptLoadRequest::DropBytecodeCacheReferences() { mCacheInfo = nullptr; }
+void ScriptLoadRequest::DropCacheReferences() { mCacheInfo = nullptr; }
 
 bool ScriptLoadRequest::HasScriptLoadContext() const {
   return HasLoadContext() && mLoadContext->IsWindowContext();
@@ -233,11 +233,11 @@ void ScriptLoadRequest::SetPendingFetchingError() {
   mState = State::PendingFetchingError;
 }
 
-void ScriptLoadRequest::MarkScriptForBytecodeEncoding(JSScript* aScript) {
+void ScriptLoadRequest::MarkScriptForCache(JSScript* aScript) {
   MOZ_ASSERT(!IsModuleRequest());
-  MOZ_ASSERT(!mScriptForBytecodeEncoding);
-  MarkForBytecodeEncoding();
-  mScriptForBytecodeEncoding = aScript;
+  MOZ_ASSERT(!mScriptForCache);
+  MarkForCache();
+  mScriptForCache = aScript;
   HoldJSObjects(this);
 }
 

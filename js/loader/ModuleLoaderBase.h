@@ -59,14 +59,14 @@ class ModuleScript;
  *
  *     * Error Logging
  *     * Generating the compile options
- *     * Optional: Bytecode Encoding
+ *     * Optional: Caching
  *
  * ScriptLoaderInterface does not provide any implementations.
  * It enables the ModuleLoaderBase to reference back to the behavior implemented
  * by a given ScriptLoader.
  *
- * Not all methods will be used by all ModuleLoaders. For example, Bytecode
- * Encoding does not apply to workers, as we only work with source text there.
+ * Not all methods will be used by all ModuleLoaders. For example, caching
+ * does not apply to workers, as we only work with source text there.
  * Fully virtual methods are implemented by all.
  *
  */
@@ -104,15 +104,15 @@ class ScriptLoaderInterface : public nsISupports {
       JSContext* cx, ScriptLoadRequest* aRequest, CompileOptions* aOptions,
       MutableHandle<JSScript*> aIntroductionScript) = 0;
 
-  virtual void MaybePrepareModuleForBytecodeEncodingBeforeExecute(
+  virtual void MaybePrepareModuleForCacheBeforeExecute(
       JSContext* aCx, ModuleLoadRequest* aRequest) {}
 
-  virtual nsresult MaybePrepareModuleForBytecodeEncodingAfterExecute(
+  virtual nsresult MaybePrepareModuleForCacheAfterExecute(
       ModuleLoadRequest* aRequest, nsresult aRv) {
     return NS_OK;
   }
 
-  virtual void MaybeTriggerBytecodeEncoding() {}
+  virtual void MaybeUpdateCache() {}
 };
 
 class ModuleMapKey : public PLDHashEntryHdr {

@@ -1618,7 +1618,7 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   Rooted<Value> rval(aCx);
 
   // TODO: Bug 1973321: Prepare Bytecode encoding for dynamic import
-  mLoader->MaybePrepareModuleForBytecodeEncodingBeforeExecute(aCx, aRequest);
+  mLoader->MaybePrepareModuleForCacheBeforeExecute(aCx, aRequest);
 
   bool ok = ModuleEvaluate(aCx, module, &rval);
 
@@ -1647,10 +1647,9 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
     LOG(("ScriptLoadRequest (%p):   evaluation failed on throw", aRequest));
   }
 
-  rv = mLoader->MaybePrepareModuleForBytecodeEncodingAfterExecute(aRequest,
-                                                                  NS_OK);
+  rv = mLoader->MaybePrepareModuleForCacheAfterExecute(aRequest, NS_OK);
 
-  mLoader->MaybeTriggerBytecodeEncoding();
+  mLoader->MaybeUpdateCache();
 
   return rv;
 }

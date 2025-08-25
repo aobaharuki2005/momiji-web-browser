@@ -266,7 +266,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
       return NS_ERROR_FAILURE;
     }
 
-    if (aRequest->PassedConditionForBytecodeEncoding()) {
+    if (aRequest->PassedConditionForCache()) {
       bool alreadyStarted;
       if (!JS::StartCollectingDelazifications(aCx, aModuleOut, stencil,
                                               alreadyStarted)) {
@@ -315,7 +315,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     return NS_ERROR_FAILURE;
   }
 
-  if (aRequest->PassedConditionForBytecodeEncoding()) {
+  if (aRequest->PassedConditionForCache()) {
     bool alreadyStarted;
     if (!JS::StartCollectingDelazifications(aCx, aModuleOut, stencil,
                                             alreadyStarted)) {
