@@ -1,16 +1,12 @@
 "use strict";
 
-const {
-  thompsonSampleSort,
-  sortKeysValues,
-  sampleBeta,
-  sampleGamma,
-  sampleNormal,
-} = ChromeUtils.importESModule("chrome://global/content/ml/ThomSample.mjs");
-
 const eps = 1e-10;
 
 add_task(function test_sortKeysvalues() {
+  const { sortKeysValues } = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/ThomSample.mjs"
+  );
+
   const scores = [1.0, 2.0, 3.0];
   const keys = ["a", "b", "c"];
 
@@ -31,6 +27,10 @@ function makeRandomStub(values) {
 }
 
 add_task(function test_sampleGamma() {
+  const { sampleGamma } = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/ThomSample.mjs"
+  );
+
   const testCases = [
     {
       a: 2.0,
@@ -53,6 +53,10 @@ add_task(function test_sampleGamma() {
 });
 
 add_task(function test_sampleNormal() {
+  const { sampleNormal } = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/ThomSample.mjs"
+  );
+
   const testCases = [
     {
       u: 0.85,
