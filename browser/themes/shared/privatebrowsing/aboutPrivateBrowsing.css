@@ -6,7 +6,6 @@
 
 @media not (prefers-contrast) {
   html.private {
-    --text-color: white;
     --background-color-canvas: #25003e;
     --link-color: white;
     --link-color-hover: white;
@@ -15,6 +14,8 @@
     --in-content-banner-text-color: #0c0c0d;
     --button-background-color-hover: rgba(12, 12, 13, 0.1);
     --button-background-color-active: rgba(12, 12, 13, 0.15);
+
+    color-scheme: dark;
   }
 }
 
