@@ -1227,6 +1227,13 @@
   value: false
   mirror: always
 
+# On Windows, whether to bring the foreground window to the front when printing
+# to avoid a DLP agent stealing focus and cancelling the print (bug 1980225)
+- name: browser.contentanalysis.print_set_foreground_window
+  type: bool
+  value: true
+  mirror: always
+
 # What content analysis should return if there is a problem communicating
 # with the agent. (see DefaultResponse enum in ContentAnalysis.h)
 # Make sure these stay in sync with the out-of-range check in Policies.sys.mjs.
@@ -1313,14 +1320,6 @@
 - name: browser.contentanalysis.max_connections
   type: uint32_t
   value: 32
-  mirror: always
-
-# Enable an experiment where printing on Windows will disallow other
-# applications to take focus, to avoid a bug in printing-to-file.
-# This pref is relevant whether or not content analysis is used.
-- name: browser.contentanalysis.windows_lock_foreground_window_on_print
-  type: bool
-  value: true
   mirror: always
 
 # Should Firefox use content analysis for clipboard operations?
