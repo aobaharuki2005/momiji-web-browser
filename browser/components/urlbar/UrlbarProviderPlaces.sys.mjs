@@ -99,7 +99,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  ProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
@@ -657,7 +657,7 @@ Search.prototype = {
     // Used by stop() to interrupt an eventual running statement.
     this.interrupt = () => {
       // Interrupt any ongoing statement to run the search sooner.
-      if (!lazy.UrlbarProvidersManager.interruptLevel) {
+      if (!lazy.ProvidersManager.interruptLevel) {
         conn.interrupt();
       }
     };

@@ -8,7 +8,7 @@
  */
 
 /**
- * @typedef {import("UrlbarProvidersManager.sys.mjs").Query} Query
+ * @import {Query, ProvidersManager} from "UrlbarProvidersManager.sys.mjs"
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -2391,7 +2391,7 @@ export class UrlbarQueryContext {
     }
 
     /**
-     * @type {[string, (any) => boolean, any?][]}
+     * @type {[string, (v: any) => boolean, any?][]}
      */
     const optionalProperties = [
       ["currentPage", v => typeof v == "string" && !!v.length],
@@ -2439,6 +2439,12 @@ export class UrlbarQueryContext {
    *   Whether or not to allow providers to include autofill results.
    */
   allowAutofill;
+
+  /**
+   * @type {boolean}
+   *   Whether or not the query has been cancelled.
+   */
+  canceled = false;
 
   /**
    * @type {string}

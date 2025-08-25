@@ -4,6 +4,10 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
+/**
+ * @import {ProvidersManager} from "resource:///modules/UrlbarProvidersManager.sys.mjs"
+ */
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -79,6 +83,9 @@ export class UrlbarController {
     this.input = options.input;
     this.browserWindow = options.input.window;
 
+    /**
+     * @type {ProvidersManager}
+     */
     this.manager = options.manager || lazy.UrlbarProvidersManager;
 
     this._listeners = new Set();
