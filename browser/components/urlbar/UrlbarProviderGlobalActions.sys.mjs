@@ -49,7 +49,7 @@ let globalActionsProviders = [
 /**
  * A provider that lets the user view all available global actions for a query.
  */
-class ProviderGlobalActions extends UrlbarProvider {
+export class UrlbarProviderGlobalActions extends UrlbarProvider {
   get name() {
     return "UrlbarProviderGlobalActions";
   }
@@ -228,5 +228,3 @@ class ProviderGlobalActions extends UrlbarProvider {
     return viewUpdate;
   }
 }
-
-export var UrlbarProviderGlobalActions = new ProviderGlobalActions();

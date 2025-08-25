@@ -16,13 +16,9 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderGlobalActions:
-    "resource:///modules/UrlbarProviderGlobalActions.sys.mjs",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-  UrlbarProviderTabToSearch:
-    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
@@ -854,7 +850,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
-    if (result.providerName == lazy.UrlbarProviderTabToSearch.name) {
+    if (result.providerName == "TabToSearch") {
       // Discard the result if a tab-to-search result was added already.
       if (!state.canAddTabToSearch) {
         return false;
@@ -1151,7 +1147,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       this._canAddResult(result, state)
     ) {
       let span = UrlbarUtils.getSpanForResult(result);
-      if (result.providerName == lazy.UrlbarProviderTabToSearch.name) {
+      if (result.providerName == "TabToSearch") {
         state.maxTabToSearchResultSpan = Math.max(
           state.maxTabToSearchResultSpan,
           span
@@ -1319,7 +1315,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Avoid multiple tab-to-search results.
     // TODO (Bug 1670185): figure out better strategies to manage this case.
-    if (result.providerName == lazy.UrlbarProviderTabToSearch.name) {
+    if (result.providerName == "TabToSearch") {
       state.canAddTabToSearch = false;
     }
 
@@ -1407,14 +1403,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // provider priority.
       // GlobalActions == TabToSearch (legacy) > QuickSuggest > Other providers
       if (
-        a.providerName === lazy.UrlbarProviderTabToSearch.name ||
-        a.providerName === lazy.UrlbarProviderGlobalActions.name
+        a.providerName === "TabToSearch" ||
+        a.providerName === "UrlbarProviderGlobalActions"
       ) {
         return 1;
       }
       if (
-        b.providerName === lazy.UrlbarProviderTabToSearch.name ||
-        b.providerName === lazy.UrlbarProviderGlobalActions.name
+        b.providerName === "TabToSearch" ||
+        b.providerName === "UrlbarProviderGlobalActions"
       ) {
         return -1;
       }

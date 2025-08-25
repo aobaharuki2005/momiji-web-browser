@@ -94,19 +94,22 @@ add_task(async function heuristicDeduplication() {
     [SUGGESTION_URL_WWW, false],
     ["http://exampledomain.com/", true],
   ];
+  let quickSuggestProviderInstance = UrlbarProvidersManager.getProvider(
+    UrlbarProviderQuickSuggest.name
+  );
 
   // Stub `UrlbarProviderQuickSuggest.startQuery()` so we can collect the
   // results it adds for each query.
   let addedResults = [];
   let sandbox = sinon.createSandbox();
-  let startQueryStub = sandbox.stub(UrlbarProviderQuickSuggest, "startQuery");
+  let startQueryStub = sandbox.stub(quickSuggestProviderInstance, "startQuery");
   startQueryStub.callsFake((queryContext, add) => {
     let fakeAdd = (provider, result) => {
       addedResults.push(result);
       add(provider, result);
     };
     return startQueryStub.wrappedMethod.call(
-      UrlbarProviderQuickSuggest,
+      quickSuggestProviderInstance,
       queryContext,
       fakeAdd
     );
@@ -117,7 +120,7 @@ add_task(async function heuristicDeduplication() {
 
     // Do a search and check the results.
     let context = createContext(SUGGESTION_SEARCH_STRING, {
-      providers: [UrlbarProviderQuickSuggest.name, UrlbarProviderAutofill.name],
+      providers: [UrlbarProviderQuickSuggest.name, "Autofill"],
       isPrivate: false,
     });
     const EXPECTED_AUTOFILL_RESULT = makeVisitResult(context, {

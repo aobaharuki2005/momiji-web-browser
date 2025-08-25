@@ -94,6 +94,7 @@ var localMuxerModules = {
 };
 
 const DEFAULT_MUXER = "UnifiedComplete";
+const DEFAULT_CHUNK_RESULTS_DELAY_MS = 16;
 
 /**
  * Class used to create a manager. There always exists one manager instance
@@ -163,7 +164,7 @@ export class ProvidersManager {
      * it to the controller after a delay, so that we can chunk results in that
      * timeframe into a single call. See _notifyResultsFromProvider for details.
      */
-    this.CHUNK_RESULTS_DELAY_MS = 16;
+    this.CHUNK_RESULTS_DELAY_MS = DEFAULT_CHUNK_RESULTS_DELAY_MS;
   }
 
   /**
@@ -800,7 +801,9 @@ export class Query {
       this._chunkTimer = new lazy.SkippableTimer({
         name: "chunking",
         callback: () => this._notifyResults(),
-        time: this.controller.manager.CHUNK_RESULTS_DELAY_MS,
+        time:
+          this.controller?.manager.CHUNK_RESULTS_DELAY_MS ??
+          DEFAULT_CHUNK_RESULTS_DELAY_MS,
         logger: provider.logger,
       });
     } else if (

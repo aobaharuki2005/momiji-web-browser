@@ -6,14 +6,12 @@
 /* import-globals-from head.js */
 
 ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProviderClipboard:
-    "resource:///modules/UrlbarProviderClipboard.sys.mjs",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
 });
 
 async function doHeuristicsTest({ trigger, assert }) {
   await doTest(async () => {
     await openPopup("x");
-
     await trigger();
     await assert();
   });
@@ -166,7 +164,9 @@ async function doClipboardTest({ trigger, assert }) {
     await assert();
   });
   SpecialPowers.clipboardCopyString("");
-  UrlbarProviderClipboard.setPreviousClipboardValue("");
+  UrlbarProvidersManager.getProvider(
+    "UrlbarProviderClipboard"
+  ).setPreviousClipboardValue("");
   await SpecialPowers.popPrefEnv();
 }
 

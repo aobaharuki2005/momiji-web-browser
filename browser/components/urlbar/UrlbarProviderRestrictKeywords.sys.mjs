@@ -24,7 +24,7 @@ const RESTRICT_KEYWORDS_FEATURE_GATE = "searchRestrictKeywords.featureGate";
 /**
  * Class used to create the provider.
  */
-class ProviderRestrictKeywords extends UrlbarProvider {
+export class UrlbarProviderRestrictKeywords extends UrlbarProvider {
   constructor() {
     super();
   }
@@ -82,5 +82,3 @@ class ProviderRestrictKeywords extends UrlbarProvider {
     }
   }
 }
-
-export var UrlbarProviderRestrictKeywords = new ProviderRestrictKeywords();

@@ -23,7 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /**
  * Class used to create the provider.
  */
-class ProviderHistoryUrlHeuristic extends UrlbarProvider {
+export class UrlbarProviderHistoryUrlHeuristic extends UrlbarProvider {
   /**
    * Returns the name of this provider.
    *
@@ -132,6 +132,3 @@ class ProviderHistoryUrlHeuristic extends UrlbarProvider {
     );
   }
 }
-
-export var UrlbarProviderHistoryUrlHeuristic =
-  new ProviderHistoryUrlHeuristic();

@@ -28,7 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * Omnibox API. If the user types a registered keyword, we send subsequent
  * keystrokes to the extension.
  */
-class ProviderOmnibox extends UrlbarProvider {
+export class UrlbarProviderOmnibox extends UrlbarProvider {
   constructor() {
     super();
   }
@@ -128,7 +128,7 @@ class ProviderOmnibox extends UrlbarProvider {
       text: queryContext.searchString,
       inPrivateWindow: queryContext.isPrivate,
     };
-    this._resultsPromise = lazy.ExtensionSearchHandler.handleSearch(
+    let resultsPromise = lazy.ExtensionSearchHandler.handleSearch(
       data,
       suggestions => {
         if (instance != this.queryInstance) {
@@ -169,7 +169,7 @@ class ProviderOmnibox extends UrlbarProvider {
       time: lazy.UrlbarPrefs.get("extension.omnibox.timeout"),
       logger: this.logger,
     }).promise;
-    await Promise.race([timeoutPromise, this._resultsPromise]).catch(ex =>
+    await Promise.race([timeoutPromise, resultsPromise]).catch(ex =>
       this.logger.error(ex)
     );
   }
@@ -182,5 +182,3 @@ class ProviderOmnibox extends UrlbarProvider {
     }
   }
 }
-
-export var UrlbarProviderOmnibox = new ProviderOmnibox();

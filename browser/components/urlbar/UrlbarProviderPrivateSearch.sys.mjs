@@ -23,11 +23,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /**
  * Class used to create the provider.
  */
-class ProviderPrivateSearch extends UrlbarProvider {
+export class UrlbarProviderPrivateSearch extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the open tabs by userContextId.
-    this.openTabs = new Map();
   }
 
   /**
@@ -127,5 +125,3 @@ class ProviderPrivateSearch extends UrlbarProvider {
     addCallback(this, result);
   }
 }
-
-export var UrlbarProviderPrivateSearch = new ProviderPrivateSearch();

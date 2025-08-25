@@ -63,9 +63,9 @@ ChromeUtils.defineLazyGetter(lazy, "semanticManager", function () {
  *
  * @class
  */
-export class ProviderSemanticHistorySearch extends UrlbarProvider {
+export class UrlbarProviderSemanticHistorySearch extends UrlbarProvider {
   /** @type {boolean} */
-  #exposureRecorded;
+  static #exposureRecorded;
 
   /**
    * Provides a shared instance of the semantic manager, so that other consumers
@@ -237,7 +237,7 @@ export class ProviderSemanticHistorySearch extends UrlbarProvider {
    */
   #maybeRecordExposure() {
     // Skip if we already recorded or if the gate is manually turned off.
-    if (this.#exposureRecorded) {
+    if (UrlbarProviderSemanticHistorySearch.#exposureRecorded) {
       return;
     }
 
@@ -260,7 +260,7 @@ export class ProviderSemanticHistorySearch extends UrlbarProvider {
         once: true,
         slug: metadata.slug,
       });
-      this.#exposureRecorded = true;
+      UrlbarProviderSemanticHistorySearch.#exposureRecorded = true;
       lazy.logger.debug(
         `Nimbus exposure event sent (semanticHistory: ${metadata.slug}).`
       );
@@ -287,6 +287,3 @@ export class ProviderSemanticHistorySearch extends UrlbarProvider {
     }
   }
 }
-
-export var UrlbarProviderSemanticHistorySearch =
-  new ProviderSemanticHistorySearch();

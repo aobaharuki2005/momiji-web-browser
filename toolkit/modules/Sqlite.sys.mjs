@@ -1283,7 +1283,7 @@ ConnectionData.prototype = Object.freeze({
  * @param options
  *        (Object) Parameters to control connection and open options.
  *
- * @return Promise<OpenedConnection>
+ * @return {Promise<OpenedConnection>}
  */
 function openConnection(options) {
   let logger = createLoggerWithPrefix("ConnectionOpener");
@@ -1493,7 +1493,7 @@ function openConnection(options) {
  * @param options
  *        (Object) Parameters to control connection and clone options.
  *
- * @return Promise<OpenedConnection>
+ * @return {Promise<OpenedConnection>}
  */
 function cloneStorageConnection(options) {
   let logger = createLoggerWithPrefix("ConnectionCloner");
@@ -1580,7 +1580,7 @@ function cloneStorageConnection(options) {
  * @param options
  *        (Object) Parameters to control connection and wrap options.
  *
- * @return Promise<OpenedConnection>
+ * @return {Promise<OpenedConnection>}
  */
 function wrapStorageConnection(options) {
   let logger = createLoggerWithPrefix("ConnectionWrapper");
@@ -1809,7 +1809,7 @@ OpenedConnection.prototype = {
    *        this parameter will be ignored and the clone will be as privileged as
    *        the original connection.
    *
-   * @return Promise<OpenedConnection>
+   * @return {Promise<OpenedConnection>}
    */
   clone(readOnly = false) {
     return this._connectionData.clone(readOnly);

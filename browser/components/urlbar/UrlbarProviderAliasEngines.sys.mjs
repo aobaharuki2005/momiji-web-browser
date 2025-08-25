@@ -22,7 +22,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /**
  * Class used to create the provider.
  */
-class ProviderAliasEngines extends UrlbarProvider {
+export class UrlbarProviderAliasEngines extends UrlbarProvider {
   /**
    * Returns the name of this provider.
    *
@@ -88,5 +88,3 @@ class ProviderAliasEngines extends UrlbarProvider {
     addCallback(this, result);
   }
 }
-
-export var UrlbarProviderAliasEngines = new ProviderAliasEngines();

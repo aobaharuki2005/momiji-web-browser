@@ -25,7 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /**
  * Class used to create the provider.
  */
-class ProviderHeuristicFallback extends UrlbarProvider {
+export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
   constructor() {
     super();
   }
@@ -330,5 +330,3 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     );
   }
 }
-
-export var UrlbarProviderHeuristicFallback = new ProviderHeuristicFallback();

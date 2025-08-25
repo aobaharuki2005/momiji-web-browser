@@ -12,10 +12,6 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
-});
-
 /**
  * A test provider that waits before returning results to simulate a slow DB
  * lookup.
@@ -218,7 +214,7 @@ add_task(async function autofillIsCleared() {
         "The first query should be cancelled."
       );
       Assert.ok(
-        !UrlbarProviderAutofill._autofillData,
+        !UrlbarProvidersManager.getProvider("Autofill")._autofillData,
         "The first result should not have populated autofill data."
       );
       Assert.ok(!queryCancelled, "No more than one query should be cancelled.");

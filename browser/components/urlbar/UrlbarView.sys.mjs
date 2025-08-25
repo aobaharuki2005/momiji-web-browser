@@ -15,14 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderGlobalActions:
-    "resource:///modules/UrlbarProviderGlobalActions.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-  UrlbarProviderQuickSuggestContextualOptIn:
-    "resource:///modules/UrlbarProviderQuickSuggestContextualOptIn.sys.mjs",
-  UrlbarProviderRecentSearches:
-    "resource:///modules/UrlbarProviderRecentSearches.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
@@ -345,7 +339,7 @@ export class UrlbarView {
       // global actions.
       if (
         this.#rows.children[index]?.result.providerName ==
-          lazy.UrlbarProviderGlobalActions.name &&
+          "UrlbarProviderGlobalActions" &&
         this.#rows.children.length > 2
       ) {
         index = index + (reverse ? -1 : 1);
@@ -2542,7 +2536,7 @@ export class UrlbarView {
       };
     }
 
-    if (row.result.providerName == lazy.UrlbarProviderRecentSearches.name) {
+    if (row.result.providerName == "RecentSearches") {
       return { id: "urlbar-group-recent-searches" };
     }
 
@@ -2571,9 +2565,8 @@ export class UrlbarView {
 
     // Show "Shortcuts" if there's another result before that group.
     if (
-      row.result.providerName == lazy.UrlbarProviderTopSites.name &&
-      this.#queryContext.results[0].providerName !=
-        lazy.UrlbarProviderTopSites.name
+      row.result.providerName == "UrlbarProviderTopSites" &&
+      this.#queryContext.results[0].providerName != "UrlbarProviderTopSites"
     ) {
       return { id: "urlbar-group-shortcuts" };
     }
@@ -3871,12 +3864,10 @@ class QueryContextCache {
       // for a moment.
       if (
         queryContext.results?.some(
-          r => r.providerName == lazy.UrlbarProviderTopSites.name
+          r => r.providerName == "UrlbarProviderTopSites"
         ) &&
         !queryContext.results.some(
-          r =>
-            r.providerName ==
-            lazy.UrlbarProviderQuickSuggestContextualOptIn.name
+          r => r.providerName == "UrlbarProviderQuickSuggestContextualOptIn"
         )
       ) {
         this.#topSitesContext = queryContext;

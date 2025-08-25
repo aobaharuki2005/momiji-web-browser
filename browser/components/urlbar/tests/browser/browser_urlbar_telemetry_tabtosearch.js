@@ -13,11 +13,6 @@
 const ENGINE_NAME = "MozSearch";
 const ENGINE_DOMAIN = "example.com";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProviderTabToSearch:
-    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
-});
-
 /**
  * Checks to see if the second result in the Urlbar is a tab-to-search result
  * with the correct engine.

@@ -887,7 +887,9 @@ async function doUnmanagedTest({ pref, suggestion }) {
     "quicksuggest-dismissals-changed"
   );
   triggerCommand({
-    feature: UrlbarProviderQuickSuggest,
+    feature: UrlbarProvidersManager.getProvider(
+      UrlbarProviderQuickSuggest.name
+    ),
     command: "dismiss",
     result: context.results[0],
     expectedCountsByCall: {

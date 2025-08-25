@@ -75,7 +75,7 @@ function initializeDynamicResult() {
 /**
  * Class used to create the provider.
  */
-class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
+export class UrlbarProviderQuickSuggestContextualOptIn extends UrlbarProvider {
   constructor() {
     super();
   }
@@ -358,6 +358,4 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
   }
 }
 
-export var UrlbarProviderQuickSuggestContextualOptIn =
-  new ProviderQuickSuggestContextualOptIn();
 initializeDynamicResult();

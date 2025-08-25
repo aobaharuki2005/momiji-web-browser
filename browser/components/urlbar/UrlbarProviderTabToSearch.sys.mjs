@@ -100,7 +100,9 @@ function initializeDynamicResult() {
 /**
  * Class used to create the provider.
  */
-class ProviderTabToSearch extends UrlbarProvider {
+export class UrlbarProviderTabToSearch extends UrlbarProvider {
+  static onboardingInteractionAtTime = null;
+
   constructor() {
     super();
   }
@@ -135,7 +137,9 @@ class ProviderTabToSearch extends UrlbarProvider {
       !queryContext.searchMode &&
       lazy.UrlbarPrefs.get("suggest.engines") &&
       !(
-        (await lazy.UrlbarProviderGlobalActions.isActive(queryContext)) &&
+        (await this.queryInstance
+          .getProvider(lazy.UrlbarProviderGlobalActions.name)
+          ?.isActive()) &&
         lazy.ActionsProviderContextualSearch.isActive(queryContext)
       )
     );
@@ -209,8 +213,9 @@ class ProviderTabToSearch extends UrlbarProvider {
     // counter by interacting with the same result repeatedly.
     if (
       result.payload.dynamicType &&
-      (!this.onboardingInteractionAtTime ||
-        this.onboardingInteractionAtTime < Date.now() - 1000 * 60 * 5)
+      (!UrlbarProviderTabToSearch.onboardingInteractionAtTime ||
+        UrlbarProviderTabToSearch.onboardingInteractionAtTime <
+          Date.now() - 1000 * 60 * 5)
     ) {
       let interactionsLeft = lazy.UrlbarPrefs.get(
         "tabToSearch.onboard.interactionsLeft"
@@ -223,7 +228,7 @@ class ProviderTabToSearch extends UrlbarProvider {
         );
       }
 
-      this.onboardingInteractionAtTime = Date.now();
+      UrlbarProviderTabToSearch.onboardingInteractionAtTime = Date.now();
     }
   }
 
@@ -403,5 +408,4 @@ function searchUrlDomainWithoutSuffix(engine) {
   return value.substr(0, value.length - engine.searchUrlPublicSuffix.length);
 }
 
-export var UrlbarProviderTabToSearch = new ProviderTabToSearch();
 initializeDynamicResult();

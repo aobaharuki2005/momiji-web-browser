@@ -69,7 +69,7 @@ ChromeUtils.defineLazyGetter(lazy, "SQL_ADAPTIVE_QUERY", () => {
 /**
  * Class used to create the provider.
  */
-class ProviderInputHistory extends UrlbarProvider {
+export class UrlbarProviderInputHistory extends UrlbarProvider {
   /**
    * Unique name for the provider, used by the context to filter on providers.
    *
@@ -258,5 +258,3 @@ class ProviderInputHistory extends UrlbarProvider {
     ];
   }
 }
-
-export var UrlbarProviderInputHistory = new ProviderInputHistory();

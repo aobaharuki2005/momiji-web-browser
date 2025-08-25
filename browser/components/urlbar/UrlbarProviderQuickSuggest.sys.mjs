@@ -15,8 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderSearchSuggestions:
-    "resource:///modules/UrlbarProviderSearchSuggestions.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
@@ -28,16 +26,7 @@ const DEFAULT_SUGGESTION_SCORE = 0.2;
  * A provider that returns a suggested url to the user based on what
  * they have currently typed so they can navigate directly.
  */
-class ProviderQuickSuggest extends UrlbarProvider {
-  /**
-   * Returns the name of this provider.
-   *
-   * @returns {string} the name of this provider.
-   */
-  get name() {
-    return "UrlbarProviderQuickSuggest";
-  }
-
+export class UrlbarProviderQuickSuggest extends UrlbarProvider {
   /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */
@@ -51,7 +40,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   suggestions require scores so they can be ranked. Scores are numeric
    *   values in the range [0, 1].
    */
-  get DEFAULT_SUGGESTION_SCORE() {
+  static get DEFAULT_SUGGESTION_SCORE() {
     return DEFAULT_SUGGESTION_SCORE;
   }
 
@@ -405,7 +394,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
           );
         } else if (
           lazy.UrlbarPrefs.get("showSearchSuggestionsFirst") &&
-          (await lazy.UrlbarProviderSearchSuggestions.isActive(queryContext)) &&
+          (await this.queryInstance
+            .getProvider("SearchSuggestions")
+            ?.isActive(queryContext)) &&
           lazy.UrlbarSearchUtils.getDefaultEngine(
             queryContext.isPrivate
           ).supportsResponseType(lazy.SearchUtils.URL_TYPE.SUGGEST_JSON)
@@ -602,5 +593,3 @@ class ProviderQuickSuggest extends UrlbarProvider {
     await this.#applyRanking(suggestion);
   }
 }
-
-export var UrlbarProviderQuickSuggest = new ProviderQuickSuggest();
