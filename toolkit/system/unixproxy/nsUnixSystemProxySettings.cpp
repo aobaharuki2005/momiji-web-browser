@@ -272,12 +272,17 @@ static bool ConvertToIPV6Addr(const nsACString& aName, PRIPv6Addr* aAddr,
 
 static bool HostIgnoredByProxy(const nsACString& aIgnore,
                                const nsACString& aHost) {
-  if (aIgnore.Equals(aHost, nsCaseInsensitiveCStringComparator)) return true;
-
+  if (aIgnore.IsEmpty()) {
+    return false;
+  }
+  if (aIgnore.Equals(aHost, nsCaseInsensitiveCStringComparator)) {
+    return true;
+  }
   if (aIgnore.First() == '*' &&
       StringEndsWith(aHost, nsDependentCSubstring(aIgnore, 1),
-                     nsCaseInsensitiveCStringComparator))
+                     nsCaseInsensitiveCStringComparator)) {
     return true;
+  }
 
   int32_t mask = 128;
   nsReadingIterator<char> start;
@@ -303,8 +308,9 @@ static bool HostIgnoredByProxy(const nsACString& aIgnore,
   nsDependentCSubstring ignoreStripped(start, slash);
   PRIPv6Addr ignoreAddr, hostAddr;
   if (!ConvertToIPV6Addr(ignoreStripped, &ignoreAddr, &mask) ||
-      !ConvertToIPV6Addr(aHost, &hostAddr, nullptr))
+      !ConvertToIPV6Addr(aHost, &hostAddr, nullptr)) {
     return false;
+  }
 
   proxy_MaskIPv6Addr(ignoreAddr, mask);
   proxy_MaskIPv6Addr(hostAddr, mask);
