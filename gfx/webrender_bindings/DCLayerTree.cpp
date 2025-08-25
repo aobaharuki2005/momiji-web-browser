@@ -1654,8 +1654,11 @@ bool DCSwapChain::Resize(wr::DeviceIntSize aSize) {
 
   mSwapChain->GetDesc(&desc);
 
+  UINT flags = mDCLayerTree->SupportsSwapChainTearing()
+                   ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
+                   : 0;
   hr = mSwapChain->ResizeBuffers(desc.BufferCount, aSize.width, aSize.height,
-                                 DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+                                 DXGI_FORMAT_B8G8R8A8_UNORM, flags);
   if (FAILED(hr)) {
     gfxCriticalNote << "Failed to resize swap chain buffers: " << gfx::hexa(hr)
                     << " Size : "
