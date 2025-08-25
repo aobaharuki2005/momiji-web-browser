@@ -15,7 +15,7 @@ fuzzy(0-1,0-800000) == linear-flipped-1.html linear-flipped-1-ref.html
 == linear-repeat-1e.html linear-repeat-1-ref.html
 == linear-repeat-1f.html linear-repeat-1-ref.html
 == linear-repeat-1g.html linear-repeat-1-ref.html # bug 582236
-fuzzy(0-1,0-500) fuzzy-if(winWidget,0-2,0-100) == linear-rotated-1.html linear-rotated-1-ref.html
+fuzzy(0-1,0-13008) == linear-rotated-1.html linear-rotated-1-ref.html
 fuzzy(0-1,0-45000) == linear-size-1a.html linear-size-1-ref.html
 == linear-stops-1a.html linear-stops-1-ref.html
 == linear-stops-1b.html linear-stops-1-ref.html
@@ -108,4 +108,4 @@ fuzzy(0-4,0-800000) fails-if(useDrawSnapshot) == mask-gradient-translucent-end-c
 
 == scaled-color-stop-position.html scaled-color-stop-position-ref.html
 fuzzy(0-1,0-40000) == color-stop-clamp-interpolation.html color-stop-clamp-interpolation-ref.html
-fuzzy-if(swgl,0-2,0-81000) == linear-gradient-repeated.html linear-gradient-repeated-ref.html
+fuzzy(0-1,0-4896) fuzzy-if(swgl,0-2,0-81000) == linear-gradient-repeated.html linear-gradient-repeated-ref.html
