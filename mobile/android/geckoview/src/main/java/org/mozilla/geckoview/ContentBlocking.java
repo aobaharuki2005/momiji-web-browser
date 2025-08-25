@@ -74,9 +74,10 @@ public class ContentBlocking {
           .dataSharingEnabled(false)
           .build();
 
-  // This class shouldn't be instantiated
+  /** Protected constructor - this class shouldn't be instantiated. */
   protected ContentBlocking() {}
 
+  /** Content blocking settings for configuring various blocking features. */
   @AnyThread
   public static class Settings extends RuntimeSettings {
     private final Map<String, SafeBrowsingProvider> mSafeBrowsingProviders = new HashMap<>();
@@ -86,6 +87,7 @@ public class ContentBlocking {
       ContentBlocking.GOOGLE_SAFE_BROWSING_PROVIDER
     };
 
+    /** Builder for constructing ContentBlocking Settings instances. */
     @AnyThread
     public static class Builder extends RuntimeSettings.Builder<Settings> {
       @Override
@@ -1062,6 +1064,7 @@ public class ContentBlocking {
       return mCbhModePrivateBrowsing.get();
     }
 
+    /** Parcelable creator for ContentBlocking Settings instances. */
     public static final Parcelable.Creator<Settings> CREATOR =
         new Parcelable.Creator<Settings>() {
           @Override
@@ -1255,6 +1258,7 @@ public class ContentBlocking {
       return new Builder(provider);
     }
 
+    /** Builder for constructing SafeBrowsingProvider instances. */
     @AnyThread
     public static class Builder {
       final SafeBrowsingProvider mProvider;
@@ -1625,7 +1629,9 @@ public class ContentBlocking {
     return pref != null ? pref.split(",") : new String[] {};
   }
 
+  /** Anti-tracking content blocking constants. */
   public static class AntiTracking {
+    /** No anti-tracking protection. */
     public static final int NONE = 0;
 
     /** Block advertisement trackers. */
@@ -1664,9 +1670,11 @@ public class ContentBlocking {
     /** Block all known trackers. May cause issues with some web sites. */
     public static final int STRICT = DEFAULT | CONTENT | CRYPTOMINING | FINGERPRINTING | EMAIL;
 
+    /** Protected constructor for AntiTracking. */
     protected AntiTracking() {}
   }
 
+  /** Content blocking anti-tracking type definitions. */
   @Retention(RetentionPolicy.SOURCE)
   @IntDef(
       flag = true,
@@ -1686,7 +1694,9 @@ public class ContentBlocking {
       })
   public @interface CBAntiTracking {}
 
+  /** Safe browsing content blocking constants. */
   public static class SafeBrowsing {
+    /** No safe browsing protection. */
     public static final int NONE = 0;
 
     /** Block malware sites. */
@@ -1704,9 +1714,11 @@ public class ContentBlocking {
     /** Block all unsafe sites. */
     public static final int DEFAULT = MALWARE | UNWANTED | HARMFUL | PHISHING;
 
+    /** Protected constructor for SafeBrowsing. */
     protected SafeBrowsing() {}
   }
 
+  /** Content blocking safe browsing type definitions. */
   @Retention(RetentionPolicy.SOURCE)
   @IntDef(
       flag = true,
@@ -1718,6 +1730,7 @@ public class ContentBlocking {
   public @interface CBSafeBrowsing {}
 
   // Sync values with nsICookieService.idl.
+  /** Cookie behavior content blocking constants. */
   public static class CookieBehavior {
     /** Accept first-party and third-party cookies and site data. */
     public static final int ACCEPT_ALL = 0;
@@ -1749,9 +1762,11 @@ public class ContentBlocking {
      */
     public static final int ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS = 5;
 
+    /** Protected constructor for CookieBehavior. */
     protected CookieBehavior() {}
   }
 
+  /** Content blocking cookie behavior type definitions. */
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({
     CookieBehavior.ACCEPT_ALL,
@@ -1763,6 +1778,7 @@ public class ContentBlocking {
   })
   public @interface CBCookieBehavior {}
 
+  /** Content blocking ETP level type definitions. */
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({EtpLevel.NONE, EtpLevel.DEFAULT, EtpLevel.STRICT})
   public @interface CBEtpLevel {}
@@ -1781,19 +1797,20 @@ public class ContentBlocking {
     public static final int STRICT = 2;
   }
 
+  /** Content blocking ETP category type definitions. */
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({EtpCategory.STANDARD, EtpCategory.STRICT, EtpCategory.CUSTOM})
   public @interface CBEtpCategory {}
 
   /** Possible settings for ETP category. */
   public static class EtpCategory {
-    // The default ETP category, balancing privacy and web compatibility.
+    /** The default ETP category, balancing privacy and web compatibility. */
     public static final int STANDARD = 0;
-    // The strict ETP category, blocking more trackers but potentially breaking
-    // more sites.
+
+    /** The strict ETP category, blocking more trackers but potentially breaking more sites. */
     public static final int STRICT = 1;
-    // The custom ETP category, allowing the user to choose which anti-tracking
-    // to enable.
+
+    /** The custom ETP category, allowing the user to choose which anti-tracking to enable. */
     public static final int CUSTOM = 2;
   }
 
@@ -1807,7 +1824,15 @@ public class ContentBlocking {
     private final @CBCookieBehavior int mCookieBehaviorCat;
     private final boolean mIsBlocking;
 
-    @SuppressWarnings("checkstyle:javadocmethod")
+    /**
+     * Constructor for BlockEvent.
+     *
+     * @param uri The URI of the blocked resource
+     * @param atCat The anti-tracking category
+     * @param sbCat The safe browsing category
+     * @param cbCat The cookie behavior category
+     * @param isBlocking Whether the resource is being blocked
+     */
     public BlockEvent(
         @NonNull final String uri,
         final @CBAntiTracking int atCat,
@@ -1877,8 +1902,12 @@ public class ContentBlocking {
           blocking);
     }
 
+    /**
+     * Get whether this resource is being blocked.
+     *
+     * @return true if the resource is being blocked, false otherwise
+     */
     @UiThread
-    @SuppressWarnings("checkstyle:javadocmethod")
     public boolean isBlocking() {
       return mIsBlocking;
     }
@@ -2144,6 +2173,7 @@ public class ContentBlocking {
 
   // Cookie Banner Handling feature.
 
+  /** Cookie banner handling mode constants. */
   public static class CookieBannerMode {
     /** Do not enable handling cookie banners. */
     public static final int COOKIE_BANNER_MODE_DISABLED = 0;
@@ -2154,9 +2184,11 @@ public class ContentBlocking {
     /** Reject cookies when possible otherwise accept the cookies. */
     public static final int COOKIE_BANNER_MODE_REJECT_OR_ACCEPT = 2;
 
+    /** Protected constructor for CookieBannerMode. */
     protected CookieBannerMode() {}
   }
 
+  /** Content blocking cookie banner mode type definitions. */
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({
     CookieBannerMode.COOKIE_BANNER_MODE_DISABLED,
@@ -2185,9 +2217,11 @@ public class ContentBlocking {
      */
     public static final int BOUNCE_TRACKING_PROTECTION_MODE_ENABLED_DRY_RUN = 3;
 
+    /** Protected constructor for BounceTrackingProtectionMode. */
     protected BounceTrackingProtectionMode() {}
   }
 
+  /** Content blocking bounce tracking protection mode type definitions. */
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({
     BounceTrackingProtectionMode.BOUNCE_TRACKING_PROTECTION_MODE_DISABLED,
