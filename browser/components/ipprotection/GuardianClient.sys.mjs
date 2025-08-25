@@ -252,7 +252,7 @@ export class GuardianClient {
  *
  * Immutable after creation.
  */
-class ProxyPass {
+export class ProxyPass {
   /**
    * @param {string} token - The JWT to use for authentication.
    * @param {number} until - The timestamp until which the token is valid.

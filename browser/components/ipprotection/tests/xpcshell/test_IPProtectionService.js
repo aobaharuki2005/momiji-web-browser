@@ -37,6 +37,7 @@ AddonTestUtils.createAppInfo(
 ExtensionTestUtils.init(this);
 
 add_setup(async function () {
+  await putServerInRemoteSettings();
   IPProtectionService.uninit();
 
   registerCleanupFunction(async () => {
@@ -56,6 +57,7 @@ add_task(async function test_IPProtectionService_start() {
     error: undefined,
     pass: {
       isValid: () => true,
+      asBearerToken: () => "Bearer hello world",
     },
   });
 
@@ -84,6 +86,10 @@ add_task(async function test_IPProtectionService_start() {
   Assert.ok(
     IPProtectionService.activatedAt,
     "IP Protection service should have an activation timestamp"
+  );
+  Assert.ok(
+    IPProtectionService.connection.active,
+    "IP Protection service should have an active connection"
   );
 
   Assert.equal(
@@ -120,6 +126,10 @@ add_task(async function test_IPProtectionService_stop() {
   Assert.ok(
     !IPProtectionService.activatedAt,
     "IP Protection service should not have an activation timestamp after stopping"
+  );
+  Assert.ok(
+    !IPProtectionService.connection,
+    "IP Protection service should not have an active connection"
   );
 
   IPProtectionService.uninit();

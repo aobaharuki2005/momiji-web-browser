@@ -74,6 +74,7 @@ add_task(async function toolbar_icon_status() {
   IPProtectionService.isEnrolled = true;
   IPProtectionService.isEntitled = true;
   content.state.isSignedIn = true;
+  await putServerInRemoteSettings();
   content.requestUpdate();
   await content.updateComplete;
   lazy.IPProtectionService.isSignedIn = true;
