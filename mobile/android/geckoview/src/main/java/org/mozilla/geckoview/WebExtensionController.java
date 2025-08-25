@@ -30,6 +30,10 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.WebExtension.InstallException;
 
+/**
+ * Controller for managing WebExtensions within a GeckoRuntime instance. Provides functionality for
+ * installing, uninstalling, enabling, disabling, and managing delegates for WebExtensions.
+ */
 public class WebExtensionController {
   private static final String LOGTAG = "WebExtension";
 
@@ -366,6 +370,10 @@ public class WebExtensionController {
     }
   }
 
+  /**
+   * Delegate for receiving debugger-related WebExtension events. Used to notify about changes to
+   * extensions during development with tools like web-ext.
+   */
   public interface DebuggerDelegate {
     /**
      * Called whenever the list of installed extensions has been modified using the debugger with
@@ -930,6 +938,7 @@ public class WebExtensionController {
         .accept(result -> unregisterWebExtension(extension));
   }
 
+  /** Defines the possible sources that can enable or disable a WebExtension. */
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({EnableSource.USER, EnableSource.APP})
   public @interface EnableSources {}
@@ -1912,6 +1921,13 @@ public class WebExtensionController {
     return null;
   }
 
+  /**
+   * Creates a new Download object with the specified ID for tracking WebExtension downloads.
+   *
+   * @param id The unique identifier for the download
+   * @return A new Download object for the specified ID
+   * @throws IllegalArgumentException if a download with this ID already exists
+   */
   @Nullable
   @UiThread
   public WebExtension.Download createDownload(final int id) {
