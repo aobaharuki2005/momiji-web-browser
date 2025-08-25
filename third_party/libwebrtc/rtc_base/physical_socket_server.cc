@@ -531,7 +531,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
 #if defined(WEBRTC_POSIX)
   int received = 0;
   iovec iov = {.iov_base = buffer, .iov_len = length};
-  msghdr msg = {.msg_name = nullptr, .msg_namelen = 0, .msg_iov = &iov, .msg_iovlen = 1};
+  msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
   if (out_addr) {
     out_addr->Clear();
     msg.msg_name = addr;
