@@ -451,6 +451,8 @@ JS_PUBLIC_API void SetPreserveWrapperCallbacks(
     JSContext* cx, PreserveWrapperCallback preserveWrapper,
     HasReleasedWrapperCallback hasReleasedWrapper);
 
+JS_PUBLIC_API void CommitPendingWrapperPreservations(JSContext* cx);
+
 JS_PUBLIC_API bool IsObjectInContextCompartment(JSObject* obj,
                                                 const JSContext* cx);
 

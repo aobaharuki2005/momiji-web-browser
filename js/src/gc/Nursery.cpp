@@ -1391,6 +1391,11 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   JSRuntime* rt = runtime();
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
+  {
+    AutoGCSession commitSession(gc, JS::HeapState::Idle);
+    rt->commitPendingWrapperPreservations();
+  }
+
   if (minorGCRequested()) {
     MOZ_ASSERT(position() == chunk(currentChunk()).end());
     toSpace.position_ = prevPosition_;

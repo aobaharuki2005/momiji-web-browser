@@ -824,6 +824,7 @@ class GCRuntime {
   void relazifyFunctionsForShrinkingGC();
   void purgePropMapTablesForShrinkingGC();
   void purgeSourceURLsForShrinkingGC();
+  void purgePendingWrapperPreservationBuffersForShrinkingGC();
   void traceRuntimeForMajorGC(JSTracer* trc, AutoGCSession& session);
   void traceRuntimeAtoms(JSTracer* trc);
   void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark);

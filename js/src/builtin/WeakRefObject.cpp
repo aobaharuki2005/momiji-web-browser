@@ -108,6 +108,8 @@ bool WeakRefObject::preserveDOMWrapper(JSContext* cx, HandleObject obj) {
     return false;
   }
 
+  cx->runtime()->commitPendingWrapperPreservations(obj->zone());
+
   return true;
 }
 
