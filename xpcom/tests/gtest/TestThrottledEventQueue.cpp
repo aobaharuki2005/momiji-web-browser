@@ -61,14 +61,14 @@ struct RunnableQueue : nsISerialEventTarget {
   // nsIEventTarget methods
 
   [[nodiscard]] NS_IMETHODIMP Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                                       uint32_t aFlags) override {
+                                       DispatchFlags aFlags) override {
     MOZ_ALWAYS_TRUE(aFlags == nsIEventTarget::DISPATCH_NORMAL);
     runnables.push(aRunnable);
     return NS_OK;
   }
 
-  [[nodiscard]] NS_IMETHODIMP DispatchFromScript(nsIRunnable* aRunnable,
-                                                 uint32_t aFlags) override {
+  [[nodiscard]] NS_IMETHODIMP DispatchFromScript(
+      nsIRunnable* aRunnable, DispatchFlags aFlags) override {
     RefPtr<nsIRunnable> r = aRunnable;
     return Dispatch(r.forget(), aFlags);
   }

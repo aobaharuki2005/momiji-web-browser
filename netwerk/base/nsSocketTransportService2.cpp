@@ -10,6 +10,7 @@
 #include "mozilla/glean/NetwerkMetrics.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MaybeLeakRefPtr.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerMarkers.h"
@@ -22,6 +23,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsASocketHandler.h"
 #include "nsError.h"
+#include "nsIEventTarget.h"
 #include "nsIFile.h"
 #include "nsINetworkLinkService.h"
 #include "nsIOService.h"
@@ -273,15 +275,15 @@ already_AddRefed<nsIThread> nsSocketTransportService::GetThreadSafely() {
 
 NS_IMETHODIMP
 nsSocketTransportService::DispatchFromScript(nsIRunnable* event,
-                                             uint32_t flags) {
-  nsCOMPtr<nsIRunnable> event_ref(event);
-  return Dispatch(event_ref.forget(), flags);
+                                             DispatchFlags flags) {
+  return Dispatch(do_AddRef(event), flags);
 }
 
 NS_IMETHODIMP
 nsSocketTransportService::Dispatch(already_AddRefed<nsIRunnable> event,
-                                   uint32_t flags) {
-  nsCOMPtr<nsIRunnable> event_ref(event);
+                                   DispatchFlags flags) {
+  MaybeLeakRefPtr<nsIRunnable> event_ref(std::move(event),
+                                         flags & NS_DISPATCH_FALLIBLE);
   SOCKET_LOG(("STS dispatch [%p]\n", event_ref.get()));
 
   nsCOMPtr<nsIThread> thread = GetThreadSafely();

@@ -1841,17 +1841,19 @@ void EventSourceImpl::ReleaseWorkerRef() {
 // EventSourceImpl::nsIEventTarget
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
-EventSourceImpl::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags) {
+EventSourceImpl::DispatchFromScript(nsIRunnable* aEvent, DispatchFlags aFlags) {
   nsCOMPtr<nsIRunnable> event(aEvent);
   return Dispatch(event.forget(), aFlags);
 }
 
 NS_IMETHODIMP
 EventSourceImpl::Dispatch(already_AddRefed<nsIRunnable> aEvent,
-                          uint32_t aFlags) {
+                          DispatchFlags aFlags) {
+  // FIXME: This dispatch implementation has inconsistent leaking behaviour when
+  // `NS_DISPATCH_FALLIBLE` is not specified.
   nsCOMPtr<nsIRunnable> event_ref(aEvent);
   if (mIsMainThread) {
-    return NS_DispatchToMainThread(event_ref.forget());
+    return NS_DispatchToMainThread(event_ref.forget(), aFlags);
   }
 
   if (mIsShutDown) {

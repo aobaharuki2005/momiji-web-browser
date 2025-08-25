@@ -41,7 +41,7 @@ class nsThreadPool final : public mozilla::Runnable, public nsIThreadPool {
 
   void ShutdownThread(nsIThread* aThread);
   nsresult PutEvent(nsIRunnable* aEvent);
-  nsresult PutEvent(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags);
+  nsresult PutEvent(already_AddRefed<nsIRunnable> aEvent, DispatchFlags aFlags);
   void NotifyChangeToAllIdleThreads() MOZ_REQUIRES(mMutex);
 
 #ifdef DEBUG

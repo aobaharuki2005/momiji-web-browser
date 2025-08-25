@@ -97,13 +97,13 @@ RemoteLazyInputStreamThread::IsOnCurrentThread(bool* aRetval) {
 
 NS_IMETHODIMP
 RemoteLazyInputStreamThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                                      uint32_t aFlags) {
+                                      DispatchFlags aFlags) {
   return mThread->Dispatch(std::move(aRunnable), aFlags);
 }
 
 NS_IMETHODIMP
 RemoteLazyInputStreamThread::DispatchFromScript(nsIRunnable* aRunnable,
-                                                uint32_t aFlags) {
+                                                DispatchFlags aFlags) {
   return mThread->Dispatch(do_AddRef(aRunnable), aFlags);
 }
 

@@ -621,23 +621,26 @@ class WorkerPrivate final
   nsISerialEventTarget* MainThreadEventTargetForMessaging();
 
   nsresult DispatchToMainThreadForMessaging(
-      nsIRunnable* aRunnable, uint32_t aFlags = NS_DISPATCH_NORMAL);
+      nsIRunnable* aRunnable,
+      nsIEventTarget::DispatchFlags aFlags = NS_DISPATCH_NORMAL);
 
   nsresult DispatchToMainThreadForMessaging(
       already_AddRefed<nsIRunnable> aRunnable,
-      uint32_t aFlags = NS_DISPATCH_NORMAL);
+      nsIEventTarget::DispatchFlags aFlags = NS_DISPATCH_NORMAL);
 
   nsISerialEventTarget* MainThreadEventTarget();
 
-  nsresult DispatchToMainThread(nsIRunnable* aRunnable,
-                                uint32_t aFlags = NS_DISPATCH_NORMAL);
+  nsresult DispatchToMainThread(
+      nsIRunnable* aRunnable,
+      nsIEventTarget::DispatchFlags aFlags = NS_DISPATCH_NORMAL);
 
-  nsresult DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable,
-                                uint32_t aFlags = NS_DISPATCH_NORMAL);
+  nsresult DispatchToMainThread(
+      already_AddRefed<nsIRunnable> aRunnable,
+      nsIEventTarget::DispatchFlags aFlags = NS_DISPATCH_NORMAL);
 
   nsresult DispatchDebuggeeToMainThread(
       already_AddRefed<WorkerRunnable> aRunnable,
-      uint32_t aFlags = NS_DISPATCH_NORMAL);
+      nsIEventTarget::DispatchFlags aFlags = NS_DISPATCH_NORMAL);
 
   // Get an event target that will dispatch runnables as control runnables on
   // the worker thread.  Implement nsICancelableRunnable if you wish to take
