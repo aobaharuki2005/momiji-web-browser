@@ -821,9 +821,9 @@
     <!-- Content description for various wallpapers. %1$s is the name of the wallpaper. -->
     <string name="wallpapers_item_name_content_description">Wallpaper Item: %1$s</string>
     <!-- Snackbar message for when wallpaper is selected -->
-    <string name="wallpaper_updated_snackbar_message">Wallpaper updated!</string>
+    <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">Wallpaper updated!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
-    <string name="wallpaper_updated_snackbar_action">View</string>
+    <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">View</string>
     <!-- Snackbar message for when wallpaper couldn't be downloaded -->
     <string name="wallpaper_download_error_snackbar_message">Couldn’t download wallpaper</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
