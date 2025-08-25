@@ -932,6 +932,16 @@ features:
           Whether or not to enable the tab management enhancements.
         type: Boolean
         default: false
+    defaults:
+      - channel: release
+        value:
+          enabled: false
+      - channel: beta
+        value:
+          enabled: false
+      - channel: nightly
+        value:
+          enabled: false
 
   address-sync:
     description: Turns on address sync.

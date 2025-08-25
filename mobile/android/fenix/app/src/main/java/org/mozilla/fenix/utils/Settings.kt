@@ -2708,7 +2708,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var tabManagerEnhancementsEnabled by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_tab_manager_enhancements),
-        default = DefaultTabManagementFeatureHelper.enhancementsEnabled,
+        default = { DefaultTabManagementFeatureHelper.enhancementsEnabled },
     )
 
     /**
