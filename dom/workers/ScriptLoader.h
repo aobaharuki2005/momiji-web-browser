@@ -206,7 +206,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   bool DispatchLoadScript(ScriptLoadRequest* aRequest);
 
-  bool DispatchLoadScripts();
+  bool DispatchLoadScripts(nsTArray<RefPtr<ThreadSafeRequestHandle>>&& aLoadingList = {});
 
   void TryShutdown();
 
