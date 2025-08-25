@@ -303,12 +303,6 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
   return MOZ_WL_SURFACE(container)->GetEGLWindow(unscaledSize);
 }
 
-void moz_container_wayland_update_opaque_region(MozContainer* container) {
-  nsWindow* window = moz_container_get_nsWindow(container);
-  MOZ_WL_SURFACE(container)->SetOpaqueRegion(
-      window->GetOpaqueRegion().ToUnknownRegion());
-}
-
 gboolean moz_container_wayland_can_draw(MozContainer* container) {
   return MOZ_WL_SURFACE(container)->IsReadyToDraw();
 }
