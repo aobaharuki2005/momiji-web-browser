@@ -18,6 +18,7 @@ use crate::std::{
     process::Child,
 };
 use anyhow::Context;
+use once_cell::sync::Lazy;
 use serde::Serialize;
 
 #[cfg(mock)]
@@ -39,7 +40,18 @@ impl MockHttp {
 }
 
 /// The user agent used by this application.
-pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
+pub fn user_agent() -> &'static str {
+    static USER_AGENT: Lazy<String> = Lazy::new(|| {
+        format!(
+            "{}/{} ({} {})",
+            env!("CARGO_PKG_NAME"),
+            mozbuild::config::MOZ_APP_VERSION,
+            std::env::consts::OS,
+            std::env::consts::ARCH,
+        )
+    });
+    &*USER_AGENT
+}
 
 // TODO set reasonable connect timeout and low speed limit?
 
@@ -135,7 +147,7 @@ impl<'a> RequestBuilder<'a> {
         let mut cmd = crate::process::background_command(path);
         cmd.args(["--backgroundtask", "crashreporterNetworkBackend"]);
         cmd.arg(url);
-        cmd.arg(USER_AGENT);
+        cmd.arg(user_agent());
 
         let mut file = TempRequestFile::new()?;
         serde_json::to_writer(&mut *file, self)?;
@@ -190,7 +202,7 @@ impl<'a> RequestBuilder<'a> {
         let mut cmd = crate::process::background_command("curl");
         let mut stdin: Option<Box<dyn Read + Send + 'static>> = None;
 
-        cmd.args(["--user-agent", USER_AGENT]);
+        cmd.args(["--user-agent", user_agent()]);
 
         match self {
             Self::MimePost { parts } => {
@@ -224,7 +236,7 @@ impl<'a> RequestBuilder<'a> {
         let mut easy = curl.easy()?;
 
         easy.set_url(url)?;
-        easy.set_user_agent(USER_AGENT)?;
+        easy.set_user_agent(user_agent())?;
         easy.set_max_redirs(30)?;
 
         match self {

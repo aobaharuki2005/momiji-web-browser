@@ -7,7 +7,6 @@
 //! whole.
 
 use super::*;
-use ::glean::TestGetValue;
 use crate::config::{test::MINIDUMP_PRUNE_SAVE_COUNT, Config};
 use crate::settings::Settings;
 use crate::std::{
@@ -22,6 +21,7 @@ use crate::std::{
     },
 };
 use crate::ui::{self, test::model, ui_impl::Interact};
+use ::glean::TestGetValue;
 
 /// A simple thread-safe counter which can be used in tests to mark that certain code paths were
 /// hit.
@@ -1272,7 +1272,7 @@ fn background_task_network_backend() {
                 "--backgroundtask",
                 "crashreporterNetworkBackend",
                 "https://reports.example.com",
-                "crashreporter/1.0.0",
+                net::http::user_agent(),
             ]
             .into_iter()
             .map(Into::into)
@@ -1376,7 +1376,7 @@ fn curl_binary() {
 
             let expected_args: Vec<OsString> = [
                 "--user-agent",
-                net::http::USER_AGENT,
+                net::http::user_agent(),
                 "--form",
                 "extra=@-;filename=extra.json;type=application/json",
                 "--form",
@@ -1429,7 +1429,7 @@ fn background_task_curl_fallback() {
                     "--backgroundtask",
                     "crashreporterNetworkBackend",
                     "https://reports.example.com",
-                    "crashreporter/1.0.0",
+                    net::http::user_agent(),
                 ]
                 .into_iter()
                 .map(Into::into)
@@ -1508,7 +1508,7 @@ fn background_task_curl_fallback() {
 
                 let expected_args: Vec<OsString> = [
                     "--user-agent",
-                    net::http::USER_AGENT,
+                    net::http::user_agent(),
                     "--form",
                     "extra=@-;filename=extra.json;type=application/json",
                     "--form",
