@@ -649,7 +649,7 @@ private fun BookmarksListTopBar(
                                 Icon(
                                     painter = painterResource(R.drawable.mozac_ic_cross_24),
                                     contentDescription = stringResource(
-                                        R.string.content_description_close_button,
+                                        R.string.bookmark_close_button_content_description,
                                     ),
                                     tint = FirefoxTheme.colors.iconPrimary,
                                 )
