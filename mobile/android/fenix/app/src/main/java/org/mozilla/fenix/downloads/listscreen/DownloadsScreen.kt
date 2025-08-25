@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -544,9 +545,9 @@ private fun getToolbarConfig(mode: Mode): ToolbarConfig {
                 R.string.download_multi_select_title,
                 mode.selectedItems.size,
             ),
-            backgroundColor = FirefoxTheme.colors.layerAccent,
-            textColor = FirefoxTheme.colors.textOnColorPrimary,
-            iconColor = FirefoxTheme.colors.iconOnColor,
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            textColor = MaterialTheme.colorScheme.inverseOnSurface,
+            iconColor = MaterialTheme.colorScheme.inverseOnSurface,
         )
 
         is Mode.Normal -> ToolbarConfig(
