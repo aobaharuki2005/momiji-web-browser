@@ -48,16 +48,16 @@ genai-prompts-proofread =
 
 genai-menu-no-provider-2 =
     .label = Ask an AI Chatbot
-    .accesskey = h
+    .accesskey = z
 genai-menu-choose-chatbot =
     .label = Choose an AI Chatbot
 genai-menu-ask-generic-2 =
     .label = Ask AI Chatbot
-    .accesskey = h
+    .accesskey = z
 # $provider (string) - name of the provider
 genai-menu-ask-provider-2 =
     .label = Ask { $provider }
-    .accesskey = h
+    .accesskey = z
 genai-menu-open-generic =
     .label = Open AI Chatbot
 # $provider (string) - name of the provider
