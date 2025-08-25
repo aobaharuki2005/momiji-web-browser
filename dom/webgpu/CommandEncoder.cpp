@@ -221,31 +221,35 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
     const dom::GPURenderPassDescriptor& aDesc) {
   dom::GPURenderPassDescriptor desc{aDesc};
 
-  for (auto& at : desc.mColorAttachments) {
-    auto coerceToViewInPlace =
-        [](dom::OwningGPUTextureOrGPUTextureView& texOrView)
-        -> RefPtr<TextureView> {
-      RefPtr<TextureView> view;
-      switch (texOrView.GetType()) {
-        case dom::OwningGPUTextureOrGPUTextureView::Type::eGPUTexture: {
-          dom::GPUTextureViewDescriptor defaultDesc{};
-          RefPtr<Texture> tex = texOrView.GetAsGPUTexture();
-          texOrView.SetAsGPUTextureView() = tex->CreateView(defaultDesc);
-          break;
-        }
-
-        case dom::OwningGPUTextureOrGPUTextureView::Type::eGPUTextureView:
-          // Nothing to do, great!
-          break;
+  auto coerceToViewInPlace =
+      [](dom::OwningGPUTextureOrGPUTextureView& texOrView)
+      -> RefPtr<TextureView> {
+    RefPtr<TextureView> view;
+    switch (texOrView.GetType()) {
+      case dom::OwningGPUTextureOrGPUTextureView::Type::eGPUTexture: {
+        dom::GPUTextureViewDescriptor defaultDesc{};
+        RefPtr<Texture> tex = texOrView.GetAsGPUTexture();
+        texOrView.SetAsGPUTextureView() = tex->CreateView(defaultDesc);
+        break;
       }
-      view = texOrView.GetAsGPUTextureView();
-      return view;
-    };
+
+      case dom::OwningGPUTextureOrGPUTextureView::Type::eGPUTextureView:
+        // Nothing to do, great!
+        break;
+    }
+    view = texOrView.GetAsGPUTextureView();
+    return view;
+  };
+
+  for (auto& at : desc.mColorAttachments) {
     TrackPresentationContext(coerceToViewInPlace(at.mView)->GetTargetContext());
     if (at.mResolveTarget.WasPassed()) {
       TrackPresentationContext(
           coerceToViewInPlace(at.mResolveTarget.Value())->GetTargetContext());
     }
+  }
+  if (desc.mDepthStencilAttachment.WasPassed()) {
+    coerceToViewInPlace(desc.mDepthStencilAttachment.Value().mView);
   }
 
   RefPtr<RenderPassEncoder> pass = new RenderPassEncoder(this, desc);
