@@ -46,19 +46,20 @@ class RefPtrTraits<FcConfig> {
   static void AddRef(FcConfig* ptr) { FcConfigReference(ptr); }
 };
 
+}  // namespace mozilla
+
+namespace std {
 template <>
-class DefaultDelete<FcFontSet> {
- public:
+struct default_delete<FcFontSet> {
   void operator()(FcFontSet* aPtr) { FcFontSetDestroy(aPtr); }
 };
 
 template <>
-class DefaultDelete<FcObjectSet> {
- public:
+struct default_delete<FcObjectSet> {
   void operator()(FcObjectSet* aPtr) { FcObjectSetDestroy(aPtr); }
 };
 
-};  // namespace mozilla
+}  // namespace std
 
 // The names for the font entry and font classes should really
 // the common 'Fc' abbreviation but the gfxPangoFontGroup code already

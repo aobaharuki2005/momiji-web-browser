@@ -196,14 +196,20 @@ class WebrtcTaskQueueWrapper : public webrtc::TaskQueueBase {
   const nsCString mName;
 };
 
-template <DeletionPolicy Deletion>
-class DefaultDelete<WebrtcTaskQueueWrapper<Deletion>>
-    : public webrtc::TaskQueueDeleter {
- public:
-  void operator()(WebrtcTaskQueueWrapper<Deletion>* aPtr) const {
+}  // namespace mozilla
+
+namespace std {
+template <mozilla::DeletionPolicy Deletion>
+struct default_delete<mozilla::WebrtcTaskQueueWrapper<Deletion>>
+    : webrtc::TaskQueueDeleter {
+  void operator()(mozilla::WebrtcTaskQueueWrapper<Deletion>* aPtr) const {
     webrtc::TaskQueueDeleter::operator()(aPtr);
   }
 };
+
+}  // namespace std
+
+namespace mozilla {
 
 std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
 CreateWebrtcTaskQueue(already_AddRefed<nsIEventTarget> aTarget,

@@ -21,7 +21,8 @@
 namespace mozilla {
 
 template <typename T>
-class DefaultDelete;
+using DefaultDelete = std::default_delete<T>;
+
 template <typename T, class D = DefaultDelete<T>>
 using UniquePtr = std::unique_ptr<T, D>;
 
@@ -59,50 +60,6 @@ struct PointerType {
 };
 
 }  // namespace detail
-
-/**
- * A default deletion policy using plain old operator delete.
- *
- * Note that this type can be specialized, but authors should beware of the risk
- * that the specialization may at some point cease to match (either because it
- * gets moved to a different compilation unit or the signature changes). If the
- * non-specialized (|delete|-based) version compiles for that type but does the
- * wrong thing, bad things could happen.
- *
- * This is a non-issue for types which are always incomplete (i.e. opaque handle
- * types), since |delete|-ing such a type will always trigger a compilation
- * error.
- */
-template <typename T>
-class DefaultDelete {
- public:
-  constexpr DefaultDelete() = default;
-
-  template <typename U>
-  MOZ_IMPLICIT DefaultDelete(
-      const DefaultDelete<U>& aOther,
-      std::enable_if_t<std::is_convertible_v<U*, T*>, int> aDummy = 0) {}
-
-  void operator()(T* aPtr) const {
-    static_assert(sizeof(T) > 0, "T must be complete");
-    delete aPtr;
-  }
-};
-
-/** A default deletion policy using operator delete[]. */
-template <typename T>
-class DefaultDelete<T[]> {
- public:
-  constexpr DefaultDelete() = default;
-
-  void operator()(T* aPtr) const {
-    static_assert(sizeof(T) > 0, "T must be complete");
-    delete[] aPtr;
-  }
-
-  template <typename U>
-  void operator()(U* aPtr) const = delete;
-};
 
 // No operator<, operator>, operator<=, operator>= for now because simplicity.
 

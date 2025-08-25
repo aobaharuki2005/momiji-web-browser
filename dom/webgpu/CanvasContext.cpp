@@ -38,22 +38,6 @@ inline void ImplCycleCollectionUnlink(dom::GPUCanvasConfiguration& aField) {
   aField.UnlinkForCC();
 }
 
-// -
-
-template <class T>
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback,
-    const std::unique_ptr<T>& aField, const char* aName, uint32_t aFlags) {
-  if (aField) {
-    ImplCycleCollectionTraverse(aCallback, *aField, aName, aFlags);
-  }
-}
-
-template <class T>
-inline void ImplCycleCollectionUnlink(std::unique_ptr<T>& aField) {
-  aField = nullptr;
-}
-
 }  // namespace mozilla
 
 // -
