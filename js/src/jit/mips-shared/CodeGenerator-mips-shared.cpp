@@ -827,9 +827,6 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
         MOZ_CRASH("Unexpected shift op");
     }
   } else {
-    // The shift amounts should be AND'ed into the 0-31 range
-    masm.ma_and(dest, ToRegister(rhs), Imm32(0x1F));
-
     switch (ins->bitop()) {
       case JSOp::Lsh:
         masm.ma_sll(dest, lhs, dest);
