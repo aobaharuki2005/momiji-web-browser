@@ -116,7 +116,7 @@ internal fun ProtectionPanel(
             if (numberOfTrackersBlocked == 0) {
                 MenuItem(
                     label = stringResource(id = R.string.protection_panel_no_trackers_blocked),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shield_24),
+                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shield_checkmark_24),
                 )
             } else {
                 MenuItem(
@@ -124,7 +124,7 @@ internal fun ProtectionPanel(
                         id = R.string.protection_panel_num_trackers_blocked,
                         numberOfTrackersBlocked,
                     ),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shield_24),
+                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shield_checkmark_24),
                     onClick = onTrackerBlockedMenuClick,
                     afterIconPainter = painterResource(id = R.drawable.mozac_ic_chevron_right_24),
                 )
