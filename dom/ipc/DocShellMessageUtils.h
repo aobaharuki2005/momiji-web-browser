@@ -43,6 +43,13 @@ struct ParamTraits<mozilla::dom::XPCOMPermitUnloadAction>
           mozilla::dom::XPCOMPermitUnloadAction::ePrompt,
           mozilla::dom::XPCOMPermitUnloadAction::eDontPromptAndUnload> {};
 
+template <>
+struct ParamTraits<mozilla::dom::ForceMediaDocument>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::dom::ForceMediaDocument,
+          mozilla::dom::ForceMediaDocument::None,
+          mozilla::dom::ForceMediaDocument::Video> {};
+
 }  // namespace IPC
 
 #endif  // mozilla_dom_docshell_message_utils_h__

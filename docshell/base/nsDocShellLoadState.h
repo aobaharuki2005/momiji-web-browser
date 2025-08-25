@@ -11,6 +11,7 @@
 #include "mozilla/dom/NavigationBinding.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/UserNavigationInvolvement.h"
+#include "mozilla/dom/LoadURIOptionsBinding.h"
 
 #include "nsIClassifiedChannel.h"
 #include "nsILoadInfo.h"
@@ -359,6 +360,15 @@ class nsDocShellLoadState final {
     return mSchemelessInput;
   }
 
+  void SetForceMediaDocument(
+      mozilla::dom::ForceMediaDocument aForceMediaDocument) {
+    mForceMediaDocument = aForceMediaDocument;
+  }
+
+  mozilla::dom::ForceMediaDocument GetForceMediaDocument() const {
+    return mForceMediaDocument;
+  }
+
   void SetHttpsUpgradeTelemetry(
       nsILoadInfo::HTTPSUpgradeTelemetryType aHttpsUpgradeTelemetry) {
     mHttpsUpgradeTelemetry = aHttpsUpgradeTelemetry;
@@ -680,6 +690,10 @@ class nsDocShellLoadState final {
   // if the address had an intentional protocol
   nsILoadInfo::SchemelessInputType mSchemelessInput =
       nsILoadInfo::SchemelessInputTypeUnset;
+
+  // If not None, force the load to result in a specific media document kind.
+  mozilla::dom::ForceMediaDocument mForceMediaDocument =
+      mozilla::dom::ForceMediaDocument::None;
 
   // Solely for the use of collecting Telemetry for HTTPS upgrades.
   nsILoadInfo::HTTPSUpgradeTelemetryType mHttpsUpgradeTelemetry =

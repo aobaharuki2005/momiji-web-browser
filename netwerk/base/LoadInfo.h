@@ -78,6 +78,10 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
          false)                                                                \
   SETTER(bool, AllowInsecureRedirectToDataURI)                                 \
                                                                                \
+  GETTER(dom::ForceMediaDocument, ForceMediaDocument, forceMediaDocument,      \
+         /* ForceMediaDocument::None */ dom::ForceMediaDocument(0))            \
+  SETTER(dom::ForceMediaDocument, ForceMediaDocument)                          \
+                                                                               \
   GETTER(bool, SkipContentPolicyCheckForWebRequest,                            \
          skipContentPolicyCheckForWebRequest, false)                           \
   SETTER(bool, SkipContentPolicyCheckForWebRequest)                            \

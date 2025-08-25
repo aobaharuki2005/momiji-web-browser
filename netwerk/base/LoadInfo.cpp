@@ -167,6 +167,9 @@ bool LoadInfo::IsDocumentMissingClientInfo() {
       aContentPolicyType, aSecurityFlags, aSandboxFlags);
 }
 
+static_assert(uint8_t(ForceMediaDocument::None) == 0,
+              "The default value of mForceMediaDocument depends on this.");
+
 LoadInfo::LoadInfo(
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
     nsINode* aLoadingContext, nsSecurityFlags aSecurityFlags,

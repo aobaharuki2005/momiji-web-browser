@@ -9,6 +9,7 @@
 #include "imgLoader.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsCharsetSource.h"
@@ -201,7 +202,20 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
     contentType = TEXT_PLAIN;
   }
 
-  CreateDocumentKind kind = GetCreateDocumentKind(contentType);
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  CreateDocumentKind kind;
+  switch (loadInfo->GetForceMediaDocument()) {
+    case dom::ForceMediaDocument::Image:
+      kind = CreateDocumentKind::Image;
+      break;
+    case dom::ForceMediaDocument::Video:
+      kind = CreateDocumentKind::Video;
+      break;
+    case dom::ForceMediaDocument::None:
+      kind = GetCreateDocumentKind(contentType);
+      break;
+  }
+
   if (kind == CreateDocumentKind::None) {
     // We can't handle this content type. Sorry!
     return NS_ERROR_FAILURE;

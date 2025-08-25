@@ -96,6 +96,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mTriggeringClassificationFlags = aLoadState.TriggeringClassificationFlags();
   mTriggeringRemoteType = aLoadState.TriggeringRemoteType();
   mSchemelessInput = aLoadState.SchemelessInput();
+  mForceMediaDocument = aLoadState.forceMediaDocument();
   mHttpsUpgradeTelemetry = aLoadState.HttpsUpgradeTelemetry();
   mPolicyContainer = aLoadState.PolicyContainer();
   mOriginalURIString = aLoadState.OriginalURIString();
@@ -206,6 +207,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mRemoteTypeOverride(aOther.mRemoteTypeOverride),
       mTriggeringRemoteType(aOther.mTriggeringRemoteType),
       mSchemelessInput(aOther.mSchemelessInput),
+      mForceMediaDocument(aOther.mForceMediaDocument),
       mHttpsUpgradeTelemetry(aOther.mHttpsUpgradeTelemetry) {
   MOZ_DIAGNOSTIC_ASSERT(
       XRE_IsParentProcess(),
@@ -514,6 +516,8 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
 
   loadState->SetSchemelessInput(static_cast<nsILoadInfo::SchemelessInputType>(
       aLoadURIOptions.mSchemelessInput));
+
+  loadState->SetForceMediaDocument(aLoadURIOptions.mForceMediaDocument);
 
   loadState.forget(aResult);
   return NS_OK;
@@ -1398,6 +1402,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize(
   loadState.LoadIdentifier() = mLoadIdentifier;
   loadState.ChannelInitialized() = mChannelInitialized;
   loadState.IsMetaRefresh() = mIsMetaRefresh;
+  loadState.forceMediaDocument() = mForceMediaDocument;
   if (mLoadingSessionHistoryInfo) {
     loadState.loadingSessionHistoryInfo().emplace(*mLoadingSessionHistoryInfo);
   }

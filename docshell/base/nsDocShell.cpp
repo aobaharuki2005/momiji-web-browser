@@ -10164,6 +10164,7 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
       aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC));
   aLoadInfo->SetIsNewWindowTarget(
       aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD));
+  aLoadInfo->SetForceMediaDocument(aLoadState->GetForceMediaDocument());
 
   bool inheritAttrs = false;
   if (aLoadState->PrincipalToInherit()) {
