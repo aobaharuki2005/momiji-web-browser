@@ -53,6 +53,7 @@ public class BasicSelectionActionDelegate
     implements ActionMode.Callback, GeckoSession.SelectionActionDelegate {
   private static final String LOGTAG = "BasicSelectionAction";
 
+  /** Intent action for processing text. */
   protected static final String ACTION_PROCESS_TEXT = Intent.ACTION_PROCESS_TEXT;
 
   private static final String[] FLOATING_TOOLBAR_ACTIONS =
@@ -70,14 +71,24 @@ public class BasicSelectionActionDelegate
   // This is limitation of intent text.
   private static final int MAX_INTENT_TEXT_LENGTH = 100000;
 
+  /** The activity associated with this delegate. */
   protected final @NonNull Activity mActivity;
+
+  /** Whether to use floating toolbar for selection actions. */
   protected final boolean mUseFloatingToolbar;
 
   private boolean mExternalActionsEnabled;
 
+  /** The current action mode, if any. */
   protected @Nullable ActionMode mActionMode;
+
+  /** The current GeckoSession associated with selection. */
   protected @Nullable GeckoSession mSession;
+
+  /** The current text selection. */
   protected @Nullable Selection mSelection;
+
+  /** Whether the menu has been repopulated. */
   protected boolean mRepopulatedMenu;
 
   private @Nullable ActionMode mActionModeForClipboardPermission;
@@ -111,12 +122,21 @@ public class BasicSelectionActionDelegate
     }
   }
 
-  @SuppressWarnings("checkstyle:javadocmethod")
+  /**
+   * Construct a BasicSelectionActionDelegate.
+   *
+   * @param activity The activity to associate with this delegate
+   */
   public BasicSelectionActionDelegate(final @NonNull Activity activity) {
     this(activity, Build.VERSION.SDK_INT >= 23);
   }
 
-  @SuppressWarnings("checkstyle:javadocmethod")
+  /**
+   * Construct a BasicSelectionActionDelegate.
+   *
+   * @param activity The activity to associate with this delegate
+   * @param useFloatingToolbar Whether to use floating toolbar for selection
+   */
   public BasicSelectionActionDelegate(
       final @NonNull Activity activity, final boolean useFloatingToolbar) {
     mActivity = activity;
@@ -456,7 +476,13 @@ public class BasicSelectionActionDelegate
     mActionMode = null;
   }
 
-  @SuppressWarnings("checkstyle:javadocmethod")
+  /**
+   * Called to get the content rectangle for the selection.
+   *
+   * @param mode The action mode
+   * @param view The view
+   * @param outRect The rectangle to be filled with content bounds
+   */
   public void onGetContentRect(
       final @Nullable ActionMode mode, final @Nullable View view, final @NonNull Rect outRect) {
     ThreadUtils.assertOnUiThread();

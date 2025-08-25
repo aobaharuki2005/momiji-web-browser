@@ -60,6 +60,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
+/** Runtime environment for Gecko-based applications. */
 public final class GeckoRuntime implements Parcelable {
   private static final String LOGTAG = "GeckoRuntime";
   private static final boolean DEBUG = false;
@@ -147,6 +148,7 @@ public final class GeckoRuntime implements Parcelable {
 
   private final MemoryController mMemoryController = new MemoryController();
 
+  /** Crashed process visibility type definitions for process crash handling. */
   @Retention(RetentionPolicy.SOURCE)
   @StringDef(
       value = {
@@ -680,6 +682,7 @@ public final class GeckoRuntime implements Parcelable {
     GeckoThread.forceQuit();
   }
 
+  /** Delegate for handling GeckoRuntime lifecycle events. */
   public interface Delegate {
     /**
      * This is called when the runtime shuts down. Any GeckoSession instances that were opened with
@@ -758,6 +761,7 @@ public final class GeckoRuntime implements Parcelable {
     return mCrashPullProxy.getDelegate();
   }
 
+  /** Delegate for handling service worker events and requests. */
   @UiThread
   public interface ServiceWorkerDelegate {
 
@@ -970,8 +974,12 @@ public final class GeckoRuntime implements Parcelable {
     return result;
   }
 
+  /**
+   * Get the runtime settings.
+   *
+   * @return The GeckoRuntimeSettings for this runtime
+   */
   @AnyThread
-  @SuppressWarnings("checkstyle:javadocmethod")
   public @NonNull GeckoRuntimeSettings getSettings() {
     return mSettings;
   }
@@ -1170,12 +1178,17 @@ public final class GeckoRuntime implements Parcelable {
   }
 
   // AIDL code may call readFromParcel even though it's not part of Parcelable.
+  /**
+   * Read runtime settings from a Parcel.
+   *
+   * @param source The Parcel to read from
+   */
   @AnyThread
-  @SuppressWarnings("checkstyle:javadocmethod")
   public void readFromParcel(final @NonNull Parcel source) {
     mSettings = source.readParcelable(getClass().getClassLoader());
   }
 
+  /** Parcelable creator for GeckoRuntime instances. */
   public static final Parcelable.Creator<GeckoRuntime> CREATOR =
       new Parcelable.Creator<GeckoRuntime>() {
         @Override
