@@ -79,6 +79,7 @@ const EXPECTED_AMP_RESULT = QuickSuggestTestUtils.ampResult({
   source: "merino",
   provider: "adm",
   requestId: "request_id",
+  suggestedIndex: -1,
 });
 const EXPECTED_WIKIPEDIA_RESULT = QuickSuggestTestUtils.wikipediaResult({
   source: "merino",
@@ -364,6 +365,7 @@ async function doOfflineTest({ mode, expectedResultArgs }) {
       QuickSuggestTestUtils.ampResult({
         ...expectedResultArgs,
         keyword: "offline",
+        suggestedIndex: -1,
       }),
     ],
   });
