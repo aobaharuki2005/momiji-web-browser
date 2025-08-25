@@ -44,6 +44,7 @@
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/EventQueue.h"
 #include "nsDeque.h"
+#include "mozilla/dom/Blob.h"
 
 namespace mozilla::dom {
 
@@ -238,9 +239,12 @@ class LlamaRunner final : public nsISupports, public nsWrapperCache {
 
   nsISupports* GetParentObject() const { return mGlobal; }
 
-  static already_AddRefed<LlamaRunner> Constructor(
-      const GlobalObject& aGlobal, const LlamaModelOptions& aOptions,
-      ErrorResult& aRv);
+  static already_AddRefed<LlamaRunner> Constructor(const GlobalObject& aGlobal,
+                                                   ErrorResult& aRv);
+
+  already_AddRefed<Promise> Initialize(const LlamaModelOptions& aOptions,
+                                       const Blob& aModelBlob,
+                                       ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

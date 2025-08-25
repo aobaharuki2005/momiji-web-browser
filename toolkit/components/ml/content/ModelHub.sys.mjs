@@ -1815,7 +1815,6 @@ export class ModelHub {
    * @param {string} config.featureId - feature id for the model
    * @param {string} config.sessionId - shared across the same session
    * @param {object} config.telemetryData - Additional telemetry data.
-   * @param {boolean} config.returnFullPath - Return the absolute path on disk.
    * @returns {Promise<[string, headers]>} The local path to the file content and headers.
    */
   async getModelDataAsFile({
@@ -1830,7 +1829,6 @@ export class ModelHub {
     featureId,
     sessionId,
     telemetryData = {},
-    returnFullPath = false,
   }) {
     // Make sure inputs are clean. We don't sanitize them but throw an exception
     let checkError = ModelHub.checkInput(model, revision, file);
@@ -1949,20 +1947,6 @@ export class ModelHub {
       cachedHeaders.lastUsed = Date.now();
       await this.cache.setHeaders({ model, revision, file, cachedHeaders });
 
-      if (returnFullPath) {
-        return [
-          (
-            await lazy.OPFS.download({
-              savePath: localFilePath,
-              deletePreviousVersions: false,
-              skipIfExists: true,
-              source: null,
-            })
-          ).mozFullPath,
-          cachedHeaders,
-        ];
-      }
-
       return [localFilePath, cachedHeaders];
     }
 
@@ -2065,10 +2049,6 @@ export class ModelHub {
           statusText: lazy.Progress.ProgressStatusText.DONE,
         })
       );
-
-      if (returnFullPath) {
-        return [fileObject.mozFullPath, headers];
-      }
 
       return [localFilePath, headers];
     } catch (error) {

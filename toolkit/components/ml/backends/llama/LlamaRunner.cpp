@@ -513,16 +513,65 @@ bool LlamaRunner::InInferenceProcess(JSContext*, JSObject*) {
       INFERENCE_REMOTE_TYPE);
 }
 
-already_AddRefed<LlamaRunner> LlamaRunner::Constructor(
-    const GlobalObject& aGlobal, const LlamaModelOptions& aOptions,
+already_AddRefed<Promise> LlamaRunner::Initialize(
+    const LlamaModelOptions& aOptions, const Blob& aModelBlob,
     ErrorResult& aRv) {
-  RefPtr<LlamaRunner> runner = new LlamaRunner(aGlobal);
-  auto result = runner->mBackend->Reinitialize(aOptions);
-  if (result.isErr()) {
-    LOGE_RUNNER("{}", result.inspectErr().mMessage);
+  LOGD_RUNNER("Entered {}", __PRETTY_FUNCTION__);
 
-    aRv.ThrowTypeError(result.inspectErr().mMessage);
+  RefPtr<Promise> promise = aModelBlob.Bytes(aRv);
+
+  Result<RefPtr<Promise>, nsresult> initResult =
+      promise->ThenWithCycleCollectedArgs(
+          [opts = LlamaModelOptions(aOptions), backend = mBackend](
+              JSContext* aCx, JS::Handle<JS::Value> aValue,
+              ErrorResult& aRv) -> already_AddRefed<Promise> {
+            LOGD_RUNNER("Entered {}", __PRETTY_FUNCTION__);
+            JS::Rooted<JSObject*> obj(aCx, aValue.toObjectOrNull());
+
+            // Get pointer + length
+            bool isShared = false;
+            size_t length = JS_GetTypedArrayLength(obj);
+            JS::AutoCheckCannotGC nogc;
+            uint8_t* data = JS_GetUint8ArrayData(obj, &isShared, nogc);
+
+            if (!data) {
+              auto msg = "Unable to get raw data from the js value"_ns;
+              LOGE_RUNNER("{}", msg);
+              aRv.ThrowTypeError(msg);
+              return nullptr;
+            }
+
+            // Initialize the backend
+            auto result = backend->Reinitialize(
+                opts, mozilla::Span<const uint8_t>(data, length));
+
+            if (result.isErr()) {
+              LOGE_RUNNER("{}", result.inspectErr().mMessage);
+              aRv.ThrowTypeError(result.inspectErr().mMessage);
+              return nullptr;
+            }
+
+            LOGD_RUNNER("{} Initialization successfully complete",
+                        __PRETTY_FUNCTION__);
+
+            return nullptr;
+          });
+
+  if (initResult.isErr()) {
+    LOGE_RUNNER(
+        "{}: Error when chaining initialization promise to the one to retrieve "
+        "model file ",
+        __PRETTY_FUNCTION__);
+    aRv.Throw(initResult.inspectErr());
+    return nullptr;
   }
+
+  return initResult.unwrap().forget();
+}
+
+already_AddRefed<LlamaRunner> LlamaRunner::Constructor(
+    const GlobalObject& aGlobal, ErrorResult& aRv) {
+  RefPtr<LlamaRunner> runner = new LlamaRunner(aGlobal);
   return runner.forget();
 }
 
