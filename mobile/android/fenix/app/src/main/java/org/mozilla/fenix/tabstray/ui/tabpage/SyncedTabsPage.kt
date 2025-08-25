@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -103,8 +104,9 @@ private fun UnauthenticatedSyncedTabsPage(
             TextButton(
                 text = stringResource(id = R.string.tab_manager_empty_synced_tabs_page_sign_in_cta),
                 onClick = onSignInClick,
-                textColor = LocalContentColor.current,
-                upperCaseText = false,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = LocalContentColor.current,
+                ),
             )
         }
     }

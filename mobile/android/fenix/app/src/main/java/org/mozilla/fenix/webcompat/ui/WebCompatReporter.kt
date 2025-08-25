@@ -213,7 +213,6 @@ fun WebCompatReporter(
                         onClick = {
                             store.dispatch(WebCompatReporterAction.CancelClicked)
                         },
-                        upperCaseText = false,
                     )
 
                     Spacer(modifier = Modifier.width(10.dp))

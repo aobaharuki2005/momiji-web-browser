@@ -257,14 +257,12 @@ private fun RestartWarningDialog(
         confirmButton = {
             TextButton(
                 text = stringResource(id = R.string.restart_warning_dialog_button_positive),
-                upperCaseText = false,
                 onClick = { onConfirm() },
             )
         },
         dismissButton = {
             TextButton(
                 text = stringResource(id = R.string.restart_warning_dialog_button_negative),
-                upperCaseText = false,
                 onClick = { onDismiss() },
             )
         },

@@ -481,14 +481,12 @@ private fun AlertDialogAddCustomProvider(
             TextButton(
                 text = stringResource(R.string.preference_doh_provider_custom_dialog_add),
                 onClick = { onCustomAddClicked(customProviderInput) },
-                upperCaseText = false,
             )
         },
         dismissButton = {
             TextButton(
                 text = stringResource(R.string.preference_doh_provider_custom_dialog_cancel),
                 onClick = onCustomCancelClicked,
-                upperCaseText = false,
             )
         },
     )

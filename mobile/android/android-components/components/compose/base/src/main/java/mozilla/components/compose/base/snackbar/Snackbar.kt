@@ -6,6 +6,7 @@ package mozilla.components.compose.base.snackbar
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarDefaults
@@ -103,8 +104,9 @@ private fun SnackbarAction(actionLabel: String, onClick: () -> Unit) {
         text = actionLabel,
         onClick = onClick,
         modifier = Modifier.testTag(SNACKBAR_BUTTON_TEST_TAG),
-        textColor = SnackbarDefaults.actionColor,
-        upperCaseText = false,
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = SnackbarDefaults.actionColor,
+        ),
     )
 }
 

@@ -747,14 +747,12 @@ private fun WarnDialog(
                 TextButton(
                     text = stringResource(R.string.open_all_warning_confirm),
                     onClick = { store.dispatch(OpenTabsConfirmationDialogAction.ConfirmTapped) },
-                    upperCaseText = false,
                 )
             },
             dismissButton = {
                 TextButton(
                     text = stringResource(R.string.open_all_warning_cancel),
                     onClick = { store.dispatch(OpenTabsConfirmationDialogAction.CancelTapped) },
-                    upperCaseText = false,
                 )
             },
         )

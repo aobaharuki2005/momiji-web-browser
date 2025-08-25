@@ -115,7 +115,7 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
 
     fun cancelFolderDeletion() {
         Log.i(TAG, "cancelFolderDeletion: Trying to click \"Cancel\" bookmarks folder deletion dialog button")
-        composeTestRule.onNodeWithText(getStringResource(R.string.bookmark_delete_negative).uppercase()).performClick()
+        composeTestRule.onNodeWithText(getStringResource(R.string.bookmark_delete_negative)).performClick()
         Log.i(TAG, "cancelFolderDeletion: Clicked \"Cancel\" bookmarks folder deletion dialog button")
     }
 
@@ -220,7 +220,7 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
 
     fun confirmDeletion() {
         Log.i(TAG, "confirmDeletion: Trying to click \"Delete\" bookmarks deletion button")
-        composeTestRule.onNodeWithText("DELETE").performClick()
+        composeTestRule.onNodeWithText("Delete").performClick()
         Log.i(TAG, "confirmDeletion: Clicked \"Delete\" bookmarks deletion button")
     }
 
