@@ -1941,6 +1941,7 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       description: {
         type: "string",
       },
+      descriptionL10n: L10N_SCHEMA,
       displayUrl: {
         type: "string",
       },
@@ -1957,6 +1958,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
         type: "boolean",
       },
       isBlockable: {
+        type: "boolean",
+      },
+      isManageable: {
         type: "boolean",
       },
       isPinned: {

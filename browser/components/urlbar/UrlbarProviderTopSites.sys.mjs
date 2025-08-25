@@ -333,7 +333,6 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
             ...lazy.UrlbarResult.payloadAndSimpleHighlights(
               queryContext.tokens,
               {
-                title: site.title,
                 keyword: site.title,
                 providesSearchMode: true,
                 engine: engine.name,
