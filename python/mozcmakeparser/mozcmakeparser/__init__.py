@@ -3,14 +3,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 import os
-from colorama import Fore, Style, init
-from pyparsing import (CharsNotIn, Group, Forward, Literal, Suppress, Word,
-                       QuotedString, ZeroOrMore, alphas, alphanums)
-from string import Template
 import re
+from string import Template
+
+from colorama import Fore, Style, init
+from pyparsing import (
+    CharsNotIn,
+    Forward,
+    Group,
+    Literal,
+    QuotedString,
+    Suppress,
+    Word,
+    ZeroOrMore,
+    alphanums,
+    alphas,
+)
 
 # Initialize colorama
 init(autoreset=True)
+
 
 # Define a custom formatter with colors and indentation
 class ColoredFormatter(logging.Formatter):
@@ -49,38 +61,42 @@ indentlevel = 0
 def debug(msg):
     log(logging.DEBUG, msg, indentlevel)
 
+
 def info(msg):
     log(logging.INFO, msg, indentlevel)
+
 
 def warn(msg):
     log(logging.WARNING, msg, indentlevel)
 
+
 def error(msg):
     log(logging.ERROR, msg, indentlevel)
 
+
 # Grammar for CMake
-comment = Literal('#') + ZeroOrMore(CharsNotIn('\n'))
-quoted_argument = QuotedString('\"', '\\', multiline=True)
-unquoted_argument = CharsNotIn('\n ()#\"\\')
+comment = Literal("#") + ZeroOrMore(CharsNotIn("\n"))
+quoted_argument = QuotedString('"', "\\", multiline=True)
+unquoted_argument = CharsNotIn('\n ()#"\\')
 argument = quoted_argument | unquoted_argument | Suppress(comment)
 arguments = Forward()
-arguments << (argument | (Literal('(') + ZeroOrMore(arguments) + Literal(')')))
-identifier = Word(alphas, alphanums+'_')
-command = Group(identifier + Literal('(') + ZeroOrMore(arguments) + Literal(')'))
+arguments << (argument | (Literal("(") + ZeroOrMore(arguments) + Literal(")")))
+identifier = Word(alphas, alphanums + "_")
+command = Group(identifier + Literal("(") + ZeroOrMore(arguments) + Literal(")"))
 file_elements = command | Suppress(comment)
 cmake = ZeroOrMore(file_elements)
 
 
 def extract_arguments(parsed):
     """Extract the command arguments skipping the parentheses"""
-    return parsed[2:len(parsed) - 1]
+    return parsed[2 : len(parsed) - 1]
 
 
 def match_block(command, parsed, start):
     """Find the end of block starting with the command"""
     depth = 0
     end = start + 1
-    endcommand = 'end' + command
+    endcommand = "end" + command
     while parsed[end][0] != endcommand or depth > 0:
         if parsed[end][0] == command:
             depth += 1
@@ -100,26 +116,25 @@ def parse_if(parsed, start):
     start = start + 1
     end = start
 
-    while parsed[end][0] != 'endif' or depth > 0:
+    while parsed[end][0] != "endif" or depth > 0:
         command = parsed[end][0]
-        if command == 'if':
+        if command == "if":
             depth += 1
-        elif command == 'else' and depth == 0:
+        elif command == "else" and depth == 0:
             condition.append(parsed[start:end])
             conditions.append(condition)
             start = end + 1
-            condition = [['TRUE']]
-        elif command == 'elseif' and depth == 0:
+            condition = [["TRUE"]]
+        elif command == "elseif" and depth == 0:
             condition.append(parsed[start:end])
             conditions.append(condition)
             condition = [extract_arguments(parsed[end])]
             start = end + 1
-        elif command == 'endif':
+        elif command == "endif":
             depth -= 1
         end = end + 1
         if end == len(parsed):
-            print('error: eof when trying to match if statement: %s'
-                  % parsed[start])
+            print(f"error: eof when trying to match if statement: {parsed[start]}")
     condition.append(parsed[start:end])
     conditions.append(condition)
     return end, conditions
@@ -134,15 +149,15 @@ def substs(variables, values):
 
         # Safe substitute leaves unrecognized variables in place.
         # We replace them with the empty string.
-        new_values.append(re.sub(r'\$\{\w+\}', '', new_value))
+        new_values.append(re.sub(r"\$\{\w+\}", "", new_value))
     return new_values
 
 
 def append(sources, source_file, pwd, flavor):
-     if flavor == "llama":
-         sources.append(os.path.join(*pwd, source_file))
-     else:
-         sources.append(source_file)
+    if flavor == "llama":
+        sources.append(os.path.join(*pwd, source_file))
+    else:
+        sources.append(source_file)
 
 
 def evaluate(variables, cache_variables, parsed, pwd, flavor):
@@ -153,82 +168,85 @@ def evaluate(variables, cache_variables, parsed, pwd, flavor):
         command = parsed[i][0]
         arguments = substs(variables, extract_arguments(parsed[i]))
 
-        if command == 'foreach':
+        if command == "foreach":
             end = match_block(command, parsed, i)
             for argument in arguments[1:]:
                 # ; is also a valid divider, why have one when you can have two?
-                argument = argument.replace(';', ' ')
-                for value in argument.split():
+                cleaned_argument = argument.replace(";", " ")
+                for value in cleaned_argument.split():
                     variables[arguments[0]] = value
-                    cont_eval, new_sources = evaluate(variables, cache_variables,
-                                                      parsed[i+1:end], pwd, flavor)
+                    cont_eval, new_sources = evaluate(
+                        variables, cache_variables, parsed[i + 1 : end], pwd, flavor
+                    )
                     sources.extend(new_sources)
                     if not cont_eval:
                         return cont_eval, sources
-        elif command == 'function':
+        elif command == "function":
             # for now we just execute functions inline at point of declaration
             # as this is sufficient to build libaom
             pass
-        elif command == 'if':
+        elif command == "if":
             i, conditions = parse_if(parsed, i)
             for condition in conditions:
                 if evaluate_boolean(variables, condition[0]):
-                    cont_eval, new_sources = evaluate(variables,
-                                                      cache_variables,
-                                                      condition[1], pwd, flavor)
+                    cont_eval, new_sources = evaluate(
+                        variables, cache_variables, condition[1], pwd, flavor
+                    )
                     sources.extend(new_sources)
                     if not cont_eval:
                         return cont_eval, sources
                     break
-        elif command == 'include':
+        elif command == "include":
             if arguments:
                 try:
-                    print('including: %s' % arguments[0])
-                    sources.extend(parse(variables, cache_variables, pwd, arguments[0], flavor))
-                except IOError:
-                    warn('warning: could not include: %s' % arguments[0])
-        elif command == 'list':
+                    print(f"including: {arguments[0]}")
+                    sources.extend(
+                        parse(variables, cache_variables, pwd, arguments[0], flavor)
+                    )
+                except OSError:
+                    warn(f"warning: could not include: {arguments[0]}")
+        elif command == "list":
             try:
                 action = arguments[0]
                 variable = arguments[1]
                 values = arguments[2:]
-                if action == 'APPEND':
+                if action == "APPEND":
                     if variable not in variables:
-                        variables[variable] = ' '.join(values)
+                        variables[variable] = " ".join(values)
                     else:
-                        variables[variable] += ' ' + ' '.join(values)
+                        variables[variable] += " " + " ".join(values)
             except (IndexError, KeyError):
                 pass
-        elif command == 'option':
+        elif command == "option":
             variable = arguments[0]
             value = arguments[2]
             # Allow options to be override without changing CMake files
             if variable not in variables:
                 variables[variable] = value
-        elif command == 'return':
+        elif command == "return":
             return False, sources
-        elif command == 'set':
+        elif command == "set":
             variable = arguments[0]
             values = arguments[1:]
             # CACHE variables are not set if already present
             try:
-                cache = values.index('CACHE')
+                cache = values.index("CACHE")
                 values = values[0:cache]
                 if variable not in variables:
-                    variables[variable] = ' '.join(values)
+                    variables[variable] = " ".join(values)
                 cache_variables.append(variable)
             except ValueError:
-                variables[variable] = ' '.join(values)
+                variables[variable] = " ".join(values)
         # we need to emulate the behavior of these function calls
         # because we don't support interpreting them directly
         # see bug 1492292
-        elif command in ['set_aom_config_var', 'set_aom_detect_var']:
+        elif command in ["set_aom_config_var", "set_aom_detect_var"]:
             variable = arguments[0]
             value = arguments[1]
             if variable not in variables:
                 variables[variable] = value
             cache_variables.append(variable)
-        elif command == 'set_aom_option_var':
+        elif command == "set_aom_option_var":
             # option vars cannot go into cache_variables
             variable = arguments[0]
             value = arguments[2]
@@ -253,12 +271,12 @@ def evaluate(variables, cache_variables, parsed, pwd, flavor):
                     os.path.join(*pwd, "ggml-cpu/CMakeLists.txt"),
                 )
             )
-        elif command == 'add_asm_library':
+        elif command == "add_asm_library":
             try:
-                sources.extend(variables[arguments[1]].split(' '))
+                sources.extend(variables[arguments[1]].split(" "))
             except (IndexError, KeyError):
                 pass
-        elif command == 'add_intrinsics_object_library':
+        elif command == "add_intrinsics_object_library":
             try:
                 source_files = variables[arguments[3]]
                 for source_file in source_files.split(" "):
@@ -283,8 +301,8 @@ def evaluate(variables, cache_variables, parsed, pwd, flavor):
             parse_target = os.path.join(*pwd, "CMakeLists.txt")
             sources.extend(parse(variables, cache_variables, pwd, parse_target, flavor))
             pwd.pop()
-        elif command == 'MOZDEBUG':
-            info('>>>> MOZDEBUG: %s' % ' '.join(arguments))
+        elif command == "MOZDEBUG":
+            info(f">>>> MOZDEBUG: {' '.join(arguments)}")
         i += 1
     return True, sources
 
@@ -296,17 +314,17 @@ def evaluate_boolean(variables, arguments):
 
     argument = arguments[0]
 
-    if argument == 'NOT':
+    if argument == "NOT":
         return not evaluate_boolean(variables, arguments[1:])
 
-    if argument == '(':
+    if argument == "(":
         i = 0
         depth = 1
         while depth > 0 and i < len(arguments):
             i += 1
-            if arguments[i] == '(':
+            if arguments[i] == "(":
                 depth += 1
-            if arguments[i] == ')':
+            if arguments[i] == ")":
                 depth -= 1
         return evaluate_boolean(variables, arguments[1:i])
 
@@ -319,11 +337,11 @@ def evaluate_boolean(variables, arguments):
                 return False
         except ValueError:
             upper = argument.upper()
-            if upper in ['ON', 'YES', 'TRUE', 'Y']:
+            if upper in ["ON", "YES", "TRUE", "Y"]:
                 return True
-            elif upper in ['OFF', 'NO', 'FALSE', 'N', 'IGNORE', '', 'NOTFOUND']:
+            elif upper in ["OFF", "NO", "FALSE", "N", "IGNORE", "", "NOTFOUND"]:
                 return False
-            elif upper.endswith('-NOTFOUND'):
+            elif upper.endswith("-NOTFOUND"):
                 return False
         return None
 
@@ -331,7 +349,7 @@ def evaluate_boolean(variables, arguments):
         # If statements can have old-style variables which are not demarcated
         # like ${VARIABLE}. Attempt to look up the variable both ways.
         try:
-            if re.search(r'\$\{\w+\}', argument):
+            if re.search(r"\$\{\w+\}", argument):
                 try:
                     t = Template(argument)
                     value = t.substitute(variables)
@@ -356,16 +374,16 @@ def evaluate_boolean(variables, arguments):
 
     if len(arguments) > 1:
         op = arguments[1]
-        if op == 'AND':
+        if op == "AND":
             return evaluate_constant(lhs) and evaluate_boolean(variables, arguments[2:])
-        elif op == 'MATCHES':
+        elif op == "MATCHES":
             rhs = lookup_variable(arguments[2])
             if not rhs:
                 rhs = arguments[2]
             return not re.match(rhs, lhs) is None
-        elif op == 'OR':
+        elif op == "OR":
             return evaluate_constant(lhs) or evaluate_boolean(variables, arguments[2:])
-        elif op == 'STREQUAL':
+        elif op == "STREQUAL":
             rhs = lookup_variable(arguments[2])
             if not rhs:
                 rhs = arguments[2]
