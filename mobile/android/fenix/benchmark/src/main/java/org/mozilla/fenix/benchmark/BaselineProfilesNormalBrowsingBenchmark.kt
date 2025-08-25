@@ -6,8 +6,6 @@ package org.mozilla.fenix.benchmark
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.StartupMode
@@ -53,7 +51,6 @@ import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
  * and the [instrumentation arguments documentation](https://d.android.com/topic/performance/benchmarking/macrobenchmark-instrumentation-args).
  **/
 @RunWith(Parameterized::class)
-@RequiresApi(Build.VERSION_CODES.N)
 @BaselineProfileMacrobenchmark
 class BaselineProfilesNormalBrowsingBenchmark(
     private val useComposableToolbar: Boolean,

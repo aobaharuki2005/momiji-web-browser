@@ -47,48 +47,42 @@ class SmokeTests {
 
     @Test
     fun loadWebsiteTest() {
-        // Disable on API21 - https://github.com/mozilla-mobile/android-components/issues/6482
-        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP) {
-            waitForIdle()
+        waitForIdle()
 
-            enterUrl(webserverRule.url())
+        enterUrl(webserverRule.url())
 
-            verifyWebsiteContent("Hello World!")
-            verifyUrlInToolbar(webserverRule.url())
-        }
+        verifyWebsiteContent("Hello World!")
+        verifyUrlInToolbar(webserverRule.url())
     }
 
     @Ignore("Intermittent: https://bugzilla.mozilla.org/show_bug.cgi?id=1794873")
     @Test
     fun loadWebsitesInMultipleTabsTest() {
-        // Disable on API21 - https://github.com/mozilla-mobile/android-components/issues/6482
-        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP) {
-            waitForIdle()
+        waitForIdle()
 
-            enterUrl(webserverRule.url())
+        enterUrl(webserverRule.url())
 
-            verifyWebsiteContent("Hello World!")
-            verifyUrlInToolbar(webserverRule.url())
+        verifyWebsiteContent("Hello World!")
+        verifyUrlInToolbar(webserverRule.url())
 
-            navigateToTabsTray()
-            openNewTabInTabsTray()
+        navigateToTabsTray()
+        openNewTabInTabsTray()
 
-            enterUrl(webserverRule.url())
+        enterUrl(webserverRule.url())
 
-            verifyWebsiteContent("Hello World!")
-            verifyUrlInToolbar(webserverRule.url())
+        verifyWebsiteContent("Hello World!")
+        verifyUrlInToolbar(webserverRule.url())
 
-            navigateToTabsTray()
-            openNewTabInTabsTray()
+        navigateToTabsTray()
+        openNewTabInTabsTray()
 
-            enterUrl(webserverRule.url())
+        enterUrl(webserverRule.url())
 
-            verifyWebsiteContent("Hello World!")
-            verifyUrlInToolbar(webserverRule.url())
+        verifyWebsiteContent("Hello World!")
+        verifyUrlInToolbar(webserverRule.url())
 
-            navigateToTabsTray()
-            openNewTabInTabsTray()
-        }
+        navigateToTabsTray()
+        openNewTabInTabsTray()
     }
 }
 
