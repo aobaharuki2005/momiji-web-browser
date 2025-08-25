@@ -3509,20 +3509,24 @@ void ScriptLoader::UpdateCache() {
     request = mCachingQueue.StealFirst();
     MOZ_ASSERT(!IsWebExtensionRequest(request),
                "Bytecode for web extension content scrips is not cached");
-    if (mCache) {
-      FinishCollectingDelazifications(aes.cx(), request);
-    } else {
-      FinishCollectingDelazificationsAndEncodeBytecode(aes.cx(), request);
+
+    RefPtr<JS::Stencil> stencil;
+    stencil = FinishCollectingDelazifications(aes.cx(), request);
+    if (stencil) {
+      MOZ_ASSERT_IF(request->IsStencil(), stencil == request->GetStencil());
+
+      // TODO: This should be performed also with mCache at some point.
+      if (!mCache) {
+        EncodeBytecodeAndSave(aes.cx(), request, stencil);
+      }
     }
     request->DropBytecode();
     request->DropCacheReferences();
   }
 }
 
-void ScriptLoader::FinishCollectingDelazifications(
+already_AddRefed<JS::Stencil> ScriptLoader::FinishCollectingDelazifications(
     JSContext* aCx, ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(mCache);
-
   RefPtr<JS::Stencil> stencil;
   bool result;
   if (aRequest->IsModuleRequest()) {
@@ -3539,37 +3543,25 @@ void ScriptLoader::FinishCollectingDelazifications(
   }
   if (!result) {
     JS_ClearPendingException(aCx);
-    return;
+    return nullptr;
   }
-
-  MOZ_ASSERT(stencil == aRequest->GetStencil());
-  return;
+  return stencil.forget();
 }
 
-void ScriptLoader::FinishCollectingDelazificationsAndEncodeBytecode(
-    JSContext* aCx, ScriptLoadRequest* aRequest) {
+void ScriptLoader::EncodeBytecodeAndSave(JSContext* aCx,
+                                         ScriptLoadRequest* aRequest,
+                                         JS::Stencil* aStencil) {
   MOZ_ASSERT(!mCache);
+  MOZ_ASSERT(aRequest->mCacheInfo);
 
   using namespace mozilla::Telemetry;
   nsresult rv = NS_OK;
-  MOZ_ASSERT_IF(!aRequest->IsStencil(), aRequest->mCacheInfo);
   auto bytecodeFailed = mozilla::MakeScopeExit(
       [&]() { TRACE_FOR_TEST_NONE(aRequest, "scriptloader_bytecode_failed"); });
 
-  bool result;
-  if (aRequest->IsModuleRequest()) {
-    aRequest->mScriptForCache = nullptr;
-    ModuleScript* moduleScript = aRequest->AsModuleRequest()->mModuleScript;
-    JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
-    result = JS::FinishCollectingDelazifications(aCx, module,
-                                                 aRequest->SRIAndBytecode());
-  } else {
-    JS::Rooted<JSScript*> script(aCx, aRequest->mScriptForCache);
-    result = JS::FinishCollectingDelazifications(aCx, script,
-                                                 aRequest->SRIAndBytecode());
-    aRequest->mScriptForCache = nullptr;
-  }
-  if (!result) {
+  JS::TranscodeResult result =
+      JS::EncodeStencil(aCx, aStencil, aRequest->SRIAndBytecode());
+  if (result != JS::TranscodeResult::Ok) {
     // Encoding can be aborted for non-supported syntax (e.g. asm.js), or
     // any other internal error.
     // We don't care the error and just give up encoding.

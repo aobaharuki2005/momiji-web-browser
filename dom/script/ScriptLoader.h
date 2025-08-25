@@ -764,18 +764,16 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void UpdateCache();
 
   /**
-   * Finish collecting the delazifications, and encode the stencils and save
-   * the bytecode to the necko cache.
+   * Finish collecting the delazifications and return the stencil.
    */
-  void FinishCollectingDelazificationsAndEncodeBytecode(
+  already_AddRefed<JS::Stencil> FinishCollectingDelazifications(
       JSContext* aCx, ScriptLoadRequest* aRequest);
 
   /**
-   * Just finish collecting the delazifications.
-   * The stencil should already be stored into the in-memory cache.
+   * Encode the stencils and save the bytecode to the necko cache.
    */
-  void FinishCollectingDelazifications(JSContext* aCx,
-                                       ScriptLoadRequest* aRequest);
+  void EncodeBytecodeAndSave(JSContext* aCx, ScriptLoadRequest* aRequest,
+                             JS::Stencil* aStencil);
 
   /**
    * Stop collecting delazifications for all requests.
