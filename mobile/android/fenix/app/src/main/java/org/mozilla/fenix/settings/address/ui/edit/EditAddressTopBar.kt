@@ -107,7 +107,7 @@ private fun AddTopBarPreview() {
 @Composable
 private fun EditTopBarPreview() {
     val address = Address("BEEF", "Work", "Mozilla", "", "", "", "", "", "", "", "")
-    val store = AddressStore(AddressState.initial(address), listOf())
+    val store = AddressStore(AddressState.initial(address = address), listOf())
 
     FirefoxTheme {
         EditAddressTopBar(store)
