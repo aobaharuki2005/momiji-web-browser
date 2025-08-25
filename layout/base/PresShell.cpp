@@ -12173,18 +12173,21 @@ PresShell::AnchorPosUpdateResult PresShell::UpdateAnchorPosLayout() {
   DoFlushLayout(/* aInterruptible = */ false);
 
   auto result = AnchorPosUpdateResult::Flushed;
-  const auto MarkForReflow = [&] (nsIFrame* aFrame) {
+  const auto MarkForReflow = [&](nsIFrame* aFrame) {
     result = AnchorPosUpdateResult::NeedReflow;
     // Abspos frames should not affect ancestor intrinsics.
     FrameNeedsReflow(aFrame, IntrinsicDirty::None, NS_FRAME_HAS_DIRTY_CHILDREN);
   };
   AUTO_PROFILER_MARKER_UNTYPED("UpdateAnchorPosLayout", LAYOUT, {});
-  for (auto* positioned: mAnchorPosPositioned) {
-    MOZ_ASSERT(positioned->IsAbsolutelyPositioned(), "Anchor positioned frame is not absolutely positioned?");
-    const auto* referencedAnchors = positioned->GetProperty(nsIFrame::AnchorPosReferences());
-    // Note that it's possible (Though unlikely) to register as anchor positioned but not
-    // actually make any anchor resolution - e.g. `position-anchor` is set, but no other anchor
-    // positioning property is used.
+  for (auto* positioned : mAnchorPosPositioned) {
+    MOZ_ASSERT(positioned->IsAbsolutelyPositioned(),
+               "Anchor positioned frame is not absolutely positioned?");
+    const auto* referencedAnchors =
+        positioned->GetProperty(nsIFrame::AnchorPosReferences());
+    // Note that it's possible (Though unlikely) to register as anchor
+    // positioned but not actually make any anchor resolution - e.g.
+    // `position-anchor` is set, but no other anchor positioning property is
+    // used.
     if (!referencedAnchors || referencedAnchors->IsEmpty()) {
       continue;
     }
@@ -12192,7 +12195,7 @@ PresShell::AnchorPosUpdateResult PresShell::UpdateAnchorPosLayout() {
       // Already marked for reflow.
       continue;
     }
-    for(const auto& kv: *referencedAnchors) {
+    for (const auto& kv : *referencedAnchors) {
       const auto& data = kv.GetData();
       const auto& anchorName = kv.GetKey();
       const auto* anchor = GetAnchorPosAnchor(anchorName, positioned);
@@ -12222,10 +12225,7 @@ PresShell::AnchorPosUpdateResult PresShell::UpdateAnchorPosLayout() {
         continue;
       }
       const auto posInfo = AnchorPositioningUtils::GetAnchorPosRect(
-        positioned->GetParent(),
-        anchor,
-        true,
-        nullptr);
+          positioned->GetParent(), anchor, true, nullptr);
       MOZ_ASSERT(posInfo, "Can't resolve anchor rect?");
       const auto newOrigin = posInfo.ref().mRect.TopLeft();
       const auto& prevOrigin = anchorReference.mOrigin.ref();
