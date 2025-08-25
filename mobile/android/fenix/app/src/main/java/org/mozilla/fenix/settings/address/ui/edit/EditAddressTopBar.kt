@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -59,7 +61,10 @@ internal fun EditAddressTopBar(store: AddressStore) {
         },
         actions = {
             if (store.state.isEditing) {
-                IconButton(onClick = { store.dispatch(DeleteTapped) }) {
+                IconButton(
+                    onClick = { store.dispatch(DeleteTapped) },
+                    modifier = Modifier.testTag(EditAddressTestTag.TOPBAR_DELETE_BUTTON),
+                ) {
                     Icon(
                         painter = painterResource(R.drawable.mozac_ic_delete_24),
                         contentDescription = stringResource(

@@ -11,22 +11,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Dropdown
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
@@ -36,12 +37,9 @@ import mozilla.components.compose.base.button.SecondaryButton
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.textfield.TextFieldColors
-import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.address.Country
-import org.mozilla.fenix.settings.address.DEFAULT_COUNTRY
-import org.mozilla.fenix.settings.address.store.AddressAction
 import org.mozilla.fenix.settings.address.store.AddressState
 import org.mozilla.fenix.settings.address.store.AddressStore
 import org.mozilla.fenix.settings.address.store.CancelTapped
@@ -52,7 +50,6 @@ import org.mozilla.fenix.settings.address.store.ViewAppeared
 import org.mozilla.fenix.settings.address.store.isEditing
 import org.mozilla.fenix.settings.address.store.selectedCountry
 import org.mozilla.fenix.theme.FirefoxTheme
-import kotlin.reflect.KProperty1
 import mozilla.components.compose.base.text.Text as DropdownText
 
 /**
@@ -73,6 +70,12 @@ fun EditAddressScreen(store: AddressStore) {
         val state by store.observeAsState(store.state) { it }
         val address = state.address
 
+        val focusRequester = remember { FocusRequester() }
+
+        LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
+        }
+
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
@@ -83,13 +86,17 @@ fun EditAddressScreen(store: AddressStore) {
                 )
                 .verticalScroll(state = rememberScrollState()),
         ) {
-            AddressField(labelId = R.string.addresses_name, value = address.name) {
+            AddressField(
+                field = Field.name,
+                value = address.name,
+                modifier = Modifier.focusRequester(focusRequester),
+            ) {
                 store.dispatch(FormChange.Name(it))
             }
-            AddressField(labelId = R.string.addresses_street_address, value = address.streetAddress) {
+            AddressField(field = Field.streetAddress, value = address.streetAddress) {
                 store.dispatch(FormChange.StreetAddress(it))
             }
-            AddressField(labelId = R.string.addresses_city, value = address.addressLevel2) {
+            AddressField(field = Field.city, value = address.addressLevel2) {
                 store.dispatch(FormChange.City(it))
             }
 
@@ -102,7 +109,7 @@ fun EditAddressScreen(store: AddressStore) {
                 )
             }
 
-            AddressField(labelId = R.string.addresses_zip, value = address.postalCode) {
+            AddressField(field = Field.zip, value = address.postalCode) {
                 store.dispatch(FormChange.PostalCode(it))
             }
 
@@ -112,10 +119,10 @@ fun EditAddressScreen(store: AddressStore) {
                 currentCountry = state.address.country,
             )
 
-            AddressField(labelId = R.string.addresses_phone, value = address.tel) {
+            AddressField(field = Field.phone, value = address.tel) {
                 store.dispatch(FormChange.Phone(it))
             }
-            AddressField(labelId = R.string.addresses_email, value = address.email) {
+            AddressField(field = Field.email, value = address.email) {
                 store.dispatch(FormChange.Email(it))
             }
 
@@ -135,7 +142,7 @@ private fun CountryDropdown(
             onCountryChange(countryKey)
         }
     }
-    AddressDropdown(R.string.addresses_country, countryList)
+    AddressDropdown(Field.country, countryList)
 }
 
 @Composable
@@ -155,7 +162,7 @@ private fun SubregionDropdown(
     }
 
     AddressDropdown(
-        subregionTitleResource,
+        Field.subregion(subregionTitleResource),
         countryList,
     )
 }
@@ -164,20 +171,29 @@ private fun SubregionDropdown(
 private fun FormButtons(store: AddressStore) {
     Row {
         if (store.state.isEditing) {
-            DestructiveButton(text = stringResource(R.string.addressess_delete_address_button)) {
+            DestructiveButton(
+                text = stringResource(R.string.addressess_delete_address_button),
+                modifier = Modifier.testTag(EditAddressTestTag.DELETE_BUTTON),
+            ) {
                 store.dispatch(DeleteTapped)
             }
         }
 
         Spacer(Modifier.weight(1f))
 
-        SecondaryButton(text = stringResource(R.string.addresses_cancel_button)) {
+        SecondaryButton(
+            text = stringResource(R.string.addresses_cancel_button),
+            modifier = Modifier.testTag(EditAddressTestTag.CANCEL_BUTTON),
+        ) {
             store.dispatch(CancelTapped)
         }
 
         Spacer(Modifier.width(8.dp))
 
-        PrimaryButton(text = stringResource(R.string.addresses_save_button)) {
+        PrimaryButton(
+            text = stringResource(R.string.addresses_save_button),
+            modifier = Modifier.testTag(EditAddressTestTag.SAVE_BUTTON),
+        ) {
             store.dispatch(SaveTapped)
         }
     }
@@ -185,8 +201,9 @@ private fun FormButtons(store: AddressStore) {
 
 @Composable
 private fun AddressField(
-    @StringRes labelId: Int,
+    field: Field,
     value: String,
+    modifier: Modifier = Modifier,
     onChange: (String) -> Unit,
 ) {
     TextField(
@@ -194,23 +211,56 @@ private fun AddressField(
         onValueChange = onChange,
         placeholder = "",
         errorText = "",
-        label = stringResource(labelId),
+        modifier = modifier.testTag(field.testTag),
+        label = stringResource(field.labelId),
         colors = TextFieldColors.default(
             placeholderColor = FirefoxTheme.colors.textPrimary,
         ),
+
     )
 }
 
 @Composable
 private fun AddressDropdown(
-    @StringRes labelId: Int,
+    field: Field,
     dropdownItems: List<MenuItem.CheckableItem>,
 ) {
     Dropdown(
-        label = stringResource(labelId),
+        label = stringResource(field.labelId),
         placeholder = "",
         dropdownItems = dropdownItems,
+        modifier = Modifier.testTag(field.testTag),
     )
+}
+
+internal data class Field(
+    @get:StringRes val labelId: Int,
+    val testTag: String,
+) {
+    companion object {
+        val name: Field
+            get() = Field(R.string.addresses_name, EditAddressTestTag.NAME_FIELD)
+
+        val streetAddress: Field
+            get() = Field(R.string.addresses_street_address, EditAddressTestTag.STREET_ADDRESS_FIELD)
+
+        val city: Field
+            get() = Field(R.string.addresses_city, EditAddressTestTag.CITY_FIELD)
+
+        val zip: Field
+            get() = Field(R.string.addresses_zip, EditAddressTestTag.ZIP_FIELD)
+
+        val country: Field
+            get() = Field(R.string.addresses_country, EditAddressTestTag.COUNTRY_FIELD)
+
+        fun subregion(@StringRes titleResource: Int) = Field(titleResource, EditAddressTestTag.SUBREGION_FIELD)
+
+        val phone: Field
+            get() = Field(R.string.addresses_phone, EditAddressTestTag.PHONE_FIELD)
+
+        val email: Field
+            get() = Field(R.string.addresses_email, EditAddressTestTag.EMAIL_FIELD)
+    }
 }
 
 @FlexibleWindowLightDarkPreview

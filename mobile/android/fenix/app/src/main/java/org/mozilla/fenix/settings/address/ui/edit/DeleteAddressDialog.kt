@@ -8,6 +8,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.TextButton
@@ -44,12 +46,14 @@ internal fun DeleteAddressDialog(store: AddressStore) {
                 TextButton(
                     text = stringResource(R.string.addressess_confirm_dialog_ok_button).uppercase(),
                     onClick = { store.dispatch(DeleteDialogAction.DeleteTapped) },
+                    modifier = Modifier.testTag(EditAddressTestTag.DIALOG_DELETE_BUTTON),
                 )
             },
             dismissButton = {
                 TextButton(
                     text = stringResource(R.string.addressess_confirm_dialog_cancel_button).uppercase(),
                     onClick = { store.dispatch(DeleteDialogAction.CancelTapped) },
+                    modifier = Modifier.testTag(EditAddressTestTag.DIALOG_CANCEL_BUTTON),
                 )
             },
         )
