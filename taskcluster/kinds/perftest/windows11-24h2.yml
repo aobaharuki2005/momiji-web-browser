@@ -325,6 +325,7 @@ ml-llama-summarizer-perf:
         fetch:
             - wllama.wasm
             - smollm2-360-instruct-gguf
+            - Qwen3-0.6B-GGUF
     description: Run ML Summarizer Model Using Wllama
     treeherder:
         symbol: perftest(ml-llama-sum-perf)
