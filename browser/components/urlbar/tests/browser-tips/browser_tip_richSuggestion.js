@@ -159,7 +159,19 @@ add_task(async function learn_more() {
       info("Activate learn more link and check");
       let expectedURL = `http://127.0.0.1:8888/support-dummy/${topic}`;
       let newTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, expectedURL);
+
       EventUtils.synthesizeKey("KEY_Tab");
+      Assert.equal(
+        UrlbarTestUtils.getSelectedElement(window),
+        learnMoreLink,
+        "The learn-more link should be selected after pressing Tab"
+      );
+      Assert.equal(
+        gURLBar.value,
+        expectedURL,
+        "The input value should be the learn-more link URL"
+      );
+
       EventUtils.synthesizeKey("KEY_Enter");
       info("Wait until expected url is loaded in the current tab");
       let newTab = await newTabOpened;
