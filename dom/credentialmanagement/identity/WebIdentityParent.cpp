@@ -91,6 +91,7 @@ mozilla::ipc::IPCResult WebIdentityParent::RecvSetLoginStatus(
   WindowGlobalParent* manager = static_cast<WindowGlobalParent*>(Manager());
   if (!manager) {
     aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
   }
   nsIPrincipal* principal = manager->DocumentPrincipal();
   if (!principal) {
