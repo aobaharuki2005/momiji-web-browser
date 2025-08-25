@@ -44,3 +44,46 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test AXHelp on fieldset and radio group
+ */
+addAccessibleTask(
+  `
+<fieldset id="fieldset" aria-describedby="testHint">
+  <button>Button</button>
+</fieldset>
+
+<div id="radiogroup" role="radiogroup" aria-describedby="testHint">
+  <input type="radio" id="radio1" name="group" value="1">
+  <label for="radio1">Radio 1</label>
+  <input type="radio" id="radio2" name="group" value="2">
+  <label for="radio2">Radio 2</label>
+</div>
+
+<div id="testHint">
+  This is a hinto
+</div>
+`,
+  async (browser, accDoc) => {
+    let getHelp = id =>
+      getNativeInterface(accDoc, id).getAttributeValue("AXHelp");
+    let getCustomDescription = id =>
+      getNativeInterface(accDoc, id).getAttributeValue("AXCustomContent")[0]
+        .description;
+
+    is(getHelp("fieldset"), "This is a hinto", "AXHelp for fieldset");
+    is(
+      getCustomDescription("fieldset"),
+      "This is a hinto",
+      "Custom description for fieldset"
+    );
+
+    is(getHelp("radiogroup"), "This is a hinto", "AXHelp for radiogroup");
+    is(
+      getCustomDescription("radiogroup"),
+      "This is a hinto",
+      "Custom description for radiogroup"
+    );
+  }
+);

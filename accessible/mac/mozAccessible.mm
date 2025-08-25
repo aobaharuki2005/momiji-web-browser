@@ -543,12 +543,15 @@ static bool ProvidesTitle(const Accessible* aAccessible, nsString& aName) {
   EDescriptionValueFlag descFlag = mGeckoAccessible->Description(desc);
 
   if (@available(macOS 11.0, *)) {
-    // Provide AXHelp on non-aria descriptions (eg. title attribute)
-    return descFlag != eDescriptionFromARIA ? nsCocoaUtils::ToNSString(desc)
-                                            : nil;
+    // Provide AXHelp only on non-aria descriptions (eg. title attribute),
+    // or if the accessible is a fieldset or radio group.
+    if (descFlag == eDescriptionFromARIA &&
+        mGeckoAccessible->Role() != roles::GROUPING &&
+        mGeckoAccessible->Role() != roles::RADIO_GROUP) {
+      return nil;
+    }
   }
 
-  // Prior to macOS 11.0
   return nsCocoaUtils::ToNSString(desc);
 }
 
