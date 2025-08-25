@@ -134,9 +134,6 @@ int WebMDemuxer::NestEggContext::Init() {
   io.tell = webmdemux_tell;
   io.userdata = this;
 
-  // While reading the metadata, we do not really care about which nestegg
-  // context is being used so long that they are both initialised.
-  // For reading the metadata however, we will use mVideoContext.
   return nestegg_init(&mContext, io, &webmdemux_log,
                       mParent->IsMediaSource() ? mResource.GetLength() : -1);
 }
@@ -285,7 +282,7 @@ nsresult WebMDemuxer::ReadMetadata() {
     return NS_ERROR_FAILURE;
   }
 
-  // For reading the metadata we can only use the video resource/context.
+  // Both contexts have the metadata; the video context is used here.
   MediaResourceIndex& resource = Resource(TrackInfo::kVideoTrack);
   nestegg* context = Context(TrackInfo::kVideoTrack);
 
