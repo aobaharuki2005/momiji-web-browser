@@ -8,6 +8,7 @@
 
 #include "mozilla/GeckoBindings.h"
 
+#include "AnchorPositioningUtils.h"
 #include "ChildIterator.h"
 #include "ErrorReporter.h"
 #include "gfxFontFeatures.h"
@@ -1822,22 +1823,6 @@ StyleFontFamilyList StyleFontFamilyList::WithOneUnquotedFamily(
   return WithNames(std::move(names));
 }
 
-// Find the aContainer's child that is the ancestor of aDescendant.
-static const nsIFrame* TraverseUpToContainerChild(const nsIFrame* aContainer,
-                                                  const nsIFrame* aDescendant) {
-  const auto* current = aDescendant;
-  while (true) {
-    const auto* parent = current->GetParent();
-    if (!parent) {
-      return nullptr;
-    }
-    if (parent == aContainer) {
-      return current;
-    }
-    current = parent;
-  }
-}
-
 static bool AnchorSideUsesCBWM(
     const StyleAnchorSideKeyword& aAnchorSideKeyword) {
   switch (aAnchorSideKeyword) {
@@ -1859,13 +1844,6 @@ static bool AnchorSideUsesCBWM(
   }
   return false;
 }
-
-struct AnchorPosInfo {
-  // Border-box of the anchor frame, offset against `mContainingBlock`'s padding
-  // box.
-  nsRect mRect;
-  const nsIFrame* mContainingBlock;
-};
 
 static const nsAtom* GetUsedAnchorName(const nsIFrame* aPositioned,
                                        const nsAtom* aAnchorName) {
@@ -1926,57 +1904,8 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
     return Nothing{};
   }
 
-  auto rect = [&]() -> Maybe<nsRect> {
-    if (aCBRectIsvalid) {
-      const nsRect result = anchor->GetRectRelativeToSelf();
-      const auto offset = anchor->GetOffsetTo(containingBlock);
-      // Easy, just use the existing function.
-      return Some(result + offset);
-    }
-
-    // Ok, containing block doesn't have its rect fully resolved. Figure out
-    // rect relative to the child of containing block that is also the ancestor
-    // of the anchor, and manually compute the offset.
-    // TODO(dshin): This wouldn't handle anchor in a previous top layer.
-    const auto* containerChild =
-        TraverseUpToContainerChild(containingBlock, anchor);
-    if (!containerChild) {
-      return Nothing{};
-    }
-
-    if (anchor == containerChild) {
-      // Anchor is the direct child of anchor's CBWM.
-      return Some(anchor->GetRect());
-    }
-
-    // TODO(dshin): Already traversed up to find `containerChild`, and we're
-    // going to do it again here, which feels a little wasteful.
-    const nsRect rectToContainerChild = anchor->GetRectRelativeToSelf();
-    const auto offset = anchor->GetOffsetTo(containerChild);
-    return Some(rectToContainerChild + offset + containerChild->GetPosition());
-  }();
-  return rect.map([&](const nsRect& aRect) {
-    // We need to position the border box of the anchor within the abspos
-    // containing block's size - So the rectangle's size (i.e. Anchor size)
-    // stays the same, while "the outer rectangle" (i.e. The abspos cb size)
-    // "shrinks" by shifting the position.
-    const auto border = containingBlock->GetUsedBorder();
-    const nsPoint borderTopLeft{border.left, border.top};
-    const auto rect = aRect - borderTopLeft;
-    if (entry) {
-      // If a partially resolved entry exists, make sure that it matches what we
-      // have now.
-      MOZ_ASSERT_IF(*entry, entry->ref().mSize == rect.Size());
-      *entry = Some(AnchorPosResolutionData{
-          rect.Size(),
-          Some(rect.TopLeft()),
-      });
-    }
-    return AnchorPosInfo{
-        .mRect = rect,
-        .mContainingBlock = containingBlock,
-    };
-  });
+  return AnchorPositioningUtils::GetAnchorPosRect(containingBlock, anchor,
+                                                  aCBRectIsvalid, entry);
 }
 
 bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
