@@ -3379,6 +3379,40 @@ function synthesizeDropAfterDragOver(
 }
 
 /**
+ * Calls `nsIDragService.startDragSessionForTests`, which is required before
+ * any other code can use `nsIDOMWindowUtils.dragSession`. Most notably,
+ * a drag session is required before populating a drag-drop event's
+ * `dataTransfer` property.
+ *
+ * @param {Window} aWindow
+ * @param {typeof DataTransfer.prototype.dropEffect} aDropEffect
+ */
+function startDragSession(aWindow, aDropEffect) {
+  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(
+    _EU_Ci.nsIDragService
+  );
+
+  let dropAction;
+  switch (aDropEffect) {
+    case null:
+    case undefined:
+    case "move":
+      dropAction = _EU_Ci.nsIDragService.DRAGDROP_ACTION_MOVE;
+      break;
+    case "copy":
+      dropAction = _EU_Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+      break;
+    case "link":
+      dropAction = _EU_Ci.nsIDragService.DRAGDROP_ACTION_LINK;
+      break;
+    default:
+      throw new Error(`${aDropEffect} is an invalid drop effect value`);
+  }
+
+  ds.startDragSessionForTests(aWindow, dropAction);
+}
+
+/**
  * Emulate a drag and drop by emulating a dragstart and firing events dragenter,
  * dragover, and drop.
  *
@@ -3428,28 +3462,7 @@ function synthesizeDrop(
     aDestWindow = aWindow;
   }
 
-  var ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(
-    _EU_Ci.nsIDragService
-  );
-
-  let dropAction;
-  switch (aDropEffect) {
-    case null:
-    case undefined:
-    case "move":
-      dropAction = _EU_Ci.nsIDragService.DRAGDROP_ACTION_MOVE;
-      break;
-    case "copy":
-      dropAction = _EU_Ci.nsIDragService.DRAGDROP_ACTION_COPY;
-      break;
-    case "link":
-      dropAction = _EU_Ci.nsIDragService.DRAGDROP_ACTION_LINK;
-      break;
-    default:
-      throw new Error(`${aDropEffect} is an invalid drop effect value`);
-  }
-
-  ds.startDragSessionForTests(aWindow, dropAction);
+  startDragSession(aWindow, aDropEffect);
 
   try {
     var [result, dataTransfer] = synthesizeDragOver(
