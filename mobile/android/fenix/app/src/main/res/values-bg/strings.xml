@@ -3308,9 +3308,9 @@
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
   -->
-  <string name="protection_panel_num_trackers_blocked">Спирани проследявания: %d</string>
+  <string name="protection_panel_num_trackers_blocked">Спряни проследявания: %d</string>
   <!-- Text for when no trackers have been blocked. -->
-  <string name="protection_panel_no_trackers_blocked">Не са намерени тракери</string>
+  <string name="protection_panel_no_trackers_blocked">Не са намерени проследяващи програми</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Настройки за поверителност и сигурност</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
@@ -3321,7 +3321,7 @@
     Text for displaying the total number of trackers blocked in the trackers blocked panel.
     %d is a placeholder for the number of trackers blocked.
   -->
-  <string name="trackers_blocked_panel_total_num_trackers_blocked">Спирани проследявания: %d</string>
+  <string name="trackers_blocked_panel_total_num_trackers_blocked">Спряни проследяващи програми : %d</string>
   <!--
     Text for displaying the number of trackers blocked for a specific tracker category in the trackers blocked panel.
     %s is a placeholder for the name of the tracker category.
@@ -3367,13 +3367,13 @@
   <!-- The title of the tab count section in Tab Tools. -->
   <string name="debug_drawer_tab_tools_tab_count_title">Брой на разделите</string>
   <!-- The active tab count category in the tab count section in Tab Tools. -->
-  <string name="debug_drawer_tab_tools_tab_count_active">Включен</string>
+  <string name="debug_drawer_tab_tools_tab_count_active">Включени</string>
   <!-- The inactive tab count category in the tab count section in Tab Tools. -->
   <string name="debug_drawer_tab_tools_tab_count_inactive">Изключени</string>
   <!-- The private tab count category in the tab count section in Tab Tools. -->
   <string name="debug_drawer_tab_tools_tab_count_private">Лични</string>
   <!-- The total tab count category in the tab count section in Tab Tools. -->
-  <string name="debug_drawer_tab_tools_tab_count_total">Всичко</string>
+  <string name="debug_drawer_tab_tools_tab_count_total">Всички</string>
   <!-- The title of the tab creation tool section in Tab Tools. -->
   <string name="debug_drawer_tab_tools_tab_creation_tool_title">Инструмент за създаване на раздели</string>
   <!-- The label of the text field in the tab creation tool. -->
@@ -3419,7 +3419,7 @@
   <!-- The survey completion header -->
   <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Проучването е завършено</string>
   <!-- The survey completion confirmation text -->
-  <string name="micro_survey_feedback_confirmation">Благодарим ви за отзива!</string>
+  <string name="micro_survey_feedback_confirmation">Благодарим ви за обратната връзка!</string>
   <!-- Option for likert scale -->
   <string name="likert_scale_option_1" tools:ignore="UnusedResources">Много доволен</string>
   <!-- Option for likert scale -->
@@ -3429,7 +3429,7 @@
   <!-- Option for likert scale -->
   <string name="likert_scale_option_4" tools:ignore="UnusedResources">Недоволен/а</string>
   <!-- Option for likert scale -->
-  <string name="likert_scale_option_5" tools:ignore="UnusedResources">Много недоволен</string>
+  <string name="likert_scale_option_5" tools:ignore="UnusedResources">Много недоволен/а</string>
   <!-- Option for likert scale -->
   <string name="likert_scale_option_6" tools:ignore="UnusedResources">не го ползвам</string>
   <!-- Option for likert scale. Note: The word "Firefox" should NOT be translated. -->
