@@ -396,6 +396,15 @@ void MacroAssemblerMIPS64::ma_daddu(Register rd, Register rs, Imm32 imm) {
   }
 }
 
+void MacroAssemblerMIPS64::ma_daddu(Register rd, Register rs, ImmWord imm) {
+  if (Imm16::IsInSignedRange(imm.value)) {
+    as_daddiu(rd, rs, imm.value);
+  } else {
+    ma_li(ScratchRegister, imm);
+    as_daddu(rd, rs, ScratchRegister);
+  }
+}
+
 void MacroAssemblerMIPS64::ma_daddu(Register rd, Register rs) {
   as_daddu(rd, rd, rs);
 }
@@ -544,6 +553,15 @@ void MacroAssemblerMIPS64::ma_dsubu(Register rd, Register rs, Imm32 imm) {
   }
 }
 
+void MacroAssemblerMIPS64::ma_dsubu(Register rd, Register rs, ImmWord imm) {
+  if (Imm16::IsInSignedRange(-imm.value)) {
+    as_daddiu(rd, rs, -imm.value);
+  } else {
+    ma_li(ScratchRegister, imm);
+    as_dsubu(rd, rs, ScratchRegister);
+  }
+}
+
 void MacroAssemblerMIPS64::ma_dsubu(Register rd, Register rs) {
   as_dsubu(rd, rd, rs);
 }
@@ -596,15 +614,18 @@ void MacroAssemblerMIPS64::ma_subPtrTestOverflow(Register rd, Register rs,
   ma_subPtrTestOverflow(rd, rs, ScratchRegister, overflow);
 }
 
-void MacroAssemblerMIPS64::ma_dmult(Register rs, Imm32 imm) {
-  ma_li(ScratchRegister, imm);
+void MacroAssemblerMIPS64::ma_dmulu(Register rd, Register rs, Register rt) {
 #ifdef MIPSR6
-  as_dmul(rs, ScratchRegister, SecondScratchReg);
-  as_dmuh(rs, ScratchRegister, rs);
-  ma_move(rs, SecondScratchReg);
+  as_dmulu(rd, rs, rt);
 #else
-  as_dmult(rs, ScratchRegister);
+  as_dmultu(rs, rt);
+  as_mflo(rd);
 #endif
+}
+
+void MacroAssemblerMIPS64::ma_dmulu(Register rd, Register rs, ImmWord imm) {
+  ma_li(ScratchRegister, imm);
+  ma_dmulu(rd, rs, ScratchRegister);
 }
 
 void MacroAssemblerMIPS64::ma_mulPtrTestOverflow(Register rd, Register rs,
