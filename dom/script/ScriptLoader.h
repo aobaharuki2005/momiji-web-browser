@@ -753,6 +753,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void EncodeBytecode();
   void EncodeRequestBytecode(JSContext* aCx, ScriptLoadRequest* aRequest);
 
+  void FinishCollectingDelazifications(JSContext* aCx,
+                                       ScriptLoadRequest* aRequest);
+
   void GiveUpBytecodeEncoding();
 
   already_AddRefed<nsIGlobalObject> GetGlobalForRequest(

@@ -3492,14 +3492,47 @@ void ScriptLoader::EncodeBytecode() {
     request = mBytecodeEncodingQueue.StealFirst();
     MOZ_ASSERT(!IsWebExtensionRequest(request),
                "Bytecode for web extension content scrips is not cached");
-    EncodeRequestBytecode(aes.cx(), request);
+    if (mCache) {
+      FinishCollectingDelazifications(aes.cx(), request);
+    } else {
+      EncodeRequestBytecode(aes.cx(), request);
+    }
     request->DropBytecode();
     request->DropBytecodeCacheReferences();
   }
 }
 
+void ScriptLoader::FinishCollectingDelazifications(
+    JSContext* aCx, ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(mCache);
+
+  RefPtr<JS::Stencil> stencil;
+  bool result;
+  if (aRequest->IsModuleRequest()) {
+    aRequest->mScriptForBytecodeEncoding = nullptr;
+    ModuleScript* moduleScript = aRequest->AsModuleRequest()->mModuleScript;
+    JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
+    result = JS::FinishCollectingDelazifications(aCx, module,
+                                                 getter_AddRefs(stencil));
+  } else {
+    JS::Rooted<JSScript*> script(aCx, aRequest->mScriptForBytecodeEncoding);
+    aRequest->mScriptForBytecodeEncoding = nullptr;
+    result = JS::FinishCollectingDelazifications(aCx, script,
+                                                 getter_AddRefs(stencil));
+  }
+  if (!result) {
+    JS_ClearPendingException(aCx);
+    return;
+  }
+
+  aRequest->SetStencil(stencil.forget());
+  return;
+}
+
 void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
                                          ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(!mCache);
+
   using namespace mozilla::Telemetry;
   nsresult rv = NS_OK;
   MOZ_ASSERT_IF(!aRequest->IsStencil(), aRequest->mCacheInfo);
@@ -3513,18 +3546,6 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
     JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
     result = JS::FinishCollectingDelazifications(aCx, module,
                                                  aRequest->SRIAndBytecode());
-  } else if (mCache) {
-    RefPtr<JS::Stencil> stencil;
-    JS::Rooted<JSScript*> script(aCx, aRequest->mScriptForBytecodeEncoding);
-    aRequest->mScriptForBytecodeEncoding = nullptr;
-    result = JS::FinishCollectingDelazifications(aCx, script,
-                                                 getter_AddRefs(stencil));
-    if (result) {
-      aRequest->SetStencil(stencil.forget());
-      bytecodeFailed.release();
-      return;
-    }
-    // TODO: Bytecode encoding for script, at different timing.
   } else {
     JS::Rooted<JSScript*> script(aCx, aRequest->mScriptForBytecodeEncoding);
     result = JS::FinishCollectingDelazifications(aCx, script,

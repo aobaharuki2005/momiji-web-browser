@@ -230,6 +230,13 @@ JS_PUBLIC_API bool JS::FinishCollectingDelazifications(
   return ::FinishCollectingDelazifications(cx, sso, buffer);
 }
 
+JS_PUBLIC_API bool JS::FinishCollectingDelazifications(
+    JSContext* cx, JS::Handle<JSObject*> module, JS::Stencil** stencilOut) {
+  JS::Rooted<ScriptSourceObject*> sso(
+      cx, module->as<ModuleObject>().scriptSourceObject());
+  return ::FinishCollectingDelazifications(cx, sso, stencilOut);
+}
+
 JS_PUBLIC_API void JS::AbortCollectingDelazifications(JS::HandleScript script) {
   if (!script) {
     return;
