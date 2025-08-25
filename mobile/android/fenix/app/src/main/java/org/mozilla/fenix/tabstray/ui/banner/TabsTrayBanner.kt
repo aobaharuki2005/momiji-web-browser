@@ -431,13 +431,16 @@ private fun generateMultiSelectBannerMenuItems(
     onSaveToCollectionsClick: () -> Unit,
     onMakeSelectedTabsInactive: () -> Unit,
 ): List<MenuItem> {
-    val menuItems = mutableListOf(
-        MenuItem.TextItem(
+    val menuItems = mutableListOf<MenuItem>(
+        MenuItem.IconItem(
             text = Text.Resource(R.string.tab_manager_multiselect_menu_item_share),
+            drawableRes = R.drawable.ic_share,
+            testTag = TabsTrayTestTag.SHARE_BUTTON,
             onClick = onShareSelectedTabs,
         ),
-        MenuItem.TextItem(
+        MenuItem.IconItem(
             text = Text.Resource(R.string.tab_manager_multiselect_menu_item_add_to_collection),
+            drawableRes = R.drawable.ic_tab_collection,
             testTag = TabsTrayTestTag.COLLECTIONS_BUTTON,
             onClick = onSaveToCollectionsClick,
         ),

@@ -71,7 +71,6 @@ class TabbedBrowsingTest : TestSetup() {
             verifyNormalTabsList()
         }.openThreeDotMenu {
             verifyCloseAllTabsButton()
-            verifyShareAllTabsButton()
             verifySelectTabsButton()
         }.closeAllTabs {
             verifyTabCounter("0")
@@ -459,8 +458,13 @@ class TabbedBrowsingTest : TestSetup() {
             verifyExistingOpenTabs("Test_Page_1")
             verifyExistingOpenTabs("Test_Page_2")
         }.openThreeDotMenu {
-            verifyShareAllTabsButton()
-        }.clickShareAllTabsButton {
+            verifySelectTabsButton()
+        }.clickSelectTabsButton {
+            selectTab("Test_Page_1", 1)
+            selectTab("Test_Page_2", 2)
+        }.openThreeDotMenu {
+            verifyShareTabsButton()
+        }.clickShareTabsButton {
             verifyShareTabsOverlay(firstWebsiteTitle, secondWebsiteTitle)
             verifySharingWithSelectedApp(
                 sharingApp,

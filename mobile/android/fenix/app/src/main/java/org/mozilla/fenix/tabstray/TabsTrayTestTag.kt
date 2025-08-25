@@ -16,6 +16,7 @@ internal object TabsTrayTestTag {
 
     const val SELECTION_COUNTER = "$BANNER_ROOT.selectionCounter"
     const val COLLECTIONS_BUTTON = "$BANNER_ROOT.collections"
+    const val SHARE_BUTTON = "$BANNER_ROOT.share"
 
     // Tabs Tray Banner three dot menu
     const val THREE_DOT_BUTTON = "$BANNER_ROOT.threeDotButton"

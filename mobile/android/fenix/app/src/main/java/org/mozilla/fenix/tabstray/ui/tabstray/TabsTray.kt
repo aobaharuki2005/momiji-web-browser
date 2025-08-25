@@ -90,7 +90,6 @@ import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabCloseClick as OnSyncedTabCl
  * the multi select banner.
  * @param onShareSelectedTabsClick Invoked when the user clicks on the share button from the
  * multi select banner.
- * @param onShareAllTabsClick Invoked when the user clicks on the share all tabs banner menu item.
  * @param onTabSettingsClick Invoked when the user clicks on the tab settings banner menu item.
  * @param onRecentlyClosedClick Invoked when the user clicks on the recently closed banner menu item.
  * @param onAccountSettingsClick Invoked when the user clicks on the account settings banner menu item.
@@ -141,7 +140,6 @@ fun TabsTray(
     onSignInClick: () -> Unit,
     onSaveToCollectionClick: () -> Unit,
     onShareSelectedTabsClick: () -> Unit,
-    onShareAllTabsClick: () -> Unit,
     onTabSettingsClick: () -> Unit,
     onRecentlyClosedClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
@@ -225,7 +223,6 @@ fun TabsTray(
             TabManagerBottomAppBar(
                 tabsTrayStore = tabsTrayStore,
                 scrollBehavior = bottomAppBarScrollBehavior,
-                onShareAllTabsClick = onShareAllTabsClick,
                 onTabSettingsClick = onTabSettingsClick,
                 onRecentlyClosedClick = onRecentlyClosedClick,
                 onAccountSettingsClick = onAccountSettingsClick,
@@ -508,7 +505,6 @@ private fun TabsTrayPreviewRoot(
             onSignInClick = {},
             onSaveToCollectionClick = {},
             onShareSelectedTabsClick = {},
-            onShareAllTabsClick = {},
             onTabSettingsClick = {},
             onRecentlyClosedClick = {},
             onAccountSettingsClick = {},

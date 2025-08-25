@@ -213,10 +213,10 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
         Log.i(TAG, "verifySelectTabsButton: Verified that the \"Select tabs\" menu button exists")
     }
 
-    fun verifyShareAllTabsButton() {
-        Log.i(TAG, "verifyShareAllTabsButton: Trying to verify that the \"Share all tabs\" menu button exists")
-        composeTestRule.dropdownMenuItemShareAllTabs().assertExists()
-        Log.i(TAG, "verifyShareAllTabsButton: Verified that the \"Share all tabs\" menu button exists")
+    fun verifyShareTabsButton() {
+        Log.i(TAG, "verifyShareTabsButton: Trying to verify that the \"Share\" menu button exists")
+        composeTestRule.dropdownMenuItemShare().assertExists()
+        Log.i(TAG, "verifyShareTabsButton: Verified that the \"Share\" menu button exists")
     }
 
     fun verifyRecentlyClosedTabsButton() {
@@ -549,10 +549,19 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
             return CollectionRobot.Transition()
         }
 
-        fun clickShareAllTabsButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
-            Log.i(TAG, "clickShareAllTabsButton: Trying to click the \"Share all tabs\" menu button button")
-            composeTestRule.dropdownMenuItemShareAllTabs().performClick()
-            Log.i(TAG, "clickShareAllTabsButton: Clicked the \"Share all tabs\" menu button button")
+        fun clickSelectTabsButton(interact: TabDrawerRobot.() -> Unit): Transition {
+            Log.i(TAG, "clickSelectTabsButton: Trying to click the \"Select tabs\" menu button")
+            composeTestRule.dropdownMenuItemSelectTabs().performClick()
+            Log.i(TAG, "clickSelectTabsButton: Clicked the \"Select tabs\" menu button")
+
+            TabDrawerRobot(composeTestRule).interact()
+            return Transition(composeTestRule)
+        }
+
+        fun clickShareTabsButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            Log.i(TAG, "clickShareTabsButton: Trying to click the \"Share\" menu button")
+            composeTestRule.dropdownMenuItemShare().performClick()
+            Log.i(TAG, "clickShareTabsButton: Clicked the \"Share\" menu button button")
 
             ShareOverlayRobot().interact()
             return ShareOverlayRobot.Transition()
@@ -692,14 +701,14 @@ private fun ComposeTestRule.dropdownMenuItemRecentlyClosedTabs() = onNodeWithTag
 private fun ComposeTestRule.dropdownMenuItemSelectTabs() = onNodeWithTag(TabsTrayTestTag.SELECT_TABS)
 
 /**
- * Obtains the dropdown menu item to share all tabs.
- */
-private fun ComposeTestRule.dropdownMenuItemShareAllTabs() = onNodeWithTag(TabsTrayTestTag.SHARE_ALL_TABS)
-
-/**
  * Obtains the dropdown menu item to access tab settings.
  */
 private fun ComposeTestRule.dropdownMenuItemTabSettings() = onNodeWithTag(TabsTrayTestTag.TAB_SETTINGS)
+
+/**
+ * Obtains the dropdown menu item to share tabs.
+ */
+private fun ComposeTestRule.dropdownMenuItemShare() = onNodeWithTag(TabsTrayTestTag.SHARE_BUTTON)
 
 /**
  * Obtains the normal tabs counter.

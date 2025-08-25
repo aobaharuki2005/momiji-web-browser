@@ -5,7 +5,6 @@
 package org.mozilla.fenix.tabstray.controller
 
 import androidx.navigation.NavController
-import androidx.navigation.NavDirections
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -149,12 +148,6 @@ class NavigationInteractorTest {
         } finally {
             unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
         }
-    }
-
-    @Test
-    fun `onShareTabsOfType calls navigation on DefaultNavigationInteractor`() {
-        createInteractor().onShareTabsOfTypeClicked(false)
-        verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
     }
 
     private fun createInteractor(

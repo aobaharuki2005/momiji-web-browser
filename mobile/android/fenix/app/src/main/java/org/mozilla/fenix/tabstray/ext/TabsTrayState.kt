@@ -193,32 +193,3 @@ private fun generateTabPageBannerMenuItems(
         else -> emptyList()
     }
 }
-
-/**
- * Builds the menu items list when in [Mode.Normal].
- *
- * @param onTabSettingsClick Invoked when the user clicks the menu item to navigate to tab settings.
- * @param onRecentlyClosedClick Invoked when the user clicks the menu item to navigate to their recently closed tabs.
- * @param onEnterMultiselectModeClick Invoked when the user the menu item to enter multiselect mode.
- * @param onShareAllTabsClick Invoked when the user clicks the menu item to share all of their tabs.
- * @param onDeleteAllTabsClick Invoked when user clicks the menu item to delete all of their tabs.
- * @param onAccountSettingsClick Invoked when user clicks the menu item to navigate to account settings.
- */
-internal fun TabsTrayState.generateMenuItems(
-    onTabSettingsClick: () -> Unit,
-    onRecentlyClosedClick: () -> Unit,
-    onEnterMultiselectModeClick: () -> Unit,
-    onShareAllTabsClick: () -> Unit,
-    onDeleteAllTabsClick: () -> Unit,
-    onAccountSettingsClick: () -> Unit,
-) = generateTabPageBannerMenuItems(
-    selectedPage = selectedPage,
-    normalTabCount = normalTabs.size,
-    privateTabCount = privateTabs.size,
-    onTabSettingsClick = onTabSettingsClick,
-    onRecentlyClosedClick = onRecentlyClosedClick,
-    onEnterMultiselectModeClick = onEnterMultiselectModeClick,
-    onShareAllTabsClick = onShareAllTabsClick,
-    onDeleteAllTabsClick = onDeleteAllTabsClick,
-    onAccountSettingsClick = onAccountSettingsClick,
-)

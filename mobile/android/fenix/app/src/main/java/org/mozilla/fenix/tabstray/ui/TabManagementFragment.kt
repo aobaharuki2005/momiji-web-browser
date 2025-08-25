@@ -292,17 +292,6 @@ class TabManagementFragment : Fragment() {
                 onSignInClick = tabManagerInteractor::onSignInClicked,
                 onSaveToCollectionClick = tabManagerInteractor::onAddSelectedTabsToCollectionClicked,
                 onShareSelectedTabsClick = tabManagerInteractor::onShareSelectedTabs,
-                onShareAllTabsClick = {
-                    if (tabsTrayStore.state.selectedPage == Page.NormalTabs) {
-                        tabsTrayStore.dispatch(TabsTrayAction.ShareAllNormalTabs)
-                    } else if (tabsTrayStore.state.selectedPage == Page.PrivateTabs) {
-                        tabsTrayStore.dispatch(TabsTrayAction.ShareAllPrivateTabs)
-                    }
-
-                    navigationInteractor.onShareTabsOfTypeClicked(
-                        private = tabsTrayStore.state.selectedPage == Page.PrivateTabs,
-                    )
-                },
                 onTabSettingsClick = navigationInteractor::onTabSettingsClicked,
                 onRecentlyClosedClick = navigationInteractor::onOpenRecentlyClosedClicked,
                 onAccountSettingsClick = navigationInteractor::onAccountSettingsClicked,

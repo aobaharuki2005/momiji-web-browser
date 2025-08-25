@@ -31,6 +31,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import mozilla.components.compose.base.menu.DropdownMenu
+import mozilla.components.compose.base.menu.MenuItem
+import mozilla.components.compose.base.text.Text
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.Page
@@ -39,7 +41,6 @@ import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayState.Mode
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
-import org.mozilla.fenix.tabstray.ext.generateMenuItems
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -48,7 +49,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState].
  * @param scrollBehavior Defines how the [BottomAppBar] should behave when the content under it is scrolled.
  * @param modifier The [Modifier] to be applied to this FAB.
- * @param onShareAllTabsClick Invoked when the user clicks on the share all tabs banner menu item.
  * @param onTabSettingsClick Invoked when the user clicks on the tab settings banner menu item.
  * @param onRecentlyClosedClick Invoked when the user clicks on the recently closed banner menu item.
  * @param onAccountSettingsClick Invoked when the user clicks on the account settings banner menu item.
@@ -59,7 +59,6 @@ internal fun TabManagerBottomAppBar(
     tabsTrayStore: TabsTrayStore,
     scrollBehavior: BottomAppBarScrollBehavior,
     modifier: Modifier = Modifier,
-    onShareAllTabsClick: () -> Unit,
     onTabSettingsClick: () -> Unit,
     onRecentlyClosedClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
@@ -70,14 +69,16 @@ internal fun TabManagerBottomAppBar(
     AnimatedVisibility(
         visible = state.mode is Mode.Normal,
     ) {
-        val menuItems = state.generateMenuItems(
+        val menuItems = generateMenuItems(
+            selectedPage = state.selectedPage,
+            normalTabCount = state.normalTabs.size,
+            privateTabCount = state.privateTabs.size,
             onAccountSettingsClick = onAccountSettingsClick,
             onTabSettingsClick = onTabSettingsClick,
             onRecentlyClosedClick = onRecentlyClosedClick,
             onEnterMultiselectModeClick = {
                 tabsTrayStore.dispatch(TabsTrayAction.EnterSelectMode)
             },
-            onShareAllTabsClick = onShareAllTabsClick,
             onDeleteAllTabsClick = onDeleteAllTabsClick,
         )
         var showBottomAppBarMenu by remember { mutableStateOf(false) }
@@ -108,6 +109,76 @@ internal fun TabManagerBottomAppBar(
     }
 }
 
+@Suppress("LongParameterList")
+private fun generateMenuItems(
+    selectedPage: Page,
+    normalTabCount: Int,
+    privateTabCount: Int,
+    onTabSettingsClick: () -> Unit,
+    onRecentlyClosedClick: () -> Unit,
+    onEnterMultiselectModeClick: () -> Unit,
+    onDeleteAllTabsClick: () -> Unit,
+    onAccountSettingsClick: () -> Unit,
+): List<MenuItem> {
+    val enterSelectModeItem = MenuItem.IconItem(
+        text = Text.Resource(R.string.tabs_tray_select_tabs),
+        drawableRes = R.drawable.mozac_ic_checkmark_24,
+        testTag = TabsTrayTestTag.SELECT_TABS,
+        onClick = onEnterMultiselectModeClick,
+    )
+    val recentlyClosedTabsItem = MenuItem.IconItem(
+        text = Text.Resource(R.string.tab_tray_menu_recently_closed),
+        drawableRes = R.drawable.mozac_ic_history_24,
+        testTag = TabsTrayTestTag.RECENTLY_CLOSED_TABS,
+        onClick = onRecentlyClosedClick,
+    )
+    val tabSettingsItem = MenuItem.IconItem(
+        text = Text.Resource(R.string.tab_tray_menu_tab_settings),
+        drawableRes = R.drawable.mozac_ic_settings_24,
+        testTag = TabsTrayTestTag.TAB_SETTINGS,
+        onClick = onTabSettingsClick,
+    )
+    val deleteAllTabsItem = MenuItem.IconItem(
+        text = Text.Resource(R.string.tab_tray_menu_item_close),
+        drawableRes = R.drawable.mozac_ic_delete_24,
+        testTag = TabsTrayTestTag.CLOSE_ALL_TABS,
+        onClick = onDeleteAllTabsClick,
+    )
+    val accountSettingsItem = MenuItem.IconItem(
+        text = Text.Resource(R.string.tab_tray_menu_account_settings),
+        drawableRes = R.drawable.mozac_ic_avatar_circle_24,
+        testTag = TabsTrayTestTag.ACCOUNT_SETTINGS,
+        onClick = onAccountSettingsClick,
+    )
+    return when {
+        selectedPage == Page.NormalTabs && normalTabCount == 0 ||
+            selectedPage == Page.PrivateTabs && privateTabCount == 0 -> listOf(
+            recentlyClosedTabsItem,
+            tabSettingsItem,
+        )
+
+        selectedPage == Page.NormalTabs -> listOf(
+            enterSelectModeItem,
+            recentlyClosedTabsItem,
+            tabSettingsItem,
+            deleteAllTabsItem,
+        )
+
+        selectedPage == Page.PrivateTabs -> listOf(
+            recentlyClosedTabsItem,
+            tabSettingsItem,
+            deleteAllTabsItem,
+        )
+
+        selectedPage == Page.SyncedTabs -> listOf(
+            accountSettingsItem,
+            recentlyClosedTabsItem,
+        )
+
+        else -> emptyList()
+    }
+}
+
 private class TabManagerBottomAppBarParameterProvider : PreviewParameterProvider<TabsTrayState> {
     override val values: Sequence<TabsTrayState>
         get() = sequenceOf(
@@ -132,7 +203,6 @@ private fun TabManagerBottomAppBarPreview(
             TabManagerBottomAppBar(
                 tabsTrayStore = remember { TabsTrayStore(initialState = state) },
                 scrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior(),
-                onShareAllTabsClick = {},
                 onTabSettingsClick = {},
                 onRecentlyClosedClick = {},
                 onAccountSettingsClick = {},
