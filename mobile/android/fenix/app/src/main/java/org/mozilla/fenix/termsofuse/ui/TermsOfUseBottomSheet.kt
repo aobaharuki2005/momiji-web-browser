@@ -19,11 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -247,14 +245,7 @@ private fun BottomSheetMessage(
 @FlexibleWindowLightDarkPreview
 @Composable
 private fun TermsOfUseBottomSheetPreview() {
-    val density = LocalDensity.current
-    val sheetState = remember {
-        SheetState(
-            initialValue = SheetValue.Expanded,
-            density = density,
-            skipPartiallyExpanded = false,
-        )
-    }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     FirefoxTheme {
         BottomSheet(sheetState = sheetState)
