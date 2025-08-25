@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -22,6 +23,7 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.utils.LastSavedFolderCache
 
 private const val WARN_OPEN_ALL_SIZE = 15
@@ -32,10 +34,12 @@ private const val WARN_OPEN_ALL_SIZE = 15
  * @param bookmarksStorage Storage layer for reading and writing bookmarks.
  * @param clipboardManager For copying bookmark URLs.
  * @param addNewTabUseCase For opening tabs from menus.
+ * @param fenixBrowserUseCases [FenixBrowserUseCases] used for loading the bookmark URLs.
+ * @param useNewSearchUX Whether to use the new integrated search UX or navigate to a separate search screen.
+ * @param openBookmarksInNewTab Whether to load bookmark URLs in a new tab.
  * @param getNavController Fetch the NavController for navigating within the local Composable nav graph.
  * @param exitBookmarks Invoked when back is clicked while the navController's backstack is empty.
- * @param wasPreviousAppDestinationHome Check whether the previous destination before entering bookmarks was home.
- * @param useNewSearchUX Whether to use the new integrated search UX or navigate to a separate search screen.
+ * @param navigateToBrowser Invoked when handling [BookmarkClicked] to navigate to the browser.
  * @param navigateToSearch Navigate to search.
  * @param navigateToSignIntoSync Invoked when handling [SignIntoSyncClicked].
  * @param shareBookmarks Invoked when the share option is selected from a menu. Allows sharing of
@@ -43,7 +47,6 @@ private const val WARN_OPEN_ALL_SIZE = 15
  * @param showTabsTray Invoked after opening tabs from menus.
  * @param resolveFolderTitle Invoked to lookup user-friendly bookmark titles.
  * @param getBrowsingMode Invoked when retrieving the app's current [BrowsingMode].
- * @param openTab Invoked when opening a tab when a bookmark is clicked.
  * @param saveBookmarkSortOrder Invoked to persist the new sort order.
  * @param lastSavedFolderCache used to cache the last folder you edited a bookmark in.
  * @param ioDispatcher Coroutine dispatcher for IO operations.
@@ -53,17 +56,18 @@ internal class BookmarksMiddleware(
     private val bookmarksStorage: BookmarksStorage,
     private val clipboardManager: ClipboardManager?,
     private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase,
+    private val fenixBrowserUseCases: FenixBrowserUseCases,
+    private val useNewSearchUX: Boolean,
+    private val openBookmarksInNewTab: Boolean,
     private val getNavController: () -> NavController,
     private val exitBookmarks: () -> Unit,
-    private val wasPreviousAppDestinationHome: () -> Boolean,
-    private val useNewSearchUX: Boolean,
+    private val navigateToBrowser: () -> Unit,
     private val navigateToSearch: () -> Unit,
     private val navigateToSignIntoSync: () -> Unit,
     private val shareBookmarks: (List<BookmarkItem.Bookmark>) -> Unit = {},
     private val showTabsTray: (isPrivateMode: Boolean) -> Unit,
     private val resolveFolderTitle: (BookmarkNode) -> String,
     private val getBrowsingMode: () -> BrowsingMode,
-    private val openTab: (url: String, openInNewTab: Boolean) -> Unit,
     private val saveBookmarkSortOrder: suspend (BookmarksListSortOrder) -> Unit,
     private val lastSavedFolderCache: LastSavedFolderCache,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -117,9 +121,16 @@ internal class BookmarksMiddleware(
                     context.store.tryDispatchReceivedRecursiveCountUpdate()
                     return
                 }
-                val openInNewTab = wasPreviousAppDestinationHome() ||
-                    getBrowsingMode() == BrowsingMode.Private
-                openTab(action.item.url, openInNewTab)
+
+                fenixBrowserUseCases.loadUrlOrSearch(
+                    searchTermOrURL = action.item.url,
+                    newTab = openBookmarksInNewTab,
+                    private = getBrowsingMode().isPrivate,
+                    flags = EngineSession.LoadUrlFlags.select(
+                        EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL,
+                    ),
+                )
+                navigateToBrowser()
             }
 
             is FolderClicked -> {

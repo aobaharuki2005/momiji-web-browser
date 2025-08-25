@@ -120,6 +120,28 @@ class BookmarkFragment : Fragment() {
                                     bookmarksStorage = requireContext().bookmarkStorage,
                                     clipboardManager = requireActivity().getSystemService(),
                                     addNewTabUseCase = requireComponents.useCases.tabsUseCases.addTab,
+                                    fenixBrowserUseCases = requireComponents.useCases.fenixBrowserUseCases,
+                                    useNewSearchUX = settings().shouldUseComposableToolbar,
+                                    openBookmarksInNewTab = if (settings().enableHomepageAsNewTab) {
+                                        false
+                                    } else {
+                                        val wasPreviousAppDestinationHome =
+                                            lifecycleHolder.navController
+                                                .previousBackStackEntry?.destination?.id == R.id.homeFragment
+                                        val browsingMode =
+                                            lifecycleHolder.homeActivity.browsingModeManager.mode
+                                        wasPreviousAppDestinationHome || browsingMode.isPrivate
+                                    },
+                                    getNavController = { lifecycleHolder.composeNavController },
+                                    exitBookmarks = { lifecycleHolder.navController.popBackStack() },
+                                    navigateToBrowser = {
+                                        lifecycleHolder.navController.navigate(R.id.browserFragment)
+                                    },
+                                    navigateToSearch = {
+                                        lifecycleHolder.navController.navigate(
+                                            NavGraphDirections.actionGlobalSearchDialog(sessionId = null),
+                                        )
+                                    },
                                     navigateToSignIntoSync = {
                                         lifecycleHolder.navController
                                             .navigate(
@@ -127,18 +149,6 @@ class BookmarkFragment : Fragment() {
                                                     entrypoint = FenixFxAEntryPoint.BookmarkView,
                                                 ),
                                             )
-                                    },
-                                    getNavController = { lifecycleHolder.composeNavController },
-                                    exitBookmarks = { lifecycleHolder.navController.popBackStack() },
-                                    wasPreviousAppDestinationHome = {
-                                        lifecycleHolder.navController
-                                            .previousBackStackEntry?.destination?.id == R.id.homeFragment
-                                    },
-                                    useNewSearchUX = settings().shouldUseComposableToolbar,
-                                    navigateToSearch = {
-                                        lifecycleHolder.navController.navigate(
-                                            NavGraphDirections.actionGlobalSearchDialog(sessionId = null),
-                                        )
                                     },
                                     shareBookmarks = { bookmarks ->
                                         lifecycleHolder.navController.nav(
@@ -158,16 +168,6 @@ class BookmarkFragment : Fragment() {
                                     },
                                     getBrowsingMode = {
                                         lifecycleHolder.homeActivity.browsingModeManager.mode
-                                    },
-                                    openTab = { url, openInNewTab ->
-                                        lifecycleHolder.homeActivity.openToBrowserAndLoad(
-                                            searchTermOrURL = url,
-                                            newTab = openInNewTab,
-                                            from = BrowserDirection.FromBookmarks,
-                                            flags = EngineSession.LoadUrlFlags.select(
-                                                EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL,
-                                            ),
-                                        )
                                     },
                                     saveBookmarkSortOrder = {
                                         lifecycleHolder.context.settings().bookmarkListSortOrder = it.asString
