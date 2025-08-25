@@ -471,27 +471,12 @@ void MemOperand::AddOffset(int64_t offset) {
   offset_ += offset;
 }
 
-static CPUFeatures InitCachedCPUFeatures() {
-#ifdef JS_SIMULATOR_ARM64
-  // Enable all features for the Simulator.
-  return CPUFeatures::All();
-#else
-  CPUFeatures cpu_features = CPUFeatures::AArch64LegacyBaseline();
-
-  // Mozilla change: always use maximally-present features.
-  cpu_features.Combine(CPUFeatures::InferFromOS());
-
-  return cpu_features;
-#endif
-}
-
 // Assembler
 Assembler::Assembler(PositionIndependentCodeOption pic)
     : pic_(pic)
 {
   // Mozilla change: query cpu features once and cache result.
-  static CPUFeatures cached_cpu_features = InitCachedCPUFeatures();
-  cpu_features_ = cached_cpu_features;
+  cpu_features_ = js::jit::ARM64Flags::GetCPUFeatures();
 }
 
 
