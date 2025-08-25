@@ -1,0 +1,97 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Machine Learning')
+
+include('sources.mozbuild')
+
+SOURCES += files["COMMON_SOURCES"]
+
+if CONFIG['TARGET_CPU'] == 'x86_64':
+    SOURCES += files['X64_SOURCES']
+elif CONFIG['TARGET_CPU'] == 'x86':
+    SOURCES += files['IA32_SOURCES']
+elif CONFIG['TARGET_CPU'] == 'aarch64':
+    SOURCES += files['ARM64_SOURCES']
+elif CONFIG['TARGET_CPU'] == 'arm':
+    SOURCES += files['ARM_SOURCES']
+else:
+    DEFINES["GGML_CPU_GENERIC"] = 1
+
+EXPORTS.llama += [
+  "include/llama.h",
+]
+
+LOCAL_INCLUDES += [
+  'ggml/',
+  'ggml/include/',
+  'ggml/src/',
+  'ggml/src/ggml-cpu/',
+  'include/',
+]
+
+EXPORTS += [
+  "ggml/include/ggml-alloc.h",
+  "ggml/include/ggml-backend.h",
+  "ggml/include/ggml-cpu.h",
+  "ggml/include/ggml-opt.h",
+  "ggml/include/ggml.h",
+]
+
+DEFINES["_GNU_SOURCE"] = 1
+DEFINES["GGML_USE_CPU"] = 1
+DEFINES["GGML_VERSION"] = "\"GGML_VERSION\""
+DEFINES["GGML_COMMIT"] = "\"GGML_COMMIT\""
+
+CFLAGS += [
+    '-Wno-sign-compare',
+    '-Wno-unused-function',
+    '-Wno-unreachable-code',
+    '-Wno-tautological-unsigned-enum-zero-compare',
+]
+
+CXXFLAGS += [
+    '-Wno-sign-compare',
+    '-Wno-unused-function',
+    '-Wno-tautological-unsigned-enum-zero-compare',
+    '-Wno-implicit-fallthrough',
+    '-Wno-unreachable-code',
+]
+
+# Only disable those warnings on old clangs.
+if CONFIG["CC_TYPE"] == "clang" and int(CONFIG["CC_VERSION"].split(".")[0]) <= 8:
+  CXXFLAGS += [
+    '-Wno-unused-variable',
+    '-Wno-unused-value'
+  ]
+  CFLAGS += [
+    '-Wno-unused-variable',
+  ]
+
+if CONFIG["CC_TYPE"] != "gcc":
+    # g++ doesn't supports this warning, only gcc does
+    CFLAGS += [
+        '-Wno-absolute-value'
+    ]
+
+if CONFIG['OS_TARGET'] == "WINNT":
+    DEFINES["UNICODE"] = 1
+    CFLAGS += [
+        '-Wno-macro-redefined',
+    ]
+
+    CXXFLAGS += [
+        '-Wno-macro-redefined',
+    ]
+
+if CONFIG['OS_TARGET'] == 'Darwin':
+  DEFINES["GGML_USE_ACCELERATE"] = 1
+  OS_LIBS += [
+      "-framework Accelerate"
+  ]
+
+FINAL_LIBRARY = 'xul'
