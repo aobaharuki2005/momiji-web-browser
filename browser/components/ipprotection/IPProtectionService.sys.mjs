@@ -24,12 +24,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
-ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
-  ).getFxAccountsSingleton();
-});
-
 import {
   SIGNIN_DATA,
   ERRORS,
@@ -37,8 +31,6 @@ import {
 
 const ENABLED_PREF = "browser.ipProtection.enabled";
 const VPN_ADDON_ID = "vpn@mozilla.com";
-
-const VPN_ID = "e6eb0d1e856335fc";
 
 /**
  * A singleton service that manages proxy integration and backend functionality.
@@ -69,11 +61,10 @@ class IPProtectionServiceSingleton extends EventTarget {
   deactivatedAt = null;
   sessionLength = 0;
   isSignedIn = null;
-  hasUpgraded = false;
   isEnrolled = null;
   isEligible = null;
   isEntitled = null;
-  isSubscribed = null;
+  hasUpgraded = null;
   hasProxyPass = null;
   hasError = null;
 
@@ -112,7 +103,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.#addEligibilityListeners();
 
     this.#updateSignInStatus();
-    this.updateHasUpgradedStatus();
     this.#updateEligibility();
     this.#updateEnrollment(true /* onlyCached */);
 
@@ -141,7 +131,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.isEnrolled = null;
     this.isEligible = null;
     this.isEntitled = null;
-    this.isSubscribed = null;
+    this.hasUpgraded = null;
     this.hasProxyPass = null;
     this.hasError = null;
 
@@ -335,21 +325,20 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
-   * Updates the `hasUpgraded` property based on whether Mozilla VPN
-   * is linked to the user's Mozilla account or not.
+   * Dispatches "IPProtectionService:UpdateHasUpgraded" to pass the
+   * `hasUpgraded` status. By default, pass the current value of
+   * `hasUpgraded`. Otherwise, if `refetchEntitlement` is true,
+   * get the most up to date entitlement status and set
+   * `hasUpgraded` based on whether the user's Mozilla account is
+   * linked to Mozilla VPN.
    *
-   * Dispatches "IPProtectionService:UpdateHasUpgraded".
-   *
-   * @param {boolean} useCached
-   *  True if we want our VPN link verification steps to use cached data.
-   * @param {boolean} skipCheck
-   *  True if we want to skip VPN link verification steps.
-   *
-   * @see {@link #checkIfVPNLinkedToAccount}
+   * @param {boolean} refetchEntitlement
+   *  True to refetch entitlement details.
+   *  Else use the current entitlement status.
    */
-  async updateHasUpgradedStatus(useCached = true, skipCheck = false) {
-    if (!skipCheck) {
-      this.hasUpgraded = await this.#checkIfVPNLinkedToAccount(useCached);
+  async updateHasUpgradedStatus(refetchEntitlement = false) {
+    if (refetchEntitlement) {
+      await this.#updateEntitlement();
     }
 
     this.dispatchEvent(
@@ -361,27 +350,6 @@ class IPProtectionServiceSingleton extends EventTarget {
         },
       })
     );
-  }
-
-  /**
-   * Checks if the VPN ID is present in the list of OAuth clients attached to the current Mozilla account.
-   *
-   * @property {boolean} useCached
-   *  True if we want to use cached OAuth clients, or false for uncached OAuth clients.
-   *
-   * @returns {boolean}
-   *  True if the VPN ID was found.
-   * @see {@link fxAccounts.listAttachedOAuthClients}
-   */
-  async #checkIfVPNLinkedToAccount(useCached) {
-    const forceRefresh = !useCached;
-    let clients = await lazy.fxAccounts.listAttachedOAuthClients(forceRefresh);
-
-    if (clients.some(client => client.id === VPN_ID)) {
-      return true;
-    }
-
-    return false;
   }
 
   /**
@@ -481,7 +449,7 @@ class IPProtectionServiceSingleton extends EventTarget {
         this.stop();
       }
       this.hasUpgraded = false;
-      await this.updateHasUpgradedStatus(undefined, true /* skipCheck */);
+      this.updateHasUpgradedStatus();
     }
   }
 
@@ -544,7 +512,7 @@ class IPProtectionServiceSingleton extends EventTarget {
       this.#entitlement = null;
       this.#pass = null;
       this.isEntitled = null;
-      this.isSubscribed = null;
+      this.hasUpgraded = null;
       this.hasProxyPass = null;
     }
   }
@@ -585,13 +553,13 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
-   * Update the entitlement and isEntitled + isSubscribed statues.
+   * Update the entitlement and hasUpgraded statues.
    */
   async #updateEntitlement() {
     this.#entitlement = await this.#getEntitlement();
     if (this.#entitlement) {
       this.isEntitled = !!this.#entitlement.uid;
-      this.isSubscribed = this.#entitlement.subscribed;
+      this.hasUpgraded = this.#entitlement.subscribed;
     }
   }
 

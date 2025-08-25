@@ -199,7 +199,9 @@ export class IPProtectionPanel {
    */
   showing(panelView) {
     if (this.initiatedUpgrade) {
-      lazy.IPProtectionService.updateHasUpgradedStatus(false /* useCached */);
+      lazy.IPProtectionService.updateHasUpgradedStatus(
+        true /* refetchEntitlement */
+      );
       this.initiatedUpgrade = false;
     }
 
