@@ -132,8 +132,6 @@ class WebMDemuxer : public MediaDataDemuxer,
   // Public accessor for nestegg callbacks
   bool IsMediaSource() const { return mIsMediaSource; }
 
-  int64_t LastWebMBlockOffset() const { return mLastWebMBlockOffset; }
-
   struct NestEggContext {
     NestEggContext(WebMDemuxer* aParent, MediaResource* aResource)
         : mParent(aParent), mResource(aResource), mContext(nullptr) {}
@@ -146,12 +144,6 @@ class WebMDemuxer : public MediaDataDemuxer,
 
     bool IsMediaSource() const { return mParent->IsMediaSource(); }
     MediaResourceIndex* GetResource() { return &mResource; }
-
-    int64_t GetEndDataOffset() const {
-      return (!mParent->IsMediaSource() || mParent->LastWebMBlockOffset() < 0)
-                 ? mResource.GetLength()
-                 : mParent->LastWebMBlockOffset();
-    }
 
     WebMDemuxer* mParent;
     MediaResourceIndex mResource;
@@ -243,10 +235,6 @@ class WebMDemuxer : public MediaDataDemuxer,
   bool mHasAudio;
   bool mNeedReIndex;
 
-  // The last complete block parsed by the WebMBufferedState. -1 if not set.
-  // We cache those values rather than retrieving them for performance reasons
-  // as nestegg only performs 1-byte read at a time.
-  int64_t mLastWebMBlockOffset;
   const bool mIsMediaSource;
   // Discard padding in WebM cannot occur more than once. This is set to true if
   // a discard padding element has been found and processed, and the decoding is
