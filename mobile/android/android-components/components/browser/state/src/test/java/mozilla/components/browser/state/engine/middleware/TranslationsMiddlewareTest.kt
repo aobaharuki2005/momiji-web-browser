@@ -4,6 +4,9 @@
 
 package mozilla.components.browser.state.engine.middleware
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.InitAction
@@ -39,10 +42,8 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.atLeastOnce
@@ -53,9 +54,8 @@ import java.util.Locale
 
 class TranslationsMiddlewareTest {
 
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
-    private val scope = coroutinesTestRule.scope
+    @OptIn(ExperimentalCoroutinesApi::class) // UnconfinedTestDispatcher
+    private val scope = TestScope(UnconfinedTestDispatcher())
     private val engine: Engine = mock()
     private val engineSession: EngineSession = mock()
     private val tab: TabSessionState = spy(
@@ -94,7 +94,6 @@ class TranslationsMiddlewareTest {
     private fun waitForIdle() {
         scope.testScheduler.runCurrent()
         scope.testScheduler.advanceUntilIdle()
-        coroutinesTestRule.testDispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
     }
 
