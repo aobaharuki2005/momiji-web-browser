@@ -239,6 +239,9 @@ struct ebml {
   struct ebml_type doctype_read_version;
 };
 
+#define DOCTYPE_WEBM "webm"
+#define DOCTYPE_MKV  "matroska"
+
 /* Matroksa Definitions */
 struct seek {
   struct ebml_type id;
@@ -2113,7 +2116,7 @@ ne_context_new(nestegg ** context, nestegg_io io, nestegg_log callback)
 }
 
 static int
-ne_match_webm(nestegg_io io, int64_t max_offset)
+ne_match_doc_type(nestegg_io io, int64_t max_offset, const char* doc_type)
 {
   int r;
   uint64_t id;
@@ -2141,13 +2144,13 @@ ne_match_webm(nestegg_io io, int64_t max_offset)
 
   /* we don't check the return value of ne_parse, that might fail because
      max_offset is not on a valid element end point. We only want to check
-     the EBML ID and that the doctype is "webm". */
+     the EBML ID and that the doctype is equal to given doc type. */
   ne_parse(ctx, NULL, max_offset);
   while (ctx->ancestor)
     ne_ctx_pop(ctx);
 
   if (ne_get_string(ctx->ebml.doctype, &doctype) != 0 ||
-      strcmp(doctype, "webm") != 0) {
+      strcmp(doctype, doc_type) != 0) {
     nestegg_destroy(ctx);
     return 0;
   }
@@ -2215,8 +2218,8 @@ nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback, int64_t ma
   }
 
   if (ne_get_string(ctx->ebml.doctype, &doctype) != 0)
-    doctype = "matroska";
-  if (!!strcmp(doctype, "webm") && !!strcmp(doctype, "matroska")) {
+    doctype = DOCTYPE_MKV;
+  if (!!strcmp(doctype, DOCTYPE_WEBM) && !!strcmp(doctype, DOCTYPE_MKV)) {
     nestegg_destroy(ctx);
     return -1;
   }
@@ -3307,8 +3310,8 @@ nestegg_has_cues(nestegg * ctx)
     ne_find_seek_for_id(ctx->segment.seek_head.head, ID_CUES);
 }
 
-int
-nestegg_sniff(unsigned char const * buffer, size_t length)
+static int ne_sniff(unsigned char const* buffer, size_t length,
+                         const char* doc_type)
 {
   nestegg_io io;
   struct io_buffer userdata;
@@ -3321,5 +3324,15 @@ nestegg_sniff(unsigned char const * buffer, size_t length)
   io.seek = ne_buffer_seek;
   io.tell = ne_buffer_tell;
   io.userdata = &userdata;
-  return ne_match_webm(io, length);
+  return ne_match_doc_type(io, length, doc_type);
+}
+
+int nestegg_sniff_webm(unsigned char const* buffer, size_t length)
+{
+  return ne_sniff(buffer, length, DOCTYPE_WEBM);
+}
+
+int nestegg_sniff_mkv(unsigned char const* buffer, size_t length)
+{
+  return ne_sniff(buffer, length, DOCTYPE_MKV);
 }

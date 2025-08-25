@@ -499,7 +499,14 @@ int nestegg_has_cues(nestegg * context);
     @param length The size of the buffer.
     @retval 0 The file is not a WebM file.
     @retval 1 The file is a WebM file. */
-int nestegg_sniff(unsigned char const * buffer, size_t length);
+int nestegg_sniff_webm(unsigned char const* buffer, size_t length);
+
+/** Try to determine if the buffer looks like the beginning of a Mkv file.
+    @param buffer A buffer containing the beginning of a media file.
+    @param length The size of the buffer.
+    @retval 0 The file is not a Mkv file.
+    @retval 1 The file is a Mkv Mkv. */
+int nestegg_sniff_mkv(unsigned char const * buffer, size_t length);
 
 #if defined(__cplusplus)
 }
