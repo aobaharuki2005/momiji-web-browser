@@ -901,7 +901,7 @@ void Simulator::VisitAddSubShifted(const Instruction* instr) {
 
 
 void Simulator::VisitAddSubImmediate(const Instruction* instr) {
-  int64_t op2 = instr->ImmAddSub() << ((instr->ShiftAddSub() == 1) ? 12 : 0);
+  int64_t op2 = instr->ImmAddSub() << ((instr->GetImmAddSubShift() == 1) ? 12 : 0);
   AddSubHelper(instr, op2);
 }
 

@@ -155,6 +155,9 @@ enum Reg31Mode {
 
 class Instruction {
  public:
+  Instr GetInstructionBits() const {
+    return *(reinterpret_cast<const Instr*>(this));
+  }
   Instr InstructionBits() const {
     return *(reinterpret_cast<const Instr*>(this));
   }
@@ -163,6 +166,7 @@ class Instruction {
     *(reinterpret_cast<Instr*>(this)) = new_instr;
   }
 
+  int ExtractBit(int pos) const { return (GetInstructionBits() >> pos) & 1; }
   int Bit(int pos) const {
     return (InstructionBits() >> pos) & 1;
   }
@@ -181,6 +185,7 @@ class Instruction {
   }
 
   #define DEFINE_GETTER(Name, HighBit, LowBit, Func)             \
+  int32_t Get##Name() const { return Func(HighBit, LowBit); }    \
   int32_t Name() const { return Func(HighBit, LowBit); }
   INSTRUCTION_FIELDS_LIST(DEFINE_GETTER)
   #undef DEFINE_GETTER
