@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,8 +34,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param isPrivate Whether or not a private request (like in private browsing) should be used to
  * download the icon (if needed).
  * @param imageUrl Optional image URL to create an [IconRequest.Resource] from.
- * @param shape The shape used to clip the favicon. Defaults to a slightly rounded rectangle.
- *              Use [CircleShape] for a round image.
+ * @param roundedCornerShape The rounded corner shape used to clip the favicon.
  */
 @Composable
 fun Favicon(
@@ -45,13 +43,12 @@ fun Favicon(
     modifier: Modifier = Modifier,
     isPrivate: Boolean = false,
     imageUrl: String? = null,
-    shape: Shape = RoundedCornerShape(2.dp),
+    roundedCornerShape: RoundedCornerShape = RoundedCornerShape(2.dp),
 ) {
     if (inComposePreview) {
         FaviconPlaceholder(
             size = size,
             modifier = modifier,
-            shape = shape,
         )
     } else {
         val iconResource = imageUrl?.let {
@@ -71,7 +68,6 @@ fun Favicon(
                 FaviconPlaceholder(
                     size = size,
                     modifier = modifier,
-                    shape = shape,
                 )
             }
 
@@ -81,7 +77,7 @@ fun Favicon(
                     contentDescription = null,
                     modifier = modifier
                         .size(size)
-                        .clip(shape),
+                        .clip(roundedCornerShape),
                     contentScale = ContentScale.Crop,
                 )
             }
@@ -94,18 +90,16 @@ fun Favicon(
  *
  * @param size [Dp] height and width of the image.
  * @param modifier [Modifier] allowing to control among others the dimensions and shape of the image.
- * @param shape The shape to clip the placeholder to.
  */
 @Composable
 private fun FaviconPlaceholder(
     size: Dp,
     modifier: Modifier = Modifier,
-    shape: Shape,
 ) {
     Box(
         modifier = modifier
             .size(size)
-            .clip(shape)
+            .clip(RoundedCornerShape(2.dp))
             .background(
                 color = FirefoxTheme.colors.layer2,
             ),
