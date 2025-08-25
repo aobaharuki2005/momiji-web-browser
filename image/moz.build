@@ -8,7 +8,7 @@ DIRS += ["build", "decoders", "encoders"]
 TEST_DIRS += ["test/gtest"]
 
 if CONFIG["FUZZING_INTERFACES"]:
-    DIRS += ["test/fuzzing"]
+    TEST_DIRS += ["test/fuzzing"]
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Graphics: ImageLib")
