@@ -1755,10 +1755,11 @@ const MESSAGES = () => [
     },
   },
   {
-    id: "FXA_ACCOUNTS_APPMENU_PROTECT_BROWSING_DATA",
+    id: "FXA_ACCOUNTS_PXIMENU_ROW_LAYOUT",
     template: "menu_message",
     content: {
       messageType: "fxa_cta",
+      layout: "row",
       primaryText: "Bounce between devices",
       secondaryText:
         "Sync and encrypt your bookmarks, passwords, and more on all your devices.",
@@ -1782,15 +1783,17 @@ const MESSAGES = () => [
           id: "FXA_ACCOUNTS_APPMENU_PROTECT_BROWSING_DATA",
         },
       },
-      imageURL:
-        "chrome://browser/content/asrouter/assets/fox-with-box-on-cloud.svg",
-      imageVerticalTopOffset: -20,
+      imageURL: "chrome://browser/content/asrouter/assets/fox-with-devices.svg",
+      imageVerticalBottomOffset: -32,
+      imageVerticalTopOffset: -4,
+      containerVerticalBottomOffset: 20,
+      imageWidth: 100,
     },
     skip_in_tests: "TODO",
     trigger: {
       id: "menuOpened",
     },
-    testingTriggerContext: "app_menu",
+    testingTriggerContext: "pxi_menu",
   },
   {
     id: "TEST_NEWTAB_MESSAGE",
