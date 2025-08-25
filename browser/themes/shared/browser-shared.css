@@ -78,7 +78,7 @@ body {
   }
 
   &[taskbartab]:not([chromehidden~="toolbar"]) {
-    min-width: 732px;
+    min-width: 764px;
   }
 
   /* z-indices that fight on the browser stack */
