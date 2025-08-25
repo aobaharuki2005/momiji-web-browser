@@ -787,11 +787,14 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
-  // Check whether the bytecode for the request should be saved or not.
+  // Check whether the request should be saved to the following or not:
+  //   * in-memory cache as Stencil
+  //   * necko alternative stream as Stencil XDR
+  //
   // If the request is a non-top-level module request and it passed the
   // condition, it's stored into mBytecodeEncodableDependencyModules in order
   // to iterate over them later.
-  void CalculateBytecodeCacheFlag(ScriptLoadRequest* aRequest);
+  void CalculateCacheFlag(ScriptLoadRequest* aRequest);
 
   void RunScriptWhenSafe(ScriptLoadRequest* aRequest);
 

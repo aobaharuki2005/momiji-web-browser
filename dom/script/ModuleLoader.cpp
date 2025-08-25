@@ -210,10 +210,6 @@ void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
 nsresult ModuleLoader::CompileFetchedModule(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleOut) {
-  if (aRequest->IsTextSource()) {
-    GetScriptLoader()->CalculateBytecodeCacheFlag(aRequest);
-  }
-
   if (!nsJSUtils::IsScriptable(aGlobal)) {
     return NS_ERROR_FAILURE;
   }
@@ -234,6 +230,8 @@ nsresult ModuleLoader::CompileFetchedModule(
 nsresult ModuleLoader::CompileJavaScriptModule(
     JSContext* aCx, JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
     JS::MutableHandle<JSObject*> aModuleOut) {
+  GetScriptLoader()->CalculateCacheFlag(aRequest);
+
   if (aRequest->IsStencil()) {
     JS::InstantiateOptions instantiateOptions(aOptions);
     RefPtr<JS::Stencil> stencil = aRequest->GetStencil();
@@ -268,8 +266,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
       return NS_ERROR_FAILURE;
     }
 
-    if (aRequest->IsTextSource() &&
-        aRequest->PassedConditionForBytecodeEncoding()) {
+    if (aRequest->PassedConditionForBytecodeEncoding()) {
       bool alreadyStarted;
       if (!JS::StartCollectingDelazifications(aCx, aModuleOut, stencil,
                                               alreadyStarted)) {
@@ -318,8 +315,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     return NS_ERROR_FAILURE;
   }
 
-  if (aRequest->IsTextSource() &&
-      aRequest->PassedConditionForBytecodeEncoding()) {
+  if (aRequest->PassedConditionForBytecodeEncoding()) {
     bool alreadyStarted;
     if (!JS::StartCollectingDelazifications(aCx, aModuleOut, stencil,
                                             alreadyStarted)) {

@@ -2650,9 +2650,14 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   return NS_OK;
 }
 
-void ScriptLoader::CalculateBytecodeCacheFlag(ScriptLoadRequest* aRequest) {
+void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   using mozilla::TimeDuration;
   using mozilla::TimeStamp;
+
+  if (aRequest->IsBytecode()) {
+    aRequest->MarkSkippedBytecodeEncoding();
+    return;
+  }
 
   if (aRequest->IsModuleRequest() &&
       aRequest->AsModuleRequest()->mModuleType != JS::ModuleType::JavaScript) {
@@ -2947,6 +2952,8 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
   nsAutoCString profilerLabelString;
   aRequest->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
 
+  CalculateCacheFlag(aRequest);
+
   if (aRequest->IsBytecode()) {
     if (aRequest->GetScriptLoadContext()->mCompileOrDecodeTask) {
       LOG(("ScriptLoadRequest (%p): Decode Bytecode & instantiate and Execute",
@@ -2965,7 +2972,7 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
       bool unused;
       InstantiateStencil(aCx, aCompileOptions, stencil, aScript, unused,
                          aDebuggerPrivateValue, aDebuggerIntroductionScript,
-                         aRv, false, &storage);
+                         aRv, /* aEncodeBytecode = */ false, &storage);
     } else {
       LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute", aRequest));
       AUTO_PROFILER_MARKER_TEXT("BytecodeDecodeMainThread", JS,
@@ -2991,7 +2998,6 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
   }
 
   MOZ_ASSERT(aRequest->IsSource());
-  CalculateBytecodeCacheFlag(aRequest);
   bool encodeBytecode = aRequest->PassedConditionForBytecodeEncoding();
 
   if (aRequest->GetScriptLoadContext()->mCompileOrDecodeTask) {
@@ -3059,11 +3065,13 @@ void ScriptLoader::InstantiateClassicScriptFromCachedStencil(
     JS::MutableHandle<JSScript*> aScript,
     JS::Handle<JS::Value> aDebuggerPrivateValue,
     JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv) {
+  CalculateCacheFlag(aRequest);
+
   bool collectingDelazificationsAlreadyStarted = false;
   InstantiateStencil(aCx, aCompileOptions, aStencil, aScript,
                      collectingDelazificationsAlreadyStarted,
                      aDebuggerPrivateValue, aDebuggerIntroductionScript, aRv,
-                     /* aEncodeBytecode */ true);
+                     /* aEncodeBytecode = */ true);
   if (collectingDelazificationsAlreadyStarted) {
     aRequest->MarkSkippedBytecodeEncoding();
   }
