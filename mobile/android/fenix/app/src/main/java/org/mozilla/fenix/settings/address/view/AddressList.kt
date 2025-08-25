@@ -49,7 +49,7 @@ fun AddressList(
         item {
             IconListItem(
                 label = stringResource(R.string.preferences_addresses_add_address),
-                beforeIconPainter = painterResource(R.drawable.ic_new),
+                beforeIconPainter = painterResource(R.drawable.mozac_ic_plus_24),
                 onClick = onAddAddressButtonClick,
             )
         }

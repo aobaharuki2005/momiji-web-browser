@@ -237,7 +237,7 @@ private fun AddEngineButton(
             modifier = Modifier
                 .size(24.dp)
                 .align(Alignment.CenterVertically),
-            painter = painterResource(id = R.drawable.ic_new),
+            painter = painterResource(id = R.drawable.mozac_ic_plus_24),
             contentDescription = stringResource(
                 id = R.string.search_engine_add_custom_search_engine_button_content_description,
             ),

@@ -53,7 +53,7 @@ fun TabsTrayFab(
 
     when (currentPage) {
         Page.NormalTabs -> {
-            icon = painterResource(id = R.drawable.ic_new)
+            icon = painterResource(id = R.drawable.mozac_ic_plus_24)
             contentDescription = stringResource(id = R.string.add_tab)
             label = null
             onClick = onNormalTabsFabClicked
@@ -71,7 +71,7 @@ fun TabsTrayFab(
         }
 
         Page.PrivateTabs -> {
-            icon = painterResource(id = R.drawable.ic_new)
+            icon = painterResource(id = R.drawable.mozac_ic_plus_24)
             contentDescription = stringResource(id = R.string.add_private_tab)
             label = stringResource(id = R.string.tab_drawer_fab_content).uppercase()
             onClick = onPrivateTabsFabClicked

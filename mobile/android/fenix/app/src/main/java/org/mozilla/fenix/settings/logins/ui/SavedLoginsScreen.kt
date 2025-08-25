@@ -205,7 +205,7 @@ private fun AddPasswordItem(
     IconListItem(
         label = stringResource(R.string.preferences_logins_add_login_2),
         modifier = modifier,
-        beforeIconPainter = painterResource(R.drawable.ic_new),
+        beforeIconPainter = painterResource(R.drawable.mozac_ic_plus_24),
         onClick = { onAddPasswordClicked() },
     )
 }
