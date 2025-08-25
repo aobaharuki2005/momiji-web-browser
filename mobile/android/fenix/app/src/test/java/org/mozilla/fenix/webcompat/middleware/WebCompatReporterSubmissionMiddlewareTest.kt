@@ -20,11 +20,14 @@ import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.telemetry.glean.private.NoReasonCodes
+import mozilla.telemetry.glean.private.PingType
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,11 +59,30 @@ class WebCompatReporterSubmissionMiddlewareTest {
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
+    @Before
+    fun setUp() {
+        // TODO(bug 1934931): Glean currently does not re-register custom pings
+        // when the GleanTestRule automatically resets Glean after each test.
+        // We do it manually here for the tests to work.
+        val brokenSiteReport: PingType<NoReasonCodes> = PingType<NoReasonCodes>(
+            name = "broken-site-report",
+            includeClientId = false,
+            sendIfEmpty = false,
+            preciseTimestamps = true,
+            includeInfoSections = true,
+            enabled = true,
+            schedulesPings = listOf(),
+            reasonCodes = listOf(),
+            followsCollectionEnabled = true,
+            uploaderCapabilities = listOf(),
+        )
+    }
+
     @Test
     fun `GIVEN the URL is not changed WHEN WebCompatInfo is retrieved successfully THEN all report broken site pings are submitted`() = runTest {
         val store = createStore()
 
-        Pings.brokenSiteReport.testBeforeNextSubmit {
+        val job = Pings.brokenSiteReport.testBeforeNextSubmit {
             assertEquals(
                 "basic",
                 BrokenSiteReportTabInfoAntitracking.blockList.testGetValue(),
@@ -195,7 +217,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
 
             assertEquals(store.state.enteredUrl, BrokenSiteReport.url.testGetValue())
             assertEquals(
-                store.state.reason?.name,
+                store.state.reason?.name?.lowercase(),
                 BrokenSiteReport.breakageCategory.testGetValue(),
             )
             assertEquals(
@@ -205,6 +227,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
         }
 
         store.dispatch(WebCompatReporterAction.SendReportClicked)
+        job.join()
     }
 
     fun `WHEN the report is sent successfully THEN appState is updated`() {
@@ -219,7 +242,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
     fun `GIVEN the URL is changed WHEN WebCompatInfo is retrieved successfully THEN only non tab related report broken site pings are submitted`() = runTest {
         val store = createStore()
 
-        Pings.brokenSiteReport.testBeforeNextSubmit {
+        val job = Pings.brokenSiteReport.testBeforeNextSubmit {
             assertNull(BrokenSiteReportTabInfoAntitracking.blockList.testGetValue())
             assertNull(BrokenSiteReportTabInfoAntitracking.btpHasPurgedSite.testGetValue())
             assertNull(BrokenSiteReportTabInfoAntitracking.etpCategory.testGetValue())
@@ -330,7 +353,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
             assertNotEquals(store.state.tabUrl, BrokenSiteReport.url.testGetValue())
             assertEquals(store.state.enteredUrl, BrokenSiteReport.url.testGetValue())
             assertEquals(
-                store.state.reason?.name,
+                store.state.reason?.name?.lowercase(),
                 BrokenSiteReport.breakageCategory.testGetValue(),
             )
             assertEquals(
@@ -342,6 +365,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
         }
 
         store.dispatch(WebCompatReporterAction.SendReportClicked)
+        job.join()
     }
 
     @Test
@@ -352,7 +376,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
 
         val store = createStore(service = webCompatReporterRetrievalService)
 
-        Pings.brokenSiteReport.testBeforeNextSubmit {
+        val job = Pings.brokenSiteReport.testBeforeNextSubmit {
             assertNull(BrokenSiteReportTabInfoAntitracking.blockList.testGetValue())
             assertNull(BrokenSiteReportTabInfoAntitracking.btpHasPurgedSite.testGetValue())
             assertNull(BrokenSiteReportTabInfoAntitracking.etpCategory.testGetValue())
@@ -393,7 +417,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
 
             assertEquals(store.state.enteredUrl, BrokenSiteReport.url.testGetValue())
             assertEquals(
-                store.state.reason?.name,
+                store.state.reason?.name?.lowercase(),
                 BrokenSiteReport.breakageCategory.testGetValue(),
             )
             assertEquals(
@@ -405,6 +429,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
         }
 
         store.dispatch(WebCompatReporterAction.SendReportClicked)
+        job.join()
     }
 
     @Test
