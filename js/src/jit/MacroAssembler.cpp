@@ -775,6 +775,44 @@ void MacroAssembler::newGCBigInt(Register result, Register temp,
   freeListAllocate(result, temp, allocKind, fail);
 }
 
+void MacroAssembler::preserveWrapper(Register wrapper, Register scratchSuccess,
+                                     Register scratch2,
+                                     const LiveRegisterSet& liveRegs) {
+  Label done, abiCall;
+  CompileZone* zone = realm()->zone();
+
+  loadPtr(AbsoluteAddress(zone->zone()->addressOfPreservedWrappersCount()),
+          scratchSuccess);
+  branchPtr(Assembler::Equal,
+            AbsoluteAddress(zone->zone()->addressOfPreservedWrappersCapacity()),
+            scratchSuccess, &abiCall);
+  loadPtr(AbsoluteAddress(zone->zone()->addressOfPreservedWrappers()),
+          scratch2);
+
+  storePtr(wrapper, BaseIndex(scratch2, scratchSuccess, ScalePointer));
+  addPtr(Imm32(1), scratchSuccess);
+  storePtr(scratchSuccess,
+           AbsoluteAddress(zone->zone()->addressOfPreservedWrappersCount()));
+
+  jump(&done);
+  bind(&abiCall);
+  LiveRegisterSet save;
+  save.set() = RegisterSet::Intersect(liveRegs.set(), RegisterSet::Volatile());
+  PushRegsInMask(save);
+
+  using Fn = bool (*)(JSContext* cx, JSObject* wrapper);
+  setupUnalignedABICall(scratch2);
+  loadJSContext(scratch2);
+  passABIArg(scratch2);
+  passABIArg(wrapper);
+  callWithABI<Fn, js::jit::PreserveWrapper>();
+  storeCallBoolResult(scratchSuccess);
+
+  MOZ_ASSERT(!save.has(scratchSuccess));
+  PopRegsInMask(save);
+  bind(&done);
+}
+
 void MacroAssembler::copySlotsFromTemplate(
     Register obj, const TemplateNativeObject& templateObj, uint32_t start,
     uint32_t end) {

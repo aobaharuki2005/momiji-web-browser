@@ -897,7 +897,8 @@ bool BaselineCacheIRCompiler::emitStoreDynamicSlot(ObjOperandId objId,
 
 bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
     CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    uint32_t newShapeOffset, Maybe<uint32_t> numNewSlotsOffset) {
+    uint32_t newShapeOffset, Maybe<uint32_t> numNewSlotsOffset,
+    bool preserveWrapper) {
   Register obj = allocator.useRegister(masm, objId);
   ValueOperand val = allocator.useValueRegister(masm, rhsId);
 
@@ -907,14 +908,25 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
   Address newShapeAddr = stubAddress(newShapeOffset);
   Address offsetAddr = stubAddress(offsetOffset);
 
+  FailurePath* failure = nullptr;
+  if (preserveWrapper) {
+    if (!addFailurePath(&failure)) {
+      return false;
+    }
+    LiveRegisterSet save = liveVolatileRegs();
+    save.takeUnchecked(scratch1);
+    save.takeUnchecked(scratch2);
+    masm.preserveWrapper(obj, scratch1, scratch2, save);
+    masm.branchIfFalseBool(scratch1, failure->label());
+  }
+
   if (op == CacheOp::AllocateAndStoreDynamicSlot) {
     // We have to (re)allocate dynamic slots. Do this first, as it's the
     // only fallible operation here. Note that growSlotsPure is fallible but
     // does not GC.
     Address numNewSlotsAddr = stubAddress(*numNewSlotsOffset);
 
-    FailurePath* failure;
-    if (!addFailurePath(&failure)) {
+    if (!failure && !addFailurePath(&failure)) {
       return false;
     }
 
@@ -963,33 +975,35 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitAddAndStoreFixedSlot(
-    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    uint32_t newShapeOffset) {
+bool BaselineCacheIRCompiler::emitAddAndStoreFixedSlot(ObjOperandId objId,
+                                                       uint32_t offsetOffset,
+                                                       ValOperandId rhsId,
+                                                       uint32_t newShapeOffset,
+                                                       bool preserveWrapper) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Maybe<uint32_t> numNewSlotsOffset = mozilla::Nothing();
   return emitAddAndStoreSlotShared(CacheOp::AddAndStoreFixedSlot, objId,
                                    offsetOffset, rhsId, newShapeOffset,
-                                   numNewSlotsOffset);
+                                   numNewSlotsOffset, preserveWrapper);
 }
 
 bool BaselineCacheIRCompiler::emitAddAndStoreDynamicSlot(
     ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    uint32_t newShapeOffset) {
+    uint32_t newShapeOffset, bool preserveWrapper) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Maybe<uint32_t> numNewSlotsOffset = mozilla::Nothing();
   return emitAddAndStoreSlotShared(CacheOp::AddAndStoreDynamicSlot, objId,
                                    offsetOffset, rhsId, newShapeOffset,
-                                   numNewSlotsOffset);
+                                   numNewSlotsOffset, preserveWrapper);
 }
 
 bool BaselineCacheIRCompiler::emitAllocateAndStoreDynamicSlot(
     ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    uint32_t newShapeOffset, uint32_t numNewSlotsOffset) {
+    uint32_t newShapeOffset, uint32_t numNewSlotsOffset, bool preserveWrapper) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitAddAndStoreSlotShared(CacheOp::AllocateAndStoreDynamicSlot, objId,
-                                   offsetOffset, rhsId, newShapeOffset,
-                                   mozilla::Some(numNewSlotsOffset));
+  return emitAddAndStoreSlotShared(
+      CacheOp::AllocateAndStoreDynamicSlot, objId, offsetOffset, rhsId,
+      newShapeOffset, mozilla::Some(numNewSlotsOffset), preserveWrapper);
 }
 
 bool BaselineCacheIRCompiler::emitArrayJoinResult(ObjOperandId objId,

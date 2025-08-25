@@ -5623,6 +5623,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void newGCBigInt(Register result, Register temp, gc::Heap initialHeap,
                    Label* fail);
 
+  void preserveWrapper(Register wrapper, Register temp1, Register temp2,
+                       const LiveRegisterSet& liveRegs);
+
  private:
   void branchIfNotStringCharsEquals(Register stringChars,
                                     const JSOffThreadAtom* str, Label* label);

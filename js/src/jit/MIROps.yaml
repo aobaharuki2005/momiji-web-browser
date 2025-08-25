@@ -2710,6 +2710,7 @@
     slotOffset: uint32_t
     shape: Shape*
     numNewSlots: uint32_t
+    preserveWrapper: bool
   possibly_calls: true
   alias_set: custom
   generate_lir: true
