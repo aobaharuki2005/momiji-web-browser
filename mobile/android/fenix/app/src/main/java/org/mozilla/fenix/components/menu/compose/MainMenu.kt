@@ -547,10 +547,11 @@ private fun ToolsAndActionsMenuGroup(
             extensionsMenuItemDescription = extensionsMenuItemDescription,
         )
 
-        MoreMenuButtonGroup(
-            moreMenuExpanded = moreMenuExpanded,
-            onMoreMenuClick = onMoreMenuClick,
-        )
+        if (!moreMenuExpanded) {
+            MoreMenuButtonGroup(
+                onMoreMenuClick = onMoreMenuClick,
+            )
+        }
 
         MenuItemAnimation(
             isExpanded = moreMenuExpanded,
@@ -561,20 +562,11 @@ private fun ToolsAndActionsMenuGroup(
 
 @Composable
 private fun MoreMenuButtonGroup(
-    moreMenuExpanded: Boolean,
     onMoreMenuClick: () -> Unit,
 ) {
     MenuItem(
-        label = if (moreMenuExpanded) {
-            stringResource(id = R.string.browser_menu_less_settings)
-        } else {
-            stringResource(id = R.string.browser_menu_more_settings)
-        },
-        stateDescription = if (moreMenuExpanded) {
-            "Expanded"
-        } else {
-            "Collapsed"
-        },
+        label = stringResource(id = R.string.browser_menu_more_settings),
+        stateDescription = "Collapsed",
         beforeIconPainter = painterResource(id = R.drawable.mozac_ic_ellipsis_horizontal_24),
         onClick = onMoreMenuClick,
     ) {
@@ -589,11 +581,7 @@ private fun MoreMenuButtonGroup(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                painter = if (moreMenuExpanded) {
-                    painterResource(id = R.drawable.mozac_ic_chevron_up_20)
-                } else {
-                    painterResource(id = R.drawable.mozac_ic_chevron_down_20)
-                },
+                painter = painterResource(id = R.drawable.mozac_ic_chevron_down_20),
                 contentDescription = null,
                 tint = FirefoxTheme.colors.iconPrimary,
                 modifier = Modifier.semantics {

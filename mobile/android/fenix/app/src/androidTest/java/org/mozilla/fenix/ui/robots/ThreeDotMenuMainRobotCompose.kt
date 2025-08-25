@@ -262,37 +262,11 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
         waitForAppWindowToBeUpdated()
     }
 
-    fun clickLessMenu() {
-        Log.i(TAG, "clickLessMenu: Trying to click the \"Less\" button from the new main menu design.")
-        composeTestRule.lessButton().performClick()
-        Log.i(TAG, "clickLessMenu: Clicked the \"Less\" button from the new main menu design.")
-        waitForAppWindowToBeUpdated()
-    }
-
     fun clickMoreOptionChevron() {
         Log.i(TAG, "clickMoreOptionChevron: Trying to click the \"More option chevron\" button from the new main menu design.")
         composeTestRule.moreChevronButton().performClick()
         Log.i(TAG, "clickMoreOptionChevron: Clicked the \"More option chevron\" button from the new main menu design.")
         waitForAppWindowToBeUpdated()
-    }
-
-    fun clickLessOptionChevron() {
-        Log.i(TAG, "clickLessOptionChevron: Trying to click the \"Less option chevron\" button from the new main menu design.")
-        composeTestRule.lessChevronButton().performClick()
-        Log.i(TAG, "clickLessOptionChevron: Clicked the \"Less option chevron\" button from the new main menu design.")
-    }
-    fun verifyTheMoreMenuExpansion(composeTestRule: ComposeTestRule, isExpanded: Boolean) {
-        if (isExpanded) {
-            Log.i(TAG, "verifyTheMoreMenuExpansion: Trying to verify that the \"More menu\" list is expanded.")
-            composeTestRule.onNodeWithText("Less", useUnmergedTree = true).assertIsDisplayed()
-            composeTestRule.onNodeWithText("More", useUnmergedTree = true).assertDoesNotExist()
-            Log.i(TAG, "verifyTheMoreMenuExpansion: Verified that the \"More menu\" list is expanded.")
-        } else {
-            Log.i(TAG, "verifyTheMoreMenuExpansion: Trying to verify that the \"More menu\" list is collapsed.")
-            composeTestRule.onNodeWithText("More", useUnmergedTree = true).assertIsDisplayed()
-            composeTestRule.onNodeWithText("Less", useUnmergedTree = true).assertDoesNotExist()
-            Log.i(TAG, "verifyTheMoreMenuExpansion: Verified that the \"More menu\" list is collapsed.")
-        }
     }
 
     fun verifyBookmarkThisPageButton() {
@@ -319,9 +293,6 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
 
     fun verifyMoreMainMenuItems() {
         Log.i(TAG, "verifyMoreMainMenuItems: Trying to verify the more main menu items on the web page.")
-        Log.i(TAG, "verifyMoreMainMenuItems: Trying to verify that the \"Less\" button exists.")
-        composeTestRule.lessButton().assertIsDisplayed()
-        Log.i(TAG, "verifyMoreMainMenuItems: Verified that the \"Less\" button exists.")
         Log.i(TAG, "verifyMoreMainMenuItems: Trying to verify that the \"Translate page\" button exists.")
         composeTestRule.translatePageButton().assertIsDisplayed()
         Log.i(TAG, "verifyMoreMainMenuItems: Verified that the \"Translate page\" button exists.")
@@ -668,8 +639,6 @@ private fun ComposeTestRule.moreButton() = onNodeWithContentDescription(getStrin
 
 private fun ComposeTestRule.moreChevronButton() = onNodeWithTag(MORE_OPTION_CHEVRON, useUnmergedTree = true)
 
-private fun ComposeTestRule.lessChevronButton() = onNodeWithTag(MORE_OPTION_CHEVRON, useUnmergedTree = true)
-
 private fun ComposeTestRule.bookmarksButton() = onNodeWithContentDescription(getStringResource(R.string.library_bookmarks), substring = true)
 
 private fun ComposeTestRule.historyButton() = onNodeWithContentDescription(getStringResource(R.string.library_history), substring = true)
@@ -721,7 +690,5 @@ private fun ComposeTestRule.printContentButton() = onNodeWithContentDescription(
 private fun ComposeTestRule.defaultOpenInAppButton() = onNodeWithContentDescription(getStringResource(R.string.browser_menu_open_app_link))
 
 private fun ComposeTestRule.openInAppNameButton(appName: String) = onNodeWithContentDescription(getStringResource(R.string.browser_menu_open_in_fenix, appName))
-
-private fun ComposeTestRule.lessButton() = onNodeWithContentDescription(getStringResource(R.string.browser_menu_less_settings), substring = true)
 
 private fun ComposeTestRule.extensionsChevronButton() = onNodeWithTag(EXTENSIONS_OPTION_CHEVRON, useUnmergedTree = true)

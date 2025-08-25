@@ -1205,8 +1205,6 @@ class MainMenuTestCompose : TestSetup() {
         }.openThreeDotMenu(composeTestRule) {
             clickMoreOptionChevron()
             verifyMoreMainMenuItems()
-            clickLessOptionChevron()
-            verifyPageMainMenuItems()
         }
     }
 
@@ -1393,10 +1391,7 @@ class MainMenuTestCompose : TestSetup() {
         }.enterURLAndEnterToBrowser(firstTestPage.url) {
         }.openThreeDotMenu(composeTestRule) {
             openMoreMenu()
-            verifyTheMoreMenuExpansion(composeTestRule, isExpanded = true)
             verifyMoreMainMenuItems()
-            clickLessMenu()
-            verifyTheMoreMenuExpansion(composeTestRule, isExpanded = false)
         }
     }
 }
