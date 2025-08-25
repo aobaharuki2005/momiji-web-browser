@@ -162,21 +162,36 @@ class CustomTabBrowserToolbarMiddleware(
                                     publicSuffixList = publicSuffixList,
                                 )
 
-                                val directions = ExternalAppBrowserFragmentDirections
-                                    .actionGlobalQuickSettingsSheetDialogFragment(
-                                        sessionId = customTabId,
+                                val directions = if (settings.enableUnifiedTrustPanel) {
+                                    ExternalAppBrowserFragmentDirections.actionGlobalTrustPanelFragment(
+                                        sessionId = customTab.id,
                                         url = customTab.content.url,
                                         title = customTab.content.title,
-                                        isLocalPdf = customTab.content.url.isContentUrl(),
                                         isSecured = customTab.content.securityInfo.secure,
                                         sitePermissions = sitePermissions,
-                                        gravity = settings.toolbarPosition.androidGravity,
                                         certificateName = customTab.content.securityInfo.issuer,
                                         permissionHighlights = customTab.content.permissionHighlights,
                                         isTrackingProtectionEnabled =
                                             customTab.trackingProtection.enabled && !isExcepted,
                                         cookieBannerUIMode = cookieBannerUIMode,
                                     )
+                                } else {
+                                    ExternalAppBrowserFragmentDirections
+                                        .actionGlobalQuickSettingsSheetDialogFragment(
+                                            sessionId = customTabId,
+                                            url = customTab.content.url,
+                                            title = customTab.content.title,
+                                            isLocalPdf = customTab.content.url.isContentUrl(),
+                                            isSecured = customTab.content.securityInfo.secure,
+                                            sitePermissions = sitePermissions,
+                                            gravity = settings.toolbarPosition.androidGravity,
+                                            certificateName = customTab.content.securityInfo.issuer,
+                                            permissionHighlights = customTab.content.permissionHighlights,
+                                            isTrackingProtectionEnabled =
+                                                customTab.trackingProtection.enabled && !isExcepted,
+                                            cookieBannerUIMode = cookieBannerUIMode,
+                                        )
+                                }
                                 environment.navController.nav(
                                     R.id.externalAppBrowserFragment,
                                     directions,
