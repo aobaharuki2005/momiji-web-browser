@@ -822,11 +822,16 @@ void BufferAllocator::markLargeNurseryOwnedBuffer(LargeBuffer* buffer,
                                                   bool ownerWasTenured) {
   MOZ_ASSERT(buffer->isNurseryOwned);
 
-  // The buffer metadata is held in a small buffer.
+  // The buffer metadata is held in a small buffer. Check whether it has already
+  // been marked.
   auto* region = SmallBufferRegion::from(buffer);
-  if (region->isNurseryOwned(buffer)) {
-    markSmallNurseryOwnedBuffer(buffer, ownerWasTenured);
+  MOZ_ASSERT(region->isNurseryOwned(buffer));
+  if (region->isMarked(buffer)) {
+    MOZ_ASSERT(!ownerWasTenured);
+    return;
   }
+
+  markSmallNurseryOwnedBuffer(buffer, ownerWasTenured);
 
   largeNurseryAllocsToSweep.ref().remove(buffer);
 
@@ -935,9 +940,6 @@ void BufferAllocator::traceLargeAlloc(JSTracer* trc, Cell* owner, void** allocp,
                                       const char* name) {
   void* alloc = *allocp;
   LargeBuffer* buffer = lookupLargeBuffer(alloc);
-
-  // Trace small buffer that holds large buffer metadata.
-  traceSmallAlloc(trc, owner, reinterpret_cast<void**>(&buffer), "LargeBuffer");
 
   if (trc->isTenuringTracer()) {
     if (isNurseryOwned(alloc)) {
