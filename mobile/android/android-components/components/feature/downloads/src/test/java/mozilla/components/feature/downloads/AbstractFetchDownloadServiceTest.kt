@@ -1490,13 +1490,13 @@ class AbstractFetchDownloadServiceTest {
         )
 
         val pausedDownload = DownloadState(
-            id = "1",
+            id = "2",
             url = "https://example.com/file.txt",
             fileName = "file.txt",
             status = PAUSED,
         )
         val pausedDownloadState = DownloadJobState(
-            state = inProgressDownload,
+            state = pausedDownload,
             foregroundServiceId = Random.nextInt(),
             status = PAUSED,
             job = CoroutineScope(IO).launch {
@@ -1505,13 +1505,13 @@ class AbstractFetchDownloadServiceTest {
             },
         )
         val initiatedDownload = DownloadState(
-            id = "1",
+            id = "3",
             url = "https://example.com/file.txt",
             fileName = "file.txt",
             status = INITIATED,
         )
         val initiatedDownloadState = DownloadJobState(
-            state = inProgressDownload,
+            state = initiatedDownload,
             foregroundServiceId = Random.nextInt(),
             status = INITIATED,
             job = CoroutineScope(IO).launch {
@@ -1520,13 +1520,13 @@ class AbstractFetchDownloadServiceTest {
             },
         )
         val failedDownload = DownloadState(
-            id = "1",
+            id = "4",
             url = "https://example.com/file.txt",
             fileName = "file.txt",
             status = FAILED,
         )
         val failedDownloadState = DownloadJobState(
-            state = inProgressDownload,
+            state = failedDownload,
             foregroundServiceId = Random.nextInt(),
             status = FAILED,
             job = CoroutineScope(IO).launch {
