@@ -202,31 +202,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "feeds.section.topstories.options",
-    {
-      title: "Configuration options for top stories feed",
-      // This is a dynamic pref as it depends on the feed being shown or not
-      getValue: args =>
-        JSON.stringify({
-          api_key_pref: "extensions.pocket.oAuthConsumerKey",
-          // Use the opposite value as what default value the feed would have used
-          hidden: !PREFS_CONFIG.get("feeds.system.topstories").getValue(args),
-          provider_icon: "chrome://global/skin/icons/help.svg",
-          provider_name: "Pocket",
-          read_more_endpoint:
-            "https://getpocket.com/explore/trending?src=fx_new_tab",
-          stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=${
-            args.locale
-          }&feed_variant=${
-            showSpocs(args) ? "default_spocs_on" : "default_spocs_off"
-          }`,
-          stories_referrer: "https://getpocket.com/recommendations",
-          topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
-          show_spocs: showSpocs(args),
-        }),
-    },
-  ],
-  [
     "feeds.topsites",
     {
       title: "Displays Top Sites on the New Tab Page",
@@ -1005,7 +980,6 @@ export const PREFS_CONFIG = new Map([
       title: "Configuration for the new pocket new tab",
       getValue: () => {
         return JSON.stringify({
-          api_key_pref: "extensions.pocket.oAuthConsumerKey",
           collapsible: true,
           enabled: true,
         });
@@ -1526,25 +1500,6 @@ export class ActivityStream {
     // In some cases, BROWSER_URLBAR_PLACEHOLDERNAME is read before it's been set,
     // so we also observe it and update our mirrored value when it changes initially.
     Services.prefs.addObserver(BROWSER_URLBAR_PLACEHOLDERNAME, this);
-
-    // Look for outdated user pref values that might have been accidentally
-    // persisted when restoring the original pref value at the end of an
-    // experiment across versions with a different default value.
-    const DS_CONFIG =
-      "browser.newtabpage.activity-stream.discoverystream.config";
-    if (
-      Services.prefs.prefHasUserValue(DS_CONFIG) &&
-      [
-        // Firefox 66
-        `{"api_key_pref":"extensions.pocket.oAuthConsumerKey","enabled":false,"show_spocs":true,"layout_endpoint":"https://getpocket.com/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic"}`,
-        // Firefox 67
-        `{"api_key_pref":"extensions.pocket.oAuthConsumerKey","enabled":false,"show_spocs":true,"layout_endpoint":"https://getpocket.cdn.mozilla.net/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic"}`,
-        // Firefox 68
-        `{"api_key_pref":"extensions.pocket.oAuthConsumerKey","collapsible":true,"enabled":false,"show_spocs":true,"hardcoded_layout":true,"personalized":false,"layout_endpoint":"https://getpocket.cdn.mozilla.net/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic"}`,
-      ].includes(Services.prefs.getStringPref(DS_CONFIG))
-    ) {
-      Services.prefs.clearUserPref(DS_CONFIG);
-    }
 
     // Hook up the store and let all feeds and pages initialize
     this.store.init(
