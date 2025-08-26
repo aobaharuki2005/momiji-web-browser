@@ -341,13 +341,13 @@ addAccessibleTask(
 
 addAccessibleTask(
   `<div role="listbox" id="select" aria-label="Choose a number">
-    <div id="groupOne" role="grouping">
+    <div id="groupOne" role="group">
       <div role="option" id="one" aria-selected="true">One</div>
     </div>
-    <div id="groupTwo" role="grouping">
+    <div id="groupTwo" role="group">
       <div role="option" id="two" aria-selected="false">Two</div>
     </div>
-    <div id="groupThree" role="grouping">
+    <div id="groupThree" role="group">
       <div role="option" id="three" aria-selected="false">Three</div>
     </div>
   </div>`,
