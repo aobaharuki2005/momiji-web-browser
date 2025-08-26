@@ -211,14 +211,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-  // Force all date/time methods in JavaScript to use the UTC timezone for
-  // fingerprinting protection.
-  bool forceUTC() const { return forceUTC_; }
-  RealmCreationOptions& setForceUTC(bool flag) {
-    forceUTC_ = flag;
-    return *this;
-  }
-
   RefPtr<LocaleString> locale() const { return locale_; }
   RealmCreationOptions& setLocaleCopyZ(const char* locale);
 
@@ -262,7 +254,6 @@ class JS_PUBLIC_API RealmCreationOptions {
 
   bool secureContext_ = false;
   bool freezeBuiltins_ = false;
-  bool forceUTC_ = false;
   bool alwaysUseFdlibm_ = false;
 };
 
