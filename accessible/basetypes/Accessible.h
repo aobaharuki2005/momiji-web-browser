@@ -8,7 +8,7 @@
 
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/AccTypes.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 #include "nsRect.h"
 #include "Units.h"
 
