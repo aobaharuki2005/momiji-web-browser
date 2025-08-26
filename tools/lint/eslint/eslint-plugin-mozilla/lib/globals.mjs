@@ -99,124 +99,6 @@ function parseBooleanConfig(string, comment) {
 var lastHTMLGlobals = {};
 
 /**
- * Attempts to convert an CallExpressions that look like module imports
- * into global variable definitions.
- *
- * @param  {object} node
- *         The AST node to convert.
- * @param  {boolean} isGlobal
- *         True if the current node is in the global scope.
- *
- * @returns {GlobalsList}
- */
-function convertCallExpressionToGlobals(node, isGlobal) {
-  let express = node.expression;
-  if (
-    express.type === "CallExpression" &&
-    express.callee.type === "MemberExpression" &&
-    express.callee.object &&
-    express.callee.object.type === "Identifier" &&
-    express.arguments.length === 1 &&
-    express.arguments[0].type === "ArrayExpression" &&
-    express.callee.property.type === "Identifier" &&
-    express.callee.property.name === "importGlobalProperties"
-  ) {
-    return express.arguments[0].elements.map(literal => {
-      return {
-        explicit: true,
-        name: literal.value,
-        writable: false,
-      };
-    });
-  }
-
-  // The definition matches below must be in the global scope for us to define
-  // a global, so bail out early if we're not a global.
-  if (!isGlobal) {
-    return [];
-  }
-
-  let source;
-  try {
-    source = helpers.getASTSource(node);
-  } catch (e) {
-    return [];
-  }
-
-  for (let reg of callExpressionDefinitions) {
-    let match = source.match(reg);
-    if (match) {
-      return [{ name: match[1], writable: true, explicit: true }];
-    }
-  }
-
-  if (
-    callExpressionMultiDefinitions.some(expr => source.startsWith(expr)) &&
-    node.expression.arguments[1]
-  ) {
-    let arg = node.expression.arguments[1];
-    if (arg.type === "ObjectExpression") {
-      return arg.properties
-        .map(p => ({
-          name: p.type === "Property" && p.key.name,
-          writable: true,
-          explicit: true,
-        }))
-        .filter(g => g.name);
-    }
-    if (arg.type === "ArrayExpression") {
-      return arg.elements
-        .map(p => ({
-          name: p.type === "Literal" && p.value,
-          writable: true,
-          explicit: true,
-        }))
-        .filter(g => typeof g.name == "string");
-    }
-  }
-
-  if (
-    node.expression.callee.type == "MemberExpression" &&
-    node.expression.callee.property.type == "Identifier" &&
-    node.expression.callee.property.name == "defineLazyScriptGetter"
-  ) {
-    // The case where we have a single symbol as a string has already been
-    // handled by the regexp, so we have an array of symbols here.
-    return node.expression.arguments[1].elements.map(n => ({
-      name: n.value,
-      writable: true,
-      explicit: true,
-    }));
-  }
-
-  return [];
-}
-
-/**
- * Attempts to convert an AssignmentExpression into a global variable
- * definition if it applies to `this` in the global scope.
- *
- * @param  {object} node
- *         The AST node to convert.
- * @param  {boolean} isGlobal
- *         True if the current node is in the global scope.
- * @returns {GlobalsList}
- */
-function convertThisAssignmentExpressionToGlobals(node, isGlobal) {
-  if (
-    isGlobal &&
-    node.expression.left &&
-    node.expression.left.object &&
-    node.expression.left.object.type === "ThisExpression" &&
-    node.expression.left.property &&
-    node.expression.left.property.type === "Identifier"
-  ) {
-    return [{ name: node.expression.left.property.name, writable: true }];
-  }
-  return [];
-}
-
-/**
  * Attempts to figure out the location for the given script.
  *
  * @param {string} src
@@ -507,19 +389,118 @@ class GlobalsForNode {
     return globals;
   }
 
-  ExpressionStatement(node, parents) {
+  /**
+   * Attempts to convert an AssignmentExpression into a global variable
+   * definition if it applies to `this` in the global scope.
+   *
+   * @param {object} node
+   *   The AST node to convert.
+   * @param {object} parents
+   *   The details of any parents of the current node.
+   *
+   * @returns {GlobalsList}
+   */
+  AssignmentExpression(node, parents) {
     let isGlobal = helpers.getIsGlobalThis(parents);
-    let globals = [];
+    if (
+      isGlobal &&
+      node.left?.object?.type === "ThisExpression" &&
+      node.left?.property?.type === "Identifier"
+    ) {
+      return [{ name: node.left.property.name, writable: true }];
+    }
+    return [];
+  }
 
-    // Note: We check the expression types here and only call the necessary
-    // functions to aid performance.
-    if (node.expression.type === "AssignmentExpression") {
-      globals = convertThisAssignmentExpressionToGlobals(node, isGlobal);
-    } else if (node.expression.type === "CallExpression") {
-      globals = convertCallExpressionToGlobals(node, isGlobal);
+  /**
+   * Attempts to convert a CallExpression that looks like a module import
+   * into global variable definitions.
+   *
+   * @param {object} node
+   *   The AST node to convert.
+   * @param {object} parents
+   *   The details of any parents of the current node.
+   * @returns {GlobalsList}
+   */
+  CallExpression(node, parents) {
+    let isGlobal = helpers.getIsGlobalThis(parents);
+    if (
+      node.type === "CallExpression" &&
+      node.callee.type === "MemberExpression" &&
+      node.callee.object?.type === "Identifier" &&
+      node.arguments[0]?.type === "ArrayExpression" &&
+      node.callee.property.type === "Identifier" &&
+      node.callee.property.name === "importGlobalProperties"
+    ) {
+      return node.arguments[0].elements.map(literal => {
+        return {
+          explicit: true,
+          name: literal.value,
+          writable: false,
+        };
+      });
     }
 
-    return globals;
+    // The definition matches below must be in the global scope for us to define
+    // a global, so bail out early if we're not a global.
+    if (!isGlobal) {
+      return [];
+    }
+
+    let source;
+    try {
+      source = helpers.getASTSource(node);
+    } catch (e) {
+      return [];
+    }
+
+    for (let reg of callExpressionDefinitions) {
+      let match = source.match(reg);
+      if (match) {
+        return [{ name: match[1], writable: true, explicit: true }];
+      }
+    }
+
+    if (
+      callExpressionMultiDefinitions.some(expr => source.startsWith(expr)) &&
+      node.arguments[1]
+    ) {
+      let arg = node.arguments[1];
+      if (arg.type === "ObjectExpression") {
+        return arg.properties
+          .map(p => ({
+            name: p.type === "Property" && p.key.name,
+            writable: true,
+            explicit: true,
+          }))
+          .filter(g => g.name);
+      }
+      if (arg.type === "ArrayExpression") {
+        return arg.elements
+          .map(p => ({
+            name: p.type === "Literal" && p.value,
+            writable: true,
+            explicit: true,
+          }))
+          .filter(g => typeof g.name == "string");
+      }
+    }
+
+    if (
+      node.callee.type == "MemberExpression" &&
+      node.callee.property.type == "Identifier" &&
+      node.callee.property.name == "defineLazyScriptGetter"
+    ) {
+      // The case where we have a single symbol as a string has already been
+      // handled by the regexp, so we have an array of symbols here.
+      return node.arguments[1].elements.map(n => ({
+        name: n.value,
+        writable: true,
+        explicit: true,
+      }));
+    }
+
+    return [];
   }
 }
 
