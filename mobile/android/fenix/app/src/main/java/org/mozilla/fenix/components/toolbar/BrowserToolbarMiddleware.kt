@@ -120,6 +120,7 @@ import org.mozilla.fenix.components.toolbar.TabCounterInteractions.AddNewTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.CloseCurrentTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterClicked
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterLongClicked
+import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
@@ -838,10 +839,18 @@ class BrowserToolbarMiddleware(
     private fun openNewTab(
         browsingMode: BrowsingMode,
     ) = runWithinEnvironment {
-        browsingModeManager.mode = browsingMode
-        navController.navigate(
-            BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
-        )
+        if (settings.enableHomepageAsNewTab) {
+            useCases.fenixBrowserUseCases.addNewHomepageTab(
+                private = browsingMode.isPrivate,
+            )
+        } else {
+            val focusOnAddressBar = !settings.enableHomepageSearchBar
+
+            browsingModeManager.mode = browsingMode
+            navController.navigate(
+                BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = focusOnAddressBar),
+            )
+        }
     }
 
     private fun observeProgressBarUpdates(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
