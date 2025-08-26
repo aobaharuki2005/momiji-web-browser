@@ -195,6 +195,7 @@ class BrowsingContextModule extends RootBiDiModule {
     this.#navigationListener = new lazy.NavigationListener(
       this.messageHandler.navigationManager
     );
+    this.#navigationListener.on("download-started", this.#onDownloadStarted);
     this.#navigationListener.on(
       "fragment-navigated",
       this.#onFragmentNavigated
@@ -1955,6 +1956,28 @@ class BrowsingContextModule extends RootBiDiModule {
     }
   };
 
+  #onDownloadStarted = async (eventName, data) => {
+    if (this.#subscribedEvents.has("browsingContext.downloadWillBegin")) {
+      const { navigationId, navigableId, suggestedFilename, timestamp, url } =
+        data;
+
+      const browsingContextInfo = {
+        context: navigableId,
+        navigation: navigationId,
+        suggestedFilename,
+        timestamp,
+        url,
+      };
+
+      const context = this.#getBrowsingContext(navigableId);
+      this.#emitContextEventForBrowsingContext(
+        context.id,
+        "browsingContext.downloadWillBegin",
+        browsingContextInfo
+      );
+    }
+  };
+
   #onFragmentNavigated = async (eventName, data) => {
     const { navigationId, navigableId, url } = data;
     const context = this.#getBrowsingContext(navigableId);
@@ -2132,6 +2155,7 @@ class BrowsingContextModule extends RootBiDiModule {
     this.#subscribedEvents.delete(event);
 
     const hasNavigationEvent =
+      this.#subscribedEvents.has("browsingContext.downloadWillBegin") ||
       this.#subscribedEvents.has("browsingContext.fragmentNavigated") ||
       this.#subscribedEvents.has("browsingContext.historyUpdated") ||
       this.#subscribedEvents.has("browsingContext.navigationFailed") ||
@@ -2162,6 +2186,7 @@ class BrowsingContextModule extends RootBiDiModule {
         this.#subscribedEvents.add(event);
         break;
       }
+      case "browsingContext.downloadWillBegin":
       case "browsingContext.fragmentNavigated":
       case "browsingContext.historyUpdated":
       case "browsingContext.navigationCommitted":
@@ -2187,6 +2212,7 @@ class BrowsingContextModule extends RootBiDiModule {
         this.#stopListeningToContextEvent(event);
         break;
       }
+      case "browsingContext.downloadWillBegin":
       case "browsingContext.fragmentNavigated":
       case "browsingContext.historyUpdated":
       case "browsingContext.navigationCommitted":
@@ -2333,6 +2359,7 @@ class BrowsingContextModule extends RootBiDiModule {
       "browsingContext.contextCreated",
       "browsingContext.contextDestroyed",
       "browsingContext.domContentLoaded",
+      "browsingContext.downloadWillBegin",
       "browsingContext.fragmentNavigated",
       "browsingContext.historyUpdated",
       "browsingContext.load",

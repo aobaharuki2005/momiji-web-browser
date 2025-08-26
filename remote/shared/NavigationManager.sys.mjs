@@ -9,6 +9,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowsingContextListener:
     "chrome://remote/content/shared/listeners/BrowsingContextListener.sys.mjs",
+  DownloadListener:
+    "chrome://remote/content/shared/listeners/DownloadListener.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   ParentWebProgressListener:
@@ -77,6 +79,7 @@ export const NavigationState = {
  */
 class NavigationRegistry extends EventEmitter {
   #contextListener;
+  #downloadListener;
   #managers;
   #navigations;
   #promptListener;
@@ -96,6 +99,9 @@ class NavigationRegistry extends EventEmitter {
     this.#contextListener = new lazy.BrowsingContextListener();
     this.#contextListener.on("attached", this.#onContextAttached);
     this.#contextListener.on("discarded", this.#onContextDiscarded);
+
+    this.#downloadListener = new lazy.DownloadListener();
+    this.#downloadListener.on("download-started", this.#onDownloadStarted);
 
     this.#promptListener = new lazy.PromptListener();
     this.#promptListener.on("closed", this.#onPromptClosed);
@@ -134,6 +140,7 @@ class NavigationRegistry extends EventEmitter {
 
       this.#contextListener.startListening();
       this.#webProgressListener.startListening();
+      this.#downloadListener.startListening();
       this.#promptListener.startListening();
     }
 
@@ -153,6 +160,7 @@ class NavigationRegistry extends EventEmitter {
     if (this.#managers.size == 0) {
       this.#contextListener.stopListening();
       this.#webProgressListener.stopListening();
+      this.#downloadListener.stopListening();
       this.#promptListener.stopListening();
 
       lazy.unregisterWebDriverDocumentInsertedActor();
@@ -676,6 +684,32 @@ class NavigationRegistry extends EventEmitter {
     this.#navigations.delete(navigableId);
   };
 
+  #onDownloadStarted = (eventName, data) => {
+    const { download, navigationId } = data;
+
+    const contextId = download.source.browsingContextId;
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+    if (!browsingContext) {
+      return;
+    }
+
+    const navigableId =
+      lazy.TabManager.getIdForBrowsingContext(browsingContext);
+    const url = download.source.url;
+
+    // Generating the download navigationId and tracking navigations is
+    // delegated to the DownloadListener. It is exposed via the DownloadManager
+    // for consistency and also to enforce having a singleton and consistent
+    // navigation ids across sessions.
+    this.emit("download-started", {
+      navigationId,
+      navigableId,
+      suggestedFilename: PathUtils.filename(download.target.path),
+      timestamp: download.startTime.getTime(),
+      url,
+    });
+  };
+
   #onPromptClosed = (eventName, data) => {
     const { contentBrowser, detail } = data;
     const { accepted, promptType } = detail;
@@ -840,6 +874,7 @@ export class NavigationManager extends EventEmitter {
 
     this.#monitoring = true;
     navigationRegistry.startMonitoring(this);
+    navigationRegistry.on("download-started", this.#onNavigationEvent);
     navigationRegistry.on("fragment-navigated", this.#onNavigationEvent);
     navigationRegistry.on("history-updated", this.#onNavigationEvent);
     navigationRegistry.on("navigation-committed", this.#onNavigationEvent);
@@ -856,6 +891,7 @@ export class NavigationManager extends EventEmitter {
 
     this.#monitoring = false;
     navigationRegistry.stopMonitoring(this);
+    navigationRegistry.off("download-started", this.#onNavigationEvent);
     navigationRegistry.off("fragment-navigated", this.#onNavigationEvent);
     navigationRegistry.off("history-updated", this.#onNavigationEvent);
     navigationRegistry.off("navigation-committed", this.#onNavigationEvent);

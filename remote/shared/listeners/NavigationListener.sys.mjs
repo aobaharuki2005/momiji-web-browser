@@ -66,6 +66,7 @@ export class NavigationListener {
       return;
     }
 
+    this.#navigationManager.on("download-started", this.#forwardEvent);
     this.#navigationManager.on("fragment-navigated", this.#forwardEvent);
     this.#navigationManager.on("history-updated", this.#forwardEvent);
     this.#navigationManager.on("navigation-committed", this.#forwardEvent);
@@ -82,6 +83,7 @@ export class NavigationListener {
       return;
     }
 
+    this.#navigationManager.off("download-started", this.#forwardEvent);
     this.#navigationManager.off("fragment-navigated", this.#forwardEvent);
     this.#navigationManager.off("history-updated", this.#forwardEvent);
     this.#navigationManager.off("navigation-committed", this.#forwardEvent);
