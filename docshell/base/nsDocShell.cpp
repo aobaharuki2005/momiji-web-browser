@@ -4222,8 +4222,7 @@ nsresult nsDocShell::StopInternal(
   RefPtr kungFuDeathGrip = this;
   if (RefPtr<Document> doc = GetDocument();
       aUnsetOngoingNavigation == UnsetOngoingNavigation::Yes && doc &&
-      !doc->ShouldIgnoreOpens() &&
-      mOngoingNavigation == Some(OngoingNavigation::NavigationID)) {
+      !doc->ShouldIgnoreOpens()) {
     SetOngoingNavigation(Nothing());
   }
 
@@ -4512,11 +4511,6 @@ nsDocShell::Destroy() {
     // the nsDSURIContentListener will block it.  All of which
     // means that we should do this before calling Stop(), of
     // course.
-  }
-
-  if (BrowsingContext* browsingContext = GetBrowsingContext();
-      browsingContext && !browsingContext->IsTop()) {
-    InformNavigationAPIAboutChildNavigableDestruction();
   }
 
   // Stop any URLs that are currently being loaded...
@@ -9648,10 +9642,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
       mBrowsingContext->Focus(CallerType::System, IgnoreErrors());
     }
     if (sameDocument) {
-      if (aLoadState->LoadIsFromSessionHistory() &&
-          (mLoadType & LOAD_CMD_HISTORY)) {
-        SetOngoingNavigation(Nothing());
-      }
       return rv;
     }
   }
@@ -9678,11 +9668,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // protocols?
   if (mTiming && !isDownload) {
     mTiming->NotifyBeforeUnload();
-  }
-
-  if (!aLoadState->LoadIsFromSessionHistory() && mOngoingNavigation &&
-      *mOngoingNavigation == OngoingNavigation::Traversal) {
-    return NS_OK;
   }
 
   // The following steps are from https://html.spec.whatwg.org/#navigate
@@ -9834,11 +9819,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
       // not just BFCacheStatus::NOT_ALLOWED), so that it can update the
       // telemetry data correctly.
       document->DisallowBFCaching(flags);
-    }
-
-    if (aLoadState->LoadIsFromSessionHistory() &&
-        (mLoadType & LOAD_CMD_HISTORY)) {
-      SetOngoingNavigation(Nothing());
     }
   }
 
@@ -12572,26 +12552,6 @@ void nsDocShell::MaybeFireTraverseHistory(nsDocShellLoadState* aLoadState) {
   }
 }
 
-bool nsDocShell::MaybeFireTraversableTraverseHistory(
-    const SessionHistoryInfo& aInfo,
-    Maybe<UserNavigationInvolvement> aUserInvolvement) {
-  MOZ_DIAGNOSTIC_ASSERT(GetBrowsingContext());
-  MOZ_DIAGNOSTIC_ASSERT(GetBrowsingContext()->IsTop());
-
-  SetOngoingNavigation(Some(OngoingNavigation::Traversal));
-
-  if (RefPtr<nsPIDOMWindowInner> activeWindow = GetActiveWindow()) {
-    if (RefPtr navigation = activeWindow->Navigation()) {
-      if (AutoJSAPI jsapi; jsapi.Init(activeWindow)) {
-        return navigation->FireTraverseNavigateEvent(jsapi.cx(), aInfo,
-                                                     aUserInvolvement);
-      }
-    }
-  }
-
-  return true;
-}
-
 nsresult nsDocShell::LoadHistoryEntry(nsDocShellLoadState* aLoadState,
                                       uint32_t aLoadType,
                                       bool aLoadingCurrentEntry) {
@@ -14483,7 +14443,8 @@ nsPIDOMWindowInner* nsDocShell::GetActiveWindow() {
 // https://html.spec.whatwg.org/#inform-the-navigation-api-about-aborting-navigation
 void nsDocShell::InformNavigationAPIAboutAbortingNavigation() {
   // Step 1
-  // We really have no idea what this means.
+  // This becomes an assert since we have a common event loop.
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
   // No ongoing navigations if we don't have a window.
   RefPtr<nsPIDOMWindowInner> window = GetActiveWindow();
@@ -14509,31 +14470,6 @@ void nsDocShell::InformNavigationAPIAboutAbortingNavigation() {
 
   // Step 4
   navigation->AbortOngoingNavigation(jsapi.cx());
-}
-
-// https://html.spec.whatwg.org/#inform-the-navigation-api-about-child-navigable-destruction
-void nsDocShell::InformNavigationAPIAboutChildNavigableDestruction() {
-  // Step 1
-  InformNavigationAPIAboutAbortingNavigation();
-
-  // No ongoing navigations if we don't have a window.
-  RefPtr<nsPIDOMWindowInner> window = GetActiveWindow();
-  if (!window) {
-    return;
-  }
-
-  // Step 2
-  RefPtr<Navigation> navigation = window->Navigation();
-  if (!navigation) {
-    return;
-  }
-
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(navigation->GetOwnerGlobal())) {
-    return;
-  }
-
-  navigation->InformAboutChildNavigableDestruction(jsapi.cx());
 }
 
 // https://html.spec.whatwg.org/#set-the-ongoing-navigation

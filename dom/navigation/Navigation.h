@@ -138,9 +138,6 @@ class Navigation final : public DOMEventTargetHelper {
   void AbortOngoingNavigation(
       JSContext* aCx, JS::Handle<JS::Value> aError = JS::UndefinedHandleValue);
 
-  MOZ_CAN_RUN_SCRIPT
-  void InformAboutChildNavigableDestruction(JSContext* aCx);
-
   void CreateNavigationActivationFrom(
       SessionHistoryInfo* aPreviousEntryForActivation,
       NavigationType aNavigationType);

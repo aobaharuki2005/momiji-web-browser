@@ -814,8 +814,7 @@ static bool HasIdenticalFragment(nsIURI* aURI, nsIURI* aOtherURI) {
   return ref.Equals(otherRef);
 }
 
-static void LogEvent(Event* aEvent, NavigateEvent* aOngoingEvent,
-                     const nsACString& aReason) {
+static void LogEvent(Event* aEvent, NavigateEvent* aOngoingEvent) {
   if (!MOZ_LOG_TEST(gNavigationLog, LogLevel::Debug)) {
     return;
   }
@@ -824,7 +823,7 @@ static void LogEvent(Event* aEvent, NavigateEvent* aOngoingEvent,
       aOngoingEvent ? aOngoingEvent->Destination() : nullptr;
   nsAutoString eventType;
   aEvent->GetType(eventType);
-  LOG_FMT("{} {} {}", aReason, NS_ConvertUTF16toUTF8(eventType),
+  LOG_FMT("Fire {} {}", NS_ConvertUTF16toUTF8(eventType),
           destination ? destination->GetURI()->GetSpecOrDefault() : ""_ns);
 }
 
@@ -834,7 +833,7 @@ nsresult Navigation::FireEvent(const nsAString& aName) {
   event->InitEvent(aName, false, false);
   event->SetTrusted(true);
   ErrorResult rv;
-  LogEvent(event, mOngoingNavigateEvent, "Fire"_ns);
+  LogEvent(event, mOngoingNavigateEvent);
   DispatchEvent(*event, rv);
   return rv.StealNSResult();
 }
@@ -855,7 +854,7 @@ nsresult Navigation::FireErrorEvent(const nsAString& aName,
   RefPtr<Event> event = ErrorEvent::Constructor(this, aName, aEventInitDict);
   ErrorResult rv;
 
-  LogEvent(event, mOngoingNavigateEvent, "Fire"_ns);
+  LogEvent(event, mOngoingNavigateEvent);
   DispatchEvent(*event, rv);
   return rv.StealNSResult();
 }
@@ -1021,7 +1020,7 @@ bool Navigation::InnerFireNavigateEvent(
   mSuppressNormalScrollRestorationDuringOngoingNavigation = false;
 
   // Step 29 and step 30
-  LogEvent(event, mOngoingNavigateEvent, "Fire"_ns);
+  LogEvent(event, mOngoingNavigateEvent);
   if (!DispatchEvent(*event, CallerType::NonSystem, IgnoreErrors())) {
     // Step 30.1
     if (aNavigationType == NavigationType::Traverse) {
@@ -1336,8 +1335,6 @@ void Navigation::AbortOngoingNavigation(JSContext* aCx,
   // Step 1
   RefPtr<NavigateEvent> event = mOngoingNavigateEvent;
 
-  LogEvent(event, event, "Abort"_ns);
-
   // Step 2
   MOZ_DIAGNOSTIC_ASSERT(event);
 
@@ -1390,21 +1387,6 @@ void Navigation::AbortOngoingNavigation(JSContext* aCx,
 
     // Step 12.2
     mTransition = nullptr;
-  }
-}
-
-// https://html.spec.whatwg.org/#inform-the-navigation-api-about-child-navigable-destruction
-void Navigation::InformAboutChildNavigableDestruction(JSContext* aCx) {
-  // Step 3
-  auto traversalAPIMethodTrackers = mUpcomingTraverseAPIMethodTrackers.Clone();
-
-  // Step 4
-  for (auto& apiMethodTracker : traversalAPIMethodTrackers.Values()) {
-    ErrorResult rv;
-    rv.ThrowAbortError("Navigable removed");
-    JS::Rooted<JS::Value> rootedExceptionValue(aCx);
-    MOZ_ALWAYS_TRUE(ToJSValue(aCx, std::move(rv), &rootedExceptionValue));
-    apiMethodTracker->RejectFinishedPromise(rootedExceptionValue);
   }
 }
 
