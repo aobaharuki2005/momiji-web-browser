@@ -12,6 +12,8 @@ const { FX_RELAY_OAUTH_CLIENT_ID } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsCommon.sys.mjs"
 );
 
+const kForceOverflowWidthPx = 500;
+
 ChromeUtils.defineESModuleGetters(this, {
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.sys.mjs",
@@ -102,12 +104,19 @@ add_task(async function test_overflow_navBar_button_visibility() {
   registerCleanupFunction(function () {
     overflowPanel.removeAttribute("animate");
     window.resizeTo(originalWindowWidth, window.outerHeight);
+    CustomizableUI.reset();
     return TestUtils.waitForCondition(
       () => !navbar.hasAttribute("overflowing")
     );
   });
 
-  window.resizeTo(450, window.outerHeight);
+  // As of bug 1960002, overflowing the navbar also requires adding an
+  // extra button.
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
+  CustomizableUI.addWidgetToArea(
+    "history-panelmenu",
+    CustomizableUI.AREA_NAVBAR
+  );
 
   await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
