@@ -395,6 +395,10 @@ struct AnchorPosResolutionData {
 // Mapping from a referenced anchor to its resolution (If a valid anchor is
 // found).
 class AnchorPosReferencedAnchors {
+ private:
+  using Map =
+      nsTHashMap<RefPtr<const nsAtom>, mozilla::Maybe<AnchorPosResolutionData>>;
+
  public:
   AnchorPosReferencedAnchors() = default;
   AnchorPosReferencedAnchors(const AnchorPosReferencedAnchors&) = delete;
@@ -411,9 +415,13 @@ class AnchorPosReferencedAnchors {
 
   Result Lookup(const nsAtom* aAnchorName, bool aNeedOffset);
 
+  bool IsEmpty() const { return mMap.IsEmpty(); }
+
+  Map::const_iterator begin() const { return mMap.cbegin(); }
+  Map::const_iterator end() const { return mMap.cend(); }
+
  private:
-  nsTHashMap<RefPtr<const nsAtom>, mozilla::Maybe<AnchorPosResolutionData>>
-      mMap;
+  Map mMap;
 };
 
 // Base set of parameters required to resolve a reference to an anchor.

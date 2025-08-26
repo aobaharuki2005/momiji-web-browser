@@ -3231,7 +3231,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     // This might post new restyles, so need to do it here. Don't do it if we're
     // already going to restyle tho, so that we don't potentially reflow with
     // dirty styling.
-    presContext->UpdateContainerQueryStyles();
+    presContext->UpdateContainerQueryStylesAndAnchorPosLayout();
     presContext->FinishedContainerQueryUpdate();
   }
 
@@ -3342,7 +3342,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     presContext->PresShell()->MergeAnchorPosAnchorChanges();
 
     mInStyleRefresh = false;
-    presContext->UpdateContainerQueryStyles();
+    presContext->UpdateContainerQueryStylesAndAnchorPosLayout();
     mInStyleRefresh = true;
   }
 
