@@ -21,10 +21,12 @@
 #include "mozilla/intl/LocaleService.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsISpeechService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSpeechTask.h"
 #include "nsString.h"
+#include "nsSynthVoiceRegistry.h"
 
 using mozilla::intl::LocaleService;
 

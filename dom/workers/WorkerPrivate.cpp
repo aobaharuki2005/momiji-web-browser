@@ -78,6 +78,7 @@
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/dom/TimeoutHandler.h"
+#include "mozilla/dom/TimeoutManager.h"
 #include "mozilla/dom/UseCounterMetrics.h"
 #include "mozilla/dom/WebTaskScheduler.h"
 #include "mozilla/dom/WindowContext.h"
