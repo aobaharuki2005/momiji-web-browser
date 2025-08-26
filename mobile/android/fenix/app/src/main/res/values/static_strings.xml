@@ -128,6 +128,8 @@
 
     <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
     <string name="inactive_tabs_menu_item">Make inactive</string>
+    <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
+    <string name="inactive_tabs_menu_item_2">Make tabs inactive</string>
 
     <!-- Content description (not visible, for screen readers etc.) used to announce [LinkTextView]. -->
     <string name="link_text_view_type_announcement" translatable="false">link</string>

@@ -431,7 +431,7 @@ private fun generateMultiSelectBannerMenuItems(
     onSaveToCollectionsClick: () -> Unit,
     onMakeSelectedTabsInactive: () -> Unit,
 ): List<MenuItem> {
-    val menuItems = mutableListOf<MenuItem>(
+    val menuItems = mutableListOf(
         MenuItem.IconItem(
             text = Text.Resource(R.string.tab_manager_multiselect_menu_item_share),
             drawableRes = R.drawable.ic_share,
@@ -447,8 +447,9 @@ private fun generateMultiSelectBannerMenuItems(
     )
     if (shouldShowInactiveButton) {
         menuItems.add(
-            MenuItem.TextItem(
-                text = Text.Resource(R.string.inactive_tabs_menu_item),
+            MenuItem.IconItem(
+                text = Text.Resource(R.string.inactive_tabs_menu_item_2),
+                drawableRes = R.drawable.mozac_ic_cross_circle_24,
                 onClick = onMakeSelectedTabsInactive,
             ),
         )
