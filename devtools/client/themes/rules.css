@@ -576,6 +576,11 @@
   transform: rotate(-90deg);
 }
 
+.ruleview-propertycontainer .ruleview-variable-link {
+  /* Prevent line break when copy/pasting an entire rule */
+  user-select: auto;
+}
+
 .ruleview-newproperty {
   /* As we don't have the checkbox displayed before the input, we need to align it
      with the property name above it. */
