@@ -594,6 +594,7 @@ browser.searchinit:
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
       - https://bugzil.la/1984248
+      - https://bugzil.la/1984462
     data_reviews:
       - https://bugzil.la/1789438
       - https://bugzil.la/1811158
@@ -605,7 +606,6 @@ browser.searchinit:
       - fx-search-telemetry@mozilla.com
     expires: 151
     unit: engines
-    telemetry_mirror: BROWSER_SEARCHINIT_SECURE_OPENSEARCH_ENGINE_COUNT
 
   insecure_opensearch_engine_count:
     type: quantity
@@ -621,6 +621,7 @@ browser.searchinit:
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
       - https://bugzil.la/1984248
+      - https://bugzil.la/1984462
     data_reviews:
       - https://bugzil.la/1789438
       - https://bugzil.la/1811158
@@ -632,7 +633,6 @@ browser.searchinit:
       - fx-search-telemetry@mozilla.com
     expires: 151
     unit: engines
-    telemetry_mirror: BROWSER_SEARCHINIT_INSECURE_OPENSEARCH_ENGINE_COUNT
 
   secure_opensearch_update_count:
     type: quantity
@@ -648,6 +648,7 @@ browser.searchinit:
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
       - https://bugzil.la/1984248
+      - https://bugzil.la/1984462
     data_reviews:
       - https://bugzil.la/1789438
       - https://bugzil.la/1811158
@@ -659,7 +660,6 @@ browser.searchinit:
       - fx-search-telemetry@mozilla.com
     expires: 151
     unit: updates
-    telemetry_mirror: BROWSER_SEARCHINIT_SECURE_OPENSEARCH_UPDATE_COUNT
 
   insecure_opensearch_update_count:
     type: quantity
@@ -675,6 +675,7 @@ browser.searchinit:
       - https://bugzil.la/1881408
       - https://bugzil.la/1916866
       - https://bugzil.la/1984248
+      - https://bugzil.la/1984462
     data_reviews:
       - https://bugzil.la/1789438
       - https://bugzil.la/1811158
@@ -686,7 +687,6 @@ browser.searchinit:
       - fx-search-telemetry@mozilla.com
     expires: 151
     unit: updates
-    telemetry_mirror: BROWSER_SEARCHINIT_INSECURE_OPENSEARCH_UPDATE_COUNT
 
 search:
   suggestions_latency:
