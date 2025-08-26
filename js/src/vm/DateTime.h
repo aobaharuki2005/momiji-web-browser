@@ -194,6 +194,21 @@ class DateTimeInfo {
     return offset;
   }
 
+  /**
+   * Cache key for this date-time info. Returns a different value when the
+   * time zone changed.
+   */
+  static int32_t timeZoneCacheKey(DateTimeInfo* dtInfo) {
+    if (MOZ_UNLIKELY(dtInfo)) {
+      // |utcToLocalStandardOffsetSeconds_| is incremented when the time zone
+      // override is modified.
+      return dtInfo->utcToLocalStandardOffsetSeconds_;
+    }
+
+    // Use the offset as the cache key for the default time zone.
+    return utcToLocalStandardOffsetSeconds();
+  }
+
   enum class TimeZoneOffset { UTC, Local };
 
 #if JS_HAS_INTL_API
@@ -265,6 +280,10 @@ class DateTimeInfo {
     return &DateTimeInfo::utcToLocalOffsetSeconds;
   }
 
+#if JS_HAS_INTL_API
+  void updateTimeZoneOverride(RefPtr<JS::TimeZoneString> timeZone);
+#endif
+
  private:
   // The method below should only be called via js::ResetTimeZoneInternal().
   friend void js::ResetTimeZoneInternal(ResetTimeZoneMode);
@@ -329,6 +348,10 @@ class DateTimeInfo {
    * time zone changes. It must not be used to convert between local and UTC
    * time, because, as outlined above, this could lead to different results when
    * compared to ICU.
+   *
+   * If |timeZoneOverride_| is non-null, i.e. when not using the default time
+   * zone, this field is reused as the time zone cache key. See also
+   * |timeZoneCacheKey()| and |updateTimeZoneOverride()|.
    */
   int32_t utcToLocalStandardOffsetSeconds_;
 

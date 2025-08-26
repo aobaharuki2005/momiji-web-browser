@@ -11137,7 +11137,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDateGet(
   }
 
   // Can't check DateTime cache when not using the default time zone.
-  if (cx_->realm()->creationOptions().timeZone()) {
+  if (cx_->realm()->behaviors().timeZone()) {
     return AttachDecision::NoAction;
   }
 

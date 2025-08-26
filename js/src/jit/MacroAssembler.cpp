@@ -3521,7 +3521,8 @@ void MacroAssembler::loadResizableArrayBufferViewLengthIntPtr(
 void MacroAssembler::dateFillLocalTimeSlots(
     Register obj, Register scratch, const LiveRegisterSet& volatileRegs) {
   // Inline implementation of the cache check from
-  // DateObject::fillLocalTimeSlots().
+  // DateObject::fillLocalTimeSlots(). Only used when no realm time zone
+  // override is active.
 
   Label callVM, done;
 
@@ -3530,8 +3531,7 @@ void MacroAssembler::dateFillLocalTimeSlots(
                       Address(obj, DateObject::offsetOfLocalTimeSlot()),
                       &callVM);
 
-  unboxInt32(Address(obj, DateObject::offsetOfUTCTimeZoneOffsetSlot()),
-             scratch);
+  unboxInt32(Address(obj, DateObject::offsetOfTimeZoneCacheKeySlot()), scratch);
 
   branch32(Assembler::Equal,
            AbsoluteAddress(DateTimeInfo::addressOfUTCToLocalOffsetSeconds()),

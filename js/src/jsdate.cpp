@@ -2163,23 +2163,20 @@ void DateObject::setUTCTime(ClippedTime t, MutableHandleValue vp) {
 void DateObject::fillLocalTimeSlots() {
   auto* dtInfo = dateTimeInfo();
 
-  // |utcTZOffset| is used to validate that the cached local time values are
-  // still valid. They can become invalid iff the system default time zone
-  // changed. When the current realm uses a time zone override, changes to the
-  // system default time zone are ignored.
-  int32_t utcTZOffset = 0;
-  if (MOZ_LIKELY(!dtInfo)) {
-    utcTZOffset = DateTimeInfo::utcToLocalStandardOffsetSeconds();
-  }
+  // |timeZoneCacheKey| is used to validate that the cached local time values
+  // are still valid. They can become invalid if either:
+  // - the system default time zone changed, or
+  // - the realm time zone override was changed.
+  const int32_t timeZoneCacheKey = DateTimeInfo::timeZoneCacheKey(dtInfo);
 
   /* Check if the cache is already populated. */
   if (!getReservedSlot(LOCAL_TIME_SLOT).isUndefined() &&
-      getReservedSlot(UTC_TIME_ZONE_OFFSET_SLOT).toInt32() == utcTZOffset) {
+      getReservedSlot(TIME_ZONE_CACHE_KEY_SLOT).toInt32() == timeZoneCacheKey) {
     return;
   }
 
   /* Remember time zone used to generate the local cache. */
-  setReservedSlot(UTC_TIME_ZONE_OFFSET_SLOT, Int32Value(utcTZOffset));
+  setReservedSlot(TIME_ZONE_CACHE_KEY_SLOT, Int32Value(timeZoneCacheKey));
 
   double utcTime = UTCTime().toDouble();
 
