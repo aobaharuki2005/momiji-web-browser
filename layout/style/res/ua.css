@@ -523,10 +523,6 @@ parsererror|sourcetext {
 :root::view-transition-image-pair(*) {
   position: absolute;
   inset: 0;
-
-  animation-duration: inherit;
-  animation-fill-mode: inherit;
-  animation-delay: inherit;
 }
 
 :root::view-transition-old(*),
@@ -535,10 +531,18 @@ parsererror|sourcetext {
   inset-block-start: 0;
   inline-size: 100%;
   block-size: auto;
+}
 
+:root::view-transition-image-pair(*),
+:root::view-transition-old(*),
+:root::view-transition-new(*) {
   animation-duration: inherit;
   animation-fill-mode: inherit;
   animation-delay: inherit;
+  animation-timing-function: inherit;
+  animation-iteration-count: inherit;
+  animation-direction: inherit;
+  animation-play-state: inherit;
 }
 
 /* Avoid exposing these keyframe names when view transitions are disabled */
