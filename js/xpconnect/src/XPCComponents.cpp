@@ -2319,13 +2319,6 @@ nsXPCComponents_Utils::ReadUTF8URI(nsIURI* aURI, nsACString& aResult) {
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::Now(double* aRetval) {
-  TimeStamp start = TimeStamp::ProcessCreation();
-  *aRetval = (TimeStamp::Now() - start).ToMilliseconds();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::CreateSpellChecker(nsIEditorSpellCheck** aSpellChecker) {
   NS_ENSURE_ARG_POINTER(aSpellChecker);
   nsCOMPtr<nsIEditorSpellCheck> spellChecker = new mozilla::EditorSpellCheck();

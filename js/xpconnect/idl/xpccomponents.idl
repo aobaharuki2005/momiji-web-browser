@@ -707,13 +707,6 @@ interface nsIXPCComponents_Utils : nsISupports
     ACString getRealmLocation(in jsval obj);
 
     /*
-     * Deprecated, will be removed soon. Use ChromeUtils.now() instead.
-     * Return a fractional number of milliseconds from process
-     * startup, measured with a monotonic clock.
-     */
-    double now();
-
-    /*
      * Reads the given file and returns its contents. If called during early
      * startup, the file will be pre-read on a background thread during profile
      * startup so its contents will be available the next time they're read.
