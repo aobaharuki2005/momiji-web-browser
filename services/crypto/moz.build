@@ -14,7 +14,3 @@ MOZ_SRC_FILES += [
     "modules/utils.sys.mjs",
     "modules/WeaveCrypto.sys.mjs",
 ]
-
-EXTRA_COMPONENTS += [
-    "cryptoComponents.manifest",
-]
