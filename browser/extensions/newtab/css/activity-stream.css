@@ -760,17 +760,6 @@ main section {
 .top-sites-list a {
   text-decoration: none;
 }
-.top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
-  background: var(--newtab-element-hover-color);
-}
-.lightWallpaper .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover), .darkWallpaper .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
-  background-color: var(--newtab-weather-background-color);
-}
-@media (prefers-contrast) {
-  .lightWallpaper .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover), .darkWallpaper .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
-    background-color: var(--background-color-box);
-  }
-}
 @media (max-width: 610px) {
   .top-sites-list > :nth-child(2n+1) .context-menu {
     margin-inline-end: auto;
@@ -945,7 +934,6 @@ main section {
 }
 .top-site-outer .context-menu-button {
   background-image: url("chrome://global/skin/icons/more.svg");
-  background-color: var(--newtab-button-background);
   border: 0;
   border-radius: var(--border-radius-small);
   cursor: pointer;
@@ -1067,6 +1055,10 @@ main section {
   width: 20px;
   fill: var(--icon-color);
   -moz-context-properties: fill;
+}
+.top-site-outer.add-button:hover .tile {
+  background-color: var(--newtab-background-color-secondary);
+  color-scheme: initial;
 }
 .top-site-outer.search-shortcut .rich-icon {
   background-color: var(--color-white);
