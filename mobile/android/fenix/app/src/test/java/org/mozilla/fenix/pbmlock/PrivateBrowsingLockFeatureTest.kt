@@ -13,8 +13,8 @@ import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
@@ -267,6 +267,59 @@ class PrivateBrowsingLockFeatureTest {
         appStore.waitUntilIdle()
 
         assertFalse(appStore.state.isPrivateScreenLocked)
+    }
+
+    // observing private mode tests
+    @Test
+    fun `GIVEN normal mode and enabled lock WHEN observePrivateModeLock is triggered THEN observing lock doesn't trigger`() = runTest {
+        var result = false
+        val appState = AppState(mode = BrowsingMode.Normal, isPrivateScreenLocked = true)
+
+        observePrivateModeLock(
+            flow = flowOf(appState),
+            onPrivateModeLocked = { result = true },
+        )
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `GIVEN normal mode and disabled lock WHEN observePrivateModeLock is triggered THEN observing lock doesn't trigger`() = runTest {
+        var result = false
+        val appState = AppState(mode = BrowsingMode.Normal, isPrivateScreenLocked = false)
+
+        observePrivateModeLock(
+            flow = flowOf(appState),
+            onPrivateModeLocked = { result = true },
+        )
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `GIVEN private mode and enabled lock WHEN observePrivateModeLock is triggered THEN observing lock triggers`() = runTest {
+        var result = false
+        val appState = AppState(mode = BrowsingMode.Private, isPrivateScreenLocked = true)
+
+        observePrivateModeLock(
+            flow = flowOf(appState),
+            onPrivateModeLocked = { result = true },
+        )
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `GIVEN private mode and disabled lock WHEN observePrivateModeLock is triggered THEN observing lock doesn't trigger`() = runTest {
+        var result = false
+        val appState = AppState(mode = BrowsingMode.Private, isPrivateScreenLocked = false)
+
+        observePrivateModeLock(
+            flow = flowOf(appState),
+            onPrivateModeLocked = { result = true },
+        )
+
+        assertFalse(result)
     }
 
     // on stop tests

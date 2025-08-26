@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
@@ -18,6 +19,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
@@ -270,16 +272,25 @@ fun Fragment.observePrivateModeLock(
     lockNormalMode: Boolean = false,
     onPrivateModeLocked: () -> Unit,
 ) {
-    consumeFlow(requireComponents.appStore) { flow ->
-        flow
-            .filter { state ->
-                state.isPrivateScreenLocked && (state.mode == BrowsingMode.Private || lockNormalMode)
-            }
-            .distinctUntilChanged()
-            .collect {
-                onPrivateModeLocked()
-            }
+    consumeFlow(requireComponents.appStore) {
+        observePrivateModeLock(it, lockNormalMode, onPrivateModeLocked)
     }
+}
+
+@VisibleForTesting
+internal suspend fun observePrivateModeLock(
+    flow: Flow<AppState>,
+    lockNormalMode: Boolean = false,
+    onPrivateModeLocked: () -> Unit,
+) {
+    flow
+        .filter { state ->
+            state.isPrivateScreenLocked && (state.mode == BrowsingMode.Private || lockNormalMode)
+        }
+        .distinctUntilChanged()
+        .collect {
+            onPrivateModeLocked()
+        }
 }
 
 /**
