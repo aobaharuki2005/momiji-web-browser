@@ -616,10 +616,8 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
                tstamp, duration, mVideoDefaultDuration);
   }
 
-  // The end time of this frame is the start time of the next frame. Fetch
-  // the timestamp of the next packet for this track.  If we've reached the
-  // end of the resource, use the file's duration as the end time of this
-  // video frame.
+  // The end time of this frame is the start time of the next frame.
+  // Attempt to fetch the timestamp of the next packet for this track.
   RefPtr<NesteggPacketHolder> next_holder;
   rv = NextPacket(aType, next_holder);
   if (NS_FAILED(rv) && rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
