@@ -8631,62 +8631,6 @@ static bool GetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-/*
- * Validate time zone input. Accepts the following formats:
- *  - "America/Chicago" (raw time zone)
- *  - ":America/Chicago"
- *  - "/this-part-is-ignored/zoneinfo/America/Chicago"
- *  - ":/this-part-is-ignored/zoneinfo/America/Chicago"
- *  - "/etc/localtime"
- *  - ":/etc/localtime"
- * Once the raw time zone is parsed out of the string, it is checked
- * against the time zones from GetAvailableTimeZones(). Throws an
- * Error if the time zone is invalid.
- */
-#if defined(JS_HAS_INTL_API) && !defined(__wasi__)
-static bool ValidateTimeZone(JSContext* cx, const char* timeZone) {
-  static constexpr char zoneInfo[] = "/zoneinfo/";
-  static constexpr size_t zoneInfoLength = sizeof(zoneInfo) - 1;
-
-  size_t i = 0;
-  if (timeZone[i] == ':') {
-    ++i;
-  }
-  const char* zoneInfoPtr = strstr(timeZone, zoneInfo);
-  const char* timeZonePart = timeZone[i] == '/' && zoneInfoPtr
-                                 ? zoneInfoPtr + zoneInfoLength
-                                 : timeZone + i;
-
-  if (!*timeZonePart) {
-    JS_ReportErrorASCII(cx, "Invalid time zone format");
-    return false;
-  }
-
-  if (!strcmp(timeZonePart, "/etc/localtime")) {
-    return true;
-  }
-
-  auto timeZones = mozilla::intl::TimeZone::GetAvailableTimeZones();
-  if (timeZones.isErr()) {
-    intl::ReportInternalError(cx, timeZones.unwrapErr());
-    return false;
-  }
-  for (auto timeZoneName : timeZones.unwrap()) {
-    if (timeZoneName.isErr()) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    if (!strcmp(timeZonePart, timeZoneName.unwrap().data())) {
-      return true;
-    }
-  }
-
-  JS_ReportErrorASCII(cx, "Unsupported time zone name: %s", timeZonePart);
-  return false;
-}
-#endif
-
 static bool SetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedObject callee(cx, &args.callee());
@@ -8720,30 +8664,18 @@ static bool SetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   };
 
   if (args[0].isString() && !args[0].toString()->empty()) {
-    Rooted<JSLinearString*> str(cx, args[0].toString()->ensureLinear(cx));
+    Rooted<JSString*> str(cx, args[0].toString());
     if (!str) {
       return false;
     }
 
-    if (!StringIsAscii(str)) {
-      ReportUsageErrorASCII(cx, callee,
-                            "First argument contains non-ASCII characters");
-      return false;
-    }
-
-    UniqueChars timeZone = JS_EncodeStringToASCII(cx, str);
+    UniqueChars timeZone =
+        StringToTimeZone(cx, callee, str, AllowTimeZoneLink::Yes);
     if (!timeZone) {
       return false;
     }
 
-    const char* timeZoneStr = timeZone.get();
-#  ifdef JS_HAS_INTL_API
-    if (!ValidateTimeZone(cx, timeZoneStr)) {
-      return false;
-    }
-#  endif
-
-    if (!setTimeZone(timeZoneStr)) {
+    if (!setTimeZone(timeZone.get())) {
       JS_ReportErrorASCII(cx, "Failed to set 'TZ' environment variable");
       return false;
     }
