@@ -3057,6 +3057,8 @@
     <string name="protection_panel_num_trackers_blocked">Trackers blocked: %d</string>
     <!-- Text for when no trackers have been blocked. -->
     <string name="protection_panel_no_trackers_blocked">No trackers found</string>
+    <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+    <string name="protection_panel_etp_disabled_no_trackers_blocked">Trackers aren’t blocked</string>
     <!-- Link text to navigate to privacy and security settings from the protection panel. -->
     <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Privacy and security settings</string>
     <!-- Link text to navigate to privacy and security settings from the protection panel. -->

@@ -113,7 +113,13 @@ internal fun ProtectionPanel(
                 onClick = onTrackingProtectionToggleClick,
             )
 
-            if (numberOfTrackersBlocked == 0) {
+            if (!isTrackingProtectionEnabled) {
+                MenuItem(
+                    label = stringResource(id = R.string.protection_panel_etp_disabled_no_trackers_blocked),
+                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shield_slash_critical_24),
+                    state = MenuItemState.CRITICAL,
+                )
+            } else if (numberOfTrackersBlocked == 0) {
                 MenuItem(
                     label = stringResource(id = R.string.protection_panel_no_trackers_blocked),
                     beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shield_checkmark_24),

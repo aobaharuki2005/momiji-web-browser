@@ -26,4 +26,8 @@
     <!-- Lock slash critical fill colors for mozac_ic_lock_slash_critical_24 -->
     <color name="mozac_ui_lock_slash_bg_fill_critical">#FFFFFF</color>
     <color name="mozac_ui_lock_slash_fill_critical">#C50042</color>
+
+    <!-- Lock slash critical fill colors for mozac_ic_shield_slash_critical_24 -->
+    <color name="mozac_ui_shield_slash_bg_fill_critical">#FFFFFF</color>
+    <color name="mozac_ui_shield_slash_fill_critical">#C50042</color>
 </resources>
