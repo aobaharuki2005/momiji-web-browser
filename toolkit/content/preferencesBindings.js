@@ -754,7 +754,7 @@ const Preferences = (window.Preferences = (function () {
         this._checkForControllingExtension();
       }
       if (typeof this.config.setup === "function") {
-        this._teardown = this.config.setup(this.onChange);
+        this._teardown = this.config.setup(this.onChange, this.deps, this);
       }
     }
     onChange = () => {
@@ -790,13 +790,15 @@ const Preferences = (window.Preferences = (function () {
     get value() {
       let prefVal = this.pref?.value;
       if (this.config.get) {
-        return this.config.get(prefVal);
+        return this.config.get(prefVal, this.deps, this);
       }
       return prefVal;
     }
 
     set value(val) {
-      let newVal = this.config.set ? this.config.set(val) : val;
+      let newVal = this.config.set
+        ? this.config.set(val, this.deps, this)
+        : val;
       if (this.pref) {
         this.pref.value = newVal;
       }
@@ -807,16 +809,18 @@ const Preferences = (window.Preferences = (function () {
     }
 
     get visible() {
-      return this.config.visible ? this.config.visible(this.deps) : true;
+      return this.config.visible ? this.config.visible(this.deps, this) : true;
     }
 
     get disabled() {
-      return this.config.disabled ? this.config.disabled(this.deps) : false;
+      return this.config.disabled
+        ? this.config.disabled(this.deps, this)
+        : false;
     }
 
     getControlConfig(config) {
       if (this.config.getControlConfig) {
-        return this.config.getControlConfig(config);
+        return this.config.getControlConfig(config, this.deps, this);
       }
       return config;
     }
@@ -824,7 +828,7 @@ const Preferences = (window.Preferences = (function () {
     userChange(val) {
       this.value = val;
       if (this.config.onUserChange) {
-        this.config.onUserChange(val);
+        this.config.onUserChange(val, this.deps, this);
       }
     }
 
