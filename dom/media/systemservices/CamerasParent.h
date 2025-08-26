@@ -153,7 +153,7 @@ class CamerasParent final : public PCamerasParent {
 
   void OnShutdown();
 
-  nsTArray<CallbackHelper*> mCallbacks;
+  nsTArray<UniquePtr<CallbackHelper>> mCallbacks;
   // If existent, blocks xpcom shutdown while alive.
   // Note that this makes a reference cycle that gets broken in ActorDestroy().
   const UniquePtr<media::ShutdownBlockingTicket> mShutdownBlocker;
