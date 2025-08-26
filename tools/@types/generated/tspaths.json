@@ -101,6 +101,9 @@
       "chrome://browser/content/preferences/widgets/dialog-button.mjs": [
         "browser/components/preferences/widgets/dialog-button/dialog-button.mjs"
       ],
+      "chrome://browser/content/preferences/widgets/nav-notice.mjs": [
+        "browser/components/preferences/widgets/nav-notice/nav-notice.mjs"
+      ],
       "chrome://browser/content/preferences/widgets/setting-control.mjs": [
         "browser/components/preferences/widgets/setting-control/setting-control.mjs"
       ],
@@ -6887,12 +6890,6 @@
       "resource://services-common/uptake-telemetry.sys.mjs": [
         "services/common/uptake-telemetry.sys.mjs"
       ],
-      "resource://services-crypto/WeaveCrypto.sys.mjs": [
-        "services/crypto/modules/WeaveCrypto.sys.mjs"
-      ],
-      "resource://services-crypto/jwcrypto.sys.mjs": [
-        "services/crypto/modules/jwcrypto.sys.mjs"
-      ],
       "resource://services-settings/Attachments.sys.mjs": [
         "services/settings/Attachments.sys.mjs"
       ],
@@ -7507,9 +7504,6 @@
       ],
       "resource://services-common/utils.sys.mjs": [
         "services/common/utils.sys.mjs"
-      ],
-      "resource://services-crypto/utils.sys.mjs": [
-        "services/crypto/modules/utils.sys.mjs"
       ],
       "resource://services-settings/Utils.sys.mjs": [
         "services/settings/Utils.sys.mjs"
