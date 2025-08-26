@@ -7408,11 +7408,17 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       creationOptions.setDefineSharedArrayBufferConstructor(v.toBoolean());
     }
 
-    if (!JS_GetProperty(cx, opts, "forceUTC", &v)) {
+    if (!JS_GetProperty(cx, opts, "timeZone", &v)) {
       return false;
     }
-    if (v.isBoolean()) {
-      creationOptions.setForceUTC(v.toBoolean());
+    if (v.isString()) {
+      RootedString str(cx, v.toString());
+      UniqueChars timeZone =
+          StringToTimeZone(cx, callee, str, AllowTimeZoneLink::No);
+      if (!timeZone) {
+        return false;
+      }
+      creationOptions.setTimeZoneCopyZ(timeZone.get());
     }
 
     if (!JS_GetProperty(cx, opts, "alwaysUseFdlibm", &v)) {
