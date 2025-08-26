@@ -8819,13 +8819,6 @@
   mirror: always
   set_spidermonkey_pref: startup
 
-# Experimental support for Promise.try in JavaScript.
-- name: javascript.options.experimental.promise_try
-  type: bool
-  value: true
-  mirror: always
-  set_spidermonkey_pref: startup
-
 # Experimental support for Math.sumPrecise in JavaScript.
 - name: javascript.options.experimental.math_sumprecise
   type: bool
