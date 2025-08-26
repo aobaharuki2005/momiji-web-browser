@@ -156,6 +156,10 @@
   <string name="mozac_feature_addons_permissions_trial_ml_description_for_update">ດາວໂຫຼດ ແລະ ເປີດໃຊ້ຕົວແບບ AI ໃນອຸປະກອນຂອງທ່ານ.</string>
   <!-- Description for the "userScripts" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_user_scripts_description_for_update">ອະນຸຍາດໃຫ້ສະຄຣິບບຸກຄົນທີ່ສາມທີ່ບໍ່ໄດ້ຢືນຢັນໃນການເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານ</string>
+  <!-- Description for the "devtools" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_devtools_description_for_update">ຂະຫຍາຍເຄື່ອງມືນັກພັດທະນາເພື່ອເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານໃນແຖບເປີດ.</string>
+  <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
+  <string name="mozac_feature_addons_permissions_one_site_description_for_update">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານສໍາລັບ %1$s.</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">ສະຄຣິບທີ່ບໍ່ໄດ້ຮັບການຢືນຢັນສາມາດສ້າງຄວາມສ່ຽງດ້ານຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ. ແລ່ນສະຄຣິບຈາກສ່ວນຂະຫຍາຍ ຫຼື ແຫຼ່ງທີ່ທ່ານເຊື່ອຖືເທົ່ານັ້ນ.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
@@ -268,6 +272,8 @@
   <string name="mozac_feature_addons_permissions_dialog_heading_required_permissions">ການ​ອະ​ນຸ​ຍາດ​ທີ່​ຕ້ອງ​ການ​:</string>
   <!-- Heading for the data collection permissions section in the add-on install dialog. -->
   <string name="mozac_feature_addons_permissions_dialog_heading_required_data_collection">ການ​ເກັບ​ກໍາ​ຂໍ້​ມູນ​ທີ່​ຕ້ອງ​ການ​:</string>
+  <!-- Heading for the optional settings section in the add-on install dialog. -->
+  <string name="mozac_feature_addons_permissions_dialog_heading_optional_settings">ການຕັ້ງຄ່າທາງເລືອກ:</string>
   <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
   <string name="mozac_feature_addons_optional_permissions_dialog_subtitle" moz:removedIn="142" tools:ignore="UnusedResources">ສ່ວນຂະຫຍາຍຕ້ອງການ:</string>
   <!-- This is a button to add (install) an add-on . -->

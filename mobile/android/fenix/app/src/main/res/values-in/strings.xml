@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Tab terbuka Anda akan ditampilkan di sini.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Tab privat Anda akan muncul di sini.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Penjelajahan pribadi</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s tidak akan mengingat riwayat atau kuki Anda, tetapi markah baru akan disimpan.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Buat tab baru untuk mulai mencari</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d terpilih</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,10 @@
   <string name="tab_tray_close_multiselect_content_description">Keluar mode seleksi ganda</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Simpan tab terpilih ke koleksi</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Ambil tab dari perangkat apa pun</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Masuk untuk mengelola tab yang disinkronkan dari semua perangkat Anda.</string>
   <!--
     Home - Bookmarks
 
@@ -817,6 +827,12 @@
   <string name="addons_permissions_allow_for_all_sites_subtitle">Jika Anda memercayai ekstensi ini, Anda dapat memberikannya izin di setiap situs web.</string>
   <!-- The text shown when an extension does not require permissions -->
   <string name="addons_does_not_require_permissions">Ekstensi ini tidak memerlukan izin apa pun.</string>
+  <!-- The title of the optional permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_permissions">Izin opsional:</string>
+  <!-- The title of the required data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_data_collection">Pengumpulan data yang diperlukan:</string>
+  <!-- The title of the optional data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_data_collection">Pengumpulan data opsional:</string>
   <!--
     Add-on Preferences
 
@@ -936,6 +952,20 @@
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Dibuat oleh @heyheymomodraws</string>
+  <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
+  <string name="alternative_app_icon_group_solid_colors">Warna rata</string>
+  <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
+  <string name="alternative_app_icon_group_gradients">Gradien</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Lainnya</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Ubah ikon aplikasi?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">Mengubah ikon mengharuskan aplikasi untuk memulai ulang.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Mulai ulang sekarang</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Batal</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1044,6 +1074,8 @@
   <string name="exceptions_empty_message_learn_more_link">Pelajari lebih lanjut</string>
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">Kirim data teknis dan interaksi</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">Pelajari lebih lanjut tentang data teknis</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
   <string name="preferences_usage_data_description_1" tools:ignore="BrandUsage">Data tentang perangkat Anda, konfigurasi perangkat keras, dan penggunaan membantu kami meningkatkan fitur, kinerja, dan stabilitas Firefox.</string>
   <!-- Preference switch for daily usage ping data collection -->
@@ -1052,8 +1084,20 @@
   <string name="preferences_daily_usage_ping_learn_more">Pelajari lebih lanjut tentang ping penggunaan harian</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Kirim laporan kerusakan secara otomatis</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Laporan terkirim</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Ini membantu kami mendiagnosis dan memperbaiki masalah pada peramban. Laporan mungkin termasuk data pribadi atau sensitif.</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">Pelajari lebih lanjut tentang laporan kerusakan</string>
+  <!-- Title Headers for data collection settings screen -->
+  <string name="crash_reports_data_category">Laporan Kerusakan</string>
+  <string name="usage_data_category">Data penggunaan</string>
+  <string name="studies_data_category">Kajian</string>
+  <string name="technical_data_category">Data Teknis</string>
+  <string name="crash_reporting_description">Laporan kerusakan memungkinkan kami mendiagnosis dan memperbaiki masalah pada peramban. Laporan mungkin termasuk data pribadi atau sensitif.</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">Pengukuran kampanye</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">Data pengukuran kampanye</string>
   <!--
@@ -1093,6 +1137,18 @@
   <string name="preference_top_toolbar">Atas</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">Bawah</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">Sederhana</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">Diperluas</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Bilah alamat harus di atas saat bilah tab ditampilkan.</string>
+  <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Pilih Ikon Aplikasi</string>
   <!--
     Theme Preferences
 
@@ -1105,6 +1161,12 @@
   <string name="preference_auto_battery_theme">Diatur oleh Penghemat Baterai</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Ikuti tema peranti</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Tampilkan bilah tab</string>
   <!--
     Gestures Preferences
 
@@ -1254,6 +1316,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Pelajari lebih lanjut</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Tab Normal Terbuka: %1$s. Ketuk untuk beralih tab.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1263,6 +1332,18 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">Tab Terselaras Terbuka: %1$s. Ketuk untuk beralih tab.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Pribadi</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Tab</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Selaraskan</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">Tab baru</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">Tab pribadi baru</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">Sinkronkan tab</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Tambah tab</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1357,6 +1438,8 @@
     %1$d is the number of items deleted.
   -->
   <string name="download_delete_multiple_items_snackbar_2">Item dihapus: %1$d</string>
+  <!-- Title for the dialog that prompts the user to choose an app for downloading a file. -->
+  <string name="download_app_dialog_title">Unduh berkas dengan:</string>
   <!-- Text for the snackbar to confirm that a single download item has been removed. %1$s is the name of the download item. -->
   <string name="download_delete_single_item_snackbar_2">“%1$s” dihapus</string>
   <!-- Text for the snackbar to confirm that downloads are in progress. -->
@@ -1401,6 +1484,16 @@
   <string name="download_navigate_back_description">Arahkan kembali</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">Kembali dan tutup pencarian</string>
+  <!--
+    Content description for the search bar clear text button on the downloads screen
+
+    Content description for pause action button on the downloads screen
+  -->
+  <string name="download_pause_action">Jeda</string>
+  <!-- Content description for resume action button on the downloads screen -->
+  <string name="download_resume_action">Lanjutkan</string>
+  <!-- Content description for retry download action button on the downloads screen -->
+  <string name="download_retry_action">Coba Lagi</string>
   <string name="download_clear_search_description">Bersihkan</string>
   <!-- Text for the button to share the download URL -->
   <string name="download_share_url">Bagikan URL</string>
@@ -1428,8 +1521,41 @@
   <string name="download_time_period_last_30_days">30 hari terakhir</string>
   <!-- Text for the header that groups the downloads older than other groups -->
   <string name="download_time_period_older">Lebih lama</string>
+  <!-- Description of an in progress download item, displayed in the downloads list when the download has just started. -->
+  <string name="download_item_in_progress_description_preparing">Mempersiapkan unduhan…</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the download time remaining is known.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+    %3$s is the amount of time remaining to complete the download.
+  -->
+  <string name="download_item_in_progress_description_2">%1$s / %2$s • dalam %3$s.</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+  -->
+  <string name="download_item_in_progress_description_pending">%1$s / %2$s • tertunda</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • waktu tidak diketahui</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+  -->
+  <string name="download_item_paused_description">%1$s / %2$s • dijeda</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • dijeda</string>
   <!-- Text to indicate that a download has failed to download. -->
   <string name="download_item_status_failed">Unduhan gagal</string>
+  <!-- Text for the snackbar action button to view failed download details. -->
+  <string name="download_failed_snackbar_action_details">Rincian</string>
   <!-- Placeholder text to indicate that users can use the search bar to search for a download. -->
   <string name="download_search_placeholder">Cari di unduhan</string>
   <!-- Text to indicate that no downloads match the search query. -->
@@ -1458,6 +1584,12 @@
   <string name="webcompat_reporter_screen_title">Laporkan situs yang rusak</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Bantu membuat %1$s lebih baik untuk semua orang. Karyawan Mozilla menggunakan info yang Anda kirim untuk memperbaiki masalah situs web.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Laporan Anda membantu kami memahami dan memperbaiki masalah di %1$s untuk menjadikannya lebih baik bagi semua orang. Pelajari lebih lanjut</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Laporan Anda membantu kami memahami dan memperbaiki masalah di %1$s untuk menjadikannya lebih baik bagi semua orang. %2$s</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Pelajari lebih lanjut</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1466,6 +1598,8 @@
   <string name="webcompat_reporter_label_whats_broken_2">Apa yang rusak?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Pilih alasan</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Pilih alasan</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Pilih alasan</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1480,6 +1614,8 @@
   <string name="webcompat_reporter_success_snackbar_text">Laporan Anda telah dikirim</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">Tutup</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">Apa yang terjadi? Apa yang seharusnya terjadi?</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -1516,10 +1652,16 @@
   <string name="tab_crash_restore">Pulihkan tab</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s harus dimulai ulang</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Anda memiliki laporan kerusakan yang belum terkirim terkait kerusakan yang sedang diselidiki. Mengirimnya akan membantu kami meningkatkan %1$s. Menutup pemberitahuan ini akan mengabaikan laporan ini.</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Anda memiliki laporan kerusakan yang belum terkirim (%1$d) terkait dengan kerusakan yang sedang diselidiki. Mengirimnya akan membantu kami meningkatkan %2$s. Menutup pemberitahuan ini akan mengabaikan laporan ini.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Kirim laporan kerusakan secara otomatis</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Tutup</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Jangan pernah tampilkan lagi</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Kirim laporan kerusakan</string>
   <!--
