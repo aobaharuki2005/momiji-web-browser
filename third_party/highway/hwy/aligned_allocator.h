@@ -32,6 +32,8 @@
 #include "hwy/base.h"
 #include "hwy/per_target.h"
 
+#include <mozilla/Attributes.h>
+
 namespace hwy {
 
 // Minimum alignment of allocated memory for use in HWY_ASSUME_ALIGNED, which
@@ -273,8 +275,8 @@ class Span {
   Span() = default;
   Span(T* data, size_t size) : size_(size), data_(data) {}
   template <typename U>
-  Span(U u) : Span(u.data(), u.size()) {}
-  Span(std::initializer_list<const T> v) : Span(v.begin(), v.size()) {}
+  MOZ_IMPLICIT Span(U u) : Span(u.data(), u.size()) {}
+  MOZ_IMPLICIT Span(std::initializer_list<const T> v) : Span(v.begin(), v.size()) {}
 
   // Copies the contents of the initializer list to the span.
   Span<T>& operator=(std::initializer_list<const T> v) {

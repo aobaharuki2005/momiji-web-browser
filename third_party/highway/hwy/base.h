@@ -33,6 +33,8 @@
 #include "hwy/detect_compiler_arch.h"
 #include "hwy/highway_export.h"
 
+#include <mozilla/Attributes.h>
+
 // API version (https://semver.org/); keep in sync with CMakeLists.txt.
 #define HWY_MAJOR 1
 #define HWY_MINOR 3
@@ -1287,7 +1289,7 @@ struct alignas(2) float16_t {
 #if HWY_HAVE_SCALAR_F16_TYPE
   // NEON vget/set_lane intrinsics and SVE `svaddv` could use explicit
   // float16_t(intrinsic()), but user code expects implicit conversions.
-  constexpr float16_t(Native arg) noexcept : native(arg) {}
+  MOZ_IMPLICIT constexpr float16_t(Native arg) noexcept : native(arg) {}
   constexpr operator Native() const noexcept { return native; }
 #endif
 
@@ -1314,7 +1316,7 @@ struct alignas(2) float16_t {
 #if HWY_HAVE_SCALAR_F16_OPERATORS || HWY_IDE
   template <typename T, hwy::EnableIf<!IsSame<RemoveCvRef<T>, float16_t>() &&
                                       IsConvertible<T, Native>()>* = nullptr>
-  constexpr float16_t(T&& arg) noexcept
+  MOZ_IMPLICIT constexpr float16_t(T&& arg) noexcept
       : native(static_cast<Native>(static_cast<T&&>(arg))) {}
 
   template <typename T, hwy::EnableIf<!IsSame<RemoveCvRef<T>, float16_t>() &&
@@ -1777,7 +1779,7 @@ struct alignas(2) bfloat16_t {
 
 // Only enable implicit conversions if we have a native type.
 #if HWY_HAVE_SCALAR_BF16_TYPE || HWY_IDE
-  constexpr bfloat16_t(Native arg) noexcept : native(arg) {}
+  MOZ_IMPLICIT constexpr bfloat16_t(Native arg) noexcept : native(arg) {}
   constexpr operator Native() const noexcept { return native; }
 #endif
 
