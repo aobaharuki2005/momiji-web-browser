@@ -56,15 +56,15 @@ function getGlobalsForScripts(environmentName, files, extraGlobals) {
   let fileGlobals = [];
   const root = helpers.rootDir;
   for (const file of files) {
-    const fileName = path.join(root, file);
+    const filePath = path.join(root, file);
     try {
-      fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
+      fileGlobals = fileGlobals.concat(globals.getGlobalsForFile({ filePath }));
     } catch (e) {
-      console.error(`Could not load globals from file ${fileName}: ${e}`);
+      console.error(`Could not load globals from file ${filePath}: ${e}`);
       console.error(
         `You may need to update the mappings for the ${environmentName} environment`
       );
-      throw new Error(`Could not load globals from file ${fileName}: ${e}`);
+      throw new Error(`Could not load globals from file ${filePath}: ${e}`);
     }
   }
 

@@ -281,8 +281,9 @@ export default [
   "toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js",
   "toolkit/modules/AppConstants.sys.mjs",
 
-  // Tests of ESLint command.
+  // ESLint tests.
   "tools/lint/test/files",
+  "tools/lint/eslint/eslint-plugin-mozilla/tests/globals-data/import-globals-from-invalid.js",
 
   // Uses special template formatting.
   "tools/tryselect/selectors/chooser/templates/chooser.html",
