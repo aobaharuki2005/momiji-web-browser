@@ -9506,7 +9506,7 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   TimeZoneIdentifierVector timeZoneId;
-  if (!DateTimeInfo::timeZoneId(DateTimeInfo::ForceUTC::No, timeZoneId)) {
+  if (!DateTimeInfo::timeZoneId(nullptr, timeZoneId)) {
     ReportOutOfMemory(cx);
     return false;
   }

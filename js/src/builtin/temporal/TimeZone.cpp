@@ -236,8 +236,7 @@ static bool ValidateAndCanonicalizeTimeZoneName(
 }
 
 static bool SystemTimeZoneOffset(JSContext* cx, int32_t* offset) {
-  auto rawOffset =
-      DateTimeInfo::getRawOffsetMs(DateTimeInfo::forceUTC(cx->realm()));
+  auto rawOffset = DateTimeInfo::getRawOffsetMs(cx->realm()->getDateTimeInfo());
   if (rawOffset.isErr()) {
     intl::ReportInternalError(cx);
     return false;
@@ -254,8 +253,7 @@ static bool SystemTimeZoneOffset(JSContext* cx, int32_t* offset) {
  */
 JSLinearString* js::temporal::ComputeSystemTimeZoneIdentifier(JSContext* cx) {
   TimeZoneIdentifierVector timeZoneId;
-  if (!DateTimeInfo::timeZoneId(DateTimeInfo::forceUTC(cx->realm()),
-                                timeZoneId)) {
+  if (!DateTimeInfo::timeZoneId(cx->realm()->getDateTimeInfo(), timeZoneId)) {
     ReportOutOfMemory(cx);
     return nullptr;
   }

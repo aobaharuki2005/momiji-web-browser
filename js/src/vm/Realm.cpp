@@ -541,6 +541,24 @@ const char* Realm::getLocale() const {
   return runtime_->getDefaultLocale();
 }
 
+js::DateTimeInfo* Realm::getDateTimeInfo() {
+#if JS_HAS_INTL_API
+  if (RefPtr<TimeZoneString> timeZone = creationOptions_.timeZone()) {
+    if (!dateTimeInfo_) {
+      AutoEnterOOMUnsafeRegion oomUnsafe;
+
+      // Crash on OOM because we don't have a good way to handle it here.
+      dateTimeInfo_ = js::MakeUnique<js::DateTimeInfo>(timeZone);
+      if (!dateTimeInfo_) {
+        oomUnsafe.crash("getDateTimeInfo");
+      }
+    }
+    return dateTimeInfo_.get();
+  }
+#endif
+  return nullptr;
+}
+
 void ObjectRealm::addSizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf, size_t* innerViewsArg,
     size_t* objectMetadataTablesArg,
