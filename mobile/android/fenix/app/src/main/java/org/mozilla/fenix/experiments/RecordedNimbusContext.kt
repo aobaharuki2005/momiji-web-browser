@@ -7,7 +7,6 @@ package org.mozilla.fenix.experiments
 import android.content.Context
 import android.os.Build
 import androidx.annotation.VisibleForTesting
-import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.json.JSONObject
 import org.mozilla.experiments.nimbus.NIMBUS_DATA_DIR
@@ -17,9 +16,7 @@ import org.mozilla.experiments.nimbus.internal.RecordedContext
 import org.mozilla.experiments.nimbus.internal.getCalculatedAttributes
 import org.mozilla.fenix.GleanMetrics.NimbusSystem
 import org.mozilla.fenix.GleanMetrics.Pings
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.home.pocket.ContentRecommendationsFeatureHelper
 import org.mozilla.fenix.utils.Settings
 import java.io.File
 
@@ -63,7 +60,7 @@ class RecordedNimbusContext(
     val deviceManufacturer: String = Build.MANUFACTURER,
     val deviceModel: String = Build.MODEL,
     val userAcceptedTou: Boolean,
-    val noShortcutsStoriesMktOptOuts: Boolean,
+    val noShortcutsStoriesMkt: Boolean,
     val userClickedTouPromptLink: Boolean,
     val userClickedTouPromptRemindMeLater: Boolean,
 ) : RecordedContext {
@@ -105,7 +102,7 @@ class RecordedNimbusContext(
                 deviceManufacturer = deviceManufacturer,
                 deviceModel = deviceModel,
                 userAcceptedTou = userAcceptedTou,
-                noShortcutsStoriesMkt = noShortcutsStoriesMktOptOuts,
+                noShortcutsStoriesMkt = noShortcutsStoriesMkt,
                 userClickedTouPromptLink = userClickedTouPromptLink,
                 userClickedTouPromptRemindMeLater = userClickedTouPromptRemindMeLater,
             ),
@@ -152,7 +149,7 @@ class RecordedNimbusContext(
                 "device_manufacturer" to deviceManufacturer,
                 "device_model" to deviceModel,
                 "user_accepted_tou" to userAcceptedTou,
-                "no_shortcuts_stories_mkt" to noShortcutsStoriesMktOptOuts,
+                "no_shortcuts_stories_mkt" to noShortcutsStoriesMkt,
                 "user_clicked_tou_prompt_link" to userClickedTouPromptLink,
                 "user_clicked_tou_prompt_remind_me_later" to userClickedTouPromptRemindMeLater,
             ),
@@ -201,45 +198,23 @@ class RecordedNimbusContext(
                 language = calculatedAttributes.language,
                 region = calculatedAttributes.region,
                 userAcceptedTou = settings.hasAcceptedTermsOfService,
-                noShortcutsStoriesMktOptOuts = settings.noShortcutsStoriesOrMktOptOuts(context),
+                noShortcutsStoriesMkt = settings.noShortcutsStoriesMkt,
                 userClickedTouPromptLink = settings.hasClickedTermOfUsePromptLink,
                 userClickedTouPromptRemindMeLater = settings.hasClickedTermOfUsePromptRemindMeLater,
             )
         }
 
-        /**
-         * Checks whether an eligible user has opted out of any sponsored top sites, stories or
-         * marketing.
-         *
-         *  @return `true` if the user has opted out of any sponsored top sites, stories or marketing,
-         * `false` otherwise.
-         */
-        private fun Settings.noShortcutsStoriesOrMktOptOuts(context: Context) =
-            hasMarketing &&
-                    !optedOutOfSponsoredTopSites(context) &&
-                    !optedOutOfSponsoredStories(context)
+        private val Settings.noShortcutsStoriesMkt: Boolean
+            get() = hasMarketing && hasSponsoredHomepageShortcuts && hasStoriesOnHomepage
 
         private val Settings.hasMarketing: Boolean
             get() = isMarketingTelemetryEnabled || shouldShowMarketingOnboarding
 
-        /**
-         * Checks whether an eligible user has opted out of the sponsored top sites feature.
-         *
-         * This is not entirely self evident from the API descriptions, please note:
-         * [Settings.showContileFeature] indicates whether the sponsored shortcuts are shown.
-         * [Settings.showTopSitesFeature] indicates whether the feature should be shown at all.
-         */
-        private fun Settings.optedOutOfSponsoredTopSites(context: Context) =
-            hasSponsoredTopSiteAvailable(context) && (!showContileFeature || !showTopSitesFeature)
+        private val Settings.hasSponsoredHomepageShortcuts: Boolean
+            get() = showTopSitesFeature || showContileFeature
 
-        private fun hasSponsoredTopSiteAvailable(context: Context): Boolean =
-            context.components.appStore.state.topSites.any { it is TopSite.Provided }
-
-        private fun Settings.optedOutOfSponsoredStories(context: Context) =
-            hasStoriesOnHomepageAvailable(context) && (!showPocketSponsoredStories || !showPocketRecommendationsFeature)
-
-        private fun hasStoriesOnHomepageAvailable(context: Context): Boolean =
-            ContentRecommendationsFeatureHelper.isContentRecommendationsFeatureEnabled(context)
+        private val Settings.hasStoriesOnHomepage: Boolean
+            get() = showPocketRecommendationsFeature || showPocketSponsoredStories
 
         /**
          * Creates a RecordedNimbusContext instance for test purposes
@@ -268,7 +243,7 @@ class RecordedNimbusContext(
                 language = "en",
                 region = "US",
                 userAcceptedTou = true,
-                noShortcutsStoriesMktOptOuts = true,
+                noShortcutsStoriesMkt = true,
                 userClickedTouPromptLink = true,
                 userClickedTouPromptRemindMeLater = true,
             )
