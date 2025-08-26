@@ -496,10 +496,7 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
     aOptions.creationOptions().setSecureContext(aSecureContext);
   }
 
-  if (aForceUTC) {
-    nsCString timeZone = nsRFPService::GetSpoofedJSTimeZone();
-    aOptions.behaviors().setTimeZoneCopyZ(timeZone.get());
-  }
+  aOptions.creationOptions().setForceUTC(aForceUTC);
   aOptions.creationOptions().setAlwaysUseFdlibm(aAlwaysUseFdlibm);
   if (aLocaleEnUS) {
     nsCString locale = nsRFPService::GetSpoofedJSLocale();

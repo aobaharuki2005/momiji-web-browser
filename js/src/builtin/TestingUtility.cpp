@@ -6,18 +6,10 @@
 
 #include "builtin/TestingUtility.h"
 
-#ifdef JS_HAS_INTL_API
-#  include "mozilla/intl/TimeZone.h"
-#endif
-
 #include <stdint.h>  // uint32_t
-#include <string.h>
 
 #include "jsapi.h"  // JS_NewPlainObject, JS_WrapValue
 
-#ifdef JS_HAS_INTL_API
-#  include "builtin/intl/CommonFunctions.h"
-#endif
 #include "frontend/CompilationStencil.h"  // js::frontend::CompilationStencil
 #include "js/CharacterEncoding.h"         // JS_EncodeStringToUTF8
 #include "js/ColumnNumber.h"              // JS::ColumnNumberOneOrigin
@@ -272,26 +264,20 @@ bool js::ParseDebugMetadata(JSContext* cx, JS::Handle<JSObject*> opts,
   return true;
 }
 
-static JS::UniqueChars StringToAscii(JSContext* cx,
-                                     JS::Handle<JSObject*> callee,
-                                     JS::Handle<JSString*> str) {
-  JS::Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
-  if (!linear) {
+JS::UniqueChars js::StringToLocale(JSContext* cx, JS::Handle<JSObject*> callee,
+                                   JS::Handle<JSString*> str_) {
+  Rooted<JSLinearString*> str(cx, str_->ensureLinear(cx));
+  if (!str) {
     return nullptr;
   }
 
-  if (!StringIsAscii(linear)) {
+  if (!StringIsAscii(str)) {
     ReportUsageErrorASCII(cx, callee,
                           "First argument contains non-ASCII characters");
     return nullptr;
   }
 
-  return JS_EncodeStringToASCII(cx, linear);
-}
-
-JS::UniqueChars js::StringToLocale(JSContext* cx, JS::Handle<JSObject*> callee,
-                                   JS::Handle<JSString*> str) {
-  UniqueChars locale = StringToAscii(cx, callee, str);
+  UniqueChars locale = JS_EncodeStringToASCII(cx, str);
   if (!locale) {
     return nullptr;
   }
@@ -309,85 +295,6 @@ JS::UniqueChars js::StringToLocale(JSContext* cx, JS::Handle<JSObject*> callee,
   }
 
   return locale;
-}
-
-/*
- * Validate time zone input. Accepts the following formats:
- *  - "America/Chicago" (raw time zone)
- *  - ":America/Chicago"
- *  - "/this-part-is-ignored/zoneinfo/America/Chicago"
- *  - ":/this-part-is-ignored/zoneinfo/America/Chicago"
- *  - "/etc/localtime"
- *  - ":/etc/localtime"
- * Once the raw time zone is parsed out of the string, it is checked
- * against the time zones from GetAvailableTimeZones(). Throws an
- * Error if the time zone is invalid.
- */
-static bool ValidateTimeZone(JSContext* cx, const char* timeZone,
-                             js::AllowTimeZoneLink allowLink) {
-  const char* timeZonePart;
-  if (allowLink == js::AllowTimeZoneLink::Yes) {
-    static constexpr char zoneInfo[] = "/zoneinfo/";
-    static constexpr size_t zoneInfoLength = sizeof(zoneInfo) - 1;
-
-    size_t i = 0;
-    if (timeZone[i] == ':') {
-      ++i;
-    }
-    const char* zoneInfoPtr = strstr(timeZone, zoneInfo);
-    timeZonePart = timeZone[i] == '/' && zoneInfoPtr
-                       ? zoneInfoPtr + zoneInfoLength
-                       : timeZone + i;
-    if (!*timeZonePart) {
-      JS_ReportErrorASCII(cx, "Invalid time zone format");
-      return false;
-    }
-
-    if (!strcmp(timeZonePart, "/etc/localtime")) {
-      return true;
-    }
-  } else {
-    timeZonePart = timeZone;
-  }
-
-#if defined(JS_HAS_INTL_API) && !defined(__wasi__)
-  auto timeZones = mozilla::intl::TimeZone::GetAvailableTimeZones();
-  if (timeZones.isErr()) {
-    js::intl::ReportInternalError(cx, timeZones.unwrapErr());
-    return false;
-  }
-  for (auto timeZoneName : timeZones.unwrap()) {
-    if (timeZoneName.isErr()) {
-      js::intl::ReportInternalError(cx);
-      return false;
-    }
-
-    if (!strcmp(timeZonePart, timeZoneName.unwrap().data())) {
-      return true;
-    }
-  }
-
-  JS_ReportErrorASCII(cx, "Unsupported time zone name: %s", timeZonePart);
-  return false;
-#else
-  return true;
-#endif
-}
-
-JS::UniqueChars js::StringToTimeZone(JSContext* cx,
-                                     JS::Handle<JSObject*> callee,
-                                     JS::Handle<JSString*> str,
-                                     AllowTimeZoneLink allowLink) {
-  UniqueChars timeZone = StringToAscii(cx, callee, str);
-  if (!timeZone) {
-    return nullptr;
-  }
-
-  if (!ValidateTimeZone(cx, timeZone.get(), allowLink)) {
-    return nullptr;
-  }
-
-  return timeZone;
 }
 
 bool js::ValidateLazinessOfStencilAndGlobal(JSContext* cx,

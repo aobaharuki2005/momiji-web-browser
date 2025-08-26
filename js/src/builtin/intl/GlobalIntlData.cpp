@@ -73,7 +73,8 @@ bool js::intl::GlobalIntlData::ensureRuntimeDefaultLocale(JSContext* cx) {
 
 bool js::intl::GlobalIntlData::ensureRuntimeDefaultTimeZone(JSContext* cx) {
   TimeZoneIdentifierVector timeZoneId;
-  if (!DateTimeInfo::timeZoneId(cx->realm()->getDateTimeInfo(), timeZoneId)) {
+  if (!DateTimeInfo::timeZoneId(DateTimeInfo::forceUTC(cx->realm()),
+                                timeZoneId)) {
     ReportOutOfMemory(cx);
     return false;
   }

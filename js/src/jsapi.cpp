@@ -1777,36 +1777,21 @@ JS::RealmCreationOptions& JS::RealmCreationOptions::setCoopAndCoepEnabled(
   return *this;
 }
 
-template <class RefCountedString>
-static RefCountedString* CopyStringZ(const char* str) {
-  MOZ_ASSERT(str);
-
-  const size_t size = strlen(str) + 1;
-
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  char* memoryPtr = js_pod_malloc<char>(sizeof(RefCountedString) + size);
-  if (!memoryPtr) {
-    oomUnsafe.crash("CopyStringZ");
-  }
-
-  char* strPtr = memoryPtr + sizeof(RefCountedString);
-  memcpy(strPtr, str, size);
-
-  return new (memoryPtr) RefCountedString(strPtr);
-}
-
 JS::RealmCreationOptions& JS::RealmCreationOptions::setLocaleCopyZ(
     const char* locale) {
-  locale_ = CopyStringZ<JS::LocaleString>(locale);
-  return *this;
-}
+  const size_t size = strlen(locale) + 1;
 
-JS::RealmBehaviors& JS::RealmBehaviors::setTimeZoneCopyZ(const char* timeZone) {
-  if (timeZone) {
-    timeZone_ = CopyStringZ<JS::TimeZoneString>(timeZone);
-  } else {
-    timeZone_ = nullptr;
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  char* memoryPtr = js_pod_malloc<char>(sizeof(LocaleString) + size);
+  if (!memoryPtr) {
+    oomUnsafe.crash("RealmCreationOptions::setLocaleCopyZ");
   }
+
+  char* localePtr = memoryPtr + sizeof(LocaleString);
+  memcpy(localePtr, locale, size);
+
+  locale_ = new (memoryPtr) LocaleString(localePtr);
+
   return *this;
 }
 

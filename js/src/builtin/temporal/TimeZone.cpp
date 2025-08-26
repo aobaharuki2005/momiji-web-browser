@@ -156,17 +156,13 @@ static TimeZoneObject* CreateTimeZoneObject(JSContext* cx,
 
 static mozilla::UniquePtr<mozilla::intl::TimeZone> CreateIntlTimeZone(
     JSContext* cx, JSLinearString* identifier) {
-  MOZ_ASSERT(StringIsAscii(identifier));
-
-  Vector<char, mozilla::intl::TimeZone::TimeZoneIdentifierLength> chars(cx);
-  if (!chars.resize(identifier->length())) {
+  JS::AutoStableStringChars stableChars(cx);
+  if (!stableChars.initTwoByte(cx, identifier)) {
     return nullptr;
   }
 
-  js::CopyChars(reinterpret_cast<JS::Latin1Char*>(chars.begin()), *identifier);
-
   auto result = mozilla::intl::TimeZone::TryCreate(
-      mozilla::Some(static_cast<mozilla::Span<const char>>(chars)));
+      mozilla::Some(stableChars.twoByteRange()));
   if (result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return nullptr;
@@ -236,7 +232,8 @@ static bool ValidateAndCanonicalizeTimeZoneName(
 }
 
 static bool SystemTimeZoneOffset(JSContext* cx, int32_t* offset) {
-  auto rawOffset = DateTimeInfo::getRawOffsetMs(cx->realm()->getDateTimeInfo());
+  auto rawOffset =
+      DateTimeInfo::getRawOffsetMs(DateTimeInfo::forceUTC(cx->realm()));
   if (rawOffset.isErr()) {
     intl::ReportInternalError(cx);
     return false;
@@ -253,7 +250,8 @@ static bool SystemTimeZoneOffset(JSContext* cx, int32_t* offset) {
  */
 JSLinearString* js::temporal::ComputeSystemTimeZoneIdentifier(JSContext* cx) {
   TimeZoneIdentifierVector timeZoneId;
-  if (!DateTimeInfo::timeZoneId(cx->realm()->getDateTimeInfo(), timeZoneId)) {
+  if (!DateTimeInfo::timeZoneId(DateTimeInfo::forceUTC(cx->realm()),
+                                timeZoneId)) {
     ReportOutOfMemory(cx);
     return nullptr;
   }

@@ -9,11 +9,10 @@
 
 #include "js/Date.h"
 #include "js/Value.h"
+#include "vm/DateTime.h"
 #include "vm/NativeObject.h"
 
 namespace js {
-
-class DateTimeInfo;
 
 class DateObject : public NativeObject {
   // Time in milliseconds since the (Unix) epoch.
@@ -21,12 +20,15 @@ class DateObject : public NativeObject {
   // The stored value is guaranteed to be a Double.
   static const uint32_t UTC_TIME_SLOT = 0;
 
-  // Time zone cache key.
+  // Raw time zone offset in seconds, i.e. without daylight saving adjustment,
+  // of the current system zone.
   //
   // This value is exclusively used to verify the cached slots are still valid.
   //
+  // It is NOT the return value of Date.prototype.getTimezoneOffset()!
+  //
   // The stored value is either an Int32 or Undefined.
-  static const uint32_t TIME_ZONE_CACHE_KEY_SLOT = 1;
+  static const uint32_t UTC_TIME_ZONE_OFFSET_SLOT = 1;
 
   /*
    * Cached slots holding local properties of the date.
@@ -62,7 +64,7 @@ class DateObject : public NativeObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  js::DateTimeInfo* dateTimeInfo() const;
+  js::DateTimeInfo::ForceUTC forceUTC() const;
 
   JS::ClippedTime clippedTime() const {
     double t = getFixedSlot(UTC_TIME_SLOT).toDouble();
@@ -134,8 +136,8 @@ class DateObject : public NativeObject {
   static constexpr size_t offsetOfUTCTimeSlot() {
     return getFixedSlotOffset(UTC_TIME_SLOT);
   }
-  static constexpr size_t offsetOfTimeZoneCacheKeySlot() {
-    return getFixedSlotOffset(TIME_ZONE_CACHE_KEY_SLOT);
+  static constexpr size_t offsetOfUTCTimeZoneOffsetSlot() {
+    return getFixedSlotOffset(UTC_TIME_ZONE_OFFSET_SLOT);
   }
   static constexpr size_t offsetOfLocalTimeSlot() {
     return getFixedSlotOffset(LOCAL_TIME_SLOT);

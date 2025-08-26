@@ -8631,6 +8631,62 @@ static bool GetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+/*
+ * Validate time zone input. Accepts the following formats:
+ *  - "America/Chicago" (raw time zone)
+ *  - ":America/Chicago"
+ *  - "/this-part-is-ignored/zoneinfo/America/Chicago"
+ *  - ":/this-part-is-ignored/zoneinfo/America/Chicago"
+ *  - "/etc/localtime"
+ *  - ":/etc/localtime"
+ * Once the raw time zone is parsed out of the string, it is checked
+ * against the time zones from GetAvailableTimeZones(). Throws an
+ * Error if the time zone is invalid.
+ */
+#if defined(JS_HAS_INTL_API) && !defined(__wasi__)
+static bool ValidateTimeZone(JSContext* cx, const char* timeZone) {
+  static constexpr char zoneInfo[] = "/zoneinfo/";
+  static constexpr size_t zoneInfoLength = sizeof(zoneInfo) - 1;
+
+  size_t i = 0;
+  if (timeZone[i] == ':') {
+    ++i;
+  }
+  const char* zoneInfoPtr = strstr(timeZone, zoneInfo);
+  const char* timeZonePart = timeZone[i] == '/' && zoneInfoPtr
+                                 ? zoneInfoPtr + zoneInfoLength
+                                 : timeZone + i;
+
+  if (!*timeZonePart) {
+    JS_ReportErrorASCII(cx, "Invalid time zone format");
+    return false;
+  }
+
+  if (!strcmp(timeZonePart, "/etc/localtime")) {
+    return true;
+  }
+
+  auto timeZones = mozilla::intl::TimeZone::GetAvailableTimeZones();
+  if (timeZones.isErr()) {
+    intl::ReportInternalError(cx, timeZones.unwrapErr());
+    return false;
+  }
+  for (auto timeZoneName : timeZones.unwrap()) {
+    if (timeZoneName.isErr()) {
+      intl::ReportInternalError(cx);
+      return false;
+    }
+
+    if (!strcmp(timeZonePart, timeZoneName.unwrap().data())) {
+      return true;
+    }
+  }
+
+  JS_ReportErrorASCII(cx, "Unsupported time zone name: %s", timeZonePart);
+  return false;
+}
+#endif
+
 static bool SetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedObject callee(cx, &args.callee());
@@ -8664,18 +8720,30 @@ static bool SetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   };
 
   if (args[0].isString() && !args[0].toString()->empty()) {
-    Rooted<JSString*> str(cx, args[0].toString());
+    Rooted<JSLinearString*> str(cx, args[0].toString()->ensureLinear(cx));
     if (!str) {
       return false;
     }
 
-    UniqueChars timeZone =
-        StringToTimeZone(cx, callee, str, AllowTimeZoneLink::Yes);
+    if (!StringIsAscii(str)) {
+      ReportUsageErrorASCII(cx, callee,
+                            "First argument contains non-ASCII characters");
+      return false;
+    }
+
+    UniqueChars timeZone = JS_EncodeStringToASCII(cx, str);
     if (!timeZone) {
       return false;
     }
 
-    if (!setTimeZone(timeZone.get())) {
+    const char* timeZoneStr = timeZone.get();
+#  ifdef JS_HAS_INTL_API
+    if (!ValidateTimeZone(cx, timeZoneStr)) {
+      return false;
+    }
+#  endif
+
+    if (!setTimeZone(timeZoneStr)) {
       JS_ReportErrorASCII(cx, "Failed to set 'TZ' environment variable");
       return false;
     }
@@ -8695,73 +8763,6 @@ static bool SetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   JS::ResetTimeZone();
 
 #endif /* __wasi__ */
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool GetRealmTimeZone(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject callee(cx, &args.callee());
-
-  if (args.length() != 0) {
-    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
-    return false;
-  }
-
-#ifdef JS_HAS_INTL_API
-  TimeZoneIdentifierVector timeZoneId;
-  if (!DateTimeInfo::timeZoneId(cx->realm()->getDateTimeInfo(), timeZoneId)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  auto* str = NewStringCopy<CanGC>(
-      cx, static_cast<mozilla::Span<const char>>(timeZoneId));
-  if (!str) {
-    return false;
-  }
-
-  args.rval().setString(str);
-#else
-  // Realm time zones require Intl support.
-  args.rval().setString(cx->emptyString());
-#endif
-
-  return true;
-}
-
-static bool SetRealmTimeZone(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject callee(cx, &args.callee());
-
-  if (args.length() != 1) {
-    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
-    return false;
-  }
-
-  if (!args[0].isString() && !args[0].isUndefined()) {
-    ReportUsageErrorASCII(cx, callee,
-                          "First argument should be a string or undefined");
-    return false;
-  }
-
-  if (args[0].isString() && !args[0].toString()->empty()) {
-    Rooted<JSString*> str(cx, args[0].toString());
-    if (!str) {
-      return false;
-    }
-
-    auto timeZone = StringToTimeZone(cx, callee, str, AllowTimeZoneLink::No);
-    if (!timeZone) {
-      return false;
-    }
-
-    cx->realm()->setTimeZone(timeZone.get());
-  } else {
-    // Reset to use the system default time zone.
-    cx->realm()->setTimeZone(nullptr);
-  }
-
   args.rval().setUndefined();
   return true;
 }
@@ -9573,7 +9574,7 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   TimeZoneIdentifierVector timeZoneId;
-  if (!DateTimeInfo::timeZoneId(nullptr, timeZoneId)) {
+  if (!DateTimeInfo::timeZoneId(DateTimeInfo::ForceUTC::No, timeZoneId)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -10987,16 +10988,6 @@ JS_FN_HELP("setTimeZone", SetTimeZone, 1, 0,
 "  Set the 'TZ' environment variable to the given time zone and applies the new time zone.\n"
 "  The time zone given is validated according to the current environment.\n"
 "  An empty string or undefined resets the time zone to its default value."),
-
-JS_FN_HELP("getRealmTimeZone", GetRealmTimeZone, 0, 0,
-"getRealmTimeZone()",
-"  Get the time zone for the current realm.\n"),
-
-JS_FN_HELP("setRealmTimeZone", SetRealmTimeZone, 1, 0,
-"setRealmTimeZone(tzname)",
-"  Set the time zone for the current realm.\n"
-"  The time zone must be a valid IANA time zone identifier.\n"
-"  An empty string or undefined resets the realm time zone to the system default time zone."),
 
 JS_FN_HELP("setDefaultLocale", SetDefaultLocale, 1, 0,
 "setDefaultLocale(locale)",
