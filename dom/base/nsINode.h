@@ -1734,7 +1734,8 @@ class nsINode : public mozilla::dom::EventTarget {
 
   /** Returns whether we're the root element of our document. */
   bool IsRootElement() const {
-    // This should be faster than pointer-chasing in the common cases.
+    // This should be faster than pointer-chasing in the common cases, plus it
+    // is also correct mid-unbind.
     const bool isRoot = !GetParent() && IsInUncomposedDoc() && IsElement();
 #ifdef DEBUG
     AssertIsRootElementSlow(isRoot);
