@@ -25,7 +25,6 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "nsGlobalWindowInner.h"
 #include "nsICookieJarSettings.h"
 
 #ifdef XP_WIN

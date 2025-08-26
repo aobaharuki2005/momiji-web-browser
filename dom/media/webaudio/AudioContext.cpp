@@ -74,7 +74,6 @@
 #include "mozilla/dom/StereoPannerNodeBinding.h"
 #include "mozilla/dom/WaveShaperNodeBinding.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIScriptError.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"

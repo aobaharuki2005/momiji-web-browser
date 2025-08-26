@@ -126,7 +126,9 @@ class TimeoutManager final {
   // get nsGlobalWindowInner
   // if the method returns nullptr, then we have a worker,
   // which should be handled differently according to TimeoutManager logic
-  nsGlobalWindowInner* GetInnerWindow() const;
+  nsGlobalWindowInner* GetInnerWindow() const {
+    return nsGlobalWindowInner::Cast(mGlobalObject.GetAsInnerWindow());
+  }
 
   // Return true if |aTimeout| needs to be reinserted into the timeout list.
   bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout,

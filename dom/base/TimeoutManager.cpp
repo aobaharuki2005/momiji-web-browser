@@ -6,6 +6,7 @@
 
 #include "TimeoutManager.h"
 
+#include "TimeoutExecutor.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/ProfilerMarkers.h"
@@ -22,7 +23,6 @@
 #include "mozilla/dom/WebTaskScheduler.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/net/WebSocketEventService.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIGlobalObject.h"
 #include "nsINamed.h"
 
@@ -87,9 +87,6 @@ TimeDuration GetMinBudget(bool aIsBackground) {
 }  // namespace
 
 //
-nsGlobalWindowInner* TimeoutManager::GetInnerWindow() const {
-  return nsGlobalWindowInner::Cast(mGlobalObject.GetAsInnerWindow());
-}
 
 bool TimeoutManager::IsBackground() const {
   return !IsActive() && mGlobalObject.IsBackgroundInternal();

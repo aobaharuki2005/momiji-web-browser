@@ -12,7 +12,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
-#include "nsGlobalWindowInner.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla::dom {

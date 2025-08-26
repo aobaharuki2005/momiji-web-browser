@@ -20,7 +20,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/net/CookieCommons.h"
 #include "mozilla/net/CookiePrefixes.h"
-#include "nsGlobalWindowInner.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "nsICookie.h"
 #include "nsIGlobalObject.h"
 #include "nsIPrincipal.h"

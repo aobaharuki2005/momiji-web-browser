@@ -10,7 +10,6 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "nsCOMPtr.h"
-#include "nsGlobalWindowInner.h"
 #include "nsICookieNotification.h"
 #include "nsIObserverService.h"
 #include "mozilla/dom/BrowsingContext.h"
