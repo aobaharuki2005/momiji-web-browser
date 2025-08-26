@@ -6,6 +6,7 @@
 
 #include "CamerasParent.h"
 
+#include <algorithm>
 #include <atomic>
 
 #include "CamerasTypes.h"
@@ -370,6 +371,12 @@ ShmemBuffer CamerasParent::GetBuffer(size_t aSize) {
   return mShmemPool.GetIfAvailable(aSize);
 }
 
+void CallbackHelper::SetConfiguration(
+    const webrtc::VideoCaptureCapability& aCapability) {
+  auto c = mConfiguration.Lock();
+  c.ref() = aCapability;
+}
+
 void CallbackHelper::OnCaptureEnded() {
   nsIEventTarget* target = mParent->GetBackgroundEventTarget();
 
@@ -378,6 +385,23 @@ void CallbackHelper::OnCaptureEnded() {
 }
 
 void CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
+  {
+    // Proactively drop frames that would not get processed anyway.
+    auto c = mConfiguration.Lock();
+    const double maxFramerate = std::clamp(
+        static_cast<double>(c->maxFPS > 0 ? c->maxFPS : 120), 0.01, 120.);
+    // Allow 5% higher fps than configured as frame time sampling is timing
+    // dependent.
+    const auto minInterval =
+        media::TimeUnit(1000, static_cast<int64_t>(1050 * maxFramerate));
+    const auto frameTime =
+        media::TimeUnit::FromMicroseconds(aVideoFrame.timestamp_us());
+    const auto frameInterval = frameTime - mLastFrameTime;
+    if (frameInterval < minInterval) {
+      return;
+    }
+    mLastFrameTime = frameTime;
+  }
   LOG_VERBOSE("CamerasParent(%p)::%s", mParent, __func__);
   if (profiler_thread_is_being_profiled_for_markers()) {
     PROFILER_MARKER_UNTYPED(
@@ -1036,16 +1060,16 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
                 }
               }
 
-              bool cbhExists = false;
               CallbackHelper* cbh = nullptr;
               for (auto& cb : mCallbacks) {
                 if (cb->mCapEngine == aCapEngine &&
                     cb->mStreamId == (uint32_t)aCaptureId) {
-                  cbhExists = true;
+                  cbh = cb.get();
                   break;
                 }
               }
-              if (!cbhExists) {
+              bool cbhCreated = !cbh;
+              if (!cbh) {
                 cbh = mCallbacks
                           .AppendElement(MakeUnique<CallbackHelper>(
                               static_cast<CaptureEngine>(aCapEngine),
@@ -1055,10 +1079,11 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
                     cbh->mTrackingId.mUniqueInProcId);
               }
 
+              cbh->SetConfiguration(capability);
               error = cap.VideoCapture()->StartCapture(capability);
 
               if (!error) {
-                if (cbh) {
+                if (cbhCreated) {
                   cap.VideoCapture()->RegisterCaptureDataCallback(
                       static_cast<
                           webrtc::VideoSinkInterface<webrtc::VideoFrame>*>(

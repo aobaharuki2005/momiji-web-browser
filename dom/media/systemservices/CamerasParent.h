@@ -37,7 +37,10 @@ class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
       : mCapEngine(aCapEng),
         mStreamId(aStreamId),
         mTrackingId(CaptureEngineToTrackingSourceStr(aCapEng), aStreamId),
-        mParent(aParent) {};
+        mParent(aParent),
+        mConfiguration("CallbackHelper::mConfiguration") {};
+
+  void SetConfiguration(const webrtc::VideoCaptureCapability& aCapability);
 
   void OnCaptureEnded();
   void OnFrame(const webrtc::VideoFrame& aVideoFrame) override;
@@ -51,6 +54,9 @@ class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
   CamerasParent* const mParent;
   MediaEventListener mCaptureEndedListener;
   bool mConnectedToCaptureEnded = false;
+  DataMutex<webrtc::VideoCaptureCapability> mConfiguration;
+  // Capture thread only.
+  media::TimeUnit mLastFrameTime = media::TimeUnit::FromNegativeInfinity();
 };
 
 class DeliverFrameRunnable;
