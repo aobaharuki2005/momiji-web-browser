@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
@@ -43,7 +44,6 @@ import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
-import org.mozilla.fenix.onboarding.store.OnboardingAction.OnboardingThemeAction
 import org.mozilla.fenix.onboarding.store.OnboardingAction.OnboardingToolbarAction
 import org.mozilla.fenix.onboarding.store.OnboardingStore
 import org.mozilla.fenix.onboarding.view.Caption
@@ -53,10 +53,13 @@ import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.onboarding.view.OnboardingPageUiData
 import org.mozilla.fenix.onboarding.view.OnboardingTermsOfServiceEventHandler
 import org.mozilla.fenix.onboarding.view.TermsOfServiceOnboardingPage
-import org.mozilla.fenix.onboarding.view.ThemeOnboardingPage
 import org.mozilla.fenix.onboarding.view.ToolbarOnboardingPage
+import org.mozilla.fenix.onboarding.view.ToolbarOption
+import org.mozilla.fenix.onboarding.view.ToolbarOptionType
 import org.mozilla.fenix.onboarding.view.mapToOnboardingPageState
 import org.mozilla.fenix.theme.FirefoxTheme
+
+private val logger: Logger = Logger("OnboardingScreenRedesign")
 
 /**
  * A screen for displaying onboarding.
@@ -66,15 +69,11 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onSkipDefaultClick Invoked when negative button on default browser page is clicked.
  * @param onSignInButtonClick Invoked when the positive button on the sign in page is clicked.
  * @param onSkipSignInClick Invoked when the negative button on the sign in page is clicked.
- * @param onNotificationPermissionButtonClick Invoked when positive button on notification page is
- * clicked.
- * @param onSkipNotificationClick Invoked when negative button on notification page is clicked.
  * @param onAddFirefoxWidgetClick Invoked when positive button on add search widget page is clicked.
  * @param onSkipFirefoxWidgetClick Invoked when negative button on add search widget page is clicked.
  * @param onboardingStore The store which contains all the state related to the add-ons onboarding screen.
  * @param termsOfServiceEventHandler Invoked when the primary button on the terms of service page is clicked.
  * @param onCustomizeToolbarClick Invoked when positive button customize toolbar page is clicked.
- * @param onCustomizeThemeClick Invoked when the primary button on the theme selection page is clicked.
  * @param onMarketingDataLearnMoreClick callback for when the user clicks the learn more text link
  * @param onMarketingOptInToggle callback for when the user toggles the opt-in checkbox
  * @param onMarketingDataContinueClick callback for when the user clicks the continue button on the
@@ -92,14 +91,11 @@ fun OnboardingScreenRedesign(
     onSkipDefaultClick: () -> Unit,
     onSignInButtonClick: () -> Unit,
     onSkipSignInClick: () -> Unit,
-    onNotificationPermissionButtonClick: () -> Unit,
-    onSkipNotificationClick: () -> Unit,
     onAddFirefoxWidgetClick: () -> Unit,
     onSkipFirefoxWidgetClick: () -> Unit,
     onboardingStore: OnboardingStore? = null,
     termsOfServiceEventHandler: OnboardingTermsOfServiceEventHandler,
     onCustomizeToolbarClick: () -> Unit,
-    onCustomizeThemeClick: () -> Unit,
     onMarketingDataLearnMoreClick: () -> Unit,
     onMarketingOptInToggle: (optIn: Boolean) -> Unit,
     onMarketingDataContinueClick: (allowMarketingDataCollection: Boolean) -> Unit,
@@ -188,14 +184,6 @@ fun OnboardingScreenRedesign(
             scrollToNextPageOrDismiss()
             onSkipSignInClick()
         },
-        onNotificationPermissionButtonClick = {
-            scrollToNextPageOrDismiss()
-            onNotificationPermissionButtonClick()
-        },
-        onNotificationPermissionSkipClick = {
-            scrollToNextPageOrDismiss()
-            onSkipNotificationClick()
-        },
         onAddFirefoxWidgetClick = {
             if (isWidgetPinnedState) {
                 scrollToNextPageOrDismiss()
@@ -210,10 +198,6 @@ fun OnboardingScreenRedesign(
         onCustomizeToolbarButtonClick = {
             scrollToNextPageOrDismiss()
             onCustomizeToolbarClick()
-        },
-        onCustomizeThemeButtonClick = {
-            scrollToNextPageOrDismiss()
-            onCustomizeThemeClick()
         },
         termsOfServiceEventHandler = termsOfServiceEventHandler,
         onAgreeAndConfirmTermsOfService = {
@@ -261,13 +245,10 @@ private fun OnboardingContent(
     onMakeFirefoxDefaultSkipClick: () -> Unit,
     onSignInButtonClick: () -> Unit,
     onSignInSkipClick: () -> Unit,
-    onNotificationPermissionButtonClick: () -> Unit,
-    onNotificationPermissionSkipClick: () -> Unit,
     onAddFirefoxWidgetClick: () -> Unit,
     onSkipFirefoxWidgetClick: () -> Unit,
     onboardingStore: OnboardingStore? = null,
     onCustomizeToolbarButtonClick: () -> Unit,
-    onCustomizeThemeButtonClick: () -> Unit,
     termsOfServiceEventHandler: OnboardingTermsOfServiceEventHandler,
     onAgreeAndConfirmTermsOfService: () -> Unit,
     onMarketingOptInToggle: (optIn: Boolean) -> Unit,
@@ -297,12 +278,9 @@ private fun OnboardingContent(
                 onMakeFirefoxDefaultSkipClick = onMakeFirefoxDefaultSkipClick,
                 onSignInButtonClick = onSignInButtonClick,
                 onSignInSkipClick = onSignInSkipClick,
-                onNotificationPermissionButtonClick = onNotificationPermissionButtonClick,
-                onNotificationPermissionSkipClick = onNotificationPermissionSkipClick,
                 onAddFirefoxWidgetClick = onAddFirefoxWidgetClick,
                 onAddFirefoxWidgetSkipClick = onSkipFirefoxWidgetClick,
                 onCustomizeToolbarButtonClick = onCustomizeToolbarButtonClick,
-                onCustomizeThemeClick = onCustomizeThemeButtonClick,
                 onTermsOfServiceButtonClick = onAgreeAndConfirmTermsOfService,
             )
             OnboardingPageForType(
@@ -342,7 +320,6 @@ private fun OnboardingPageForType(
         OnboardingPageUiData.Type.DEFAULT_BROWSER,
         OnboardingPageUiData.Type.SYNC_SIGN_IN,
         OnboardingPageUiData.Type.ADD_SEARCH_WIDGET,
-        OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
         -> OnboardingPage(state)
 
         OnboardingPageUiData.Type.TOOLBAR_PLACEMENT -> {
@@ -364,25 +341,6 @@ private fun OnboardingPageForType(
             }
         }
 
-        OnboardingPageUiData.Type.THEME_SELECTION -> {
-            val context = LocalContext.current
-            onboardingStore?.let { store ->
-                ThemeOnboardingPage(
-                    onboardingStore = store,
-                    pageState = state,
-                    onThemeSelectionClicked = {
-                        store.dispatch(OnboardingThemeAction.UpdateSelected(it))
-                        context.components.appStore.dispatch(
-                            AppAction.SetupChecklistAction.TaskPreferenceUpdated(
-                                ChecklistItem.Task.Type.SELECT_THEME,
-                                true,
-                            ),
-                        )
-                    },
-                )
-            }
-        }
-
         OnboardingPageUiData.Type.MARKETING_DATA -> MarketingDataOnboardingPage(
             state = state,
             onMarketingDataLearnMoreClick = onMarketingDataLearnMoreClick,
@@ -394,6 +352,13 @@ private fun OnboardingPageForType(
             state,
             termsOfServiceEventHandler,
         )
+
+        // no-ops
+        OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
+        OnboardingPageUiData.Type.THEME_SELECTION,
+            -> {
+            logger.error("Unsupported page type: $type used for onboarding redesign.")
+        }
     }
 }
 
@@ -432,12 +397,9 @@ private fun OnboardingScreenPreview() {
             onMakeFirefoxDefaultSkipClick = {},
             onSignInButtonClick = {},
             onSignInSkipClick = {},
-            onNotificationPermissionButtonClick = {},
-            onNotificationPermissionSkipClick = {},
             onAddFirefoxWidgetClick = {},
             onSkipFirefoxWidgetClick = {},
             onCustomizeToolbarButtonClick = {},
-            onCustomizeThemeButtonClick = {},
             onAgreeAndConfirmTermsOfService = {},
             termsOfServiceEventHandler = object : OnboardingTermsOfServiceEventHandler {},
             onMarketingDataLearnMoreClick = {},
@@ -482,18 +444,21 @@ private fun defaultPreviewPages() = listOf(
         ),
     ),
     OnboardingPageUiData(
-        type = OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
-        imageRes = R.drawable.ic_notification_permission,
-        title = stringResource(R.string.juno_onboarding_enable_notifications_title_nimbus_2),
-        description = stringResource(R.string.juno_onboarding_enable_notifications_description_nimbus_2),
-        primaryButtonLabel = stringResource(R.string.juno_onboarding_enable_notifications_positive_button),
-        secondaryButtonLabel = stringResource(R.string.juno_onboarding_enable_notifications_negative_button),
-        privacyCaption = Caption(
-            text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-            linkTextState = LinkTextState(
-                text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-                url = "",
-                onClick = {},
+        type = OnboardingPageUiData.Type.TOOLBAR_PLACEMENT,
+        imageRes = R.drawable.ic_onboarding_customize_toolbar,
+        title = stringResource(R.string.onboarding_customize_toolbar_title),
+        description = stringResource(R.string.onboarding_customize_toolbar_description),
+        primaryButtonLabel = stringResource(R.string.onboarding_save_and_start_button),
+        toolbarOptions = listOf(
+            ToolbarOption(
+                toolbarType = ToolbarOptionType.TOOLBAR_TOP,
+                imageRes = R.drawable.ic_onboarding_top_toolbar,
+                label = stringResource(R.string.onboarding_customize_toolbar_top_option),
+            ),
+            ToolbarOption(
+                toolbarType = ToolbarOptionType.TOOLBAR_BOTTOM,
+                imageRes = R.drawable.ic_onboarding_bottom_toolbar,
+                label = stringResource(R.string.onboarding_customize_toolbar_bottom_option),
             ),
         ),
     ),
