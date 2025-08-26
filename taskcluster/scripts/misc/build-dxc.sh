@@ -32,7 +32,7 @@ cmake .. \
   -C ../cmake/caches/PredefinedParams.cmake \
   -DCMAKE_TOOLCHAIN_FILE=../cmake/platforms/WinMsvc.cmake \
   -DHOST_ARCH="$MOZ_DXC_TARGET_ARCH" \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_DISABLE_ASSEMBLY_FILES=ON \
   -DLLVM_NATIVE_TOOLCHAIN="$MOZ_FETCHES_DIR/clang" \
   -DLLVM_WINSYSROOT="$VSINSTALLDIR" \
