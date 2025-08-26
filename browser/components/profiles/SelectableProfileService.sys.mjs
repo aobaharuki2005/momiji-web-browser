@@ -182,6 +182,7 @@ class SelectableProfileServiceClass extends EventEmitter {
     "app.shield.optoutstudies.enabled",
     "browser.crashReports.unsubmittedCheck.autoSubmit2",
     "browser.discovery.enabled",
+    "browser.shell.checkDefaultBrowser",
     "browser.urlbar.quicksuggest.dataCollection.enabled",
     "datareporting.healthreport.uploadEnabled",
     "datareporting.policy.currentPolicyVersion",
