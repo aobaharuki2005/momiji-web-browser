@@ -180,7 +180,8 @@ extern void IterateHeapUnbarriered(JSContext* cx, void* data,
                                    IterateZoneCallback zoneCallback,
                                    JS::IterateRealmCallback realmCallback,
                                    IterateArenaCallback arenaCallback,
-                                   IterateCellCallback cellCallback);
+                                   IterateCellCallback cellCallback,
+                                   const js::gc::AutoTraceSession& session);
 
 /*
  * This function is like IterateHeapUnbarriered, but does it for a single zone.
@@ -188,13 +189,14 @@ extern void IterateHeapUnbarriered(JSContext* cx, void* data,
 extern void IterateHeapUnbarrieredForZone(
     JSContext* cx, JS::Zone* zone, void* data, IterateZoneCallback zoneCallback,
     JS::IterateRealmCallback realmCallback, IterateArenaCallback arenaCallback,
-    IterateCellCallback cellCallback);
+    IterateCellCallback cellCallback, const js::gc::AutoTraceSession& session);
 
 /*
  * Invoke chunkCallback on every in-use chunk.
  */
 extern void IterateChunks(JSContext* cx, void* data,
-                          IterateChunkCallback chunkCallback);
+                          IterateChunkCallback chunkCallback,
+                          const js::gc::AutoTraceSession& session);
 
 using IterateScriptCallback = void (*)(JSRuntime*, void*, BaseScript*,
                                        const JS::AutoRequireNoGC&);

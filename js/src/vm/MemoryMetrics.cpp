@@ -643,8 +643,9 @@ static bool CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats,
                                       ObjectPrivateVisitor* opv, bool anonymize,
                                       IterateCellCallback statsCellCallback) {
   // Finish any ongoing incremental GC that may change the data we're gathering
-  // and ensure that we don't do anything that could start another one.
-  gc::FinishGC(cx);
+  // and start a trace session. Ensure that we don't do anything that could
+  // start another GC.
+  js::gc::AutoPrepareForTracing session(cx);
   JS::AutoAssertNoGC nogc(cx);
 
   // Wait for any background tasks to finish.
@@ -668,13 +669,13 @@ static bool CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats,
 
   if (js::gc::DecommitEnabled()) {
     IterateChunks(cx, &rtStats->gcHeapDecommittedPages,
-                  DecommittedPagesChunkCallback);
+                  DecommittedPagesChunkCallback, session);
   }
 
   // Take the per-compartment measurements.
   StatsClosure closure(rtStats, opv, anonymize);
   IterateHeapUnbarriered(cx, &closure, StatsZoneCallback, StatsRealmCallback,
-                         StatsArenaCallback, statsCellCallback);
+                         StatsArenaCallback, statsCellCallback, session);
 
   // Take the "explicit/js/runtime/" measurements.
   rt->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
@@ -849,9 +850,10 @@ JS_PUBLIC_API bool AddSizeOfTab(JSContext* cx, HandleObject obj,
   // Take the per-compartment measurements. No need to anonymize because
   // these measurements will be aggregated.
   StatsClosure closure(&rtStats, opv, /* anonymize = */ false);
+  js::gc::AutoPrepareForTracing session(cx);
   IterateHeapUnbarrieredForZone(cx, zone, &closure, StatsZoneCallback,
                                 StatsRealmCallback, StatsArenaCallback,
-                                StatsCellCallback<CoarseGrained>);
+                                StatsCellCallback<CoarseGrained>, session);
 
   MOZ_ASSERT(rtStats.zoneStatsVector.length() == 1);
   rtStats.zTotals.addSizes(rtStats.zoneStatsVector[0]);

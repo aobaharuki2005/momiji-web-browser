@@ -45,8 +45,8 @@ void js::IterateHeapUnbarriered(JSContext* cx, void* data,
                                 IterateZoneCallback zoneCallback,
                                 JS::IterateRealmCallback realmCallback,
                                 IterateArenaCallback arenaCallback,
-                                IterateCellCallback cellCallback) {
-  AutoPrepareForTracing prep(cx);
+                                IterateCellCallback cellCallback,
+                                const js::gc::AutoTraceSession& session) {
   JS::AutoSuppressGCAnalysis nogc(cx);
 
   auto iterateZone = [&](Zone* zone) -> void {
@@ -65,12 +65,10 @@ void js::IterateHeapUnbarriered(JSContext* cx, void* data,
   }
 }
 
-void js::IterateHeapUnbarrieredForZone(JSContext* cx, Zone* zone, void* data,
-                                       IterateZoneCallback zoneCallback,
-                                       JS::IterateRealmCallback realmCallback,
-                                       IterateArenaCallback arenaCallback,
-                                       IterateCellCallback cellCallback) {
-  AutoPrepareForTracing prep(cx);
+void js::IterateHeapUnbarrieredForZone(
+    JSContext* cx, Zone* zone, void* data, IterateZoneCallback zoneCallback,
+    JS::IterateRealmCallback realmCallback, IterateArenaCallback arenaCallback,
+    IterateCellCallback cellCallback, const js::gc::AutoTraceSession& session) {
   JS::AutoSuppressGCAnalysis nogc(cx);
 
   (*zoneCallback)(cx->runtime(), data, zone, nogc);
@@ -79,8 +77,8 @@ void js::IterateHeapUnbarrieredForZone(JSContext* cx, Zone* zone, void* data,
 }
 
 void js::IterateChunks(JSContext* cx, void* data,
-                       IterateChunkCallback chunkCallback) {
-  AutoPrepareForTracing prep(cx);
+                       IterateChunkCallback chunkCallback,
+                       const js::gc::AutoTraceSession& session) {
   AutoLockGC lock(cx->runtime());
   JS::AutoSuppressGCAnalysis nogc(cx);
 
