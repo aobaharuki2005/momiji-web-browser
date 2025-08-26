@@ -118,7 +118,8 @@ class MOZ_RAII AutoHeapSession {
   mozilla::Maybe<AutoGeckoProfilerEntry> profilingStackFrame;
 };
 
-class MOZ_RAII AutoTraceSession : public AutoHeapSession {
+class MOZ_RAII AutoTraceSession : public AutoHeapSession,
+                                  public JS::AutoCheckCannotGC {
  public:
   explicit AutoTraceSession(JSRuntime* rt);
 };
