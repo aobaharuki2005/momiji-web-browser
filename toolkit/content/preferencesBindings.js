@@ -825,6 +825,12 @@ const Preferences = (window.Preferences = (function () {
       return config;
     }
 
+    userClick(event) {
+      if (this.config.onUserClick) {
+        this.config.onUserClick(event);
+      }
+    }
+
     userChange(val) {
       this.value = val;
       if (this.config.onUserChange) {

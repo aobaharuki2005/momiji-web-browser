@@ -217,6 +217,10 @@ export class SettingControl extends MozLitElement {
     this.setting.userChange(this.controlValue(el));
   }
 
+  onClick(event) {
+    this.setting.userClick(event);
+  }
+
   async disableExtension() {
     this.setting.disableControllingExtension();
   }
@@ -227,12 +231,15 @@ export class SettingControl extends MozLitElement {
       this.setting.controllingExtensionInfo.name
     );
   }
+
   get extensionName() {
     return this.setting.controllingExtensionInfo.name;
   }
+
   get extensionMessageId() {
     return this.setting.controllingExtensionInfo.l10nId;
   }
+
   render() {
     // Allow the Setting to override the static config if necessary.
     this.config = this.setting.getControlConfig(this.config);
