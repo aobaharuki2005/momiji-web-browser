@@ -7,7 +7,7 @@
 #include "ThreadEventTarget.h"
 #include "mozilla/ThreadEventQueue.h"
 
-#include "MaybeLeakRefPtr.h"
+#include "LeakRefPtr.h"
 #include "mozilla/DelayedRunnable.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/TimeStamp.h"
@@ -51,8 +51,7 @@ void ThreadEventTarget::ClearCurrentThread() { mThread = nullptr; }
 NS_IMPL_ISUPPORTS(ThreadEventTarget, nsIEventTarget, nsISerialEventTarget)
 
 NS_IMETHODIMP
-ThreadEventTarget::DispatchFromScript(nsIRunnable* aRunnable,
-                                      DispatchFlags aFlags) {
+ThreadEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
   return Dispatch(do_AddRef(aRunnable), aFlags);
 }
 
@@ -65,23 +64,22 @@ void ThreadEventTarget::XPCOMShutdownThreadsNotificationFinished() {
 
 NS_IMETHODIMP
 ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
-                            DispatchFlags aFlags) {
-  MaybeLeakRefPtr<nsIRunnable> event(std::move(aEvent),
-                                     aFlags & NS_DISPATCH_FALLIBLE);
+                            uint32_t aFlags) {
+  // We want to leak the reference when we fail to dispatch it, so that
+  // we won't release the event in a wrong thread.
+  LeakRefPtr<nsIRunnable> event(std::move(aEvent));
   if (NS_WARN_IF(!event)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  NS_ASSERTION(
-      !gXPCOMThreadsShutDownNotified || mIsMainThread ||
-          PR_GetCurrentThread() == mThread ||
-          (aFlags & NS_DISPATCH_IGNORE_BLOCK_DISPATCH) ||
-          (aFlags & NS_DISPATCH_FALLIBLE),
-      "Infallible dispatch to non-main thread after xpcom-shutdown-threads");
+  NS_ASSERTION(!gXPCOMThreadsShutDownNotified || mIsMainThread ||
+                   PR_GetCurrentThread() == mThread ||
+                   (aFlags & NS_DISPATCH_IGNORE_BLOCK_DISPATCH),
+               "Dispatch to non-main thread after xpcom-shutdown-threads");
 
   if (mBlockDispatch && !(aFlags & NS_DISPATCH_IGNORE_BLOCK_DISPATCH)) {
     MOZ_DIAGNOSTIC_ASSERT(
-        aFlags & NS_DISPATCH_FALLIBLE,
+        false,
         "Attempt to dispatch to thread which does not usually process "
         "dispatched runnables until shutdown");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -89,7 +87,10 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
 
   LogRunnable::LogDispatch(event.get());
 
-  if (!mSink->PutEvent(event, EventQueuePriority::Normal)) {
+  NS_ASSERTION((aFlags & (NS_DISPATCH_AT_END |
+                          NS_DISPATCH_IGNORE_BLOCK_DISPATCH)) == aFlags,
+               "unexpected dispatch flags");
+  if (!mSink->PutEvent(event.take(), EventQueuePriority::Normal)) {
     return NS_ERROR_UNEXPECTED;
   }
   // Delay to encourage the receiving task to run before we do work.

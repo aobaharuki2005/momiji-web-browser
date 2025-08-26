@@ -13,7 +13,6 @@
 #include "base/string_util.h"
 #include "base/thread_local.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/MaybeLeakRefPtr.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ProfilerRunnable.h"
 #include "nsIEventTarget.h"
@@ -150,22 +149,24 @@ MessageLoop::EventTarget::IsOnCurrentThread(bool* aResult) {
 
 NS_IMETHODIMP
 MessageLoop::EventTarget::DispatchFromScript(nsIRunnable* aEvent,
-                                             DispatchFlags aFlags) {
-  return Dispatch(do_AddRef(aEvent), aFlags);
+                                             uint32_t aFlags) {
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return Dispatch(event.forget(), aFlags);
 }
 
 NS_IMETHODIMP
 MessageLoop::EventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
-                                   DispatchFlags aFlags) {
-  mozilla::MaybeLeakRefPtr<nsIRunnable> event(std::move(aEvent),
-                                              aFlags & NS_DISPATCH_FALLIBLE);
-
+                                   uint32_t aFlags) {
   mozilla::MutexAutoLock lock(mMutex);
   if (!mLoop) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mLoop->PostTask(event.forget());
+  if (aFlags != NS_DISPATCH_NORMAL) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  mLoop->PostTask(std::move(aEvent));
   return NS_OK;
 }
 
@@ -426,7 +427,7 @@ void MessageLoop::PostTask_Helper(already_AddRefed<nsIRunnable> task,
     if (delay_ms) {
       rv = target->DelayedDispatch(std::move(task), delay_ms);
     } else {
-      rv = target->Dispatch(std::move(task), NS_DISPATCH_NORMAL);
+      rv = target->Dispatch(std::move(task), 0);
     }
     MOZ_ALWAYS_SUCCEEDS(rv);
     return;

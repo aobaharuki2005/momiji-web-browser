@@ -121,11 +121,10 @@ extern nsresult NS_DispatchToCurrentThread(
  *   If event is null.
  */
 extern nsresult NS_DispatchToMainThread(
-    nsIRunnable* aEvent,
-    nsIEventTarget::DispatchFlags aDispatchFlags = NS_DISPATCH_NORMAL);
+    nsIRunnable* aEvent, uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 extern nsresult NS_DispatchToMainThread(
     already_AddRefed<nsIRunnable>&& aEvent,
-    nsIEventTarget::DispatchFlags aDispatchFlags = NS_DISPATCH_NORMAL);
+    uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 
 extern nsresult NS_DelayedDispatchToCurrentThread(
     already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs);
@@ -1664,10 +1663,9 @@ extern mozilla::TimeStamp NS_GetTimerDeadlineHintOnCurrentThread(
  */
 extern nsresult NS_DispatchBackgroundTask(
     already_AddRefed<nsIRunnable> aEvent,
-    nsIEventTarget::DispatchFlags aDispatchFlags = NS_DISPATCH_NORMAL);
+    uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 extern "C" nsresult NS_DispatchBackgroundTask(
-    nsIRunnable* aEvent,
-    nsIEventTarget::DispatchFlags aDispatchFlags = NS_DISPATCH_NORMAL);
+    nsIRunnable* aEvent, uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 
 /**
  * Obtain a new serial event target that dispatches runnables to a background

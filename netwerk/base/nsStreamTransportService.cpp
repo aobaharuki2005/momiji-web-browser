@@ -277,15 +277,14 @@ NS_IMPL_ISUPPORTS(nsStreamTransportService, nsIStreamTransportService,
 
 NS_IMETHODIMP
 nsStreamTransportService::DispatchFromScript(nsIRunnable* task,
-                                             DispatchFlags flags) {
-  return Dispatch(do_AddRef(task), flags);
+                                             uint32_t flags) {
+  nsCOMPtr<nsIRunnable> event(task);
+  return Dispatch(event.forget(), flags);
 }
 
 NS_IMETHODIMP
 nsStreamTransportService::Dispatch(already_AddRefed<nsIRunnable> task,
-                                   DispatchFlags flags) {
-  // NOTE: To maintain existing behaviour, we never leak task on error, even if
-  // NS_DISPATCH_FALLIBLE is not specified.
+                                   uint32_t flags) {
   nsCOMPtr<nsIRunnable> event(task);  // so it gets released on failure paths
   nsCOMPtr<nsIThreadPool> pool;
   {

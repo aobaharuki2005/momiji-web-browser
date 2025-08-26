@@ -63,7 +63,7 @@ class AndroidUiThread : public nsThread {
             nsThread::NOT_MAIN_THREAD, {.stackSize = 0}) {}
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aEvent,
-                    DispatchFlags aFlags) override;
+                    uint32_t aFlags) override;
   nsresult DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
                            uint32_t aDelayMs) override;
 
@@ -73,7 +73,7 @@ class AndroidUiThread : public nsThread {
 
 NS_IMETHODIMP
 AndroidUiThread::Dispatch(already_AddRefed<nsIRunnable> aEvent,
-                          DispatchFlags aFlags) {
+                          uint32_t aFlags) {
   EnqueueTask(std::move(aEvent), 0);
   return NS_OK;
 }

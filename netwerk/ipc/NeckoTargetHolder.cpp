@@ -21,9 +21,8 @@ already_AddRefed<nsISerialEventTarget> NeckoTargetHolder::GetNeckoTarget() {
   return target.forget();
 }
 
-nsresult NeckoTargetHolder::Dispatch(
-    already_AddRefed<nsIRunnable>&& aRunnable,
-    nsIEventTarget::DispatchFlags aDispatchFlags) {
+nsresult NeckoTargetHolder::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable,
+                                     uint32_t aDispatchFlags) {
   if (mNeckoTarget) {
     return mNeckoTarget->Dispatch(std::move(aRunnable), aDispatchFlags);
   }

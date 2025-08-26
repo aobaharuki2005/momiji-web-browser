@@ -61,9 +61,14 @@ class WorkletThread final : public nsThread, public nsIObserver {
 
   // This should only be called by consumers that have an
   // nsIEventTarget/nsIThread pointer.
-  using nsThread::DelayedDispatch;
-  using nsThread::Dispatch;
-  using nsThread::DispatchFromScript;
+  NS_IMETHOD
+  Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags) override;
+
+  NS_IMETHOD
+  DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) override;
+
+  NS_IMETHOD
+  DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
 
   const RefPtr<WorkletImpl> mWorkletImpl;
 

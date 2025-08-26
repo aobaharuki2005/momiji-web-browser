@@ -7,7 +7,7 @@
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/EventQueue.h"
 
-#include "MaybeLeakRefPtr.h"
+#include "LeakRefPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITargetShutdownTask.h"
 #include "nsIThreadInternal.h"
@@ -25,9 +25,9 @@ class ThreadEventQueue::NestedSink : public ThreadTargetSink {
   NestedSink(EventQueue* aQueue, ThreadEventQueue* aOwner)
       : mQueue(aQueue), mOwner(aOwner) {}
 
-  bool PutEvent(RefPtr<nsIRunnable>& aEvent,
+  bool PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                 EventQueuePriority aPriority) final {
-    return mOwner->PutEventInternal(aEvent, aPriority, this);
+    return mOwner->PutEventInternal(std::move(aEvent), aPriority, this);
   }
 
   void Disconnect(const MutexAutoLock& aProofOfLock) final { mQueue = nullptr; }
@@ -68,17 +68,17 @@ ThreadEventQueue::ThreadEventQueue(UniquePtr<EventQueue> aQueue,
 
 ThreadEventQueue::~ThreadEventQueue() { MOZ_ASSERT(mNestedQueues.IsEmpty()); }
 
-bool ThreadEventQueue::PutEvent(RefPtr<nsIRunnable>& aEvent,
+bool ThreadEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                                 EventQueuePriority aPriority) {
-  return PutEventInternal(aEvent, aPriority, nullptr);
+  return PutEventInternal(std::move(aEvent), aPriority, nullptr);
 }
 
-bool ThreadEventQueue::PutEventInternal(RefPtr<nsIRunnable>& aEvent,
+bool ThreadEventQueue::PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
                                         EventQueuePriority aPriority,
                                         NestedSink* aSink) {
-  // NOTE: We leave the nsIRunnable's reference with our caller until we've
-  // successfully dispatched it, so that our caller can handle leaking the event
-  // on error if required.
+  // We want to leak the reference when we fail to dispatch it, so that
+  // we won't release the event in a wrong thread.
+  LeakRefPtr<nsIRunnable> event(std::move(aEvent));
   nsCOMPtr<nsIThreadObserver> obs;
 
   {
@@ -86,8 +86,8 @@ bool ThreadEventQueue::PutEventInternal(RefPtr<nsIRunnable>& aEvent,
     // Do this outside the lock, so runnables implemented in JS can QI
     // (and possibly GC) outside of the lock.
     if (mIsMainThread) {
-      if (nsCOMPtr<nsIRunnablePriority> runnablePrio =
-              do_QueryInterface(aEvent)) {
+      auto* e = event.get();  // can't do_QueryInterface on LeakRefPtr.
+      if (nsCOMPtr<nsIRunnablePriority> runnablePrio = do_QueryInterface(e)) {
         uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
         runnablePrio->GetPriority(&prio);
         if (prio == nsIRunnablePriority::PRIORITY_CONTROL) {
@@ -121,9 +121,9 @@ bool ThreadEventQueue::PutEventInternal(RefPtr<nsIRunnable>& aEvent,
         return false;
       }
 
-      aSink->mQueue->PutEvent(aEvent.forget(), aPriority, lock);
+      aSink->mQueue->PutEvent(event.take(), aPriority, lock);
     } else {
-      mBaseQueue->PutEvent(aEvent.forget(), aPriority, lock);
+      mBaseQueue->PutEvent(event.take(), aPriority, lock);
     }
 
     mEventsAvailable.Notify();

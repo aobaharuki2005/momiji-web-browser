@@ -78,13 +78,14 @@ NS_IMPL_ISUPPORTS(LazyIdleThread, nsIEventTarget, nsISerialEventTarget,
                   nsIObserver)
 
 NS_IMETHODIMP
-LazyIdleThread::DispatchFromScript(nsIRunnable* aEvent, DispatchFlags aFlags) {
-  return Dispatch(do_AddRef(aEvent), aFlags);
+LazyIdleThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags) {
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return Dispatch(event.forget(), aFlags);
 }
 
 NS_IMETHODIMP
 LazyIdleThread::Dispatch(already_AddRefed<nsIRunnable> aEvent,
-                         DispatchFlags aFlags) {
+                         uint32_t aFlags) {
   return mTaskQueue->Dispatch(std::move(aEvent), aFlags);
 }
 

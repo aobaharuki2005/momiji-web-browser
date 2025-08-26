@@ -473,10 +473,10 @@ class MockEventTarget final : public nsIEventTarget {
     *_retval = false;
     return NS_OK;
   }
-  NS_IMETHOD Dispatch(already_AddRefed<nsIRunnable>, DispatchFlags) {
+  NS_IMETHOD Dispatch(already_AddRefed<nsIRunnable>, uint32_t) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  NS_IMETHOD DispatchFromScript(nsIRunnable*, DispatchFlags) {
+  NS_IMETHOD DispatchFromScript(nsIRunnable*, uint32_t) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   NS_IMETHOD DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {

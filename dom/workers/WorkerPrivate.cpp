@@ -96,7 +96,6 @@
 #include "nsCycleCollector.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIDUtils.h"
-#include "nsIEventTarget.h"
 #include "nsIFile.h"
 #include "nsIMemoryReporter.h"
 #include "nsIPermissionManager.h"
@@ -1580,9 +1579,9 @@ nsresult WorkerPrivate::DispatchToParent(
     RefPtr<WorkerParentDebuggeeRunnable> debuggeeRunnable =
         runnable.forget().downcast<WorkerParentDebuggeeRunnable>();
     return DispatchDebuggeeToMainThread(debuggeeRunnable.forget(),
-                                        NS_DISPATCH_FALLIBLE);
+                                        NS_DISPATCH_NORMAL);
   }
-  return DispatchToMainThread(runnable.forget(), NS_DISPATCH_FALLIBLE);
+  return DispatchToMainThread(runnable.forget());
 }
 
 nsresult WorkerPrivate::DispatchLockHeld(
@@ -1637,7 +1636,7 @@ nsresult WorkerPrivate::DispatchLockHeld(
         ("WorkerPrivate::DispatchLockHeld [%p] runnable %p dispatch to a "
          "SyncLoop(%p)",
          this, runnable.get(), aSyncLoopTarget));
-    rv = aSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_FALLIBLE);
+    rv = aSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   } else {
     // If mStatus is Pending, the WorkerPrivate initialization still can fail.
     // Append this WorkerThreadRunnable to WorkerPrivate::mPreStartRunnables,
@@ -4047,15 +4046,14 @@ nsISerialEventTarget* WorkerPrivate::MainThreadEventTargetForMessaging() {
   return mMainThreadEventTargetForMessaging;
 }
 
-nsresult WorkerPrivate::DispatchToMainThreadForMessaging(
-    nsIRunnable* aRunnable, nsIEventTarget::DispatchFlags aFlags) {
+nsresult WorkerPrivate::DispatchToMainThreadForMessaging(nsIRunnable* aRunnable,
+                                                         uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> r = aRunnable;
   return DispatchToMainThreadForMessaging(r.forget(), aFlags);
 }
 
 nsresult WorkerPrivate::DispatchToMainThreadForMessaging(
-    already_AddRefed<nsIRunnable> aRunnable,
-    nsIEventTarget::DispatchFlags aFlags) {
+    already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags) {
   return mMainThreadEventTargetForMessaging->Dispatch(std::move(aRunnable),
                                                       aFlags);
 }
@@ -4064,21 +4062,19 @@ nsISerialEventTarget* WorkerPrivate::MainThreadEventTarget() {
   return mMainThreadEventTarget;
 }
 
-nsresult WorkerPrivate::DispatchToMainThread(
-    nsIRunnable* aRunnable, nsIEventTarget::DispatchFlags aFlags) {
+nsresult WorkerPrivate::DispatchToMainThread(nsIRunnable* aRunnable,
+                                             uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> r = aRunnable;
   return DispatchToMainThread(r.forget(), aFlags);
 }
 
 nsresult WorkerPrivate::DispatchToMainThread(
-    already_AddRefed<nsIRunnable> aRunnable,
-    nsIEventTarget::DispatchFlags aFlags) {
+    already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags) {
   return mMainThreadEventTarget->Dispatch(std::move(aRunnable), aFlags);
 }
 
 nsresult WorkerPrivate::DispatchDebuggeeToMainThread(
-    already_AddRefed<WorkerRunnable> aRunnable,
-    nsIEventTarget::DispatchFlags aFlags) {
+    already_AddRefed<WorkerRunnable> aRunnable, uint32_t aFlags) {
   RefPtr<WorkerRunnable> debuggeeRunnable = std::move(aRunnable);
   MOZ_ASSERT_DEBUG_OR_FUZZING(debuggeeRunnable->IsDebuggeeRunnable());
   return mMainThreadDebuggeeEventTarget->Dispatch(debuggeeRunnable.forget(),
@@ -6614,18 +6610,21 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 WorkerPrivate::EventTarget::DispatchFromScript(nsIRunnable* aRunnable,
-                                               DispatchFlags aFlags) {
-  return Dispatch(do_AddRef(aRunnable), aFlags);
+                                               uint32_t aFlags) {
+  nsCOMPtr<nsIRunnable> event(aRunnable);
+  return Dispatch(event.forget(), aFlags);
 }
 
 NS_IMETHODIMP
 WorkerPrivate::EventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                                     DispatchFlags aFlags) {
+                                     uint32_t aFlags) {
   // May be called on any thread!
-
-  // NOTE: This nsIEventTarget implementation never leaks aRunnable, even if
-  // NS_DISPATCH_FALLIBLE is not set.
   nsCOMPtr<nsIRunnable> event(aRunnable);
+
+  // Workers only support asynchronous dispatch for now.
+  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   RefPtr<WorkerRunnable> workerRunnable;
 

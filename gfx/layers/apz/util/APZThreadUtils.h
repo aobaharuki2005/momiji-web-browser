@@ -49,7 +49,7 @@ class APZThreadUtils {
    */
   static void RunOnControllerThread(
       RefPtr<Runnable>&& aTask,
-      nsIEventTarget::DispatchFlags flags = nsIEventTarget::DISPATCH_NORMAL);
+      uint32_t flags = nsIEventTarget::DISPATCH_NORMAL);
 
   /**
    * Get the controller thread.

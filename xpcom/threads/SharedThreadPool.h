@@ -10,7 +10,6 @@
 #include <utility>
 #include <type_traits>
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/MaybeLeakRefPtr.h"
 #include "mozilla/RefCountType.h"
 #include "nsCOMPtr.h"
 #include "nsID.h"
@@ -66,18 +65,14 @@ class SharedThreadPool : public nsIThreadPool {
     return Dispatch(event, NS_DISPATCH_AT_END);
   }
 
-  NS_IMETHOD DispatchFromScript(nsIRunnable* event,
-                                DispatchFlags flags) override {
+  NS_IMETHOD DispatchFromScript(nsIRunnable* event, uint32_t flags) override {
     return Dispatch(event, flags);
   }
 
   NS_IMETHOD Dispatch(already_AddRefed<nsIRunnable> event,
-                      DispatchFlags flags = NS_DISPATCH_NORMAL) override {
-    // NOTE: Like `nsThreadPool`, this method never leaks `event` on failure,
-    // whether or not NS_DISPATCH_FALLIBLE is specified.
-    nsCOMPtr<nsIRunnable> runnable(event);
+                      uint32_t flags = NS_DISPATCH_NORMAL) override {
     return !mPool ? NS_ERROR_NULL_POINTER
-                  : mPool->Dispatch(runnable.forget(), flags);
+                  : mPool->Dispatch(std::move(event), flags);
   }
 
   NS_IMETHOD DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override {

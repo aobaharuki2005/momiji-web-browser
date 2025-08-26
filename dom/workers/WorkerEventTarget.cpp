@@ -149,18 +149,16 @@ void WorkerEventTarget::ForgetWorkerPrivate(WorkerPrivate* aWorkerPrivate) {
 }
 
 NS_IMETHODIMP
-WorkerEventTarget::DispatchFromScript(nsIRunnable* aRunnable,
-                                      DispatchFlags aFlags) {
+WorkerEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
   LOGV(("WorkerEventTarget::DispatchFromScript [%p] aRunnable: %p", this,
         aRunnable));
-  return Dispatch(do_AddRef(aRunnable), aFlags);
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  return Dispatch(runnable.forget(), aFlags);
 }
 
 NS_IMETHODIMP
 WorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                            DispatchFlags aFlags) {
-  // NOTE: This dispatch implementation does not leak even if
-  // `NS_DISPATCH_FALLIBLE` is not set.
+                            uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   LOGV(
       ("WorkerEventTarget::Dispatch [%p] aRunnable: %p", this, runnable.get()));

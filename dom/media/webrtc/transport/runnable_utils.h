@@ -24,9 +24,9 @@ namespace detail {
 
 enum RunnableResult { NoResult, ReturnsResult };
 
-static inline nsresult RunOnThreadInternal(
-    nsIEventTarget* thread, nsIRunnable* runnable,
-    nsIEventTarget::DispatchFlags flags) {
+static inline nsresult RunOnThreadInternal(nsIEventTarget* thread,
+                                           nsIRunnable* runnable,
+                                           uint32_t flags) {
   return thread->Dispatch(runnable, flags);
 }
 
@@ -172,8 +172,7 @@ runnable_args_memfn_ret<R, Class, M, std::decay_t<Args>...>* WrapRunnableRet(
 
 static inline nsresult RUN_ON_THREAD(
     nsIEventTarget* thread,
-    detail::runnable_args_base<detail::NoResult>* runnable,
-    nsIEventTarget::DispatchFlags flags) {
+    detail::runnable_args_base<detail::NoResult>* runnable, uint32_t flags) {
   return detail::RunOnThreadInternal(
       thread, static_cast<nsIRunnable*>(runnable), flags);
 }

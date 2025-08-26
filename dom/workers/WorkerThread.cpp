@@ -173,7 +173,7 @@ nsresult WorkerThread::DispatchPrimaryRunnable(
   }
 #endif
 
-  nsresult rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_FALLIBLE);
+  nsresult rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -203,7 +203,7 @@ nsresult WorkerThread::DispatchAnyThread(
 #endif
 
   nsresult rv =
-      nsThread::Dispatch(aWorkerRunnable.forget(), NS_DISPATCH_FALLIBLE);
+      nsThread::Dispatch(aWorkerRunnable.forget(), NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -216,21 +216,23 @@ nsresult WorkerThread::DispatchAnyThread(
 }
 
 NS_IMETHODIMP
-WorkerThread::DispatchFromScript(nsIRunnable* aRunnable, DispatchFlags aFlags) {
-  return Dispatch(do_AddRef(aRunnable), aFlags);
+WorkerThread::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  return Dispatch(runnable.forget(), aFlags);
 }
 
 NS_IMETHODIMP
 WorkerThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                       DispatchFlags aFlags) {
+                       uint32_t aFlags) {
   // May be called on any thread!
-
-  // NOTE: To maintain historical behaviour we don't leak on error cases within
-  // WorkerThread::Dispatch even if `NS_DISPATCH_FALLIBLE` is not specified. We
-  // may want to change this for consistency in the future.
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);  // in case we exit early
 
   LOGV(("WorkerThread::Dispatch [%p] runnable: %p", this, runnable.get()));
+
+  // Workers only support asynchronous dispatch.
+  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   const bool onWorkerThread = PR_GetCurrentThread() == mThread;
 
@@ -261,7 +263,7 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
   }
 
   nsresult rv;
-  rv = nsThread::Dispatch(runnable.forget(), aFlags);
+  rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 
   if (!onWorkerThread && workerPrivate) {
     // We need to wake the worker thread if we're not already on the right

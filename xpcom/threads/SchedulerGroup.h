@@ -7,16 +7,18 @@
 #ifndef mozilla_SchedulerGroup_h
 #define mozilla_SchedulerGroup_h
 
-#include "nsIEventTarget.h"
+#include "nscore.h"
 #include "mozilla/AlreadyAddRefed.h"
+
+class nsIEventTarget;
+class nsIRunnable;
+class nsISerialEventTarget;
 
 namespace mozilla {
 
 class SchedulerGroup {
  public:
-  static nsresult Dispatch(
-      already_AddRefed<nsIRunnable>&& aRunnable,
-      nsIEventTarget::DispatchFlags aFlags = NS_DISPATCH_NORMAL);
+  static nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable);
 };
 
 }  // namespace mozilla
