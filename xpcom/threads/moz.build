@@ -59,6 +59,7 @@ EXPORTS.mozilla += [
     "InputTaskManager.h",
     "LazyIdleThread.h",
     "MainThreadIdlePeriod.h",
+    "MaybeLeakRefPtr.h",
     "Monitor.h",
     "MozPromise.h",
     "Mutex.h",

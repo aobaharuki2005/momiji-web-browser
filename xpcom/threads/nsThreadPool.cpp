@@ -8,6 +8,8 @@
 
 #include "nsCOMArray.h"
 #include "ThreadDelay.h"
+#include "nsIEventTarget.h"
+#include "nsIRunnable.h"
 #include "nsThreadManager.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
@@ -139,13 +141,16 @@ void nsThreadPool::DebugLogPoolStatus(MutexAutoLock& aProofOfLock,
 
 nsresult nsThreadPool::PutEvent(nsIRunnable* aEvent) {
   nsCOMPtr<nsIRunnable> event(aEvent);
-  return PutEvent(event.forget(), 0);
+  return PutEvent(event.forget(), NS_DISPATCH_NORMAL);
 }
 
 nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
-                                uint32_t aFlags) {
-  // Avoid spawning a new thread while holding the event queue lock...
+                                DispatchFlags aFlags) {
+  // NOTE: To maintain existing behaviour, we never leak aEvent on error, even
+  // if NS_DISPATCH_FALLIBLE is not specified.
+  nsCOMPtr<nsIRunnable> event(aEvent);
 
+  // Avoid spawning a new thread while holding the event queue lock...
   bool spawnThread = false;
   uint32_t stackSize = 0;
   nsCString name;
@@ -156,7 +161,6 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    nsCOMPtr<nsIRunnable> event(aEvent);
     LogRunnable::LogDispatch(event);
     mEvents.PutEvent(event.forget(), EventQueuePriority::Normal, lock);
 
@@ -262,8 +266,12 @@ void nsThreadPool::ShutdownThread(nsIThread* aThread) {
   // shutdown requires this thread have an event loop (and it may not, see bug
   // 10204784).  The simplest way to cover all cases is to asynchronously
   // shutdown aThread from the main thread.
-  SchedulerGroup::Dispatch(NewRunnableMethod(
-      "nsIThread::AsyncShutdown", aThread, &nsIThread::AsyncShutdown));
+  // NOTE: If this fails, it's OK, as XPCOM shutdown will already have destroyed
+  // the nsThread for us.
+  SchedulerGroup::Dispatch(
+      NewRunnableMethod("nsIThread::AsyncShutdown", aThread,
+                        &nsIThread::AsyncShutdown),
+      NS_DISPATCH_FALLIBLE);
 }
 
 NS_IMETHODIMP
@@ -475,23 +483,24 @@ nsThreadPool::Run() {
 }
 
 NS_IMETHODIMP
-nsThreadPool::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags) {
-  nsCOMPtr<nsIRunnable> event(aEvent);
-  return Dispatch(event.forget(), aFlags);
+nsThreadPool::DispatchFromScript(nsIRunnable* aEvent, DispatchFlags aFlags) {
+  return Dispatch(do_AddRef(aEvent), aFlags);
 }
 
 NS_IMETHODIMP
-nsThreadPool::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) {
-  LOG(("THRD-P(%p) dispatch [%p %x]\n", this, /* XXX aEvent*/ nullptr, aFlags));
+nsThreadPool::Dispatch(already_AddRefed<nsIRunnable> aEvent,
+                       DispatchFlags aFlags) {
+  // NOTE: To maintain existing behaviour, we never leak aEvent on error, even
+  // if NS_DISPATCH_FALLIBLE is not specified.
+  nsCOMPtr<nsIRunnable> event(aEvent);
+
+  LOG(("THRD-P(%p) dispatch [%p %x]\n", this, event.get(), aFlags));
 
   if (NS_WARN_IF(mShutdown)) {
-    nsCOMPtr<nsIRunnable> event(aEvent);
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL || aFlags == NS_DISPATCH_AT_END,
-               "unexpected dispatch flags");
-  PutEvent(std::move(aEvent), aFlags);
+  PutEvent(event.forget(), aFlags);
   return NS_OK;
 }
 
