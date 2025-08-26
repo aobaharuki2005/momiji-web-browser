@@ -1040,7 +1040,8 @@ void nsPresContext::UpdateContainerQueryStylesAndAnchorPosLayout() {
   AUTO_PROFILER_MARKER_UNTYPED("UpdateContainerQueryStyles", LAYOUT, {});
 
   using AnchorPosUpdateResult = PresShell::AnchorPosUpdateResult;
-  if (result == AnchorPosUpdateResult::NotApplicable || result == AnchorPosUpdateResult::NeedReflow) {
+  if (result == AnchorPosUpdateResult::NotApplicable ||
+      result == AnchorPosUpdateResult::NeedReflow) {
     PresShell()->DoFlushLayout(/* aInterruptible = */ false);
   }
 
