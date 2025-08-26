@@ -428,16 +428,13 @@ class TabManagementFragment : Fragment() {
             dismissTabManager()
         }
 
-        observePrivateModeLock(
-            lockNormalMode = true,
-            onPrivateModeLocked = {
-                if (tabsTrayStore.state.selectedPage == Page.PrivateTabs) {
-                    findNavController().navigate(
-                        NavGraphDirections.actionGlobalUnlockPrivateTabsFragment(NavigationOrigin.TABS_TRAY),
-                    )
-                }
-            },
-        )
+        observePrivateModeLock(lockNormalMode = true) {
+            if (tabsTrayStore.state.selectedPage == Page.PrivateTabs) {
+                findNavController().navigate(
+                    NavGraphDirections.actionGlobalUnlockPrivateTabsFragment(NavigationOrigin.TABS_TRAY),
+                )
+            }
+        }
     }
 
     override fun onResume() {
