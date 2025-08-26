@@ -1027,8 +1027,9 @@ class LocalHostPermissionPrompt extends PermissionPromptForRequest {
 
   get popupOptions() {
     let options = {
-      // Add a URL to learn more about localhost permissions
-      // See Bug 1978017
+      learnMoreURL: Services.urlFormatter.formatURLPref(
+        "browser.lna.warning.infoURL"
+      ),
       displayURI: false,
       name: this.getPrincipalName(),
     };
@@ -1248,9 +1249,10 @@ class LocalNetworkPermissionPrompt extends PermissionPromptForRequest {
   }
 
   get popupOptions() {
-    // add a URL to learn more about local network permissions
-    // See Bug 1978017
     let options = {
+      learnMoreURL: Services.urlFormatter.formatURLPref(
+        "browser.lna.warning.infoURL"
+      ),
       displayURI: false,
       name: this.getPrincipalName(),
     };
