@@ -105,8 +105,6 @@ class MP4SampleIndex {
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges,
                        bool aCanEvict);
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges);
-  media::TimeUnit GetEndCompositionIfBuffered(
-      const mozilla::MediaByteRangeSet& aByteRanges);
   mozilla::media::TimeIntervals ConvertByteRangesToTimeRanges(
       const mozilla::MediaByteRangeSet& aByteRanges);
   uint64_t GetEvictionOffset(const media::TimeUnit& aTime);

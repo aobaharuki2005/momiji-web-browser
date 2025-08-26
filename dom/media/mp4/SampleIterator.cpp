@@ -559,35 +559,6 @@ void MP4SampleIndex::UpdateMoofIndex(const MediaByteRangeSet& aByteRanges,
   }
 }
 
-TimeUnit MP4SampleIndex::GetEndCompositionIfBuffered(
-    const MediaByteRangeSet& aByteRanges) {
-  FallibleTArray<Sample>* index;
-  if (mMoofParser) {
-    int64_t base = mMoofParser->mMdhd.mTimescale;
-    if (!mMoofParser->ReachedEnd() || mMoofParser->Moofs().IsEmpty()) {
-      return TimeUnit::Zero(base);
-    }
-    index = &mMoofParser->Moofs().LastElement().mIndex;
-  } else {
-    index = &mIndex;
-  }
-
-  int64_t base = mMoofParser->mMdhd.mTimescale;
-  media::TimeUnit lastComposition = TimeUnit::Zero(base);
-  RangeFinder rangeFinder(aByteRanges);
-  for (size_t i = index->Length(); i--;) {
-    const Sample& sample = (*index)[i];
-    if (!rangeFinder.Contains(sample.mByteRange)) {
-      return TimeUnit::Zero(base);
-    }
-    lastComposition = std::max(lastComposition, sample.mCompositionRange.end);
-    if (sample.mSync) {
-      return lastComposition;
-    }
-  }
-  return TimeUnit::Zero(base);
-}
-
 TimeIntervals MP4SampleIndex::ConvertByteRangesToTimeRanges(
     const MediaByteRangeSet& aByteRanges) {
   if (aByteRanges == mLastCachedRanges) {
