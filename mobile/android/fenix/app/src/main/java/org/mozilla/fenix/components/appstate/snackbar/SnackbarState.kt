@@ -123,11 +123,6 @@ sealed class SnackbarState {
     data object WebCompatReportSent : SnackbarState()
 
     /**
-     * Display a snackbar when the current site's data has been deleted.
-     */
-    data object SiteDataCleared : SnackbarState()
-
-    /**
      * Display a snackbar when the current tab has been closed.
      *
      * @property isPrivate Whether closed tab was private or not.

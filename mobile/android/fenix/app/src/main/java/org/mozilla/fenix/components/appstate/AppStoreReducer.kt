@@ -177,10 +177,6 @@ internal object AppStoreReducer {
             state.copy(snackbarState = SnackbarState.DeletingBrowserDataInProgress)
         }
 
-        is AppAction.SiteDataCleared -> state.copy(
-            snackbarState = SnackbarState.SiteDataCleared,
-        )
-
         is AppAction.CurrentTabClosed -> state.copy(
             snackbarState = SnackbarState.CurrentTabClosed(action.isPrivate),
         )

@@ -252,15 +252,6 @@ class SnackbarBinding(
                         appStore.dispatch(SnackbarAction.SnackbarShown)
                     }
 
-                    SnackbarState.SiteDataCleared -> {
-                        snackbarDelegate.show(
-                            text = R.string.clear_site_data_snackbar,
-                            duration = Snackbar.LENGTH_LONG,
-                        )
-
-                        appStore.dispatch(SnackbarAction.SnackbarShown)
-                    }
-
                     is SnackbarState.CurrentTabClosed -> {
                         snackbarDelegate.show(
                             text = context.tabClosedUndoMessage(state.isPrivate),

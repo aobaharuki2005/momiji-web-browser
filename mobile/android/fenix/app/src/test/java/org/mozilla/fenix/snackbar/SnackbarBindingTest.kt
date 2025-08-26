@@ -65,7 +65,6 @@ import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.ShareTabsFai
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.ShareToAppFailed
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.SharedTabsSuccessfully
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.ShortcutAdded
-import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.SiteDataCleared
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.TranslationInProgress
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.UserAccountAuthenticated
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.WebCompatReportSent
@@ -477,21 +476,6 @@ class SnackbarBindingTest {
         )
 
         assertEquals(None(CopyLinkToClipboard), appStore.state.snackbarState)
-    }
-
-    @Test
-    fun `WHEN site data is cleared THEN display a snackbar`() {
-        val binding = buildSnackbarBinding()
-        binding.start()
-
-        appStore.dispatch(AppAction.SiteDataCleared)
-        waitForStoreToSettle()
-
-        verify(snackbarDelegate).show(
-            text = R.string.clear_site_data_snackbar,
-        )
-
-        assertEquals(None(SiteDataCleared), appStore.state.snackbarState)
     }
 
     @Test

@@ -140,11 +140,6 @@ sealed class AppAction : Action {
     data object DeleteAndQuitStarted : AppAction()
 
     /**
-     * Action dispatched when the current site's data has been cleared.
-     */
-    data object SiteDataCleared : AppAction()
-
-    /**
      * Action dispatched when the current tab has been closed.
      *
      * @property isPrivate Whether the closed tab was private or not.
