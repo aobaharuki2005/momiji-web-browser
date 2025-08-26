@@ -18,6 +18,7 @@
 #include "nsINode.h"
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
+#include "nsStyleStruct.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -288,6 +289,80 @@ nsIFrame* AnchorPositioningUtils::FindFirstAcceptableAnchor(
 
   // If we reach here, we didn't find any acceptable anchor.
   return nullptr;
+}
+
+// Find the aContainer's child that is the ancestor of aDescendant.
+static const nsIFrame* TraverseUpToContainerChild(const nsIFrame* aContainer,
+                                                  const nsIFrame* aDescendant) {
+  const auto* current = aDescendant;
+  while (true) {
+    const auto* parent = current->GetParent();
+    if (!parent) {
+      return nullptr;
+    }
+    if (parent == aContainer) {
+      return current;
+    }
+    current = parent;
+  }
+}
+
+Maybe<AnchorPosInfo> AnchorPositioningUtils::GetAnchorPosRect(
+    const nsIFrame* aAbsoluteContainingBlock, const nsIFrame* aAnchor,
+    bool aCBRectIsvalid,
+    Maybe<AnchorPosResolutionData>* aReferencedAnchorsEntry) {
+  auto rect = [&]() -> Maybe<nsRect> {
+    if (aCBRectIsvalid) {
+      const nsRect result = aAnchor->GetRectRelativeToSelf();
+      const auto offset = aAnchor->GetOffsetTo(aAbsoluteContainingBlock);
+      // Easy, just use the existing function.
+      return Some(result + offset);
+    }
+
+    // Ok, containing block doesn't have its rect fully resolved. Figure out
+    // rect relative to the child of containing block that is also the ancestor
+    // of the anchor, and manually compute the offset.
+    // TODO(dshin): This wouldn't handle anchor in a previous top layer.
+    const auto* containerChild =
+        TraverseUpToContainerChild(aAbsoluteContainingBlock, aAnchor);
+    if (!containerChild) {
+      return Nothing{};
+    }
+
+    if (aAnchor == containerChild) {
+      // Anchor is the direct child of anchor's CBWM.
+      return Some(aAnchor->GetRect());
+    }
+
+    // TODO(dshin): Already traversed up to find `containerChild`, and we're
+    // going to do it again here, which feels a little wasteful.
+    const nsRect rectToContainerChild = aAnchor->GetRectRelativeToSelf();
+    const auto offset = aAnchor->GetOffsetTo(containerChild);
+    return Some(rectToContainerChild + offset + containerChild->GetPosition());
+  }();
+  return rect.map([&](const nsRect& aRect) {
+    // We need to position the border box of the anchor within the abspos
+    // containing block's size - So the rectangle's size (i.e. Anchor size)
+    // stays the same, while "the outer rectangle" (i.e. The abspos cb size)
+    // "shrinks" by shifting the position.
+    const auto border = aAbsoluteContainingBlock->GetUsedBorder();
+    const nsPoint borderTopLeft{border.left, border.top};
+    const auto rect = aRect - borderTopLeft;
+    if (aReferencedAnchorsEntry) {
+      // If a partially resolved entry exists, make sure that it matches what we
+      // have now.
+      MOZ_ASSERT_IF(*aReferencedAnchorsEntry,
+                    aReferencedAnchorsEntry->ref().mSize == rect.Size());
+      *aReferencedAnchorsEntry = Some(AnchorPosResolutionData{
+          rect.Size(),
+          Some(rect.TopLeft()),
+      });
+    }
+    return AnchorPosInfo{
+        .mRect = rect,
+        .mContainingBlock = aAbsoluteContainingBlock,
+    };
+  });
 }
 
 }  // namespace mozilla
