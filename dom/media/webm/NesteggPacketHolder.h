@@ -117,10 +117,10 @@ class WebMPacketQueue {
     mQueue.push_front(std::move(aItem));
   }
 
-  already_AddRefed<NesteggPacketHolder> PopFront() {
+  RefPtr<NesteggPacketHolder> PopFront() {
     RefPtr<NesteggPacketHolder> result = std::move(mQueue.front());
     mQueue.pop_front();
-    return result.forget();
+    return result;
   }
 
   void Reset() {

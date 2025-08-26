@@ -173,16 +173,17 @@ class WebMDemuxer : public MediaDataDemuxer,
                         const media::TimeUnit& aTarget);
   CryptoTrack GetTrackCrypto(TrackInfo::TrackType aType, size_t aTrackNumber);
 
-  // Read a packet from the nestegg file. Returns nullptr if all packets for
-  // the particular track have been read. Pass TrackInfo::kVideoTrack or
-  // TrackInfo::kVideoTrack to indicate the type of the packet we want to read.
-  nsresult NextPacket(TrackInfo::TrackType aType,
-                      RefPtr<NesteggPacketHolder>& aPacket);
+  // Read a packet from the nestegg file.
+  // Returns NS_ERROR_DOM_MEDIA_END_OF_STREAM if all packets for the
+  // particular track have been read. Pass TrackInfo::kVideoTrack or
+  // TrackInfo::kVideoTrack to indicate the type of the packet to read.
+  Result<RefPtr<NesteggPacketHolder>, nsresult> NextPacket(
+      TrackInfo::TrackType aType);
 
   // Internal method that demuxes the next packet from the stream. The caller
   // is responsible for making sure it doesn't get lost.
-  nsresult DemuxPacket(TrackInfo::TrackType aType,
-                       RefPtr<NesteggPacketHolder>& aPacket);
+  Result<RefPtr<NesteggPacketHolder>, nsresult> DemuxPacket(
+      TrackInfo::TrackType aType);
 
   // libnestegg audio and video context for webm container.
   // Access on reader's thread only.

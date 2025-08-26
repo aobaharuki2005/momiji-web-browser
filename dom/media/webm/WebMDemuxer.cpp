@@ -594,12 +594,11 @@ CryptoTrack WebMDemuxer::GetTrackCrypto(TrackInfo::TrackType aType,
 
 nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
                                     MediaRawDataQueue* aSamples) {
-  RefPtr<NesteggPacketHolder> holder;
-  nsresult rv = NextPacket(aType, holder);
-
-  if (NS_FAILED(rv)) {
-    return rv;
+  auto result = NextPacket(aType);
+  if (result.isErr()) {
+    return result.unwrapErr();
   }
+  RefPtr<NesteggPacketHolder> holder = result.unwrap();
 
   int r = 0;
   unsigned int count = 0;
@@ -618,12 +617,15 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
 
   // The end time of this frame is the start time of the next frame.
   // Attempt to fetch the timestamp of the next packet for this track.
-  RefPtr<NesteggPacketHolder> next_holder;
-  rv = NextPacket(aType, next_holder);
-  if (NS_FAILED(rv) && rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-    WEBM_DEBUG("NextPacket: error");
-    return rv;
+  result = NextPacket(aType);
+  if (result.isErr()) {
+    nsresult rv = result.unwrapErr();
+    if (rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+      WEBM_DEBUG("NextPacket: error");
+      return rv;
+    }
   }
+  RefPtr<NesteggPacketHolder> next_holder = result.unwrapOr(nullptr);
 
   int64_t next_tstamp = INT64_MIN;
   auto calculateNextTimestamp = [&](auto pushPacket,
@@ -913,8 +915,8 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   return NS_OK;
 }
 
-nsresult WebMDemuxer::NextPacket(TrackInfo::TrackType aType,
-                                 RefPtr<NesteggPacketHolder>& aPacket) {
+Result<RefPtr<NesteggPacketHolder>, nsresult> WebMDemuxer::NextPacket(
+    TrackInfo::TrackType aType) {
   bool isVideo = aType == TrackInfo::kVideoTrack;
 
   // Flag to indicate that we do need to playback these types of
@@ -923,40 +925,34 @@ nsresult WebMDemuxer::NextPacket(TrackInfo::TrackType aType,
 
   if (!hasType) {
     WEBM_DEBUG("No media type found");
-    return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+    return Err(NS_ERROR_DOM_MEDIA_DEMUXER_ERR);
   }
 
   // The packet queue for the type that we are interested in.
   WebMPacketQueue& packets = isVideo ? mVideoPackets : mAudioPackets;
 
   if (packets.GetSize() > 0) {
-    aPacket = packets.PopFront();
-    return NS_OK;
+    return packets.PopFront();
   }
 
   // Track we are interested in
   uint32_t ourTrack = isVideo ? mVideoTrack : mAudioTrack;
 
   do {
-    RefPtr<NesteggPacketHolder> holder;
-    nsresult rv = DemuxPacket(aType, holder);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (!holder) {
-      WEBM_DEBUG("Couldn't demux packet");
-      return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+    auto result = DemuxPacket(aType);
+    if (result.isErr()) {
+      return result.propagateErr();
     }
 
+    RefPtr<NesteggPacketHolder> holder = result.unwrap();
     if (ourTrack == holder->Track()) {
-      aPacket = holder;
-      return NS_OK;
+      return holder;
     }
   } while (true);
 }
 
-nsresult WebMDemuxer::DemuxPacket(TrackInfo::TrackType aType,
-                                  RefPtr<NesteggPacketHolder>& aPacket) {
+Result<RefPtr<NesteggPacketHolder>, nsresult> WebMDemuxer::DemuxPacket(
+    TrackInfo::TrackType aType) {
   nestegg_packet* packet;
   const NestEggContext& context = CallbackContext(aType);
   int r = nestegg_read_packet(context.mContext, &packet);
@@ -965,10 +961,10 @@ nsresult WebMDemuxer::DemuxPacket(TrackInfo::TrackType aType,
     nestegg_read_reset(context.mContext);
     if (r == 0) {
       WEBM_DEBUG("EOS");
-      return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
+      return Err(NS_ERROR_DOM_MEDIA_END_OF_STREAM);
     } else if (r < 0) {
       WEBM_DEBUG("nestegg_read_packet: error");
-      return NS_FAILED(rv) ? rv : NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+      return Err(NS_FAILED(rv) ? rv : NS_ERROR_DOM_MEDIA_DEMUXER_ERR);
     }
   }
 
@@ -976,18 +972,17 @@ nsresult WebMDemuxer::DemuxPacket(TrackInfo::TrackType aType,
   r = nestegg_packet_track(packet, &track);
   if (r == -1) {
     WEBM_DEBUG("nestegg_packet_track: error");
-    return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+    return Err(NS_ERROR_DOM_MEDIA_DEMUXER_ERR);
   }
 
   int64_t offset = Resource(aType).Tell();
   RefPtr<NesteggPacketHolder> holder = new NesteggPacketHolder();
   if (!holder->Init(packet, offset, track, false)) {
     WEBM_DEBUG("NesteggPacketHolder::Init: error");
-    return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+    return Err(NS_ERROR_DOM_MEDIA_DEMUXER_ERR);
   }
 
-  aPacket = holder;
-  return NS_OK;
+  return holder;
 }
 
 void WebMDemuxer::PushAudioPacket(NesteggPacketHolder* aItem) {
