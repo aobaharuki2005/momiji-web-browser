@@ -1057,7 +1057,6 @@
       aTab,
       aIconURL = "",
       aOriginalURL = aIconURL,
-      aLoadingPrincipal = null,
       aClearImageFirst = false
     ) {
       let makeString = url => (url instanceof Ci.nsIURI ? url.spec : url);
@@ -1069,7 +1068,6 @@
 
       if (
         aIconURL &&
-        !aLoadingPrincipal &&
         !LOCAL_PROTOCOLS.some(protocol => aIconURL.startsWith(protocol))
       ) {
         console.error(
@@ -1086,15 +1084,9 @@
           aTab.removeAttribute("image");
         }
         if (aIconURL) {
-          if (aLoadingPrincipal) {
-            aTab.setAttribute("iconloadingprincipal", aLoadingPrincipal);
-          } else {
-            aTab.removeAttribute("iconloadingprincipal");
-          }
           aTab.setAttribute("image", aIconURL);
         } else {
           aTab.removeAttribute("image");
-          aTab.removeAttribute("iconloadingprincipal");
         }
         this._tabAttrModified(aTab, ["image"]);
       }

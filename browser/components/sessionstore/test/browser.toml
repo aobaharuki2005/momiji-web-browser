@@ -205,9 +205,6 @@ tags = "os_integration"
 
 ["browser_not_collect_when_idle.js"]
 
-["browser_old_favicon.js"]
-https_first_disabled = true
-
 ["browser_page_title.js"]
 
 ["browser_parentProcessRestoreHash.js"]

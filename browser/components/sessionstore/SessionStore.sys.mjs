@@ -5016,16 +5016,10 @@ var SessionStoreInternal = {
         !activePageData ||
         (activePageData && activePageData.url != "about:blank")
       ) {
-        win.gBrowser.setIcon(
-          tab,
-          tabData.image,
-          undefined,
-          tabData.iconLoadingPrincipal
-        );
+        win.gBrowser.setIcon(tab, tabData.image);
       }
       lazy.TabStateCache.update(browser.permanentKey, {
         image: null,
-        iconLoadingPrincipal: null,
       });
     }
   },
@@ -6283,7 +6277,6 @@ var SessionStoreInternal = {
       // When that's done it will be removed from the cache and we always
       // collect it in TabState._collectBaseTabData().
       image: tabData.image || "",
-      iconLoadingPrincipal: tabData.iconLoadingPrincipal || null,
       searchMode: tabData.searchMode || null,
       userTypedValue: tabData.userTypedValue || "",
       userTypedClear: tabData.userTypedClear || 0,
