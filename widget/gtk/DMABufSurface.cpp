@@ -224,20 +224,21 @@ RefPtr<GLContext> DMABufSurface::ClaimSnapshotGLContext() {
     sSnapshotContext->mOwningThreadId = Nothing();  // No singular owner.
   }
   if (!sSnapshotContext->MakeCurrent()) {
-    LOGDMABUFS("ClaimSnapshotGLContext: Failed to make GLContext current.");
+    gfxCriticalNote
+        << "ClaimSnapshotGLContext: Failed to make GLContext current";
     return nullptr;
   }
   return sSnapshotContext;
 }
 
 void DMABufSurface::ReturnSnapshotGLContext(RefPtr<GLContext> aGLContext) {
-  // direct eglMakeCurrent() call breaks current context caching so make sure
-  // it's not used.
-  MOZ_ASSERT(!aGLContext->mUseTLSIsCurrent);
-  if (!aGLContext->IsCurrent()) {
+  if (!aGLContext || !aGLContext->IsCurrent()) {
     LOGDMABUFS("ReturnSnapshotGLContext() failed, is not current!");
     return;
   }
+  // direct eglMakeCurrent() call breaks current context caching so make sure
+  // it's not used.
+  MOZ_ASSERT(!aGLContext->mUseTLSIsCurrent);
   const auto& gle = gl::GLContextEGL::Cast(aGLContext);
   const auto& egl = gle->mEgl;
   egl->fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
