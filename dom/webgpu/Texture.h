@@ -29,23 +29,23 @@ class CanvasContext;
 class Device;
 class TextureView;
 
-class Texture final : public ObjectBase, public ChildOf<Device> {
+class Texture final : public nsWrapperCache,
+                      public ObjectBase,
+                      public ChildOf<Device> {
  public:
   GPU_DECL_CYCLE_COLLECTION(Texture)
   GPU_DECL_JS_WRAP(Texture)
 
   Texture(Device* const aParent, RawId aId,
           const dom::GPUTextureDescriptor& aDesc);
-  Device* GetDevice() { return mParent; }
-  const RawId mId;
+
   const dom::GPUTextureFormat mFormat;
   const Maybe<uint8_t> mBytesPerBlock;
 
   WeakPtr<CanvasContext> mTargetContext;
 
  private:
-  virtual ~Texture();
-  void Cleanup();
+  virtual ~Texture() = default;
 
   const ffi::WGPUExtent3d mSize;
   const uint32_t mMipLevelCount;

@@ -262,7 +262,7 @@ extern void wgpu_parent_queue_submit(
   auto textures = Span(aTextureIds, aTextureIdsLength);
   auto externalTextureSources =
       Span(aExternalTextureSourceIds, aExternalTextureSourceIdsLength);
-  parent->QueueSubmit(aDeviceId, aQueueId, command_buffers, textures,
+  parent->QueueSubmit(aQueueId, aDeviceId, command_buffers, textures,
                       externalTextureSources);
 }
 
@@ -503,7 +503,7 @@ WebGPUParent::WebGPUParent(const dom::ContentParentId& aContentId)
                &WebGPUParent::MaintainDevices);
 }
 
-WebGPUParent::~WebGPUParent() {}
+WebGPUParent::~WebGPUParent() = default;
 
 void WebGPUParent::MaintainDevices() {
   ffi::wgpu_server_poll_all_devices(mContext.get(), false);

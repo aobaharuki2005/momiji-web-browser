@@ -17,8 +17,6 @@ SupportedLimits::SupportedLimits(Adapter* const aParent,
                                  const ffi::WGPULimits& aLimits)
     : ChildOf(aParent), mFfi(std::make_unique<ffi::WGPULimits>(aLimits)) {}
 
-SupportedLimits::~SupportedLimits() = default;
-
 uint64_t GetLimit(const ffi::WGPULimits& limits, const Limit limit) {
   switch (limit) {
     case Limit::MaxTextureDimension1D:

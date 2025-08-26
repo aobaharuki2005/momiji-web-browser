@@ -102,8 +102,7 @@ class SupportedLimits final : public nsWrapperCache, public ChildOf<Adapter> {
   SupportedLimits(Adapter* const aParent, const ffi::WGPULimits&);
 
  private:
-  ~SupportedLimits();
-  void Cleanup() {}
+  virtual ~SupportedLimits() = default;
 };
 
 }  // namespace mozilla::webgpu

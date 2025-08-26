@@ -40,12 +40,22 @@ using DevicePromise = MozPromise<bool, ipc::ResponseRejectReason, true>;
 
 ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x);
 
-class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
+/// The child actor is held alive by all WebGPU DOM wrapper objects since it
+/// provides access to the rust Client; even if it can't send any more
+/// messages.
+///
+/// It should not take part in cycle collection because the cycle collector can
+/// be destroyed earlier than IPDL actors; see Bug 1983205.
+///
+/// It also doesn't need to take part in cycle collection even if some of
+/// its fields contain strong references to DOM wrapper objects because
+/// we make sure that all cycles are broken either by a server message or
+/// by `ClearActorState`.
+class WebGPUChild final : public PWebGPUChild {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUChild, override)
+
  public:
   friend class layers::CompositorBridgeChild;
-
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(WebGPUChild)
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING_INHERITED(WebGPUChild)
 
  public:
   explicit WebGPUChild();
@@ -75,7 +85,18 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   virtual ~WebGPUChild();
 
   UniquePtr<ffi::WGPUClient> const mClient;
-  std::unordered_map<RawId, RefPtr<Device>> mDeviceMap;
+
+  /// This is used to relay device lost and uncaptured error messages.
+  ///
+  /// It must hold devices weakly, or else we can end up with cycles that might
+  /// never get broken. This is ok because:
+  /// - device lost messages no longer need to be relayed once there are no
+  ///   more external references to the Device, and
+  /// - uncaptured error messages will be relayed since the Device will be
+  ///   kept alive if there are any `uncapturederror` event handlers registered
+  ///   (see the call to `KeepAliveIfHasListenersFor` in its constructor).
+  std::unordered_map<RawId, WeakPtr<Device>> mDeviceMap;
+
   nsTArray<RawId> mSwapChainTexturesWaitingForSubmit;
 
   bool mScheduledFlushQueuedMessages = false;

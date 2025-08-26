@@ -24,8 +24,7 @@ class DeviceLostInfo final : public nsWrapperCache {
       : mGlobal(aGlobal), mReason(aReason), mMessage(aMessage) {}
 
  private:
-  ~DeviceLostInfo() = default;
-  void Cleanup() {}
+  virtual ~DeviceLostInfo() = default;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   const dom::GPUDeviceLostReason mReason;
