@@ -102,7 +102,7 @@ add_task(async function test_IPProtectionService_stop() {
 
   // Simulate signing in to the account
   IPProtectionService.isActive = true;
-  IPProtectionService.activatedAt = Cu.now();
+  IPProtectionService.activatedAt = ChromeUtils.now();
 
   let stoppedEventPromise = waitForEvent(
     IPProtectionService,

@@ -263,14 +263,14 @@ export class MLEngineParent extends JSProcessActorParent {
       }
 
       var engine;
-      const start = Cu.now();
+      const start = ChromeUtils.now();
 
       engine = await MLEngine.initialize({
         mlEngineParent: this,
         pipelineOptions,
         notificationsCallback,
       });
-      const creationTime = Cu.now() - start;
+      const creationTime = ChromeUtils.now() - start;
 
       Glean.firefoxAiRuntime.engineCreationSuccess[
         engine.getGleanLabel()

@@ -347,7 +347,7 @@ class PlacesSemanticHistoryManager {
         }
 
         // Capture updateTask startTime.
-        const updateStartTime = Cu.now();
+        const updateStartTime = ChromeUtils.now();
 
         try {
           lazy.logger.info("Running vector DB update task...");
@@ -434,7 +434,7 @@ class PlacesSemanticHistoryManager {
           lazy.logger.error("Error executing vector DB update task:", error);
         } finally {
           lazy.logger.info("Vector DB update task completed.");
-          const updateEndTime = Cu.now();
+          const updateEndTime = ChromeUtils.now();
           const updateTaskTime = updateEndTime - updateStartTime;
           this.#updateTaskLatency.push(updateTaskTime);
 

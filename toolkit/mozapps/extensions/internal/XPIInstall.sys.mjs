@@ -2426,7 +2426,7 @@ var DownloadAddonInstall = class extends AddonInstall {
    * Starts downloading the add-on's XPI file.
    */
   startDownload() {
-    this.downloadStartedAt = Cu.now();
+    this.downloadStartedAt = ChromeUtils.now();
 
     this.state = AddonManager.STATE_DOWNLOADING;
     if (!this._callInstallListeners("onDownloadStarted")) {

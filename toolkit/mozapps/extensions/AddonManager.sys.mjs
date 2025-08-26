@@ -3916,10 +3916,13 @@ export var AddonManagerPrivate = {
   // Start a timer, record a simple measure of the time interval when
   // timer.done() is called
   simpleTimer(aName) {
-    let startTime = Cu.now();
+    let startTime = ChromeUtils.now();
     return {
       done: () =>
-        this.recordSimpleMeasure(aName, Math.round(Cu.now() - startTime)),
+        this.recordSimpleMeasure(
+          aName,
+          Math.round(ChromeUtils.now() - startTime)
+        ),
     };
   },
 
@@ -4866,7 +4869,9 @@ AMTelemetry = {
   },
 
   onDownloadEnded(install) {
-    let download_time = Math.round(Cu.now() - install.downloadStartedAt);
+    let download_time = Math.round(
+      ChromeUtils.now() - install.downloadStartedAt
+    );
     this.recordInstallEvent(install, {
       step: "download_completed",
       download_time,
@@ -4874,7 +4879,9 @@ AMTelemetry = {
   },
 
   onDownloadFailed(install) {
-    let download_time = Math.round(Cu.now() - install.downloadStartedAt);
+    let download_time = Math.round(
+      ChromeUtils.now() - install.downloadStartedAt
+    );
     this.recordInstallEvent(install, {
       step: "download_failed",
       download_time,

@@ -462,7 +462,7 @@ export class MerinoClient {
     let useOhttp = configUrl && relayUrl;
 
     let response;
-    let startMs = Cu.now();
+    let startMs = ChromeUtils.now();
     if (!useOhttp) {
       response = await fetch(url, { signal });
     } else {
@@ -479,7 +479,7 @@ export class MerinoClient {
       });
     }
 
-    let elapsedMs = Cu.now() - startMs;
+    let elapsedMs = ChromeUtils.now() - startMs;
     let label = response.status.toString();
     if (useOhttp) {
       label += "_ohttp";

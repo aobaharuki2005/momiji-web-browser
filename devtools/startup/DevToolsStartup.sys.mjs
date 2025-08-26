@@ -909,7 +909,7 @@ DevToolsStartup.prototype = {
       // Record the timing at which this event started in order to compute later in
       // gDevTools.showToolbox, the complete time it takes to open the toolbox.
       // i.e. especially take `initDevTools` into account.
-      const startTime = Cu.now();
+      const startTime = ChromeUtils.now();
       const require = this.initDevTools("KeyShortcut", key);
       const {
         gDevToolsBrowser,

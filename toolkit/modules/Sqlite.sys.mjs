@@ -1154,7 +1154,10 @@ ConnectionData.prototype = Object.freeze({
    * longer than necessary.
    */
   _getTimeoutPromise() {
-    if (this._timeoutPromise && Cu.now() <= this._timeoutPromiseExpires) {
+    if (
+      this._timeoutPromise &&
+      ChromeUtils.now() <= this._timeoutPromiseExpires
+    ) {
       return this._timeoutPromise;
     }
     let timeoutPromise = new Promise((resolve, reject) => {
@@ -1172,7 +1175,7 @@ ConnectionData.prototype = Object.freeze({
     });
     this._timeoutPromise = timeoutPromise;
     this._timeoutPromiseExpires =
-      Cu.now() + Sqlite.TRANSACTIONS_TIMEOUT_MS * 0.2;
+      ChromeUtils.now() + Sqlite.TRANSACTIONS_TIMEOUT_MS * 0.2;
     return this._timeoutPromise;
   },
 

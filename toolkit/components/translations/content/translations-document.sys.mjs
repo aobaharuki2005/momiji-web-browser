@@ -3469,7 +3469,7 @@ export class TranslationsDocument {
    * callback without the need to explicitly bind `this` to the function object.
    */
   #handleScrollEvent = () => {
-    if (Cu.now() - this.#mostRecentScrollTimestamp < 100) {
+    if (ChromeUtils.now() - this.#mostRecentScrollTimestamp < 100) {
       // Scrolling can fire a lot of events in rapid succession, and computing the scrollY value can
       // trigger reflow, so we will limit how often we take the time to compute the scrollY value.
       // Scroll hints are critical to providing a smooth translation experience, but it's not the
@@ -3483,7 +3483,7 @@ export class TranslationsDocument {
       scrollY >= this.#previousScrollY ? "down" : "up";
 
     this.#previousScrollY = scrollY;
-    this.#mostRecentScrollTimestamp = Cu.now();
+    this.#mostRecentScrollTimestamp = ChromeUtils.now();
   };
 
   /**
@@ -3492,7 +3492,7 @@ export class TranslationsDocument {
    * @returns {boolean}
    */
   #hasUserScrolledRecently() {
-    return Cu.now() - this.#mostRecentScrollTimestamp < 200;
+    return ChromeUtils.now() - this.#mostRecentScrollTimestamp < 200;
   }
 
   /**

@@ -140,7 +140,7 @@ export default class IPProtectionContentElement extends MozLitElement {
    */
   #getFormattedTime(startMS) {
     let duration = window.Temporal.Duration.from({
-      milliseconds: Math.ceil(Cu.now() - startMS),
+      milliseconds: Math.ceil(ChromeUtils.now() - startMS),
     }).round({ smallestUnit: "seconds", largestUnit: "hours" });
 
     let formatter = new Intl.DurationFormat("en-US", {

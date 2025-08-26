@@ -214,7 +214,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.connection.start();
 
     this.isActive = true;
-    this.activatedAt = Cu.now();
+    this.activatedAt = ChromeUtils.now();
 
     this.usageObserver.start();
     this.usageObserver.addIsolationKey(this.connection.isolationKey);
@@ -248,7 +248,7 @@ class IPProtectionServiceSingleton extends EventTarget {
   stop(userAction = true) {
     this.isActive = false;
 
-    let deactivatedAt = Cu.now();
+    let deactivatedAt = ChromeUtils.now();
     let sessionLength = this.activatedAt - deactivatedAt;
 
     Glean.ipprotection.toggled.record({

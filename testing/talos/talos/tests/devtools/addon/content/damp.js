@@ -233,7 +233,7 @@ Damp.prototype = {
     // Force freeing memory now so that it doesn't happen during the next test
     await this.garbageCollect();
 
-    let duration = Math.round(Cu.now() - this._startTime);
+    let duration = Math.round(ChromeUtils.now() - this._startTime);
     dump(`${this._currentTest} took ${duration}ms.\n`);
 
     this._runNextTest();
@@ -264,7 +264,7 @@ Damp.prototype = {
     }
 
     let test = this._tests[this._nextTestIndex++];
-    this._startTime = Cu.now();
+    this._startTime = ChromeUtils.now();
     this._currentTest = test;
 
     dump(`Loading test '${test}'\n`);

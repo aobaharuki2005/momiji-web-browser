@@ -838,7 +838,7 @@ class TelemetryEvent {
     }
 
     this._startEventInfo = {
-      timeStamp: event.timeStamp || Cu.now(),
+      timeStamp: event.timeStamp || ChromeUtils.now(),
       interactionType: this._getStartInteractionType(event, searchString),
       searchString,
     };
@@ -1680,7 +1680,7 @@ class TelemetryEvent {
   }
 
   getCurrentTime() {
-    return Cu.now();
+    return ChromeUtils.now();
   }
 
   /**

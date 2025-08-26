@@ -1054,13 +1054,13 @@ export let BrowserUsageTelemetry = {
   _flowIdTS: 0,
 
   recordInteractionEvent(widgetId, source) {
-    // A note on clocks. Cu.now() is monotonic, but its behaviour across
+    // A note on clocks. ChromeUtils.now() is monotonic, but its behaviour across
     // computer sleeps is different per platform.
     // We're okay with this for flows because we're looking at idle times
     // on the order of minutes and within the same machine, so the weirdest
     // thing we may expect is a flow that accidentally continues across a
     // sleep. Until we have evidence that this is common, we're in the clear.
-    if (!this._flowId || this._flowIdTS + FLOW_IDLE_TIME < Cu.now()) {
+    if (!this._flowId || this._flowIdTS + FLOW_IDLE_TIME < ChromeUtils.now()) {
       // We submit the ping full o' events on every new flow,
       // including at startup.
       GleanPings.prototypeNoCodeEvents.submit();
@@ -1068,7 +1068,7 @@ export let BrowserUsageTelemetry = {
       // out of all events from all flows across all clients.
       this._flowId = Services.uuid.generateUUID();
     }
-    this._flowIdTS = Cu.now();
+    this._flowIdTS = ChromeUtils.now();
 
     const extra = {
       source,

@@ -463,7 +463,9 @@ export class TelemetryFeed {
     }
 
     if (session.perf.visibility_event_rcvd_ts) {
-      let absNow = this.processStartTs + Cu.now();
+      // @backward-compat { version 144 } This newtab train-hop compatibility
+      // shim can be removed once Firefox 144 makes it to the release channel.
+      let absNow = this.processStartTs + (ChromeUtils.now?.() || Cu.now());
       session.session_duration = Math.round(
         absNow - session.perf.visibility_event_rcvd_ts
       );
