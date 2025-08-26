@@ -225,10 +225,6 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     if (res.isOk() && res.unwrap() > 0) {
       uint16_t count = res.unwrap();
 
-      if (reader.Remaining() < count * 6) {
-        return nullptr;
-      }
-
       for (size_t i = 0; i < count; i++) {
         auto res_16 = reader.ReadU16();
         auto res_32 = reader.ReadU32();
