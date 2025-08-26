@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.lib.state.ext.flowScoped
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingLocked
@@ -33,6 +34,7 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.PrivateBrowsingLockAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
 import org.mozilla.fenix.settings.biometric.BiometricUtils
 import org.mozilla.fenix.settings.biometric.DefaultBiometricUtils
@@ -261,35 +263,22 @@ class PrivateBrowsingLockUseCases(appStore: AppStore) {
 /**
  * Observes the app state and triggers a callback when the user enters a locked private browsing session.
  *
- * The observer is active in the [Lifecycle.State.RESUMED] state to ensure the UI state is sync with the app state (the
- * app state might be updated while the UI is no longer active.
- *
- * @param viewLifecycleOwner The [LifecycleOwner] used to control when the observation is active.
- * @param scope The [CoroutineScope] in which the coroutine will be launched.
- * @param appStore The [AppStore] to observe the [AppState].
  * @param lockNormalMode If true, the callback will also be triggered in normal mode.
  * @param onPrivateModeLocked A callback invoked when private browsing mode is locked.
  */
-fun observePrivateModeLock(
-    viewLifecycleOwner: LifecycleOwner,
-    scope: CoroutineScope,
-    appStore: AppStore,
+fun Fragment.observePrivateModeLock(
     lockNormalMode: Boolean = false,
     onPrivateModeLocked: () -> Unit,
 ) {
-    with(viewLifecycleOwner) {
-        scope.launch {
-            lifecycle.repeatOnLifecycle(RESUMED) {
-                appStore.flow()
-                    .filter { state ->
-                        state.isPrivateScreenLocked && (state.mode == BrowsingMode.Private || lockNormalMode)
-                    }
-                    .distinctUntilChanged()
-                    .collect {
-                        onPrivateModeLocked()
-                    }
+    consumeFlow(requireComponents.appStore) { flow ->
+        flow
+            .filter { state ->
+                state.isPrivateScreenLocked && (state.mode == BrowsingMode.Private || lockNormalMode)
             }
-        }
+            .distinctUntilChanged()
+            .collect {
+                onPrivateModeLocked()
+            }
     }
 }
 

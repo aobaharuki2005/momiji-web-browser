@@ -523,9 +523,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         }
 
         observePrivateModeLock(
-            viewLifecycleOwner = viewLifecycleOwner,
-            scope = viewLifecycleOwner.lifecycleScope,
-            appStore = requireComponents.appStore,
             lockNormalMode = true,
             onPrivateModeLocked = {
                 if (tabsTrayStore.state.selectedPage == Page.PrivateTabs) {

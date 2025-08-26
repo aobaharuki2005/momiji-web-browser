@@ -866,9 +866,6 @@ class HomeFragment : Fragment() {
         observeWallpaperUpdates()
 
         observePrivateModeLock(
-            viewLifecycleOwner = viewLifecycleOwner,
-            scope = viewLifecycleOwner.lifecycleScope,
-            appStore = requireComponents.appStore,
             onPrivateModeLocked = {
                 findNavController().navigate(
                     NavGraphDirections.actionGlobalUnlockPrivateTabsFragment(NavigationOrigin.HOME_PAGE),
