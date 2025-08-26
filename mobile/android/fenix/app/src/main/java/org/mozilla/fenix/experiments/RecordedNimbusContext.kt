@@ -19,6 +19,7 @@ import org.mozilla.fenix.GleanMetrics.NimbusSystem
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.pocket.ContentRecommendationsFeatureHelper
 import org.mozilla.fenix.utils.Settings
 import java.io.File
 
@@ -207,7 +208,9 @@ class RecordedNimbusContext(
         }
 
         private fun Settings.noShortcutsStoriesMktOptOuts(context: Context) =
-            hasMarketing && !optedOutOfSponsoredTopSites(context) && hasStoriesOnHomepage
+            hasMarketing &&
+                    !optedOutOfSponsoredTopSites(context) &&
+                    !optedOutOfSponsoredStories(context)
 
         private val Settings.hasMarketing: Boolean
             get() = isMarketingTelemetryEnabled || shouldShowMarketingOnboarding
@@ -225,8 +228,11 @@ class RecordedNimbusContext(
         private fun hasSponsoredTopSiteAvailable(context: Context): Boolean =
             context.components.appStore.state.topSites.any { it is TopSite.Provided }
 
-        private val Settings.hasStoriesOnHomepage: Boolean
-            get() = showPocketRecommendationsFeature || showPocketSponsoredStories
+        private fun Settings.optedOutOfSponsoredStories(context: Context) =
+            hasStoriesOnHomepageAvailable(context) && (!showPocketSponsoredStories || !showPocketRecommendationsFeature)
+
+        private fun hasStoriesOnHomepageAvailable(context: Context): Boolean =
+            ContentRecommendationsFeatureHelper.isContentRecommendationsFeatureEnabled(context)
 
         /**
          * Creates a RecordedNimbusContext instance for test purposes
