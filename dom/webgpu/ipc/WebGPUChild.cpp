@@ -37,8 +37,6 @@
 
 namespace mozilla::webgpu {
 
-NS_IMPL_CYCLE_COLLECTION(WebGPUChild)
-
 void WebGPUChild::JsWarning(nsIGlobalObject* aGlobal,
                             const nsACString& aMessage) {
   const auto& flatString = PromiseFlatCString(aMessage);
@@ -219,7 +217,7 @@ void wgpu_child_resolve_create_shader_module_promise(
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
-  MOZ_RELEASE_ASSERT(pending_promise.shader_module->mId == aShaderModuleId);
+  MOZ_RELEASE_ASSERT(pending_promise.shader_module->GetId() == aShaderModuleId);
 
   auto ffi_messages = Span(aMessages.data, aMessages.length);
 
@@ -358,13 +356,18 @@ void WebGPUChild::FlushQueuedMessages() {
 
 ipc::IPCResult WebGPUChild::RecvUncapturedError(RawId aDeviceId,
                                                 const nsACString& aMessage) {
-  RefPtr<Device> device;
-  if (aDeviceId) {
-    const auto itr = mDeviceMap.find(aDeviceId);
-    if (itr != mDeviceMap.end()) {
-      device = itr->second.get();
-    }
+  MOZ_RELEASE_ASSERT(aDeviceId);
+
+  WeakPtr<Device> device;
+  const auto itr = mDeviceMap.find(aDeviceId);
+  if (itr != mDeviceMap.end()) {
+    device = itr->second;
   }
+
+  if (!device) {
+    return IPC_OK();
+  }
+
   // We don't want to spam the errors to the console indefinitely
   if (device->CheckNewWarning(aMessage)) {
     JsWarning(device->GetOwnerGlobal(), aMessage);
@@ -397,7 +400,11 @@ ipc::IPCResult WebGPUChild::RecvDeviceLost(RawId aDeviceId, uint8_t aReason,
 
     const auto itr = mDeviceMap.find(aDeviceId);
     if (itr != mDeviceMap.end()) {
-      auto* device = itr->second.get();
+      WeakPtr<Device> device = itr->second;
+
+      if (!device) {
+        return IPC_OK();
+      }
 
       dom::GPUDeviceLostReason reason =
           static_cast<dom::GPUDeviceLostReason>(aReason);
@@ -424,12 +431,10 @@ void WebGPUChild::SwapChainPresent(RawId aTextureId,
 }
 
 void WebGPUChild::RegisterDevice(Device* const aDevice) {
-  mDeviceMap.insert({aDevice->mId, aDevice});
+  mDeviceMap.insert({aDevice->GetId(), aDevice});
 }
 
 void WebGPUChild::UnregisterDevice(RawId aDeviceId) {
-  ffi::wgpu_client_drop_device(GetClient(), aDeviceId);
-
   mDeviceMap.erase(aDeviceId);
 }
 
@@ -481,11 +486,13 @@ void WebGPUChild::ClearActorState() {
     // Empty device map and resolve all lost promises with an "unknown" reason.
     else if (!mDeviceMap.empty()) {
       auto device_map_entry = mDeviceMap.begin();
-      auto device = std::move(device_map_entry->second);
+      WeakPtr<Device> device = device_map_entry->second;
       mDeviceMap.erase(device_map_entry->first);
 
-      device->ResolveLost(dom::GPUDeviceLostReason::Unknown,
-                          u"WebGPUChild destroyed"_ns);
+      if (device) {
+        device->ResolveLost(dom::GPUDeviceLostReason::Unknown,
+                            u"WebGPUChild destroyed"_ns);
+      }
     }
     // Pretend this worked and there is no error, per spec.
     else if (!mPendingPopErrorScopePromises.empty()) {

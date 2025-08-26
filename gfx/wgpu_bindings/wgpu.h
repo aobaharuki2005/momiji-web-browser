@@ -33,17 +33,17 @@ extern "C" {
 
 }  // namespace ffi
 
-inline ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x) {
+inline ffi::WGPUByteBuf* ToFFI(mozilla::ipc::ByteBuf* x) {
   return reinterpret_cast<ffi::WGPUByteBuf*>(x);
 }
-inline const ffi::WGPUByteBuf* ToFFI(const ipc::ByteBuf* x) {
+inline const ffi::WGPUByteBuf* ToFFI(const mozilla::ipc::ByteBuf* x) {
   return reinterpret_cast<const ffi::WGPUByteBuf*>(x);
 }
-inline ipc::ByteBuf* FromFFI(ffi::WGPUByteBuf* x) {
-  return reinterpret_cast<ipc::ByteBuf*>(x);
+inline mozilla::ipc::ByteBuf* FromFFI(ffi::WGPUByteBuf* x) {
+  return reinterpret_cast<mozilla::ipc::ByteBuf*>(x);
 }
-inline const ipc::ByteBuf* FromFFI(const ffi::WGPUByteBuf* x) {
-  return reinterpret_cast<const ipc::ByteBuf*>(x);
+inline const mozilla::ipc::ByteBuf* FromFFI(const ffi::WGPUByteBuf* x) {
+  return reinterpret_cast<const mozilla::ipc::ByteBuf*>(x);
 }
 
 }  // namespace webgpu
