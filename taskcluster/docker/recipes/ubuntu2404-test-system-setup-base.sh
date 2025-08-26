@@ -134,6 +134,7 @@ if [[ "$ARCH" == "amd64" ]]; then
     apt_packages+=('libx11-xcb1:i386')
     apt_packages+=('libxcb1:i386')
     apt_packages+=('libasound2:i386')
+    apt_packages+=('libnotify4:i386')
 
     apt-get install --allow-downgrades "${apt_packages[@]}"
 fi
