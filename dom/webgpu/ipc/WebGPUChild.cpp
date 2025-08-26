@@ -86,6 +86,15 @@ RawId WebGPUChild::RenderBundleEncoderFinishError(RawId aDeviceId,
 }
 
 namespace ffi {
+void wgpu_child_send_messages(WGPUWebGPUChildPtr aChild, uint32_t aNrOfMessages,
+                              struct WGPUByteBuf aSerializedMessages) {
+  auto* c = static_cast<WebGPUChild*>(aChild);
+  auto messages =
+      ipc::ByteBuf(aSerializedMessages.data, aSerializedMessages.len,
+                   aSerializedMessages.capacity);
+  c->SendSerializedMessages(aNrOfMessages, std::move(messages));
+}
+
 void wgpu_child_resolve_request_adapter_promise(
     WGPUWebGPUChildPtr aChild, RawId aAdapterId,
     const struct WGPUAdapterInformation* aAdapterInfo) {
@@ -340,11 +349,16 @@ void WebGPUChild::FlushQueuedMessages() {
     return;
   }
 
-  PROFILER_MARKER_FMT("WebGPU: FlushQueuedMessages", GRAPHICS_WebGPU, {},
-                      "messages: {}", nr_of_messages);
+  SendSerializedMessages(nr_of_messages, std::move(serialized_messages));
+}
+
+void WebGPUChild::SendSerializedMessages(uint32_t aNrOfMessages,
+                                         ipc::ByteBuf aSerializedMessages) {
+  PROFILER_MARKER_FMT("WebGPU: SendSerializedMessages", GRAPHICS_WebGPU, {},
+                      "messages: {}", aNrOfMessages);
 
   bool sent =
-      SendMessages(nr_of_messages, std::move(serialized_messages),
+      SendMessages(aNrOfMessages, std::move(aSerializedMessages),
                    std::move(mQueuedDataBuffers), std::move(mQueuedHandles));
   mQueuedDataBuffers.Clear();
   mQueuedHandles.Clear();

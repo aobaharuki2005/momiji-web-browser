@@ -81,6 +81,9 @@ class WebGPUChild final : public PWebGPUChild {
 
   static void JsWarning(nsIGlobalObject* aGlobal, const nsACString& aMessage);
 
+  void SendSerializedMessages(uint32_t aNrOfMessages,
+                              ipc::ByteBuf aSerializedMessages);
+
  private:
   virtual ~WebGPUChild();
 
