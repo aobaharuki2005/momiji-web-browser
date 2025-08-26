@@ -148,6 +148,7 @@ class WebMDemuxer : public MediaDataDemuxer,
     WebMDemuxer* mParent;
     MediaResourceIndex mResource;
     nestegg* mContext;
+    nsresult mLastIORV = NS_OK;
   };
 
  private:
@@ -191,9 +192,11 @@ class WebMDemuxer : public MediaDataDemuxer,
     return aType == TrackInfo::kVideoTrack ? mVideoContext.mResource
                                            : mAudioContext.mResource;
   }
+  const NestEggContext& CallbackContext(TrackInfo::TrackType aType) const {
+    return aType == TrackInfo::kVideoTrack ? mVideoContext : mAudioContext;
+  }
   nestegg* Context(TrackInfo::TrackType aType) const {
-    return aType == TrackInfo::kVideoTrack ? mVideoContext.mContext
-                                           : mAudioContext.mContext;
+    return CallbackContext(aType).mContext;
   }
 
   MediaInfo mInfo;

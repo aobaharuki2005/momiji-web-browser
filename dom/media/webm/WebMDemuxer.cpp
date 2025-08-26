@@ -60,18 +60,18 @@ static int webmdemux_read(void* aBuffer, size_t aLength, void* aUserData) {
   WebMDemuxer::NestEggContext* context =
       reinterpret_cast<WebMDemuxer::NestEggContext*>(aUserData);
   uint32_t bytes = 0;
-  nsresult rv = context->GetResource()->Read(static_cast<char*>(aBuffer),
-                                             aLength, &bytes);
+  context->mLastIORV = context->GetResource()->Read(static_cast<char*>(aBuffer),
+                                                    aLength, &bytes);
   bool eof = bytes < aLength;
-  return NS_FAILED(rv) ? -1 : eof ? 0 : 1;
+  return NS_FAILED(context->mLastIORV) ? -1 : eof ? 0 : 1;
 }
 
 static int webmdemux_seek(int64_t aOffset, int aWhence, void* aUserData) {
   MOZ_ASSERT(aUserData);
   WebMDemuxer::NestEggContext* context =
       reinterpret_cast<WebMDemuxer::NestEggContext*>(aUserData);
-  nsresult rv = context->GetResource()->Seek(aWhence, aOffset);
-  return NS_SUCCEEDED(rv) ? 0 : -1;
+  context->mLastIORV = context->GetResource()->Seek(aWhence, aOffset);
+  return NS_SUCCEEDED(context->mLastIORV) ? 0 : -1;
 }
 
 static int64_t webmdemux_tell(void* aUserData) {
@@ -960,14 +960,16 @@ nsresult WebMDemuxer::NextPacket(TrackInfo::TrackType aType,
 nsresult WebMDemuxer::DemuxPacket(TrackInfo::TrackType aType,
                                   RefPtr<NesteggPacketHolder>& aPacket) {
   nestegg_packet* packet;
-  int r = nestegg_read_packet(Context(aType), &packet);
+  const NestEggContext& context = CallbackContext(aType);
+  int r = nestegg_read_packet(context.mContext, &packet);
   if (r == 0) {
-    nestegg_read_reset(Context(aType));
+    nestegg_read_reset(context.mContext);
     WEBM_DEBUG("EOS");
     return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
   } else if (r < 0) {
     WEBM_DEBUG("nestegg_read_packet: error");
-    return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+    return NS_FAILED(context.mLastIORV) ? context.mLastIORV
+                                        : NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
 
   unsigned int track = 0;
