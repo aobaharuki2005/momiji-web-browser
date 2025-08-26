@@ -188,7 +188,7 @@ hashbrown_0_14 = { package = "hashbrown", path = "build/rust/hashbrown" }
 thiserror = { path = "build/rust/thiserror" }
 
 # Patch thin_vec with not-yet-published changes.
-thin-vec = { git = "https://github.com/Gankra/thin-vec", rev = "3b4d5c838eacf5e2156d89bfdb559b6377bd6c39" }
+thin-vec = { path = "third_party/rust/thin-vec" }
 
 # The following overrides point to dummy projects, as a temporary measure until this is resolved:
 # https://github.com/rust-lang/cargo/issues/6179
