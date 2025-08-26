@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.children
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -70,6 +71,7 @@ class BrowserToolbarIntegration(
     private val customTabId: String? = null,
     isOnboardingTab: Boolean = false,
     renderStyle: ToolbarFeature.RenderStyle = ToolbarFeature.RenderStyle.ColoredUrl,
+    private val coroutineScope: CoroutineScope = MainScope(),
 ) : LifecycleAwareFeature {
     private val presenter = ToolbarPresenter(
         toolbar,
@@ -225,7 +227,7 @@ class BrowserToolbarIntegration(
     }
 
     private fun setBrowserActionButtons() {
-        tabsCounterScope = store.flowScoped { flow ->
+        tabsCounterScope = store.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.distinctUntilChangedBy { state -> state.tabs.size > 1 }
                 .collect { state ->
                     if (state.tabs.size > 1) {
@@ -261,7 +263,7 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal fun observeEraseCfr() {
-        eraseTabsCfrScope = fragment.components?.appStore?.flowScoped { flow ->
+        eraseTabsCfrScope = fragment.components?.appStore?.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.mapNotNull { state -> state.showEraseTabsCfr }
                 .distinctUntilChanged()
                 .collect { showEraseCfr ->
@@ -313,7 +315,8 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal fun observeCookieBannerCfr() {
-        cookieBannerCfrScope = fragment.components?.appStore?.flowScoped { flow ->
+        cookieBannerCfrScope =
+            fragment.components?.appStore?.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.mapNotNull { state -> state.showCookieBannerCfr }
                 .distinctUntilChanged()
                 .collect { showCookieBannerCfr ->
@@ -376,7 +379,8 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal fun observeTrackingProtectionCfr() {
-        trackingProtectionCfrScope = fragment.components?.appStore?.flowScoped { flow ->
+        trackingProtectionCfrScope =
+            fragment.components?.appStore?.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.mapNotNull { state -> state.showTrackingProtectionCfrForTab }
                 .distinctUntilChanged()
                 .collect { showTrackingProtectionCfrForTab ->
@@ -446,7 +450,7 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal fun observerSecurityIndicatorChanges() {
-        securityIndicatorScope = store.flowScoped { flow ->
+        securityIndicatorScope = store.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabId) }
                 .distinctUntilChangedBy { tab -> tab.content.securityInfo }
                 .collect {

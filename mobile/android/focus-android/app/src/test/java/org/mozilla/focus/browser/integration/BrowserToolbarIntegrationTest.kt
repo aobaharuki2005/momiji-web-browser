@@ -5,6 +5,9 @@
 package org.mozilla.focus.browser.integration
 
 import android.view.View
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SecurityInfoState
@@ -16,11 +19,9 @@ import mozilla.components.browser.toolbar.display.DisplayToolbar.Indicators
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
@@ -34,8 +35,8 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserToolbarIntegrationTest {
-    @get:Rule
-    val mainCoroutineRule = MainCoroutineRule()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val scope = TestScope(UnconfinedTestDispatcher())
 
     private val selectedTab = createSecureTab()
 
@@ -81,6 +82,7 @@ class BrowserToolbarIntegrationTest {
                 onUrlLongClicked = { false },
                 eraseActionListener = {},
                 tabCounterListener = {},
+                coroutineScope = scope,
             ),
         )
     }
@@ -203,7 +205,7 @@ class BrowserToolbarIntegrationTest {
             ),
         ).joinBlocking()
 
-        mainCoroutineRule.testDispatcher.scheduler.advanceUntilIdle()
+        scope.testScheduler.advanceUntilIdle()
     }
 
     private fun updateTabUrl(url: String) {
@@ -211,7 +213,7 @@ class BrowserToolbarIntegrationTest {
             ContentAction.UpdateUrlAction(selectedTab.id, url),
         ).joinBlocking()
 
-        mainCoroutineRule.testDispatcher.scheduler.advanceUntilIdle()
+        scope.testScheduler.advanceUntilIdle()
     }
 
     private fun createSecureTab(): TabSessionState {

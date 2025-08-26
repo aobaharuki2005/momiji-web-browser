@@ -204,14 +204,16 @@ fun <S : State, A : Action> Store<S, A>.flow(
  * the store subscription. When the [Lifecycle] is in STOPPED state then no [State] will be received.
  * Once the [Lifecycle] switches back to at least STARTED state then the latest [State] and further
  * updates will be emitted.
+ * @param coroutineScope The [CoroutineScope] the flow will be collected in. Defaults to [MainScope].
  * @return The [CoroutineScope] [block] is getting executed in.
  */
 @MainThread
 fun <S : State, A : Action> Store<S, A>.flowScoped(
     owner: LifecycleOwner? = null,
+    coroutineScope: CoroutineScope = MainScope(),
     block: suspend (Flow<S>) -> Unit,
 ): CoroutineScope {
-    return MainScope().apply {
+    return coroutineScope.apply {
         launch {
             block(flow(owner))
         }
