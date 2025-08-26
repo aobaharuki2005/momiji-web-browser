@@ -305,6 +305,9 @@ add_task(async function tabActionsSearchMode() {
     entry: "keywordoffer",
     restrictType: "keyword",
   });
+
+  await UrlbarTestUtils.promiseSearchComplete(window);
+
   await expectTabThroughResults();
 
   await exitSearchMode();
