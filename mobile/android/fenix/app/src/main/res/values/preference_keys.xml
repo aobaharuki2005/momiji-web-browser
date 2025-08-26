@@ -90,6 +90,7 @@
     <string name="pref_key_terms_clicked_link" translatable="false">pref_key_terms_clicked_link</string>
     <string name="pref_key_terms_clicked_remind_me_later" translatable="false">pref_key_terms_clicked_remind_me_later</string>
     <string name="pref_key_should_show_marketing_onboarding" translatable="false">pref_key_should_show_marketing_onboarding</string>
+    <string name="pref_key_use_onboarding_redesign" translatable="false">pref_key_use_onboarding_redesign</string>
     <string name="pref_key_crash_pull_never_show_again" translatable="false">pref_key_crash_pull_never_show_again</string>
     <string name="pref_key_crash_pull_dont_show_before" translatable="false">pref_key_crash_pull_dont_show_before</string>
 

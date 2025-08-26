@@ -2075,6 +2075,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var onboardingFeatureEnabled = FeatureFlags.onboardingFeatureEnabled
 
     /**
+     * Indicates if the onboarding redesign should be used.
+     */
+    var useOnboardingRedesign by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_use_onboarding_redesign),
+        featureFlag = true,
+        default = { FxNimbus.features.junoOnboarding.value().useOnboardingRedesign },
+    )
+
+    /**
      * Indicates if the marketing onboarding card should be shown to the user.
      */
     var shouldShowMarketingOnboarding by booleanPreference(
