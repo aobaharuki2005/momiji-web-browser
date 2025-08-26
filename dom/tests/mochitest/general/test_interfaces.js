@@ -319,6 +319,8 @@ let interfaceNamesInGlobalScope = [
     android: false,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "CommandEvent", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Comment", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CompositionEvent", insecureContext: true },
@@ -1755,6 +1757,8 @@ let interfaceNamesInGlobalScope = [
   { name: "onclick", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onclose", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "oncommand", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "oncontentvisibilityautostatechange", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
