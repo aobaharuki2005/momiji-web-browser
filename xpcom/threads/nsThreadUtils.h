@@ -938,19 +938,16 @@ struct IsParameterStorageClass<StoreConstPtrPassByConstPtr<S>>
 
 namespace detail {
 
-template <typename>
-struct SFINAE1True : std::true_type {};
+template <class T, typename = void>
+struct HasRefCountMethodsTest : std::false_type {};
 
 template <class T>
-static auto HasRefCountMethodsTest(int)
-    -> SFINAE1True<decltype(std::declval<T>().AddRef(),
-                            std::declval<T>().Release())>;
-template <class>
-static auto HasRefCountMethodsTest(long) -> std::false_type;
+struct HasRefCountMethodsTest<
+    T, std::void_t<decltype(std::declval<T>().AddRef(),
+                            std::declval<T>().Release())>> : std::true_type {};
 
 template <class T>
-constexpr static bool HasRefCountMethods =
-    decltype(HasRefCountMethodsTest<T>(0))::value;
+constexpr static bool HasRefCountMethods = HasRefCountMethodsTest<T>::value;
 
 // Choose storage&passing strategy based on preferred storage type:
 // - If IsParameterStorageClass<T>::value is true, use as-is.
@@ -1011,8 +1008,11 @@ struct OtherParameterStorage<T&&> {
 
 template <typename T>
 struct OtherParameterStorage<const T&&> {
-  // This is good advice regardless of the types you're handling.
-  static_assert(!SFINAE1True<T>::value, "please use a lambda function");
+  // This is good advice regardless of the types you're handling. Making it a
+  // dependent type so that the check only happens when this specialization is
+  // instantiated.
+  static_assert(!std::is_same_v<std::void_t<T>, void>,
+                "please use a lambda function");
 };
 
 // default impl.
@@ -1046,16 +1046,13 @@ struct ParameterStorage {
   using Type = typename ParameterStorageHelper<T>::Type;
 };
 
-template <class T>
-static auto HasSetDeadlineTest(int)
-    -> SFINAE1True<decltype(std::declval<T>().SetDeadline(
-        std::declval<mozilla::TimeStamp>()))>;
+template <class T, typename = void>
+struct HasSetDeadline : std::false_type {};
 
 template <class T>
-static auto HasSetDeadlineTest(long) -> std::false_type;
-
-template <class T>
-struct HasSetDeadline : decltype(HasSetDeadlineTest<T>(0)) {};
+struct HasSetDeadline<T, std::void_t<decltype(std::declval<T>().SetDeadline(
+                             std::declval<mozilla::TimeStamp>()))>>
+    : std::true_type {};
 
 template <class T>
 std::enable_if_t<::detail::HasSetDeadline<T>::value> SetDeadlineImpl(
