@@ -21,6 +21,7 @@
 #include "mozilla/Maybe.h"
 
 #include <algorithm>
+#include <cstdint>
 
 #include "js/Conversions.h"
 #include "js/Equality.h"
@@ -53,7 +54,7 @@ using namespace js::wasm;
 using mozilla::Atomic;
 
 uint32_t wasm::ObservedCPUFeatures() {
-  enum Arch {
+  enum Arch : uint32_t {
     X86 = 0x1,
     X64 = 0x2,
     ARM = 0x3,
@@ -62,8 +63,12 @@ uint32_t wasm::ObservedCPUFeatures() {
     ARM64 = 0x6,
     LOONG64 = 0x7,
     RISCV64 = 0x8,
-    ARCH_BITS = 3
+
+    LAST = RISCV64,
+    ARCH_BITS = 4
   };
+
+  static_assert(LAST < (1 << ARCH_BITS));
 
 #if defined(JS_CODEGEN_X86)
   MOZ_ASSERT(uint32_t(jit::CPUInfo::GetFingerprint()) <=
