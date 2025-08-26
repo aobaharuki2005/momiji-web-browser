@@ -972,7 +972,9 @@ var TelemetryReportingPolicyImpl = {
     const { BrowserWindowTracker } = ChromeUtils.importESModule(
       "resource:///modules/BrowserWindowTracker.sys.mjs"
     );
-    let win = BrowserWindowTracker.getTopWindow();
+    let win = BrowserWindowTracker.getTopWindow({
+      allowFromInactiveWorkspace: true,
+    });
 
     if (!win) {
       this._log.info(
@@ -1264,7 +1266,9 @@ var TelemetryReportingPolicyImpl = {
       "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
     );
 
-    let win = BrowserWindowTracker.getTopWindow();
+    let win = BrowserWindowTracker.getTopWindow({
+      allowFromInactiveWorkspace: true,
+    });
 
     const config = {
       type: "SHOW_SPOTLIGHT",

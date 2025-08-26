@@ -772,6 +772,9 @@ class nsIWidget : public nsISupports {
 
   virtual void MoveToWorkspace(const nsAString& workspaceID) = 0;
 
+  // Assume that it is not, since most widgets are not cloaked.
+  virtual bool IsCloaked() const { return false; }
+
   /**
    * Suppress animations that are applied to a window by OS.
    */

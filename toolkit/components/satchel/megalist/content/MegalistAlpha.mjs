@@ -90,7 +90,9 @@ export class MegalistAlpha extends MozLitElement {
           const { BrowserWindowTracker } = ChromeUtils.importESModule(
             "resource:///modules/BrowserWindowTracker.sys.mjs"
           );
-          const window = BrowserWindowTracker.getTopWindow();
+          const window = BrowserWindowTracker.getTopWindow({
+            allowFromInactiveWorkspace: true,
+          });
           window.SidebarController.hide();
         }
       }
@@ -380,9 +382,9 @@ export class MegalistAlpha extends MozLitElement {
           this.shadowRoot.querySelector(".passwords-list").focus();
         } else if (e.key === "Tab") {
           e.preventDefault();
-          const webContent =
-            lazy.BrowserWindowTracker.getTopWindow().gBrowser.selectedTab
-              .linkedBrowser;
+          const webContent = lazy.BrowserWindowTracker.getTopWindow({
+            allowFromInactiveWorkspace: true,
+          }).gBrowser.selectedTab.linkedBrowser;
           webContent.focus();
         }
       }}

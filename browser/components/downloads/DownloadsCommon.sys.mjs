@@ -1003,6 +1003,7 @@ DownloadsDataCtor.prototype = {
     // Show the panel in the most recent browser window, if present.
     let browserWin = lazy.BrowserWindowTracker.getTopWindow({
       private: this._isPrivate,
+      allowFromInactiveWorkspace: true,
     });
     if (!browserWin) {
       return;

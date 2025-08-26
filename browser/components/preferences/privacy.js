@@ -2560,7 +2560,7 @@ var gPrivacyPane = {
    * tabs, tabs with beforeunload listeners), are reloaded.
    */
   reloadAllOtherTabs() {
-    let ourTab = BrowserWindowTracker.getTopWindow().gBrowser.selectedTab;
+    let ourTab = window.browsingContext.topChromeWindow.gBrowser.selectedTab;
     BrowserWindowTracker.orderedWindows.forEach(win => {
       let otherGBrowser = win.gBrowser;
       for (let tab of otherGBrowser.tabs) {
@@ -2591,7 +2591,7 @@ var gPrivacyPane = {
     if (window.BrowserWindowTracker.orderedWindows.length > 1) {
       shouldShow = true;
     } else {
-      let tabbrowser = window.BrowserWindowTracker.getTopWindow().gBrowser;
+      let tabbrowser = window.browsingContext.topChromeWindow.gBrowser;
       if (tabbrowser.tabs.length > 1) {
         shouldShow = true;
       }

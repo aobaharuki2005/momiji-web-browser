@@ -918,6 +918,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void Restore();
   void GetWorkspaceID(nsAString& workspaceID);
   void MoveToWorkspace(const nsAString& workspaceID);
+  bool IsCloaked() const;
   void NotifyDefaultButtonLoaded(mozilla::dom::Element& aDefaultButton,
                                  mozilla::ErrorResult& aError);
   mozilla::dom::ChromeMessageBroadcaster* MessageManager();
@@ -1106,7 +1107,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void ScrollTo(const mozilla::CSSPoint& aScroll,
                 const mozilla::dom::ScrollOptions& aOptions);
 
-  already_AddRefed<nsIWidget> GetMainWidget();
+  already_AddRefed<nsIWidget> GetMainWidget() const;
   nsIWidget* GetNearestWidget() const;
 
   bool IsInModalState();

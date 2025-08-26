@@ -1243,7 +1243,10 @@ export const LoginHelper = {
 
     const paramsPart = params.toString() ? `?${params}` : "";
 
-    let browserWindow = lazy.BrowserWindowTracker.getTopWindow();
+    // bug 1985105 - should this only look for windows on the current workspace?
+    let browserWindow = lazy.BrowserWindowTracker.getTopWindow({
+      allowFromInactiveWorkspace: true,
+    });
     const browser = browserWindow.gBrowser ?? browserWindow.opener?.gBrowser;
 
     const tab = browser.addTrustedTab(`about:logins${paramsPart}`, {

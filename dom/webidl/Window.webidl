@@ -668,6 +668,16 @@ partial interface Window {
   readonly attribute boolean isFullyOccluded;
 
   /**
+   * On Windows, returns whether the window is cloaked, presumably
+   * because it is on another virtual desktop. Per Microsoft, we
+   * should not automatically switch to this window if we are looking
+   * for an existing window to focus, and instead open a new window.
+   * On non-Windows platforms, this is always false.
+   */
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
+  readonly attribute boolean isCloaked;
+
+  /**
    * browserDOMWindow provides access to yet another layer of
    * utility functions implemented by chrome script. It will be null
    * for DOMWindows not corresponding to browsers.

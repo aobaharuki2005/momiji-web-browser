@@ -1658,7 +1658,7 @@ export class nsContextMenu {
   // View Partial Source
   viewPartialSource() {
     let { browser } = this;
-    let openSelectionFn = () => {
+    let openSelectionFn = async () => {
       let tabBrowser = this.window.gBrowser;
       let relatedToCurrent = tabBrowser?.selectedBrowser === browser;
       const inNewWindow = !Services.prefs.getBoolPref("view_source.tab");
@@ -1668,7 +1668,9 @@ export class nsContextMenu {
       // (in the sidebar). Deal with those cases:
       if (!tabBrowser || !tabBrowser.addTab || !this.window.toolbar.visible) {
         // This returns only non-popup browser windows by default.
-        let browserWindow = lazy.BrowserWindowTracker.getTopWindow();
+        let browserWindow =
+          lazy.BrowserWindowTracker.getTopWindow() ??
+          (await lazy.BrowserWindowTracker.promiseOpenWindow());
         tabBrowser = browserWindow.gBrowser;
       }
 
