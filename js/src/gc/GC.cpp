@@ -3710,6 +3710,9 @@ AutoHeapSession::AutoHeapSession(GCRuntime* gc, JS::HeapState heapState)
 
 AutoHeapSession::~AutoHeapSession() { gc->heapState_ = prevState; }
 
+AutoTraceSession::AutoTraceSession(JSRuntime* rt)
+    : AutoHeapSession(&rt->gc, JS::HeapState::Tracing) {}
+
 static const char* MajorGCStateToLabel(State state) {
   switch (state) {
     case State::Mark:
