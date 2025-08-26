@@ -861,7 +861,7 @@ pref("browser.search.visualSearch.featureGate", false);
 pref("browser.spin_cursor_while_busy", false);
 
 // Enable display of contextual-password-manager option in browser sidebar
-pref("browser.contextual-password-manager.enabled", true);
+pref("browser.contextual-password-manager.enabled", false);
 
 // Whether the user has opted-in to recommended settings for data features.
 pref("browser.dataFeatureRecommendations.enabled", false);
