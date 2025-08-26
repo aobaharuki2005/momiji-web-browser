@@ -39,6 +39,22 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
  */
 
 /**
+ * Enum of all supported navigation manager events.
+ *
+ * @enum {string}
+ */
+export const NAVIGATION_EVENTS = {
+  DownloadStarted: "download-started",
+  FragmentNavigated: "fragment-navigated",
+  HistoryUpdated: "history-updated",
+  NavigationCommitted: "navigation-committed",
+  NavigationFailed: "navigation-failed",
+  NavigationStarted: "navigation-started",
+  NavigationStopped: "navigation-stopped",
+  SameDocumentChanged: "same-document-changed",
+};
+
+/**
  * Enum of navigation states.
  *
  * @enum {string}
@@ -203,7 +219,11 @@ class NavigationRegistry extends EventEmitter {
     }
 
     // Hash change navigations are immediately done, fire a single event.
-    this.emit("fragment-navigated", { navigationId, navigableId, url });
+    this.emit(NAVIGATION_EVENTS.FragmentNavigated, {
+      navigationId,
+      navigableId,
+      url,
+    });
 
     return navigation;
   }
@@ -232,7 +252,7 @@ class NavigationRegistry extends EventEmitter {
     const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
 
     // History updates are immediately done, fire a single event.
-    this.emit("history-updated", { navigableId, url });
+    this.emit(NAVIGATION_EVENTS.HistoryUpdated, { navigableId, url });
   }
 
   /**
@@ -272,7 +292,11 @@ class NavigationRegistry extends EventEmitter {
 
     // Same document navigations are immediately done, fire a single event.
 
-    this.emit("same-document-changed", { navigationId, navigableId, url });
+    this.emit(NAVIGATION_EVENTS.SameDocumentChanged, {
+      navigationId,
+      navigableId,
+      url,
+    });
 
     return navigation;
   }
@@ -326,7 +350,7 @@ class NavigationRegistry extends EventEmitter {
       lazy.truncate`[${navigableId}] Navigation committed for url: ${url} (${navigation.navigationId})`
     );
 
-    this.emit("navigation-committed", {
+    this.emit(NAVIGATION_EVENTS.NavigationCommitted, {
       contextId: context.id,
       errorName,
       navigationId: navigation.navigationId,
@@ -383,7 +407,7 @@ class NavigationRegistry extends EventEmitter {
 
     navigation.state = NavigationState.Finished;
 
-    this.emit("navigation-failed", {
+    this.emit(NAVIGATION_EVENTS.NavigationFailed, {
       contextId: context.id,
       errorName,
       navigationId: navigation.navigationId,
@@ -492,7 +516,11 @@ class NavigationRegistry extends EventEmitter {
       lazy.truncate`[${navigableId}] Navigation started for url: ${url} (${navigationId})`
     );
 
-    this.emit("navigation-started", { navigationId, navigableId, url });
+    this.emit(NAVIGATION_EVENTS.NavigationStarted, {
+      navigationId,
+      navigableId,
+      url,
+    });
 
     return navigation;
   }
@@ -536,7 +564,7 @@ class NavigationRegistry extends EventEmitter {
 
     navigation.state = NavigationState.Finished;
 
-    this.emit("navigation-stopped", {
+    this.emit(NAVIGATION_EVENTS.NavigationStopped, {
       navigationId: navigation.navigationId,
       navigableId,
       url,
@@ -701,7 +729,7 @@ class NavigationRegistry extends EventEmitter {
     // delegated to the DownloadListener. It is exposed via the DownloadManager
     // for consistency and also to enforce having a singleton and consistent
     // navigation ids across sessions.
-    this.emit("download-started", {
+    this.emit(NAVIGATION_EVENTS.DownloadStarted, {
       navigationId,
       navigableId,
       suggestedFilename: PathUtils.filename(download.target.path),
@@ -874,14 +902,9 @@ export class NavigationManager extends EventEmitter {
 
     this.#monitoring = true;
     navigationRegistry.startMonitoring(this);
-    navigationRegistry.on("download-started", this.#onNavigationEvent);
-    navigationRegistry.on("fragment-navigated", this.#onNavigationEvent);
-    navigationRegistry.on("history-updated", this.#onNavigationEvent);
-    navigationRegistry.on("navigation-committed", this.#onNavigationEvent);
-    navigationRegistry.on("navigation-failed", this.#onNavigationEvent);
-    navigationRegistry.on("navigation-started", this.#onNavigationEvent);
-    navigationRegistry.on("navigation-stopped", this.#onNavigationEvent);
-    navigationRegistry.on("same-document-changed", this.#onNavigationEvent);
+    for (const eventName of Object.values(NAVIGATION_EVENTS)) {
+      navigationRegistry.on(eventName, this.#onNavigationEvent);
+    }
   }
 
   stopMonitoring() {
@@ -891,14 +914,9 @@ export class NavigationManager extends EventEmitter {
 
     this.#monitoring = false;
     navigationRegistry.stopMonitoring(this);
-    navigationRegistry.off("download-started", this.#onNavigationEvent);
-    navigationRegistry.off("fragment-navigated", this.#onNavigationEvent);
-    navigationRegistry.off("history-updated", this.#onNavigationEvent);
-    navigationRegistry.off("navigation-committed", this.#onNavigationEvent);
-    navigationRegistry.off("navigation-failed", this.#onNavigationEvent);
-    navigationRegistry.off("navigation-started", this.#onNavigationEvent);
-    navigationRegistry.off("navigation-stopped", this.#onNavigationEvent);
-    navigationRegistry.off("same-document-changed", this.#onNavigationEvent);
+    for (const eventName of Object.values(NAVIGATION_EVENTS)) {
+      navigationRegistry.off(eventName, this.#onNavigationEvent);
+    }
   }
 
   #onNavigationEvent = (eventName, data) => {
