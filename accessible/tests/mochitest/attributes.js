@@ -319,9 +319,6 @@ const kSansSerifFontFamily = function (aFontFamily) {
 const kSerifFontFamily = function (aFontFamily) {
   return aFontFamily != "serif";
 };
-const kMathFontFamily = function (aFontFamily) {
-  return aFontFamily != "math";
-};
 
 const kCursiveFontFamily = LINUX ? "DejaVu Serif" : "Comic Sans MS";
 
@@ -337,8 +334,6 @@ function fontFamily(aComputedStyle) {
       return kSansSerifFontFamily;
     case "serif":
       return kSerifFontFamily;
-    case "math":
-      return kMathFontFamily;
     default:
       return name;
   }
