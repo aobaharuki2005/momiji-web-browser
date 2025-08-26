@@ -85,7 +85,6 @@ class IPProtectionServiceSingleton extends EventTarget {
   #entitlement = null;
   #pass = null;
   #inited = false;
-  #hasWidget = false;
   #usageObserver = null;
 
   constructor() {
@@ -121,9 +120,7 @@ class IPProtectionServiceSingleton extends EventTarget {
    * Removes the IPProtectionService and IPProtection widget.
    */
   uninit() {
-    if (this.#hasWidget) {
-      lazy.IPProtection.uninit();
-    }
+    lazy.IPProtection.uninit();
 
     this.removeSignInStateObserver();
     this.removeVPNAddonObserver();
@@ -147,7 +144,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.#pass = null;
     this.errors = [];
 
-    this.#hasWidget = false;
     this.#inited = false;
   }
 
@@ -501,10 +497,7 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    if (!this.#hasWidget) {
-      lazy.IPProtection.init();
-      this.#hasWidget = true;
-    }
+    lazy.IPProtection.init();
 
     if (this.#inited && this.isSignedIn) {
       this.#updateEnrollment();
@@ -526,12 +519,11 @@ class IPProtectionServiceSingleton extends EventTarget {
   async #updateEnrollment(onlyCached = false) {
     this.isEnrolled = await this.#isEnrolled(onlyCached);
 
-    if (this.isEnrolled && !this.#hasWidget) {
+    if (this.isEnrolled) {
       lazy.IPProtection.init();
-      this.#hasWidget = true;
     } else if (
       !this.isEnrolled &&
-      this.#hasWidget &&
+      lazy.IPProtection.isInitialized &&
       this.isEligible &&
       this.isSignedIn
     ) {
