@@ -82,14 +82,13 @@ class SupportedLimits;
 class Texture;
 class WebGPUChild;
 
-class Device final : public DOMEventTargetHelper,
-                     public SupportsWeakPtr,
-                     public ObjectBase {
+class Device final : public DOMEventTargetHelper {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Device, DOMEventTargetHelper)
   GPU_DECL_JS_WRAP(Device)
 
+  const RawId mId;
   RefPtr<SupportedFeatures> mFeatures;
   RefPtr<SupportedLimits> mLimits;
   RefPtr<AdapterInfo> mAdapterInfo;
@@ -104,6 +103,7 @@ class Device final : public DOMEventTargetHelper,
                   RefPtr<AdapterInfo> aAdapterInfo,
                   RefPtr<dom::Promise> aLostPromise);
 
+  RefPtr<WebGPUChild> GetBridge();
   already_AddRefed<Texture> InitSwapChain(
       const dom::GPUCanvasConfiguration* const aConfig,
       const layers::RemoteTextureOwnerId aOwnerId,
@@ -111,16 +111,26 @@ class Device final : public DOMEventTargetHelper,
       gfx::SurfaceFormat aFormat, gfx::IntSize aCanvasSize);
   bool CheckNewWarning(const nsACString& aMessage);
 
+  void CleanupUnregisteredInParent();
+
   void TrackBuffer(Buffer* aBuffer);
   void UntrackBuffer(Buffer* aBuffer);
 
+  bool IsLost() const;
+
+  RawId GetId() const { return mId; }
+
  private:
-  virtual ~Device();
+  ~Device();
+  void Cleanup();
   // Expires external textures in mExternalTexturesToExpire. Scheduled to run
   // as a stable state task when an external texture is imported from an
   // HTMLVideoElement.
   void ExpireExternalTextures();
 
+  RefPtr<WebGPUChild> mBridge;
+  bool mValid = true;
+  nsString mLabel;
   RefPtr<dom::Promise> mLostPromise;
   RefPtr<Queue> mQueue;
   nsTHashSet<nsCString> mKnownWarnings;
@@ -131,6 +141,8 @@ class Device final : public DOMEventTargetHelper,
   nsTArray<WeakPtr<ExternalTexture>> mExternalTexturesToExpire;
 
  public:
+  void GetLabel(nsAString& aValue) const;
+  void SetLabel(const nsAString& aLabel);
   dom::Promise* GetLost(ErrorResult& aRv);
   void ResolveLost(dom::GPUDeviceLostReason aReason, const nsAString& aMessage);
 

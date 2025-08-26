@@ -45,7 +45,8 @@ class CompilationMessage final : public nsWrapperCache, public ChildOf<Device> {
   uint64_t Length() const { return mLength; }
 
  private:
-  virtual ~CompilationMessage() = default;
+  ~CompilationMessage() = default;
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

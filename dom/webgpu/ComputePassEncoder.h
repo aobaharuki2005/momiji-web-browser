@@ -31,18 +31,18 @@ struct ffiWGPUComputePassDeleter {
   void operator()(ffi::WGPURecordedComputePass*);
 };
 
-class ComputePassEncoder final : public nsWrapperCache,
-                                 public ObjectBase,
+class ComputePassEncoder final : public ObjectBase,
                                  public ChildOf<CommandEncoder> {
  public:
   GPU_DECL_CYCLE_COLLECTION(ComputePassEncoder)
   GPU_DECL_JS_WRAP(ComputePassEncoder)
 
-  ComputePassEncoder(CommandEncoder* const aParent, RawId aId,
+  ComputePassEncoder(CommandEncoder* const aParent,
                      const dom::GPUComputePassDescriptor& aDesc);
 
  private:
-  virtual ~ComputePassEncoder() = default;
+  virtual ~ComputePassEncoder();
+  void Cleanup();
 
   std::unique_ptr<ffi::WGPURecordedComputePass, ffiWGPUComputePassDeleter>
       mPass;
@@ -57,8 +57,6 @@ class ComputePassEncoder final : public nsWrapperCache,
 
   // programmable pass encoder
  private:
-  bool mValid = true;
-
   void SetBindGroup(uint32_t aSlot, BindGroup* const aBindGroup,
                     const uint32_t* aDynamicOffsets,
                     size_t aDynamicOffsetsLength);

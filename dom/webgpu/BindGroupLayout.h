@@ -14,17 +14,18 @@ namespace mozilla::webgpu {
 
 class Device;
 
-class BindGroupLayout final : public nsWrapperCache,
-                              public ObjectBase,
-                              public ChildOf<Device> {
+class BindGroupLayout final : public ObjectBase, public ChildOf<Device> {
  public:
   GPU_DECL_CYCLE_COLLECTION(BindGroupLayout)
   GPU_DECL_JS_WRAP(BindGroupLayout)
 
   BindGroupLayout(Device* const aParent, RawId aId);
 
+  const RawId mId;
+
  private:
-  virtual ~BindGroupLayout() = default;
+  ~BindGroupLayout();
+  void Cleanup();
 };
 
 }  // namespace mozilla::webgpu

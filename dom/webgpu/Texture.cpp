@@ -35,18 +35,38 @@ static Maybe<uint8_t> GetBytesPerBlockSingleAspect(
 
 Texture::Texture(Device* const aParent, RawId aId,
                  const dom::GPUTextureDescriptor& aDesc)
-    : ObjectBase(aParent->GetChild(), aId, ffi::wgpu_client_drop_texture),
-      ChildOf(aParent),
+    : ChildOf(aParent),
+      mId(aId),
       mFormat(aDesc.mFormat),
       mBytesPerBlock(GetBytesPerBlockSingleAspect(aDesc.mFormat)),
       mSize(ConvertExtent(aDesc.mSize)),
       mMipLevelCount(aDesc.mMipLevelCount),
       mSampleCount(aDesc.mSampleCount),
       mDimension(aDesc.mDimension),
-      mUsage(aDesc.mUsage) {}
+      mUsage(aDesc.mUsage) {
+  MOZ_RELEASE_ASSERT(aId);
+}
+
+void Texture::Cleanup() {
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  ffi::wgpu_client_drop_texture(bridge->GetClient(), mId);
+}
+
+Texture::~Texture() { Cleanup(); }
 
 already_AddRefed<TextureView> Texture::CreateView(
     const dom::GPUTextureViewDescriptor& aDesc) {
+  auto bridge = mParent->GetBridge();
+
   ffi::WGPUTextureViewDescriptor desc = {};
 
   webgpu::StringHelper label(aDesc.mLabel);
@@ -78,8 +98,8 @@ already_AddRefed<TextureView> Texture::CreateView(
   desc.array_layer_count =
       aDesc.mArrayLayerCount.WasPassed() ? &layerCount : nullptr;
 
-  RawId id = ffi::wgpu_client_create_texture_view(GetClient(), mParent->GetId(),
-                                                  GetId(), &desc);
+  RawId id = ffi::wgpu_client_create_texture_view(bridge->GetClient(),
+                                                  mParent->mId, mId, &desc);
 
   RefPtr<TextureView> view = new TextureView(this, id);
   view->SetLabel(aDesc.mLabel);
@@ -87,6 +107,8 @@ already_AddRefed<TextureView> Texture::CreateView(
 }
 
 void Texture::Destroy() {
-  ffi::wgpu_client_destroy_texture(GetClient(), GetId());
+  auto bridge = mParent->GetBridge();
+
+  ffi::wgpu_client_destroy_texture(bridge->GetClient(), mId);
 }
 }  // namespace mozilla::webgpu

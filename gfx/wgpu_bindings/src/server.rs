@@ -2895,9 +2895,6 @@ unsafe fn process_message(
             global.buffer_drop(id)
         }
         Message::DropCommandEncoder(id) => global.command_encoder_drop(id),
-        Message::DropRenderPassEncoder(_id) => {}
-        Message::DropComputePassEncoder(_id) => {}
-        Message::DropRenderBundleEncoder(_id) => {}
         Message::DropCommandBuffer(id) => global.command_buffer_drop(id),
         Message::DropRenderBundle(id) => global.render_bundle_drop(id),
         Message::DropBindGroupLayout(id) => global.bind_group_layout_drop(id),

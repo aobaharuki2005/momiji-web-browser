@@ -28,6 +28,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
                             public nsWrapperCache {
  private:
   virtual ~CanvasContext();
+  void Cleanup();
 
  public:
   // nsISupports interface + CC
@@ -107,7 +108,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   bool mPendingSwapChainPresent = false;
   bool mWaitingCanvasRendererInitialized = false;
 
-  RefPtr<WebGPUChild> mChild;
+  RefPtr<WebGPUChild> mBridge;
   RefPtr<Texture> mCurrentTexture;
   gfx::SurfaceFormat mGfxFormat = gfx::SurfaceFormat::R8G8B8A8;
 

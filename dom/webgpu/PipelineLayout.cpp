@@ -15,8 +15,24 @@ GPU_IMPL_CYCLE_COLLECTION(PipelineLayout, mParent)
 GPU_IMPL_JS_WRAP(PipelineLayout)
 
 PipelineLayout::PipelineLayout(Device* const aParent, RawId aId)
-    : ObjectBase(aParent->GetChild(), aId,
-                 ffi::wgpu_client_drop_pipeline_layout),
-      ChildOf(aParent) {}
+    : ChildOf(aParent), mId(aId) {
+  MOZ_RELEASE_ASSERT(aId);
+}
+
+PipelineLayout::~PipelineLayout() { Cleanup(); }
+
+void PipelineLayout::Cleanup() {
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  ffi::wgpu_client_drop_pipeline_layout(bridge->GetClient(), mId);
+}
 
 }  // namespace mozilla::webgpu
