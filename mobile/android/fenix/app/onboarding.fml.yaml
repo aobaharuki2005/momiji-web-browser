@@ -5,6 +5,10 @@ features:
     description: A feature that shows the onboarding flow.
 
     variables:
+      use-onboarding-redesign:
+        description: If true, use the onboarding redesign.
+        type: Boolean
+        default: false
       conditions:
         description: >
           A collection of out the box conditional expressions to be
