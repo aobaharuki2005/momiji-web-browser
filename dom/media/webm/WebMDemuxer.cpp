@@ -962,14 +962,16 @@ nsresult WebMDemuxer::DemuxPacket(TrackInfo::TrackType aType,
   nestegg_packet* packet;
   const NestEggContext& context = CallbackContext(aType);
   int r = nestegg_read_packet(context.mContext, &packet);
-  if (r == 0) {
+  if (r <= 0) {
+    nsresult rv = context.mLastIORV;
     nestegg_read_reset(context.mContext);
-    WEBM_DEBUG("EOS");
-    return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
-  } else if (r < 0) {
-    WEBM_DEBUG("nestegg_read_packet: error");
-    return NS_FAILED(context.mLastIORV) ? context.mLastIORV
-                                        : NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+    if (r == 0) {
+      WEBM_DEBUG("EOS");
+      return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
+    } else if (r < 0) {
+      WEBM_DEBUG("nestegg_read_packet: error");
+      return NS_FAILED(rv) ? rv : NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+    }
   }
 
   unsigned int track = 0;
