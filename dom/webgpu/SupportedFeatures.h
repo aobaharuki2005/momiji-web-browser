@@ -32,7 +32,8 @@ class SupportedFeatures final : public nsWrapperCache, public ChildOf<Adapter> {
   const auto& Features() const { return mFeatures; }
 
  private:
-  virtual ~SupportedFeatures();
+  ~SupportedFeatures() = default;
+  void Cleanup() {}
 
   std::unordered_set<dom::GPUFeatureName> mFeatures;
 };

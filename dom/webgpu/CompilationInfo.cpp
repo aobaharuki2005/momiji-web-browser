@@ -16,8 +16,6 @@ GPU_IMPL_JS_WRAP(CompilationInfo)
 
 CompilationInfo::CompilationInfo(Device* const aParent) : ChildOf(aParent) {}
 
-CompilationInfo::~CompilationInfo() = default;
-
 void CompilationInfo::SetMessages(
     nsTArray<mozilla::webgpu::WebGPUCompilationMessage>& aMessages) {
   for (auto& msg : aMessages) {

@@ -49,14 +49,14 @@ class WebGPUChild;
 
 enum class CommandEncoderState { Open, Locked, Ended };
 
-class CommandEncoder final : public nsWrapperCache,
-                             public ObjectBase,
-                             public ChildOf<Device> {
+class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
  public:
   GPU_DECL_CYCLE_COLLECTION(CommandEncoder)
   GPU_DECL_JS_WRAP(CommandEncoder)
 
-  CommandEncoder(Device* const aParent, RawId aId);
+  CommandEncoder(Device* const aParent, WebGPUChild* const aBridge, RawId aId);
+
+  const RawId mId;
 
   static void ConvertTextureDataLayoutToFFI(
       const dom::GPUTexelCopyBufferLayout& aLayout,
@@ -66,10 +66,12 @@ class CommandEncoder final : public nsWrapperCache,
       ffi::WGPUTexelCopyTextureInfo_TextureId* aViewFFI);
 
  private:
-  virtual ~CommandEncoder();
+  ~CommandEncoder();
+  void Cleanup();
 
   CommandEncoderState mState;
 
+  RefPtr<WebGPUChild> mBridge;
   CanvasContextArray mPresentationContexts;
   nsTArray<RefPtr<ExternalTexture>> mExternalTextures;
 
@@ -77,6 +79,7 @@ class CommandEncoder final : public nsWrapperCache,
 
  public:
   const auto& GetDevice() const { return mParent; };
+  RefPtr<WebGPUChild> GetBridge();
 
   CommandEncoderState GetState() const { return mState; };
 
@@ -138,7 +141,7 @@ void AssignPassTimestampWrites(const T& src,
     dest.end_of_pass_write_index = nullptr;
   }
 
-  dest.query_set = src.mQuerySet->GetId();
+  dest.query_set = src.mQuerySet->mId;
 }
 
 }  // namespace webgpu

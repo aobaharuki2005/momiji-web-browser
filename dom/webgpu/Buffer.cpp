@@ -22,9 +22,6 @@ namespace mozilla::webgpu {
 
 GPU_IMPL_JS_WRAP(Buffer)
 
-// We can't use `NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS` since
-// we need to trace all nested `ArrayBuffer`s. We also need access to the
-// parent in the `Cleanup` step before we unlink it.
 NS_IMPL_CYCLE_COLLECTION_CLASS(Buffer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Buffer)
   tmp->Cleanup();
@@ -46,10 +43,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
                uint32_t aUsage, ipc::SharedMemoryMapping&& aShmem)
-    : ObjectBase(aParent->GetChild(), aId, ffi::wgpu_client_drop_buffer),
-      ChildOf(aParent),
-      mSize(aSize),
-      mUsage(aUsage) {
+    : ChildOf(aParent), mId(aId), mSize(aSize), mUsage(aUsage) {
   mozilla::HoldJSObjects(this);
   mShmem = std::make_shared<ipc::SharedMemoryMapping>(std::move(aShmem));
   MOZ_ASSERT(mParent);
@@ -63,7 +57,7 @@ Buffer::~Buffer() {
 already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
                                         const dom::GPUBufferDescriptor& aDesc,
                                         ErrorResult& aRv) {
-  RefPtr<WebGPUChild> child = aDevice->GetChild();
+  RefPtr<WebGPUChild> bridge = aDevice->GetBridge();
 
   ipc::MutableSharedMemoryHandle handle;
   ipc::SharedMemoryMapping mapping;
@@ -121,9 +115,9 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
   desc.usage = aDesc.mUsage;
   desc.mapped_at_creation = aDesc.mMappedAtCreation;
 
-  auto shmem_handle_index = child->QueueShmemHandle(std::move(handle));
-  RawId bufferId = ffi::wgpu_client_create_buffer(child->GetClient(), aDeviceId,
-                                                  &desc, shmem_handle_index);
+  auto shmem_handle_index = bridge->QueueShmemHandle(std::move(handle));
+  RawId bufferId = ffi::wgpu_client_create_buffer(
+      bridge->GetClient(), aDeviceId, &desc, shmem_handle_index);
 
   RefPtr<Buffer> buffer = new Buffer(aDevice, bufferId, aDesc.mSize,
                                      aDesc.mUsage, std::move(mapping));
@@ -153,14 +147,21 @@ void Buffer::Cleanup() {
     // The array buffers could live longer than us and our shmem, so make sure
     // we clear the external buffer bindings.
     dom::AutoJSAPI jsapi;
-    if (jsapi.Init(mParent->GetOwnerGlobal())) {
+    if (jsapi.Init(GetDevice().GetOwnerGlobal())) {
       IgnoredErrorResult rv;
       UnmapArrayBuffers(jsapi.cx(), rv);
     }
   }
   mMapped.reset();
 
-  mParent->UntrackBuffer(this);
+  GetDevice().UntrackBuffer(this);
+
+  auto bridge = GetDevice().GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  ffi::wgpu_client_drop_buffer(bridge->GetClient(), mId);
 }
 
 void Buffer::SetMapped(BufferAddress aOffset, BufferAddress aSize,
@@ -183,6 +184,11 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
     return nullptr;
   }
 
+  if (GetDevice().IsLost()) {
+    promise->MaybeRejectWithOperationError("Device Lost");
+    return promise.forget();
+  }
+
   if (mMapRequest) {
     promise->MaybeRejectWithOperationError("Buffer mapping is already pending");
     return promise.forget();
@@ -200,7 +206,9 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
     // zero.
   }
 
-  ffi::wgpu_client_buffer_map(GetClient(), mParent->GetId(), GetId(), aMode,
+  const auto& bridge = GetDevice().GetBridge();
+
+  ffi::wgpu_client_buffer_map(bridge->GetClient(), GetDevice().mId, mId, aMode,
                               aOffset, size);
 
   mMapRequest = promise;
@@ -209,12 +217,12 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
       RefPtr(promise),
       RefPtr(this),
   };
-  auto& pending_promises = GetChild()->mPendingBufferMapPromises;
-  if (auto search = pending_promises.find(GetId());
+  auto& pending_promises = bridge->mPendingBufferMapPromises;
+  if (auto search = pending_promises.find(mId);
       search != pending_promises.end()) {
     search->second.push_back(std::move(pending_promise));
   } else {
-    pending_promises.insert({GetId(), {std::move(pending_promise)}});
+    pending_promises.insert({mId, {std::move(pending_promise)}});
   }
 
   return promise.forget();
@@ -409,8 +417,10 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
     mShmem = std::make_shared<ipc::SharedMemoryMapping>();
   }
 
-  ffi::wgpu_client_buffer_unmap(GetClient(), mParent->GetId(), GetId(),
-                                mMapped->mWritable);
+  if (!GetDevice().IsLost()) {
+    ffi::wgpu_client_buffer_unmap(GetDevice().GetBridge()->GetClient(),
+                                  GetDevice().mId, mId, mMapped->mWritable);
+  }
 
   mMapped.reset();
 }
@@ -420,7 +430,9 @@ void Buffer::Destroy(JSContext* aCx, ErrorResult& aRv) {
     Unmap(aCx, aRv);
   }
 
-  ffi::wgpu_client_destroy_buffer(GetClient(), GetId());
+  auto bridge = mParent->GetBridge();
+
+  ffi::wgpu_client_destroy_buffer(bridge->GetClient(), mId);
 }
 
 dom::GPUBufferMapState Buffer::MapState() const {

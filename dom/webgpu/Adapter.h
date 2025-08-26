@@ -47,7 +47,8 @@ class AdapterInfo final : public nsWrapperCache, public ChildOf<Adapter> {
 
  protected:
   const std::shared_ptr<ffi::WGPUAdapterInformation> mAboutSupportInfo;
-  virtual ~AdapterInfo() = default;
+  ~AdapterInfo() = default;
+  void Cleanup() {}
 
  public:
   explicit AdapterInfo(
@@ -80,16 +81,18 @@ inline auto ToHexCString(const uint64_t v) {
   return nsPrintfCString("0x%" PRIx64, v);
 }
 
-class Adapter final : public nsWrapperCache,
-                      public ObjectBase,
-                      public ChildOf<Instance> {
+class Adapter final : public ObjectBase, public ChildOf<Instance> {
  public:
   GPU_DECL_CYCLE_COLLECTION(Adapter)
   GPU_DECL_JS_WRAP(Adapter)
 
- private:
-  virtual ~Adapter();
+  RefPtr<WebGPUChild> mBridge;
 
+ private:
+  ~Adapter();
+  void Cleanup();
+
+  const RawId mId;
   // Cant have them as `const` right now, since we wouldn't be able
   // to unlink them in CC unlink.
   RefPtr<SupportedFeatures> mFeatures;
@@ -98,7 +101,7 @@ class Adapter final : public nsWrapperCache,
   const std::shared_ptr<ffi::WGPUAdapterInformation> mInfoInner;
 
  public:
-  Adapter(Instance* const aParent, WebGPUChild* const aChild,
+  Adapter(Instance* const aParent, WebGPUChild* const aBridge,
           const std::shared_ptr<ffi::WGPUAdapterInformation>& aInfo);
   const RefPtr<SupportedFeatures>& Features() const;
   const RefPtr<SupportedLimits>& Limits() const;
@@ -109,7 +112,7 @@ class Adapter final : public nsWrapperCache,
   nsCString LabelOrId() const {
     nsCString ret = this->CLabel();
     if (ret.IsEmpty()) {
-      ret = ToHexCString(GetId());
+      ret = ToHexCString(mId);
     }
     return ret;
   }

@@ -32,18 +32,17 @@ struct ffiWGPURenderBundleEncoderDeleter {
   void operator()(ffi::WGPURenderBundleEncoder*);
 };
 
-class RenderBundleEncoder final : public nsWrapperCache,
-                                  public ObjectBase,
-                                  public ChildOf<Device> {
+class RenderBundleEncoder final : public ObjectBase, public ChildOf<Device> {
  public:
   GPU_DECL_CYCLE_COLLECTION(RenderBundleEncoder)
   GPU_DECL_JS_WRAP(RenderBundleEncoder)
 
-  RenderBundleEncoder(Device* const aParent, RawId aId,
+  RenderBundleEncoder(Device* const aParent, WebGPUChild* const aBridge,
                       const dom::GPURenderBundleEncoderDescriptor& aDesc);
 
  private:
-  virtual ~RenderBundleEncoder();
+  ~RenderBundleEncoder();
+  void Cleanup();
 
   std::unique_ptr<ffi::WGPURenderBundleEncoder,
                   ffiWGPURenderBundleEncoderDeleter>
@@ -59,8 +58,6 @@ class RenderBundleEncoder final : public nsWrapperCache,
 
   // programmable pass encoder
  private:
-  bool mValid = true;
-
   void SetBindGroup(uint32_t aSlot, BindGroup* const aBindGroup,
                     const uint32_t* aDynamicOffsets,
                     size_t aDynamicOffsetsLength);

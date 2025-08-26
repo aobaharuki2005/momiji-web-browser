@@ -18,11 +18,25 @@ GPU_IMPL_JS_WRAP(ShaderModule)
 
 ShaderModule::ShaderModule(Device* const aParent, RawId aId,
                            const RefPtr<dom::Promise>& aCompilationInfo)
-    : ObjectBase(aParent->GetChild(), aId, ffi::wgpu_client_drop_shader_module),
-      ChildOf(aParent),
-      mCompilationInfo(aCompilationInfo) {}
+    : ChildOf(aParent), mId(aId), mCompilationInfo(aCompilationInfo) {
+  MOZ_RELEASE_ASSERT(aId);
+}
 
-ShaderModule::~ShaderModule() = default;
+ShaderModule::~ShaderModule() { Cleanup(); }
+
+void ShaderModule::Cleanup() {
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  ffi::wgpu_client_drop_shader_module(bridge->GetClient(), mId);
+}
 
 already_AddRefed<dom::Promise> ShaderModule::GetCompilationInfo(
     ErrorResult& aRv) {

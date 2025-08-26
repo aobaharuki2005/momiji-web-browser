@@ -20,9 +20,7 @@ namespace webgpu {
 
 class Device;
 
-class QuerySet final : public nsWrapperCache,
-                       public ObjectBase,
-                       public ChildOf<Device> {
+class QuerySet final : public ObjectBase, public ChildOf<Device> {
  public:
   GPU_DECL_CYCLE_COLLECTION(QuerySet)
   GPU_DECL_JS_WRAP(QuerySet)
@@ -36,8 +34,11 @@ class QuerySet final : public nsWrapperCache,
   dom::GPUQueryType Type() const;
   uint32_t Count() const;
 
+  const RawId mId;
+
  private:
   virtual ~QuerySet();
+  void Cleanup();
 
   dom::GPUQueryType mType;
   uint32_t mCount;

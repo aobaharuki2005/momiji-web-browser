@@ -146,7 +146,7 @@ void AdapterInfo::GetWgpuBackend(nsString& s) const {
 
 // -
 
-GPU_IMPL_CYCLE_COLLECTION(Adapter, mParent, mFeatures, mLimits, mInfo)
+GPU_IMPL_CYCLE_COLLECTION(Adapter, mParent, mBridge, mFeatures, mLimits, mInfo)
 GPU_IMPL_JS_WRAP(Adapter)
 
 enum class FeatureImplementationStatusTag {
@@ -293,10 +293,11 @@ double GetLimitDefault(Limit aLimit) {
   MOZ_CRASH("Bad Limit");
 }
 
-Adapter::Adapter(Instance* const aParent, WebGPUChild* const aChild,
+Adapter::Adapter(Instance* const aParent, WebGPUChild* const aBridge,
                  const std::shared_ptr<ffi::WGPUAdapterInformation>& aInfo)
-    : ObjectBase(aChild, aInfo->id, ffi::wgpu_client_drop_adapter),
-      ChildOf(aParent),
+    : ChildOf(aParent),
+      mBridge(aBridge),
+      mId(aInfo->id),
       mFeatures(new SupportedFeatures(this)),
       mLimits(new SupportedLimits(this, aInfo->limits)),
       mInfo(new AdapterInfo(this, aInfo)),
@@ -372,7 +373,20 @@ Adapter::Adapter(Instance* const aParent, WebGPUChild* const aChild,
   }
 }
 
-Adapter::~Adapter() = default;
+Adapter::~Adapter() { Cleanup(); }
+
+void Adapter::Cleanup() {
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  if (!mBridge) {
+    return;
+  }
+
+  ffi::wgpu_client_drop_adapter(mBridge->GetClient(), mId);
+}
 
 const RefPtr<SupportedFeatures>& Adapter::Features() const { return mFeatures; }
 const RefPtr<SupportedLimits>& Adapter::Limits() const { return mLimits; }
@@ -645,12 +659,12 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
     ffiDesc.required_limits = deviceLimits;
 
     ffi::WGPUDeviceQueueId ids =
-        ffi::wgpu_client_request_device(GetClient(), GetId(), &ffiDesc);
+        ffi::wgpu_client_request_device(mBridge->GetClient(), mId, &ffiDesc);
 
     auto pending_promise = WebGPUChild::PendingRequestDevicePromise{
         RefPtr(promise), ids.device, ids.queue, aDesc.mLabel, RefPtr(this),
         features,        limits,     mInfo,     lost_promise};
-    GetChild()->mPendingRequestDevicePromises.push_back(
+    mBridge->mPendingRequestDevicePromises.push_back(
         std::move(pending_promise));
 
   }();

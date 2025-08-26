@@ -38,8 +38,11 @@ class WGSLLanguageFeatures final : public nsWrapperCache,
     dom::WGSLLanguageFeatures_Binding::SetlikeHelpers::Add(this, feature, aRv);
   }
 
+ private:
+  void Cleanup() {}
+
  protected:
-  virtual ~WGSLLanguageFeatures() = default;
+  ~WGSLLanguageFeatures() { Cleanup(); };
 
  public:
   JSObject* WrapObject(JSContext* aCx,
@@ -75,7 +78,8 @@ class Instance final : public nsWrapperCache {
 
  private:
   explicit Instance(nsIGlobalObject* aOwner);
-  virtual ~Instance() = default;
+  virtual ~Instance();
+  void Cleanup();
 
   nsCOMPtr<nsIGlobalObject> mOwner;
   RefPtr<WGSLLanguageFeatures> mWgslLanguageFeatures;

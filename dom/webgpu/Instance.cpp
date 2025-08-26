@@ -93,6 +93,10 @@ Instance::Instance(nsIGlobalObject* aOwner)
   }
 }
 
+Instance::~Instance() { Cleanup(); }
+
+void Instance::Cleanup() {}
+
 JSObject* Instance::WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> givenProto) {
   return dom::GPU_Binding::Wrap(cx, this, givenProto);
@@ -171,8 +175,8 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
     return promise.forget();
   }
 
-  RefPtr<WebGPUChild> child = canvasManager->GetWebGPUChild();
-  if (!child) {
+  RefPtr<WebGPUChild> bridge = canvasManager->GetWebGPUChild();
+  if (!bridge) {
     promise->MaybeRejectWithInvalidStateError("Failed to create WebGPUChild");
     return promise.forget();
   }
@@ -224,11 +228,11 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
   }
 
   RawId adapter_id = ffi::wgpu_client_request_adapter(
-      child->GetClient(), power_preference, aOptions.mForceFallbackAdapter);
+      bridge->GetClient(), power_preference, aOptions.mForceFallbackAdapter);
 
   auto pending_promise = WebGPUChild::PendingRequestAdapterPromise{
       RefPtr(promise), RefPtr(this), adapter_id};
-  child->mPendingRequestAdapterPromises.push_back(std::move(pending_promise));
+  bridge->mPendingRequestAdapterPromises.push_back(std::move(pending_promise));
 
   return promise.forget();
 }

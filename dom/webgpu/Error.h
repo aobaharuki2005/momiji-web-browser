@@ -19,7 +19,7 @@ class GlobalObject;
 }  // namespace dom
 namespace webgpu {
 
-class Error : public nsWrapperCache {
+class Error : public nsWrapperCache, public SupportsWeakPtr {
  protected:
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsString mMessage;
@@ -32,6 +32,7 @@ class Error : public nsWrapperCache {
 
  protected:
   virtual ~Error() = default;
+  virtual void Cleanup() {}
 
  public:
   void GetMessage(nsAString& aMessage) const { aMessage = mMessage; }

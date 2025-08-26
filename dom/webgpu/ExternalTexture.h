@@ -58,10 +58,9 @@ class WebGPUParent;
 // by any external textures.
 //
 // [1] https://www.w3.org/TR/webgpu/#gpuexternaltexture
-class ExternalTexture final : public nsWrapperCache,
-                              public ObjectBase,
-                              public ChildOf<Device>,
-                              public SupportsWeakPtr {
+class ExternalTexture : public ObjectBase,
+                        public ChildOf<Device>,
+                        public SupportsWeakPtr {
  public:
   GPU_DECL_CYCLE_COLLECTION(ExternalTexture)
   GPU_DECL_JS_WRAP(ExternalTexture)
@@ -86,10 +85,13 @@ class ExternalTexture final : public nsWrapperCache,
 
   RefPtr<ExternalTextureSourceClient> Source() { return mSource; }
 
+  const RawId mId;
+
  private:
   explicit ExternalTexture(Device* const aParent, RawId aId,
                            RefPtr<ExternalTextureSourceClient> aSource);
   virtual ~ExternalTexture();
+  void Cleanup();
 
   // Destroys the external texture if it is no longer required, i.e. all
   // submitted work using the external texture has completed, and the external
@@ -151,7 +153,7 @@ class ExternalTextureCache : public SupportsWeakPtr {
 // reference. The source itself retains a strong reference to the layers::Image
 // it was imported from, which ensures that the decoder does not attempt to
 // reuse the image's underlying resources while the source is still in use.
-class ExternalTextureSourceClient final : public ObjectBase {
+class ExternalTextureSourceClient {
   NS_INLINE_DECL_REFCOUNTING(ExternalTextureSourceClient)
 
  public:
@@ -161,6 +163,8 @@ class ExternalTextureSourceClient final : public ObjectBase {
   static already_AddRefed<ExternalTextureSourceClient> Create(
       Device* aDevice, ExternalTextureCache* aCache,
       const dom::OwningHTMLVideoElementOrVideoFrame& aSource, ErrorResult& aRv);
+
+  const RawId mId;
 
   // Hold a strong reference to the image as long as we are alive. If the
   // SurfaceDescriptor sent to the host was a SurfaceDescriptorGPUVideo, this
@@ -186,12 +190,16 @@ class ExternalTextureSourceClient final : public ObjectBase {
       Device* aDevice, const dom::GPUExternalTextureDescriptor& aDesc);
 
  private:
-  ExternalTextureSourceClient(WebGPUChild* aChild, RawId aId,
+  ExternalTextureSourceClient(WebGPUChild* aBridge, RawId aId,
                               ExternalTextureCache* aCache,
                               const RefPtr<layers::Image>& aImage,
                               const std::array<RawId, 3>& aTextureIds,
                               const std::array<RawId, 3>& aViewIds);
-  virtual ~ExternalTextureSourceClient();
+  ~ExternalTextureSourceClient();
+
+  // Used to free resources on the host side when we are destroyed, if the
+  // bridge is still valid.
+  const WeakPtr<WebGPUChild> mBridge;
 
   // Pointer to the cache this source is stored in. If the cache is still
   // valid then the source *must* remove itself from the cache when it is

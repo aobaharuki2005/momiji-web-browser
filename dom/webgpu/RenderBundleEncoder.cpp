@@ -29,7 +29,7 @@ void ffiWGPURenderBundleEncoderDeleter::operator()(
 
 ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
     RawId aDeviceId, const dom::GPURenderBundleEncoderDescriptor& aDesc,
-    WebGPUChild* const aChild) {
+    WebGPUChild* const aBridge) {
   ffi::WGPURenderBundleEncoderDescriptor desc = {};
   desc.sample_count = aDesc.mSampleCount;
 
@@ -53,23 +53,28 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
   desc.color_formats = {colorFormats.data(), colorFormats.size()};
 
   auto* bundle = ffi::wgpu_device_create_render_bundle_encoder(
-      aChild->GetClient(), aDeviceId, &desc);
+      aBridge->GetClient(), aDeviceId, &desc);
 
   return bundle;
 }
 
 RenderBundleEncoder::RenderBundleEncoder(
-    Device* const aParent, RawId aId,
+    Device* const aParent, WebGPUChild* const aBridge,
     const dom::GPURenderBundleEncoderDescriptor& aDesc)
-    : ObjectBase(aParent->GetChild(), aId,
-                 ffi::wgpu_client_drop_render_bundle_encoder),
-      ChildOf(aParent),
-      mEncoder(CreateRenderBundleEncoder(aParent->GetId(), aDesc,
-                                         aParent->GetChild())) {
+    : ChildOf(aParent),
+      mEncoder(CreateRenderBundleEncoder(aParent->mId, aDesc, aBridge)) {
   mValid = !!mEncoder;
 }
 
-RenderBundleEncoder::~RenderBundleEncoder() = default;
+RenderBundleEncoder::~RenderBundleEncoder() { Cleanup(); }
+
+void RenderBundleEncoder::Cleanup() {
+  mValid = false;
+  mEncoder.release();
+  mUsedBindGroups.Clear();
+  mUsedBuffers.Clear();
+  mUsedPipelines.Clear();
+}
 
 void RenderBundleEncoder::SetBindGroup(uint32_t aSlot,
                                        BindGroup* const aBindGroup,
@@ -79,7 +84,7 @@ void RenderBundleEncoder::SetBindGroup(uint32_t aSlot,
   if (aBindGroup) {
     mUsedBindGroups.AppendElement(aBindGroup);
     mUsedCanvasContexts.AppendElements(aBindGroup->GetCanvasContexts());
-    bindGroup = aBindGroup->GetId();
+    bindGroup = aBindGroup->mId;
   }
   ffi::wgpu_render_bundle_set_bind_group(
       mEncoder.get(), aSlot, bindGroup, aDynamicOffsets, aDynamicOffsetsLength);
@@ -119,7 +124,7 @@ void RenderBundleEncoder::SetPipeline(const RenderPipeline& aPipeline) {
     return;
   }
   mUsedPipelines.AppendElement(&aPipeline);
-  ffi::wgpu_render_bundle_set_pipeline(mEncoder.get(), aPipeline.GetId());
+  ffi::wgpu_render_bundle_set_pipeline(mEncoder.get(), aPipeline.mId);
 }
 
 void RenderBundleEncoder::SetIndexBuffer(
@@ -133,8 +138,8 @@ void RenderBundleEncoder::SetIndexBuffer(
                            ? ffi::WGPUIndexFormat_Uint32
                            : ffi::WGPUIndexFormat_Uint16;
   const uint64_t* sizeRef = aSize.WasPassed() ? &aSize.Value() : nullptr;
-  ffi::wgpu_render_bundle_set_index_buffer(mEncoder.get(), aBuffer.GetId(),
-                                           iformat, aOffset, sizeRef);
+  ffi::wgpu_render_bundle_set_index_buffer(mEncoder.get(), aBuffer.mId, iformat,
+                                           aOffset, sizeRef);
 }
 
 void RenderBundleEncoder::SetVertexBuffer(
@@ -145,8 +150,8 @@ void RenderBundleEncoder::SetVertexBuffer(
   }
   mUsedBuffers.AppendElement(&aBuffer);
   const uint64_t* sizeRef = aSize.WasPassed() ? &aSize.Value() : nullptr;
-  ffi::wgpu_render_bundle_set_vertex_buffer(mEncoder.get(), aSlot,
-                                            aBuffer.GetId(), aOffset, sizeRef);
+  ffi::wgpu_render_bundle_set_vertex_buffer(mEncoder.get(), aSlot, aBuffer.mId,
+                                            aOffset, sizeRef);
 }
 
 void RenderBundleEncoder::Draw(uint32_t aVertexCount, uint32_t aInstanceCount,
@@ -176,7 +181,7 @@ void RenderBundleEncoder::DrawIndirect(const Buffer& aIndirectBuffer,
     return;
   }
   mUsedBuffers.AppendElement(&aIndirectBuffer);
-  ffi::wgpu_render_bundle_draw_indirect(mEncoder.get(), aIndirectBuffer.GetId(),
+  ffi::wgpu_render_bundle_draw_indirect(mEncoder.get(), aIndirectBuffer.mId,
                                         aIndirectOffset);
 }
 
@@ -187,7 +192,7 @@ void RenderBundleEncoder::DrawIndexedIndirect(const Buffer& aIndirectBuffer,
   }
   mUsedBuffers.AppendElement(&aIndirectBuffer);
   ffi::wgpu_render_bundle_draw_indexed_indirect(
-      mEncoder.get(), aIndirectBuffer.GetId(), aIndirectOffset);
+      mEncoder.get(), aIndirectBuffer.mId, aIndirectOffset);
 }
 
 void RenderBundleEncoder::PushDebugGroup(const nsAString& aString) {
@@ -213,7 +218,8 @@ void RenderBundleEncoder::InsertDebugMarker(const nsAString& aString) {
 
 already_AddRefed<RenderBundle> RenderBundleEncoder::Finish(
     const dom::GPURenderBundleDescriptor& aDesc) {
-  RawId deviceId = mParent->GetId();
+  RawId deviceId = mParent->mId;
+  auto bridge = mParent->GetBridge();
 
   ffi::WGPURenderBundleDescriptor desc = {};
   webgpu::StringHelper label(aDesc.mLabel);
@@ -221,19 +227,15 @@ already_AddRefed<RenderBundle> RenderBundleEncoder::Finish(
 
   RawId id;
   if (mValid) {
-    id = ffi::wgpu_client_create_render_bundle(GetClient(), deviceId,
+    id = ffi::wgpu_client_create_render_bundle(bridge->GetClient(), deviceId,
                                                mEncoder.get(), &desc);
 
   } else {
-    id = ffi::wgpu_client_create_render_bundle_error(GetClient(), deviceId,
-                                                     label.Get());
+    id = ffi::wgpu_client_create_render_bundle_error(bridge->GetClient(),
+                                                     deviceId, label.Get());
   }
 
-  mValid = false;
-  mEncoder.release();
-  mUsedBindGroups.Clear();
-  mUsedBuffers.Clear();
-  mUsedPipelines.Clear();
+  Cleanup();
 
   auto canvasContexts = mUsedCanvasContexts.Clone();
   RefPtr<RenderBundle> bundle =

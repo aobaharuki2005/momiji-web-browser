@@ -40,18 +40,18 @@ struct ffiWGPURenderPassDeleter {
   void operator()(ffi::WGPURecordedRenderPass*);
 };
 
-class RenderPassEncoder final : public nsWrapperCache,
-                                public ObjectBase,
+class RenderPassEncoder final : public ObjectBase,
                                 public ChildOf<CommandEncoder> {
  public:
   GPU_DECL_CYCLE_COLLECTION(RenderPassEncoder)
   GPU_DECL_JS_WRAP(RenderPassEncoder)
 
-  RenderPassEncoder(CommandEncoder* const aParent, RawId aId,
+  RenderPassEncoder(CommandEncoder* const aParent,
                     const dom::GPURenderPassDescriptor& aDesc);
 
  protected:
   virtual ~RenderPassEncoder();
+  void Cleanup();
 
   std::unique_ptr<ffi::WGPURecordedRenderPass, ffiWGPURenderPassDeleter> mPass;
   // keep all the used objects alive while the pass is recorded
@@ -67,8 +67,6 @@ class RenderPassEncoder final : public nsWrapperCache,
 
   // programmable pass encoder
  private:
-  bool mValid = true;
-
   void SetBindGroup(uint32_t aSlot, BindGroup* const aBindGroup,
                     const uint32_t* aDynamicOffsets,
                     size_t aDynamicOffsetsLength);
