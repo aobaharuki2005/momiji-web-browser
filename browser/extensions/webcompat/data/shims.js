@@ -509,6 +509,7 @@ const AVAILABLE_SHIMS = [
       "okcfox.co",
       "turnto10.com",
       "wcti12.com",
+      "wjactv.com",
     ],
     matches: [
       "*://www.googletagservices.com/tag/js/gpt.js*",
