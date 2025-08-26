@@ -39,8 +39,6 @@ class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
         mTrackingId(CaptureEngineToTrackingSourceStr(aCapEng), aStreamId),
         mParent(aParent) {};
 
-  // These callbacks end up running on the VideoCapture thread.
-  // From  VideoCaptureCallback
   void OnCaptureEnded();
   void OnFrame(const webrtc::VideoFrame& aVideoFrame) override;
 
