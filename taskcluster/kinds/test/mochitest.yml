@@ -1267,6 +1267,7 @@ mochitest-browser-newtab-trainhop-beta:
     treeherder-symbol: nt-trainhop(Mbc-beta)
     tier: 3
     loopback-video: true
+    test-manifest-loader: null  # don't load tests in the taskgraph
     mozharness:
         mochitest-flavor: browser
         chunked: false
@@ -1316,6 +1317,7 @@ mochitest-browser-newtab-trainhop-release:
     treeherder-symbol: nt-trainhop(Mbc-release)
     tier: 3
     loopback-video: true
+    test-manifest-loader: null  # don't load tests in the taskgraph
     mozharness:
         mochitest-flavor: browser
         chunked: false
