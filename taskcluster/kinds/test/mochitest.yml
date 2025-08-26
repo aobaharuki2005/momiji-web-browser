@@ -1260,13 +1260,10 @@ mochitest-browser-newtab-trainhop-beta:
         name: mochitest-browser-chrome
     run-on-projects:
         by-test-platform:
-            linux(?!.*shippable).*: []
-            macosx(?!.*shippable).*: []
-            windows(?!.*shippable).*: []
-            default: [trunk]
-    when:
-        files-changed:
-            - "browser/extensions/newtab/**"
+            linux.*64(-shippable)?(-qr)?/.*: ['trunk']
+            macosx.*64(-shippable)?(-qr)?/.*: ['trunk']
+            windows1.*-64.*(-shippable)?/.*: ['trunk']
+            default: []
     treeherder-symbol: nt-trainhop(Mbc-beta)
     tier: 3
     loopback-video: true
@@ -1312,13 +1309,10 @@ mochitest-browser-newtab-trainhop-release:
         name: mochitest-browser-chrome
     run-on-projects:
         by-test-platform:
-            linux(?!.*shippable).*: []
-            macosx(?!.*shippable).*: []
-            windows(?!.*shippable).*: []
-            default: [trunk]
-    when:
-        files-changed:
-            - "browser/extensions/newtab/**"
+            linux.*64(-shippable)?(-qr)?/.*: ['trunk']
+            macosx.*64(-shippable)?(-qr)?/.*: ['trunk']
+            windows1.*-64.*(-shippable)?/.*: ['trunk']
+            default: []
     treeherder-symbol: nt-trainhop(Mbc-release)
     tier: 3
     loopback-video: true

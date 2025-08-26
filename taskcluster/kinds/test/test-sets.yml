@@ -196,7 +196,6 @@ linux-tests:
     - mochitest-browser-chrome
     - mochitest-browser-media
     - mochitest-browser-translations
-    - mochitest-browser-newtab-trainhop-beta
     - mochitest-chrome
     - mochitest-chrome-gpu
     - mochitest-devtools-chrome
@@ -229,7 +228,6 @@ linux-2404-tsan-tests:
     - mochitest-browser-chrome
     - mochitest-browser-media
     - mochitest-browser-translations
-    - mochitest-browser-newtab-trainhop-beta
     - mochitest-chrome
     - mochitest-chrome-gpu
     # - mochitest-devtools-chrome
