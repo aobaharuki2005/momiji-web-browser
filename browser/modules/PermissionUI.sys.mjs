@@ -1047,8 +1047,9 @@ class LocalHostPermissionPrompt extends PermissionPromptForRequest {
     }
 
     if (options.checkbox.show) {
-      options.checkbox.label =
-        lazy.gBrowserBundle.GetStringFromName("localhost.remember");
+      options.checkbox.label = lazy.gBrowserBundle.GetStringFromName(
+        "localhost.remember2"
+      );
     }
 
     return options;
@@ -1270,7 +1271,7 @@ class LocalNetworkPermissionPrompt extends PermissionPromptForRequest {
 
     if (options.checkbox.show) {
       options.checkbox.label = lazy.gBrowserBundle.GetStringFromName(
-        "localNetwork.remember"
+        "localNetwork.remember2"
       );
     }
 
