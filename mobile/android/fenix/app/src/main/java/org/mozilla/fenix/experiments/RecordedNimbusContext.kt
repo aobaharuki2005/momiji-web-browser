@@ -7,6 +7,7 @@ package org.mozilla.fenix.experiments
 import android.content.Context
 import android.os.Build
 import androidx.annotation.VisibleForTesting
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.json.JSONObject
 import org.mozilla.experiments.nimbus.NIMBUS_DATA_DIR
@@ -16,6 +17,7 @@ import org.mozilla.experiments.nimbus.internal.RecordedContext
 import org.mozilla.experiments.nimbus.internal.getCalculatedAttributes
 import org.mozilla.fenix.GleanMetrics.NimbusSystem
 import org.mozilla.fenix.GleanMetrics.Pings
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 import java.io.File
@@ -198,20 +200,30 @@ class RecordedNimbusContext(
                 language = calculatedAttributes.language,
                 region = calculatedAttributes.region,
                 userAcceptedTou = settings.hasAcceptedTermsOfService,
-                noShortcutsStoriesMktOptOuts = settings.noShortcutsStoriesMktOptOuts,
+                noShortcutsStoriesMktOptOuts = settings.noShortcutsStoriesMktOptOuts(context),
                 userClickedTouPromptLink = settings.hasClickedTermOfUsePromptLink,
                 userClickedTouPromptRemindMeLater = settings.hasClickedTermOfUsePromptRemindMeLater,
             )
         }
 
-        private val Settings.noShortcutsStoriesMktOptOuts: Boolean
-            get() = hasMarketing && hasSponsoredHomepageShortcuts && hasStoriesOnHomepage
+        private fun Settings.noShortcutsStoriesMktOptOuts(context: Context) =
+            hasMarketing && !optedOutOfSponsoredTopSites(context) && hasStoriesOnHomepage
 
         private val Settings.hasMarketing: Boolean
             get() = isMarketingTelemetryEnabled || shouldShowMarketingOnboarding
 
-        private val Settings.hasSponsoredHomepageShortcuts: Boolean
-            get() = showTopSitesFeature || showContileFeature
+        /**
+         * Checks whether an eligible user has opted out of the sponsored top sites feature.
+         *
+         * This is not entirely self evident from the API descriptions, please note:
+         * [Settings.showContileFeature] indicates whether the sponsored shortcuts are shown.
+         * [Settings.showTopSitesFeature] indicates whether the feature should be shown at all.
+         */
+        private fun Settings.optedOutOfSponsoredTopSites(context: Context) =
+            hasSponsoredTopSiteAvailable(context) && (!showContileFeature || !showTopSitesFeature)
+
+        private fun hasSponsoredTopSiteAvailable(context: Context): Boolean =
+            context.components.appStore.state.topSites.any { it is TopSite.Provided }
 
         private val Settings.hasStoriesOnHomepage: Boolean
             get() = showPocketRecommendationsFeature || showPocketSponsoredStories
