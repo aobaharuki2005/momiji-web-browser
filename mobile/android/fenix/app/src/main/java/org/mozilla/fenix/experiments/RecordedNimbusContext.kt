@@ -201,13 +201,20 @@ class RecordedNimbusContext(
                 language = calculatedAttributes.language,
                 region = calculatedAttributes.region,
                 userAcceptedTou = settings.hasAcceptedTermsOfService,
-                noShortcutsStoriesMktOptOuts = settings.noShortcutsStoriesMktOptOuts(context),
+                noShortcutsStoriesMktOptOuts = settings.noShortcutsStoriesOrMktOptOuts(context),
                 userClickedTouPromptLink = settings.hasClickedTermOfUsePromptLink,
                 userClickedTouPromptRemindMeLater = settings.hasClickedTermOfUsePromptRemindMeLater,
             )
         }
 
-        private fun Settings.noShortcutsStoriesMktOptOuts(context: Context) =
+        /**
+         * Checks whether an eligible user has opted out of any sponsored top sites, stories or
+         * marketing.
+         *
+         *  @return `true` if the user has opted out of any sponsored top sites, stories or marketing,
+         * `false` otherwise.
+         */
+        private fun Settings.noShortcutsStoriesOrMktOptOuts(context: Context) =
             hasMarketing &&
                     !optedOutOfSponsoredTopSites(context) &&
                     !optedOutOfSponsoredStories(context)
