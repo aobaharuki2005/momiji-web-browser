@@ -1016,8 +1016,18 @@ class nsDocShell final : public nsDocLoader,
                  nsIURI* aPreviousURI);
   nsPresContext* GetEldestPresContext();
   nsresult CheckLoadingPermissions();
+
+  // Fire a traverse navigate event for a non-traversable navigable.
   MOZ_CAN_RUN_SCRIPT
   void MaybeFireTraverseHistory(nsDocShellLoadState* aLoadState);
+  // Fire a traverse navigate event for a traversable navigable. Since this
+  // participates in #checking-if-unloading-is-canceled we return false to
+  // indicate that we should cancel the navigation.
+  MOZ_CAN_RUN_SCRIPT
+  bool MaybeFireTraversableTraverseHistory(
+      const mozilla::dom::SessionHistoryInfo& aInfo,
+      mozilla::Maybe<mozilla::dom::UserNavigationInvolvement> aUserInvolvement);
+
   nsresult LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType,
                             bool aUserActivation);
   nsresult LoadHistoryEntry(
@@ -1186,6 +1196,10 @@ class nsDocShell final : public nsDocLoader,
  private:
   MOZ_CAN_RUN_SCRIPT
   void InformNavigationAPIAboutAbortingNavigation();
+
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  void InformNavigationAPIAboutChildNavigableDestruction();
 
   enum class OngoingNavigation : uint8_t { NavigationID, Traversal };
   enum class UnsetOngoingNavigation : bool { No, Yes };
