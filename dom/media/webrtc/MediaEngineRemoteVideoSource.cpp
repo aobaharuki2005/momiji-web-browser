@@ -86,6 +86,9 @@ static Maybe<VideoFacingModeEnum> GetFacingMode(const nsString& aDeviceName) {
 
 struct DesiredSizeInput {
   NormalizedConstraints mConstraints;
+  bool mCanCropAndScale;
+  Maybe<int32_t> mCapabilityWidth;
+  Maybe<int32_t> mCapabilityHeight;
   camera::CaptureEngine mCapEngine;
   int32_t mInputWidth;
   int32_t mInputHeight;
@@ -96,17 +99,31 @@ static gfx::IntSize CalculateDesiredSize(DesiredSizeInput aInput) {
   MOZ_ASSERT(aInput.mInputWidth > 0);
   MOZ_ASSERT(aInput.mInputHeight > 0);
 
+  if (aInput.mCapabilityWidth && aInput.mCapabilityHeight &&
+      !aInput.mCanCropAndScale) {
+    // Downscaling camera by constraints is not yet supported (bug 1286945).
+    aInput.mConstraints.mWidth.mIdeal = Nothing();
+    aInput.mConstraints.mHeight.mIdeal = Nothing();
+  }
+
   if (aInput.mRotation == 90 || aInput.mRotation == 270) {
     // This frame is rotated, so what was negotiated as width is now height,
     // and vice versa.
     std::swap(aInput.mConstraints.mWidth, aInput.mConstraints.mHeight);
+    std::swap(aInput.mCapabilityWidth, aInput.mCapabilityWidth);
   }
+
+  // Account for a shared camera giving us higher resolution than we asked for.
+  const int32_t inputWidth =
+      std::max(2, aInput.mCapabilityWidth.valueOr(aInput.mInputWidth));
+  const int32_t inputHeight =
+      std::max(2, aInput.mCapabilityHeight.valueOr(aInput.mInputHeight));
 
   // This logic works for both camera and screen sharing case.
   // In VideoResizeModeEnum::None, ideal dimensions are absent.
   // In screen sharing, min and max dimensions are forbidden.
-  int32_t dst_width = aInput.mConstraints.mWidth.Get(aInput.mInputWidth);
-  int32_t dst_height = aInput.mConstraints.mHeight.Get(aInput.mInputHeight);
+  int32_t dst_width = aInput.mConstraints.mWidth.Get(inputWidth);
+  int32_t dst_height = aInput.mConstraints.mHeight.Get(inputHeight);
 
   if (!aInput.mConstraints.mWidth.mIdeal &&
       aInput.mConstraints.mHeight.mIdeal) {
@@ -378,17 +395,21 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   {
     MutexAutoLock lock(mMutex);
     mState = kStarted;
+    const int32_t& cw = mCapability.width;
+    const int32_t& ch = mCapability.height;
     const double maxFPS = AssertedCast<double>(mCapability.maxFPS);
-    const bool can_crop_and_scale = mCalculation == kFeasibility;
     input = {
         .mConstraints = *mConstraints,
+        .mCanCropAndScale = mCalculation == kFeasibility,
+        .mCapabilityWidth = cw ? Some(cw) : Nothing(),
+        .mCapabilityHeight = ch ? Some(ch) : Nothing(),
         .mCapEngine = mCapEngine,
-        .mInputWidth = mCapability.width,
-        .mInputHeight = mCapability.height,
+        .mInputWidth = cw,
+        .mInputHeight = ch,
         .mRotation = 0,
     };
     framerate =
-        can_crop_and_scale ? mConstraints->mFrameRate.Get(maxFPS) : maxFPS;
+        input.mCanCropAndScale ? mConstraints->mFrameRate.Get(maxFPS) : maxFPS;
   }
 
   mSettingsUpdatedByFrame->mValue = false;
@@ -496,6 +517,9 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
     const int32_t& ch = mCapability.height;
     input = {
         .mConstraints = c,
+        .mCanCropAndScale = mCalculation == kFeasibility,
+        .mCapabilityWidth = cw ? Some(cw) : Nothing(),
+        .mCapabilityHeight = ch ? Some(ch) : Nothing(),
         .mCapEngine = mCapEngine,
         .mInputWidth = cw ? cw : mImageSize.width,
         .mInputHeight = ch ? ch : mImageSize.height,
@@ -588,9 +612,14 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mState == kStarted);
+    const int32_t& cw = mCapability.width;
+    const int32_t& ch = mCapability.height;
 
     input = {
         .mConstraints = *mConstraints,
+        .mCanCropAndScale = mCalculation == kFeasibility,
+        .mCapabilityWidth = cw ? Some(cw) : Nothing(),
+        .mCapabilityHeight = ch ? Some(ch) : Nothing(),
         .mCapEngine = mCapEngine,
         .mInputWidth = aProps.width(),
         .mInputHeight = aProps.height(),
