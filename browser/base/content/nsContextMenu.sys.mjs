@@ -70,6 +70,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "gPrintEnabled",
+  "print.enabled",
+  false
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "QueryStringStripper",
@@ -871,7 +878,8 @@ export class nsContextMenu {
       "context-print-selection",
       !this.inAboutDevtoolsToolbox &&
         this.isContentSelected &&
-        this.selectionInfo.isDocumentLevelSelection
+        this.selectionInfo.isDocumentLevelSelection &&
+        lazy.gPrintEnabled
     );
 
     var shouldShow = !(
@@ -969,6 +977,8 @@ export class nsContextMenu {
     this.showItem("context-openframeintab", !this.inSrcdocFrame);
     this.showItem("context-openframe", !this.inSrcdocFrame);
     this.showItem("context-bookmarkframe", !this.inSrcdocFrame);
+    this.showItem("context-printframe", lazy.gPrintEnabled);
+    this.showItem("print-frame-sep", lazy.gPrintEnabled);
 
     // Hide menu entries for images, show otherwise
     if (this.inFrame) {
