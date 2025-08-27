@@ -48,6 +48,13 @@
 
     constructor() {
       super();
+
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "_showTabGroupHoverPreview",
+        "browser.tabs.groups.hoverPreview.enabled",
+        false
+      );
     }
 
     static get inheritedAttributes() {
@@ -355,6 +362,12 @@
     }
 
     async #updateTooltip() {
+      // Disable the tooltip for collapsed groups when tab group hover preview is enabled
+      if (this._showTabGroupHoverPreview && this.collapsed) {
+        delete this.dataset.tooltip;
+        return;
+      }
+
       let tabGroupName = this.#label || this.defaultGroupName;
       let tooltipKey = this.collapsed
         ? "tab-group-label-tooltip-collapsed"
