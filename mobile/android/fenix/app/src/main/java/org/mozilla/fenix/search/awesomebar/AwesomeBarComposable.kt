@@ -143,7 +143,7 @@ class AwesomeBarComposable(
                 onClick = {
                     url?.let {
                         toolbarStore.dispatch(
-                            SearchQueryUpdated(query = url, showAsPreselected = false),
+                            SearchQueryUpdated(query = url, isQueryPrefilled = false),
                         )
                     }
                 },

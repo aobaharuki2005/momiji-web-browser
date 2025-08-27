@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -53,7 +51,7 @@ private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(90.dp)
  * URL ("edit mode").
  *
  * @param query The current query.
- * @param showQueryAsPreselected Whether or not to show the query as preselected.
+ * @param isQueryPrefilled Whether [query] is prefilled and not user entered.
  * @param gravity [ToolbarGravity] for where the toolbar is being placed on the screen.
  * @param autocompleteProviders Optional list of [AutocompleteProvider]s to be used for
  * inline autocompleting the current query.
@@ -76,7 +74,7 @@ private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(90.dp)
 fun BrowserEditToolbar(
     query: String,
     hint: String,
-    showQueryAsPreselected: Boolean = false,
+    isQueryPrefilled: Boolean = false,
     gravity: ToolbarGravity = Top,
     autocompleteProviders: List<AutocompleteProvider> = emptyList(),
     useComposeTextField: Boolean = false,
@@ -161,7 +159,7 @@ fun BrowserEditToolbar(
                 InlineAutocompleteTextField(
                     query = query,
                     hint = hint,
-                    showQueryAsPreselected = showQueryAsPreselected,
+                    showQueryAsPreselected = isQueryPrefilled,
                     autocompleteProviders = autocompleteProviders,
                     modifier = Modifier.weight(1f),
                     onUrlEdit = onUrlEdit,

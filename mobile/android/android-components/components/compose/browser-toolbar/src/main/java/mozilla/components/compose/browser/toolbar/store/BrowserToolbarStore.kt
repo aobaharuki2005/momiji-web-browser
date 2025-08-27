@@ -102,7 +102,7 @@ private fun reduce(state: BrowserToolbarState, action: BrowserToolbarAction): Br
         is BrowserEditToolbarAction.SearchQueryUpdated -> state.copy(
             editState = state.editState.copy(
                 query = action.query,
-                showQueryAsPreselected = action.showAsPreselected,
+                isQueryPrefilled = action.isQueryPrefilled,
             ),
         )
 

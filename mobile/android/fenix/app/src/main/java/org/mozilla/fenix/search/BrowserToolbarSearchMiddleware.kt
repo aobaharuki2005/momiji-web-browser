@@ -537,7 +537,7 @@ class BrowserToolbarSearchMiddleware(
                         context.dispatch(
                             SearchQueryUpdated(
                                 query = voiceInputResult,
-                                showAsPreselected = true,
+                                isQueryPrefilled = true,
                             ),
                         )
                         appStore.dispatch(VoiceInputRequestCleared)
