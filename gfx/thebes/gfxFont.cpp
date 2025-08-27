@@ -183,7 +183,7 @@ void gfxFontCache::Shutdown() {
 
 gfxFontCache::gfxFontCache(nsIEventTarget* aEventTarget)
     : ExpirationTrackerImpl<gfxFont, 3, Lock, AutoLock>(
-          FONT_TIMEOUT_SECONDS * 1000, "gfxFontCache", aEventTarget) {
+          FONT_TIMEOUT_SECONDS * 1000, "gfxFontCache"_ns, aEventTarget) {
   nsCOMPtr<nsIObserverService> obs = GetObserverService();
   if (obs) {
     obs->AddObserver(new Observer, "memory-pressure", false);

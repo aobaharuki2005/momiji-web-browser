@@ -1424,13 +1424,13 @@ class nsReadOnlyTimer final : public nsITimer {
   NS_IMETHOD InitWithNamedFuncCallback(nsTimerCallbackFunc aCallback,
                                        void* aClosure, uint32_t aDelay,
                                        uint32_t aType,
-                                       const char* aName) override {
+                                       const nsACString& aName) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   NS_IMETHOD InitHighResolutionWithNamedFuncCallback(
       nsTimerCallbackFunc aCallback, void* aClosure,
       const mozilla::TimeDuration& aDelay, uint32_t aType,
-      const char* aName) override {
+      const nsACString& aName) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 

@@ -1989,7 +1989,7 @@ nsresult WorkerPrivate::DispatchDebuggerRunnable(
       MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
           DebuggerInterruptTimerCallback, nullptr,
           DEBUGGER_RUNNABLE_INTERRUPT_AFTER_MS, nsITimer::TYPE_ONE_SHOT,
-          "dom:DebuggerInterruptTimer"));
+          "dom:DebuggerInterruptTimer"_ns));
     }
 
     // okay, we have our mutex back now, put the timer in place.
@@ -4204,7 +4204,7 @@ void WorkerPrivate::ScheduleTimeSliceExpiration(uint32_t aDelay) {
   // used for control events.
   MOZ_ALWAYS_SUCCEEDS(data->mTSTimer->InitWithNamedFuncCallback(
       [](nsITimer* Timer, void* aClosure) { return; }, nullptr, aDelay,
-      nsITimer::TYPE_ONE_SHOT, "TimeSliceExpirationTimer"));
+      nsITimer::TYPE_ONE_SHOT, "TimeSliceExpirationTimer"_ns));
 }
 
 void WorkerPrivate::CancelTimeSliceExpiration() {
@@ -4309,14 +4309,14 @@ void WorkerPrivate::SetGCTimerMode(GCTimerMode aMode) {
   uint32_t delay = 0;
   int16_t type = nsITimer::TYPE_ONE_SHOT;
   nsTimerCallbackFunc callback = nullptr;
-  const char* name = nullptr;
+  nsCString name;
   nsITimer* timer = nullptr;
 
   if (aMode == PeriodicTimer) {
     delay = PERIODIC_GC_TIMER_DELAY_SEC * 1000;
     type = nsITimer::TYPE_REPEATING_SLACK;
     callback = PeriodicGCTimerCallback;
-    name = "dom::PeriodicGCTimerCallback";
+    name.AssignLiteral("dom::PeriodicGCTimerCallback");
     timer = data->mPeriodicGCTimer;
     data->mPeriodicGCTimerRunning = true;
     LOG(WorkerLog(), ("Worker %p scheduled periodic GC timer\n", this));
@@ -4324,7 +4324,7 @@ void WorkerPrivate::SetGCTimerMode(GCTimerMode aMode) {
     delay = IDLE_GC_TIMER_DELAY_SEC * 1000;
     type = nsITimer::TYPE_ONE_SHOT;
     callback = IdleGCTimerCallback;
-    name = "dom::IdleGCTimerCallback";
+    name.AssignLiteral("dom::IdleGCTimerCallback");
     timer = data->mIdleGCTimer;
     data->mIdleGCTimerRunning = true;
     LOG(WorkerLog(), ("Worker %p scheduled idle GC timer\n", this));

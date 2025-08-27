@@ -3265,7 +3265,7 @@ class SelectorCache final : public nsExpirationTracker<SelectorCacheKey, 4> {
 
   SelectorCache()
       : nsExpirationTracker<SelectorCacheKey, 4>(
-            1000, "SelectorCache", GetMainThreadSerialEventTarget()) {}
+            1000, "SelectorCache"_ns, GetMainThreadSerialEventTarget()) {}
 
   void NotifyExpired(SelectorCacheKey* aSelector) final {
     MOZ_ASSERT(NS_IsMainThread());

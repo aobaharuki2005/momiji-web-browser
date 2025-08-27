@@ -8156,7 +8156,7 @@ void ConnectionPool::AdjustIdleTimer() {
 
     MOZ_ALWAYS_SUCCEEDS(mIdleTimer->InitWithNamedFuncCallback(
         IdleTimerCallback, this, delay, nsITimer::TYPE_ONE_SHOT,
-        "ConnectionPool::IdleTimerCallback"));
+        "ConnectionPool::IdleTimerCallback"_ns));
 
     mTargetIdleTime = newTargetIdleTime;
   }
@@ -12230,7 +12230,7 @@ nsresult QuotaClient::AsyncDeleteFile(DatabaseFileManager* aFileManager,
 
   QM_TRY(MOZ_TO_RESULT(mDeleteTimer->InitWithNamedFuncCallback(
       DeleteTimerCallback, this, kDeleteTimeoutMs, nsITimer::TYPE_ONE_SHOT,
-      "dom::indexeddb::QuotaClient::AsyncDeleteFile")));
+      "dom::indexeddb::QuotaClient::AsyncDeleteFile"_ns)));
 
   mPendingDeleteInfos.GetOrInsertNew(aFileManager)->AppendElement(aFileId);
 

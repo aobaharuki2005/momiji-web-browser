@@ -110,7 +110,7 @@ class PopupExpirationTracker final
 
  public:
   PopupExpirationTracker()
-      : nsExpirationTracker(5000 /* ms */, "PopupExpirationTracker") {}
+      : nsExpirationTracker(5000 /* ms */, "PopupExpirationTracker"_ns) {}
   static PopupExpirationTracker* Get() { return sInstance.get(); }
   static PopupExpirationTracker& GetOrCreate() {
     if (!sInstance) {

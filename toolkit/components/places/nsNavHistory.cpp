@@ -572,7 +572,7 @@ PRTime nsNavHistory::GetNow() {
     if (mExpireNowTimer)
       mExpireNowTimer->InitWithNamedFuncCallback(
           expireNowTimerCallback, this, RENEW_CACHED_NOW_TIMEOUT,
-          nsITimer::TYPE_ONE_SHOT, "nsNavHistory::GetNow");
+          nsITimer::TYPE_ONE_SHOT, "nsNavHistory::GetNow"_ns);
   }
   return mCachedNow;
 }

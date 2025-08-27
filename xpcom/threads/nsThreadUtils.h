@@ -1158,9 +1158,9 @@ class RunnableMethodImpl final
     if (nsCOMPtr<nsITimer> timer = GetTimer()) {
       timer->Cancel();
       timer->SetTarget(aTarget);
-      timer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
-                                       nsITimer::TYPE_ONE_SHOT,
-                                       "detail::RunnableMethodImpl::SetTimer");
+      timer->InitWithNamedFuncCallback(
+          TimedOut, this, aDelay, nsITimer::TYPE_ONE_SHOT,
+          "detail::RunnableMethodImpl::SetTimer"_ns);
     }
   }
 };

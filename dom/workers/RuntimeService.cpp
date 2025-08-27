@@ -1723,7 +1723,7 @@ void RuntimeService::Cleanup() {
           getter_AddRefs(timer),
           [self](nsITimer*) { self->DumpRunningWorkers(); },
           TimeDuration::FromSeconds(1), nsITimer::TYPE_ONE_SHOT,
-          "RuntimeService::WorkerShutdownDump");
+          "RuntimeService::WorkerShutdownDump"_ns);
       Unused << NS_WARN_IF(NS_FAILED(rv));
 
       // And make sure all their final messages have run and all their threads

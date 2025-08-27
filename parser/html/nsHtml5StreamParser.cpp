@@ -1608,7 +1608,7 @@ void nsHtml5StreamParser::DoDataAvailable(Span<const uint8_t> aBuffer) {
         nsHtml5StreamParser::TimerCallback, static_cast<void*>(this),
         mFlushTimerEverFired ? StaticPrefs::html5_flushtimer_initialdelay()
                              : StaticPrefs::html5_flushtimer_subsequentdelay(),
-        nsITimer::TYPE_ONE_SHOT, "nsHtml5StreamParser::DoDataAvailable");
+        nsITimer::TYPE_ONE_SHOT, "nsHtml5StreamParser::DoDataAvailable"_ns);
   }
   mFlushTimerArmed = true;
 }

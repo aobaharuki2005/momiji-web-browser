@@ -2438,7 +2438,7 @@ void QuotaManager::Shutdown() {
       MOZ_ALWAYS_SUCCEEDS(crashBrowserTimer->InitWithNamedFuncCallback(
           crashBrowserTimerCallback, this, SHUTDOWN_CRASH_BROWSER_TIMEOUT_MS,
           nsITimer::TYPE_ONE_SHOT,
-          "quota::QuotaManager::Shutdown::crashBrowserTimer"));
+          "quota::QuotaManager::Shutdown::crashBrowserTimer"_ns));
     }
   };
 
@@ -2488,7 +2488,7 @@ void QuotaManager::Shutdown() {
       MOZ_ALWAYS_SUCCEEDS(killActorsTimer->InitWithNamedFuncCallback(
           killActorsTimerCallback, this, SHUTDOWN_KILL_ACTORS_TIMEOUT_MS,
           nsITimer::TYPE_ONE_SHOT,
-          "quota::QuotaManager::Shutdown::killActorsTimer"));
+          "quota::QuotaManager::Shutdown::killActorsTimer"_ns));
     }
   };
 

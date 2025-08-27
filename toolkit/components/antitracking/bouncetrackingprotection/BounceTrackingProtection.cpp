@@ -201,7 +201,7 @@ nsresult BounceTrackingProtection::UpdateBounceTrackingPurgeTimer(
             [] { NS_WARNING("RunPurgeBounceTrackers failed"); });
       },
       purgeTimerPeriod * PR_MSEC_PER_SEC, nsITimer::TYPE_REPEATING_SLACK,
-      "mBounceTrackingPurgeTimer");
+      "mBounceTrackingPurgeTimer"_ns);
 }
 
 // static

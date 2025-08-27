@@ -2930,7 +2930,7 @@ void CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate() {
         },
         this, StaticPrefs::browser_sessionstore_interval(),
         nsITimer::TYPE_ONE_SHOT,
-        "CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate");
+        "CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate"_ns);
 
     if (result.isErr()) {
       return;

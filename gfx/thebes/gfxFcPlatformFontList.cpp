@@ -1375,7 +1375,7 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
       NS_NewTimerWithFuncCallback(
           getter_AddRefs(mCheckFontUpdatesTimer), CheckFontUpdates, this,
           (rescanInterval + 1) * 1000, nsITimer::TYPE_REPEATING_SLACK,
-          "gfxFcPlatformFontList::gfxFcPlatformFontList");
+          "gfxFcPlatformFontList::gfxFcPlatformFontList"_ns);
       if (!mCheckFontUpdatesTimer) {
         NS_WARNING("Failure to create font updates timer");
       }

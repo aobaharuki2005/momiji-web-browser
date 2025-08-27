@@ -213,7 +213,7 @@ class DcSctpTimeout : public Timeout {
                     static_cast<unsigned>(timeout_id.value())));
           connection->HandleTimeout(timeout_id);
         },
-        duration.value(), nsITimer::TYPE_ONE_SHOT, "DcSctpTimeout::Start");
+        duration.value(), nsITimer::TYPE_ONE_SHOT, "DcSctpTimeout::Start"_ns);
     if (result.isOk()) {
       mTimer = result.unwrap();
     }

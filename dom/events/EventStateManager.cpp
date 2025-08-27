@@ -2363,7 +2363,7 @@ void EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
   int32_t clickHoldDelay = StaticPrefs::ui_click_hold_context_menus_delay();
   NS_NewTimerWithFuncCallback(
       getter_AddRefs(mClickHoldTimer), sClickHoldCallback, this, clickHoldDelay,
-      nsITimer::TYPE_ONE_SHOT, "EventStateManager::CreateClickHoldTimer");
+      nsITimer::TYPE_ONE_SHOT, "EventStateManager::CreateClickHoldTimer"_ns);
 }  // CreateClickHoldTimer
 
 //

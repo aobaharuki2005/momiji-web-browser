@@ -6135,10 +6135,11 @@ void HTMLMediaElement::StartProgressTimer() {
   MOZ_ASSERT(mNetworkState == NETWORK_LOADING);
   NS_ASSERTION(!mProgressTimer, "Already started progress timer.");
 
-  NS_NewTimerWithFuncCallback(
-      getter_AddRefs(mProgressTimer), ProgressTimerCallback, this, PROGRESS_MS,
-      nsITimer::TYPE_REPEATING_SLACK, "HTMLMediaElement::ProgressTimerCallback",
-      GetMainThreadSerialEventTarget());
+  NS_NewTimerWithFuncCallback(getter_AddRefs(mProgressTimer),
+                              ProgressTimerCallback, this, PROGRESS_MS,
+                              nsITimer::TYPE_REPEATING_SLACK,
+                              "HTMLMediaElement::ProgressTimerCallback"_ns,
+                              GetMainThreadSerialEventTarget());
 }
 
 void HTMLMediaElement::StartProgress() {

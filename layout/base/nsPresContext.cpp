@@ -2483,7 +2483,7 @@ void nsPresContext::NotifyDidPaintForSubtree(
 }
 
 already_AddRefed<nsITimer> nsPresContext::CreateTimer(
-    nsTimerCallbackFunc aCallback, const char* aName, uint32_t aDelay) {
+    nsTimerCallbackFunc aCallback, const nsACString& aName, uint32_t aDelay) {
   nsCOMPtr<nsITimer> timer;
   NS_NewTimerWithFuncCallback(getter_AddRefs(timer), aCallback, this, aDelay,
                               nsITimer::TYPE_ONE_SHOT, aName,
