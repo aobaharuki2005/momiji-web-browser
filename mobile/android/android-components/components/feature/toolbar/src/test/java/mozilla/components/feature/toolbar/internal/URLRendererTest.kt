@@ -437,21 +437,143 @@ class URLRendererTest {
         }
     }
 
-    private suspend fun getSpannedUrl(url: String): SpannableStringBuilder {
+    @Test
+    fun `GIVEN a simple URL WHEN rendering it THEN domain set and registrable domain is colored`() {
+        runTestOnMain {
+            testRenderWithColoredDomain(
+                testUrl = "https://www.mozilla.org/",
+                expectedUrl = "www.mozilla.org",
+                expectedRegistrableDomainSpan = 4 to 15,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN a URL with a trailing period in the domain WHEN rendering it THEN domain is set and registrable domain is colored`() {
+        runTestOnMain {
+            testRenderWithColoredDomain(
+                testUrl = "https://www.mozilla.org./",
+                expectedUrl = "www.mozilla.org.",
+                expectedRegistrableDomainSpan = 4 to 15,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN a URL with a repeated domain WHEN rendering it THEN domain is set and the last occurrence of domain is colored`() {
+        runTestOnMain {
+            testRenderWithColoredDomain(
+                testUrl = "https://mozilla.org.mozilla.org/",
+                expectedUrl = "mozilla.org.mozilla.org",
+                expectedRegistrableDomainSpan = 12 to 23,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN a URL with an IPv4 address WHEN rendering it THEN the IP part is set and colored`() {
+        runTestOnMain {
+            testRenderWithColoredDomain(
+                testUrl = "http://127.0.0.1/",
+                expectedUrl = "127.0.0.1",
+                expectedRegistrableDomainSpan = 0 to 9,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN a URL with an IPv6 address WHEN rendering it THEN the IP part is set and colored`() {
+        runTestOnMain {
+            testRenderWithColoredDomain(
+                testUrl = "http://[::1]/",
+                expectedUrl = "[::1]",
+                expectedRegistrableDomainSpan = 0 to 5,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN a URL with a non PSL domain WHEN rendering it THEN host set and colored`() {
+        runTestOnMain {
+            testRenderWithColoredDomain(
+                testUrl = "http://localhost/",
+                expectedUrl = "localhost",
+                expectedRegistrableDomainSpan = 0 to 9,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN an internal page name WHEN rendering it THEN it is set and not colored`() {
+        runTestOnMain {
+            testRenderWithColoredDomain(
+                testUrl = "about:mozilla",
+                expectedUrl = "about:mozilla",
+                expectedRegistrableDomainSpan = null,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN a content URI WHEN rendering it THEN it is set and not colored`() {
+        runTestOnMain {
+            testRenderWithColoredDomain(
+                testUrl = "content://media/external/file/1000000000",
+                expectedUrl = "content://media/external/file/1000000000",
+                expectedRegistrableDomainSpan = null,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN a blob URI WHEN rendering it THEN domain set and registrable domain is colored`() {
+        runTestOnMain {
+            testRenderWithColoredDomain(
+                testUrl = "blob:https://www.mozilla.org/69a29afb-938c-4b9e-9fca-b2f79755047a",
+                expectedUrl = "www.mozilla.org",
+                expectedRegistrableDomainSpan = 4 to 15,
+            )
+        }
+    }
+
+    private suspend fun getSpannedUrl(
+        url: String,
+        renderStyle: ToolbarFeature.RenderStyle = ToolbarFeature.RenderStyle.ColoredUrl,
+    ): SpannableStringBuilder {
         val toolbar: Toolbar = FakeToolbar(url = "")
 
-        val renderer = URLRenderer(toolbar, getConfiguration())
+        val renderer = URLRenderer(toolbar, getConfiguration(renderStyle))
 
         renderer.updateUrl(url)
 
         return requireNotNull(toolbar.url as? SpannableStringBuilder) { "Toolbar URL should not be null" }
     }
 
-    private fun getConfiguration() = ToolbarFeature.UrlRenderConfiguration(
+    private fun getConfiguration(
+        renderStyle: ToolbarFeature.RenderStyle = ToolbarFeature.RenderStyle.ColoredUrl,
+    ) = ToolbarFeature.UrlRenderConfiguration(
         publicSuffixList = PublicSuffixList(testContext, Dispatchers.Unconfined),
         registrableDomainColor = Color.RED,
         urlColor = Color.GREEN,
+        renderStyle = renderStyle,
     )
+
+    private fun assertUrlColorSpans(
+        url: SpannableStringBuilder,
+        expectedRegistrableDomainSpan: Pair<Int, Int>,
+    ) {
+        val spans = url.getSpans(0, url.length, ForegroundColorSpan::class.java)
+
+        assertEquals(2, spans.size)
+        assertEquals(Color.GREEN, spans[0].foregroundColor)
+        assertEquals(Color.RED, spans[1].foregroundColor)
+
+        assertEquals(0, url.getSpanStart(spans[0]))
+        assertEquals(url.length, url.getSpanEnd(spans[0]))
+
+        assertEquals(expectedRegistrableDomainSpan.first, url.getSpanStart(spans[1]))
+        assertEquals(expectedRegistrableDomainSpan.second, url.getSpanEnd(spans[1]))
+    }
 
     private suspend fun testRenderWithColoredUrl(
         testUrl: String,
@@ -461,17 +583,7 @@ class URLRendererTest {
 
         assertEquals(testUrl, url.toString())
 
-        val spans = url.getSpans(0, url.length, ForegroundColorSpan::class.java)
-
-        assertEquals(2, spans.size)
-        assertEquals(Color.GREEN, spans[0].foregroundColor)
-        assertEquals(Color.RED, spans[1].foregroundColor)
-
-        assertEquals(0, url.getSpanStart(spans[0]))
-        assertEquals(testUrl.length, url.getSpanEnd(spans[0]))
-
-        assertEquals(expectedRegistrableDomainSpan.first, url.getSpanStart(spans[1]))
-        assertEquals(expectedRegistrableDomainSpan.second, url.getSpanEnd(spans[1]))
+        assertUrlColorSpans(url, expectedRegistrableDomainSpan)
     }
 
     private suspend fun testRenderWithUncoloredUrl(testUrl: String) {
@@ -488,17 +600,30 @@ class URLRendererTest {
     ) {
         val toolbar: Toolbar = FakeToolbar(url = testUrl)
 
-        val configuration = ToolbarFeature.UrlRenderConfiguration(
-            publicSuffixList = PublicSuffixList(testContext, Dispatchers.Unconfined),
-            registrableDomainColor = Color.RED,
-            urlColor = Color.GREEN,
-            renderStyle = ToolbarFeature.RenderStyle.RegistrableDomain,
+        val renderer = URLRenderer(
+            toolbar,
+            getConfiguration(renderStyle = ToolbarFeature.RenderStyle.RegistrableDomain),
         )
-
-        val renderer = URLRenderer(toolbar, configuration)
 
         renderer.updateUrl(testUrl)
         assertEquals(expectedUrl, toolbar.url)
+    }
+
+    private suspend fun testRenderWithColoredDomain(
+        testUrl: String,
+        expectedUrl: String,
+        expectedRegistrableDomainSpan: Pair<Int, Int>?,
+    ) {
+        val url = getSpannedUrl(testUrl, ToolbarFeature.RenderStyle.ColoredDomain)
+
+        assertEquals(expectedUrl, url.toString())
+
+        if (expectedRegistrableDomainSpan != null) {
+            assertUrlColorSpans(url, expectedRegistrableDomainSpan)
+        } else {
+            val spans = url.getSpans(0, url.length, ForegroundColorSpan::class.java)
+            assertEquals(0, spans.size)
+        }
     }
 }
 

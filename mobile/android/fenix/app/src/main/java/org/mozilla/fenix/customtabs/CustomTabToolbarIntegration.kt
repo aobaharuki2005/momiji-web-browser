@@ -29,5 +29,5 @@ class CustomTabToolbarIntegration(
     interactor = interactor,
     customTabId = customTabId,
     isPrivate = isPrivate,
-    renderStyle = ToolbarFeature.RenderStyle.RegistrableDomain,
+    renderStyle = ToolbarFeature.RenderStyle.ColoredDomain,
 )
