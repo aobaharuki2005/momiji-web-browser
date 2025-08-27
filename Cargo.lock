@@ -3030,7 +3030,7 @@ version = "0.1.0"
 dependencies = [
  "nserror",
  "nsstring",
- "sfv",
+ "sfv 0.9.4",
  "thin-vec",
  "xpcom",
 ]
@@ -4624,8 +4624,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-bin"
-version = "0.14.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
+version = "0.15.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.15.0#01e855911c2edf9745dafc02cf5156182d4fb1aa"
 dependencies = [
  "clap",
  "clap-verbosity-flag",
@@ -4647,8 +4647,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.14.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
+version = "0.15.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.15.0#01e855911c2edf9745dafc02cf5156182d4fb1aa"
 dependencies = [
  "enum-map",
  "env_logger",
@@ -4660,8 +4660,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.14.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
+version = "0.15.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.15.0#01e855911c2edf9745dafc02cf5156182d4fb1aa"
 dependencies = [
  "bindgen",
  "enum-map",
@@ -4677,8 +4677,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.14.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
+version = "0.15.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.15.0#01e855911c2edf9745dafc02cf5156182d4fb1aa"
 dependencies = [
  "enumset",
  "log",
@@ -4688,15 +4688,15 @@ dependencies = [
  "neqo-transport",
  "qlog",
  "rustc-hash 2.1.1",
- "sfv",
+ "sfv 0.14.0",
  "strum",
  "url",
 ]
 
 [[package]]
 name = "neqo-qpack"
-version = "0.14.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
+version = "0.15.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.15.0#01e855911c2edf9745dafc02cf5156182d4fb1aa"
 dependencies = [
  "log",
  "neqo-common",
@@ -4708,8 +4708,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.14.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
+version = "0.15.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.15.0#01e855911c2edf9745dafc02cf5156182d4fb1aa"
 dependencies = [
  "enum-map",
  "enumset",
@@ -4727,8 +4727,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-udp"
-version = "0.14.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
+version = "0.15.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.15.0#01e855911c2edf9745dafc02cf5156182d4fb1aa"
 dependencies = [
  "cfg_aliases",
  "libc",
@@ -5615,6 +5615,26 @@ name = "redox_users"
 version = "0.4.999"
 
 [[package]]
+name = "ref-cast"
+version = "1.0.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a0ae411dbe946a674d89546582cea4ba2bb8defac896622d6496f14c23ba5cf"
+dependencies = [
+ "ref-cast-impl",
+]
+
+[[package]]
+name = "ref-cast-impl"
+version = "1.0.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1165225c21bff1f3bbce98f5a1f889949bc902d3575308cc7b0de30b4f6d27c7"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "regex"
 version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6133,6 +6153,17 @@ dependencies = [
  "data-encoding",
  "indexmap",
  "rust_decimal",
+]
+
+[[package]]
+name = "sfv"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d471eaefb14f4b30032525bdb124b36e55ba9cb1292080e06f1a236cd10fe87"
+dependencies = [
+ "base64 0.22.1",
+ "indexmap",
+ "ref-cast",
 ]
 
 [[package]]

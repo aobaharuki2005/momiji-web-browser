@@ -5380,6 +5380,12 @@ criteria = "safe-to-deploy"
 delta = "0.9.3 -> 0.9.4"
 notes = "Only an update of `indexmap` 1 → 2."
 
+[[audits.sfv]]
+who = "Valentin Gosu <valentin.gosu@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.9.4 -> 0.14.0"
+notes = "I have reviewed and published the sfv updates myself."
+
 [[audits.sha1]]
 who = "Dana Keeler <dkeeler@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -7387,6 +7393,18 @@ criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-04-09"
 end = "2024-05-30"
+
+[[trusted.ref-cast]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-05-05"
+end = "2026-08-19"
+
+[[trusted.ref-cast-impl]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-05-05"
+end = "2026-08-19"
 
 [[trusted.regex]]
 criteria = "safe-to-deploy"
