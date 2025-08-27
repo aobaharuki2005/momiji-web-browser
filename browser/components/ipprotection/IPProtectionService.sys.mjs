@@ -30,7 +30,15 @@ import {
 } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 const ENABLED_PREF = "browser.ipProtection.enabled";
+const LOG_PREF = "browser.ipProtection.log";
 const VPN_ADDON_ID = "vpn@mozilla.com";
+
+ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
+  return console.createInstance({
+    prefix: "IPProtectionService",
+    maxLogLevel: Services.prefs.getBoolPref(LOG_PREF, false) ? "Debug" : "Warn",
+  });
+});
 
 /**
  * A singleton service that manages proxy integration and backend functionality.
@@ -166,6 +174,13 @@ class IPProtectionServiceSingleton extends EventTarget {
       !this.isEntitled ||
       this.isActive
     ) {
+      lazy.logConsole.info("Proxy: Error");
+      lazy.logConsole.debug("Could not start:", {
+        isSignedIn: this.isSignedIn,
+        isEnrolled: this.isEnrolled,
+        isEntitled: this.isEntitled,
+        isActive: this.isActive,
+      });
       this.#dispatchError(ERRORS.GENERIC);
       return;
     }
@@ -177,6 +192,8 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (!this.#pass?.isValid()) {
       this.#pass = await this.#getProxyPass();
       if (!this.#pass) {
+        lazy.logConsole.info("Proxy: No Pass");
+        this.#dispatchError(ERRORS.GENERIC);
         return;
       }
       this.hasProxyPass = true;
@@ -184,6 +201,7 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.location = await lazy.getDefaultLocation();
     const server = await lazy.selectServer(this.location?.city);
+    lazy.logConsole.debug("Server:", server?.hostname);
     if (this.connection?.active) {
       this.connection.stop();
     }
@@ -218,6 +236,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (userAction) {
       this.reloadCurrentTab();
     }
+    lazy.logConsole.info("Proxy: Started");
   }
 
   /**
@@ -251,6 +270,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (userAction) {
       this.reloadCurrentTab();
     }
+    lazy.logConsole.info("Proxy: Stopped");
   }
 
   /**
@@ -291,6 +311,10 @@ class IPProtectionServiceSingleton extends EventTarget {
       this.#dispatchError(error?.message);
     }
 
+    if (isEnrolled) {
+      lazy.logConsole.info("Account: Linked");
+    }
+
     return isEnrolled;
   }
 
@@ -301,7 +325,13 @@ class IPProtectionServiceSingleton extends EventTarget {
    */
   #isEligible() {
     let inExperiment = lazy.NimbusFeatures.ipProtection.getEnrollmentMetadata();
-    return inExperiment?.branch && inExperiment.branch !== "control";
+    let isEligible = inExperiment?.branch && inExperiment.branch !== "control";
+
+    if (isEligible) {
+      lazy.logConsole.info("Device: Eligible");
+    }
+
+    return isEligible;
   }
 
   /**
@@ -429,6 +459,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
 
     if (this.isSignedIn) {
+      lazy.logConsole.info("Account: Signed In");
       this.dispatchEvent(
         new CustomEvent("IPProtectionService:SignedIn", {
           bubbles: true,
@@ -438,6 +469,7 @@ class IPProtectionServiceSingleton extends EventTarget {
       await this.#updateEnrollment();
       await this.updateHasUpgradedStatus();
     } else {
+      lazy.logConsole.info("Account: Signed Out");
       this.dispatchEvent(
         new CustomEvent("IPProtectionService:SignedOut", {
           bubbles: true,
@@ -544,12 +576,17 @@ class IPProtectionServiceSingleton extends EventTarget {
       this.#dispatchError(error?.message);
     }
 
-    this.isEnrolled = enrollment?.ok;
-    if (enrollment?.error) {
-      this.#dispatchError(enrollment.error);
+    lazy.logConsole.debug(
+      "Guardian:",
+      enrollment?.ok ? "Enrolled" : "Enrollment Failed"
+    );
+
+    if (enrollment?.ok) {
+      return true;
     }
 
-    return this.isEnrolled;
+    this.#dispatchError(enrollment?.error);
+    return false;
   }
 
   /**
@@ -569,9 +606,11 @@ class IPProtectionServiceSingleton extends EventTarget {
    * @returns {Promise<Entitlement|null>} - The entitlement object or null if not entitled.
    */
   async #getEntitlement() {
-    let { error, entitlement } = await this.guardian.fetchUserInfo();
-    if (error) {
-      this.#dispatchError(error);
+    let { status, entitlement, error } = await this.guardian.fetchUserInfo();
+    lazy.logConsole.debug("Entitlement:", { status, entitlement, error });
+
+    if (error || !entitlement || status != 200) {
+      this.#dispatchError(error || `Status: ${status}`);
       return null;
     }
 
@@ -584,9 +623,15 @@ class IPProtectionServiceSingleton extends EventTarget {
    * @returns {Promise<ProxyPass|null>} - the proxy pass if it available.
    */
   async #getProxyPass() {
-    let { error, status, pass } = await this.guardian.fetchProxyPass();
+    let { status, error, pass } = await this.guardian.fetchProxyPass();
+    lazy.logConsole.debug("ProxyPass:", {
+      status,
+      valid: pass?.isValid(),
+      error,
+    });
+
     if (error || !pass || status != 200) {
-      this.#dispatchError(ERRORS.GENERIC);
+      this.#dispatchError(error);
       return null;
     }
 
@@ -608,7 +653,7 @@ class IPProtectionServiceSingleton extends EventTarget {
    *
    * @param {string} error - the error message to send.
    */
-  #dispatchError(error = ERRORS.GENERIC) {
+  #dispatchError(error) {
     this.hasError = true;
     this.errors.push(error);
     this.dispatchEvent(
@@ -620,6 +665,7 @@ class IPProtectionServiceSingleton extends EventTarget {
         },
       })
     );
+    lazy.logConsole.error(error);
   }
 }
 
