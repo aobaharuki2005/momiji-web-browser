@@ -756,8 +756,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mOverriddenFingerprintingSettingsIsSet(
           rhs.mOverriddenFingerprintingSettingsIsSet),
 #endif
-      mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-          rhs.mIsOriginTrialCoepCredentiallessEnabledForTopLevel),
       mUnstrippedURI(rhs.mUnstrippedURI),
       mInterceptionInfo(rhs.mInterceptionInfo),
       mHasInjectedCookieForCookieBannerHandling(
@@ -803,7 +801,6 @@ LoadInfo::LoadInfo(
     nsILoadInfo::IPAddressSpace aIPAddressSpace,
     const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
     nsINode* aLoadingContext,
-    bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
     nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
     bool aHasInjectedCookieForCookieBannerHandling,
     nsILoadInfo::SchemelessInputType aSchemelessInput,
@@ -858,8 +855,6 @@ LoadInfo::LoadInfo(
       mParentIPAddressSpace(aParentIPAddressSpace),
       mIPAddressSpace(aIPAddressSpace),
       mOverriddenFingerprintingSettings(aOverriddenFingerprintingSettings),
-      mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-          aIsOriginTrialCoepCredentiallessEnabledForTopLevel),
       mUnstrippedURI(aUnstrippedURI),
       mInterceptionInfo(aInterceptionInfo),
       mHasInjectedCookieForCookieBannerHandling(
@@ -2075,22 +2070,6 @@ LoadInfo::GetFetchDestination(nsACString& aDestination) {
   aDestination.Assign(
       GetEnumString(InternalRequest::MapContentPolicyTypeToRequestDestination(
           mInternalContentPolicyType)));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-    bool* aIsOriginTrialCoepCredentiallessEnabledForTopLevel) {
-  *aIsOriginTrialCoepCredentiallessEnabledForTopLevel =
-      mIsOriginTrialCoepCredentiallessEnabledForTopLevel;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-    bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel) {
-  mIsOriginTrialCoepCredentiallessEnabledForTopLevel =
-      aIsOriginTrialCoepCredentiallessEnabledForTopLevel;
   return NS_OK;
 }
 

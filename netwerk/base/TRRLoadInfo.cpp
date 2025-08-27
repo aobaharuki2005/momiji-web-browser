@@ -604,18 +604,6 @@ TRRLoadInfo::SetIsUserTriggeredSave(bool aIsUserTriggeredSave) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-    bool* aIsOriginTrialCoepCredentiallessEnabledForTopLevel) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-    bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetUnstrippedURI(nsIURI** aURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
