@@ -663,19 +663,19 @@ void MacroAssembler::max32(Register lhs, Imm32 rhs, Register dest) {
 }
 
 void MacroAssembler::minPtr(Register lhs, Register rhs, Register dest) {
-  minMaxPtr(lhs, rhs, dest, /* isMax = */ false);
+  minMax32(lhs, rhs, dest, /* isMax = */ false);
 }
 
 void MacroAssembler::minPtr(Register lhs, ImmWord rhs, Register dest) {
-  minMaxPtr(lhs, rhs, dest, /* isMax = */ false);
+  minMax32(lhs, Imm32(rhs.value), dest, /* isMax = */ false);
 }
 
 void MacroAssembler::maxPtr(Register lhs, Register rhs, Register dest) {
-  minMaxPtr(lhs, rhs, dest, /* isMax = */ true);
+  minMax32(lhs, rhs, dest, /* isMax = */ true);
 }
 
 void MacroAssembler::maxPtr(Register lhs, ImmWord rhs, Register dest) {
-  minMaxPtr(lhs, rhs, dest, /* isMax = */ true);
+  minMax32(lhs, Imm32(rhs.value), dest, /* isMax = */ true);
 }
 
 void MacroAssembler::minFloat32(FloatRegister other, FloatRegister srcDest,
