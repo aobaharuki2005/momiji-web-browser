@@ -2545,48 +2545,6 @@
     "n_buckets": 250,
     "description": "SPDY: Streams recevied per connection"
   },
-  "SPDY_SYN_SIZE": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 20,
-    "high": 20000,
-    "n_buckets": 50,
-    "description": "SPDY: SYN Frame Header Size"
-  },
-  "SPDY_SYN_RATIO": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 99,
-    "n_buckets": 20,
-    "description": "SPDY: SYN Frame Header Ratio (lower better)"
-  },
-  "SPDY_SYN_REPLY_SIZE": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 16,
-    "high": 20000,
-    "n_buckets": 50,
-    "description": "SPDY: SYN Reply Header Size"
-  },
-  "SPDY_SYN_REPLY_RATIO": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 99,
-    "n_buckets": 20,
-    "description": "SPDY: SYN Reply Header Ratio (lower better)"
-  },
   "SPDY_KBREAD_PER_CONN2": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
@@ -2608,16 +2566,6 @@
     "high": 5000,
     "n_buckets": 100,
     "description": "H2: Settings Max Streams parameter"
-  },
-  "SPDY_SETTINGS_IW": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 50,
-    "description": "H2: Settings Initial Window (rounded to KB)"
   },
   "SPDY_GOAWAY_LOCAL": {
     "record_in_processes": ["main", "socket"],
@@ -2648,116 +2596,6 @@
     "n_buckets": 75,
     "releaseChannelCollection": "opt-out",
     "description": "Size of continued H2 headers in bytes."
-  },
-  "HPACK_ELEMENTS_EVICTED_DECOMPRESSOR": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 50,
-    "description": "HPACK: Number of items removed from dynamic table to make room for 1 new item",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
-  },
-  "HPACK_BYTES_EVICTED_DECOMPRESSOR": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 8192,
-    "n_buckets": 50,
-    "description": "HPACK: Number of bytes removed from dynamic table to make room for 1 new item",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
-  },
-  "HPACK_BYTES_EVICTED_RATIO_DECOMPRESSOR": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 50,
-    "description": "HPACK: Ratio of bytes evicted to bytes added (* 100)",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
-  },
-  "HPACK_PEAK_COUNT_DECOMPRESSOR": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 1024,
-    "n_buckets": 50,
-    "description": "HPACK: peak number of items in the dynamic table",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
-  },
-  "HPACK_PEAK_SIZE_DECOMPRESSOR": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 16384,
-    "n_buckets": 100,
-    "description": "HPACK: peak size in bytes of the table",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
-  },
-  "HPACK_ELEMENTS_EVICTED_COMPRESSOR": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 50,
-    "description": "HPACK: Number of items removed from dynamic table to make room for 1 new item",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
-  },
-  "HPACK_BYTES_EVICTED_COMPRESSOR": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 8192,
-    "n_buckets": 50,
-    "description": "HPACK: Number of bytes removed from dynamic table to make room for 1 new item",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
-  },
-  "HPACK_BYTES_EVICTED_RATIO_COMPRESSOR": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 50,
-    "description": "HPACK: Ratio of bytes evicted to bytes added (* 100)",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
-  },
-  "HPACK_PEAK_COUNT_COMPRESSOR": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 1024,
-    "n_buckets": 50,
-    "description": "HPACK: peak number of items in the dynamic table",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
-  },
-  "HPACK_PEAK_SIZE_COMPRESSOR": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 16384,
-    "n_buckets": 100,
-    "description": "HPACK: peak size in bytes of the table",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1296280]
   },
   "HTTP2_FAIL_BEFORE_SETTINGS": {
     "record_in_processes": ["main"],
@@ -2969,6 +2807,7 @@
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-in",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "kind": "exponential",
     "high": 60000,

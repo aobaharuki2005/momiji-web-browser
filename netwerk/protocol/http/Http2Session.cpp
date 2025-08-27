@@ -1836,7 +1836,6 @@ nsresult Http2Session::RecvSettings(Http2Session* self) {
         break;
 
       case SETTINGS_TYPE_INITIAL_WINDOW: {
-        glean::spdy::settings_iw.Accumulate(value >> 10);
         int32_t delta = value - self->mServerInitialStreamWindow;
         self->mServerInitialStreamWindow = value;
 

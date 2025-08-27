@@ -132,13 +132,6 @@ nsresult Http2Stream::GenerateHeaders(nsCString& aCompressedData,
     firstFrameFlags |= Http2Session::kFlag_END_STREAM;
   }
 
-  // The size of the input headers is approximate
-  uint32_t ratio =
-      aCompressedData.Length() * 100 /
-      (11 + requestURI.Length() + mFlatHttpRequestHeaders.Length());
-
-  glean::spdy::syn_ratio.AccumulateSingleSample(ratio);
-
   return NS_OK;
 }
 

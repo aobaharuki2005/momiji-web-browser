@@ -323,13 +323,6 @@ nsresult Http2StreamTunnel::GenerateHeaders(nsCString& aCompressedData,
       EmptyCString(), EmptyCString(), true, aCompressedData, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // The size of the input headers is approximate
-  uint32_t ratio =
-      aCompressedData.Length() * 100 /
-      (11 + authorityHeader.Length() + mFlatHttpRequestHeaders.Length());
-
-  glean::spdy::syn_ratio.AccumulateSingleSample(ratio);
-
   return NS_OK;
 }
 
@@ -706,12 +699,6 @@ nsresult Http2StreamWebSocket::GenerateHeaders(nsCString& aCompressedData,
 
   mRequestBodyLenRemaining = 0x0fffffffffffffffULL;
 
-  // The size of the input headers is approximate
-  uint32_t ratio =
-      aCompressedData.Length() * 100 /
-      (11 + authorityHeader.Length() + mFlatHttpRequestHeaders.Length());
-
-  glean::spdy::syn_ratio.AccumulateSingleSample(ratio);
   return NS_OK;
 }
 
