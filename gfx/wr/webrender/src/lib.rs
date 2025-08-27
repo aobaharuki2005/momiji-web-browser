@@ -197,3 +197,6 @@ pub use bump_allocator::ChunkPool;
 
 #[cfg(feature = "sw_compositor")]
 pub use crate::compositor::sw_compositor;
+
+#[cfg(feature = "debugger")]
+mod debugger;

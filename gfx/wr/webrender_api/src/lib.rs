@@ -42,6 +42,8 @@ extern crate peek_poke;
 
 pub mod channel;
 mod color;
+#[cfg(feature = "debugger")]
+pub mod debugger;
 mod display_item;
 mod display_item_cache;
 mod display_list;
