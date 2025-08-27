@@ -24,7 +24,7 @@ figma.connect(
       badged: figma.boolean("Show badge"),
       submenu: figma.boolean("Show submenu"),
       rule: figma.boolean("Show separator", {
-        true: "<hr />",
+        true: html`<hr />`,
       }),
     },
     example: props =>
