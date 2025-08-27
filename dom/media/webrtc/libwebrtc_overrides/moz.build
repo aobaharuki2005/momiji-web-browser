@@ -16,6 +16,8 @@ EXPORTS.libwebrtc_overrides.api += [
 ]
 EXPORTS.libwebrtc_overrides.call += [
     "call/call_basic_stats.h",
+    "call/video_receive_stream.h",
+    "call/video_send_stream.h",
 ]
 EXPORTS.libwebrtc_overrides.common_audio += [
     "common_audio/intrin.h",
