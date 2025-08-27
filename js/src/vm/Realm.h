@@ -44,6 +44,7 @@ class BaselineCompileQueue;
 }  // namespace jit
 
 class AutoRestoreRealmDebugMode;
+class DateTimeInfo;
 class Debugger;
 class GlobalObject;
 class GlobalObjectData;
@@ -338,6 +339,11 @@ class JS::Realm : public JS::shadow::Realm {
 
   const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
   void* realmPrivate_ = nullptr;
+
+#if JS_HAS_INTL_API
+  // Date-time info for realms with non-default time zones.
+  js::UniquePtr<js::DateTimeInfo> dateTimeInfo_;
+#endif
 
   // There are two ways to enter a realm:
   //
@@ -802,6 +808,10 @@ class JS::Realm : public JS::shadow::Realm {
 
   // Returns the locale for this realm. (Pointer must NOT be freed!)
   const char* getLocale() const;
+
+  // Returns the date-time info for this realm. Returns nullptr unless a time
+  // zone override was specified in the realm creation options.
+  js::DateTimeInfo* getDateTimeInfo();
 
   // Initializes randomNumberGenerator if needed.
   mozilla::non_crypto::XorShift128PlusRNG& getOrCreateRandomNumberGenerator();

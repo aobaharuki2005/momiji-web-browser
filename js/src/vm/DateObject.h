@@ -9,10 +9,11 @@
 
 #include "js/Date.h"
 #include "js/Value.h"
-#include "vm/DateTime.h"
 #include "vm/NativeObject.h"
 
 namespace js {
+
+class DateTimeInfo;
 
 class DateObject : public NativeObject {
   // Time in milliseconds since the (Unix) epoch.
@@ -64,7 +65,7 @@ class DateObject : public NativeObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  js::DateTimeInfo::ForceUTC forceUTC() const;
+  js::DateTimeInfo* dateTimeInfo() const;
 
   JS::ClippedTime clippedTime() const {
     double t = getFixedSlot(UTC_TIME_SLOT).toDouble();
