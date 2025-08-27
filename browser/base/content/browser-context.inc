@@ -388,7 +388,7 @@
           <menuitem id="context-printframe"
                     data-l10n-id="main-context-menu-frame-print"
                     />
-          <menuseparator id="print-frame-sep"/>
+          <menuseparator/>
           <menuitem id="context-viewframesource"
                     data-l10n-id="main-context-menu-frame-view-source"
                     />
