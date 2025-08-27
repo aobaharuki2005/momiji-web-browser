@@ -1094,6 +1094,7 @@ export class LoginManagerStorage_json {
     }
     this.reencryptionInProgress = true;
     this._store.ensureDataReady();
+    Glean.pwmgr.migration.record({ value: "started" });
 
     const encryptedLogins = structuredClone(
       this._store.data.logins.filter(login => !this.loginIsDeleted(login.guid))
@@ -1105,13 +1106,22 @@ export class LoginManagerStorage_json {
         encryptedUnknownFields,
       ]
     );
-    try {
-      const decrypted = await this._crypto.decryptMany(encrypted);
-      encrypted = await this._crypto.encryptMany(decrypted);
-    } catch (e) {
+    const decrypted = await this._crypto.decryptMany(encrypted).catch(error => {
+      Glean.pwmgr.migration.record({
+        value: "decryptionError",
+        error: error.name,
+      });
       this.reencryptionInProgress = false;
-      throw e;
-    }
+      throw error;
+    });
+    encrypted = await this._crypto.encryptMany(decrypted).catch(error => {
+      Glean.pwmgr.migration.record({
+        value: "encryptionError",
+        error: error.name,
+      });
+      this.reencryptionInProgress = false;
+      throw error;
+    });
 
     for (let oldIndex = 0; oldIndex < encryptedLogins.length; oldIndex++) {
       const oldLogin = encryptedLogins[oldIndex];
@@ -1152,6 +1162,7 @@ export class LoginManagerStorage_json {
     if (this.addedLoginObserver) {
       Services.obs.removeObserver(this, "passwordmgr-crypto-login");
     }
+    Glean.pwmgr.migration.record({ value: "success" });
   }
 
   /**

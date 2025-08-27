@@ -5,11 +5,52 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 
 const EXPECTED_LOGINS = LoginTestUtils.testData.loginList();
 
+let migrationCount = 0;
+
+function assertMigrationCount() {
+  const migrationValue = Glean.pwmgr.migration.testGetValue();
+  if (!migrationValue) {
+    return;
+  }
+  console.log(migrationValue);
+  const migrationStartedEvents = migrationValue.filter(
+    ({ extra }) => extra.value === "started"
+  );
+  const migrationSuccessEvents = migrationValue.filter(
+    ({ extra }) => extra.value === "success"
+  );
+  const errorEvents = migrationValue.filter(
+    ({ extra }) =>
+      extra.value === "decryptionError" || extra.value === "encryptionError"
+  );
+  Assert.equal(
+    migrationCount,
+    migrationStartedEvents.length,
+    "Should have received the correct number of migrationStarted events"
+  );
+  Assert.equal(
+    migrationCount,
+    migrationSuccessEvents.length,
+    "Should have received the correct number of migrationFinished events"
+  );
+  Assert.deepEqual([], errorEvents, "Should have received no error events");
+}
+
+async function reencryptAllLogins() {
+  assertMigrationCount();
+  await Services.logins.reencryptAllLogins();
+  migrationCount += 1;
+  assertMigrationCount();
+}
+
 add_setup(async function () {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("security.sdr.mechanism");
     Services.logins.removeAllLogins();
   });
+
+  do_get_profile();
+  Services.fog.initializeFOG();
 
   Services.prefs.setIntPref("security.sdr.mechanism", 0);
   Services.logins.removeAllLogins();
@@ -24,7 +65,7 @@ add_task(async function test_before_reencrypt() {
 });
 
 add_task(async function test_reencrypt_same_mechanism() {
-  await Services.logins.reencryptAllLogins();
+  await reencryptAllLogins();
 
   await LoginTestUtils.checkLogins(
     EXPECTED_LOGINS,
@@ -35,7 +76,7 @@ add_task(async function test_reencrypt_same_mechanism() {
 add_task(async function test_reencrypt_new_mechanism() {
   Services.prefs.setIntPref("security.sdr.mechanism", 1);
 
-  await Services.logins.reencryptAllLogins();
+  await reencryptAllLogins();
 
   await LoginTestUtils.checkLogins(
     EXPECTED_LOGINS,
@@ -53,7 +94,7 @@ add_task(async function test_reencrypt_mixed_mechanism() {
 
   // Reencrypt all logins, of which one now is encrypted with a different
   // mechanism
-  await Services.logins.reencryptAllLogins();
+  await reencryptAllLogins();
 
   await LoginTestUtils.checkLogins(
     EXPECTED_LOGINS,
