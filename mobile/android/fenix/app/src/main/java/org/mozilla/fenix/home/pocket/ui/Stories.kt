@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -323,9 +324,9 @@ fun Stories(
                                 // Check if this is in a preview because `.settings()` breaks previews
                                 if (!inComposePreview) {
                                     val verticalOffset =
-                                        LocalContext.current.resources.getDimensionPixelSize(
-                                            R.dimen.browser_toolbar_height,
-                                        )
+                                        with(LocalDensity.current) {
+                                            dimensionResource(id = R.dimen.browser_toolbar_height).roundToPx()
+                                        }
 
                                     if (LocalContext.current.settings().shouldUseBottomToolbar) {
                                         bottom -= verticalOffset
@@ -381,9 +382,9 @@ fun Stories(
                                 // Check if this is in a preview because `settings()` breaks previews
                                 if (!inComposePreview) {
                                     val verticalOffset =
-                                        LocalContext.current.resources.getDimensionPixelSize(
-                                            R.dimen.browser_toolbar_height,
-                                        )
+                                        with(LocalDensity.current) {
+                                            dimensionResource(id = R.dimen.browser_toolbar_height).roundToPx()
+                                        }
 
                                     if (LocalContext.current.settings().shouldUseBottomToolbar) {
                                         bottom -= verticalOffset

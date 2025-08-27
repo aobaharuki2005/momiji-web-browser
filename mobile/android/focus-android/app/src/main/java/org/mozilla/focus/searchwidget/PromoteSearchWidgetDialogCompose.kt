@@ -164,11 +164,7 @@ private fun ComponentAddWidgetButton(
         ),
     ) {
         Text(
-            text = AnnotatedString(
-                LocalContext.current.resources.getString(
-                    R.string.promote_search_widget_button_text,
-                ),
-            ),
+            text = AnnotatedString(stringResource(id = R.string.promote_search_widget_button_text)),
             color = PhotonColors.White,
         )
     }
