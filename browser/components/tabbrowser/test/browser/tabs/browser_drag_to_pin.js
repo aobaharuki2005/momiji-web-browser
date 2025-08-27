@@ -10,11 +10,14 @@ add_setup(() => {
   currentReduceMotionOverride = gReduceMotionOverride;
   // Disable tab animations
   gReduceMotionOverride = true;
+  // Disable tab groups so as not to interfere with pinned drop indicator delayed visiblity
+  Services.prefs.setBoolPref("browser.tabs.groups.enabled", false);
 });
 
 registerCleanupFunction(() => {
   gReduceMotionOverride = currentReduceMotionOverride;
   Services.prefs.clearUserPref("sidebar.revamp");
+  Services.prefs.clearUserPref("browser.tabs.groups.enabled");
   // Reset UI because sidebar-button added
   CustomizableUI.reset();
 });
@@ -42,7 +45,8 @@ async function pinIndicatorDragCond(pinnedDropIndicator) {
     () => {
       return (
         pinnedDropIndicator.hasAttribute("visible") &&
-        pinnedDropIndicator.hasAttribute("interactive")
+        pinnedDropIndicator.hasAttribute("interactive") &&
+        BrowserTestUtils.isVisible(pinnedDropIndicator)
       );
     }
   );
