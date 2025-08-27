@@ -47,10 +47,9 @@ namespace mozilla::webgpu {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CanvasContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CanvasContext)
 
-GPU_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(CanvasContext, mConfiguration,
-                                                mCurrentTexture, mBridge,
-                                                mCanvasElement,
-                                                mOffscreenCanvas)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(CanvasContext, mConfiguration,
+                                               mCurrentTexture, mCanvasElement,
+                                               mOffscreenCanvas)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CanvasContext)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -63,11 +62,9 @@ NS_INTERFACE_MAP_END
 CanvasContext::CanvasContext() = default;
 
 CanvasContext::~CanvasContext() {
-  Cleanup();
+  Unconfigure();
   RemovePostRefreshObserver();
 }
-
-void CanvasContext::Cleanup() { Unconfigure(); }
 
 JSObject* CanvasContext::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -159,8 +156,8 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig,
   // buffer count doesn't matter much, will be created on demand
   const size_t maxBufferCount = 10;
   for (size_t i = 0; i < maxBufferCount; ++i) {
-    mBufferIds.AppendElement(ffi::wgpu_client_make_buffer_id(
-        aConfig.mDevice->GetBridge()->GetClient()));
+    mBufferIds.AppendElement(
+        ffi::wgpu_client_make_buffer_id(aConfig.mDevice->GetClient()));
   }
 
   mCurrentTexture = aConfig.mDevice->InitSwapChain(
@@ -172,7 +169,7 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig,
   }
 
   mCurrentTexture->mTargetContext = this;
-  mBridge = aConfig.mDevice->GetBridge();
+  mChild = aConfig.mDevice->GetChild();
   if (mCanvasElement) {
     mWaitingCanvasRendererInitialized = true;
   }
@@ -181,20 +178,20 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig,
 }
 
 void CanvasContext::Unconfigure() {
-  if (mBridge && mBridge->CanSend() && mRemoteTextureOwnerId) {
+  if (mChild && mChild->CanSend() && mRemoteTextureOwnerId) {
     auto txn_type = layers::ToRemoteTextureTxnType(mFwdTransactionTracker);
     auto txn_id = layers::ToRemoteTextureTxnId(mFwdTransactionTracker);
     ffi::wgpu_client_swap_chain_drop(
-        mBridge->GetClient(), mRemoteTextureOwnerId->mId, txn_type, txn_id);
+        mChild->GetClient(), mRemoteTextureOwnerId->mId, txn_type, txn_id);
 
     for (auto& id : mBufferIds) {
-      ffi::wgpu_client_free_buffer_id(mBridge->GetClient(), id);
+      ffi::wgpu_client_free_buffer_id(mChild->GetClient(), id);
     }
   }
   mBufferIds.Clear();
   mRemoteTextureOwnerId = Nothing();
   mFwdTransactionTracker = nullptr;
-  mBridge = nullptr;
+  mChild = nullptr;
   mConfiguration = nullptr;
   mCurrentTexture = nullptr;
   mGfxFormat = gfx::SurfaceFormat::UNKNOWN;
@@ -251,7 +248,7 @@ void CanvasContext::MaybeQueueSwapChainPresent() {
   MOZ_ASSERT(mCurrentTexture);
 
   if (mCurrentTexture) {
-    mBridge->NotifyWaitForSubmit(mCurrentTexture->mId);
+    mChild->NotifyWaitForSubmit(mCurrentTexture->GetId());
   }
 
   if (mPendingSwapChainPresent) {
@@ -269,20 +266,20 @@ void CanvasContext::MaybeQueueSwapChainPresent() {
 
 Maybe<layers::SurfaceDescriptor> CanvasContext::SwapChainPresent() {
   mPendingSwapChainPresent = false;
-  if (!mBridge || !mBridge->CanSend() || mRemoteTextureOwnerId.isNothing() ||
+  if (!mChild || !mChild->CanSend() || mRemoteTextureOwnerId.isNothing() ||
       !mCurrentTexture) {
     return Nothing();
   }
   mLastRemoteTextureId = Some(layers::RemoteTextureId::GetNext());
-  mBridge->SwapChainPresent(mCurrentTexture->mId, *mLastRemoteTextureId,
-                            *mRemoteTextureOwnerId);
+  mChild->SwapChainPresent(mCurrentTexture->GetId(), *mLastRemoteTextureId,
+                           *mRemoteTextureOwnerId);
   if (mUseSharedTextureInSwapChain) {
     mCurrentTexture->Destroy();
     mNewTextureRequested = true;
   }
 
   PROFILER_MARKER_UNTYPED("WebGPU: SwapChainPresent", GRAPHICS_WebGPU);
-  mBridge->FlushQueuedMessages();
+  mChild->FlushQueuedMessages();
 
   return Some(layers::SurfaceDescriptorRemoteTexture(*mLastRemoteTextureId,
                                                      *mRemoteTextureOwnerId));
@@ -408,7 +405,7 @@ already_AddRefed<gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
     return nullptr;
   }
 
-  if (!mBridge || !mBridge->CanSend() || mRemoteTextureOwnerId.isNothing()) {
+  if (!mChild || !mChild->CanSend() || mRemoteTextureOwnerId.isNothing()) {
     return nullptr;
   }
 
@@ -417,17 +414,16 @@ already_AddRefed<gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
   // The parent side needs to create a command encoder which will be submitted
   // and dropped right away so we create and release an encoder ID here.
   RawId commandEncoderId =
-      ffi::wgpu_client_make_command_encoder_id(mBridge->GetClient());
+      ffi::wgpu_client_make_command_encoder_id(mChild->GetClient());
   RawId commandBufferId =
-      ffi::wgpu_client_make_command_buffer_id(mBridge->GetClient());
+      ffi::wgpu_client_make_command_buffer_id(mChild->GetClient());
   RefPtr<gfx::DataSourceSurface> snapshot = cm->GetSnapshot(
-      cm->Id(), mBridge->Id(), mRemoteTextureOwnerId, Some(commandEncoderId),
+      cm->Id(), mChild->Id(), mRemoteTextureOwnerId, Some(commandEncoderId),
       Some(commandBufferId), snapshotFormat, /* aPremultiply */ false,
       /* aYFlip */ false);
-  ffi::wgpu_client_free_command_encoder_id(mBridge->GetClient(),
+  ffi::wgpu_client_free_command_encoder_id(mChild->GetClient(),
                                            commandEncoderId);
-  ffi::wgpu_client_free_command_buffer_id(mBridge->GetClient(),
-                                          commandBufferId);
+  ffi::wgpu_client_free_command_buffer_id(mChild->GetClient(), commandBufferId);
   if (!snapshot) {
     return nullptr;
   }

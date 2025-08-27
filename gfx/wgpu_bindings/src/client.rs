@@ -266,6 +266,9 @@ struct IdentityHub {
     queues: IdentityManager<markers::Queue>,
     buffers: IdentityManager<markers::Buffer>,
     command_encoders: IdentityManager<markers::CommandEncoder>,
+    render_pass_encoders: IdentityManager<markers::RenderPassEncoder>,
+    compute_pass_encoders: IdentityManager<markers::ComputePassEncoder>,
+    render_bundle_encoders: IdentityManager<markers::RenderBundleEncoder>,
     command_buffers: IdentityManager<markers::CommandBuffer>,
     render_bundles: IdentityManager<markers::RenderBundle>,
     bind_group_layouts: IdentityManager<markers::BindGroupLayout>,
@@ -290,6 +293,9 @@ impl Default for IdentityHub {
             queues: IdentityManager::new(),
             buffers: IdentityManager::new(),
             command_encoders: IdentityManager::new(),
+            render_pass_encoders: IdentityManager::new(),
+            compute_pass_encoders: IdentityManager::new(),
+            render_bundle_encoders: IdentityManager::new(),
             command_buffers: IdentityManager::new(),
             render_bundles: IdentityManager::new(),
             bind_group_layouts: IdentityManager::new(),
@@ -500,6 +506,25 @@ pub extern "C" fn wgpu_client_free_buffer_id(client: &Client, id: id::BufferId) 
     client.identities.lock().buffers.free(id)
 }
 
+#[no_mangle]
+pub extern "C" fn wgpu_client_make_render_pass_encoder_id(
+    client: &Client,
+) -> id::RenderPassEncoderId {
+    client.identities.lock().render_pass_encoders.process()
+}
+#[no_mangle]
+pub extern "C" fn wgpu_client_make_compute_pass_encoder_id(
+    client: &Client,
+) -> id::ComputePassEncoderId {
+    client.identities.lock().compute_pass_encoders.process()
+}
+#[no_mangle]
+pub extern "C" fn wgpu_client_make_render_bundle_encoder_id(
+    client: &Client,
+) -> id::RenderBundleEncoderId {
+    client.identities.lock().render_bundle_encoders.process()
+}
+
 #[rustfmt::skip]
 mod drop {
     use super::*;
@@ -515,6 +540,9 @@ mod drop {
     #[no_mangle] pub extern "C" fn wgpu_client_drop_queue(client: &Client, id: id::QueueId) { client.queue_message(&Message::DropQueue(id)); client.identities.lock().queues.free(id); }
     #[no_mangle] pub extern "C" fn wgpu_client_drop_buffer(client: &Client, id: id::BufferId) { client.queue_message(&Message::DropBuffer(id)); client.identities.lock().buffers.free(id); }
     #[no_mangle] pub extern "C" fn wgpu_client_drop_command_encoder(client: &Client, id: id::CommandEncoderId) { client.queue_message(&Message::DropCommandEncoder(id)); client.identities.lock().command_encoders.free(id); }
+    #[no_mangle] pub extern "C" fn wgpu_client_drop_render_pass_encoder(client: &Client, id: id::RenderPassEncoderId) { client.queue_message(&Message::DropRenderPassEncoder(id)); client.identities.lock().render_pass_encoders.free(id); }
+    #[no_mangle] pub extern "C" fn wgpu_client_drop_compute_pass_encoder(client: &Client, id: id::ComputePassEncoderId) { client.queue_message(&Message::DropComputePassEncoder(id)); client.identities.lock().compute_pass_encoders.free(id); }
+    #[no_mangle] pub extern "C" fn wgpu_client_drop_render_bundle_encoder(client: &Client, id: id::RenderBundleEncoderId) { client.queue_message(&Message::DropRenderBundleEncoder(id)); client.identities.lock().render_bundle_encoders.free(id); }
     #[no_mangle] pub extern "C" fn wgpu_client_drop_command_buffer(client: &Client, id: id::CommandBufferId) { client.queue_message(&Message::DropCommandBuffer(id)); client.identities.lock().command_buffers.free(id); }
     #[no_mangle] pub extern "C" fn wgpu_client_drop_render_bundle(client: &Client, id: id::RenderBundleId) { client.queue_message(&Message::DropRenderBundle(id)); client.identities.lock().render_bundles.free(id); }
     #[no_mangle] pub extern "C" fn wgpu_client_drop_bind_group_layout(client: &Client, id: id::BindGroupLayoutId) { client.queue_message(&Message::DropBindGroupLayout(id)); client.identities.lock().bind_group_layouts.free(id); }
