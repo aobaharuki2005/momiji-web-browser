@@ -94,16 +94,21 @@ export class UrlbarInput {
    *   The initial options for UrlbarInput.
    * @param {HTMLDivElement} options.textbox
    *   The container element.
+   * @param {string} options.eventTelemetryCategory
+   * @param {boolean} [options.isAddressbar]
+   *   Whether this instance is meant to display the browser's current address,
+   *   as opposed to being just a search input.
    */
-  constructor(options) {
-    this.textbox = options.textbox;
+  constructor({ textbox, eventTelemetryCategory, isAddressbar = false }) {
+    this.textbox = textbox;
+    this.isAddressbar = !!isAddressbar;
     this.window = this.textbox.ownerGlobal;
     this.document = this.window.document;
     this.isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(this.window);
     this.panel = this.textbox.querySelector(".urlbarView");
     this.controller = new lazy.UrlbarController({
       input: this,
-      eventTelemetryCategory: options.eventTelemetryCategory,
+      eventTelemetryCategory,
     });
     this.view = new lazy.UrlbarView(this);
     this.valueIsTyped = false;
@@ -179,10 +184,10 @@ export class UrlbarInput {
     this._searchModeIndicator = this.querySelector(
       "#urlbar-search-mode-indicator"
     );
-    this._searchModeIndicatorTitle = this._searchModeIndicator.querySelector(
+    this._searchModeIndicatorTitle = this._searchModeIndicator?.querySelector(
       "#urlbar-search-mode-indicator-title"
     );
-    this._searchModeIndicatorClose = this._searchModeIndicator.querySelector(
+    this._searchModeIndicatorClose = this._searchModeIndicator?.querySelector(
       "#urlbar-search-mode-indicator-close"
     );
 
@@ -397,7 +402,7 @@ export class UrlbarInput {
    */
   formatValue() {
     // The editor may not exist if the toolbar is not visible.
-    if (this.editor) {
+    if (this.isAddressbar && this.editor) {
       this.#lazy.valueFormatter.update();
     }
   }
@@ -766,7 +771,7 @@ export class UrlbarInput {
     // the triggering event is not a mouse click -- i.e., it's a Return
     // key -- or if the one-off was mouse-clicked.
     if (this.view.isOpen) {
-      let selectedOneOff = this.view.oneOffSearchButtons.selectedButton;
+      let selectedOneOff = this.view.oneOffSearchButtons?.selectedButton;
       if (selectedOneOff && (!isMouseEvent || event.target == selectedOneOff)) {
         this.view.oneOffSearchButtons.handleSearchCommand(event, {
           engineName: selectedOneOff.engine?.name,
@@ -1139,7 +1144,7 @@ export class UrlbarInput {
         result.providerName == lazy.UrlbarProviderGlobalActions.name) ||
       (result.heuristic &&
         this.searchMode?.isPreview &&
-        this.view.oneOffSearchButtons.selectedButton)
+        this.view.oneOffSearchButtons?.selectedButton)
     ) {
       this.confirmSearchMode();
       this.search(this.value);
@@ -1590,7 +1595,7 @@ export class UrlbarInput {
     if (
       this.searchMode?.isPreview &&
       !this.#providesSearchMode(result) &&
-      !this.view.oneOffSearchButtons.selectedButton
+      !this.view.oneOffSearchButtons?.selectedButton
     ) {
       this.searchMode = null;
     }
@@ -2192,7 +2197,9 @@ export class UrlbarInput {
       this.searchMode = searchMode;
 
       // Unselect the one-off search button to ensure UI consistency.
-      this.view.oneOffSearchButtons.selectedButton = null;
+      if (this.view.oneOffSearchButtons) {
+        this.view.oneOffSearchButtons.selectedButton = null;
+      }
     }
   }
 
@@ -2451,7 +2458,7 @@ export class UrlbarInput {
       return "urlbar-handoff";
     }
 
-    const isOneOff = this.view.oneOffSearchButtons.eventTargetIsAOneOff(event);
+    const isOneOff = this.view.oneOffSearchButtons?.eventTargetIsAOneOff(event);
     if (this.searchMode && !isOneOff) {
       // Without checking !isOneOff, we might record the string
       // oneoff_urlbar-searchmode in the SEARCH_COUNTS probe (in addition to
@@ -3115,7 +3122,7 @@ export class UrlbarInput {
     searchActionDetails = {},
     browser = this.window.gBrowser.selectedBrowser
   ) {
-    const isOneOff = this.view.oneOffSearchButtons.eventTargetIsAOneOff(event);
+    const isOneOff = this.view.oneOffSearchButtons?.eventTargetIsAOneOff(event);
     const searchSource = this.getSearchSource(event);
 
     // Record when the user uses the search bar to be
@@ -3159,6 +3166,9 @@ export class UrlbarInput {
    *   The trimmed string
    */
   _trimValue(val) {
+    if (!this.isAddressbar) {
+      return val;
+    }
     let trimmedValue = lazy.UrlbarPrefs.get("trimURLs")
       ? lazy.BrowserUIUtils.trimURL(val)
       : val;
@@ -3910,8 +3920,10 @@ export class UrlbarInput {
       return;
     }
 
-    this._searchModeIndicatorTitle.textContent = "";
-    this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
+    if (this._searchModeIndicatorTitle) {
+      this._searchModeIndicatorTitle.textContent = "";
+      this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
+    }
 
     if (!engineName && !source) {
       try {
@@ -3925,8 +3937,10 @@ export class UrlbarInput {
     }
 
     if (engineName) {
-      // Set text content for the search mode indicator.
-      this._searchModeIndicatorTitle.textContent = engineName;
+      if (this._searchModeIndicatorTitle) {
+        // Set text content for the search mode indicator.
+        this._searchModeIndicatorTitle.textContent = engineName;
+      }
       this.document.l10n.setAttributes(
         this.inputField,
         isGeneralPurposeEngine
@@ -3944,7 +3958,12 @@ export class UrlbarInput {
       };
       let sourceName = lazy.UrlbarUtils.getResultSourceName(source);
       let l10nID = `urlbar-search-mode-${sourceName}`;
-      this.document.l10n.setAttributes(this._searchModeIndicatorTitle, l10nID);
+      if (this._searchModeIndicatorTitle) {
+        this.document.l10n.setAttributes(
+          this._searchModeIndicatorTitle,
+          l10nID
+        );
+      }
       this.document.l10n.setAttributes(this.inputField, messageIDs[sourceName]);
     }
 
@@ -4064,6 +4083,10 @@ export class UrlbarInput {
    *                        without an engine name ("Search or enter address").
    */
   initPlaceHolder(force = false) {
+    if (!this.isAddressbar) {
+      return;
+    }
+
     let prefName =
       "browser.urlbar.placeholderName" + (this.isPrivate ? ".private" : "");
     let engineName = Services.prefs.getStringPref(prefName, "");
@@ -4172,7 +4195,7 @@ export class UrlbarInput {
       throw new Error("Expected an engineName to be specified");
     }
 
-    if (this.searchMode) {
+    if (this.searchMode || !this.isAddressbar) {
       return;
     }
 
@@ -4194,6 +4217,10 @@ export class UrlbarInput {
    * The name of the engine or an empty string to use the default placeholder.
    */
   _setPlaceholder(name) {
+    if (!this.isAddressbar) {
+      return;
+    }
+
     let l10nId;
     if (lazy.UrlbarPrefs.get("keyword.enabled")) {
       l10nId = name ? "urlbar-placeholder-with-name" : "urlbar-placeholder";
@@ -4324,7 +4351,9 @@ export class UrlbarInput {
 
     if (event.target == this._searchModeIndicatorClose && event.button != 2) {
       this.searchMode = null;
-      this.view.oneOffSearchButtons.selectedButton = null;
+      if (this.view.oneOffSearchButtons) {
+        this.view.oneOffSearchButtons.selectedButton = null;
+      }
       if (this.view.isOpen) {
         this.startQuery({
           event,
@@ -4562,7 +4591,7 @@ export class UrlbarInput {
       }
       if (!value && !lazy.UrlbarPrefs.get("suggest.topsites")) {
         this.view.clear();
-        if (!this.searchMode || !this.view.oneOffSearchButtons.hasView) {
+        if (!this.searchMode || !this.view.oneOffSearchButtons?.hasView) {
           this.view.close();
           return;
         }

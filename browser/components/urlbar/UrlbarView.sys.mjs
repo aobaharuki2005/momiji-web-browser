@@ -106,6 +106,9 @@ export class UrlbarView {
   }
 
   get oneOffSearchButtons() {
+    if (!this.input.isAddressbar) {
+      return null;
+    }
     if (!this.#oneOffSearchButtons) {
       this.#oneOffSearchButtons = new lazy.UrlbarSearchOneOffs(this);
       this.#oneOffSearchButtons.addEventListener(
@@ -753,7 +756,7 @@ export class UrlbarView {
     // Search mode is active.  If the one-offs should be shown, make sure they
     // are enabled and show the view.
     let openPanelInstance = (this.#openPanelInstance = {});
-    this.oneOffSearchButtons.willHide().then(willHide => {
+    this.oneOffSearchButtons?.willHide().then(willHide => {
       if (!willHide && openPanelInstance == this.#openPanelInstance) {
         this.oneOffSearchButtons.enable(true);
         this.#openPanel();
@@ -794,7 +797,7 @@ export class UrlbarView {
       //  * The search string is empty
       //  * The search string starts with an `@` or a search restriction
       //    character
-      this.oneOffSearchButtons.enable(
+      this.oneOffSearchButtons?.enable(
         (firstResult.providerName != "UrlbarProviderSearchTips" ||
           queryContext.trimmedSearchString) &&
           queryContext.trimmedSearchString[0] != "@" &&
@@ -804,7 +807,7 @@ export class UrlbarView {
       );
     }
 
-    if (!this.#selectedElement && !this.oneOffSearchButtons.selectedButton) {
+    if (!this.#selectedElement && !this.oneOffSearchButtons?.selectedButton) {
       if (firstResult.heuristic) {
         // Select the heuristic result.  The heuristic may not be the first
         // result added, which is why we do this check here when each result is
@@ -854,7 +857,7 @@ export class UrlbarView {
 
     // If we update the selected element, a new unique ID is generated for it.
     // We need to ensure that aria-activedescendant reflects this new ID.
-    if (this.#selectedElement && !this.oneOffSearchButtons.selectedButton) {
+    if (this.#selectedElement && !this.oneOffSearchButtons?.selectedButton) {
       let aadID = this.input.inputField.getAttribute("aria-activedescendant");
       if (aadID && !this.document.getElementById(aadID)) {
         this.#setAccessibleFocus(this.#selectedElement);
@@ -3201,7 +3204,7 @@ export class UrlbarView {
   #enableOrDisableRowWrap() {
     let wrap = getBoundsWithoutFlushing(this.input.textbox).width < 650;
     this.#rows.toggleAttribute("wrap", wrap);
-    this.oneOffSearchButtons.container.toggleAttribute("wrap", wrap);
+    this.oneOffSearchButtons?.container.toggleAttribute("wrap", wrap);
   }
 
   /**

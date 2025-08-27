@@ -322,7 +322,7 @@ export class UrlbarController {
       }
 
       let { queryContext } = this._lastQueryContextWrapper;
-      let handled = this.view.oneOffSearchButtons.handleKeyDown(
+      let handled = this.view.oneOffSearchButtons?.handleKeyDown(
         event,
         this.view.visibleRowCount,
         this.view.allowEmptySelection,
@@ -503,7 +503,9 @@ export class UrlbarController {
           !event.shiftKey
         ) {
           this.input.searchMode = null;
-          this.input.view.oneOffSearchButtons.selectedButton = null;
+          if (this.input.view.oneOffSearchButtons) {
+            this.input.view.oneOffSearchButtons.selectedButton = null;
+          }
           this.input.startQuery({
             allowAutofill: false,
             event,

@@ -164,6 +164,13 @@ var gBrowserInit = {
 
     gURLBar.initPlaceHolder();
 
+    if (Services.prefs.getBoolPref("browser.search.widget.new", false)) {
+      new UrlbarInput({
+        textbox: document.getElementById("searchbar-new"),
+        eventTelemetryCategory: "searchbar",
+      });
+    }
+
     // Hack to ensure that the various initial pages favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
     this._callWithURIToLoad(uriToLoad => {
