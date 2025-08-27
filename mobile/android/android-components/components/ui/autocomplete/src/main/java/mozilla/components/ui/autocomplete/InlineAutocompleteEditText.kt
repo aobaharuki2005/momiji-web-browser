@@ -274,13 +274,6 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         }
 
         removeAutocomplete(text)
-
-        try {
-            restartInput()
-            inputMethodManger?.hideSoftInputFromWindow(windowToken, 0)
-        } catch (ignored: NullPointerException) {
-            // See bug 782096 for details
-        }
     }
 
     override fun setText(text: CharSequence?, type: BufferType) {
