@@ -2886,28 +2886,6 @@
     </issue>
 
     <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="            preferences.edit().putBoolean(sharedKey, true).apply()"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/settings/ToggleRadioButtonPreference.kt"
-            line="80"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="            preferences.edit().putBoolean(sharedKey, false).apply()"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/settings/ToggleRadioButtonPreference.kt"
-            line="87"
-            column="13"/>
-    </issue>
-
-    <issue
         id="ClickableViewAccessibility"
         message="Custom view ``SearchDialogFragmentConstraintLayout`` has `setOnTouchListener` called on it but does not override `performClick`"
         errorLine1="                binding.searchWrapper.setOnTouchListener { _, _ ->"
