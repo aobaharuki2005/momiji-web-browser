@@ -43,6 +43,9 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     : mContext(aContext), mParent(aParent) {
   // Default error code for early returns if ranges are not as expected
   mInitStatus = NS_ERROR_DOM_MEDIA_RANGE_ERR;
+  // Set start offset for Offset() even when the box is unavailable.
+  // The empty range indicates !IsAvailable(), overwritten below on success.
+  mRange = MediaByteRange(aOffset, aOffset);
 
   uint8_t header[8];
   if (aOffset > INT64_MAX - sizeof(header)) {
