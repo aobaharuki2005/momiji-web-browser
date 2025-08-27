@@ -298,6 +298,8 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
     // for each.
     DDLINKCHILD("source", aSource);
   }
+  // Advance, looking for additional moov, moof, or mdat boxes in aByteRanges.
+  // Return true or false to indicate whether a new valid moof is seen.
   bool RebuildFragmentedIndex(const mozilla::MediaByteRangeSet& aByteRanges);
   // If *aCanEvict is set to true. then will remove all moofs already parsed
   // from index then rebuild the index. *aCanEvict is set to true upon return if
@@ -318,6 +320,10 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   void ParseStsd(Box& aBox);
   void ParseEncrypted(Box& aBox);
 
+  // Similar to RebuildFragmentedIndex(), but advance only as far as the next
+  // moof, only if there is a next moof, and block, waiting for the read, if
+  // the ByteStream supports blocking reads.
+  // Return true or false to indicate whether a new valid moof is seen.
   bool BlockingReadNextMoof();
 
   already_AddRefed<mozilla::MediaByteBuffer> Metadata();
