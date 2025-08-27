@@ -162,7 +162,7 @@ internal class HomeToolbarComposable(
         }
 
         if (settings.shouldUseBottomToolbar) {
-            ImeInsetsSynchronizer.setup(layout)
+            ImeInsetsSynchronizer.setup(homeBinding.root)
         }
 
         updateHomeAppBarIntegration()
