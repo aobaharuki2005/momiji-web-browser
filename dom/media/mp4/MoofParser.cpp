@@ -64,7 +64,8 @@ bool MoofParser::RebuildFragmentedIndex(BoxContext& aContext) {
                                            : mTrackParseMode.as<uint32_t>());
   bool foundValidMoof = false;
 
-  for (Box box(&aContext, mOffset); box.IsAvailable(); box = box.Next()) {
+  for (Box box(&aContext, mOffset); box.IsAvailable();
+       mOffset = box.NextOffset(), box = box.Next()) {
     if (box.IsType("moov") && mInitRange.IsEmpty()) {
       mInitRange = MediaByteRange(0, box.Range().mEnd);
       ParseMoov(box);
@@ -96,7 +97,6 @@ bool MoofParser::RebuildFragmentedIndex(BoxContext& aContext) {
             mMediaRanges.LastElement().Span(box.Range());
       }
     }
-    mOffset = box.NextOffset();
   }
   MOZ_ASSERT(mTrackParseMode.is<ParseAllTracks>() ||
                  mTrex.mTrackId == mTrackParseMode.as<uint32_t>(),
