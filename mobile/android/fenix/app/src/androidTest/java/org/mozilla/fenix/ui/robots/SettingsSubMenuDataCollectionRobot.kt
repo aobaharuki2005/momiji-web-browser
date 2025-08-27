@@ -128,9 +128,9 @@ class SettingsSubMenuDataCollectionRobot {
         Log.i(TAG, "clickUsageAndTechnicalDataToggle: Clicked the \"Technical and interaction data\" toggle")
     }
 
-    fun clickDailyUsagePingToggle() {
+    fun clickDailyUsagePingToggle(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickDailyUsagePingToggle: Trying to click the \"Daily usage ping\" toggle")
-        itemContainingText(getStringResource(R.string.preferences_daily_usage_ping_title)).click()
+        composeTestRule.onNodeWithTag("data.collection.Daily usage ping.toggle", useUnmergedTree = true).performClick()
         Log.i(TAG, "clickDailyUsagePingToggle: Clicked the \"Daily usage ping\" toggle")
     }
 
