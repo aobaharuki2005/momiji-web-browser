@@ -2165,48 +2165,38 @@ void MacroAssemblerLOONG64::compareFloatingPoint(FloatFormat fmt,
   }
 }
 
-void MacroAssemblerLOONG64::minMax32(Register lhs, Register rhs, Register dest,
-                                     bool isMax) {
-  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
-  if (lhs != dest) {
-    move32(lhs, dest);
-  }
-  asMasm().cmp32Move32(cond, rhs, lhs, rhs, dest);
-}
-
-void MacroAssemblerLOONG64::minMax32(Register lhs, Imm32 rhs, Register dest,
-                                     bool isMax) {
-  auto cond =
-      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
-  if (lhs != dest) {
-    move32(lhs, dest);
-  }
-  Label done;
-  asMasm().branch32(cond, lhs, rhs, &done);
-  move32(rhs, dest);
-  bind(&done);
-}
-
 void MacroAssemblerLOONG64::minMaxPtr(Register lhs, Register rhs, Register dest,
                                       bool isMax) {
-  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
-  if (lhs != dest) {
-    movePtr(lhs, dest);
+  ScratchRegisterScope scratch(asMasm());
+  SecondScratchRegisterScope scratch2(asMasm());
+
+  as_slt(scratch, rhs, lhs);
+  if (isMax) {
+    as_masknez(scratch2, rhs, scratch);
+    as_maskeqz(dest, lhs, scratch);
+  } else {
+    as_masknez(scratch2, lhs, scratch);
+    as_maskeqz(dest, rhs, scratch);
   }
-  asMasm().cmpPtrMovePtr(cond, rhs, lhs, rhs, dest);
+  as_or(dest, dest, scratch2);
 }
 
 void MacroAssemblerLOONG64::minMaxPtr(Register lhs, ImmWord rhs, Register dest,
                                       bool isMax) {
-  auto cond =
-      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
-  if (lhs != dest) {
-    movePtr(lhs, dest);
+  ScratchRegisterScope scratch(asMasm());
+  SecondScratchRegisterScope scratch2(asMasm());
+
+  ma_li(scratch2, rhs);
+
+  as_slt(scratch, scratch2, lhs);
+  if (isMax) {
+    as_masknez(scratch2, scratch2, scratch);
+    as_maskeqz(dest, lhs, scratch);
+  } else {
+    as_maskeqz(scratch2, scratch2, scratch);
+    as_masknez(dest, lhs, scratch);
   }
-  Label done;
-  asMasm().branchPtr(cond, lhs, rhs, &done);
-  movePtr(rhs, dest);
-  bind(&done);
+  as_or(dest, dest, scratch2);
 }
 
 void MacroAssemblerLOONG64::minMaxDouble(FloatRegister srcDest,

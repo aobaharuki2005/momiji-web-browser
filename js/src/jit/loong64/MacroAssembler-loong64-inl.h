@@ -642,19 +642,19 @@ void MacroAssembler::sqrtDouble(FloatRegister src, FloatRegister dest) {
 }
 
 void MacroAssembler::min32(Register lhs, Register rhs, Register dest) {
-  minMax32(lhs, rhs, dest, /* isMax = */ false);
+  minMaxPtr(lhs, rhs, dest, /* isMax = */ false);
 }
 
 void MacroAssembler::min32(Register lhs, Imm32 rhs, Register dest) {
-  minMax32(lhs, rhs, dest, /* isMax = */ false);
+  minMaxPtr(lhs, ImmWord(rhs.value), dest, /* isMax = */ false);
 }
 
 void MacroAssembler::max32(Register lhs, Register rhs, Register dest) {
-  minMax32(lhs, rhs, dest, /* isMax = */ true);
+  minMaxPtr(lhs, rhs, dest, /* isMax = */ true);
 }
 
 void MacroAssembler::max32(Register lhs, Imm32 rhs, Register dest) {
-  minMax32(lhs, rhs, dest, /* isMax = */ true);
+  minMaxPtr(lhs, ImmWord(rhs.value), dest, /* isMax = */ true);
 }
 
 void MacroAssembler::minPtr(Register lhs, Register rhs, Register dest) {

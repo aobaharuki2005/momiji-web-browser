@@ -351,9 +351,6 @@ class MacroAssemblerLOONG64 : public Assembler {
     as_movfr2gr_s(dest, src);
   }
 
-  void minMax32(Register lhs, Register rhs, Register dest, bool isMax);
-  void minMax32(Register lhs, Imm32 rhs, Register dest, bool isMax);
-
   void minMaxPtr(Register lhs, Register rhs, Register dest, bool isMax);
   void minMaxPtr(Register lhs, ImmWord rhs, Register dest, bool isMax);
 
