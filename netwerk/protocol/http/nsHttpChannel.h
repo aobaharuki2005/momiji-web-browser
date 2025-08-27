@@ -309,6 +309,9 @@ class nsHttpChannel final : public HttpBaseChannel,
   // end server host name.
   ProxyDNSStrategy GetProxyDNSStrategy();
 
+  // Add Sec-Fetch-Storage-Access headers based on cookie partitioning
+  void AddStorageAccessHeadersToRequest();
+
   // We might synchronously or asynchronously call BeginConnect,
   // which includes DNS prefetch and speculative connection, according to
   // whether an async tracker lookup is required. If the tracker lookup

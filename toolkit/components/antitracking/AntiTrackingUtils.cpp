@@ -619,6 +619,25 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     }
   }
 
+  // determine whether storage access could be granted using the
+  // Activate-Storage-Access header from the storage-access-headers draft.
+  // XXX(Bug 1968723, Bug 1968725): The response header is not yet parsed.
+  uint32_t result = 0;
+  rv = AntiTrackingUtils::TestStoragePermissionInParent(
+      targetPrincipal, trackingPrincipal, &result);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nsILoadInfo::NoStoragePermission;
+  }
+  if (result == nsIPermissionManager::ALLOW_ACTION) {
+    return nsILoadInfo::InactiveStoragePermission;
+  }
+
+  bool isThirdParty = false;
+  rv = framePrincipal->IsThirdPartyURI(trackingURI, &isThirdParty);
+  if (NS_FAILED(rv) || isThirdParty) {
+    return nsILoadInfo::DisabledStoragePermission;
+  }
+
   return nsILoadInfo::NoStoragePermission;
 }
 

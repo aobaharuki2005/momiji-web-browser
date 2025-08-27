@@ -20213,7 +20213,10 @@ bool Document::UsingStorageAccess() {
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-  return loadInfo->GetStoragePermission() != nsILoadInfo::NoStoragePermission;
+  nsILoadInfo::StoragePermissionState storageAccess =
+      loadInfo->GetStoragePermission();
+  return storageAccess == nsILoadInfo::HasStoragePermission ||
+         storageAccess == nsILoadInfo::StoragePermissionAllowListed;
 }
 
 bool Document::IsOn3PCBExceptionList() const {
