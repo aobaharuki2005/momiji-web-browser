@@ -2081,6 +2081,61 @@ class BrowserToolbarMiddlewareTest {
         }
 
     @Test
+    fun `GIVEN reader mode is available WHEN reader mode status updates THEN update appropriate security indicator`() =
+        runTest {
+            val readerModeStatus: ReaderModeStatus = mockk(relaxed = true) {
+                every { isAvailable } returns true
+                every { isActive } returns false
+            }
+
+            every { browserScreenState.readerModeStatus } returns readerModeStatus
+
+            val tab = createTab(url = "URL", id = tabId)
+
+            val browserScreenStore = buildBrowserScreenStore()
+
+            val browserStore = BrowserStore(
+                BrowserState(
+                    tabs = listOf(tab),
+                    selectedTabId = tab.id,
+                ),
+            )
+
+            val middleware = buildMiddleware(
+                browserScreenStore = browserScreenStore,
+                browserStore = browserStore,
+            )
+            val toolbarStore = buildStore(middleware).also {
+                it.dispatch(BrowserToolbarAction.Init())
+            }
+            mainLooperRule.idle()
+
+            val expectedSecurityIndicator = ActionButtonRes(
+                drawableResId = R.drawable.mozac_ic_shield_slash_24,
+                contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                onClick = StartPageActions.SiteInfoClicked,
+            )
+
+            var toolbarPageActions = toolbarStore.state.displayState.pageActionsStart
+            assertEquals(1, toolbarPageActions.size)
+            val securityIndicator = toolbarPageActions[0] as ActionButtonRes
+            assertEquals(expectedSecurityIndicator, securityIndicator)
+
+            browserScreenStore.dispatch(
+                ReaderModeStatusUpdated(
+                    ReaderModeStatus(
+                        isAvailable = true,
+                        isActive = true,
+                    ),
+                ),
+            )
+            mainLooperRule.idle()
+
+            toolbarPageActions = toolbarStore.state.displayState.pageActionsStart
+            assertEquals(0, toolbarPageActions.size)
+        }
+
+    @Test
     fun `GIVEN default state WHEN building NewTab action THEN returns NewTab ActionButton with DEFAULT state and no long-click`() {
         val middleware = buildMiddleware()
         val result = middleware.buildAction(

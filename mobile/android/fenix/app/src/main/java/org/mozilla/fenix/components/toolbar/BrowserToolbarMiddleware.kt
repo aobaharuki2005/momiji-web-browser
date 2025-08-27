@@ -690,7 +690,9 @@ class BrowserToolbarMiddleware(
 
     private fun buildStartPageActions(): List<Action> {
         return listOf(
-            ToolbarActionConfig(ToolbarAction.SiteInfo),
+            ToolbarActionConfig(ToolbarAction.SiteInfo) {
+                !browserScreenStore.state.readerModeStatus.isActive
+            },
         ).filter { config ->
             config.isVisible()
         }.map { config ->
@@ -956,6 +958,7 @@ class BrowserToolbarMiddleware(
         browserScreenStore.observeWhileActive {
             distinctUntilChangedBy { it.readerModeStatus }
                 .collect {
+                    updateStartPageActions(context)
                     updateEndPageActions(context)
                 }
         }
