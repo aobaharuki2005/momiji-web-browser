@@ -32,7 +32,7 @@ class SampleIterator {
   media::TimeUnit GetNextKeyframeTime();
 
  private:
-  Sample* Get();
+  Result<Sample*, nsresult> Get();
 
   // Gets the sample description entry for the current moof, or nullptr if
   // called without a valid current moof.

@@ -78,13 +78,14 @@ SampleIterator::SampleIterator(MP4SampleIndex* aIndex)
 
 SampleIterator::~SampleIterator() { mIndex->UnregisterIterator(this); }
 
-bool SampleIterator::HasNext() { return !!Get(); }
+bool SampleIterator::HasNext() { return Get().isOk(); }
 
 already_AddRefed<MediaRawData> SampleIterator::GetNextHeader() {
-  Sample* s(Get());
-  if (!s) {
+  auto current = Get();
+  if (current.isErr()) {
     return nullptr;
   }
+  Sample* s = current.unwrap();
 
   int64_t length = std::numeric_limits<int64_t>::max();
   mIndex->mSource->Length(&length);
@@ -104,10 +105,11 @@ already_AddRefed<MediaRawData> SampleIterator::GetNextHeader() {
 }
 
 already_AddRefed<MediaRawData> SampleIterator::GetNext() {
-  Sample* s(Get());
-  if (!s) {
+  auto current = Get();
+  if (current.isErr()) {
     return nullptr;
   }
+  Sample* s = current.unwrap();
 
   int64_t length = std::numeric_limits<int64_t>::max();
   mIndex->mSource->Length(&length);
@@ -372,19 +374,21 @@ Result<CryptoScheme, nsCString> SampleIterator::GetEncryptionScheme() {
       "is in use."));
 }
 
-Sample* SampleIterator::Get() {
+Result<Sample*, nsresult> SampleIterator::Get() {
   if (!mIndex->mMoofParser) {
     MOZ_ASSERT(!mCurrentMoof);
-    return mCurrentSample < mIndex->mIndex.Length()
-               ? &mIndex->mIndex[mCurrentSample]
-               : nullptr;
+    if (mCurrentSample >= mIndex->mIndex.Length()) {
+      return Err(NS_ERROR_DOM_MEDIA_END_OF_STREAM);
+    }
+    return &mIndex->mIndex[mCurrentSample];
   }
 
   nsTArray<Moof>& moofs = mIndex->mMoofParser->Moofs();
   while (true) {
     if (mCurrentMoof == moofs.Length()) {
-      if (NS_FAILED(mIndex->mMoofParser->BlockingReadNextMoof())) {
-        return nullptr;
+      nsresult rv = mIndex->mMoofParser->BlockingReadNextMoof();
+      if (NS_FAILED(rv)) {
+        return Err(rv);
       }
       MOZ_ASSERT(mCurrentMoof < moofs.Length());
     }
@@ -404,8 +408,7 @@ void SampleIterator::Seek(const TimeUnit& aTime) {
   size_t syncSample = 0;
   mCurrentMoof = 0;
   mCurrentSample = 0;
-  Sample* sample;
-  while (!!(sample = Get())) {
+  while (Sample* sample = Get().unwrapOr(nullptr)) {
     if (sample->mCompositionRange.start > aTime) {
       break;
     }
@@ -424,8 +427,7 @@ void SampleIterator::Seek(const TimeUnit& aTime) {
 
 TimeUnit SampleIterator::GetNextKeyframeTime() {
   SampleIterator itr(*this);
-  Sample* sample;
-  while (!!(sample = itr.Get())) {
+  while (Sample* sample = itr.Get().unwrapOr(nullptr)) {
     if (sample->mSync) {
       return sample->mCompositionRange.start;
     }
