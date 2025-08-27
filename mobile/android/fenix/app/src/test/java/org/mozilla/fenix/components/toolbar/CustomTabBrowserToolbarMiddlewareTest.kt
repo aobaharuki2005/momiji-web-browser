@@ -6,6 +6,8 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.InetAddresses
+import android.util.Patterns
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
@@ -37,6 +39,7 @@ import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
+import mozilla.components.support.ktx.kotlin.getRegistrableDomainIndexRange
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainLooperTestRule
@@ -57,8 +60,12 @@ import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware.Co
 import org.mozilla.fenix.helpers.lifecycle.TestLifecycleOwner
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.Implementation
+import org.robolectric.annotation.Implements
 
 @RunWith(RobolectricTestRunner::class)
+@Config(shadows = [ShadowInetAddresses::class])
 class CustomTabBrowserToolbarMiddlewareTest {
     @get:Rule
     val mainLooperRule = MainLooperTestRule()
@@ -325,12 +332,12 @@ class CustomTabBrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
         mainLooperRule.idle()
         var pageOrigin = toolbarStore.state.displayState.pageOrigin
-        assertEquals(expectedDetails, pageOrigin)
+        assertPageOriginEquals(expectedDetails, pageOrigin)
 
         browserStore.dispatch(UpdateTitleAction(customTabId, "UpdatedTitle")).joinBlocking()
         mainLooperRule.idle()
         pageOrigin = toolbarStore.state.displayState.pageOrigin
-        assertEquals(expectedDetails.copy(title = "UpdatedTitle"), pageOrigin)
+        assertPageOriginEquals(expectedDetails.copy(title = "UpdatedTitle"), pageOrigin)
     }
 
     @Test
@@ -350,12 +357,12 @@ class CustomTabBrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
         mainLooperRule.idle()
         var pageOrigin = toolbarStore.state.displayState.pageOrigin
-        assertEquals(expectedDetails, pageOrigin)
+        assertPageOriginEquals(expectedDetails, pageOrigin)
 
         browserStore.dispatch(UpdateUrlAction(customTabId, "UpdatedURL")).joinBlocking()
         mainLooperRule.idle()
         pageOrigin = toolbarStore.state.displayState.pageOrigin
-        assertEquals(expectedDetails.copy(url = "UpdatedURL"), pageOrigin)
+        assertPageOriginEquals(expectedDetails.copy(url = "UpdatedURL"), pageOrigin)
     }
 
     @Test
@@ -375,12 +382,12 @@ class CustomTabBrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
         mainLooperRule.idle()
         var pageOrigin = toolbarStore.state.displayState.pageOrigin
-        assertEquals(expectedDetails, pageOrigin)
+        assertPageOriginEquals(expectedDetails, pageOrigin)
 
         browserStore.dispatch(UpdateUrlAction(customTabId, "UpdatedURL")).joinBlocking()
         mainLooperRule.idle()
         pageOrigin = toolbarStore.state.displayState.pageOrigin
-        assertEquals(
+        assertPageOriginEquals(
             expectedDetails.copy(
                 // If a title was used previously and not available after then the URL is shown as title also.
                 title = "UpdatedURL",
@@ -391,7 +398,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN an url with an ip address for the domain WHEN showing displaying the page origin THEN correctly infer the ip address as the domain`() = runTest {
+    fun `GIVEN an url with an ip address for the domain WHEN displaying the page origin THEN correctly infer the ip address as the domain`() = runTest {
         val customTab = createCustomTab(title = "Title", url = "http://127.0.0.1/test", id = customTabId)
         val browserStore = BrowserStore(
             BrowserState(customTabs = listOf(customTab)),
@@ -407,7 +414,36 @@ class CustomTabBrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
         mainLooperRule.idle()
         val pageOrigin = toolbarStore.state.displayState.pageOrigin
-        assertEquals(expectedPageOrigin, pageOrigin)
+        assertPageOriginEquals(expectedPageOrigin, pageOrigin)
+    }
+
+    @Test
+    fun `GIVEN a url with subdomain and path WHEN displaying the page origin THEN show the subdomain and domain`() = runTest {
+        val registrableDomain = "mozilla.com"
+        val subDomain = "www."
+        val domain = "$subDomain$registrableDomain"
+        val customTab = createCustomTab(title = "Title", url = "https://$domain/firefox", id = customTabId)
+        val browserStore = BrowserStore(
+            BrowserState(customTabs = listOf(customTab)),
+        )
+        val expectedPageOrigin = PageOrigin(
+            hint = R.string.search_hint,
+            title = "Title",
+            url = domain,
+            onClick = null,
+        )
+        every { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred(registrableDomain)
+        val middleware = buildMiddleware(browserStore)
+
+        val toolbarStore = buildStore(middleware)
+        mainLooperRule.idle()
+
+        val pageOrigin = toolbarStore.state.displayState.pageOrigin
+        assertPageOriginEquals(expectedPageOrigin, pageOrigin)
+        assertEquals(
+            subDomain.length to domain.length,
+            pageOrigin.url?.getRegistrableDomainIndexRange(),
+        )
     }
 
     @Test
@@ -555,5 +591,28 @@ class CustomTabBrowserToolbarMiddlewareTest {
                 ),
             ),
         )
+    }
+
+    private fun assertPageOriginEquals(expected: PageOrigin, actual: PageOrigin) {
+        assertEquals(expected.hint, actual.hint)
+        assertEquals(expected.title, actual.title)
+        assertEquals(expected.url.toString(), actual.url.toString())
+        // Cannot check the onClick and onLongClick anonymous object
+    }
+}
+
+/**
+ * Robolectric default implementation of [InetAddresses] returns false for any address.
+ * This shadow is used to override that behavior and return true for any IP address.
+ */
+@Implements(InetAddresses::class)
+private class ShadowInetAddresses {
+    companion object {
+        @Implementation
+        @JvmStatic
+        @Suppress("DEPRECATION")
+        fun isNumericAddress(address: String): Boolean {
+            return Patterns.IP_ADDRESS.matcher(address).matches() || address.contains(":")
+        }
     }
 }

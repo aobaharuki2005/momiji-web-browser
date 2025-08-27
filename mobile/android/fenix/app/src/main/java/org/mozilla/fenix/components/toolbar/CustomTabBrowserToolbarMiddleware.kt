@@ -50,6 +50,7 @@ import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.flow
+import mozilla.components.support.ktx.kotlin.applyRegistrableDomainSpan
 import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.components.support.ktx.kotlin.isContentUrl
 import mozilla.components.support.ktx.kotlin.isIpv4OrIpv6
@@ -306,7 +307,7 @@ class CustomTabBrowserToolbarMiddleware(
                     PageOrigin(
                         hint = R.string.search_hint,
                         title = getTitleToShown(customTab),
-                        url = getUrlDomain()?.trimmed(),
+                        url = getHostFromUrl()?.trimmed(),
                         onClick = null,
                     ),
                 ),
@@ -424,13 +425,28 @@ class CustomTabBrowserToolbarMiddleware(
 
     private fun buildProgressBar(progress: Int = 0) = ProgressBarConfig(progress)
 
-    private suspend fun getUrlDomain(): String? {
+    /**
+     * Get the host of the current URL with the registrable domain span applied.
+     * If this cannot be done, the original URL is returned.
+     */
+    private suspend fun getHostFromUrl(): CharSequence? {
         val url = customTab?.content?.url
         val host = url?.toUri()?.host
         return when {
             host.isNullOrEmpty() -> url
             host.isIpv4OrIpv6() -> host
-            else -> publicSuffixList.getPublicSuffixPlusOne(host).await() ?: url
+            else -> {
+                val hostStart = url.indexOf(host)
+                try {
+                    url.applyRegistrableDomainSpan(publicSuffixList)
+                        .subSequence(
+                            startIndex = hostStart,
+                            endIndex = hostStart + host.length,
+                        )
+                } catch (_: IndexOutOfBoundsException) {
+                    host
+                }
+            }
         }
     }
 
