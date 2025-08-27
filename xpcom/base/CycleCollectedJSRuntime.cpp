@@ -1206,7 +1206,8 @@ struct GCMajorMarker : public BaseMarkerType<GCMajorMarker> {
 
   using MS = MarkerSchema;
   static constexpr MS::PayloadField PayloadFields[] = {
-      {"timings", MS::InputType::CString, "GC timings"}};
+      {"timings", MS::InputType::CString, "GC timings", MS::Format::String,
+       MS::PayloadFlags::Hidden}};
 
   static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
                                                MS::Location::MarkerTable,
