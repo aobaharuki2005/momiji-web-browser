@@ -38,7 +38,7 @@ class HomeTelemetryMiddlewareTest {
         assertNull(HomeContentArticle.click.testGetValue())
 
         var pingReceived = false
-        Pings.home.testBeforeNextSubmit {
+        val job = Pings.home.testBeforeNextSubmit {
             assertNotNull(HomeContentArticle.click.testGetValue())
 
             val snapshot = HomeContentArticle.click.testGetValue()!!
@@ -67,6 +67,7 @@ class HomeTelemetryMiddlewareTest {
             ),
         ).joinBlocking()
 
+        job.join()
         assertTrue(pingReceived)
     }
 
@@ -84,7 +85,7 @@ class HomeTelemetryMiddlewareTest {
         assertNull(HomeContentArticle.impression.testGetValue())
 
         var pingReceived = false
-        Pings.home.testBeforeNextSubmit {
+        val job = Pings.home.testBeforeNextSubmit {
             assertNotNull(HomeContentArticle.impression.testGetValue())
 
             val snapshot = HomeContentArticle.impression.testGetValue()!!
@@ -115,6 +116,7 @@ class HomeTelemetryMiddlewareTest {
             ),
         ).joinBlocking()
 
+        job.join()
         assertTrue(pingReceived)
     }
 
