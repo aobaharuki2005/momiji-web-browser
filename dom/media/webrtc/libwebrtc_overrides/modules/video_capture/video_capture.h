@@ -7,7 +7,7 @@
 #ifndef DOM_MEDIA_WEBRTC_LIBWEBRTCOVERRIDES_MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_H_
 #define DOM_MEDIA_WEBRTC_LIBWEBRTCOVERRIDES_MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_H_
 
-#include "modules/desktop_capture/desktop_capture_types.h"
 #include "../../third_party/libwebrtc/modules/video_capture/video_capture.h"
+#include "modules/desktop_capture/desktop_capture_types.h"
 
 #endif  // DOM_MEDIA_WEBRTC_LIBWEBRTCOVERRIDES_MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_H_

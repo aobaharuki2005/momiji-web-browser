@@ -7,7 +7,7 @@
 #ifndef DOM_MEDIA_WEBRTC_LIBWEBRTCOVERRIDES_API_NETWORK_CONTROL_H_
 #define DOM_MEDIA_WEBRTC_LIBWEBRTCOVERRIDES_API_NETWORK_CONTROL_H_
 
-#include "api/rtc_event_log/rtc_event_log.h"
 #include "../../third_party/libwebrtc/api/transport/network_control.h"
+#include "api/rtc_event_log/rtc_event_log.h"
 
 #endif  // DOM_MEDIA_WEBRTC_LIBWEBRTCOVERRIDES_API_NETWORK_CONTROL_H_
