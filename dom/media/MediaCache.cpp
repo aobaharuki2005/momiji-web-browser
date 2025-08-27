@@ -2051,8 +2051,7 @@ void MediaCacheStream::NotifyDataReceived(uint32_t aLoadID, uint32_t aCount,
   }
 }
 
-void MediaCacheStream::FlushPartialBlockInternal(AutoLock& aLock,
-                                                 bool aNotifyAll) {
+void MediaCacheStream::FlushPartialBlockInternal(AutoLock& aLock) {
   MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
 
   int32_t blockIndex = OffsetToBlockIndexUnchecked(mChannelOffset);
@@ -2060,9 +2059,8 @@ void MediaCacheStream::FlushPartialBlockInternal(AutoLock& aLock,
   if (blockOffset > 0) {
     LOG("Stream %p writing partial block: [%d] bytes; "
         "mStreamOffset [%" PRId64 "] mChannelOffset[%" PRId64
-        "] mStreamLength [%" PRId64 "] notifying: [%s]",
-        this, blockOffset, mStreamOffset, mChannelOffset, mStreamLength,
-        aNotifyAll ? "yes" : "no");
+        "] mStreamLength [%" PRId64 "]",
+        this, blockOffset, mStreamOffset, mChannelOffset, mStreamLength);
 
     // Write back the partial block
     memset(mPartialBlockBuffer.get() + blockOffset, 0,
@@ -2074,7 +2072,7 @@ void MediaCacheStream::FlushPartialBlockInternal(AutoLock& aLock,
   // |mChannelOffset == 0| means download ends with no bytes received.
   // We should also wake up those readers who are waiting for data
   // that will never come.
-  if ((blockOffset > 0 || mChannelOffset == 0) && aNotifyAll) {
+  if ((blockOffset > 0 || mChannelOffset == 0)) {
     // Wake up readers who may be waiting for this data
     aLock.NotifyAll();
   }
@@ -2117,7 +2115,7 @@ void MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
 
   // Note we don't flush the partial block when download ends abnormally for
   // the padding zeros will give wrong data to other streams.
-  FlushPartialBlockInternal(lock, true);
+  FlushPartialBlockInternal(lock);
 
   MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
   while (MediaCacheStream* stream = iter.Next(lock)) {

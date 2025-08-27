@@ -451,9 +451,9 @@ class MediaCacheStream : public DecoderDoctorLifeLogger<MediaCacheStream> {
   // any thread.
   int64_t GetNextCachedDataInternal(AutoLock&, int64_t aOffset);
   // Used by |NotifyDataEnded| to write |mPartialBlock| to disk.
-  // If |aNotifyAll| is true, this function will wake up readers who may be
+  // This function will wake up readers who may be
   // waiting on the media cache monitor. Called on the media cache thread only.
-  void FlushPartialBlockInternal(AutoLock&, bool aNotifyAll);
+  void FlushPartialBlockInternal(AutoLock&);
 
   void NotifyDataStartedInternal(uint32_t aLoadID, int64_t aOffset,
                                  bool aSeekable, int64_t aLength);
