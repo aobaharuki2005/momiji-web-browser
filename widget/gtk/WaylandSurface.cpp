@@ -660,6 +660,17 @@ void WaylandSurface::UnmapLocked(WaylandSurfaceLock& aSurfaceLock) {
   // Remove references to WaylandBuffers attached to mSurface,
   // we don't want to get any buffer release callback when we're unmapped.
   ReleaseAllWaylandTransactionsLocked(aSurfaceLock);
+
+  // Add ref until all events are processed
+  AddRef();
+  static const struct wl_callback_listener listener{
+      [](void* aData, struct wl_callback* callback, uint32_t time) {
+        RefPtr surface = dont_AddRef(static_cast<WaylandSurface*>(aData));
+        LOGS_VERBOSE("WaylandSurface::UnmapLocked() finished callback [%p] ",
+                     aData);
+      }};
+  wl_callback_add_listener(wl_display_sync(WaylandDisplayGetWLDisplay()),
+                           &listener, this);
 }
 
 void WaylandSurface::Commit(WaylandSurfaceLock* aProofOfLock, bool aForceCommit,
@@ -725,7 +736,6 @@ bool WaylandSurface::DisableUserInputLocked(
 
 void WaylandSurface::OpaqueCallbackHandler() {
   WaylandSurfaceLock lock(this);
-  MOZ_DIAGNOSTIC_ASSERT(mPendingOpaqueRegion, "Missing opaque region?");
   if (mPendingOpaqueRegion) {
     LOGVERBOSE("WaylandSurface::OpaqueCallbackHandler()");
     wl_surface_set_opaque_region(mSurface, mPendingOpaqueRegion);
