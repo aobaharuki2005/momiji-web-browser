@@ -12,6 +12,7 @@
 #include "nsIObserver.h"
 
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
@@ -78,26 +79,20 @@ class nsTimerImpl {
 
   using ObserverCallback = nsCOMPtr<nsIObserver>;
 
-  /// A raw function pointer and its closed-over state, along with its name for
-  /// logging purposes.
+  /// A raw function pointer and its closed-over state.
   struct FuncCallback {
     nsTimerCallbackFunc mFunc;
     void* mClosure;
-    const char* mName;
   };
 
-  /// A callback defined by an owned closure and its name for logging purposes.
-  struct ClosureCallback {
-    std::function<void(nsITimer*)> mFunc;
-    const char* mName;
-  };
+  using ClosureCallback = std::function<void(nsITimer*)>;
 
   using Callback =
       mozilla::Variant<UnknownCallback, InterfaceCallback, ObserverCallback,
                        FuncCallback, ClosureCallback>;
 
   nsresult InitCommon(const mozilla::TimeDuration& aDelay, uint32_t aType,
-                      Callback&& newCallback,
+                      const nsACString& aName, Callback&& newCallback,
                       const mozilla::MutexAutoLock& aProofOfLock)
       MOZ_REQUIRES(mMutex);
 
@@ -128,9 +123,6 @@ class nsTimerImpl {
     return mType == nsITimer::TYPE_REPEATING_SLACK ||
            mType == nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY;
   }
-
-  void GetName(nsACString& aName, const mozilla::MutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(mMutex);
 
   // Caution: Only call this when you hold TimerThread's monitor!
   bool IsInTimerThread() const { return mIsInTimerThread; }
@@ -171,6 +163,7 @@ class nsTimerImpl {
 
   RefPtr<nsITimer> mITimer MOZ_GUARDED_BY(mMutex);
   mozilla::Mutex mMutex;
+  nsCString mName MOZ_GUARDED_BY(mMutex);
   Callback mCallback MOZ_GUARDED_BY(mMutex);
   // Counter because in rare cases we can Fire reentrantly
   unsigned int mFiring MOZ_GUARDED_BY(mMutex);
