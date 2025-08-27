@@ -414,6 +414,9 @@ dictionary SynthesizeMouseEventData {
 dictionary SynthesizeMouseEventOptions {
   // Indicates whether the event should ignore viewport bounds during dispatch.
   boolean ignoreRootScrollFrame = false;
+  // If true the event is dispatched to the parent process through APZ,
+  // without being injected into the OS event queue.
+  boolean isAsyncEnabled = false;
   // Controls Event.isSynthesized value that helps identifying test related events.
   boolean isDOMEventSynthesized = true;
   // Controls WidgetMouseEvent.mReason value.
