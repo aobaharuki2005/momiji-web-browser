@@ -56,7 +56,7 @@ const expected = {
   n_chars: "4",
   n_words: "1",
   engagement_type: "enter",
-  provider: "HeuristicFallback",
+  provider: "UrlbarProviderHeuristicFallback",
   threshold: "10",
 };
 

@@ -29,10 +29,6 @@ export class UrlbarProviderRestrictKeywords extends UrlbarProvider {
     super();
   }
 
-  get name() {
-    return "RestrictKeywords";
-  }
-
   /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */

@@ -35,10 +35,6 @@ export class UrlbarProviderRecentSearches extends UrlbarProvider {
     Services.obs.addObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
   }
 
-  get name() {
-    return "RecentSearches";
-  }
-
   /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */

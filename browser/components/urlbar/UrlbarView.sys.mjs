@@ -359,7 +359,7 @@ export class UrlbarView {
     const isSkippableTabToSearchAnnounce = selectedElt => {
       let result = this.getResultFromElement(selectedElt);
       let skipAnnouncement =
-        result?.providerName == "TabToSearch" &&
+        result?.providerName == "UrlbarProviderTabToSearch" &&
         !this.#announceTabToSearchOnSelection &&
         lazy.UrlbarPrefs.get("accessibility.tabToSearch.announceResults");
       if (skipAnnouncement) {
@@ -835,7 +835,7 @@ export class UrlbarView {
     // a row.
     let secondResult = queryContext.results[1];
     if (
-      secondResult?.providerName == "TabToSearch" &&
+      secondResult?.providerName == "UrlbarProviderTabToSearch" &&
       lazy.UrlbarPrefs.get("accessibility.tabToSearch.announceResults") &&
       this.#previousTabToSearchEngine != secondResult.payload.engine
     ) {
@@ -1965,11 +1965,11 @@ export class UrlbarView {
       item.setAttribute("type", "dynamic");
       this.#updateRowForDynamicType(item, result);
       return;
-    } else if (result.providerName == "TabToSearch") {
+    } else if (result.providerName == "UrlbarProviderTabToSearch") {
       item.setAttribute("type", "tabtosearch");
-    } else if (result.providerName == "SemanticHistorySearch") {
+    } else if (result.providerName == "UrlbarProviderSemanticHistorySearch") {
       item.setAttribute("type", "semantic-history");
-    } else if (result.providerName == "InputHistory") {
+    } else if (result.providerName == "UrlbarProviderInputHistory") {
       item.setAttribute("type", "adaptive-history");
     } else {
       item.setAttribute(
@@ -2060,7 +2060,7 @@ export class UrlbarView {
               });
             };
           }
-        } else if (result.providerName == "TabToSearch") {
+        } else if (result.providerName == "UrlbarProviderTabToSearch") {
           actionSetter = () => {
             this.#l10nCache.setElementL10n(action, {
               id: result.payload.isGeneralPurposeEngine
@@ -2128,7 +2128,10 @@ export class UrlbarView {
 
     this.#setRowSelectable(item, isRowSelectable);
 
-    action.toggleAttribute("slide-in", result.providerName == "TabToSearch");
+    action.toggleAttribute(
+      "slide-in",
+      result.providerName == "UrlbarProviderTabToSearch"
+    );
 
     item.toggleAttribute("pinned", !!result.payload.isPinned);
 
@@ -2544,7 +2547,7 @@ export class UrlbarView {
       };
     }
 
-    if (row.result.providerName == "RecentSearches") {
+    if (row.result.providerName == "UrlbarProviderRecentSearches") {
       return { id: "urlbar-group-recent-searches" };
     }
 
@@ -2972,7 +2975,7 @@ export class UrlbarView {
           },
         });
       } else if (
-        result.providerName == "TokenAliasEngines" &&
+        result.providerName == "UrlbarProviderTokenAliasEngines" &&
         lazy.UrlbarPrefs.getScotchBonnetPref(
           "searchRestrictKeywords.featureGate"
         )

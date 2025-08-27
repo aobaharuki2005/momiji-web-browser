@@ -3875,7 +3875,7 @@ export class UrlbarInput {
           case "UrlbarProviderTopSites":
             searchMode.entry = "topsites_urlbar";
             break;
-          case "TabToSearch":
+          case "UrlbarProviderTabToSearch":
             if (result.payload.dynamicType) {
               searchMode.entry = "tabtosearch_onboard";
             } else {

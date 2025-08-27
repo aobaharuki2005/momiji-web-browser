@@ -535,24 +535,24 @@ export var UrlbarUtils = {
     }
     if (result.heuristic) {
       switch (result.providerName) {
-        case "AliasEngines":
+        case "UrlbarProviderAliasEngines":
           return this.RESULT_GROUP.HEURISTIC_ENGINE_ALIAS;
-        case "Autofill":
+        case "UrlbarProviderAutofill":
           return this.RESULT_GROUP.HEURISTIC_AUTOFILL;
-        case "BookmarkKeywords":
+        case "UrlbarProviderBookmarkKeywords":
           return this.RESULT_GROUP.HEURISTIC_BOOKMARK_KEYWORD;
-        case "HeuristicFallback":
+        case "UrlbarProviderHeuristicFallback":
           return this.RESULT_GROUP.HEURISTIC_FALLBACK;
-        case "Omnibox":
+        case "UrlbarProviderHistoryUrlHeuristic":
+          return this.RESULT_GROUP.HEURISTIC_HISTORY_URL;
+        case "UrlbarProviderOmnibox":
           return this.RESULT_GROUP.HEURISTIC_OMNIBOX;
-        case "RestrictKeywordsAutofill":
+        case "UrlbarProviderRestrictKeywordsAutofill":
           return this.RESULT_GROUP.HEURISTIC_RESTRICT_KEYWORD_AUTOFILL;
-        case "TokenAliasEngines":
+        case "UrlbarProviderTokenAliasEngines":
           return this.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE;
         case "UrlbarProviderSearchTips":
           return this.RESULT_GROUP.HEURISTIC_SEARCH_TIP;
-        case "HistoryUrlHeuristic":
-          return this.RESULT_GROUP.HEURISTIC_HISTORY_URL;
         default:
           if (result.providerName.startsWith("TestProvider")) {
             return this.RESULT_GROUP.HEURISTIC_TEST;
@@ -570,9 +570,9 @@ export var UrlbarUtils = {
     }
 
     switch (result.providerName) {
-      case "AboutPages":
+      case "UrlbarProviderAboutPages":
         return this.RESULT_GROUP.ABOUT_PAGES;
-      case "InputHistory":
+      case "UrlbarProviderInputHistory":
         return this.RESULT_GROUP.INPUT_HISTORY;
       case "UrlbarProviderQuickSuggest":
         return this.RESULT_GROUP.GENERAL_PARENT;
@@ -583,7 +583,7 @@ export var UrlbarUtils = {
     switch (result.type) {
       case this.RESULT_TYPE.SEARCH:
         if (result.source == this.RESULT_SOURCE.HISTORY) {
-          return result.providerName == "RecentSearches"
+          return result.providerName == "UrlbarProviderRecentSearches"
             ? this.RESULT_GROUP.RECENT_SEARCH
             : this.RESULT_GROUP.FORM_HISTORY;
         }
@@ -1097,7 +1097,11 @@ export var UrlbarUtils = {
       ),
       tabGroup: window.gBrowser.selectedTab.group?.id ?? null,
       prohibitRemoteResults: true,
-      providers: ["AliasEngines", "BookmarkKeywords", "HeuristicFallback"],
+      providers: [
+        "UrlbarProviderAliasEngines",
+        "UrlbarProviderBookmarkKeywords",
+        "UrlbarProviderHeuristicFallback",
+      ],
     };
     if (window.gURLBar.searchMode) {
       let searchMode = window.gURLBar.searchMode;
@@ -1271,13 +1275,13 @@ export var UrlbarUtils = {
       case this.RESULT_TYPE.TAB_SWITCH:
         return "switchtab";
       case this.RESULT_TYPE.SEARCH:
-        if (result.providerName == "RecentSearches") {
+        if (result.providerName == "UrlbarProviderRecentSearches") {
           return "recent_search";
         }
         if (result.source == this.RESULT_SOURCE.HISTORY) {
           return "formhistory";
         }
-        if (result.providerName == "TabToSearch") {
+        if (result.providerName == "UrlbarProviderTabToSearch") {
           return "tabtosearch";
         }
         if (result.payload.suggestion) {
@@ -1318,7 +1322,7 @@ export var UrlbarUtils = {
             result.source == this.RESULT_SOURCE.BOOKMARKS
               ? "bookmark"
               : "history";
-          if (result.providerName == "InputHistory") {
+          if (result.providerName == "UrlbarProviderInputHistory") {
             return type + "adaptive";
           }
           return type;
@@ -1332,7 +1336,7 @@ export var UrlbarUtils = {
       case this.RESULT_TYPE.TIP:
         return "tip";
       case this.RESULT_TYPE.DYNAMIC:
-        if (result.providerName == "TabToSearch") {
+        if (result.providerName == "UrlbarProviderTabToSearch") {
           // This is the onboarding result.
           return "tabtosearch";
         }
@@ -1511,14 +1515,14 @@ export var UrlbarUtils = {
     // for testing purposes.
     if (
       result.providerType === this.PROVIDER_TYPE.EXTENSION &&
-      result.providerName != "Omnibox"
+      result.providerName != "UrlbarProviderOmnibox"
     ) {
       return "experimental_addon";
     }
 
     // Appends subtype to certain result types.
     function checkForSubType(type, res) {
-      if (res.providerName == "SemanticHistorySearch") {
+      if (res.providerName == "UrlbarProviderSemanticHistorySearch") {
         type += "_semantic";
       }
       if (
@@ -1535,11 +1539,11 @@ export var UrlbarUtils = {
     switch (result.type) {
       case this.RESULT_TYPE.DYNAMIC:
         switch (result.providerName) {
-          case "calculator":
+          case "UrlbarProviderCalculator":
             return "calc";
-          case "TabToSearch":
+          case "UrlbarProviderTabToSearch":
             return "tab_to_search";
-          case "UnitConversion":
+          case "UrlbarProviderUnitConversion":
             return "unit";
           case "UrlbarProviderQuickSuggest":
             return this._getQuickSuggestTelemetryType(result);
@@ -1557,11 +1561,11 @@ export var UrlbarUtils = {
       case this.RESULT_TYPE.REMOTE_TAB:
         return "remote_tab";
       case this.RESULT_TYPE.SEARCH:
-        if (result.providerName === "TabToSearch") {
+        if (result.providerName === "UrlbarProviderTabToSearch") {
           return "tab_to_search";
         }
         if (result.source == this.RESULT_SOURCE.HISTORY) {
-          return result.providerName == "RecentSearches"
+          return result.providerName == "UrlbarProviderRecentSearches"
             ? "recent_search"
             : "search_history";
         }

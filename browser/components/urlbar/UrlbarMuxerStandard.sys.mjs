@@ -840,17 +840,18 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
-    // HeuristicFallback may add non-heuristic results in some cases, but those
-    // should be retained only if the heuristic result comes from it.
+    // UrlbarProviderHeuristicFallback may add non-heuristic results in some cases,
+    // but those should be retained only if the heuristic result comes from it.
     if (
       !result.heuristic &&
-      result.providerName == "HeuristicFallback" &&
-      state.context.heuristicResult?.providerName != "HeuristicFallback"
+      result.providerName == "UrlbarProviderHeuristicFallback" &&
+      state.context.heuristicResult?.providerName !=
+        "UrlbarProviderHeuristicFallback"
     ) {
       return false;
     }
 
-    if (result.providerName == "TabToSearch") {
+    if (result.providerName == "UrlbarProviderTabToSearch") {
       // Discard the result if a tab-to-search result was added already.
       if (!state.canAddTabToSearch) {
         return false;
@@ -1147,7 +1148,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       this._canAddResult(result, state)
     ) {
       let span = UrlbarUtils.getSpanForResult(result);
-      if (result.providerName == "TabToSearch") {
+      if (result.providerName == "UrlbarProviderTabToSearch") {
         state.maxTabToSearchResultSpan = Math.max(
           state.maxTabToSearchResultSpan,
           span
@@ -1248,8 +1249,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state.quickSuggestResult ??= result;
     }
 
-    state.hasUnitConversionResult =
-      state.hasUnitConversionResult || result.providerName == "UnitConversion";
+    state.hasUnitConversionResult ||=
+      result.providerName == "UrlbarProviderUnitConversion";
 
     // Keep track of result urls to dedupe results with the same url embedded
     // in its query string
@@ -1315,7 +1316,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Avoid multiple tab-to-search results.
     // TODO (Bug 1670185): figure out better strategies to manage this case.
-    if (result.providerName == "TabToSearch") {
+    if (result.providerName == "UrlbarProviderTabToSearch") {
       state.canAddTabToSearch = false;
     }
 
@@ -1403,13 +1404,13 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // provider priority.
       // GlobalActions == TabToSearch (legacy) > QuickSuggest > Other providers
       if (
-        a.providerName === "TabToSearch" ||
+        a.providerName === "UrlbarProviderTabToSearch" ||
         a.providerName === "UrlbarProviderGlobalActions"
       ) {
         return 1;
       }
       if (
-        b.providerName === "TabToSearch" ||
+        b.providerName === "UrlbarProviderTabToSearch" ||
         b.providerName === "UrlbarProviderGlobalActions"
       ) {
         return -1;

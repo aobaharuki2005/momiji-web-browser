@@ -61,16 +61,6 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
   }
 
   /**
-   * Unique name for the provider, used by the context to filter on providers.
-   * Not using a unique name will cause the newest registration to win.
-   *
-   * @returns {string}
-   */
-  get name() {
-    return "UrlbarProviderTopSites";
-  }
-
-  /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */
   get type() {

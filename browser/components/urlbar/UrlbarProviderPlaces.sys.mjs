@@ -1395,15 +1395,6 @@ export class UrlbarProviderPlaces extends UrlbarProvider {
   #currentSearch = null;
 
   /**
-   * Returns the name of this provider.
-   *
-   * @returns {string} the name of this provider.
-   */
-  get name() {
-    return "Places";
-  }
-
-  /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */
   get type() {

@@ -156,10 +156,10 @@ add_task(async function autofillIsCleared() {
   await PlacesTestUtils.addVisits("http://example.com");
 
   let firstContext = createContext("e", {
-    providers: ["Autofill", "HeuristicFallback"],
+    providers: ["UrlbarProviderAutofill", "UrlbarProviderHeuristicFallback"],
   });
   let secondContext = createContext("em", {
-    providers: ["Autofill", "HeuristicFallback"],
+    providers: ["UrlbarProviderAutofill", "UrlbarProviderHeuristicFallback"],
   });
 
   info("Sanity check: The first query autofills and the second does not.");
@@ -181,7 +181,7 @@ add_task(async function autofillIsCleared() {
     matches: [
       makeSearchResult(secondContext, {
         engineName: (await Services.search.getDefault()).name,
-        providerName: "HeuristicFallback",
+        providerName: "UrlbarProviderHeuristicFallback",
         heuristic: true,
       }),
     ],
@@ -189,10 +189,10 @@ add_task(async function autofillIsCleared() {
 
   // Refresh our queries
   firstContext = createContext("e", {
-    providers: ["Autofill", "HeuristicFallback"],
+    providers: ["UrlbarProviderAutofill", "UrlbarProviderHeuristicFallback"],
   });
   secondContext = createContext("em", {
-    providers: ["Autofill", "HeuristicFallback"],
+    providers: ["UrlbarProviderAutofill", "UrlbarProviderHeuristicFallback"],
   });
 
   // Set up controller to observe queries.
@@ -214,7 +214,8 @@ add_task(async function autofillIsCleared() {
         "The first query should be cancelled."
       );
       Assert.ok(
-        !UrlbarProvidersManager.getProvider("Autofill")._autofillData,
+        !UrlbarProvidersManager.getProvider("UrlbarProviderAutofill")
+          ._autofillData,
         "The first result should not have populated autofill data."
       );
       Assert.ok(!queryCancelled, "No more than one query should be cancelled.");

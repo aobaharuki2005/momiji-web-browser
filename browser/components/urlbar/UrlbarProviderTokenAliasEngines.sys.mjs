@@ -30,15 +30,6 @@ export class UrlbarProviderTokenAliasEngines extends UrlbarProvider {
   }
 
   /**
-   * Returns the name of this provider.
-   *
-   * @returns {string} the name of this provider.
-   */
-  get name() {
-    return "TokenAliasEngines";
-  }
-
-  /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */
   get type() {

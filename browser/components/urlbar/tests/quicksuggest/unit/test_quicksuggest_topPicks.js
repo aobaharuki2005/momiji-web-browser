@@ -120,7 +120,7 @@ add_task(async function heuristicDeduplication() {
 
     // Do a search and check the results.
     let context = createContext(SUGGESTION_SEARCH_STRING, {
-      providers: [UrlbarProviderQuickSuggest.name, "Autofill"],
+      providers: [UrlbarProviderQuickSuggest.name, UrlbarProviderAutofill.name],
       isPrivate: false,
     });
     const EXPECTED_AUTOFILL_RESULT = makeVisitResult(context, {

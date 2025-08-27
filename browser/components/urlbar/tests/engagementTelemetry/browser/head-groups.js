@@ -101,7 +101,7 @@ async function doTailSearchSuggestTest({ trigger, assert }) {
 
   await doTest(async () => {
     await openPopup("hello");
-    await selectRowByProvider("SearchSuggestions");
+    await selectRowByProvider("UrlbarProviderSearchSuggestions");
 
     await trigger();
     await assert();
@@ -175,7 +175,7 @@ async function doRemoteTabTest({ trigger, assert }) {
 
   await doTest(async () => {
     await openPopup("example");
-    await selectRowByProvider("RemoteTabs");
+    await selectRowByProvider("UrlbarProviderRemoteTabs");
 
     await trigger();
     await assert();
@@ -269,7 +269,7 @@ async function doSuggestedIndexTest({ trigger, assert }) {
 
   await doTest(async () => {
     await openPopup("1m to cm");
-    await selectRowByProvider("UnitConversion");
+    await selectRowByProvider("UrlbarProviderUnitConversion");
 
     await trigger();
     await assert();

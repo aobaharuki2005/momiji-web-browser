@@ -80,10 +80,6 @@ export class UrlbarProviderQuickSuggestContextualOptIn extends UrlbarProvider {
     super();
   }
 
-  get name() {
-    return "UrlbarProviderQuickSuggestContextualOptIn";
-  }
-
   /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */

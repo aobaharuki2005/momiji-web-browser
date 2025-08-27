@@ -24,15 +24,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class UrlbarProviderAliasEngines extends UrlbarProvider {
   /**
-   * Returns the name of this provider.
-   *
-   * @returns {string} the name of this provider.
-   */
-  get name() {
-    return "AliasEngines";
-  }
-
-  /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */
   get type() {

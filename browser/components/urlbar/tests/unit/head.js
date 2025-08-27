@@ -784,7 +784,7 @@ function makeSearchResult(
   if (uri) {
     payload.url = uri;
   }
-  if (providerName == "TabToSearch") {
+  if (providerName == "UrlbarProviderTabToSearch") {
     if (searchUrlDomainWithoutSuffix.startsWith("www.")) {
       searchUrlDomainWithoutSuffix = searchUrlDomainWithoutSuffix.substring(4);
     }
@@ -793,7 +793,7 @@ function makeSearchResult(
     payload.isGeneralPurposeEngine = false;
   }
 
-  if (providerName == "TokenAliasEngines") {
+  if (providerName == "UrlbarProviderTokenAliasEngines") {
     payload.keywords = alias?.toLowerCase();
   }
 
@@ -877,8 +877,7 @@ function makeVisitResult(
 
   if (
     !heuristic &&
-    providerName != "AboutPages" &&
-    providerName != "PreloadedSites" &&
+    providerName != "UrlbarProviderAboutPages" &&
     source == UrlbarUtils.RESULT_SOURCE.HISTORY
   ) {
     payload.isBlockable = true;
@@ -1139,7 +1138,7 @@ async function check_results({
     if (
       actual.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
       actual.source == UrlbarUtils.RESULT_SOURCE.SEARCH &&
-      actual.providerName == "HeuristicFallback"
+      actual.providerName == "UrlbarProviderHeuristicFallback"
     ) {
       expected.payload.icon = SEARCH_GLASS_ICON;
     }

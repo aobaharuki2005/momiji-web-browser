@@ -1456,7 +1456,7 @@ add_task(async function tabToSearch() {
         ),
         providesSearchMode: true,
         query: "",
-        providerName: "TabToSearch",
+        providerName: "UrlbarProviderTabToSearch",
         satisfiesAutofillThreshold: true,
       }),
       // Suggest best match

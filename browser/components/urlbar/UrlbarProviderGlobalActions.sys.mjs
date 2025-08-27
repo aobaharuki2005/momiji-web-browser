@@ -50,10 +50,6 @@ let globalActionsProviders = [
  * A provider that lets the user view all available global actions for a query.
  */
 export class UrlbarProviderGlobalActions extends UrlbarProvider {
-  get name() {
-    return "UrlbarProviderGlobalActions";
-  }
-
   /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */

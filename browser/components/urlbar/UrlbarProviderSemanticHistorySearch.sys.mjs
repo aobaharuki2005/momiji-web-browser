@@ -78,10 +78,6 @@ export class UrlbarProviderSemanticHistorySearch extends UrlbarProvider {
     return lazy.semanticManager;
   }
 
-  get name() {
-    return "SemanticHistorySearch";
-  }
-
   /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */

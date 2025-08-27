@@ -28,10 +28,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * A provider that lets the user view all available actions while in searchMode.
  */
 export class UrlbarProviderActionsSearchMode extends UrlbarProvider {
-  get name() {
-    return "UrlbarProviderActionsSearchMode";
-  }
-
   /**
    * @returns {Values<typeof UrlbarUtils.PROVIDER_TYPE>}
    */
