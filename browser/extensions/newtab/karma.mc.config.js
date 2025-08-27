@@ -329,10 +329,10 @@ module.exports = function (config) {
               branches: 0,
             },
             "content-src/components/CustomizeMenu/ContentSection/*.jsx": {
-              statements: 77,
-              lines: 77,
-              functions: 87,
-              branches: 65,
+              statements: 80,
+              lines: 80,
+              functions: 99,
+              branches: 64,
             },
             "content-src/components/CustomizeMenu/**/*.jsx": {
               statements: 68,
