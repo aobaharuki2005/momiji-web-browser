@@ -9671,7 +9671,8 @@ Result<bool, nsresult> nsContentUtils::SynthesizeMouseEvent(
     if (NS_FAILED(rv)) {
       return Err(rv);
     }
-  } else if (StaticPrefs::test_events_async_enabled()) {
+  } else if (aOptions.mIsAsyncEnabled ||
+             StaticPrefs::test_events_async_enabled()) {
     status = aWidget->DispatchInputEvent(&mouseOrPointerEvent).mContentStatus;
   } else {
     nsresult rv = aWidget->DispatchEvent(&mouseOrPointerEvent, status);
