@@ -82,9 +82,11 @@ class SearchFragmentStoreTest {
         every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
+        every { settings.shouldUseBottomToolbar } returns true
 
         mockkStatic("org.mozilla.fenix.search.SearchFragmentStoreKt") {
             val expected = EMPTY_SEARCH_FRAGMENT_STATE.copy(
+                searchSuggestionsOrientedAtBottom = true,
                 showSearchShortcutsSetting = true,
                 showSearchSuggestions = true,
                 showSearchTermHistory = true,
@@ -146,9 +148,10 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowSearchSuggestionsInPrivate } returns false
         every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
-        every { settings.showNonSponsoredSuggestions } returns true
+        every { settings.shouldUseBottomToolbar } returns true
 
         val expected = EMPTY_SEARCH_FRAGMENT_STATE.copy(
+            searchSuggestionsOrientedAtBottom = true,
             showSearchShortcutsSetting = true,
             showSearchTermHistory = true,
             showAllHistorySuggestions = true,
@@ -173,6 +176,7 @@ class SearchFragmentStoreTest {
 
     @Test
     fun `createInitialSearchFragmentState with tab`() {
+        every { settings.shouldUseBottomToolbar } returns true
         activity.browsingModeManager.mode = BrowsingMode.Private
         every { components.core.store.state } returns BrowserState(
             tabs = listOf(
@@ -191,6 +195,7 @@ class SearchFragmentStoreTest {
                 query = "https://example.com",
                 url = "https://example.com",
                 searchTerms = "search terms",
+                searchSuggestionsOrientedAtBottom = true,
                 showAllSessionSuggestions = true,
                 showQrButton = true,
                 tabId = "tabId",

@@ -266,7 +266,7 @@ fun createInitialSearchFragmentState(
         searchTerms = tab?.content?.searchTerms.orEmpty(),
         searchEngineSource = searchEngineSource,
         searchSuggestionsProviders = emptyList(),
-        searchSuggestionsOrientedAtBottom = false,
+        searchSuggestionsOrientedAtBottom = settings.shouldUseBottomToolbar,
         searchStartedForCurrentUrl = false,
         shouldShowSearchSuggestions = false,
         defaultEngine = null,
