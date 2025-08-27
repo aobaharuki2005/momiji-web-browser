@@ -591,7 +591,7 @@ bool Moof::GetAuxInfo(AtomType aType,
       LOG_ERROR(Moof, "OOM");
       return false;
     }
-    uint64_t offset = mRange.mStart + saio->mOffsets[0];
+    uint64_t offset = mTfhd.mBaseDataOffset + saio->mOffsets[0];
     for (size_t i = 0; i < saiz->mSampleInfoSize.Length(); i++) {
       if (!aByteRanges->AppendElement(
               MediaByteRange(offset, offset + saiz->mSampleInfoSize[i]),
