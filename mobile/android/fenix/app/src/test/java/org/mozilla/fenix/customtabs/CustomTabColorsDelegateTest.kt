@@ -14,6 +14,7 @@ import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.ColorUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -68,6 +69,9 @@ class CustomTabColorsDelegateTest {
                 navigationBarColor = defaultColorSchemeParams.navigationBarColor,
                 navigationBarDividerColor = defaultColorSchemeParams.navigationBarDividerColor,
                 readableColor = Color.BLACK,
+                secondaryReadableColor = defaultColorSchemeParams.toolbarColor?.let {
+                    ColorUtils.getSecondaryReadableTextColor(it)
+                },
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -90,6 +94,9 @@ class CustomTabColorsDelegateTest {
                 navigationBarColor = defaultColorSchemeParams.toolbarColor,
                 navigationBarDividerColor = defaultColorSchemeParams.navigationBarDividerColor,
                 readableColor = Color.BLACK,
+                secondaryReadableColor = defaultColorSchemeParams.toolbarColor?.let {
+                    ColorUtils.getSecondaryReadableTextColor(it)
+                },
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -115,6 +122,9 @@ class CustomTabColorsDelegateTest {
                 navigationBarColor = lightColorSchemeParams.navigationBarColor,
                 navigationBarDividerColor = lightColorSchemeParams.navigationBarDividerColor,
                 readableColor = Color.WHITE,
+                secondaryReadableColor = lightColorSchemeParams.toolbarColor?.let {
+                    ColorUtils.getSecondaryReadableTextColor(it)
+                },
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -139,6 +149,9 @@ class CustomTabColorsDelegateTest {
                 navigationBarColor = defaultColorSchemeParams.navigationBarColor,
                 navigationBarDividerColor = defaultColorSchemeParams.navigationBarDividerColor,
                 readableColor = Color.BLACK,
+                secondaryReadableColor = defaultColorSchemeParams.toolbarColor?.let {
+                    ColorUtils.getSecondaryReadableTextColor(it)
+                },
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -164,6 +177,9 @@ class CustomTabColorsDelegateTest {
                 navigationBarColor = darkColorSchemeParams.navigationBarColor,
                 navigationBarDividerColor = darkColorSchemeParams.navigationBarDividerColor,
                 readableColor = Color.WHITE,
+                secondaryReadableColor = darkColorSchemeParams.toolbarColor?.let {
+                    ColorUtils.getSecondaryReadableTextColor(it)
+                },
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -188,6 +204,9 @@ class CustomTabColorsDelegateTest {
                 navigationBarColor = defaultColorSchemeParams.navigationBarColor,
                 navigationBarDividerColor = defaultColorSchemeParams.navigationBarDividerColor,
                 readableColor = Color.BLACK,
+                secondaryReadableColor = defaultColorSchemeParams.toolbarColor?.let {
+                    ColorUtils.getSecondaryReadableTextColor(it)
+                },
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -212,6 +231,9 @@ class CustomTabColorsDelegateTest {
                 navigationBarColor = lightColorSchemeParams.navigationBarColor,
                 navigationBarDividerColor = lightColorSchemeParams.navigationBarDividerColor,
                 readableColor = Color.WHITE,
+                secondaryReadableColor = lightColorSchemeParams.toolbarColor?.let {
+                    ColorUtils.getSecondaryReadableTextColor(it)
+                },
             ),
             browserScreenStore.state.customTabColors,
         )
@@ -236,6 +258,9 @@ class CustomTabColorsDelegateTest {
                 navigationBarColor = darkColorSchemeParams.navigationBarColor,
                 navigationBarDividerColor = darkColorSchemeParams.navigationBarDividerColor,
                 readableColor = Color.WHITE,
+                secondaryReadableColor = darkColorSchemeParams.toolbarColor?.let {
+                    ColorUtils.getSecondaryReadableTextColor(it)
+                },
             ),
             browserScreenStore.state.customTabColors,
         )
