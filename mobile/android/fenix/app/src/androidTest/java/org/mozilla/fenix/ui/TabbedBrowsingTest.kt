@@ -109,52 +109,36 @@ class TabbedBrowsingTest : TestSetup() {
         }
     }
 
-    @Test
-    fun closingAndUndoCloseTabTest() {
-        val url1 = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val url2 = TestAssetHelper.getGenericAsset(mockWebServer, 2)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(url1.url) {
-            waitForPageToLoad()
-        }.goToHomescreen(composeTestRule) {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(url2.url) {
-            waitForPageToLoad()
-        }.openTabDrawer(composeTestRule) {
-            verifyExistingOpenTabs("Test_Page_1", "Test_Page_2")
-            swipeTabLeft("Test_Page_2")
-            verifySnackBarText("Tab closed")
-            clickSnackbarButton(composeTestRule, "UNDO")
-            verifyExistingOpenTabs("Test_Page_1", "Test_Page_2")
-
-            swipeTabLeft("Test_Page_2")
-            verifySnackBarText("Tab closed")
-            verifyExistingOpenTabs("Test_Page_1")
-        }
-    }
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/903604
     @Test
     fun swipeToCloseTabsTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val webPages = TestAssetHelper.getGenericAssets(mockWebServer)
 
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-            waitForPageToLoad()
-        }.openTabDrawer(composeTestRule) {
-            verifyExistingOpenTabs("Test_Page_1")
-            swipeTabRight("Test_Page_1")
-            verifySnackBarText("Tab closed")
-        }
+        MockBrowserDataHelper.createTabItem(webPages[0].url.toString())
+        MockBrowserDataHelper.createTabItem(webPages[1].url.toString())
+
         homeScreen {
-            verifyTabCounter("0")
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-            waitForPageToLoad()
         }.openTabDrawer(composeTestRule) {
-            verifyExistingOpenTabs("Test_Page_1")
-            swipeTabLeft("Test_Page_1")
+            verifyExistingOpenTabs(webPages[0].title)
+            verifyExistingOpenTabs(webPages[1].title)
+            swipeTabRight(webPages[0].title)
+            verifySnackBarText("Tab closed")
+            clickSnackbarButton(composeTestRule, "UNDO")
+            verifyExistingOpenTabs(webPages[0].title)
+            verifyExistingOpenTabs(webPages[1].title)
+            swipeTabRight(webPages[0].title)
+            verifySnackBarText("Tab closed")
+            verifyNoExistingOpenTabs(webPages[0].title)
+            verifyExistingOpenTabs(webPages[1].title)
+            swipeTabLeft(webPages[1].title)
+            verifySnackBarText("Tab closed")
+            clickSnackbarButton(composeTestRule, "UNDO")
+        }
+        browserScreen {
+            verifyPageContent(webPages[1].content)
+        }.openTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs(webPages[1].title)
+            swipeTabLeft(webPages[1].title)
             verifySnackBarText("Tab closed")
         }
         homeScreen {
