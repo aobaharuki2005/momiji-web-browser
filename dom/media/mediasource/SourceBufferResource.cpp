@@ -43,18 +43,17 @@ nsresult SourceBufferResource::ReadAtInternal(int64_t aOffset, char* aBuffer,
                                               uint32_t* aBytes) {
   MOZ_ASSERT(OnThread());
   MOZ_ASSERT(aOffset >= 0);
+  uint32_t available = mInputBuffer.GetLength() - aOffset;
+  uint32_t count = std::min(aCount, available);
+  SBR_DEBUGV("offset=%" PRId64 " GetLength()=%" PRIu64
+             " available=%u count=%u mEnded=%d",
+             aOffset, mInputBuffer.GetLength(), available, count, mEnded);
 
   if (mClosed || aOffset < 0 || uint64_t(aOffset) < mInputBuffer.GetOffset() ||
       static_cast<uint64_t>(aOffset) > mInputBuffer.GetLength()) {
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t available = mInputBuffer.GetLength() - aOffset;
-  uint32_t count = std::min(aCount, available);
-
-  SBR_DEBUGV("offset=%" PRId64 " GetLength()=%" PRIu64
-             " available=%u count=%u mEnded=%d",
-             aOffset, mInputBuffer.GetLength(), available, count, mEnded);
   if (available == 0) {
     SBR_DEBUGV("reached EOF");
     *aBytes = 0;
