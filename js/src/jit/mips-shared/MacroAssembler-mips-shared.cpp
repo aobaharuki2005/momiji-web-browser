@@ -1416,6 +1416,10 @@ void MacroAssemblerMIPSShared::ma_bc1d(FloatRegister lhs, FloatRegister rhs,
 
 void MacroAssemblerMIPSShared::minMax32(Register lhs, Register rhs,
                                         Register dest, bool isMax) {
+  if (rhs == dest) {
+    std::swap(lhs, rhs);
+  }
+
   auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
   if (lhs != dest) {
     asMasm().move32(lhs, dest);
@@ -1425,19 +1429,34 @@ void MacroAssemblerMIPSShared::minMax32(Register lhs, Register rhs,
 
 void MacroAssemblerMIPSShared::minMax32(Register lhs, Imm32 rhs, Register dest,
                                         bool isMax) {
-  auto cond =
-      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
-  if (lhs != dest) {
-    asMasm().move32(lhs, dest);
+  if (rhs.value == 0) {
+    ScratchRegisterScope scratch(asMasm());
+
+    if (isMax) {
+      // dest = (~lhs >> 31) & lhs
+      as_nor(scratch, lhs, zero);
+      as_sra(scratch, scratch, 31);
+      as_and(dest, lhs, scratch);
+    } else {
+      // dest = (lhs >> 31) & lhs
+      as_sra(scratch, lhs, 31);
+      as_and(dest, lhs, scratch);
+    }
+    return;
   }
-  Label done;
-  asMasm().branch32(cond, lhs, rhs, &done);
-  asMasm().move32(rhs, dest);
-  bind(&done);
+
+  SecondScratchRegisterScope scratch(asMasm());
+  asMasm().move32(rhs, scratch);
+
+  minMax32(lhs, scratch, dest, isMax);
 }
 
 void MacroAssemblerMIPSShared::minMaxPtr(Register lhs, Register rhs,
                                          Register dest, bool isMax) {
+  if (rhs == dest) {
+    std::swap(lhs, rhs);
+  }
+
   auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
   if (lhs != dest) {
     asMasm().movePtr(lhs, dest);
@@ -1447,15 +1466,26 @@ void MacroAssemblerMIPSShared::minMaxPtr(Register lhs, Register rhs,
 
 void MacroAssemblerMIPSShared::minMaxPtr(Register lhs, ImmWord rhs,
                                          Register dest, bool isMax) {
-  auto cond =
-      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
-  if (lhs != dest) {
-    asMasm().movePtr(lhs, dest);
+  if (rhs.value == 0) {
+    ScratchRegisterScope scratch(asMasm());
+
+    if (isMax) {
+      // dest = (~lhs >> 63) & lhs
+      as_nor(scratch, lhs, zero);
+      as_dsra32(scratch, scratch, 63);
+      as_and(dest, lhs, scratch);
+    } else {
+      // dest = (lhs >> 63) & lhs
+      as_dsra32(scratch, lhs, 63);
+      as_and(dest, lhs, scratch);
+    }
+    return;
   }
-  Label done;
-  asMasm().branchPtr(cond, lhs, rhs, &done);
-  asMasm().movePtr(rhs, dest);
-  bind(&done);
+
+  SecondScratchRegisterScope scratch(asMasm());
+  asMasm().movePtr(rhs, scratch);
+
+  minMaxPtr(lhs, scratch, dest, isMax);
 }
 
 void MacroAssemblerMIPSShared::minMaxDouble(FloatRegister srcDest,
