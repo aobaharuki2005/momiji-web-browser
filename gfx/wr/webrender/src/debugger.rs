@@ -13,7 +13,7 @@ use std::thread;
 use tiny_http::{Server, Response, ReadWrite, Method};
 use base64::prelude::*;
 use api::channel::Sender;
-use sha1::Sha1;
+use sha1::{Sha1, Digest};
 
 /// Implements the WR remote debugger interface, that the `wrshell` application
 /// can connect to when the cargo feature `debugger` is enabled. There are two
@@ -273,10 +273,8 @@ fn convert_ws_key(input: &str) -> String {
         .into_bytes();
     input.append(&mut bytes);
 
-    let mut sha1 = Sha1::new();
-    sha1.update(&input);
-
-    BASE64_STANDARD.encode(sha1.digest().bytes())
+    let sha1 = Sha1::digest(&input);
+    BASE64_STANDARD.encode(sha1)
 }
 
 /// Convert a string to a websocket text frame

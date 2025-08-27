@@ -62,7 +62,7 @@ zeitstempel = "0.1.2"
 tiny_http = {  version = "0.12", optional=true }
 serde_json = { optional=true, version="1" }
 url = { optional=true, version="2.5" }
-sha1 = { optional=true, version="0.6" }
+sha1 = { optional=true, version="0.10" }
 base64 = { optional=true, version="0.22" }
 
 [dev-dependencies]
