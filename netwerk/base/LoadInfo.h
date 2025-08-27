@@ -57,6 +57,23 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
 
 #define LOADINFO_FOR_EACH_FIELD(GETTER, SETTER)                                \
   /*     Type  Name                  LoadInfoArgs Name     Default         */  \
+  GETTER(uint32_t, TriggeringSandboxFlags, triggeringSandboxFlags, 0)          \
+  SETTER(uint32_t, TriggeringSandboxFlags)                                     \
+                                                                               \
+  GETTER(uint64_t, TriggeringWindowId, triggeringWindowId, 0)                  \
+  SETTER(uint64_t, TriggeringWindowId)                                         \
+                                                                               \
+  GETTER(bool, TriggeringStorageAccess, triggeringStorageAccess, false)        \
+  SETTER(bool, TriggeringStorageAccess)                                        \
+                                                                               \
+  GETTER(uint32_t, TriggeringFirstPartyClassificationFlags,                    \
+         triggeringFirstPartyClassificationFlags, 0)                           \
+  SETTER(uint32_t, TriggeringFirstPartyClassificationFlags)                    \
+                                                                               \
+  GETTER(uint32_t, TriggeringThirdPartyClassificationFlags,                    \
+         triggeringThirdPartyClassificationFlags, 0)                           \
+  SETTER(uint32_t, TriggeringThirdPartyClassificationFlags)                    \
+                                                                               \
   GETTER(bool, BlockAllMixedContent, blockAllMixedContent, false)              \
                                                                                \
   GETTER(bool, UpgradeInsecureRequests, upgradeInsecureRequests, false)        \
@@ -381,10 +398,6 @@ class LoadInfo final : public nsILoadInfo {
            const Maybe<mozilla::dom::ClientInfo>& aInitialClientInfo,
            const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
            nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags,
-           uint32_t aTriggeringSandboxFlags, uint64_t aTriggeringWindowId,
-           bool aTriggeringStorageAccess,
-           uint32_t aTriggeringFirstPartyClassificationFlags,
-           uint32_t aTriggeringThirdPartyClassificationFlags,
            nsContentPolicyType aContentPolicyType, LoadTainting aTainting,
 
 #define DEFINE_PARAMETER(type, name, _n, _d) type a##name,
@@ -476,11 +489,6 @@ class LoadInfo final : public nsILoadInfo {
   nsWeakPtr mContextForTopLevelLoad;
   nsSecurityFlags mSecurityFlags;
   uint32_t mSandboxFlags;
-  uint32_t mTriggeringSandboxFlags = 0;
-  uint64_t mTriggeringWindowId = 0;
-  bool mTriggeringStorageAccess = false;
-  uint32_t mTriggeringFirstPartyClassificationFlags = 0;
-  uint32_t mTriggeringThirdPartyClassificationFlags = 0;
   nsContentPolicyType mInternalContentPolicyType;
   LoadTainting mTainting = LoadTainting::Basic;
 

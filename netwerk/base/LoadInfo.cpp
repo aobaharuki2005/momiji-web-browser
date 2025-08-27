@@ -720,13 +720,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mContextForTopLevelLoad(rhs.mContextForTopLevelLoad),
       mSecurityFlags(rhs.mSecurityFlags),
       mSandboxFlags(rhs.mSandboxFlags),
-      mTriggeringSandboxFlags(rhs.mTriggeringSandboxFlags),
-      mTriggeringWindowId(rhs.mTriggeringWindowId),
-      mTriggeringStorageAccess(rhs.mTriggeringStorageAccess),
-      mTriggeringFirstPartyClassificationFlags(
-          rhs.mTriggeringFirstPartyClassificationFlags),
-      mTriggeringThirdPartyClassificationFlags(
-          rhs.mTriggeringThirdPartyClassificationFlags),
       mInternalContentPolicyType(rhs.mInternalContentPolicyType),
       mTainting(rhs.mTainting),
 #define DEFINE_INIT(_t, name, _n, _d) m##name(rhs.m##name),
@@ -774,10 +767,6 @@ LoadInfo::LoadInfo(
     const Maybe<ClientInfo>& aInitialClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController,
     nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags,
-    uint32_t aTriggeringSandboxFlags, uint64_t aTriggeringWindowId,
-    bool aTriggeringStorageAccess,
-    uint32_t aTriggeringFirstPartyClassificationFlags,
-    uint32_t aTriggeringThirdPartyClassificationFlags,
     nsContentPolicyType aContentPolicyType, LoadTainting aTainting,
 #define DEFINE_PARAMETER(type, name, _n, _d) type a##name,
     LOADINFO_FOR_EACH_FIELD(DEFINE_PARAMETER, LOADINFO_DUMMY_SETTER)
@@ -818,13 +807,6 @@ LoadInfo::LoadInfo(
       mLoadingContext(do_GetWeakReference(aLoadingContext)),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
-      mTriggeringSandboxFlags(aTriggeringSandboxFlags),
-      mTriggeringWindowId(aTriggeringWindowId),
-      mTriggeringStorageAccess(aTriggeringStorageAccess),
-      mTriggeringFirstPartyClassificationFlags(
-          aTriggeringFirstPartyClassificationFlags),
-      mTriggeringThirdPartyClassificationFlags(
-          aTriggeringThirdPartyClassificationFlags),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(aTainting),
 
@@ -1077,66 +1059,6 @@ LoadInfo::GetSecurityFlags(nsSecurityFlags* aResult) {
 NS_IMETHODIMP
 LoadInfo::GetSandboxFlags(uint32_t* aResult) {
   *aResult = mSandboxFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTriggeringSandboxFlags(uint32_t* aResult) {
-  *aResult = mTriggeringSandboxFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTriggeringSandboxFlags(uint32_t aFlags) {
-  mTriggeringSandboxFlags = aFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTriggeringWindowId(uint64_t* aResult) {
-  *aResult = mTriggeringWindowId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTriggeringWindowId(uint64_t aFlags) {
-  mTriggeringWindowId = aFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTriggeringStorageAccess(bool* aResult) {
-  *aResult = mTriggeringStorageAccess;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTriggeringStorageAccess(bool aFlags) {
-  mTriggeringStorageAccess = aFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTriggeringFirstPartyClassificationFlags(uint32_t* aResult) {
-  *aResult = mTriggeringFirstPartyClassificationFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTriggeringFirstPartyClassificationFlags(uint32_t aFlags) {
-  mTriggeringFirstPartyClassificationFlags = aFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTriggeringThirdPartyClassificationFlags(uint32_t* aResult) {
-  *aResult = mTriggeringThirdPartyClassificationFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTriggeringThirdPartyClassificationFlags(uint32_t aFlags) {
-  mTriggeringThirdPartyClassificationFlags = aFlags;
   return NS_OK;
 }
 
