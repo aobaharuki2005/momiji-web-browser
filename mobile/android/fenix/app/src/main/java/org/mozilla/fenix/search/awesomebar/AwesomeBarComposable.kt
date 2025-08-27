@@ -7,6 +7,7 @@ package org.mozilla.fenix.search.awesomebar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -135,116 +136,116 @@ class AwesomeBarComposable(
             }
         }
 
-        if (isSearchActive && shouldShowClipboardBar) {
-            val url = components.clipboardHandler.extractURL()
+        Column {
+            if (isSearchActive && shouldShowClipboardBar) {
+                val url = components.clipboardHandler.extractURL()
 
-            ClipboardSuggestionBar(
-                shouldUseBottomToolbar = components.settings.shouldUseBottomToolbar,
-                onClick = {
-                    url?.let {
-                        toolbarStore.dispatch(
-                            SearchQueryUpdated(query = url, isQueryPrefilled = false),
-                        )
-                    }
-                },
-            )
-        } else if (isSearchActive && state.showSearchSuggestionsHint) {
-            Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(FirefoxTheme.colors.layer1)
-                    .pointerInput(WindowInsets.isImeVisible) {
-                        detectTapGestures(
-                            // Hide the keyboard for any touches in the empty area of the awesomebar
-                            onPress = { keyboardController?.hide() },
-                        )
-                    },
-            ) {
-                PrivateSuggestionsCard(
-                    onSearchSuggestionsInPrivateModeAllowed = {
-                        activity.settings().shouldShowSearchSuggestionsInPrivate = true
-                        activity.settings().showSearchSuggestionsInPrivateOnboardingFinished = true
-                        searchStore.dispatch(
-                            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
-                                false,
-                            ),
-                        )
-                        searchStore.dispatch(
-                            SearchFragmentAction.PrivateSuggestionsCardAccepted,
-                        )
-                    },
-                    onSearchSuggestionsInPrivateModeBlocked = {
-                        activity.settings().shouldShowSearchSuggestionsInPrivate = false
-                        activity.settings().showSearchSuggestionsInPrivateOnboardingFinished = true
-                        searchStore.dispatch(
-                            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
-                                false,
-                            ),
-                        )
-                    },
-                    onLearnMoreClick = {
-                        components.useCases.fenixBrowserUseCases.loadUrlOrSearch(
-                            searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-                                SupportUtils.SumoTopic.SEARCH_SUGGESTION,
-                            ),
-                            newTab = appStore.state.searchState.sourceTabId == null,
-                            private = true,
-                        )
-                        navController.navigate(R.id.browserFragment)
+                ClipboardSuggestionBar(
+                    shouldUseBottomToolbar = components.settings.shouldUseBottomToolbar,
+                    onClick = {
+                        url?.let {
+                            toolbarStore.dispatch(
+                                SearchQueryUpdated(query = url, isQueryPrefilled = false),
+                            )
+                        }
                     },
                 )
             }
-        } else if (isSearchActive && state.shouldShowSearchSuggestions) {
-            Box(
-                modifier = modifier
-                    .background(AcornTheme.colors.layer1)
-                    .fillMaxSize()
-                    .pointerInput(WindowInsets.isImeVisible) {
-                        detectTapGestures(
-                            // Hide the keyboard for any touches in the empty area of the awesomebar
-                            onPress = { view.hideKeyboard() },
-                        )
-                    },
-            ) {
-                AwesomeBar(
-                    text = state.query,
-                    providers = state.searchSuggestionsProviders,
-                    orientation = orientation,
-                    colors = AwesomeBarDefaults.colors(
-                        background = Color.Transparent,
-                        title = FirefoxTheme.colors.textPrimary,
-                        description = FirefoxTheme.colors.textSecondary,
-                        autocompleteIcon = FirefoxTheme.colors.textSecondary,
-                        groupTitle = FirefoxTheme.colors.textSecondary,
-                    ),
-                    onSuggestionClicked = { suggestion ->
-                        searchStore.dispatch(SuggestionClicked(suggestion))
-                    },
-                    onAutoComplete = { suggestion ->
-                        searchStore.dispatch(SuggestionSelected(suggestion))
-                    },
-                    onVisibilityStateUpdated = {
-                        browserStore.dispatch(AwesomeBarAction.VisibilityStateUpdated(it))
-                    },
-                    onScroll = { view.hideKeyboard() },
-                    profiler = components.core.engine.profiler,
+
+            if (isSearchActive && state.showSearchSuggestionsHint) {
+                Box(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .background(FirefoxTheme.colors.layer1)
+                        .pointerInput(WindowInsets.isImeVisible) {
+                            detectTapGestures(
+                                // Hide the keyboard for any touches in the empty area of the awesomebar
+                                onPress = { keyboardController?.hide() },
+                            )
+                        },
+                ) {
+                    PrivateSuggestionsCard(
+                        onSearchSuggestionsInPrivateModeAllowed = {
+                            activity.settings().shouldShowSearchSuggestionsInPrivate = true
+                            activity.settings().showSearchSuggestionsInPrivateOnboardingFinished = true
+                            searchStore.dispatch(
+                                SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false),
+                            )
+                            searchStore.dispatch(
+                                SearchFragmentAction.PrivateSuggestionsCardAccepted,
+                            )
+                        },
+                        onSearchSuggestionsInPrivateModeBlocked = {
+                            activity.settings().shouldShowSearchSuggestionsInPrivate = false
+                            activity.settings().showSearchSuggestionsInPrivateOnboardingFinished = true
+                            searchStore.dispatch(
+                                SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false),
+                            )
+                        },
+                        onLearnMoreClick = {
+                            components.useCases.fenixBrowserUseCases.loadUrlOrSearch(
+                                searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
+                                    SupportUtils.SumoTopic.SEARCH_SUGGESTION,
+                                ),
+                                newTab = appStore.state.searchState.sourceTabId == null,
+                                private = true,
+                            )
+                            navController.navigate(R.id.browserFragment)
+                        },
+                    )
+                }
+            } else if (isSearchActive && state.shouldShowSearchSuggestions) {
+                Box(
+                    modifier = modifier
+                        .background(AcornTheme.colors.layer1)
+                        .fillMaxSize()
+                        .pointerInput(WindowInsets.isImeVisible) {
+                            detectTapGestures(
+                                // Hide the keyboard for any touches in the empty area of the awesomebar
+                                onPress = { view.hideKeyboard() },
+                            )
+                        },
+                ) {
+                    AwesomeBar(
+                        text = state.query,
+                        providers = state.searchSuggestionsProviders,
+                        orientation = orientation,
+                        colors = AwesomeBarDefaults.colors(
+                            background = Color.Transparent,
+                            title = FirefoxTheme.colors.textPrimary,
+                            description = FirefoxTheme.colors.textSecondary,
+                            autocompleteIcon = FirefoxTheme.colors.textSecondary,
+                            groupTitle = FirefoxTheme.colors.textSecondary,
+                        ),
+                        onSuggestionClicked = { suggestion ->
+                            searchStore.dispatch(SuggestionClicked(suggestion))
+                        },
+                        onAutoComplete = { suggestion ->
+                            searchStore.dispatch(SuggestionSelected(suggestion))
+                        },
+                        onVisibilityStateUpdated = {
+                            browserStore.dispatch(AwesomeBarAction.VisibilityStateUpdated(it))
+                        },
+                        onScroll = { view.hideKeyboard() },
+                        profiler = components.core.engine.profiler,
+                    )
+                }
+            } else if (isSearchActive && showScrimWhenNoSuggestions) {
+                Spacer(
+                    modifier = modifier
+                        .background(Color(MATERIAL_DESIGN_SCRIM.toColorInt()))
+                        .fillMaxSize()
+                        .pointerInput(WindowInsets.isImeVisible) {
+                            detectTapGestures(
+                                onPress = {
+                                    focusManager.clearFocus()
+                                    keyboardController?.hide()
+                                    appStore.dispatch(SearchEnded)
+                                },
+                            )
+                        },
                 )
             }
-        } else if (isSearchActive && showScrimWhenNoSuggestions) {
-            Spacer(
-                modifier = modifier
-                    .background(Color(MATERIAL_DESIGN_SCRIM.toColorInt()))
-                    .fillMaxSize()
-                    .pointerInput(WindowInsets.isImeVisible) {
-                        detectTapGestures(
-                            onPress = {
-                                focusManager.clearFocus()
-                                keyboardController?.hide()
-                                appStore.dispatch(SearchEnded)
-                            },
-                        )
-                    },
-            )
         }
     }
 
