@@ -134,8 +134,16 @@ int WebMDemuxer::NestEggContext::Init() {
   io.tell = webmdemux_tell;
   io.userdata = this;
 
-  return nestegg_init(&mContext, io, &webmdemux_log,
-                      mParent->IsMediaSource() ? mResource.GetLength() : -1);
+  return nestegg_init(
+      &mContext, io, &webmdemux_log,
+      // nestegg_init() would return an error, from ne_parse(), if a resource
+      // read were to fail.
+      // For MediaSource, TrackBuffersManager::InitializationSegmentReceived()
+      // calls WebMDemuxer::Init() while the resource has cached only the
+      // bytes of the initialization segment.  max_offset is passed so that no
+      // read will fail.
+      mParent->IsMediaSource() ? mResource.GetResource()->GetCachedDataEnd(0)
+                               : -1);
 }
 
 WebMDemuxer::WebMDemuxer(MediaResource* aResource)

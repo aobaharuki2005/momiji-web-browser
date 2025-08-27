@@ -189,7 +189,8 @@ class WebMContainerParser
     if (initSegment || !HasCompleteInitData()) {
       if (mParser.mInitEndOffset > 0) {
         MOZ_DIAGNOSTIC_ASSERT(mInitData && mResource &&
-                              mParser.mInitEndOffset <= mResource->GetLength());
+                              mParser.mInitEndOffset <=
+                                  mResource->GetCachedDataEnd(0));
         if (!mInitData->SetLength(mParser.mInitEndOffset, fallible)) {
           // Super unlikely OOM
           return NS_ERROR_OUT_OF_MEMORY;
@@ -550,8 +551,8 @@ class MP4ContainerParser : public ContainerParser,
 
     mResource->AppendData(aData);
     MediaByteRangeSet byteRanges;
-    byteRanges +=
-        MediaByteRange(int64_t(mParser->mOffset), mResource->GetLength());
+    byteRanges += MediaByteRange(int64_t(mParser->mOffset),
+                                 mResource->GetCachedDataEnd(mParser->mOffset));
     mParser->RebuildFragmentedIndex(byteRanges);
 
     if (initSegment || !HasCompleteInitData()) {
