@@ -32,6 +32,8 @@ export class PrefsFeed {
     this._prefMap = prefMap;
     this._prefs = new Prefs();
     this.onExperimentUpdated = this.onExperimentUpdated.bind(this);
+    this.onTrainhopExperimentUpdated =
+      this.onTrainhopExperimentUpdated.bind(this);
     this.onPocketExperimentUpdated = this.onPocketExperimentUpdated.bind(this);
     this.onSmartShortcutsExperimentUpdated =
       this.onSmartShortcutsExperimentUpdated.bind(this);
@@ -92,6 +94,46 @@ export class PrefsFeed {
         type: at.PREF_CHANGED,
         data: {
           name: "featureConfig",
+          value,
+        },
+      })
+    );
+  }
+
+  /**
+   * Handler for when experiment data updates.
+   */
+  onTrainhopExperimentUpdated() {
+    const allEnrollments =
+      lazy.NimbusFeatures.newtabTrainhop.getAllEnrollments() || [];
+
+    // Combine all trainhop experiments keyed by type.
+    // Rules for duplicates:
+    // - Experiments take precedence over rollouts (this is expected).
+    // - If multiple experiments or multiple rollouts exist for the same type,
+    //   only the first is kept. This is nondeterministic and considered an error;
+    //   those experiments/rollouts should be relaunched.
+    const value = {};
+    allEnrollments.reduce((accumulator, currentValue) => {
+      if (currentValue?.value?.type) {
+        if (
+          !accumulator[currentValue.value.type] ||
+          (accumulator[currentValue.value.type].meta.isRollout &&
+            !currentValue.meta.isRollout)
+        ) {
+          accumulator[currentValue.value.type] = currentValue;
+          // Shorten the data chain.
+          value[currentValue.value.type] = currentValue.value.payload;
+        }
+      }
+      return accumulator;
+    }, {});
+
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: {
+          name: "trainhopConfig",
           value,
         },
       })
@@ -191,6 +233,9 @@ export class PrefsFeed {
   init() {
     this._prefs.observeBranch(this);
     lazy.NimbusFeatures.newtab.onUpdate(this.onExperimentUpdated);
+    lazy.NimbusFeatures.newtabTrainhop.onUpdate(
+      this.onTrainhopExperimentUpdated
+    );
     lazy.NimbusFeatures.pocketNewtab.onUpdate(this.onPocketExperimentUpdated);
     lazy.NimbusFeatures.newtabSmartShortcuts.onUpdate(
       this.onSmartShortcutsExperimentUpdated
@@ -309,9 +354,15 @@ export class PrefsFeed {
   removeListeners() {
     this._prefs.ignoreBranch(this);
     lazy.NimbusFeatures.newtab.offUpdate(this.onExperimentUpdated);
+    lazy.NimbusFeatures.newtabTrainhop.offUpdate(
+      this.onTrainhopExperimentUpdated
+    );
     lazy.NimbusFeatures.pocketNewtab.offUpdate(this.onPocketExperimentUpdated);
     lazy.NimbusFeatures.newtabSmartShortcuts.offUpdate(
       this.onSmartShortcutsExperimentUpdated
+    );
+    lazy.NimbusFeatures.newtabInferredPersonalization.offUpdate(
+      this.onInferredPersonalizationExperimentUpdated
     );
     lazy.NimbusFeatures.newtabWidgets.offUpdate(this.onWidgetsUpdated);
 

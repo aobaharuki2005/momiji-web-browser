@@ -139,6 +139,12 @@ const PREF_WIDGET_LISTS_ENABLED = "widgets.lists.enabled";
 
 let getHardcodedLayout;
 
+ChromeUtils.defineLazyGetter(lazy, "userAgent", () => {
+  return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+    Ci.nsIHttpProtocolHandler
+  ).userAgent;
+});
+
 export class DiscoveryStreamFeed {
   constructor() {
     // Internal state for checking if we've intialized all our data
@@ -1347,6 +1353,8 @@ export class DiscoveryStreamFeed {
       }
 
       if (placements?.length) {
+        const headers = new Headers();
+        headers.append("content-type", "application/json");
         const apiKeyPref = this.config.api_key_pref;
         const apiKey = Services.prefs.getCharPref(apiKeyPref, "");
         const state = this.store.getState();
@@ -1365,6 +1373,29 @@ export class DiscoveryStreamFeed {
           unifiedAdsPlacements = this.getAdsPlacements();
           const blockedSponsors =
             state.Prefs.values[PREF_UNIFIED_ADS_BLOCKED_LIST];
+          const preFlightConfig =
+            state.Prefs.values?.trainhopConfig?.marsPreFlight || {};
+
+          // We need some basic data that we can pass along to the ohttp request.
+          // We purposefully don't use ohttp on this request. We also expect to
+          // mostly hit the HTTP cache rather than the network with these requests.
+          if (preFlightConfig.enabled) {
+            const preFlight = await this.fetchFromEndpoint(
+              `${endpointBaseUrl}v1/o`,
+              {
+                method: "GET",
+              }
+            );
+
+            if (preFlight) {
+              // If we don't get a normalized_ua, it means it matched the default userAgent.
+              headers.append(
+                "X-User-Agent",
+                preFlight.normalized_ua || lazy.userAgent
+              );
+              headers.append("X-Geoname-ID", preFlight.geoname_id);
+            }
+          }
 
           body = {
             context_id: await lazy.ContextId.request(),
@@ -1373,9 +1404,7 @@ export class DiscoveryStreamFeed {
           };
         }
 
-        const headers = new Headers();
         const marsOhttpEnabled = state.Prefs.values[PREF_UNIFIED_ADS_OHTTP];
-        headers.append("content-type", "application/json");
 
         let spocsResponse;
         // Logic decision point: Query ads servers in this file or utilize AdsFeed method
