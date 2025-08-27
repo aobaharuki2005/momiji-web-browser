@@ -3287,7 +3287,7 @@
     Title text for the protection panel banner when tracking protection is enabled.
     %s is the name of the app (for example "Firefox").
   -->
-  <string name="protection_panel_banner_protected_title">%s е нащрек</string>
+  <string name="protection_panel_banner_protected_title">%s е на пост</string>
   <!-- Description text for the protection panel banner when tracking protection is enabled. -->
   <string name="protection_panel_banner_protected_description">Вие сте защитени. Ако забележим нещо, ще ви уведомим.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
@@ -3316,7 +3316,7 @@
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings_2">Настройки за поверителност</string>
   <!-- Title text for the protection panel permissions section. -->
-  <string name="protection_panel_permissions_title">Права</string>
+  <string name="protection_panel_permissions_title">Разрешения</string>
   <!--
     Text for displaying the total number of trackers blocked in the trackers blocked panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3347,7 +3347,7 @@
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.
   -->
-  <string name="connection_security_panel_verified_by">Потвърдено от %s</string>
+  <string name="connection_security_panel_verified_by">Проверено от %s</string>
   <!--
     Debug drawer
 
@@ -3357,7 +3357,7 @@
   <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
   <string name="debug_drawer_back_button_content_description">Връщане назад</string>
   <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
-  <string name="debug_drawer_fab_content_description">Отваряне на чекмеджето за отстраняване на грешки</string>
+  <string name="debug_drawer_fab_content_description">Отваряне на раздела за отстраняване на грешки</string>
   <!--
     Debug drawer tabs tools
 
@@ -3431,7 +3431,7 @@
   <!-- Option for likert scale -->
   <string name="likert_scale_option_5" tools:ignore="UnusedResources">Много недоволен/а</string>
   <!-- Option for likert scale -->
-  <string name="likert_scale_option_6" tools:ignore="UnusedResources">не го ползвам</string>
+  <string name="likert_scale_option_6" tools:ignore="UnusedResources">Не го използвам</string>
   <!-- Option for likert scale. Note: The word "Firefox" should NOT be translated. -->
   <string name="likert_scale_option_7" tools:ignore="BrandUsage,UnusedResources">Не използвам търсене във Firefox</string>
   <!-- Option for likert scale -->
@@ -3467,7 +3467,7 @@
 
     The title of the Logins feature in the Debug Drawer.
   -->
-  <string name="debug_drawer_logins_title">Регистрации</string>
+  <string name="debug_drawer_logins_title">Вписвания</string>
   <!-- The title of the logins section in the Logins feature. %s is the site domain. -->
   <string name="debug_drawer_logins_current_domain_label">Текущ домейн: %s</string>
   <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
@@ -3501,7 +3501,7 @@
 
     The title of the glean debugging feature
   -->
-  <string name="glean_debug_tools_title">Събиране на инструменти за дебъгване</string>
+  <string name="glean_debug_tools_title">Събиране на инструменти за отстраняване на грешки</string>
   <!--
     Debug drawer region tools
 
@@ -3561,7 +3561,7 @@
   -->
   <string name="certificate_warning_homepage_card_update_now_button" tools:ignore="UnusedResources">Обновяване</string>
   <!-- Homepage card title about old Firefox version. "Update" is a verb. Note: The word "Firefox" should NOT be translated. -->
-  <string name="certificate_warning_homepage_card_hca1_title" tools:ignore="BrandUsage,UnusedResources">Обновете своя браузър Firefox</string>
+  <string name="certificate_warning_homepage_card_hca1_title" tools:ignore="BrandUsage,UnusedResources">Обновете своя четец Firefox</string>
   <!-- Homepage card message about old Firefox version -->
   <string name="certificate_warning_homepage_card_hca1_message" tools:ignore="UnusedResources">Кореневият сертификат ще изтече, причинявайки някои функции да спрат да работят на 14 март.</string>
   <!-- Homepage card title about old Firefox version. "Update" is a verb. -->
