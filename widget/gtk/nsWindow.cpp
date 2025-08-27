@@ -7063,8 +7063,13 @@ void nsWindow::UpdateOpaqueRegionInternal() {
         cairo_rectangle_int_t rect = {gdkRect.x + offset.x,
                                       gdkRect.y + offset.y, gdkRect.width,
                                       gdkRect.height};
+        LOG("nsWindow::UpdateOpaqueRegionInternal() set opaque region [%d,%d] "
+            "-> [%d x %d]",
+            gdkRect.x, gdkRect.y, gdkRect.width, gdkRect.height);
         cairo_region_union_rectangle(region, &rect);
       }
+    } else {
+      LOG("nsWindow::UpdateOpaqueRegionInternal() window is transparent");
     }
     gdk_window_set_opaque_region(window, region);
     if (region) {
