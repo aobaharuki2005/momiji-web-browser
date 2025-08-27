@@ -14,6 +14,9 @@ LOCAL_INCLUDES += [
 EXPORTS.libwebrtc_overrides.api += [
     "api/location.h",
 ]
+EXPORTS.libwebrtc_overrides.api.transport += [
+    "api/transport/network_control.h",
+]
 EXPORTS.libwebrtc_overrides.call += [
     "call/call_basic_stats.h",
     "call/video_receive_stream.h",
