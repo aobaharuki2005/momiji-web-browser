@@ -345,10 +345,10 @@ class MediaCacheStream : public DecoderDoctorLifeLogger<MediaCacheStream> {
   // These methods must be called on a different thread from the main
   // thread. They should always be called on the same thread for a given
   // stream.
-  // *aBytes gets the number of bytes that were actually read. This can
-  // be less than aCount. If the first byte of data is not in the cache,
-  // this will block until the data is available or the stream is
-  // closed, otherwise it won't block.
+  // On success, *aBytes returns the number of bytes that were actually read.
+  // This can be less than aCount on end of stream or when remaining bytes will
+  // not be available because a network error has occurred.
+  // This will block until the data is available or the stream is closed.
   nsresult Read(AutoLock&, char* aBuffer, uint32_t aCount, uint32_t* aBytes);
   // Seeks to aOffset in the stream then performs a Read operation. See
   // 'Read' for argument and return details.

@@ -2581,7 +2581,7 @@ nsresult MediaCacheStream::Read(AutoLock& aLock, char* aBuffer, uint32_t aCount,
       mMediaCache->QueueUpdate(aLock);
     }
 
-    // No data to read, so block
+    // No more data to read, so block
     aLock.Wait();
   }
 

@@ -68,8 +68,11 @@ class MediaResource : public DecoderDoctorLifeLogger<MediaResource> {
   // These methods are called off the main thread.
   // Read up to aCount bytes from the stream. The read starts at
   // aOffset in the stream, seeking to that location initially if
-  // it is not the current stream offset. The remaining arguments,
-  // results and requirements are the same as per the Read method.
+  // it is not the current stream offset.
+  // On success, *aBytes returns the number of bytes that were actually read.
+  // This can be less than aCount on end of stream or when remaining bytes will
+  // not be available because a network error has occurred.
+  // This will block until the data is available or the stream is closed.
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                           uint32_t* aBytes) = 0;
   // Indicate whether caching data in advance of reads is worth it.
@@ -197,7 +200,7 @@ class MediaResourceIndex : public DecoderDoctorLifeLogger<MediaResourceIndex> {
   // Read up to aCount bytes from the stream. The read starts at
   // aOffset in the stream, seeking to that location initially if
   // it is not the current stream offset.
-  // Unlike MediaResource::ReadAt, ReadAt only returns fewer bytes than
+  // ReadAt only returns fewer bytes than
   // requested if end of stream or an error is encountered. There is no need to
   // call it again to get more data.
   // If the resource has cached data past the end of the request, it will be
