@@ -7,6 +7,7 @@ package org.mozilla.focus.browser.integration
 import android.graphics.Color
 import android.widget.LinearLayout
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.compose.material3.Text
@@ -24,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -31,6 +33,7 @@ import mozilla.components.browser.toolbar.display.DisplayToolbar.Indicators
 import mozilla.components.compose.cfr.CFRPopup
 import mozilla.components.compose.cfr.CFRPopupProperties
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
+import mozilla.components.feature.customtabs.getConfiguredColorSchemeParams
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton
@@ -40,6 +43,8 @@ import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.utils.ColorUtils.getReadableTextColor
+import mozilla.components.support.utils.ColorUtils.getSecondaryReadableTextColor
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
@@ -73,14 +78,30 @@ class BrowserToolbarIntegration(
     renderStyle: ToolbarFeature.RenderStyle = ToolbarFeature.RenderStyle.ColoredUrl,
     private val coroutineScope: CoroutineScope = MainScope(),
 ) : LifecycleAwareFeature {
+    val backgroundColor = customTabId
+        ?.let { store.state.findCustomTab(it)?.config }
+        ?.getConfiguredColorSchemeParams(
+            currentNightMode = toolbar.context.resources.configuration.uiMode,
+            preferredNightMode = MODE_NIGHT_FOLLOW_SYSTEM,
+        )
+        ?.toolbarColor
+
     private val presenter = ToolbarPresenter(
         toolbar,
         store,
         customTabId,
         urlRenderConfiguration = ToolbarFeature.UrlRenderConfiguration(
             toolbar.context.components.publicSuffixList,
-            ContextCompat.getColor(toolbar.context, R.color.primaryText),
-            ContextCompat.getColor(toolbar.context, R.color.secondaryText),
+            if (backgroundColor != null) {
+                getReadableTextColor(backgroundColor)
+            } else {
+                ContextCompat.getColor(toolbar.context, R.color.primaryText)
+            },
+            if (backgroundColor != null) {
+                getSecondaryReadableTextColor(backgroundColor)
+            } else {
+                ContextCompat.getColor(toolbar.context, R.color.secondaryText)
+            },
             renderStyle,
         ),
     )
