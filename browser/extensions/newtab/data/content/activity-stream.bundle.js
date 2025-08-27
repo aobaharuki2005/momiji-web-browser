@@ -13514,15 +13514,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           properties: component.properties
         });
       case "Widgets":
-        {
-          // Nimbus experiment override
-          const nimbusWidgetsEnabled = this.props.Prefs.values.widgetsConfig?.enabled;
-          const widgetsEnabled = this.props.Prefs.values["widgets.system.enabled"];
-          if (widgetsEnabled || nimbusWidgetsEnabled) {
-            return /*#__PURE__*/external_React_default().createElement(Widgets, null);
-          }
-          return null;
-        }
+        return /*#__PURE__*/external_React_default().createElement(Widgets, null);
       default:
         return /*#__PURE__*/external_React_default().createElement("div", null, component.type);
     }
@@ -13593,7 +13585,12 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
 
     // Extract TopSites to render before the rest and Message to use for header
     const topSites = extractComponent("TopSites");
-    const widgets = extractComponent("Widgets");
+
+    // There are two ways to enable widgets:
+    // Via `widgets.system.*` prefs or Nimbus experiment
+    const widgetsNimbusEnabled = this.props.Prefs.values.widgetsConfig?.enabled;
+    const widgetsSystemPrefsEnabled = this.props.Prefs.values["widgets.system.enabled"];
+    const widgets = widgetsNimbusEnabled || widgetsSystemPrefsEnabled;
     const message = extractComponent("Message") || {
       header: {
         link_text: topStories.learnMore.link.message,
@@ -13621,7 +13618,9 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
       sectionType: "topsites"
     }]), widgets && this.renderLayout([{
       width: 12,
-      components: [widgets],
+      components: [{
+        type: "Widgets"
+      }],
       sectionType: "widgets"
     }]), !!layoutRender.length && /*#__PURE__*/external_React_default().createElement(CollapsibleSection, {
       className: "ds-layout",
