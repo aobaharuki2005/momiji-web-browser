@@ -37,17 +37,17 @@ impl gecko_profiler::ProfilerMarker for TimespanMetricMarker {
         schema.set_table_label(
             "{marker.data.cat}.{marker.data.id}: {marker.data.val}{marker.data.stringval}",
         );
-        schema.add_key_label_format_searchable(
+        schema.add_key_label_format_with_flags(
             "cat",
             "Category",
             Format::UniqueString,
-            Searchable::Searchable,
+            PayloadFlags::Searchable,
         );
-        schema.add_key_label_format_searchable(
+        schema.add_key_label_format_with_flags(
             "id",
             "Metric",
             Format::UniqueString,
-            Searchable::Searchable,
+            PayloadFlags::Searchable,
         );
         schema.add_key_label_format("val", "Value", Format::Integer);
         schema.add_key_label_format("stringval", "Value", Format::String);

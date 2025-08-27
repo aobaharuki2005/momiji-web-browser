@@ -494,8 +494,8 @@ struct PreferenceMarker {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyLabelFormatSearchable("prefName", "Name", MS::Format::String,
-                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("prefName", "Name", MS::Format::String,
+                             MS::PayloadFlags::Searchable);
     schema.AddKeyLabelFormat("prefKind", "Kind", MS::Format::String);
     schema.AddKeyLabelFormat("prefType", "Type", MS::Format::String);
     schema.AddKeyLabelFormat("prefValue", "Value", MS::Format::String);

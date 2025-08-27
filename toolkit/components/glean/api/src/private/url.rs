@@ -31,19 +31,24 @@ impl gecko_profiler::ProfilerMarker for UrlMetricMarker {
         let mut schema = MarkerSchema::new(&[Location::MarkerChart, Location::MarkerTable]);
         schema.set_tooltip_label("{marker.data.cat}.{marker.data.id} {marker.data.val}");
         schema.set_table_label("{marker.data.cat}.{marker.data.id}: {marker.data.val}");
-        schema.add_key_label_format_searchable(
+        schema.add_key_label_format_with_flags(
             "cat",
             "Category",
             Format::UniqueString,
-            Searchable::Searchable,
+            PayloadFlags::Searchable,
         );
-        schema.add_key_label_format_searchable(
+        schema.add_key_label_format_with_flags(
             "id",
             "Metric",
             Format::UniqueString,
-            Searchable::Searchable,
+            PayloadFlags::Searchable,
         );
-        schema.add_key_label_format_searchable("val", "Value", Format::Url, Searchable::Searchable);
+        schema.add_key_label_format_with_flags(
+            "val",
+            "Value",
+            Format::Url,
+            PayloadFlags::Searchable,
+        );
         schema
     }
 

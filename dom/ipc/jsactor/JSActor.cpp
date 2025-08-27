@@ -41,10 +41,10 @@ struct JSActorMessageMarker {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyLabelFormatSearchable(
-        "actor", "Actor Name", MS::Format::String, MS::Searchable::Searchable);
-    schema.AddKeyLabelFormatSearchable(
-        "name", "Message Name", MS::Format::String, MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("actor", "Actor Name", MS::Format::String,
+                             MS::PayloadFlags::Searchable);
+    schema.AddKeyLabelFormat("name", "Message Name", MS::Format::String,
+                             MS::PayloadFlags::Searchable);
     schema.SetTooltipLabel("JSActor - {marker.name}");
     schema.SetTableLabel(
         "{marker.name} - [{marker.data.actor}] {marker.data.name}");

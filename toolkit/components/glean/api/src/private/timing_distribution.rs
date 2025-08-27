@@ -91,29 +91,29 @@ impl<MetricT: MetricMetadataGetter + MetricNamer + 'static> gecko_profiler::Prof
         );
         schema.set_table_label("{marker.name} - {marker.data.cat}.{marker.data.id} {marker.data.label}: {marker.data.duration}{marker.data.sample}{marker.data.samples}");
         schema.set_chart_label("{marker.data.cat}.{marker.data.id} {marker.data.label}");
-        schema.add_key_label_format_searchable(
+        schema.add_key_label_format_with_flags(
             "cat",
             "Category",
             Format::UniqueString,
-            Searchable::Searchable,
+            PayloadFlags::Searchable,
         );
-        schema.add_key_label_format_searchable(
+        schema.add_key_label_format_with_flags(
             "id",
             "Metric",
             Format::UniqueString,
-            Searchable::Searchable,
+            PayloadFlags::Searchable,
         );
-        schema.add_key_label_format_searchable(
+        schema.add_key_label_format_with_flags(
             "label",
             "Label",
             Format::UniqueString,
-            Searchable::Searchable,
+            PayloadFlags::Searchable,
         );
-        schema.add_key_label_format_searchable(
+        schema.add_key_label_format_with_flags(
             "timer_id",
             "TimerId",
             Format::Integer,
-            Searchable::Searchable,
+            PayloadFlags::Searchable,
         );
         schema.add_key_label_format("duration", "Duration", Format::String);
         schema.add_key_label_format("sample", "Sample", Format::String);

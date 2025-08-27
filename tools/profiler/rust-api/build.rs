@@ -83,7 +83,7 @@ fn generate_bindings() {
         .rustified_enum("mozilla::StackCaptureOptions")
         .rustified_enum("mozilla::MarkerSchema_Location")
         .rustified_enum("mozilla::MarkerSchema_Format")
-        .rustified_enum("mozilla::MarkerSchema_Searchable")
+        .rustified_enum("mozilla::MarkerSchema_PayloadFlags")
         // Converting std::string to an opaque type makes some platforms build
         // successfully. Otherwise, it fails to build because MarkerSchema has
         // some std::strings as its fields.
