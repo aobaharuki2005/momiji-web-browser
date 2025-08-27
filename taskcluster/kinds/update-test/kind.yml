@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - toolchain
+    - release-update-verify-config
     - post-balrog-dummy
     - post-beetmover-dummy
     - release-balrog-submit-toplevel
@@ -20,7 +21,7 @@ transforms:
 task-defaults:
     shipping-phase: promote
     shipping-product: firefox
-    run-on-releases: [release, release-rc]
+    run-on-releases: [release, release-rc, beta]
     treeherder:
         kind: other
         tier: 2
@@ -33,7 +34,7 @@ task-defaults:
     run:
         using: run-task
         command: >-
-            ./mach update-test --test-type Background;
+            ./mach update-test
 
 tasks:
     update-test:
@@ -64,6 +65,6 @@ tasks:
                 VERSION_LOG_FILENAME: update-test-version-info.log
         run:
             command: >-
-                . $HOME/scripts/xvfb.sh && start_xvfb '1600x1200x24' 0 && ./mach update-test --test-type Background;
+                . $HOME/scripts/xvfb.sh && start_xvfb '1600x1200x24' 0 && ./mach update-test
         os:
             - ubuntu2404-test
