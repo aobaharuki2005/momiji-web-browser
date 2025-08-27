@@ -864,8 +864,7 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       policyContainerToInherit, triggeringRemoteType,
       loadInfoArgs.sandboxedNullPrincipalID(), clientInfo, reservedClientInfo,
       initialClientInfo, controller, loadInfoArgs.securityFlags(),
-      loadInfoArgs.sandboxFlags(),
-      loadInfoArgs.contentPolicyType(),
+      loadInfoArgs.sandboxFlags(), loadInfoArgs.contentPolicyType(),
       static_cast<LoadTainting>(loadInfoArgs.tainting()),
 
 #define DEFINE_ARGUMENT(_t, _n, name, _d) loadInfoArgs.name(),
@@ -882,9 +881,8 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       loadInfoArgs.integrityMetadata(),
       // This function is only called for moving LoadInfo across processes.
       // Same-document navigation won't cross process boundaries.
-      /* aIsSameDocumentNavigation */ false,
-      overriddenFingerprintingSettings, loadingContext,
-      loadInfoArgs.unstrippedURI(), interceptionInfo,
+      /* aIsSameDocumentNavigation */ false, overriddenFingerprintingSettings,
+      loadingContext, loadInfoArgs.unstrippedURI(), interceptionInfo,
       loadInfoArgs.schemelessInput(), loadInfoArgs.userNavigationInvolvement());
 
   loadInfo.forget(outLoadInfo);
