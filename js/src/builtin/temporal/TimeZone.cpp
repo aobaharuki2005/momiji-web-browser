@@ -156,13 +156,17 @@ static TimeZoneObject* CreateTimeZoneObject(JSContext* cx,
 
 static mozilla::UniquePtr<mozilla::intl::TimeZone> CreateIntlTimeZone(
     JSContext* cx, JSLinearString* identifier) {
-  JS::AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, identifier)) {
+  MOZ_ASSERT(StringIsAscii(identifier));
+
+  Vector<char, mozilla::intl::TimeZone::TimeZoneIdentifierLength> chars(cx);
+  if (!chars.resize(identifier->length())) {
     return nullptr;
   }
 
+  js::CopyChars(reinterpret_cast<JS::Latin1Char*>(chars.begin()), *identifier);
+
   auto result = mozilla::intl::TimeZone::TryCreate(
-      mozilla::Some(stableChars.twoByteRange()));
+      mozilla::Some(static_cast<mozilla::Span<const char>>(chars)));
   if (result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return nullptr;
