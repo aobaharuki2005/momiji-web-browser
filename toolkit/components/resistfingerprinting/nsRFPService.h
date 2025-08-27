@@ -286,6 +286,12 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   // --------------------------------------------------------------------------
 
+  // This method generates the time zone string (e.g. "Atlantic/Reykjavik") that
+  // should be spoofed by the JavaScript engine.
+  static nsCString GetSpoofedJSTimeZone();
+
+  // --------------------------------------------------------------------------
+
   /**
    * This method for getting spoofed modifier states for the given keyboard
    * event.
