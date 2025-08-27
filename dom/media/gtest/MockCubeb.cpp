@@ -5,6 +5,8 @@
 
 #include "MockCubeb.h"
 
+#include "gtest/gtest.h"
+
 namespace mozilla {
 
 using KeepProcessing = MockCubebStream::KeepProcessing;

@@ -371,9 +371,6 @@ pref("media.video-queue.send-to-compositor-size", 9999);
 
 pref("media.cubeb.output_voice_routing", true);
 
-// Force cubeb to use the mock context, which exposes only fake devices.
-pref("media.cubeb.force_mock_context", false);
-
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
