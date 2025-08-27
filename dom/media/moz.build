@@ -238,7 +238,7 @@ EXPORTS.mozilla.dom += [
     "MediaDevices.h",
     "MediaStreamError.h",
     "MediaStreamTrack.h",
-    "MPSCQueue.h",
+    "UnboundedMPSCQueue.h",
     "VideoPlaybackQuality.h",
     "VideoStreamTrack.h",
     "VideoTrack.h",

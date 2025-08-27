@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_MPSCQueue_h
-#define mozilla_dom_MPSCQueue_h
+#ifndef mozilla_dom_UnboundedMPSCQueue_h
+#define mozilla_dom_UnboundedMPSCQueue_h
 
 namespace mozilla {
 
@@ -20,7 +20,7 @@ namespace mozilla {
 const size_t MPSC_MSG_RESERVED = sizeof(std::atomic<void*>);
 
 template <typename T>
-class MPSCQueue {
+class UnboundedMPSCQueue {
  public:
   struct Message {
     Message() { mNext.store(nullptr, std::memory_order_relaxed); }
@@ -31,15 +31,15 @@ class MPSCQueue {
     T data;
   };
 
-  // Creates a new MPSCQueue. Initially, the queue has a single sentinel node,
+  // Creates a new UnboundedMPSCQueue. Initially, the queue has a single sentinel node,
   // pointed to by both mHead and mTail.
-  MPSCQueue()
+  UnboundedMPSCQueue()
       // At construction, the initial message points to nullptr (it has no
       // successor). It is a sentinel node, that does not contain meaningful
       // data.
       : mHead(new Message()), mTail(mHead.load(std::memory_order_relaxed)) {}
 
-  ~MPSCQueue() {
+  ~UnboundedMPSCQueue() {
     Message dummy;
     while (Pop(&dummy.data)) {
     }
@@ -47,7 +47,7 @@ class MPSCQueue {
     delete front;
   }
 
-  void Push(MPSCQueue<T>::Message* aMessage) {
+  void Push(UnboundedMPSCQueue<T>::Message* aMessage) {
     // The next two non-commented line are called A and B in this paragraph.
     // Producer threads i, i-1, etc. are numbered in the order they reached
     // A in time, thread i being the thread that has reached A first.
@@ -123,10 +123,10 @@ class MPSCQueue {
   // in the queue.
   std::atomic<Message*> mTail;
 
-  MPSCQueue(const MPSCQueue&) = delete;
-  void operator=(const MPSCQueue&) = delete;
+  UnboundedMPSCQueue(const UnboundedMPSCQueue&) = delete;
+  void operator=(const UnboundedMPSCQueue&) = delete;
 };
 
 }  // namespace mozilla
 
-#endif  // mozilla_dom_MPSCQueue_h
+#endif  // mozilla_dom_UnboundedMPSCQueue_h
