@@ -14,10 +14,14 @@ function WidgetsFeatureHighlight({ handleDismiss, handleBlock, dispatch }) {
       arrowPosition="arrow-top-center"
       openedOverride={true}
       showButtonIcon={false}
-      feature={messageData.content.feature}
+      feature={messageData?.content?.feature}
       modalClassName="widget-highlight-wrapper"
       message={
         <div className="widget-highlight">
+          <img
+            src="chrome://newtab/content/data/content/assets/widget-message.png"
+            alt=""
+          />
           <h3>Stay focused with lists and a built-in timer</h3>
           <p>
             From quick reminders to daily to-dos, focus sessions to stretch

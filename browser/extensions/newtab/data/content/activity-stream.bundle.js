@@ -13420,11 +13420,14 @@ function WidgetsFeatureHighlight({
     arrowPosition: "arrow-top-center",
     openedOverride: true,
     showButtonIcon: false,
-    feature: messageData.content.feature,
+    feature: messageData?.content?.feature,
     modalClassName: "widget-highlight-wrapper",
     message: /*#__PURE__*/React.createElement("div", {
       className: "widget-highlight"
-    }, /*#__PURE__*/React.createElement("h3", null, "Stay focused with lists and a built-in timer"), /*#__PURE__*/React.createElement("p", null, "From quick reminders to daily to-dos, focus sessions to stretch breaks \u2014 stay on task and on time.")),
+    }, /*#__PURE__*/React.createElement("img", {
+      src: "chrome://newtab/content/data/content/assets/widget-message.png",
+      alt: ""
+    }), /*#__PURE__*/React.createElement("h3", null, "Stay focused with lists and a built-in timer"), /*#__PURE__*/React.createElement("p", null, "From quick reminders to daily to-dos, focus sessions to stretch breaks \u2014 stay on task and on time.")),
     dispatch: dispatch,
     dismissCallback: () => {
       handleDismiss();
