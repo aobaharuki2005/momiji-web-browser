@@ -20,8 +20,14 @@ EXPORTS.libwebrtc_overrides.call += [
 EXPORTS.libwebrtc_overrides.common_audio += [
     "common_audio/intrin.h",
 ]
+EXPORTS.libwebrtc_overrides.modules.desktop_capture += [
+    "modules/desktop_capture/desktop_capture_types.h",
+]
 EXPORTS.libwebrtc_overrides.modules.desktop_capture.linux.x11 += [
     "modules/desktop_capture/linux/x11/x_error_trap.h",
+]
+EXPORTS.libwebrtc_overrides.modules.video_capture += [
+    "modules/video_capture/video_capture.h",
 ]
 EXPORTS.libwebrtc_overrides.rtc_base += [
     "rtc_base/trace_event.h",

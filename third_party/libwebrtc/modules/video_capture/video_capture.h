@@ -17,7 +17,6 @@
 #include "api/video/video_frame.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_sink_interface.h"
-#include "modules/desktop_capture/desktop_capture_types.h"
 #include "modules/video_capture/raw_video_sink_interface.h"
 #include "modules/video_capture/video_capture_defines.h"
 #include "rtc_base/synchronization/mutex.h"
