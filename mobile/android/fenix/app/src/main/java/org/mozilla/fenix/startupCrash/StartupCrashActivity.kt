@@ -4,19 +4,23 @@
 
 package org.mozilla.fenix.startupCrash
 
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.crashes.StartupCrashCanary
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -31,7 +35,20 @@ class StartupCrashActivity : AppCompatActivity() {
 
         findViewById<ComposeView>(R.id.startupCrashActivity).setContent {
             FirefoxTheme {
-                StartupCrashScreen()
+                StartupCrashScreen(
+                    store = StartupCrashStore(
+                        initialState = StartupCrashState(UiState.Idle),
+                        middleware = listOf(
+                            StartupCrashMiddleware(
+                                settings = LocalContext.current.settings(),
+                                crashReporter = components.analytics.crashReporter,
+                                reinitializeHandler = ::initializeAndRestartFenix,
+                                startupCrashCanaryCache =
+                                    StartupCrashCanary.build(applicationContext),
+                            ),
+                        ),
+                    ),
+                )
             }
         }
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -41,11 +58,12 @@ class StartupCrashActivity : AppCompatActivity() {
         }
     }
 
-    @Composable
-    private fun StartupCrashScreen() {
-        LaunchedEffect(CoroutineScope(Dispatchers.IO)) {
-            StartupCrashCanary.build(applicationContext).clearCanary()
-        }
-        Text(text = "YOU HAVE ARRIVED AT THE STARTUP CRASH SCREEN")
+    private suspend fun initializeAndRestartFenix() = withContext(Dispatchers.Main) {
+        val fenixApplication = applicationContext as FenixApplication
+        fenixApplication.initialize()
+        val homeActivityIntent = Intent(applicationContext, HomeActivity::class.java)
+        homeActivityIntent.flags = FLAG_ACTIVITY_NEW_TASK
+        applicationContext.startActivity(homeActivityIntent)
+        finish()
     }
 }
