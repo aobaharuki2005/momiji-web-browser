@@ -99,11 +99,7 @@ extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
   _(DATEPARSE_IMPL_DEF, DateParseImplDef)                                 \
   _(OPTIMIZE_ARRAY_SPECIES_FUSE, OptimizeArraySpeciesFuse)                \
   _(OPTIMIZE_PROMISE_LOOKUP_FUSE, OptimizePromiseLookupFuse)              \
-  _(REGEXP_SYMBOL_PROTOCOL_ON_PRIMITIVE, RegExpSymbolProtocolOnPrimitive) \
-  _(ERROR_CAPTURESTACKTRACE, ErrorCaptureStackTrace)                      \
-  _(ERROR_CAPTURESTACKTRACE_CTOR, ErrorCaptureStackTraceCtor)             \
-  _(ERROR_CAPTURESTACKTRACE_UNCALLABLE_CTOR,                              \
-    ErrorCaptureStackTraceUncallableCtor)
+  _(REGEXP_SYMBOL_PROTOCOL_ON_PRIMITIVE, RegExpSymbolProtocolOnPrimitive)
 
 /*
  * Use counter names passed to the accumulate use counter callback.
