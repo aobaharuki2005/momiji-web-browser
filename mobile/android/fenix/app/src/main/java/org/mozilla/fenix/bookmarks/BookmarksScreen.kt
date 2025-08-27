@@ -300,10 +300,12 @@ private fun BookmarksList(
 
         when (state.isSearching) {
             true -> {
-                bookmarksSearchEngine?.let {
-                    appStore.dispatch(AppAction.SearchAction.SearchEngineSelected(it, false))
+                if (!appStore.state.searchState.isSearchActive) {
+                    bookmarksSearchEngine?.let {
+                        appStore.dispatch(AppAction.SearchAction.SearchEngineSelected(it, false))
+                    }
+                    appStore.dispatch(AppAction.SearchAction.SearchStarted())
                 }
-                appStore.dispatch(AppAction.SearchAction.SearchStarted())
             }
             false -> {
                 appStore.dispatch(AppAction.SearchAction.SearchEnded)
