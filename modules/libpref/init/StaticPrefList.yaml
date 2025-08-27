@@ -2732,7 +2732,7 @@
 # Whether the commandfor attribute implementation is enabled
 - name: dom.element.commandfor.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether the commandfor "toggle" and "open" details commands are enabled
