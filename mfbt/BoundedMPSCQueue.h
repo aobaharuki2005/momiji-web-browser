@@ -14,8 +14,8 @@
  * buffer (Rust implem is 5 slots, we want a bit more).
  * */
 
-#ifndef mozilla_MPSCQueue_h
-#define mozilla_MPSCQueue_h
+#ifndef mozilla_BoundedMPSCQueue_h
+#define mozilla_BoundedMPSCQueue_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -367,8 +367,8 @@ class MPSCRingBufferBase {
  * without explicit synchronization nor allocation (outside of the constructor).
  */
 template <typename T>
-using MPSCQueue = MPSCRingBufferBase<T>;
+using BoundedMPSCQueue = MPSCRingBufferBase<T>;
 
 }  // namespace mozilla
 
-#endif  // mozilla_MPSCQueue_h
+#endif  // mozilla_BoundedMPSCQueue_h

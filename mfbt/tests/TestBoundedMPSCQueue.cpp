@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/MPSCQueue.h"
+#include "mozilla/BoundedMPSCQueue.h"
 #include "mozilla/PodOperations.h"
 #include <vector>
 #include <iostream>
@@ -49,7 +49,7 @@ void FillNativeStack(NativeStack* aStack) {
   StackWalkCallback((void*)0x901, (void*)0x976, aStack);
 }
 
-void BasicAPITestWithStack(MPSCQueue<NativeStack>& aQueue, size_t aCap) {
+void BasicAPITestWithStack(BoundedMPSCQueue<NativeStack>& aQueue, size_t aCap) {
   MOZ_RELEASE_ASSERT(aQueue.Capacity() == aCap);
 
   NativeStack s = {.mCount = 0};
@@ -78,7 +78,7 @@ void BasicAPITestWithStack(MPSCQueue<NativeStack>& aQueue, size_t aCap) {
   }
 }
 
-void BasicAPITestMP(MPSCQueue<NativeStack>& aQueue, size_t aThreads) {
+void BasicAPITestMP(BoundedMPSCQueue<NativeStack>& aQueue, size_t aThreads) {
   MOZ_RELEASE_ASSERT(aQueue.Capacity() == 15);
 
   std::thread consumer([&aQueue, aThreads] {
@@ -119,13 +119,13 @@ void BasicAPITestMP(MPSCQueue<NativeStack>& aQueue, size_t aThreads) {
 int main() {
   size_t caps[] = {2, 5, 7, 10, 15};
   for (auto maxCap : caps) {
-    MPSCQueue<NativeStack> s(maxCap);
+    BoundedMPSCQueue<NativeStack> s(maxCap);
     BasicAPITestWithStack(s, maxCap);
   }
 
   {
     NativeStack e{};
-    MPSCQueue<NativeStack> deq(2);
+    BoundedMPSCQueue<NativeStack> deq(2);
 
     // Dequeue with nothing should return 0 and not fail later
     int retrieve = deq.Recv(&e);
@@ -161,7 +161,7 @@ int main() {
 
   size_t nbThreads[] = {8, 16, 64, 128, 512, 1024};
   for (auto threads : nbThreads) {
-    MPSCQueue<NativeStack> s(15);
+    BoundedMPSCQueue<NativeStack> s(15);
     BasicAPITestMP(s, threads);
   }
 
