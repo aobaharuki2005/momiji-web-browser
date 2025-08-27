@@ -860,10 +860,8 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     }
   }
 
-  nsILoadInfo::StoragePermissionState storageAccess =
-      loadInfo->GetStoragePermission();
-  bool allowed = storageAccess == nsILoadInfo::HasStoragePermission ||
-                 storageAccess == nsILoadInfo::StoragePermissionAllowListed;
+  bool allowed =
+      loadInfo->GetStoragePermission() != nsILoadInfo::NoStoragePermission;
   if (!allowed) {
     *aRejectedReason = blockedReason;
   }

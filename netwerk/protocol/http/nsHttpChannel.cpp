@@ -11,7 +11,6 @@
 
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/Try.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/NavigatorLogin.h"
 #include "mozilla/glean/AntitrackingMetrics.h"
@@ -71,7 +70,6 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/FlowMarkers.h"
 #include "mozilla/Components.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_security.h"
@@ -574,44 +572,6 @@ nsHttpChannel::LogMimeTypeMismatch(const nsACString& aMessageName,
 //-----------------------------------------------------------------------------
 // nsHttpChannel <private>
 //-----------------------------------------------------------------------------
-
-void nsHttpChannel::AddStorageAccessHeadersToRequest() {
-  if (!StaticPrefs::dom_storage_access_enabled() ||
-      !StaticPrefs::dom_storage_access_headers_enabled()) {
-    return;
-  }
-
-  // check if request is eligible for storage-access
-  uint32_t cookiePolicy = 0;
-  if (mLoadInfo->GetCookiePolicy(&cookiePolicy) != NS_OK) {
-    return;
-  }
-  if (cookiePolicy != nsILoadInfo::SEC_COOKIES_INCLUDE) {
-    return;
-  }
-
-  // check whether we have storage-access permission set in channel
-  nsILoadInfo::StoragePermissionState storageAccess =
-      AntiTrackingUtils::GetStoragePermissionStateInParent(this);
-
-  switch (storageAccess) {
-    case nsILoadInfo::HasStoragePermission:
-    case nsILoadInfo::StoragePermissionAllowListed:
-      SetRequestHeader(nsHttp::Sec_Fetch_Storage_Access.val(), "active"_ns,
-                       false);
-      break;
-    case nsILoadInfo::InactiveStoragePermission:
-      SetRequestHeader(nsHttp::Sec_Fetch_Storage_Access.val(), "inactive"_ns,
-                       false);
-      break;
-    case nsILoadInfo::DisabledStoragePermission:
-      SetRequestHeader(nsHttp::Sec_Fetch_Storage_Access.val(), "none"_ns,
-                       false);
-      break;
-    case nsILoadInfo::NoStoragePermission:
-      break;
-  }
-}
 
 nsresult nsHttpChannel::PrepareToConnect() {
   LOG(("nsHttpChannel::PrepareToConnect [this=%p]\n", this));
@@ -7241,7 +7201,6 @@ nsresult nsHttpChannel::BeginConnect() {
   mRequestHead.SetHTTPS(isHttps);
   mRequestHead.SetOrigin(scheme, host, port);
 
-  AddStorageAccessHeadersToRequest();
   SetOriginHeader();
   SetDoNotTrack();
   SetGlobalPrivacyControl();
@@ -10907,21 +10866,7 @@ void nsHttpChannel::SetOriginHeader() {
 
   // Step 4. Otherwise, if request’s method is neither `GET` nor `HEAD`, then:
   if (mRequestHead.IsGet() || mRequestHead.IsHead()) {
-    // Modified Step 4 in case storage-access-headers are enabled
-    if (!StaticPrefs::dom_storage_access_enabled() ||
-        !StaticPrefs::dom_storage_access_headers_enabled()) {
-      // proceed with unmodified fetch spec
-      return;
-    } else {
-      // the result of getting `Sec-Fetch-Storage-Access` from request’s header
-      // list is "inactive"
-      nsAutoCString storageAccess;
-      nsresult rv =
-          GetRequestHeader("Sec-Fetch-Storage-Access"_ns, storageAccess);
-      if (NS_FAILED(rv) || !storageAccess.EqualsLiteral("inactive")) {
-        return;
-      }
-    }
+    return;
   }
 
   if (!serializedOrigin.EqualsLiteral("null")) {
