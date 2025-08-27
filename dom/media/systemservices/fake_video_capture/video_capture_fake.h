@@ -9,8 +9,10 @@
 
 #include "MediaEventSource.h"
 #include "modules/video_capture/video_capture_impl.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ThreadSafety.h"
+#include "mozilla/TimeStamp.h"
 
 class nsISerialEventTarget;
 
@@ -46,10 +48,12 @@ class VideoCaptureFake : public webrtc::videocapturemodule::VideoCaptureImpl {
       MOZ_EXCLUDES(api_lock_) override;
 
  private:
-  void OnGeneratedImage(const RefPtr<mozilla::layers::Image>& aImage);
+  void OnGeneratedImage(const RefPtr<mozilla::layers::Image>& aImage,
+                        mozilla::TimeStamp aTime);
 
   const nsCOMPtr<nsISerialEventTarget> mTarget;
   const RefPtr<mozilla::FakeVideoSource> mSource;
+  mozilla::Maybe<mozilla::TimeStamp> mStart;
   mozilla::MediaEventListener mGeneratedImageListener;
 };
 }  // namespace webrtc::videocapturemodule

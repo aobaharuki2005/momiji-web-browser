@@ -14,6 +14,7 @@ using mozilla::FakeVideoSource;
 using mozilla::ImageBuffer;
 using mozilla::MakeRefPtr;
 using mozilla::TimeDuration;
+using mozilla::TimeStamp;
 using mozilla::layers::Image;
 
 namespace webrtc::videocapturemodule {
@@ -54,11 +55,17 @@ void VideoCaptureFake::SetTrackingId(uint32_t aTrackingIdProcId) {
   mSource->SetTrackingId(aTrackingIdProcId);
 }
 
-void VideoCaptureFake::OnGeneratedImage(const RefPtr<Image>& aImage) {
+void VideoCaptureFake::OnGeneratedImage(const RefPtr<Image>& aImage,
+                                        TimeStamp aTime) {
   webrtc::scoped_refptr<ImageBuffer> buffer(
       new webrtc::RefCountedObject<ImageBuffer>(RefPtr(aImage)));
-  auto videoFrame =
-      webrtc::VideoFrame::Builder().set_video_frame_buffer(buffer).build();
+  if (!mStart) {
+    mStart = Some(aTime);
+  }
+  auto videoFrame = webrtc::VideoFrame::Builder()
+                        .set_video_frame_buffer(buffer)
+                        .set_timestamp_us((aTime - *mStart).ToMicroseconds())
+                        .build();
   webrtc::MutexLock lock(&api_lock_);
   DeliverCapturedFrame(videoFrame);
 }
