@@ -1054,7 +1054,8 @@ static bool exn_captureStackTrace(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Rooted<JSObject*> caller(cx, nullptr);
-  if (args.length() > 1 && args[1].isObject() && args[1].toObject().isCallable()) {
+  if (args.length() > 1 && args[1].isObject() &&
+      args[1].toObject().isCallable()) {
     caller = CheckedUnwrapStatic(&args[1].toObject());
     if (!caller) {
       ReportAccessDenied(cx);
