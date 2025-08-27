@@ -132,8 +132,9 @@ class AsyncLogger {
   // The goal here is to make it easy on the allocator. We pack a pointer in the
   // message struct, and we still want to do power of two allocations to
   // minimize allocator slop.
-  static_assert(sizeof(UnboundedMPSCQueue<TracePayload>::Message) == PAYLOAD_TOTAL_SIZE,
-                "UnboundedMPSCQueue internal allocations has an unexpected size.");
+  static_assert(
+      sizeof(UnboundedMPSCQueue<TracePayload>::Message) == PAYLOAD_TOTAL_SIZE,
+      "UnboundedMPSCQueue internal allocations has an unexpected size.");
 
   explicit AsyncLogger() : mThread(nullptr), mRunning(false) {}
 
