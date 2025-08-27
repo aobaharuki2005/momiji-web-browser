@@ -1496,7 +1496,18 @@ enum DataProcessing1SourceOp : uint32_t {
   AUTDZA = DataProcessing1SourceFixed | 0x80013800,
   AUTDZB = DataProcessing1SourceFixed | 0x80013C00,
   XPACI  = DataProcessing1SourceFixed | 0x80014000,
-  XPACD  = DataProcessing1SourceFixed | 0x80014400
+  XPACD  = DataProcessing1SourceFixed | 0x80014400,
+
+  // Mozilla change: Add constants for CSSC instructions.
+  ABS = DataProcessing1SourceFixed | 0x0000'2000,
+  ABS_w = ABS,
+  ABS_x = ABS | SixtyFourBits,
+  CNT = DataProcessing1SourceFixed | 0x0000'1C00,
+  CNT_w = CNT,
+  CNT_x = CNT | SixtyFourBits,
+  CTZ = DataProcessing1SourceFixed | 0x0000'1800,
+  CTZ_w = CTZ,
+  CTZ_x = CTZ | SixtyFourBits,
 };
 
 // Data processing 2 source.
@@ -1530,7 +1541,21 @@ enum DataProcessing2SourceOp : uint32_t {
   CRC32CB = DataProcessing2SourceFixed | 0x00005000,
   CRC32CH = DataProcessing2SourceFixed | 0x00005400,
   CRC32CW = DataProcessing2SourceFixed | 0x00005800,
-  CRC32CX = DataProcessing2SourceFixed | SixtyFourBits | 0x00005C00
+  CRC32CX = DataProcessing2SourceFixed | SixtyFourBits | 0x00005C00,
+
+  // Mozilla change: Add constants for CSSC instructions.
+  SMAX = DataProcessing2SourceFixed | 0x0000'6000,
+  SMAX_w = SMAX,
+  SMAX_x = SMAX | SixtyFourBits,
+  SMIN = DataProcessing2SourceFixed | 0x0000'6800,
+  SMIN_w = SMIN,
+  SMIN_x = SMIN | SixtyFourBits,
+  UMAX = DataProcessing2SourceFixed | 0x0000'6400,
+  UMAX_w = UMAX,
+  UMAX_x = UMAX | SixtyFourBits,
+  UMIN = DataProcessing2SourceFixed | 0x0000'6C00,
+  UMIN_w = UMIN,
+  UMIN_x = UMIN | SixtyFourBits,
 };
 
 // Data processing 3 source.
@@ -4482,6 +4507,25 @@ enum UnimplementedOp : uint32_t {
 enum UnallocatedOp : uint32_t {
   UnallocatedFixed = 0x00000000,
   UnallocatedFMask = 0x00000000
+};
+
+// Mozilla change: Add enum for CSSC max-min immediate instructions
+enum MaxMinImmediateOp : uint32_t {
+  MaxMinImmediateFixed = 0x11C00000,
+  MaxMinImmediateFMask = 0x1FC00000,
+  MaxMinImmediateMask  = 0xFFFC0000,
+  SMAX_imm = MaxMinImmediateFixed | 0x0000'0000,
+  SMAX_w_imm = SMAX_imm,
+  SMAX_x_imm = SMAX_imm | SixtyFourBits,
+  SMIN_imm = MaxMinImmediateFixed | 0x0008'0000,
+  SMIN_w_imm = SMIN_imm,
+  SMIN_x_imm = SMIN_imm | SixtyFourBits,
+  UMAX_imm = MaxMinImmediateFixed | 0x0004'0000,
+  UMAX_w_imm = UMAX_imm,
+  UMAX_x_imm = UMAX_imm | SixtyFourBits,
+  UMIN_imm = MaxMinImmediateFixed | 0x000c'0000,
+  UMIN_w_imm = UMIN_imm,
+  UMIN_x_imm = UMIN_imm | SixtyFourBits,
 };
 
 // Re-enable `clang-format` after the `enum`s.
