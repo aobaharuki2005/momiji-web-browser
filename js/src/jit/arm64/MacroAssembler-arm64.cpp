@@ -442,6 +442,15 @@ void MacroAssemblerCompat::minMax32(Register lhs, Register rhs, Register dest,
   auto rhs32 = vixl::Operand(ARMRegister(rhs, 32));
   auto dest32 = ARMRegister(dest, 32);
 
+  if (CPUHas(vixl::CPUFeatures::kCSSC)) {
+    if (isMax) {
+      Smax(dest32, lhs32, rhs32);
+    } else {
+      Smin(dest32, lhs32, rhs32);
+    }
+    return;
+  }
+
   auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
   Cmp(lhs32, rhs32);
   Csel(dest32, lhs32, rhs32, cond);
@@ -452,6 +461,15 @@ void MacroAssemblerCompat::minMax32(Register lhs, Imm32 rhs, Register dest,
   auto lhs32 = ARMRegister(lhs, 32);
   auto rhs32 = vixl::Operand(vixl::IntegerOperand(rhs.value));
   auto dest32 = ARMRegister(dest, 32);
+
+  if (CPUHas(vixl::CPUFeatures::kCSSC)) {
+    if (isMax) {
+      Smax(dest32, lhs32, rhs32);
+    } else {
+      Smin(dest32, lhs32, rhs32);
+    }
+    return;
+  }
 
   // max(lhs, 0): dest = lhs & ~(lhs >> 31)
   // min(lhs, 0): dest = lhs & (lhs >> 31)
@@ -517,6 +535,15 @@ void MacroAssemblerCompat::minMaxPtr(Register lhs, Register rhs, Register dest,
   auto rhs64 = vixl::Operand(ARMRegister(rhs, 64));
   auto dest64 = ARMRegister(dest, 64);
 
+  if (CPUHas(vixl::CPUFeatures::kCSSC)) {
+    if (isMax) {
+      Smax(dest64, lhs64, rhs64);
+    } else {
+      Smin(dest64, lhs64, rhs64);
+    }
+    return;
+  }
+
   auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
   Cmp(lhs64, rhs64);
   Csel(dest64, lhs64, rhs64, cond);
@@ -527,6 +554,15 @@ void MacroAssemblerCompat::minMaxPtr(Register lhs, ImmWord rhs, Register dest,
   auto lhs64 = ARMRegister(lhs, 64);
   auto rhs64 = vixl::Operand(vixl::IntegerOperand(rhs.value));
   auto dest64 = ARMRegister(dest, 64);
+
+  if (CPUHas(vixl::CPUFeatures::kCSSC)) {
+    if (isMax) {
+      Smax(dest64, lhs64, rhs64);
+    } else {
+      Smin(dest64, lhs64, rhs64);
+    }
+    return;
+  }
 
   // max(lhs, 0): dest = lhs & ~(lhs >> 63)
   // min(lhs, 0): dest = lhs & (lhs >> 63)
