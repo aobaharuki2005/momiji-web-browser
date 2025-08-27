@@ -99,24 +99,42 @@ delete-profile-confirm = Delete
 ## These strings are color themes available to select from the profile selection screen. Theme names should be localized.
 
 profiles-gray-theme = Gray
+profiles-gray-theme-title =
+    .title = Apply gray theme
 profiles-yellow-theme = Yellow
+profiles-yellow-theme-title =
+    .title = Apply yellow theme
 profiles-orange-theme = Orange
+profiles-orange-theme-title =
+    .title = Apply orange theme
 profiles-red-theme = Red
+profiles-red-theme-title =
+    .title = Apply red theme
 profiles-pink-theme = Pink
+profiles-pink-theme-title =
+    .title = Apply pink theme
 profiles-purple-theme = Purple
+profiles-purple-theme-title =
+    .title = Apply purple theme
 profiles-violet-theme = Violet
+profiles-violet-theme-title =
+    .title = Apply violet theme
 profiles-blue-theme = Blue
+profiles-blue-theme-title =
+    .title = Apply blue theme
 profiles-green-theme = Green
+profiles-green-theme-title =
+    .title = Apply green theme
 profiles-cyan-theme = Cyan
-
-# The default light theme
-profiles-light-theme = Light
-
-# The default dark theme
-profiles-dark-theme = Dark
+profiles-cyan-theme-title =
+    .title = Apply cyan theme
+profiles-custom-theme-title =
+    .title = Apply custom theme
 
 # The default system theme
 profiles-system-theme = System
+profiles-system-theme-title =
+    .title = Apply system theme
 
 ## Alternative text for default profile icons
 
