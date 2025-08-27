@@ -366,6 +366,21 @@ impl MessageQueue {
 
         self.nr_of_queued_messages = self.nr_of_queued_messages.checked_add(1).unwrap();
         (self.on_message_queued)(child);
+
+        // Force send when we have queued up at least 4k messages.
+        // We must comply with some static limits:
+        //   - `IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE` (32767): currently,
+        //     no message can refer to more than one shmem handle; 4k is well below 32k.
+        //   - `IPC::Channel::kMaximumMessageSize` (256 * 1024 * 1024, when fuzzing):
+        //     with a limit of 4k messages, each message can be up to 64KiB; while we have
+        //     some messages that can have arbitrary size (ex. `CreateShaderModule`) most
+        //     have a static size.
+        // If we ever violate the limits, the worst that can happen is that we trigger asserts.
+        if self.nr_of_queued_messages >= 4 * 1024 {
+            let (nr_of_messages, serialized_messages) = self.flush();
+            let serialized_messages = ByteBuf::from_vec(serialized_messages);
+            unsafe { wgpu_child_send_messages(child, nr_of_messages, serialized_messages) };
+        }
     }
 
     fn flush(&mut self) -> (u32, Vec<u8>) {
@@ -569,6 +584,11 @@ pub struct FfiShaderModuleCompilationMessage {
 }
 
 extern "C" {
+    fn wgpu_child_send_messages(
+        child: WebGPUChildPtr,
+        nr_of_messages: u32,
+        serialized_messages: ByteBuf,
+    );
     fn wgpu_child_resolve_request_adapter_promise(
         child: WebGPUChildPtr,
         adapter_id: id::AdapterId,
