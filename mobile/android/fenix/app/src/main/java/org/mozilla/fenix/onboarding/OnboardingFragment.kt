@@ -275,6 +275,8 @@ class OnboardingFragment : Fragment() {
             onboardingStore = onboardingStore,
             termsOfServiceEventHandler = termsOfServiceEventHandler,
             onCustomizeToolbarClick = {
+                requireContext().settings().hasCompletedSetupStepToolbar = true
+
                 telemetryRecorder.onSelectToolbarPlacementClick(
                     pagesToDisplay.telemetrySequenceId(),
                     pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.TOOLBAR_PLACEMENT),
@@ -415,6 +417,8 @@ class OnboardingFragment : Fragment() {
                 removeMarketingFeature.withFeature { it.currentPageIndex = index }
             },
             onCustomizeThemeClick = {
+                requireContext().settings().hasCompletedSetupStepTheme = true
+
                 telemetryRecorder.onSelectThemeClick(
                     onboardingStore.state.themeOptionSelected.id,
                     pagesToDisplay.telemetrySequenceId(),
