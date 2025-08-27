@@ -340,6 +340,16 @@
          %2$s is the name of the language which the page was translated to. (For example: French) -->
     <string name="browser_toolbar_translated_successfully">Page translated from %1$s to %2$s.</string>
 
+    <!-- Translation Toolbar -->
+    <!-- Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+         %1$s is the name of the language that is displayed in the original page. (For example: English)
+         %2$s is the name of the language which the page was translated to. (For example: French) -->
+    <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Translated from %1$s to %2$s</string>
+    <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+    <string name="translation_toolbar_expand_action">Open translation sheet</string>
+    <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+    <string name="translation_toolbar_close_action">Dismiss message</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Selected language</string>
