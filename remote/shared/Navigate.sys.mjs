@@ -503,7 +503,7 @@ export class ProgressListener {
       }
     }
 
-    this.#deferredNavigation = new lazy.Deferred();
+    this.#deferredNavigation = lazy.Deferred();
 
     // Enable all location change and network state notifications to get
     // informed about an upcoming load as early as possible.
