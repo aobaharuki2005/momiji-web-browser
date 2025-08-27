@@ -626,7 +626,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
 .etp-card {
   margin-top: 31px;
-  grid-template-rows: 20% auto auto;
+  grid-template-rows: auto auto auto;
 }
 
 /* Lockwise Card */
