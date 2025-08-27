@@ -310,9 +310,16 @@ class IPProtectionWidget {
     );
   }
 
-  onWidgetRemoved(widgetId) {
-    // Shut down VPN connection when widget is removed
-    if (widgetId == IPProtectionWidget.WIDGET_ID) {
+  async onWidgetRemoved(widgetId) {
+    if (widgetId != IPProtectionWidget.WIDGET_ID) {
+      return;
+    }
+
+    // Shut down VPN connection when widget is removed,
+    // but wait to check if it has been moved.
+    await Promise.resolve();
+    let moved = !!lazy.CustomizableUI.getPlacementOfWidget(widgetId);
+    if (!moved) {
       lazy.IPProtectionService.stop();
     }
   }
