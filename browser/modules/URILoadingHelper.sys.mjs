@@ -74,8 +74,10 @@ function openInWindow(url, params, sourceWindow) {
     triggeringPrincipal,
     policyContainer,
     resolveOnContentBrowserCreated,
+    chromeless,
   } = params;
-  let features = "chrome,dialog=no,all";
+  const CHROMELESS_FEATURES = `resizable,minimizable,titlebar,close`;
+  let features = `chrome,dialog=no,${chromeless ? CHROMELESS_FEATURES : "all"}`;
   if (params.private) {
     features += ",private";
     // To prevent regular browsing data from leaking to private browsing sites,
@@ -353,6 +355,7 @@ export const URILoadingHelper = {
    *    "tab"         new tab                (if there aren't any browser windows, then in a new window instead)
    *    "tabshifted"  same as "tab" but in background if default is to select new tabs, and vice versa
    *    "window"      new window
+   *    "chromeless"  new minimal window     (no browser navigation UI)
    *    "save"        save to disk (with no filename hint!)
    *
    * @param {Object}  params
@@ -460,7 +463,6 @@ export const URILoadingHelper = {
       allowThirdPartyFixup,
       postData,
       charset,
-      relatedToCurrent,
       allowInheritPrincipal,
       forceAllowDataURI,
       forceNonPrivate,
@@ -501,29 +503,19 @@ export const URILoadingHelper = {
     }
 
     // Establish which window we'll load the link in.
-    let w;
-    if (where == "current" && params.targetBrowser) {
-      w = params.targetBrowser.ownerGlobal;
-    } else {
-      w = this.getTargetWindow(window, { forceNonPrivate });
-    }
-    // We don't want to open tabs in popups or taskbar tab windows,
-    // so try to find a regular Firefox window in that case.
-    if (
-      (where == "tab" || where == "tabshifted") &&
-      w &&
-      (!w.toolbar.visible ||
-        w.document.documentElement.hasAttribute("taskbartab"))
-    ) {
-      w = this.getTargetWindow(window, {
-        skipPopups: true,
-        skipTaskbarTabs: true,
-        forceNonPrivate,
-      });
-      relatedToCurrent = false;
-    }
+    let w = this._resolveInitialTargetWindow(
+      where,
+      params,
+      window,
+      forceNonPrivate
+    );
 
     updatePrincipals(w, params);
+
+    if (where == "chromeless") {
+      params.chromeless = true;
+      where = "window";
+    }
 
     if (!w || where == "window") {
       openInWindow(url, params, w || window);
@@ -609,7 +601,7 @@ export const URILoadingHelper = {
           postData,
           inBackground: loadInBackground,
           allowThirdPartyFixup,
-          relatedToCurrent,
+          relatedToCurrent: params.relatedToCurrent,
           skipAnimation: skipTabAnimation,
           userContextId,
           originPrincipal,
@@ -674,7 +666,38 @@ export const URILoadingHelper = {
       targetBrowser.focus();
     }
   },
+  /*
+   * Resolve the initial browser window to use for a load, based on `where`.
+   *
+   * @param {string} where
+   *        The target location for the load (e.g. "current", "tab", "window").
+   * @param {Object} params
+   *        The full params object passed to openLinkIn.
+   * @param {Window} win
+   *        The reference window used as a fallback for getTargetWindow.
+   * @param {boolean} forceNonPrivate
+   *        Whether to force choosing a non-private target window.
+   * @returns {Window}
+   *          The browser window that should be used as the initial target.
+   */
+  _resolveInitialTargetWindow(where, params, win, forceNonPrivate) {
+    if (where === "current" && params.targetBrowser) {
+      return params.targetBrowser.ownerGlobal;
+    }
 
+    if (where === "tab" || where === "tabshifted") {
+      const target = this.getTargetWindow(win, {
+        skipPopups: true,
+        skipTaskbarTabs: true,
+        forceNonPrivate,
+      });
+      if (win.top !== target) {
+        params.relatedToCurrent = false;
+      }
+      return target;
+    }
+    return this.getTargetWindow(win, { forceNonPrivate });
+  },
   /**
    * Finds a browser window suitable for opening a link matching the
    * requirements given in the `params` argument. If the current window matches
