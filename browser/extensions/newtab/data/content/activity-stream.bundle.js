@@ -3297,7 +3297,8 @@ function FeatureHighlight({
   openedOverride = false,
   showButtonIcon = true,
   dismissCallback = () => {},
-  outsideClickCallback = () => {}
+  outsideClickCallback = () => {},
+  modalClassName = ""
 }) {
   const [opened, setOpened] = (0,external_React_namespaceObject.useState)(openedOverride);
   const ref = (0,external_React_namespaceObject.useRef)(null);
@@ -3348,7 +3349,7 @@ function FeatureHighlight({
     className: `toggle-button ${hideButtonClass}`,
     onClick: onToggleClick
   }, toggle), /*#__PURE__*/external_React_default().createElement("div", {
-    className: `feature-highlight-modal ${position} ${arrowPosition} ${openedClassname}`
+    className: `feature-highlight-modal ${position} ${arrowPosition} ${modalClassName} ${openedClassname}`
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "message-icon"
   }, icon), /*#__PURE__*/external_React_default().createElement("p", {
@@ -13399,10 +13400,46 @@ function EditableTimerFields({
     tabIndex: tabIndex
   }, formatTime(props.timeLeft).split(":")[1]));
 }
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/FeatureHighlight/WidgetsFeatureHighlight.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+
+
+function WidgetsFeatureHighlight({
+  handleDismiss,
+  handleBlock,
+  dispatch
+}) {
+  const {
+    messageData
+  } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Messages);
+  return /*#__PURE__*/React.createElement(FeatureHighlight, {
+    position: "inset-inline-center inset-block-end",
+    arrowPosition: "arrow-top-center",
+    openedOverride: true,
+    showButtonIcon: false,
+    feature: messageData.content.feature,
+    modalClassName: "widget-highlight-wrapper",
+    message: /*#__PURE__*/React.createElement("div", {
+      className: "widget-highlight"
+    }, /*#__PURE__*/React.createElement("h3", null, "Stay focused with lists and a built-in timer"), /*#__PURE__*/React.createElement("p", null, "From quick reminders to daily to-dos, focus sessions to stretch breaks \u2014 stay on task and on time.")),
+    dispatch: dispatch,
+    dismissCallback: () => {
+      handleDismiss();
+      handleBlock();
+    },
+    outsideClickCallback: handleDismiss
+  });
+}
+
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/Widgets.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
 
 
 
@@ -13414,6 +13451,9 @@ const PREF_WIDGETS_TIMER_ENABLED = "widgets.focusTimer.enabled";
 const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
 function Widgets() {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
+  const {
+    messageData
+  } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Messages);
   const listsState = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.ListsWidget);
   const timerState = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget);
   const timerType = timerState?.timerType;
@@ -13439,6 +13479,10 @@ function Widgets() {
     "aria-live": "polite"
   }, /*#__PURE__*/external_React_default().createElement("p", {
     "data-l10n-id": "newtab-widget-keep-scrolling"
+  })), messageData?.content?.messageType === "WidgetMessage" && /*#__PURE__*/external_React_default().createElement(MessageWrapper, {
+    dispatch: dispatch
+  }, /*#__PURE__*/external_React_default().createElement(WidgetsFeatureHighlight, {
+    dispatch: dispatch
   })));
 }
 

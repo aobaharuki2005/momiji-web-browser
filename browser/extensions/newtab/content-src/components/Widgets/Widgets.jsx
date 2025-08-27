@@ -6,6 +6,8 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Lists } from "./Lists/Lists";
 import { FocusTimer } from "./FocusTimer/FocusTimer";
+import { MessageWrapper } from "content-src/components/MessageWrapper/MessageWrapper";
+import { WidgetsFeatureHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/WidgetsFeatureHighlight";
 
 const PREF_WIDGETS_LISTS_ENABLED = "widgets.lists.enabled";
 const PREF_WIDGETS_SYSTEM_LISTS_ENABLED = "widgets.system.lists.enabled";
@@ -14,6 +16,7 @@ const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
 
 function Widgets() {
   const prefs = useSelector(state => state.Prefs.values);
+  const { messageData } = useSelector(state => state.Messages);
   const listsState = useSelector(state => state.ListsWidget);
   const timerState = useSelector(state => state.TimerWidget);
   const timerType = timerState?.timerType;
@@ -49,6 +52,11 @@ function Widgets() {
         <div className="widgets-scroll-message fade-in" aria-live="polite">
           <p data-l10n-id="newtab-widget-keep-scrolling"></p>
         </div>
+      )}
+      {messageData?.content?.messageType === "WidgetMessage" && (
+        <MessageWrapper dispatch={dispatch}>
+          <WidgetsFeatureHighlight dispatch={dispatch} />
+        </MessageWrapper>
       )}
     </div>
   );

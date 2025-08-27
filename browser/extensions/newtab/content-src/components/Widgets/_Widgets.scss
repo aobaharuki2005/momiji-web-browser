@@ -68,3 +68,29 @@
     }
   }
 }
+
+.feature-highlight .feature-highlight-modal.widget-highlight-wrapper {
+  width: 370px;
+
+  .widget-highlight {
+    h3 {
+      margin-block: 0 var(--space-xsmall);
+      font-size: var(--font-size-root);
+    }
+
+    p {
+      margin-block: 0;
+      font-size: var(--font-size-root);
+    }
+  }
+
+  .message-icon {
+    margin-inline: var(--space-medium);
+  }
+
+  moz-button {
+    margin-inline-end: var(--space-small);
+    margin-block-start: var(--space-small);
+  }
+}
+

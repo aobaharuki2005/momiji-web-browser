@@ -175,20 +175,6 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
-            "content-src/components/DiscoveryStreamComponents/FeatureHighlight/WallpaperFeatureHighlight.jsx":
-              {
-                statements: 0,
-                lines: 0,
-                functions: 0,
-                branches: 0,
-              },
-            "content-src/components/DiscoveryStreamComponents/FeatureHighlight/DownloadMobilePromoHighlight.jsx":
-              {
-                statements: 0,
-                lines: 0,
-                functions: 0,
-                branches: 0,
-              },
             "content-src/components/DiscoveryStreamComponents/FeatureHighlight/FollowSectionButtonHighlight.jsx":
               {
                 statements: 88,
@@ -200,6 +186,14 @@ module.exports = function (config) {
                 statements: 88,
                 lines: 88,
                 functions: 80,
+              },
+            // for all other components in FeatureHighlight that dont have bespoke functionality
+            "content-src/components/DiscoveryStreamComponents/FeatureHighlight/!(FeatureHighlight).jsx":
+              {
+                statements: 0,
+                lines: 0,
+                functions: 0,
+                branches: 0,
               },
             "content-src/components/DiscoveryStreamComponents/ReportContent/ReportContent.jsx":
               {

@@ -4298,6 +4298,25 @@ main section {
   }
 }
 
+.feature-highlight .feature-highlight-modal.widget-highlight-wrapper {
+  width: 370px;
+}
+.feature-highlight .feature-highlight-modal.widget-highlight-wrapper .widget-highlight h3 {
+  margin-block: 0 var(--space-xsmall);
+  font-size: var(--font-size-root);
+}
+.feature-highlight .feature-highlight-modal.widget-highlight-wrapper .widget-highlight p {
+  margin-block: 0;
+  font-size: var(--font-size-root);
+}
+.feature-highlight .feature-highlight-modal.widget-highlight-wrapper .message-icon {
+  margin-inline: var(--space-medium);
+}
+.feature-highlight .feature-highlight-modal.widget-highlight-wrapper moz-button {
+  margin-inline-end: var(--space-small);
+  margin-block-start: var(--space-small);
+}
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8255,6 +8274,13 @@ main section {
 .feature-highlight .feature-highlight-modal.inset-inline-start::after {
   inset-inline-end: calc(var(--space-xxlarge) - var(--space-medium));
 }
+.feature-highlight .feature-highlight-modal.inset-inline-center {
+  transform: translateX(-50%);
+  inset-inline-start: 50%;
+}
+.feature-highlight .feature-highlight-modal.inset-inline-center:dir(rtl) {
+  transform: translateX(50%);
+}
 .feature-highlight .feature-highlight-modal.inset-inline-end {
   inset-inline-start: calc(var(--space-xxlarge) * -1);
 }
@@ -8282,6 +8308,13 @@ main section {
   width: 16px;
   background: var(--newtab-background-color-secondary);
   box-shadow: 4px 4px 6px -2px rgba(0, 0, 0, 0.15);
+}
+.feature-highlight .feature-highlight-modal.arrow-top-center::after {
+  inset-block-start: calc(var(--space-small) * -1);
+  inset-inline-start: 50%;
+  transform: translateX(-50%) rotate(225deg);
+  height: 16px;
+  width: 16px;
 }
 .feature-highlight .feature-highlight-modal p {
   font-size: var(--font-size-small);
