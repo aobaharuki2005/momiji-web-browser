@@ -154,7 +154,10 @@ class CrashReporter internal constructor(
     /**
      * Install this [CrashReporter] instance. At this point the component will be setup to collect crash reports.
      */
-    fun install(applicationContext: Context): CrashReporter {
+    fun install(
+        applicationContext: Context,
+        handleCaughtExceptionSideEffects: (() -> Unit)? = null,
+    ): CrashReporter {
         instance = this
 
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
@@ -162,6 +165,7 @@ class CrashReporter internal constructor(
             context = applicationContext,
             crashReporter = this,
             defaultExceptionHandler = defaultHandler,
+            handleCaughtException = handleCaughtExceptionSideEffects,
         )
         Thread.setDefaultUncaughtExceptionHandler(handler)
 

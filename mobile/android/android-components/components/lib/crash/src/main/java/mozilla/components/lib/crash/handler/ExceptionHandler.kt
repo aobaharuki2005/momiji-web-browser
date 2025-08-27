@@ -20,6 +20,7 @@ class ExceptionHandler(
     private val context: Context,
     private val crashReporter: CrashReporter,
     private val defaultExceptionHandler: Thread.UncaughtExceptionHandler? = null,
+    private val handleCaughtException: (() -> Unit)? = null,
 ) : Thread.UncaughtExceptionHandler {
     private var crashing = false
 
@@ -31,6 +32,8 @@ class ExceptionHandler(
         if (crashing) {
             return
         }
+
+        handleCaughtException?.invoke()
 
         // We want to catch and log all exceptions that can take down the crash reporter.
         // This is the best we can do without being able to report it.

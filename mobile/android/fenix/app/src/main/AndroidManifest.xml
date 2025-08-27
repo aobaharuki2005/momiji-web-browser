@@ -474,6 +474,12 @@
         </activity-alias>
 
         <activity
+            android:name=".startupCrash.StartupCrashActivity"
+            android:exported="true"
+            >
+        </activity>
+
+        <activity
             android:name=".HomeActivity"
             android:theme="@style/SplashScreen"
             android:exported="true"

@@ -86,6 +86,7 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.initializeGlean
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.startMetricsIfEnabled
+import org.mozilla.fenix.crashes.StartupCrashCanary
 import org.mozilla.fenix.experiments.maybeFetchExperiments
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.containsQueryParameters
@@ -140,7 +141,20 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     override fun onCreate() {
         super.onCreate()
 
-        initialize()
+        initializeWithStartupCrashCheck()
+    }
+
+    /**
+     * Initializes Fenix, unless a startup crash was detected on the previous launch,
+     * in which case returns early to allow for the [HomeActivity] to enter the startup crash
+     * flow. See [HomeActivity.onCreate] for more context.
+     */
+    open fun initializeWithStartupCrashCheck() {
+        if (StartupCrashCanary.build(applicationContext).startupCrashDetected) {
+            setupInAllProcesses()
+        } else {
+            initialize()
+        }
     }
 
     /**
@@ -499,7 +513,15 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         components
             .analytics
             .crashReporter
-            .install(this)
+            .install(this, ::handleCaughtException)
+    }
+
+    private fun handleCaughtException() {
+        if (isMainProcess() && !components.performance.visualCompletenessQueue.isReady()) {
+            CoroutineScope(IO).launch {
+                StartupCrashCanary.build(applicationContext).createCanary()
+            }
+        }
     }
 
     protected open fun initializeNimbus() {
