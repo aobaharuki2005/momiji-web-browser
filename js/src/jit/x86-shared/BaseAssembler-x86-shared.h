@@ -4497,6 +4497,17 @@ class BaseAssembler : public GenericAssembler {
                                rm, src0, reg);
   }
 
+  void andnl_rrr(RegisterID src1, RegisterID src2, RegisterID dst) {
+    spew("andnl      %s, %s, %s", GPReg32Name(src1), GPReg32Name(src2),
+         GPReg32Name(dst));
+
+    RegisterID rm = src2;
+    XMMRegisterID src0 = static_cast<XMMRegisterID>(src1);
+    int reg = dst;
+    m_formatter.threeByteOpVex(VEX_PS, OP3_ANDN_GyByEy, ESCAPE_38, rm, src0,
+                               reg);
+  }
+
   // FMA instructions:
 
   void vfmadd231ps_rrr(XMMRegisterID src1, XMMRegisterID src0,
