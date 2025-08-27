@@ -433,17 +433,20 @@ class Routes(TryConfig):
 class ChemspillPrio(TryConfig):
     arguments = [
         [
-            ["--chemspill-prio"],
+            ["--chemspill", "--chemspill-priority"],
             {
                 "action": "store_true",
+                "dest": "chemspill",
                 "help": "Run at a higher priority than most try jobs (chemspills only).",
             },
         ],
     ]
 
-    def try_config(self, chemspill_prio, **kwargs):
-        if chemspill_prio:
-            return {"chemspill-prio": True}
+    def try_config(self, chemspill, **kwargs):
+        if chemspill:
+            # Despite being "low", this is still higher than other tasks on
+            # try, the equivalent of a push to autoland.
+            return {"priority": "low"}
 
 
 class GeckoProfile(TryConfig):

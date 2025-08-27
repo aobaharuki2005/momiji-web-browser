@@ -24,7 +24,8 @@ TASK_CONFIG_TESTS = {
     ],
     "chemspill-prio": [
         ([], None),
-        (["--chemspill-prio"], {"try_task_config": {"chemspill-prio": True}}),
+        (["--chemspill"], {"try_task_config": {"priority": "low"}}),
+        (["--chemspill-priority"], {"try_task_config": {"priority": "low"}}),
     ],
     "env": [
         ([], None),
