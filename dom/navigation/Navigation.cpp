@@ -1263,7 +1263,10 @@ bool Navigation::InnerFireNavigateEvent(
               }
             },
         failureSteps, scope);
-  } else if (apiMethodTracker) {
+  } else if (apiMethodTracker && mOngoingAPIMethodTracker) {
+    // In contrast to spec we add a check that we're still the ongoing tracker.
+    // If we're not, then we've already been cleaned up.
+    MOZ_DIAGNOSTIC_ASSERT(apiMethodTracker == mOngoingAPIMethodTracker);
     // Step 35
     apiMethodTracker->CleanUp();
   }
