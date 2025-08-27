@@ -309,7 +309,8 @@ var gPlayTests = [
   { name: "seek-short.webm", type: "video/webm", duration: 0.23 },
 
   // Test playback of a webm file with 'matroska' doctype
-  { name: "bug1377278.webm", type: "video/webm", duration: 4.0 },
+  // TODO : re-enable this in bug 1985419 after MKV is supported.
+  // { name: "bug1377278.webm", type: "video/webm", duration: 4.0 },
 
   // Test playback of a WebM file with non-zero start time.
   { name: "split.webm", type: "video/webm", duration: 1.967 },
