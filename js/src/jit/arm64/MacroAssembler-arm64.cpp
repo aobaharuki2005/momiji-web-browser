@@ -438,45 +438,151 @@ void MacroAssemblerCompat::breakpoint() {
 
 void MacroAssemblerCompat::minMax32(Register lhs, Register rhs, Register dest,
                                     bool isMax) {
+  auto lhs32 = ARMRegister(lhs, 32);
+  auto rhs32 = vixl::Operand(ARMRegister(rhs, 32));
+  auto dest32 = ARMRegister(dest, 32);
+
   auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
-  if (lhs != dest) {
-    move32(lhs, dest);
-  }
-  asMasm().cmp32Move32(cond, rhs, lhs, rhs, dest);
+  Cmp(lhs32, rhs32);
+  Csel(dest32, lhs32, rhs32, cond);
 }
 
 void MacroAssemblerCompat::minMax32(Register lhs, Imm32 rhs, Register dest,
                                     bool isMax) {
+  auto lhs32 = ARMRegister(lhs, 32);
+  auto rhs32 = vixl::Operand(vixl::IntegerOperand(rhs.value));
+  auto dest32 = ARMRegister(dest, 32);
+
+  // max(lhs, 0): dest = lhs & ~(lhs >> 31)
+  // min(lhs, 0): dest = lhs & (lhs >> 31)
+  if (rhs32.GetImmediate() == 0) {
+    if (isMax) {
+      Bic(dest32, lhs32, vixl::Operand(lhs32, vixl::ASR, 31));
+    } else {
+      And(dest32, lhs32, vixl::Operand(lhs32, vixl::ASR, 31));
+    }
+    return;
+  }
+
+  // max(lhs, 1): lhs > 0 ? lhs : 1
+  // min(lhs, 1): lhs <= 0 ? lhs : 1
+  //
+  // Note: Csel emits a single `csinc` instruction when the operand is 1.
+  if (rhs32.GetImmediate() == 1) {
+    auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThanOrEqual;
+    Cmp(lhs32, vixl::Operand(0));
+    Csel(dest32, lhs32, rhs32, cond);
+    return;
+  }
+
+  // max(lhs, -1): lhs >= 0 ? lhs : -1
+  // min(lhs, -1): lhs < 0 ? lhs : -1
+  //
+  // Note: Csel emits a single `csinv` instruction when the operand is -1.
+  if (rhs32.GetImmediate() == -1) {
+    auto cond = isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThan;
+    Cmp(lhs32, vixl::Operand(0));
+    Csel(dest32, lhs32, rhs32, cond);
+    return;
+  }
+
   auto cond =
       isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
+
+  // Use scratch register when immediate can't be encoded in `cmp` instruction.
+  // This avoids materializing the immediate twice.
+  if (!IsImmAddSub(mozilla::Abs(rhs32.GetImmediate()))) {
+    vixl::UseScratchRegisterScope temps(this);
+    vixl::Register scratch32 = temps.AcquireW();
+
+    Mov(scratch32, rhs32.GetImmediate());
+    Cmp(lhs32, scratch32);
+    Csel(dest32, lhs32, vixl::Operand(scratch32), cond);
+    return;
+  }
+
   if (lhs != dest) {
-    move32(lhs, dest);
+    Mov(dest32, lhs32);
   }
   Label done;
-  asMasm().branch32(cond, lhs, rhs, &done);
-  move32(rhs, dest);
+  Cmp(lhs32, rhs32);
+  B(&done, cond);
+  Mov(dest32, rhs32);
   bind(&done);
 }
 
 void MacroAssemblerCompat::minMaxPtr(Register lhs, Register rhs, Register dest,
                                      bool isMax) {
+  auto lhs64 = ARMRegister(lhs, 64);
+  auto rhs64 = vixl::Operand(ARMRegister(rhs, 64));
+  auto dest64 = ARMRegister(dest, 64);
+
   auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
-  if (lhs != dest) {
-    movePtr(lhs, dest);
-  }
-  asMasm().cmpPtrMovePtr(cond, rhs, lhs, rhs, dest);
+  Cmp(lhs64, rhs64);
+  Csel(dest64, lhs64, rhs64, cond);
 }
 
 void MacroAssemblerCompat::minMaxPtr(Register lhs, ImmWord rhs, Register dest,
                                      bool isMax) {
+  auto lhs64 = ARMRegister(lhs, 64);
+  auto rhs64 = vixl::Operand(vixl::IntegerOperand(rhs.value));
+  auto dest64 = ARMRegister(dest, 64);
+
+  // max(lhs, 0): dest = lhs & ~(lhs >> 63)
+  // min(lhs, 0): dest = lhs & (lhs >> 63)
+  if (rhs64.GetImmediate() == 0) {
+    if (isMax) {
+      Bic(dest64, lhs64, vixl::Operand(lhs64, vixl::ASR, 63));
+    } else {
+      And(dest64, lhs64, vixl::Operand(lhs64, vixl::ASR, 63));
+    }
+    return;
+  }
+
+  // max(lhs, 1): lhs > 0 ? lhs : 1
+  // min(lhs, 1): lhs <= 0 ? lhs : 1
+  //
+  // Note: Csel emits a single `csinc` instruction when the operand is 1.
+  if (rhs64.GetImmediate() == 1) {
+    auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThanOrEqual;
+    Cmp(lhs64, vixl::Operand(0));
+    Csel(dest64, lhs64, rhs64, cond);
+    return;
+  }
+
+  // max(lhs, -1): lhs >= 0 ? lhs : -1
+  // min(lhs, -1): lhs < 0 ? lhs : -1
+  //
+  // Note: Csel emits a single `csinv` instruction when the operand is -1.
+  if (rhs64.GetImmediate() == -1) {
+    auto cond = isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThan;
+    Cmp(lhs64, vixl::Operand(0));
+    Csel(dest64, lhs64, rhs64, cond);
+    return;
+  }
+
   auto cond =
       isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
+
+  // Use scratch register when immediate can't be encoded in `cmp` instruction.
+  // This avoids materializing the immediate twice.
+  if (!IsImmAddSub(mozilla::Abs(rhs64.GetImmediate()))) {
+    vixl::UseScratchRegisterScope temps(this);
+    vixl::Register scratch64 = temps.AcquireX();
+
+    Mov(scratch64, rhs64.GetImmediate());
+    Cmp(lhs64, scratch64);
+    Csel(dest64, lhs64, vixl::Operand(scratch64), cond);
+    return;
+  }
+
   if (lhs != dest) {
-    movePtr(lhs, dest);
+    Mov(dest64, lhs64);
   }
   Label done;
-  asMasm().branchPtr(cond, lhs, rhs, &done);
-  movePtr(rhs, dest);
+  Cmp(lhs64, rhs64);
+  B(&done, cond);
+  Mov(dest64, rhs64);
   bind(&done);
 }
 
