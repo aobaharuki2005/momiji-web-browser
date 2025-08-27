@@ -1286,6 +1286,12 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     Negs(ARMRegister(reg, 64), Operand(ARMRegister(reg, 64)));
   }
 
+  void minMax32(Register lhs, Register rhs, Register dest, bool isMax);
+  void minMax32(Register lhs, Imm32 rhs, Register dest, bool isMax);
+
+  void minMaxPtr(Register lhs, Register rhs, Register dest, bool isMax);
+  void minMaxPtr(Register lhs, ImmWord rhs, Register dest, bool isMax);
+
   BufferOffset ret() {
     pop(lr);
     BufferOffset ret(currentOffset());

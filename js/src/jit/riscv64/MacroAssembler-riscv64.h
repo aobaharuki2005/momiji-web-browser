@@ -1257,6 +1257,12 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
 
   static void calculateAlignedStackPointer(void** stackPointer);
 
+  void minMax32(Register lhs, Register rhs, Register dest, bool isMax);
+  void minMax32(Register lhs, Imm32 rhs, Register dest, bool isMax);
+
+  void minMaxPtr(Register lhs, Register rhs, Register dest, bool isMax);
+  void minMaxPtr(Register lhs, ImmWord rhs, Register dest, bool isMax);
+
   void cmpPtrSet(Assembler::Condition cond, Address lhs, ImmPtr rhs,
                  Register dest);
   void cmpPtrSet(Assembler::Condition cond, Register lhs, Address rhs,

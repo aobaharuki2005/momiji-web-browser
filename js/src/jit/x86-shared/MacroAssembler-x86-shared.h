@@ -99,6 +99,12 @@ class MacroAssemblerX86Shared : public Assembler {
     return masm.addToPCRel4(offset, bias);
   }
 
+  void minMax32(Register lhs, Register rhs, Register dest, bool isMax);
+  void minMax32(Register lhs, Imm32 rhs, Register dest, bool isMax);
+
+  void minMaxPtr(Register lhs, Register rhs, Register dest, bool isMax);
+  void minMaxPtr(Register lhs, ImmWord rhs, Register dest, bool isMax);
+
   // Evaluate srcDest = minmax<isMax>{Float32,Double}(srcDest, second).
   // Checks for NaN if canBeNaN is true.
   void minMaxDouble(FloatRegister srcDest, FloatRegister second, bool canBeNaN,

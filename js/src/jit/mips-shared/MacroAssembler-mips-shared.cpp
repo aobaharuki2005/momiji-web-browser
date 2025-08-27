@@ -1414,6 +1414,50 @@ void MacroAssemblerMIPSShared::ma_bc1d(FloatRegister lhs, FloatRegister rhs,
   asMasm().branchWithCode(getBranchCode(testKind, fcc), label, jumpKind);
 }
 
+void MacroAssemblerMIPSShared::minMax32(Register lhs, Register rhs,
+                                        Register dest, bool isMax) {
+  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
+  if (lhs != dest) {
+    asMasm().move32(lhs, dest);
+  }
+  asMasm().cmp32Move32(cond, rhs, lhs, rhs, dest);
+}
+
+void MacroAssemblerMIPSShared::minMax32(Register lhs, Imm32 rhs, Register dest,
+                                        bool isMax) {
+  auto cond =
+      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
+  if (lhs != dest) {
+    asMasm().move32(lhs, dest);
+  }
+  Label done;
+  asMasm().branch32(cond, lhs, rhs, &done);
+  asMasm().move32(rhs, dest);
+  bind(&done);
+}
+
+void MacroAssemblerMIPSShared::minMaxPtr(Register lhs, Register rhs,
+                                         Register dest, bool isMax) {
+  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
+  if (lhs != dest) {
+    asMasm().movePtr(lhs, dest);
+  }
+  asMasm().cmpPtrMovePtr(cond, rhs, lhs, rhs, dest);
+}
+
+void MacroAssemblerMIPSShared::minMaxPtr(Register lhs, ImmWord rhs,
+                                         Register dest, bool isMax) {
+  auto cond =
+      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
+  if (lhs != dest) {
+    asMasm().movePtr(lhs, dest);
+  }
+  Label done;
+  asMasm().branchPtr(cond, lhs, rhs, &done);
+  asMasm().movePtr(rhs, dest);
+  bind(&done);
+}
+
 void MacroAssemblerMIPSShared::minMaxDouble(FloatRegister srcDest,
                                             FloatRegister second,
                                             bool handleNaN, bool isMax) {
