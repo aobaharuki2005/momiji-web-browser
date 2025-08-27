@@ -180,6 +180,18 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
   GETTER(Maybe<dom::RequestMode>, RequestMode, requestMode, Nothing())         \
   SETTER(Maybe<dom::RequestMode>, RequestMode)                                 \
                                                                                \
+  GETTER(nsILoadInfo::StoragePermissionState, StoragePermission,               \
+         storagePermission, nsILoadInfo::NoStoragePermission)                  \
+  SETTER(nsILoadInfo::StoragePermissionState, StoragePermission)               \
+                                                                               \
+  GETTER(nsILoadInfo::IPAddressSpace, ParentIpAddressSpace,                    \
+         parentIPAddressSpace, nsILoadInfo::Unknown)                           \
+  SETTER(nsILoadInfo::IPAddressSpace, ParentIpAddressSpace)                    \
+                                                                               \
+  GETTER(nsILoadInfo::IPAddressSpace, IpAddressSpace, ipAddressSpace,          \
+         nsILoadInfo::Unknown)                                                 \
+  SETTER(nsILoadInfo::IPAddressSpace, IpAddressSpace)                          \
+                                                                               \
   GETTER(bool, IsMetaRefresh, isMetaRefresh, false)                            \
   SETTER(bool, IsMetaRefresh)                                                  \
                                                                                \
@@ -415,9 +427,6 @@ class LoadInfo final : public nsILoadInfo {
            const nsTArray<nsCString>& aCorsUnsafeHeaders,
            bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
            const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
-           nsILoadInfo::StoragePermissionState aStoragePermission,
-           nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
-           nsILoadInfo::IPAddressSpace aIPAddressSpace,
            const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
            nsINode* aLoadingContext, nsIURI* aUnstrippedURI,
            nsIInterceptionInfo* aInterceptionInfo,
@@ -512,11 +521,6 @@ class LoadInfo final : public nsILoadInfo {
   nsString mIntegrityMetadata;
   bool mIsSameDocumentNavigation = false;
   bool mIsUserTriggeredSave = false;
-  nsILoadInfo::StoragePermissionState mStoragePermission =
-      nsILoadInfo::NoStoragePermission;
-  // IP Address space of the parent browsing context.
-  nsILoadInfo::IPAddressSpace mParentIPAddressSpace = nsILoadInfo::Unknown;
-  nsILoadInfo::IPAddressSpace mIPAddressSpace = nsILoadInfo::Unknown;
 
   Maybe<RFPTargetSet> mOverriddenFingerprintingSettings;
 #ifdef DEBUG

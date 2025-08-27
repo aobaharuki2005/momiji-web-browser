@@ -167,40 +167,6 @@ TRRLoadInfo::SetCookieJarSettings(nsICookieJarSettings* aCookieJarSettings) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-TRRLoadInfo::GetStoragePermission(
-    nsILoadInfo::StoragePermissionState* aHasStoragePermission) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetStoragePermission(
-    nsILoadInfo::StoragePermissionState aHasStoragePermission) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetParentIpAddressSpace(
-    nsILoadInfo::IPAddressSpace* aIPAddressSpace) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetParentIpAddressSpace(
-    nsILoadInfo::IPAddressSpace aIPAddressSpace) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetIpAddressSpace(nsILoadInfo::IPAddressSpace* aIPAddressSpace) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetIpAddressSpace(nsILoadInfo::IPAddressSpace aIPAddressSpace) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 const Maybe<RFPTargetSet>& TRRLoadInfo::GetOverriddenFingerprintingSettings() {
   return mOverriddenFingerprintingSettings;
 }

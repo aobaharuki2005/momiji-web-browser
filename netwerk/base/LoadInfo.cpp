@@ -741,9 +741,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
       mCspNonce(rhs.mCspNonce),
       mIntegrityMetadata(rhs.mIntegrityMetadata),
-      mStoragePermission(rhs.mStoragePermission),
-      mParentIPAddressSpace(rhs.mParentIPAddressSpace),
-      mIPAddressSpace(rhs.mIPAddressSpace),
       mOverriddenFingerprintingSettings(rhs.mOverriddenFingerprintingSettings),
 #ifdef DEBUG
       mOverriddenFingerprintingSettingsIsSet(
@@ -783,9 +780,6 @@ LoadInfo::LoadInfo(
     const nsTArray<nsCString>& aCorsUnsafeHeaders,
     bool aLoadTriggeredFromExternal, const nsAString& aCspNonce,
     const nsAString& aIntegrityMetadata, bool aIsSameDocumentNavigation,
-    nsILoadInfo::StoragePermissionState aStoragePermission,
-    nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
-    nsILoadInfo::IPAddressSpace aIPAddressSpace,
     const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
     nsINode* aLoadingContext, nsIURI* aUnstrippedURI,
     nsIInterceptionInfo* aInterceptionInfo,
@@ -828,9 +822,6 @@ LoadInfo::LoadInfo(
       mCspNonce(aCspNonce),
       mIntegrityMetadata(aIntegrityMetadata),
       mIsSameDocumentNavigation(aIsSameDocumentNavigation),
-      mStoragePermission(aStoragePermission),
-      mParentIPAddressSpace(aParentIPAddressSpace),
-      mIPAddressSpace(aIPAddressSpace),
       mOverriddenFingerprintingSettings(aOverriddenFingerprintingSettings),
       mUnstrippedURI(aUnstrippedURI),
       mInterceptionInfo(aInterceptionInfo),
@@ -1181,45 +1172,6 @@ LoadInfo::SetCookieJarSettings(nsICookieJarSettings* aCookieJarSettings) {
   MOZ_ASSERT(aCookieJarSettings);
   // We allow the overwrite of CookieJarSettings.
   mCookieJarSettings = aCookieJarSettings;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetStoragePermission(
-    nsILoadInfo::StoragePermissionState* aStoragePermission) {
-  *aStoragePermission = mStoragePermission;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetStoragePermission(
-    nsILoadInfo::StoragePermissionState aStoragePermission) {
-  mStoragePermission = aStoragePermission;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIpAddressSpace(nsILoadInfo::IPAddressSpace* aIPAddressSpace) {
-  *aIPAddressSpace = mIPAddressSpace;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIpAddressSpace(nsILoadInfo::IPAddressSpace aIPAddressSpace) {
-  mIPAddressSpace = aIPAddressSpace;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetParentIpAddressSpace(
-    nsILoadInfo::IPAddressSpace* aIPAddressSpace) {
-  *aIPAddressSpace = mParentIPAddressSpace;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetParentIpAddressSpace(nsILoadInfo::IPAddressSpace aIPAddressSpace) {
-  mParentIPAddressSpace = aIPAddressSpace;
   return NS_OK;
 }
 
@@ -2120,7 +2072,7 @@ void LoadInfo::UpdateParentAddressSpaceInfo() {
   RefPtr<mozilla::dom::BrowsingContext> bc;
   GetBrowsingContext(getter_AddRefs(bc));
   if (!bc) {
-    mParentIPAddressSpace = nsILoadInfo::Local;
+    mParentIpAddressSpace = nsILoadInfo::Local;
     return;
   }
   // if this main or sub document then we need to assign IPAddressSpace of
@@ -2128,9 +2080,9 @@ void LoadInfo::UpdateParentAddressSpaceInfo() {
   if (externalType == ExtContentPolicy::TYPE_DOCUMENT ||
       externalType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
     if (bc->GetParent()) {
-      mParentIPAddressSpace = bc->GetParent()->GetCurrentIPAddressSpace();
+      mParentIpAddressSpace = bc->GetParent()->GetCurrentIPAddressSpace();
     } else if (RefPtr<dom::BrowsingContext> opener = bc->GetOpener()) {
-      mParentIPAddressSpace = opener->GetCurrentIPAddressSpace();
+      mParentIpAddressSpace = opener->GetCurrentIPAddressSpace();
     } else {
       // XXX (sunil): add if this was loaded from about:blank. In that case we
       // need to give assign local IPAddress
@@ -2138,7 +2090,7 @@ void LoadInfo::UpdateParentAddressSpaceInfo() {
   } else {
     // For non-document loads, we need to set the parent IPAddressSpace to
     // IPAddress space of the browsing context
-    mParentIPAddressSpace = bc->GetCurrentIPAddressSpace();
+    mParentIpAddressSpace = bc->GetCurrentIPAddressSpace();
   }
 }
 
