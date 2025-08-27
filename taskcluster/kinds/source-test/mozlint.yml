@@ -711,6 +711,19 @@ fluent-lint:
             - 'tools/lint/fluent-lint.yml'
             - 'tools/lint/fluent-lint/exclusions.yml'
 
+glean-parser:
+    description: Lint Glean telemetry configuration files
+    treeherder:
+        symbol: misc(glean-parser)
+    run:
+        mach: lint -v -l glean-parser -f treeherder -f json:/builds/worker/mozlint.json .
+    when:
+        files-changed:
+            - '**/*metrics.yaml'
+            - '**/pings.yaml'
+            - 'tools/lint/glean-parser.yml'
+            - 'tools/lint/glean-parser/**'
+
 trojan-source:
     description: Trojan Source attack - CVE-2021-42572
     platform: lint/opt
