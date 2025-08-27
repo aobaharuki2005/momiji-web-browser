@@ -22,6 +22,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const FXA_WIDGET_ID = "fxa-toolbar-menu-button";
 const EXT_WIDGET_ID = "unified-extensions-button";
 
+const REGISTERED_EVENTS = [
+  "IPProtectionService:Started",
+  "IPProtectionService:Stopped",
+  "IPProtectionService:Error",
+  "IPProtectionService:SignedIn",
+  "IPProtectionService:SignedOut",
+];
+
 /**
  * IPProtectionWidget is the class for the singleton IPProtection.
  *
@@ -77,6 +85,13 @@ class IPProtectionWidget {
     lazy.CustomizableUI.removeListener(this);
 
     this.#inited = false;
+  }
+
+  /**
+   * Returns the initialization status
+   */
+  get isInitialized() {
+    return this.#inited;
   }
 
   /**
@@ -279,35 +294,15 @@ class IPProtectionWidget {
       this.sendReadyTrigger
     );
 
-    lazy.IPProtectionService.addEventListener(
-      "IPProtectionService:Started",
-      this.handleEvent
-    );
-
-    lazy.IPProtectionService.addEventListener(
-      "IPProtectionService:Stopped",
-      this.handleEvent
-    );
-
-    lazy.IPProtectionService.addEventListener(
-      "IPProtectionService:Error",
-      this.handleEvent
-    );
+    for (const evt of REGISTERED_EVENTS) {
+      lazy.IPProtectionService.addEventListener(evt, this.handleEvent);
+    }
   }
 
   #onDestroyed() {
-    lazy.IPProtectionService.removeEventListener(
-      "IPProtectionService:Started",
-      this.handleEvent
-    );
-    lazy.IPProtectionService.removeEventListener(
-      "IPProtectionService:Stopped",
-      this.handleEvent
-    );
-    lazy.IPProtectionService.removeEventListener(
-      "IPProtectionService:Error",
-      this.handleEvent
-    );
+    for (const evt of REGISTERED_EVENTS) {
+      lazy.IPProtectionService.removeEventListener(evt, this.handleEvent);
+    }
   }
 
   async onWidgetRemoved(widgetId) {
@@ -338,14 +333,17 @@ class IPProtectionWidget {
     if (
       event.type == "IPProtectionService:Started" ||
       event.type == "IPProtectionService:Stopped" ||
-      event.type == "IPProtectionService:Error"
+      event.type == "IPProtectionService:Error" ||
+      event.type == "IPProtectionService:SignedIn" ||
+      event.type == "IPProtectionService:SignedOut"
     ) {
-      let isError =
-        lazy.IPProtectionService.hasError &&
-        lazy.IPProtectionService.errors.includes(ERRORS.GENERIC);
       let status = {
-        isActive: lazy.IPProtectionService.isActive,
-        isError,
+        isActive:
+          lazy.IPProtectionService.isSignedIn &&
+          lazy.IPProtectionService.isActive,
+        isError:
+          lazy.IPProtectionService.hasError &&
+          lazy.IPProtectionService.errors.includes(ERRORS.GENERIC),
       };
 
       let widget = lazy.CustomizableUI.getWidget(IPProtectionWidget.WIDGET_ID);
