@@ -993,31 +993,75 @@ class ArenaCollection {
 
   using Tree = RedBlackTree<arena_t, ArenaTreeTrait>;
 
-  struct Iterator : Tree::Iterator {
+  class Iterator {
+   public:
     explicit Iterator(Tree* aTree, Tree* aSecondTree,
                       Tree* aThirdTree = nullptr)
-        : Tree::Iterator(aTree),
+        : mFirstIterator(aTree),
           mSecondTree(aSecondTree),
           mThirdTree(aThirdTree) {}
 
-    Item<Iterator> begin() {
-      return Item<Iterator>(this, *Tree::Iterator::begin());
-    }
+    class Item {
+     private:
+      Iterator& mIter;
+      arena_t* mArena;
 
-    Item<Iterator> end() { return Item<Iterator>(this, nullptr); }
+     public:
+      Item(Iterator& aIter, arena_t* aArena) : mIter(aIter), mArena(aArena) {}
 
-    arena_t* Next() {
-      arena_t* result = Tree::Iterator::Next();
-      if (!result && mSecondTree) {
-        new (this) Iterator(mSecondTree, mThirdTree);
-        result = *Tree::Iterator::begin();
+      bool operator!=(const Item& aOther) const {
+        return mArena != aOther.mArena;
       }
-      return result;
+
+      arena_t* operator*() const { return mArena; }
+
+      const Item& operator++() {
+        mArena = mIter.Next();
+        return *this;
+      }
+    };
+
+    Item begin() {
+      // If the first tree is empty calling Next() would access memory out of
+      // bounds, so advance to the next non-empty tree (or last empty tree).
+      MaybeNextTree();
+      return Item(*this, mFirstIterator.Current());
     }
+
+    Item end() { return Item(*this, nullptr); }
 
    private:
+    Tree::Iterator mFirstIterator;
     Tree* mSecondTree;
     Tree* mThirdTree;
+
+    void MaybeNextTree() {
+      while (!mFirstIterator.NotDone() && mSecondTree) {
+        mFirstIterator = mSecondTree->iter();
+        mSecondTree = mThirdTree;
+        mThirdTree = nullptr;
+      }
+    }
+
+    arena_t* Next() {
+      arena_t* arena = mFirstIterator.Next();
+      if (arena) {
+        return arena;
+      }
+
+      // Advance to the next tree if we can.
+      MaybeNextTree();
+      if (!mFirstIterator.NotDone()) {
+        // It's not safe to call Next()
+        return nullptr;
+      }
+
+      // If this now returns null then it was the last item from the last
+      // iterator.
+      return mFirstIterator.Next();
+    }
+
+    friend Item;
   };
 
   Iterator iter() MOZ_REQUIRES(mLock) {
