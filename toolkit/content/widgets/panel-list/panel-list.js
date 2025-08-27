@@ -280,7 +280,7 @@
         // If there's more space between the bottom of the anchor element and the bottom of the viewport, we valign bottom.
         if (
           anchorBottom > bottomSpaceY &&
-          anchorBottom + panelHeight > winHeight
+          anchorBottom + panelHeight + VIEWPORT_PANEL_MIN_MARGIN > winHeight
         ) {
           // Never want to have a negative value for topOffset, so ensure it's at least 10px.
           topOffset = Math.max(
