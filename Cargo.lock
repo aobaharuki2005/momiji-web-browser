@@ -3030,7 +3030,7 @@ version = "0.1.0"
 dependencies = [
  "nserror",
  "nsstring",
- "sfv 0.9.4",
+ "sfv",
  "thin-vec",
  "xpcom",
 ]
@@ -4688,7 +4688,7 @@ dependencies = [
  "neqo-transport",
  "qlog",
  "rustc-hash 2.1.1",
- "sfv 0.14.0",
+ "sfv",
  "strum",
  "url",
 ]
@@ -5868,16 +5868,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_decimal"
-version = "1.28.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e13cf35f7140155d02ba4ec3294373d513a3c7baa8364c162b030e33c61520a8"
-dependencies = [
- "arrayvec",
- "num-traits",
-]
-
-[[package]]
 name = "rust_minidump_writer_linux"
 version = "0.1.0"
 dependencies = [
@@ -6142,17 +6132,6 @@ name = "servo_arc"
 version = "0.4.0"
 dependencies = [
  "stable_deref_trait",
-]
-
-[[package]]
-name = "sfv"
-version = "0.9.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f27daf6ed3fc7ffd5ea3ce9f684fe351c47e50f2fdbb6236e2bad0b440dbe408"
-dependencies = [
- "data-encoding",
- "indexmap",
- "rust_decimal",
 ]
 
 [[package]]
