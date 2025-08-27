@@ -259,6 +259,11 @@ void MarkerSchema::Stream(JSONWriter& aWriter,
                     uint32_t(PayloadFlags::Searchable)) {
                   aWriter.BoolProperty("searchable", true);
                 }
+
+                if (uint32_t(aData.mPayloadFlags) &
+                    uint32_t(PayloadFlags::Hidden)) {
+                  aWriter.BoolProperty("hidden", true);
+                }
               },
               [&aWriter](const StaticData& aStaticData) {
                 aWriter.StringProperty("label", aStaticData.mLabel);
