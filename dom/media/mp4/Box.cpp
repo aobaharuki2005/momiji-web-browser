@@ -41,8 +41,10 @@ static uint32_t BoxOffset(AtomType aType) {
 
 Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     : mContext(aContext), mParent(aParent) {
-  uint8_t header[8];
+  // Default error code for early returns if ranges are not as expected
+  mInitStatus = NS_ERROR_DOM_MEDIA_RANGE_ERR;
 
+  uint8_t header[8];
   if (aOffset > INT64_MAX - sizeof(header)) {
     return;
   }
@@ -65,9 +67,16 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
   }
 
   size_t bytes;
-  if (NS_FAILED(mContext->mSource->CachedReadAt(aOffset, header, sizeof(header),
-                                                &bytes)) ||
-      bytes != sizeof(header)) {
+  nsresult rv =
+      mContext->mSource->CachedReadAt(aOffset, header, sizeof(header), &bytes);
+  if (NS_FAILED(rv)) {
+    mInitStatus = rv;
+    return;
+  }
+  if (bytes != sizeof(header)) {
+    // CachedReadAt() would usually return an error if the read cannot
+    // complete, but BlockingStream can return fewer bytes on end of stream or
+    // after a network error has occurred.
     return;
   }
 
@@ -80,10 +89,16 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     MediaByteRange bigLengthRange(headerRange.mEnd,
                                   headerRange.mEnd + sizeof(bigLength));
     if ((mParent && !mParent->mRange.Contains(bigLengthRange)) ||
-        !byteRange->Contains(bigLengthRange) ||
-        NS_FAILED(mContext->mSource->CachedReadAt(
-            aOffset + sizeof(header), bigLength, sizeof(bigLength), &bytes)) ||
-        bytes != sizeof(bigLength)) {
+        !byteRange->Contains(bigLengthRange)) {
+      return;
+    }
+    rv = mContext->mSource->CachedReadAt(aOffset + sizeof(header), bigLength,
+                                         sizeof(bigLength), &bytes);
+    if (NS_FAILED(rv)) {
+      mInitStatus = rv;
+      return;
+    }
+    if (bytes != sizeof(bigLength)) {
       return;
     }
     size = BigEndian::readUint64(bigLength);
@@ -115,6 +130,7 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     return;
   }
 
+  mInitStatus = NS_OK;
   mRange = boxRange;
 }
 
