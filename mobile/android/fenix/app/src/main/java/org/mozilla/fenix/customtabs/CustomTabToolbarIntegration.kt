@@ -5,6 +5,7 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Context
+import androidx.annotation.ColorInt
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.feature.toolbar.ToolbarFeature
@@ -21,6 +22,7 @@ class CustomTabToolbarIntegration(
     interactor: BrowserToolbarInteractor,
     customTabId: String,
     isPrivate: Boolean,
+    @ColorInt backgroundColor: Int? = null,
 ) : ToolbarIntegration(
     context = context,
     toolbar = toolbar,
@@ -30,4 +32,5 @@ class CustomTabToolbarIntegration(
     customTabId = customTabId,
     isPrivate = isPrivate,
     renderStyle = ToolbarFeature.RenderStyle.ColoredDomain,
+    backgroundColor = backgroundColor,
 )

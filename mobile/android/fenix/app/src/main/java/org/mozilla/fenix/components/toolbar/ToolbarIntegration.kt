@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
@@ -22,6 +23,8 @@ import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.utils.ColorUtils.getReadableTextColor
+import mozilla.components.support.utils.ColorUtils.getSecondaryReadableTextColor
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.AddressToolbar
@@ -46,6 +49,7 @@ abstract class ToolbarIntegration(
     private val customTabId: String?,
     isPrivate: Boolean,
     renderStyle: ToolbarFeature.RenderStyle,
+    @param:ColorInt val backgroundColor: Int? = null,
 ) : LifecycleAwareFeature {
 
     val store = context.components.core.store
@@ -56,8 +60,16 @@ abstract class ToolbarIntegration(
         shouldDisplaySearchTerms = true,
         urlRenderConfiguration = ToolbarFeature.UrlRenderConfiguration(
             context.components.publicSuffixList,
-            context.getColorFromAttr(R.attr.textPrimary),
-            context.getColorFromAttr(R.attr.textSecondary),
+            if (backgroundColor != null && !isPrivate) {
+                getReadableTextColor(backgroundColor)
+            } else {
+                context.getColorFromAttr(R.attr.textPrimary)
+            },
+            if (backgroundColor != null && !isPrivate) {
+                getSecondaryReadableTextColor(backgroundColor)
+            } else {
+                context.getColorFromAttr(R.attr.textSecondary)
+            },
             renderStyle = renderStyle,
         ),
     )

@@ -8,9 +8,6 @@ import android.app.Activity
 import android.content.Context
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.graphics.ColorUtils
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -32,7 +29,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.getAppNightMode
 
 @Suppress("LongParameterList")
 class CustomTabsIntegration(
@@ -120,16 +117,6 @@ class CustomTabsIntegration(
         ),
         customTabsColorsConfig = getCustomTabsColorsConfig(),
     )
-
-    private fun Settings.getAppNightMode() = if (shouldFollowDeviceTheme) {
-        MODE_NIGHT_FOLLOW_SYSTEM
-    } else {
-        if (shouldUseLightTheme) {
-            MODE_NIGHT_NO
-        } else {
-            MODE_NIGHT_YES
-        }
-    }
 
     private fun getCustomTabsColorsConfig() = CustomTabsColorsConfig(
         updateStatusBarColor = !isPrivate,
