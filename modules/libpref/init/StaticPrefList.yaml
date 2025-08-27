@@ -17365,7 +17365,7 @@
 # 1 - AES_CBC
 - name: security.sdr.mechanism
   type: RelaxedAtomicUint32
-  value: 0
+  value: 1
   mirror: always
 
 #---------------------------------------------------------------------------
