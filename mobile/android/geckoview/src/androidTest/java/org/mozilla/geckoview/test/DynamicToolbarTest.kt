@@ -1070,6 +1070,12 @@ class DynamicToolbarTest : BaseSessionTest() {
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
     fun viewTransitionSnapshotSize() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "dom.viewTransitions.enabled" to true,
+            ),
+        )
+
         val reference = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
 
         val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
