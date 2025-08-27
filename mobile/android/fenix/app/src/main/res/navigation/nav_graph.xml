@@ -1769,6 +1769,9 @@
         <argument
             android:name="cookieBannerUIMode"
             app:argType="org.mozilla.fenix.trackingprotection.CookieBannerUIMode" />
+        <argument
+            android:name="isLocalPdf"
+            app:argType="boolean" />
         <dialog
             android:id="@+id/trustPanelFragment"
             android:name="org.mozilla.fenix.settings.trustpanel.TrustPanelFragment">
@@ -1801,6 +1804,9 @@
             <argument
                 android:name="cookieBannerUIMode"
                 app:argType="org.mozilla.fenix.trackingprotection.CookieBannerUIMode" />
+            <argument
+                android:name="isLocalPdf"
+                app:argType="boolean" />
         </dialog>
     </navigation>
     <dialog

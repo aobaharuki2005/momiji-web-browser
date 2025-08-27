@@ -168,6 +168,7 @@ class CustomTabBrowserToolbarMiddleware(
                                         sessionId = customTab.id,
                                         url = customTab.content.url,
                                         title = customTab.content.title,
+                                        isLocalPdf = customTab.content.url.isContentUrl(),
                                         isSecured = customTab.content.securityInfo.secure,
                                         sitePermissions = sitePermissions,
                                         certificateName = customTab.content.securityInfo.issuer,

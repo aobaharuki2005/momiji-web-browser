@@ -263,6 +263,7 @@ class TrustPanelFragment : BottomSheetDialogFragment() {
                             ProtectionPanel(
                                 icon = sessionState?.content?.icon,
                                 isTrackingProtectionEnabled = isTrackingProtectionEnabled,
+                                isLocalPdf = args.isLocalPdf,
                                 numberOfTrackersBlocked = numberOfTrackersBlocked,
                                 websiteInfoState = store.state.websiteInfoState,
                                 websitePermissions = websitePermissions.filter { it.isVisible },
