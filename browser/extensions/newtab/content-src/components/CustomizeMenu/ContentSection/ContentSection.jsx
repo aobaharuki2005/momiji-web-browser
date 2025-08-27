@@ -28,7 +28,7 @@ export class ContentSection extends React.PureComponent {
   }
 
   onPreferenceSelect(e) {
-    // eventSource: WEATHER | TOP_SITES | TOP_STORIES
+    // eventSource: WEATHER | TOP_SITES | TOP_STORIES | WIDGET_LISTS | WIDGET_TIMER | TRENDING_SEARCH
     const { preference, eventSource } = e.target.dataset;
     let value;
     if (e.target.nodeName === "SELECT") {

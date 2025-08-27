@@ -14467,7 +14467,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }));
   }
   onPreferenceSelect(e) {
-    // eventSource: WEATHER | TOP_SITES | TOP_STORIES
+    // eventSource: WEATHER | TOP_SITES | TOP_STORIES | WIDGET_LISTS | WIDGET_TIMER | TRENDING_SEARCH
     const {
       preference,
       eventSource
