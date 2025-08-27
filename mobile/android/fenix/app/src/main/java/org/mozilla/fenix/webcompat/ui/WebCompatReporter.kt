@@ -191,7 +191,7 @@ fun WebCompatReporter(
             ) {
                 if (Config.channel.isBeta || Config.channel.isNightlyOrDebug) {
                     Text(
-                        text = stringResource(id = R.string.webcompat_reporter_send_more_info),
+                        text = stringResource(id = R.string.webcompat_reporter_add_more_info),
                         modifier = Modifier
                             .clickable {
                                 store.dispatch(WebCompatReporterAction.SendMoreInfoClicked)
