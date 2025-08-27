@@ -180,7 +180,7 @@ class MediaCache {
   // Note mMonitor will be dropped while doing IO. The caller need
   // to handle changes happening when the monitor is not held.
   nsresult ReadCacheFile(AutoLock&, int64_t aOffset, void* aData,
-                         int32_t aLength, int32_t* aBytes);
+                         int32_t aLength);
 
   // The generated IDs are always positive.
   int64_t AllocateResourceID(AutoLock&) { return ++mNextResourceID; }
@@ -861,12 +861,11 @@ RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength,
 }
 
 nsresult MediaCache::ReadCacheFile(AutoLock&, int64_t aOffset, void* aData,
-                                   int32_t aLength, int32_t* aBytes) {
+                                   int32_t aLength) {
   if (!mBlockCache) {
     return NS_ERROR_FAILURE;
   }
-  return mBlockCache->Read(aOffset, reinterpret_cast<uint8_t*>(aData), aLength,
-                           aBytes);
+  return mBlockCache->Read(aOffset, reinterpret_cast<uint8_t*>(aData), aLength);
 }
 
 // Allowed range is whatever can be accessed with an int32_t block index.
@@ -2482,10 +2481,9 @@ Result<uint32_t, nsresult> MediaCacheStream::ReadBlockFromCache(
   // |BLOCK_SIZE - OffsetInBlock(aOffset)| <= BLOCK_SIZE
   int32_t bytesToRead =
       std::min<int32_t>(BLOCK_SIZE - OffsetInBlock(aOffset), aBuffer.Length());
-  int32_t bytesRead = 0;
   nsresult rv = mMediaCache->ReadCacheFile(
       aLock, cacheBlock * BLOCK_SIZE + OffsetInBlock(aOffset),
-      aBuffer.Elements(), bytesToRead, &bytesRead);
+      aBuffer.Elements(), bytesToRead);
 
   // Ensure |cacheBlock * BLOCK_SIZE + OffsetInBlock(aOffset)| won't overflow.
   static_assert(INT64_MAX >= BLOCK_SIZE * (uint32_t(INT32_MAX) + 1),
@@ -2503,7 +2501,7 @@ Result<uint32_t, nsresult> MediaCacheStream::ReadBlockFromCache(
                                 TimeStamp::Now());
   }
 
-  return bytesRead;
+  return bytesToRead;
 }
 
 nsresult MediaCacheStream::Read(AutoLock& aLock, char* aBuffer, uint32_t aCount,
