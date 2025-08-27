@@ -204,7 +204,7 @@
   <!-- Browser menu group that contains additional settings in collapsed state -->
   <string name="browser_menu_more_settings">עוד</string>
   <!-- Browser menu group that contains additional settings in expanded state -->
-  <string name="browser_menu_less_settings">פחות</string>
+  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">פחות</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -899,9 +899,9 @@
   -->
   <string name="wallpapers_item_name_content_description">פריט תמונת רקע: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">תמונת הרקע עודכנה!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">תמונת הרקע עודכנה!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">הצגה</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">הצגה</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">לא ניתן להוריד טפט</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
@@ -1388,8 +1388,16 @@
   <string name="tab_tray_menu_item_close">סגירת כל הלשוניות</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">הוספה לסימניות</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">יצירת סימנייה ללשוניות שנבחרו</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">סגירה</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">סגירת הלשוניות שנבחרו</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">שיתוף</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">הוספה לאוסף</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">שיתוף לשוניות נבחרות</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1737,6 +1745,8 @@
   <string name="bookmark_menu_delete_button">מחיקה</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">שמירה</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">אפשרויות מיון</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">מיון לפי סדר מותאם אישית</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1807,6 +1817,8 @@
   <string name="bookmark_search_button_content_description">חיפוש בסימניות</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">תפריט הפריט עבור %s</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">סגירת סימניות</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">אין סימניות עדיין</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -3305,6 +3317,8 @@
   <string name="protection_panel_num_trackers_blocked">רכיבי מעקב שנחסמו: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">לא נמצאו רכיבי מעקב</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">רכיבי מעקב לא נחסמים</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">הגדרות פרטיות ואבטחה</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->

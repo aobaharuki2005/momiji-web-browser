@@ -440,9 +440,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Si’hiaj sa gīnu riña raga’a: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">¡Ngà nahuin nākà sinu riña raga’a!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">¡Ngà nahuin nākà sinu riña raga’a!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Ni\'hiāj</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Ni\'hiāj</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Nu gā’hue nādunïn sinu riña raga’a</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->

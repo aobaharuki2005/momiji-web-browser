@@ -341,7 +341,7 @@
   -->
   <string name="customize_toggle_recently_visited">ఇటీవల చూసినవి</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">చూడండి</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">చూడండి</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
   <string name="wallpaper_download_error_snackbar_action">మళ్ళీ ప్రయత్నించు</string>
   <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->

@@ -291,7 +291,7 @@
   <!-- Title for the opening wallpaper settings screen -->
   <string name="customize_wallpapers">وال پیپرز</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">نظارہ</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">نظارہ</string>
   <!-- Preference for triggering sync -->
   <string name="preferences_sync_now">ابھی sync کریں</string>
   <!-- Preference category for sync -->
