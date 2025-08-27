@@ -588,7 +588,7 @@ void ViewTransition::CallUpdateCallback(ErrorResult& aRv) {
   mTimeoutTimer = NS_NewTimer();
   mTimeoutTimer->InitWithNamedFuncCallback(
       TimeoutCallback, this, StaticPrefs::dom_viewTransitions_timeout_ms(),
-      nsITimer::TYPE_ONE_SHOT, "ViewTransition::TimeoutCallback"_ns);
+      nsITimer::TYPE_ONE_SHOT, "ViewTransition::TimeoutCallback");
 }
 
 void ViewTransition::ClearTimeoutTimer() {

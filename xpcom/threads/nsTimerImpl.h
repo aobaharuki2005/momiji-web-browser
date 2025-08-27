@@ -12,7 +12,6 @@
 #include "nsIObserver.h"
 
 #include "nsCOMPtr.h"
-#include "nsString.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
@@ -79,20 +78,26 @@ class nsTimerImpl {
 
   using ObserverCallback = nsCOMPtr<nsIObserver>;
 
-  /// A raw function pointer and its closed-over state.
+  /// A raw function pointer and its closed-over state, along with its name for
+  /// logging purposes.
   struct FuncCallback {
     nsTimerCallbackFunc mFunc;
     void* mClosure;
+    const char* mName;
   };
 
-  using ClosureCallback = std::function<void(nsITimer*)>;
+  /// A callback defined by an owned closure and its name for logging purposes.
+  struct ClosureCallback {
+    std::function<void(nsITimer*)> mFunc;
+    const char* mName;
+  };
 
   using Callback =
       mozilla::Variant<UnknownCallback, InterfaceCallback, ObserverCallback,
                        FuncCallback, ClosureCallback>;
 
   nsresult InitCommon(const mozilla::TimeDuration& aDelay, uint32_t aType,
-                      const nsACString& aName, Callback&& newCallback,
+                      Callback&& newCallback,
                       const mozilla::MutexAutoLock& aProofOfLock)
       MOZ_REQUIRES(mMutex);
 
@@ -124,6 +129,9 @@ class nsTimerImpl {
            mType == nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY;
   }
 
+  void GetName(nsACString& aName, const mozilla::MutexAutoLock& aProofOfLock)
+      MOZ_REQUIRES(mMutex);
+
   // Caution: Only call this when you hold TimerThread's monitor!
   bool IsInTimerThread() const { return mIsInTimerThread; }
 
@@ -138,8 +146,7 @@ class nsTimerImpl {
 
   nsresult InitWithClosureCallback(std::function<void(nsITimer*)>&& aCallback,
                                    const mozilla::TimeDuration& aDelay,
-                                   uint32_t aType,
-                                   const nsACString& aNameString);
+                                   uint32_t aType, const char* aNameString);
 
   // Is this timer currently referenced from a TimerThread::Entry in the list?
   // ALL accesses to mIsInTimerThread are under the TimerThread's Monitor lock,
@@ -164,7 +171,6 @@ class nsTimerImpl {
 
   RefPtr<nsITimer> mITimer MOZ_GUARDED_BY(mMutex);
   mozilla::Mutex mMutex;
-  nsCString mName MOZ_GUARDED_BY(mMutex);
   Callback mCallback MOZ_GUARDED_BY(mMutex);
   // Counter because in rare cases we can Fire reentrantly
   unsigned int mFiring MOZ_GUARDED_BY(mMutex);
@@ -192,8 +198,7 @@ class nsTimer final : public nsITimer {
   // does not support forwarding rvalue references.
   nsresult InitWithClosureCallback(std::function<void(nsITimer*)>&& aCallback,
                                    const mozilla::TimeDuration& aDelay,
-                                   uint32_t aType,
-                                   const nsACString& aNameString) {
+                                   uint32_t aType, const char* aNameString) {
     return mImpl ? mImpl->InitWithClosureCallback(std::move(aCallback), aDelay,
                                                   aType, aNameString)
                  : NS_ERROR_NULL_POINTER;

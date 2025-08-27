@@ -331,7 +331,7 @@ class IdleRunnableWrapper final : public Runnable,
     MOZ_ASSERT(!mTimer);
     NS_NewTimerWithFuncCallback(getter_AddRefs(mTimer), TimedOut, this, aDelay,
                                 nsITimer::TYPE_ONE_SHOT,
-                                "IdleRunnableWrapper::SetTimer"_ns, aTarget);
+                                "IdleRunnableWrapper::SetTimer", aTarget);
   }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY

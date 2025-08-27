@@ -159,7 +159,7 @@ void ScrollbarActivity::StartFadeTimer() {
         activity->BeginFade();
       },
       this, LookAndFeel::GetInt(LookAndFeel::IntID::ScrollbarFadeBeginDelay),
-      nsITimer::TYPE_ONE_SHOT, "ScrollbarActivity::FadeBeginTimerFired"_ns);
+      nsITimer::TYPE_ONE_SHOT, "ScrollbarActivity::FadeBeginTimerFired");
 }
 
 void ScrollbarActivity::BeginFade() {

@@ -338,8 +338,7 @@ OCSPRequest::Run() {
 
   rv = NS_NewTimerWithFuncCallback(
       getter_AddRefs(mTimeoutTimer), OCSPRequest::OnTimeout, this,
-      mTimeout.ToMilliseconds(), nsITimer::TYPE_ONE_SHOT,
-      "OCSPRequest::Run"_ns);
+      mTimeout.ToMilliseconds(), nsITimer::TYPE_ONE_SHOT, "OCSPRequest::Run");
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }

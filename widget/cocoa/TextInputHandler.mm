@@ -3575,7 +3575,7 @@ void IMEInputHandler::ResetTimer() {
   }
   mTimer->InitWithNamedFuncCallback(FlushPendingMethods, this, 0,
                                     nsITimer::TYPE_ONE_SHOT,
-                                    "IMEInputHandler::FlushPendingMethods"_ns);
+                                    "IMEInputHandler::FlushPendingMethods");
 }
 
 void IMEInputHandler::ExecutePendingMethods() {

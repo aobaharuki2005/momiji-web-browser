@@ -11,7 +11,7 @@
 namespace mozilla {
 
 already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
-    const CallbackType& aCallback, const nsACString& aRunnableName,
+    const CallbackType& aCallback, const char* aRunnableName,
     TimeDuration aStartDelay, TimeDuration aMaxDelay,
     TimeDuration aMinimumUsefulBudget, bool aRepeating,
     const MayStopProcessingCallbackType& aMayStopProcessing,
@@ -59,7 +59,7 @@ class IdleTaskRunnerTask : public Task {
     if (mRunner) {
       aName.Assign(mRunner->GetName());
     } else {
-      aName = "ExpiredIdleTaskRunner"_ns;
+      aName.Assign("ExpiredIdleTaskRunner");
     }
     return true;
   }
@@ -79,7 +79,7 @@ class IdleTaskRunnerTask : public Task {
 };
 
 IdleTaskRunner::IdleTaskRunner(
-    const CallbackType& aCallback, const nsACString& aRunnableName,
+    const CallbackType& aCallback, const char* aRunnableName,
     TimeDuration aStartDelay, TimeDuration aMaxDelay,
     TimeDuration aMinimumUsefulBudget, bool aRepeating,
     const MayStopProcessingCallbackType& aMayStopProcessing,

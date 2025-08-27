@@ -2181,7 +2181,7 @@ void ContentParent::MaybeBeginShutDown(bool aImmediate,
             self->MaybeBeginShutDown(/* aImmediate */ true);
             return true;
           },
-          "ContentParent::IdleMaybeBeginShutdown"_ns, startDelay, maxDelay,
+          "ContentParent::IdleMaybeBeginShutdown", startDelay, maxDelay,
           /* aMinimumUsefulBudget */ TimeDuration::FromMilliseconds(3),
           /* aRepeating */ false, [] { return false; });
     }
@@ -2213,11 +2213,10 @@ void ContentParent::StartSendShutdownTimer() {
 
   uint32_t timeoutSecs = StaticPrefs::dom_ipc_tabs_shutdownTimeoutSecs();
   if (timeoutSecs > 0) {
-    NS_NewTimerWithFuncCallback(
-        getter_AddRefs(mSendShutdownTimer),
-        ContentParent::SendShutdownTimerCallback, this, timeoutSecs * 1000,
-        nsITimer::TYPE_ONE_SHOT,
-        "dom::ContentParent::StartSendShutdownTimer"_ns);
+    NS_NewTimerWithFuncCallback(getter_AddRefs(mSendShutdownTimer),
+                                ContentParent::SendShutdownTimerCallback, this,
+                                timeoutSecs * 1000, nsITimer::TYPE_ONE_SHOT,
+                                "dom::ContentParent::StartSendShutdownTimer");
     MOZ_ASSERT(mSendShutdownTimer);
   }
 }
@@ -2232,7 +2231,7 @@ void ContentParent::StartForceKillTimer() {
     NS_NewTimerWithFuncCallback(getter_AddRefs(mForceKillTimer),
                                 ContentParent::ForceKillTimerCallback, this,
                                 timeoutSecs * 1000, nsITimer::TYPE_ONE_SHOT,
-                                "dom::ContentParent::StartForceKillTimer"_ns);
+                                "dom::ContentParent::StartForceKillTimer");
     MOZ_ASSERT(mForceKillTimer);
   }
 }

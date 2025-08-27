@@ -34,8 +34,7 @@ bool WaitUntil(const ConditionT& aCondition, uint32_t aTimeoutMs) {
       [](nsITimer*, void* isTimeout) {
         *reinterpret_cast<bool*>(isTimeout) = true;
       },
-      &isTimeout, aTimeoutMs, nsITimer::TYPE_ONE_SHOT,
-      "TestAvailableMemoryWatcherMac"_ns);
+      &isTimeout, aTimeoutMs, nsITimer::TYPE_ONE_SHOT, __func__);
 
   SpinEventLoopUntil("TestAvailableMemoryWatcherMac"_ns, [&]() -> bool {
     if (isTimeout) {

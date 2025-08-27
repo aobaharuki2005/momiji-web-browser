@@ -105,7 +105,7 @@ class SharedSurfacesParent final {
                             nsIEventTarget* aEventTarget)
         : ExpirationTrackerImpl<gfx::SourceSurfaceSharedDataWrapper, 4,
                                 StaticMutex, StaticMutexAutoLock>(
-              aExpirationTimeoutMS, "SharedMappingTracker"_ns, aEventTarget) {}
+              aExpirationTimeoutMS, "SharedMappingTracker", aEventTarget) {}
 
     void TakeExpired(
         nsTArray<RefPtr<gfx::SourceSurfaceSharedDataWrapper>>& aExpired,

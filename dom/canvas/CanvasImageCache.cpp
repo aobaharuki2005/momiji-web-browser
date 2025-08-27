@@ -231,8 +231,7 @@ class CanvasImageCacheShutdownObserver final : public nsIObserver {
 };
 
 ImageCache::ImageCache()
-    : nsExpirationTracker<ImageCacheEntryData, 4>(GENERATION_MS,
-                                                  "ImageCache"_ns) {
+    : nsExpirationTracker<ImageCacheEntryData, 4>(GENERATION_MS, "ImageCache") {
   mImageCacheObserver = new ImageCacheObserver(this);
   MOZ_RELEASE_ASSERT(mImageCacheObserver,
                      "GFX: Can't alloc ImageCacheObserver");

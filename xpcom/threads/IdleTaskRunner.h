@@ -11,7 +11,6 @@
 #include "nsIEventTarget.h"
 #include "nsISupports.h"
 #include "nsITimer.h"
-#include "nsString.h"
 #include <functional>
 
 namespace mozilla {
@@ -58,7 +57,7 @@ class IdleTaskRunner {
   // All durations are in milliseconds.
   //
   static already_AddRefed<IdleTaskRunner> Create(
-      const CallbackType& aCallback, const nsACString& aRunnableName,
+      const CallbackType& aCallback, const char* aRunnableName,
       TimeDuration aStartDelay, TimeDuration aMaxDelay,
       TimeDuration aMinimumUsefulBudget, bool aRepeating,
       const MayStopProcessingCallbackType& aMayStopProcessing,
@@ -82,11 +81,11 @@ class IdleTaskRunner {
 
   void Schedule(bool aAllowIdleDispatch);
 
-  const nsACString& GetName() { return mName; }
+  const char* GetName() { return mName; }
 
  private:
   explicit IdleTaskRunner(
-      const CallbackType& aCallback, const nsACString& aRunnableName,
+      const CallbackType& aCallback, const char* aRunnableName,
       TimeDuration aStartDelay, TimeDuration aMaxDelay,
       TimeDuration aMinimumUsefulBudget, bool aRepeating,
       const MayStopProcessingCallbackType& aMayStopProcessing,
@@ -117,7 +116,7 @@ class IdleTaskRunner {
   bool mTimerActive;
   MayStopProcessingCallbackType mMayStopProcessing;
   RequestInterruptCallbackType mRequestInterrupt;
-  nsCString mName;
+  const char* mName;
   RefPtr<IdleTaskRunnerTask> mTask;
 };
 

@@ -1155,8 +1155,7 @@ class nsPresContext : public nsISupports,
   // Creates a one-shot timer with the given aCallback & aDelay.
   // Returns a refcounted pointer to the timer (or nullptr on failure).
   already_AddRefed<nsITimer> CreateTimer(nsTimerCallbackFunc aCallback,
-                                         const nsACString& aName,
-                                         uint32_t aDelay);
+                                         const char* aName, uint32_t aDelay);
 
   struct TransactionInvalidations {
     TransactionId mTransactionId;

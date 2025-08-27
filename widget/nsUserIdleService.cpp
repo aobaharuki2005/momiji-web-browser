@@ -129,7 +129,7 @@ nsUserIdleServiceDaily::Observe(nsISupports*, const char* aTopic,
   // Start timer for the next check in one day.
   (void)mTimer->InitWithNamedFuncCallback(
       DailyCallback, this, SECONDS_PER_DAY * PR_MSEC_PER_SEC,
-      nsITimer::TYPE_ONE_SHOT, "nsUserIdleServiceDaily::Observe"_ns);
+      nsITimer::TYPE_ONE_SHOT, "nsUserIdleServiceDaily::Observe");
 
   return NS_OK;
 }
@@ -206,7 +206,7 @@ void nsUserIdleServiceDaily::Init() {
 
     (void)mTimer->InitWithNamedFuncCallback(
         DailyCallback, this, milliSecLeftUntilDaily, nsITimer::TYPE_ONE_SHOT,
-        "nsUserIdleServiceDaily::Init"_ns);
+        "nsUserIdleServiceDaily::Init");
   }
 }
 
@@ -264,7 +264,7 @@ void nsUserIdleServiceDaily::DailyCallback(nsITimer* aTimer, void* aClosure) {
 
     (void)self->mTimer->InitWithNamedFuncCallback(
         DailyCallback, self, delayTime / PR_USEC_PER_MSEC,
-        nsITimer::TYPE_ONE_SHOT, "nsUserIdleServiceDaily::DailyCallback"_ns);
+        nsITimer::TYPE_ONE_SHOT, "nsUserIdleServiceDaily::DailyCallback");
     return;
   }
 
@@ -857,8 +857,7 @@ void nsUserIdleService::SetTimerExpiryIfBefore(TimeStamp aNextTimeout) {
     // Start the timer
     mTimer->InitWithNamedFuncCallback(
         StaticIdleTimerCallback, this, deltaTime.ToMilliseconds(),
-        nsITimer::TYPE_ONE_SHOT,
-        "nsUserIdleService::SetTimerExpiryIfBefore"_ns);
+        nsITimer::TYPE_ONE_SHOT, "nsUserIdleService::SetTimerExpiryIfBefore");
   }
 }
 

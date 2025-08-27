@@ -1726,7 +1726,7 @@ void PresShell::InitPaintSuppressionTimer() {
         self->UnsuppressPainting();
       },
       this, delay, nsITimer::TYPE_ONE_SHOT,
-      "PresShell::sPaintSuppressionCallback"_ns);
+      "PresShell::sPaintSuppressionCallback");
 }
 
 nsresult PresShell::Initialize() {

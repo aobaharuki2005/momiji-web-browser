@@ -1260,7 +1260,7 @@ void AppleVTEncoder::ForceOutputIfNeeded() {
         self->MaybeResolveOrRejectEncodePromise();
       },
       TimeDuration::FromMilliseconds(50), nsITimer::TYPE_ONE_SHOT,
-      "EncodingProgressChecker"_ns, mTaskQueue);
+      "EncodingProgressChecker", mTaskQueue);
   if (r.isErr()) {
     LOGE(
         "Failed to set an encoding progress checker. Resolve the pending "

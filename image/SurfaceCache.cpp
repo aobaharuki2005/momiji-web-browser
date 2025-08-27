@@ -1516,7 +1516,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     explicit SurfaceTracker(uint32_t aSurfaceCacheExpirationTimeMS)
         : ExpirationTrackerImpl<CachedSurface, 2, StaticMutex,
                                 StaticMutexAutoLock>(
-              aSurfaceCacheExpirationTimeMS, "SurfaceTracker"_ns) {}
+              aSurfaceCacheExpirationTimeMS, "SurfaceTracker") {}
 
    protected:
     void NotifyExpiredLocked(CachedSurface* aSurface,

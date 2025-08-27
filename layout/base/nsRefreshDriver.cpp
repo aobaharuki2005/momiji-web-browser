@@ -427,7 +427,7 @@ class SimpleTimerBasedRefreshDriverTimer : public RefreshDriverTimer {
     uint32_t delay = static_cast<uint32_t>(mRateMilliseconds);
     mTimer->InitWithNamedFuncCallback(
         TimerTick, this, delay, nsITimer::TYPE_ONE_SHOT,
-        "SimpleTimerBasedRefreshDriverTimer::StartTimer"_ns);
+        "SimpleTimerBasedRefreshDriverTimer::StartTimer");
   }
 
   void StopTimer() override { mTimer->Cancel(); }
@@ -1025,7 +1025,7 @@ class StartupRefreshDriverTimer : public SimpleTimerBasedRefreshDriverTimer {
         static_cast<uint32_t>((newTarget - aNowTime).ToMilliseconds());
     mTimer->InitWithNamedFuncCallback(
         TimerTick, this, delay, nsITimer::TYPE_ONE_SHOT,
-        "StartupRefreshDriverTimer::ScheduleNextTick"_ns);
+        "StartupRefreshDriverTimer::ScheduleNextTick");
     mTargetTime = newTarget;
   }
 
@@ -1095,9 +1095,9 @@ class InactiveRefreshDriverTimer final
     mTargetTime = mLastFireTime + mRateDuration;
 
     uint32_t delay = static_cast<uint32_t>(mRateMilliseconds);
-    mTimer->InitWithNamedFuncCallback(
-        TimerTickOne, this, delay, nsITimer::TYPE_ONE_SHOT,
-        "InactiveRefreshDriverTimer::StartTimer"_ns);
+    mTimer->InitWithNamedFuncCallback(TimerTickOne, this, delay,
+                                      nsITimer::TYPE_ONE_SHOT,
+                                      "InactiveRefreshDriverTimer::StartTimer");
     mIsTicking = true;
   }
 
@@ -1125,7 +1125,7 @@ class InactiveRefreshDriverTimer final
     uint32_t delay = static_cast<uint32_t>(mNextTickDuration);
     mTimer->InitWithNamedFuncCallback(
         TimerTickOne, this, delay, nsITimer::TYPE_ONE_SHOT,
-        "InactiveRefreshDriverTimer::ScheduleNextTick"_ns);
+        "InactiveRefreshDriverTimer::ScheduleNextTick");
 
     LOG("[%p] inactive timer next tick in %f ms [index %d/%d]", this,
         mNextTickDuration, mNextDriverIndex, GetRefreshDriverCount());

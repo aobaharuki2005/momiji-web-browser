@@ -3735,7 +3735,7 @@ nsresult CacheFileIOManager::StartRemovingTrash() {
     return NS_NewTimerWithFuncCallback(
         getter_AddRefs(mTrashTimer), CacheFileIOManager::OnTrashTimer, nullptr,
         kRemoveTrashStartDelay - elapsed, nsITimer::TYPE_ONE_SHOT,
-        "net::CacheFileIOManager::StartRemovingTrash"_ns, ioTarget);
+        "net::CacheFileIOManager::StartRemovingTrash", ioTarget);
   }
 
   nsCOMPtr<nsIRunnable> ev;

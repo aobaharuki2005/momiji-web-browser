@@ -893,7 +893,7 @@ void ScheduleWantsLaterTimer(uint32_t aWantsLaterDelay) {
     auto res = NS_NewTimerWithFuncCallback(
         CheckIdleMemoryCleanupNeeded, (void*)"IdleMemoryCleanupWantsLaterCheck",
         aWantsLaterDelay, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-        "IdleMemoryCleanupWantsLaterCheck"_ns);
+        "IdleMemoryCleanupWantsLaterCheck");
     if (res.isOk()) {
       sIdleMemoryCleanupWantsLater = res.unwrap().forget();
     } else {
@@ -906,7 +906,7 @@ void ScheduleWantsLaterTimer(uint32_t aWantsLaterDelay) {
     timerInitOK = sIdleMemoryCleanupWantsLater->InitWithNamedFuncCallback(
         CheckIdleMemoryCleanupNeeded, (void*)"IdleMemoryCleanupWantsLaterCheck",
         aWantsLaterDelay, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-        "IdleMemoryCleanupWantsLaterCheck"_ns);
+        "IdleMemoryCleanupWantsLaterCheck");
   }
   if (NS_SUCCEEDED(timerInitOK)) {
     sIdleMemoryCleanupWantsLaterScheduled = true;
@@ -932,7 +932,7 @@ void ScheduleIdleMemoryCleanup(uint32_t aWantsLaterDelay) {
       [aWantsLaterDelay](TimeStamp aDeadline) {
         return RunIdleMemoryCleanup(aDeadline, aWantsLaterDelay);
       },
-      "TaskController::IdlePurgeRunner"_ns, TimeDuration(), maxPurgeDelay,
+      "TaskController::IdlePurgeRunner", TimeDuration(), maxPurgeDelay,
       minPurgeBudget, true, nullptr, nullptr);
 }
 }  // namespace mozilla

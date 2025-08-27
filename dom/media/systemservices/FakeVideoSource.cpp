@@ -54,7 +54,7 @@ int32_t FakeVideoSource::StartCapture(int32_t aWidth, int32_t aHeight,
         capturer->GenerateImage();
       },
       this, aFrameInterval, nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
-      "FakeVideoSource::GenerateFrame"_ns);
+      "FakeVideoSource::GenerateFrame");
 
   return 0;
 }

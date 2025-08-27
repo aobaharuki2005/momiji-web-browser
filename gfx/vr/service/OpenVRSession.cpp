@@ -1384,7 +1384,7 @@ void OpenVRSession::StartHapticTimer() {
     mHapticTimer->InitWithNamedFuncCallback(
         HapticTimerCallback, this, kVRHapticUpdateInterval,
         nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
-        "OpenVRSession::HapticTimerCallback"_ns);
+        "OpenVRSession::HapticTimerCallback");
   }
 }
 

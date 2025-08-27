@@ -179,7 +179,7 @@ SpinEventLoopUntilRet SpinEventLoopUntil(
   bool timedOut = false;
   auto timer = UNWRAP(NS_NewTimerWithCallback(
       [&](nsITimer*) { timedOut = true; }, aDuration, nsITimer::TYPE_ONE_SHOT,
-      "SpinEventLoop timer"_ns, currentThread));
+      "SpinEventLoop timer", currentThread));
   auto onExitCancelTimer = mozilla::MakeScopeExit([&] { timer->Cancel(); });
 
   bool const ret = mozilla::SpinEventLoopUntil(

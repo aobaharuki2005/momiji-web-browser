@@ -30,7 +30,7 @@ class ActiveResource {
 class ActiveResourceTracker final
     : public nsExpirationTracker<ActiveResource, 3> {
  public:
-  ActiveResourceTracker(uint32_t aExpirationCycle, const nsACString& aName,
+  ActiveResourceTracker(uint32_t aExpirationCycle, const char* aName,
                         nsIEventTarget* aEventTarget)
       : nsExpirationTracker(aExpirationCycle, aName, aEventTarget) {}
 

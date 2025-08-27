@@ -605,7 +605,7 @@ void WebrtcGlobalInformation::AdjustTimerReferences(
             },
             nullptr, WebrtcGlobalStatsHistory::Pref::PollIntervalMs(),
             nsITimer::TYPE_REPEATING_SLACK,
-            "WebrtcGlobalInformation::GatherHistory"_ns);
+            "WebrtcGlobalInformation::GatherHistory");
       }
       ClearOnShutdown(&sHistoryTimer);
     }

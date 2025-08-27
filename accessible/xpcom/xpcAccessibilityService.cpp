@@ -90,7 +90,7 @@ xpcAccessibilityService::Release(void) {
   if (count == 1 && !mShutdownTimer) {
     NS_NewTimerWithFuncCallback(
         getter_AddRefs(mShutdownTimer), ShutdownCallback, this, 100,
-        nsITimer::TYPE_ONE_SHOT, "xpcAccessibilityService::Release"_ns);
+        nsITimer::TYPE_ONE_SHOT, "xpcAccessibilityService::Release");
   }
 
   return count;

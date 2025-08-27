@@ -3732,7 +3732,7 @@ void ScriptLoader::ProcessPendingRequestsAsyncBypassParserBlocking() {
   // async scripts forever.
   mProcessPendingRequestsAsyncBypassParserBlocking->InitWithNamedFuncCallback(
       ProcessPendingRequestsCallback, this, 2500, nsITimer::TYPE_ONE_SHOT,
-      "ProcessPendingRequestsAsyncBypassParserBlocking"_ns);
+      "ProcessPendingRequestsAsyncBypassParserBlocking");
 }
 
 void ScriptLoader::ProcessPendingRequests(bool aAllowBypassingParserBlocking) {

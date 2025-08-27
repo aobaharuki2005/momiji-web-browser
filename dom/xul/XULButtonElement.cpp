@@ -317,10 +317,10 @@ void XULButtonElement::StartBlinking() {
               self->StopBlinking();
             },
             aClosure, kBlinkDelay, nsITimer::TYPE_ONE_SHOT,
-            "XULButtonElement::ContinueBlinking"_ns);
+            "XULButtonElement::ContinueBlinking");
       },
       this, kBlinkDelay, nsITimer::TYPE_ONE_SHOT,
-      "XULButtonElement::StartBlinking"_ns, GetMainThreadSerialEventTarget());
+      "XULButtonElement::StartBlinking", GetMainThreadSerialEventTarget());
 }
 
 void XULButtonElement::UnbindFromTree(UnbindContext& aContext) {
@@ -531,7 +531,7 @@ void XULButtonElement::PostHandleEventForMenus(
           self->OpenMenuPopup(false);
         },
         this, MenuOpenCloseDelay(), nsITimer::TYPE_ONE_SHOT,
-        "XULButtonElement::OpenMenu"_ns, GetMainThreadSerialEventTarget());
+        "XULButtonElement::OpenMenu", GetMainThreadSerialEventTarget());
   }
 }
 

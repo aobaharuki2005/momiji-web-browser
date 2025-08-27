@@ -180,8 +180,7 @@ void MIDIPermissionRequest::CancelWithRandomizedDelay() {
   RefPtr<MIDIPermissionRequest> self = this;
   NS_NewTimerWithCallback(
       getter_AddRefs(mCancelTimer), [=](auto) { self->Cancel(); }, delay,
-      nsITimer::TYPE_ONE_SHOT,
-      "MIDIPermissionRequest::CancelWithRandomizedDelay"_ns);
+      nsITimer::TYPE_ONE_SHOT, __func__);
 }
 
 nsresult MIDIPermissionRequest::DoPrompt() {
