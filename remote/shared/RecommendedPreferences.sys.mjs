@@ -216,6 +216,7 @@ const COMMON_PREFERENCES = new Map([
   ["datareporting.policy.dataSubmissionEnabled", false],
   ["datareporting.policy.dataSubmissionPolicyAccepted", false],
   ["datareporting.policy.dataSubmissionPolicyBypassNotification", true],
+  ["datareporting.usage.uploadEnabled", false],
 
   // Disable popup-blocker
   ["dom.disable_open_during_load", false],
