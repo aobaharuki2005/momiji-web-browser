@@ -756,7 +756,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mOverriddenFingerprintingSettingsIsSet(
           rhs.mOverriddenFingerprintingSettingsIsSet),
 #endif
-      mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy),
       mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
           rhs.mIsOriginTrialCoepCredentiallessEnabledForTopLevel),
       mUnstrippedURI(rhs.mUnstrippedURI),
@@ -804,7 +803,6 @@ LoadInfo::LoadInfo(
     nsILoadInfo::IPAddressSpace aIPAddressSpace,
     const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
     nsINode* aLoadingContext,
-    nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
     bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
     nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
     bool aHasInjectedCookieForCookieBannerHandling,
@@ -860,7 +858,6 @@ LoadInfo::LoadInfo(
       mParentIPAddressSpace(aParentIPAddressSpace),
       mIPAddressSpace(aIPAddressSpace),
       mOverriddenFingerprintingSettings(aOverriddenFingerprintingSettings),
-      mLoadingEmbedderPolicy(aLoadingEmbedderPolicy),
       mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
           aIsOriginTrialCoepCredentiallessEnabledForTopLevel),
       mUnstrippedURI(aUnstrippedURI),
@@ -2078,20 +2075,6 @@ LoadInfo::GetFetchDestination(nsACString& aDestination) {
   aDestination.Assign(
       GetEnumString(InternalRequest::MapContentPolicyTypeToRequestDestination(
           mInternalContentPolicyType)));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetLoadingEmbedderPolicy(
-    nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) {
-  *aOutPolicy = mLoadingEmbedderPolicy;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetLoadingEmbedderPolicy(
-    nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) {
-  mLoadingEmbedderPolicy = aPolicy;
   return NS_OK;
 }
 

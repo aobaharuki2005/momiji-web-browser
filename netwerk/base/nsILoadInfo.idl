@@ -1595,6 +1595,10 @@ interface nsILoadInfo : nsISupports
    * innerWindowIID in the nsILoadInfo.
    * It also could be set by workers when fetch is called under
    * the workers' scope.
+   *
+   * If the value is nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP, CORP checking
+   * must be performed for the loading.
+   * See https://wicg.github.io/cross-origin-embedder-policy/#corp-check.
    */
   [infallible] attribute nsILoadInfo_CrossOriginEmbedderPolicy
         loadingEmbedderPolicy;
