@@ -675,6 +675,24 @@ private fun BookmarksListTopBar(
                                 tint = iconColor,
                             )
                         }
+
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
+                                    contentDescription = stringResource(
+                                        R.string.content_description_menu,
+                                    ),
+                                    tint = iconColor,
+                                )
+                            }
+
+                            FolderListOverflowMenu(
+                                showFolderMenu = showMenu,
+                                onDismissRequest = { showMenu = false },
+                                store = store,
+                            )
+                        }
                     }
                     else -> {
                         if (selectedItems.size == 1) {
@@ -1065,6 +1083,39 @@ private fun BookmarkListOverflowMenu(
     ContextualMenu(
         menuItems = menuItems,
         showMenu = showMenu,
+        onDismissRequest = onDismissRequest,
+    )
+}
+
+@Composable
+@Suppress("Deprecation") // https://bugzilla.mozilla.org/show_bug.cgi?id=1927718
+private fun FolderListOverflowMenu(
+    showFolderMenu: Boolean,
+    onDismissRequest: () -> Unit,
+    store: BookmarksStore,
+) {
+    val menuItems = listOf(
+        MenuItem(
+            title = stringResource(R.string.bookmark_menu_select_all_bookmarks),
+            onClick = { store.dispatch(BookmarksListMenuAction.SelectAll) },
+        ),
+        MenuItem(
+            title = stringResource(R.string.bookmark_menu_open_in_new_tab_button),
+            onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.OpenInNormalTabsClicked) },
+        ),
+        MenuItem(
+            title = stringResource(R.string.bookmark_menu_open_in_private_tab_button),
+            onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.OpenInPrivateTabsClicked) },
+        ),
+        MenuItem(
+            title = stringResource(R.string.bookmark_menu_delete_button),
+            color = FirefoxTheme.colors.textCritical,
+            onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.DeleteClicked) },
+        ),
+    )
+    ContextualMenu(
+        menuItems = menuItems,
+        showMenu = showFolderMenu,
         onDismissRequest = onDismissRequest,
     )
 }
