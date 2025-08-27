@@ -159,10 +159,8 @@ class MediaResourceIndex : public DecoderDoctorLifeLogger<MediaResourceIndex> {
 
   // Read up to aCount bytes from the stream. The buffer must have
   // enough room for at least aCount bytes. Stores the number of
-  // actual bytes read in aBytes (0 on end of file).
-  // May read less than aCount bytes if the number of
-  // available bytes is less than aCount. Always check *aBytes after
-  // read, and call again if necessary.
+  // actual bytes read in *aBytes. This can be less than aCount on end
+  // of stream or error.
   nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
   // Seek to the given bytes offset in the stream. aWhence can be
   // one of:
