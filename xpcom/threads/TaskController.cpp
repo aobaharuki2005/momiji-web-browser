@@ -888,6 +888,7 @@ void ScheduleWantsLaterTimer(uint32_t aWantsLaterDelay) {
     sIdleMemoryCleanupRunner->Cancel();
     sIdleMemoryCleanupRunner = nullptr;
   }
+  nsresult timerInitOK = NS_OK;
   if (!sIdleMemoryCleanupWantsLater) {
     auto res = NS_NewTimerWithFuncCallback(
         CheckIdleMemoryCleanupNeeded, (void*)"IdleMemoryCleanupWantsLaterCheck",
@@ -895,17 +896,29 @@ void ScheduleWantsLaterTimer(uint32_t aWantsLaterDelay) {
         "IdleMemoryCleanupWantsLaterCheck");
     if (res.isOk()) {
       sIdleMemoryCleanupWantsLater = res.unwrap().forget();
+    } else {
+      timerInitOK = res.unwrapErr();
     }
   } else {
     if (sIdleMemoryCleanupWantsLaterScheduled) {
       sIdleMemoryCleanupWantsLater->Cancel();
     }
-    sIdleMemoryCleanupWantsLater->InitWithNamedFuncCallback(
+    timerInitOK = sIdleMemoryCleanupWantsLater->InitWithNamedFuncCallback(
         CheckIdleMemoryCleanupNeeded, (void*)"IdleMemoryCleanupWantsLaterCheck",
         aWantsLaterDelay, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
         "IdleMemoryCleanupWantsLaterCheck");
   }
-  sIdleMemoryCleanupWantsLaterScheduled = true;
+  if (NS_SUCCEEDED(timerInitOK)) {
+    sIdleMemoryCleanupWantsLaterScheduled = true;
+  } else {
+    // Under normal conditions, we would never expect this to fail.
+    MOZ_ASSERT_UNREACHABLE(
+        "ScheduleWantsLaterTimer could not create the timer.");
+    // If we were not able to create/init the timer, we will retry the next
+    // time the main thread is about to fall idle. But if we were to stay
+    // idle, we would never purge without this emergency purge.
+    jemalloc_free_dirty_pages();
+  }
 }
 
 void ScheduleIdleMemoryCleanup(uint32_t aWantsLaterDelay) {
