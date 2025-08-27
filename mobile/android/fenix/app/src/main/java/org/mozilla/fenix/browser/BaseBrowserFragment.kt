@@ -427,6 +427,8 @@ abstract class BaseBrowserFragment :
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
         val profilerStartTime = requireComponents.core.engine.profiler?.getProfilerTime()
 
+        browserScreenStore = buildBrowserScreenStore()
+
         initializeUI(view)
 
         appLinksFeature.set(
@@ -1299,7 +1301,6 @@ abstract class BaseBrowserFragment :
         store: BrowserStore,
         readerModeController: DefaultReaderModeController,
     ): BrowserToolbarComposable {
-        browserScreenStore = buildBrowserScreenStore()
         val toolbarStore = buildToolbarStore(activity, readerModeController)
 
         browserNavigationBar =

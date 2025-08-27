@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.translations
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,13 +45,13 @@ fun TranslationToolbar(
         modifier = Modifier
             .fillMaxWidth()
             .height(40.dp)
-            .clip(shape)
-            .background(Color.Transparent),
+            .clip(shape),
+        color = AcornTheme.colors.layer1.copy(alpha = 0.87f),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(start = 16.dp, end = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
@@ -81,8 +79,6 @@ fun TranslationToolbar(
                     tint = AcornTheme.colors.iconPrimary,
                 )
             }
-
-            Spacer(modifier = Modifier.width(4.dp))
 
             IconButton(
                 onClick = {},

@@ -35,6 +35,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.isContentUrl
 import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.AddressToolbar
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.R
@@ -70,6 +71,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
     private val translationsBinding = ViewBoundFeatureWrapper<TranslationsBinding>()
+    private val translationsBannerIntegration = ViewBoundFeatureWrapper<TranslationsBannerIntegration>()
 
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
@@ -126,6 +128,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 initBrowserToolbarComposableUpdates(view)
             }
         }
+        initTranslationsUpdates(view)
 
         thumbnailsFeature.set(
             feature = BrowserThumbnails(context, binding.engineView, components.core.store),
@@ -168,7 +171,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private fun initBrowserToolbarComposableUpdates(rootView: View) {
         initReaderModeUpdates(rootView.context, rootView)
-        initTranslationsUpdates(rootView.context, rootView)
         QrScannerBinding.register(this)
         initVoiceSearchSupport(rootView.context)
     }
@@ -271,23 +273,34 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         )
     }
 
-    private fun initTranslationsUpdates(context: Context, view: View) {
-        if (!FxNimbus.features.translations.value().mainFlowToolbarEnabled) return
+    private fun initTranslationsUpdates(rootView: View) {
+        if (Config.channel.isDebug) {
+            translationsBannerIntegration.set(
+                feature = TranslationsBannerIntegration(
+                    browserScreenStore = browserScreenStore,
+                    binding = binding,
+                ),
+                owner = this,
+                view = rootView,
+            )
+        }
 
-        translationsBinding.set(
-            feature = TranslationsBinding(
-                browserStore = context.components.core.store,
-                browserScreenStore = browserScreenStore,
-                appStore = context.components.appStore,
-                onTranslationStatusUpdate = {
-                    translationsAvailable = it.isTranslationPossible
-                },
-                onShowTranslationsDialog = browserToolbarInteractor::onTranslationsButtonClicked,
-                navController = findNavController(),
-            ),
-            owner = this,
-            view = view,
-        )
+        if (FxNimbus.features.translations.value().mainFlowToolbarEnabled) {
+            translationsBinding.set(
+                feature = TranslationsBinding(
+                    browserStore = rootView.context.components.core.store,
+                    browserScreenStore = browserScreenStore,
+                    appStore = rootView.context.components.appStore,
+                    onTranslationStatusUpdate = {
+                        translationsAvailable = it.isTranslationPossible
+                    },
+                    onShowTranslationsDialog = browserToolbarInteractor::onTranslationsButtonClicked,
+                    navController = findNavController(),
+                ),
+                owner = this,
+                view = rootView,
+            )
+        }
     }
 
     private fun initVoiceSearchSupport(context: Context) {
