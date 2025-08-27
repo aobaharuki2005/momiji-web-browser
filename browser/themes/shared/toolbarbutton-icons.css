@@ -329,3 +329,13 @@
     stroke: var(--icon-color-critical);
   }
 }
+
+#taskbar-tabs-favicon {
+  margin: auto 8px;
+  height: var(--icon-size);
+  width: var(--icon-size);
+
+  :root:not([taskbartab]) & {
+    display: none;
+  }
+}

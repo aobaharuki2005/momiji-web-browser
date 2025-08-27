@@ -2,6 +2,10 @@
 http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  Favicons: ["@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
+});
+
 // Given a window, check if it meets all requirements
 // of the taskbar tab chrome UI
 function checkWindowChrome(win) {
@@ -109,3 +113,51 @@ add_task(async function testOpenWindowChrome() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function testFaviconUpdates() {
+  const win = await openTaskbarTabWindow();
+  const favicon = win.document.getElementById("taskbar-tabs-favicon");
+  const tab = win.gBrowser.selectedTab;
+
+  is(favicon.src, Favicons.defaultFavicon.spec, "starts with default favicon");
+
+  let promise = Promise.all([
+    waitForTabAttributeChange(tab, "image"),
+    BrowserTestUtils.browserLoaded(tab.linkedBrowser),
+  ]);
+  BrowserTestUtils.startLoadingURIString(
+    tab.linkedBrowser,
+    "data:text/html,<link rel='shortcut icon' href='https://example.com/favicon.ico'>"
+  );
+  await promise;
+
+  is(favicon.src, win.gBrowser.getIcon(tab), "updates favicon when changed");
+
+  promise = Promise.all([
+    waitForTabAttributeChange(tab, "busy").then(() =>
+      waitForTabAttributeChange(tab, "busy")
+    ),
+    BrowserTestUtils.browserLoaded(tab.linkedBrowser),
+  ]);
+  BrowserTestUtils.startLoadingURIString(
+    tab.linkedBrowser,
+    "data:text/html,<meta charset='utf-8'>"
+  );
+  await promise;
+
+  is(favicon.src, Favicons.defaultFavicon.spec, "ends with default favicon");
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+async function waitForTabAttributeChange(aTab, aEvent) {
+  return await new Promise(resolve => {
+    const callback = e => {
+      if (e.detail.changed.includes(aEvent)) {
+        aTab.removeEventListener("TabAttrModified", callback);
+        resolve();
+      }
+    };
+    aTab.addEventListener("TabAttrModified", callback);
+  });
+}
