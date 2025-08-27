@@ -24,6 +24,7 @@
 #include "nsICookie.h"
 #include "nsIGlobalObject.h"
 #include "nsIPrincipal.h"
+#include "nsIURL.h"
 #include "nsReadableUtils.h"
 #include "nsSandboxFlags.h"
 
@@ -191,14 +192,26 @@ bool ValidateCookiePath(nsIURI* aURI, const nsAString& aPath,
   aRetPath = aPath;
 
   if (aRetPath.IsEmpty()) {
-    nsAutoCString pathFromURI;
-    nsresult rv = aURI->GetFilePath(pathFromURI);
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+
+    if (!url) {
+      aPromise->MaybeRejectWithNotAllowedError("Permission denied");
+      return false;
+    }
+
+    nsAutoCString directory;
+    nsresult rv = url->GetDirectory(directory);
+
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aPromise->MaybeRejectWithNotAllowedError("Permission denied");
       return false;
     }
 
-    CopyUTF8toUTF16(pathFromURI, aRetPath);
+    if (!directory.IsEmpty() && directory.Last() == '/') {
+      directory.Truncate(directory.Length() - 1);
+    }
+
+    CopyUTF8toUTF16(directory, aRetPath);
   }
 
   if (aRetPath[0] != '/') {
