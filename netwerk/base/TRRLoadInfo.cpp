@@ -615,18 +615,6 @@ nsIInterceptionInfo* TRRLoadInfo::InterceptionInfo() { return nullptr; }
 void TRRLoadInfo::SetInterceptionInfo(nsIInterceptionInfo* aPrincipla) {}
 
 NS_IMETHODIMP
-TRRLoadInfo::GetHasInjectedCookieForCookieBannerHandling(
-    bool* aHasInjectedCookieForCookieBannerHandling) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetHasInjectedCookieForCookieBannerHandling(
-    bool aHasInjectedCookieForCookieBannerHandling) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetSchemelessInput(
     nsILoadInfo::SchemelessInputType* aSchemelessInput) {
   *aSchemelessInput = nsILoadInfo::SchemelessInputTypeUnset;
@@ -636,28 +624,6 @@ TRRLoadInfo::GetSchemelessInput(
 NS_IMETHODIMP
 TRRLoadInfo::SetSchemelessInput(
     nsILoadInfo::SchemelessInputType aSchemelessInput) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetHttpsUpgradeTelemetry(
-    nsILoadInfo::HTTPSUpgradeTelemetryType* aOutHttpsTelemetry) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetHttpsUpgradeTelemetry(
-    nsILoadInfo::HTTPSUpgradeTelemetryType aHttpsTelemetry) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetIsNewWindowTarget(bool* aIsNewWindowTarget) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetIsNewWindowTarget(bool aIsNewWindowTarget) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -184,7 +184,18 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
                                                                                \
   GETTER(bool, IsOriginTrialCoepCredentiallessEnabledForTopLevel,              \
          originTrialCoepCredentiallessEnabledForTopLevel, false)               \
-  SETTER(bool, IsOriginTrialCoepCredentiallessEnabledForTopLevel)
+  SETTER(bool, IsOriginTrialCoepCredentiallessEnabledForTopLevel)              \
+                                                                               \
+  GETTER(bool, HasInjectedCookieForCookieBannerHandling,                       \
+         hasInjectedCookieForCookieBannerHandling, false)                      \
+  SETTER(bool, HasInjectedCookieForCookieBannerHandling)                       \
+                                                                               \
+  GETTER(nsILoadInfo::HTTPSUpgradeTelemetryType, HttpsUpgradeTelemetry,        \
+         httpsUpgradeTelemetry, nsILoadInfo::NOT_INITIALIZED)                  \
+  SETTER(nsILoadInfo::HTTPSUpgradeTelemetryType, HttpsUpgradeTelemetry)        \
+                                                                               \
+  GETTER(bool, IsNewWindowTarget, isNewWindowTarget, false)                    \
+  SETTER(bool, IsNewWindowTarget)
 
 // Heads-up: LoadInfoToLoadInfoArgs still needs to be manually updated.
 
@@ -395,12 +406,9 @@ class LoadInfo final : public nsILoadInfo {
            nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
            nsILoadInfo::IPAddressSpace aIPAddressSpace,
            const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
-           nsINode* aLoadingContext,
-           nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
-           bool aHasInjectedCookieForCookieBannerHandling,
+           nsINode* aLoadingContext, nsIURI* aUnstrippedURI,
+           nsIInterceptionInfo* aInterceptionInfo,
            nsILoadInfo::SchemelessInputType aSchemelessInput,
-           nsILoadInfo::HTTPSUpgradeTelemetryType aHttpsUpgradeTelemetry,
-           bool aIsNewWindowTarget,
            dom::UserNavigationInvolvement aUserNavigationInvolvement);
 
   LoadInfo(const LoadInfo& rhs);
@@ -513,17 +521,12 @@ class LoadInfo final : public nsILoadInfo {
 
   nsCOMPtr<nsIInterceptionInfo> mInterceptionInfo;
 
-  bool mHasInjectedCookieForCookieBannerHandling = false;
   nsILoadInfo::SchemelessInputType mSchemelessInput =
       nsILoadInfo::SchemelessInputTypeUnset;
-
-  nsILoadInfo::HTTPSUpgradeTelemetryType mHttpsUpgradeTelemetry =
-      nsILoadInfo::NOT_INITIALIZED;
 
   dom::UserNavigationInvolvement mUserNavigationInvolvement =
       dom::UserNavigationInvolvement::None;
 
-  bool mIsNewWindowTarget = false;
   bool mSkipHTTPSUpgrade = false;
 };
 // This is exposed solely for testing purposes and should not be used outside of

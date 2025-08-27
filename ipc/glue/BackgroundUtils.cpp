@@ -889,10 +889,7 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       loadInfoArgs.parentIPAddressSpace(), loadInfoArgs.ipAddressSpace(),
       overriddenFingerprintingSettings, loadingContext,
       loadInfoArgs.unstrippedURI(), interceptionInfo,
-      loadInfoArgs.hasInjectedCookieForCookieBannerHandling(),
-      loadInfoArgs.schemelessInput(), loadInfoArgs.httpsUpgradeTelemetry(),
-      loadInfoArgs.isNewWindowTarget(),
-      loadInfoArgs.userNavigationInvolvement());
+      loadInfoArgs.schemelessInput(), loadInfoArgs.userNavigationInvolvement());
 
   loadInfo.forget(outLoadInfo);
   return NS_OK;

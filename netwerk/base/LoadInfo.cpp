@@ -758,11 +758,9 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
 #endif
       mUnstrippedURI(rhs.mUnstrippedURI),
       mInterceptionInfo(rhs.mInterceptionInfo),
-      mHasInjectedCookieForCookieBannerHandling(
-          rhs.mHasInjectedCookieForCookieBannerHandling),
       mSchemelessInput(rhs.mSchemelessInput),
-      mHttpsUpgradeTelemetry(rhs.mHttpsUpgradeTelemetry),
-      mIsNewWindowTarget(rhs.mIsNewWindowTarget) {
+      mUserNavigationInvolvement(rhs.mUserNavigationInvolvement),
+      mSkipHTTPSUpgrade(rhs.mSkipHTTPSUpgrade) {
 }
 
 LoadInfo::LoadInfo(
@@ -800,12 +798,9 @@ LoadInfo::LoadInfo(
     nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
     nsILoadInfo::IPAddressSpace aIPAddressSpace,
     const Maybe<RFPTargetSet>& aOverriddenFingerprintingSettings,
-    nsINode* aLoadingContext,
-    nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
-    bool aHasInjectedCookieForCookieBannerHandling,
+    nsINode* aLoadingContext, nsIURI* aUnstrippedURI,
+    nsIInterceptionInfo* aInterceptionInfo,
     nsILoadInfo::SchemelessInputType aSchemelessInput,
-    nsILoadInfo::HTTPSUpgradeTelemetryType aHttpsUpgradeTelemetry,
-    bool aIsNewWindowTarget,
     dom::UserNavigationInvolvement aUserNavigationInvolvement)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
@@ -857,12 +852,8 @@ LoadInfo::LoadInfo(
       mOverriddenFingerprintingSettings(aOverriddenFingerprintingSettings),
       mUnstrippedURI(aUnstrippedURI),
       mInterceptionInfo(aInterceptionInfo),
-      mHasInjectedCookieForCookieBannerHandling(
-          aHasInjectedCookieForCookieBannerHandling),
       mSchemelessInput(aSchemelessInput),
-      mHttpsUpgradeTelemetry(aHttpsUpgradeTelemetry),
-      mUserNavigationInvolvement(aUserNavigationInvolvement),
-      mIsNewWindowTarget(aIsNewWindowTarget) {
+      mUserNavigationInvolvement(aUserNavigationInvolvement) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
              aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -2172,22 +2163,6 @@ void LoadInfo::SetInterceptionInfo(nsIInterceptionInfo* aInfo) {
 }
 
 NS_IMETHODIMP
-LoadInfo::GetHasInjectedCookieForCookieBannerHandling(
-    bool* aHasInjectedCookieForCookieBannerHandling) {
-  *aHasInjectedCookieForCookieBannerHandling =
-      mHasInjectedCookieForCookieBannerHandling;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetHasInjectedCookieForCookieBannerHandling(
-    bool aHasInjectedCookieForCookieBannerHandling) {
-  mHasInjectedCookieForCookieBannerHandling =
-      aHasInjectedCookieForCookieBannerHandling;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 LoadInfo::GetSchemelessInput(
     nsILoadInfo::SchemelessInputType* aSchemelessInput) {
   *aSchemelessInput = mSchemelessInput;
@@ -2198,32 +2173,6 @@ NS_IMETHODIMP
 LoadInfo::SetSchemelessInput(
     nsILoadInfo::SchemelessInputType aSchemelessInput) {
   mSchemelessInput = aSchemelessInput;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetHttpsUpgradeTelemetry(
-    nsILoadInfo::HTTPSUpgradeTelemetryType* aOutHttpsUpgradeTelemetry) {
-  *aOutHttpsUpgradeTelemetry = mHttpsUpgradeTelemetry;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetHttpsUpgradeTelemetry(
-    nsILoadInfo::HTTPSUpgradeTelemetryType aHttpsUpgradeTelemetry) {
-  mHttpsUpgradeTelemetry = aHttpsUpgradeTelemetry;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsNewWindowTarget(bool* aIsNewWindowTarget) {
-  *aIsNewWindowTarget = mIsNewWindowTarget;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsNewWindowTarget(bool aIsNewWindowTarget) {
-  mIsNewWindowTarget = aIsNewWindowTarget;
   return NS_OK;
 }
 
