@@ -148,7 +148,7 @@ class BlockingStream : public ByteStream,
   RefPtr<ByteStream> mStream;
 };
 
-bool MoofParser::BlockingReadNextMoof() {
+nsresult MoofParser::BlockingReadNextMoof() {
   LOG_DEBUG(Moof, "Starting.");
   int64_t length = std::numeric_limits<int64_t>::max();
   mSource->Length(&length);
@@ -156,19 +156,23 @@ bool MoofParser::BlockingReadNextMoof() {
   MediaByteRangeSet byteRanges(MediaByteRange(0, length));
 
   BoxContext context(stream, byteRanges);
-  for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
+  Box box(&context, mOffset);
+  for (; box.IsAvailable(); box = box.Next()) {
     if (box.IsType("moof")) {
       MediaByteRangeSet parseByteRanges(
           MediaByteRange(mOffset, box.Range().mEnd));
       BoxContext parseContext(stream, parseByteRanges);
       if (RebuildFragmentedIndex(parseContext)) {
-        LOG_DEBUG(Moof, "Succeeded on RebuildFragmentedIndex, returning true.");
-        return true;
+        LOG_DEBUG(Moof, "Succeeded on RebuildFragmentedIndex, returning NS_OK");
+        return NS_OK;
       }
     }
   }
-  LOG_DEBUG(Moof, "Couldn't read next moof, returning false.");
-  return false;
+  nsresult rv = box.Offset() == length ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
+                                       : box.InitStatus();
+  LOG_DEBUG(Moof, "Couldn't read next moof, returning %s",
+            GetStaticErrorName(rv));
+  return rv;
 }
 
 void MoofParser::ScanForMetadata(mozilla::MediaByteRange& aMoov) {

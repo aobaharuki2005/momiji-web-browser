@@ -323,8 +323,10 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   // Similar to RebuildFragmentedIndex(), but advance only as far as the next
   // moof, only if there is a next moof, and block, waiting for the read, if
   // the ByteStream supports blocking reads.
-  // Return true or false to indicate whether a new valid moof is seen.
-  bool BlockingReadNextMoof();
+  // Return NS_OK if a new valid moof is seen or
+  // NS_ERROR_DOM_MEDIA_END_OF_STREAM if no fatal error occurs before reaching
+  // end of stream.
+  nsresult BlockingReadNextMoof();
 
   already_AddRefed<mozilla::MediaByteBuffer> Metadata();
   MediaByteRange FirstCompleteMediaSegment();

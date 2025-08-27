@@ -383,7 +383,7 @@ Sample* SampleIterator::Get() {
   nsTArray<Moof>& moofs = mIndex->mMoofParser->Moofs();
   while (true) {
     if (mCurrentMoof == moofs.Length()) {
-      if (!mIndex->mMoofParser->BlockingReadNextMoof()) {
+      if (NS_FAILED(mIndex->mMoofParser->BlockingReadNextMoof())) {
         return nullptr;
       }
       MOZ_ASSERT(mCurrentMoof < moofs.Length());
