@@ -20,6 +20,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/net/ExecuteIfOnMainThreadEventTarget.h"
 #include "mozilla/net/CookieServiceParent.h"
 #include "mozilla/Components.h"
 #include "mozilla/InputStreamLengthHelper.h"
@@ -657,7 +658,7 @@ bool HttpChannelParent::DoAsyncOpen(
   RefPtr<HttpChannelParent> self = this;
   WaitForBgParent(mChannel->ChannelId())
       ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
+          ExecuteIfOnMainThreadEventTarget::Get(), __func__,
           [self]() {
             self->mRequest.Complete();
             self->TryInvokeAsyncOpen(NS_OK);
@@ -740,7 +741,7 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId) {
   RefPtr<HttpChannelParent> self = this;
   WaitForBgParent(mChannel->ChannelId())
       ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
+          ExecuteIfOnMainThreadEventTarget::Get(), __func__,
           [self]() { self->mRequest.Complete(); },
           [self](const nsresult& aResult) {
             NS_ERROR("failed to establish the background channel");
@@ -986,7 +987,7 @@ HttpChannelParent::ContinueVerification(
   if (mChannel) {
     WaitForBgParent(mChannel->ChannelId())
         ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
+            ExecuteIfOnMainThreadEventTarget::Get(), __func__,
             [callback]() { callback->ReadyToVerify(NS_OK); },
             [callback](const nsresult& aResult) {
               NS_ERROR("failed to establish the background channel");
