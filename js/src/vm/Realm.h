@@ -813,6 +813,10 @@ class JS::Realm : public JS::shadow::Realm {
   // zone override was specified in the realm creation options.
   js::DateTimeInfo* getDateTimeInfo();
 
+  // Set the time zone for this realm. Reset to the system default time zone
+  // when the input is |nullptr|.
+  void setTimeZone(const char* timeZone);
+
   // Initializes randomNumberGenerator if needed.
   mozilla::non_crypto::XorShift128PlusRNG& getOrCreateRandomNumberGenerator();
 

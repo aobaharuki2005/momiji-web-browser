@@ -207,6 +207,24 @@ void js::DateTimeInfo::resetState() {
 #endif /* JS_HAS_INTL_API */
 }
 
+#if JS_HAS_INTL_API
+void js::DateTimeInfo::updateTimeZoneOverride(
+    RefPtr<JS::TimeZoneString> timeZone) {
+  MOZ_RELEASE_ASSERT(timeZoneOverride_, "can't change default instance");
+  MOZ_ASSERT(timeZone);
+
+  // Reset state when time zone override changed.
+  if (std::strcmp(timeZoneOverride_->chars(), timeZone->chars()) != 0) {
+    timeZoneOverride_ = timeZone;
+
+    // Reuse the |utcToLocalStandardOffsetSeconds_| as the cache key.
+    utcToLocalStandardOffsetSeconds_++;
+
+    resetState();
+  }
+}
+#endif
+
 void js::DateTimeInfo::updateTimeZone() {
   MOZ_ASSERT(timeZoneStatus_ != TimeZoneStatus::Valid);
 #if JS_HAS_INTL_API
@@ -250,8 +268,13 @@ js::DateTimeInfo::DateTimeInfo() {
 
 #if JS_HAS_INTL_API
 js::DateTimeInfo::DateTimeInfo(RefPtr<JS::TimeZoneString> timeZone)
-    : timeZoneOverride_(timeZone) {
+    : utcToLocalStandardOffsetSeconds_(SecondsPerDay),
+      timeZoneOverride_(timeZone) {
   MOZ_ASSERT(timeZone);
+
+  // |utcToLocalStandardOffsetSeconds_| is initialized to |SecondsPerDay| to
+  // ensure it's larger than any valid time zone offset as computed by
+  // |UTCToLocalStandardOffsetSeconds()|.
 
   // Manually reset all internal state, because |updateTimeZone| is never called
   // when a time zone override is used.

@@ -214,12 +214,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   RefPtr<LocaleString> locale() const { return locale_; }
   RealmCreationOptions& setLocaleCopyZ(const char* locale);
 
-  // Create the realm with a different time zone than the system default time
-  // zone. The time zone must be a valid IANA time zone identifier, otherwise
-  // this option will be ignored and the system default time zone will be used!
-  RefPtr<TimeZoneString> timeZone() const { return timeZone_; }
-  RealmCreationOptions& setTimeZoneCopyZ(const char* timeZone);
-
   // Always use the fdlibm implementation of math functions instead of the
   // platform native libc implementations. Useful for fingerprinting protection
   // and cross-platform consistency.
@@ -244,7 +238,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   };
   uint64_t profilerRealmID_ = 0;
   RefPtr<LocaleString> locale_;
-  RefPtr<TimeZoneString> timeZone_;
   bool invisibleToDebugger_ = false;
   bool preserveJitCode_ = false;
   bool sharedMemoryAndAtomics_ = false;
@@ -327,12 +320,20 @@ class JS_PUBLIC_API RealmBehaviors {
     return *this;
   };
 
+  // Change the realm's current time zone to a different value than the system
+  // default time zone. The time zone must be a valid IANA time zone identifier,
+  // otherwise this option will be ignored and the system default time zone will
+  // be used!
+  RefPtr<TimeZoneString> timeZone() const { return timeZone_; }
+  RealmBehaviors& setTimeZoneCopyZ(const char* timeZone);
+
  private:
+  RefPtr<LocaleString> localeOverride_;
+  RefPtr<TimeZoneString> timeZone_;
   mozilla::Maybe<RTPCallerTypeToken> rtpCallerType;
   bool discardSource_ = false;
   bool clampAndJitterTime_ = true;
   bool isNonLive_ = false;
-  RefPtr<LocaleString> localeOverride_;
 };
 
 /**

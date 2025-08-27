@@ -1779,6 +1779,8 @@ JS::RealmCreationOptions& JS::RealmCreationOptions::setCoopAndCoepEnabled(
 
 template <class RefCountedString>
 static RefCountedString* CopyStringZ(const char* str) {
+  MOZ_ASSERT(str);
+
   const size_t size = strlen(str) + 1;
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -1799,9 +1801,12 @@ JS::RealmCreationOptions& JS::RealmCreationOptions::setLocaleCopyZ(
   return *this;
 }
 
-JS::RealmCreationOptions& JS::RealmCreationOptions::setTimeZoneCopyZ(
-    const char* timeZone) {
-  timeZone_ = CopyStringZ<JS::TimeZoneString>(timeZone);
+JS::RealmBehaviors& JS::RealmBehaviors::setTimeZoneCopyZ(const char* timeZone) {
+  if (timeZone) {
+    timeZone_ = CopyStringZ<JS::TimeZoneString>(timeZone);
+  } else {
+    timeZone_ = nullptr;
+  }
   return *this;
 }
 
