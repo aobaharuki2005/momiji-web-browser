@@ -9,6 +9,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
@@ -62,7 +63,7 @@ export class ImportantDatesSuggestions extends SuggestProvider {
       return null;
     }
 
-    return this.#makeDateResult(suggestion.data.result.payload);
+    return this.#makeDateResult(queryContext, suggestion.data.result.payload);
   }
 
   /**
@@ -181,12 +182,14 @@ export class ImportantDatesSuggestions extends SuggestProvider {
   /**
    * Creates a urlbar result from an important dates payload.
    *
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context.
    * @param {DatePayload} payload
    *   The important dates payload.
    * @returns {?UrlbarResult}
    *   A urlbar result or null if all instances are in the past.
    */
-  #makeDateResult(payload) {
+  #makeDateResult(queryContext, payload) {
     let eventDateOrRange = payload.dates.find(
       // Find first entry where the end date is in the future.
       // This is always the upcoming occurrence since dates is ordered by time.
@@ -213,19 +216,19 @@ export class ImportantDatesSuggestions extends SuggestProvider {
     }
 
     let dateString = this.#formatDateOrRange(eventDateOrRange);
-    let [url] = lazy.UrlbarUtils.getSearchQueryUrl(
-      Services.search.defaultEngine,
-      payload.name
-    );
     return Object.assign(
       new lazy.UrlbarResult(
-        lazy.UrlbarUtils.RESULT_TYPE.URL,
+        lazy.UrlbarUtils.RESULT_TYPE.SEARCH,
         lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
         {
           title: dateString,
           description,
+          engine: lazy.UrlbarSearchUtils.getDefaultEngine(
+            queryContext.isPrivate
+          ).name,
           descriptionL10n,
-          url,
+          query: payload.name,
+          lowerCaseSuggestion: payload.name.toLowerCase(),
           icon: "chrome://browser/skin/calendar-24.svg",
           helpUrl: lazy.QuickSuggest.HELP_URL,
           isManageable: true,

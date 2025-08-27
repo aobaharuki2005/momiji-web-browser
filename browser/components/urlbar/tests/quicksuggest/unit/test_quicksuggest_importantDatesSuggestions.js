@@ -291,7 +291,7 @@ function makeExpectedResult({
 }) {
   let name = description ?? descriptionL10n.args.name;
   return {
-    type: UrlbarUtils.RESULT_TYPE.URL,
+    type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     isBestMatch,
@@ -299,7 +299,9 @@ function makeExpectedResult({
     isRichSuggestion,
     payload: {
       title: date,
-      url: Services.search.defaultEngine.getSubmission(name).uri.spec,
+      engine: Services.search.defaultEngine.name,
+      query: name,
+      lowerCaseSuggestion: name.toLocaleLowerCase(),
       description,
       descriptionL10n: descriptionL10n
         ? { cacheable: true, excludeArgsFromCacheKey: true, ...descriptionL10n }

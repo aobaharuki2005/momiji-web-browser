@@ -2033,6 +2033,14 @@ export class UrlbarView {
         setURL = true;
         break;
       case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
+        if (
+          result.payload.suggestionObject?.suggestionType == "important_dates"
+        ) {
+          // Don't show action for important date results because clicking them
+          // searches for the name of the event which is in the description and
+          // not the title.
+          break;
+        }
         if (result.payload.inPrivateWindow) {
           if (result.payload.isPrivateEngine) {
             actionSetter = () => {
