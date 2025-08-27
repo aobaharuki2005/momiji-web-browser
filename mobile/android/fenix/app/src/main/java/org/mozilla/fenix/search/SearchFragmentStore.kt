@@ -119,6 +119,7 @@ sealed class SearchEngineSource {
  * @property searchSuggestionsProviders The list of search suggestions providers that the user can choose from.
  * @property searchSuggestionsOrientedAtBottom Whether or not the search suggestions should be oriented at the
  * bottom of the screen.
+ * @property searchStartedForCurrentUrl Whether or not the search started with editing the current URL.
  * @property shouldShowSearchSuggestions Whether or not to show search suggestions in the AwesomeBar.
  * @property showSearchSuggestions Whether or not to show search suggestions from the search engine in the AwesomeBar.
  * @property showSearchSuggestionsHint Whether or not to show search suggestions in private hint panel.
@@ -163,6 +164,7 @@ data class SearchFragmentState(
     val defaultEngine: SearchEngine?,
     val searchSuggestionsProviders: List<SuggestionProvider>,
     val searchSuggestionsOrientedAtBottom: Boolean,
+    val searchStartedForCurrentUrl: Boolean,
     val shouldShowSearchSuggestions: Boolean,
     val showSearchSuggestions: Boolean,
     val showSearchSuggestionsHint: Boolean,
@@ -205,6 +207,7 @@ data class SearchFragmentState(
             defaultEngine = null,
             searchSuggestionsProviders = emptyList(),
             searchSuggestionsOrientedAtBottom = false,
+            searchStartedForCurrentUrl = false,
             shouldShowSearchSuggestions = false,
             showSearchSuggestions = false,
             showSearchSuggestionsHint = false,
@@ -264,6 +267,7 @@ fun createInitialSearchFragmentState(
         searchEngineSource = searchEngineSource,
         searchSuggestionsProviders = emptyList(),
         searchSuggestionsOrientedAtBottom = false,
+        searchStartedForCurrentUrl = false,
         shouldShowSearchSuggestions = false,
         defaultEngine = null,
         showSearchSuggestions = shouldShowSearchSuggestions(
@@ -319,11 +323,13 @@ sealed class SearchFragmentAction : Action {
      * or `null` if the default search engine should be used.
      * @property isUserSelected Whether or not the search engine was selected by the user.
      * @property inPrivateMode Whether or not the search is started in private browsing mode.
+     * @property searchStartedForCurrentUrl Whether or not the search started with editing the current URL.
      */
     data class SearchStarted(
         val selectedSearchEngine: SearchEngine?,
         val isUserSelected: Boolean,
         val inPrivateMode: Boolean,
+        val searchStartedForCurrentUrl: Boolean,
     ) : SearchFragmentAction()
 
     /**
@@ -627,9 +633,12 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
             state.copy(shouldShowSearchSuggestions = action.visible)
         }
 
+        is SearchFragmentAction.SearchStarted -> {
+            state.copy(searchStartedForCurrentUrl = action.searchStartedForCurrentUrl)
+        }
+
         is SearchFragmentAction.EnvironmentRehydrated,
         is SearchFragmentAction.EnvironmentCleared,
-        is SearchFragmentAction.SearchStarted,
         is SearchFragmentAction.SuggestionClicked,
         is SearchFragmentAction.PrivateSuggestionsCardAccepted,
         is SearchFragmentAction.SuggestionSelected,

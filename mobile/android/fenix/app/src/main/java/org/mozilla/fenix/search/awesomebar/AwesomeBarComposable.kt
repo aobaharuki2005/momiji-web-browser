@@ -258,7 +258,7 @@ class AwesomeBarComposable(
                 searchAccessPoint = searchAccessPoint,
             ),
             middleware = listOf(
-                BrowserToolbarToFenixSearchMapperMiddleware(toolbarStore),
+                BrowserToolbarToFenixSearchMapperMiddleware(toolbarStore, browserStore),
                 BrowserStoreToFenixSearchMapperMiddleware(browserStore),
                 FenixSearchMiddleware(
                     engine = components.core.engine,
