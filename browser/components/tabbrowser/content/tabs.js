@@ -116,9 +116,21 @@
       // Override arrowscrollbox.js method, since our scrollbox's children are
       // inherited from the scrollbox binding parent (this).
       this.arrowScrollbox._getScrollableElements = () => {
-        return this.ariaFocusableItems.filter(
-          this.arrowScrollbox._canScrollToElement
-        );
+        return this.ariaFocusableItems.reduce((elements, item) => {
+          if (this.arrowScrollbox._canScrollToElement(item)) {
+            elements.push(item);
+            if (
+              isTab(item) &&
+              item.group &&
+              item.group.collapsed &&
+              item.selected
+            ) {
+              // overflow container is scrollable, but not in focus order
+              elements.push(item.group.overflowContainer);
+            }
+          }
+          return elements;
+        }, []);
       };
       this.arrowScrollbox._canScrollToElement = element => {
         if (isTab(element)) {

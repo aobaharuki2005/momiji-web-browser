@@ -35,7 +35,7 @@
     #overflowCountLabel;
 
     /** @type {MozXULElement} */
-    #overflowContainer;
+    overflowContainer;
 
     /** @type {string} */
     #colorCode;
@@ -115,10 +115,10 @@
       this.#updateLabelAriaAttributes();
       this.#updateCollapsedAriaAttributes();
 
-      this.#overflowContainer = this.querySelector(
+      this.overflowContainer = this.querySelector(
         ".tab-group-overflow-count-container"
       );
-      this.#overflowCountLabel = this.#overflowContainer.querySelector(
+      this.#overflowCountLabel = this.overflowContainer.querySelector(
         ".tab-group-overflow-count"
       );
 
@@ -149,7 +149,7 @@
     }
 
     appendChild(node) {
-      return this.insertBefore(node, this.#overflowContainer);
+      return this.insertBefore(node, this.overflowContainer);
     }
 
     #observeTabChanges() {
@@ -183,7 +183,7 @@
             // When a group containing the active tab is collapsed,
             // the overflow count displays the number of additional tabs
             // in the group adjacent to the active tab.
-            let overflowCountLabel = this.#overflowContainer.querySelector(
+            let overflowCountLabel = this.overflowContainer.querySelector(
               ".tab-group-overflow-count"
             );
             if (tabCount > 1) {
@@ -332,6 +332,20 @@
       gBrowser.tabContainer.previewPanel?.deactivate(this, { force: true });
       const eventName = val ? "TabGroupCollapse" : "TabGroupExpand";
       this.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
+
+      let pendingAnimationPromises = this.tabs.flatMap(tab =>
+        tab
+          .getAnimations()
+          .filter(anim =>
+            ["min-width", "max-width"].includes(anim.transitionProperty)
+          )
+          .map(anim => anim.finished)
+      );
+      Promise.allSettled(pendingAnimationPromises).then(() => {
+        this.dispatchEvent(
+          new CustomEvent("TabGroupAnimationComplete", { bubbles: true })
+        );
+      });
     }
 
     #lastAddedTo = 0;
