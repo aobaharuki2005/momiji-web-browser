@@ -387,6 +387,13 @@ class InactivePropertyHelper {
         fixId: "inactive-css-not-block-fix",
         msgId: "inactive-css-not-block",
       },
+      // Block container properties used on non-block-container elements.
+      {
+        invalidProperties: ["text-overflow"],
+        when: () => !this.isBlockContainer(),
+        fixId: "inactive-css-not-block-container-fix",
+        msgId: "inactive-css-not-block-container",
+      },
       // shape-image-threshold, shape-margin, shape-outside properties used on non-floated elements.
       {
         invalidProperties: [
@@ -983,6 +990,13 @@ class InactivePropertyHelper {
       "grid",
       "table",
     ]);
+  }
+
+  /**
+   *  Check if the current node is an block container.
+   */
+  isBlockContainer() {
+    return this.node ? InspectorUtils.isBlockContainer(this.node) : false;
   }
 
   /**
