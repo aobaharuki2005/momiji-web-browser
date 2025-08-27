@@ -49,6 +49,7 @@
 #include "nsColor.h"
 #include "nsComputedDOMStyle.h"
 #include "nsContentList.h"
+#include "nsFieldSetFrame.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIContentInlines.h"
 #include "nsLayoutUtils.h"
@@ -1004,6 +1005,37 @@ Element* InspectorUtils::ContainingBlockOf(GlobalObject&, Element& aElement) {
     return nullptr;
   }
   return Element::FromNodeOrNull(cb->GetContent());
+}
+
+bool InspectorUtils::IsBlockContainer(GlobalObject&, Element& aElement) {
+  nsIFrame* frame = aElement.GetPrimaryFrame(FlushType::Frames);
+  if (!frame) {
+    return false;
+  }
+
+  // For fieldset elements, we need to check the inner frame.
+  if (nsFieldSetFrame* fieldsetFrame = do_QueryFrame(frame)) {
+    frame = fieldsetFrame->GetInner();
+  }
+
+  if (frame->IsBlockFrameOrSubclass()) {
+    return true;
+  }
+  // ScrollContainerFrame::GetContentInsertionFrame() jumps across the block and
+  // returns the ruby inside (because it calls GetContentInsertionFrame on its
+  // own). So we have to account for that here.
+  if (auto* sc = frame->GetScrollTargetFrame()) {
+    if (sc->GetScrolledFrame()->IsBlockFrameOrSubclass()) {
+      return true;
+    }
+  }
+  if (nsIFrame* inner = frame->GetContentInsertionFrame()) {
+    if (inner->IsBlockFrameOrSubclass()) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void InspectorUtils::GetBlockLineCounts(GlobalObject& aGlobal,

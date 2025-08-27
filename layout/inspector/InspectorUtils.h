@@ -232,6 +232,8 @@ class InspectorUtils {
 
   static Element* ContainingBlockOf(GlobalObject&, Element&);
 
+  static bool IsBlockContainer(GlobalObject&, Element&);
+
   static void GetBlockLineCounts(GlobalObject&, Element&,
                                  Nullable<nsTArray<uint32_t>>& aResult);
 

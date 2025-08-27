@@ -83,6 +83,8 @@ namespace InspectorUtils {
 
   Element? containingBlockOf(Element element);
 
+  boolean isBlockContainer(Element element);
+
   // If the element is styled as display:block, returns an array of numbers giving
   // the number of lines in each fragment.
   // Returns null if the element is not a block.
