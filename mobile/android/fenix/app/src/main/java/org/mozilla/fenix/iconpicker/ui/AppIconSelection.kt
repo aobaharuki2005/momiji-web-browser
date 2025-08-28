@@ -248,7 +248,10 @@ private fun RestartWarningDialog(
                 },
         text = {
             Text(
-                text = stringResource(R.string.restart_warning_dialog_body),
+                text = stringResource(
+                    id = R.string.restart_warning_dialog_body_2,
+                    stringResource(R.string.app_name),
+                ),
                 color = FirefoxTheme.colors.textPrimary,
                 style = FirefoxTheme.typography.body2,
             )
@@ -256,7 +259,7 @@ private fun RestartWarningDialog(
         onDismissRequest = { onDismiss() },
         confirmButton = {
             TextButton(
-                text = stringResource(id = R.string.restart_warning_dialog_button_positive),
+                text = stringResource(id = R.string.restart_warning_dialog_button_positive_2),
                 onClick = { onConfirm() },
             )
         },
