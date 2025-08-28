@@ -1112,9 +1112,7 @@ class HomeFragment : Fragment() {
         awesomeBarComposable = null
         _binding = null
 
-        if (!requireContext().components.appStore.state.isPrivateScreenLocked) {
-            bundleArgs.clear()
-        }
+        bundleArgs.clear()
         lastAppliedWallpaperName = Wallpaper.DEFAULT
     }
 
