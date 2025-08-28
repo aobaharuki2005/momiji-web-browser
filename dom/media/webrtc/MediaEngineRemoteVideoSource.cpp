@@ -83,7 +83,7 @@ static Maybe<VideoFacingModeEnum> GetFacingMode(const nsString& aDeviceName) {
 
 struct DesiredSizeInput {
   NormalizedConstraints mConstraints;
-  bool mCanCropAndScale;
+  Maybe<bool> mCanCropAndScale;
   Maybe<int32_t> mCapabilityWidth;
   Maybe<int32_t> mCapabilityHeight;
   camera::CaptureEngine mCapEngine;
@@ -93,12 +93,11 @@ struct DesiredSizeInput {
 };
 
 static gfx::IntSize CalculateDesiredSize(DesiredSizeInput aInput) {
-  MOZ_ASSERT(aInput.mInputWidth > 0);
-  MOZ_ASSERT(aInput.mInputHeight > 0);
-
-  if (aInput.mCapabilityWidth && aInput.mCapabilityHeight &&
-      !aInput.mCanCropAndScale) {
-    // Downscaling camera by constraints is not yet supported (bug 1286945).
+  if (!aInput.mCanCropAndScale.valueOr(aInput.mCapEngine !=
+                                       camera::CameraEngine)) {
+    // Don't scale to constraints in resizeMode "none".
+    // If resizeMode is disabled, follow our legacy behavior of downscaling for
+    // screen capture but not for cameras.
     aInput.mConstraints.mWidth.mIdeal = Nothing();
     aInput.mConstraints.mHeight.mIdeal = Nothing();
   }
@@ -118,57 +117,54 @@ static gfx::IntSize CalculateDesiredSize(DesiredSizeInput aInput) {
 
   // This logic works for both camera and screen sharing case.
   // In VideoResizeModeEnum::None, ideal dimensions are absent.
-  // In screen sharing, min and max dimensions are forbidden.
+  // In screen sharing, min and exact dimensions are forbidden.
   int32_t dst_width = aInput.mConstraints.mWidth.Get(inputWidth);
   int32_t dst_height = aInput.mConstraints.mHeight.Get(inputHeight);
 
-  if (!aInput.mConstraints.mWidth.mIdeal &&
-      aInput.mConstraints.mHeight.mIdeal) {
-    dst_width = *aInput.mConstraints.mHeight.mIdeal * aInput.mInputWidth /
-                aInput.mInputHeight;
-  } else if (!aInput.mConstraints.mHeight.mIdeal &&
-             aInput.mConstraints.mWidth.mIdeal) {
-    dst_height = *aInput.mConstraints.mWidth.mIdeal * aInput.mInputHeight /
-                 aInput.mInputWidth;
-  }
+  // We must not upscale.
+  dst_width = std::min(dst_width, inputWidth);
+  dst_height = std::min(dst_height, inputHeight);
 
   if (aInput.mCapEngine != camera::CameraEngine ||
       !aInput.mConstraints.mWidth.mIdeal ||
       !aInput.mConstraints.mHeight.mIdeal) {
     // Scale down without cropping.
     // Cropping is not allowed by spec for desktop capture.
-    // It also doesn't make sense when not both ideal width and height are
-    // given.
-    // First scale to average of portrait and landscape.
-    double scale_width = AssertedCast<double>(dst_width) /
-                         AssertedCast<double>(aInput.mInputWidth);
-    double scale_height = AssertedCast<double>(dst_height) /
-                          AssertedCast<double>(aInput.mInputHeight);
-    double scale = (scale_width + scale_height) / 2;
-    // If both ideal width & ideal height are absent, scale is 1, but
-    // if one is present and the other not, scale precisely to the one present
-    if (!aInput.mConstraints.mWidth.mIdeal) {
-      scale = scale_height;
-    } else if (!aInput.mConstraints.mHeight.mIdeal) {
-      scale = scale_width;
-    }
-    dst_width = int32_t(scale * (double)aInput.mInputWidth);
-    dst_height = int32_t(scale * (double)aInput.mInputHeight);
+    // For cameras, it only makes sense when not both ideal width and
+    // height are given, assuming they're within min/max constraints.
 
-    // If scaled rectangle exceeds max rectangle, scale to minimum of portrait
-    // and landscape
-    if (dst_width > aInput.mConstraints.mWidth.mMax ||
-        dst_height > aInput.mConstraints.mHeight.mMax) {
-      scale_width = AssertedCast<double>(aInput.mConstraints.mWidth.mMax) /
-                    AssertedCast<double>(dst_width);
-      scale_height = AssertedCast<double>(aInput.mConstraints.mHeight.mMax) /
-                     AssertedCast<double>(dst_height);
-      scale = std::min(scale_width, scale_height);
-      dst_width = AssertedCast<int32_t>(
-          std::lround(scale * AssertedCast<double>(dst_width)));
-      dst_height = AssertedCast<int32_t>(
-          std::lround(scale * AssertedCast<double>(dst_height)));
-    }
+    // Max constraints decide the envelope.
+    const double scale_width_strict =
+        std::min(1.0, AssertedCast<double>(aInput.mConstraints.mWidth.mMax) /
+                          AssertedCast<double>(aInput.mInputWidth));
+    const double scale_height_strict =
+        std::min(1.0, AssertedCast<double>(aInput.mConstraints.mHeight.mMax) /
+                          AssertedCast<double>(aInput.mInputHeight));
+
+    double scale_width =
+        AssertedCast<double>(dst_width) / AssertedCast<double>(inputWidth);
+    double scale_height =
+        AssertedCast<double>(dst_height) / AssertedCast<double>(inputHeight);
+
+    // If both ideal width & ideal height are absent, scale is 1, but
+    // if one is present and the other not, scale precisely to the one present.
+    // If both are present, scale to the smaller one.
+    // This works because the fitness distance for width and height is shortest
+    // where either dimension exactly matches its ideal constraint.
+    // Also adapt to max constraints.
+    double scale = std::min(
+        {scale_width, scale_height, scale_width_strict, scale_height_strict});
+
+    dst_width = AssertedCast<int32_t>(
+        std::round(scale * AssertedCast<double>(aInput.mInputWidth)));
+    dst_height = AssertedCast<int32_t>(
+        std::round(scale * AssertedCast<double>(aInput.mInputHeight)));
+  }
+
+  if (aInput.mCapEngine == camera::CameraEngine) {
+    // For cameras we are allowed to crop. Adapt to min constraints.
+    dst_width = aInput.mConstraints.mWidth.Clamp(dst_width);
+    dst_height = aInput.mConstraints.mHeight.Clamp(dst_height);
   }
 
   // Ensure width and height are at least two. Smaller frames can lead to
@@ -278,7 +274,9 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
     const double maxFPS = AssertedCast<double>(mCapability.maxFPS);
     input = {
         .mConstraints = c,
-        .mCanCropAndScale = mCalculation == kFeasibility,
+        .mCanCropAndScale = resizeMode.map([](auto aRM) {
+          return aRM == dom::VideoResizeModeEnum::Crop_and_scale;
+        }),
         .mCapabilityWidth = cw ? Some(cw) : Nothing(),
         .mCapabilityHeight = ch ? Some(ch) : Nothing(),
         .mCapEngine = mCapEngine,
@@ -286,8 +284,9 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
         .mInputHeight = ch,
         .mRotation = 0,
     };
-    framerate =
-        input.mCanCropAndScale ? mConstraints->mFrameRate.Get(maxFPS) : maxFPS;
+    framerate = input.mCanCropAndScale.valueOr(false)
+                    ? mConstraints->mFrameRate.Get(maxFPS)
+                    : maxFPS;
   }
 
   auto dstSize = CalculateDesiredSize(input);
@@ -502,7 +501,9 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
     const int32_t& ch = mCapability.height;
     input = {
         .mConstraints = c,
-        .mCanCropAndScale = mCalculation == kFeasibility,
+        .mCanCropAndScale = resizeMode.map([](auto aRM) {
+          return aRM == dom::VideoResizeModeEnum::Crop_and_scale;
+        }),
         .mCapabilityWidth = cw ? Some(cw) : Nothing(),
         .mCapabilityHeight = ch ? Some(ch) : Nothing(),
         .mCapEngine = mCapEngine,
@@ -613,7 +614,9 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
 
     input = {
         .mConstraints = *mConstraints,
-        .mCanCropAndScale = mCalculation == kFeasibility,
+        .mCanCropAndScale = mPrefs->mResizeModeEnabled
+                                ? Some(mCalculation == kFeasibility)
+                                : Nothing(),
         .mCapabilityWidth = cw ? Some(cw) : Nothing(),
         .mCapabilityHeight = ch ? Some(ch) : Nothing(),
         .mCapEngine = mCapEngine,
