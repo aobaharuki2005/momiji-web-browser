@@ -1979,8 +1979,8 @@ const MESSAGES = () => {
                       {
                         type: "OPEN_PANEL",
                         data: {
-                          widgetId: "ipprotection-button",
-                          panelId: "PanelUI-ipprotection",
+                          widget_id: "ipprotection-button",
+                          panel_id: "PanelUI-ipprotection",
                         },
                         requiresPrevious: true,
                       },
@@ -2108,8 +2108,8 @@ const MESSAGES = () => {
                       {
                         type: "OPEN_PANEL",
                         data: {
-                          widgetId: "ipprotection-button",
-                          panelId: "PanelUI-ipprotection",
+                          widget_id: "ipprotection-button",
+                          panel_id: "PanelUI-ipprotection",
                         },
                         requiresPrevious: true,
                       },
