@@ -49,6 +49,8 @@ class GraphSpewer : JSONPrinter {
   void endFunction();
 };
 
+using UniqueGraphSpewer = UniquePtr<GraphSpewer, JS::FreePolicy>;
+
 }  // namespace jit
 }  // namespace js
 

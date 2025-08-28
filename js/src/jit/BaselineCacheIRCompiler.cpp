@@ -237,6 +237,8 @@ JitCode* BaselineCacheIRCompiler::compile() {
   Address enteredCount(ICStubReg, ICCacheIRStub::offsetOfEnteredCount());
   masm.add32(Imm32(1), enteredCount);
 
+  perfSpewer_.startRecording();
+
   CacheIRReader reader(writer_);
   do {
     CacheOp op = reader.readOp();
@@ -259,6 +261,8 @@ JitCode* BaselineCacheIRCompiler::compile() {
   masm.assumeUnreachable("Should have returned from IC");
 
   // Done emitting the main IC code. Now emit the failure paths.
+  perfSpewer_.recordOffset(masm, "FailurePath");
+
   for (size_t i = 0; i < failurePaths.length(); i++) {
     if (!emitFailurePath(i)) {
       return nullptr;
@@ -268,6 +272,8 @@ JitCode* BaselineCacheIRCompiler::compile() {
     }
     EmitStubGuardFailure(masm);
   }
+
+  perfSpewer_.endRecording();
 
   Linker linker(masm);
   JitCode* newStubCode = linker.newCode(cx_, CodeKind::Baseline);

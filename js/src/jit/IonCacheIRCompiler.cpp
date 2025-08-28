@@ -55,7 +55,7 @@ IonCacheIRCompiler::IonCacheIRCompiler(JSContext* cx, TempAllocator& alloc,
       ionScript_(ionScript),
       savedLiveRegs_(false),
       localTracingSlots_(0),
-      perfSpewer_(ic->pc()) {
+      perfSpewer_(ic->script(), ic->pc()) {
   MOZ_ASSERT(ic_);
   MOZ_ASSERT(ionScript_);
 }
@@ -592,6 +592,8 @@ JitCode* IonCacheIRCompiler::compile(IonICStub* stub) {
 
   allocator.fixupAliasedInputs(masm);
 
+  perfSpewer_.startRecording();
+
   CacheIRReader reader(writer_);
   do {
     CacheOp op = reader.readOp();
@@ -613,6 +615,8 @@ JitCode* IonCacheIRCompiler::compile(IonICStub* stub) {
   masm.assumeUnreachable("Should have returned from IC");
 
   // Done emitting the main IC code. Now emit the failure paths.
+  perfSpewer_.recordOffset(masm, "FailurePath");
+
   for (size_t i = 0; i < failurePaths.length(); i++) {
     if (!emitFailurePath(i)) {
       return nullptr;
@@ -624,6 +628,8 @@ JitCode* IonCacheIRCompiler::compile(IonICStub* stub) {
       return nullptr;
     }
   }
+
+  perfSpewer_.endRecording();
 
   Linker linker(masm);
   Rooted<JitCode*> newStubCode(cx_, linker.newCode(cx_, CodeKind::Ion));

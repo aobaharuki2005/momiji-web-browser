@@ -16800,6 +16800,7 @@ bool CodeGenerator::generateWasm(wasm::CallIndirectId callIndirectId,
       StackArgAreaSizeUnaligned(argTypes, ABIKind::Wasm);
   inboundStackArgBytes_ = nInboundStackArgBytes;
 
+  perfSpewer_.startRecording();
   perfSpewer_.markStartOffset(masm.currentOffset());
   perfSpewer_.recordOffset(masm, "Prologue");
   wasm::GenerateFunctionPrologue(masm, callIndirectId, mozilla::Nothing(),
@@ -16904,6 +16905,7 @@ bool CodeGenerator::generateWasm(wasm::CallIndirectId callIndirectId,
     }
   }
 
+  perfSpewer_.endRecording();
   *spewer = std::move(perfSpewer_);
   return true;
 }
@@ -16941,6 +16943,7 @@ bool CodeGenerator::generate(const WarpSnapshot* snapshot) {
     return false;
   }
 
+  perfSpewer_.startRecording();
   perfSpewer_.recordOffset(masm, "Prologue");
   if (!generatePrologue()) {
     return false;
@@ -17020,6 +17023,8 @@ bool CodeGenerator::generate(const WarpSnapshot* snapshot) {
   // For each instruction with a safepoint, we have an OSI point inserted after
   // which handles bailouts in case of invalidation of the code.
   MOZ_ASSERT(osiIndices_.length() == graph.numSafepoints());
+
+  perfSpewer_.endRecording();
 
   return !masm.oom();
 }

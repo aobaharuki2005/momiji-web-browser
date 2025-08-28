@@ -274,6 +274,7 @@ MethodStatus BaselineCompiler::compileOffThread() {
 bool BaselineCompiler::compileImpl() {
   AutoCreatedBy acb(masm, "BaselineCompiler::compile");
 
+  perfSpewer_.startRecording();
   perfSpewer_.recordOffset(masm, "Prologue");
   if (!emitPrologue()) {
     return false;
@@ -290,6 +291,8 @@ bool BaselineCompiler::compileImpl() {
 
   perfSpewer_.recordOffset(masm, "OOLPostBarrierSlot");
   emitOutOfLinePostBarrierSlot();
+
+  perfSpewer_.endRecording();
 
   return true;
 }
@@ -7026,7 +7029,7 @@ bool BaselineCompiler::emitBody() {
       return false;
     }
 
-    perfSpewer_.recordInstruction(masm, handler.pc(), frame);
+    perfSpewer_.recordInstruction(masm, handler.pc(), handler.script(), frame);
 
 #define EMIT_OP(OP, ...)                                \
   case JSOp::OP: {                                      \
@@ -7264,6 +7267,7 @@ bool BaselineInterpreterGenerator::generate(JSContext* cx,
     return false;
   }
 
+  perfSpewer_.startRecording();
   perfSpewer_.recordOffset(masm, "Prologue");
   if (!emitPrologue()) {
     ReportOutOfMemory(cx);
@@ -7326,6 +7330,7 @@ bool BaselineInterpreterGenerator::generate(JSContext* cx,
                                            tableLoc);
     }
 
+    perfSpewer_.endRecording();
     perfSpewer_.saveProfile(code);
 
 #ifdef MOZ_VTUNE
