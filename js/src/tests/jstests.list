@@ -948,10 +948,24 @@ skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-ethiopic.js
 skip script test262/staging/sm/Temporal/PlainDate/non-positive-era-year.js
 
 # Canonical era names have changed.
-skip script test262/intl402/Temporal/ZonedDateTime/from/canonicalize-era-codes.js 
+skip script test262/intl402/Temporal/ZonedDateTime/from/canonicalize-era-codes.js
 skip script test262/staging/Intl402/Temporal/old/japanese-before-era.js
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-gregory.js
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamicc.js
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-civil.js
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-tbla.js
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-umalqura.js
+skip script test262/staging/Intl402/Temporal/old/islamic-calendars-islamic.js
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-ethioaa.js
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-hebrew.js
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-buddhist.js
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-indian.js
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-persian.js
+skip script test262/intl402/Temporal/PlainYearMonth/from/calendar-not-supporting-eras.js
+skip script test262/intl402/Temporal/PlainYearMonth/from/reference-day-chinese.js
+skip script test262/intl402/Temporal/PlainYearMonth/from/reference-day-hebrew.js
+skip script test262/intl402/Temporal/PlainDate/from/calendar-not-supporting-eras.js
+skip script test262/intl402/Temporal/PlainDateTime/from/calendar-not-supporting-eras.js
+
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=1983837
+skip script test262/staging/top-level-await/tla-hang-entry.js
