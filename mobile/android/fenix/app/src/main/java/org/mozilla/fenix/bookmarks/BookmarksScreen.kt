@@ -88,7 +88,6 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.search.SearchEngine
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.FloatingActionButton
@@ -107,7 +106,6 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
-import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -138,24 +136,20 @@ private const val MATERIAL_DESIGN_SCRIM = "#52000000"
  * @param buildStore A builder function to construct a [BookmarksStore] using the NavController that's local
  * to the nav graph for the Bookmarks view hierarchy.
  * @param appStore [AppStore] for syncing with other application features.
- * @param browserStore [BrowserStore] for checking browser state and dispatching browser action.
  * @param toolbarStore [BrowserToolbarStore] controlling the search toolbar.
  * @param searchStore [SearchFragmentStore] controlling how search results are displayed.
  * @param bookmarksSearchEngine [SearchEngine] the default search engine to use when searching bookmarks.
  * @param useNewSearchUX Whether to use the new integrated search UX or navigate to a separate search screen.
- * @param profiler app profiler used to access firefox profile features.
  * @param startDestination the screen on which to initialize [BookmarksScreen] with.
  */
 @Composable
 internal fun BookmarksScreen(
     buildStore: (NavHostController) -> BookmarksStore,
     appStore: AppStore = components.appStore,
-    browserStore: BrowserStore = components.core.store,
     toolbarStore: BrowserToolbarStore,
     searchStore: SearchFragmentStore,
     bookmarksSearchEngine: SearchEngine?,
     useNewSearchUX: Boolean = false,
-    profiler: Profiler? = components.core.engine.profiler,
     startDestination: String = BookmarksDestinations.LIST,
 ) {
     val navController = rememberNavController()
@@ -186,11 +180,9 @@ internal fun BookmarksScreen(
             BookmarksList(
                 store = store,
                 appStore = appStore,
-                browserStore = browserStore,
                 toolbarStore = toolbarStore,
                 searchStore = searchStore,
                 bookmarksSearchEngine = bookmarksSearchEngine,
-                profiler = profiler,
                 useNewSearchUX = useNewSearchUX,
             )
         }
@@ -230,13 +222,12 @@ internal object BookmarksDestinations {
 private fun BookmarksList(
     store: BookmarksStore,
     appStore: AppStore,
-    browserStore: BrowserStore,
     toolbarStore: BrowserToolbarStore,
     searchStore: SearchFragmentStore,
     bookmarksSearchEngine: SearchEngine?,
-    profiler: Profiler?,
     useNewSearchUX: Boolean = false,
 ) {
+    val browserStore = components.core.store
     val state by store.observeAsState(store.state) { it }
     val searchState = searchStore.observeAsComposableState { it }.value
     val awesomebarBackground = AcornTheme.colors.layer1
@@ -545,7 +536,7 @@ private fun BookmarksList(
                             browserStore.dispatch(AwesomeBarAction.VisibilityStateUpdated(it))
                         },
                         onScroll = { view.hideKeyboard() },
-                        profiler = profiler,
+                        profiler = components.core.engine.profiler,
                     )
                 }
             }
@@ -1731,11 +1722,9 @@ private fun BookmarksScreenPreview() {
             BookmarksScreen(
                 buildStore = store,
                 appStore = AppStore(),
-                browserStore = BrowserStore(),
                 toolbarStore = BrowserToolbarStore(),
                 searchStore = SearchFragmentStore(SearchFragmentState.EMPTY),
                 bookmarksSearchEngine = null,
-                profiler = null,
             )
         }
     }
@@ -1777,11 +1766,9 @@ private fun EmptyBookmarksScreenPreview() {
             BookmarksScreen(
                 buildStore = store,
                 appStore = AppStore(),
-                browserStore = BrowserStore(),
                 toolbarStore = BrowserToolbarStore(),
                 searchStore = SearchFragmentStore(SearchFragmentState.EMPTY),
                 bookmarksSearchEngine = null,
-                profiler = null,
             )
         }
     }
