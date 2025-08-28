@@ -6,7 +6,7 @@
 
 #ifdef JS_JITSPEW
 
-#  include "jit/JSONSpewer.h"
+#  include "jit/GraphSpewer.h"
 
 #  include "jit/BacktrackingAllocator.h"
 #  include "jit/LIR.h"
@@ -18,24 +18,35 @@
 using namespace js;
 using namespace js::jit;
 
-void JSONSpewer::beginFunction(JSScript* script) {
+void GraphSpewer::beginFunction(JSScript* script) {
   beginObject();
   formatProperty("name", "%s:%u", script->filename(), script->lineno());
   beginListProperty("passes");
 }
 
-void JSONSpewer::beginWasmFunction(unsigned funcIndex) {
+void GraphSpewer::beginWasmFunction(unsigned funcIndex) {
   beginObject();
   formatProperty("name", "wasm-func%u", funcIndex);
   beginListProperty("passes");
 }
 
-void JSONSpewer::beginPass(const char* pass) {
+void GraphSpewer::spewPass(const char* pass, MIRGraph* graph,
+                             BacktrackingAllocator* ra) {
+  beginPass(pass);
+  spewMIR(graph);
+  spewLIR(graph);
+  if (ra) {
+    spewRanges(ra);
+  }
+  endPass();
+}
+
+void GraphSpewer::beginPass(const char* pass) {
   beginObject();
   property("name", pass);
 }
 
-void JSONSpewer::spewMResumePoint(MResumePoint* rp) {
+void GraphSpewer::spewMResumePoint(MResumePoint* rp) {
   if (!rp) {
     return;
   }
@@ -62,7 +73,7 @@ void JSONSpewer::spewMResumePoint(MResumePoint* rp) {
   endObject();
 }
 
-void JSONSpewer::spewMDef(MDefinition* def) {
+void GraphSpewer::spewMDef(MDefinition* def) {
   beginObject();
 
   property("id", def->id());
@@ -131,7 +142,7 @@ void JSONSpewer::spewMDef(MDefinition* def) {
   endObject();
 }
 
-void JSONSpewer::spewMIR(MIRGraph* mir) {
+void GraphSpewer::spewMIR(MIRGraph* mir) {
   beginObjectProperty("mir");
   beginListProperty("blocks");
 
@@ -186,7 +197,7 @@ void JSONSpewer::spewMIR(MIRGraph* mir) {
   endObject();
 }
 
-void JSONSpewer::spewLIns(LNode* ins) {
+void GraphSpewer::spewLIns(LNode* ins) {
   beginObject();
 
   property("id", ins->id());
@@ -209,7 +220,7 @@ void JSONSpewer::spewLIns(LNode* ins) {
   endObject();
 }
 
-void JSONSpewer::spewLIR(MIRGraph* mir) {
+void GraphSpewer::spewLIR(MIRGraph* mir) {
   beginObjectProperty("lir");
   beginListProperty("blocks");
 
@@ -238,7 +249,7 @@ void JSONSpewer::spewLIR(MIRGraph* mir) {
   endObject();
 }
 
-void JSONSpewer::spewRanges(BacktrackingAllocator* regalloc) {
+void GraphSpewer::spewRanges(BacktrackingAllocator* regalloc) {
   beginObjectProperty("ranges");
   beginListProperty("blocks");
 
@@ -281,9 +292,9 @@ void JSONSpewer::spewRanges(BacktrackingAllocator* regalloc) {
   endObject();
 }
 
-void JSONSpewer::endPass() { endObject(); }
+void GraphSpewer::endPass() { endObject(); }
 
-void JSONSpewer::endFunction() {
+void GraphSpewer::endFunction() {
   endList();
   endObject();
 }

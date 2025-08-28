@@ -975,7 +975,7 @@ namespace jit {
 
 bool OptimizeMIR(MIRGenerator* mir) {
   MIRGraph& graph = mir->graph();
-  GraphSpewer& gs = mir->graphSpewer();
+  JitSpewGraphSpewer& gs = mir->graphSpewer();
 
   if (mir->shouldCancel("Start")) {
     return false;
@@ -1593,7 +1593,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
 LIRGraph* GenerateLIR(MIRGenerator* mir) {
   MIRGraph& graph = mir->graph();
-  GraphSpewer& gs = mir->graphSpewer();
+  JitSpewGraphSpewer& gs = mir->graphSpewer();
 
   LIRGraph* lir = mir->alloc().lifoAlloc()->new_<LIRGraph>(&graph);
   if (!lir || !lir->init()) {

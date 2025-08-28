@@ -32,7 +32,7 @@ using namespace js;
 using namespace js::jit;
 using namespace js::jitspew::detail;
 
-class IonSpewer {
+class JitSpewGraphOutput {
  private:
   Mutex outputLock_ MOZ_UNANNOTATED;
   Fprinter jsonOutput_;
@@ -43,14 +43,14 @@ class IonSpewer {
   void release();
 
  public:
-  IonSpewer()
-      : outputLock_(mutexid::IonSpewer),
+  JitSpewGraphOutput()
+      : outputLock_(mutexid::JitSpewGraphOutput),
         firstFunction_(false),
         asyncLogging_(false),
         inited_(false) {}
 
   // File output is terminated safely upon destruction.
-  ~IonSpewer();
+  ~JitSpewGraphOutput();
 
   bool init();
   bool isEnabled() { return inited_; }
@@ -58,12 +58,12 @@ class IonSpewer {
   bool getAsyncLogging() { return asyncLogging_; }
 
   void beginFunction();
-  void spewPass(GraphSpewer* gs);
-  void endFunction(GraphSpewer* gs);
+  void spewPass(JitSpewGraphSpewer* gs);
+  void endFunction(JitSpewGraphSpewer* gs);
 };
 
-// IonSpewer singleton.
-MOZ_RUNINIT static IonSpewer ionspewer;
+// JitSpewGraphOutput singleton.
+MOZ_RUNINIT static JitSpewGraphOutput jitSpewGraphOutput;
 
 bool jitspew::detail::LoggingChecked = false;
 static_assert(JitSpew_Terminator <= 64,
@@ -121,24 +121,24 @@ static bool FilterContainsLocation(JSScript* function) {
 }
 
 void jit::EnableIonDebugSyncLogging() {
-  ionspewer.init();
-  ionspewer.setAsyncLogging(false);
+  jitSpewGraphOutput.init();
+  jitSpewGraphOutput.setAsyncLogging(false);
   EnableChannel(JitSpew_IonSyncLogs);
 }
 
 void jit::EnableIonDebugAsyncLogging() {
-  ionspewer.init();
-  ionspewer.setAsyncLogging(true);
+  jitSpewGraphOutput.init();
+  jitSpewGraphOutput.setAsyncLogging(true);
 }
 
-void IonSpewer::release() {
+void JitSpewGraphOutput::release() {
   if (jsonOutput_.isInitialized()) {
     jsonOutput_.finish();
   }
   inited_ = false;
 }
 
-bool IonSpewer::init() {
+bool JitSpewGraphOutput::init() {
   if (inited_) {
     return true;
   }
@@ -156,7 +156,8 @@ bool IonSpewer::init() {
     size_t len;
     len = SprintfLiteral(jsonBuffer, JIT_SPEW_DIR "/ion%" PRIu32 ".json", pid);
     if (bufferLength <= len) {
-      fprintf(stderr, "Warning: IonSpewer::init: Cannot serialize file name.");
+      fprintf(stderr,
+              "Warning: JitSpewGraphOutput::init: Cannot serialize file name.");
       return false;
     }
     jsonFilename = jsonBuffer;
@@ -174,7 +175,7 @@ bool IonSpewer::init() {
   return true;
 }
 
-void IonSpewer::beginFunction() {
+void JitSpewGraphOutput::beginFunction() {
   // If we are doing a synchronous logging then we spew everything as we go,
   // as this is useful in case of failure during the compilation. On the other
   // hand, it is recommended to disable off thread compilation.
@@ -184,14 +185,14 @@ void IonSpewer::beginFunction() {
   }
 }
 
-void IonSpewer::spewPass(GraphSpewer* gs) {
+void JitSpewGraphOutput::spewPass(JitSpewGraphSpewer* gs) {
   if (!getAsyncLogging()) {
     LockGuard<Mutex> guard(outputLock_);
     gs->dump(jsonOutput_);
   }
 }
 
-void IonSpewer::endFunction(GraphSpewer* gs) {
+void JitSpewGraphOutput::endFunction(JitSpewGraphSpewer* gs) {
   LockGuard<Mutex> guard(outputLock_);
   if (getAsyncLogging() && !firstFunction_) {
     jsonOutput_.put(",");  // separate functions
@@ -201,7 +202,7 @@ void IonSpewer::endFunction(GraphSpewer* gs) {
   firstFunction_ = false;
 }
 
-IonSpewer::~IonSpewer() {
+JitSpewGraphOutput::~JitSpewGraphOutput() {
   if (!inited_) {
     return;
   }
@@ -210,15 +211,15 @@ IonSpewer::~IonSpewer() {
   release();
 }
 
-GraphSpewer::GraphSpewer(TempAllocator* alloc,
-                         const wasm::CodeMetadata* wasmCodeMeta)
+JitSpewGraphSpewer::JitSpewGraphSpewer(TempAllocator* alloc,
+                                       const wasm::CodeMetadata* wasmCodeMeta)
     : graph_(nullptr),
       jsonPrinter_(alloc->lifoAlloc()),
-      jsonSpewer_(jsonPrinter_, wasmCodeMeta) {}
+      graphSpewer_(jsonPrinter_, wasmCodeMeta) {}
 
-void GraphSpewer::init(MIRGraph* graph, JSScript* function) {
+void JitSpewGraphSpewer::init(MIRGraph* graph, JSScript* function) {
   MOZ_ASSERT(!isSpewing());
-  if (!ionspewer.isEnabled()) {
+  if (!jitSpewGraphOutput.isEnabled()) {
     return;
   }
 
@@ -233,33 +234,29 @@ void GraphSpewer::init(MIRGraph* graph, JSScript* function) {
   MOZ_ASSERT(isSpewing());
 }
 
-void GraphSpewer::beginFunction(JSScript* function) {
+void JitSpewGraphSpewer::beginFunction(JSScript* function) {
   if (!isSpewing()) {
     return;
   }
-  jsonSpewer_.beginFunction(function);
-  ionspewer.beginFunction();
+  graphSpewer_.beginFunction(function);
+  jitSpewGraphOutput.beginFunction();
 }
 
-void GraphSpewer::beginWasmFunction(unsigned funcIndex) {
+void JitSpewGraphSpewer::beginWasmFunction(unsigned funcIndex) {
   if (!isSpewing()) {
     return;
   }
-  jsonSpewer_.beginWasmFunction(funcIndex);
-  ionspewer.beginFunction();
+  graphSpewer_.beginWasmFunction(funcIndex);
+  jitSpewGraphOutput.beginFunction();
 }
 
-void GraphSpewer::spewPass(const char* pass) {
+void JitSpewGraphSpewer::spewPass(const char* pass, BacktrackingAllocator* ra) {
   if (!isSpewing()) {
     return;
   }
 
-  jsonSpewer_.beginPass(pass);
-  jsonSpewer_.spewMIR(graph_);
-  jsonSpewer_.spewLIR(graph_);
-  jsonSpewer_.endPass();
-
-  ionspewer.spewPass(this);
+  graphSpewer_.spewPass(pass, graph_, ra);
+  jitSpewGraphOutput.spewPass(this);
 
   // As this function is used for debugging, we ignore any of the previous
   // failures and ensure there is enough ballast space, such that we do not
@@ -272,22 +269,8 @@ void GraphSpewer::spewPass(const char* pass) {
   }
 }
 
-void GraphSpewer::spewPass(const char* pass, BacktrackingAllocator* ra) {
-  if (!isSpewing()) {
-    return;
-  }
-
-  jsonSpewer_.beginPass(pass);
-  jsonSpewer_.spewMIR(graph_);
-  jsonSpewer_.spewLIR(graph_);
-  jsonSpewer_.spewRanges(ra);
-  jsonSpewer_.endPass();
-
-  ionspewer.spewPass(this);
-}
-
-void GraphSpewer::endFunction() {
-  if (!ionspewer.isEnabled()) {
+void JitSpewGraphSpewer::endFunction() {
+  if (!jitSpewGraphOutput.isEnabled()) {
     return;
   }
 
@@ -297,13 +280,13 @@ void GraphSpewer::endFunction() {
     return;
   }
 
-  jsonSpewer_.endFunction();
+  graphSpewer_.endFunction();
 
-  ionspewer.endFunction(this);
+  jitSpewGraphOutput.endFunction(this);
   graph_ = nullptr;
 }
 
-void GraphSpewer::dump(Fprinter& jsonOut) {
+void JitSpewGraphSpewer::dump(Fprinter& jsonOut) {
   if (!jsonPrinter_.hadOutOfMemory()) {
     jsonPrinter_.exportInto(jsonOut);
   } else {

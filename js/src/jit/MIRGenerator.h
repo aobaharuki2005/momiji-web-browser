@@ -174,10 +174,10 @@ class MIRGenerator final {
   const JitCompileOptions options;
 
  private:
-  GraphSpewer gs_;
+  JitSpewGraphSpewer gs_;
 
  public:
-  GraphSpewer& graphSpewer() { return gs_; }
+  JitSpewGraphSpewer& graphSpewer() { return gs_; }
   CompilationDependencyTracker tracker;
 };
 
