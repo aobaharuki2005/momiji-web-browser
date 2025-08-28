@@ -93,6 +93,9 @@ import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.FloatingActionButton
 import mozilla.components.compose.base.button.PrimaryButton
 import mozilla.components.compose.base.button.TextButton
+import mozilla.components.compose.base.menu.DropdownMenu
+import mozilla.components.compose.base.menu.MenuItem
+import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.textfield.TextFieldColors
 import mozilla.components.compose.base.theme.AcornTheme
@@ -113,9 +116,7 @@ import org.mozilla.fenix.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_URL_TEXT_
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.components
-import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.Favicon
-import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.SelectableFaviconListItem
 import org.mozilla.fenix.compose.list.SelectableIconListItem
@@ -1017,35 +1018,35 @@ private fun BookmarkSortOverflowMenu(
     val sortOrder by store.observeAsState(store.state.sortOrder) { store.state.sortOrder }
 
     val menuItems = listOf(
-        MenuItem(
-            title = stringResource(R.string.bookmark_sort_menu_custom),
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_custom),
             isChecked = sortOrder is BookmarksListSortOrder.Positional,
             onClick = { store.dispatch(BookmarksListMenuAction.SortMenu.CustomSortClicked) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_sort_menu_newest),
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_newest),
             isChecked = sortOrder == BookmarksListSortOrder.Created(ascending = true),
             onClick = { store.dispatch(BookmarksListMenuAction.SortMenu.NewestClicked) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_sort_menu_oldest),
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_oldest),
             isChecked = sortOrder == BookmarksListSortOrder.Created(ascending = false),
             onClick = { store.dispatch(BookmarksListMenuAction.SortMenu.OldestClicked) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_sort_menu_a_to_z),
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_a_to_z),
             isChecked = sortOrder == BookmarksListSortOrder.Alphabetical(ascending = true),
             onClick = { store.dispatch(BookmarksListMenuAction.SortMenu.AtoZClicked) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_sort_menu_z_to_a),
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_z_to_a),
             isChecked = sortOrder == BookmarksListSortOrder.Alphabetical(ascending = false),
             onClick = { store.dispatch(BookmarksListMenuAction.SortMenu.ZtoAClicked) },
         ),
     )
-    ContextualMenu(
+    DropdownMenu(
         menuItems = menuItems,
-        showMenu = showMenu,
+        expanded = showMenu,
         onDismissRequest = onDismissRequest,
     )
 }
@@ -1058,70 +1059,68 @@ private fun BookmarkListOverflowMenu(
     store: BookmarksStore,
 ) {
     val menuItems = listOf(
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_select_all_bookmarks),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_select_all_bookmarks),
             onClick = { store.dispatch(BookmarksListMenuAction.SelectAll) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_open_in_new_tab_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_open_in_new_tab_button),
             onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.OpenInNormalTabsClicked) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_open_in_private_tab_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_open_in_private_tab_button),
             onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.OpenInPrivateTabsClicked) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_share_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_share_button),
             onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.ShareClicked) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_delete_button),
-            color = FirefoxTheme.colors.textCritical,
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_delete_button),
+            level = MenuItem.FixedItem.Level.Critical,
             onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.DeleteClicked) },
         ),
     )
-    ContextualMenu(
+    DropdownMenu(
         menuItems = menuItems,
-        showMenu = showMenu,
+        expanded = showMenu,
         onDismissRequest = onDismissRequest,
     )
 }
 
 @Composable
-@Suppress("Deprecation") // https://bugzilla.mozilla.org/show_bug.cgi?id=1927718
 private fun FolderListOverflowMenu(
     showFolderMenu: Boolean,
     onDismissRequest: () -> Unit,
     store: BookmarksStore,
 ) {
     val menuItems = listOf(
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_select_all_bookmarks),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_select_all_bookmarks),
             onClick = { store.dispatch(BookmarksListMenuAction.SelectAll) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_open_in_new_tab_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_open_in_new_tab_button),
             onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.OpenInNormalTabsClicked) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_open_in_private_tab_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_open_in_private_tab_button),
             onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.OpenInPrivateTabsClicked) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_delete_button),
-            color = FirefoxTheme.colors.textCritical,
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_delete_button),
+            level = MenuItem.FixedItem.Level.Critical,
             onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.DeleteClicked) },
         ),
     )
-    ContextualMenu(
+    DropdownMenu(
         menuItems = menuItems,
-        showMenu = showFolderMenu,
+        expanded = showFolderMenu,
         onDismissRequest = onDismissRequest,
     )
 }
 
 @Composable
-@Suppress("Deprecation") // https://bugzilla.mozilla.org/show_bug.cgi?id=1927718
 private fun BookmarkListItemMenu(
     showMenu: Boolean,
     onDismissRequest: () -> Unit,
@@ -1129,41 +1128,40 @@ private fun BookmarkListItemMenu(
     store: BookmarksStore,
 ) {
     val menuItems = listOf(
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_edit_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_edit_button),
             onClick = { store.dispatch(BookmarksListMenuAction.Bookmark.EditClicked(bookmark)) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_copy_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_copy_button),
             onClick = { store.dispatch(BookmarksListMenuAction.Bookmark.CopyClicked(bookmark)) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_share_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_share_button),
             onClick = { store.dispatch(BookmarksListMenuAction.Bookmark.ShareClicked(bookmark)) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_open_in_new_tab_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_open_in_new_tab_button),
             onClick = { store.dispatch(BookmarksListMenuAction.Bookmark.OpenInNormalTabClicked(bookmark)) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_open_in_private_tab_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_open_in_private_tab_button),
             onClick = { store.dispatch(BookmarksListMenuAction.Bookmark.OpenInPrivateTabClicked(bookmark)) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_delete_button),
-            color = FirefoxTheme.colors.actionCritical,
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_delete_button),
+            level = MenuItem.FixedItem.Level.Critical,
             onClick = { store.dispatch(BookmarksListMenuAction.Bookmark.DeleteClicked(bookmark)) },
         ),
     )
-    ContextualMenu(
+    DropdownMenu(
         menuItems = menuItems,
-        showMenu = showMenu,
+        expanded = showMenu,
         onDismissRequest = onDismissRequest,
     )
 }
 
 @Composable
-@Suppress("Deprecation") // https://bugzilla.mozilla.org/show_bug.cgi?id=1927718
 private fun BookmarkListFolderMenu(
     showMenu: Boolean,
     onDismissRequest: () -> Unit,
@@ -1171,27 +1169,27 @@ private fun BookmarkListFolderMenu(
     store: BookmarksStore,
 ) {
     val menuItems = listOf(
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_edit_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_edit_button),
             onClick = { store.dispatch(BookmarksListMenuAction.Folder.EditClicked(folder)) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_open_all_in_tabs_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_open_all_in_tabs_button),
             onClick = { store.dispatch(BookmarksListMenuAction.Folder.OpenAllInNormalTabClicked(folder)) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_open_all_in_private_tabs_button),
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_open_all_in_private_tabs_button),
             onClick = { store.dispatch(BookmarksListMenuAction.Folder.OpenAllInPrivateTabClicked(folder)) },
         ),
-        MenuItem(
-            title = stringResource(R.string.bookmark_menu_delete_button),
-            color = FirefoxTheme.colors.actionCritical,
+        MenuItem.TextItem(
+            text = Text.Resource(R.string.bookmark_menu_delete_button),
+            level = MenuItem.FixedItem.Level.Critical,
             onClick = { store.dispatch(BookmarksListMenuAction.Folder.DeleteClicked(folder)) },
         ),
     )
-    ContextualMenu(
+    DropdownMenu(
         menuItems = menuItems,
-        showMenu = showMenu,
+        expanded = showMenu,
         onDismissRequest = onDismissRequest,
     )
 }
