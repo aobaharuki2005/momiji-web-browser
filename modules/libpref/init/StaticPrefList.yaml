@@ -4781,6 +4781,12 @@
   value: true
   mirror: always
 
+# Enable Storage-Access-Headers
+- name: dom.storage_access.headers.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Forward-Declared Storage-access API.
 - name: dom.storage_access.forward_declared.enabled
   type: bool

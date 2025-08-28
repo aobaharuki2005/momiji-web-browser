@@ -669,6 +669,14 @@ interface nsILoadInfo : nsISupports
     NoStoragePermission = 0,
     HasStoragePermission = 1,
     StoragePermissionAllowListed = 2,
+    // Value for Storage-Access-Headers. Like NoStoragePermission, but on a channel that can potentially
+    // have access to unpartitioned cookies.
+    // XXX(Bug 1978856): If this is considered to be not useful, this variant can be removed.
+    DisabledStoragePermission = 3,
+    // Value for Storage-Access-Headers. The user has granted storage-access permissions previously,
+    // but in this request we partition the storage. Website can simply elevate to unpartitioned cookies
+    // by running document.requestStoragePermission()
+    InactiveStoragePermission = 4,
   };
 
 /**
