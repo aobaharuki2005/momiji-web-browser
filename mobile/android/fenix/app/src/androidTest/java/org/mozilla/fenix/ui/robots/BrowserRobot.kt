@@ -1135,13 +1135,13 @@ class BrowserRobot {
             )
             Log.i(
                 TAG,
-                "verifyWebCompatReporterViewItems: Trying to verify that the \"Send more info\" link is displayed",
+                "verifyWebCompatReporterViewItems: Trying to verify that the \"Add more info\" link is displayed",
             )
-            composeTestRule.onNodeWithText(getStringResource(R.string.webcompat_reporter_send_more_info))
+            composeTestRule.onNodeWithText(getStringResource(R.string.webcompat_reporter_add_more_info))
                 .assertIsDisplayed()
             Log.i(
                 TAG,
-                "verifyWebCompatReporterViewItems: Verified that the \"Send more info\" link is displayed",
+                "verifyWebCompatReporterViewItems: Verified that the \"Add more info\" link is displayed",
             )
         }
         Log.i(TAG, "verifyWebCompatReporterViewItems: Trying to verify that the \"Cancel\" button is displayed")
