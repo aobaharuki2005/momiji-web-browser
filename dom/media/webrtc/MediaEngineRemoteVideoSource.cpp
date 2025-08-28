@@ -395,15 +395,12 @@ nsresult MediaEngineRemoteVideoSource::Start() {
         input.mCanCropAndScale ? mConstraints->mFrameRate.Get(maxFPS) : maxFPS;
   }
 
-  mSettingsUpdatedByFrame->mValue = false;
-
-  if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture, mCapEngine,
-                              mCaptureId, mCapability, constraints, this)) {
-    LOG("StartCapture failed");
-    MutexAutoLock lock(mMutex);
-    mState = kStopped;
-    return NS_ERROR_FAILURE;
+  nsresult rv = StartCapture(constraints);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
+
+  mSettingsUpdatedByFrame->mValue = false;
 
   Maybe<gfx::IntSize> dstSize;
   if (input.mInputWidth && input.mInputHeight) {
@@ -425,10 +422,27 @@ nsresult MediaEngineRemoteVideoSource::Start() {
           auto resizeMode = cropAndScale ? VideoResizeModeEnum::Crop_and_scale
                                          : VideoResizeModeEnum::None;
           settings->mResizeMode.Reset();
-          settings->mResizeMode.Value() =
-              NS_ConvertASCIItoUTF16(dom::GetEnumString(resizeMode));
+          settings->mResizeMode.Construct(
+              NS_ConvertASCIItoUTF16(dom::GetEnumString(resizeMode)));
         }
       }));
+  return rv;
+}
+
+nsresult MediaEngineRemoteVideoSource::StartCapture(
+    const NormalizedConstraints& aConstraints) {
+  LOG("%s", __PRETTY_FUNCTION__);
+  AssertIsOnOwningThread();
+
+  MOZ_ASSERT(mState == kStarted);
+
+  if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture, mCapEngine,
+                              mCaptureId, mCapability, aConstraints, this)) {
+    LOG("StartCapture failed");
+    MutexAutoLock lock(mMutex);
+    mState = kStopped;
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -492,7 +506,7 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
   double framerate = 0.0;
   {
     MutexAutoLock lock(mMutex);
-    // Start() applies mCapability on the device.
+    // StartCapture() applies mCapability on the device.
     mCapability = newCapability;
     mCalculation = distanceMode;
     mConstraints = Some(c);
@@ -515,7 +529,7 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
   }
 
   if (mState == kStarted && capabilityChanged) {
-    nsresult rv = Start();
+    nsresult rv = StartCapture(c);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       nsAutoCString name;
       GetErrorName(rv, name);
@@ -529,14 +543,23 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
   mSettingsUpdatedByFrame->mValue = false;
   gfx::IntSize dstSize = CalculateDesiredSize(input);
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [domSettings = mSettings, updated = mSettingsUpdatedByFrame,
-                 dstSize, framerate]() mutable {
-        if (updated->mValue) {
-          return;
+      __func__,
+      [settings = mSettings, updated = mSettingsUpdatedByFrame, dstSize,
+       framerate, resizeModeEnabled = mPrefs->mResizeModeEnabled,
+       distanceMode]() mutable {
+        const bool cropAndScale = distanceMode == kFeasibility;
+        if (!updated->mValue) {
+          settings->mWidth.Value() = dstSize.width;
+          settings->mHeight.Value() = dstSize.height;
         }
-        domSettings->mWidth.Value() = dstSize.width;
-        domSettings->mHeight.Value() = dstSize.height;
-        domSettings->mFrameRate.Value() = framerate;
+        settings->mFrameRate.Value() = framerate;
+        if (resizeModeEnabled) {
+          auto resizeMode = cropAndScale ? VideoResizeModeEnum::Crop_and_scale
+                                         : VideoResizeModeEnum::None;
+          settings->mResizeMode.Reset();
+          settings->mResizeMode.Construct(
+              NS_ConvertASCIItoUTF16(dom::GetEnumString(resizeMode)));
+        }
       }));
 
   return NS_OK;
