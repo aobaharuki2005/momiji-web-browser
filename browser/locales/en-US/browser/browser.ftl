@@ -2,74 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-## The main browser window's title
-
-# These are the default window titles everywhere except macOS.
-# .data-title-default and .data-title-private are used when the web content
-# opened has no title:
-#
-# default - "Mozilla Firefox"
-# private - "Mozilla Firefox (Private Browsing)"
-#
-# .data-content-title-default and .data-content-title-private are for use when
-# there *is* a content title.
-#
-# .data-title-default-with-profile, .data-title-private-with-profile,
-# .data-content-title-default-with-profile,
-# .data-content-title-private-with-profile are used when there a
-# SelectableProfileService.current profile exists.
-#
-# Variables:
-#  $content-title (String): the title of the web content.
-#  $profile-name (String): the name of the current profile.
-browser-main-window-titles =
-  .data-title-default = { -brand-full-name }
-  .data-title-private = { -brand-full-name } Private Browsing
-  .data-title-default-with-profile = { $profile-name } — { -brand-full-name }
-  .data-title-private-with-profile = { $profile-name } — { -brand-full-name } Private Browsing
-  .data-content-title-default = { $content-title } — { -brand-full-name }
-  .data-content-title-private = { $content-title } — { -brand-full-name } Private Browsing
-  .data-content-title-default-with-profile = { $content-title } — { $profile-name } — { -brand-full-name }
-  .data-content-title-private-with-profile = { $content-title } — { $profile-name } — { -brand-full-name } Private Browsing
-
-# These are the default window titles on macOS.
-# .data-title-default and .data-title-private are used when the web content
-# opened has no title:
-#
-#
-# "default" - "Mozilla Firefox"
-# "private" - "Mozilla Firefox — (Private Browsing)"
-#
-# .data-content-title-default and .data-content-title-private are for use when
-# there *is* a content title.
-# Do not use the brand name in these, as we do on non-macOS.
-#
-# .data-title-default-with-profile, .data-title-private-with-profile,
-# .data-content-title-default-with-profile,
-# .data-content-title-private-with-profile are used when there a
-# SelectableProfileService.current profile exists.
-#
-# Also note the other subtle difference here: we use a `-` to separate the
-# brand name from `(Private Browsing)`, which does not happen on other OSes.
-#
-# Variables:
-#  $content-title (String): the title of the web content.
-#  $profile-name (String): the name of the current profile.
-browser-main-window-titles-mac =
-  .data-title-default = { -brand-full-name }
-  .data-title-private = { -brand-full-name } — Private Browsing
-  .data-title-default-with-profile = { $profile-name } — { -brand-full-name }
-  .data-title-private-with-profile = { $profile-name } — { -brand-full-name } Private Browsing
-  .data-content-title-default = { $content-title }
-  .data-content-title-private = { $content-title } — Private Browsing
-  .data-content-title-default-with-profile = { $content-title } — { $profile-name }
-  .data-content-title-private-with-profile = { $content-title } — { $profile-name } — Private Browsing
-
-# This gets set as the initial title, and is overridden as soon as we start
-# updating the titlebar based on loaded tabs or private browsing state.
-# This should match the `data-title-default` attribute in both
-# `browser-main-window` and `browser-main-window-mac`.
+# This is the initial default title for the browser window.
+# It gets updated based on loaded tabs or private browsing state.
 browser-main-window-default-title = { -brand-full-name }
+
+# Note: only on macOS do we use a `-` separator between the brand name and the
+# "Private Browsing" suffix.
+browser-main-private-window-title = { PLATFORM() ->
+      [macos] { -brand-full-name } — Private Browsing
+     *[other] { -brand-full-name } Private Browsing
+  }
+
+# This is only used on macOS; on other OSes we use the full private window
+# title (so including the brand name) as a suffix
+browser-main-private-suffix-for-content = Private Browsing
 
 # The non-variable portion of this MUST match the translation of
 # "PRIVATE_BROWSING_SHORTCUT_TITLE" in custom.properties

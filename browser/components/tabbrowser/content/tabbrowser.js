@@ -179,6 +179,7 @@
       }
 
       Services.obs.addObserver(this, "contextual-identity-updated");
+      Services.obs.addObserver(this, "intl:app-locales-changed");
 
       document.addEventListener("keydown", this, { mozSystemGroup: true });
       document.addEventListener("keypress", this, { mozSystemGroup: true });
@@ -206,8 +207,7 @@
 
       // We take over setting the document title, so remove the l10n id to
       // avoid it being re-translated and overwriting document content if
-      // we ever switch languages at runtime. After a language change, the
-      // window title will update at the next tab or location change.
+      // we ever switch languages at runtime.
       document.querySelector("title").removeAttribute("data-l10n-id");
 
       this._setupEventListeners();
@@ -1117,39 +1117,36 @@
       }
     }
 
-    getWindowTitleForBrowser(aBrowser) {
-      let docElement = document.documentElement;
-      let title = "";
-      let dataSuffix =
-        docElement.getAttribute("privatebrowsingmode") == "temporary"
-          ? "Private"
-          : "Default";
-
-      if (
-        SelectableProfileService?.isEnabled &&
-        SelectableProfileService.currentProfile
-      ) {
-        dataSuffix += "WithProfile";
+    #cachedTitleInfo = null;
+    #populateTitleCache() {
+      this.#cachedTitleInfo = {};
+      for (let id of [
+        "mainWindowTitle",
+        "privateWindowTitle",
+        "privateWindowSuffixForContent",
+      ]) {
+        this.#cachedTitleInfo[id] =
+          document.getElementById(id)?.textContent || "";
       }
-      let defaultTitle = docElement.dataset["title" + dataSuffix].replace(
-        "PROFILENAME",
-        () => SelectableProfileService.currentProfile.name.replace(/\0/g, "")
-      );
+    }
 
+    #determineContentTitle(browser) {
+      let title = "";
       if (
         !this._shouldExposeContentTitle ||
         (PrivateBrowsingUtils.isWindowPrivate(window) &&
           !this._shouldExposeContentTitlePbm)
       ) {
-        return defaultTitle;
+        return title;
       }
 
+      let docElement = document.documentElement;
       // If location bar is hidden and the URL type supports a host,
       // add the scheme and host to the title to prevent spoofing.
       // XXX https://bugzilla.mozilla.org/show_bug.cgi?id=22183#c239
       try {
         if (docElement.getAttribute("chromehidden").includes("location")) {
-          const uri = Services.io.createExposableURI(aBrowser.currentURI);
+          const uri = Services.io.createExposableURI(browser.currentURI);
           let prefix = uri.prePath;
           if (uri.scheme == "about") {
             prefix = uri.spec;
@@ -1172,33 +1169,53 @@
         title += docElement.getAttribute("titlepreface");
       }
 
-      let tab = this.getTabForBrowser(aBrowser);
+      let tab = this.getTabForBrowser(browser);
       if (tab._labelIsContentTitle) {
         // Strip out any null bytes in the content title, since the
         // underlying widget implementations of nsWindow::SetTitle pass
         // null-terminated strings to system APIs.
         title += tab.getAttribute("label").replace(/\0/g, "");
       }
+      return title;
+    }
 
-      if (title) {
-        // We're using a function rather than just using `title` as the
-        // new substring to avoid `$$`, `$'` etc. having a special
-        // meaning to `replace`.
-        // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#specifying_a_string_as_a_parameter
-        // and the documentation for functions for more info about this.
-        return docElement.dataset["contentTitle" + dataSuffix]
-          .replace("CONTENTTITLE", () => title)
-          .replace(
-            "PROFILENAME",
-            () =>
-              SelectableProfileService?.currentProfile?.name.replace(
-                /\0/g,
-                ""
-              ) ?? ""
-          );
+    getWindowTitleForBrowser(browser) {
+      if (!this.#cachedTitleInfo) {
+        this.#populateTitleCache();
+      }
+      let contentTitle = this.#determineContentTitle(browser);
+      let docElement = document.documentElement;
+      let isTemporaryPrivateWindow =
+        docElement.getAttribute("privatebrowsingmode") == "temporary";
+
+      let profileIdentifier =
+        SelectableProfileService?.isEnabled &&
+        SelectableProfileService.currentProfile?.name.replace(/\0/g, "");
+      // Note that empty/falsy bits get filtered below.
+      let parts = [contentTitle, profileIdentifier];
+
+      // On macOS PB windows, add the private window suffix if we have a content
+      // title. We'll add the brand name and private window suffix for all other
+      // platforms below.
+      if (
+        AppConstants.platform == "macosx" &&
+        contentTitle &&
+        isTemporaryPrivateWindow
+      ) {
+        parts.push(this.#cachedTitleInfo.privateWindowSuffixForContent);
       }
 
-      return defaultTitle;
+      // Show the brand name if we don't have a content title, or suffix
+      // it everywhere except on macOS.
+      if (!contentTitle || AppConstants.platform != "macosx") {
+        parts.push(
+          this.#cachedTitleInfo[
+            isTemporaryPrivateWindow ? "privateWindowTitle" : "mainWindowTitle"
+          ]
+        );
+      }
+
+      return parts.filter(p => !!p).join(" — ");
     }
 
     updateTitlebar() {
@@ -7332,6 +7349,11 @@
           }
           break;
         }
+        case "intl:app-locales-changed": {
+          this.#populateTitleCache();
+          this.updateTitlebar();
+          break;
+        }
       }
     }
 
@@ -7392,6 +7414,7 @@
     destroy() {
       this.tabContainer.destroy();
       Services.obs.removeObserver(this, "contextual-identity-updated");
+      Services.obs.removeObserver(this, "intl:app-locales-changed");
 
       for (let tab of this.tabs) {
         let browser = tab.linkedBrowser;
