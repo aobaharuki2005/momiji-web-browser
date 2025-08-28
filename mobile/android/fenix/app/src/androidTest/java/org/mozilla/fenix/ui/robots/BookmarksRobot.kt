@@ -32,13 +32,15 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
 
     @OptIn(ExperimentalTestApi::class)
     fun verifyEmptyBookmarksMenuView() {
-        Log.i(TAG, "verifyBookmarksMenuView: Waiting for bookmarks header to exist.")
+        Log.i(TAG, "verifyBookmarksMenuView: Waiting for bookmarks toolbar elements to exist.")
         composeTestRule.waitUntilAtLeastOneExists(
             hasTestTag(BOOKMARK_TOOLBAR)
                 .and(hasAnyDescendant(hasText("Bookmarks")))
-                .and(hasAnyDescendant(hasContentDescription("Navigate back"))),
+                .and(hasAnyDescendant(hasContentDescription("Navigate back")))
+                .and(hasAnyDescendant(hasContentDescription(getStringResource(R.string.bookmark_sort_menu_content_desc))))
+                .and(hasAnyDescendant(hasContentDescription(getStringResource(R.string.bookmark_add_new_folder_button_content_description)))),
         )
-        Log.i(TAG, "verifyBookmarksMenuView: Waited for bookmarks header to exist.")
+        Log.i(TAG, "verifyBookmarksMenuView: Waited for bookmarks toolbar elements to exist.")
         Log.i(TAG, "verifyBookmarksMenuView: Trying to verify the empty bookmarks list is displayed.")
         composeTestRule.onNodeWithText(
             getStringResource(R.string.bookmark_empty_list_guest_description),
