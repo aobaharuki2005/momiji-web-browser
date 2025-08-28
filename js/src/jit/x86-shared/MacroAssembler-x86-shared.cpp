@@ -219,6 +219,50 @@ void MacroAssemblerX86Shared::bitwiseTestSimd128(const SimdConstant& rhs,
   }
 }
 
+void MacroAssemblerX86Shared::minMax32(Register lhs, Register rhs,
+                                       Register dest, bool isMax) {
+  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
+  if (lhs != dest) {
+    move32(lhs, dest);
+  }
+  asMasm().cmp32Move32(cond, rhs, lhs, rhs, dest);
+}
+
+void MacroAssemblerX86Shared::minMax32(Register lhs, Imm32 rhs, Register dest,
+                                       bool isMax) {
+  auto cond =
+      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
+  if (lhs != dest) {
+    move32(lhs, dest);
+  }
+  Label done;
+  asMasm().branch32(cond, lhs, rhs, &done);
+  move32(rhs, dest);
+  bind(&done);
+}
+
+void MacroAssemblerX86Shared::minMaxPtr(Register lhs, Register rhs,
+                                        Register dest, bool isMax) {
+  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
+  if (lhs != dest) {
+    asMasm().movePtr(lhs, dest);
+  }
+  asMasm().cmpPtrMovePtr(cond, rhs, lhs, rhs, dest);
+}
+
+void MacroAssemblerX86Shared::minMaxPtr(Register lhs, ImmWord rhs,
+                                        Register dest, bool isMax) {
+  auto cond =
+      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
+  if (lhs != dest) {
+    asMasm().movePtr(lhs, dest);
+  }
+  Label done;
+  asMasm().branchPtr(cond, lhs, rhs, &done);
+  asMasm().movePtr(rhs, dest);
+  bind(&done);
+}
+
 void MacroAssemblerX86Shared::minMaxDouble(FloatRegister first,
                                            FloatRegister second, bool canBeNaN,
                                            bool isMax) {
