@@ -19,6 +19,7 @@ BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 XPIDL_SOURCES += [
     "nsIPrefBranch.idl",
     "nsIPrefLocalizedString.idl",
+    "nsIPrefOverrideMap.idl",
     "nsIPrefService.idl",
     "nsIRelativeFilePref.idl",
 ]
