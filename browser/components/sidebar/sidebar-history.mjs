@@ -417,7 +417,9 @@ export class SidebarHistory extends SidebarPage {
             </moz-button>
           </div>
         </sidebar-panel-header>
-        ${this.cardsTemplate}
+        <div class="sidebar-panel-scrollable-content">
+          ${this.cardsTemplate}
+        </div>
       </div>
     `;
   }

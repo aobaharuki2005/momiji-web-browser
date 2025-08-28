@@ -5,13 +5,8 @@
 @import url("chrome://global/skin/design-system/text-and-typography.css");
 
 :host {
-  display: block;
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 1;
   padding-block: var(--space-large);
   margin-block-start: calc(var(--space-large) * -1);
-  background-color: var(--sidebar-background-color);
 }
 
 .sidebar-panel-heading {

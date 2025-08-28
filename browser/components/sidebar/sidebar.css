@@ -57,14 +57,21 @@ moz-card {
 }
 
 .sidebar-panel {
+  display: flex;
+  flex-direction: column;
   padding: var(--space-large);
-  height: fit-content;
   box-sizing: border-box;
   border-radius: var(--border-radius-medium);
   width: 100%;
+  height: 100%;
 
-  > moz-input-search {
+  moz-input-search {
     display: block;
+  }
+
+  .sidebar-panel-scrollable-content {
+    overflow-y: auto;
+    height: 100%;
   }
 }
 

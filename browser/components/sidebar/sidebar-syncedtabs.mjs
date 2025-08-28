@@ -324,11 +324,13 @@ class SyncedTabsInSidebar extends SidebarPage {
             @MozInputSearch:search=${this.onSearchQuery}
           ></moz-input-search>
         </sidebar-panel-header>
-        ${when(
-          messageCard,
-          () => this.messageCardTemplate(messageCard),
-          () => html`${this.deviceListTemplate()}`
-        )}
+        <div class="sidebar-panel-scrollable-content">
+          ${when(
+            messageCard,
+            () => this.messageCardTemplate(messageCard),
+            () => html`${this.deviceListTemplate()}`
+          )}
+        </div>
       </div>
     `;
   }
