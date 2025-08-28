@@ -48,7 +48,7 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 const CSS_TYPE_LEGACY_SHORTHAND = 3;
 
 // Each property has the following fields:
-//   domProp: The name of the relevant member of nsIDOM[NS]CSS2Properties
+//   domProp: The name of the relevant member of CSSStyleProperties
 //   inherited: Whether the property is inherited by default (stated as
 //     yes or no in the property header in all CSS specs)
 //   type: see above

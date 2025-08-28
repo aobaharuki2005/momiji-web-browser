@@ -82,7 +82,7 @@ class CSSStyleRule final : public css::GroupRule {
   void GetCssText(nsACString& aCssText) const final;
   void GetSelectorText(nsACString& aSelectorText);
   void SetSelectorText(const nsACString& aSelectorText);
-  nsICSSDeclaration* Style() { return &mDecls; }
+  nsDOMCSSDeclaration* Style() { return &mDecls; }
 
   // If we wanted to follow the declaration order in CSSStyleRule.webidl,
   // chromeonly Web IDL stuff would be declared here, but it's currently

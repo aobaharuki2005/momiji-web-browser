@@ -95,7 +95,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
                    mozilla::ErrorResult& aRv) override;
   uint32_t Length() override;
 
-  // WebIDL interface for CSS2Properties
+  // WebIDL interface for CSSStyleProperties
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound,
                              nsACString& aPropName) override;
 

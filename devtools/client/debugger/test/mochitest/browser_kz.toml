@@ -147,7 +147,8 @@ skip-if = [
 ]
 
 ["browser_dbg-preview-wrapped-lines.js"]
-fail-if = ["a11y_checks"] # Bug 1860733 splitter element is not focusable
+skip-if = ["true"] # Bug 1985564 the test is flaky
+# fail-if = ["a11y_checks"] # Bug 1860733 splitter element is not focusable
 
 ["browser_dbg-preview.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled

@@ -401,9 +401,9 @@ with Files("WebTransport*"):
     BUG_COMPONENT = ("Core", "Networking")
 
 GENERATED_WEBIDL_FILES = [
-    "CSS2Properties.webidl",
     "CSSPageDescriptors.webidl",
     "CSSPositionTryDescriptors.webidl",
+    "CSSStyleProperties.webidl",
 ]
 
 PREPROCESSED_WEBIDL_FILES = [

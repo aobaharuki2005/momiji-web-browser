@@ -11,7 +11,7 @@
 [Exposed=Window]
 interface CSSStyleRule : CSSGroupingRule {
   attribute UTF8String selectorText;
-  [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
+  [SameObject, PutForwards=cssText] readonly attribute CSSStyleProperties style;
 
   [ChromeOnly] readonly attribute unsigned long selectorCount;
   [ChromeOnly] UTF8String selectorTextAt(unsigned long index, optional boolean desugared = false);
