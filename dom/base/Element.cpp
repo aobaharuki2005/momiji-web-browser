@@ -1707,7 +1707,7 @@ already_AddRefed<nsIPrincipal> Element::CreateDevtoolsPrincipal() {
 
   if (nsIPolicyContainer* policyContainer = GetPolicyContainer()) {
     if (nsIContentSecurityPolicy* csp =
-            PolicyContainer::Cast(policyContainer)->CSP()) {
+            PolicyContainer::Cast(policyContainer)->GetCSP()) {
       RefPtr<nsCSPContext> dtCsp = new nsCSPContext();
       dtCsp->InitFromOther(static_cast<nsCSPContext*>(csp));
       dtCsp->SetSkipAllowInlineStyleCheck(true);

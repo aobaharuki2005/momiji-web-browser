@@ -4149,7 +4149,7 @@ nsresult Document::InitIntegrityPolicy(nsIChannel* aChannel) {
   MOZ_ASSERT(mPolicyContainer,
              "Policy container must be initialized before IntegrityPolicy!");
 
-  if (mPolicyContainer->IntegrityPolicy()) {
+  if (mPolicyContainer->GetIntegrityPolicy()) {
     // We inherited the integrity policy.
     return NS_OK;
   }
