@@ -21,11 +21,7 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
  */
 export class ImportantDatesSuggestions extends SuggestProvider {
   get enablingPreferences() {
-    return [
-      "importantDatesFeatureGate",
-      "suggest.importantDates",
-      "suggest.quicksuggest.nonsponsored",
-    ];
+    return ["importantDatesFeatureGate", "suggest.importantDates"];
   }
 
   get primaryUserControlledPreferences() {
