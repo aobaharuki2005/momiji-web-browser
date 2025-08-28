@@ -43,8 +43,8 @@ The VERSION file contains the version of the image.
 
 
 def get_image_digest(image_name):
-    from taskgraph.generator import load_tasks_for_kind
-    from taskgraph.parameters import Parameters
+    from taskgraph.generator import load_tasks_for_kind  # noqa: PLC0415
+    from taskgraph.parameters import Parameters  # noqa: PLC0415
 
     params = Parameters(
         level=os.environ.get("MOZ_SCM_LEVEL", "3"),
@@ -56,9 +56,9 @@ def get_image_digest(image_name):
 
 
 def load_image_by_name(image_name, tag=None):
-    from taskgraph.generator import load_tasks_for_kind
-    from taskgraph.optimize.strategies import IndexSearch
-    from taskgraph.parameters import Parameters
+    from taskgraph.generator import load_tasks_for_kind  # noqa: PLC0415
+    from taskgraph.optimize.strategies import IndexSearch  # noqa: PLC0415
+    from taskgraph.parameters import Parameters  # noqa: PLC0415
 
     params = Parameters(
         level=os.environ.get("MOZ_SCM_LEVEL", "3"),
@@ -97,21 +97,21 @@ def load_image_by_task_id(task_id, tag=None):
     return tag
 
 
-def build_context(name, outputFile, args=None):
+def build_context(name, outputFile, graph_config, args=None):
     """Build a context.tar for image with specified name."""
     if not name:
         raise ValueError("must provide a Docker image name")
     if not outputFile:
         raise ValueError("must provide a outputFile")
 
-    image_dir = docker.image_path(name)
+    image_dir = docker.image_path(name, graph_config)
     if not os.path.isdir(image_dir):
         raise Exception(f"image directory does not exist: {image_dir}")
 
     docker.create_context_tar(".", image_dir, outputFile, args)
 
 
-def build_image(name, tag, args=None):
+def build_image(name, tag, graph_config, args=None):
     """Build a Docker image of specified name.
 
     Output from image building process will be printed to stdout.
@@ -119,7 +119,7 @@ def build_image(name, tag, args=None):
     if not name:
         raise ValueError("must provide a Docker image name")
 
-    image_dir = docker.image_path(name)
+    image_dir = docker.image_path(name, graph_config)
     if not os.path.isdir(image_dir):
         raise Exception(f"image directory does not exist: {image_dir}")
 
@@ -193,6 +193,21 @@ def load_image(url, imageName=None, imageTag=None):
 
                 # Open stream reader for the member
                 reader = tarin.extractfile(member)
+
+                # If the member is `manifest.json` and we're retagging the image,
+                # override RepoTags.
+                if member.name == "manifest.json" and imageName:
+                    manifest = json.loads(reader.read())  # type: ignore
+                    reader.close()  # type: ignore
+
+                    if len(manifest) > 1:
+                        raise Exception("file contains more than one manifest")
+
+                    manifest[0]["RepoTags"] = [f"{imageName}:{imageTag}"]
+
+                    data = json.dumps(manifest)
+                    reader = BytesIO(data.encode("utf-8"))
+                    member.size = len(data)
 
                 # If member is `repositories`, we parse and possibly rewrite the
                 # image tags.
@@ -331,13 +346,14 @@ def load_task(task_id, remove=True, user=None):
 
         if task_command:
             initfile = tempfile.NamedTemporaryFile("w+", delete=False)
+            os.fchmod(initfile.fileno(), 0o644)
             initfile.write(
                 dedent(
                     f"""
             function exec-task() {{
-                echo "Starting task: {task_command}";
-                pushd {task_cwd};
-                {task_command};
+                echo Starting task: {shlex.quote(task_command)}
+                pushd {task_cwd}
+                {task_command}
                 popd
             }}
             """

@@ -339,7 +339,7 @@ def status_task_batched(task_ids, use_proxy=False):
     """
     if testing:
         logger.info(f"Would have gotten status for {len(task_ids)} tasks.")
-        return
+        return {}
     endpoint = liburls.api(get_root_url(use_proxy), "queue", "v1", "tasks/status")
     statuses = {}
     continuation_token = None
