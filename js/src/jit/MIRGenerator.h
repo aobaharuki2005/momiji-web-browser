@@ -164,12 +164,6 @@ class MIRGenerator final {
     return wasmCodeMeta_;
   }
 
- private:
-  IonPerfSpewer wasmPerfSpewer_;
-
- public:
-  IonPerfSpewer& perfSpewer() { return wasmPerfSpewer_; }
-
  public:
   const JitCompileOptions options;
 
