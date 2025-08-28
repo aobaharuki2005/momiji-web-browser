@@ -921,7 +921,7 @@ class SitePermissionsFeature(
                     titleId = R.string.mozac_feature_sitepermissions_local_device_access_title,
                     iconId = iconsR.drawable.mozac_ic_device_desktop_24,
                     showDoNotAskAgainCheckBox = true,
-                    doNotAskAgainCheckBoxLabel = R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site3,
+                    doNotAskAgainCheckBoxLabel = R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site4,
                     shouldSelectRememberChoice = false,
                     negativeButtonResId = R.string.mozac_feature_sitepermissions_block,
                 )
@@ -934,7 +934,7 @@ class SitePermissionsFeature(
                     titleId = R.string.mozac_feature_sitepermissions_local_network_access_title,
                     iconId = iconsR.drawable.mozac_ic_router_24,
                     showDoNotAskAgainCheckBox = true,
-                    doNotAskAgainCheckBoxLabel = R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site3,
+                    doNotAskAgainCheckBoxLabel = R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site4,
                     shouldSelectRememberChoice = false,
                     negativeButtonResId = R.string.mozac_feature_sitepermissions_block,
                 )
