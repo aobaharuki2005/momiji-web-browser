@@ -255,26 +255,12 @@ uint32_t MacroAssembler::callJit(ImmPtr callee) {
   return currentOffset();
 }
 
-void MacroAssembler::pushFrameDescriptor(FrameType type) {
-  uint32_t descriptor = MakeFrameDescriptor(type);
-  push(Imm32(descriptor));
+void MacroAssembler::push(FrameDescriptor descriptor) {
+  push(Imm32(descriptor.value()));
 }
 
-void MacroAssembler::PushFrameDescriptor(FrameType type) {
-  uint32_t descriptor = MakeFrameDescriptor(type);
-  Push(Imm32(descriptor));
-}
-
-void MacroAssembler::pushFrameDescriptorForJitCall(FrameType type,
-                                                   uint32_t argc) {
-  uint32_t descriptor = MakeFrameDescriptorForJitCall(type, argc);
-  push(Imm32(descriptor));
-}
-
-void MacroAssembler::PushFrameDescriptorForJitCall(FrameType type,
-                                                   uint32_t argc) {
-  uint32_t descriptor = MakeFrameDescriptorForJitCall(type, argc);
-  Push(Imm32(descriptor));
+void MacroAssembler::Push(FrameDescriptor descriptor) {
+  Push(Imm32(descriptor.value()));
 }
 
 void MacroAssembler::pushFrameDescriptorForJitCall(FrameType type,
@@ -327,7 +313,7 @@ void MacroAssembler::loadFunctionFromCalleeToken(Address token, Register dest) {
 uint32_t MacroAssembler::buildFakeExitFrame(Register scratch) {
   mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
 
-  PushFrameDescriptor(FrameType::IonJS);
+  Push(FrameDescriptor(FrameType::IonJS));
   uint32_t retAddr = pushFakeReturnAddress(scratch);
   Push(FramePointer);
 
