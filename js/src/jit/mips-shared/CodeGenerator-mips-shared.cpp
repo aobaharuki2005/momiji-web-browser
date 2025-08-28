@@ -827,15 +827,16 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
         MOZ_CRASH("Unexpected shift op");
     }
   } else {
+    Register shift = ToRegister(rhs);
     switch (ins->bitop()) {
       case JSOp::Lsh:
-        masm.ma_sll(dest, lhs, dest);
+        masm.ma_sll(dest, lhs, shift);
         break;
       case JSOp::Rsh:
-        masm.ma_sra(dest, lhs, dest);
+        masm.ma_sra(dest, lhs, shift);
         break;
       case JSOp::Ursh:
-        masm.ma_srl(dest, lhs, dest);
+        masm.ma_srl(dest, lhs, shift);
         if (ins->mir()->toUrsh()->fallible()) {
           // x >>> 0 can overflow.
           bailoutCmp32(Assembler::LessThan, dest, Imm32(0), ins->snapshot());
