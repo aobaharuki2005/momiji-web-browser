@@ -3,7 +3,7 @@
 
 "use strict";
 
-const kForceOverflowWidthPx = 450;
+const kForceOverflowWidthPx = 500;
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/base/content/test/general/head.js",
@@ -127,16 +127,22 @@ add_task(
     let navbar = document.getElementById("nav-bar");
 
     // Resize the window so that the account button is in the overflow menu.
+    // As of bug 1960002, overflowing the navbar also requires adding an
+    // extra button.
     let originalWidth = window.outerWidth;
     window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
+    CustomizableUI.addWidgetToArea(
+      "history-panelmenu",
+      CustomizableUI.AREA_NAVBAR
+    );
     await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
 
     await checkForConfirmationHint("PanelUI-menu-button");
     document.documentElement.setAttribute("fxastatus", "not_configured");
 
     window.resizeTo(originalWidth, window.outerHeight);
-    await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
     CustomizableUI.reset();
+    await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
   }
 );
 
