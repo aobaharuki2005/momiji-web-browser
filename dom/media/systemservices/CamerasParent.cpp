@@ -7,7 +7,6 @@
 #include "CamerasParent.h"
 
 #include <algorithm>
-#include <atomic>
 
 #include "CamerasTypes.h"
 #include "MediaEngineSource.h"
@@ -17,15 +16,12 @@
 #include "api/video/video_frame_buffer.h"
 #include "common/browser_logging/WebRtcLog.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/StaticPrefs_permissions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"

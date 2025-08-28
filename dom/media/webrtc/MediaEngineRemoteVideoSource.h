@@ -7,37 +7,23 @@
 #ifndef MEDIAENGINE_REMOTE_VIDEO_SOURCE_H_
 #define MEDIAENGINE_REMOTE_VIDEO_SOURCE_H_
 
+#include "CamerasChild.h"
 #include "DOMMediaStream.h"
-#include "mozilla/Mutex.h"
-#include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsThreadUtils.h"
-#include "prcvar.h"
-#include "prthread.h"
-
-// Avoid warnings about redefinition of WARN_UNUSED_RESULT
-#include "AudioSegment.h"
 #include "MediaEngineSource.h"
 #include "MediaTrackGraph.h"
-#include "VideoSegment.h"
-#include "VideoUtils.h"
-#include "ipc/IPCMessageUtils.h"
-#include "mozilla/dom/MediaStreamTrackBinding.h"
-
-// Camera Access via IPC
-#include "CamerasChild.h"
-#include "NullTransport.h"
-
-// WebRTC includes
 #include "common_video/include/video_frame_buffer_pool.h"
 #include "modules/video_capture/video_capture_defines.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/dom/MediaStreamTrackBinding.h"
 
 namespace webrtc {
 using CaptureCapability = VideoCaptureCapability;
 }
 
 namespace mozilla {
+namespace dom {
+enum class VideoResizeModeEnum : uint8_t;
+}
 
 // Fitness distance is defined in
 // https://w3c.github.io/mediacapture-main/getusermedia.html#dfn-selectsettings
