@@ -954,7 +954,8 @@ ipc::IPCResult CamerasParent::RecvReleaseCapture(
 
 ipc::IPCResult CamerasParent::RecvStartCapture(
     const CaptureEngine& aCapEngine, const int& aCaptureId,
-    const VideoCaptureCapability& aIpcCaps) {
+    const VideoCaptureCapability& aIpcCaps,
+    const NormalizedConstraints& aConstraints) {
   MOZ_ASSERT(mPBackgroundEventTarget->IsOnCurrentThread());
   MOZ_ASSERT(!mDestroyed);
 
