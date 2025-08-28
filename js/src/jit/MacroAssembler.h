@@ -5908,8 +5908,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
  public:
   void loadJitCodeRaw(Register func, Register dest);
-  void loadBaselineJitCodeRaw(Register func, Register dest,
-                              Label* failure = nullptr);
+  void loadJitCodeRawNoIon(Register func, Register dest, Register scratch);
 
   void loadBaselineFramePtr(Register framePtr, Register dest);
 
