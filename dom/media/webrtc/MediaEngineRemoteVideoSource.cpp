@@ -179,31 +179,6 @@ static gfx::IntSize CalculateDesiredSize(DesiredSizeInput aInput) {
   return {dst_width, dst_height};
 }
 
-static VideoResizeModeEnum GetResizeMode(const NormalizedConstraintSet& c,
-                                         const MediaEnginePrefs& aPrefs) {
-  if (!aPrefs.mResizeModeEnabled) {
-    return dom::VideoResizeModeEnum::None;
-  }
-  auto defaultResizeMode = aPrefs.mResizeMode;
-  nsString defaultResizeModeString =
-      NS_ConvertASCIItoUTF16(dom::GetEnumString(defaultResizeMode));
-  uint32_t distanceToDefault = MediaConstraintsHelper::FitnessDistance(
-      Some(defaultResizeModeString), c.mResizeMode);
-  if (distanceToDefault == 0) {
-    return defaultResizeMode;
-  }
-  VideoResizeModeEnum otherResizeMode =
-      (defaultResizeMode == VideoResizeModeEnum::None)
-          ? VideoResizeModeEnum::Crop_and_scale
-          : VideoResizeModeEnum::None;
-  nsString otherResizeModeString =
-      NS_ConvertASCIItoUTF16(dom::GetEnumString(otherResizeMode));
-  uint32_t distanceToOther = MediaConstraintsHelper::FitnessDistance(
-      Some(otherResizeModeString), c.mResizeMode);
-  return (distanceToDefault <= distanceToOther) ? defaultResizeMode
-                                                : otherResizeMode;
-}
-
 MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
     const MediaDevice* aMediaDevice)
     : mCapEngine(CaptureEngine(aMediaDevice->mMediaSource)),
@@ -266,7 +241,9 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
   MOZ_ASSERT(mState == kReleased);
 
   NormalizedConstraints c(aConstraints);
-  auto distanceMode = ToDistanceCalculation(GetResizeMode(c, aPrefs));
+  const auto resizeMode = MediaConstraintsHelper::GetResizeMode(c, aPrefs);
+  const auto distanceMode =
+      resizeMode.map(&ToDistanceCalculation).valueOr(kFitness);
   webrtc::CaptureCapability newCapability;
   LOG("ChooseCapability(%s) for mCapability (Allocate) ++",
       ToString(distanceMode));
@@ -299,8 +276,7 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineRemoteVideoSource::Allocate::MainUpdate",
       [settings = mSettings, caps = mTrackCapabilities,
-       facingMode = mFacingMode,
-       resizeModeEnabled = aPrefs.mResizeModeEnabled]() {
+       facingMode = mFacingMode, resizeMode]() {
         *settings = dom::MediaTrackSettings();
         *caps = dom::MediaTrackCapabilities();
 
@@ -315,12 +291,14 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
           caps->mFacingMode.Construct(std::move(facing));
         }
 
-        if (resizeModeEnabled) {
+        if (resizeMode) {
           NS_ConvertASCIItoUTF16 noneString(
               dom::GetEnumString(VideoResizeModeEnum::None));
           NS_ConvertASCIItoUTF16 cropString(
               dom::GetEnumString(VideoResizeModeEnum::Crop_and_scale));
-          settings->mResizeMode.Construct(noneString);
+          settings->mResizeMode.Construct(
+              *resizeMode == VideoResizeModeEnum::Crop_and_scale ? cropString
+                                                                 : noneString);
           caps->mResizeMode.Construct(
               nsTArray<nsString>{noneString, cropString});
         }
@@ -496,7 +474,8 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
   AssertIsOnOwningThread();
 
   NormalizedConstraints c(aConstraints);
-  auto distanceMode = ToDistanceCalculation(GetResizeMode(c, aPrefs));
+  auto resizeMode = MediaConstraintsHelper::GetResizeMode(c, aPrefs);
+  auto distanceMode = resizeMode.map(&ToDistanceCalculation).valueOr(kFitness);
   webrtc::CaptureCapability newCapability;
   LOG("ChooseCapability(%s) for mTargetCapability (Reconfigure) ++",
       ToString(distanceMode));
@@ -819,7 +798,9 @@ uint32_t MediaEngineRemoteVideoSource::GetBestFitnessDistance(
 
   bool first = true;
   for (const NormalizedConstraintSet* ns : aConstraintSets) {
-    auto mode = ToDistanceCalculation(GetResizeMode(*ns, aPrefs));
+    auto mode = MediaConstraintsHelper::GetResizeMode(*ns, aPrefs)
+                    .map(&ToDistanceCalculation)
+                    .valueOr(kFitness);
     for (size_t i = 0; i < candidateSet.Length();) {
       auto& candidate = candidateSet[i];
       uint32_t distance = GetDistance(candidate.mCapability, *ns, mode);
