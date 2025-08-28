@@ -5,9 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.annotation.SuppressLint
-import android.content.ActivityNotFoundException
 import android.content.DialogInterface
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -18,7 +16,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
-import androidx.core.net.toUri
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -44,7 +41,6 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Addons
@@ -52,7 +48,6 @@ import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.GleanMetrics.Translations
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
@@ -477,17 +472,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
             // About preferences
             resources.getString(R.string.pref_key_rate) -> {
-                try {
-                    startActivity(Intent(Intent.ACTION_VIEW, SupportUtils.RATE_APP_URL.toUri()))
-                } catch (e: ActivityNotFoundException) {
-                    // Device without the play store installed.
-                    // Opening the play store website.
-                    (activity as HomeActivity).openToBrowserAndLoad(
-                        searchTermOrURL = SupportUtils.FENIX_PLAY_STORE_URL,
-                        newTab = true,
-                        from = BrowserDirection.FromSettings,
-                    )
-                }
+                components.playStoreReviewPromptController.tryLaunchPlayStoreReview(requireActivity())
                 null
             }
 

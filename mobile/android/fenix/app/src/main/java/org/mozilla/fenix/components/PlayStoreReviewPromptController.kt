@@ -60,7 +60,10 @@ class PlayStoreReviewPromptController(
         }
     }
 
-    private fun tryLaunchPlayStoreReview(activity: Activity) {
+    /**
+     * Try to launch the play store review flow.
+     */
+    fun tryLaunchPlayStoreReview(activity: Activity) {
         try {
             activity.startActivity(
                 Intent(Intent.ACTION_VIEW, SupportUtils.RATE_APP_URL.toUri()),
