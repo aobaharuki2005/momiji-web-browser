@@ -31,9 +31,9 @@ notes = "This is the upstream code plus the ARM intrinsics workaround from qcms,
 audit-as-crates-io = true
 notes = "This is the upstream code plus a few local fixes, see bug 1685697."
 
-[policy."bindgen:0.69.4"]
+[policy."bindgen:0.72.0@git:9366e0af8da529c958b4cd4fcbe492d951c86f5c"]
 audit-as-crates-io = true
-notes = "This is the upstream code plus a fix for clang trunk. See bug 1894093."
+notes = "This is the upstream code not yet released"
 
 [policy.chardetng]
 audit-as-crates-io = true

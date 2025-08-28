@@ -1047,6 +1047,19 @@ who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
 delta = "0.69.2 -> 0.69.4"
 
+[[audits.bindgen]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+delta = "0.69.4 -> 0.72.0"
+notes = "I'm the primary maintainer of this crate."
+
+[[audits.bindgen]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+delta = "0.72.0 -> 0.72.0@git:9366e0af8da529c958b4cd4fcbe492d951c86f5c"
+importable = false
+notes = "Authored or reviewed all relevant changes upstream."
+
 [[audits.bit-set]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
 criteria = "safe-to-deploy"

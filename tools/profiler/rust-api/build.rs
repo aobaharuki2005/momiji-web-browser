@@ -88,6 +88,11 @@ fn generate_bindings() {
         // successfully. Otherwise, it fails to build because MarkerSchema has
         // some std::strings as its fields.
         .opaque_type("std::string")
+        .opaque_type("std::unique_ptr")
+        .opaque_type("mozilla::Maybe")
+        .opaque_type("mozilla::MallocAllocPolicy")
+        .opaque_type("mozilla::Variant")
+        .opaque_type("mozilla::baseprofiler::UniqueJSONStrings")
         // std::vector needs to be converted to an opaque type because, if it's
         // not an opaque type, bindgen can't find its size properly and
         // MarkerSchema's total size reduces. That causes a heap buffer overflow.
