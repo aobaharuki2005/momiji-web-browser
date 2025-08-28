@@ -192,7 +192,7 @@
   <!-- Browser menu group that contains additional settings in collapsed state -->
   <string name="browser_menu_more_settings">കൂടുതല്‍</string>
   <!-- Browser menu group that contains additional settings in expanded state -->
-  <string name="browser_menu_less_settings">കുറച്ചു്</string>
+  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">കുറച്ചു്</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -848,9 +848,9 @@
   -->
   <string name="wallpapers_item_name_content_description">ചുവർകടലാസു് ഇനം: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">ചുവർകടലാസു് പുതുച്ചു</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">ചുവർകടലാസു് പുതുച്ചു</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">കാണുക</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">കാണുക</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">ചുവർകടലാസു് ഇറക്കിവയ്ക്കാൻ പറ്റിയില്ല</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->

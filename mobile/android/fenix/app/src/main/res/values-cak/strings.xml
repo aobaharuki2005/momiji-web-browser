@@ -591,9 +591,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Retal rupam ruwäch: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">¡Xk\'ex ri rupam ruwäch!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">¡Xk\'ex ri rupam ruwäch!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Titz\'et</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Titz\'et</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Man tikirel ta niqasäx rupam ruwäch</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->

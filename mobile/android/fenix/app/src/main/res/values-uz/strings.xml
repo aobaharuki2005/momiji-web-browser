@@ -380,9 +380,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Fon rasmi: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">Fon rasmi yangilandi!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">Fon rasmi yangilandi!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Koʻrish</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Koʻrish</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Fon rasmi yuklab olinmadi</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
