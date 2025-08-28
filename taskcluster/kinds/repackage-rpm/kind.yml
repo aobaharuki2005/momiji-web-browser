@@ -60,6 +60,7 @@ tasks:
             # dependencies gets filled out in gecko_taskgraph.transforms.repackage_rpm
         attributes:
             build_platform: linux-shippable
+            primary-dependency-label: build-signing-linux-shippable/opt
         treeherder:
             platform: linux-shippable/opt
 
@@ -69,6 +70,7 @@ tasks:
             # dependencies gets filled out in gecko_taskgraph.transforms.repackage_rpm
         attributes:
             build_platform: linux64-shippable
+            primary-dependency-label: build-signing-linux64-shippable/opt
         treeherder:
             platform: linux64-shippable/opt
 
@@ -78,6 +80,7 @@ tasks:
             # dependencies gets filled out in gecko_taskgraph.transforms.repackage_rpm
         attributes:
             build_platform: linux64-aarch64-shippable
+            primary-dependency-label: build-signing-linux64-aarch64-shippable/opt
         treeherder:
             platform: linux64-aarch64-shippable/opt
 
@@ -87,6 +90,7 @@ tasks:
             # dependencies gets filled out in gecko_taskgraph.transforms.repackage_rpm
         attributes:
             build_platform: linux-devedition
+            primary-dependency-label: build-signing-linux-devedition/opt
         treeherder:
             platform: linux-devedition/opt
 
@@ -96,6 +100,7 @@ tasks:
             # dependencies gets filled out in gecko_taskgraph.transforms.repackage_rpm
         attributes:
             build_platform: linux64-devedition
+            primary-dependency-label: build-signing-linux64-devedition/opt
         treeherder:
             platform: linux64-devedition/opt
 
@@ -105,5 +110,6 @@ tasks:
             # dependencies gets filled out in gecko_taskgraph.transforms.repackage_rpm
         attributes:
             build_platform: linux64-aarch64-devedition
+            primary-dependency-label: build-signing-linux64-aarch64-devedition/opt
         treeherder:
             platform: linux64-aarch64-devedition/opt
