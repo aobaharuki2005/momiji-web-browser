@@ -12,6 +12,10 @@
 #  include "nsISupportsImpl.h"
 #  include "nsString.h"
 
+#  ifdef ENABLE_SET_CUBEB_BACKEND
+#    include "MockCubeb.h"
+#  endif
+
 class AudioDeviceInfo;
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(cubeb_stream_prefs)
@@ -123,6 +127,7 @@ int32_t AndroidGetAudioOutputFramesPerBuffer();
 
 #  if defined(ENABLE_TESTS) || defined(FUZZING)
 void ForceSetCubebContext(cubeb* aCubebContext);
+void ForceUnsetCubebContext();
 #  endif
 }  // namespace CubebUtils
 }  // namespace mozilla
