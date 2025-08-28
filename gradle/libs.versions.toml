@@ -84,7 +84,7 @@ spotless = "7.2.1"
 google-java-format = "1.27.0"
 
 # Mozilla versions
-mozilla-glean = "65.0.1"
+mozilla-glean = "65.0.2"
 
 # Testing versions
 androidx-test = "1.7.0"
