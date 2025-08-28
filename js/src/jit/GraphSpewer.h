@@ -40,8 +40,8 @@ class GraphSpewer : JSONPrinter {
 
  public:
   explicit GraphSpewer(GenericPrinter& out,
-                      const wasm::CodeMetadata* wasmCodeMeta = nullptr)
-      : JSONPrinter(out), wasmCodeMeta_(wasmCodeMeta) {}
+                       const wasm::CodeMetadata* wasmCodeMeta = nullptr)
+      : JSONPrinter(out, /*indent*/ false), wasmCodeMeta_(wasmCodeMeta) {}
 
   void beginFunction(JSScript* script);
   void beginWasmFunction(unsigned funcIndex);

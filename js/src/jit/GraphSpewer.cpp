@@ -156,6 +156,7 @@ void GraphSpewer::spewMIR(MIRGraph* mir) {
     beginObject();
 
     property("number", block->id());
+    property("loopDepth", block->loopDepth());
 
     beginListProperty("attributes");
     if (block->hasLastIns()) {
