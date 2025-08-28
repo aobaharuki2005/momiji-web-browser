@@ -233,6 +233,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
           : undefined // Adds to the end of navbar if position_start is false.
       );
     }
+    // Ensure CUI knows to not restore this button if the user later removes it
+    let prefId = "browser.toolbarbuttons.introduced.sidebar-button";
+    Services.prefs.setBoolPref(prefId, true);
   }
 );
 
