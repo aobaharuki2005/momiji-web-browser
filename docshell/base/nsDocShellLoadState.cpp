@@ -50,6 +50,7 @@ nsDocShellLoadState::nsDocShellLoadState(
     const DocShellLoadStateInit& aLoadState, mozilla::ipc::IProtocol* aActor,
     bool* aReadSuccess)
     : mNotifiedBeforeUnloadListeners(false),
+      mShouldNotForceReplaceInOnLoad(false),
       mLoadIdentifier(aLoadState.LoadIdentifier()) {
   // If we return early, we failed to read in the data.
   *aReadSuccess = false;
@@ -170,6 +171,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mInheritPrincipal(aOther.mInheritPrincipal),
       mPrincipalIsExplicit(aOther.mPrincipalIsExplicit),
       mNotifiedBeforeUnloadListeners(aOther.mNotifiedBeforeUnloadListeners),
+      mShouldNotForceReplaceInOnLoad(aOther.mShouldNotForceReplaceInOnLoad),
       mPrincipalToInherit(aOther.mPrincipalToInherit),
       mPartitionedPrincipalToInherit(aOther.mPartitionedPrincipalToInherit),
       mForceAllowDataURI(aOther.mForceAllowDataURI),
@@ -232,6 +234,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
       mInheritPrincipal(false),
       mPrincipalIsExplicit(false),
       mNotifiedBeforeUnloadListeners(false),
+      mShouldNotForceReplaceInOnLoad(false),
       mForceAllowDataURI(false),
       mIsExemptFromHTTPSFirstMode(false),
       mOriginalFrameSrc(false),
@@ -663,6 +666,15 @@ bool nsDocShellLoadState::NotifiedBeforeUnloadListeners() const {
 void nsDocShellLoadState::SetNotifiedBeforeUnloadListeners(
     bool aNotifiedBeforeUnloadListeners) {
   mNotifiedBeforeUnloadListeners = aNotifiedBeforeUnloadListeners;
+}
+
+bool nsDocShellLoadState::ShouldNotForceReplaceInOnLoad() const {
+  return mShouldNotForceReplaceInOnLoad;
+}
+
+void nsDocShellLoadState::SetShouldNotForceReplaceInOnLoad(
+    bool aShouldNotForceReplaceInOnLoad) {
+  mShouldNotForceReplaceInOnLoad = aShouldNotForceReplaceInOnLoad;
 }
 
 bool nsDocShellLoadState::ForceAllowDataURI() const {

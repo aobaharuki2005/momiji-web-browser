@@ -149,6 +149,10 @@ class nsDocShellLoadState final {
 
   void SetNotifiedBeforeUnloadListeners(bool aNotifiedBeforeUnloadListeners);
 
+  bool ShouldNotForceReplaceInOnLoad() const;
+
+  void SetShouldNotForceReplaceInOnLoad(bool aShouldNotForceReplaceInOnLoad);
+
   bool ForceAllowDataURI() const;
 
   void SetForceAllowDataURI(bool aForceAllowDataURI);
@@ -529,7 +533,13 @@ class nsDocShellLoadState final {
   // for a content docshell the load fails.
   bool mPrincipalIsExplicit;
 
+  // If this attribute is true, any potential unload listeners have been
+  // notified if applicable.
   bool mNotifiedBeforeUnloadListeners;
+
+  // If this attribute is true, navigations for subframes taking place inside of
+  // an onload handler will not be changed to replace loads.
+  bool mShouldNotForceReplaceInOnLoad;
 
   // Principal we're inheriting. If null, this means the principal should be
   // inherited from the current document. If set to NullPrincipal, the channel
