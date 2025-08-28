@@ -388,8 +388,6 @@ void CamerasChild::RemoveCallback(const int capture_id) {
 
 int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
                                const webrtc::VideoCaptureCapability& webrtcCaps,
-                               const NormalizedConstraints& constraints,
-                               const dom::VideoResizeModeEnum& resize_mode,
                                FrameRelay* cb) {
   LOG(("%s", __PRETTY_FUNCTION__));
   AddCallback(capture_id, cb);
@@ -397,12 +395,9 @@ int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
       webrtcCaps.width, webrtcCaps.height, webrtcCaps.maxFPS,
       static_cast<int>(webrtcCaps.videoType), webrtcCaps.interlaced);
   nsCOMPtr<nsIRunnable> runnable =
-      mozilla::NewRunnableMethod<CaptureEngine, int, VideoCaptureCapability,
-                                 NormalizedConstraints,
-                                 dom::VideoResizeModeEnum>(
+      mozilla::NewRunnableMethod<CaptureEngine, int, VideoCaptureCapability>(
           "camera::PCamerasChild::SendStartCapture", this,
-          &CamerasChild::SendStartCapture, aCapEngine, capture_id, capCap,
-          constraints, resize_mode);
+          &CamerasChild::SendStartCapture, aCapEngine, capture_id, capCap);
   LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
   return dispatcher.ReturnValue();
 }

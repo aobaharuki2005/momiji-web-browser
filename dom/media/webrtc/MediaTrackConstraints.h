@@ -10,7 +10,6 @@
 #include <set>
 #include <vector>
 
-#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 
 namespace mozilla {
@@ -25,21 +24,17 @@ class NormalizedConstraintSet {
  protected:
   class BaseRange {
    protected:
-    BaseRange(const nsCString& aName) : mName(aName) {}
+    BaseRange(const char* aName) : mName(aName) {}
     virtual ~BaseRange() = default;
 
    public:
     bool operator==(const BaseRange& aOther) const noexcept {
-      return mName == aOther.mName;
-    }
-    BaseRange& operator=(const BaseRange& aOther) {
-      MOZ_RELEASE_ASSERT(mName == aOther.mName);
-      return *this;
+      return strcmp(mName, aOther.mName) == 0;
     }
     virtual bool Merge(const BaseRange& aOther) = 0;
     virtual void FinalizeMerge() = 0;
 
-    const nsCString mName;
+    const char* mName;
   };
 
  public:
@@ -49,7 +44,7 @@ class NormalizedConstraintSet {
     ValueType mMin, mMax;
     Maybe<ValueType> mIdeal;
 
-    Range(const nsCString& aName, ValueType aMin, ValueType aMax)
+    Range(const char* aName, ValueType aMin, ValueType aMax)
         : BaseRange(aName), mMin(aMin), mMax(aMax), mMergeDenominator(0) {}
     virtual ~Range() = default;
 
@@ -62,7 +57,9 @@ class NormalizedConstraintSet {
     void SetFrom(const ConstrainRange& aOther);
 
     /// Clamp n based on Range. If the Range is empty, mMin is returned.
-    ValueType Clamp(ValueType n) const { return std::clamp(n, mMin, mMax); }
+    ValueType Clamp(ValueType n) const {
+      return std::max(mMin, std::min(n, mMax));
+    }
     ValueType Get(ValueType defaultValue) const {
       return Clamp(mIdeal.valueOr(defaultValue));
     }
@@ -79,8 +76,8 @@ class NormalizedConstraintSet {
       }
     }
     bool Merge(const Range& aOther) {
-      if (mName != "width" && mName != "height" && mName != "frameRate" &&
-          !Intersects(aOther)) {
+      if (strcmp(mName, "width") != 0 && strcmp(mName, "height") != 0 &&
+          strcmp(mName, "frameRate") != 0 && !Intersects(aOther)) {
         return false;
       }
       Intersect(aOther);
@@ -128,47 +125,47 @@ class NormalizedConstraintSet {
   };
 
   struct LongRange final : public Range<int32_t> {
-    LongRange(const nsCString& aName,
+    LongRange(const char* aName,
               const dom::Optional<dom::OwningLongOrConstrainLongRange>& aOther,
               bool advanced);
   };
 
   struct LongLongRange final : public Range<int64_t> {
-    LongLongRange(const nsCString& aName, const dom::Optional<int64_t>& aOther);
+    LongLongRange(const char* aName, const dom::Optional<int64_t>& aOther);
   };
 
   struct DoubleRange final : public Range<double> {
     DoubleRange(
-        const nsCString& aName,
+        const char* aName,
         const dom::Optional<dom::OwningDoubleOrConstrainDoubleRange>& aOther,
         bool advanced);
   };
 
   struct BooleanRange final : public Range<bool> {
     BooleanRange(
-        const nsCString& aName,
+        const char* aName,
         const dom::Optional<dom::OwningBooleanOrConstrainBooleanParameters>&
             aOther,
         bool advanced);
 
-    BooleanRange(const nsCString& aName, const bool& aOther)
+    BooleanRange(const char* aName, const bool& aOther)
         : Range<bool>(aName, false, true) {
       mIdeal.emplace(aOther);
     }
   };
 
   struct StringRange final : public BaseRange {
-    using ValueType = std::set<nsString>;
+    typedef std::set<nsString> ValueType;
     ValueType mExact, mIdeal;
 
     StringRange(
-        const nsCString& aName,
+        const char* aName,
         const dom::Optional<
             dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters>&
             aOther,
         bool advanced);
 
-    StringRange(const nsCString& aName, const dom::Optional<nsString>& aOther)
+    StringRange(const char* aName, const dom::Optional<nsString>& aOther)
         : BaseRange(aName) {
       if (aOther.WasPassed()) {
         mIdeal.insert(aOther.Value());
@@ -218,28 +215,25 @@ class NormalizedConstraintSet {
 
   NormalizedConstraintSet(const dom::MediaTrackConstraintSet& aOther,
                           bool advanced)
-      : mWidth("width"_ns, aOther.mWidth, advanced),
-        mHeight("height"_ns, aOther.mHeight, advanced),
-        mFrameRate("frameRate"_ns, aOther.mFrameRate, advanced),
-        mFacingMode("facingMode"_ns, aOther.mFacingMode, advanced),
-        mResizeMode("resizeMode"_ns, aOther.mResizeMode, advanced),
-        mMediaSource("mediaSource"_ns, aOther.mMediaSource),
-        mBrowserWindow("browserWindow"_ns, aOther.mBrowserWindow),
-        mDeviceId("deviceId"_ns, aOther.mDeviceId, advanced),
-        mGroupId("groupId"_ns, aOther.mGroupId, advanced),
-        mViewportOffsetX("viewportOffsetX"_ns, aOther.mViewportOffsetX,
-                         advanced),
-        mViewportOffsetY("viewportOffsetY"_ns, aOther.mViewportOffsetY,
-                         advanced),
-        mViewportWidth("viewportWidth"_ns, aOther.mViewportWidth, advanced),
-        mViewportHeight("viewportHeight"_ns, aOther.mViewportHeight, advanced),
-        mEchoCancellation("echoCancellation"_ns, aOther.mEchoCancellation,
+      : mWidth("width", aOther.mWidth, advanced),
+        mHeight("height", aOther.mHeight, advanced),
+        mFrameRate("frameRate", aOther.mFrameRate, advanced),
+        mFacingMode("facingMode", aOther.mFacingMode, advanced),
+        mResizeMode("resizeMode", aOther.mResizeMode, advanced),
+        mMediaSource("mediaSource", aOther.mMediaSource),
+        mBrowserWindow("browserWindow", aOther.mBrowserWindow),
+        mDeviceId("deviceId", aOther.mDeviceId, advanced),
+        mGroupId("groupId", aOther.mGroupId, advanced),
+        mViewportOffsetX("viewportOffsetX", aOther.mViewportOffsetX, advanced),
+        mViewportOffsetY("viewportOffsetY", aOther.mViewportOffsetY, advanced),
+        mViewportWidth("viewportWidth", aOther.mViewportWidth, advanced),
+        mViewportHeight("viewportHeight", aOther.mViewportHeight, advanced),
+        mEchoCancellation("echoCancellation", aOther.mEchoCancellation,
                           advanced),
-        mNoiseSuppression("noiseSuppression"_ns, aOther.mNoiseSuppression,
+        mNoiseSuppression("noiseSuppression", aOther.mNoiseSuppression,
                           advanced),
-        mAutoGainControl("autoGainControl"_ns, aOther.mAutoGainControl,
-                         advanced),
-        mChannelCount("channelCount"_ns, aOther.mChannelCount, advanced) {}
+        mAutoGainControl("autoGainControl", aOther.mAutoGainControl, advanced),
+        mChannelCount("channelCount", aOther.mChannelCount, advanced) {}
 
   bool operator==(const NormalizedConstraintSet& aOther) const noexcept {
     return mWidth == aOther.mWidth && mHeight == aOther.mHeight &&
@@ -367,10 +361,6 @@ class MediaConstraintsHelper {
       const MediaDevice* aMediaDevice);
 
   static void LogConstraints(const NormalizedConstraintSet& aConstraints);
-
-  static Maybe<dom::VideoResizeModeEnum> GetResizeMode(
-      const NormalizedConstraintSet& aConstraints,
-      const MediaEnginePrefs& aPrefs);
 };
 
 }  // namespace mozilla
