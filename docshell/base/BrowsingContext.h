@@ -1151,7 +1151,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return IsTop();
   }
 
-
   bool CanSet(FieldIndex<IDX_MediumOverride>, const nsString&, ContentParent*) {
     return IsTop();
   }
