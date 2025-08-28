@@ -1200,7 +1200,7 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
   }
 
   RootedScript targetScript(cx_, inlineData->target);
-  if (!TrialInliner::canInline(targetScript, script_, loc)) {
+  if (!TrialInliner::canInline(cx_, targetScript, script_, loc)) {
     return false;
   }
 
