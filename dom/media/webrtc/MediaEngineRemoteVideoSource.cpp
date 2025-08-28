@@ -506,8 +506,8 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
         .mCapabilityWidth = cw ? Some(cw) : Nothing(),
         .mCapabilityHeight = ch ? Some(ch) : Nothing(),
         .mCapEngine = mCapEngine,
-        .mInputWidth = cw ? cw : mImageSize.width,
-        .mInputHeight = ch ? ch : mImageSize.height,
+        .mInputWidth = cw ? cw : mScaledImageSize.width,
+        .mInputHeight = ch ? ch : mScaledImageSize.height,
         .mRotation = 0,
     };
     framerate = distanceMode == kFeasibility
@@ -690,7 +690,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
       aProps.ntpTimeMs(), aProps.renderTimeMs());
 #endif
 
-  if (mImageSize != dstSize) {
+  if (mScaledImageSize != dstSize) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "MediaEngineRemoteVideoSource::FrameSizeChange",
         [settings = mSettings, updated = mSettingsUpdatedByFrame,
@@ -710,8 +710,8 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mState == kStarted);
     VideoSegment segment;
-    mImageSize = image->GetSize();
-    segment.AppendWebrtcLocalFrame(image.forget(), mImageSize, mPrincipal,
+    mScaledImageSize = image->GetSize();
+    segment.AppendWebrtcLocalFrame(image.forget(), mScaledImageSize, mPrincipal,
                                    /* aForceBlack */ false, TimeStamp::Now(),
                                    aProps.captureTime());
     mTrack->AppendData(&segment);
