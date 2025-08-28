@@ -118,7 +118,7 @@
       font-size: var(--og-main-font-size);
       line-height: 1.15; /* Design requires 18px line-height */
       list-style-type: square;
-      padding-inline-start: var(--space-xlarge);
+      padding-inline: var(--space-xlarge) var(--space-xsmall);
     }
 
     li {
