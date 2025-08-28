@@ -163,6 +163,12 @@ class EmulationModule extends RootBiDiModule {
       };
     }
 
+    if (contextIds !== null && userContextIds !== null) {
+      throw new lazy.error.InvalidArgumentError(
+        `Providing both "contexts" and "userContexts" arguments is not supported`
+      );
+    }
+
     const navigables = new Set();
     const userContexts = new Set();
     if (contextIds !== null) {
@@ -220,12 +226,6 @@ class EmulationModule extends RootBiDiModule {
     } else {
       throw new lazy.error.InvalidArgumentError(
         `At least one of "contexts" or "userContexts" arguments should be provided`
-      );
-    }
-
-    if (contextIds !== null && userContextIds !== null) {
-      throw new lazy.error.InvalidArgumentError(
-        `Providing both "contexts" and "userContexts" arguments is not supported`
       );
     }
 
@@ -445,6 +445,167 @@ class EmulationModule extends RootBiDiModule {
   }
 
   /**
+   * Set the timezone override to the list of top-level navigables
+   * or user contexts.
+   *
+   * @param {object=} options
+   * @param {Array<string>=} options.contexts
+   *     Optional list of browsing context ids.
+   * @param {(string|null)} options.timezone
+   *     Timezone string which has to override
+   *     the return result of JavaScript Intl/Date APIs.
+   *     It can represent timezone id or timezone offset.
+   *     Null value resets the override.
+   * @param {Array<string>=} options.userContexts
+   *     Optional list of user context ids.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   * @throws {NoSuchUserContextError}
+   *     Raised if the user context id could not be found.
+   */
+  async setTimezoneOverride(options = {}) {
+    let { timezone } = options;
+    const { contexts: contextIds = null, userContexts: userContextIds = null } =
+      options;
+
+    if (timezone === null) {
+      // The API requires an empty string to reset the override.
+      timezone = "";
+    } else {
+      lazy.assert.string(
+        timezone,
+        lazy.pprint`Expected "timezone" to be a string, got ${timezone}`
+      );
+
+      if (
+        // Validate if the timezone is on the list of available timezones ids
+        !Intl.supportedValuesOf("timeZone").includes(timezone) &&
+        // or is a valid timezone offset string.
+        !this.#isTimeZoneOffsetString(timezone)
+      ) {
+        throw new lazy.error.InvalidArgumentError(
+          `Expected "timezone" to be a valid timezone ID (e.g., "Europe/Berlin") ` +
+            `or a valid timezone offset (e.g., "+01:00"), got ${timezone}`
+        );
+      }
+
+      if (this.#isTimeZoneOffsetString(timezone)) {
+        // The platform API requires a timezone offset to have a "GMT" prefix.
+        timezone = `GMT${timezone}`;
+      }
+    }
+
+    if (contextIds !== null && userContextIds !== null) {
+      throw new lazy.error.InvalidArgumentError(
+        `Providing both "contexts" and "userContexts" arguments is not supported`
+      );
+    }
+
+    const navigables = new Set();
+    const userContexts = new Set();
+    if (contextIds !== null) {
+      lazy.assert.isNonEmptyArray(
+        contextIds,
+        lazy.pprint`Expected "contexts" to be a non-empty array, got ${contextIds}`
+      );
+
+      for (const contextId of contextIds) {
+        lazy.assert.string(
+          contextId,
+          lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
+        );
+
+        const context = this.#getBrowsingContext(contextId);
+
+        lazy.assert.topLevel(
+          context,
+          `Browsing context with id ${contextId} is not top-level`
+        );
+
+        navigables.add(context);
+      }
+    } else if (userContextIds !== null) {
+      lazy.assert.isNonEmptyArray(
+        userContextIds,
+        lazy.pprint`Expected "userContexts" to be a non-empty array, got ${userContextIds}`
+      );
+
+      for (const userContextId of userContextIds) {
+        lazy.assert.string(
+          userContextId,
+          lazy.pprint`Expected elements of "userContexts" to be a string, got ${userContextId}`
+        );
+
+        const internalId =
+          lazy.UserContextManager.getInternalIdById(userContextId);
+
+        if (internalId === null) {
+          throw new lazy.error.NoSuchUserContextError(
+            `User context with id: ${userContextId} doesn't exist`
+          );
+        }
+
+        userContexts.add(internalId);
+
+        // Prepare the list of navigables to update.
+        lazy.UserContextManager.getTabsForUserContext(internalId).forEach(
+          tab => {
+            const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
+            navigables.add(contentBrowser.browsingContext);
+          }
+        );
+      }
+    } else {
+      throw new lazy.error.InvalidArgumentError(
+        `At least one of "contexts" or "userContexts" arguments should be provided`
+      );
+    }
+
+    const sessionDataItems = [];
+    if (userContextIds !== null) {
+      for (const userContext of userContexts) {
+        sessionDataItems.push({
+          category: "timezone-override",
+          moduleName: "_configuration",
+          values: [timezone],
+          contextDescriptor: {
+            type: lazy.ContextDescriptorType.UserContext,
+            id: userContext,
+          },
+          method: lazy.SessionDataMethod.Add,
+        });
+      }
+    } else {
+      for (const navigable of navigables) {
+        sessionDataItems.push({
+          category: "timezone-override",
+          moduleName: "_configuration",
+          values: [timezone],
+          contextDescriptor: {
+            type: lazy.ContextDescriptorType.TopBrowsingContext,
+            id: navigable.browserId,
+          },
+          method: lazy.SessionDataMethod.Add,
+        });
+      }
+    }
+
+    if (sessionDataItems.length) {
+      // TODO: Bug 1953079. Saving the timezone override in the session data works fine
+      // with one session, but when we start supporting multiple BiDi session, we will
+      // have to rethink this approach.
+      await this.messageHandler.updateSessionData(sessionDataItems);
+    }
+
+    for (const navigable of navigables) {
+      this._setTimezoneOverride({ context: navigable, timezone });
+    }
+  }
+
+  /**
    * Set the locale override to the top-level browsing context.
    *
    * @param {object=} options
@@ -462,6 +623,12 @@ class EmulationModule extends RootBiDiModule {
     context.languageOverride = locale;
   }
 
+  _setTimezoneOverride(params) {
+    const { context, timezone } = params;
+
+    context.timezoneOverride = timezone;
+  }
+
   #getBrowsingContext(contextId) {
     const context = lazy.TabManager.getBrowsingContextById(contextId);
     if (context === null) {
@@ -471,6 +638,27 @@ class EmulationModule extends RootBiDiModule {
     }
 
     return context;
+  }
+
+  /**
+   * Validate that a string has timezone offset string format
+   * (e.g. `+10:00` or `-05:00`).
+   *
+   * @see https://tc39.es/ecma262/#sec-time-zone-offset-strings.
+   *
+   * @param {string} string
+   *     The string to validate.
+   *
+   * @returns {boolean}
+   *     Return true if the string has timezone offset string format,
+   *     false otherwise.
+   */
+  #isTimeZoneOffsetString(string) {
+    if (string === "" || string === "Z") {
+      return false;
+    }
+    // Random date string is added to validate an offset string.
+    return ChromeUtils.isISOStyleDate(`2011-10-05T00:00${string}`);
   }
 }
 
