@@ -464,45 +464,6 @@ internal class BookmarksMiddleware(
             }.getOrNull()
         } ?: listOf()
 
-    private suspend fun openSelectedInTabs(
-        preReductionState: BookmarksState,
-        isPrivate: Boolean,
-    ) {
-        preReductionState.selectedItems.forEach { item ->
-            when (item) {
-                is BookmarkItem.Bookmark -> {
-                    addNewTabUseCase(item.url, private = isPrivate)
-                }
-                is BookmarkItem.Folder -> {
-                    bookmarksStorage.getTree(
-                        guid = item.guid,
-                        recursive = true,
-                    )
-                        ?.collectUrlsRecursive()
-                        ?.forEach {
-                            addNewTabUseCase(url = it, private = isPrivate)
-                        }
-                }
-            }
-        }
-    }
-
-    private fun BookmarkNode.collectUrlsRecursive(): List<String> {
-        val urls = mutableListOf<String>()
-
-        this.children?.forEach { node ->
-            when (node.type) {
-                BookmarkNodeType.ITEM -> node.url?.let { value -> urls.add(value) }
-                BookmarkNodeType.FOLDER -> {
-                    urls.addAll(node.collectUrlsRecursive())
-                }
-                BookmarkNodeType.SEPARATOR -> Unit
-            }
-        }
-
-        return urls
-    }
-
     private fun collectFolders(
         node: BookmarkNode,
         comparator: Comparator<BookmarkItem>,
@@ -611,14 +572,18 @@ internal class BookmarksMiddleware(
             }
 
             BookmarksListMenuAction.MultiSelect.OpenInNormalTabsClicked -> scope.launch {
-                openSelectedInTabs(preReductionState, isPrivate = false)
+                preReductionState.selectedItems
+                    .mapNotNull { (it as? BookmarkItem.Bookmark)?.url }
+                    .forEach { url -> addNewTabUseCase(url = url, private = false) }
                 withContext(Dispatchers.Main) {
                     showTabsTray(false)
                 }
             }
 
             BookmarksListMenuAction.MultiSelect.OpenInPrivateTabsClicked -> scope.launch {
-                openSelectedInTabs(preReductionState, isPrivate = true)
+                preReductionState.selectedItems
+                    .mapNotNull { (it as? BookmarkItem.Bookmark)?.url }
+                    .forEach { url -> addNewTabUseCase(url = url, private = true) }
                 withContext(Dispatchers.Main) {
                     showTabsTray(true)
                 }

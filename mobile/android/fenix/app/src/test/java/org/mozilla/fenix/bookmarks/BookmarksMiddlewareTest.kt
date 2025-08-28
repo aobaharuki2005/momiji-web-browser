@@ -33,8 +33,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -715,56 +713,9 @@ class BookmarksMiddlewareTest {
             ),
         )
 
-        store.dispatch(BookmarksListMenuAction.SelectAll)
-        store.waitUntilIdle()
-        val bookmarkCount = store.state.selectedItems.size
-        store.dispatch(BookmarksListMenuAction.MultiSelect.OpenInNormalTabsClicked)
-        store.waitUntilIdle()
-        assertEquals(bookmarkCount, store.state.bookmarksSelectFolderState?.folders?.count())
-    }
+        store.dispatch(SelectFolderAction.ViewAppeared)
 
-    @Test
-    fun `GIVEN selected folder WHEN OpenInNormalTabsClicked THEN urls opened as normal tabs`() = runTest {
-        val bookmarkFolder = BookmarkItem.Folder(title = "folder", guid = "1234", position = 0u)
-        val bookmarkItem = BookmarkItem.Bookmark(url = "url", title = "title", previewImageUrl = "string", guid = "guid", position = bookmarkFolder.position)
-
-        var trayShown = false
-        showTabsTray = { trayShown = true }
-        val middleware = buildMiddleware()
-        val store = middleware.makeStore(
-            initialState =
-            BookmarksState.default.copy(
-                bookmarkItems = listOf(bookmarkFolder, bookmarkItem),
-                selectedItems = listOf(bookmarkFolder, bookmarkItem),
-            ),
-        )
-
-        store.dispatch(BookmarksListMenuAction.MultiSelect.OpenInNormalTabsClicked)
-        advanceUntilIdle()
-        verify(addNewTabUseCase).invoke(url = "url", private = false)
-        assertTrue(trayShown)
-    }
-
-    @Test
-    fun `GIVEN selected folder WHEN OpenInPrivateTabsClicked THEN urls opened as private tabs`() = runTest {
-        val bookmarkFolder = BookmarkItem.Folder(title = "folder", guid = "1234", position = 0u)
-        val bookmarkItem = BookmarkItem.Bookmark(url = "url", title = "title", previewImageUrl = "string", guid = "guid", position = bookmarkFolder.position)
-
-        var trayShown = false
-        showTabsTray = { trayShown = true }
-        val middleware = buildMiddleware()
-        val store = middleware.makeStore(
-            initialState =
-            BookmarksState.default.copy(
-                bookmarkItems = listOf(bookmarkFolder, bookmarkItem),
-                selectedItems = listOf(bookmarkFolder, bookmarkItem),
-            ),
-        )
-
-        store.dispatch(BookmarksListMenuAction.MultiSelect.OpenInPrivateTabsClicked)
-        advanceUntilIdle()
-        verify(addNewTabUseCase).invoke(url = "url", private = true)
-        assertTrue(trayShown)
+        assertEquals(0, store.state.bookmarksSelectFolderState?.folders?.count())
     }
 
     @Test
