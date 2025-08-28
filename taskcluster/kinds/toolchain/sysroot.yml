@@ -17,12 +17,12 @@ sysroot-i686-linux-gnu:
         local-toolchain: true
     worker:
         env:
-            PACKAGES_TASKS: {task-reference: '<gcc-8>'}
-            GCC_VERSION: '8'
+            PACKAGES_TASKS: {task-reference: '<gcc-10>'}
+            GCC_VERSION: '10'
     treeherder:
         symbol: TL32(sysroot)
     dependencies:
-        gcc-8: packages-deb8-32-gcc-8
+        gcc-10: packages-deb8-32-gcc-10
     run:
         toolchain-artifact: public/build/sysroot-i686-linux-gnu.tar.zst
         arguments:
@@ -34,12 +34,12 @@ sysroot-x86_64-linux-gnu:
         local-toolchain: true
     worker:
         env:
-            PACKAGES_TASKS: {task-reference: '<gcc-8>'}
-            GCC_VERSION: '8'
+            PACKAGES_TASKS: {task-reference: '<gcc-10>'}
+            GCC_VERSION: '10'
     treeherder:
         symbol: TL(sysroot)
     dependencies:
-        gcc-8: packages-deb8-gcc-8
+        gcc-10: packages-deb8-gcc-10
     run:
         toolchain-artifact: public/build/sysroot-x86_64-linux-gnu.tar.zst
         arguments:
@@ -51,12 +51,12 @@ sysroot-x86_64-linux-gnu-x11:
         local-toolchain: true
     worker:
         env:
-            PACKAGES_TASKS: {task-reference: '<gcc-8> <gtk3>'}
-            GCC_VERSION: '8'
+            PACKAGES_TASKS: {task-reference: '<gcc-10> <gtk3>'}
+            GCC_VERSION: '10'
     treeherder:
         symbol: TL(sysroot-x11)
     dependencies:
-        gcc-8: packages-deb8-gcc-8
+        gcc-10: packages-deb8-gcc-10
         gtk3: packages-deb8-gtk3
     run:
         toolchain-artifact: public/build/sysroot-x86_64-linux-gnu.tar.zst
