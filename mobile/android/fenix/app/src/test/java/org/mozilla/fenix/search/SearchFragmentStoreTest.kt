@@ -88,7 +88,7 @@ class SearchFragmentStoreTest {
             val expected = EMPTY_SEARCH_FRAGMENT_STATE.copy(
                 searchSuggestionsOrientedAtBottom = true,
                 showSearchShortcutsSetting = true,
-                showSearchSuggestions = true,
+                showSearchSuggestionsFromCurrentEngine = true,
                 showSearchTermHistory = true,
                 showAllHistorySuggestions = true,
                 showAllSessionSuggestions = true,
@@ -625,7 +625,7 @@ class SearchFragmentStoreTest {
             assertNotSame(initialState, store.state)
             assertEquals(SearchEngineSource.Default(searchEngine), store.state.searchEngineSource)
 
-            assertTrue(store.state.showSearchSuggestions)
+            assertTrue(store.state.showSearchSuggestionsFromCurrentEngine)
             assertFalse(store.state.showSearchShortcuts)
             assertTrue(store.state.showClipboardSuggestions)
             assertFalse(store.state.showSearchTermHistory)
@@ -667,7 +667,7 @@ class SearchFragmentStoreTest {
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Default(searchEngine), store.state.searchEngineSource)
 
-        assertTrue(store.state.showSearchSuggestions)
+        assertTrue(store.state.showSearchSuggestionsFromCurrentEngine)
         assertFalse(store.state.showSearchShortcuts)
         assertTrue(store.state.showClipboardSuggestions)
         assertFalse(store.state.showSearchTermHistory)
@@ -709,7 +709,7 @@ class SearchFragmentStoreTest {
 
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(topicSpecificEngine), store.state.searchEngineSource)
-        assertTrue(store.state.showSearchSuggestions)
+        assertTrue(store.state.showSearchSuggestionsFromCurrentEngine)
         assertFalse(store.state.showSearchShortcuts)
         assertTrue(store.state.showClipboardSuggestions)
         assertTrue(store.state.showSearchTermHistory)
@@ -738,7 +738,7 @@ class SearchFragmentStoreTest {
         ).join()
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(generalEngine), store.state.searchEngineSource)
-        assertFalse(store.state.showSearchSuggestions)
+        assertFalse(store.state.showSearchSuggestionsFromCurrentEngine)
         assertFalse(store.state.showSearchShortcuts)
         assertTrue(store.state.showClipboardSuggestions)
         assertTrue(store.state.showSearchTermHistory)
@@ -785,7 +785,7 @@ class SearchFragmentStoreTest {
 
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(searchEngine), store.state.searchEngineSource)
-        assertFalse(store.state.showSearchSuggestions)
+        assertFalse(store.state.showSearchSuggestionsFromCurrentEngine)
         assertFalse(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
         assertTrue(store.state.showSearchTermHistory)
@@ -830,7 +830,7 @@ class SearchFragmentStoreTest {
 
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(searchEngine), store.state.searchEngineSource)
-        assertTrue(store.state.showSearchSuggestions)
+        assertTrue(store.state.showSearchSuggestionsFromCurrentEngine)
         assertTrue(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
         assertFalse(store.state.showSearchTermHistory)
@@ -951,7 +951,7 @@ class SearchFragmentStoreTest {
 
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.History(searchEngine), store.state.searchEngineSource)
-        assertFalse(store.state.showSearchSuggestions)
+        assertFalse(store.state.showSearchSuggestionsFromCurrentEngine)
         assertFalse(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
         assertFalse(store.state.showSearchTermHistory)
@@ -973,7 +973,7 @@ class SearchFragmentStoreTest {
 
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Bookmarks(searchEngine), store.state.searchEngineSource)
-        assertFalse(store.state.showSearchSuggestions)
+        assertFalse(store.state.showSearchSuggestionsFromCurrentEngine)
         assertFalse(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
         assertFalse(store.state.showSearchTermHistory)
@@ -995,7 +995,7 @@ class SearchFragmentStoreTest {
 
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Tabs(searchEngine), store.state.searchEngineSource)
-        assertFalse(store.state.showSearchSuggestions)
+        assertFalse(store.state.showSearchSuggestionsFromCurrentEngine)
         assertFalse(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
         assertFalse(store.state.showSearchTermHistory)
@@ -1025,10 +1025,10 @@ class SearchFragmentStoreTest {
 
         store.dispatch(SearchFragmentAction.SetShowSearchSuggestions(true)).join()
         assertNotSame(initialState, store.state)
-        assertTrue(store.state.showSearchSuggestions)
+        assertTrue(store.state.showSearchSuggestionsFromCurrentEngine)
 
         store.dispatch(SearchFragmentAction.SetShowSearchSuggestions(false)).join()
-        assertFalse(store.state.showSearchSuggestions)
+        assertFalse(store.state.showSearchSuggestionsFromCurrentEngine)
     }
 
     @Test

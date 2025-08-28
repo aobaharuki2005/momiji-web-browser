@@ -150,28 +150,15 @@ class AwesomeBarComposable(
             )
         }
 
-        if (isSearchActive && state.showSearchSuggestionsHint) {
-            Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(FirefoxTheme.colors.layer1)
-                    .pointerInput(WindowInsets.isImeVisible) {
-                        detectTapGestures(
-                            // Hide the keyboard for any touches in the empty area of the awesomebar
-                            onPress = { keyboardController?.hide() },
-                        )
-                    },
-            ) {
+        if (isSearchActive) {
+            if (state.showSearchSuggestionsHint) {
                 PrivateSuggestionsCard(
                     onSearchSuggestionsInPrivateModeAllowed = {
                         activity.settings().shouldShowSearchSuggestionsInPrivate = true
                         activity.settings().showSearchSuggestionsInPrivateOnboardingFinished = true
-                        searchStore.dispatch(
-                            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false),
-                        )
-                        searchStore.dispatch(
-                            SearchFragmentAction.PrivateSuggestionsCardAccepted,
-                        )
+                        searchStore.dispatch(SearchFragmentAction.SetShowSearchSuggestions(true))
+                        searchStore.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false))
+                        searchStore.dispatch(SearchFragmentAction.PrivateSuggestionsCardAccepted)
                     },
                     onSearchSuggestionsInPrivateModeBlocked = {
                         activity.settings().shouldShowSearchSuggestionsInPrivate = false
@@ -192,57 +179,58 @@ class AwesomeBarComposable(
                     },
                 )
             }
-        } else if (isSearchActive && state.shouldShowSearchSuggestions) {
-            Box(
-                modifier = modifier
-                    .background(AcornTheme.colors.layer1)
-                    .fillMaxSize()
-                    .pointerInput(WindowInsets.isImeVisible) {
-                        detectTapGestures(
-                            // Hide the keyboard for any touches in the empty area of the awesomebar
-                            onPress = { view.hideKeyboard() },
-                        )
-                    },
-            ) {
-                AwesomeBar(
-                    text = state.query,
-                    providers = state.searchSuggestionsProviders,
-                    orientation = orientation,
-                    colors = AwesomeBarDefaults.colors(
-                        background = Color.Transparent,
-                        title = FirefoxTheme.colors.textPrimary,
-                        description = FirefoxTheme.colors.textSecondary,
-                        autocompleteIcon = FirefoxTheme.colors.textSecondary,
-                        groupTitle = FirefoxTheme.colors.textSecondary,
-                    ),
-                    onSuggestionClicked = { suggestion ->
-                        searchStore.dispatch(SuggestionClicked(suggestion))
-                    },
-                    onAutoComplete = { suggestion ->
-                        searchStore.dispatch(SuggestionSelected(suggestion))
-                    },
-                    onVisibilityStateUpdated = {
-                        browserStore.dispatch(AwesomeBarAction.VisibilityStateUpdated(it))
-                    },
-                    onScroll = { view.hideKeyboard() },
-                    profiler = components.core.engine.profiler,
+            if (state.shouldShowSearchSuggestions) {
+                Box(
+                    modifier = modifier
+                        .background(AcornTheme.colors.layer1)
+                        .fillMaxSize()
+                        .pointerInput(WindowInsets.isImeVisible) {
+                            detectTapGestures(
+                                // Hide the keyboard for any touches in the empty area of the awesomebar
+                                onPress = { view.hideKeyboard() },
+                            )
+                        },
+                ) {
+                    AwesomeBar(
+                        text = state.query,
+                        providers = state.searchSuggestionsProviders,
+                        orientation = orientation,
+                        colors = AwesomeBarDefaults.colors(
+                            background = Color.Transparent,
+                            title = FirefoxTheme.colors.textPrimary,
+                            description = FirefoxTheme.colors.textSecondary,
+                            autocompleteIcon = FirefoxTheme.colors.textSecondary,
+                            groupTitle = FirefoxTheme.colors.textSecondary,
+                        ),
+                        onSuggestionClicked = { suggestion ->
+                            searchStore.dispatch(SuggestionClicked(suggestion))
+                        },
+                        onAutoComplete = { suggestion ->
+                            searchStore.dispatch(SuggestionSelected(suggestion))
+                        },
+                        onVisibilityStateUpdated = {
+                            browserStore.dispatch(AwesomeBarAction.VisibilityStateUpdated(it))
+                        },
+                        onScroll = { view.hideKeyboard() },
+                        profiler = components.core.engine.profiler,
+                    )
+                }
+            } else if (showScrimWhenNoSuggestions) {
+                Spacer(
+                    modifier = modifier
+                        .background(Color(MATERIAL_DESIGN_SCRIM.toColorInt()))
+                        .fillMaxSize()
+                        .pointerInput(WindowInsets.isImeVisible) {
+                            detectTapGestures(
+                                onPress = {
+                                    focusManager.clearFocus()
+                                    keyboardController?.hide()
+                                    appStore.dispatch(SearchEnded)
+                                },
+                            )
+                        },
                 )
             }
-        } else if (isSearchActive && showScrimWhenNoSuggestions) {
-            Spacer(
-                modifier = modifier
-                    .background(Color(MATERIAL_DESIGN_SCRIM.toColorInt()))
-                    .fillMaxSize()
-                    .pointerInput(WindowInsets.isImeVisible) {
-                        detectTapGestures(
-                            onPress = {
-                                focusManager.clearFocus()
-                                keyboardController?.hide()
-                                appStore.dispatch(SearchEnded)
-                            },
-                        )
-                    },
-            )
         }
 
         if (isSearchActive && shouldShowClipboardBar && orientation == AwesomeBarOrientation.BOTTOM) {
