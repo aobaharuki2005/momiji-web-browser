@@ -3457,3 +3457,9 @@ pref("browser.ipProtection.guardian.endpoint", "https://vpn.mozilla.org/");
 
 // Pref to enable aboug:glean redesign.
 pref("about.glean.redesign.enabled", false);
+
+// Forward Rust component logs to the JS console (comma separate list of crate names)
+// The empty string defaults to forwarding error-level messages.
+// If your crate needs to log more by default, for example persistent logging to a file like Sync,
+// contact the application-services developers and we can work with you to implement this.
+pref("toolkit.rust-components.logging.crates", "");
