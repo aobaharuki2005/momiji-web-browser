@@ -5412,7 +5412,6 @@ impl Renderer {
             self.device.delete_texture(gpu_buffer_texture_i);
         }
 
-        self.force_redraw = false;
         frame.has_been_rendered = true;
     }
 
@@ -5488,10 +5487,12 @@ impl Renderer {
                     );
                 }
             }
+            // Reset force_redraw. It was used in composite_simple() with layer compositor.
+            self.force_redraw = false;
         } else {
             // Rendering a frame without presenting it will confuse the partial
             // present logic, so force a full present for the next frame.
-            self.force_redraw();
+            self.force_redraw = true;
         }
     }
 
