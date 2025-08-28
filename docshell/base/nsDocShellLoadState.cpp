@@ -665,6 +665,15 @@ void nsDocShellLoadState::SetNotifiedBeforeUnloadListeners(
   mNotifiedBeforeUnloadListeners = aNotifiedBeforeUnloadListeners;
 }
 
+bool nsDocShellLoadState::ShouldNotForceReplaceInOnLoad() const {
+  return mShouldNotForceReplaceInOnLoad;
+}
+
+void nsDocShellLoadState::SetShouldNotForceReplaceInOnLoad(
+    bool aShouldNotForceReplaceInOnLoad) {
+  mShouldNotForceReplaceInOnLoad = aShouldNotForceReplaceInOnLoad;
+}
+
 bool nsDocShellLoadState::ForceAllowDataURI() const {
   return mForceAllowDataURI;
 }
