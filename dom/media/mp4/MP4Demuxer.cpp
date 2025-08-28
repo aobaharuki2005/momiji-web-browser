@@ -542,7 +542,10 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
   while (aNumSamples) {
     auto next = GetNextSample();
     if (next.isErr()) {
-      if (samples->GetSamples().IsEmpty()) {
+      nsresult rv = next.inspectErr().Code();
+      if ((rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM &&
+           rv != NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) ||
+          samples->GetSamples().IsEmpty()) {
         return SamplesPromise::CreateAndReject(next.unwrapErr(), __func__);
       }
       break;

@@ -1240,12 +1240,15 @@ RefPtr<WebMTrackDemuxer::SamplesPromise> WebMTrackDemuxer::GetSamples(
   RefPtr<SamplesHolder> samples = new SamplesHolder;
   MOZ_ASSERT(aNumSamples);
 
-  nsresult rv = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
-
   while (aNumSamples) {
     RefPtr<MediaRawData> sample;
-    rv = NextSample(sample);
+    nsresult rv = NextSample(sample);
     if (NS_FAILED(rv)) {
+      if ((rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM &&
+           rv != NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) ||
+          samples->GetSamples().IsEmpty()) {
+        return SamplesPromise::CreateAndReject(rv, __func__);
+      }
       break;
     }
     // Ignore empty samples.
@@ -1266,12 +1269,8 @@ RefPtr<WebMTrackDemuxer::SamplesPromise> WebMTrackDemuxer::GetSamples(
     aNumSamples--;
   }
 
-  if (samples->GetSamples().IsEmpty()) {
-    return SamplesPromise::CreateAndReject(rv, __func__);
-  } else {
-    UpdateSamples(samples->GetSamples());
-    return SamplesPromise::CreateAndResolve(samples, __func__);
-  }
+  UpdateSamples(samples->GetSamples());
+  return SamplesPromise::CreateAndResolve(samples, __func__);
 }
 
 void WebMTrackDemuxer::SetNextKeyFrameTime() {
