@@ -73,6 +73,11 @@ class MediaResource : public DecoderDoctorLifeLogger<MediaResource> {
   // This can be less than aCount on end of stream or when remaining bytes will
   // not be available because a network error has occurred.
   // This will block until the data is available or the stream is closed.
+  // For most resources, this will block until the data is available or the
+  // stream is closed.
+  // The exception is SourceBufferResource, which will return
+  // NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA if aCount bytes are not available to
+  // read.
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                           uint32_t* aBytes) = 0;
   // Indicate whether caching data in advance of reads is worth it.

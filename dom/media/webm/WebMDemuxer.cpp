@@ -627,8 +627,14 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   // Attempt to fetch the timestamp of the next packet for this track.
   result = NextPacket(aType);
   if (result.isErr()) {
-    nsresult rv = result.unwrapErr();
-    if (rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+    nsresult rv = result.inspectErr();
+    if (rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM &&
+        // Gecko has historically estimated a duration for the last frame
+        // available in a SourceBuffer, if possible, even though this might
+        // result in a different frame duration from that which would be
+        // calculated if the frame were not parsed until the next frame
+        // becomes available.
+        rv != NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
       WEBM_DEBUG("NextPacket: error");
       return rv;
     }
@@ -690,7 +696,7 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
 
   if (mIsMediaSource && next_tstamp == INT64_MIN) {
     WEBM_DEBUG("WebM is a media source, and next timestamp computation filed.");
-    return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
+    return result.unwrapErr();
   }
 
   int64_t discardPadding = 0;

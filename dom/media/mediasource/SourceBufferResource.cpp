@@ -49,9 +49,24 @@ nsresult SourceBufferResource::ReadAtInternal(int64_t aOffset, char* aBuffer,
              " available=%u count=%u mEnded=%d",
              aOffset, mInputBuffer.GetLength(), available, count, mEnded);
 
-  if (mClosed || aOffset < 0 || uint64_t(aOffset) < mInputBuffer.GetOffset() ||
-      static_cast<uint64_t>(aOffset) > mInputBuffer.GetLength()) {
-    return NS_ERROR_FAILURE;
+  if (mClosed) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+  if (aOffset < 0) {
+    return NS_ERROR_DOM_MEDIA_RANGE_ERR;
+  }
+  if (static_cast<uint64_t>(aOffset) < mInputBuffer.GetOffset()) {
+    // Requested bytes have been evicted.
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (mEnded) {
+    if (static_cast<uint64_t>(aOffset) > mInputBuffer.GetLength()) {
+      return NS_ERROR_DOM_MEDIA_RANGE_ERR;
+    }
+  } else {
+    if (static_cast<uint64_t>(aOffset) + aCount > mInputBuffer.GetLength()) {
+      return NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA;
+    }
   }
 
   if (available == 0) {
