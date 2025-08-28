@@ -7,7 +7,6 @@ package org.mozilla.fenix.experiments
 import android.content.Context
 import android.os.Build
 import androidx.annotation.VisibleForTesting
-import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.json.JSONObject
 import org.mozilla.experiments.nimbus.NIMBUS_DATA_DIR
@@ -17,7 +16,6 @@ import org.mozilla.experiments.nimbus.internal.RecordedContext
 import org.mozilla.experiments.nimbus.internal.getCalculatedAttributes
 import org.mozilla.fenix.GleanMetrics.NimbusSystem
 import org.mozilla.fenix.GleanMetrics.Pings
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.pocket.ContentRecommendationsFeatureHelper
 import org.mozilla.fenix.utils.Settings
@@ -214,7 +212,7 @@ class RecordedNimbusContext(
          * `false` otherwise.
          */
         private fun Settings.noShortcutsOrStoriesOptOuts(context: Context) =
-            !optedOutOfSponsoredTopSites(context) && !optedOutOfSponsoredStories(context)
+            !optedOutOfSponsoredTopSites() && !optedOutOfSponsoredStories(context)
 
         /**
          * Checks whether an eligible user has opted out of the sponsored top sites feature.
@@ -223,11 +221,8 @@ class RecordedNimbusContext(
          * [Settings.showContileFeature] indicates whether the sponsored shortcuts are shown.
          * [Settings.showTopSitesFeature] indicates whether the feature should be shown at all.
          */
-        private fun Settings.optedOutOfSponsoredTopSites(context: Context) =
-            hasSponsoredTopSiteAvailable(context) && (!showContileFeature || !showTopSitesFeature)
-
-        private fun hasSponsoredTopSiteAvailable(context: Context): Boolean =
-            context.components.appStore.state.topSites.any { it is TopSite.Provided }
+        private fun Settings.optedOutOfSponsoredTopSites() =
+            !showContileFeature || !showTopSitesFeature
 
         private fun Settings.optedOutOfSponsoredStories(context: Context) =
             isEligibleForStories(context) && (!showPocketSponsoredStories || !showPocketRecommendationsFeature)
