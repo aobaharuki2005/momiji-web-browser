@@ -25,6 +25,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(lazy, "pageFrecencyThreshold", () => {
+  return lazy.PlacesUtils.history.pageFrecencyThreshold(90, 0, true);
+});
+
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
 const QUERYTYPE = {
@@ -148,7 +152,7 @@ function originQuery(where) {
 
 function urlQuery(where1, where2, isBookmarkContained) {
   // We limit the search to places that are either bookmarked or have a frecency
-  // over some small, arbitrary threshold (20) in order to avoid scanning as few
+  // over some small, arbitrary threshold in order to avoid scanning as few
   // rows as possible.  Keep in mind that we run this query every time the user
   // types a key when the urlbar value looks like a URL with a path.
   let selectTitle;
@@ -224,20 +228,20 @@ const QUERY_ORIGIN_PREFIX_BOOKMARK = originQuery(
 );
 
 const QUERY_URL_HISTORY_BOOKMARK = urlQuery(
-  `AND (n_bookmarks > 0 OR frecency > 20)
+  `AND (n_bookmarks > 0 OR frecency > :pageFrecencyThreshold)
      AND stripped_url COLLATE NOCASE
        BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
-  `AND (n_bookmarks > 0 OR frecency > 20)
+  `AND (n_bookmarks > 0 OR frecency > :pageFrecencyThreshold)
      AND stripped_url COLLATE NOCASE
        BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`,
   true
 );
 
 const QUERY_URL_PREFIX_HISTORY_BOOKMARK = urlQuery(
-  `AND (n_bookmarks > 0 OR frecency > 20)
+  `AND (n_bookmarks > 0 OR frecency > :pageFrecencyThreshold)
      AND url COLLATE NOCASE
        BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
-  `AND (n_bookmarks > 0 OR frecency > 20)
+  `AND (n_bookmarks > 0 OR frecency > :pageFrecencyThreshold)
      AND url COLLATE NOCASE
        BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`,
   true
@@ -245,11 +249,11 @@ const QUERY_URL_PREFIX_HISTORY_BOOKMARK = urlQuery(
 
 const QUERY_URL_HISTORY = urlQuery(
   `AND (visited OR n_bookmarks = 0)
-     AND frecency > 20
+     AND frecency > :pageFrecencyThreshold
      AND stripped_url COLLATE NOCASE
        BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
   `AND (visited OR n_bookmarks = 0)
-     AND frecency > 20
+     AND frecency > :pageFrecencyThreshold
      AND stripped_url COLLATE NOCASE
        BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`,
   false
@@ -257,11 +261,11 @@ const QUERY_URL_HISTORY = urlQuery(
 
 const QUERY_URL_PREFIX_HISTORY = urlQuery(
   `AND (visited OR n_bookmarks = 0)
-     AND frecency > 20
+     AND frecency > :pageFrecencyThreshold
      AND url COLLATE NOCASE
        BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
   `AND (visited OR n_bookmarks = 0)
-     AND frecency > 20
+     AND frecency > :pageFrecencyThreshold
      AND url COLLATE NOCASE
        BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`,
   false
@@ -609,6 +613,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY) &&
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)
     ) {
+      opts.pageFrecencyThreshold = lazy.pageFrecencyThreshold;
       return [
         this._strippedPrefix
           ? QUERY_URL_PREFIX_HISTORY_BOOKMARK
@@ -617,6 +622,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
       ];
     }
     if (queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY)) {
+      opts.pageFrecencyThreshold = lazy.pageFrecencyThreshold;
       return [
         this._strippedPrefix ? QUERY_URL_PREFIX_HISTORY : QUERY_URL_HISTORY,
         opts,
@@ -633,16 +639,20 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
 
   _getAdaptiveHistoryQuery(queryContext) {
     let sourceCondition;
+    let params = {};
     if (
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY) &&
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)
     ) {
-      sourceCondition = "(h.foreign_count > 0 OR h.frecency > 20)";
+      sourceCondition =
+        "(h.foreign_count > 0 OR h.frecency > :pageFrecencyThreshold)";
+      params.pageFrecencyThreshold = lazy.pageFrecencyThreshold;
     } else if (
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY)
     ) {
       sourceCondition =
-        "((h.visit_count > 0 OR h.foreign_count = 0) AND h.frecency > 20)";
+        "((h.visit_count > 0 OR h.foreign_count = 0) AND h.frecency > :pageFrecencyThreshold)";
+      params.pageFrecencyThreshold = lazy.pageFrecencyThreshold;
     } else if (
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)
     ) {
@@ -661,7 +671,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
       joinBookmarks = "";
     }
 
-    const params = {
+    params = Object.assign(params, {
       queryType: QUERYTYPE.AUTOFILL_ADAPTIVE,
       // `fullSearchString` is the value the user typed including a prefix if
       // they typed one. `searchString` has been stripped of the prefix.
@@ -671,7 +681,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
       useCountThreshold: lazy.UrlbarPrefs.get(
         "autoFillAdaptiveHistoryUseCountThreshold"
       ),
-    };
+    });
 
     const query = `
       WITH matched(input, url, title, stripped_url, is_exact_match, starts_with, id) AS (
