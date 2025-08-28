@@ -13,6 +13,10 @@
 #include "js/AllocPolicy.h"
 #include "js/Vector.h"
 
+#ifdef JS_JITSPEW
+#  include "jit/GraphSpewer.h"
+#endif
+
 class JSScript;
 enum class JSOp : uint8_t;
 
@@ -20,14 +24,17 @@ namespace js {
 
 namespace wasm {
 struct OpBytes;
+struct CodeMetadata;
 }
 
 namespace jit {
 
 class JitCode;
+class BacktrackingAllocator;
 class CompilerFrameInfo;
 class MacroAssembler;
 class MBasicBlock;
+class MIRGraph;
 class LInstruction;
 enum class CacheOp : uint16_t;
 
@@ -67,6 +74,7 @@ class PerfSpewer {
   JS::UniqueChars irFileName_;
 
   virtual const char* CodeName(uint32_t op) = 0;
+  virtual const char* IRFileExtension() { return ".txt"; }
 
   // Append an opcode to opcodes_ and the implicit debugInfo_ entry referencing
   // it.
@@ -91,8 +99,8 @@ class PerfSpewer {
   void saveWasmProfile(uintptr_t codeBase, size_t codeSize,
                        JS::UniqueChars& desc);
 
-  void disable(AutoLockPerfSpewer& lock);
-  void disable();
+  virtual void disable(AutoLockPerfSpewer& lock);
+  virtual void disable();
 
  public:
   PerfSpewer() = default;
@@ -104,11 +112,11 @@ class PerfSpewer {
   void markStartOffset(uint32_t offset) { startOffset_ = offset; }
 
   // Start recording. This may create a temp file if we're recording IR.
-  void startRecording();
+  virtual void startRecording(const wasm::CodeMetadata* wasmCodeMeta = nullptr);
 
   // Finish recording and get ready for saving to jitdump, but do not yet
   // write the debug info.
-  void endRecording();
+  virtual void endRecording();
 
   void recordOffset(MacroAssembler& masm, const char*);
 
@@ -130,13 +138,28 @@ void CollectPerfSpewerWasmMap(uintptr_t base, uintptr_t size,
 
 class IonPerfSpewer : public PerfSpewer {
   const char* CodeName(uint32_t op) override;
+  const char* IRFileExtension() override;
+
+  void disable() override;
+
+#ifdef JS_JITSPEW
+  Fprinter graphPrinter_;
+  UniqueGraphSpewer graphSpewer_ = nullptr;
+#endif
 
  public:
   IonPerfSpewer() = default;
   IonPerfSpewer(IonPerfSpewer&&) = default;
   IonPerfSpewer& operator=(IonPerfSpewer&&) = default;
 
+  void startRecording(
+      const wasm::CodeMetadata* wasmCodeMeta = nullptr) override;
+  void endRecording() override;
+
+  void recordPass(const char* pass, MIRGraph* graph,
+                  BacktrackingAllocator* ra = nullptr);
   void recordInstruction(MacroAssembler& masm, LInstruction* ins);
+
   void saveJSProfile(JSContext* cx, JSScript* script, JitCode* code);
   void saveWasmProfile(uintptr_t codeBase, size_t codeSize,
                        JS::UniqueChars& desc);

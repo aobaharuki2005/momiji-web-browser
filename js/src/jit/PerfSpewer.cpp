@@ -97,7 +97,7 @@ static std::atomic<bool> etwCollection = false;
 using namespace js;
 using namespace js::jit;
 
-enum class PerfModeType { None, Function, Source, IR, IROperands };
+enum class PerfModeType { None, Function, Source, IR, IROperands, IRGraph };
 
 static std::atomic<PerfModeType> PerfMode = PerfModeType::None;
 
@@ -259,12 +259,29 @@ static void CheckPerf() {
               "enabled, defaulting to IONPERF=ir\n");
       PerfMode = PerfModeType::IR;
 #  endif
+    } else if (!strcmp(env, "ir-graph")) {
+#  ifdef JS_JITSPEW
+      PerfMode = PerfModeType::IRGraph;
+#  else
+      fprintf(stderr,
+              "Warning: IONPERF=ir-graph requires --enable-jitspew to be "
+              "enabled, defaulting to IONPERF=ir\n");
+      PerfMode = PerfModeType::IR;
+#  endif
     } else if (!strcmp(env, "func")) {
       PerfMode = PerfModeType::Function;
     } else {
       fprintf(stderr, "Use IONPERF=func to record at function granularity\n");
       fprintf(stderr,
               "Use IONPERF=ir to record and annotate assembly with IR\n");
+#  ifdef JS_JITSPEW
+      fprintf(stderr,
+              "Use IONPERF=ir-ops to record and annotate assembly with IR that "
+              "shows operands\n");
+      fprintf(stderr,
+              "Use IONPERF=ir-graph to record structured IR graphs for "
+              "visualization\n");
+#  endif
       fprintf(stderr,
               "Use IONPERF=src to record and annotate assembly with source, if "
               "available locally\n");
@@ -349,20 +366,16 @@ static bool PerfSrcEnabled() {
 
 #ifdef JS_JITSPEW
 static bool PerfIROpsEnabled() { return PerfMode == PerfModeType::IROperands; }
+static bool PerfIRGraphEnabled() { return PerfMode == PerfModeType::IRGraph; }
 #endif
 
 static bool PerfIREnabled() {
-  return (PerfMode == PerfModeType::IROperands) ||
+  return (PerfMode == PerfModeType::IRGraph) ||
+         (PerfMode == PerfModeType::IROperands) ||
          (PerfMode == PerfModeType::IR);
 }
 
-static bool PerfFuncEnabled() {
-  return PerfMode == PerfModeType::Function;
-}
-
-bool js::jit::PerfEnabled() {
-  return PerfSrcEnabled() || PerfIREnabled() || PerfFuncEnabled();
-}
+bool js::jit::PerfEnabled() { return PerfMode != PerfModeType::None; }
 
 void InlineCachePerfSpewer::recordInstruction(MacroAssembler& masm,
                                               const CacheOp& op) {
@@ -379,6 +392,50 @@ void InlineCachePerfSpewer::recordInstruction(MacroAssembler& masm,
     disable(); \
     return;              \
   }
+
+void IonPerfSpewer::disable() {
+#ifdef JS_JITSPEW
+  if (graphSpewer_) {
+    graphPrinter_.finish();
+    graphSpewer_ = nullptr;
+  }
+#endif
+  PerfSpewer::disable();
+}
+
+void IonPerfSpewer::startRecording(const wasm::CodeMetadata* wasmCodeMeta) {
+  PerfSpewer::startRecording();
+#ifdef JS_JITSPEW
+  if (PerfIRGraphEnabled()) {
+    graphPrinter_.init(irFile_);
+    graphSpewer_ = MakeUnique<GraphSpewer>(graphPrinter_, wasmCodeMeta);
+    if (!graphSpewer_) {
+      disable();
+    }
+    graphSpewer_->beginAnonFunction();
+  }
+#endif
+}
+
+void IonPerfSpewer::endRecording() {
+#ifdef JS_JITSPEW
+  if (graphSpewer_) {
+    graphSpewer_->endFunction();
+    graphPrinter_.finish();
+    graphSpewer_ = nullptr;
+  }
+#endif
+  PerfSpewer::endRecording();
+}
+
+void IonPerfSpewer::recordPass(const char* pass, MIRGraph* graph,
+                               BacktrackingAllocator* ra) {
+#ifdef JS_JITSPEW
+  if (PerfIRGraphEnabled() && graphSpewer_) {
+    graphSpewer_->spewPass(pass, graph, ra);
+  }
+#endif
+}
 
 void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LInstruction* ins) {
   uint32_t offset = masm.currentOffset() - startOffset_;
@@ -403,6 +460,15 @@ void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LInstruction* ins) {
   if (!PerfIREnabled()) {
     return;
   }
+
+#ifdef JS_JITSPEW
+  if (PerfIRGraphEnabled()) {
+    if (!debugInfo_.emplaceBack(offset, ins->id(), 0)) {
+      disable();
+    }
+    return;
+  }
+#endif
 
   LNode::Opcode op = ins->op();
   UniqueChars opcodeStr;
@@ -577,6 +643,15 @@ const char* IonPerfSpewer::CodeName(uint32_t op) {
   return js::jit::LIRCodeName(static_cast<LNode::Opcode>(op));
 }
 
+const char* IonPerfSpewer::IRFileExtension() {
+#ifdef JS_JITSPEW
+  if (PerfIRGraphEnabled()) {
+    return ".iongraph.json";
+  }
+#endif
+  return ".txt";
+}
+
 const char* WasmBaselinePerfSpewer::CodeName(uint32_t op) {
   return wasm::OpBytes::fromPacked(op).toString();
 }
@@ -667,6 +742,11 @@ void PerfSpewer::recordOffset(MacroAssembler& masm, const char* msg) {
   if (!PerfIREnabled()) {
     return;
   }
+#ifdef JS_JITSPEW
+  if (PerfIRGraphEnabled()) {
+    return;
+  }
+#endif
 
   UniqueChars offsetStr = DuplicateString(msg);
   recordOpcode(masm.currentOffset() - startOffset_, std::move(offsetStr));
@@ -811,7 +891,7 @@ void PerfSpewer::disable() {
   disable(lock);
 }
 
-void PerfSpewer::startRecording() {
+void PerfSpewer::startRecording(const wasm::CodeMetadata* wasmCodeMeta) {
   MOZ_ASSERT(!irFile_ && !irFileName_);
 
 #ifdef JS_ION_PERF
@@ -822,8 +902,8 @@ void PerfSpewer::startRecording() {
   }
 
   AutoLockPerfSpewer lock;
-  irFileName_ = JS_smprintf("%s/jitdump-ir-%u.%u.txt", spew_dir.get(),
-                            filenameCounter++, getpid());
+  irFileName_ = JS_smprintf("%s/jitdump-ir-%u.%u%s", spew_dir.get(),
+                            filenameCounter++, getpid(), IRFileExtension());
   if (!irFileName_) {
     disable(lock);
     return;

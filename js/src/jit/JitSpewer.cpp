@@ -296,22 +296,6 @@ void JitSpewGraphSpewer::dump(Fprinter& jsonOut) {
   jsonPrinter_.clear();
 }
 
-void jit::SpewBeginFunction(MIRGenerator* mir, JSScript* function) {
-  MIRGraph* graph = &mir->graph();
-  mir->graphSpewer().init(graph, function);
-  mir->graphSpewer().beginFunction(function);
-}
-
-void jit::SpewBeginWasmFunction(MIRGenerator* mir, unsigned funcIndex) {
-  MIRGraph* graph = &mir->graph();
-  mir->graphSpewer().init(graph, nullptr);
-  mir->graphSpewer().beginWasmFunction(funcIndex);
-}
-
-AutoSpewEndFunction::~AutoSpewEndFunction() {
-  mir_->graphSpewer().endFunction();
-}
-
 Fprinter& jit::JitSpewPrinter() {
   static Fprinter out;
   return out;

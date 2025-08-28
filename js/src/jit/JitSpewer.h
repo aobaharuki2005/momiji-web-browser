@@ -167,18 +167,6 @@ class JitSpewGraphSpewer {
   void dump(Fprinter& json);
 };
 
-void SpewBeginFunction(MIRGenerator* mir, JSScript* function);
-void SpewBeginWasmFunction(MIRGenerator* mir, unsigned funcIndex);
-
-class AutoSpewEndFunction {
- private:
-  MIRGenerator* mir_;
-
- public:
-  explicit AutoSpewEndFunction(MIRGenerator* mir) : mir_(mir) {}
-  ~AutoSpewEndFunction();
-};
-
 void CheckLogging();
 Fprinter& JitSpewPrinter();
 
@@ -250,16 +238,6 @@ class JitSpewGraphSpewer {
   void endFunction() {}
 
   void dump(Fprinter& c1, Fprinter& json) {}
-};
-
-static inline void SpewBeginFunction(MIRGenerator* mir, JSScript* function) {}
-static inline void SpewBeginWasmFunction(MIRGenerator* mir,
-                                         unsigned funcIndex) {}
-
-class AutoSpewEndFunction {
- public:
-  explicit AutoSpewEndFunction(MIRGenerator* mir) {}
-  ~AutoSpewEndFunction() {}
 };
 
 static inline void CheckLogging() {}

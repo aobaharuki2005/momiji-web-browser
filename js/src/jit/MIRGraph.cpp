@@ -74,6 +74,34 @@ mozilla::GenericErrorResult<AbortReason> MIRGenerator::abort(AbortReason r) {
   return Err(std::move(r));
 }
 
+void MIRGenerator::spewBeginFunction(JSScript* function) {
+  graphSpewer().init(&graph(), function);
+  graphSpewer().beginFunction(function);
+  perfSpewer().startRecording();
+}
+
+void MIRGenerator::spewBeginWasmFunction(unsigned funcIndex) {
+  graphSpewer().init(&graph(), nullptr);
+  graphSpewer().beginWasmFunction(funcIndex);
+  perfSpewer().startRecording(wasmCodeMeta_);
+}
+
+void MIRGenerator::spewPass(const char* name, BacktrackingAllocator* ra) {
+  graphSpewer().spewPass(name, ra);
+  perfSpewer().recordPass(name, &graph(), ra);
+}
+
+void MIRGenerator::spewEndFunction() {
+  graphSpewer().endFunction();
+  perfSpewer().endRecording();
+}
+
+AutoSpewEndFunction::~AutoSpewEndFunction() {
+  if (mir_) {
+    mir_->spewEndFunction();
+  }
+}
+
 mozilla::GenericErrorResult<AbortReason> MIRGenerator::abortFmt(
     AbortReason r, const char* message, va_list ap) {
   JitSpewVA(JitSpew_IonAbort, message, ap);

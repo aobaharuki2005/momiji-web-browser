@@ -32,6 +32,7 @@
 namespace js {
 namespace jit {
 
+class BacktrackingAllocator;
 class JitRuntime;
 class MIRGraph;
 class OptimizationInfo;
@@ -169,10 +170,27 @@ class MIRGenerator final {
 
  private:
   JitSpewGraphSpewer gs_;
+  IonPerfSpewer perfSpewer_;
 
  public:
   JitSpewGraphSpewer& graphSpewer() { return gs_; }
+  IonPerfSpewer& perfSpewer() { return perfSpewer_; }
+
+  void spewBeginFunction(JSScript* function);
+  void spewBeginWasmFunction(unsigned funcIndex);
+  void spewPass(const char* name, BacktrackingAllocator* ra = nullptr);
+  void spewEndFunction();
+
   CompilationDependencyTracker tracker;
+};
+
+class AutoSpewEndFunction {
+ private:
+  MIRGenerator* mir_;
+
+ public:
+  explicit AutoSpewEndFunction(MIRGenerator* mir) : mir_(mir) {}
+  ~AutoSpewEndFunction();
 };
 
 }  // namespace jit

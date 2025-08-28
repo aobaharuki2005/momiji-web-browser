@@ -45,11 +45,12 @@ class GraphSpewer : JSONPrinter {
 
   void beginFunction(JSScript* script);
   void beginWasmFunction(unsigned funcIndex);
+  void beginAnonFunction();
   void spewPass(const char* pass, MIRGraph* graph, BacktrackingAllocator* ra = nullptr);
   void endFunction();
 };
 
-using UniqueGraphSpewer = UniquePtr<GraphSpewer, JS::FreePolicy>;
+using UniqueGraphSpewer = UniquePtr<GraphSpewer>;
 
 }  // namespace jit
 }  // namespace js

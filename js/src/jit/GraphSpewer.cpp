@@ -30,6 +30,12 @@ void GraphSpewer::beginWasmFunction(unsigned funcIndex) {
   beginListProperty("passes");
 }
 
+void GraphSpewer::beginAnonFunction() {
+  beginObject();
+  property("name", "unknown");
+  beginListProperty("passes");
+}
+
 void GraphSpewer::spewPass(const char* pass, MIRGraph* graph,
                              BacktrackingAllocator* ra) {
   beginPass(pass);

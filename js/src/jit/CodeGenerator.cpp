@@ -553,7 +553,7 @@ void CodeGenerator::visitOutOfLineCallVM(
   }
   JitSpewFin(JitSpew_Codegen);
 #endif
-  perfSpewer_.recordInstruction(masm, lir);
+  perfSpewer().recordInstruction(masm, lir);
   saveLive(lir);
   ool->args().generate(this);
   callVM<Fn, fn>(lir);
@@ -8260,7 +8260,7 @@ bool CodeGenerator::generateBody() {
         return false;
       }
 
-      perfSpewer_.recordInstruction(masm, *iter);
+      perfSpewer().recordInstruction(masm, *iter);
 #ifdef JS_JITSPEW
       JitSpewStart(JitSpew_Codegen, "                                # LIR=%s",
                    iter->opName());
@@ -16790,8 +16790,7 @@ bool CodeGenerator::generateWasm(wasm::CallIndirectId callIndirectId,
                                  size_t trapExitLayoutNumWords,
                                  wasm::FuncOffsets* offsets,
                                  wasm::StackMaps* stackMaps,
-                                 wasm::Decoder* decoder,
-                                 jit::IonPerfSpewer* spewer) {
+                                 wasm::Decoder* decoder) {
   AutoCreatedBy acb(masm, "CodeGenerator::generateWasm");
 
   JitSpew(JitSpew_Codegen, "# Emitting wasm code");
@@ -16800,9 +16799,8 @@ bool CodeGenerator::generateWasm(wasm::CallIndirectId callIndirectId,
       StackArgAreaSizeUnaligned(argTypes, ABIKind::Wasm);
   inboundStackArgBytes_ = nInboundStackArgBytes;
 
-  perfSpewer_.startRecording();
-  perfSpewer_.markStartOffset(masm.currentOffset());
-  perfSpewer_.recordOffset(masm, "Prologue");
+  perfSpewer().markStartOffset(masm.currentOffset());
+  perfSpewer().recordOffset(masm, "Prologue");
   wasm::GenerateFunctionPrologue(masm, callIndirectId, mozilla::Nothing(),
                                  offsets);
 
@@ -16857,11 +16855,11 @@ bool CodeGenerator::generateWasm(wasm::CallIndirectId callIndirectId,
     return false;
   }
 
-  perfSpewer_.recordOffset(masm, "Epilogue");
+  perfSpewer().recordOffset(masm, "Epilogue");
   masm.bind(&returnLabel_);
   wasm::GenerateFunctionEpilogue(masm, frameSize(), offsets);
 
-  perfSpewer_.recordOffset(masm, "OOLCode");
+  perfSpewer().recordOffset(masm, "OOLCode");
   if (!generateOutOfLineCode()) {
     return false;
   }
@@ -16905,8 +16903,6 @@ bool CodeGenerator::generateWasm(wasm::CallIndirectId callIndirectId,
     }
   }
 
-  perfSpewer_.endRecording();
-  *spewer = std::move(perfSpewer_);
   return true;
 }
 
@@ -16943,8 +16939,7 @@ bool CodeGenerator::generate(const WarpSnapshot* snapshot) {
     return false;
   }
 
-  perfSpewer_.startRecording();
-  perfSpewer_.recordOffset(masm, "Prologue");
+  perfSpewer().recordOffset(masm, "Prologue");
   if (!generatePrologue()) {
     return false;
   }
@@ -16963,7 +16958,7 @@ bool CodeGenerator::generate(const WarpSnapshot* snapshot) {
     return false;
   }
 
-  perfSpewer_.recordOffset(masm, "Epilogue");
+  perfSpewer().recordOffset(masm, "Epilogue");
   if (!generateEpilogue()) {
     return false;
   }
@@ -16973,12 +16968,12 @@ bool CodeGenerator::generate(const WarpSnapshot* snapshot) {
     return false;
   }
 
-  perfSpewer_.recordOffset(masm, "InvalidateEpilogue");
+  perfSpewer().recordOffset(masm, "InvalidateEpilogue");
   generateInvalidateEpilogue();
 
   // native => bytecode entries for OOL code will be added
   // by CodeGeneratorShared::generateOutOfLineCode
-  perfSpewer_.recordOffset(masm, "OOLCode");
+  perfSpewer().recordOffset(masm, "OOLCode");
   if (!generateOutOfLineCode()) {
     return false;
   }
@@ -17023,8 +17018,6 @@ bool CodeGenerator::generate(const WarpSnapshot* snapshot) {
   // For each instruction with a safepoint, we have an OSI point inserted after
   // which handles bailouts in case of invalidation of the code.
   MOZ_ASSERT(osiIndices_.length() == graph.numSafepoints());
-
-  perfSpewer_.endRecording();
 
   return !masm.oom();
 }
@@ -17345,7 +17338,7 @@ bool CodeGenerator::link(JSContext* cx) {
   }
   ionScript->setInvalidationEpilogueOffset(invalidate_.offset());
 
-  perfSpewer_.saveJSProfile(cx, script, code);
+  perfSpewer().saveJSProfile(cx, script, code);
 
 #ifdef MOZ_VTUNE
   vtune::MarkScript(code, script, "ion");
