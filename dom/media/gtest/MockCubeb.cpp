@@ -5,6 +5,8 @@
 
 #include "MockCubeb.h"
 
+#include "gtest/gtest.h"
+
 namespace mozilla {
 
 using KeepProcessing = MockCubebStream::KeepProcessing;
@@ -539,12 +541,7 @@ void MockCubebStream::NotifyDeviceChanged() {
 MockCubeb::MockCubeb() : MockCubeb(MockCubeb::RunningMode::Automatic) {}
 
 MockCubeb::MockCubeb(RunningMode aRunningMode)
-    : ops(&mock_ops), mRunningMode(aRunningMode) {
-  // Silence a -Wunused-private-field warning in clang.
-  // Note [[maybe_unused]] could silence this but then gcc warns about
-  // error: 'unused' attribute ignored [-Werror=attributes].
-  (void)ops;
-}
+    : ops(&mock_ops), mRunningMode(aRunningMode) {}
 
 MockCubeb::~MockCubeb() { MOZ_RELEASE_ASSERT(!mFakeAudioThreadRunning); }
 
