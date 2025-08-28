@@ -99,7 +99,6 @@ using namespace js::jit;
 
 enum class PerfModeType { None, Function, Source, IR, IROperands };
 
-static std::atomic<bool> geckoProfiling = false;
 static std::atomic<PerfModeType> PerfMode = PerfModeType::None;
 
 // Mutex to guard access to the profiler vectors and jitdump file if perf
@@ -327,7 +326,6 @@ void PerfSpewer::Init() {
 static void DisablePerfSpewer(AutoLockPerfSpewer& lock) {
   fprintf(stderr, "Warning: Disabling PerfSpewer.");
 
-  geckoProfiling = false;
 #ifdef XP_WIN
   etwCollection = false;
 #endif
@@ -346,7 +344,7 @@ static void DisablePerfSpewer() {
 }
 
 static bool PerfSrcEnabled() {
-  return PerfMode == PerfModeType::Source || geckoProfiling;
+  return PerfMode == PerfModeType::Source;
 }
 
 #ifdef JS_JITSPEW
@@ -355,11 +353,11 @@ static bool PerfIROpsEnabled() { return PerfMode == PerfModeType::IROperands; }
 
 static bool PerfIREnabled() {
   return (PerfMode == PerfModeType::IROperands) ||
-         (PerfMode == PerfModeType::IR) || geckoProfiling;
+         (PerfMode == PerfModeType::IR);
 }
 
 static bool PerfFuncEnabled() {
-  return PerfMode == PerfModeType::Function || geckoProfiling;
+  return PerfMode == PerfModeType::Function;
 }
 
 bool js::jit::PerfEnabled() {
