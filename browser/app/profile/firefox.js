@@ -1932,7 +1932,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.ctaButtonSponsors", "")
 pref("browser.newtabpage.activity-stream.discoverystream.ctaButtonVariant", "");
 
 // Pref enabling content reporting
-pref("browser.newtabpage.activity-stream.discoverystream.reportAds.enabled", false);
+pref("browser.newtabpage.activity-stream.discoverystream.reportAds.enabled", true);
 
 // List of regions that do not get stories, regardless of locale-list-config.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-block", "");
