@@ -16,8 +16,7 @@
     "test-ci": "TZ=Africa/Nairobi jest --json",
     "test:watch": "jest --watch",
     "test:coverage": "yarn test --coverage",
-    "test:all": "yarn test",
-    "watch": "node bin/watch"
+    "test:all": "yarn test"
   },
   "dependencies": {
     "acorn": "~8.8.2",
