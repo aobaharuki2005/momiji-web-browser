@@ -3601,7 +3601,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // isolate the containing element blending as well.
   if (aBuilder->ContainsBlendMode()) {
     resultList.AppendToTop(nsDisplayBlendContainer::CreateForMixBlendMode(
-        aBuilder, this, &resultList, containerItemASR));
+        aBuilder, this, &resultList, containerItemASR,
+        nsDisplayItem::ContainerASRType::AncestorOfContained));
     createdContainer = true;
     MarkAsIsolated();
   }
@@ -3659,7 +3660,11 @@ void nsIFrame::BuildDisplayListForStackingContext(
                                : containerItemASR;
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop<nsDisplayMasksAndClipPaths>(
-          aBuilder, this, &resultList, maskASR, usingBackdropFilter);
+          aBuilder, this, &resultList, maskASR,
+          clipForMask.isSome()
+              ? nsDisplayItem::ContainerASRType::Constant
+              : nsDisplayItem::ContainerASRType::AncestorOfContained,
+          usingBackdropFilter);
       createdContainer = true;
       MarkAsIsolated();
     }
@@ -3680,8 +3685,10 @@ void nsIFrame::BuildDisplayListForStackingContext(
     const bool needsActiveOpacityLayer =
         nsDisplayOpacity::NeedsActiveLayer(aBuilder, this);
     resultList.AppendNewToTop<nsDisplayOpacity>(
-        aBuilder, this, &resultList, containerItemASR, opacityItemForEventsOnly,
-        needsActiveOpacityLayer, usingBackdropFilter, ShouldForceIsolation());
+        aBuilder, this, &resultList, containerItemASR,
+        nsDisplayItem::ContainerASRType::AncestorOfContained,
+        opacityItemForEventsOnly, needsActiveOpacityLayer, usingBackdropFilter,
+        ShouldForceIsolation());
     createdContainer = true;
   }
 
@@ -3818,6 +3825,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
           aBuilder, this,
           /* aIndex = */ nsDisplayOwnLayer::OwnLayerForTransformWithRoundedClip,
           &resultList, aBuilder->CurrentActiveScrolledRoot(),
+          nsDisplayItem::ContainerASRType::Constant,
           nsDisplayOwnLayerFlags::None, ScrollbarData{},
           /* aForceActive = */ false, false);
       createdContainer = true;
@@ -3840,7 +3848,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     const ActiveScrolledRoot* fixedASR = ActiveScrolledRoot::PickAncestor(
         containerItemASR, aBuilder->CurrentActiveScrolledRoot());
     resultList.AppendNewToTop<nsDisplayFixedPosition>(
-        aBuilder, this, &resultList, fixedASR, containerItemASR,
+        aBuilder, this, &resultList, fixedASR,
+        nsDisplayItem::ContainerASRType::AncestorOfContained, containerItemASR,
         ShouldForceIsolation());
     createdContainer = true;
   } else if (useStickyPosition && !capturedByViewTransition) {
@@ -3862,6 +3871,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     auto* stickyItem = MakeDisplayItem<nsDisplayStickyPosition>(
         aBuilder, this, &resultList, stickyASR,
+        nsDisplayItem::ContainerASRType::AncestorOfContained,
         aBuilder->CurrentActiveScrolledRoot(),
         clipState.IsClippedToDisplayPort());
 
@@ -3888,9 +3898,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
   if (effects->mMixBlendMode != StyleBlend::Normal) {
     stackingContextTracker.AddToParent(
         StackingContextBits::ContainsMixBlendMode);
-    resultList.AppendNewToTop<nsDisplayBlendMode>(aBuilder, this, &resultList,
-                                                  effects->mMixBlendMode,
-                                                  containerItemASR, false);
+    resultList.AppendNewToTop<nsDisplayBlendMode>(
+        aBuilder, this, &resultList, effects->mMixBlendMode, containerItemASR,
+        nsDisplayItem::ContainerASRType::AncestorOfContained, false);
     createdContainer = true;
     MarkAsIsolated();
   }
@@ -3909,7 +3919,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   if (!isolated && localIsolationReasons != StackingContextBits::None) {
     resultList.AppendToTop(nsDisplayBlendContainer::CreateForIsolation(
-        aBuilder, this, &resultList, containerItemASR, ShouldForceIsolation()));
+        aBuilder, this, &resultList, containerItemASR,
+        nsDisplayItem::ContainerASRType::AncestorOfContained,
+        ShouldForceIsolation()));
     createdContainer = true;
   }
 
@@ -3926,7 +3938,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     nsDisplayItem* container = resultList.GetBottom();
     if (resultList.Length() > 1 || container->Frame() != this) {
       container = MakeDisplayItem<nsDisplayContainer>(
-          aBuilder, this, containerItemASR, &resultList);
+          aBuilder, this, containerItemASR,
+          nsDisplayItem::ContainerASRType::AncestorOfContained, &resultList);
     } else {
       MOZ_ASSERT(resultList.Length() == 1);
       resultList.Clear();
@@ -4000,8 +4013,9 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
   // TODO:RetainedDisplayListBuilder's merge phase has the full list and
   // could strip them out.
 
-  return MakeDisplayItem<nsDisplayContainer>(aBuilder, aFrame, aContainerASR,
-                                             aList);
+  return MakeDisplayItem<nsDisplayContainer>(
+      aBuilder, aFrame, aContainerASR,
+      nsDisplayItem::ContainerASRType::AncestorOfContained, aList);
 }
 
 /**

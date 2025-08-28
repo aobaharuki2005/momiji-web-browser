@@ -5291,9 +5291,9 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
         rootScrollContainerFrame->GetContent());
 
     nsDisplayList wrapped(&info->mBuilder);
-    wrapped.AppendNewToTop<nsDisplayAsyncZoom>(&info->mBuilder,
-                                               rootScrollContainerFrame,
-                                               &info->mList, nullptr, zoomedId);
+    wrapped.AppendNewToTop<nsDisplayAsyncZoom>(
+        &info->mBuilder, rootScrollContainerFrame, &info->mList, nullptr,
+        nsDisplayItem::ContainerASRType::Constant, zoomedId);
     info->mList.AppendToTop(&wrapped);
   }
 
