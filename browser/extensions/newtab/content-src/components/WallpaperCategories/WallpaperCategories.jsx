@@ -58,7 +58,7 @@ export class _WallpaperCategories extends React.PureComponent {
       showColorPicker: false,
       inputType: "radio",
       activeId: null,
-      isCustomWallpaperError: false,
+      customWallpaperErrorType: null,
     };
   }
 
@@ -288,27 +288,35 @@ export class _WallpaperCategories extends React.PureComponent {
 
     // Catch cancel events
     fileInput.oncancel = async () => {
-      this.setState({ isCustomWallpaperError: false });
+      this.setState({ customWallpaperErrorType: null });
     };
 
     // Reset error state when user begins file selection
-    this.setState({ isCustomWallpaperError: false });
+    this.setState({ customWallpaperErrorType: null });
 
     // Fire when user selects a file
     fileInput.onchange = async event => {
       const [file] = event.target.files;
 
-      // Limit image uploaded to a maximum file size if enabled
-      // Note: The max file size pref (customWallpaper.fileSize) is converted to megabytes (MB)
-      // Example: if pref value is 5, max file size is 5 MB
-      const maxSize = wallpaperUploadMaxFileSize * 1024 * 1024;
-      if (wallpaperUploadMaxFileSizeEnabled && file && file.size > maxSize) {
-        console.error("File size exceeds limit");
-        this.setState({ isCustomWallpaperError: true });
-        return;
-      }
-
       if (file) {
+        // Validate file type: Only accept files with a valid image MIME type
+        const isValidImage = file.type && file.type.startsWith("image/");
+        if (!isValidImage) {
+          console.error("Invalid file type");
+          this.setState({ customWallpaperErrorType: "fileType" });
+          return;
+        }
+
+        // Limit image uploaded to a maximum file size if enabled
+        // Note: The max file size pref (customWallpaper.fileSize) is converted to megabytes (MB)
+        // Example: if pref value is 5, max file size is 5 MB
+        const maxSize = wallpaperUploadMaxFileSize * 1024 * 1024;
+        if (wallpaperUploadMaxFileSizeEnabled && file.size > maxSize) {
+          console.error("File size exceeds limit");
+          this.setState({ customWallpaperErrorType: "fileSize" });
+          return;
+        }
+
         this.props.dispatch(
           ac.OnlyToMain({
             type: at.WALLPAPER_UPLOAD,
@@ -539,13 +547,26 @@ export class _WallpaperCategories extends React.PureComponent {
               );
             })}
           </fieldset>
-          {this.state.isCustomWallpaperError && (
+          {this.state.customWallpaperErrorType && (
             <div className="custom-wallpaper-error" id="customWallpaperError">
               <span className="icon icon-info"></span>
-              <span
-                data-l10n-id="newtab-wallpaper-error-max-file-size"
-                data-l10n-args={`{"file_size": ${wallpaperUploadMaxFileSize}}`}
-              ></span>
+              {(() => {
+                switch (this.state.customWallpaperErrorType) {
+                  case "fileSize":
+                    return (
+                      <span
+                        data-l10n-id="newtab-wallpaper-error-max-file-size"
+                        data-l10n-args={`{"file_size": ${wallpaperUploadMaxFileSize}}`}
+                      ></span>
+                    );
+                  case "fileType":
+                    return (
+                      <span data-l10n-id="newtab-wallpaper-error-upload-file-type"></span>
+                    );
+                  default:
+                    return null;
+                }
+              })()}
             </div>
           )}
         </div>
