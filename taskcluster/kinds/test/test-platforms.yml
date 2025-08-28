@@ -434,11 +434,6 @@ android-em-7.0-x86_64-qr/debug-isolated-process:
     test-sets:
         - android-x86_64-tests
 
-android-em-7.0-x86-qr/opt:
-    build-platform: android-x86/opt
-    test-sets:
-        - android-x86-tests
-
 # new android 14 emulator- will run in parallel for a few weeks
 android-em-14-x86_64/opt:
     build-platform: android-x86_64/opt
