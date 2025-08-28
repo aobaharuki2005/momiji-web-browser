@@ -674,6 +674,8 @@ def target_tasks_custom_car_perf_testing(full_task_graph, parameters, graph_conf
             return False
 
         try_name = attributes.get("raptor_try_name")
+        if "network-bench" in try_name and "linux" not in platform:
+            return False
 
         # Desktop and Android selection for CaR
         if accept_raptor_desktop_build(platform):
