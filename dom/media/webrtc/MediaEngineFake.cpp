@@ -52,7 +52,6 @@ static constexpr int VIDEO_HEIGHT_DEFAULT =
     MediaEnginePrefs::DEFAULT_43_VIDEO_HEIGHT;
 #endif
 static constexpr int VIDEO_HEIGHT_MAX = 2160;
-static constexpr int DEFAULT_AUDIO_TIMER_MS = 10;
 
 static nsString FakeVideoName() {
   // For the purpose of testing we allow to change the name of the fake device
