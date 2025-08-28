@@ -772,7 +772,8 @@ class HomeFragment : Fragment() {
                                     )
                                 }
                         } else {
-                            toolbarView.updateDividerVisibility(true)
+                            val showDivider = !requireContext().settings().enableHomepageSearchBar
+                            toolbarView.updateDividerVisibility(showDivider)
                         }
 
                         if (isToolbarAtTheBottom) {
@@ -791,9 +792,11 @@ class HomeFragment : Fragment() {
     private fun resetToolbarViewUI() {
         val elevation = requireContext().resources.getDimension(R.dimen.browser_fragment_toolbar_elevation)
         _binding?.homeLayout?.removeView(bottomToolbarContainerView.toolbarContainerView)
+        val showDivider = requireContext().isToolbarAtBottom() || !requireContext().settings().enableHomepageSearchBar
+
         updateToolbarViewUI(
             R.drawable.home_bottom_bar_background,
-            true,
+            showDivider,
             elevation,
         )
     }
@@ -875,6 +878,9 @@ class HomeFragment : Fragment() {
         if (requireContext().settings().isTabStripEnabled) {
             initTabStrip()
         }
+
+        val showDivider = requireContext().isToolbarAtBottom() || !requireContext().settings().enableHomepageSearchBar
+        toolbarView.updateDividerVisibility(showDivider)
 
         consumeFrom(requireComponents.core.store) {
             toolbarView.updateTabCounter(it)
