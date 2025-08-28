@@ -121,7 +121,7 @@ int32_t AndroidGetAudioOutputSampleRate();
 int32_t AndroidGetAudioOutputFramesPerBuffer();
 #  endif
 
-#  ifdef ENABLE_SET_CUBEB_BACKEND
+#  if defined(ENABLE_TESTS) || defined(FUZZING)
 void ForceSetCubebContext(cubeb* aCubebContext);
 #  endif
 }  // namespace CubebUtils

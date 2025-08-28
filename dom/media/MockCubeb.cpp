@@ -5,8 +5,6 @@
 
 #include "MockCubeb.h"
 
-#include "gtest/gtest.h"
-
 namespace mozilla {
 
 using KeepProcessing = MockCubebStream::KeepProcessing;
@@ -572,7 +570,7 @@ MockCubeb* MockCubeb::AsMock(cubeb* aContext) {
 int MockCubeb::EnumerateDevices(cubeb_device_type aType,
                                 cubeb_device_collection* aCollection) {
 #ifdef ANDROID
-  EXPECT_TRUE(false) << "This is not to be called on Android.";
+  MOZ_ASSERT_UNREACHABLE("This is not to be called on Android.");
 #endif
   size_t count = 0;
   if (aType & CUBEB_DEVICE_TYPE_INPUT) {
