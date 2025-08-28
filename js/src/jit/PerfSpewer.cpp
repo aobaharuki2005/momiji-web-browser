@@ -360,9 +360,7 @@ static void DisablePerfSpewer() {
   DisablePerfSpewer(lock);
 }
 
-static bool PerfSrcEnabled() {
-  return PerfMode == PerfModeType::Source;
-}
+static bool PerfSrcEnabled() { return PerfMode == PerfModeType::Source; }
 
 #ifdef JS_JITSPEW
 static bool PerfIROpsEnabled() { return PerfMode == PerfModeType::IROperands; }
@@ -387,10 +385,10 @@ void InlineCachePerfSpewer::recordInstruction(MacroAssembler& masm,
   recordOpcode(masm.currentOffset() - startOffset_, static_cast<uint32_t>(op));
 }
 
-#define CHECK_RETURN(x)  \
-  if (!(x)) {            \
-    disable(); \
-    return;              \
+#define CHECK_RETURN(x) \
+  if (!(x)) {           \
+    disable();          \
+    return;             \
   }
 
 void IonPerfSpewer::disable() {
@@ -1027,8 +1025,7 @@ void BaselineInterpreterPerfSpewer::saveProfile(JitCode* code) {
     if (ops_[i - 1].str) {
       rangeName = JS_smprintf("BlinterpOp: %s", ops_[i - 1].str.get());
     } else {
-      rangeName =
-          JS_smprintf("BlinterpOp: %s", CodeName(ops_[i - 1].opcode));
+      rangeName = JS_smprintf("BlinterpOp: %s", CodeName(ops_[i - 1].opcode));
     }
 
     // If rangeName is empty, we probably went OOM.
@@ -1049,8 +1046,7 @@ void BaselineInterpreterPerfSpewer::recordOffset(MacroAssembler& masm,
     return;
   }
 
-  if (!ops_.emplaceBack(masm.currentOffset() - startOffset_,
-                            unsigned(op))) {
+  if (!ops_.emplaceBack(masm.currentOffset() - startOffset_, unsigned(op))) {
     disable();
     ops_.clear();
     return;
@@ -1064,8 +1060,7 @@ void BaselineInterpreterPerfSpewer::recordOffset(MacroAssembler& masm,
   }
 
   UniqueChars desc = DuplicateString(name);
-  if (!ops_.emplaceBack(masm.currentOffset() - startOffset_,
-                            std::move(desc))) {
+  if (!ops_.emplaceBack(masm.currentOffset() - startOffset_, std::move(desc))) {
     disable();
     ops_.clear();
     return;

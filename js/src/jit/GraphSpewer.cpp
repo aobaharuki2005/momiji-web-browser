@@ -37,7 +37,7 @@ void GraphSpewer::beginAnonFunction() {
 }
 
 void GraphSpewer::spewPass(const char* pass, MIRGraph* graph,
-                             BacktrackingAllocator* ra) {
+                           BacktrackingAllocator* ra) {
   beginPass(pass);
   spewMIR(graph);
   spewLIR(graph);

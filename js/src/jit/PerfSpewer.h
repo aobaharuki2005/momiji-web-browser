@@ -25,7 +25,7 @@ namespace js {
 namespace wasm {
 struct OpBytes;
 struct CodeMetadata;
-}
+}  // namespace wasm
 
 namespace jit {
 
@@ -187,9 +187,10 @@ class BaselineInterpreterPerfSpewer : public PerfSpewer {
     // Prologue/Epilogue, or to add operand info.
     JS::UniqueChars str;
 
-    explicit Op(uint32_t offset_, uint32_t opcode_) : offset(offset_), opcode(opcode_) {}
+    explicit Op(uint32_t offset_, uint32_t opcode_)
+        : offset(offset_), opcode(opcode_) {}
     explicit Op(uint32_t offset_, JS::UniqueChars&& str_)
-        :  offset(offset_), opcode(0), str(std::move(str_)) {}
+        : offset(offset_), opcode(0), str(std::move(str_)) {}
 
     Op(Op&& copy) {
       offset = copy.offset;
