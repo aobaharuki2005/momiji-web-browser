@@ -291,7 +291,8 @@ export class ContentSection extends React.PureComponent {
                 data-eventSource="TOP_STORIES"
                 {...(mayHaveInferredPersonalization
                   ? {
-                      label: "Stories",
+                      "data-l10n-id":
+                        "newtab-custom-stories-personalized-toggle",
                     }
                   : {
                       "data-l10n-id": "newtab-custom-stories-toggle",
@@ -319,9 +320,8 @@ export class ContentSection extends React.PureComponent {
                             <label
                               className="customize-menu-checkbox-label"
                               htmlFor="inferred-personalization"
-                            >
-                              Personalized stories based on your activity
-                            </label>
+                              data-l10n-id="newtab-custom-stories-personalized-checkbox-label"
+                            />
                           </div>
                         )}
                         {mayHaveTopicSections && (

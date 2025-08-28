@@ -14703,7 +14703,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       "data-preference": "feeds.section.topstories",
       "data-eventSource": "TOP_STORIES"
     }, mayHaveInferredPersonalization ? {
-      label: "Stories"
+      "data-l10n-id": "newtab-custom-stories-personalized-toggle"
     } : {
       "data-l10n-id": "newtab-custom-stories-toggle"
     }), /*#__PURE__*/external_React_default().createElement("div", {
@@ -14727,8 +14727,9 @@ class ContentSection extends (external_React_default()).PureComponent {
       "data-eventSource": "INFERRED_PERSONALIZATION"
     }), /*#__PURE__*/external_React_default().createElement("label", {
       className: "customize-menu-checkbox-label",
-      htmlFor: "inferred-personalization"
-    }, "Personalized stories based on your activity")), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
+      htmlFor: "inferred-personalization",
+      "data-l10n-id": "newtab-custom-stories-personalized-checkbox-label"
+    })), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
       exitEventFired: exitEventFired
     }))))))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
