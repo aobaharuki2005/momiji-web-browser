@@ -576,6 +576,18 @@
   grid-gap: var(--space-large);
   grid-template-columns: repeat(1, 300px);
 
+  .ds-image {
+    &.image-2,
+    &.image-3,
+    &.image-4 {
+      display: none;
+    }
+
+    &.image-1 {
+      display: block;
+    }
+  }
+
   @media (min-width: $break-point-medium) {
     @for $i from 0 through 16 {
       .col-1-position-#{$i} {
@@ -604,18 +616,6 @@
     .col-1-hide-excerpt {
       .meta .info-wrap .excerpt {
         display: none;
-      }
-    }
-
-    .ds-image {
-      &.image-2,
-      &.image-3,
-      &.image-4 {
-        display: none;
-      }
-
-      &.image-1 {
-        display: block;
       }
     }
   }
