@@ -54,6 +54,7 @@ mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasParentLog, mozilla::LogLevel::Debug)
 
 namespace mozilla {
+using dom::VideoResizeModeEnum;
 using media::ShutdownBlockingTicket;
 namespace camera {
 
@@ -368,9 +369,15 @@ ShmemBuffer CamerasParent::GetBuffer(size_t aSize) {
 }
 
 void CallbackHelper::SetConfiguration(
-    const webrtc::VideoCaptureCapability& aCapability) {
+    const webrtc::VideoCaptureCapability& aCapability,
+    const NormalizedConstraints& aConstraints,
+    const dom::VideoResizeModeEnum& aResizeMode) {
   auto c = mConfiguration.Lock();
-  c.ref() = aCapability;
+  c.ref() = Configuration{
+      .mCapability = aCapability,
+      .mConstraints = aConstraints,
+      .mResizeMode = aResizeMode,
+  };
 }
 
 void CallbackHelper::OnCaptureEnded() {
@@ -384,12 +391,21 @@ void CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
   {
     // Proactively drop frames that would not get processed anyway.
     auto c = mConfiguration.Lock();
-    const double maxFramerate = std::clamp(
-        static_cast<double>(c->maxFPS > 0 ? c->maxFPS : 120), 0.01, 120.);
+
+    const double maxFramerate =
+        std::clamp(static_cast<double>(
+                       c->mCapability.maxFPS > 0 ? c->mCapability.maxFPS : 120),
+                   0.01, 120.);
+    const double targetFramerate =
+        c->mResizeMode == VideoResizeModeEnum::Crop_and_scale
+            ? std::min(maxFramerate,
+                       c->mConstraints.mFrameRate.Get(maxFramerate))
+            : maxFramerate;
+
     // Allow 5% higher fps than configured as frame time sampling is timing
     // dependent.
     const auto minInterval =
-        media::TimeUnit(1000, static_cast<int64_t>(1050 * maxFramerate));
+        media::TimeUnit(1000, static_cast<int64_t>(1050 * targetFramerate));
     const auto frameTime =
         media::TimeUnit::FromMicroseconds(aVideoFrame.timestamp_us());
     const auto frameInterval = frameTime - mLastFrameTime;
@@ -951,7 +967,8 @@ ipc::IPCResult CamerasParent::RecvReleaseCapture(
 ipc::IPCResult CamerasParent::RecvStartCapture(
     const CaptureEngine& aCapEngine, const int& aCaptureId,
     const VideoCaptureCapability& aIpcCaps,
-    const NormalizedConstraints& aConstraints) {
+    const NormalizedConstraints& aConstraints,
+    const dom::VideoResizeModeEnum& aResizeMode) {
   MOZ_ASSERT(mPBackgroundEventTarget->IsOnCurrentThread());
   MOZ_ASSERT(!mDestroyed);
 
@@ -960,7 +977,8 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
   using Promise = MozPromise<int, bool, true>;
   InvokeAsync(
       mVideoCaptureThread, __func__,
-      [this, self = RefPtr(this), aCapEngine, aCaptureId, aIpcCaps] {
+      [this, self = RefPtr(this), aCapEngine, aCaptureId, aIpcCaps,
+       aConstraints, aResizeMode] {
         LOG_FUNCTION();
         int error = -1;
 
@@ -1076,7 +1094,7 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
                     cbh->mTrackingId.mUniqueInProcId);
               }
 
-              cbh->SetConfiguration(capability);
+              cbh->SetConfiguration(capability, aConstraints, aResizeMode);
               error = cap.VideoCapture()->StartCapture(capability);
 
               if (!error) {

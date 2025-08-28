@@ -109,7 +109,8 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   nsresult FocusOnSelectedSource() override;
   nsresult Stop() override;
 
-  nsresult StartCapture(const NormalizedConstraints& aConstraints);
+  nsresult StartCapture(const NormalizedConstraints& aConstraints,
+                        const dom::VideoResizeModeEnum& aResizeMode);
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const MediaEnginePrefs& aPrefs) const override;

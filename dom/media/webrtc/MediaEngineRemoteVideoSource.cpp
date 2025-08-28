@@ -395,7 +395,17 @@ nsresult MediaEngineRemoteVideoSource::Start() {
         input.mCanCropAndScale ? mConstraints->mFrameRate.Get(maxFPS) : maxFPS;
   }
 
-  nsresult rv = StartCapture(constraints);
+  // Tell CamerasParent what resizeMode was selected, as it doesn't have access
+  // to MediaEnginePrefs.
+  const auto resizeMode = input.mCanCropAndScale
+                              ? VideoResizeModeEnum::Crop_and_scale
+                              : VideoResizeModeEnum::None;
+  const auto resizeModeString =
+      NS_ConvertASCIItoUTF16(dom::GetEnumString(resizeMode));
+  constraints.mResizeMode.mIdeal.clear();
+  constraints.mResizeMode.mIdeal.insert(resizeModeString);
+
+  nsresult rv = StartCapture(constraints, resizeMode);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -406,7 +416,6 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   if (input.mInputWidth && input.mInputHeight) {
     dstSize = Some(CalculateDesiredSize(input));
   }
-
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineRemoteVideoSource::SetLastCapability",
       [settings = mSettings, updated = mSettingsUpdatedByFrame,
@@ -430,14 +439,16 @@ nsresult MediaEngineRemoteVideoSource::Start() {
 }
 
 nsresult MediaEngineRemoteVideoSource::StartCapture(
-    const NormalizedConstraints& aConstraints) {
+    const NormalizedConstraints& aConstraints,
+    const dom::VideoResizeModeEnum& aResizeMode) {
   LOG("%s", __PRETTY_FUNCTION__);
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kStarted);
 
   if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture, mCapEngine,
-                              mCaptureId, mCapability, aConstraints, this)) {
+                              mCaptureId, mCapability, aConstraints,
+                              aResizeMode, this)) {
     LOG("StartCapture failed");
     MutexAutoLock lock(mMutex);
     mState = kStopped;
@@ -488,8 +499,9 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
   AssertIsOnOwningThread();
 
   NormalizedConstraints c(aConstraints);
-  auto resizeMode = MediaConstraintsHelper::GetResizeMode(c, aPrefs);
-  auto distanceMode = resizeMode.map(&ToDistanceCalculation).valueOr(kFitness);
+  const auto resizeMode = MediaConstraintsHelper::GetResizeMode(c, aPrefs);
+  const auto distanceMode =
+      resizeMode.map(&ToDistanceCalculation).valueOr(kFitness);
   webrtc::CaptureCapability newCapability;
   LOG("ChooseCapability(%s) for mTargetCapability (Reconfigure) ++",
       ToString(distanceMode));
@@ -501,11 +513,15 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
   LOG("ChooseCapability(%s) for mTargetCapability (Reconfigure) --",
       ToString(distanceMode));
 
-  const bool capabilityChanged = mCapability != newCapability;
+  bool needsRestart{};
   DesiredSizeInput input{};
   double framerate = 0.0;
   {
     MutexAutoLock lock(mMutex);
+
+    needsRestart = mCapability != newCapability || mConstraints != Some(c) ||
+                   !(*mPrefs == aPrefs);
+
     // StartCapture() applies mCapability on the device.
     mCapability = newCapability;
     mCalculation = distanceMode;
@@ -528,8 +544,9 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
                     : mCapability.maxFPS;
   }
 
-  if (mState == kStarted && capabilityChanged) {
-    nsresult rv = StartCapture(c);
+  if (mState == kStarted && needsRestart) {
+    nsresult rv =
+        StartCapture(c, resizeMode.valueOr(dom::VideoResizeModeEnum::None));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       nsAutoCString name;
       GetErrorName(rv, name);

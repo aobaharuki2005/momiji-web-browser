@@ -706,6 +706,11 @@ DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
     mozilla::NormalizedConstraints, mozilla::NormalizedConstraintSet,
     mAdvanced);
 
+template <>
+struct ParamTraits<mozilla::dom::VideoResizeModeEnum>
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::VideoResizeModeEnum> {};
+
 }  // namespace IPC
 
 #endif  // mozilla_dom_media_MediaIPCUtils_h
