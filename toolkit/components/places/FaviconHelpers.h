@@ -184,6 +184,8 @@ class AsyncGetFaviconForPageRunnable final : public Runnable {
       const RefPtr<FaviconPromise::Private>& aPromise, bool aOnConcurrentConn);
 
  private:
+  ~AsyncGetFaviconForPageRunnable();
+
   nsCOMPtr<nsIURI> mPageURI;
   uint16_t mPreferredWidth;
   nsMainThreadPtrHandle<FaviconPromise::Private> mPromise;

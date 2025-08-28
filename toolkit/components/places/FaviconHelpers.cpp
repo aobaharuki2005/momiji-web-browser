@@ -946,6 +946,14 @@ AsyncGetFaviconForPageRunnable::Run() {
   return NS_OK;
 }
 
+AsyncGetFaviconForPageRunnable::~AsyncGetFaviconForPageRunnable() {
+  // If the promise is not fulfilled yet we must reject it to avoid assertions,
+  // otherwise this is a no-op.
+  // This may happen for example when the runnable is enqueued in
+  // ConcurrentConnection and it skips unnecessary work on shutdown.
+  mPromise->Reject(NS_ERROR_ABORT, __func__);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// AsyncTryCopyFaviconsRunnable
 
