@@ -241,6 +241,7 @@ struct EmbedderColorSchemes {
   /* DevTools override for prefers-color-scheme */                            \
   FIELD(PrefersColorSchemeOverride, dom::PrefersColorSchemeOverride)          \
   FIELD(LanguageOverride, nsCString)                                          \
+  FIELD(TimezoneOverride, nsString)                                           \
   /* DevTools override for forced-colors */                                   \
   FIELD(ForcedColorsOverride, dom::ForcedColorsOverride)                      \
   /* prefers-color-scheme override based on the color-scheme style of our     \
@@ -973,6 +974,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     aLanguageOverride = GetLanguageOverride();
   }
 
+  void GetTimezoneOverride(nsAString& aTimezoneOverride) const {
+    aTimezoneOverride = GetTimezoneOverride();
+  }
+
   dom::PrefersColorSchemeOverride PrefersColorSchemeOverride() const {
     return GetPrefersColorSchemeOverride();
   }
@@ -1141,6 +1146,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return IsTop();
   }
 
+  bool CanSet(FieldIndex<IDX_TimezoneOverride>, const nsString&,
+              ContentParent*) {
+    return IsTop();
+  }
+
+
   bool CanSet(FieldIndex<IDX_MediumOverride>, const nsString&, ContentParent*) {
     return IsTop();
   }
@@ -1178,6 +1189,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void PresContextAffectingFieldChanged();
 
   void DidSet(FieldIndex<IDX_LanguageOverride>, nsCString&& aOldValue);
+
+  void DidSet(FieldIndex<IDX_TimezoneOverride>, nsString&& aOldValue);
 
   void DidSet(FieldIndex<IDX_MediumOverride>, nsString&& aOldValue);
 

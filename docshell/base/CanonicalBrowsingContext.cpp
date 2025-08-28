@@ -274,6 +274,8 @@ void CanonicalBrowsingContext::ReplacedBy(
 
   // Reapply language override to update the corresponding realm.
   txn.SetLanguageOverride(GetLanguageOverride());
+  // Reapply timezone override to update the corresponding realm.
+  txn.SetTimezoneOverride(GetTimezoneOverride());
 
   // Propagate some settings on BrowsingContext replacement so they're not lost
   // on bfcached navigations. These are important for GeckoView (see bug

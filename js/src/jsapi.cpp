@@ -1822,6 +1822,10 @@ void JS::SetRealmLocaleOverride(Realm* realm, const char* locale) {
   realm->setLocaleOverride(locale);
 }
 
+void JS::SetRealmTimezoneOverride(Realm* realm, const char* timezone) {
+  realm->setTimeZone(timezone);
+}
+
 void JS::SetRealmNonLive(Realm* realm) { realm->setNonLive(); }
 
 void JS::SetRealmReduceTimerPrecisionCallerType(Realm* realm,

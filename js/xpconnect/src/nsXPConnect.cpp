@@ -482,7 +482,8 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
                              bool aIsSystemPrincipal, bool aSecureContext,
                              bool aForceUTC, bool aAlwaysUseFdlibm,
                              bool aLocaleEnUS,
-                             const nsACString& aLanguageOverride) {
+                             const nsACString& aLanguageOverride,
+                             const nsAString& aTimezoneOverride) {
   if (aIsSystemPrincipal) {
     // Make toSource functions [ChromeOnly]
     aOptions.creationOptions().setToSourceEnabled(true);
@@ -509,6 +510,11 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
   if (!aLanguageOverride.IsEmpty()) {
     aOptions.behaviors().setLocaleOverride(
         PromiseFlatCString(aLanguageOverride).get());
+  }
+
+  if (!aTimezoneOverride.IsEmpty()) {
+    aOptions.behaviors().setTimeZoneCopyZ(
+        NS_ConvertUTF16toUTF8(aTimezoneOverride).get());
   }
 }
 
@@ -565,7 +571,8 @@ nsresult InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
                           /* aSecureContext */ true,
                           /* aForceUTC */ false, /* aAlwaysUseFdlibm */ false,
                           /* aLocaleEnUS */ false,
-                          /* aLanguageOverride */ VoidCString());
+                          /* aLanguageOverride */ ""_ns,
+                          /* aTimezoneOverride */ u""_ns);
 
   // Call into XPCWrappedNative to make a new global object, scope, and global
   // prototype.

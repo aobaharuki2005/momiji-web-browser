@@ -223,6 +223,9 @@ interface BrowsingContext {
   // Language emulation for WebDriver BiDi and DevTools.
   [SetterThrows] attribute UTF8String languageOverride;
 
+  // Timezone emulation for WebDriver BiDi and DevTools per browsing context.
+  [SetterThrows] attribute DOMString timezoneOverride;
+
   // Color-scheme simulation, for DevTools.
   [SetterThrows] attribute PrefersColorSchemeOverride prefersColorSchemeOverride;
 

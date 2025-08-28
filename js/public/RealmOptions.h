@@ -380,6 +380,9 @@ extern JS_PUBLIC_API const RealmBehaviors& RealmBehaviorsRef(JSContext* cx);
 extern JS_PUBLIC_API void SetRealmLocaleOverride(Realm* realm,
                                                  const char* locale);
 
+extern JS_PUBLIC_API void SetRealmTimezoneOverride(Realm* realm,
+                                                   const char* timezone);
+
 extern JS_PUBLIC_API void SetRealmNonLive(Realm* realm);
 
 // This behaves like RealmBehaviors::setReduceTimerPrecisionCallerType, but

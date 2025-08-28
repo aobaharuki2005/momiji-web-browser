@@ -716,7 +716,8 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
                              bool aIsSystemPrincipal, bool aSecureContext,
                              bool aForceUTC, bool aAlwaysUseFdlibm,
                              bool aLocaleEnUS,
-                             const nsACString& aLanguageOverride);
+                             const nsACString& aLanguageOverride,
+                             const nsAString& aTimezoneOverride);
 
 class ErrorBase {
  public:

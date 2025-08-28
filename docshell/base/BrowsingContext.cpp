@@ -81,6 +81,7 @@
 #include "PresShell.h"
 #include "nsIObserverService.h"
 #include "nsISHistory.h"
+#include "nsJSUtils.h"
 #include "nsContentUtils.h"
 #include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
@@ -3477,6 +3478,28 @@ void BrowsingContext::SetGeolocationServiceOverride(
         nsGeolocationService::GetGeolocationService();
     serviceOverride->MoveLocators(service);
   }
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_TimezoneOverride>,
+                             nsString&& aOldValue) {
+  MOZ_ASSERT(IsTop());
+
+  PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
+    RefPtr<WindowContext> windowContext =
+        aBrowsingContext->GetCurrentWindowContext();
+
+    if (nsCOMPtr<nsPIDOMWindowInner> window = windowContext->GetInnerWindow()) {
+      JSObject* global = nsGlobalWindowInner::Cast(window)->GetGlobalJSObject();
+      JS::Realm* realm = JS::GetObjectRealmOrNull(global);
+
+      if (GetTimezoneOverride().IsEmpty()) {
+        JS::SetRealmTimezoneOverride(realm, nullptr);
+      } else {
+        JS::SetRealmTimezoneOverride(
+            realm, NS_ConvertUTF16toUTF8(GetTimezoneOverride()).get());
+      }
+    }
+  });
 }
 
 auto BrowsingContext::CanSet(FieldIndex<IDX_DefaultLoadFlags>,

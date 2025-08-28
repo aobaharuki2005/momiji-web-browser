@@ -2031,7 +2031,8 @@ static nsresult CreateNativeGlobalForInner(
       aDocument->ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC),
       aDocument->ShouldResistFingerprinting(RFPTarget::JSMathFdlibm),
       aDocument->ShouldResistFingerprinting(RFPTarget::JSLocale),
-      aDocument->GetBrowsingContext()->Top()->GetLanguageOverride());
+      aDocument->GetBrowsingContext()->Top()->GetLanguageOverride(),
+      aDocument->GetBrowsingContext()->Top()->GetTimezoneOverride());
 
   // Determine if we need the Components object.
   bool needComponents = principal->IsSystemPrincipal();
