@@ -63,7 +63,7 @@ class RecordedNimbusContext(
     val deviceManufacturer: String = Build.MANUFACTURER,
     val deviceModel: String = Build.MODEL,
     val userAcceptedTou: Boolean,
-    val noShortcutsStoriesMktOptOuts: Boolean,
+    val noShortcutsOrStoriesOptOuts: Boolean,
     val userClickedTouPromptLink: Boolean,
     val userClickedTouPromptRemindMeLater: Boolean,
 ) : RecordedContext {
@@ -105,7 +105,7 @@ class RecordedNimbusContext(
                 deviceManufacturer = deviceManufacturer,
                 deviceModel = deviceModel,
                 userAcceptedTou = userAcceptedTou,
-                noShortcutsStoriesMkt = noShortcutsStoriesMktOptOuts,
+                noShortcutsOrStoriesOptOuts = noShortcutsOrStoriesOptOuts,
                 userClickedTouPromptLink = userClickedTouPromptLink,
                 userClickedTouPromptRemindMeLater = userClickedTouPromptRemindMeLater,
             ),
@@ -152,7 +152,7 @@ class RecordedNimbusContext(
                 "device_manufacturer" to deviceManufacturer,
                 "device_model" to deviceModel,
                 "user_accepted_tou" to userAcceptedTou,
-                "no_shortcuts_stories_mkt" to noShortcutsStoriesMktOptOuts,
+                "no_shortcuts_or_stories_opt_out" to noShortcutsOrStoriesOptOuts,
                 "user_clicked_tou_prompt_link" to userClickedTouPromptLink,
                 "user_clicked_tou_prompt_remind_me_later" to userClickedTouPromptRemindMeLater,
             ),
@@ -201,26 +201,20 @@ class RecordedNimbusContext(
                 language = calculatedAttributes.language,
                 region = calculatedAttributes.region,
                 userAcceptedTou = settings.hasAcceptedTermsOfService,
-                noShortcutsStoriesMktOptOuts = settings.noShortcutsStoriesOrMktOptOuts(context),
+                noShortcutsOrStoriesOptOuts = settings.noShortcutsOrStoriesOptOuts(context),
                 userClickedTouPromptLink = settings.hasClickedTermOfUsePromptLink,
                 userClickedTouPromptRemindMeLater = settings.hasClickedTermOfUsePromptRemindMeLater,
             )
         }
 
         /**
-         * Checks whether an eligible user has opted out of any sponsored top sites, stories or
-         * marketing.
+         * Checks whether an eligible user has opted out of any sponsored top sites or stories.
          *
-         *  @return `true` if the user has opted out of any sponsored top sites, stories or marketing,
+         *  @return `true` if the user has opted out of any sponsored top sites or stories,
          * `false` otherwise.
          */
-        private fun Settings.noShortcutsStoriesOrMktOptOuts(context: Context) =
-            hasMarketing &&
-                    !optedOutOfSponsoredTopSites(context) &&
-                    !optedOutOfSponsoredStories(context)
-
-        private val Settings.hasMarketing: Boolean
-            get() = isMarketingTelemetryEnabled || shouldShowMarketingOnboarding
+        private fun Settings.noShortcutsOrStoriesOptOuts(context: Context) =
+            !optedOutOfSponsoredTopSites(context) && !optedOutOfSponsoredStories(context)
 
         /**
          * Checks whether an eligible user has opted out of the sponsored top sites feature.
@@ -236,9 +230,9 @@ class RecordedNimbusContext(
             context.components.appStore.state.topSites.any { it is TopSite.Provided }
 
         private fun Settings.optedOutOfSponsoredStories(context: Context) =
-            hasStoriesOnHomepageAvailable(context) && (!showPocketSponsoredStories || !showPocketRecommendationsFeature)
+            isEligibleForStories(context) && (!showPocketSponsoredStories || !showPocketRecommendationsFeature)
 
-        private fun hasStoriesOnHomepageAvailable(context: Context): Boolean =
+        private fun isEligibleForStories(context: Context): Boolean =
             ContentRecommendationsFeatureHelper.isContentRecommendationsFeatureEnabled(context)
 
         /**
@@ -268,7 +262,7 @@ class RecordedNimbusContext(
                 language = "en",
                 region = "US",
                 userAcceptedTou = true,
-                noShortcutsStoriesMktOptOuts = true,
+                noShortcutsOrStoriesOptOuts = true,
                 userClickedTouPromptLink = true,
                 userClickedTouPromptRemindMeLater = true,
             )

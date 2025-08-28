@@ -12935,7 +12935,7 @@ nimbus_system:
           type: string
         user_accepted_tou:
           type: boolean
-        no_shortcuts_stories_mkt:
+        no_shortcuts_or_stories_opt_outs:
           type: boolean
         user_clicked_tou_prompt_link:
           type: boolean
@@ -12948,11 +12948,13 @@ nimbus_system:
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1970135'
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1970165'
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1981877'
+      - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1984639'
     data_reviews:
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1898552#c3'
       - 'https://phabricator.services.mozilla.com/D258942'
       - 'https://phabricator.services.mozilla.com/D259407'
       - 'https://phabricator.services.mozilla.com/D260845'
+      - 'https://phabricator.services.mozilla.com/D262139'
     data_sensitivity:
       - interaction
     notification_emails:
