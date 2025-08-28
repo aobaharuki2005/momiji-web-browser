@@ -459,11 +459,7 @@ void Decoder::DecodeBitfieldExtract(const Instruction* instr) {
 void Decoder::DecodeAddSubImmediate(const Instruction* instr) {
   VIXL_ASSERT(instr->Bits(27, 24) == 0x1);
   if (instr->Bit(23) == 1) {
-    if (instr->Bit(22) == 1) {
-      VisitMaxMinImmediate(instr);
-    } else {
-      VisitUnallocated(instr);
-    }
+    VisitUnallocated(instr);
   } else {
     VisitAddSubImmediate(instr);
   }
@@ -522,6 +518,7 @@ void Decoder::DecodeDataProcessing(const Instruction* instr) {
                   (instr->Bits(15, 11) == 0) ||
                   (instr->Bits(15, 12) == 0x1) ||
                   (instr->Bits(15, 12) == 0x3) ||
+                  (instr->Bits(15, 13) == 0x3) ||
                   (instr->Mask(0x8000EC00) == 0x00004C00) ||
                   (instr->Mask(0x8000E800) == 0x80004000) ||
                   (instr->Mask(0x8000E400) == 0x80004000)) {
@@ -530,9 +527,11 @@ void Decoder::DecodeDataProcessing(const Instruction* instr) {
                 VisitDataProcessing2Source(instr);
               }
             } else {
-              if ((instr->Bits(20, 16) != 0) ||
+              if ((instr->Bit(13) == 1) ||
+                  (instr->Bits(20, 16) != 0) ||
                   (instr->Bits(15, 14) != 0) ||
-                  (instr->Mask(0xA01FFC00) == 0x00000C00)) {
+                  (instr->Mask(0xA01FFC00) == 0x00000C00) ||
+                  (instr->Mask(0x201FF800) == 0x00001800)) {
                 VisitUnallocated(instr);
               } else {
                 VisitDataProcessing1Source(instr);

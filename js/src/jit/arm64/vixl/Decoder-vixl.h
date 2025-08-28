@@ -39,7 +39,6 @@
 #define VISITOR_LIST_THAT_RETURN(V)     \
   V(PCRelAddressing)                    \
   V(AddSubImmediate)                    \
-  V(MaxMinImmediate)                    \
   V(LogicalImmediate)                   \
   V(MoveWideImmediate)                  \
   V(AtomicMemory)                       \

@@ -11495,22 +11495,19 @@ void CodeGenerator::visitMinMaxI(LMinMaxI* ins) {
 
   MOZ_ASSERT(first == output);
 
+  Assembler::Condition cond =
+      ins->mir()->isMax() ? Assembler::GreaterThan : Assembler::LessThan;
+
   if (ins->second()->isConstant()) {
     auto second = Imm32(ToInt32(ins->second()));
 
-    if (ins->mir()->isMax()) {
-      masm.max32(first, second, output);
-    } else {
-      masm.min32(first, second, output);
-    }
+    Label done;
+    masm.branch32(cond, first, second, &done);
+    masm.move32(second, output);
+    masm.bind(&done);
   } else {
     Register second = ToRegister(ins->second());
-
-    if (ins->mir()->isMax()) {
-      masm.max32(first, second, output);
-    } else {
-      masm.min32(first, second, output);
-    }
+    masm.cmp32Move32(cond, second, first, second, output);
   }
 }
 
@@ -11520,22 +11517,19 @@ void CodeGenerator::visitMinMaxIntPtr(LMinMaxIntPtr* ins) {
 
   MOZ_ASSERT(first == output);
 
+  Assembler::Condition cond =
+      ins->mir()->isMax() ? Assembler::GreaterThan : Assembler::LessThan;
+
   if (ins->second()->isConstant()) {
     auto second = ImmWord(ToIntPtr(ins->second()));
 
-    if (ins->mir()->isMax()) {
-      masm.maxPtr(first, second, output);
-    } else {
-      masm.minPtr(first, second, output);
-    }
+    Label done;
+    masm.branchPtr(cond, first, second, &done);
+    masm.movePtr(second, output);
+    masm.bind(&done);
   } else {
     Register second = ToRegister(ins->second());
-
-    if (ins->mir()->isMax()) {
-      masm.maxPtr(first, second, output);
-    } else {
-      masm.minPtr(first, second, output);
-    }
+    masm.cmpPtrMovePtr(cond, second, first, second, output);
   }
 }
 

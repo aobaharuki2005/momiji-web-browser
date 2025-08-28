@@ -6900,11 +6900,10 @@ bool CacheIRCompiler::emitInt32MinMax(bool isMax, Int32OperandId firstId,
   Register second = allocator.useRegister(masm, secondId);
   Register result = allocator.defineRegister(masm, resultId);
 
-  if (isMax) {
-    masm.max32(first, second, result);
-  } else {
-    masm.min32(first, second, result);
-  }
+  Assembler::Condition cond =
+      isMax ? Assembler::GreaterThan : Assembler::LessThan;
+  masm.move32(first, result);
+  masm.cmp32Move32(cond, second, first, second, result);
   return true;
 }
 
