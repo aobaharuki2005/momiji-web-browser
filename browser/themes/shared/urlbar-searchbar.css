@@ -31,8 +31,7 @@
   }
 }
 
-#urlbar-container,
-#search-container {
+.urlbar-container {
   padding-block: var(--urlbar-padding-block);
   margin-inline: var(--urlbar-margin-inline);
 
@@ -268,7 +267,7 @@
   min-width: 0;
 }
 
-#urlbar-container[breakout] {
+.urlbar-container[breakout] {
   min-height: var(--urlbar-container-height);
 }
 
@@ -1021,15 +1020,14 @@
   }
 }
 
-#searchbar-new {
-  display: none;
+/* stylelint-disable-next-line media-query-no-invalid */
+@media not -moz-pref("browser.search.widget.new") {
+  #searchbar-new {
+    display: none;
+  }
 }
-
 /* stylelint-disable-next-line media-query-no-invalid */
 @media -moz-pref("browser.search.widget.new") {
-  #searchbar-new {
-    display: flex;
-  }
   #searchbar {
     display: none;
   }
