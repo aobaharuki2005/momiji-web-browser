@@ -224,7 +224,7 @@ nsAVIFDecoder::DecodeResult AVIFParser::GetImage(AVIFImage& aImage) {
 
   // If the AVIF is animated, get next frame and yield if sequence is not done.
   if (IsAnimated()) {
-    aImage.mColorImage = mColorSampleIter->GetNext();
+    aImage.mColorImage = mColorSampleIter->GetNext().unwrapOr(nullptr);
 
     if (!aImage.mColorImage) {
       return AsVariant(nsAVIFDecoder::NonDecoderResult::NoSamples);
@@ -236,7 +236,7 @@ nsAVIFDecoder::DecodeResult AVIFParser::GetImage(AVIFImage& aImage) {
         static_cast<int32_t>(std::min<int64_t>(durationMs, INT32_MAX)));
 
     if (mAlphaSampleIter) {
-      aImage.mAlphaImage = mAlphaSampleIter->GetNext();
+      aImage.mAlphaImage = mAlphaSampleIter->GetNext().unwrapOr(nullptr);
       if (!aImage.mAlphaImage) {
         return AsVariant(nsAVIFDecoder::NonDecoderResult::NoSamples);
       }

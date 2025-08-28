@@ -13,6 +13,8 @@
 #include "SinfParser.h"
 #include "mozilla/RefPtr.h"
 
+extern mozilla::LazyLogModule gMediaDemuxerLog;
+
 using namespace mozilla::media;
 
 namespace mozilla {
@@ -104,18 +106,20 @@ already_AddRefed<MediaRawData> SampleIterator::GetNextHeader() {
   return sample.forget();
 }
 
-already_AddRefed<MediaRawData> SampleIterator::GetNext() {
+Result<already_AddRefed<MediaRawData>, MediaResult> SampleIterator::GetNext() {
   auto current = Get();
   if (current.isErr()) {
-    return nullptr;
+    return current.propagateErr();
   }
   Sample* s = current.unwrap();
 
   int64_t length = std::numeric_limits<int64_t>::max();
   mIndex->mSource->Length(&length);
   if (s->mByteRange.mEnd > length) {
-    // We don't have this complete sample.
-    return nullptr;
+    return Err(MediaResult::Logged(
+        NS_ERROR_DOM_MEDIA_RANGE_ERR,
+        RESULT_DETAIL("Sample data byte range beyond end of resource"),
+        gMediaDemuxerLog));
   }
 
   RefPtr<MediaRawData> sample = new MediaRawData();
@@ -128,14 +132,20 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
   UniquePtr<MediaRawDataWriter> writer(sample->CreateWriter());
   // Do the blocking read
   if (!writer->SetSize(s->mByteRange.Length())) {
-    return nullptr;
+    return Err(MediaResult::Logged(NS_ERROR_OUT_OF_MEMORY, __func__,
+                                   gMediaDemuxerLog));
   }
 
   size_t bytesRead;
   nsresult rv = mIndex->mSource->ReadAt(sample->mOffset, writer->Data(),
                                         sample->Size(), &bytesRead);
   if (NS_FAILED(rv) || bytesRead != sample->Size()) {
-    return nullptr;
+    return Err(MediaResult::Logged(
+        // Fewer bytes read means end of stream, or the bytes are not
+        // available because a network error has occurred.
+        // A sample range extending past the end of stream is a bad range.
+        NS_FAILED(rv) ? rv : NS_ERROR_DOM_MEDIA_RANGE_ERR,
+        RESULT_DETAIL("Sample data read failed"), gMediaDemuxerLog));
   }
 
   MoofParser* moofParser = mIndex->mMoofParser.get();
@@ -162,8 +172,9 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
 
   auto cryptoSchemeResult = GetEncryptionScheme();
   if (cryptoSchemeResult.isErr()) {
-    // Log the error here in future.
-    return nullptr;
+    return Err(MediaResult::Logged(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                   cryptoSchemeResult.unwrapErr(),
+                                   gMediaDemuxerLog));
   }
   CryptoScheme cryptoScheme = cryptoSchemeResult.unwrap();
   if (cryptoScheme == CryptoScheme::None) {
@@ -205,21 +216,35 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     // zero, we should have an IV for this sample, which we need to look up
     // in mCencRange (which must then be non empty). If neither of these are
     // true we have bad crypto data, so bail.
-    return nullptr;
+    return Err(MediaResult::Logged(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                   RESULT_DETAIL("Crypto IV size inconsistent"),
+                                   gMediaDemuxerLog));
   }
   // Parse auxiliary information if present
   if (!s->mCencRange.IsEmpty()) {
     // The size comes from an 8 bit field
     AutoTArray<uint8_t, 256> cencAuxInfo;
     cencAuxInfo.SetLength(s->mCencRange.Length());
+    // Sample Auxiliary Information may be stored anywhere in the file, but
+    // encryption is supported in only fragmented mp4, so the offsets are
+    // assumed in the traf or a subsequent box.
     rv = mIndex->mSource->ReadAt(s->mCencRange.mStart, cencAuxInfo.Elements(),
                                  cencAuxInfo.Length(), &bytesRead);
     if (NS_FAILED(rv) || bytesRead != cencAuxInfo.Length()) {
-      return nullptr;
+      return Err(MediaResult::Logged(
+          // Unless pref "eme.mse-only" is set to false, encryption is supported
+          // only in MSE, where fewer bytes means end of stream.  mCencRange
+          // extending past the end of stream means an error with the range.
+          NS_FAILED(rv) ? rv : NS_ERROR_DOM_MEDIA_RANGE_ERR,
+          RESULT_DETAIL("cenc Sample Auxiliary Information read failed"),
+          gMediaDemuxerLog));
     }
     BufferReader reader(cencAuxInfo);
     if (!reader.ReadArray(writer->mCrypto.mIV, writer->mCrypto.mIVSize)) {
-      return nullptr;
+      return Err(MediaResult::Logged(
+          NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+          RESULT_DETAIL("sample InitializationVector error"),
+          gMediaDemuxerLog));
     }
 
     // Parse the auxiliary information for subsample information
@@ -231,7 +256,11 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
         auto res_16 = reader.ReadU16();
         auto res_32 = reader.ReadU32();
         if (res_16.isErr() || res_32.isErr()) {
-          return nullptr;
+          return Err(MediaResult::Logged(
+              NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+              RESULT_DETAIL("cenc subsample_count too large for"
+                            "CencSampleAuxiliaryDataFormat"),
+              gMediaDemuxerLog));
         }
         writer->mCrypto.mPlainSizes.AppendElement(res_16.unwrap());
         writer->mCrypto.mEncryptedSizes.AppendElement(res_32.unwrap());
@@ -335,7 +364,7 @@ Result<CryptoScheme, nsCString> SampleIterator::GetEncryptionScheme() {
     // entry.
     // If we encounter this error often, we may consider using the first
     // sample description entry if the index is out of bounds.
-    return mozilla::Err(nsLiteralCString(
+    return mozilla::Err(RESULT_DETAIL(
         "Could not determine encryption scheme due to bad index for sample "
         "description entry."));
   }
@@ -348,7 +377,7 @@ Result<CryptoScheme, nsCString> SampleIterator::GetEncryptionScheme() {
     // The sample description entry says this sample is encrypted, but we
     // don't have a valid sinf box. This shouldn't happen as the sinf box is
     // part of the sample description entry. Suggests a malformed file, bail.
-    return mozilla::Err(nsLiteralCString(
+    return mozilla::Err(RESULT_DETAIL(
         "Could not determine encryption scheme. Sample description entry "
         "indicates encryption, but could not find associated sinf box."));
   }
@@ -357,7 +386,7 @@ Result<CryptoScheme, nsCString> SampleIterator::GetEncryptionScheme() {
   if (sampleInfo && !sampleInfo->mIsEncrypted) {
     // May not have sample encryption info, but if we do, it should match other
     // metadata.
-    return mozilla::Err(nsLiteralCString(
+    return mozilla::Err(RESULT_DETAIL(
         "Could not determine encryption scheme. Sample description entry "
         "indicates encryption, but sample encryption entry indicates sample is "
         "not encrypted. These should be consistent."));
@@ -368,7 +397,7 @@ Result<CryptoScheme, nsCString> SampleIterator::GetEncryptionScheme() {
   } else if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cbcs")) {
     return CryptoScheme::Cbcs;
   }
-  return mozilla::Err(nsLiteralCString(
+  return mozilla::Err(RESULT_DETAIL(
       "Could not determine encryption scheme. Sample description entry "
       "reports sample is encrypted, but no scheme, or an unsupported scheme "
       "is in use."));

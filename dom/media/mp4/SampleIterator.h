@@ -27,7 +27,7 @@ class SampleIterator {
   ~SampleIterator();
   bool HasNext();
   already_AddRefed<mozilla::MediaRawData> GetNextHeader();
-  already_AddRefed<mozilla::MediaRawData> GetNext();
+  Result<already_AddRefed<mozilla::MediaRawData>, MediaResult> GetNext();
   void Seek(const media::TimeUnit& aTime);
   media::TimeUnit GetNextKeyframeTime();
 
