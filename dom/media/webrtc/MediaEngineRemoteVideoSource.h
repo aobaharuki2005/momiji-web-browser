@@ -183,6 +183,12 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   // incoming images. Cameras IPC thread only.
   webrtc::VideoFrameBufferPool mRescalingBufferPool;
 
+  // The intrinsic size of the latest received image, before cropping and
+  // scaling down. So we can provide a decent guess to settings for desktop
+  // sources, since they don't provide capabilities.
+  // Set under mMutex on the Cameras IPC thread. Accessed under one of the two.
+  gfx::IntSize mIncomingImageSize = gfx::IntSize(0, 0);
+
   // The intrinsic size of the latest processed image, after cropping and
   // scaling down. So we can update settings on main thread in response to size
   // changes.

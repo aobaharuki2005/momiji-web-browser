@@ -506,8 +506,8 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
         .mCapabilityWidth = cw ? Some(cw) : Nothing(),
         .mCapabilityHeight = ch ? Some(ch) : Nothing(),
         .mCapEngine = mCapEngine,
-        .mInputWidth = cw ? cw : mScaledImageSize.width,
-        .mInputHeight = ch ? ch : mScaledImageSize.height,
+        .mInputWidth = cw ? cw : mIncomingImageSize.width,
+        .mInputHeight = ch ? ch : mIncomingImageSize.height,
         .mRotation = 0,
     };
     framerate = distanceMode == kFeasibility
@@ -607,6 +607,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mState == kStarted);
+    mIncomingImageSize = {aProps.width(), aProps.height()};
     const int32_t& cw = mCapability.width;
     const int32_t& ch = mCapability.height;
 
