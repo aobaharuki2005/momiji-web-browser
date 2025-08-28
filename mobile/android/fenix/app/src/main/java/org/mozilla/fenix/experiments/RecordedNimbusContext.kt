@@ -60,7 +60,7 @@ class RecordedNimbusContext(
     val deviceManufacturer: String = Build.MANUFACTURER,
     val deviceModel: String = Build.MODEL,
     val userAcceptedTou: Boolean,
-    val noShortcutsStoriesMkt: Boolean,
+    val noShortcutsStoriesMktOptOuts: Boolean,
     val userClickedTouPromptLink: Boolean,
     val userClickedTouPromptRemindMeLater: Boolean,
 ) : RecordedContext {
@@ -102,7 +102,7 @@ class RecordedNimbusContext(
                 deviceManufacturer = deviceManufacturer,
                 deviceModel = deviceModel,
                 userAcceptedTou = userAcceptedTou,
-                noShortcutsStoriesMkt = noShortcutsStoriesMkt,
+                noShortcutsStoriesMkt = noShortcutsStoriesMktOptOuts,
                 userClickedTouPromptLink = userClickedTouPromptLink,
                 userClickedTouPromptRemindMeLater = userClickedTouPromptRemindMeLater,
             ),
@@ -149,7 +149,7 @@ class RecordedNimbusContext(
                 "device_manufacturer" to deviceManufacturer,
                 "device_model" to deviceModel,
                 "user_accepted_tou" to userAcceptedTou,
-                "no_shortcuts_stories_mkt" to noShortcutsStoriesMkt,
+                "no_shortcuts_stories_mkt" to noShortcutsStoriesMktOptOuts,
                 "user_clicked_tou_prompt_link" to userClickedTouPromptLink,
                 "user_clicked_tou_prompt_remind_me_later" to userClickedTouPromptRemindMeLater,
             ),
@@ -198,13 +198,13 @@ class RecordedNimbusContext(
                 language = calculatedAttributes.language,
                 region = calculatedAttributes.region,
                 userAcceptedTou = settings.hasAcceptedTermsOfService,
-                noShortcutsStoriesMkt = settings.noShortcutsStoriesMkt,
+                noShortcutsStoriesMktOptOuts = settings.noShortcutsStoriesMktOptOuts,
                 userClickedTouPromptLink = settings.hasClickedTermOfUsePromptLink,
                 userClickedTouPromptRemindMeLater = settings.hasClickedTermOfUsePromptRemindMeLater,
             )
         }
 
-        private val Settings.noShortcutsStoriesMkt: Boolean
+        private val Settings.noShortcutsStoriesMktOptOuts: Boolean
             get() = hasMarketing && hasSponsoredHomepageShortcuts && hasStoriesOnHomepage
 
         private val Settings.hasMarketing: Boolean
@@ -243,7 +243,7 @@ class RecordedNimbusContext(
                 language = "en",
                 region = "US",
                 userAcceptedTou = true,
-                noShortcutsStoriesMkt = true,
+                noShortcutsStoriesMktOptOuts = true,
                 userClickedTouPromptLink = true,
                 userClickedTouPromptRemindMeLater = true,
             )
