@@ -80,7 +80,7 @@
   .progress-circle-complete {
     --thickness: var(--space-small);
 
-    border-radius: 50%; // stylelint-disable-line declaration-property-value-disallowed-list
+    border-radius: var(--border-radius-circle);
     inset: 0;
     mask: radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), black calc(100% - var(--thickness)));  position: absolute;
   }
@@ -204,7 +204,7 @@
   }
 
   .focus-timer-controls>moz-button::part(button) {
-    border-radius: 50%; // stylelint-disable-line declaration-property-value-disallowed-list
+    border-radius: var(--border-radius-circle);
     padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall)); // 17px
   }
 }

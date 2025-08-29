@@ -4575,7 +4575,7 @@ main section {
 .progress-circle-wrapper .progress-circle,
 .progress-circle-wrapper .progress-circle-complete {
   --thickness: var(--space-small);
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   inset: 0;
   mask: radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), black calc(100% - var(--thickness)));
   position: absolute;
@@ -4667,7 +4667,7 @@ main section {
   margin-inline-start: var(--space-medium);
 }
 .set-timer-controls-wrapper .focus-timer-controls > moz-button::part(button) {
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall));
 }
 

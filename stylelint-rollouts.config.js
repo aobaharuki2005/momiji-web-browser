@@ -46,7 +46,6 @@ module.exports = [
       "browser/components/urlbar/tests/browser/dynamicResult1.css",
       "browser/extensions/formautofill/content/manageDialog.css",
       "browser/extensions/newtab/content-src/components/DiscoveryStreamComponents/TopicSelection/_TopicSelection.scss",
-      "browser/extensions/newtab/content-src/components/Widgets/FocusTimer/_FocusTimer.scss",
       "browser/extensions/webcompat/injections/css/**",
       "browser/fxr/content/fxrui.css",
       "browser/fxr/content/prefs.css",
