@@ -1290,6 +1290,8 @@ mochitest-browser-newtab-trainhop-beta:
         newtab-xpi-job:
             - artifact: ../browser-extensions/newtab.xpi
               extract: false
+        build:
+            - artifact: target.trainhop.tests.tar.gz
     target:
         by-test-platform:
             linux.*:
@@ -1338,6 +1340,8 @@ mochitest-browser-newtab-trainhop-release:
         newtab-xpi-job:
             - artifact: ../browser-extensions/newtab.xpi
               extract: false
+        build:
+            - artifact: target.trainhop.tests.tar.gz
     target:
         by-test-platform:
             linux.*:
