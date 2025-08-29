@@ -1378,23 +1378,6 @@
       }
     ]
   },
-  "1836157": {
-    "label": "thai-masszazs.net",
-    "bugs": {
-      "1836157": {
-        "issue": "broken-scrolling",
-        "matches": ["*://*.thai-masszazs.net/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "content_scripts": {
-          "js": ["bug1836157-thai-masszazs-niceScroll-disable.js"]
-        }
-      }
-    ]
-  },
   "1836178": {
     "label": "atracker.pro",
     "bugs": {
@@ -5087,23 +5070,6 @@
       }
     ]
   },
-  "1966673": {
-    "label": "culturepsg.com",
-    "bugs": {
-      "1966673": {
-        "issue": "broken-interactive-elements",
-        "matches": ["*://www.culturepsg.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "content_scripts": {
-          "js": ["bug1966673-culturepsg.com-niceScroll-cantouch-fix.js"]
-        }
-      }
-    ]
-  },
   "1967510": {
     "label": "gemini.google.com",
     "bugs": {
@@ -5391,23 +5357,6 @@
       }
     ]
   },
-  "1932357": {
-    "label": "shellacfinishes.com",
-    "bugs": {
-      "1932357": {
-        "issue": "broken-scrolling",
-        "matches": ["*://www.shellacfinishes.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "content_scripts": {
-          "js": ["bug1932357-shellacfinishes.com-niceScroll-disable.js"]
-        }
-      }
-    ]
-  },
   "1934908": {
     "label": "www.cbsnews.com",
     "bugs": {
@@ -5425,23 +5374,6 @@
             "lib/ua_helpers.js",
             "bug1934908-www.cbsnews.com-ua-override.js"
           ]
-        }
-      }
-    ]
-  },
-  "1960823": {
-    "label": "dvcreservations.com",
-    "bugs": {
-      "1960823": {
-        "issue": "broken-scrolling",
-        "matches": ["*://dvcreservations.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "content_scripts": {
-          "js": ["bug1960823-dvcreservations.com-niceScroll-disable.js"]
         }
       }
     ]
