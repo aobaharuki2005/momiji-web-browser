@@ -10,9 +10,7 @@
 #include "MediaManager.h"
 #include "MediaTrackConstraints.h"
 #include "PerformanceRecorder.h"
-#include "Tracing.h"
-#include "VideoFrameUtils.h"
-#include "VideoUtils.h"
+#include "VideoSegment.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "mozilla/ErrorNames.h"
@@ -28,7 +26,6 @@ extern LazyLogModule gMediaManagerLog;
 #define LOG_FRAME(...) \
   MOZ_LOG(gMediaManagerLog, LogLevel::Verbose, (__VA_ARGS__))
 
-using dom::ConstrainLongRange;
 using dom::MediaSourceEnum;
 using dom::MediaTrackCapabilities;
 using dom::MediaTrackConstraints;
