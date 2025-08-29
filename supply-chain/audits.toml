@@ -6334,11 +6334,6 @@ criteria = "safe-to-deploy"
 version = "0.23.0"
 notes = "Maintained by the Glean and Application Services team."
 
-[[audits.uritemplate-next]]
-who = "Kershaw Chang <kershaw@mozilla.com>"
-criteria = "safe-to-deploy"
-version = "0.2.0"
-
 [[audits.url]]
 who = "Valentin Gosu <valentin.gosu@gmail.com>"
 criteria = "safe-to-deploy"

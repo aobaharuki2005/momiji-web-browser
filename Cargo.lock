@@ -2643,7 +2643,6 @@ dependencies = [
  "unicode-bidi",
  "unicode-bidi-ffi",
  "uniffi-bindgen-gecko-js-test-fixtures",
- "uritemplate_glue",
  "url",
  "urlpattern",
  "urlpattern_glue",
@@ -7293,25 +7292,6 @@ name = "unix_str"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ace0b4755d0a2959962769239d56267f8a024fef2d9b32666b3dcd0946b0906"
-
-[[package]]
-name = "uritemplate-next"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcde98d1fc3f528255b1ecb22fb688ee0d23deb672a8c57127df10b98b4bd18c"
-dependencies = [
- "regex",
-]
-
-[[package]]
-name = "uritemplate_glue"
-version = "0.1.0"
-dependencies = [
- "nserror",
- "nsstring",
- "uritemplate-next",
- "xpcom",
-]
 
 [[package]]
 name = "url"
