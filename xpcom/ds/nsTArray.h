@@ -3610,14 +3610,15 @@ void nsTArray_base<Alloc, RelocationStrategy>::MoveInit(
   MOZ_ASSERT(Length() == 0);
   MOZ_ASSERT(Capacity() == 0 || UsesAutoArrayBuffer());
 
-  if (aOther.IsEmpty()) {
+  const auto newLength = aOther.Length();
+  if (!newLength) {
     return;
   }
 
-  // If neither array uses an auto buffer which is big enough to store the
-  // other array's elements, then ensure that both arrays use malloc'ed storage
-  // and swap their mHdr pointers.
-  if (Capacity() < aOther.Length() && !aOther.UsesAutoArrayBuffer()) {
+  // If this array doesn't use an auto buffer which is big enough to store the
+  // other array's elements, and the other array is using malloc'ed storage,
+  // take their mHdr pointer.
+  if (Capacity() < newLength && !aOther.UsesAutoArrayBuffer()) {
     const bool thisIsAuto = mHdr->mIsAutoArray;
     Header* otherAutoHeader = aOther.GetAutoArrayHeader();
     mHdr = aOther.mHdr;
@@ -3634,7 +3635,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::MoveInit(
   // Move the data by copying, since at least one has an auto
   // buffer which is large enough to hold all of the aOther's elements.
 
-  EnsureCapacity<nsTArrayInfallibleAllocator>(aOther.Length(), aElemSize);
+  EnsureCapacity<nsTArrayInfallibleAllocator>(newLength, aElemSize);
 
   // The EnsureCapacity calls above shouldn't have caused *both* arrays to
   // switch from their auto buffers to malloc'ed space.
@@ -3642,14 +3643,14 @@ void nsTArray_base<Alloc, RelocationStrategy>::MoveInit(
              "One of the arrays should be using its auto buffer.");
 
   RelocationStrategy::RelocateNonOverlappingRegion(Hdr() + 1, aOther.Hdr() + 1,
-                                                   aOther.Length(), aElemSize);
+                                                   newLength, aElemSize);
 
   // Swap the arrays' lengths.
   MOZ_ASSERT(!HasEmptyHeader() && !aOther.HasEmptyHeader(),
              "Both arrays should have capacity");
 
   // Update our buffer's length, and reduce the other buffer's length.
-  mHdr->mLength = aOther.Length();
+  mHdr->mLength = newLength;
   aOther.mHdr->mLength = 0;
   aOther.ShrinkCapacityToZero();
 }
