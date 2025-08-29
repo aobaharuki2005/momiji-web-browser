@@ -116,6 +116,9 @@ const COMMON_PREFERENCES = new Map([
   // Make sure error page is not shown for blank pages with 4xx or 5xx response code
   ["browser.http.blank_page_with_error_response.enabled", true],
 
+  // Disable CFR features for automated tests.
+  ["browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", false],
+
   // Make sure newtab weather doesn't hit the network to retrieve weather data.
   [
     "browser.newtabpage.activity-stream.discoverystream.region-weather-config",
