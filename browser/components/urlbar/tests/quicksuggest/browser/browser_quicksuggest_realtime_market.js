@@ -32,7 +32,6 @@ const TEST_MERINO_MULTI = [
       polygon: {
         values: [
           {
-            image_url: "https://example.com/voo.svg",
             query: "VOO stock",
             name: "Vanguard S&P 500 ETF",
             ticker: "VOO",
@@ -41,7 +40,6 @@ const TEST_MERINO_MULTI = [
             index: "S&P 500",
           },
           {
-            image_url: "https://example.com/qqq.svg",
             query: "QQQ stock",
             name: "Invesco QQQ Trust",
             ticker: "QQQ",
@@ -50,7 +48,6 @@ const TEST_MERINO_MULTI = [
             index: "NASDAQ",
           },
           {
-            image_url: "https://example.com/dia.svg",
             query: "DIA stock",
             name: "SPDR Dow Jones ETF",
             ticker: "DIA",
@@ -64,34 +61,24 @@ const TEST_MERINO_MULTI = [
   },
 ];
 
-const TEST_MERINO_NO_SPECIFIC_IMAGE = [
+// This array should be parallel to `TEST_MERINO_MULTI`. The object at index `i`
+// contains the expected values that will be passed to `assertUI()` for
+// `TEST_MERINO_MULTI[i]`.
+const EXPECTED_MERINO_MULTI = [
   {
-    provider: "polygon",
-    is_sponsored: false,
-    score: 0,
-    custom_details: {
-      polygon: {
-        values: [
-          {
-            image_url: "",
-            query: "VOO stock",
-            name: "Vanguard S&P 500 ETF",
-            ticker: "VOO",
-            todays_change_perc: "-0.11",
-            last_price: "$559.44 USD",
-            index: "S&P 500",
-          },
-          {
-            query: "QQQ stock",
-            name: "Invesco QQQ Trust",
-            ticker: "QQQ",
-            todays_change_perc: "+1.53",
-            last_price: "$539.78 USD",
-            index: "NASDAQ",
-          },
-        ],
-      },
-    },
+    changeDescription: "down",
+    image: "chrome://browser/skin/urlbar/market-down.svg",
+    isImageAnArrow: true,
+  },
+  {
+    changeDescription: "up",
+    image: "chrome://browser/skin/urlbar/market-up.svg",
+    isImageAnArrow: true,
+  },
+  {
+    changeDescription: "unchanged",
+    image: "chrome://browser/skin/urlbar/market-unchanged.svg",
+    isImageAnArrow: true,
   },
 ];
 
@@ -135,7 +122,9 @@ add_task(async function ui_single() {
 
   let target = TEST_MERINO_SINGLE[0].custom_details.polygon.values[0];
   assertUI(items[0], {
+    changeDescription: "down",
     image: target.image_url,
+    isImageAnArrow: false,
     name: target.name,
     todaysChangePerc: target.todays_change_perc,
     lastPrice: target.last_price,
@@ -198,9 +187,10 @@ add_task(async function ui_multi() {
   // Check each item in the row, then select it and check the selection.
   for (let i = 0; i < items.length; i++) {
     info(`Check the item[${i}]`);
+    let expected = EXPECTED_MERINO_MULTI[i];
     let target = TEST_MERINO_MULTI[0].custom_details.polygon.values[i];
     assertUI(items[i], {
-      image: target.image_url,
+      ...expected,
       name: target.name,
       todaysChangePerc: target.todays_change_perc,
       lastPrice: target.last_price,
@@ -270,31 +260,20 @@ add_task(async function activate() {
   }
 });
 
-add_task(async function no_image() {
-  MerinoTestUtils.server.response.body.suggestions =
-    TEST_MERINO_NO_SPECIFIC_IMAGE;
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "only match the Merino suggestion",
-  });
-  let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  let items = element.row.querySelectorAll(".urlbarView-market-item");
-
-  for (let item of items) {
-    let image = item.querySelector(".urlbarView-market-image");
-    Assert.equal(
-      image.getAttribute("src"),
-      "chrome://global/skin/icons/search-glass.svg",
-      "Image is fallbacked"
-    );
-  }
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  gURLBar.handleRevert();
-});
-
 function assertUI(item, expected) {
+  Assert.equal(
+    item.getAttribute("change"),
+    expected.changeDescription,
+    "change attribute should be correct"
+  );
+
+  let imageContainer = item.querySelector(".urlbarView-market-image-container");
+  Assert.equal(
+    imageContainer.hasAttribute("is-arrow"),
+    expected.isImageAnArrow,
+    "is-arrow should be correct"
+  );
+
   let image = item.querySelector(".urlbarView-market-image");
   Assert.equal(image.getAttribute("src"), expected.image, "Image is correct");
 
@@ -309,47 +288,6 @@ function assertUI(item, expected) {
     `${expected.todaysChangePerc}%`,
     "Todays change percentage is correct"
   );
-  let expectedTodaysChangePercNumber = Number(expected.todaysChangePerc);
-  if (expectedTodaysChangePercNumber < 0) {
-    Assert.ok(
-      todaysChangePerc.classList.contains(
-        "urlbarView-market-todays-change-perc-minus"
-      ),
-      "Class that indicates minus is contained"
-    );
-    Assert.ok(
-      !todaysChangePerc.classList.contains(
-        "urlbarView-market-todays-change-perc-plus"
-      ),
-      "Class that indicates plus is not contained"
-    );
-  } else if (expectedTodaysChangePercNumber > 0) {
-    Assert.ok(
-      !todaysChangePerc.classList.contains(
-        "urlbarView-market-todays-change-perc-minus"
-      ),
-      "Class that indicates minus is not contained"
-    );
-    Assert.ok(
-      todaysChangePerc.classList.contains(
-        "urlbarView-market-todays-change-perc-plus"
-      ),
-      "Class that indicates plus is contained"
-    );
-  } else {
-    Assert.ok(
-      !todaysChangePerc.classList.contains(
-        "urlbarView-market-todays-change-perc-minus"
-      ),
-      "Class that indicates minus is not contained"
-    );
-    Assert.ok(
-      !todaysChangePerc.classList.contains(
-        "urlbarView-market-todays-change-perc-plus"
-      ),
-      "Class that indicates plus is not contained"
-    );
-  }
 
   let lastPrice = item.querySelector(".urlbarView-market-last-price");
   Assert.equal(

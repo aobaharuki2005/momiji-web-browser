@@ -71,6 +71,7 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
           // Unfortunately Merino serves market icons of different sizes due to
           // its reliance on a third-party API.
           {
+            name: `image_container_${i}`,
             tag: "span",
             classList: ["urlbarView-market-image-container"],
             children: [
@@ -112,6 +113,7 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
                   {
                     name: `todays_change_perc_${i}`,
                     tag: "span",
+                    classList: ["urlbarView-market-todays-change-perc"],
                   },
                   {
                     name: `bottom_separator_${i}`,
@@ -144,30 +146,45 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
         },
       ],
       ...result.payload.polygon.values.flatMap((v, i) => {
-        let todaysChangePercClassList = [
-          "urlbarView-market-todays-change-perc",
-        ];
-        let todaysChangePerc = Number(v.todays_change_perc);
-        if (todaysChangePerc < 0) {
-          todaysChangePercClassList.push(
-            "urlbarView-market-todays-change-perc-minus"
-          );
-        } else if (todaysChangePerc > 0) {
-          todaysChangePercClassList.push(
-            "urlbarView-market-todays-change-perc-plus"
-          );
+        let arrowImageUri;
+        let changeDescription;
+        let changePercent = parseFloat(v.todays_change_perc);
+        if (changePercent < 0) {
+          changeDescription = "down";
+          arrowImageUri = "chrome://browser/skin/urlbar/market-down.svg";
+        } else if (changePercent > 0) {
+          changeDescription = "up";
+          arrowImageUri = "chrome://browser/skin/urlbar/market-up.svg";
+        } else {
+          changeDescription = "unchanged";
+          arrowImageUri = "chrome://browser/skin/urlbar/market-unchanged.svg";
+        }
+
+        let imageUri = v.image_url;
+        let isImageAnArrow = false;
+        if (!imageUri) {
+          isImageAnArrow = true;
+          imageUri = arrowImageUri;
         }
 
         return Object.entries({
           [`item_${i}`]: {
+            attributes: {
+              change: changeDescription,
+            },
             dataset: {
               // These `query`s will be used when there are multiple values.
               query: v.query,
             },
           },
+          [`image_container_${i}`]: {
+            attributes: {
+              "is-arrow": isImageAnArrow ? "" : null,
+            },
+          },
           [`image_${i}`]: {
             attributes: {
-              src: v.image_url || "chrome://global/skin/icons/search-glass.svg",
+              src: imageUri,
             },
           },
           [`name_${i}`]: {
@@ -178,7 +195,6 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
           },
           [`todays_change_perc_${i}`]: {
             textContent: `${v.todays_change_perc}%`,
-            classList: todaysChangePercClassList,
           },
           [`last_price_${i}`]: {
             textContent: v.last_price,
