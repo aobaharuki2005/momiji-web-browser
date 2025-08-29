@@ -192,7 +192,7 @@ def _is_process_running(process_name: str) -> bool:
     """Check if a process is running using pgrep."""
     try:
         result = subprocess.run(
-            ["pgrep", "-fc", process_name],
+            ["pgrep", "-f", process_name],
             capture_output=True,
             check=False,
         )
