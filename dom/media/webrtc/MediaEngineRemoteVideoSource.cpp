@@ -924,20 +924,14 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
 
   nsTArray<CapabilityCandidate> candidateSet;
   size_t num = NumCapabilities();
-  int32_t minHeight = 0, maxHeight = 0, minWidth = 0, maxWidth = 0, maxFps = 0;
+  int32_t maxHeight = 0, maxWidth = 0, maxFps = 0;
   for (size_t i = 0; i < num; i++) {
     auto capability = GetCapability(i);
     if (capability.height > maxHeight) {
       maxHeight = capability.height;
     }
-    if (!minHeight || (capability.height < minHeight)) {
-      minHeight = capability.height;
-    }
     if (capability.width > maxWidth) {
       maxWidth = capability.width;
-    }
-    if (!minWidth || (capability.width < minWidth)) {
-      minWidth = capability.width;
     }
     if (capability.maxFPS > maxFps) {
       maxFps = capability.maxFPS;
@@ -947,17 +941,17 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineRemoteVideoSource::ChooseCapability",
-      [capabilities = mTrackCapabilities, maxHeight, minHeight, maxWidth,
-       minWidth, maxFps]() mutable {
+      [capabilities = mTrackCapabilities, maxHeight, maxWidth,
+       maxFps]() mutable {
         dom::ULongRange widthRange;
         widthRange.mMax.Construct(maxWidth);
-        widthRange.mMin.Construct(minWidth);
+        widthRange.mMin.Construct(2);
         capabilities->mWidth.Reset();
         capabilities->mWidth.Construct(widthRange);
 
         dom::ULongRange heightRange;
         heightRange.mMax.Construct(maxHeight);
-        heightRange.mMin.Construct(minHeight);
+        heightRange.mMin.Construct(2);
         capabilities->mHeight.Reset();
         capabilities->mHeight.Construct(heightRange);
 
