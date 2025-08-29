@@ -762,6 +762,39 @@ void InspectorUtils::RgbToColorName(GlobalObject&, uint8_t aR, uint8_t aG,
 }
 
 /* static */
+void InspectorUtils::RgbToHsv(GlobalObject&, float aR, float aG, float aB,
+                              nsTArray<float>& aResult) {
+  StyleAbsoluteColor input{
+      .components = StyleColorComponents{aR, aG, aB},
+      .alpha = 1.0,
+      .color_space = StyleColorSpace::Srgb,
+  };
+  StyleAbsoluteColor result = input.ToColorSpace(StyleColorSpace::Hwb);
+  float h = result.components._0 / 360.0f;
+  float v = 1 - result.components._2 / 100.0f;
+  float s = 0;
+  if (v != 0.0) {
+    s = 1 - (result.components._1 / 100.0f) / v;
+  }
+  aResult = {h, s, v};
+}
+
+/* static */
+void InspectorUtils::HsvToRgb(GlobalObject&, float aH, float aS, float aV,
+                              nsTArray<float>& aResult) {
+  float h = aH * 360;
+  float w = aV * (1 - aS) * 100;
+  float b = (1 - aV) * 100;
+  StyleAbsoluteColor input{
+      .components = StyleColorComponents{h, w, b},
+      .alpha = 1.0,
+      .color_space = StyleColorSpace::Hwb,
+  };
+  StyleAbsoluteColor result = input.ToColorSpace(StyleColorSpace::Srgb);
+  aResult = {result.components._0, result.components._1, result.components._2};
+}
+
+/* static */
 void InspectorUtils::ColorToRGBA(GlobalObject& aGlobal,
                                  const nsACString& aColorString,
                                  Nullable<InspectorRGBATuple>& aResult) {

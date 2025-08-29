@@ -190,8 +190,9 @@ class Spectrum {
       : null;
   }
 
-  set rgb(color) {
-    this.hsv = rgbToHsv(color[0], color[1], color[2], color[3]);
+  /** @param {[number, number, number, number]} color */
+  set rgb([r, g, b, a]) {
+    this.hsv = [...InspectorUtils.rgbToHsv(r / 255, g / 255, b / 255), a];
   }
 
   set backgroundColorData(colorData) {
@@ -206,14 +207,18 @@ class Spectrum {
     return this._textProps;
   }
 
+  #toRgbInt(rgbFloat) {
+    return rgbFloat.map(c => Math.round(c * 255));
+  }
+
+  get rgbFloat() {
+    const [h, s, v, a] = this.hsv;
+    return [...InspectorUtils.hsvToRgb(h, s, v), a];
+  }
+
   get rgb() {
-    const rgb = hsvToRgb(this.hsv[0], this.hsv[1], this.hsv[2], this.hsv[3]);
-    return [
-      Math.round(rgb[0]),
-      Math.round(rgb[1]),
-      Math.round(rgb[2]),
-      Math.round(rgb[3] * 100) / 100,
-    ];
+    const [r, g, b, a] = this.rgbFloat;
+    return [...this.#toRgbInt([r, g, b]), a];
   }
 
   /**
@@ -242,8 +247,10 @@ class Spectrum {
   }
 
   get rgbNoSatVal() {
-    const rgb = hsvToRgb(this.hsv[0], 1, 1);
-    return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]), rgb[3]];
+    return [
+      ...this.#toRgbInt(InspectorUtils.hsvToRgb(this.hsv[0], 1, 1)),
+      this.hsv[3],
+    ];
   }
 
   get rgbCssString() {
@@ -590,84 +597,6 @@ class Spectrum {
     this.contrastValue = this.contrastValueMin = this.contrastValueMax = null;
     this.contrastLabel = null;
   }
-}
-
-function hsvToRgb(h, s, v, a) {
-  let r, g, b;
-
-  const i = Math.floor(h * 6);
-  const f = h * 6 - i;
-  const p = v * (1 - s);
-  const q = v * (1 - f * s);
-  const t = v * (1 - (1 - f) * s);
-
-  switch (i % 6) {
-    case 0:
-      r = v;
-      g = t;
-      b = p;
-      break;
-    case 1:
-      r = q;
-      g = v;
-      b = p;
-      break;
-    case 2:
-      r = p;
-      g = v;
-      b = t;
-      break;
-    case 3:
-      r = p;
-      g = q;
-      b = v;
-      break;
-    case 4:
-      r = t;
-      g = p;
-      b = v;
-      break;
-    case 5:
-      r = v;
-      g = p;
-      b = q;
-      break;
-  }
-
-  return [r * 255, g * 255, b * 255, a];
-}
-
-function rgbToHsv(r, g, b, a) {
-  r = r / 255;
-  g = g / 255;
-  b = b / 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-
-  const v = max;
-  const d = max - min;
-  const s = max == 0 ? 0 : d / max;
-
-  let h;
-  if (max == min) {
-    // achromatic
-    h = 0;
-  } else {
-    switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0);
-        break;
-      case g:
-        h = (b - r) / d + 2;
-        break;
-      case b:
-        h = (r - g) / d + 4;
-        break;
-    }
-    h /= 6;
-  }
-  return [h, s, v, a];
 }
 
 function draggable(element, dragHelper, onmove) {

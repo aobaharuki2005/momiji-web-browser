@@ -25364,6 +25364,7 @@ declare namespace InspectorUtils {
     function getUsedFontFaces(range: Range, maxRanges?: number, skipCollapsedWhitespace?: boolean): InspectorFontFace[];
     function hasPseudoClassLock(element: Element, pseudoClass: string): boolean;
     function hasRulesModifiedByCSSOM(sheet: CSSStyleSheet): boolean;
+    function hsvToRgb(r: number, g: number, b: number): number[] | Float32Array;
     function isCustomElementName(name: string | null, namespaceURI: string | null): boolean;
     function isElementThemed(element: Element): boolean;
     function isIgnorableWhitespace(dataNode: CharacterData): boolean;
@@ -25375,6 +25376,7 @@ declare namespace InspectorUtils {
     function removePseudoClassLock(element: Element, pseudoClass: string): void;
     function replaceBlockRuleBodyTextInStylesheet(styleSheetText: string, line: number, column: number, newBodyText: string): string | null;
     function rgbToColorName(r: number, g: number, b: number): string;
+    function rgbToHsv(r: number, g: number, b: number): number[] | Float32Array;
     function setContentState(element: Element, state: number): boolean;
     function setDynamicToolbarMaxHeight(aContext: BrowsingContext | null, aHeight: number): void;
     function setVerticalClipping(aContext: BrowsingContext | null, aOffset: number): void;
