@@ -2695,7 +2695,9 @@ export class UrlbarView {
     if (this.#selectedElement) {
       this.#selectedElement.toggleAttribute("selected", false);
       this.#selectedElement.removeAttribute("aria-selected");
-      this.#getSelectedRow()?.toggleAttribute("selected", false);
+      let row = this.#getSelectedRow();
+      row?.toggleAttribute("selected", false);
+      row?.toggleAttribute("descendant-selected", false);
     }
     let row = this.#getRowFromElement(element);
     if (element) {
@@ -2703,6 +2705,9 @@ export class UrlbarView {
       element.setAttribute("aria-selected", "true");
       if (row?.hasAttribute("row-selectable")) {
         row?.toggleAttribute("selected", true);
+      }
+      if (element != row) {
+        row?.toggleAttribute("descendant-selected", true);
       }
     }
 
