@@ -1179,6 +1179,7 @@ void FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
                  !GetAccService() &&
 #endif
                  !OwnerDoc()->MayHaveDOMMutationObservers() &&
+                 !OwnerDoc()->DevToolsWatchingDOMMutations() &&
                  !nsContentUtils::HasMutationListeners(
                      OwnerDoc(), NS_EVENT_BITS_MUTATION_ALL);
     }

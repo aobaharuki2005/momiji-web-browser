@@ -1513,6 +1513,8 @@ class nsContentUtils {
    */
   static bool IsPreloadType(nsContentPolicyType aType);
 
+  enum class IgnoreDevToolsMutationObserver : bool { No, Yes };
+
   /**
    * Quick helper to determine whether mutation events are enabled and there are
    * any mutation listeners of a given type that apply to this content or any of
@@ -1527,8 +1529,10 @@ class nsContentUtils {
    *
    * @return true if there are mutation listeners of the specified type
    */
-  static bool WantMutationEvents(nsINode* aNode, uint32_t aType,
-                                 nsINode* aTargetForSubtreeModified);
+  static bool WantMutationEvents(
+      nsINode* aNode, uint32_t aType, nsINode* aTargetForSubtreeModified,
+      IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver =
+          IgnoreDevToolsMutationObserver::No);
 
   /**
    * Quick helper to determine whether there are any mutation listeners
@@ -1541,7 +1545,10 @@ class nsContentUtils {
    *
    * @return true if there are mutation listeners of the specified type
    */
-  static bool HasMutationListeners(Document* aDocument, uint32_t aType);
+  static bool HasMutationListeners(
+      Document* aDocument, uint32_t aType,
+      IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver =
+          IgnoreDevToolsMutationObserver::No);
   /**
    * Synchronously fire DOMNodeRemoved on aChild. Only fires the event if
    * there really are listeners by checking using the HasMutationListeners

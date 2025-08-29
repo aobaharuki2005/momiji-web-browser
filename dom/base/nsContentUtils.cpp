@@ -5750,10 +5750,13 @@ bool nsContentUtils::HasNonEmptyAttr(const nsIContent* aContent,
 }
 
 /* static */
-bool nsContentUtils::WantMutationEvents(nsINode* aNode, uint32_t aType,
-                                        nsINode* aTargetForSubtreeModified) {
+bool nsContentUtils::WantMutationEvents(
+    nsINode* aNode, uint32_t aType, nsINode* aTargetForSubtreeModified,
+    IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver /* = No */) {
   Document* doc = aNode->OwnerDoc();
-  if (!doc->MutationEventsEnabled()) {
+  if (MOZ_LIKELY(!doc->MutationEventsEnabled() &&
+                 (static_cast<bool>(aIgnoreDevToolsMutationObserver) ||
+                  !doc->DevToolsWatchingDOMMutations()))) {
     return false;
   }
 
@@ -5761,11 +5764,10 @@ bool nsContentUtils::WantMutationEvents(nsINode* aNode, uint32_t aType,
     return false;
   }
 
-  // global object will be null for documents that don't have windows.
-  nsPIDOMWindowInner* window = doc->GetInnerWindow();
   // This relies on EventListenerManager::AddEventListener, which sets
   // all mutation bits when there is a listener for DOMSubtreeModified event.
-  if (window && !window->HasMutationListeners(aType)) {
+  if (!nsContentUtils::HasMutationListeners(doc, aType,
+                                            aIgnoreDevToolsMutationObserver)) {
     return false;
   }
 
@@ -5777,8 +5779,9 @@ bool nsContentUtils::WantMutationEvents(nsINode* aNode, uint32_t aType,
 
   // If we have a window, we can check it for mutation listeners now.
   if (aNode->IsInUncomposedDoc()) {
-    nsCOMPtr<EventTarget> piTarget(do_QueryInterface(window));
-    if (piTarget) {
+    // global object will be null for documents that don't have windows.
+    if (const nsCOMPtr<EventTarget> piTarget =
+            do_QueryInterface(doc->GetInnerWindow())) {
       EventListenerManager* manager = piTarget->GetExistingListenerManager();
       if (manager && manager->HasMutationListeners()) {
         return true;
@@ -5802,13 +5805,30 @@ bool nsContentUtils::WantMutationEvents(nsINode* aNode, uint32_t aType,
 }
 
 /* static */
-bool nsContentUtils::HasMutationListeners(Document* aDocument, uint32_t aType) {
+bool nsContentUtils::HasMutationListeners(
+    Document* aDocument, uint32_t aType,
+    IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver /* = No */) {
   nsPIDOMWindowInner* window =
       aDocument ? aDocument->GetInnerWindow() : nullptr;
 
   // This relies on EventListenerManager::AddEventListener, which sets
   // all mutation bits when there is a listener for DOMSubtreeModified event.
-  return !window || window->HasMutationListeners(aType);
+  if (!window || window->HasMutationListeners(aType)) {
+    return true;
+  }
+
+  // If the DevTools' mutation observer is enabled, we dispatch
+  // "devtoolschildremoved" event immediately before "DOMNodeRemoved" in
+  // nsContentUtils::MaybeFireNodeRemoved().  For making it called even without
+  // a legacy DOM mutation event listener, we need to return true for
+  // NS_EVENT_BITS_MUTATION_NODEREMOVED.
+  // NOTE: For the other events, "devtoolschildinserted" and
+  // "devtoolsattrmodified" are fired by an nsIMutationObserver subclass,
+  // DevToolsMutationObserver. Therefore, we don't need to handle the other
+  // bits.
+  return !static_cast<bool>(aIgnoreDevToolsMutationObserver) &&
+         aDocument->DevToolsWatchingDOMMutations() &&
+         (aType & NS_EVENT_BITS_MUTATION_NODEREMOVED);
 }
 
 void nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent) {
@@ -5849,7 +5869,8 @@ void nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent) {
     }
   }
 
-  if (WantMutationEvents(aChild, NS_EVENT_BITS_MUTATION_NODEREMOVED, aParent)) {
+  if (WantMutationEvents(aChild, NS_EVENT_BITS_MUTATION_NODEREMOVED, aParent,
+                         IgnoreDevToolsMutationObserver::Yes)) {
     InternalMutationEvent mutation(true, eLegacyNodeRemoved);
     mutation.mRelatedNode = aParent;
 
