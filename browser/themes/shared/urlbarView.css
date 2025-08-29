@@ -472,7 +472,6 @@
 .urlbarView-splitbutton-dropmarker {
   border-radius: var(--toolbarbutton-border-radius);
   padding: 0.5em 1em;
-  margin-inline-end: 1.4em;
   font-size: 0.93em;
   font-weight: var(--font-weight-bold);
   background-clip: padding-box;
@@ -508,7 +507,6 @@
 }
 
 .urlbarView-splitbutton-main {
-  margin-inline-start: 0;
   /* Make the cap to the dropmarker */
   margin-inline-end: 1px;
   border-start-end-radius: 0;
@@ -928,11 +926,6 @@
 
   > .urlbarView-row-body-description {
     max-width: 80ch;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow-y: hidden;
-
     &:not(:empty) + .urlbarView-row-body-bottom:not(:empty) {
       margin-block-start: 1em;
     }
@@ -982,12 +975,6 @@
        button. */
     margin-inline-end: 1.8em;
 
-    .urlbarView-row[tip-type="realtime_opt_in"] > & > .urlbarView-favicon {
-      width: 98px;
-      height: 86px;
-      flex-basis: 98px;
-    }
-
     > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
       flex-shrink: unset;
 
@@ -1005,11 +992,14 @@
     }
 
     > .urlbarView-row-body > .urlbarView-row-body-description {
-      /* Keep padding so the entire selected outline for learn more link */
-      padding-block: 4px;
+      &:not(:empty) {
+        /* Keep padding so the entire selected outline for learn more link */
+        padding-block: 4px;
+      }
 
       > a {
         white-space: nowrap;
+        color: currentColor;
       }
 
       > a[selected] {
@@ -1020,6 +1010,25 @@
     }
   }
 
+  > .urlbarView-row-buttons {
+    /* Move the buttons away from the row edge for better visual balance. */
+    padding-inline-end: var(--space-large);
+
+    > .urlbarView-button,
+    > .urlbarView-splitbutton {
+      /* Horizontal space between buttons */
+      margin-inline: var(--space-small);
+      /* Vertical space between buttons when the row is narrow and the buttons wrap */
+      margin-block: var(--space-small);
+    }
+
+    > .urlbarView-splitbutton > .urlbarView-splitbutton-dropmarker {
+      /* The dropmarker is a `.urlbarView-button` so it gets the usual 4px inline
+         margin. Remove it so it doesn't add to the splitbutton margin. */
+      margin-inline-end: 0;
+    }
+  }
+
   .urlbarView-results[wrap] > & {
     display: block;
     text-align: end;
@@ -1027,17 +1036,6 @@
     > .urlbarView-row-inner {
       display: flex;
       text-align: start;
-    }
-
-    > .urlbarView-row-buttons {
-      > .urlbarView-button,
-      > .urlbarView-splitbutton {
-        margin-block: 1em var(--urlbarView-item-block-padding);
-        margin-inline: 4px 0;
-      }
-      > :last-child {
-        margin-inline-end: 4px;
-      }
     }
 
     &[tip-type="dismissalAcknowledgment"] {
@@ -1242,6 +1240,64 @@
     > .urlbarView-action-btn-label {
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+  }
+}
+
+/* Suggest realtime opt-in */
+
+.urlbarView-row[rich-suggestion][tip-type="realtime_opt_in"] {
+  /* `margin-block-end` is large to give enough spacing between the opt-in and the
+     row label in the next row. */
+  margin-block: var(--urlbarView-item-block-padding) calc(5 * var(--urlbarView-item-block-padding));
+  padding-block: 0;
+  border-block: none;
+  border-radius: var(--border-radius-medium);
+  background-color: color-mix(in srgb, var(--urlbarView-highlight-background) 20%, transparent);
+
+  > .urlbarView-row-inner {
+    padding: 0;
+
+    > .urlbarView-favicon {
+      width: 98px;
+      flex-basis: 98px;
+      height: auto;
+      align-self: stretch;
+
+      margin-inline: 0;
+      border-start-start-radius: var(--border-radius-medium);
+      border-end-start-radius: var(--border-radius-medium);
+
+      background-color: light-dark(#ddcfff, #4e2e9d);
+      fill: none;
+
+      @media (prefers-contrast) {
+        background-color: currentColor;
+        fill: currentColor;
+      }
+    }
+
+    > .urlbarView-row-body {
+      padding: var(--space-xlarge);
+
+      > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title {
+        font-weight: var(--font-weight-bold);
+      }
+    }
+  }
+
+  .urlbarView-results[wrap] > & {
+    > .urlbarView-row-inner {
+      padding: var(--space-large);
+
+      > .urlbarView-favicon {
+        border-radius: var(--border-radius-medium);
+      }
+    }
+
+    > .urlbarView-row-buttons {
+      /* Should match `padding-inline-end` of `.urlbarView-row-buttons` in tips. */
+      padding-block-end: var(--space-large);
     }
   }
 }

@@ -2225,6 +2225,14 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
             input: {
               type: "string",
             },
+            attributes: {
+              type: "object",
+              properties: {
+                primary: {
+                  type: "string",
+                },
+              },
+            },
             menu: {
               type: "array",
               items: {
