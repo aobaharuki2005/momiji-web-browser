@@ -59,6 +59,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.Divider
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.displayName
 import mozilla.components.feature.addons.ui.summary
@@ -72,7 +73,7 @@ import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_ON
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.EXTENSIONS
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.EXTENSIONS_OPTION_CHEVRON
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.MORE_OPTION_CHEVRON
-import org.mozilla.fenix.components.menu.compose.header.MenuNavHeader
+import org.mozilla.fenix.components.menu.compose.MenuNavigation
 import org.mozilla.fenix.components.menu.compose.header.MozillaAccountMenuItem
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -87,6 +88,7 @@ import org.mozilla.fenix.utils.DURATION_MS_MAIN_MENU_ITEM
  * @param accountState The [AccountState] of a Mozilla account.
  * @param showQuitMenu Whether or not the button to delete browsing data and quit
  * should be visible.
+ * @param isBottomToolbar Whether or not the browser toolbar is at the bottom.
  * @param isSiteLoading Whether or not the tab is loading.
  * @param isExtensionsExpanded Whether or not the extensions menu is expanded.
  * @param isMoreMenuExpanded Whether or not the more menu is expanded.
@@ -128,13 +130,14 @@ import org.mozilla.fenix.utils.DURATION_MS_MAIN_MENU_ITEM
  * @param extensionSubmenu The content of extensions menu item to avoid configuration during animation.
  * @param extensionsMenuItemDescription The label of extensions menu item description.
  */
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun MainMenu(
     accessPoint: MenuAccessPoint,
     account: Account?,
     accountState: AccountState,
     showQuitMenu: Boolean,
+    isBottomToolbar: Boolean,
     isSiteLoading: Boolean,
     isExtensionsExpanded: Boolean,
     isMoreMenuExpanded: Boolean,
@@ -176,20 +179,43 @@ fun MainMenu(
     extensionsMenuItemDescription: String?,
 ) {
     MenuFrame(
+        contentModifier = Modifier
+            .padding(
+                start = 8.dp,
+                top = if (isBottomToolbar && accessPoint != MenuAccessPoint.Home) 0.dp else 8.dp,
+                end = 8.dp,
+                bottom = if (isBottomToolbar && accessPoint != MenuAccessPoint.Home) 84.dp else 16.dp,
+            ),
+        scrollState = scrollState,
         header = {
-            if (accessPoint != MenuAccessPoint.Home) {
-                MenuNavHeader(
+            if (accessPoint != MenuAccessPoint.Home && !isBottomToolbar) {
+                MenuNavigation(
                     state = MenuItemState.ENABLED,
-                    goBackState = if (canGoBack) {
-                        MenuItemState.ENABLED
-                    } else {
-                        MenuItemState.DISABLED
-                    },
-                    goForwardState = if (canGoForward) {
-                        MenuItemState.ENABLED
-                    } else {
-                        MenuItemState.DISABLED
-                    },
+                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
+                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
+                    isSiteLoading = isSiteLoading,
+                    onBackButtonClick = onBackButtonClick,
+                    onForwardButtonClick = onForwardButtonClick,
+                    onRefreshButtonClick = onRefreshButtonClick,
+                    onStopButtonClick = onStopButtonClick,
+                    onShareButtonClick = onShareButtonClick,
+                    isExtensionsExpanded = isExtensionsExpanded,
+                    isMoreMenuExpanded = isMoreMenuExpanded,
+                )
+                if (scrollState.value != 0) {
+                    Divider(color = FirefoxTheme.colors.borderPrimary)
+                }
+            }
+        },
+        footer = {
+            if (accessPoint != MenuAccessPoint.Home && isBottomToolbar) {
+                if (scrollState.value != 0) {
+                    Divider(color = FirefoxTheme.colors.borderPrimary)
+                }
+                MenuNavigation(
+                    state = MenuItemState.ENABLED,
+                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
+                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
                     isSiteLoading = isSiteLoading,
                     onBackButtonClick = onBackButtonClick,
                     onForwardButtonClick = onForwardButtonClick,
@@ -201,7 +227,6 @@ fun MainMenu(
                 )
             }
         },
-        scrollState = scrollState,
     ) {
         if (isReaderViewActive && accessPoint != MenuAccessPoint.Home) {
             MenuGroup {
@@ -905,6 +930,7 @@ private fun MenuDialogPreview() {
                 accountState = AuthenticationProblem,
                 isPrivate = false,
                 showQuitMenu = true,
+                isBottomToolbar = false,
                 isSiteLoading = false,
                 isExtensionsExpanded = false,
                 isMoreMenuExpanded = true,
@@ -965,6 +991,7 @@ private fun MenuDialogPrivatePreview(
                 accountState = AuthenticationProblem,
                 isPrivate = false,
                 showQuitMenu = true,
+                isBottomToolbar = true,
                 isSiteLoading = isSiteLoading,
                 isExtensionsExpanded = true,
                 isMoreMenuExpanded = true,
