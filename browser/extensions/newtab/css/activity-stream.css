@@ -4491,7 +4491,7 @@ main section {
 .lists .completed-task-wrapper summary .completed-title::after {
   content: "";
   -moz-context-properties: fill;
-  fill: var(--text-color-deemphasized);
+  fill: var(--button-icon-fill);
   background-image: url("chrome://global/skin/icons/arrow-right.svg");
   height: var(--space-large);
   width: var(--space-large);
