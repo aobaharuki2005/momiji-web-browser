@@ -178,20 +178,32 @@ class nsTextFrame : public nsIFrame {
     const mozilla::dom::CharacterDataBuffer* mCharacterDataBuffer;
     const nsIFrame* mLineContainer;
     nsTextFrame* mFrame;
-    gfxSkipCharsIterator mStart;  // Offset in original and transformed string
+
+    // Offset in original and transformed string
+    gfxSkipCharsIterator mStart;
+
     const gfxSkipCharsIterator mTempIterator;
 
     // Either null, or pointing to the frame's TabWidthProperty.
     mutable nsTextFrame::TabWidthStore* mTabWidths;
+
     // How far we've done tab-width calculation; this is ONLY valid when
     // mTabWidths is nullptr (otherwise rely on mTabWidths->mLimit instead).
     // It's a DOM offset relative to the current frame's offset.
     mutable uint32_t mTabWidthsAnalyzedLimit;
 
-    int32_t mLength;                  // DOM string length, may be INT32_MAX
-    const gfxFloat mWordSpacing;      // space for each whitespace char
-    const gfxFloat mLetterSpacing;    // space for each letter
-    mutable gfxFloat mMinTabAdvance;  // min advance for <tab> char
+    // DOM string length, may be INT32_MAX
+    int32_t mLength;
+
+    // space for each whitespace char
+    const gfxFloat mWordSpacing;
+
+    // space for each letter
+    const gfxFloat mLetterSpacing;
+
+    // min advance for <tab> char
+    mutable gfxFloat mMinTabAdvance;
+
     mutable gfxFloat mHyphenWidth;
     mutable gfxFloat mOffsetFromBlockOriginForTabs;
 
