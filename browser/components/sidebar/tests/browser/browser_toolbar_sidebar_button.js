@@ -341,19 +341,6 @@ add_task(async function test_toolbar_sidebar_badges() {
     "Toolbar badge and sidebar badge should clear when pref is false"
   );
 
-  // Test that hidden tools don't show badges
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.ml.chat.enabled", false],
-      ["sidebar.notification.badge.aichat", true],
-    ],
-  });
-  Assert.ok(
-    !badgeEl.classList.contains("feature-callout"),
-    "Toolbar badge should not appear for hidden tools"
-  );
-  await SpecialPowers.popPrefEnv();
-
   await SpecialPowers.pushPrefEnv({
     set: [[VERTICAL_TABS_PREF, true]],
   });
