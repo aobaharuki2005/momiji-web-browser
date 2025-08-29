@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,6 +42,7 @@ import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.PrimaryButton
 import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.SnackbarVisuals
+import mozilla.components.compose.base.snackbar.displaySnackbar
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.SnackbarBehavior
 import org.mozilla.fenix.compose.SwipeToDismissBox2
@@ -257,16 +257,14 @@ private fun SnackbarHostPreview() {
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     scope.launch {
-                        val result = snackbarHostState.showSnackbar(
+                        snackbarHostState.displaySnackbar(
                             visuals = SnackbarVisuals(
                                 message = "Snackbar",
                                 subMessage = "SubMessage",
                                 actionLabel = "click me",
                             ),
+                            onActionPerformed = { snackbarClicks++ },
                         )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            snackbarClicks++
-                        }
                     }
                 }
 

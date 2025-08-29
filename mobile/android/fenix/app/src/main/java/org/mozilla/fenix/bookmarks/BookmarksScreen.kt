@@ -42,10 +42,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -96,6 +94,7 @@ import mozilla.components.compose.base.button.PrimaryButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
+import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.textfield.TextFieldColors
@@ -273,24 +272,18 @@ private fun BookmarksList(
         when (state.bookmarksSnackbarState) {
             BookmarksSnackbarState.None -> return@LaunchedEffect
             is BookmarksSnackbarState.UndoDeletion -> scope.launch {
-                val result = snackbarHostState.showSnackbar(
+                snackbarHostState.displaySnackbar(
                     message = snackbarMessage,
                     actionLabel = snackbarActionLabel,
-                    duration = SnackbarDuration.Short,
+                    onActionPerformed = { store.dispatch(SnackbarAction.Undo) },
+                    onDismissPerformed = { store.dispatch(SnackbarAction.Dismissed) },
                 )
-                if (result == SnackbarResult.Dismissed) {
-                    store.dispatch(SnackbarAction.Dismissed)
-                } else if (result == SnackbarResult.ActionPerformed) {
-                    store.dispatch(SnackbarAction.Undo)
-                }
             }
             BookmarksSnackbarState.CantEditDesktopFolders -> scope.launch {
-                val result = snackbarHostState.showSnackbar(
+                snackbarHostState.displaySnackbar(
                     message = snackbarMessage,
+                    onDismissPerformed = { store.dispatch(SnackbarAction.Dismissed) },
                 )
-                if (result == SnackbarResult.Dismissed) {
-                    store.dispatch(SnackbarAction.Dismissed)
-                }
             }
         }
     }

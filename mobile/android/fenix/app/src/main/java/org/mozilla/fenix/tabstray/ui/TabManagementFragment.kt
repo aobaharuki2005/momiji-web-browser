@@ -15,9 +15,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricManager
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.fragment.app.Fragment
@@ -34,6 +32,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.feature.accounts.push.CloseTabsUseCases
 import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
@@ -89,6 +88,7 @@ import org.mozilla.fenix.tabstray.ui.theme.getTabManagerTheme
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.getSnackbarTimeout
 import kotlin.math.abs
 
 /**
@@ -479,14 +479,12 @@ class TabManagementFragment : Fragment() {
     @UiThread
     internal fun showUndoSnackbarForSyncedTab(closeOperation: CloseTabsUseCases.UndoableOperation) {
         lifecycleScope.launch {
-            val snackbarResult = snackbarHostState.showSnackbar(
+            snackbarHostState.displaySnackbar(
                 message = getString(R.string.snackbar_tab_closed),
                 actionLabel = getString(R.string.snackbar_deleted_undo),
-                duration = SnackbarDuration.Short,
+                timeout = requireContext().getSnackbarTimeout(hasAction = true),
+                onActionPerformed = { closeOperation.undo() },
             )
-            if (snackbarResult == SnackbarResult.ActionPerformed) {
-                closeOperation.undo()
-            }
         }
     }
 
@@ -500,17 +498,17 @@ class TabManagementFragment : Fragment() {
         val undoUseCases = requireComponents.useCases.tabsUseCases.undo
 
         lifecycleScope.launch {
-            val snackbarResult = snackbarHostState.showSnackbar(
+            snackbarHostState.displaySnackbar(
                 message = snackbarMessage,
                 actionLabel = getString(R.string.snackbar_deleted_undo),
-                duration = SnackbarDuration.Short,
+                timeout = requireContext().getSnackbarTimeout(hasAction = true),
+                onActionPerformed = {
+                    undoUseCases.invoke()
+                    runIfFragmentIsAttached {
+                        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(page))
+                    }
+                },
             )
-            if (snackbarResult == SnackbarResult.ActionPerformed) {
-                undoUseCases.invoke()
-                runIfFragmentIsAttached {
-                    tabsTrayStore.dispatch(TabsTrayAction.PageSelected(page))
-                }
-            }
         }
     }
 
@@ -522,15 +520,15 @@ class TabManagementFragment : Fragment() {
             }
 
         lifecycleScope.launch {
-            val snackbarResult = snackbarHostState.showSnackbar(
+            snackbarHostState.displaySnackbar(
                 message = snackbarMessage,
                 actionLabel = getString(R.string.snackbar_deleted_undo),
-                duration = SnackbarDuration.Short,
+                timeout = requireContext().getSnackbarTimeout(hasAction = true),
+                onActionPerformed = {
+                    requireComponents.useCases.tabsUseCases.undo.invoke()
+                    tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.NormalTabs))
+                },
             )
-            if (snackbarResult == SnackbarResult.ActionPerformed) {
-                requireComponents.useCases.tabsUseCases.undo.invoke()
-                tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.NormalTabs))
-            }
         }
     }
 
@@ -589,9 +587,9 @@ class TabManagementFragment : Fragment() {
             else -> return // Don't show snackbar for multiple tabs
         }
         lifecycleScope.launch {
-            snackbarHostState.showSnackbar(
+            snackbarHostState.displaySnackbar(
                 message = getString(messageResId),
-                duration = SnackbarDuration.Long,
+                timeout = requireContext().getSnackbarTimeout(hasAction = false),
             )
         }
     }
@@ -610,17 +608,16 @@ class TabManagementFragment : Fragment() {
             }
         }
         lifecycleScope.launch {
-            val result = snackbarHostState.showSnackbar(
+            snackbarHostState.displaySnackbar(
                 message = getString(displayResId, displayFolderTitle),
                 actionLabel = getString(R.string.create_collection_view),
-                duration = SnackbarDuration.Long,
+                timeout = requireContext().getSnackbarTimeout(hasAction = true),
+                onActionPerformed = {
+                    findNavController().navigate(
+                        TabManagementFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id),
+                    )
+                },
             )
-
-            if (result == SnackbarResult.ActionPerformed) {
-                findNavController().navigate(
-                    TabManagementFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id),
-                )
-            }
         }
     }
 
@@ -631,9 +628,9 @@ class TabManagementFragment : Fragment() {
 
     private fun showInactiveTabsAutoCloseConfirmationSnackbar() {
         lifecycleScope.launch {
-            snackbarHostState.showSnackbar(
+            snackbarHostState.displaySnackbar(
                 message = getString(R.string.inactive_tabs_auto_close_message_snackbar),
-                duration = SnackbarDuration.Long,
+                timeout = requireContext().getSnackbarTimeout(hasAction = false),
             )
         }
     }

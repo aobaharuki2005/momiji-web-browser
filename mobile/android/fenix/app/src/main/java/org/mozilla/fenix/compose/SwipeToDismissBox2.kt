@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import mozilla.components.compose.base.snackbar.displaySnackbar
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -290,7 +291,7 @@ private fun SwipeToDismissBoxPreview() {
                     enableDismissFromEndToStart = false,
                     onSwipeToEnd = {
                         coroutineScope.launch {
-                            snackbarState.showSnackbar(message = "Dismiss")
+                            snackbarState.displaySnackbar(message = "Dismiss")
                         }
                     },
                 )
@@ -302,7 +303,7 @@ private fun SwipeToDismissBoxPreview() {
                     text = "<- Swipe to left",
                     onSwipeToStart = {
                         coroutineScope.launch {
-                            snackbarState.showSnackbar(message = "Dismiss")
+                            snackbarState.displaySnackbar(message = "Dismiss")
                         }
                     },
                 )
@@ -313,12 +314,12 @@ private fun SwipeToDismissBoxPreview() {
                     text = "<- Swipe both ways ->",
                     onSwipeToStart = {
                         coroutineScope.launch {
-                            snackbarState.showSnackbar(message = "Dismiss")
+                            snackbarState.displaySnackbar(message = "Dismiss")
                         }
                     },
                     onSwipeToEnd = {
                         coroutineScope.launch {
-                            snackbarState.showSnackbar(message = "Dismiss")
+                            snackbarState.displaySnackbar(message = "Dismiss")
                         }
                     },
                 )

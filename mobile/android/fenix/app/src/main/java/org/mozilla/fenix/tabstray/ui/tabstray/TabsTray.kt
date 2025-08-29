@@ -37,6 +37,7 @@ import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.SnackbarVisuals
+import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabsTrayAction
@@ -433,7 +434,7 @@ private fun TabsTrayPreviewRoot(
                 }
 
                 scope.launch {
-                    snackbarHostState.showSnackbar(
+                    snackbarHostState.displaySnackbar(
                         visuals = SnackbarVisuals(
                             message = "Tab closed",
                         ),
@@ -465,7 +466,7 @@ private fun TabsTrayPreviewRoot(
                 tabsTrayStore.dispatch(TabsTrayAction.UpdateInactiveTabs(emptyList()))
 
                 scope.launch {
-                    snackbarHostState.showSnackbar(
+                    snackbarHostState.displaySnackbar(
                         visuals = SnackbarVisuals(
                             message = "Tabs closed",
                         ),
@@ -485,7 +486,7 @@ private fun TabsTrayPreviewRoot(
                 tabsTrayStore.dispatch(TabsTrayAction.UpdateInactiveTabs(newTabs))
 
                 scope.launch {
-                    snackbarHostState.showSnackbar(
+                    snackbarHostState.displaySnackbar(
                         visuals = SnackbarVisuals(
                             message = "Tab closed",
                         ),
@@ -495,7 +496,7 @@ private fun TabsTrayPreviewRoot(
             onSyncedTabClick = {},
             onSyncedTabClose = { _, _ ->
                 scope.launch {
-                    snackbarHostState.showSnackbar(
+                    snackbarHostState.displaySnackbar(
                         visuals = SnackbarVisuals(
                             message = "Tab closed",
                         ),

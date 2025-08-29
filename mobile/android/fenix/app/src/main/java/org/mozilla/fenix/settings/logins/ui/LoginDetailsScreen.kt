@@ -45,6 +45,7 @@ import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
+import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.textfield.TextFieldColors
 import mozilla.components.compose.base.textfield.TextFieldStyle
@@ -371,7 +372,7 @@ private fun showTextCopiedSnackbar(
     snackbarHostState: SnackbarHostState,
 ) {
     coroutineScope.launch {
-        snackbarHostState.showSnackbar(
+        snackbarHostState.displaySnackbar(
             message = message,
         )
     }

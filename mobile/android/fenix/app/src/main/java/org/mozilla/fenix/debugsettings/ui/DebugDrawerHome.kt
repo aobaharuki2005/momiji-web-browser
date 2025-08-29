@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mozilla.components.compose.base.Divider
+import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.utils.inComposePreview
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.appVersionName
@@ -122,7 +123,7 @@ private fun DebugDrawerHomePreview() {
                         title = R.string.debug_drawer_title,
                         onClick = {
                             scope.launch {
-                                snackbarState.showSnackbar(message = "item $it clicked")
+                                snackbarState.displaySnackbar(message = "item $it clicked")
                             }
                         },
                         content = {},
