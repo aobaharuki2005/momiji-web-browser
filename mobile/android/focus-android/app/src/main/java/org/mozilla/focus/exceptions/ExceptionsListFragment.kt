@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
+import androidx.annotation.LayoutRes
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -275,6 +276,7 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
         val handleView: View = itemView.findViewById(R.id.handleView)
 
         companion object {
+            @LayoutRes
             val LAYOUT_ID = R.layout.item_custom_domain
         }
 

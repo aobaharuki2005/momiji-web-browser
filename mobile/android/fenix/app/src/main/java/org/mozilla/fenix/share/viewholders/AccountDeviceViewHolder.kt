@@ -6,6 +6,7 @@ package org.mozilla.fenix.share.viewholders
 
 import android.content.Context
 import android.view.View
+import androidx.annotation.LayoutRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.getColor
 import androidx.recyclerview.widget.RecyclerView
@@ -58,7 +59,8 @@ class AccountDeviceViewHolder(
     }
 
     companion object {
-        const val LAYOUT_ID = R.layout.account_share_list_item
+        @LayoutRes
+        val LAYOUT_ID = R.layout.account_share_list_item
 
         /**
          * Returns a triple with the name, icon drawable resource, and background color drawable resource
