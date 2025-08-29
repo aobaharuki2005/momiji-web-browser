@@ -3312,11 +3312,6 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacity(
   }
 
   size_type length = Length();
-  if (length == 0) {
-    ShrinkCapacityToZero();
-    return;
-  }
-
   // Try to switch to our auto-buffer if possible.
   if (auto* autoHdr = GetAutoArrayHeader()) {
     if (mHdr == autoHdr) {
@@ -3330,6 +3325,13 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacity(
       mHdr = autoHdr;
       return;
     }
+  }
+
+  if (length == 0) {
+    MOZ_ASSERT(!mHdr->mIsAutoArray, "Should've been dealt with above.");
+    nsTArrayFallibleAllocator::Free(mHdr);
+    mHdr = EmptyHdr();
+    return;
   }
 
   if (length >= mHdr->mCapacity) {  // should never be greater than...
