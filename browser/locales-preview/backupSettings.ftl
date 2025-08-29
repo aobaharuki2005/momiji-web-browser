@@ -99,8 +99,11 @@ turn-off-scheduled-backups-confirm-button = Turn off and delete backup
 restore-from-backup-header = Restore your data
 # Variables:
 #   $date (string) - Date to be formatted based on locale
-restore-from-backup-description-with-metadata = { -brand-short-name } will replace all your current data with your backup from { DATETIME($date, timeStyle: "short") }, { DATETIME($date, dateStyle: "short") }.
-restore-from-backup-support-link = What will be restored?
+restore-from-backup-description-with-metadata =
+    .message = This will replace all your current { -brand-short-name } data with your backup from { DATETIME($date, timeStyle: "short", dateStyle: "short") }.
+restore-from-backup-support-link =
+    .message = What will be restored?
+restore-from-backup-no-backup-file-link = Having problems finding your backup?
 
 restore-from-backup-filepicker-label = Backup file
 restore-from-backup-filepicker-title = Choose Backup File:
@@ -122,9 +125,7 @@ restore-from-backup-restoring-button = Restoring…
 # User is not authorized to restore a particular backup file, usually because
 # the backup file is encrypted and the user provided a recovery password that
 # was different than the password the user configured for their backup file
-restore-from-backup-error-incorrect-password =
-    .heading = Unauthorized
-    .message = The password you entered was incorrect. Please try again.
+restore-from-backup-error-incorrect-password = Incorrect password. <a data-l10n-name="incorrect-password-support-link">Still having problems?</a>
 
 # The backup file (or specific data files within the backup file) could not be
 # loaded and parsed correctly, most likely due to data corruption of the
