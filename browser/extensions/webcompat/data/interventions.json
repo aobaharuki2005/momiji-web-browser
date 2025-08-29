@@ -4765,23 +4765,6 @@
       }
     ]
   },
-  "1957657": {
-    "label": "myheritage.com",
-    "bugs": {
-      "1957657": {
-        "issue": "broken-interactive-elements",
-        "matches": ["*://www.myheritage.com/complete-genealogy-package*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "content_scripts": {
-          "js": ["bug1957657-myheritage.com-fix-signup-email-field.js"]
-        }
-      }
-    ]
-  },
   "1959046": {
     "label": "angeljackets.com",
     "bugs": {
