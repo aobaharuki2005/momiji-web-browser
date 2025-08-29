@@ -145,7 +145,7 @@ function handleRequest(request, response) {
       beacons[id].data = data;
       beacons[id].mimetype = mimetype;
       finishControlResponse(id, item.response);
-      blockedResponse.finish();
+      item.response.finish();
     } else {
       DEBUG("GET has not arrived, marking it as unblocked");
       beacons[id] = {};
