@@ -1329,8 +1329,12 @@
   padding: var(--urlbarView-item-inline-padding);
   padding-inline-end: var(--space-large);
 
-  --market-todays-change-perc-plus-color: light-dark(var(--color-green-60), var(--color-green-20));
-  --market-todays-change-perc-minus-color: light-dark(var(--color-red-70), var(--color-red-40));
+  --market-up-color: light-dark(var(--color-green-60), var(--color-green-20));
+  --market-down-color: light-dark(var(--color-red-70), var(--color-red-40));
+
+  --market-image-bg-color: var(--urlbar-box-focus-bgcolor);
+  --market-image-down-bg-color: light-dark(var(--color-red-0), var(--color-red-90));
+  --market-image-up-bg-color: light-dark(var(--color-green-0), var(--color-green-90));
 
   .urlbarView-row[dynamicType="market"] > .urlbarView-dynamic-market-root:not([selectable]) > &:not([selected]):hover {
     background-color: var(--urlbarView-hover-background);
@@ -1347,13 +1351,38 @@
     width: var(--urlbarView-top-pick-large-icon-box-size);
     height: var(--urlbarView-top-pick-large-icon-box-size);
     margin-inline-end: var(--space-medium);
-    background-color: var(--urlbar-box-focus-bgcolor);
+    background-color: var(--market-image-bg-color);
+    border: 1px solid transparent;
     border-radius: var(--border-radius-small);
+
+    fill: currentColor;
+    fill-opacity: var(--urlbar-icon-fill-opacity);
+    -moz-context-properties: fill, fill-opacity;
 
     > .urlbarView-market-image {
       width: 36px;
       height: auto;
       max-height: 36px;
+    }
+
+    &[is-arrow] {
+      border-color: color-mix(in srgb, currentColor 10%, transparent);
+
+      .urlbarView-market-item[change="down"] > & {
+        fill: var(--market-down-color);
+        border-color: color-mix(in srgb, var(--market-down-color) 10%, transparent);
+        background-color: var(--market-image-down-bg-color);
+      }
+      .urlbarView-market-item[change="up"] > & {
+        fill: var(--market-up-color);
+        border-color: color-mix(in srgb, var(--market-up-color) 10%, transparent);
+        background-color: var(--market-image-up-bg-color);
+      }
+
+      > .urlbarView-market-image {
+        width: 20px;
+        height: 20px;
+      }
     }
   }
 
@@ -1384,15 +1413,20 @@
 
     .urlbarView-row[dynamicType="market"]:not([selected])
       > .urlbarView-row-inner
-      > .urlbarView-market-item:not([selected])
+      > .urlbarView-market-item[change="up"]:not([selected])
       > &
-      > .urlbarView-market-description-bottom {
-      > .urlbarView-market-todays-change-perc-plus {
-        color: var(--market-todays-change-perc-plus-color);
-      }
-      > .urlbarView-market-todays-change-perc-minus {
-        color: var(--market-todays-change-perc-minus-color);
-      }
+      > .urlbarView-market-description-bottom
+      > .urlbarView-market-todays-change-perc {
+      color: var(--market-up-color);
+    }
+
+    .urlbarView-row[dynamicType="market"]:not([selected])
+      > .urlbarView-row-inner
+      > .urlbarView-market-item[change="down"]:not([selected])
+      > &
+      > .urlbarView-market-description-bottom
+      > .urlbarView-market-todays-change-perc {
+      color: var(--market-down-color);
     }
   }
 }
