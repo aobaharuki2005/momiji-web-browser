@@ -38,15 +38,15 @@ class CharacterDataBuffer;
 }  // namespace mozilla
 
 class nsTextFrame : public nsIFrame {
-  typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
-  typedef mozilla::SelectionTypeMask SelectionTypeMask;
-  typedef mozilla::SelectionType SelectionType;
-  typedef mozilla::TextRangeStyle TextRangeStyle;
-  typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::Point Point;
-  typedef mozilla::gfx::Rect Rect;
-  typedef mozilla::gfx::Size Size;
-  typedef gfxTextRun::Range Range;
+  using DrawTarget = mozilla::gfx::DrawTarget;
+  using LayoutDeviceRect = mozilla::LayoutDeviceRect;
+  using Point = mozilla::gfx::Point;
+  using Range = gfxTextRun::Range;
+  using Rect = mozilla::gfx::Rect;
+  using SelectionType = mozilla::SelectionType;
+  using SelectionTypeMask = mozilla::SelectionTypeMask;
+  using Size = mozilla::gfx::Size;
+  using TextRangeStyle = mozilla::TextRangeStyle;
 
  public:
   enum TextRunType : uint8_t;
@@ -58,9 +58,7 @@ class nsTextFrame : public nsIFrame {
    */
   class MOZ_STACK_CLASS PropertyProvider final
       : public gfxTextRun::PropertyProvider {
-    typedef gfxTextRun::Range Range;
-    typedef gfxTextRun::HyphenType HyphenType;
-    typedef mozilla::gfx::DrawTarget DrawTarget;
+    using HyphenType = gfxTextRun::HyphenType;
 
    public:
     /**
