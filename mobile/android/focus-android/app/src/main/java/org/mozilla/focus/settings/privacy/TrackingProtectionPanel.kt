@@ -28,6 +28,8 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.installedDate
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.ui.theme.FocusTheme
+import java.text.NumberFormat
+import java.util.Locale
 
 @SuppressWarnings("LongParameterList")
 class TrackingProtectionPanel(
@@ -158,9 +160,8 @@ class TrackingProtectionPanel(
     }
 
     private fun updateTrackersBlocked() {
-        binding.trackersCount.text = String.format("%,d", blockedTrackersCount)
-        binding.trackersCountNote.text =
-            context.getString(R.string.trackers_count_note, context.installedDate)
+        binding.trackersCount.text = NumberFormat.getIntegerInstance(Locale.getDefault()).format(blockedTrackersCount)
+        binding.trackersCountNote.text = context.getString(R.string.trackers_count_note, context.installedDate)
     }
 
     private fun updateTrackersState() {
