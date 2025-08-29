@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -396,7 +397,9 @@ private val numberOfGridColumns: Int
     @ReadOnlyComposable
     get() {
         val configuration = LocalConfiguration.current
-        val screenWidthDp = configuration.screenWidthDp.toFloat()
+        val screenWidthDp = with(LocalDensity.current) {
+                LocalWindowInfo.current.containerSize.width.toDp().value
+            }
 
         return if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             numberOfGridColumnsLandscape(screenWidthDp = screenWidthDp)
