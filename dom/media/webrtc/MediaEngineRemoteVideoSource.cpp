@@ -143,29 +143,34 @@ static gfx::IntSize CalculateDesiredSize(DesiredSizeInput aInput) {
     // It also doesn't make sense when not both ideal width and height are
     // given.
     // First scale to average of portrait and landscape.
-    float scale_width = (float)dst_width / (float)aInput.mInputWidth;
-    float scale_height = (float)dst_height / (float)aInput.mInputHeight;
-    float scale = (scale_width + scale_height) / 2;
-    // If both req_ideal_width & req_ideal_height are absent, scale is 1, but
+    double scale_width = AssertedCast<double>(dst_width) /
+                         AssertedCast<double>(aInput.mInputWidth);
+    double scale_height = AssertedCast<double>(dst_height) /
+                          AssertedCast<double>(aInput.mInputHeight);
+    double scale = (scale_width + scale_height) / 2;
+    // If both ideal width & ideal height are absent, scale is 1, but
     // if one is present and the other not, scale precisely to the one present
     if (!aInput.mConstraints.mWidth.mIdeal) {
       scale = scale_height;
     } else if (!aInput.mConstraints.mHeight.mIdeal) {
       scale = scale_width;
     }
-    dst_width = int32_t(scale * (float)aInput.mInputWidth);
-    dst_height = int32_t(scale * (float)aInput.mInputHeight);
+    dst_width = int32_t(scale * (double)aInput.mInputWidth);
+    dst_height = int32_t(scale * (double)aInput.mInputHeight);
 
     // If scaled rectangle exceeds max rectangle, scale to minimum of portrait
     // and landscape
     if (dst_width > aInput.mConstraints.mWidth.mMax ||
         dst_height > aInput.mConstraints.mHeight.mMax) {
-      scale_width = (float)aInput.mConstraints.mWidth.mMax / (float)dst_width;
-      scale_height =
-          (float)aInput.mConstraints.mHeight.mMax / (float)dst_height;
+      scale_width = AssertedCast<double>(aInput.mConstraints.mWidth.mMax) /
+                    AssertedCast<double>(dst_width);
+      scale_height = AssertedCast<double>(aInput.mConstraints.mHeight.mMax) /
+                     AssertedCast<double>(dst_height);
       scale = std::min(scale_width, scale_height);
-      dst_width = int32_t(scale * dst_width);
-      dst_height = int32_t(scale * dst_height);
+      dst_width = AssertedCast<int32_t>(
+          std::lround(scale * AssertedCast<double>(dst_width)));
+      dst_height = AssertedCast<int32_t>(
+          std::lround(scale * AssertedCast<double>(dst_height)));
     }
   }
 
@@ -214,6 +219,7 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
       mTrackCapabilities(
           MakeAndAddRef<media::Refcountable<MediaTrackCapabilities>>()),
       mFirstFramePromise(mFirstFramePromiseHolder.Ensure(__func__)),
+      mCalculation(kFitness),
       mPrefs(MakeUnique<MediaEnginePrefs>()),
       mMediaDevice(aMediaDevice),
       mDeviceUUID(NS_ConvertUTF16toUTF8(aMediaDevice->mRawID)) {
@@ -896,7 +902,7 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
     MediaConstraintsHelper::LogConstraints(aConstraints);
     if (!aConstraints.mAdvanced.empty()) {
       LOG("Advanced array[%zu]:", aConstraints.mAdvanced.size());
-      for (auto& advanced : aConstraints.mAdvanced) {
+      for (const auto& advanced : aConstraints.mAdvanced) {
         MediaConstraintsHelper::LogConstraints(advanced);
       }
     }
@@ -911,7 +917,7 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
       // capture at. This is signaled through CamerasParent as the capability's
       // maxFPS. Note that DesktopCaptureImpl does not expose any capabilities.
       aCapability.maxFPS =
-          c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
+          SaturatingCast<int32_t>(std::lround(c.mFrameRate.Get(aPrefs.mFPS)));
       return true;
     }
     default:
@@ -991,7 +997,8 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
       cap.height = c.mHeight.Get(prefHeight);
       cap.height = std::clamp(cap.height, 0, 4320);
 
-      cap.maxFPS = c.mFrameRate.Get(aPrefs.mFPS);
+      cap.maxFPS =
+          SaturatingCast<int32_t>(std::lround(c.mFrameRate.Get(aPrefs.mFPS)));
       cap.maxFPS = std::clamp(cap.maxFPS, 0, 480);
 
       if (cap.width != prefWidth) {
