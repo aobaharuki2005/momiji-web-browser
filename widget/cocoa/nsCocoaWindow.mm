@@ -163,6 +163,7 @@ static void RollUpPopups(nsIRollupListener::AllowAnimations aAllowAnimations =
 
 extern nsIArray* gDraggedTransferables;
 extern bool gCreatedFileForFileURL;
+extern bool gCreatedFileForFilePromise;
 ChildView* ChildViewMouseTracker::sLastMouseEventView = nil;
 NSEvent* ChildViewMouseTracker::sLastMouseMoveEvent = nil;
 NSWindow* ChildViewMouseTracker::sWindowUnderMouse = nil;
@@ -3800,7 +3801,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-static NSURL* GetPasteLocation(NSPasteboard* aPasteboard) {
+static NSURL* GetPasteLocation(NSPasteboard* aPasteboard, bool aUseFallback) {
   // First, try to get the paste location from the low level pasteboard.
   PasteboardRef pboardRef = nullptr;
   PasteboardCreate((CFStringRef)[aPasteboard name], &pboardRef);
@@ -3814,6 +3815,10 @@ static NSURL* GetPasteLocation(NSPasteboard* aPasteboard) {
   CFRelease(pboardRef);
   if (urlRef) {
     return [(NSURL*)urlRef autorelease];
+  }
+
+  if (aUseFallback) {
+    return nil;
   }
 
   // If no paste location was present on the pasteboard, fall back to a temp
@@ -3875,15 +3880,23 @@ static NSURL* GetPasteLocation(NSPasteboard* aPasteboard) {
            ![[pasteboardOutputDict valueForKey:curType] isEqualToString:@""])) {
         [aPasteboard setString:[pasteboardOutputDict valueForKey:curType]
                        forType:curType];
-      } else if (([curType isEqualToString:[UTIHelper
-                                              stringFromPboardType:(NSString*)
-                                                           kUTTypeFileURL]] && !gCreatedFileForFileURL) ||
-                  [curType
-                     isEqualToString:
-                         [UTIHelper
-                             stringFromPboardType:
-                                 (NSString*)kPasteboardTypeFileURLPromise]]) {
-        NSURL* url = GetPasteLocation(aPasteboard);
+      } else if (([curType
+                      isEqualToString:[UTIHelper
+                                          stringFromPboardType:
+                                              (NSString*)kUTTypeFileURL]] &&
+                  !gCreatedFileForFileURL) ||
+                 ([curType
+                      isEqualToString:
+                          [UTIHelper
+                              stringFromPboardType:
+                                  (NSString*)kPasteboardTypeFileURLPromise]] &&
+                  !gCreatedFileForFilePromise)) {
+        NSURL* url = GetPasteLocation(
+            aPasteboard,
+            [curType
+                isEqualToString:[UTIHelper
+                                    stringFromPboardType:(NSString*)
+                                                             kUTTypeFileURL]]);
         nsCOMPtr<nsILocalFileMac> macLocalFile;
         if (NS_FAILED(NS_NewLocalFileWithCFURL((__bridge CFURLRef)url,
                                                getter_AddRefs(macLocalFile)))) {
@@ -3931,6 +3944,8 @@ static NSURL* GetPasteLocation(NSPasteboard* aPasteboard) {
             [aPasteboard setString:[[NSURL fileURLWithPath:filePath] absoluteString]
                            forType:curType];
             gCreatedFileForFileURL = true;
+          } else {
+            gCreatedFileForFilePromise = true;
           }
         }
       } else if ([curType isEqualToString:[UTIHelper
