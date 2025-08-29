@@ -860,8 +860,6 @@ void gfxTextRun::GetLineHeightMetrics(Range aRange, gfxFloat& aAscent,
   aDescent = accumulatedMetrics.mDescent;
 }
 
-#define MEASUREMENT_BUFFER_SIZE 100
-
 void gfxTextRun::ClassifyAutoHyphenations(uint32_t aStart, Range aRange,
                                           nsTArray<HyphenType>& aHyphenBuffer,
                                           HyphenationState* aWordState) {
@@ -943,9 +941,10 @@ uint32_t gfxTextRun::BreakAndMeasureText(
 
   NS_ASSERTION(aStart + aMaxLength <= GetLength(), "Substring out of range");
 
-  Range bufferRange(
-      aStart, aStart + std::min<uint32_t>(aMaxLength, MEASUREMENT_BUFFER_SIZE));
-  PropertyProvider::Spacing spacingBuffer[MEASUREMENT_BUFFER_SIZE];
+  constexpr uint32_t kMeasurementBufferSize = 100;
+  Range bufferRange(aStart,
+                    aStart + std::min(aMaxLength, kMeasurementBufferSize));
+  PropertyProvider::Spacing spacingBuffer[kMeasurementBufferSize];
   bool haveSpacing = !!(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING);
   if (haveSpacing) {
     GetAdjustedSpacing(this, bufferRange, aProvider, spacingBuffer);
@@ -999,7 +998,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
       uint32_t oldHyphenBufferLength = hyphenBuffer.Length();
       bufferRange.start = i;
       bufferRange.end =
-          std::min(aStart + aMaxLength, i + MEASUREMENT_BUFFER_SIZE);
+          std::min(aStart + aMaxLength, i + kMeasurementBufferSize);
       // For spacing, we always overwrite the old data with the newly
       // fetched one. However, for hyphenation, hyphenation data sometimes
       // depends on the context in every word (if "hyphens: auto" is set).
