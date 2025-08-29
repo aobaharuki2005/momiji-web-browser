@@ -564,21 +564,21 @@ private fun BookmarksListTopBar(
     val showSortMenu by store.observeAsState(store.state.sortMenuShown) { it.sortMenuShown }
 
     val backgroundColor = if (selectedItems.isEmpty()) {
-        FirefoxTheme.colors.layer1
+        MaterialTheme.colorScheme.surface
     } else {
-        FirefoxTheme.colors.layerAccent
+        MaterialTheme.colorScheme.primary
     }
 
     val textColor = if (selectedItems.isEmpty()) {
-        FirefoxTheme.colors.textPrimary
+        MaterialTheme.colorScheme.onSurface
     } else {
-        FirefoxTheme.colors.textOnColorPrimary
+        MaterialTheme.colorScheme.inverseOnSurface
     }
 
     val iconColor = if (selectedItems.isEmpty()) {
-        FirefoxTheme.colors.textPrimary
+        MaterialTheme.colorScheme.onSurface
     } else {
-        FirefoxTheme.colors.iconOnColor
+        MaterialTheme.colorScheme.inverseOnSurface
     }
 
     Box {
