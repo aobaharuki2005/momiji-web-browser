@@ -52,6 +52,11 @@ object FeatureFlags {
     val onboardingFeatureEnabled = !Config.channel.isDebug
 
     /**
+     * Whether the composable toolbar should be allowed in the current build.
+     */
+    val composableToolbar = Config.channel.isNightlyOrDebug
+
+    /**
      * Enables the "Discover more" stories screen.
      */
     const val DISCOVER_MORE_STORIES = false
