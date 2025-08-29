@@ -26,8 +26,6 @@ module.exports = [
       "browser/components/asrouter/content-src/styles/_feature-callout.scss",
       "browser/components/backup/content/archive.css",
       "browser/components/contextualidentity/content/usercontext.css",
-      "browser/components/extensions/extension-popup-panel.css",
-      "browser/components/extensions/extension.css",
       "browser/components/firefoxview/card-container.css",
       "browser/components/firefoxview/fxview-tab-row.css",
       "browser/components/firefoxview/history.css",

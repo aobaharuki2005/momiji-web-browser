@@ -381,5 +381,12 @@ module.exports = {
         ],
       },
     },
+    {
+      // CSS files under browser/components/extensions are not using design tokens
+      files: ["browser/components/extensions/**"],
+      rules: {
+        "stylelint-plugin-mozilla/use-border-radius-tokens": false,
+      },
+    },
   ],
 };

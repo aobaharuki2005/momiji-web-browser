@@ -85,7 +85,7 @@ h2 {
   color: var(--button-text-color-primary);
   font-weight: bold;
   /* Use a large border-radius to get semi-circles on the sides. */
-  border-radius: 1000px;
+  border-radius: var(--border-radius-circle);
   padding: 2px 6px;
   content: attr(badge-count);
   text-align: center;
@@ -538,7 +538,7 @@ button.addon-detail-description-toggle {
   display: flex;
   padding: var(--card-padding);
   border: 1px solid var(--in-content-box-border-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   margin-bottom: var(--card-padding);
   flex-direction: column;
 }
@@ -630,7 +630,7 @@ button.addon-detail-description-toggle {
   display: block;
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   background-color: var(--color-accent-primary);
 }
 
@@ -807,7 +807,7 @@ section:not(:empty) ~ #empty-addons-message {
     display: block;
     width: 5px;
     height: 5px;
-    border-radius: 50%;
+    border-radius: var(--border-radius-circle);
     min-width: auto;
     padding: 0;
     /* move the badged dot into the top-end (right in ltr, left in rtl) corner. */
