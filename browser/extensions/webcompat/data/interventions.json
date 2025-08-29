@@ -3079,7 +3079,7 @@
     },
     "interventions": [
       {
-        "platforms": ["all"],
+        "platforms": ["desktop"],
         "content_scripts": {
           "css": ["bug1902405-soffice.11st.co.kr-hide-browser-warning.css"]
         }
