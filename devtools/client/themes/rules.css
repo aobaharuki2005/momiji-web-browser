@@ -198,16 +198,16 @@
 
 .ruleview-computedlist,
 [hidden]:is(
-    .ruleview-expandable-container,
-    .ruleview-overridden-items,
-    .ruleview-overridden-rule-filter,
-    .ruleview-warning,
-    .ruleview-inactive-css-warning,
-    .ruleview-compatibility-warning,
-    .ruleview-used,
-    .ruleview-invalid-at-computed-value-time-warning,
+  .ruleview-expandable-container,
+  .ruleview-overridden-items,
+  .ruleview-overridden-rule-filter,
+  .ruleview-warning,
+  .ruleview-inactive-css-warning,
+  .ruleview-compatibility-warning,
+  .ruleview-used,
+  .ruleview-invalid-at-computed-value-time-warning,
 
-  ),
+),
 .ruleview-overridden .inspector-grid {
   display: none;
 }

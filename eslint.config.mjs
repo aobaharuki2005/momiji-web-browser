@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import sdl from "@microsoft/eslint-plugin-sdl";
-import eslintConfigPrettier from "eslint-config-prettier";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 import html from "eslint-plugin-html";
 import importPlugin from "eslint-plugin-import";
 import json from "eslint-plugin-json";
