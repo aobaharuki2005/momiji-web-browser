@@ -397,15 +397,12 @@ void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
     return;
   }
 
-  // If we are tranferring something, we cannot call 'Read()' more than once.
+  // If we are transferring something, we cannot call 'Read()' more than once.
   if (mSupportsTransferring) {
-    mBlobImplArray.Clear();
-    mWasmModuleArray.Clear();
-    mClonedSurfaces.Clear();
-    mInputStreamArray.Clear();
-    mVideoFrames.Clear();
-    mEncodedAudioChunks.Clear();
-    mEncodedVideoChunks.Clear();
+#define STMT(_member) (_member).Clear()
+    CLONED_DATA_MEMBERS
+#undef STMT
+
     Clear();
   }
 }
