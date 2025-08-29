@@ -29,6 +29,9 @@
 #  include "mozilla/layers/CompositeProcessD3D11FencesHolderMap.h"
 #  include "mozilla/layers/GpuProcessD3D11TextureMap.h"
 #endif
+#ifdef XP_MACOSX
+#  include "mozilla/gfx/MacIOSurface.h"
+#endif
 
 namespace mozilla::webgpu {
 
@@ -486,10 +489,15 @@ ExternalTextureSourceHost::ExternalTextureSourceHost(
                                          dxgiDesc);
         } break;
 
+        case layers::RemoteDecoderVideoSubDescriptor::
+            TSurfaceDescriptorMacIOSurface: {
+          return CreateFromMacIOSurfaceDesc(
+              aParent, aDeviceId, aDesc,
+              subDesc.get_SurfaceDescriptorMacIOSurface());
+        } break;
+
         case layers::RemoteDecoderVideoSubDescriptor::T__None:
         case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorDMABuf:
-        case layers::RemoteDecoderVideoSubDescriptor::
-            TSurfaceDescriptorMacIOSurface:
         case layers::RemoteDecoderVideoSubDescriptor::
             TSurfaceDescriptorDcompSurface: {
           gfxCriticalErrorOnce()
@@ -879,6 +887,157 @@ ExternalTextureSourceHost::CreateFromDXGIYCbCrDesc(
       aDesc.mSampleTransform, aDesc.mLoadTransform);
   source.mFenceId = Some(aSd.fencesHolderId());
   return source;
+#else
+  MOZ_CRASH();
+#endif
+}
+
+/* static */ ExternalTextureSourceHost
+ExternalTextureSourceHost::CreateFromMacIOSurfaceDesc(
+    WebGPUParent* aParent, RawId aDeviceId,
+    const ExternalTextureSourceDescriptor& aDesc,
+    const layers::SurfaceDescriptorMacIOSurface& aSd) {
+#ifdef XP_MACOSX
+  const RefPtr<MacIOSurface> ioSurface = MacIOSurface::LookupSurface(
+      aSd.surfaceId(), !aSd.isOpaque(), aSd.yUVColorSpace());
+  if (!ioSurface) {
+    gfxCriticalErrorOnce() << "Failed to lookup MacIOSurface";
+    aParent->ReportError(aDeviceId, dom::GPUErrorFilter::Internal,
+                         "Failed to lookup MacIOSurface"_ns);
+
+    return CreateError();
+  }
+
+  // aSd.gpuFence should be null. It is only required to synchronize GPU reads
+  // from an IOSurface following GPU writes, e.g. when an IOSurface is used for
+  // WebGPU presentation. In our case the IOSurface has been written to from
+  // the CPU or obtained from a CVPixelBuffer, and no additional synchronization
+  // is required.
+  MOZ_ASSERT(!aSd.gpuFence());
+
+  const gfx::SurfaceFormat format = ioSurface->GetFormat();
+  const gfx::YUVRangedColorSpace colorSpace = gfx::ToYUVRangedColorSpace(
+      ioSurface->GetYUVColorSpace(), ioSurface->GetColorRange());
+
+  auto planeSize = [ioSurface](auto plane) {
+    return ffi::WGPUExtent3d{
+        .width = static_cast<uint32_t>(ioSurface->GetDevicePixelWidth(plane)),
+        .height = static_cast<uint32_t>(ioSurface->GetDevicePixelHeight(plane)),
+        .depth_or_array_layers = 1,
+    };
+  };
+  auto yuvPlaneFormat =
+      [ioSurface](auto numComponents) -> ffi::WGPUTextureFormat {
+    switch (numComponents) {
+      case 1:
+        switch (ioSurface->GetColorDepth()) {
+          case gfx::ColorDepth::COLOR_8:
+            return {ffi::WGPUTextureFormat_R8Unorm};
+          case gfx::ColorDepth::COLOR_10:
+          case gfx::ColorDepth::COLOR_12:
+          case gfx::ColorDepth::COLOR_16:
+            return {ffi::WGPUTextureFormat_R16Unorm};
+        }
+      case 2:
+        switch (ioSurface->GetColorDepth()) {
+          case gfx::ColorDepth::COLOR_8:
+            return {ffi::WGPUTextureFormat_Rg8Unorm};
+          case gfx::ColorDepth::COLOR_10:
+          case gfx::ColorDepth::COLOR_12:
+          case gfx::ColorDepth::COLOR_16:
+            return {ffi::WGPUTextureFormat_Rg16Unorm};
+        }
+      default:
+        MOZ_CRASH("Invalid numComponents");
+    }
+  };
+
+  AutoTArray<ffi::WGPUTextureDescriptor, 2> textureDescs;
+  switch (format) {
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::R8G8B8X8:
+      textureDescs.AppendElement(ffi::WGPUTextureDescriptor{
+          .size = planeSize(0),
+          .mip_level_count = 1,
+          .sample_count = 1,
+          .dimension = ffi::WGPUTextureDimension_D2,
+          .format = {ffi::WGPUTextureFormat_Rgba8Unorm},
+          .usage = WGPUTextureUsages_TEXTURE_BINDING,
+          .view_formats = {},
+      });
+      break;
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8:
+      textureDescs.AppendElement(ffi::WGPUTextureDescriptor{
+          .size = planeSize(0),
+          .mip_level_count = 1,
+          .sample_count = 1,
+          .dimension = ffi::WGPUTextureDimension_D2,
+          .format = {ffi::WGPUTextureFormat_Bgra8Unorm},
+          .usage = WGPUTextureUsages_TEXTURE_BINDING,
+          .view_formats = {},
+      });
+      break;
+    case gfx::SurfaceFormat::NV12:
+    case gfx::SurfaceFormat::P010: {
+      textureDescs.AppendElement(ffi::WGPUTextureDescriptor{
+          .size = planeSize(0),
+          .mip_level_count = 1,
+          .sample_count = 1,
+          .dimension = ffi::WGPUTextureDimension_D2,
+          .format = yuvPlaneFormat(1),
+          .usage = WGPUTextureUsages_TEXTURE_BINDING,
+          .view_formats = {},
+      });
+      textureDescs.AppendElement(ffi::WGPUTextureDescriptor{
+          .size = planeSize(1),
+          .mip_level_count = 1,
+          .sample_count = 1,
+          .dimension = ffi::WGPUTextureDimension_D2,
+          .format = yuvPlaneFormat(2),
+          .usage = WGPUTextureUsages_TEXTURE_BINDING,
+          .view_formats = {},
+      });
+    } break;
+    default:
+      gfxCriticalErrorOnce() << "Unsupported IOSurface format: " << format;
+      aParent->ReportError(aDeviceId, dom::GPUErrorFilter::Internal,
+                           nsPrintfCString("Unsupported IOSurface format: %s",
+                                           mozilla::ToString(format).c_str()));
+      return CreateError();
+  }
+
+  AutoTArray<RawId, 2> usedTextureIds;
+  AutoTArray<RawId, 2> usedViewIds;
+  for (size_t i = 0; i < textureDescs.Length(); i++) {
+    usedTextureIds.AppendElement(aDesc.mTextureIds[i]);
+    usedViewIds.AppendElement(aDesc.mViewIds[i]);
+    {
+      ErrorBuffer error;
+      ffi::wgpu_server_device_import_texture_from_iosurface(
+          aParent->GetContext(), aDeviceId, aDesc.mTextureIds[i],
+          &textureDescs[i], ioSurface->GetIOSurfaceID(), i, error.ToFFI());
+      // From here on there's no need to return early with `CreateError()` in
+      // case of an error, as an error creating a texture or view will be
+      // propagated to any views or external textures created from them.
+      // Since we have full control over the creation of this texture, any
+      // validation error we encounter should be treated as an internal error.
+      error.CoerceValidationToInternal();
+      aParent->ForwardError(error);
+    }
+    ffi::WGPUTextureViewDescriptor viewDesc{};
+    {
+      ErrorBuffer error;
+      ffi::wgpu_server_texture_create_view(
+          aParent->GetContext(), aDeviceId, aDesc.mTextureIds[i],
+          aDesc.mViewIds[i], &viewDesc, error.ToFFI());
+      error.CoerceValidationToInternal();
+      aParent->ForwardError(error);
+    }
+  }
+  return ExternalTextureSourceHost(usedTextureIds, usedViewIds, aDesc.mSize,
+                                   format, colorSpace, aDesc.mSampleTransform,
+                                   aDesc.mLoadTransform);
 #else
   MOZ_CRASH();
 #endif

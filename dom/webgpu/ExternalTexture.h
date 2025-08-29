@@ -254,6 +254,10 @@ class ExternalTextureSourceHost {
       WebGPUParent* aParent, RawId aDeviceId, RawId aQueueId,
       const ExternalTextureSourceDescriptor& aDesc,
       const layers::SurfaceDescriptorDXGIYCbCr& aSd);
+  static ExternalTextureSourceHost CreateFromMacIOSurfaceDesc(
+      WebGPUParent* aParent, RawId aDeviceId,
+      const ExternalTextureSourceDescriptor& aDesc,
+      const layers::SurfaceDescriptorMacIOSurface& aSd);
 
   // Creates an external texture source in an error state that will be
   // propagated to any external textures created from it.

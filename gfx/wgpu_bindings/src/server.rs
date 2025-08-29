@@ -3224,3 +3224,84 @@ pub unsafe extern "C" fn wgpu_server_device_wait_fence_from_shared_handle(
     let res = hal_queue.as_raw().Wait(&fence, fence_value);
     res.is_ok()
 }
+
+/// Imports a Metal texture from the specified plane of an IOSurface.
+#[cfg(target_os = "macos")]
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_server_device_import_texture_from_iosurface(
+    global: &Global,
+    device_id: id::DeviceId,
+    id_in: id::TextureId,
+    desc: &wgt::TextureDescriptor<Option<&nsACString>, crate::FfiSlice<wgt::TextureFormat>>,
+    io_surface_id: u32,
+    plane: usize,
+    mut error_buf: ErrorBuffer,
+) {
+    let desc = desc.map_label_and_view_formats(|l| wgpu_string(*l), |v| v.as_slice().to_vec());
+
+    let surface = io_surface::lookup(io_surface_id);
+
+    let Some(hal_device) = global.device_as_hal::<wgc::api::Metal>(device_id) else {
+        emit_critical_invalid_note("metal device");
+        global.create_texture_error(Some(id_in), &desc);
+        return;
+    };
+    let metal_device = hal_device.raw_device().lock();
+
+    let metal_desc = metal::TextureDescriptor::new();
+    let texture_type = match desc.dimension {
+        wgt::TextureDimension::D1 => metal::MTLTextureType::D1,
+        wgt::TextureDimension::D2 => {
+            if desc.sample_count > 1 {
+                metal_desc.set_sample_count(desc.sample_count as u64);
+                metal::MTLTextureType::D2Multisample
+            } else if desc.size.depth_or_array_layers > 1 {
+                metal_desc.set_array_length(desc.size.depth_or_array_layers as u64);
+                metal::MTLTextureType::D2Array
+            } else {
+                metal::MTLTextureType::D2
+            }
+        }
+        wgt::TextureDimension::D3 => {
+            metal_desc.set_depth(desc.size.depth_or_array_layers as u64);
+            metal::MTLTextureType::D3
+        }
+    };
+    metal_desc.set_texture_type(texture_type);
+    let format = match desc.format {
+        wgt::TextureFormat::Rgba8Unorm => metal::MTLPixelFormat::RGBA8Unorm,
+        wgt::TextureFormat::Bgra8Unorm => metal::MTLPixelFormat::BGRA8Unorm,
+        wgt::TextureFormat::R8Unorm => metal::MTLPixelFormat::R8Unorm,
+        wgt::TextureFormat::Rg8Unorm => metal::MTLPixelFormat::RG8Unorm,
+        wgt::TextureFormat::R16Unorm => metal::MTLPixelFormat::R16Unorm,
+        wgt::TextureFormat::Rg16Unorm => metal::MTLPixelFormat::RG16Unorm,
+        _ => unreachable!(),
+    };
+    metal_desc.set_pixel_format(format);
+    metal_desc.set_width(desc.size.width as u64);
+    metal_desc.set_height(desc.size.height as u64);
+    metal_desc.set_mipmap_level_count(desc.mip_level_count as u64);
+    metal_desc.set_storage_mode(metal::MTLStorageMode::Private);
+    metal_desc.set_usage(metal::MTLTextureUsage::ShaderRead);
+
+    let metal_texture: metal::Texture = msg_send![
+        *metal_device,
+        newTextureWithDescriptor:metal_desc iosurface:surface.obj plane:plane
+    ];
+
+    let hal_texture = <wgh::api::Metal as wgh::Api>::Device::texture_from_raw(
+        metal_texture,
+        desc.format,
+        texture_type,
+        desc.array_layer_count(),
+        desc.mip_level_count,
+        wgh::CopyExtent::map_extent_to_copy_size(&desc.size, desc.dimension),
+    );
+
+    let (_, error) = unsafe {
+        global.create_texture_from_hal(Box::new(hal_texture), device_id, &desc, Some(id_in))
+    };
+    if let Some(err) = error {
+        error_buf.init(err, device_id);
+    }
+}
