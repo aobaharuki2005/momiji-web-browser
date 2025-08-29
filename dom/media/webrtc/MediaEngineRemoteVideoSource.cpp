@@ -909,8 +909,13 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
       // DesktopCaptureImpl polls for frames and so must know the framerate to
       // capture at. This is signaled through CamerasParent as the capability's
       // maxFPS. Note that DesktopCaptureImpl does not expose any capabilities.
-      aCapability.maxFPS =
+      constexpr int32_t nativeRefreshRate = 60;
+      const int32_t constrainedFramerate =
           SaturatingCast<int32_t>(std::lround(c.mFrameRate.Get(aPrefs.mFPS)));
+      aCapability.maxFPS =
+          aCalculate == kFeasibility
+              ? constrainedFramerate
+              : std::max(constrainedFramerate, nativeRefreshRate);
       return true;
     }
     default:
