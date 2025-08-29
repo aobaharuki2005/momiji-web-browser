@@ -325,6 +325,9 @@ export class RealtimeSuggestProvider extends SuggestProvider {
                 cacheable: true,
               },
               input: queryContext.searchString,
+              attributes: {
+                primary: "",
+              },
             },
             {
               ...splitButtonMain,
