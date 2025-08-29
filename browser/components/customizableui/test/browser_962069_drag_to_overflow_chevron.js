@@ -12,14 +12,14 @@ add_task(async function () {
   BrowserTestUtils.startLoadingURIString(gBrowser, "http://mochi.test:8888/");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
+  originalWindowWidth = window.outerWidth;
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   ok(
     !navbar.hasAttribute("overflowing"),
     "Should start with a non-overflowing toolbar."
   );
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
-  originalWindowWidth = ensureToolbarOverflow(window, false);
-
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
@@ -77,5 +77,4 @@ add_task(async function () {
     !navbar.hasAttribute("overflowing"),
     "Should not have an overflowing toolbar."
   );
-  CustomizableUI.reset();
 });
