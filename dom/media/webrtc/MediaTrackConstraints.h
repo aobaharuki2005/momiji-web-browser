@@ -370,6 +370,10 @@ class MediaConstraintsHelper {
       const MediaDevice* aMediaDevice);
 
   static void LogConstraints(const NormalizedConstraintSet& aConstraints);
+
+  static Maybe<dom::VideoResizeModeEnum> GetResizeMode(
+      const NormalizedConstraintSet& aConstraints,
+      const MediaEnginePrefs& aPrefs);
 };
 
 }  // namespace mozilla

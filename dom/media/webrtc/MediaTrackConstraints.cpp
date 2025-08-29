@@ -573,4 +573,31 @@ void MediaConstraintsHelper::LogConstraints(
   }());
 }
 
+/* static */
+Maybe<VideoResizeModeEnum> MediaConstraintsHelper::GetResizeMode(
+    const NormalizedConstraintSet& aConstraints,
+    const MediaEnginePrefs& aPrefs) {
+  if (!aPrefs.mResizeModeEnabled) {
+    return Nothing();
+  }
+  auto defaultResizeMode = aPrefs.mResizeMode;
+  nsString defaultResizeModeString =
+      NS_ConvertASCIItoUTF16(dom::GetEnumString(defaultResizeMode));
+  uint32_t distanceToDefault = MediaConstraintsHelper::FitnessDistance(
+      Some(defaultResizeModeString), aConstraints.mResizeMode);
+  if (distanceToDefault == 0) {
+    return Some(defaultResizeMode);
+  }
+  VideoResizeModeEnum otherResizeMode =
+      (defaultResizeMode == VideoResizeModeEnum::None)
+          ? VideoResizeModeEnum::Crop_and_scale
+          : VideoResizeModeEnum::None;
+  nsString otherResizeModeString =
+      NS_ConvertASCIItoUTF16(dom::GetEnumString(otherResizeMode));
+  uint32_t distanceToOther = MediaConstraintsHelper::FitnessDistance(
+      Some(otherResizeModeString), aConstraints.mResizeMode);
+  return Some((distanceToDefault <= distanceToOther) ? defaultResizeMode
+                                                     : otherResizeMode);
+}
+
 }  // namespace mozilla
