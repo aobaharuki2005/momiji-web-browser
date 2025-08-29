@@ -183,17 +183,19 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   // incoming images. Cameras IPC thread only.
   webrtc::VideoFrameBufferPool mRescalingBufferPool;
 
-  // The intrinsic size of the latest captured image, so we can feed black
-  // images of the same size while stopped.
+  // The intrinsic size of the latest processed image, after cropping and
+  // scaling down. So we can update settings on main thread in response to size
+  // changes.
   // Set under mMutex on the Cameras IPC thread. Accessed under one of the two.
-  gfx::IntSize mImageSize = gfx::IntSize(0, 0);
+  gfx::IntSize mScaledImageSize = gfx::IntSize(0, 0);
 
   struct AtomicBool {
     Atomic<bool> mValue;
   };
 
   // True when resolution settings have been updated from a real frame's
-  // resolution. Threadsafe.
+  // resolution. Threadsafe. Set to false on the owning thread. Set to true on
+  // main thread.
   const RefPtr<media::Refcountable<AtomicBool>> mSettingsUpdatedByFrame;
 
   // The current settings of this source.
