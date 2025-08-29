@@ -1207,6 +1207,16 @@ export var Policies = {
           false // preserveAllowListSettings
         );
         ContentBlockingPrefs.matchCBCategory();
+        // We don't want to lock the new exceptions UI unless
+        // that policy was explicitly set.
+        if (param.Category == "strict") {
+          Services.prefs.unlockPref(
+            "privacy.trackingprotection.allow_list.baseline.enabled"
+          );
+          Services.prefs.unlockPref(
+            "privacy.trackingprotection.allow_list.convenience.enabled"
+          );
+        }
       }
     },
     onBeforeUIStartup(manager, param) {
