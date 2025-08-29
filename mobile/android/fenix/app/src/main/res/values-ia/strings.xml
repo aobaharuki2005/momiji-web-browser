@@ -1390,8 +1390,16 @@
   <string name="tab_tray_menu_item_close">Clauder tote le schedas</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Adder al marcapaginas</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Adder le schedas seligite al marcapaginas</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Clauder</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Clauder schedas seligite</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">Compartir</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">Adder al collection</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">Compartir le schedas seligite</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1739,6 +1747,8 @@
   <string name="bookmark_menu_delete_button">Deler</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Salvar</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">Optiones de ordinamento</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Arrangiar per ordine personalitate</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1809,6 +1819,8 @@
   <string name="bookmark_search_button_content_description">Cercar in marcapaginas</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Menu de elementos pro %s</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">Clauder marcapaginas</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Nulle marcapaginas acora</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -3311,6 +3323,8 @@
   <string name="protection_panel_num_trackers_blocked">Traciatores blocate: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Nulle traciatores trovate</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">Le traciatores non es blocate</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Configurationes de confidentialitate e securitate</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
@@ -3338,7 +3352,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Cancellar</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">Cookies e datos de sitos removite</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Cookies e datos de sitos removite</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Connexion secur</string>
   <!-- Text for the connection security panel when the site is not secure. -->

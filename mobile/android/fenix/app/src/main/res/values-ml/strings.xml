@@ -3159,7 +3159,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">റദ്ദാക്കുക</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">കുക്കികളും വെബുസ്ഥാന ദത്തയും മായച്ചു</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">കുക്കികളും വെബുസ്ഥാന ദത്തയും മായച്ചു</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">സുരക്ഷിതമായ സമ്പൎക്കം</string>
   <!-- Text for the connection security panel when the site is not secure. -->

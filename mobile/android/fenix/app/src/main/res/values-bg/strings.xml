@@ -2423,7 +2423,7 @@
   <!-- Bullet point 1 for "Increased Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_increased_protection_info_1">Използва се избран от вас доставчик</string>
   <!-- Bullet point 2 for "Increased Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_increased_protection_info_2">Използва се вашият стандартен DNS (от доставчика ви на интернет), само ако има проблем със сигурния DNS.</string>
+  <string name="preference_doh_increased_protection_info_2">Използва се вашият стандартен DNS (от доставчика ви на интернет), само ако има проблем със сигурния DNS</string>
   <!-- Title displayed for "Max Protection" option under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection">Максимална защита</string>
   <!-- Summary displayed for "Max Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
@@ -2433,19 +2433,19 @@
   <!-- Bullet point 2 for "Max Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection_info_2">Винаги да се предупреждава, ако не е наличен защитен DNS</string>
   <!-- Bullet point 3 for "Max Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_max_protection_info_3">Ако защитеният DNS не е наличен, сайтовете няма да зареждат или да работят правилно.</string>
+  <string name="preference_doh_max_protection_info_3">Ако защитеният DNS не е наличен, сайтовете няма да зареждат или да работят правилно</string>
   <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off">Изключено</string>
   <!-- Summary displayed for "Off" option under "DNS over HTTPS" -->
-  <string name="preference_doh_off_summary">Използва се вашият DNS по подразбиране (от доставчика ви на Интернет).</string>
+  <string name="preference_doh_off_summary">Използва се вашият DNS по подразбиране (от доставчика ви на Интернет)</string>
   <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
-  <string name="preference_doh_choose_provider">Изберете доставчик</string>
+  <string name="preference_doh_choose_provider">Избор на доставчик</string>
   <!-- Text displayed for "Default provider" under "DNS over HTTPS" providers -->
   <string name="preference_doh_provider_default">(по подразбиране)</string>
   <!-- Text displayed for "Custom" under "DNS over HTTPS" providers -->
   <string name="preference_doh_provider_custom">По избор</string>
   <!-- Text displayed for "Custom provider" dialog under "DNS over HTTPS" -->
-  <string name="preference_doh_provider_custom_dialog_title">Персонализиран доставчик</string>
+  <string name="preference_doh_provider_custom_dialog_title">Личен доставчик</string>
   <!-- Text displayed above provider textfield under "DNS over HTTPS" -->
   <string name="preference_doh_provider_custom_dialog_textfield">Доставчик</string>
   <!-- Error text displayed for provider textfield under "DNS over HTTPS" if the URL does not start with "https://" or its scheme is not "https" -->
@@ -2603,7 +2603,7 @@
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Защитете запазените пароли</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
-  <string name="logins_warning_dialog_message_2">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените пароли от достъп, ако някой друг има вашето устройство.</string>
+  <string name="logins_warning_dialog_message_2">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените пароли от достъп, ако някой друг има достъп до вашето устройство.</string>
   <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_later">По-късно</string>
   <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -3352,7 +3352,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Отказ</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">Бисквитките и данните на сайта са премахнати</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Бисквитките и данните на сайта са премахнати</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Защитена връзка</string>
   <!-- Text for the connection security panel when the site is not secure. -->
