@@ -56,6 +56,7 @@ import mozilla.components.compose.base.button.FloatingActionButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.modifier.thenConditional
+import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.text.Text
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
@@ -567,14 +568,11 @@ private fun showDeleteSnackbar(
     undoAction: () -> Unit,
 ) {
     coroutineScope.launch {
-        val snackbarResult = snackbarHostState.showSnackbar(
+        snackbarHostState.displaySnackbar(
             message = getDeleteSnackBarMessage(selectedItems, context),
             actionLabel = context.getString(R.string.download_undo_delete_snackbar_action),
-            duration = SnackbarDuration.Short,
+            onActionPerformed = { undoAction.invoke() },
         )
-        if (snackbarResult == SnackbarResult.ActionPerformed) {
-            undoAction.invoke()
-        }
     }
 }
 
@@ -724,14 +722,14 @@ private fun DownloadsScreenPreviews(
                 downloadsStore = downloadsStore,
                 onItemClick = {
                     scope.launch {
-                        snackbarHostState.showSnackbar(
+                        snackbarHostState.displaySnackbar(
                             message = "Item ${it.fileName} clicked",
                         )
                     }
                 },
                 onNavigationIconClick = {
                     scope.launch {
-                        snackbarHostState.showSnackbar(
+                        snackbarHostState.displaySnackbar(
                             message = "Navigation Icon clicked",
                         )
                     }

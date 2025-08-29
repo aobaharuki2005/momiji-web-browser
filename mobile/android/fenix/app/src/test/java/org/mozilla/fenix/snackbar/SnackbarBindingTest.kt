@@ -12,6 +12,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
 import com.google.android.material.snackbar.Snackbar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +39,7 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,7 +72,10 @@ import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.TranslationI
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.UserAccountAuthenticated
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.WebCompatReportSent
 import org.mozilla.fenix.components.metrics.MetricsUtils.BookmarkAction.Source
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.tabClosedUndoMessage
+import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.getSnackbarTimeout
 
 @RunWith(AndroidJUnit4::class)
 class SnackbarBindingTest {
@@ -80,6 +86,15 @@ class SnackbarBindingTest {
     private val snackbarDelegate: FenixSnackbarDelegate = mock()
     private val navController: NavController = mock()
     private val tabsUseCases: TabsUseCases = mock()
+    private var settings: Settings = mock()
+
+    @Before
+    fun setup() {
+        settings = mockk(relaxed = true) {
+            every { accessibilityServicesEnabled } returns false
+        }
+        every { testContext.settings() } returns settings
+    }
 
     @Test
     fun `GIVEN translation is in progress for the current selected session WHEN snackbar state is updated to translation in progress THEN display the snackbar`() = runTestOnMain {
@@ -517,7 +532,7 @@ class SnackbarBindingTest {
             text = eq(testContext.getString(R.string.download_item_status_failed)),
             subText = eq("fileName"),
             subTextOverflow = eq(TextOverflow.MiddleEllipsis),
-            duration = eq(DOWNLOAD_SNACKBAR_DURATION_MS),
+            duration = eq(testContext.getSnackbarTimeout(hasAction = true).value.toInt()),
             isError = eq(false),
             action = eq(testContext.getString(R.string.download_failed_snackbar_action_details)),
             listener = snackbarAction.capture(),
@@ -558,7 +573,7 @@ class SnackbarBindingTest {
             text = eq(testContext.getString(R.string.download_completed_snackbar)),
             subText = eq("fileName"),
             subTextOverflow = eq(TextOverflow.MiddleEllipsis),
-            duration = eq(DOWNLOAD_SNACKBAR_DURATION_MS),
+            duration = eq(testContext.getSnackbarTimeout(hasAction = true).value.toInt()),
             isError = eq(false),
             action = eq(testContext.getString(R.string.download_completed_snackbar_action_open)),
             listener = snackbarAction.capture(),
@@ -589,7 +604,7 @@ class SnackbarBindingTest {
 
         verify(snackbarDelegate).show(
             text = "No app found to open  files",
-            duration = DOWNLOAD_SNACKBAR_DURATION_MS,
+            duration = testContext.getSnackbarTimeout(hasAction = false).value.toInt(),
             isError = false,
         )
     }
@@ -616,7 +631,7 @@ class SnackbarBindingTest {
             text = eq(testContext.getString(R.string.download_in_progress_snackbar)),
             subText = eq(null),
             subTextOverflow = eq(null),
-            duration = eq(DOWNLOAD_SNACKBAR_DURATION_MS),
+            duration = eq(testContext.getSnackbarTimeout(hasAction = true).value.toInt()),
             isError = eq(false),
             action = eq(testContext.getString(R.string.download_in_progress_snackbar_action_details)),
             listener = snackbarAction.capture(),
@@ -643,7 +658,7 @@ class SnackbarBindingTest {
             text = eq(testContext.getString(R.string.webcompat_reporter_success_snackbar_text)),
             subText = eq(null),
             subTextOverflow = eq(null),
-            duration = eq(WEBCOMPAT_SNACKBAR_DURATION_MS),
+            duration = eq(testContext.getSnackbarTimeout(hasAction = true).value.toInt()),
             isError = eq(false),
             action = eq(testContext.getString(R.string.webcompat_reporter_dismiss_success_snackbar_text)),
             listener = snackbarAction.capture(),
