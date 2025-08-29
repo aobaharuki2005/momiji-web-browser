@@ -1855,6 +1855,7 @@
     "interventions": [
       {
         "platforms": ["all"],
+        "max_version": 142,
         "content_scripts": {
           "css": ["bug1886616-www.six-group.com-select-fix.css"]
         }
