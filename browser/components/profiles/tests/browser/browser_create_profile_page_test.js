@@ -545,3 +545,66 @@ add_task(async function test_new_profile_delete_telemetry() {
     }
   );
 });
+
+add_task(async function test_profile_age_redirect() {
+  if (!AppConstants.MOZ_SELECTABLE_PROFILES) {
+    // `mochitest-browser` suite `add_task` does not yet support
+    // `properties.skip_if`.
+    ok(true, "Skipping because !AppConstants.MOZ_SELECTABLE_PROFILES");
+    return;
+  }
+  await setup();
+
+  // We can't easily mock out the response from ProfileAge.sys.mjs because
+  // asrouter uses it early in startup, and the value from times.json is
+  // cached. Instead, in automation we don't automatically call the redirect
+  // function; we allow it to be called with a timestamp to verify the logic.
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:newprofile",
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        let newProfileCard =
+          content.document.querySelector("new-profile-card").wrappedJSObject;
+
+        await ContentTaskUtils.waitForCondition(
+          () => newProfileCard.initialized,
+          "Waiting for new-profile-card to be initialized"
+        );
+
+        await newProfileCard.updateComplete;
+
+        const ONE_MINUTE_IN_MS = 60 * 1000;
+        const ONE_HOUR_IN_MS = 60 * ONE_MINUTE_IN_MS;
+
+        // Verify a new (one minute old) profile is not redirected.
+        newProfileCard.maybeRedirectExistingProfile(
+          Date.now() - ONE_MINUTE_IN_MS
+        );
+        Assert.equal(
+          "about:newprofile",
+          content.location.href,
+          "Should not have redirected a profile created one minute ago."
+        );
+
+        // Verify we redirect an older profile (kick off the redirect here
+        // but verify outside the spawn call to prevent an error caused by
+        // changing domains / content processes before the spawn resolves)
+        newProfileCard.maybeRedirectExistingProfile(
+          Date.now() - ONE_HOUR_IN_MS
+        );
+      });
+
+      await BrowserTestUtils.waitForCondition(
+        () => browser.documentURI.spec == "about:editprofile"
+      );
+      Assert.equal(
+        "about:editprofile",
+        browser.documentURI.spec,
+        "Should have redirected a profile created more than ten minutes ago."
+      );
+    }
+  );
+});

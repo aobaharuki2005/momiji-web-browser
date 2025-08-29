@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { SelectableProfileService } from "resource:///modules/profiles/SelectableProfileService.sys.mjs";
+import { ProfileAge } from "resource://gre/modules/ProfileAge.sys.mjs";
 
 const lazy = {};
 
@@ -271,14 +272,15 @@ export class ProfilesParent extends JSWindowActorParent {
   }
 
   async #getProfileContent(isDark) {
-    // Make sure SelectableProfileService is initialized
     await SelectableProfileService.init();
     let currentProfile = SelectableProfileService.currentProfile;
+    let profileAge = await ProfileAge();
     let profiles = await SelectableProfileService.getAllProfiles();
     let themes = await this.getSafeForContentThemes(isDark);
     return {
       currentProfile: await currentProfile.toContentSafeObject(),
       profiles: await Promise.all(profiles.map(p => p.toContentSafeObject())),
+      profileCreated: await profileAge.created,
       themes,
       isInAutomation: Cu.isInAutomation,
     };
