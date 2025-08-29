@@ -23,6 +23,8 @@ backup-file-name = { -brand-product-name }Backup
 
 settings-data-backup-header = Backup
 settings-data-backup-toggle = Manage backup
+settings-data-backup-trigger-button = Backup now
+settings-data-backup-in-progress-button = Backup in progress…
 settings-data-backup-scheduled-backups-on = Backup: ON
 settings-data-backup-scheduled-backups-off = Backup: OFF
 settings-data-backup-scheduled-backups-description = Automatically protect your bookmarks, history, and other data. <a data-l10n-name="support-link">Learn more</a>

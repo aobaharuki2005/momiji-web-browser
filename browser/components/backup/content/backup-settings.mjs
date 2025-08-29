@@ -33,6 +33,7 @@ export default class BackupSettings extends MozLitElement {
   static get queries() {
     return {
       scheduledBackupsButtonEl: "#backup-toggle-scheduled-button",
+      triggerBackupButtonEl: "#backup-trigger-button",
       changePasswordButtonEl: "#backup-change-password-button",
       disableBackupEncryptionEl: "disable-backup-encryption",
       disableBackupEncryptionDialogEl: "#disable-backup-encryption-dialog",
@@ -77,6 +78,7 @@ export default class BackupSettings extends MozLitElement {
       lastBackupDate: null,
       lastBackupFileName: "",
       supportBaseLink: "",
+      backupInProgress: false,
     };
     this.recoveryInProgress = false;
     this.recoveryErrorCode = 0;
@@ -146,6 +148,14 @@ export default class BackupSettings extends MozLitElement {
         );
         break;
     }
+  }
+
+  handleBackupTrigger() {
+    this.dispatchEvent(
+      new CustomEvent("BackupUI:TriggerCreateBackup", {
+        bubbles: true,
+      })
+    );
   }
 
   handleShowScheduledBackups() {
@@ -422,6 +432,11 @@ export default class BackupSettings extends MozLitElement {
       .scheduledBackupsEnabled
       ? "settings-data-backup-scheduled-backups-on"
       : "settings-data-backup-scheduled-backups-off";
+
+    let backupTriggerL10nID = this.backupServiceState.backupInProgress
+      ? "settings-data-backup-in-progress-button"
+      : "settings-data-backup-trigger-button";
+
     return html`<link
         rel="stylesheet"
         href="chrome://browser/skin/preferences/preferences.css"
@@ -442,6 +457,14 @@ export default class BackupSettings extends MozLitElement {
             data-l10n-id=${scheduledBackupsEnabledL10nID}
             class="heading-medium"
           ></span>
+
+          <moz-button
+            id="backup-trigger-button"
+            @click=${this.handleBackupTrigger}
+            data-l10n-id=${backupTriggerL10nID}
+            ?disabled=${this.backupServiceState.backupInProgress ||
+            !this.backupServiceState.scheduledBackupsEnabled}
+          ></moz-button>
 
           <moz-button
             id="backup-toggle-scheduled-button"
