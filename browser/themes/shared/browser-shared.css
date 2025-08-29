@@ -51,7 +51,7 @@ body {
   }
 
   &:not([chromehidden~="toolbar"]) {
-    min-width: 450px;
+    min-width: 500px;
     min-height: 120px;
 
     /* stylelint-disable-next-line media-query-no-invalid */
