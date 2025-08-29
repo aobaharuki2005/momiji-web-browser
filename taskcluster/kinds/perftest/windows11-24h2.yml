@@ -592,6 +592,11 @@ perftest-accessibility:
             --mochitest-binary ${MOZ_FETCHES_DIR}/firefox/firefox.exe
             --flavor mochitest
             --output $MOZ_FETCHES_DIR/../artifacts
+            accessible/tests/browser/performance/browser_addManyIds.js
+            && python3 python/mozperftest/mozperftest/runner.py
+            --mochitest-binary ${MOZ_FETCHES_DIR}/firefox/firefox.exe
+            --flavor mochitest
+            --output $MOZ_FETCHES_DIR/../artifacts
             accessible/tests/browser/performance/browser_addManyNodes.js
             && python3 python/mozperftest/mozperftest/runner.py
             --mochitest-binary ${MOZ_FETCHES_DIR}/firefox/firefox.exe

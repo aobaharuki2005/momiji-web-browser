@@ -3234,42 +3234,16 @@ LocalAccessible* LocalAccessible::ContainerWidget() const {
   return nullptr;
 }
 
-bool LocalAccessible::IsActiveDescendantId(LocalAccessible** aWidget) const {
-  if (!HasOwnContent() || !mContent->HasID()) {
-    return false;
+bool LocalAccessible::IsActiveDescendant(LocalAccessible** aWidget) const {
+  RelatedAccIterator widgets(mDoc, mContent, nsGkAtoms::aria_activedescendant);
+  if (LocalAccessible* widget = widgets.Next()) {
+    if (aWidget) {
+      *aWidget = widget;
+    }
+    return true;
   }
 
-  dom::DocumentOrShadowRoot* docOrShadowRoot =
-      mContent->GetUncomposedDocOrConnectedShadowRoot();
-  if (!docOrShadowRoot) {
-    return false;
-  }
-
-  nsAutoCString selector;
-  selector.AppendPrintf(
-      "[aria-activedescendant=\"%s\"]",
-      NS_ConvertUTF16toUTF8(mContent->GetID()->GetUTF16String()).get());
-  IgnoredErrorResult er;
-
-  dom::Element* widgetElm =
-      docOrShadowRoot->AsNode().QuerySelector(selector, er);
-
-  if (!widgetElm || er.Failed()) {
-    return false;
-  }
-
-  if (widgetElm->IsInclusiveDescendantOf(mContent)) {
-    // Don't want a cyclical descendant relationship. That would be bad.
-    return false;
-  }
-
-  LocalAccessible* widget = mDoc->GetAccessible(widgetElm);
-
-  if (aWidget) {
-    *aWidget = widget;
-  }
-
-  return !!widget;
+  return false;
 }
 
 void LocalAccessible::Announce(const nsAString& aAnnouncement,

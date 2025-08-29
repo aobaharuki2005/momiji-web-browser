@@ -67,7 +67,7 @@ static nsStaticAtom* const kRelationAttrs[] = {
     nsGkAtoms::aria_controls,     nsGkAtoms::aria_flowto,
     nsGkAtoms::aria_errormessage, nsGkAtoms::_for,
     nsGkAtoms::control,           nsGkAtoms::popovertarget,
-    nsGkAtoms::commandfor};
+    nsGkAtoms::commandfor,        nsGkAtoms::aria_activedescendant};
 
 static const uint32_t kRelationAttrsLen = std::size(kRelationAttrs);
 
@@ -817,7 +817,7 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
   RemoveDependentElementsFor(accessible, aAttribute);
 
   if (aAttribute == nsGkAtoms::id) {
-    if (accessible->IsActiveDescendantId()) {
+    if (accessible->IsActiveDescendant()) {
       RefPtr<AccEvent> event =
           new AccStateChangeEvent(accessible, states::ACTIVE, false);
       FireDelayedEvent(event);
@@ -918,7 +918,6 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
     mNotificationController
         ->ScheduleNotification<DocAccessible, LocalAccessible>(
             this, &DocAccessible::ARIAActiveDescendantChanged, accessible);
-    return;
   }
 
   // Defer to accessible any needed actions like changing states or emiting
@@ -3028,7 +3027,7 @@ void DocAccessible::DispatchScrollingEvent(nsINode* aTarget,
 void DocAccessible::ARIAActiveDescendantIDMaybeMoved(
     LocalAccessible* aAccessible) {
   LocalAccessible* widget = nullptr;
-  if (aAccessible->IsActiveDescendantId(&widget) && widget) {
+  if (aAccessible->IsActiveDescendant(&widget) && widget) {
     // The active descendant might have just been inserted and may not be in the
     // tree yet. Therefore, schedule this async to ensure the tree is up to
     // date.
