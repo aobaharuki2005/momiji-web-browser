@@ -797,10 +797,14 @@ class BrowserToolbarMiddleware(
     }
 
     private suspend fun updateNavigationActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
-        val isBookmarked =
-            browserStore.state.selectedTab?.content?.url?.let {
-                bookmarksStorage.getBookmarksWithUrl(it).isNotEmpty()
-            } == true
+        val url = browserStore.state.selectedTab?.content?.url
+        val isBookmarked = if (url != null) {
+            withContext(Dispatchers.IO) {
+                bookmarksStorage.getBookmarksWithUrl(url).isNotEmpty()
+            }
+        } else {
+            false
+        }
 
         context.dispatch(
             NavigationActionsUpdated(
