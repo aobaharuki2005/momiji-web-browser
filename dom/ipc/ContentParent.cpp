@@ -2737,7 +2737,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
       clipboard->IsClipboardTypeSupported(nsIClipboard::kSelectionCache);
 
   // Let's copy the domain policy from the parent to the child (if it's active).
-  StructuredCloneData initialData;
+  auto initialData = MakeUnique<StructuredCloneData>();
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (ssm) {
     ssm->CloneDomainPolicy(&xpcomInit.domainPolicy());
@@ -2757,7 +2757,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
         MOZ_CRASH();
       }
 
-      initialData.Write(jsapi.cx(), init, rv);
+      initialData->Write(jsapi.cx(), init, rv);
       if (NS_WARN_IF(rv.Failed())) {
         MOZ_CRASH();
       }
@@ -4655,7 +4655,7 @@ mozilla::ipc::IPCResult ContentParent::RecvExtProtocolChannelConnectParent(
 
 mozilla::ipc::IPCResult ContentParent::RecvSyncMessage(
     const nsAString& aMsg, const ClonedMessageData& aData,
-    nsTArray<StructuredCloneData>* aRetvals) {
+    nsTArray<UniquePtr<StructuredCloneData>>* aRetvals) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvSyncMessage",
                                              OTHER, aMsg);
   MMPrinter::Print("ContentParent::RecvSyncMessage", aMsg, aData);
@@ -7855,16 +7855,16 @@ void ContentParent::StartRemoteWorkerService() {
 }
 
 IPCResult ContentParent::RecvRawMessage(
-    const JSActorMessageMeta& aMeta, const Maybe<ClonedMessageData>& aData,
-    const Maybe<ClonedMessageData>& aStack) {
-  Maybe<StructuredCloneData> data;
+    const JSActorMessageMeta& aMeta, const UniquePtr<ClonedMessageData>& aData,
+    const UniquePtr<ClonedMessageData>& aStack) {
+  UniquePtr<StructuredCloneData> data;
   if (aData) {
-    data.emplace();
+    data = MakeUnique<StructuredCloneData>();
     data->BorrowFromClonedMessageData(*aData);
   }
-  Maybe<StructuredCloneData> stack;
+  UniquePtr<StructuredCloneData> stack;
   if (aStack) {
-    stack.emplace();
+    stack = MakeUnique<StructuredCloneData>();
     stack->BorrowFromClonedMessageData(*aStack);
   }
   MMPrinter::Print("ContentParent::RecvRawMessage", aMeta.actorName(),

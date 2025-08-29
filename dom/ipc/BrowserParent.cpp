@@ -2329,12 +2329,12 @@ mozilla::ipc::IPCResult BrowserParent::RecvSynthesizedEventResponse(
 
 mozilla::ipc::IPCResult BrowserParent::RecvSyncMessage(
     const nsString& aMessage, const ClonedMessageData& aData,
-    nsTArray<StructuredCloneData>* aRetVal) {
+    nsTArray<UniquePtr<ipc::StructuredCloneData>>* aRetVal) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserParent::RecvSyncMessage",
                                              OTHER, aMessage);
   MMPrinter::Print("BrowserParent::RecvSyncMessage", aMessage, aData);
 
-  StructuredCloneData data;
+  ipc::StructuredCloneData data;
   ipc::UnpackClonedMessageData(aData, data);
 
   if (!ReceiveMessage(aMessage, true, &data, aRetVal)) {
@@ -3499,9 +3499,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetInputContext(
   return IPC_OK();
 }
 
-bool BrowserParent::ReceiveMessage(const nsString& aMessage, bool aSync,
-                                   StructuredCloneData* aData,
-                                   nsTArray<StructuredCloneData>* aRetVal) {
+bool BrowserParent::ReceiveMessage(
+    const nsString& aMessage, bool aSync, ipc::StructuredCloneData* aData,
+    nsTArray<UniquePtr<ipc::StructuredCloneData>>* aRetVal) {
   // If we're for an oop iframe, don't deliver messages to the wrong place.
   if (mBrowserBridgeParent) {
     return true;

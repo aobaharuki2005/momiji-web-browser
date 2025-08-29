@@ -658,7 +658,8 @@ NS_INTERFACE_MAP_BEGIN(ContentChild)
 NS_INTERFACE_MAP_END
 
 mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
-    XPCOMInitData&& aXPCOMInit, const StructuredCloneData& aInitialData,
+    XPCOMInitData&& aXPCOMInit,
+    const UniquePtr<StructuredCloneData>& aInitialData,
     FullLookAndFeel&& aLookAndFeelData, dom::SystemFontList&& aFontList,
     Maybe<mozilla::ipc::ReadOnlySharedMemoryHandle>&& aSharedUASheetHandle,
     const uintptr_t& aSharedUASheetAddress,
@@ -676,7 +677,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
   PerfStats::SetCollectionMask(aXPCOMInit.perfStatsMask());
   LookAndFeel::EnsureInit();
   InitSharedUASheets(std::move(aSharedUASheetHandle), aSharedUASheetAddress);
-  InitXPCOM(std::move(aXPCOMInit), aInitialData,
+  InitXPCOM(std::move(aXPCOMInit), *aInitialData,
             aIsReadyForBackgroundProcessing);
   InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());
   RefPtr<net::ChildDNSService> dnsServiceChild =
@@ -4568,17 +4569,17 @@ already_AddRefed<JSActor> ContentChild::InitJSActor(
   return actor.forget();
 }
 
-IPCResult ContentChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
-                                       const Maybe<ClonedMessageData>& aData,
-                                       const Maybe<ClonedMessageData>& aStack) {
-  Maybe<StructuredCloneData> data;
+IPCResult ContentChild::RecvRawMessage(
+    const JSActorMessageMeta& aMeta, const UniquePtr<ClonedMessageData>& aData,
+    const UniquePtr<ClonedMessageData>& aStack) {
+  UniquePtr<StructuredCloneData> data;
   if (aData) {
-    data.emplace();
+    data = MakeUnique<StructuredCloneData>();
     data->BorrowFromClonedMessageData(*aData);
   }
-  Maybe<StructuredCloneData> stack;
+  UniquePtr<StructuredCloneData> stack;
   if (aStack) {
-    stack.emplace();
+    stack = MakeUnique<StructuredCloneData>();
     stack->BorrowFromClonedMessageData(*aStack);
   }
   ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
