@@ -617,24 +617,6 @@ function hexToRGBA(name, highResolution) {
 }
 
 /**
- * Calculates the luminance of a rgba tuple based on the formula given in
- * https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
- *
- * @param {Array} rgba An array with [r,g,b,a] values.
- * @return {Number} The calculated luminance.
- */
-function calculateLuminance(rgba) {
-  for (let i = 0; i < 3; i++) {
-    rgba[i] /= 255;
-    rgba[i] =
-      rgba[i] < 0.03928
-        ? rgba[i] / 12.92
-        : Math.pow((rgba[i] + 0.055) / 1.055, 2.4);
-  }
-  return 0.2126 * rgba[0] + 0.7152 * rgba[1] + 0.0722 * rgba[2];
-}
-
-/**
  * Blend background and foreground colors takign alpha into account.
  * @param  {Array} foregroundColor
  *         An array with [r,g,b,a] values containing the foreground color.
@@ -660,6 +642,8 @@ function blendColors(foregroundColor, backgroundColor = [255, 255, 255, 1]) {
 }
 
 /**
+ * TODO: Replace with RelativeLuminanceUtils::ContrastRatio, see bug 1984999.
+ *
  * Calculates the contrast ratio of 2 rgba tuples based on the formula in
  * https://www.w3.org/TR/2008/REC-WCAG20-20081211/#visual-audio-contrast7
  *
@@ -677,8 +661,12 @@ function calculateContrastRatio(backgroundColor, textColor) {
   backgroundColor = blendColors(backgroundColor);
   textColor = blendColors(textColor, backgroundColor);
 
-  const backgroundLuminance = calculateLuminance(backgroundColor);
-  const textLuminance = calculateLuminance(textColor);
+  const backgroundLuminance = InspectorUtils.relativeLuminance(
+    ...backgroundColor.map(c => c / 255)
+  );
+  const textLuminance = InspectorUtils.relativeLuminance(
+    ...textColor.map(c => c / 255)
+  );
   const ratio = (textLuminance + 0.05) / (backgroundLuminance + 0.05);
 
   return ratio > 1.0 ? ratio : 1 / ratio;
@@ -697,7 +685,6 @@ module.exports.colorUtils = {
   rgbToHwb,
   classifyColor,
   calculateContrastRatio,
-  calculateLuminance,
   blendColors,
   colorIsUppercase,
 };

@@ -11,12 +11,6 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "colorUtils",
-  "resource://devtools/shared/css/color.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   ["getTextProperties", "getContrastRatioAgainstBackground"],
   "resource://devtools/shared/accessibility.js",
   true
@@ -405,7 +399,7 @@ class Spectrum {
     // We should be able to distinguish the color preview on high luminance rgba values.
     // Give the color preview a light grey border if the luminance of the current rgba
     // tuple is great.
-    const colorLuminance = colorUtils.calculateLuminance(this.rgb);
+    const colorLuminance = InspectorUtils.relativeLuminance(...this.rgbFloat);
     this.colorPreview.classList.toggle("high-luminance", colorLuminance > 0.85);
 
     // Set title on color preview for better UX

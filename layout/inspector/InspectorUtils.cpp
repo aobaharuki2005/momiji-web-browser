@@ -15,6 +15,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSParser.h"
@@ -800,6 +801,11 @@ void InspectorUtils::HsvToRgb(GlobalObject&, float aH, float aS, float aV,
   };
   StyleAbsoluteColor result = input.ToColorSpace(StyleColorSpace::Srgb);
   aResult = {result.components._0, result.components._1, result.components._2};
+}
+
+/* static */
+float InspectorUtils::RelativeLuminance(GlobalObject&, float aR, float aG, float aB) {
+  return RelativeLuminanceUtils::Compute(aR, aG, aB);
 }
 
 /* static */

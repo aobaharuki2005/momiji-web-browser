@@ -116,6 +116,8 @@ class InspectorUtils {
   static void HsvToRgb(GlobalObject&, float aH, float aS, float aV,
                        nsTArray<float>& aResult);
 
+  static float RelativeLuminance(GlobalObject&, float aR, float aG, float aB);
+
   // Convert a given CSS color string to rgba. Returns null on failure or an
   // InspectorRGBATuple on success.
   //

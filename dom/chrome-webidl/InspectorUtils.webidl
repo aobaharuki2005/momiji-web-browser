@@ -36,6 +36,7 @@ namespace InspectorUtils {
   InspectorNearestColor rgbToNearestColorName(float r, float g, float b);
   sequence<float> rgbToHsv(float r, float g, float b);
   sequence<float> hsvToRgb(float h, float s, float v);
+  float relativeLuminance(float r, float g, float b);
   InspectorRGBATuple? colorToRGBA(UTF8String colorString);
   InspectorColorToResult? colorTo(UTF8String fromColor, UTF8String toColorSpace);
   boolean isValidCSSColor(UTF8String colorString);
