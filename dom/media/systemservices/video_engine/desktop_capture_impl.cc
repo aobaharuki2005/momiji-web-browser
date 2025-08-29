@@ -598,7 +598,7 @@ void DesktopCaptureImpl::CaptureFrameOnThread() {
   mCaptureTimer->InitHighResolutionWithNamedFuncCallback(
       &::CaptureFrameOnThread, this,
       std::max(timeUntilRequestedCapture, sleepTime), nsITimer::TYPE_ONE_SHOT,
-      "DesktopCaptureImpl::mCaptureTimer");
+      "DesktopCaptureImpl::mCaptureTimer"_ns);
 }
 
 mozilla::MediaEventSource<void>* DesktopCaptureImpl::CaptureEndedEvent() {

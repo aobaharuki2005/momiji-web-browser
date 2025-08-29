@@ -475,7 +475,7 @@ nsresult HttpConnectionUDP::MaybeForceSendIO() {
   return NS_NewTimerWithFuncCallback(
       getter_AddRefs(mForceSendTimer), HttpConnectionUDP::ForceSendIO, this,
       kForceDelay, nsITimer::TYPE_ONE_SHOT,
-      "net::HttpConnectionUDP::MaybeForceSendIO");
+      "net::HttpConnectionUDP::MaybeForceSendIO"_ns);
 }
 
 // trigger an asynchronous read

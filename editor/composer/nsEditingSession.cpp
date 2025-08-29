@@ -878,11 +878,11 @@ nsresult nsEditingSession::EndDocumentLoad(nsIWebProgress* aWebProgress,
             mLoadBlankDocTimer = nullptr;
           }
 
-          rv = NS_NewTimerWithFuncCallback(getter_AddRefs(mLoadBlankDocTimer),
-                                           nsEditingSession::TimerCallback,
-                                           static_cast<void*>(mDocShell.get()),
-                                           10, nsITimer::TYPE_ONE_SHOT,
-                                           "nsEditingSession::EndDocumentLoad");
+          rv = NS_NewTimerWithFuncCallback(
+              getter_AddRefs(mLoadBlankDocTimer),
+              nsEditingSession::TimerCallback,
+              static_cast<void*>(mDocShell.get()), 10, nsITimer::TYPE_ONE_SHOT,
+              "nsEditingSession::EndDocumentLoad"_ns);
           NS_ENSURE_SUCCESS(rv, rv);
 
           mEditorStatus = eEditorCreationInProgress;

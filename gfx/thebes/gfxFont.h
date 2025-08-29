@@ -363,7 +363,7 @@ class gfxFontCache final
         mWordCacheExpirationTimer->InitWithNamedFuncCallback(
             WordCacheExpirationTimerCallback, this,
             SHAPED_WORD_TIMEOUT_SECONDS * 1000, nsITimer::TYPE_REPEATING_SLACK,
-            "gfxFontCache::WordCacheExpiration");
+            "gfxFontCache::WordCacheExpiration"_ns);
         mTimerRunning = true;
       }
     }

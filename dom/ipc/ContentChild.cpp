@@ -2941,7 +2941,7 @@ void ContentChild::StartForceKillTimer() {
     NS_NewTimerWithFuncCallback(getter_AddRefs(mForceKillTimer),
                                 ContentChild::ForceKillTimerCallback, this,
                                 timeoutSecs * 1000, nsITimer::TYPE_ONE_SHOT,
-                                "dom::ContentChild::StartForceKillTimer");
+                                "dom::ContentChild::StartForceKillTimer"_ns);
     MOZ_ASSERT(mForceKillTimer);
   }
 }

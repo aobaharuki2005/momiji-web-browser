@@ -581,7 +581,7 @@ nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs) {
           }
         },
         aTimeoutMs, nsITimer::TYPE_ONE_SHOT,
-        "nsThreadPool::ShutdownWithTimeout");
+        "nsThreadPool::ShutdownWithTimeout"_ns);
   }
 
   // Start a counter and register a callback to decrement outstandingThreads

@@ -273,7 +273,7 @@ RefPtr<GetIPCIdentityCredentialPromise> DiscoverFromExternalSourceInMainProcess(
         },
         StaticPrefs::
             dom_security_credentialmanagement_identity_reject_delay_duration_ms(),
-        nsITimer::TYPE_ONE_SHOT, "IdentityCredentialTimeoutCallback");
+        nsITimer::TYPE_ONE_SHOT, "IdentityCredentialTimeoutCallback"_ns);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       result->Reject(NS_ERROR_FAILURE, __func__);
       return result.forget();

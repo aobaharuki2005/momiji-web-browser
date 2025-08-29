@@ -208,7 +208,7 @@ class ScrollFrameActivityTracker final
   enum { TIMEOUT_MS = 1000 };
   explicit ScrollFrameActivityTracker(nsIEventTarget* aEventTarget)
       : nsExpirationTracker<ScrollContainerFrame, 4>(
-            TIMEOUT_MS, "ScrollFrameActivityTracker", aEventTarget) {}
+            TIMEOUT_MS, "ScrollFrameActivityTracker"_ns, aEventTarget) {}
   ~ScrollFrameActivityTracker() { AgeAllGenerations(); }
 
   virtual void NotifyExpired(ScrollContainerFrame* aObject) override {
@@ -2723,7 +2723,7 @@ void ScrollContainerFrame::ResetDisplayPortExpiryTimer() {
     mDisplayPortExpiryTimer->InitWithNamedFuncCallback(
         RemoveDisplayPortCallback, this,
         StaticPrefs::apz_displayport_expiry_ms(), nsITimer::TYPE_ONE_SHOT,
-        "ScrollContainerFrame::ResetDisplayPortExpiryTimer");
+        "ScrollContainerFrame::ResetDisplayPortExpiryTimer"_ns);
   }
 }
 
@@ -2885,7 +2885,7 @@ void ScrollContainerFrame::ScheduleSyntheticMouseMove() {
 
   mScrollActivityTimer->InitWithNamedFuncCallback(
       ScrollActivityCallback, this, 100, nsITimer::TYPE_ONE_SHOT,
-      "ScrollContainerFrame::ScheduleSyntheticMouseMove");
+      "ScrollContainerFrame::ScheduleSyntheticMouseMove"_ns);
 }
 
 void ScrollContainerFrame::NotifyApproximateFrameVisibilityUpdate(

@@ -101,7 +101,7 @@ void nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader) {
   if (loadTimeout > 0) {
     NS_NewTimerWithFuncCallback(getter_AddRefs(mLoadTimer), LoadTimerCallback,
                                 static_cast<void*>(this), loadTimeout,
-                                nsITimer::TYPE_ONE_SHOT, "LoadTimerCallback",
+                                nsITimer::TYPE_ONE_SHOT, "LoadTimerCallback"_ns,
                                 GetMainThreadSerialEventTarget());
   } else {
     mUserFontEntry->mFontDataLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
@@ -155,7 +155,8 @@ void nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure) {
           loader->mLoadTimer->GetDelay(&delay);
           loader->mLoadTimer->InitWithNamedFuncCallback(
               LoadTimerCallback, static_cast<void*>(loader), delay >> 1,
-              nsITimer::TYPE_ONE_SHOT, "nsFontFaceLoader::LoadTimerCallback");
+              nsITimer::TYPE_ONE_SHOT,
+              "nsFontFaceLoader::LoadTimerCallback"_ns);
           updateUserFontSet = false;
           LOG(("userfonts (%p) 75%% done, resetting timer\n", loader));
         }

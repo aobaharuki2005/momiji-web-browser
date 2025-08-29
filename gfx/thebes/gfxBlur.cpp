@@ -324,7 +324,7 @@ struct BlurCacheData {
 class BlurCache final : public nsExpirationTracker<BlurCacheData, 4> {
  public:
   BlurCache()
-      : nsExpirationTracker<BlurCacheData, 4>(GENERATION_MS, "BlurCache") {}
+      : nsExpirationTracker<BlurCacheData, 4>(GENERATION_MS, "BlurCache"_ns) {}
 
   virtual void NotifyExpired(BlurCacheData* aObject) override {
     RemoveObject(aObject);

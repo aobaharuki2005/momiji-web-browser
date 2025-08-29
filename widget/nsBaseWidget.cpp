@@ -2167,7 +2167,7 @@ nsresult nsIWidget::SynthesizeNativeTouchTap(
     }
     mLongTapTimer->InitWithNamedFuncCallback(
         OnLongTapTimerCallback, this, timeout, nsITimer::TYPE_REPEATING_SLACK,
-        "nsIWidget::SynthesizeNativeTouchTap");
+        "nsIWidget::SynthesizeNativeTouchTap"_ns);
   }
 
   // If we already have a long tap pending, cancel it. We only allow one long

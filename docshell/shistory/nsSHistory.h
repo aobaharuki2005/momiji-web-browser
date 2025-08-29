@@ -41,7 +41,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
    public:
     explicit HistoryTracker(nsSHistory* aSHistory, uint32_t aTimeout,
                             nsIEventTarget* aEventTarget)
-        : nsExpirationTracker(1000 * aTimeout / 2, "HistoryTracker",
+        : nsExpirationTracker(1000 * aTimeout / 2, "HistoryTracker"_ns,
                               aEventTarget) {
       MOZ_ASSERT(aSHistory);
       mSHistory = aSHistory;

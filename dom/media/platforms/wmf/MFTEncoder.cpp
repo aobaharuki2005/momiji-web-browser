@@ -1083,7 +1083,7 @@ RefPtr<MFTEncoder::EncodePromise> MFTEncoder::EncodeWithAsyncCallback(
         self->MaybeResolveOrRejectEncodePromise();
       },
       TimeDuration::FromMilliseconds(20), nsITimer::TYPE_ONE_SHOT,
-      "EncodingProgressChecker", GetCurrentSerialEventTarget());
+      "EncodingProgressChecker"_ns, GetCurrentSerialEventTarget());
   if (timerResult.isErr()) {
     MFT_ENC_LOGE(
         "Failed to set an encoding progress checker. Resolve encode promise "

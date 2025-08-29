@@ -220,7 +220,7 @@ nsresult NS_NewTimerWithCallback(nsITimer** aTimer, nsITimerCallback* aCallback,
 
 mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithCallback(
     std::function<void(nsITimer*)>&& aCallback, uint32_t aDelay, uint32_t aType,
-    const char* aNameString, nsIEventTarget* aTarget) {
+    const nsACString& aNameString, nsIEventTarget* aTarget) {
   nsCOMPtr<nsITimer> timer;
   MOZ_TRY(NS_NewTimerWithCallback(getter_AddRefs(timer), std::move(aCallback),
                                   aDelay, aType, aNameString, aTarget));
@@ -229,7 +229,7 @@ mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithCallback(
 nsresult NS_NewTimerWithCallback(nsITimer** aTimer,
                                  std::function<void(nsITimer*)>&& aCallback,
                                  uint32_t aDelay, uint32_t aType,
-                                 const char* aNameString,
+                                 const nsACString& aNameString,
                                  nsIEventTarget* aTarget) {
   return NS_NewTimerWithCallback(aTimer, std::move(aCallback),
                                  TimeDuration::FromMilliseconds(aDelay), aType,
@@ -238,7 +238,7 @@ nsresult NS_NewTimerWithCallback(nsITimer** aTimer,
 
 mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithCallback(
     std::function<void(nsITimer*)>&& aCallback, const TimeDuration& aDelay,
-    uint32_t aType, const char* aNameString, nsIEventTarget* aTarget) {
+    uint32_t aType, const nsACString& aNameString, nsIEventTarget* aTarget) {
   nsCOMPtr<nsITimer> timer;
   MOZ_TRY(NS_NewTimerWithCallback(getter_AddRefs(timer), std::move(aCallback),
                                   aDelay, aType, aNameString, aTarget));
@@ -247,7 +247,7 @@ mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithCallback(
 nsresult NS_NewTimerWithCallback(nsITimer** aTimer,
                                  std::function<void(nsITimer*)>&& aCallback,
                                  const TimeDuration& aDelay, uint32_t aType,
-                                 const char* aNameString,
+                                 const nsACString& aNameString,
                                  nsIEventTarget* aTarget) {
   RefPtr<nsTimer> timer = nsTimer::WithEventTarget(aTarget);
 
@@ -259,7 +259,7 @@ nsresult NS_NewTimerWithCallback(nsITimer** aTimer,
 
 mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithFuncCallback(
     nsTimerCallbackFunc aCallback, void* aClosure, uint32_t aDelay,
-    uint32_t aType, const char* aNameString, nsIEventTarget* aTarget) {
+    uint32_t aType, const nsACString& aNameString, nsIEventTarget* aTarget) {
   nsCOMPtr<nsITimer> timer;
   MOZ_TRY(NS_NewTimerWithFuncCallback(getter_AddRefs(timer), aCallback,
                                       aClosure, aDelay, aType, aNameString,
@@ -269,7 +269,8 @@ mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithFuncCallback(
 nsresult NS_NewTimerWithFuncCallback(nsITimer** aTimer,
                                      nsTimerCallbackFunc aCallback,
                                      void* aClosure, uint32_t aDelay,
-                                     uint32_t aType, const char* aNameString,
+                                     uint32_t aType,
+                                     const nsACString& aNameString,
                                      nsIEventTarget* aTarget) {
   auto timer = nsTimer::WithEventTarget(aTarget);
 
@@ -281,7 +282,7 @@ nsresult NS_NewTimerWithFuncCallback(nsITimer** aTimer,
 
 mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithFuncCallback(
     nsTimerCallbackFunc aCallback, void* aClosure, const TimeDuration& aDelay,
-    uint32_t aType, const char* aNameString, nsIEventTarget* aTarget) {
+    uint32_t aType, const nsACString& aNameString, nsIEventTarget* aTarget) {
   nsCOMPtr<nsITimer> timer;
   MOZ_TRY(NS_NewTimerWithFuncCallback(getter_AddRefs(timer), aCallback,
                                       aClosure, aDelay, aType, aNameString,
@@ -291,7 +292,8 @@ mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithFuncCallback(
 nsresult NS_NewTimerWithFuncCallback(nsITimer** aTimer,
                                      nsTimerCallbackFunc aCallback,
                                      void* aClosure, const TimeDuration& aDelay,
-                                     uint32_t aType, const char* aNameString,
+                                     uint32_t aType,
+                                     const nsACString& aNameString,
                                      nsIEventTarget* aTarget) {
   auto timer = nsTimer::WithEventTarget(aTarget);
 
@@ -437,34 +439,22 @@ nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
 nsresult nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
                                                 void* aClosure, uint32_t aDelay,
                                                 uint32_t aType,
-                                                const char* aName) {
+                                                const nsACString& aName) {
   return InitHighResolutionWithNamedFuncCallback(
       aFunc, aClosure, TimeDuration::FromMilliseconds(aDelay), aType, aName);
 }
 
 nsresult nsTimerImpl::InitHighResolutionWithNamedFuncCallback(
     nsTimerCallbackFunc aFunc, void* aClosure, const TimeDuration& aDelay,
-    uint32_t aType, const char* aName) {
+    uint32_t aType, const nsACString& aName) {
   if (NS_WARN_IF(!aFunc)) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCString name;
-  if (aName) {
-    // FIXME: This assumes that the caller never passes us a runtime-allocated
-    // string as a `const char*`. If this is incorrect, it could cause us
-    // problems. Making a copy of the string here unconditionally would be
-    // safer, but have more overhead.
-    // FIXME: This requires us to compute `strlen(aName)` (even though our
-    // caller is probably passing us a string literal), which is a bit
-    // inefficient.
-    name.AssignLiteral(aName, strlen(aName));
   }
 
   Callback cb{FuncCallback{aFunc, aClosure}};
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelay, aType, name, std::move(cb), lock);
+  return InitCommon(aDelay, aType, aName, std::move(cb), lock);
 }
 
 nsresult nsTimerImpl::InitWithCallback(nsITimerCallback* aCallback,
@@ -518,27 +508,15 @@ nsresult nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelayInMs,
 
 nsresult nsTimerImpl::InitWithClosureCallback(
     std::function<void(nsITimer*)>&& aCallback, const TimeDuration& aDelay,
-    uint32_t aType, const char* aNameString) {
+    uint32_t aType, const nsACString& aNameString) {
   if (NS_WARN_IF(!aCallback)) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCString name;
-  if (aNameString) {
-    // FIXME: This assumes that the caller never passes us a runtime-allocated
-    // string as a `const char*`. If this is incorrect, it could cause us
-    // problems. Making a copy of the string here unconditionally would be
-    // safer, but have more overhead.
-    // FIXME: This requires us to compute `strlen(aNameString)` (even though our
-    // caller is probably passing us a string literal), which is a bit
-    // inefficient.
-    name.AssignLiteral(aNameString, strlen(aNameString));
   }
 
   Callback cb{std::move(aCallback)};
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelay, aType, name, std::move(cb), lock);
+  return InitCommon(aDelay, aType, aNameString, std::move(cb), lock);
 }
 
 nsresult nsTimerImpl::Cancel() {

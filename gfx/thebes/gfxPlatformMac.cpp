@@ -813,7 +813,7 @@ class OSXVsyncSource final : public VsyncSource {
       uint32_t delay = 100;
       mTimer->InitWithNamedFuncCallback(RetryCreateDisplayLink, this, delay,
                                         nsITimer::TYPE_ONE_SHOT,
-                                        "RetryCreateDisplayLink");
+                                        "RetryCreateDisplayLink"_ns);
       return;
     }
 
@@ -953,7 +953,7 @@ class OSXVsyncSource final : public VsyncSource {
         uint32_t delay = 100;
         mTimer->InitWithNamedFuncCallback(RetryCreateDisplayLink, this, delay,
                                           nsITimer::TYPE_ONE_SHOT,
-                                          "RetryEnableVsync");
+                                          "RetryEnableVsync"_ns);
       }
     }
   }

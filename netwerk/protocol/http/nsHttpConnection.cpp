@@ -1458,10 +1458,10 @@ nsresult nsHttpConnection::MaybeForceSendIO() {
   }
   MOZ_ASSERT(!mForceSendTimer);
   mForceSendPending = true;
-  return NS_NewTimerWithFuncCallback(getter_AddRefs(mForceSendTimer),
-                                     nsHttpConnection::ForceSendIO, this,
-                                     kForceDelay, nsITimer::TYPE_ONE_SHOT,
-                                     "net::nsHttpConnection::MaybeForceSendIO");
+  return NS_NewTimerWithFuncCallback(
+      getter_AddRefs(mForceSendTimer), nsHttpConnection::ForceSendIO, this,
+      kForceDelay, nsITimer::TYPE_ONE_SHOT,
+      "net::nsHttpConnection::MaybeForceSendIO"_ns);
 }
 
 // trigger an asynchronous read
@@ -2110,7 +2110,7 @@ nsresult nsHttpConnection::StartShortLivedTCPKeepalives() {
     mTCPKeepaliveTransitionTimer->InitWithNamedFuncCallback(
         nsHttpConnection::UpdateTCPKeepalive, this, (uint32_t)time * 1000,
         nsITimer::TYPE_ONE_SHOT,
-        "net::nsHttpConnection::StartShortLivedTCPKeepalives");
+        "net::nsHttpConnection::StartShortLivedTCPKeepalives"_ns);
   } else {
     NS_WARNING(
         "nsHttpConnection::StartShortLivedTCPKeepalives failed to "
