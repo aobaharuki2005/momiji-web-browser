@@ -16,6 +16,7 @@ const TEST_MERINO_SINGLE = [
             ticker: "AAPL",
             todays_change_perc: "-0.54",
             last_price: "$181.98 USD",
+            exchange: "NYSE",
           },
         ],
       },
@@ -38,6 +39,7 @@ const TEST_MERINO_MULTI = [
             todays_change_perc: "-0.11",
             last_price: "$559.44 USD",
             index: "S&P 500",
+            exchange: "NYSE",
           },
           {
             query: "QQQ stock",
@@ -46,6 +48,7 @@ const TEST_MERINO_MULTI = [
             todays_change_perc: "+1.53",
             last_price: "$539.78 USD",
             index: "NASDAQ",
+            exchange: "NYSE",
           },
           {
             query: "DIA stock",
@@ -54,6 +57,7 @@ const TEST_MERINO_MULTI = [
             todays_change_perc: "0",
             last_price: "$430.80 USD",
             index: "Dow Jones",
+            exchange: "NYSE",
           },
         ],
       },
@@ -128,6 +132,7 @@ add_task(async function ui_single() {
     name: target.name,
     todaysChangePerc: target.todays_change_perc,
     lastPrice: target.last_price,
+    exchange: target.exchange,
   });
 
   // Arrow down to select the row.
@@ -194,6 +199,7 @@ add_task(async function ui_multi() {
       name: target.name,
       todaysChangePerc: target.todays_change_perc,
       lastPrice: target.last_price,
+      exchange: target.exchange,
     });
 
     EventUtils.synthesizeKey("KEY_Tab");
@@ -295,4 +301,7 @@ function assertUI(item, expected) {
     expected.lastPrice,
     "Last price is correct"
   );
+
+  let exchange = item.querySelector(".urlbarView-market-exchange");
+  Assert.equal(exchange.textContent, expected.exchange, "Exchange is correct");
 }

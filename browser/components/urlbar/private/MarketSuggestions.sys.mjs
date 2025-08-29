@@ -116,7 +116,7 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
                     classList: ["urlbarView-market-todays-change-perc"],
                   },
                   {
-                    name: `bottom_separator_${i}`,
+                    name: `bottom_separator_1_${i}`,
                     tag: "span",
                     classList: ["urlbarView-market-description-separator"],
                   },
@@ -124,6 +124,16 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
                     name: `last_price_${i}`,
                     tag: "span",
                     classList: ["urlbarView-market-last-price"],
+                  },
+                  {
+                    name: `bottom_separator_2_${i}`,
+                    tag: "span",
+                    classList: ["urlbarView-market-description-separator"],
+                  },
+                  {
+                    name: `exchange_${i}`,
+                    tag: "span",
+                    classList: ["urlbarView-market-exchange"],
                   },
                 ],
               },
@@ -199,10 +209,16 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
           [`last_price_${i}`]: {
             textContent: v.last_price,
           },
+          [`exchange_${i}`]: {
+            textContent: v.exchange,
+          },
           [`top_separator_${i}`]: {
             textContent: "·",
           },
-          [`bottom_separator_${i}`]: {
+          [`bottom_separator_1_${i}`]: {
+            textContent: "·",
+          },
+          [`bottom_separator_2_${i}`]: {
             textContent: "·",
           },
         });
