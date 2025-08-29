@@ -390,16 +390,18 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   MOZ_ASSERT(mState == kAllocated || mState == kStarted || mState == kStopped);
   MOZ_ASSERT(mTrack);
 
+  NormalizedConstraints constraints;
   DesiredSizeInput input{};
   double framerate = 0.0;
   {
     MutexAutoLock lock(mMutex);
     mState = kStarted;
+    constraints = *mConstraints;
     const int32_t& cw = mCapability.width;
     const int32_t& ch = mCapability.height;
     const double maxFPS = AssertedCast<double>(mCapability.maxFPS);
     input = {
-        .mConstraints = *mConstraints,
+        .mConstraints = constraints,
         .mCanCropAndScale = mCalculation == kFeasibility,
         .mCapabilityWidth = cw ? Some(cw) : Nothing(),
         .mCapabilityHeight = ch ? Some(ch) : Nothing(),
@@ -415,7 +417,7 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   mSettingsUpdatedByFrame->mValue = false;
 
   if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture, mCapEngine,
-                              mCaptureId, mCapability, this)) {
+                              mCaptureId, mCapability, constraints, this)) {
     LOG("StartCapture failed");
     MutexAutoLock lock(mMutex);
     mState = kStopped;

@@ -108,7 +108,8 @@ class CamerasParent final : public PCamerasParent {
       const CaptureEngine& aCapEngine, const int& aDeviceIndex) override;
   mozilla::ipc::IPCResult RecvStartCapture(
       const CaptureEngine& aCapEngine, const int& aCaptureId,
-      const VideoCaptureCapability& aIpcCaps) override;
+      const VideoCaptureCapability& aIpcCaps,
+      const NormalizedConstraints& aConstraints) override;
   mozilla::ipc::IPCResult RecvFocusOnSelectedSource(
       const CaptureEngine& aCapEngine, const int& aCaptureId) override;
   mozilla::ipc::IPCResult RecvStopCapture(const CaptureEngine& aCapEngine,
