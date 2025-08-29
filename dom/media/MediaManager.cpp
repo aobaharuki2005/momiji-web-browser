@@ -4728,10 +4728,10 @@ RefPtr<DeviceListener::DeviceListenerPromise> DeviceListener::ApplyConstraints(
     return DeviceListenerPromise::CreateAndResolve(false, __func__);
   }
 
-  return MediaManager::Dispatch<DeviceListenerPromise>(
-      __func__,
+  return InvokeAsync(
+      mgr->mMediaThread, __func__,
       [device = mDeviceState->mDevice, aConstraints, prefs = mgr->mPrefs,
-       aCallerType](MozPromiseHolder<DeviceListenerPromise>& aHolder) mutable {
+       aCallerType]() mutable -> RefPtr<DeviceListenerPromise> {
         MOZ_ASSERT(MediaManager::IsInMediaThread());
         MediaManager* mgr = MediaManager::GetIfExists();
         MOZ_RELEASE_ASSERT(mgr);  // Must exist while media thread is alive
@@ -4755,14 +4755,14 @@ RefPtr<DeviceListener::DeviceListenerPromise> DeviceListener::ApplyConstraints(
                 static_cast<uint32_t>(rv));
           }
 
-          aHolder.Reject(MakeRefPtr<MediaMgrError>(
-                             MediaMgrError::Name::OverconstrainedError, "",
-                             NS_ConvertASCIItoUTF16(badConstraint)),
-                         __func__);
-          return;
+          return DeviceListenerPromise::CreateAndReject(
+              MakeRefPtr<MediaMgrError>(
+                  MediaMgrError::Name::OverconstrainedError, "",
+                  NS_ConvertASCIItoUTF16(badConstraint)),
+              __func__);
         }
         // Reconfigure was successful
-        aHolder.Resolve(false, __func__);
+        return DeviceListenerPromise::CreateAndResolve(false, __func__);
       });
 }
 
