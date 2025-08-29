@@ -70,6 +70,8 @@ class GeckoInstance:
         "datareporting.healthreport.service.enabled": False,
         "datareporting.healthreport.service.firstRun": False,
         "datareporting.healthreport.uploadEnabled": False,
+        "datareporting.usage.uploadEnabled": False,
+        "telemetry.fog.test.localhost_port": -1,
         # Do not show datareporting policy notifications which can interfere with tests
         "datareporting.policy.dataSubmissionEnabled": False,
         "datareporting.policy.dataSubmissionPolicyBypassNotification": True,

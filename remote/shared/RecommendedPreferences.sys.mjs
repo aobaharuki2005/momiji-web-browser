@@ -219,6 +219,8 @@ const COMMON_PREFERENCES = new Map([
   ["datareporting.policy.dataSubmissionEnabled", false],
   ["datareporting.policy.dataSubmissionPolicyAccepted", false],
   ["datareporting.policy.dataSubmissionPolicyBypassNotification", true],
+  ["datareporting.usage.uploadEnabled", false],
+  ["telemetry.fog.test.localhost_port", -1],
 
   // Disable popup-blocker
   ["dom.disable_open_during_load", false],
