@@ -16,9 +16,6 @@ figma.connect(
         iconSrc: figma.boolean("Show icon", {
           true: "chrome://example.svg",
         }),
-        showSlot: figma.boolean("Show slot", {
-          true: figma.instance("Slot"),
-        }),
       }),
       passwordInputProps: figma.nestedProps("Password input", {
         placeholder: figma.boolean("Show placeholder", {
@@ -46,7 +43,6 @@ figma.connect(
         support-page=${props.labelProps.supportPage}
         placeholder=${props.passwordInputProps.placeholder}
       >
-        ${props.labelProps.showSlot}
       </moz-input-password>
       ${props.errorMessage}
     `,

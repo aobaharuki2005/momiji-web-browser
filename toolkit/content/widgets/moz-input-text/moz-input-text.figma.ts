@@ -16,9 +16,6 @@ figma.connect(
         iconSrc: figma.boolean("Show icon", {
           true: "chrome://example.svg",
         }),
-        showSlot: figma.boolean("Show slot", {
-          true: figma.instance("Slot"),
-        }),
       }),
       textInputProps: figma.nestedProps("Text input", {
         placeholder: figma.boolean("Show placeholder", {
@@ -49,7 +46,6 @@ figma.connect(
         placeholder=${props.textInputProps.placeholder}
         disabled=${props.disabled}
       >
-        ${props.labelProps.showSlot}
       </moz-input-text>
       ${props.errorMessage}
     `,

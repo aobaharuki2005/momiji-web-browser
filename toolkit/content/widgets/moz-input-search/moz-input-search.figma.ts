@@ -16,9 +16,6 @@ figma.connect(
         iconSrc: figma.boolean("Show icon", {
           true: "chrome://example.svg",
         }),
-        showSlot: figma.boolean("Show slot", {
-          true: figma.instance("Slot"),
-        }),
       }),
       searchInputProps: figma.nestedProps("Search input", {
         placeholder: figma.boolean("Show placeholder", {
@@ -46,7 +43,6 @@ figma.connect(
         placeholder=${props.searchInputProps.placeholder}
         disabled=${props.disabled}
       >
-        ${props.labelProps.showSlot}
       </moz-input-search>
       ${props.errorMessage}
     `,
