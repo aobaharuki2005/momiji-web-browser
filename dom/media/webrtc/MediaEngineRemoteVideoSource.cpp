@@ -284,23 +284,20 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
         settings->mHeight.Construct(0);
         settings->mFrameRate.Construct(0);
 
-        if (facingMode.isSome()) {
+        if (facingMode) {
           settings->mFacingMode.Construct(*facingMode);
-          nsTArray<nsString> facing;
-          facing.AppendElement(*facingMode);
-          caps->mFacingMode.Construct(std::move(facing));
+          caps->mFacingMode.Construct(nsTArray{*facingMode});
         }
 
         if (resizeMode) {
-          NS_ConvertASCIItoUTF16 noneString(
-              dom::GetEnumString(VideoResizeModeEnum::None));
-          NS_ConvertASCIItoUTF16 cropString(
+          nsString noneString, cropString;
+          noneString.AssignASCII(dom::GetEnumString(VideoResizeModeEnum::None));
+          cropString.AssignASCII(
               dom::GetEnumString(VideoResizeModeEnum::Crop_and_scale));
           settings->mResizeMode.Construct(
               *resizeMode == VideoResizeModeEnum::Crop_and_scale ? cropString
                                                                  : noneString);
-          caps->mResizeMode.Construct(
-              nsTArray<nsString>{noneString, cropString});
+          caps->mResizeMode.Construct(nsTArray{noneString, cropString});
         }
       }));
 
