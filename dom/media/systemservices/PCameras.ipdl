@@ -10,6 +10,7 @@ include PBackgroundSharedTypes;
 include "mozilla/dom/MediaIPCUtils.h";
 
 using mozilla::camera::CaptureEngine from "mozilla/media/CamerasTypes.h";
+using mozilla::dom::VideoResizeModeEnum from "mozilla/dom/MediaStreamTrackBinding.h";
 using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using mozilla::media::TimeUnit from "TimeUnits.h";
 using mozilla::NormalizedConstraints from "MediaTrackConstraints.h";
@@ -86,7 +87,8 @@ parent:
   async ReleaseCapture(CaptureEngine engine, int captureId);
   async StartCapture(CaptureEngine engine, int captureId,
                      VideoCaptureCapability capability,
-                     NormalizedConstraints constraints);
+                     NormalizedConstraints constraints,
+                     VideoResizeModeEnum resizeMode);
   async FocusOnSelectedSource(CaptureEngine engine, int captureId);
   async StopCapture(CaptureEngine engine, int captureId);
   // transfers frame back
