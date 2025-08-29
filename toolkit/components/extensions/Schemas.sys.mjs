@@ -445,6 +445,9 @@ class Context {
       localize(value) {
         return value;
       },
+      stringToLowerCase(value) {
+        return value.toLowerCase();
+      },
       ...params.preprocessors,
     };
 

@@ -2163,6 +2163,7 @@ export class ExtensionData {
 
           jsPaths: options.js || [],
           cssPaths: options.css || [],
+          cssOrigin: options.css_origin,
         });
       }
 
