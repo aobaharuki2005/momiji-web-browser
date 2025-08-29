@@ -186,8 +186,8 @@ fun TextListItem(
  *
  * @param label The label in the list item.
  * @param url Website [url] for which the favicon will be shown.
- * @param faviconShape The shape used to clip the favicon. Defaults to a slightly rounded rectangle.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param faviconShape The shape used to clip the favicon. Defaults to a slightly rounded rectangle.
  * @param labelModifier [Modifier] to be applied to the label.
  * @param description An optional description text below the label.
  * @param faviconPainter Optional painter to use when fetching a new favicon is unnecessary.
@@ -205,8 +205,8 @@ fun TextListItem(
 fun FaviconListItem(
     label: String,
     url: String,
-    faviconShape: Shape = RoundedCornerShape(2.dp),
     modifier: Modifier = Modifier,
+    faviconShape: Shape = RoundedCornerShape(2.dp),
     labelModifier: Modifier = Modifier,
     description: String? = null,
     faviconPainter: Painter? = null,
