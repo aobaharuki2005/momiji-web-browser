@@ -1651,6 +1651,11 @@ interface InspectorFontFeature {
     tag: string;
 }
 
+interface InspectorNearestColor {
+    colorName: string;
+    exact: boolean;
+}
+
 interface InspectorRGBATuple {
     a?: number;
     b?: number;
@@ -25377,6 +25382,7 @@ declare namespace InspectorUtils {
     function replaceBlockRuleBodyTextInStylesheet(styleSheetText: string, line: number, column: number, newBodyText: string): string | null;
     function rgbToColorName(r: number, g: number, b: number): string;
     function rgbToHsv(r: number, g: number, b: number): number[] | Float32Array;
+    function rgbToNearestColorName(r: number, g: number, b: number): InspectorNearestColor;
     function setContentState(element: Element, state: number): boolean;
     function setDynamicToolbarMaxHeight(aContext: BrowsingContext | null, aHeight: number): void;
     function setVerticalClipping(aContext: BrowsingContext | null, aOffset: number): void;

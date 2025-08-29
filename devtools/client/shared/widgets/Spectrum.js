@@ -17,12 +17,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "labColors",
-  "resource://devtools/shared/css/color-db.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   ["getTextProperties", "getContrastRatioAgainstBackground"],
   "resource://devtools/shared/accessibility.js",
   true
@@ -229,16 +223,9 @@ class Spectrum {
    *         Color name or closest color name
    */
   get colorName() {
-    const labColorEntries = Object.entries(labColors);
-
-    const deltaEs = labColorEntries.map(color =>
-      colorUtils.calculateDeltaE(color[1], colorUtils.rgbToLab(this.rgb))
-    );
-
-    // Get the color name for the one that has the lowest delta-E
-    const minDeltaE = Math.min(...deltaEs);
-    const colorName = labColorEntries[deltaEs.indexOf(minDeltaE)][0];
-    return minDeltaE === 0
+    const [r, g, b] = this.rgbFloat;
+    const { exact, colorName } = InspectorUtils.rgbToNearestColorName(r, g, b);
+    return exact
       ? colorName
       : ColorPickerBundle.formatValueSync(
           "colorpicker-tooltip-color-name-title",

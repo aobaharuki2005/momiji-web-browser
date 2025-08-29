@@ -107,6 +107,9 @@ class InspectorUtils {
   static void RgbToColorName(GlobalObject& aGlobal, uint8_t aR, uint8_t aG,
                              uint8_t aB, nsACString& aResult);
 
+  static void RgbToNearestColorName(GlobalObject&, float aR, float aG, float aB,
+                                    InspectorNearestColor& aResult);
+
   static void RgbToHsv(GlobalObject&, float aR, float aG, float aB,
                        nsTArray<float>& aResult);
 

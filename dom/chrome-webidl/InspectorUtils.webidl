@@ -33,6 +33,7 @@ namespace InspectorUtils {
   sequence<PropertyPref> getCSSPropertyPrefs();
   [Throws] sequence<DOMString> getCSSValuesForProperty(UTF8String property);
   UTF8String rgbToColorName(octet r, octet g, octet b);
+  InspectorNearestColor rgbToNearestColorName(float r, float g, float b);
   sequence<float> rgbToHsv(float r, float g, float b);
   sequence<float> hsvToRgb(float h, float s, float v);
   InspectorRGBATuple? colorToRGBA(UTF8String colorString);
@@ -178,6 +179,11 @@ dictionary InspectorRGBATuple {
   double g = 0;
   double b = 0;
   double a = 1;
+};
+
+dictionary InspectorNearestColor {
+  required UTF8String colorName;
+  required boolean exact;
 };
 
 dictionary InspectorColorToResult {

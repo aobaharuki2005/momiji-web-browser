@@ -26,7 +26,7 @@ use std::iter;
 use std::os::raw::c_void;
 use std::ptr;
 use style::color::mix::ColorInterpolationMethod;
-use style::color::{AbsoluteColor, ColorSpace};
+use style::color::{AbsoluteColor, ColorComponents, ColorSpace};
 use style::computed_value_flags::ComputedValueFlags;
 use style::context::ThreadLocalStyleContext;
 use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext};
@@ -162,7 +162,7 @@ use style::values::computed::length::AnchorSizeFunction;
 use style::values::computed::length_percentage::AllowAnchorPosResolutionInCalcPercentage;
 use style::values::computed::position::AnchorFunction;
 use style::values::computed::{self, ContentVisibility, Context, ToComputedValue};
-use style::values::distance::ComputeSquaredDistance;
+use style::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use style::values::generics::color::ColorMixFlags;
 use style::values::generics::easing::BeforeFlag;
 use style::values::generics::Optional;
@@ -9630,6 +9630,43 @@ pub extern "C" fn Servo_SlowRgbToColorName(r: u8, g: u8, b: u8, result: &mut nsA
     candidates.sort();
     result.assign(candidates[0]);
     true
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_SlowRgbToNearestColorName(
+    r: f32,
+    g: f32,
+    b: f32,
+    color_space: ColorSpace,
+    result: &mut nsACString,
+) -> bool {
+    let absolute = |r, g, b, color_space| AbsoluteColor {
+        components: ColorComponents(r, g, b),
+        alpha: 1.0,
+        color_space,
+        flags: Default::default(),
+    };
+
+    let input = absolute(r, g, b, color_space).to_color_space(ColorSpace::Oklab);
+
+    let mut nearest = (SquaredDistance::from_sqrt(f64::INFINITY), "black");
+    for (name, color) in cssparser::color::all_named_colors() {
+        let color = absolute(
+            color.0 as f32 / 255.0,
+            color.1 as f32 / 255.0,
+            color.2 as f32 / 255.0,
+            ColorSpace::Srgb,
+        )
+        .to_color_space(ColorSpace::Oklab);
+
+        let distance = input.compute_squared_distance(&color).unwrap();
+        if distance < nearest.0 {
+            // DevTools expect the first alphabetically.
+            nearest = (distance, name);
+        }
+    }
+    result.assign(nearest.1);
+    return nearest.0 == SquaredDistance::from_sqrt(0.0);
 }
 
 #[no_mangle]

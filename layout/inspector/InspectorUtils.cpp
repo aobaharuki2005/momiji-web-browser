@@ -761,6 +761,14 @@ void InspectorUtils::RgbToColorName(GlobalObject&, uint8_t aR, uint8_t aG,
   Servo_SlowRgbToColorName(aR, aG, aB, &aColorName);
 }
 
+void InspectorUtils::RgbToNearestColorName(GlobalObject&, float aR, float aG,
+                                           float aB,
+                                           InspectorNearestColor& aResult) {
+  bool exact = Servo_SlowRgbToNearestColorName(
+      aR, aG, aB, StyleColorSpace::Srgb, &aResult.mColorName);
+  aResult.mExact = exact;
+}
+
 /* static */
 void InspectorUtils::RgbToHsv(GlobalObject&, float aR, float aG, float aB,
                               nsTArray<float>& aResult) {
