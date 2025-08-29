@@ -1362,7 +1362,8 @@ var SidebarController = {
         id => toolsNameMap[id] === pref
       );
 
-      if (!commandID) {
+      // Skip badges for unknown or hidden tools
+      if (!commandID || this.toolsAndExtensions.get(commandID).hidden) {
         continue;
       }
 
