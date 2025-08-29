@@ -3615,8 +3615,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::MoveInit(
   // If neither array uses an auto buffer which is big enough to store the
   // other array's elements, then ensure that both arrays use malloc'ed storage
   // and swap their mHdr pointers.
-  if ((!UsesAutoArrayBuffer() || Capacity() < aOther.Length()) &&
-      !aOther.UsesAutoArrayBuffer()) {
+  if (Capacity() < aOther.Length() && !aOther.UsesAutoArrayBuffer()) {
     const bool thisIsAuto = mHdr->mIsAutoArray;
     Header* otherAutoHeader = aOther.GetAutoArrayHeader();
     mHdr = aOther.mHdr;
