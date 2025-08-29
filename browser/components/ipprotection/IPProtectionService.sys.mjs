@@ -615,7 +615,15 @@ class IPProtectionServiceSingleton extends EventTarget {
    * @returns {Promise<ProxyPass|null>} - the proxy pass if it available.
    */
   async #getProxyPass() {
-    let { status, error, pass } = await this.guardian.fetchProxyPass();
+    let proxyPass;
+    try {
+      proxyPass = await this.guardian.fetchProxyPass();
+    } catch (error) {
+      this.#dispatchError(error);
+      return null;
+    }
+
+    let { status, error, pass } = proxyPass;
     lazy.logConsole.debug("ProxyPass:", {
       status,
       valid: pass?.isValid(),
