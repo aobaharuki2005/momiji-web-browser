@@ -5158,23 +5158,6 @@
       }
     ]
   },
-  "1971504": {
-    "label": "wallapop.com",
-    "bugs": {
-      "1971504": {
-        "issue": "broken-interactive-elements",
-        "matches": ["*://*.wallapop.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "css": ["bug1971504-wallapop.com-fix-range-sliders.css"]
-        }
-      }
-    ]
-  },
   "1971690": {
     "label": "bapenda.jabarprov.go.id",
     "bugs": {
