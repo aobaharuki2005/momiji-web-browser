@@ -145,4 +145,11 @@ module.exports = [
       "toolkit/themes/shared/tree/tree.css",
     ],
   },
+  {
+    name: "rollout-use-border-radius-tokens",
+    rules: {
+      "stylelint-plugin-mozilla/use-border-radius-tokens": true,
+    },
+    files: ["devtools/client/aboutdebugging/src/components/debugtarget/**"],
+  },
 ];
