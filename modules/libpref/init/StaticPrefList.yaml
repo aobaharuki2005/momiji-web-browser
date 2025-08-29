@@ -5138,7 +5138,7 @@
 # Is support for View Transitions Level 1 enabled?
 - name: dom.viewTransitions.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
