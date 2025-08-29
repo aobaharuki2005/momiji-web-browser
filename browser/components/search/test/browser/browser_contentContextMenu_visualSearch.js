@@ -215,6 +215,17 @@ add_task(async function contextClick_dataURI() {
   });
 });
 
+// With a default engine that supports visual search, context-clicking an image
+// that's served with `Content-Disposition: attachment` should not show the
+// visual search menuitem.
+add_task(async function contextClick_contentDisposition() {
+  await setDefaultEngineAndCheckMenu({
+    selector: "#image-content-disposition",
+    defaultEngineId: "visual-search-1",
+    shouldBeShown: false,
+  });
+});
+
 // With a default engine that supports visual search and no separate private
 // default engine, context-clicking an image in a private window should show the
 // visual search menuitem, and clicking the item should load the visual search

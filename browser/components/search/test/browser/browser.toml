@@ -46,6 +46,8 @@ support-files = ["browser_contentContextMenu.xhtml"]
 support-files = [
   "browser_contentContextMenu.xhtml",
   "ctxmenu-image.png",
+  "firebird.png",
+  "firebird.png^headers^",
   "search-glass.svg",
 ]
 
