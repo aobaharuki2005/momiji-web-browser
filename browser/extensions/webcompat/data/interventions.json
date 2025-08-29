@@ -124,23 +124,6 @@
       }
     ]
   },
-  "1452707": {
-    "label": "ib.absa.co.za",
-    "bugs": {
-      "1452707": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["https://ib.absa.co.za/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "js": ["bug1452707-window.controllers-shim-ib.absa.co.za.js"]
-        }
-      }
-    ]
-  },
   "1458885": {
     "label": "ipstack.com",
     "bugs": {
