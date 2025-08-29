@@ -95,6 +95,16 @@ add_setup(async function () {
   SystemDate = Cu.getGlobalForObject(QuickSuggestTestUtils).Date;
 });
 
+add_task(async function telemetryType() {
+  Assert.equal(
+    QuickSuggest.getFeature(
+      "ImportantDatesSuggestions"
+    ).getSuggestionTelemetryType({}),
+    "important_dates",
+    "Telemetry type should be 'important_dates'"
+  );
+});
+
 add_task(async function fourDaysBefore() {
   setTime("2025-03-01T00:00");
 

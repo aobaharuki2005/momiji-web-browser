@@ -63,10 +63,10 @@ add_task(async function opt_in() {
     assertEngagementTelemetry([
       {
         engagement_type: "opt_in",
-        selected_result: "rust_market",
+        selected_result: "rust_market_opt_in",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,rust_market",
+        results: "search_engine,rust_market_opt_in",
       },
     ]);
   });
@@ -86,10 +86,10 @@ add_task(async function not_now_and_dismiss() {
     assertEngagementTelemetry([
       {
         engagement_type: "not_now",
-        selected_result: "rust_market",
+        selected_result: "rust_market_opt_in",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,rust_market",
+        results: "search_engine,rust_market_opt_in",
       },
     ]);
 
@@ -116,10 +116,10 @@ add_task(async function not_now_and_dismiss() {
     assertEngagementTelemetry([
       {
         engagement_type: "dismiss",
-        selected_result: "rust_market",
+        selected_result: "rust_market_opt_in",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,rust_market",
+        results: "search_engine,rust_market_opt_in",
       },
     ]);
   });
@@ -158,10 +158,10 @@ add_task(async function not_interested() {
     assertEngagementTelemetry([
       {
         engagement_type: "not_interested",
-        selected_result: "rust_market",
+        selected_result: "rust_market_opt_in",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,rust_market",
+        results: "search_engine,rust_market_opt_in",
       },
     ]);
   });

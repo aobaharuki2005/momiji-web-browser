@@ -52,7 +52,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     return this.realtimeType;
   }
 
-  get telemetryType() {
+  get baseTelemetryType() {
     return this.realtimeType;
   }
 
@@ -181,6 +181,25 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     return this.isSponsored;
   }
 
+  /**
+   * The telemetry type for a suggestion from this provider. (This string does
+   * not include the `${source}_` prefix, e.g., "rust_".)
+   *
+   * Since realtime providers serve two types of suggestions, the opt-in and the
+   * online suggestion, this will return two possible telemetry types depending
+   * on the passed-in suggestion. Telemetry types for each are:
+   *
+   *   Opt-in suggestion: `${this.baseTelemetryType}_opt_in`
+   *   Online suggestion: this.baseTelemetryType
+   *
+   * Individual suggestions can override these telemetry types, but that's
+   * expected to be uncommon.
+   *
+   * @param {object} suggestion
+   *   A suggestion from this provider.
+   * @returns {string}
+   *   The suggestion's telemetry type.
+   */
   getSuggestionTelemetryType(suggestion) {
     switch (suggestion.source) {
       case "merino":
@@ -192,9 +211,9 @@ export class RealtimeSuggestProvider extends SuggestProvider {
         if (suggestion.data?.result?.payload?.hasOwnProperty("telemetryType")) {
           return suggestion.data.result.payload.telemetryType;
         }
-        break;
+        return this.baseTelemetryType + "_opt_in";
     }
-    return this.telemetryType;
+    return this.baseTelemetryType;
   }
 
   filterSuggestions(suggestions) {
