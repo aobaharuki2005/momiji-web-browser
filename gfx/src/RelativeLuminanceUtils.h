@@ -57,7 +57,7 @@ class RelativeLuminanceUtils {
   }
 
  private:
- static float ComputeComponent(float aComponent) {
+  static float ComputeComponent(float aComponent) {
     if (aComponent <= 0.03928f) {
       return aComponent / 12.92f;
     }
