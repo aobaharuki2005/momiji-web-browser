@@ -162,9 +162,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   // IPC messages
   mozilla::ipc::IPCResult RecvRawMessage(
-      const JSActorMessageMeta& aMeta,
-      const UniquePtr<ClonedMessageData>& aData,
-      const UniquePtr<ClonedMessageData>& aStack);
+      const JSActorMessageMeta& aMeta, const Maybe<ClonedMessageData>& aData,
+      const Maybe<ClonedMessageData>& aStack);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvMakeFrameLocal(

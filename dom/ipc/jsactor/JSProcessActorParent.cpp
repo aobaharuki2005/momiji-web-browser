@@ -35,8 +35,8 @@ void JSProcessActorParent::Init(const nsACString& aName,
 JSProcessActorParent::~JSProcessActorParent() { MOZ_ASSERT(!mManager); }
 
 void JSProcessActorParent::SendRawMessage(
-    const JSActorMessageMeta& aMeta, UniquePtr<ipc::StructuredCloneData> aData,
-    UniquePtr<ipc::StructuredCloneData> aStack, ErrorResult& aRv) {
+    const JSActorMessageMeta& aMeta, Maybe<ipc::StructuredCloneData>&& aData,
+    Maybe<ipc::StructuredCloneData>&& aStack, ErrorResult& aRv) {
   if (NS_WARN_IF(!CanSend() || !mManager || !mManager->GetCanSend())) {
     aRv.ThrowInvalidStateError(
         nsPrintfCString("Actor '%s' cannot send message '%s' during shutdown.",
@@ -56,9 +56,9 @@ void JSProcessActorParent::SendRawMessage(
   }
 
   // Cross-process case - send data over ContentParent to other side.
-  UniquePtr<ClonedMessageData> msgData;
+  Maybe<ClonedMessageData> msgData;
   if (aData) {
-    msgData = MakeUnique<ClonedMessageData>();
+    msgData.emplace();
     if (NS_WARN_IF(!aData->BuildClonedMessageData(*msgData))) {
       aRv.ThrowDataCloneError(
           nsPrintfCString("Actor '%s' cannot send message '%s': cannot clone.",
@@ -68,9 +68,9 @@ void JSProcessActorParent::SendRawMessage(
     }
   }
 
-  UniquePtr<ClonedMessageData> stackData;
+  Maybe<ClonedMessageData> stackData;
   if (aStack) {
-    stackData = MakeUnique<ClonedMessageData>();
+    stackData.emplace();
     if (!aStack->BuildClonedMessageData(*stackData)) {
       stackData.reset();
     }

@@ -3408,7 +3408,7 @@ BrowserChild::GetChromeOuterWindowID(uint64_t* aId) {
 
 bool BrowserChild::DoSendBlockingMessage(
     const nsAString& aMessage, StructuredCloneData& aData,
-    nsTArray<UniquePtr<StructuredCloneData>>* aRetVal) {
+    nsTArray<StructuredCloneData>* aRetVal) {
   ClonedMessageData data;
   if (!BuildClonedMessageData(aData, data)) {
     return false;

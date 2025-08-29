@@ -498,8 +498,7 @@ class ContentChild final : public PContentChild,
 #endif  // defined(XP_WIN)
 
   mozilla::ipc::IPCResult RecvSetXPCOMProcessAttributes(
-      XPCOMInitData&& aXPCOMInit,
-      const UniquePtr<StructuredCloneData>& aInitialData,
+      XPCOMInitData&& aXPCOMInit, const StructuredCloneData& aInitialData,
       FullLookAndFeel&& aLookAndFeelData, SystemFontList&& aFontList,
       Maybe<mozilla::ipc::ReadOnlySharedMemoryHandle>&& aSharedUASheetHandle,
       const uintptr_t& aSharedUASheetAddress,
@@ -761,9 +760,8 @@ class ContentChild final : public PContentChild,
       const uint32_t aStopFlags);
 
   mozilla::ipc::IPCResult RecvRawMessage(
-      const JSActorMessageMeta& aMeta,
-      const UniquePtr<ClonedMessageData>& aData,
-      const UniquePtr<ClonedMessageData>& aStack);
+      const JSActorMessageMeta& aMeta, const Maybe<ClonedMessageData>& aData,
+      const Maybe<ClonedMessageData>& aStack);
 
   already_AddRefed<JSActor> InitJSActor(JS::Handle<JSObject*> aMaybeActor,
                                         const nsACString& aName,

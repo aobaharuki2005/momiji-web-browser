@@ -66,17 +66,16 @@ class JSActor : public nsISupports, public nsWrapperCache {
   // message metadata |aMetadata|. The underlying transport should call the
   // |ReceiveMessage| method on the other side asynchronously.
   virtual void SendRawMessage(const JSActorMessageMeta& aMetadata,
-                              UniquePtr<ipc::StructuredCloneData> aData,
-                              UniquePtr<ipc::StructuredCloneData> aStack,
+                              Maybe<ipc::StructuredCloneData>&& aData,
+                              Maybe<ipc::StructuredCloneData>&& aStack,
                               ErrorResult& aRv) = 0;
 
   // Helper method to send an in-process raw message.
   using OtherSideCallback = std::function<already_AddRefed<JSActorManager>()>;
-  static void SendRawMessageInProcess(
-      const JSActorMessageMeta& aMeta,
-      UniquePtr<ipc::StructuredCloneData> aData,
-      UniquePtr<ipc::StructuredCloneData> aStack,
-      OtherSideCallback&& aGetOtherSide);
+  static void SendRawMessageInProcess(const JSActorMessageMeta& aMeta,
+                                      Maybe<ipc::StructuredCloneData>&& aData,
+                                      Maybe<ipc::StructuredCloneData>&& aStack,
+                                      OtherSideCallback&& aGetOtherSide);
 
   virtual ~JSActor() = default;
 
@@ -135,7 +134,7 @@ class JSActor : public nsISupports, public nsWrapperCache {
     ~QueryHandler() = default;
 
     void SendReply(JSContext* aCx, JSActorMessageKind aKind,
-                   UniquePtr<ipc::StructuredCloneData> aData);
+                   Maybe<ipc::StructuredCloneData>&& aData);
 
     RefPtr<JSActor> mActor;
     RefPtr<Promise> mPromise;

@@ -27,8 +27,8 @@ JSObject* JSProcessActorChild::WrapObject(JSContext* aCx,
 }
 
 void JSProcessActorChild::SendRawMessage(
-    const JSActorMessageMeta& aMeta, UniquePtr<ipc::StructuredCloneData> aData,
-    UniquePtr<ipc::StructuredCloneData> aStack, ErrorResult& aRv) {
+    const JSActorMessageMeta& aMeta, Maybe<ipc::StructuredCloneData>&& aData,
+    Maybe<ipc::StructuredCloneData>&& aStack, ErrorResult& aRv) {
   if (NS_WARN_IF(!CanSend() || !mManager || !mManager->GetCanSend())) {
     aRv.ThrowInvalidStateError("JSProcessActorChild cannot send at the moment");
     return;
@@ -45,9 +45,9 @@ void JSProcessActorChild::SendRawMessage(
   }
 
   // Cross-process case - send data over ContentChild to other side.
-  UniquePtr<ClonedMessageData> msgData;
+  Maybe<ClonedMessageData> msgData;
   if (aData) {
-    msgData = MakeUnique<ClonedMessageData>();
+    msgData.emplace();
     if (NS_WARN_IF(!aData->BuildClonedMessageData(*msgData))) {
       aRv.ThrowDataCloneError(
           nsPrintfCString("JSProcessActorChild serialization error: cannot "
@@ -57,9 +57,9 @@ void JSProcessActorChild::SendRawMessage(
     }
   }
 
-  UniquePtr<ClonedMessageData> stackData;
+  Maybe<ClonedMessageData> stackData;
   if (aStack) {
-    stackData = MakeUnique<ClonedMessageData>();
+    stackData.emplace();
     if (!aStack->BuildClonedMessageData(*stackData)) {
       stackData.reset();
     }

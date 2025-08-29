@@ -36,8 +36,8 @@ void JSWindowActorParent::Init(const nsACString& aName,
 }
 
 void JSWindowActorParent::SendRawMessage(
-    const JSActorMessageMeta& aMeta, UniquePtr<ipc::StructuredCloneData> aData,
-    UniquePtr<ipc::StructuredCloneData> aStack, ErrorResult& aRv) {
+    const JSActorMessageMeta& aMeta, Maybe<ipc::StructuredCloneData>&& aData,
+    Maybe<ipc::StructuredCloneData>&& aStack, ErrorResult& aRv) {
   if (NS_WARN_IF(!CanSend() || !mManager || !mManager->CanSend())) {
     aRv.ThrowInvalidStateError("JSWindowActorParent cannot send at the moment");
     return;
@@ -50,9 +50,9 @@ void JSWindowActorParent::SendRawMessage(
     return;
   }
 
-  UniquePtr<ClonedMessageData> msgData;
+  Maybe<ClonedMessageData> msgData;
   if (aData) {
-    msgData = MakeUnique<ClonedMessageData>();
+    msgData.emplace();
     if (NS_WARN_IF(!aData->BuildClonedMessageData(*msgData))) {
       aRv.ThrowDataCloneError(
           nsPrintfCString("JSWindowActorParent serialization error: cannot "
@@ -62,9 +62,9 @@ void JSWindowActorParent::SendRawMessage(
     }
   }
 
-  UniquePtr<ClonedMessageData> stackData;
+  Maybe<ClonedMessageData> stackData;
   if (aStack) {
-    stackData = MakeUnique<ClonedMessageData>();
+    stackData.emplace();
     if (!aStack->BuildClonedMessageData(*stackData)) {
       stackData.reset();
     }

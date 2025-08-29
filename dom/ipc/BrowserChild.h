@@ -223,11 +223,11 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
    * MessageManagerCallback methods that we override.
    */
   virtual bool DoSendBlockingMessage(
-      const nsAString& aMessage, ipc::StructuredCloneData& aData,
-      nsTArray<UniquePtr<ipc::StructuredCloneData>>* aRetVal) override;
+      const nsAString& aMessage, StructuredCloneData& aData,
+      nsTArray<StructuredCloneData>* aRetVal) override;
 
   virtual nsresult DoSendAsyncMessage(const nsAString& aMessage,
-                                      ipc::StructuredCloneData& aData) override;
+                                      StructuredCloneData& aData) override;
 
   bool DoUpdateZoomConstraints(const uint32_t& aPresShellId,
                                const ViewID& aViewId,

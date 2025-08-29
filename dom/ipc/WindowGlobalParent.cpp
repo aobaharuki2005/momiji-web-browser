@@ -552,16 +552,16 @@ IPCResult WindowGlobalParent::RecvDestroy() {
 }
 
 IPCResult WindowGlobalParent::RecvRawMessage(
-    const JSActorMessageMeta& aMeta, const UniquePtr<ClonedMessageData>& aData,
-    const UniquePtr<ClonedMessageData>& aStack) {
-  UniquePtr<StructuredCloneData> data;
+    const JSActorMessageMeta& aMeta, const Maybe<ClonedMessageData>& aData,
+    const Maybe<ClonedMessageData>& aStack) {
+  Maybe<StructuredCloneData> data;
   if (aData) {
-    data = MakeUnique<StructuredCloneData>();
+    data.emplace();
     data->BorrowFromClonedMessageData(*aData);
   }
-  UniquePtr<StructuredCloneData> stack;
+  Maybe<StructuredCloneData> stack;
   if (aStack) {
-    stack = MakeUnique<StructuredCloneData>();
+    stack.emplace();
     stack->BorrowFromClonedMessageData(*aStack);
   }
   MMPrinter::Print("WindowGlobalParent::RecvRawMessage", aMeta.actorName(),
