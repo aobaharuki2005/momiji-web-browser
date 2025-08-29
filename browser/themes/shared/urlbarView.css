@@ -439,7 +439,10 @@
   background-image: url("chrome://global/skin/icons/more.svg");
   background-color: var(--button-background-color);
 
-  .urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-buttons > &:not([open]):first-child:empty {
+  .urlbarView-results:not([disable-resultmenu-autohide])
+    > .urlbarView-row:not(:hover, [selected], [descendant-selected])
+    > .urlbarView-row-buttons
+    > &:not([open]):first-child:empty {
     display: none;
   }
 
@@ -1304,53 +1307,92 @@
 
 /* Market suggestions */
 
+.urlbarView-row[dynamicType="market"] > .urlbarView-row-inner {
+  /* Remove the usual inner padding. Each item in the row will have its own. */
+  padding: 0;
+}
+
 .urlbarView-market-item {
   display: flex;
   align-items: center;
+
+  /* This should match the radius on `.urlbarView-row`. Only visible when there
+     are multiple items in a row. */
+  border-radius: calc(var(--urlbarView-row-gutter) + var(--toolbarbutton-border-radius));
+
+  /* Inline spacing between multiple items in a row */
+  margin-inline-end: var(--space-small);
+
+  /* The block and inline-start padding should match the normal inner inline
+     padding we removed above, in order to keep the first item's image aligned
+     with the text and images in other rows. */
+  padding: var(--urlbarView-item-inline-padding);
   padding-inline-end: var(--space-large);
 
   --market-todays-change-perc-plus-color: light-dark(var(--color-green-60), var(--color-green-20));
   --market-todays-change-perc-minus-color: light-dark(var(--color-red-70), var(--color-red-40));
 
-  &:hover,
-  &[selected] {
-    --market-todays-change-perc-plus-color: light-dark(var(--color-green-20), var(--color-green-60));
-    --market-todays-change-perc-minus-color: light-dark(var(--color-red-40), var(--color-red-70));
+  .urlbarView-row[dynamicType="market"] > .urlbarView-dynamic-market-root:not([selectable]) > &:not([selected]):hover {
+    background-color: var(--urlbarView-hover-background);
   }
 
-  > .urlbarView-market-image {
-    /* The image size for realtime suggestion is larger than others by design */
-    width: 52px;
-    height: 52px;
-    margin-block: var(--space-small);
-    margin-inline-end: var(--space-small);
+  &[selected] {
+    background-color: var(--urlbarView-highlight-background);
+  }
+
+  > .urlbarView-market-image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--urlbarView-top-pick-large-icon-box-size);
+    height: var(--urlbarView-top-pick-large-icon-box-size);
+    margin-inline-end: var(--space-medium);
+    background-color: var(--urlbar-box-focus-bgcolor);
+    border-radius: var(--border-radius-small);
+
+    > .urlbarView-market-image {
+      width: 36px;
+      height: auto;
+      max-height: 36px;
+    }
   }
 
   > .urlbarView-market-description {
     display: flex;
     flex-direction: column;
     text-align: start;
-    grid-row-gap: var(--space-xxsmall);
+    grid-row-gap: var(--space-xsmall);
 
-    > .urlbarView-market-name {
-      font-weight: var(--font-weight-bold);
+    > .urlbarView-market-description-top > .urlbarView-market-description-separator,
+    > .urlbarView-market-description-bottom > .urlbarView-market-description-separator {
+      margin-inline: var(--space-xsmall);
     }
 
-    > .urlbarView-market-todays-change-perc {
-      font-weight: var(--font-weight-bold);
+    > .urlbarView-market-description-top {
+      > .urlbarView-market-name {
+        font-weight: var(--font-weight-bold);
+      }
+    }
+
+    > .urlbarView-market-description-bottom {
       font-size: var(--urlbarView-small-font-size);
+
+      > .urlbarView-market-todays-change-perc {
+        font-weight: var(--font-weight-bold);
+      }
     }
 
-    > .urlbarView-market-todays-change-perc-plus {
-      color: var(--market-todays-change-perc-plus-color);
-    }
-
-    > .urlbarView-market-todays-change-perc-minus {
-      color: var(--market-todays-change-perc-minus-color);
-    }
-
-    > .urlbarView-market-last-price {
-      font-size: var(--urlbarView-small-font-size);
+    .urlbarView-row[dynamicType="market"]:not([selected])
+      > .urlbarView-row-inner
+      > .urlbarView-market-item:not([selected])
+      > &
+      > .urlbarView-market-description-bottom {
+      > .urlbarView-market-todays-change-perc-plus {
+        color: var(--market-todays-change-perc-plus-color);
+      }
+      > .urlbarView-market-todays-change-perc-minus {
+        color: var(--market-todays-change-perc-minus-color);
+      }
     }
   }
 }

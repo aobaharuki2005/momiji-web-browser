@@ -100,10 +100,8 @@ add_setup(async function () {
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
   });
-});
 
-add_task(async function ui_single() {
-  const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_SINGLE,
     prefs: [
       ["market.featureGate", true],
@@ -111,6 +109,10 @@ add_task(async function ui_single() {
       ["suggest.quicksuggest.nonsponsored", true],
     ],
   });
+});
+
+add_task(async function ui_single() {
+  MerinoTestUtils.server.response.body.suggestions = TEST_MERINO_SINGLE;
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -139,25 +141,50 @@ add_task(async function ui_single() {
     lastPrice: target.last_price,
   });
 
+  // Arrow down to select the row.
   EventUtils.synthesizeKey("KEY_ArrowDown");
   let { query } = TEST_MERINO_SINGLE[0].custom_details.polygon.values[0];
   Assert.ok(query, "Sanity check: query is defined");
   Assert.equal(gURLBar.value, query, "Input value should be the query");
 
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRow(window),
+    element.row,
+    "The row should be selected"
+  );
+  Assert.ok(
+    element.row.hasAttribute("descendant-selected"),
+    "The row should have descendant-selected attribute since the row inner is selected"
+  );
+  Assert.ok(
+    BrowserTestUtils.isVisible(
+      element.row.querySelector(".urlbarView-button-result-menu")
+    ),
+    "The result menu button should be visible"
+  );
+
+  // Arrow down again past the row.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  Assert.notEqual(
+    UrlbarTestUtils.getSelectedRow(window),
+    element.row,
+    "The row should not be selected after pressing Down"
+  );
+  Assert.ok(
+    !element.row.hasAttribute("descendant-selected"),
+    "The row should still not have descendant-selected attribute after pressing Down"
+  );
+
+  // Should assert the result menu button is not visible here, but that
+  // intermittently fails in verify/TV mode. Because the row is intermittently
+  // hovered?
+
   await UrlbarTestUtils.promisePopupClose(window);
   gURLBar.handleRevert();
-  await cleanup();
 });
 
 add_task(async function ui_multi() {
-  const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    merinoSuggestions: TEST_MERINO_MULTI,
-    prefs: [
-      ["market.featureGate", true],
-      ["suggest.market", true],
-      ["suggest.quicksuggest.nonsponsored", true],
-    ],
-  });
+  MerinoTestUtils.server.response.body.suggestions = TEST_MERINO_MULTI;
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -168,6 +195,7 @@ add_task(async function ui_multi() {
   let items = element.row.querySelectorAll(".urlbarView-market-item");
   Assert.equal(items.length, 3);
 
+  // Check each item in the row, then select it and check the selection.
   for (let i = 0; i < items.length; i++) {
     info(`Check the item[${i}]`);
     let target = TEST_MERINO_MULTI[0].custom_details.polygon.values[i];
@@ -179,6 +207,7 @@ add_task(async function ui_multi() {
     });
 
     EventUtils.synthesizeKey("KEY_Tab");
+
     let { query } = TEST_MERINO_MULTI[0].custom_details.polygon.values[i];
     Assert.ok(query, "Sanity check: query is defined at index " + i);
     Assert.equal(
@@ -186,22 +215,30 @@ add_task(async function ui_multi() {
       query,
       "Input value should be the query at index " + i
     );
+
+    Assert.equal(
+      UrlbarTestUtils.getSelectedRow(window),
+      element.row,
+      "The selected row should be the expected row at index " + i
+    );
+    Assert.ok(
+      element.row.hasAttribute("descendant-selected"),
+      "Row should have descendant-selected attribute at index " + i
+    );
+    Assert.ok(
+      BrowserTestUtils.isVisible(
+        element.row.querySelector(".urlbarView-button-result-menu")
+      ),
+      "Result menu button should be visible at index " + i
+    );
   }
 
   await UrlbarTestUtils.promisePopupClose(window);
   gURLBar.handleRevert();
-  await cleanup();
 });
 
 add_task(async function activate() {
-  const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    merinoSuggestions: TEST_MERINO_MULTI,
-    prefs: [
-      ["market.featureGate", true],
-      ["suggest.market", true],
-      ["suggest.quicksuggest.nonsponsored", true],
-    ],
-  });
+  MerinoTestUtils.server.response.body.suggestions = TEST_MERINO_MULTI;
 
   let values = TEST_MERINO_MULTI[0].custom_details.polygon.values;
   for (let i = 0; i < values.length; i++) {
@@ -229,20 +266,13 @@ add_task(async function activate() {
     Assert.ok(true, `Expected URL is loaded [${expectedURL}]`);
 
     await UrlbarTestUtils.promisePopupClose(window);
+    gURLBar.handleRevert();
   }
-
-  await cleanup();
 });
 
 add_task(async function no_image() {
-  const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    merinoSuggestions: TEST_MERINO_NO_SPECIFIC_IMAGE,
-    prefs: [
-      ["market.featureGate", true],
-      ["suggest.market", true],
-      ["suggest.quicksuggest.nonsponsored", true],
-    ],
-  });
+  MerinoTestUtils.server.response.body.suggestions =
+    TEST_MERINO_NO_SPECIFIC_IMAGE;
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -261,7 +291,7 @@ add_task(async function no_image() {
   }
 
   await UrlbarTestUtils.promisePopupClose(window);
-  await cleanup();
+  gURLBar.handleRevert();
 });
 
 function assertUI(item, expected) {
