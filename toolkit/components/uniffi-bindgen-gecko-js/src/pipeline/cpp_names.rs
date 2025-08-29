@@ -3,12 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::*;
-use heck::{ToLowerCamelCase, ToUpperCamelCase};
+use heck::ToUpperCamelCase;
 
 pub fn pass(root: &mut Root) -> Result<()> {
     root.visit_mut(|arg: &mut FfiValueArgument| {
         arg.field_name = format!("m{}", arg.name.to_upper_camel_case());
-        arg.var_name = arg.name.to_lower_camel_case();
         arg.name = format!("a{}", arg.name.to_upper_camel_case());
     });
     Ok(())

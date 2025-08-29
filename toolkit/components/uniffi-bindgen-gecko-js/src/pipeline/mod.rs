@@ -20,7 +20,6 @@ mod literals;
 mod modules;
 mod types;
 
-pub use crate::ConcurrencyMode;
 use crate::Config;
 use anyhow::Result;
 pub use nodes::*;
