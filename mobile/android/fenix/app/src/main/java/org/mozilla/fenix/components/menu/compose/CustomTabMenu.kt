@@ -131,6 +131,12 @@ internal fun CustomTabMenu(
             }
         },
     ) {
+        if (isBottomToolbar) {
+            PoweredByFirefoxItem(
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+            )
+        }
+
         MenuGroup {
             val badgeText: String
             val menuItemState: MenuItemState
@@ -202,7 +208,11 @@ internal fun CustomTabMenu(
             }
         }
 
-        PoweredByFirefoxItem()
+        if (!isBottomToolbar) {
+            PoweredByFirefoxItem(
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
     }
 }
 
