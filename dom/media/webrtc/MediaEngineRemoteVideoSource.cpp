@@ -262,6 +262,8 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
     return NS_ERROR_FAILURE;
   }
 
+  DesiredSizeInput input{};
+  double framerate = 0.0;
   {
     MutexAutoLock lock(mMutex);
     mState = kAllocated;
@@ -271,18 +273,35 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
     *mPrefs = aPrefs;
     mTrackingId =
         TrackingId(CaptureEngineToTrackingSourceStr(mCapEngine), mCaptureId);
+    const int32_t& cw = mCapability.width;
+    const int32_t& ch = mCapability.height;
+    const double maxFPS = AssertedCast<double>(mCapability.maxFPS);
+    input = {
+        .mConstraints = c,
+        .mCanCropAndScale = mCalculation == kFeasibility,
+        .mCapabilityWidth = cw ? Some(cw) : Nothing(),
+        .mCapabilityHeight = ch ? Some(ch) : Nothing(),
+        .mCapEngine = mCapEngine,
+        .mInputWidth = cw,
+        .mInputHeight = ch,
+        .mRotation = 0,
+    };
+    framerate =
+        input.mCanCropAndScale ? mConstraints->mFrameRate.Get(maxFPS) : maxFPS;
   }
+
+  auto dstSize = CalculateDesiredSize(input);
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineRemoteVideoSource::Allocate::MainUpdate",
-      [settings = mSettings, caps = mTrackCapabilities,
+      [settings = mSettings, caps = mTrackCapabilities, dstSize, framerate,
        facingMode = mFacingMode, resizeMode]() {
         *settings = dom::MediaTrackSettings();
         *caps = dom::MediaTrackCapabilities();
 
-        settings->mWidth.Construct(0);
-        settings->mHeight.Construct(0);
-        settings->mFrameRate.Construct(0);
+        settings->mWidth.Construct(dstSize.width);
+        settings->mHeight.Construct(dstSize.height);
+        settings->mFrameRate.Construct(framerate);
 
         if (facingMode) {
           settings->mFacingMode.Construct(*facingMode);
@@ -369,32 +388,15 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   MOZ_ASSERT(mTrack);
 
   NormalizedConstraints constraints;
-  DesiredSizeInput input{};
-  double framerate = 0.0;
   {
     MutexAutoLock lock(mMutex);
     mState = kStarted;
     constraints = *mConstraints;
-    const int32_t& cw = mCapability.width;
-    const int32_t& ch = mCapability.height;
-    const double maxFPS = AssertedCast<double>(mCapability.maxFPS);
-    input = {
-        .mConstraints = constraints,
-        .mCanCropAndScale = mCalculation == kFeasibility,
-        .mCapabilityWidth = cw ? Some(cw) : Nothing(),
-        .mCapabilityHeight = ch ? Some(ch) : Nothing(),
-        .mCapEngine = mCapEngine,
-        .mInputWidth = cw,
-        .mInputHeight = ch,
-        .mRotation = 0,
-    };
-    framerate =
-        input.mCanCropAndScale ? mConstraints->mFrameRate.Get(maxFPS) : maxFPS;
   }
 
   // Tell CamerasParent what resizeMode was selected, as it doesn't have access
   // to MediaEnginePrefs.
-  const auto resizeMode = input.mCanCropAndScale
+  const auto resizeMode = mCalculation == kFeasibility
                               ? VideoResizeModeEnum::Crop_and_scale
                               : VideoResizeModeEnum::None;
   const auto resizeModeString =
@@ -403,35 +405,7 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   constraints.mResizeMode.mIdeal.insert(resizeModeString);
 
   nsresult rv = StartCapture(constraints, resizeMode);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   mSettingsUpdatedByFrame->mValue = false;
-
-  Maybe<gfx::IntSize> dstSize;
-  if (input.mInputWidth && input.mInputHeight) {
-    dstSize = Some(CalculateDesiredSize(input));
-  }
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "MediaEngineRemoteVideoSource::SetLastCapability",
-      [settings = mSettings, updated = mSettingsUpdatedByFrame,
-       calc = mCalculation, dstSize, framerate,
-       resizeModeEnabled = mPrefs->mResizeModeEnabled]() mutable {
-        const bool cropAndScale = calc == kFeasibility;
-        if (dstSize && !updated->mValue) {
-          settings->mWidth.Value() = dstSize->width;
-          settings->mHeight.Value() = dstSize->height;
-        }
-        settings->mFrameRate.Value() = framerate;
-        if (resizeModeEnabled) {
-          auto resizeMode = cropAndScale ? VideoResizeModeEnum::Crop_and_scale
-                                         : VideoResizeModeEnum::None;
-          settings->mResizeMode.Reset();
-          settings->mResizeMode.Construct(
-              NS_ConvertASCIItoUTF16(dom::GetEnumString(resizeMode)));
-        }
-      }));
   return rv;
 }
 
