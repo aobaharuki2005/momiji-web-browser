@@ -155,14 +155,14 @@ class gfxTextRun : public gfxShapedText {
   // Describe range [start, end) of a text run. The range is
   // restricted to grapheme cluster boundaries.
   struct Range {
-    uint32_t start;
-    uint32_t end;
+    uint32_t start = 0;
+    uint32_t end = 0;
     uint32_t Length() const { return end - start; }
 
-    Range() : start(0), end(0) {}
+    Range() = default;
     Range(uint32_t aStart, uint32_t aEnd) : start(aStart), end(aEnd) {}
     explicit Range(const gfxTextRun* aTextRun)
-        : start(0), end(aTextRun->GetLength()) {}
+        : Range(0, aTextRun->GetLength()) {}
   };
 
   // All coordinates are in layout/app units
