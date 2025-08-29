@@ -1022,7 +1022,7 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsAString& aMsg, const ClonedMessageData& aData,
-      nsTArray<StructuredCloneData>* aRetvals);
+      nsTArray<UniquePtr<StructuredCloneData>>* aRetvals);
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsAString& aMsg,
                                            const ClonedMessageData& aData);
@@ -1294,8 +1294,9 @@ class ContentParent final : public PContentParent,
       ServiceWorkerShutdownState::Progress aProgress);
 
   mozilla::ipc::IPCResult RecvRawMessage(
-      const JSActorMessageMeta& aMeta, const Maybe<ClonedMessageData>& aData,
-      const Maybe<ClonedMessageData>& aStack);
+      const JSActorMessageMeta& aMeta,
+      const UniquePtr<ClonedMessageData>& aData,
+      const UniquePtr<ClonedMessageData>& aStack);
 
   mozilla::ipc::IPCResult RecvAbortOtherOrientationPendingPromises(
       const MaybeDiscarded<BrowsingContext>& aContext);
