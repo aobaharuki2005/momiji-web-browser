@@ -725,10 +725,16 @@
   <string name="preferences_category_account">Akun</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">Lokasi bilah alamat</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">Tata letak bilah alat</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">Tema</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Beranda</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Ikon aplikasi</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Tampilan bilah tab</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gestur</string>
   <!-- Preference for settings related to visual options -->
@@ -803,6 +809,12 @@
   <string name="preferences_open_links_in_apps_ask">Tanyakan sebelum buka</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Jangan pernah</string>
+  <!-- Preference title for choosing an app to handle downloads -->
+  <string name="preferences_choose_app_for_downloads">Kelola unduhan dengan aplikasi lain</string>
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_downloads_settings_clean_up_files_title">Hapus dari %s dan perangkat</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">Unduhan</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">Aktifkan log Gecko</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
@@ -827,6 +839,12 @@
   <string name="addons_permissions_allow_for_all_sites_subtitle">Jika Anda memercayai ekstensi ini, Anda dapat memberikannya izin di setiap situs web.</string>
   <!-- The text shown when an extension does not require permissions -->
   <string name="addons_does_not_require_permissions">Ekstensi ini tidak memerlukan izin apa pun.</string>
+  <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
+  <string name="addons_permissions_required_data_collection_description_2">Pengembang mengatakan ekstensi ini mengumpulkan: %1$s</string>
+  <!-- The description of the "none" data collection permission, when the extension doesn't collect anything according to the developer. -->
+  <string name="addons_permissions_none_required_data_collection_description">Pengembang mengatakan ekstensi ini tidak memerlukan pengumpulan data.</string>
+  <!-- The title of the required permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_permissions">Izin yang diperlukan:</string>
   <!-- The title of the optional permissions section from addon's permissions screen. -->
   <string name="addons_permissions_heading_optional_permissions">Izin opsional:</string>
   <!-- The title of the required data collection permissions section from addon's permissions screen. -->
@@ -3241,7 +3259,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Batal</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">Kuki dan data situs dihapus</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Kuki dan data situs dihapus</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Sambungan aman</string>
   <!-- Text for the connection security panel when the site is not secure. -->

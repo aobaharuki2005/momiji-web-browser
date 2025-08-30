@@ -1386,6 +1386,12 @@
   <string name="tab_tray_multiselect_menu_item_bookmark">Αποθήκευση</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Κλείσιμο</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Κλείσιμο επιλεγμένων καρτελών</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">Κοινή χρήση</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">Προσθήκη σε συλλογή</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">Κοινή χρήση επιλεγμένων καρτελών</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1733,6 +1739,8 @@
   <string name="bookmark_menu_delete_button">Διαγραφή</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Αποθήκευση</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">Επιλογές ταξινόμησης</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Προσαρμοσμένη σειρά</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1803,6 +1811,8 @@
   <string name="bookmark_search_button_content_description">Αναζήτηση σελιδοδεικτών</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Μενού στοιχείων για «%s»</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">Κλείσιμο σελιδοδεικτών</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Δεν υπάρχει κανένας σελιδοδείκτης ακόμα</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -3325,7 +3335,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Ακύρωση</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">Τα cookie και τα δεδομένα ιστοτόπων αφαιρέθηκαν</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Τα cookie και τα δεδομένα ιστοτόπων αφαιρέθηκαν</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Ασφαλής σύνδεση</string>
   <!-- Text for the connection security panel when the site is not secure. -->
