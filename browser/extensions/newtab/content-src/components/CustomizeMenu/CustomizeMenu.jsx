@@ -15,11 +15,15 @@ export class _CustomizeMenu extends React.PureComponent {
     this.onExited = this.onExited.bind(this);
     this.state = {
       exitEventFired: false,
+      isMounted: false, // becomes true after first open; never reset (see onEntered)
     };
   }
 
   onEntered() {
-    this.setState({ exitEventFired: false });
+    this.setState({
+      exitEventFired: false,
+      isMounted: true,
+    });
     if (this.closeButton) {
       this.closeButton.focus();
     }
@@ -33,6 +37,9 @@ export class _CustomizeMenu extends React.PureComponent {
   }
 
   render() {
+    const { showing } = this.props;
+    const { isMounted } = this.state;
+
     return (
       <span>
         <CSSTransition
@@ -61,51 +68,57 @@ export class _CustomizeMenu extends React.PureComponent {
             <label data-l10n-id="newtab-customize-panel-icon-button-label" />
           </button>
         </CSSTransition>
-        <CSSTransition
-          timeout={250}
-          classNames="customize-animate"
-          in={this.props.showing}
-          onEntered={this.onEntered}
-          onExited={this.onExited}
-          appear={true}
-        >
-          <div
-            className="customize-menu"
-            role="dialog"
-            data-l10n-id="newtab-settings-dialog-label"
+        {/*
+         * Lazy mounting: `showing` controls visibility;
+         * `isMounted` avoids initial load cost but keeps DOM for faster re-open.
+         */}
+        {(showing || isMounted) && (
+          <CSSTransition
+            timeout={250}
+            classNames="customize-animate"
+            in={this.props.showing}
+            onEntered={this.onEntered}
+            onExited={this.onExited}
+            appear={true}
           >
-            <div className="close-button-wrapper">
-              <moz-button
-                onClick={() => this.props.onClose()}
-                id="close-button"
-                type="icon ghost"
-                data-l10n-id="newtab-custom-close-menu-button"
-                iconsrc="chrome://global/skin/icons/close.svg"
-                ref={c => (this.closeButton = c)}
-              ></moz-button>
+            <div
+              className="customize-menu"
+              role="dialog"
+              data-l10n-id="newtab-settings-dialog-label"
+            >
+              <div className="close-button-wrapper">
+                <moz-button
+                  onClick={() => this.props.onClose()}
+                  id="close-button"
+                  type="icon ghost"
+                  data-l10n-id="newtab-custom-close-menu-button"
+                  iconsrc="chrome://global/skin/icons/close.svg"
+                  ref={c => (this.closeButton = c)}
+                ></moz-button>
+              </div>
+              <ContentSection
+                openPreferences={this.props.openPreferences}
+                setPref={this.props.setPref}
+                enabledSections={this.props.enabledSections}
+                enabledWidgets={this.props.enabledWidgets}
+                wallpapersEnabled={this.props.wallpapersEnabled}
+                activeWallpaper={this.props.activeWallpaper}
+                pocketRegion={this.props.pocketRegion}
+                mayHaveTopicSections={this.props.mayHaveTopicSections}
+                mayHaveInferredPersonalization={
+                  this.props.mayHaveInferredPersonalization
+                }
+                mayHaveWeather={this.props.mayHaveWeather}
+                mayHaveTrendingSearch={this.props.mayHaveTrendingSearch}
+                mayHaveWidgets={this.props.mayHaveWidgets}
+                mayHaveTimerWidget={this.props.mayHaveTimerWidget}
+                mayHaveListsWidget={this.props.mayHaveListsWidget}
+                dispatch={this.props.dispatch}
+                exitEventFired={this.state.exitEventFired}
+              />
             </div>
-            <ContentSection
-              openPreferences={this.props.openPreferences}
-              setPref={this.props.setPref}
-              enabledSections={this.props.enabledSections}
-              enabledWidgets={this.props.enabledWidgets}
-              wallpapersEnabled={this.props.wallpapersEnabled}
-              activeWallpaper={this.props.activeWallpaper}
-              pocketRegion={this.props.pocketRegion}
-              mayHaveTopicSections={this.props.mayHaveTopicSections}
-              mayHaveInferredPersonalization={
-                this.props.mayHaveInferredPersonalization
-              }
-              mayHaveWeather={this.props.mayHaveWeather}
-              mayHaveTrendingSearch={this.props.mayHaveTrendingSearch}
-              mayHaveWidgets={this.props.mayHaveWidgets}
-              mayHaveTimerWidget={this.props.mayHaveTimerWidget}
-              mayHaveListsWidget={this.props.mayHaveListsWidget}
-              dispatch={this.props.dispatch}
-              exitEventFired={this.state.exitEventFired}
-            />
-          </div>
-        </CSSTransition>
+          </CSSTransition>
+        )}
       </span>
     );
   }
