@@ -1,4 +1,6 @@
 ChromeUtils.defineESModuleGetters(this, {
+  AboutNewTabResourceMapping:
+    "resource:///modules/AboutNewTabResourceMapping.sys.mjs",
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
@@ -2297,5 +2299,30 @@ add_task(async function test_buildId() {
     await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
     message,
     "should select correct item when filtering by build ID"
+  );
+});
+
+add_task(async function test_newtabAddonVersion() {
+  const FAKE_NEWTAB_VERSION = "145.0.2123.2131";
+  const sandbox = sinon.createSandbox();
+
+  sandbox
+    .stub(AboutNewTabResourceMapping, "addonVersion")
+    .get(() => FAKE_NEWTAB_VERSION);
+
+  is(
+    ASRouterTargeting.Environment.newtabAddonVersion,
+    FAKE_NEWTAB_VERSION,
+    "Should return the newtab addon version as reported by AboutNewTabResourceMapping"
+  );
+
+  const message = {
+    id: "foo",
+    targeting: `newtabAddonVersion|versionCompare('143.1.0') >= 0`,
+  };
+  is(
+    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
+    message,
+    "should select correct item when filtering by newtabAddonVersion"
   );
 });
