@@ -43,7 +43,7 @@ class MediaBlockCacheBase {
               std::remove_const<decltype(MediaCacheStream::BLOCK_SIZE)>::type>(
               INT32_MAX),
       "MediaCacheStream::BLOCK_SIZE should fit in 31 bits");
-  static const int32_t BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE;
+  static constexpr int32_t BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE;
 
  protected:
   virtual ~MediaBlockCacheBase() = default;
