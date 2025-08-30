@@ -967,23 +967,10 @@ bool nsMathMLChar::StretchEnumContext::TryVariants(
     if (ch.IsGlyphID()) {
       RefPtr<gfxFont> mathFont = aFontGroup->get()->GetFirstMathFont();
       // For OpenType MATH fonts, we will rely on the DisplayOperatorMinHeight
-      // to select the right size variant. Note that the value is sometimes too
-      // small so we use kLargeOpFactor/kIntegralFactor as a minimum value.
+      // to select the right size variant.
       if (mathFont) {
         displayOperatorMinHeight = mathFont->MathTable()->Constant(
             gfxMathTable::DisplayOperatorMinHeight, oneDevPixel);
-        RefPtr<gfxTextRun> textRun =
-            aGlyphTable->MakeTextRun(mDrawTarget, oneDevPixel, *aFontGroup, ch);
-        nsBoundingMetrics bm = MeasureTextRun(mDrawTarget, textRun.get());
-        float largeopFactor = kLargeOpFactor;
-        if (nsMathMLOperators::IsIntegralOperator(mChar->mData)) {
-          // integrals are drawn taller
-          largeopFactor = kIntegralFactor;
-        }
-        nscoord minHeight = largeopFactor * (bm.ascent + bm.descent);
-        if (displayOperatorMinHeight < minHeight) {
-          displayOperatorMinHeight = minHeight;
-        }
       }
     }
   }
