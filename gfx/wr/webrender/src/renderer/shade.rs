@@ -880,7 +880,11 @@ impl Shaders {
         let ps_quad_conic_gradient = loader.create_shader(
             ShaderKind::Primitive,
             "ps_quad_conic_gradient",
-            &[],
+            if options.enable_dithering {
+               &[DITHERING_FEATURE]
+            } else {
+               &[]
+            },
             &shader_list,
         )?;
 
@@ -1039,7 +1043,11 @@ impl Shaders {
         let cs_conic_gradient = loader.create_shader(
             ShaderKind::Cache(VertexArrayKind::ConicGradient),
             "cs_conic_gradient",
-            &[],
+            if options.enable_dithering {
+               &[DITHERING_FEATURE]
+            } else {
+               &[]
+            },
             &shader_list,
         )?;
 
