@@ -1394,7 +1394,17 @@ class GeneratedFile(ContextDerived):
                 f
                 for f in self.outputs
                 if f.endswith(
-                    (".asm", ".c", ".cpp", ".inc", ".m", ".mm", ".def", "symverscript")
+                    (
+                        ".asm",
+                        ".c",
+                        ".cpp",
+                        ".inc",
+                        ".m",
+                        ".mm",
+                        ".def",
+                        ".S",
+                        "symverscript",
+                    )
                 )
             ]
         else:
