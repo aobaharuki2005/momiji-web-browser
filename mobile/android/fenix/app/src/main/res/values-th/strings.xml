@@ -979,9 +979,9 @@
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">เปลี่ยนไอคอนแอปหรือไม่?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
-  <string name="restart_warning_dialog_body">การเปลี่ยนไอคอนต้องเริ่มการทำงานแอปใหม่</string>
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">การเปลี่ยนไอคอนต้องเริ่มการทำงานแอปใหม่</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
-  <string name="restart_warning_dialog_button_positive">เริ่มการทำงานใหม่ตอนนี้</string>
+  <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">เริ่มการทำงานใหม่ตอนนี้</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">ยกเลิก</string>
   <!--
@@ -1620,7 +1620,7 @@
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">อธิบายปัญหา (เพิ่มเติม)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">ส่งข้อมูลเพิ่มเติม</string>
+  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">ส่งข้อมูลเพิ่มเติม</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">ยกเลิก</string>
   <!-- The button text for the send button to submit the provided form data. -->
