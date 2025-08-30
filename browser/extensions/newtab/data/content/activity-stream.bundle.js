@@ -14758,14 +14758,12 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
     this.onEntered = this.onEntered.bind(this);
     this.onExited = this.onExited.bind(this);
     this.state = {
-      exitEventFired: false,
-      isMounted: false // becomes true after first open; never reset (see onEntered)
+      exitEventFired: false
     };
   }
   onEntered() {
     this.setState({
-      exitEventFired: false,
-      isMounted: true
+      exitEventFired: false
     });
     if (this.closeButton) {
       this.closeButton.focus();
@@ -14780,12 +14778,6 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
     }
   }
   render() {
-    const {
-      showing
-    } = this.props;
-    const {
-      isMounted
-    } = this.state;
     return /*#__PURE__*/external_React_default().createElement("span", null, /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
       timeout: 300,
       classNames: "personalize-animate",
@@ -14806,7 +14798,7 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       src: "chrome://global/skin/icons/edit-outline.svg"
     })), /*#__PURE__*/external_React_default().createElement("label", {
       "data-l10n-id": "newtab-customize-panel-icon-button-label"
-    }))), (showing || isMounted) && /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
+    }))), /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
       timeout: 250,
       classNames: "customize-animate",
       in: this.props.showing,
