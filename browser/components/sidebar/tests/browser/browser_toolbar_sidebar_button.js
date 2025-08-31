@@ -304,10 +304,10 @@ add_task(async function test_toolbar_sidebar_badges() {
   const SIDEBAR_COMMAND_ID = "viewGenaiChatSidebar";
 
   await SpecialPowers.pushPrefEnv({
-    set: [["sidebar.notification.badge.aichat", true]],
-  });
-  await SpecialPowers.pushPrefEnv({
-    set: [[VERTICAL_TABS_PREF, false]],
+    set: [
+      ["sidebar.notification.badge.aichat", true],
+      [VERTICAL_TABS_PREF, false],
+    ],
   });
   await waitForTabstripOrientation("horizontal");
 
@@ -341,42 +341,15 @@ add_task(async function test_toolbar_sidebar_badges() {
     "Toolbar badge and sidebar badge should clear when pref is false"
   );
 
-  // Test that disabled tools don't show badges
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["sidebar.main.tools", "history"],
-      ["sidebar.notification.badge.aichat", true],
-    ],
+    set: [[VERTICAL_TABS_PREF, true]],
   });
-  Assert.ok(
-    !badgeEl.classList.contains("feature-callout"),
-    "Toolbar badge should not appear for disabled tools"
-  );
-  await SpecialPowers.popPrefEnv();
-
-  // Test that hidden tools don't show badges
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.ml.chat.enabled", false],
-      ["sidebar.notification.badge.aichat", true],
-    ],
-  });
-  Assert.ok(
-    !badgeEl.classList.contains("feature-callout"),
-    "Toolbar badge should not appear for hidden tools"
-  );
-  await SpecialPowers.popPrefEnv();
-
-  await SpecialPowers.popPrefEnv();
-  await SpecialPowers.popPrefEnv();
   await waitForTabstripOrientation("vertical");
 
   Assert.ok(
     !badgeEl.classList.contains("feature-callout"),
     "Toolbar button don't appear a badge in vertical sidebar"
   );
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_states_for_hide_sidebar_vertical() {
@@ -462,7 +435,7 @@ add_task(async function test_states_for_hide_sidebar_vertical() {
   await SidebarController.waitUntilStable();
 
   info("Don't collapse the sidebar by loading a tool.");
-  const toolButton = sidebarMain.toolButtons[2];
+  const toolButton = sidebarMain.toolButtons[1];
   EventUtils.synthesizeMouseAtCenter(toolButton, {}, win);
 
   await checkStates({ hidden: false, expanded: true });

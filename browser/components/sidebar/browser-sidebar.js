@@ -1374,15 +1374,7 @@ var SidebarController = {
         this.dismissSidebarBadge(commandID);
       }
 
-      // Show badge on toolbar if we would have shown it on a visible tool but sidebar is closed
-      const tool = this.toolsAndExtensions.get(commandID);
-      if (
-        this.sidebarRevampEnabled &&
-        badgePref &&
-        !tool.disabled &&
-        !tool.hidden &&
-        isSidebarClosed
-      ) {
+      if (this.sidebarRevampEnabled && badgePref && isSidebarClosed) {
         this._showToolbarButtonBadge();
       } else {
         this._clearToolbarButtonBadge();
