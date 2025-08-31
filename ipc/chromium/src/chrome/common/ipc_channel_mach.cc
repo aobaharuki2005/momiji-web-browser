@@ -424,7 +424,7 @@ bool ChannelMach::ProcessIncomingMessage() {
     }
 #ifdef XP_MACOSX
     if (XRE_IsParentProcess() &&
-        audit_token_to_pid(trailer->msgh_audit) != other_pid) {
+        ((pid_t)trailer->msgh_audit[5]) != other_pid) {
       CHROMIUM_LOG(ERROR) << "audit token does not correspond to given pid";
       return false;
     }
