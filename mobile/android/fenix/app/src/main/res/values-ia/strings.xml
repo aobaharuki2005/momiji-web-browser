@@ -387,6 +387,8 @@
   <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Traducite ab %1$s a %2$s</string>
   <!-- Content description for the translate toolbar action that opens the translations dialog. -->
   <string name="translation_toolbar_expand_action">Aperir folio de traduction</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">Ignorar message</string>
   <!--
     Locale Settings Fragment
 
@@ -517,6 +519,10 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Le reportos de crash nos permitte de diagnosticar e corriger problemas del navigator, ma pote includer datos personal o sensibile.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Pro saper plus</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s debe reinitialisar</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">Il habeva un problema aperiente %s.\n\nInviar un reporto de crash adjuta nos a diagnosticar e reparar problemas del navigator. Le reportos pote includer datos personal o sensibile.</string>
   <!-- Button text to submit a startup crash report -->
   <string name="startup_crash_positive">Inviar le reporto de crash</string>
   <!-- Button text to continue and not send a startup crash report -->
@@ -1002,6 +1008,8 @@
   <string name="restart_warning_dialog_title">Cambiar icone del application?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Cambiar le icone require reinitialisar le application.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">Le application pote clauder. Justo tocca tu lucente nove icone pro reaperir %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Reinitialisar ora</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->

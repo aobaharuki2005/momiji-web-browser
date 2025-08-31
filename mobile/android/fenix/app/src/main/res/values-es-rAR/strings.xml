@@ -53,7 +53,7 @@
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Guardar pestañas seleccionadas en la colección</string>
   <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
-  <string name="tab_manager_empty_synced_tabs_page_header">Capturar pestañas desde cualquier dispositivo</string>
+  <string name="tab_manager_empty_synced_tabs_page_header">Tomar pestañas desde cualquier dispositivo</string>
   <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
   <string name="tab_manager_empty_synced_tabs_page_description">Iniciá sesión para administrar las pestañas sincronizadas desde todos tus dispositivos.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
@@ -3386,7 +3386,7 @@
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Conexión insegura</string>
   <!-- Text for the connection security panel when accessed from local PDF. -->
-  <string name="connection_security_panel_local_pdf">Esta página está almacenada en su dispositivo</string>
+  <string name="connection_security_panel_local_pdf">Esta página está guardada en tu dispositivo</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.

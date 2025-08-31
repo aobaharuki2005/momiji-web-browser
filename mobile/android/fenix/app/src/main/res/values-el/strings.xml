@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Οι ιδιωτικές καρτέλες σας θα εμφανίζονται εδώ.</string>
   <!-- The header text displayed on the private tabs page when no private tabs are open -->
   <string name="tab_manager_empty_private_tabs_page_header">Ιδιωτική περιήγηση</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">Το %1$s δεν θα θυμάται το ιστορικό ή τα cookie σας, αλλά οι νέοι σελιδοδείκτες θα αποθηκεύονται.</string>
   <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
   <string name="tab_manager_empty_normal_tabs_page_header">Δημιουργήστε μια νέα καρτέλα για να ξεκινήσετε την αναζήτηση</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
@@ -50,6 +52,8 @@
   <string name="tab_tray_close_multiselect_content_description">Τέλος λειτουργίας πολλαπλής επιλογής</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Αποθήκευση επιλεγμένων καρτελών στη συλλογή</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Λάβετε καρτέλες από οποιαδήποτε συσκευή</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Σύνδεση</string>
   <!--
@@ -372,6 +376,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">Η σελίδα μεταφράστηκε από τα %1$s στα %2$s.</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Μεταφράστηκε από τα %1$s στα %2$s</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">Άνοιγμα σελίδας μετάφρασης</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">Απόρριψη μηνύματος</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -501,6 +517,14 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Οι αναφορές κατάρρευσης μάς επιτρέπουν να διαγνώσουμε και να διορθώσουμε προβλήματα του προγράμματος περιήγησης. Οι αναφορές ενδέχεται να περιλαμβάνουν προσωπικά ή ευαίσθητα δεδομένα.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Μάθετε περισσότερα</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">Πρέπει να γίνει επανεκκίνηση του %s</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">Αποστολή αναφοράς κατάρρευσης</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">Όχι, ευχαριστώ</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">Εκ νέου άνοιγμα του %s</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Αποστολή τεχνικών δεδομένων και δεδομένων αλληλεπίδρασης στη Mozilla</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Τα δεδομένα σχετικά με τη συσκευή σας, τη διαμόρφωση του υλικού της και τον τρόπο με τον οποίο χρησιμοποιείτε το Firefox συμβάλλουν στη βελτίωση των λειτουργιών, των επιδόσεων και της σταθερότητας για όλους.</string>
@@ -980,8 +1004,12 @@
   <string name="restart_warning_dialog_title">Αλλαγή εικονιδίου εφαρμογής;</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Η αλλαγή του εικονιδίου απαιτεί επανεκκίνηση της εφαρμογής.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">Η εφαρμογή ενδέχεται να κλείσει. Πατήστε το νέο εικονίδιο για να ανοίξετε ξανά το %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Επανεκκίνηση τώρα</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">Αλλαγή εικονιδίου</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Ακύρωση</string>
   <!--
@@ -2985,6 +3013,8 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Άρθρα</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">Πλοήγηση προς τα πίσω</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">Χορηγία</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3308,6 +3338,8 @@
   <string name="protection_panel_num_trackers_blocked">Αποκλεισμένοι ιχνηλάτες: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Δεν βρέθηκαν ιχνηλάτες</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">Οι ιχνηλάτες δεν αποκλείονται</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Ρυθμίσεις απορρήτου και ασφάλειας</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
@@ -3340,6 +3372,8 @@
   <string name="connection_security_panel_secure">Ασφαλής σύνδεση</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Μη ασφαλής σύνδεση</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">Αυτή η σελίδα είναι αποθηκευμένη στη συσκευή σας</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.

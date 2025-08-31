@@ -378,6 +378,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">Էջը թարգմանվել է %1$s-ից %2$s:</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Թարգմանված է %1$s-ից %2$s</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">Փակել թարգմանությունների թերթիկը</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">Փակել ուղերձը</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -507,6 +519,16 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Խափանումների զեկույցները մեզ թույլ են տալիս ախտորոշել և շտկել դիտարկիչի հետ կապված խնդիրները: Զեկույցները կարող են ներառել անձնական կամ զգայուն տվյալներ:</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Իմանալ ավելին</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s-ը պետք է վերամեկնարկել</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">%s-ը բացելիս խնդիր առաջացավ։\n\nՎթարի մասին հաղորդագրություն ուղարկելը մեզ օգնում է ախտորոշել և շտկել դիտարկիչի խնդիրները։ Հաղորդագրությունները կարող են պարունակել անձնական կամ զգայուն տվյալներ։</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">Ուղարկել վթարի մասին հաղորդում</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">Ոչ, շնորհակալություն</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">Վերաբացել %s-ը</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Ուղարկեք տեխնիկական և փոխազդեցության տվյալները Mozilla-ին</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Ձեր սարքի, սարքաշարի կազմաձևման և Firefox-ի օգտագործման տվյալներն օգնում են բարելավելու հնարավորությունները, արտադրողականությունը և կայունությունը օգտատերերի համար ամենուր:</string>
@@ -986,8 +1008,12 @@
   <string name="restart_warning_dialog_title">Փոխե՞լ հավելվածի պատկերակը։</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Պատկերակը փոխելը պահանջում է հավելվածի վերամեկնարկում։</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">Հավելվածը կարող է փակվել: Պարզապես սեղմեք ձեր նոր փայլուն պատկերակին՝ %1$s-ը վերաբանալու համար:</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Վերամեկնարկել հիմա</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">Փոխել պատկերակը</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Չեղարկել</string>
   <!--
@@ -1638,6 +1664,8 @@
   <string name="webcompat_reporter_label_description">Նկարագրեք խնդիրը (ըստ ցանկության)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Ուղարկել լրացուցիչ տեղեկություն</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">Ավելացնել ավելի շատ տեղեկություններ</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Չեղարկել</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -3357,6 +3385,8 @@
   <string name="connection_security_panel_secure">Անվտանգ կապակցում</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Կապակցումն անվտանգ չէ</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">Այս էջը պահվում է ձեր սարքում</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.

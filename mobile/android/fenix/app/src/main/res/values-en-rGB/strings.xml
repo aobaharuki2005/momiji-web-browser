@@ -378,6 +378,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">Page translated from %1$s to %2$s.</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Translated from %1$s to %2$s</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">Open translation sheet</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">Dismiss message</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -507,6 +519,16 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Crash reports allow us to diagnose and fix issues with the browser. Reports may include personal or sensitive data.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Learn more</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s needs to restart</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">There was a problem opening %s.\n\nSending a crash report helps us diagnose and fix problems with the browser. Reports may include personal or sensitive data.</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">Send crash report</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">No thanks</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">Reopen %s</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Send technical and interaction data to Mozilla</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Data about your device, hardware configuration and how you use Firefox helps improve features, performance and stability for everyone.</string>
@@ -986,8 +1008,12 @@
   <string name="restart_warning_dialog_title">Change app icon?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Changing the icon requires the app to restart.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">The app may close. Just tap your shiny new icon to reopen %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Restart now</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">Change icon</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Cancel</string>
   <!--
@@ -1638,6 +1664,8 @@
   <string name="webcompat_reporter_label_description">Describe the problem (optional)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Send more info</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">Add more info</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Cancel</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -3357,6 +3385,8 @@
   <string name="connection_security_panel_secure">Secure connection</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Connection not secure</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">This page is stored on your device</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.
