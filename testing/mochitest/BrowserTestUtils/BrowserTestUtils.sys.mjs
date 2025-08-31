@@ -1455,7 +1455,7 @@ export var BrowserTestUtils = {
       let isValidUrl = () => {
         return (
           frame.browsingContext?.currentURI?.spec ==
-            "chrome://global/content/datetimepicker.xhtml"
+          "chrome://global/content/datetimepicker.xhtml"
         );
       };
 

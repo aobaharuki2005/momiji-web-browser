@@ -103,7 +103,9 @@ function DatePicker(context) {
           });
           this._update();
           this._dispatchState();
-          this._closePopup();
+          if (this.props.type !== "datetime-local") {
+            this._closePopup();
+          }
         },
         setMonthByOffset: offset => {
           dateKeeper.setMonthByOffset(offset);
