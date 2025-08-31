@@ -25,36 +25,34 @@ export var DateTimePickerPanel = class {
   }
 
   openPicker(type, rect, detail) {
+    if (
+      type == "datetime-local" &&
+      !Services.prefs.getBoolPref("dom.forms.datetime.timepicker")
+    ) {
+      type = "date";
+    }
     this.pickerState = {};
     // TODO: Resize picker according to content zoom level
     this.element.style.fontSize = "10px";
     this.type = type;
     this.detail = detail;
     this.dateTimePopupFrame.addEventListener("load", this, true);
+    this.dateTimePopupFrame.setAttribute(
+      "src",
+      "chrome://global/content/datetimepicker.xhtml"
+    );
     switch (type) {
       case "time": {
-        this.dateTimePopupFrame.setAttribute(
-          "src",
-          "chrome://global/content/timepicker.xhtml"
-        );
         this.dateTimePopupFrame.style.width = this.TIME_PICKER_WIDTH;
         this.dateTimePopupFrame.style.height = this.TIME_PICKER_HEIGHT;
         break;
       }
       case "date": {
-        this.dateTimePopupFrame.setAttribute(
-          "src",
-          "chrome://global/content/datepicker.xhtml"
-        );
         this.dateTimePopupFrame.style.width = this.DATE_PICKER_WIDTH;
         this.dateTimePopupFrame.style.height = this.DATE_PICKER_HEIGHT;
         break;
       }
       case "datetime-local": {
-        this.dateTimePopupFrame.setAttribute(
-          "src",
-          "chrome://global/content/datetimepicker.xhtml"
-        );
         this.dateTimePopupFrame.style.width = this.DATETIME_PICKER_WIDTH;
         this.dateTimePopupFrame.style.height = this.DATETIME_PICKER_HEIGHT;
         break;
@@ -114,6 +112,7 @@ export var DateTimePickerPanel = class {
 
     const { year, month, day, hour, minute } = detail.value;
     const flattenDetail = {
+      type: this.type,
       year,
       // Month value from input box starts from 1 instead of 0
       month: month == undefined ? undefined : month - 1,

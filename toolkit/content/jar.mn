@@ -46,7 +46,6 @@ toolkit.jar:
 *   content/global/buildconfig.html
    content/global/buildconfig.css
    content/global/contentAreaUtils.js
-   content/global/datepicker.xhtml
 #ifndef MOZ_FENNEC
    content/global/editMenuOverlay.js
 #endif
@@ -62,7 +61,6 @@ toolkit.jar:
    content/global/resetProfile.xhtml
    content/global/resetProfileProgress.xhtml
    content/global/TopLevelVideoDocument.js
-   content/global/timepicker.xhtml
    content/global/datetimepicker.xhtml
    content/global/treeUtils.js
 #ifndef MOZ_FENNEC
