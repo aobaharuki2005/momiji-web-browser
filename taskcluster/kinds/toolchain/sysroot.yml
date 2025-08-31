@@ -160,8 +160,14 @@ sysroot-aarch64-linux-gnu:
     description: "Sysroot for linux64 aarch64 builds"
     attributes:
         local-toolchain: true
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-10>'}
+            GCC_VERSION: '10'
     treeherder:
         symbol: TLA64(sysroot)
+    dependencies:
+        gcc-10: packages-deb10-arm64-gcc-10
     run:
         toolchain-artifact: public/build/sysroot-aarch64-linux-gnu.tar.zst
         arguments:
