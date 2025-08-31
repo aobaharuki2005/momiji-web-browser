@@ -1376,7 +1376,7 @@
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">ອະທິບາຍບັນຫາ (ທາງເລືອກ)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">ສົ່ງຂໍ້ມູນເພີ່ມເຕີມ</string>
+  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">ສົ່ງຂໍ້ມູນເພີ່ມເຕີມ</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">ຍົກເລີກ</string>
   <!-- The button text for the send button to submit the provided form data. -->

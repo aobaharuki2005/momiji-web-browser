@@ -985,9 +985,9 @@
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">要更改應用程式圖示嗎？</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
-  <string name="restart_warning_dialog_body">更改圖示需要重新啟動程式。</string>
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">更改圖示需要重新啟動程式。</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
-  <string name="restart_warning_dialog_button_positive">立刻重新啟動</string>
+  <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">立刻重新啟動</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">取消</string>
   <!--
@@ -1637,7 +1637,7 @@
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">請描述問題（選填）</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">傳送更多資訊</string>
+  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">傳送更多資訊</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">取消</string>
   <!-- The button text for the send button to submit the provided form data. -->

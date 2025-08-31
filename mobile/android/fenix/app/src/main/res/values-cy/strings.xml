@@ -378,6 +378,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">Tudalen wedi\'i chyfieithu o\'r %1$s i\'r %2$s.</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Cyfieithwyd o %1$s i %2$s</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">Agor taflen gyfieithu</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">Cau\'r neges</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -507,6 +519,16 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Mae adroddiadau chwalu\'n ein galluogi i wneud diagnosis a thrwsio problemau gyda\'r porwr. Gall adroddiadau gynnwys data personol neu sensitif.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Dysgu rhagor</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">Mae angen ailgychwyn %s</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">Bu problem wrth agor %s.\n\nMae anfon adroddiad chwalfa yn ein helpu i wneud diagnosis a thrwsio problemau gyda\'r porwr. Gall adroddiadau gynnwys data personol neu sensitif.</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">Anfon adroddiad chwalu</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">Dim diolch</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">Ailagor %s</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Anfon data technegol a rhyngweithio i Mozilla</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Mae data am eich dyfais, ffurfweddiad caledwedd, a sut rydych chi\'n defnyddio Firefox yn helpu i wella nodweddion, perfformiad, a sefydlogrwydd i bawb.</string>
@@ -985,9 +1007,13 @@
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Newid eicon yr ap?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
-  <string name="restart_warning_dialog_body">Mae newid yr eicon yn golygu fod rhaid i\'r ap ailgychwyn.</string>
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Mae newid yr eicon yn golygu fod rhaid i\'r ap ailgychwyn.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">Efallai y bydd yr app yn cau. Tapiwch eich eicon newydd sgleiniog i ailagor %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
-  <string name="restart_warning_dialog_button_positive">Ailgychwyn nawr</string>
+  <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Ailgychwyn nawr</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">Newid eicon</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Diddymu</string>
   <!--
@@ -1391,11 +1417,11 @@
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Nod Tudalen</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
-  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Llyfrnodi tabiau a ddewiswyd</string>
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Gosod nod tudalen i\'r tabiau hyn</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Cau</string>
   <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
-  <string name="tab_manager_multiselect_menu_item_close_content_description">Caewch y tabiau a ddewiswyd</string>
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Cau\'r tabiau hyn</string>
   <!-- Text shown in the multiselect menu for sharing selected tabs. -->
   <string name="tab_manager_multiselect_menu_item_share">Rhannu</string>
   <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
@@ -1637,7 +1663,9 @@
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Disgrifiwch y broblem (dewisol)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">Anfon rhagor o wybodaeth</string>
+  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Anfon rhagor o wybodaeth</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">Ychwanegu mwy o wybodaeth</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Na</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1748,7 +1776,7 @@
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Cadw</string>
   <!-- Accessibility label for sorting options -->
-  <string name="bookmark_sort_menu_content_desc">Opsiynau didoli</string>
+  <string name="bookmark_sort_menu_content_desc">Dewisiadau didoli</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Trefnu yn ôl y drefn gyfaddas</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -3357,6 +3385,8 @@
   <string name="connection_security_panel_secure">Cysylltiadau diogel</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Nid yw’r cysylltiad yn ddiogel</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">Mae\'r dudalen hon yn cael ei storio ar eich dyfais</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.

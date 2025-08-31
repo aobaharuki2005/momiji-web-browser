@@ -985,9 +985,9 @@
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Нишонаи барномаро иваз мекунед?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
-  <string name="restart_warning_dialog_body">Агар шумо нишонаро иваз кунед, барнома бояд аз нав оғоз карда шавад.</string>
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Агар шумо нишонаро иваз кунед, барнома бояд аз нав оғоз карда шавад.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
-  <string name="restart_warning_dialog_button_positive">Ҳозир аз нав оғоз карда шавад</string>
+  <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Ҳозир аз нав оғоз карда шавад</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Бекор кардан</string>
   <!--
@@ -1637,7 +1637,7 @@
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Мушкилиро тавзеҳ кунед (ихтиёрӣ)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">Фиристодани маълумоти бештар</string>
+  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Фиристодани маълумоти бештар</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Бекор кардан</string>
   <!-- The button text for the send button to submit the provided form data. -->

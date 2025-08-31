@@ -985,9 +985,9 @@
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Изменить значок приложения?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
-  <string name="restart_warning_dialog_body">Смена значка требует перезапуска приложения.</string>
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Смена значка требует перезапуска приложения.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
-  <string name="restart_warning_dialog_button_positive">Перезапустить сейчас</string>
+  <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Перезапустить сейчас</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Отмена</string>
   <!--
@@ -1637,7 +1637,7 @@
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Опишите проблему (необязательно)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">Отправьте больше информации</string>
+  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Отправьте больше информации</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Отмена</string>
   <!-- The button text for the send button to submit the provided form data. -->

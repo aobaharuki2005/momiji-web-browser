@@ -378,6 +378,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">페이지가 %1$s에서 %2$s로 번역되었습니다.</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">%1$s에서 %2$s로 번역됨</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">번역 시트 열기</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">메시지 닫기</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -507,6 +519,16 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">충돌 보고서를 통해 브라우저의 문제를 진단하고 고칠 수 있습니다. 보고서에는 개인 정보나 민감한 정보가 포함되어 있을 수 있습니다.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">더 알아보기</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s를 다시 시작해야 함</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">%s를 여는 데 문제가 발생했습니다.\n\n충돌 보고서를 전송하면 진단과 브라우저 문제 해결에 도움이 됩니다. 보고서에는 개인 정보나 민감한 정보가 포함되어 있을 수 있습니다.</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">충돌 보고서 보내기</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">아니요</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">%s 다시 열기</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Mozilla에 기술 및 상호 작용 데이터 보내기</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">사용자의 기기와 하드웨어 설정, 그리고 Firefox를 어떻게 사용하는지에 대한 데이터는 모두를 위해 기능, 성능, 안정성을 개선하는 데 도움이 됩니다.</string>
@@ -985,9 +1007,13 @@
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">앱 아이콘을 변경하시겠습니까?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
-  <string name="restart_warning_dialog_body">아이콘을 변경하려면 앱을 다시 시작해야 합니다.</string>
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">아이콘을 변경하려면 앱을 다시 시작해야 합니다.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">앱이 닫힐 수 있습니다. %1$s를 다시 열려면 빛나는 새 아이콘을 누르세요.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
-  <string name="restart_warning_dialog_button_positive">지금 다시 시작</string>
+  <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">지금 다시 시작</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">아이콘 변경</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">취소</string>
   <!--
@@ -1637,7 +1663,9 @@
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">문제 설명 (선택 사항)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">추가 정보 보내기</string>
+  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">추가 정보 보내기</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">추가 정보 추가</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">취소</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -3357,6 +3385,8 @@
   <string name="connection_security_panel_secure">안전한 연결</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">안전하지 않은 연결</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">이 페이지는 사용자의 기기에 저장되었음</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.
