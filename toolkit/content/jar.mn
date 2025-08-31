@@ -63,6 +63,7 @@ toolkit.jar:
    content/global/resetProfileProgress.xhtml
    content/global/TopLevelVideoDocument.js
    content/global/timepicker.xhtml
+   content/global/datetimepicker.xhtml
    content/global/treeUtils.js
 #ifndef MOZ_FENNEC
    content/global/viewZoomOverlay.js

@@ -380,3 +380,9 @@ button.month-year.active {
 .spacer {
   width: var(--day-period-spacing-width);
 }
+
+#datetime-picker {
+  display: flex;
+  align-items: flex-start;
+  gap: 1em;
+}
