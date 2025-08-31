@@ -61,12 +61,12 @@ nsIWidget* ChromeObserver::GetWindowWidget() {
   return nullptr;
 }
 
-void ChromeObserver::SetDrawsTitle(bool aState) {
+void ChromeObserver::SetHideTitlebarSeparator(bool aState) {
   nsIWidget* mainWidget = GetWindowWidget();
   if (mainWidget) {
-    // We can do this synchronously because SetDrawsTitle doesn't have any
-    // synchronous effects apart from a harmless invalidation.
-    mainWidget->SetDrawsTitle(aState);
+    // We can do this synchronously because SetHideTitlebarSeparator doesn't
+    // have any synchronous effects apart from a harmless invalidation.
+    mainWidget->SetHideTitlebarSeparator(aState);
   }
 }
 
@@ -86,8 +86,8 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
       HideWindowChrome(added);
     } else if (aName == nsGkAtoms::customtitlebar) {
       SetCustomTitlebar(added);
-    } else if (aName == nsGkAtoms::drawtitle) {
-      SetDrawsTitle(added);
+    } else if (aName == nsGkAtoms::hidetitlebarseparator) {
+      SetHideTitlebarSeparator(added);
     } else if (aName == nsGkAtoms::windowsmica) {
       SetMica(added);
     }

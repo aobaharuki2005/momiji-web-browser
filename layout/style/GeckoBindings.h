@@ -591,6 +591,7 @@ float Gecko_MediaFeatures_GetResolution(const mozilla::dom::Document*);
 bool Gecko_MediaFeatures_PrefersReducedMotion(const mozilla::dom::Document*);
 bool Gecko_MediaFeatures_PrefersReducedTransparency(
     const mozilla::dom::Document*);
+bool Gecko_MediaFeatures_MacRTL(const mozilla::dom::Document*);
 mozilla::StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
     const mozilla::dom::Document*);
 mozilla::StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(

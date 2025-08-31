@@ -56,7 +56,6 @@ class TextInputHandler;
   NSRect mDirtyRect;
 
   BOOL mBeingShown;
-  BOOL mDrawTitle;
   BOOL mIsAnimationSuppressed;
 
   nsTouchBar* mTouchBar;
@@ -103,9 +102,6 @@ class TextInputHandler;
 - (NSArray<NSView*>*)contentViewContents;
 
 - (ChildView*)mainChildView;
-
-- (void)setWantsTitleDrawn:(BOOL)aDrawTitle;
-- (BOOL)wantsTitleDrawn;
 
 - (void)disableSetNeedsDisplay;
 - (void)enableSetNeedsDisplay;
@@ -447,7 +443,8 @@ class nsCocoaWindow final : public nsBaseWidget {
   bool GetSupportsNativeFullscreen();
   void SetSupportsNativeFullscreen(bool aShow) override;
   void SetWindowAnimationType(WindowAnimationType aType) override;
-  void SetDrawsTitle(bool aDrawTitle) override;
+  void SetHideTitlebarSeparator(bool) override;
+  bool IsMacTitlebarDirectionRTL() override;
   void SetCustomTitlebar(bool) override;
   void UpdateThemeGeometries(
       const nsTArray<ThemeGeometry>& aThemeGeometries) override;
