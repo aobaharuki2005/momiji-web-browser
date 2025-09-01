@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-08-07T08:27:43.954734+00:00'
+updated_at: '2025-08-29T09:01:42.778524+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -125,8 +125,7 @@ people:
     bmo_id: 683100
     name: Ben Dean-Kawamura
     nick: bdk
-  - &benbangert
-    bmo_id: 424312
+  - bmo_id: 424312
     name: Ben Bangert
     nick: benbangert
   - &beth
@@ -1155,13 +1154,13 @@ modules:
       - README.txt
     meta:
       owners_emeritus:
+        - Ben Bangert
         - Brendan Eich
         - Kate Hudson
     owners:
       - *bholley
       - *overholt
       - *mossop
-      - *benbangert
       - *nalexander
       - *nika
     peers: []
@@ -4612,5 +4611,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: e74b5f06f5659fc5aa4c58bc0961ad9f6e08b4f8
-  export: 2596fd3cfb6d02fe6fa2fc006003183b7ff0db83
+  config: 9f3923cb7636f902a6d9f58b8cff523436ae54c9
+  export: 6ed1a39b8fef1ffa7f028851d901f2a3d3bea32a
