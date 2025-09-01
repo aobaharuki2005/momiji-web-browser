@@ -3257,13 +3257,49 @@ void MacroAssembler::moveValue(const Value& src, const ValueOperand& dest) {
   writeDataRelocation(src);
   movWithPatch(ImmWord(src.asRawBits()), dest.valueReg());
 }
-void MacroAssembler::nearbyIntDouble(RoundingMode, FloatRegister,
-                                     FloatRegister) {
-  MOZ_CRASH("not supported on this platform");
+
+void MacroAssembler::nearbyIntDouble(RoundingMode mode, FloatRegister src,
+                                     FloatRegister dest) {
+  MOZ_ASSERT(HasRoundInstruction(mode));
+
+  ScratchDoubleScope2 fscratch(*this);
+
+  switch (mode) {
+    case RoundingMode::Down:
+      Floor_d_d(dest, src, fscratch);
+      break;
+    case RoundingMode::Up:
+      Ceil_d_d(dest, src, fscratch);
+      break;
+    case RoundingMode::NearestTiesToEven:
+      Round_d_d(dest, src, fscratch);
+      break;
+    case RoundingMode::TowardsZero:
+      Trunc_d_d(dest, src, fscratch);
+      break;
+  }
 }
-void MacroAssembler::nearbyIntFloat32(RoundingMode, FloatRegister,
-                                      FloatRegister) {
-  MOZ_CRASH("not supported on this platform");
+
+void MacroAssembler::nearbyIntFloat32(RoundingMode mode, FloatRegister src,
+                                      FloatRegister dest) {
+  MOZ_ASSERT(HasRoundInstruction(mode));
+
+  ScratchFloat32Scope2 fscratch(*this);
+
+  switch (mode) {
+    case RoundingMode::Down:
+      Floor_s_s(dest, src, fscratch);
+      break;
+    case RoundingMode::Up:
+      Ceil_s_s(dest, src, fscratch);
+      break;
+    case RoundingMode::NearestTiesToEven:
+      Round_s_s(dest, src, fscratch);
+      break;
+    case RoundingMode::TowardsZero:
+      Trunc_s_s(dest, src, fscratch);
+      break;
+  }
 }
 
 void MacroAssembler::oolWasmTruncateCheckF32ToI32(

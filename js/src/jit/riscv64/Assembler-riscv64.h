@@ -82,6 +82,16 @@ struct ScratchDoubleScope : public AutoFloatRegisterScope {
       : AutoFloatRegisterScope(masm, ScratchDoubleReg) {}
 };
 
+struct ScratchFloat32Scope2 : public AutoFloatRegisterScope {
+  explicit ScratchFloat32Scope2(MacroAssembler& masm)
+      : AutoFloatRegisterScope(masm, ScratchFloat32Reg2) {}
+};
+
+struct ScratchDoubleScope2 : public AutoFloatRegisterScope {
+  explicit ScratchDoubleScope2(MacroAssembler& masm)
+      : AutoFloatRegisterScope(masm, ScratchDoubleReg2) {}
+};
+
 struct ScratchRegisterScope : public AutoRegisterScope {
   explicit ScratchRegisterScope(MacroAssembler& masm)
       : AutoRegisterScope(masm, ScratchRegister) {}
@@ -469,7 +479,16 @@ class Assembler : public AssemblerShared,
     return Assembler::ExtractLoad64Value(inst);
   }
 
-  static bool HasRoundInstruction(RoundingMode) { return false; }
+  static bool HasRoundInstruction(RoundingMode mode) {
+    switch (mode) {
+      case RoundingMode::Up:
+      case RoundingMode::Down:
+      case RoundingMode::NearestTiesToEven:
+      case RoundingMode::TowardsZero:
+        return true;
+    }
+    MOZ_CRASH("unexpected mode");
+  }
 
   void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
                                    const Disassembler::HeapAccess& heapAccess) {
