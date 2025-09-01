@@ -3945,24 +3945,18 @@ static bool IsOpenPopoverWithInvoker(nsIContent* aContent) {
   return false;
 }
 
-static nsGenericHTMLElement* GetAssociatedPopoverFromInvoker(
-    nsIContent* aContent) {
+static nsIContent* InvokerForPopoverShowingState(nsIContent* aContent) {
   Element* invoker = Element::FromNode(aContent);
   if (!invoker) {
     return nullptr;
   }
-  nsGenericHTMLElement* popover = invoker->GetAssociatedPopover();
-  if (popover && popover->IsPopoverOpen()) {
-    MOZ_ASSERT(popover->GetPopoverData()->GetInvoker() == invoker);
-    return popover;
-  }
-  return nullptr;
-}
 
-static nsIContent* InvokerForPopoverShowingState(nsIContent* aContent) {
-  if (aContent && GetAssociatedPopoverFromInvoker(aContent)) {
+  nsGenericHTMLElement* popover = invoker->GetEffectivePopoverTargetElement();
+  if (popover && popover->IsPopoverOpen() &&
+      popover->GetPopoverData()->GetInvoker() == invoker) {
     return aContent;
   }
+
   return nullptr;
 }
 
@@ -4019,7 +4013,6 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
     nsIContent* aOriginalStartContent, bool aForward, int32_t aCurrentTabIndex,
     bool aIgnoreTabIndex, bool aForDocumentNavigation, bool aNavigateByKey,
     bool aSkipOwner, bool aReachedToEndForDocumentNavigation) {
-  MOZ_ASSERT(aOwner, "aOwner must not be null");
   MOZ_ASSERT(
       IsHostOrSlot(aOwner) || IsOpenPopoverWithInvoker(aOwner),
       "Scope owner should be host, slot or an open popover with invoker set.");
@@ -4265,7 +4258,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
     if (InvokerForPopoverShowingState(startContent)) {
       if (aForward) {
         RefPtr<nsIContent> popover =
-            GetAssociatedPopoverFromInvoker(startContent);
+            startContent->GetEffectivePopoverTargetElement();
         nsIContent* contentToFocus = GetNextTabbableContentInScope(
             popover, popover, aOriginalStartContent, aForward, 1,
             aIgnoreTabIndex, aForDocumentNavigation, aNavigateByKey,
@@ -4451,7 +4444,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
         if (tabIndex >= 0 &&
             (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
           RefPtr<nsIContent> popover =
-              GetAssociatedPopoverFromInvoker(currentContent);
+              currentContent->GetEffectivePopoverTargetElement();
           nsIContent* contentToFocus = GetNextTabbableContentInScope(
               popover, popover, aOriginalStartContent, aForward, 0,
               aIgnoreTabIndex, aForDocumentNavigation, aNavigateByKey,

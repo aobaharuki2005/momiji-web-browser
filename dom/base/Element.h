@@ -73,7 +73,6 @@ class nsDOMCSSAttributeDeclaration;
 class nsDOMStringMap;
 class nsDOMTokenList;
 class nsFocusManager;
-class nsGenericHTMLElement;
 class nsGenericHTMLFormControlElementWithState;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
@@ -612,9 +611,6 @@ class Element : public FragmentOrElement {
 
   bool IsAutoPopover() const;
   bool IsPopoverOpen() const;
-
-  void SetAssociatedPopover(nsGenericHTMLElement& aPopover);
-  nsGenericHTMLElement* GetAssociatedPopover() const;
 
   /**
    * https://html.spec.whatwg.org/multipage/popover.html#topmost-popover-ancestor
