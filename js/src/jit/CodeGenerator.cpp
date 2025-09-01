@@ -12601,6 +12601,22 @@ void CodeGenerator::visitTruncF(LTruncF* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitNearbyInt(LNearbyInt* lir) {
+  FloatRegister input = ToFloatRegister(lir->input());
+  FloatRegister output = ToFloatRegister(lir->output());
+
+  RoundingMode roundingMode = lir->mir()->roundingMode();
+  masm.nearbyIntDouble(roundingMode, input, output);
+}
+
+void CodeGenerator::visitNearbyIntF(LNearbyIntF* lir) {
+  FloatRegister input = ToFloatRegister(lir->input());
+  FloatRegister output = ToFloatRegister(lir->output());
+
+  RoundingMode roundingMode = lir->mir()->roundingMode();
+  masm.nearbyIntFloat32(roundingMode, input, output);
+}
+
 void CodeGenerator::visitCompareS(LCompareS* lir) {
   JSOp op = lir->mir()->jsop();
   Register left = ToRegister(lir->left());
