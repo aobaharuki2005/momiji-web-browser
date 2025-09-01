@@ -270,22 +270,20 @@ addon-list addon-card > .addon.card {
 }
 
 addon-card[expanded] .addon-card-message,
-addon-card[expanded] .update-postponed-bar {
+addon-card[expanded] .update-postponed-bar,
+.update-postponed-bar:has(+ .addon-card-message:not([hidden])) {
   border-radius: 0;
   margin-bottom: 0;
 }
 
-addon-card[expanded] .update-postponed-bar + .addon-card-message {
-  /* Remove margin between the two message bars when they are both
-   * visible in the detail view */
-  margin-top: 0;
+.update-postponed-bar:has(+ .addon-card-message:not([hidden])) {
+  border-bottom: none;
 }
 
-.update-postponed-bar + .addon-card-message:not([hidden]) {
-  /* Prevent the small overlapping between the two message bars
-   * when they are both visible at the same time one after the
-   * other on the same addon card */
-  margin-top: 12px;
+.update-postponed-bar:not([hidden]) + .addon-card-message {
+  /* Remove margin between the two message bars when they are both
+   * visible at the same time. */
+  margin-top: 0;
 }
 
 /* Theme preview image. */
