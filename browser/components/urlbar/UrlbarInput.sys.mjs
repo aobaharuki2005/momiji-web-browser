@@ -1083,7 +1083,7 @@ export class UrlbarInput {
   /**
    * Called when an element of the view is picked.
    *
-   * @param {Element} element The element that was picked.
+   * @param {HTMLElement} element The element that was picked.
    * @param {Event} event The event that picked the element.
    */
   pickElement(element, event) {
@@ -1102,7 +1102,7 @@ export class UrlbarInput {
    *
    * @param {UrlbarResult} result The result that was picked.
    * @param {Event} event The event that picked the result.
-   * @param {DOMElement} element the picked view element, if available.
+   * @param {HTMLElement} element the picked view element, if available.
    * @param {object} browser The browser to use for the load.
    */
   // eslint-disable-next-line complexity
@@ -3298,7 +3298,7 @@ export class UrlbarInput {
    *
    * @param {UrlbarResult} result The result that was picked.
    * @param {Event} event The event that picked the result.
-   * @param {DOMElement} element the picked view element, if available.
+   * @param {HTMLElement} element the picked view element, if available.
    * @param {object} browser The browser to use for the load.
    */
   #pickMenuResult(result, event, element, browser) {

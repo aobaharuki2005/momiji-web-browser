@@ -611,7 +611,7 @@ export var UrlbarUtils = {
    *   The result to extract from.
    * @param {object} options
    *   Options object.
-   * @param {Element} [options.element]
+   * @param {HTMLElement} [options.element]
    *   The element associated with the result that was selected or picked, if
    *   available. For results that have multiple selectable children, the URL
    *   may be taken from a child element rather than the result.

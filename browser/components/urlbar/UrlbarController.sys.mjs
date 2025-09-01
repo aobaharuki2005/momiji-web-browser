@@ -861,7 +861,7 @@ class TelemetryEvent {
    *        A DOM event.
    *        Note: event can be null, that usually happens for paste&go or drop&go.
    *        If there's no _startEventInfo this is a no-op.
-   * @param {object} details An object describing action details.
+   * @param {object} [details] An object describing action details.
    * @param {string} [details.searchString] The user's search string. Note that
    *        this string is not sent with telemetry data. It is only used
    *        locally to discern other data, such as the number of characters and
@@ -872,7 +872,7 @@ class TelemetryEvent {
    *        "switchtab", "remotetab", "extension", "oneoff", "dismiss".
    * @param {UrlbarResult} [details.result] The engaged result. This should be
    *        set to the result related to the picked element.
-   * @param {DOMElement} [details.element] The picked view element.
+   * @param {HTMLElement} [details.element] The picked view element.
    */
   record(event, details) {
     // Prevent re-entering `record()`. This can happen because

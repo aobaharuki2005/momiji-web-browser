@@ -1107,7 +1107,7 @@ export class UrlbarView {
    * but we want a connected #selectedElement usually. We don't use a WeakRef
    * because it would depend too much on GC timing.
    *
-   * @returns {DOMElement} the selected element.
+   * @returns {HTMLElement} the selected element.
    */
   get #selectedElement() {
     return this.#rawSelectedElement?.isConnected
