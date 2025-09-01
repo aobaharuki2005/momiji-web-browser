@@ -16,10 +16,6 @@ skip-if = [
 ]
 
 ["test_filename_sanitize.js"]
-skip-if = [
-  "os == 'android' && android_version == '34' && processor == 'x86_64' && debug", # Bug 1982960
-  "os == 'android' && android_version == '34' && processor == 'x86_64' && opt", # Bug 1982960
-]
 
 ["test_getFromTypeAndExtension.js"]
 skip-if = ["os == 'android'"]
