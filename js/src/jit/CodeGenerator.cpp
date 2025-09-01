@@ -1648,20 +1648,18 @@ void CodeGenerator::visitStrictConstantCompareBoolean(
   JSOp op = comp->mir()->jsop();
   Register output = ToRegister(comp->output());
 
-  Label fail, pass, done;
-  Register boolUnboxed = ToRegister(comp->temp0());
-  masm.fallibleUnboxBoolean(value, boolUnboxed,
-                            op == JSOp::StrictEq ? &fail : &pass);
-  masm.branch32(JSOpToCondition(op, true), boolUnboxed, Imm32(constantVal),
-                &pass);
+  masm.move32(Imm32(op == JSOp::StrictNe), output);
 
-  masm.bind(&fail);
-  masm.move32(Imm32(0), output);
-  masm.jump(&done);
-
-  masm.bind(&pass);
-  masm.move32(Imm32(1), output);
-
+  Label done;
+  masm.fallibleUnboxBoolean(value, output, &done);
+  {
+    // Prefer comparison against zero because most architectures can optimize
+    // this case more efficiently.
+    if (constantVal) {
+      op = NegateCompareOp(op);
+    }
+    masm.cmp32Set(JSOpToCondition(op, true), output, Imm32(0), output);
+  }
   masm.bind(&done);
 }
 

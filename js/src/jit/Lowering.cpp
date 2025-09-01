@@ -1532,8 +1532,7 @@ void LIRGenerator::visitStrictConstantCompareBoolean(
     MStrictConstantCompareBoolean* ins) {
   MDefinition* value = ins->value();
 
-  auto* lir =
-      new (alloc()) LStrictConstantCompareBoolean(useBox(value), temp());
+  auto* lir = new (alloc()) LStrictConstantCompareBoolean(useBox(value));
   define(lir, ins);
 }
 
