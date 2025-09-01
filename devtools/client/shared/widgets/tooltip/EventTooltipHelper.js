@@ -55,7 +55,7 @@ class EventTooltip extends EventEmitter {
     this._subscriptions = [];
 
     const config = {
-      mode: Editor.modes.javascript,
+      mode: Editor.modes.js,
       lineNumbers: false,
       lineWrapping: true,
       readOnly: true,
