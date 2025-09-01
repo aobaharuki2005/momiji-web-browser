@@ -768,7 +768,7 @@
   -->
   <string name="download_multi_select_title">%1$d na seleición</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">Unviar más información</string>
+  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Unviar más información</string>
   <!--
     Crashes
 

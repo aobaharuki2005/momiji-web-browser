@@ -11,5 +11,5 @@
   <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
   <string name="mozac_compose_base_progress_loading">Cargante</string>
   <!-- Content description for the dismiss icon of a Snackbar -->
-  <string name="mozac_compose_base_snackbar_dismiss_content_description">Dimitter message</string>
+  <string name="mozac_compose_base_snackbar_dismiss_content_description">Ignorar message</string>
 </resources>

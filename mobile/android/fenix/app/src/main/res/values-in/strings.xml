@@ -979,9 +979,9 @@
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Ubah ikon aplikasi?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
-  <string name="restart_warning_dialog_body">Mengubah ikon mengharuskan aplikasi untuk memulai ulang.</string>
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Mengubah ikon mengharuskan aplikasi untuk memulai ulang.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
-  <string name="restart_warning_dialog_button_positive">Mulai ulang sekarang</string>
+  <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Mulai ulang sekarang</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Batal</string>
   <!--
@@ -1623,7 +1623,7 @@
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Jelaskan masalahnya (opsional)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">Kirim info lebih lanjut</string>
+  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Kirim info lebih lanjut</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Batal</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1678,10 +1678,15 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Kirim laporan kerusakan secara otomatis</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Tutup</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">TUTUP</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Jangan pernah tampilkan lagi</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">KIRIM</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Kirim laporan kerusakan</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Pelajari lebih lanjut</string>
   <!--
     Bookmarks
 
@@ -1792,6 +1797,8 @@
   <string name="bookmark_search_button_content_description">Cari markah</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Item Menu untuk %s</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">Tutup markah</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Belum ada markah</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -1890,6 +1897,10 @@
   <string name="studies_on">Aktif</string>
   <!-- Summary of studies data on quit preference if it is set to off -->
   <string name="studies_off">Mati</string>
+  <!-- Toggle if desktop site is turned on -->
+  <string name="browser_feature_desktop_site_on">Nyala</string>
+  <!-- Toggle if desktop site is turned off -->
+  <string name="browser_feature_desktop_site_off">Mati</string>
   <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
   <string name="preferences_category_permissions">Izin</string>
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
@@ -2533,6 +2544,10 @@
   <string name="saved_login_clear_username">Hapus nama pengguna</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Hapus nama host</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Sunting</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Hapus</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Buka situs di peramban</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -3223,6 +3238,10 @@
   <string name="protection_panel_banner_protected_description">Anda terlindungi. Jika kami menemukan sesuatu, kami akan memberi tahu Anda.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Perlindungan Pelacakan yang Ditingkatkan</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Nyala</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Mati</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Jika ada yang tampak rusak di situs ini, coba matikan perlindungan.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
@@ -3619,4 +3638,14 @@
   <string name="private_tab_cfr_negative">Tidak, terima kasih</string>
   <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->
   <string name="private_tab_cfr_positive">Kunci tab</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Ketentuan Penggunaan</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Pemberitahuan Privasi</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Pelajari lebih lanjut</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Terima</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Ingatkan saya nanti</string>
 </resources>
