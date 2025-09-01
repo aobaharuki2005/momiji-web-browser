@@ -804,11 +804,11 @@ void nsIFrame::HandlePrimaryFrameStyleChange(ComputedStyle* aOldStyle) {
     // TODO: Add invalidation.
     // TODO: Only remove/add the necessary names below.
     if (oldDisp && oldDisp->HasAnchorName()) {
-      for (auto& name : oldDisp->mAnchorName.AsSpan()) {
+      for (const auto& name : oldDisp->mAnchorName.AsSpan()) {
         PresShell()->RemoveAnchorPosAnchor(name.AsAtom(), this);
       }
     }
-    for (auto& name : disp->mAnchorName.AsSpan()) {
+    for (const auto& name : disp->mAnchorName.AsSpan()) {
       PresShell()->AddAnchorPosAnchor(name.AsAtom(), this);
     }
   }
@@ -890,7 +890,7 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
   }
 
   if (HasAnchorPosName()) {
-    for (auto& name : disp->mAnchorName.AsSpan()) {
+    for (const auto& name : disp->mAnchorName.AsSpan()) {
       PresShell()->RemoveAnchorPosAnchor(name.AsAtom(), this);
     }
   }
