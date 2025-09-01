@@ -66,6 +66,8 @@ dependencies {
     implementation libs.androidx.espresso.core
     implementation libs.androidx.test.uiautomator
     implementation libs.androidx.benchmark.macro.junit4
+    implementation libs.testing.mockwebserver
+    implementation libs.androidx.core.ktx
 }
 
 androidComponents {

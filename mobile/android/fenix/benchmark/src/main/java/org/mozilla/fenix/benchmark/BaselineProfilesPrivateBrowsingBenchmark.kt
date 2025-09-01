@@ -16,6 +16,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.mozilla.fenix.benchmark.utils.EXTRA_COMPOSABLE_TOOLBAR
+import org.mozilla.fenix.benchmark.utils.FENIX_HOME_DEEP_LINK
+import org.mozilla.fenix.benchmark.utils.HtmlAsset
+import org.mozilla.fenix.benchmark.utils.MockWebServerRule
 import org.mozilla.fenix.benchmark.utils.ParameterizedToolbarsTest
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
 import org.mozilla.fenix.benchmark.utils.closeTab
@@ -25,6 +28,7 @@ import org.mozilla.fenix.benchmark.utils.loadSite
 import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
 import org.mozilla.fenix.benchmark.utils.openNewPrivateTabOnTabsTray
 import org.mozilla.fenix.benchmark.utils.openTabsTray
+import org.mozilla.fenix.benchmark.utils.url
 
 /**
  * This test class benchmarks the speed of loading a website from the awesome bar in private
@@ -56,10 +60,13 @@ import org.mozilla.fenix.benchmark.utils.openTabsTray
 @BaselineProfileMacrobenchmark
 class BaselineProfilesPrivateBrowsingBenchmark(
     private val useComposableToolbar: Boolean,
-): ParameterizedToolbarsTest() {
+) : ParameterizedToolbarsTest() {
 
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
+
+    @get:Rule
+    val mockRule = MockWebServerRule()
 
     @Test
     fun privateBrowsingNone() = privateBrowsingBenchmark(CompilationMode.None())
@@ -80,7 +87,7 @@ class BaselineProfilesPrivateBrowsingBenchmark(
                 pressHome()
             },
         ) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("fenix-nightly://home"))
+            val intent = Intent(Intent.ACTION_VIEW, FENIX_HOME_DEEP_LINK)
                 .putExtra(EXTRA_COMPOSABLE_TOOLBAR, useComposableToolbar)
 
             startActivityAndWait(intent = intent)
@@ -91,10 +98,11 @@ class BaselineProfilesPrivateBrowsingBenchmark(
 
             device.openTabsTray(useComposableToolbar)
             device.openNewPrivateTabOnTabsTray()
-            device.loadSite(url = "example.com", useComposableToolbar)
+            val url = mockRule.url(HtmlAsset.SIMPLE)
+            device.loadSite(url = url, useComposableToolbar)
 
             device.openTabsTray(useComposableToolbar)
-            device.closeTab(siteName = "Example Domain", siteUrl = "http://example.com")
+            device.closeTab(siteName = HtmlAsset.SIMPLE.title, siteUrl = url)
 
             killProcess()
         }

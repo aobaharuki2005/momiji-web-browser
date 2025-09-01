@@ -15,8 +15,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.benchmark.utils.HtmlAsset
+import org.mozilla.fenix.benchmark.utils.MockWebServerRule
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
 import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
+import org.mozilla.fenix.benchmark.utils.uri
 
 /**
  * This test class benchmarks the speed of app startup when launching an intent. Run this benchmark
@@ -51,6 +54,9 @@ class BaselineProfilesLaunchIntentBenchmark {
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
 
+    @get:Rule
+    val mockRule = MockWebServerRule()
+
     @Test
     fun startupLaunchIntentNone() = launchIntentBenchmark(CompilationMode.None())
 
@@ -70,7 +76,7 @@ class BaselineProfilesLaunchIntentBenchmark {
             },
         ) {
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse("http://example.com/")
+            intent.data = mockRule.uri(HtmlAsset.SIMPLE)
             intent.setPackage(TARGET_PACKAGE)
 
             startActivityAndWait(intent = intent)

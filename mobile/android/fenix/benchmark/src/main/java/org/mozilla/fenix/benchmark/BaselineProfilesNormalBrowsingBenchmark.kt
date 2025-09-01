@@ -16,6 +16,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.mozilla.fenix.benchmark.utils.EXTRA_COMPOSABLE_TOOLBAR
+import org.mozilla.fenix.benchmark.utils.FENIX_HOME_DEEP_LINK
+import org.mozilla.fenix.benchmark.utils.HtmlAsset
+import org.mozilla.fenix.benchmark.utils.MockWebServerRule
 import org.mozilla.fenix.benchmark.utils.ParameterizedToolbarsTest
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
 import org.mozilla.fenix.benchmark.utils.dismissWallpaperOnboarding
@@ -23,6 +26,7 @@ import org.mozilla.fenix.benchmark.utils.enterSearchMode
 import org.mozilla.fenix.benchmark.utils.isWallpaperOnboardingShown
 import org.mozilla.fenix.benchmark.utils.loadSite
 import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
+import org.mozilla.fenix.benchmark.utils.url
 
 /**
  * This test class benchmarks the speed of loading a website from the awesome bar in normal browsing
@@ -58,6 +62,9 @@ class BaselineProfilesNormalBrowsingBenchmark(
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
 
+    @get:Rule
+    val mockRule = MockWebServerRule()
+
     @Test
     fun normalBrowsingNone() = normalBrowsingBenchmark(CompilationMode.None())
 
@@ -78,7 +85,7 @@ class BaselineProfilesNormalBrowsingBenchmark(
                 killProcess()
             },
         ) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("fenix-nightly://home"))
+            val intent = Intent(Intent.ACTION_VIEW, FENIX_HOME_DEEP_LINK)
                 .putExtra(EXTRA_COMPOSABLE_TOOLBAR, useComposableToolbar)
 
             startActivityAndWait(intent = intent)
@@ -88,7 +95,7 @@ class BaselineProfilesNormalBrowsingBenchmark(
             }
 
             device.enterSearchMode(useComposableToolbar)
-            device.loadSite(url = "example.com", useComposableToolbar)
+            device.loadSite(url = mockRule.url(HtmlAsset.SIMPLE), useComposableToolbar)
 
             killProcess()
         }

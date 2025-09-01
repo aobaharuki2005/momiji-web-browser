@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.benchmark.utils.FENIX_HOME_DEEP_LINK
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
 import org.mozilla.fenix.benchmark.utils.dismissWallpaperOnboarding
 import org.mozilla.fenix.benchmark.utils.flingToEnd
@@ -71,7 +72,7 @@ class BaselineProfilesHomepageScrollBenchmark {
                 pressHome()
             },
         ) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("fenix-nightly://home"))
+            val intent = Intent(Intent.ACTION_VIEW, FENIX_HOME_DEEP_LINK)
 
             startActivityAndWait(intent = intent)
 
