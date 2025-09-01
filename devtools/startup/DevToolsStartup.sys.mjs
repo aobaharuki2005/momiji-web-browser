@@ -428,7 +428,7 @@ DevToolsStartup.prototype = {
     }
 
     // The following code would only work if we have a top level browser window opened
-    const window = Services.wm.getMostRecentWindow("navigator:browser");
+    const window = Services.wm.getMostRecentBrowserWindow();
     if (!window) {
       return;
     }
@@ -1193,7 +1193,7 @@ DevToolsStartup.prototype = {
       keys = `${modifiers}+${shortcut}`;
     }
 
-    const window = Services.wm.getMostRecentWindow("navigator:browser");
+    const window = Services.wm.getMostRecentBrowserWindow();
 
     this.telemetry.addEventProperty(
       window,

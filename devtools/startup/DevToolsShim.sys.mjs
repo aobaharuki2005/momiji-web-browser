@@ -262,7 +262,7 @@ export const DevToolsShim = {
     }
 
     if (reason) {
-      const window = Services.wm.getMostRecentWindow("navigator:browser");
+      const window = Services.wm.getMostRecentBrowserWindow();
 
       this.telemetry.addEventProperty(
         window,

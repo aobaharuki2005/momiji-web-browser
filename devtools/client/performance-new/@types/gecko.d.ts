@@ -207,6 +207,7 @@ declare namespace MockedExports {
       removeObserver: (observer: object, type: string) => void;
     };
     wm: {
+      getMostRecentBrowserWindow: () => BrowserWindow;
       getMostRecentWindow: (name: string) => BrowserWindow;
       getMostRecentNonPBWindow: (name: string) => BrowserWindow;
     };
