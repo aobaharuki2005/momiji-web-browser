@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/Navigation.h"
 
-#include "fmt/format.h"
 #include "jsapi.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedUniquePtr.h"
@@ -124,6 +123,10 @@ struct NavigationAPIMethodTracker final : public nsISupports {
   }
 
   Promise* CommittedPromise() { return mCommittedPromise; }
+
+  bool NeedsToWaitForCommittedPromise() const {
+    return mCommittedPromise->State() == Promise::PromiseState::Pending;
+  }
 
   RefPtr<Navigation> mNavigationObject;
   Maybe<nsID> mKey;
@@ -817,27 +820,12 @@ static void LogEvent(Event* aEvent, NavigateEvent* aOngoingEvent,
     return;
   }
 
+  RefPtr<NavigationDestination> destination =
+      aOngoingEvent ? aOngoingEvent->Destination() : nullptr;
   nsAutoString eventType;
   aEvent->GetType(eventType);
-
-  nsTArray<nsCString> log = {nsCString(aReason),
-                             NS_ConvertUTF16toUTF8(eventType)};
-
-  if (aEvent->Cancelable()) {
-    log.AppendElement("cancelable");
-  }
-
-  if (aOngoingEvent) {
-    log.AppendElement(
-        fmt::format(FMT_STRING("{}"), aOngoingEvent->NavigationType()));
-
-    if (RefPtr<NavigationDestination> destination =
-            aOngoingEvent->Destination()) {
-      log.AppendElement(destination->GetURI()->GetSpecOrDefault());
-    }
-  }
-
-  LOG_FMT("{}", fmt::join(log.begin(), log.end(), std::string_view{" "}));
+  LOG_FMT("{} {} {}", aReason, NS_ConvertUTF16toUTF8(eventType),
+          destination ? destination->GetURI()->GetSpecOrDefault() : ""_ns);
 }
 
 nsresult Navigation::FireEvent(const nsAString& aName) {
@@ -1145,8 +1133,6 @@ bool Navigation::InnerFireNavigateEvent(
               RefPtr event = weakScope->mEvent;
               RefPtr self = weakScope->mNavigation;
               RefPtr apiMethodTracker = weakScope->mAPIMethodTracker;
-              LogEvent(event, event, "Success"_ns);
-
               // Success steps
               // Step 1
               if (RefPtr document = event->GetDocument();
@@ -1196,8 +1182,6 @@ bool Navigation::InnerFireNavigateEvent(
               RefPtr self = weakScope->mNavigation;
               RefPtr apiMethodTracker = weakScope->mAPIMethodTracker;
 
-              LogEvent(event, event, "Rejected"_ns);
-
               // Failure steps
               // Step 1
               if (RefPtr document = event->GetDocument();
@@ -1242,33 +1226,43 @@ bool Navigation::InnerFireNavigateEvent(
               // Step 10
               self->mTransition = nullptr;
             };
+    Promise::WaitForAll(
+        globalObject, promiseList,
+        [weakScope = WeakPtr(scope), successSteps,
+         failureSteps](const Span<JS::Heap<JS::Value>>& aValue)
+            MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
+              // If weakScope is null we've been cycle collected
+              if (!weakScope) {
+                return;
+              }
 
-    // If the committed promise in the api method tracker hasn't resolved yet,
-    // we can't run neither of the success nor failure steps. To handle that we
-    // set up a callback for when that resolves. This differs from how spec
-    // performs these steps, since spec can perform more of
-    // #apply-the-history-steps in a synchronous way.
-    if (apiMethodTracker) {
-      LOG_FMT("Waiting for committed");
-      apiMethodTracker->CommittedPromise()->AddCallbacksWithCycleCollectedArgs(
-          [successSteps, failureSteps](
-              JSContext*, JS::Handle<JS::Value>, ErrorResult&,
-              nsIGlobalObject* aGlobalObject,
-              const Span<RefPtr<Promise>>& aPromiseList) {
-            Promise::WaitForAll(aGlobalObject, aPromiseList, successSteps,
-                                failureSteps);
-          },
-          [](JSContext*, JS::Handle<JS::Value>, ErrorResult&, nsIGlobalObject*,
-             const Span<RefPtr<Promise>>&) {},
-          nsCOMPtr(globalObject),
-          nsTArray<RefPtr<Promise>>(std::move(promiseList)));
-    } else {
-      LOG_FMT("No API method tracker, not waiting for committed");
-      // If we don't have an apiMethodTracker we can immediately start waiting
-      // for the promise list.
-      Promise::WaitForAll(globalObject, promiseList, successSteps,
-                          failureSteps);
-    }
+              // If the committed promise in the api method tracker hasn't
+              // resolved yet, we can't run success steps. To handle that we set
+              // up a callback for when that resolves. This differs from how
+              // spec performs these steps, since spec can perform more of
+              // #apply-the-history-steps in a synchronous way.
+              RefPtr apiMethodTracker = weakScope->mAPIMethodTracker;
+              if (apiMethodTracker &&
+                  apiMethodTracker->NeedsToWaitForCommittedPromise()) {
+                // If we reach failure steps here it is because we've called
+                // NavigationAPIMethodTracker::RejectFinishedPromise by
+                // Navigation::AbortOngoingNavigation. That performs cleaup
+                // steps on its own, so we can safely ignore the reject handler
+                // here.
+                apiMethodTracker->CommittedPromise()
+                    ->AddCallbacksWithCycleCollectedArgs(
+                        [successSteps](JSContext*, JS::Handle<JS::Value>,
+                                       ErrorResult&) {
+                          successSteps(nsTArray<JS::Heap<JS::Value>>());
+                        },
+                        [](JSContext*, JS::Handle<JS::Value>, ErrorResult&) {});
+              } else {
+                // If the committed promise has resolved we can run the success
+                // steps immediately.
+                successSteps(aValue);
+              }
+            },
+        failureSteps, scope);
   } else if (apiMethodTracker && mOngoingAPIMethodTracker) {
     // In contrast to spec we add a check that we're still the ongoing tracker.
     // If we're not, then we've already been cleaned up.
