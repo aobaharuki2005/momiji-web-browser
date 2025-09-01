@@ -32,39 +32,6 @@ namespace mozilla {
 
 namespace detail {
 
-struct HasPointerTypeHelper {
-  template <class U>
-  static double Test(...);
-  template <class U>
-  static char Test(typename U::pointer* = 0);
-};
-
-template <class T>
-class HasPointerType
-    : public std::integral_constant<bool, sizeof(HasPointerTypeHelper::Test<T>(
-                                              0)) == 1> {};
-
-template <class T, class D, bool = HasPointerType<D>::value>
-struct PointerTypeImpl {
-  typedef typename D::pointer Type;
-};
-
-template <class T, class D>
-struct PointerTypeImpl<T, D, false> {
-  typedef T* Type;
-};
-
-template <class T, class D>
-struct PointerType {
-  typedef typename PointerTypeImpl<T, std::remove_reference_t<D>>::Type Type;
-};
-
-}  // namespace detail
-
-// No operator<, operator>, operator<=, operator>= for now because simplicity.
-
-namespace detail {
-
 template <typename T>
 struct UniqueSelector {
   typedef UniquePtr<T> SingleObject;
@@ -245,6 +212,8 @@ auto TempPtrToSetter(UniquePtr<T, Deleter>* const p) {
 }  // namespace mozilla
 
 namespace std {
+
+// No operator<, operator>, operator<=, operator>= for now because simplicity.
 
 template <typename T, class D>
 bool operator==(const mozilla::UniquePtr<T, D>& aX, const T* aY) {
