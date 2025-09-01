@@ -221,6 +221,12 @@ class FragmentOrElement : public nsIContent {
     UniquePtr<PopoverData> mPopoverData;
 
     /**
+     * The association to a popover that this element was the source
+     * showing a popover, e.g. the source in `el.showPopover({source})`.
+     */
+    nsWeakPtr mAssociatedPopover;
+
+    /**
      * CustomStates for the element.
      */
     nsTArray<RefPtr<nsAtom>> mCustomStates;

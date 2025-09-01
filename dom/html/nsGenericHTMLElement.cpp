@@ -3433,6 +3433,9 @@ void nsGenericHTMLElement::ShowPopoverInternal(Element* aInvoker,
     auto* popoverData = GetPopoverData();
     popoverData->SetPopoverVisibilityState(PopoverVisibilityState::Showing);
     popoverData->SetInvoker(aInvoker);
+    if (aInvoker && aInvoker->IsHTMLElement()) {
+      aInvoker->SetAssociatedPopover(*this);
+    }
   }
 
   // Run the popover focusing steps given element.
