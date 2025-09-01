@@ -1026,21 +1026,24 @@ void WindowGlobalParent::PermitUnload(std::function<void(bool)>&& aResolver) {
 }
 
 void WindowGlobalParent::PermitUnloadTraversable(
-    const SessionHistoryInfo& aInfo, std::function<void(bool)>&& aResolver) {
+    const SessionHistoryInfo& aInfo,
+    nsIDocumentViewer::PermitUnloadAction aAction,
+    std::function<void(bool)>&& aResolver) {
   MOZ_DIAGNOSTIC_ASSERT(BrowsingContext()->IsTop());
   RefPtr<CheckPermitUnloadRequest> request =
-      MakeRefPtr<CheckPermitUnloadRequest>(
-          this, /* aHasInProcessBlocker */ false,
-          nsIDocumentViewer::PermitUnloadAction::ePrompt, std::move(aResolver));
+      MakeRefPtr<CheckPermitUnloadRequest>(this,
+                                           /* aHasInProcessBlocker */ false,
+                                           aAction, std::move(aResolver));
   request->RunTraversable(aInfo);
 }
 
 void WindowGlobalParent::PermitUnloadChildNavigables(
+    nsIDocumentViewer::PermitUnloadAction aAction,
     std::function<void(bool)>&& aResolver) {
   RefPtr<CheckPermitUnloadRequest> request =
-      MakeRefPtr<CheckPermitUnloadRequest>(
-          this, /* aHasInProcessBlocker */ false,
-          nsIDocumentViewer::PermitUnloadAction::ePrompt, std::move(aResolver));
+      MakeRefPtr<CheckPermitUnloadRequest>(this,
+                                           /* aHasInProcessBlocker */ false,
+                                           aAction, std::move(aResolver));
   request->RunChildNavigables();
 }
 

@@ -1515,9 +1515,16 @@ static bool MaybeCheckUnloadingIsCanceled(
   // Step 4.3.4
   // PermitUnloadTraversable only includes the process of the top level browsing
   // context.
+
+  // If we don't have any unload handlers registered, we still need to run
+  // navigate event handlers, but we don't need to show the prompt.
+  nsIDocumentViewer::PermitUnloadAction action =
+      windowGlobalParent->NeedsBeforeUnload()
+          ? nsIDocumentViewer::PermitUnloadAction::ePrompt
+          : nsIDocumentViewer::PermitUnloadAction::eDontPromptAndUnload;
   windowGlobalParent->PermitUnloadTraversable(
-      targetEntry->Info(),
-      [loadResults = CopyableTArray(std::move(aLoadResults)),
+      targetEntry->Info(), action,
+      [action, loadResults = CopyableTArray(std::move(aLoadResults)),
        windowGlobalParent, aResolver](bool aAllow) mutable {
         if (!aAllow) {
           aResolver(loadResults, aAllow);
@@ -1527,6 +1534,7 @@ static bool MaybeCheckUnloadingIsCanceled(
         // PermitUnloadTraversable includes everything except the process of the
         // top level browsing context.
         windowGlobalParent->PermitUnloadChildNavigables(
+            action,
             [loadResults = std::move(loadResults), aResolver](
                 bool aAllow) mutable { aResolver(loadResults, aAllow); });
       });
