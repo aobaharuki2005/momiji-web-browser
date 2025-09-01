@@ -4795,6 +4795,26 @@ bool Element::IsPopoverOpen() const {
   return htmlElement && htmlElement->PopoverOpen();
 }
 
+void Element::SetAssociatedPopover(nsGenericHTMLElement& aPopover) {
+  MOZ_ASSERT(IsHTMLElement());
+  MOZ_ASSERT(aPopover.IsHTMLElement());
+  auto* slots = ExtendedDOMSlots();
+  slots->mAssociatedPopover = do_GetWeakReference(&aPopover);
+}
+
+nsGenericHTMLElement* Element::GetAssociatedPopover() const {
+  if (const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
+    if (nsCOMPtr<nsGenericHTMLElement> popover =
+            do_QueryReferent(slots->mAssociatedPopover)) {
+      if (popover->GetPopoverData() &&
+          popover->GetPopoverData()->GetInvoker() == this) {
+        return popover;
+      }
+    }
+  }
+  return nullptr;
+}
+
 Element* Element::GetTopmostPopoverAncestor(const Element* aInvoker,
                                             bool isPopover) const {
   const Element* newPopover = this;
