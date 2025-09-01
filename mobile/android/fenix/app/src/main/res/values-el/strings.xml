@@ -54,6 +54,8 @@
   <string name="tab_tray_collection_button_multiselect_content_description">Αποθήκευση επιλεγμένων καρτελών στη συλλογή</string>
   <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
   <string name="tab_manager_empty_synced_tabs_page_header">Λάβετε καρτέλες από οποιαδήποτε συσκευή</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Συνδεθείτε για να διαχειριστείτε τις συγχρονισμένες καρτέλες από όλες τις συσκευές σας.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Σύνδεση</string>
   <!--
@@ -519,6 +521,8 @@
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Μάθετε περισσότερα</string>
   <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
   <string name="startup_crash_title">Πρέπει να γίνει επανεκκίνηση του %s</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">Προέκυψε πρόβλημα κατά το άνοιγμα του %s.\n\nΗ αποστολή μιας αναφοράς κατάρρευσης συμβάλλει στη διάγνωση και διόρθωση των προβλημάτων του προγράμματος περιήγησης. Οι αναφορές ενδέχεται να περιλαμβάνουν προσωπικά ή ευαίσθητα δεδομένα.</string>
   <!-- Button text to submit a startup crash report -->
   <string name="startup_crash_positive">Αποστολή αναφοράς κατάρρευσης</string>
   <!-- Button text to continue and not send a startup crash report -->
@@ -1412,6 +1416,8 @@
   <string name="tab_tray_menu_item_close">Κλείσιμο όλων των καρτελών</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Αποθήκευση</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Προσθήκη επιλεγμένων καρτελών στους σελιδοδείκτες</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Κλείσιμο</string>
   <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
@@ -1658,6 +1664,8 @@
   <string name="webcompat_reporter_label_description">Περιγράψτε το πρόβλημα (προαιρετικό)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Αποστολή περισσότερων πληροφοριών</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">Προσθήκη περισσότερων πληροφοριών</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Ακύρωση</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -3013,6 +3021,11 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Άρθρα</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">Ανακαλύψτε περισσότερα άρθρα</string>
   <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
   <string name="stories_back_button_content_description">Πλοήγηση προς τα πίσω</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
