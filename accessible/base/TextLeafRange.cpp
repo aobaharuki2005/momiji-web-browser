@@ -2287,17 +2287,12 @@ bool TextLeafRange::Crop(Accessible* aContainer) {
 }
 
 LayoutDeviceIntRect TextLeafRange::Bounds() const {
-  if (mStart == mEnd) {
-    // Return the insertion point bounds for the offset if range is collapsed.
-    return mStart.InsertionPointBounds();
-  }
-
   // We can't simply query the first and last character, and union their bounds.
   // They might reside on different lines, so a simple union may yield an
   // incorrect width. We should use the length of the longest spanned line for
   // our width. To achieve this, walk all the lines and union them into the
   // result rectangle.
-  LayoutDeviceIntRect result = TextLeafPoint{mStart}.CharBounds();
+  LayoutDeviceIntRect result;
   const bool succeeded = WalkLineRects(
       [&result](TextLeafRange aLine, LayoutDeviceIntRect aLineRect) {
         result.UnionRect(result, aLineRect);
@@ -2546,9 +2541,12 @@ void TextLeafRange::ScrollIntoView(uint32_t aScrollType) const {
 nsTArray<TextLeafRange> TextLeafRange::VisibleLines(
     Accessible* aContainer) const {
   MOZ_ASSERT(aContainer);
+  nsTArray<TextLeafRange> lines;
+  if (mStart == mEnd) {
+    return lines;
+  }
   // We want to restrict our lines to those visible within aContainer.
   LayoutDeviceIntRect containerBounds = aContainer->Bounds();
-  nsTArray<TextLeafRange> lines;
   WalkLineRects([&lines, &containerBounds](TextLeafRange aLine,
                                            LayoutDeviceIntRect aLineRect) {
     // XXX This doesn't correctly handle lines that are scrolled out where the
@@ -2564,8 +2562,13 @@ nsTArray<TextLeafRange> TextLeafRange::VisibleLines(
 }
 
 bool TextLeafRange::WalkLineRects(LineRectCallback aCallback) const {
-  if (mEnd <= mStart) {
+  if (mEnd < mStart) {
     return false;
+  }
+  if (mStart == mEnd) {
+    // Return the insertion point bounds for the offset if range is collapsed.
+    aCallback(*this, mStart.InsertionPointBounds());
+    return true;
   }
 
   bool locatedFinalLine = false;
