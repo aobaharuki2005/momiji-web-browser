@@ -32,6 +32,10 @@
   <string name="no_open_tabs_description">താങ്കളുടെ തുറന്നു കിടക്കുന്ന ടാബുകൾ ഇവിടെ കാണിക്കും.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">നിങ്ങളുടെ സ്വകാര്യ ടാബുകൾ ഇവിടെ കാണിക്കും.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">സ്വകാര്യ തിരയൽ</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">തിരയാൻ വേണ്ടിയൊരു പുതിയ ടാബുണ്ടാക്കുക</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d തിരഞ്ഞെടുത്തിരിക്കുന്നു</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +50,10 @@
   <string name="tab_tray_close_multiselect_content_description">ബഹുതിരഞ്ഞെടുപ്പു് രീതി നിന്നു് പുറത്തുകടക്കുക</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">തിരഞ്ഞെടുത്ത ടാബുകൾ ശേഖരത്തിൽ കരുതിവയ്ക്കുക</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">ഏതുപകരണത്തിൽ നിന്നും ടാബുകൾ എടുത്തുപയോഗിക്കുക</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">പ്രവേശിക്കുക</string>
   <!--
     Home - Bookmarks
 
@@ -366,6 +374,16 @@
   -->
   <string name="browser_toolbar_translated_successfully">ഈ താൾ %1$s-ൽ നിന്നു് %2$s-ലേക്കു് വിവർത്തനം ചെയ്തിരിക്കുന്നു</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">%1$s നിന്നു് %2$s-ലേക്കു് വിവൎത്തനം ചെയ്തു</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">വിവൎത്തന കടലാസു തുറക്കുക</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -490,6 +508,14 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">തകർച്ച റിപ്പോർട്ടുകൾ ഞങ്ങൾക്കു് അന്വേഷിയന്ത്രത്തിന്റെ കൂടെയുള്ള എല്ലാ പ്രശ്നങ്ങളെ കണ്ടുപ്പിടിക്കാനും പരിഹരിക്കാനും സഹായിക്കുന്നു. റിപ്പോർട്ടുകളിൽ തനതായ അല്ലെങ്കിൽ സൂക്ഷിച്ചുവയ്ക്കാനുള്ള ദത്തയും ഉൾപ്പെടാം.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">കൂടുതല്‍ അറിയുക</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s-നു വീണ്ടും തുടങ്ങണ്ടി വരും</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">തകരാറിനെപ്പറ്റിയുള്ള അറിയിപ്പ് അയയ്ക്കുക</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">വേണ്ട, നന്ദി</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">%s വീണ്ടും തുറക്കുക</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">സാങ്കേതികയും ഇടപാടുനീയ ദത്ത മോസില്ലയ്ക്കു അയക്കുക</string>
   <string name="onboarding_preferences_dialog_usage_data_learn_more_2">കൂടുതല്‍ അറിയുക</string>
@@ -1307,8 +1333,16 @@
   <string name="tab_tray_menu_item_close">എല്ലാ ടാബുകളും അടയ്ക്കുക</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">അടയാളകുറിപ്പു്</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">തിരഞ്ഞെടുത്ത ടാബുകളെ കുറിച്ചിടുക</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">അടയ്ക്കുക</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">തിരഞ്ഞെടുത്ത ടാബുകളെ അടയ്ക്കുക</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">പങ്കിടുക</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">ശേഖരത്തിലോട്ടു ചേൎക്കുക</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">തിരഞ്ഞെടുത്ത ടാബുകൾ പങ്കിടുക</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1545,6 +1579,8 @@
   <string name="webcompat_reporter_label_description">പ്രശ്നം വിവരിക്കുക (ഇതു് നല്കാൻ ആവശ്യമല്ല)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">കൂടുതൽ വിവരങ്ങൾ അയക്കുക</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">ഇനിയും വിവരം ചേൎക്കുക</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">റദ്ദാക്കുക</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1716,6 +1752,8 @@
   <string name="bookmark_search_button_content_description">അടയാളക്കുറിപ്പുകളിൽ തേടുക</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">%s-നുള്ള ഇനം പട്ടിക</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">അടയാളക്കുറിപ്പുകൾ അടയ്ക്കുക</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">ഇതുവരെ അടയാളക്കുറിപ്പുകളൊന്നുമില്ല</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -1758,6 +1796,8 @@
   <string name="clear_permissions_on_all_sites">എല്ലാ സൈറ്റുകളിലെയും അനുമതികൾ ഇല്ലാതാക്കുക</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">ഓട്ടോപ്ലേ</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">ഉപകരണപ്രയോഗങ്ങളും സേവനങ്ങളും</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">ക്യാമറ</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2830,6 +2870,8 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">കഥകൾ</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">പുറകോട്ടു ചെല്ലുക</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">പണം കൊണ്ടു് പ്രചരിപ്പിച്ചതു്</string>
   <!-- Snackbar button text to navigate to telemetry settings. -->
@@ -3509,6 +3551,11 @@
     Title for the pop up prompt
   -->
   <string name="terms_of_use_prompt_title">പുതുക്കൽ ലഭ്യം</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">ദയവായി %1$s-ന് പരിശോധിച്ച് അംഗീകരിക്കുക.\u0020</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">ഉപയോഗനിബന്ധനകള്‍</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->

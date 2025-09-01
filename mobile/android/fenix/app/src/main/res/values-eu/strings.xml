@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Irekitako fitxak hemen erakutsiko dira.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Zure fitxa pribatuak hemen erakutsiko dira.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Nabigatze pribatua</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s(e)k ez du historia edo cookierik gogoratuko baina laster-marka berriak gorde egingo dira.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Sortu fitxa berria edo hasi bilatzen</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d hautatuta</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">Irten hautapen anitzeko modutik</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Gorde hautatutako fitxak bilduman</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Hartu fitxak edozein gailutatik</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Hasi saioa zure gailu guztietako sinkronizatutako fitxak kudeatzeko.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Hasi saioa</string>
   <!--
     Home - Bookmarks
 
@@ -366,6 +378,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">Orria %1$s hizkuntzatik %2$s hizkuntzara itzuli da.</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">%1$s hizkuntzatik %2$s hizkuntzara itzuli da</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">Ireki itzulpenen orria</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">Baztertu mezua</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -495,6 +519,16 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Hutsegite-txostenek nabigatzailearen arazoak diagnostikatu eta konpontzen laguntzen digute. Txostenek datu pertsonal edo kontuzkoak izan litzakete.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Argibide gehiago</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s berrabiarazi egin behar da</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">Arazo bat egon da %s irekitzen.\nHutsegite-txostenek nabigatzailearen arazoak diagnostikatu eta konpontzen laguntzen digute. Txostenek datu pertsonal edo kontuzkoak izan litzakete.</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">Bidali hutsegite-txostena</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">Ez, eskerrik asko</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">Berrireki %s</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Bidali datu tekniko eta interakziozkoak Mozillara</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Zure gailuaren, hardware-konfigurazioaren eta Firefox erabiltzen duzun moduaren inguruko datuek eginbideak, errendimendua eta egonkortasuna mundu guztiarentzat hobetzen laguntzen dute.</string>
@@ -725,6 +759,8 @@
   <string name="preferences_home_2">Hasiera-orria</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Aplikazioaren ikonoa</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Fitxa-barraren bistaratzea</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Keinuak</string>
   <!-- Preference for settings related to visual options -->
@@ -799,6 +835,14 @@
   <string name="preferences_open_links_in_apps_ask">Galdetu ireki aurretik</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Inoiz ez</string>
+  <!-- Preference title for choosing an app to handle downloads -->
+  <string name="preferences_choose_app_for_downloads">Kudeatu deskargak beste aplikazio batekin</string>
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_downloads_settings_clean_up_files_title">Ezabatu %s aplikaziotik eta gailutik</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">Fitxategiak deskarga-kudeatzailetik kentzean zure gailutik ere kentzen ditu</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">Deskargak</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">Gaitu Gecko erregistroak</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
@@ -823,6 +867,18 @@
   <string name="addons_permissions_allow_for_all_sites_subtitle">Hedapena fidagarritzat baduzu, webgune guztietarako baimena eman diezaiokezu.</string>
   <!-- The text shown when an extension does not require permissions -->
   <string name="addons_does_not_require_permissions">Hedapen honek ez du baimenik behar.</string>
+  <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
+  <string name="addons_permissions_required_data_collection_description_2">Garatzaileak dio hedapen honek ondorengoa biltzen duela: %1$s</string>
+  <!-- The description of the "none" data collection permission, when the extension doesn't collect anything according to the developer. -->
+  <string name="addons_permissions_none_required_data_collection_description">Garatzaileak dio hedapen honek ez duela daturik biltzen.</string>
+  <!-- The title of the required permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_permissions">Beharrezko baimenak:</string>
+  <!-- The title of the optional permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_permissions">Aukerako baimenak:</string>
+  <!-- The title of the required data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_data_collection">Beharrezko datu-bilketa:</string>
+  <!-- The title of the optional data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_data_collection">Aukerazko datu-bilketa:</string>
   <!--
     Add-on Preferences
 
@@ -852,6 +908,8 @@
     a section where users see a list of tabs that they have visited in the past few days
   -->
   <string name="customize_toggle_recently_visited">Bisitatutako azkenak</string>
+  <!-- Title for the customize home screen section with Pocket. -->
+  <string name="customize_toggle_pocket_3">Istorioak</string>
   <!-- Title for the customize home screen section with sponsored Pocket stories. -->
   <string name="customize_toggle_pocket_sponsored">Babesleen istorioak</string>
   <!-- Title for the opening wallpaper settings screen -->
@@ -890,6 +948,30 @@
   <string name="wallpapers_onboarding_dialog_body_text">Aukeratu zuri egokitzen zaizun horma-papera.</string>
   <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
   <string name="wallpapers_onboarding_dialog_explore_more_button_text">Arakatu horma-paper gehiago</string>
+  <!--
+    Icon picker
+
+    Title for the "Default" alternative app icon variant in the icon picker screen.
+  -->
+  <string name="alternative_app_icon_option_default">Lehenetsia</string>
+  <!-- Title for the "Light" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_light">Argia</string>
+  <!-- Title for the "Dark" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_dark">Iluna</string>
+  <!-- Title for the "Red" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_red">Gorria</string>
+  <!-- Title for the "Green" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_green">Berdea</string>
+  <!-- Title for the "Blue" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_blue">Urdina</string>
+  <!-- Title for the "Purple" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_purple">Morea</string>
+  <!-- Title for the "Purple Dark" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_purple_dark">More iluna</string>
+  <!-- Title for the "Sunrise" gradient alternative app icon variant in the icon picker screen. The app icon features a soft yellow-to-blue gradient background, resembling the colors of early morning light. -->
+  <string name="alternative_app_icon_option_gradient_sunrise">Egunsentia</string>
+  <!-- Title for the "Golden Hour" gradient alternative app icon variant in the icon picker screen. The app icon features a warm golden-to-pink gradient background, resembling the colors of the sunlight shortly before sunset. -->
+  <string name="alternative_app_icon_option_gradient_golden_hour">Urrezko ordua</string>
   <!-- Title for the "Sunset" gradient alternative app icon variant in the icon picker screen. The app icon has a rich red-to-purple gradient background, resembling the tones of a sunset sky. -->
   <string name="alternative_app_icon_option_gradient_sunset">Ilunabarra</string>
   <!-- Title for the "Blue Hour" gradient alternative app icon variant in the icon picker screen. The app icon has a cool blue gradient background, resembling the sky color around the time just after sunset or before sunrise. -->
@@ -914,14 +996,24 @@
   <string name="alternative_app_icon_option_cute">Polita</string>
   <!-- Title for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo">Momo</string>
+  <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
+  <string name="alternative_app_icon_option_momo_subtitle">\u0040heyheymomodraws-ek sortuta</string>
   <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
   <string name="alternative_app_icon_group_solid_colors">Kolore solidoak</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Gradienteak</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources">Bestelakoak</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Aldatu aplikazio-ikonoa?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Ikonoa aldatzeak aplikazioa berrabiaraztea eskatzen du.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">Aplikazioa itxi liteke. Sakatu zure ikono berria %1$s berrirekitzeko.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Berrabiarazi orain</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">Aldatu ikonoa</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Utzi</string>
   <!--
@@ -1032,6 +1124,8 @@
   <string name="exceptions_empty_message_learn_more_link">Argibide gehiago</string>
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">Bidali datu tekniko eta interakziozkoak</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">Datuen teknikoei buruzko argibide gehiago</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
   <string name="preferences_usage_data_description_1" tools:ignore="BrandUsage">Zure gailuaren, hardware-konfigurazioaren eta erabilpenaren inguruko datuek guztientzat Firefoxen eginbideak, errendimendua eta egonkortasuna hobetzen laguntzen dute.</string>
   <!-- Preference switch for daily usage ping data collection -->
@@ -1044,12 +1138,16 @@
   <string name="crash_reporting_snack_bar_message">Txostena bidalita</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Hauek nabigatzailearen arazoak diagnostikatu eta konpontzen laguntzen digu honek. Txostenek datu pertsonal edo kontuzkoak izan litzakete.</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">Hutsegite-txostenei buruzko argibide gehiago</string>
   <!-- Title Headers for data collection settings screen -->
   <string name="crash_reports_data_category">Hutsegite-txostenak</string>
   <string name="usage_data_category">Erabilpen-datuak</string>
   <string name="studies_data_category">Esperimentuak</string>
   <string name="technical_data_category">Datu teknikoak</string>
   <string name="crash_reporting_description">Hutsegite-txostenek nabigatzailearen arazoak diagnostikatu eta konpontzen laguntzen digute. Txostenek datu pertsonal edo kontuzkoak izan litzakete.</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">Kanpainen neurketa</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">Kanpainen neurketa-datuak</string>
   <!--
@@ -1093,6 +1191,8 @@
   <string name="preference_simple_toolbar">Sinplea</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Zabaldua</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Helbide-barrak goian egon behar du fitxa-barra erakustean.</string>
   <!--
     App icon Preferences
 
@@ -1111,6 +1211,12 @@
   <string name="preference_auto_battery_theme">Bateria-aurrezlea ezarrita</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Erabili gailuaren itxura</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Erakutsi fitxa-barra</string>
   <!--
     Gestures Preferences
 
@@ -1260,6 +1366,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Argibide gehiago</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Irekitako fitxa normalak: %1$s. Sakatu fitxaz aldatzeko.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1303,8 +1416,16 @@
   <string name="tab_tray_menu_item_close">Itxi fitxa guztiak</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Egin laster-marka</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Egin hautatutako fitxen laster-markak</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Itxi</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Itxi hautatutako fitxak</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">Partekatu</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">Gehitu bildumara</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">Partekatu hautatutako fitxak</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1398,6 +1519,18 @@
     %1$d is the number of downloads selected
   -->
   <string name="download_multi_select_title">%1$d hautatuta</string>
+  <!-- Title for the dialog that is shown when there is not enough storage space to download a file. -->
+  <string name="download_file_has_not_enough_storage_dialog_title">Leku libre nahikorik ez</string>
+  <!--
+    Message for the dialog that is shown when there is not enough storage space to download a file.
+    %s is the name of the file to download.
+  -->
+  <string name="download_file_has_not_enough_storage_dialog_message"><![CDATA[Gailu honek ez du leku libre nahikorik <b>%s</b> deskargatzeko.]]></string>
+  <!--
+    Text for the confirm button in the dialog that is shown when there is not enough storage space to download a file.
+    This button will navigate the user to the device's storage management settings.
+  -->
+  <string name="download_file_has_not_enough_storage_dialog_confirm_button_text">Kudeatu fitxategiak</string>
   <!--
     Text for the cancel button in the dialog that is shown when there is not enough storage space to download a file.
     This button will dismiss the dialog.
@@ -1407,6 +1540,8 @@
   <string name="download_delete_item">Ezabatu</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">Nabigatu atzera</string>
+  <!-- Content description for the toolbar back button while searching the downloads -->
+  <string name="download_close_search_description">Atzera eta itxi bilaketa</string>
   <!--
     Content description for the search bar clear text button on the downloads screen
 
@@ -1415,6 +1550,8 @@
   <string name="download_pause_action">Pausatu</string>
   <!-- Content description for resume action button on the downloads screen -->
   <string name="download_resume_action">Berrekin</string>
+  <!-- Content description for retry download action button on the downloads screen -->
+  <string name="download_retry_action">Saiatu berriro</string>
   <string name="download_clear_search_description">Garbitu</string>
   <!-- Text for the button to share the download URL -->
   <string name="download_share_url">Partekatu URLa</string>
@@ -1442,8 +1579,41 @@
   <string name="download_time_period_last_30_days">Azken 30 egunak</string>
   <!-- Text for the header that groups the downloads older than other groups -->
   <string name="download_time_period_older">Zaharragoa</string>
+  <!-- Description of an in progress download item, displayed in the downloads list when the download has just started. -->
+  <string name="download_item_in_progress_description_preparing">Deskarga prestatzen…</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the download time remaining is known.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+    %3$s is the amount of time remaining to complete the download.
+  -->
+  <string name="download_item_in_progress_description_2">%2$s / %1$s • %3$s faltan.</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+  -->
+  <string name="download_item_in_progress_description_pending">%2$s / %1$s • zain</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • denbora ezezaguna</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+  -->
+  <string name="download_item_paused_description">%2$s / %1$s • pausatuta</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • pausatuta</string>
   <!-- Text to indicate that a download has failed to download. -->
   <string name="download_item_status_failed">Deskargak huts egin du</string>
+  <!-- Text for the snackbar action button to view failed download details. -->
+  <string name="download_failed_snackbar_action_details">Xehetasunak</string>
   <!-- Placeholder text to indicate that users can use the search bar to search for a download. -->
   <string name="download_search_placeholder">Bilatu deskargak</string>
   <!-- Text to indicate that no downloads match the search query. -->
@@ -1472,6 +1642,12 @@
   <string name="webcompat_reporter_screen_title">Eman hondatutako gunearen berri</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Lagundu %1$s denontzat hobetzen. Mozillako langileek zuk bidalitako informazioa erabiltzen dute webguneetako arazoak konpontzeko.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Zure txostenak %1$s(e)n arazoak ulertu eta konpontzen laguntzen digu, horrela denontzat hobetzeko. Argibide gehiago</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Zure txostenak %1$s(e)n arazoak ulertu eta konpontzen laguntzen digu, horrela denontzat hobetzeko. %2$s</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Argibide gehiago</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URLa</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1480,12 +1656,16 @@
   <string name="webcompat_reporter_label_whats_broken_2">Zer dago hondatuta?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Aukeratu arrazoia</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Aukeratu arrazoia</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Aukeratu arrazoia</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Azaldu arazoa (aukerakoa)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Bidali informazio gehiago</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">Gehitu informazio gehiago</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Utzi</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1494,6 +1674,28 @@
   <string name="webcompat_reporter_success_snackbar_text">Zure txostena bidali da</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">Itxi</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">Zer gertatu da? Zerk gertatu beharko luke?</string>
+  <!--
+    These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
+
+    Broken site reason text for site doesn’t load
+  -->
+  <string name="webcompat_reporter_reason_load">Gunea ez da kargatzen</string>
+  <!-- Broken site reason text for can’t pay, check out or shop -->
+  <string name="webcompat_reporter_reason_checkout">Ezin da ordaindu edo erosketarik egin</string>
+  <!-- Broken site reason text for site is slow -->
+  <string name="webcompat_reporter_reason_slow2">Gunea mantso doa</string>
+  <!-- Broken site reason text for video isn’t playing or loading -->
+  <string name="webcompat_reporter_reason_media2">Bideoa ez da erreproduzitzen edo kargatzen</string>
+  <!-- Broken site reason text for missing content -->
+  <string name="webcompat_reporter_reason_content2">Edukia falta da</string>
+  <!-- Broken site reason text for can’t sign in or register -->
+  <string name="webcompat_reporter_reason_account2">Ezin da saioa hasi edo erregistratu</string>
+  <!-- Broken site reason text for site asked to turn off ad blocker -->
+  <string name="webcompat_reporter_reason_turn_off_adblocker">Guneak iragarki-blokeatzailea desgaitzeko eskatu du</string>
+  <!-- Broken site reason text for browser isn’t supported or blocked -->
+  <string name="webcompat_reporter_reason_notsupported">Nabigatzailea ez da onartzen edo blokeatuta dago</string>
   <!-- Broken site reason text for something else -->
   <string name="webcompat_reporter_reason_other">Beste zerbait</string>
   <!--
@@ -1510,12 +1712,29 @@
   <string name="tab_crash_restore">Berreskuratu fitxa</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s berrabiarazi egin behar izan da</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s(e)k huts egin du. Bidali txostena?</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Bidali gabeko hutsegite-txosten bat duzu ikerketapean dauden hutsegiteekin zerikusia duena. Bidaltzeak %1$s hobetzen lagunduko digu. Jakinarazpen hau ixteak txosten hau ezikusiko du.</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Bidali gabeko hutsegite-txostenak dituzu (%1$d) ikerketapean dauden hutsegiteekin zerikusia dutena. Bidaltzeak %2$s hobetzen lagunduko digu. Jakinarazpen hau ixteak txosten hauek ezikusiko ditu.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Bidali automatikoki hutsegite-txostenak</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Itxi</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ITXI</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Ez erakutsi hau berriro</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">BIDALI</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Bidali hutsegite-txostena</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Hutsegite-txostenek nabigatzailearen arazoak diagnostikatu eta konpontzen laguntzen digute. Txostenek datu pertsonal edo kontuzkoak izan litzakete. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Argibide gehiago</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">Argibide gehiago</string>
   <!--
     Bookmarks
 
@@ -1542,6 +1761,8 @@
   <string name="bookmark_menu_copy_button">Kopiatu</string>
   <!-- Bookmark overflow menu share button -->
   <string name="bookmark_menu_share_button">Partekatu</string>
+  <!-- Bookmark overflow menu select all bookmarks -->
+  <string name="bookmark_menu_select_all_bookmarks">Hautatu dena</string>
   <!-- Bookmark overflow menu open in new tab button -->
   <string name="bookmark_menu_open_in_new_tab_button">Ireki fitxa berrian</string>
   <!-- Bookmark overflow menu open in private tab button -->
@@ -1554,6 +1775,10 @@
   <string name="bookmark_menu_delete_button">Ezabatu</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Gorde</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">Ordenatzeko aukerak</string>
+  <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
+  <string name="bookmark_sort_menu_custom">Ordenatu ordena pertsonalizatuaren arabera</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_newest">Ordenatu berrienen arabera</string>
   <!-- Label for button to sort bookmarks by oldest in the bookmark sorting overflow menu. -->
@@ -1622,6 +1847,8 @@
   <string name="bookmark_search_button_content_description">Bilatu laster-markak</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">%s laster-markarako menu-elementua</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">Itxi laster-markak</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Laster-markarik ez oraindik</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -1664,6 +1891,10 @@
   <string name="clear_permissions_on_all_sites">Garbitu gune guztietako baimenak</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">Erreprodukzio automatikoa</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">Gailuaren aplikazio eta zerbitzuak</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">Sare lokaleko gailuak</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Kamera</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -1720,6 +1951,10 @@
   <string name="studies_on">Aktibatuta</string>
   <!-- Summary of studies data on quit preference if it is set to off -->
   <string name="studies_off">Desaktibatuta</string>
+  <!-- Toggle if desktop site is turned on -->
+  <string name="browser_feature_desktop_site_on">Aktibatuta</string>
+  <!-- Toggle if desktop site is turned off -->
+  <string name="browser_feature_desktop_site_off">Desaktibatuta</string>
   <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
   <string name="preferences_category_permissions">Baimenak</string>
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
@@ -1938,6 +2173,8 @@
   <string name="preference_accessibility_text_size_summary">Handiagotu edo txikiagotu webguneetako testua</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Letra-tamaina</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%% %d.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Letra-tamaina automatikoa</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2069,6 +2306,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Zorrotza</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Jarraipenaren babes sendoagoa eta errendimendu hobea baina baliteke zenbait gune ondo ez ibiltzea.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Baimendu %1$s(r)i salbuespenak automatikoki aplikatzea webgune nagusiak hautsita azaltzea eragozteko.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Aplikatu automatikoki salbuespenak arazo txikiak konpontzeko eta erosotasun-eginbideak erabilgarri egiteko beharrezkoak direnak.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Jarraipenaren babes zorrotzak blokeatzen duena</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2341,6 +2582,8 @@
   <string name="preferences_passwords_exceptions_remove_all">Ezabatu salbuespen guztiak</string>
   <!-- Hint for search box in passwords list -->
   <string name="preferences_passwords_saved_logins_search_2">Bilatu pasahitzak</string>
+  <!-- Content description for the logins navigation bar back button -->
+  <string name="logins_navigate_back_button_content_description">Atzera</string>
   <!-- The header for the site that a login is for -->
   <string name="preferences_passwords_saved_logins_site">Gunea</string>
   <!-- The header for the username for a login -->
@@ -2361,6 +2604,22 @@
   <string name="saved_login_clear_username">Garbitu erabiltzaile-izena</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Garbitu ostalaria</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Saio-hasierako xehetasunen menua</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Nabigatu atzera</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Editatu</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Ezabatu</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">Nabigatu atzera</string>
+  <!-- Content description, used by tools like screenreaders, to press on the save new login button. -->
+  <string name="add_login_save_new_login_button_content_description">Gorde saio-hasiera berria</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">Nabigatu atzera</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">Editatu saio-hasiera</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Ireki gunea nabigatzailean</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2419,6 +2678,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Gorde eta osatu helbideak</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Telefono zenbakiak eta helbide elektronikoak ere baditu</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Sinkronizatu helbideak gailuen artean</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Sinkronizatu helbideak</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Gehitu txartela</string>
   <!-- Title of the "Edit card" screen -->
@@ -2652,6 +2915,17 @@
   <string name="synced_tabs_expand_group">Zabaldu sinkronizatutako fitxen taldea</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Tolestu sinkronizatutako fitxen taldea</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Lasterbideak</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">Erakutsi lasterbide guztiak</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Lasterbideen mugara iritsi da</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -2741,6 +3015,19 @@
   <string name="action_bar_up_description">Nabigatu gora</string>
   <!-- Content description for privacy content close button -->
   <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Itxi</string>
+  <!--
+    Pocket recommended stories
+
+    Header text for a section on the home screen.
+  -->
+  <string name="pocket_stories_header_2">Istorioak</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">Deskubritu istorio gehiago</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">Nabigatu atzera</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">Babesleak hornituta</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3045,10 +3332,18 @@
   <string name="protection_panel_banner_protected_description">Babestuta zaude. Zerbait ikusten badugu, jakinaraziko dizugu.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Jarraipenaren babes hobetua</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Aktibatuta</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Desaktibatuta</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Zerbaitek apurtuta badirudi gune honetan, saiatu babesak desaktibatzen.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Zerbaitek apurtuta badirudi gune honetan, saiatu desaktibatzen.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Babesak desgaituta daude. Berriro ere aktibatzea gomendatzen dugu.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Jarraipenaren babes aktibatzea gomendatzen dugu.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3056,8 +3351,12 @@
   <string name="protection_panel_num_trackers_blocked">Blokeatutako jarraipen-elementuak: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Ez da jarraipen-elementurik aurkitu</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">Jarraipen-elementuak ez daude blokeatuta</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Pribatutasun- eta segurtasun-ezarpenak</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Pribatutasun-ezarpenak</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Baimenak</string>
   <!--
@@ -3086,6 +3385,8 @@
   <string name="connection_security_panel_secure">Konexio segurua</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Konexio ez-segurua</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">Orri hau zure gailuan biltegiratuta dago</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.
@@ -3265,6 +3566,14 @@
   <string name="debug_drawer_override_current_region_label">Baliogabetu uneko eskualdea</string>
   <!-- The title of the button for overriding home and current region. -->
   <string name="debug_drawer_override_region">Baliogabetu etxeko eta uneko eskualdea</string>
+  <!-- The title of the button for overriding home region permanently. -->
+  <string name="debug_drawer_override_home_region_permanently">Baliogabetu etxeko eskualdea behin betiko</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Gehigarrien tresnak</string>
   <!-- The title of the button used to check for add-on updates. -->
   <string name="addons_debug_tools_check_for_updates_button">Bilatu eguneraketak</string>
   <!--
@@ -3395,6 +3704,8 @@
   <string name="setup_checklist_task_explore_extensions">Arakatu hedapenak</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Instalatu bilaketarako widgeta</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Arakatu bilaketarako widgeta</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3429,12 +3740,54 @@
   <string name="pbm_authentication_unlock">Desblokeatu</string>
   <!-- Title text instructing the user to unlock private tabs -->
   <string name="pbm_authentication_unlock_private_tabs">Desblokeatu fitxa pribatuak</string>
+  <!-- Authentication prompt title to enable the private tabs mode -->
+  <string name="pbm_authentication_enable_lock">Gaitu fitxa pribatuetako pantailaren blokeoa</string>
+  <!-- Authentication prompt title to disable the private tabs mode -->
+  <string name="pbm_authentication_disable_lock">Desgaitu fitxa pribatuetako pantailaren blokeoa</string>
+  <!-- Label for a preference shown when the device supports screen lock (e.g., PIN, pattern, or password) but the user has not set one up. -->
+  <string name="pbm_authentication_lock_device_feature_disabled">Konfiguratu pantailaren blokeoa fitxak ezkutatzeko</string>
   <!-- Title text for the contextual feature recommendation (CFR) suggesting the user enable a screen lock to protect private tabs -->
   <string name="private_tab_cfr_title">Erabili pantailaren blokeoa fitxa pribatuak ezkutatzeko?</string>
   <!-- Negative button text for the contextual feature recommendation (CFR) dismissing the screen lock suggestion -->
   <string name="private_tab_cfr_negative">Ez, eskerrik asko</string>
   <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->
   <string name="private_tab_cfr_positive">Blokeatu fitxak</string>
+  <!--
+    Review prompt
+
+    Title for a prompt asking the user about their experience using the app. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="review_prompt_pre_prompt_header">Zer da %1$s(r)i buruzko zure iritzia?</string>
+  <!-- Label for a button negatively rating the user's experience with the app -->
+  <string name="review_prompt_negative_button">Arazoak izaten ari naiz</string>
+  <!-- Label for a button positively rating the user's experience with the app -->
+  <string name="review_prompt_positive_button">Oso ona da!</string>
+  <!-- Title for a prompt asking the user to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_rate_header">Eskerrik asko %1$s gustuko izateagatik. Baduzu segundo bat iritzia balorazio batekin zabaltzeko?</string>
+  <!-- Label for a button proceeding to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_rate_button">Puntuatu %1$s Play Storen</string>
+  <!-- Title for a prompt asking the user send us feedback. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_feedback_header">Sentitzen dugu arazoak izaten ari zarela. Esan iezaguzu nola hobe dezakegun %1$s.</string>
+  <!-- Label for a button opening a feedback forum -->
+  <string name="review_prompt_feedback_button">Eman iritzia</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Nobedade bat dugu</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">%1$s %2$s sarrarazi dugu eta gure %3$s eguneratu dugu.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Har ezazu une bat berrikusi eta onartzeko. %1$s.</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Erabilera-baldintzak</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
