@@ -4,7 +4,7 @@
 const OFFLINE_REMOTE_SETTINGS = [
   {
     type: "dynamic-suggestions",
-    suggestion_type: "market",
+    suggestion_type: "market_opt_in",
     attachment: [
       {
         keywords: ["stock"],
@@ -74,7 +74,7 @@ async function doOptInTest(useKeyboard) {
   let { element, result } = await openRealtimeSuggestion({ input: "stock" });
   Assert.ok(result.isBestMatch);
   Assert.ok(result.hideRowLabel);
-  Assert.equal(result.payload.suggestionType, "market");
+  Assert.equal(result.payload.suggestionType, "market_opt_in");
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP);
 
   Assert.ok(
