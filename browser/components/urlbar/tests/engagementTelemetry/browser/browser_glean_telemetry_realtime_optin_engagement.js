@@ -10,7 +10,7 @@ add_setup(async function () {
         // eslint-disable-next-line mozilla/valid-lazy
         collection: lazy.QuickSuggestTestUtils.RS_COLLECTION.OTHER,
         type: "dynamic-suggestions",
-        suggestion_type: "market",
+        suggestion_type: "market_opt_in",
         attachment: [
           {
             keywords: ["stock"],
