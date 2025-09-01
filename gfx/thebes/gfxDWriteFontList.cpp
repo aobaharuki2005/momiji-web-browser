@@ -1581,7 +1581,7 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
   mHardcodedSubstitutions.Clear();
   mNonExistingFonts.Clear();
 
-  RefPtr<IDWriteFactory> factory = Factory::GetDWriteFactory();
+  RefPtr<IDWriteFactory> factory = Factory::EnsureDWriteFactory();
   HRESULT hr = factory->GetGdiInterop(getter_AddRefs(mGDIInterop));
   if (FAILED(hr)) {
     glean::fontlist::dwritefont_init_problem.AccumulateSingleSample(
