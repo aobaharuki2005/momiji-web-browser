@@ -824,7 +824,10 @@ private fun ListItem(
                 ),
                 predicate = { (onClick != null || onLongClick != null) && enabled },
             )
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(
+                horizontal = FirefoxTheme.layout.space.dynamic200,
+                vertical = FirefoxTheme.layout.space.static100,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         beforeListItemAction()
