@@ -137,20 +137,9 @@ struct UniqueSelector<T[N]> {
  */
 
 template <typename T, typename... Args>
-typename detail::UniqueSelector<T>::SingleObject MakeUnique(Args&&... aArgs) {
-  return UniquePtr<T>(new T(std::forward<Args>(aArgs)...));
+auto MakeUnique(Args&&... aArgs) {
+  return std::make_unique<T>(std::forward<Args>(aArgs)...);
 }
-
-template <typename T>
-typename detail::UniqueSelector<T>::UnknownBound MakeUnique(
-    decltype(sizeof(int)) aN) {
-  using ArrayType = std::remove_extent_t<T>;
-  return UniquePtr<T>(new ArrayType[aN]());
-}
-
-template <typename T, typename... Args>
-typename detail::UniqueSelector<T>::KnownBound MakeUnique(Args&&... aArgs) =
-    delete;
 
 /**
  * WrapUnique is a helper function to transfer ownership from a raw pointer
