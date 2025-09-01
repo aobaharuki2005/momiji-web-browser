@@ -1724,6 +1724,13 @@
   args:
     input: NumberId
 
+- name: MathRoundNumberResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    input: NumberId
+
 - name: MathFloorToInt32Result
   shared: true
   transpile: true

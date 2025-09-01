@@ -1912,6 +1912,21 @@ void LIRGenerator::visitNearbyInt(MNearbyInt* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitRoundToDouble(MRoundToDouble* ins) {
+  MIRType inputType = ins->input()->type();
+  MOZ_ASSERT(IsFloatingPointType(inputType));
+  MOZ_ASSERT(ins->type() == inputType);
+
+  LInstructionHelper<1, 1, 0>* lir;
+  if (inputType == MIRType::Double) {
+    lir = new (alloc()) LRoundToDouble(useRegister(ins->input()));
+  } else {
+    lir = new (alloc()) LRoundToFloat32(useRegister(ins->input()));
+  }
+
+  define(lir, ins);
+}
+
 void LIRGenerator::visitMinMax(MMinMax* ins) {
   MDefinition* first = ins->getOperand(0);
   MDefinition* second = ins->getOperand(1);

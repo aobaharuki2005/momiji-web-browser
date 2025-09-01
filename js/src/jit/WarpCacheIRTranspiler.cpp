@@ -4201,6 +4201,21 @@ bool WarpCacheIRTranspiler::emitMathTruncNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMathRoundNumberResult(NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  MInstruction* ins;
+  if (MRoundToDouble::HasAssemblerSupport()) {
+    ins = MRoundToDouble::New(alloc(), input);
+  } else {
+    ins = MMathFunction::New(alloc(), input, UnaryMathFunction::Round);
+  }
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitNumberParseIntResult(StringOperandId strId,
                                                      Int32OperandId radixId) {
   MDefinition* str = getOperand(strId);

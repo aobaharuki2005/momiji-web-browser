@@ -1655,6 +1655,12 @@ bool MNearbyInt::writeRecoverData(CompactBufferWriter& writer) const {
   }
 }
 
+bool MRoundToDouble::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_Round));
+  return true;
+}
+
 bool MSign::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_Sign));

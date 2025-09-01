@@ -9150,7 +9150,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathRound() {
     if (resultIsInt32) {
       writer.mathRoundToInt32Result(numberId);
     } else {
-      writer.mathFunctionNumberResult(numberId, UnaryMathFunction::Round);
+      writer.mathRoundNumberResult(numberId);
     }
   }
 

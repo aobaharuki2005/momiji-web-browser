@@ -1360,6 +1360,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void powPtr(Register base, Register power, Register dest, Register temp1,
               Register temp2, Label* onOver);
 
+  // Inline implementation of Math.round.
+  void roundFloat32(FloatRegister src, FloatRegister dest);
+  void roundDouble(FloatRegister src, FloatRegister dest);
+
   void sameValueDouble(FloatRegister left, FloatRegister right,
                        FloatRegister temp, Register dest);
 

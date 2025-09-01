@@ -2305,6 +2305,13 @@ void MNearbyInt::trySpecializeFloat32(TempAllocator& alloc) {
   }
 }
 
+void MRoundToDouble::trySpecializeFloat32(TempAllocator& alloc) {
+  if (EnsureFloatConsumersAndInputOrConvert(this, alloc)) {
+    specialization_ = MIRType::Float32;
+    setResultType(MIRType::Float32);
+  }
+}
+
 MGoto* MGoto::New(TempAllocator& alloc, MBasicBlock* target) {
   return new (alloc) MGoto(target);
 }

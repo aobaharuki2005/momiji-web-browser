@@ -6623,6 +6623,25 @@ bool CacheIRCompiler::emitMathTruncNumberResult(NumberOperandId inputId) {
                                             output.valueReg());
 }
 
+bool CacheIRCompiler::emitMathRoundNumberResult(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoAvailableFloatRegister scratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister scratch1(*this, FloatReg1);
+
+  allocator.ensureDoubleRegister(masm, inputId, scratch0);
+
+  if (Assembler::HasRoundInstruction(RoundingMode::Up)) {
+    masm.roundDouble(scratch0, scratch1);
+    masm.boxDouble(scratch1, output.valueReg(), scratch1);
+    return true;
+  }
+
+  return emitMathFunctionNumberResultShared(UnaryMathFunction::Round, scratch0,
+                                            output.valueReg());
+}
+
 bool CacheIRCompiler::emitMathFRoundNumberResult(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

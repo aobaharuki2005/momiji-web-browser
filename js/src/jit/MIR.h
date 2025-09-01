@@ -8800,6 +8800,48 @@ class MNearbyInt : public MUnaryInstruction,
   ALLOW_CLONE(MNearbyInt)
 };
 
+// Inlined version of Math.round(double) -> double.
+class MRoundToDouble : public MUnaryInstruction,
+                       public FloatingPointPolicy<0>::Data {
+  explicit MRoundToDouble(MDefinition* num)
+      : MUnaryInstruction(classOpcode, num) {
+    MOZ_ASSERT(HasAssemblerSupport());
+
+    setResultType(MIRType::Double);
+    specialization_ = MIRType::Double;
+
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(RoundToDouble)
+  TRIVIAL_NEW_WRAPPERS
+
+  static bool HasAssemblerSupport() {
+    // Requires Ceil support in the assembler.
+    return Assembler::HasRoundInstruction(RoundingMode::Up);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  bool isFloat32Commutative() const override { return true; }
+  void trySpecializeFloat32(TempAllocator& alloc) override;
+#ifdef DEBUG
+  bool isConsistentFloat32Use(MUse* use) const override { return true; }
+#endif
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  [[nodiscard]] bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MRoundToDouble)
+};
+
 class MGetIteratorCache : public MUnaryInstruction,
                           public BoxExceptPolicy<0, MIRType::Object>::Data {
   explicit MGetIteratorCache(MDefinition* val)

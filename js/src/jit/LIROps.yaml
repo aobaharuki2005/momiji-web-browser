@@ -2686,6 +2686,22 @@
     input: WordSized
   mir_op: NearbyInt
 
+# Rounds a double precision number and keeps a double output.
+# Implements Math.round().
+- name: RoundToDouble
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: true
+
+# Rounds a single precision number and keeps a single output.
+# Implements Math.round().
+- name: RoundToFloat32
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: RoundToDouble
+
 - name: NewLexicalEnvironmentObject
   result_type: WordSized
   num_temps: 1

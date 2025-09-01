@@ -2877,6 +2877,9 @@
 - name: NearbyInt
   gen_boilerplate: false
 
+- name: RoundToDouble
+  gen_boilerplate: false
+
 - name: GetIteratorCache
   gen_boilerplate: false
 
