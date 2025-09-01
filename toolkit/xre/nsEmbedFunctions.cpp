@@ -441,12 +441,15 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
   Maybe<IPC::Channel::ChannelHandle> clientChannel =
       geckoargs::sIPCHandle.Get(aArgc, aArgv);
+//it ain't workin sorry nika
+/*
 #ifdef XP_DARWIN
   MOZ_ASSERT_IF(clientChannel, !geckoargs::sIPCPort.IsPresent(aArgc, aArgv));
   if (!clientChannel) {
     clientChannel = geckoargs::sIPCPort.Get(aArgc, aArgv);
   }
 #endif
+*/
   if (NS_WARN_IF(!clientChannel)) {
     return NS_ERROR_FAILURE;
   }

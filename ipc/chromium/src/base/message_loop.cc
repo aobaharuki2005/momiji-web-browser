@@ -21,9 +21,10 @@
 
 #if defined(XP_DARWIN)
 #  include "base/message_pump_mac.h"
-#  include "base/message_pump_kqueue.h"
+//it ain't workin'. sorry nika 
+//#  include "base/message_pump_kqueue.h"
 #endif
-#if defined(XP_UNIX) && !defined(XP_DARWIN)
+#if defined(XP_UNIX) // /*it ain't workin. sorry nika*/ && !defined(XP_DARWIN)
 #  include "base/message_pump_libevent.h"
 #endif
 #if defined(XP_LINUX) || defined(__DragonFly__) || defined(XP_FREEBSD) || \
@@ -285,11 +286,12 @@ MessageLoop::MessageLoop(Type type, nsISerialEventTarget* aEventTarget)
     pump_ = new base::MessagePumpForUI();
 #  endif  // XP_LINUX
   } else if (type_ == TYPE_IO) {
-#  if defined(XP_DARWIN)
+// it ain't workin. sorry nika
+/*#  if defined(XP_DARWIN)
     pump_ = new base::MessagePumpKqueue();
-#  else
+#  else */
     pump_ = new base::MessagePumpLibevent();
-#  endif
+//#  endif
   } else {
     pump_ = new base::MessagePumpDefault();
   }
@@ -711,7 +713,8 @@ bool MessageLoopForIO::WaitForIOCompletion(DWORD timeout, IOHandler* filter) {
   return pump_io()->WaitForIOCompletion(timeout, filter);
 }
 
-#elif defined(XP_DARWIN)
+//it ain't workin. sorry nika
+/*#elif defined(XP_DARWIN)
 
 bool MessageLoopForIO::WatchFileDescriptor(int fd, bool persistent, Mode mode,
                                            FileDescriptorWatcher* controller,
@@ -726,9 +729,8 @@ bool MessageLoopForIO::WatchMachReceivePort(mach_port_t port,
                                             MachPortWatcher* delegate) {
   return pump_kqueue()->WatchMachReceivePort(port, controller, delegate);
 }
-
+*/
 #else
-
 bool MessageLoopForIO::WatchFileDescriptor(int fd, bool persistent, Mode mode,
                                            FileDescriptorWatcher* controller,
                                            Watcher* delegate) {
