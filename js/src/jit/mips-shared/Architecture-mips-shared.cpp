@@ -6,15 +6,17 @@
 
 #include "jit/mips-shared/Architecture-mips-shared.h"
 
-#include <fcntl.h>
-#include <unistd.h>
-
 #include "jit/FlushICache.h"  // js::jit::FlushICache
 #include "jit/mips64/Simulator-mips64.h"
 #include "jit/RegisterSets.h"
 
-#if defined(__linux__) && !defined(JS_SIMULATOR)
-#  include <sys/cachectl.h>
+#if defined(__linux__)
+#  include <fcntl.h>
+#  include <unistd.h>
+
+#  if !defined(JS_SIMULATOR)
+#    include <sys/cachectl.h>
+#  endif
 #endif
 
 #define HWCAP_MIPS (1 << 28)
