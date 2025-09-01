@@ -471,6 +471,9 @@ features:
         type: Boolean
         default: false
     defaults:
+      - channel: nightly
+        value:
+          enabled: true
       - channel: developer
         value:
           enabled: true

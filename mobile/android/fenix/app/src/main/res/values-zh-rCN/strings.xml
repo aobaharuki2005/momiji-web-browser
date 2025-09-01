@@ -54,6 +54,8 @@
   <string name="tab_tray_collection_button_multiselect_content_description">将选中的的标签页保存到收藏集</string>
   <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
   <string name="tab_manager_empty_synced_tabs_page_header">跨设备接收标签页</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">登录即可管理您各设备间同步的标签页。</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">登录</string>
   <!--
@@ -202,7 +204,7 @@
   <!-- Browser menu group that contains additional settings in collapsed state -->
   <string name="browser_menu_more_settings">更多</string>
   <!-- Browser menu group that contains additional settings in expanded state -->
-  <string name="browser_menu_less_settings">折叠</string>
+  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">折叠</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -899,9 +901,9 @@
   -->
   <string name="wallpapers_item_name_content_description">壁纸：%1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">壁纸已更换！</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">壁纸已更换！</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">查看</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">查看</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">无法下载壁纸</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
@@ -1390,6 +1392,10 @@
   <string name="tab_tray_multiselect_menu_item_bookmark">书签</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">关闭</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">关闭所选标签页</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">添加到收藏集</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">分享所选标签页</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1737,6 +1743,8 @@
   <string name="bookmark_menu_delete_button">删除</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">保存</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">排序选项</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">按自定义顺序排序</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1807,6 +1815,8 @@
   <string name="bookmark_search_button_content_description">搜索书签</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">“%s”项目菜单</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">关闭书签</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">暂无书签</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -2979,6 +2989,13 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">文章</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">发现更多文章</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">浏览上一页</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">赞助推广</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3302,6 +3319,8 @@
   <string name="protection_panel_num_trackers_blocked">已拦截 %d 个跟踪器</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">未发现跟踪器</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">未在拦截跟踪器</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">隐私与安全设置</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
@@ -3329,7 +3348,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">取消</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">已移除 Cookie 和网站数据</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">已移除 Cookie 和网站数据</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">安全连接</string>
   <!-- Text for the connection security panel when the site is not secure. -->

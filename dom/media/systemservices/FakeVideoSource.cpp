@@ -138,6 +138,8 @@ static void ReleaseFrame(layers::PlanarYCbCrData& aData) {
 void FakeVideoSource::GenerateImage() {
   mTarget.AssertOnCurrentThread();
 
+  const TimeStamp now = TimeStamp::Now();
+
   if (mTrackingId) {
     mCaptureRecorder.Start(0, "FakeVideoSource"_ns, *mTrackingId, mWidth,
                            mHeight, CaptureStage::ImageType::I420);
@@ -192,7 +194,7 @@ void FakeVideoSource::GenerateImage() {
     return;
   }
 
-  mGeneratedImageEvent.Notify(ycbcr_image);
+  mGeneratedImageEvent.Notify(ycbcr_image, now);
   mCaptureRecorder.Record(0);
 }
 

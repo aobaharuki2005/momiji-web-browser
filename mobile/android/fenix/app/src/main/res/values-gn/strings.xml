@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Ne rendaykekuéra ñemiguáva ojehecháta ápe.</string>
   <!-- The header text displayed on the private tabs page when no private tabs are open -->
   <string name="tab_manager_empty_private_tabs_page_header">Ñeikundaha ñemi</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Emoheñói tendayke pyahu eheka ñepyrũ hag̃ua</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d poravopyre</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -48,6 +50,8 @@
   <string name="tab_tray_close_multiselect_content_description">Esẽ poravoha hekoetáva ayvúgui</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Eñongatu tendayke poravopyre mbyatyhápe</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Ejapyhy tendayke oimeha mba’e’okágui</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Eñemboheraguapy</string>
   <!--
@@ -196,7 +200,7 @@
   <!-- Browser menu group that contains additional settings in collapsed state -->
   <string name="browser_menu_more_settings">Hetave</string>
   <!-- Browser menu group that contains additional settings in expanded state -->
-  <string name="browser_menu_less_settings">Sa’ive</string>
+  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">Sa’ive</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -893,9 +897,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Mba’erechaha rugua mba’eporu: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">¡Mba’erechaha rugua hekopyahupyréva!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">¡Mba’erechaha rugua hekopyahupyréva!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Hecha</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Hecha</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Noñemboguejykuaái mba’erechaha rugua</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
@@ -2965,6 +2969,13 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Tembiasakue</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">Eikuaave tembiasakue</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">Eikundaha tapykuévo</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">Pytyvõpyréva</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3315,7 +3326,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Heja</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">Kookie ha tenda mba’ekuaarã mboguepyre</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Kookie ha tenda mba’ekuaarã mboguepyre</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Jeikekatu</string>
   <!-- Text for the connection security panel when the site is not secure. -->

@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.Mode
 import mozilla.components.lib.state.Middleware
@@ -31,9 +33,11 @@ import mozilla.components.lib.state.Action as MVIAction
  * [SearchFragmentStore] [Middleware] to synchronize search related details from [BrowserToolbarStore].
  *
  * @param toolbarStore The [BrowserToolbarStore] to sync from.
+ * @param browserStore The [BrowserStore] to sync from.
  */
 class BrowserToolbarToFenixSearchMapperMiddleware(
     private val toolbarStore: BrowserToolbarStore,
+    private val browserStore: BrowserStore? = null,
 ) : Middleware<SearchFragmentState, SearchFragmentAction> {
     @VisibleForTesting
     internal var environment: Environment? = null
@@ -66,11 +70,14 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
             distinctUntilChangedBy { it.mode }
                 .collect {
                     if (it.mode == Mode.EDIT) {
+                        val editState = toolbarStore.state.editState
                         context.dispatch(
                             SearchStarted(
                                 selectedSearchEngine = null,
                                 isUserSelected = true,
                                 inPrivateMode = environment?.browsingModeManager?.mode?.isPrivate == true,
+                                searchStartedForCurrentUrl = editState.isQueryPrefilled &&
+                                    browserStore?.state?.selectedTab?.content?.url == editState.query,
                             ),
                         )
 
@@ -88,7 +95,14 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
             map { it.editState.query }
                 .distinctUntilChanged()
                 .collect { query ->
-                    context.dispatch(SearchFragmentAction.UpdateQuery(query))
+                    context.dispatch(
+                        SearchFragmentAction.UpdateQuery(
+                            when (toolbarStore.state.editState.isQueryPrefilled) {
+                                true -> "" // consider a prefilled & preselected toolbar query as not entered by user
+                                false -> query
+                            },
+                        ),
+                    )
                 }
         }
     }

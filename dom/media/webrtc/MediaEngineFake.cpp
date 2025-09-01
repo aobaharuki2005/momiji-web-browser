@@ -101,7 +101,7 @@ class MediaEngineFakeVideoSource : public MediaEngineSource {
     mGeneratedImageListener.DisconnectIfExists();
   }
 
-  void OnGeneratedImage(RefPtr<layers::Image> aImage);
+  void OnGeneratedImage(RefPtr<layers::Image> aImage, TimeStamp aTime);
 
   // Owning thread only.
   RefPtr<FakeVideoSource> mCapturer;
@@ -316,12 +316,12 @@ nsresult MediaEngineFakeVideoSource::Reconfigure(
   return NS_OK;
 }
 
-void MediaEngineFakeVideoSource::OnGeneratedImage(
-    RefPtr<layers::Image> aImage) {
+void MediaEngineFakeVideoSource::OnGeneratedImage(RefPtr<layers::Image> aImage,
+                                                  TimeStamp aTime) {
   VideoSegment segment;
   segment.AppendFrame(aImage.forget(),
                       gfx::IntSize(mOpts.mWidth, mOpts.mHeight),
-                      mPrincipalHandle);
+                      mPrincipalHandle, /*aForceBlack=*/false, aTime);
   mTrack->AppendData(&segment);
 }
 

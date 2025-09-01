@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.components.menu.compose.header
+package org.mozilla.fenix.components.menu.compose
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
@@ -10,7 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -39,14 +38,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.menu.compose.MenuItemState
-import org.mozilla.fenix.components.menu.compose.SiteLoadingPreviewParameterProvider
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
 @Suppress("LongParameterList")
 @Composable
-internal fun MenuNavHeader(
+internal fun MenuNavigation(
     state: MenuItemState = MenuItemState.ENABLED,
     isSiteLoading: Boolean,
     goBackState: MenuItemState = MenuItemState.ENABLED,
@@ -62,28 +59,14 @@ internal fun MenuNavHeader(
     val navigationHeaderContentDescription =
         stringResource(id = R.string.browser_main_menu_content_description_navigation_header)
 
-    Spacer(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(12.dp)
-            .background(
-                if (isExtensionsExpanded || isMoreMenuExpanded) {
-                    FirefoxTheme.colors.layerSearch
-                } else {
-                    Color.Transparent
-                },
-            ),
-    )
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
             .background(
                 color = if (isExtensionsExpanded || isMoreMenuExpanded) {
                     FirefoxTheme.colors.layerSearch
                 } else {
-                    Color.Transparent
+                    FirefoxTheme.colors.layer1
                 },
             )
             .padding(horizontal = 4.dp, vertical = 12.dp)
@@ -176,7 +159,6 @@ private fun MenuNavItem(
             maxLines = 2,
             softWrap = true,
             textAlign = TextAlign.Center,
-
         )
     }
 }
@@ -209,7 +191,7 @@ private fun MenuHeaderPreview() {
             modifier = Modifier
                 .background(color = FirefoxTheme.colors.layer3),
         ) {
-            MenuNavHeader(
+            MenuNavigation(
                 isSiteLoading = false,
                 onBackButtonClick = {},
                 onForwardButtonClick = {},
@@ -233,7 +215,7 @@ private fun MenuHeaderPrivatePreview(
             modifier = Modifier
                 .background(color = FirefoxTheme.colors.layer3),
         ) {
-            MenuNavHeader(
+            MenuNavigation(
                 isSiteLoading = isSiteLoading,
                 onBackButtonClick = {},
                 onForwardButtonClick = {},

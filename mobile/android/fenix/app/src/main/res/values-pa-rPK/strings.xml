@@ -639,9 +639,9 @@
   -->
   <string name="wallpapers_item_name_content_description">وال‌پیپر سامان: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">وال‌پیپر اپڈیٹ کیتا!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">وال‌پیپر اپڈیٹ کیتا!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">ویکھو</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">ویکھو</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">وال‌پیپر ڈاؤن‌لوڈ نہیں کیتا جا سکیا</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->

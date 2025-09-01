@@ -68,3 +68,40 @@
     }
   }
 }
+
+.feature-highlight .feature-highlight-modal.widget-highlight-wrapper {
+  width: auto;
+  border-radius: var(--border-radius-medium);
+
+  .content-wrapper {
+    margin: 0;
+    padding: var(--space-medium);
+  }
+
+  .widget-highlight {
+    img {
+      border-radius: var(--border-radius-medium);
+      margin-block-end: var(--space-small);
+    }
+
+    h3 {
+      margin-block: 0 var(--space-xsmall);
+      font-size: var(--font-size-root);
+    }
+
+    p {
+      margin-block: 0;
+      font-size: var(--font-size-root);
+    }
+  }
+
+  .message-icon {
+    display: none;
+  }
+
+  moz-button {
+    position: absolute;
+    inset-inline-end: var(--space-medium);
+    inset-block-start: var(--space-medium);
+  }
+}

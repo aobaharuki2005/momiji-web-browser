@@ -353,8 +353,8 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         .width(32.dp),
                     onRequestDismiss = ::dismiss,
                     handlebarContentDescription = handlebarContentDescription,
-                    isExtensionsExpanded = isExtensionsExpanded,
-                    isMoreMenuExpanded = isMoreMenuExpanded,
+                    isMenuDragBarDark = !settings.shouldUseBottomToolbar &&
+                            (isExtensionsExpanded || isMoreMenuExpanded),
                     cornerShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                     handleColor = FirefoxTheme.colors.borderInverted.copy(0.4f),
                     handleCornerRadius = CornerRadius(100f, 100f),
@@ -553,6 +553,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     account = account,
                                     accountState = accountState,
                                     showQuitMenu = settings.shouldDeleteBrowsingDataOnQuit,
+                                    isBottomToolbar = settings.shouldUseBottomToolbar,
                                     isSiteLoading = isSiteLoading,
                                     isExtensionsProcessDisabled = isExtensionsProcessDisabled,
                                     isExtensionsExpanded = isExtensionsExpanded,
@@ -767,6 +768,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 CustomTabMenu(
                                     canGoBack = customTab?.content?.canGoBack ?: true,
                                     canGoForward = customTab?.content?.canGoForward ?: true,
+                                    isBottomToolbar = settings.shouldUseBottomToolbar,
                                     isSiteLoading = isSiteLoading,
                                     scrollState = scrollState,
                                     isPdf = customTab?.content?.isPdf == true,

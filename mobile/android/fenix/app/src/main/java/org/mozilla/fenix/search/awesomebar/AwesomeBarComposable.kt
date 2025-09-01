@@ -95,7 +95,7 @@ class AwesomeBarComposable(
      * that will show search suggestions whenever the users edits the current query in the toolbar.
      */
     @OptIn(ExperimentalLayoutApi::class) // for WindowInsets.isImeVisible
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     @Composable
     fun SearchSuggestions() {
         val isSearchActive = appStore.observeAsComposableState { it.searchState.isSearchActive }.value
@@ -135,7 +135,7 @@ class AwesomeBarComposable(
             }
         }
 
-        if (isSearchActive && shouldShowClipboardBar) {
+        if (isSearchActive && shouldShowClipboardBar && orientation == AwesomeBarOrientation.TOP) {
             val url = components.clipboardHandler.extractURL()
 
             ClipboardSuggestionBar(
@@ -143,12 +143,14 @@ class AwesomeBarComposable(
                 onClick = {
                     url?.let {
                         toolbarStore.dispatch(
-                            SearchQueryUpdated(query = url, showAsPreselected = false),
+                            SearchQueryUpdated(query = url, isQueryPrefilled = false),
                         )
                     }
                 },
             )
-        } else if (isSearchActive && state.showSearchSuggestionsHint) {
+        }
+
+        if (isSearchActive && state.showSearchSuggestionsHint) {
             Box(
                 modifier = modifier
                     .fillMaxSize()
@@ -165,9 +167,7 @@ class AwesomeBarComposable(
                         activity.settings().shouldShowSearchSuggestionsInPrivate = true
                         activity.settings().showSearchSuggestionsInPrivateOnboardingFinished = true
                         searchStore.dispatch(
-                            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
-                                false,
-                            ),
+                            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false),
                         )
                         searchStore.dispatch(
                             SearchFragmentAction.PrivateSuggestionsCardAccepted,
@@ -177,9 +177,7 @@ class AwesomeBarComposable(
                         activity.settings().shouldShowSearchSuggestionsInPrivate = false
                         activity.settings().showSearchSuggestionsInPrivateOnboardingFinished = true
                         searchStore.dispatch(
-                            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
-                                false,
-                            ),
+                            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false),
                         )
                     },
                     onLearnMoreClick = {
@@ -246,6 +244,21 @@ class AwesomeBarComposable(
                     },
             )
         }
+
+        if (isSearchActive && shouldShowClipboardBar && orientation == AwesomeBarOrientation.BOTTOM) {
+            val url = components.clipboardHandler.extractURL()
+
+            ClipboardSuggestionBar(
+                shouldUseBottomToolbar = components.settings.shouldUseBottomToolbar,
+                onClick = {
+                    url?.let {
+                        toolbarStore.dispatch(
+                            SearchQueryUpdated(query = url, isQueryPrefilled = false),
+                        )
+                    }
+                },
+            )
+        }
     }
 
     private fun initializeSearchStore() = StoreProvider.get(lifecycleOwner) {
@@ -258,7 +271,7 @@ class AwesomeBarComposable(
                 searchAccessPoint = searchAccessPoint,
             ),
             middleware = listOf(
-                BrowserToolbarToFenixSearchMapperMiddleware(toolbarStore),
+                BrowserToolbarToFenixSearchMapperMiddleware(toolbarStore, browserStore),
                 BrowserStoreToFenixSearchMapperMiddleware(browserStore),
                 FenixSearchMiddleware(
                     engine = components.core.engine,

@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Сіздің ашық беттеріңіз осында көрсетілетін болады.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Сіздің жекелік беттеріңіз осында көрсетілетін болады.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Жекелік шолу</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s сіздің шолу тарихыңызды немесе cookies сақтамайды, бірақ, жаңа бетбелгілер сақталатын болады.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Іздеуді бастау үшін жаңа бетті жасау</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d таңдалды</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">Көп таңдау режимінен шығу</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Таңдалған беттерді жинаққа сақтау</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Кез келген құрылғыдан беттерді алу</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Сіздің барлық құрылғылардағы синхрондалған беттерді басқару үшін жүйеге кіріңіз.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Кіру</string>
   <!--
     Home - Bookmarks
 
@@ -192,7 +204,7 @@
   <!-- Browser menu group that contains additional settings in collapsed state -->
   <string name="browser_menu_more_settings">Көбірек</string>
   <!-- Browser menu group that contains additional settings in expanded state -->
-  <string name="browser_menu_less_settings">Аздау</string>
+  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">Аздау</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -889,9 +901,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Түсқағаз элементі: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">Түсқағаз жаңартылды!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">Түсқағаз жаңартылды!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Қарап шығу</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Қарап шығу</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Тұсқағазды жүктеп алу мүмкін болмады</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
@@ -1350,6 +1362,12 @@
   <string name="tabs_header_normal_tabs_title">Беттер</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">Синхрондау</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">Жаңа бет</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">Жаңа жекелік беті</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">Беттерді синхрондау</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Жаңа бетті қосу</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1592,6 +1610,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">%1$s өнімін әркім үшін де жақсартуға көмектесіңіз. Mozilla қызметкерлері сіз жіберген ақпаратты веб-сайт мәселелерін шешу үшін пайдаланады.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Есептеме жіберу %1$s жүйесіндегі мәселелерді түсінуге және оны барлығы үшін жақсартуға көмектеседі. Көбірек білу</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Есептеме жіберу %1$s жүйесіндегі мәселелерді түсінуге және оны барлығы үшін жақсартуға көмектеседі. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Көбірек білу</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1831,6 +1851,10 @@
   <string name="clear_permissions_on_all_sites">Барлық сайттар рұқсаттарын тазарту</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">Автоойнату</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">Құрылғы қолданбалары мен қызметтері</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">Жергілікті желі құрылғылары</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Камера</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2857,6 +2881,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">Жарлықтар</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">Барлық жарлықтарды көрсету</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Жарлықтар саны шегіне жетті</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -2952,6 +2981,13 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Әңгімелер</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">Көбірек хикаяларды жүктеу</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">Артқа өту</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">Демеуленген</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3302,7 +3338,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Бас тарту</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">Cookie файлдары мен сайт деректері өшірілді</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Cookie файлдары мен сайт деректері өшірілді</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Қауіпсіз байланыс</string>
   <!-- Text for the connection security panel when the site is not secure. -->
@@ -3624,6 +3660,8 @@
   <string name="setup_checklist_task_explore_extensions">Кеңейтулерді шолу</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Іздеу виджетін орнату</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Іздеу виджетін зерттеу</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3688,4 +3726,32 @@
   <string name="review_prompt_feedback_header">Мәселелер туындағанына өкінеміз. %1$s қалай жақсартуға болатынын бізге айтыңыз.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Пікір қалдыру</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Бізде жаңарту бар</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Біз %1$s %2$s енгіздік және біздің %3$s жаңарттық.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Қарап шығуға және қабылдауға біраз уақыт бөліңіз. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Қолдану шарттары</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Жекелік ескертуі</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Көбірек білу</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Қабылдау</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Кейінірек еске салу</string>
 </resources>

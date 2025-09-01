@@ -715,9 +715,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Wêneyê dîwêr: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">Wêneyê dîwêr hat venûkirin!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">Wêneyê dîwêr hat venûkirin!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Nîşan bide</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Nîşan bide</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Wêneyê dîwêr nehat daxistin</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->

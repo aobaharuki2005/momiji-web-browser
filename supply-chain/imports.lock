@@ -272,15 +272,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "64.5.4"
-when = "2025-07-29"
+version = "64.5.5"
+when = "2025-08-25"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "64.5.4"
-when = "2025-07-29"
+version = "64.5.5"
+when = "2025-08-25"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -951,7 +951,7 @@ who = "Nick Fitzgerald <fitzgen@gmail.com>"
 criteria = "safe-to-deploy"
 user-id = 696 # Nick Fitzgerald (fitzgen)
 start = "2019-03-16"
-end = "2025-07-30"
+end = "2026-08-21"
 
 [[audits.bytecode-alliance.wildcard-audits.wasmparser]]
 who = "Alex Crichton <alex@alexcrichton.com>"

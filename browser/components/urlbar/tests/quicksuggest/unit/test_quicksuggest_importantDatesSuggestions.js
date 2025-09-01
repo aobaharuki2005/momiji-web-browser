@@ -87,12 +87,86 @@ add_setup(async function () {
     prefs: [
       ["importantDates.featureGate", true],
       ["quicksuggest.dynamicSuggestionTypes", "other_suggestions"],
-      ["suggest.quicksuggest.nonsponsored", true],
     ],
   });
   await Services.search.init();
 
   SystemDate = Cu.getGlobalForObject(QuickSuggestTestUtils).Date;
+});
+
+add_task(async function telemetryType() {
+  Assert.equal(
+    QuickSuggest.getFeature(
+      "ImportantDatesSuggestions"
+    ).getSuggestionTelemetryType({}),
+    "important_dates",
+    "Telemetry type should be 'important_dates'"
+  );
+});
+
+// Important dates should respect the `importantDates.featureGate` and
+// `suggest.importantDates` prefs.
+add_task(async function enablingPrefs() {
+  setTime("2025-03-01T00:00");
+
+  let query = "event 1";
+  let expected = makeExpectedResult({
+    date: "Wednesday, March 5, 2025",
+    descriptionL10n: {
+      id: "urlbar-result-dates-countdown",
+      args: { name: "Event 1", daysUntilStart: 4 },
+    },
+  });
+
+  for (let pref of ["importantDates.featureGate", "suggest.importantDates"]) {
+    info("Doing enabling-pref test: " + pref);
+
+    // First make sure the result is matched.
+    await checkDatesResults(query, expected);
+
+    // Now disable the pref and do another search.
+    UrlbarPrefs.set(pref, false);
+    await checkDatesResults(query, null);
+
+    // Clean up.
+    UrlbarPrefs.set(pref, true);
+    await QuickSuggestTestUtils.forceSync();
+  }
+});
+
+// Important dates are considered "utility" suggestions and not part of the
+// Suggest brand, so they should be enabled regardless of the sponsored and
+// nonsponsored Suggest prefs.
+add_task(async function neitherSponsoredNorNonsponsored() {
+  setTime("2025-03-01T00:00");
+
+  let query = "event 1";
+  let expected = makeExpectedResult({
+    date: "Wednesday, March 5, 2025",
+    descriptionL10n: {
+      id: "urlbar-result-dates-countdown",
+      args: { name: "Event 1", daysUntilStart: 4 },
+    },
+  });
+
+  for (let sponsored of [true, false]) {
+    for (let nonsponsored of [true, false]) {
+      info(
+        "Doing sponsored/nonsponsored test: " +
+          JSON.stringify({ sponsored, nonsponsored })
+      );
+
+      UrlbarPrefs.set("suggest.quicksuggest.sponsored", sponsored);
+      UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", nonsponsored);
+      await QuickSuggestTestUtils.forceSync();
+
+      await checkDatesResults(query, expected);
+    }
+  }
+
+  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
+  await QuickSuggestTestUtils.forceSync();
 });
 
 add_task(async function fourDaysBefore() {
@@ -197,6 +271,10 @@ add_task(async function lastDayDuringMultiDay() {
 // Test whether the date suggestion is before the other
 // isBestMatch suggestion.
 add_task(async function testTwoSuggestions() {
+  // `other_suggestions` is nonsponsored so it depends on the nonsponsored pref.
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  await QuickSuggestTestUtils.forceSync();
+
   setTime("2025-03-01T00:00");
 
   // 1 date suggestion and 2 other suggestions match this, but
@@ -238,6 +316,9 @@ add_task(async function testTwoSuggestions() {
     expectedDateSuggestion,
     expectedOtherSuggestion,
   ]);
+
+  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
+  await QuickSuggestTestUtils.forceSync();
 });
 
 /**
@@ -291,7 +372,7 @@ function makeExpectedResult({
 }) {
   let name = description ?? descriptionL10n.args.name;
   return {
-    type: UrlbarUtils.RESULT_TYPE.URL,
+    type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     isBestMatch,
@@ -299,7 +380,9 @@ function makeExpectedResult({
     isRichSuggestion,
     payload: {
       title: date,
-      url: Services.search.defaultEngine.getSubmission(name).uri.spec,
+      engine: Services.search.defaultEngine.name,
+      query: name,
+      lowerCaseSuggestion: name.toLocaleLowerCase(),
       description,
       descriptionL10n: descriptionL10n
         ? { cacheable: true, excludeArgsFromCacheKey: true, ...descriptionL10n }

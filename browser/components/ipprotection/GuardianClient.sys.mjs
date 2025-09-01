@@ -41,12 +41,13 @@ export class GuardianClient {
    * Checks the current user's FxA account to see if it is linked to the Guardian service.
    * This should be used before attempting to check Entitlement info.
    *
+   * @param { boolean } onlyCached - if true only the cached clients will be checked.
    * @returns {Promise<boolean>}
    *  - True: The user is linked to the Guardian service, they might be a proxy user or have/had a VPN-Subscription.
    *          This needs to be followed up with a call to `fetchUserInfo()` to check if they are a proxy user.
    *  - False: The user is not linked to the Guardian service, they cannot be a proxy user.
    */
-  async isLinkedToGuardian() {
+  async isLinkedToGuardian(onlyCached = false) {
     const guardian_clientId = CLIENT_ID_MAP[this.#successURL.origin];
     if (!guardian_clientId) {
       throw new Error(
@@ -56,6 +57,9 @@ export class GuardianClient {
     const cached_clients = await lazy.fxAccounts.listAttachedOAuthClients();
     if (cached_clients.some(client => client.id === guardian_clientId)) {
       return true;
+    }
+    if (onlyCached) {
+      return false;
     }
     // If we don't have the client in the cache, we refresh it, just to be sure.
     const refreshed_clients =
@@ -252,7 +256,7 @@ export class GuardianClient {
  *
  * Immutable after creation.
  */
-class ProxyPass {
+export class ProxyPass {
   /**
    * @param {string} token - The JWT to use for authentication.
    * @param {number} until - The timestamp until which the token is valid.
@@ -398,6 +402,13 @@ const CLIENT_ID_MAP = {
 };
 
 /**
+ * Adds a strong reference to keep listeners alive until
+ * we're done with it.
+ * (From kungFuDeathGrip in XPCShellContentUtils.sys.mjs)
+ */
+const listeners = new Set();
+
+/**
  * Waits for a specific URL to be loaded in the browser.
  *
  * @param {*} browser - The browser instance to listen for URL changes.
@@ -406,14 +417,14 @@ const CLIENT_ID_MAP = {
  */
 async function waitUntilURL(browser, predicate) {
   const prom = Promise.withResolvers();
-  const wp = browser.webProgress; // nsIWebProgress
   const done = false;
   const check = arg => {
     if (done) {
       return;
     }
     if (predicate(arg)) {
-      wp.removeProgressListener(listener);
+      listeners.delete(listener);
+      browser.removeProgressListener(listener);
       prom.resolve(arg);
     }
   };
@@ -423,15 +434,26 @@ async function waitUntilURL(browser, predicate) {
       "nsISupportsWeakReference",
     ]),
 
-    // Fires for every redirect/location change (before the document load).
-    onLocationChange(_, __, location) {
-      check(location.spec);
+    // Runs the check after the document has stopped loading.
+    onStateChange(webProgress, request, stateFlags, status) {
+      request.QueryInterface(Ci.nsIChannel);
+
+      if (
+        webProgress.isTopLevel &&
+        stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        status !== Cr.NS_BINDING_ABORTED
+      ) {
+        check(request.URI?.spec);
+      }
     },
 
     // Unused callbacks we still need to implement:
-    onStateChange() {},
+    onLocationChange() {},
     onProgressChange() {},
-    onStatusChange(_, request) {
+    onStatusChange(_, request, status) {
+      if (Components.isSuccessCode(status)) {
+        return;
+      }
       try {
         const url = request.QueryInterface(Ci.nsIChannel).URI.spec;
         check(url);
@@ -440,9 +462,9 @@ async function waitUntilURL(browser, predicate) {
     onSecurityChange() {},
     onContentBlockingEvent() {},
   };
-  wp.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
+  listeners.add(listener);
+  browser.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
   const url = await prom.promise;
-
   return url;
 }
 

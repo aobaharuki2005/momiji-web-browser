@@ -204,7 +204,7 @@
   <!-- Browser menu group that contains additional settings in collapsed state -->
   <string name="browser_menu_more_settings">Plus</string>
   <!-- Browser menu group that contains additional settings in expanded state -->
-  <string name="browser_menu_less_settings">Minus</string>
+  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">Minus</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -458,7 +458,7 @@
   <!-- Text for the button dismiss the screen and move on with the flow -->
   <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Non ora</string>
   <!-- Title for sign in to sync screen. -->
-  <string name="juno_onboarding_sign_in_title_2">Resta cryptate dum tu passa inter tu apparatos</string>
+  <string name="juno_onboarding_sign_in_title_2">Resta cryptate quando tu passa inter apparatos</string>
   <!--
     Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
     Note: The word "Firefox" should NOT be translated
@@ -901,9 +901,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Elemento de fundo: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">Fundo actualisate!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">Fundo actualisate!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Vider</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Vider</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Impossibile discargar le fundo</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
@@ -943,9 +943,9 @@
   <!-- Title for the "Blue" alternative app icon variant in the icon picker screen. -->
   <string name="alternative_app_icon_option_blue">Blau</string>
   <!-- Title for the "Purple" alternative app icon variant in the icon picker screen. -->
-  <string name="alternative_app_icon_option_purple">Violette</string>
+  <string name="alternative_app_icon_option_purple">Purpuree</string>
   <!-- Title for the "Purple Dark" alternative app icon variant in the icon picker screen. -->
-  <string name="alternative_app_icon_option_purple_dark">Violette obscur</string>
+  <string name="alternative_app_icon_option_purple_dark">Purpuree obscur</string>
   <!-- Title for the "Sunrise" gradient alternative app icon variant in the icon picker screen. The app icon features a soft yellow-to-blue gradient background, resembling the colors of early morning light. -->
   <string name="alternative_app_icon_option_gradient_sunrise">Alba</string>
   <!-- Title for the "Golden Hour" gradient alternative app icon variant in the icon picker screen. The app icon features a warm golden-to-pink gradient background, resembling the colors of the sunlight shortly before sunset. -->
@@ -1390,8 +1390,16 @@
   <string name="tab_tray_menu_item_close">Clauder tote le schedas</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Adder al marcapaginas</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Adder le schedas seligite al marcapaginas</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Clauder</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Clauder schedas seligite</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">Compartir</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">Adder al collection</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">Compartir le schedas seligite</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1739,6 +1747,8 @@
   <string name="bookmark_menu_delete_button">Deler</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Salvar</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">Optiones de ordinamento</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Arrangiar per ordine personalitate</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1809,6 +1819,8 @@
   <string name="bookmark_search_button_content_description">Cercar in marcapaginas</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Menu de elementos pro %s</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">Clauder marcapaginas</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Nulle marcapaginas acora</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -1818,7 +1830,7 @@
   <!-- Description for the bookmark list empty state when you're signed into sync. -->
   <string name="bookmark_empty_list_authenticated_description">Salva le sitos durante le navigation. Nos alsi acquirera marcapaginas ab altere apparatos synchronisate.</string>
   <!-- Description for the bookmark list empty state when you're in an empty folder. -->
-  <string name="bookmark_empty_list_folder_description">Adde marcapaginas dum tu naviga pro trovar tu sitos preferite plus tarde.</string>
+  <string name="bookmark_empty_list_folder_description">Adde marcapaginas durante que tu naviga pro retrovar tu sitos preferite plus tarde.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Nove plica</string>
   <!--
@@ -2981,6 +2993,13 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Historias</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">Discoperi altere historias</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">Naviga retro</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">Sponsorisate</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3075,7 +3094,7 @@
     a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
     %1$s is the size in kilobytes or megabytes of the language file.
   -->
-  <string name="translations_download_language_file_dialog_title">Discargar le lingua dum in modo sparnio de datos (%1$s)?</string>
+  <string name="translations_download_language_file_dialog_title">Discargar le lingua in modo de sparnio de datos (%1$s)?</string>
   <!--
     Translations options dialog
 
@@ -3227,7 +3246,7 @@
   -->
   <string name="delete_language_file_dialog_title">Deler %1$s (%2$s)?</string>
   <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="delete_language_file_dialog_message">Si tu dele iste lingua, %1$s discargara linguas partial a tu cache dum tu traduce.</string>
+  <string name="delete_language_file_dialog_message">Si tu dele iste lingua, %1$s discargara linguas partial a tu cache durante que tu traduce.</string>
   <!--
     Title for the dialog used by the translations feature to confirm deleting all languages file.
     The dialog will be presented when the user requests deletion of all languages file.
@@ -3235,7 +3254,7 @@
   -->
   <string name="delete_language_all_languages_file_dialog_title">Deler tote le linguas (%1$s)?</string>
   <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="delete_language_all_languages_file_dialog_message">Si tu dele tote le linguas, %1$s discargara linguas partial a tu cache dum tu traduce.</string>
+  <string name="delete_language_all_languages_file_dialog_message">Si tu dele tote le linguas, %1$s discargara linguas partial a tu cache durante que tu traduce.</string>
   <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
   <string name="delete_language_file_dialog_positive_button_text">Deler</string>
   <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
@@ -3246,7 +3265,7 @@
     a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
     %1$s is the size in kilobytes or megabytes of the language file.
   -->
-  <string name="download_language_file_dialog_title">Discargar dum in modo sparnio de datos (%1$s)?</string>
+  <string name="download_language_file_dialog_title">Discargar in modo de sparnio de datos (%1$s)?</string>
   <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
   <string name="download_language_file_dialog_message_all_languages">Nos discarga linguas partial a tu cache pro mantener private le traductiones.</string>
   <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
@@ -3304,6 +3323,8 @@
   <string name="protection_panel_num_trackers_blocked">Traciatores blocate: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Nulle traciatores trovate</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">Le traciatores non es blocate</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Configurationes de confidentialitate e securitate</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
@@ -3331,7 +3352,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Cancellar</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">Cookies e datos de sitos removite</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Cookies e datos de sitos removite</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Connexion secur</string>
   <!-- Text for the connection security panel when the site is not secure. -->

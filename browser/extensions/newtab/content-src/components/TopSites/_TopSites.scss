@@ -67,23 +67,6 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
     text-decoration: none;
   }
 
-  &:not(.dnd-active) {
-    .top-site-outer:is(.active, :focus, :hover) {
-      background: var(--newtab-element-hover-color);
-
-      // Bug 1908010 - This overwrites the design system color because of a
-      // known transparency issue with color-mix syntax when a wallpaper is set
-      .lightWallpaper &,
-      .darkWallpaper & {
-        background-color: var(--newtab-weather-background-color);
-
-        @media (prefers-contrast) {
-          background-color: var(--background-color-box);
-        }
-      }
-    }
-  }
-
   // Two columns
   @media (max-width: $break-point-medium) {
     > :nth-child(2n+1) {
@@ -259,7 +242,6 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
 
   .context-menu-button {
     background-image: url('chrome://global/skin/icons/more.svg');
-    background-color: var(--newtab-button-background);
     border: 0;
     border-radius: var(--border-radius-small);
     cursor: pointer;
@@ -406,6 +388,13 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
         width: 20px;
         fill: var(--icon-color);
         -moz-context-properties: fill;
+      }
+    }
+
+    &:hover {
+      .tile {
+        background-color: var(--newtab-background-color-secondary);
+        color-scheme: initial;
       }
     }
   }

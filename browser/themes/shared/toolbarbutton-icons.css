@@ -329,3 +329,27 @@
     stroke: var(--icon-color-critical);
   }
 }
+
+#taskbar-tabs-favicon {
+  margin: auto 8px;
+  height: var(--icon-size);
+  width: var(--icon-size);
+
+  :root:not([taskbartab]) & {
+    display: none;
+  }
+}
+
+#taskbar-tabs-audio {
+  /* This is only visible in Taskbar Tabs windows; see ':root[taskbartab] toolbar' in
+   * toolbarbuttons.css. */
+  display: none;
+
+  &[soundplaying] {
+    list-style-image: url("chrome://global/skin/media/audio.svg");
+  }
+
+  &[muted] {
+    list-style-image: url("chrome://global/skin/media/audio-muted.svg");
+  }
+}

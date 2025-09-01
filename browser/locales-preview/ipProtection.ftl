@@ -7,9 +7,17 @@
 # before exposing it to localization
 -firefox-vpn-brand-name = Firefox VPN
 
+## Toolbar button tooltip reflects VPN state
+
 ipprotection-button =
   .label = { -firefox-vpn-brand-name }
   .tooltiptext = { -firefox-vpn-brand-name }
+
+ipprotection-button-error =
+  .label = Turn { -firefox-vpn-brand-name } on
+  .tooltiptext = Turn { -firefox-vpn-brand-name } on
+
+##
 
 # The word "Beta" is intended to be uppercase in the experiment label.
 ipprotection-experiment-badge =

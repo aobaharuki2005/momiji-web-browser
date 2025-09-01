@@ -681,9 +681,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Аҭӡамц аелемент: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">Аҭӡамц ҿыцуп!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">Аҭӡамц ҿыцуп!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Асахьа</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Асахьа</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Аҭӡамц аҭагалара алымшеит</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->

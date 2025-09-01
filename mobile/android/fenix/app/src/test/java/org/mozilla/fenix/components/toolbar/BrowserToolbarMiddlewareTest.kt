@@ -488,12 +488,51 @@ class BrowserToolbarMiddlewareTest {
             navController = navController,
         )
         val newTabButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
+        toolbarStore.dispatch(newTabButton.onClick as BrowserToolbarEvent)
 
-        mockkStatic(NavController::nav) {
-            toolbarStore.dispatch(newTabButton.onClick as BrowserToolbarEvent)
+        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)) }
+    }
 
-            verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)) }
-        }
+    @Test
+    fun `GIVEN homepage as new tab is enabled WHEN clicking the new tab button THEN navigate to home screen without focus`() {
+        val browserAnimatorActionCaptor = slot<(Boolean) -> Unit>()
+        every {
+            browserAnimator.captureEngineViewAndDrawStatically(
+                any<Long>(),
+                capture(browserAnimatorActionCaptor),
+            )
+        } answers { browserAnimatorActionCaptor.captured.invoke(true) }
+        every { settings.enableHomepageAsNewTab } returns true
+        val middleware = buildMiddleware()
+        val toolbarStore = buildStore(
+            middleware = middleware,
+            navController = navController,
+        )
+        val newTabButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
+        toolbarStore.dispatch(newTabButton.onClick as BrowserToolbarEvent)
+
+        verify { useCases.fenixBrowserUseCases.addNewHomepageTab(false) }
+    }
+
+    @Test
+    fun `WHEN clicking the new tab button with homepage search bar enabled THEN navigate to home screen without focus`() {
+        val browserAnimatorActionCaptor = slot<(Boolean) -> Unit>()
+        every {
+            browserAnimator.captureEngineViewAndDrawStatically(
+                any<Long>(),
+                capture(browserAnimatorActionCaptor),
+            )
+        } answers { browserAnimatorActionCaptor.captured.invoke(true) }
+        every { settings.enableHomepageSearchBar } returns true
+        val middleware = buildMiddleware()
+        val toolbarStore = buildStore(
+            middleware = middleware,
+            navController = navController,
+        )
+        val newTabButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
+        toolbarStore.dispatch(newTabButton.onClick as BrowserToolbarEvent)
+
+        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = false)) }
     }
 
     @Test

@@ -1036,6 +1036,50 @@ describe("DiscoveryStreamFeed", () => {
         },
       });
     });
+    it("should fetch MARS pre flight info", async () => {
+      sandbox
+        .stub(feed, "fetchFromEndpoint")
+        .withArgs("unifiedAdEndpoint/v1/o", { method: "GET" })
+        .resolves({
+          normalized_ua: "normalized_ua",
+          geoname_id: "geoname_id",
+        });
+
+      feed.store = createStore(combineReducers(reducers), {
+        Prefs: {
+          values: {
+            "unifiedAds.endpoint": "unifiedAdEndpoint/",
+            "unifiedAds.blockedAds": "",
+            "unifiedAds.spocs.enabled": true,
+            "discoverystream.placements.spocs": "newtab_stories_1",
+            "discoverystream.placements.spocs.counts": "1",
+            trainhopConfig: {
+              marsPreFlight: { enabled: true },
+            },
+          },
+        },
+      });
+
+      await feed.loadSpocs(feed.store.dispatch);
+
+      assert.equal(
+        feed.fetchFromEndpoint.firstCall.args[0],
+        "unifiedAdEndpoint/v1/o"
+      );
+      assert.equal(feed.fetchFromEndpoint.firstCall.args[1].method, "GET");
+      assert.equal(
+        feed.fetchFromEndpoint.secondCall.args[0],
+        "unifiedAdEndpoint/v1/ads"
+      );
+      assert.equal(
+        feed.fetchFromEndpoint.secondCall.args[1].headers.get("X-User-Agent"),
+        "normalized_ua"
+      );
+      assert.equal(
+        feed.fetchFromEndpoint.secondCall.args[1].headers.get("X-Geoname-ID"),
+        "geoname_id"
+      );
+    });
     describe("test SOV behaviour", () => {
       beforeEach(() => {
         globals.set("NimbusFeatures", {

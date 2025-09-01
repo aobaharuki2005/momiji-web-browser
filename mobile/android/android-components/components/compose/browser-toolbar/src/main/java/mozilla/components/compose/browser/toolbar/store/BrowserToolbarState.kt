@@ -93,7 +93,8 @@ data class DisplayState(
  * Wrapper containing the toolbar edit state.
  *
  * @property query The text the user is editing in "edit" mode.
- * @property showQueryAsPreselected Whether or not [query] should be shown as selected.
+ * @property hint The hint to show in the edit toolbar.
+ * @property isQueryPrefilled Whether [query] is prefilled and not user entered.
  * @property editActionsStart List of [Action]s to be displayed at the start of the URL of
  * the edit toolbar.
  * @property editActionsEnd List of [Action]s to be displayed at the end of the URL of
@@ -102,7 +103,7 @@ data class DisplayState(
 data class EditState(
     val query: String = "",
     @param:StringRes val hint: Int = R.string.mozac_browser_toolbar_search_hint,
-    val showQueryAsPreselected: Boolean = false,
+    val isQueryPrefilled: Boolean = false,
     val autocompleteProviders: List<AutocompleteProvider> = emptyList(),
     val editActionsStart: List<Action> = emptyList(),
     val editActionsEnd: List<Action> = emptyList(),

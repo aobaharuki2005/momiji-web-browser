@@ -10,7 +10,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
 });
 
-import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
+import {
+  LINKS,
+  ERRORS,
+} from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 let hasCustomElements = new WeakSet();
 
@@ -196,7 +199,9 @@ export class IPProtectionPanel {
    */
   showing(panelView) {
     if (this.initiatedUpgrade) {
-      lazy.IPProtectionService.updateHasUpgradedStatus(false /* useCached */);
+      lazy.IPProtectionService.updateHasUpgradedStatus(
+        true /* refetchEntitlement */
+      );
       this.initiatedUpgrade = false;
     }
 
@@ -268,6 +273,11 @@ export class IPProtectionPanel {
       this.panel.remove();
       this.#removePanelListeners(this.panel.ownerDocument);
       this.panel = null;
+      if (this.state.error) {
+        this.setState({
+          error: "",
+        });
+      }
     }
   }
 
@@ -317,6 +327,10 @@ export class IPProtectionPanel {
       "IPProtectionService:UpdateHasUpgraded",
       this.handleEvent
     );
+    lazy.IPProtectionService.addEventListener(
+      "IPProtectionService:Error",
+      this.handleEvent
+    );
   }
 
   #removeProxyListeners() {
@@ -338,6 +352,10 @@ export class IPProtectionPanel {
     );
     lazy.IPProtectionService.removeEventListener(
       "IPProtectionService:UpdateHasUpgraded",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.removeEventListener(
+      "IPProtectionService:Error",
       this.handleEvent
     );
   }
@@ -369,6 +387,7 @@ export class IPProtectionPanel {
       this.setState({
         isProtectionEnabled: true,
         protectionEnabledSince: event.detail?.activatedAt,
+        error: "",
       });
     } else if (event.type == "IPProtectionService:Stopped") {
       this.setState({
@@ -381,6 +400,13 @@ export class IPProtectionPanel {
       });
     } else if (event.type == "IPProtection:SignIn") {
       this.startLoginFlow();
+    } else if (
+      event.type == "IPProtectionService:Error" &&
+      event.detail?.error == ERRORS.GENERIC
+    ) {
+      this.setState({
+        error: event.detail.error,
+      });
     }
   }
 }

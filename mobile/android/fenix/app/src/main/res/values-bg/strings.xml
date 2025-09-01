@@ -204,7 +204,7 @@
   <!-- Browser menu group that contains additional settings in collapsed state -->
   <string name="browser_menu_more_settings">Повече</string>
   <!-- Browser menu group that contains additional settings in expanded state -->
-  <string name="browser_menu_less_settings">По-малко</string>
+  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">По-малко</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -901,9 +901,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Тапет: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">Тапетът е променен!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">Тапетът е променен!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Преглед</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Преглед</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Тапетът не можа да бъде изтеглен</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
@@ -1390,8 +1390,16 @@
   <string name="tab_tray_menu_item_close">Затваряне на всички раздели</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Отметка</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Отмятане на избраните раздели</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Затваряне</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Затваряне на избраните раздели</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">Споделяне</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">Добавяне към списък</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">Споделяне на избраните раздели</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1739,6 +1747,8 @@
   <string name="bookmark_menu_delete_button">Изтриване</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Запазване</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">Опции за сортиране</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Подреждане по избор</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1809,6 +1819,8 @@
   <string name="bookmark_search_button_content_description">Търсене в отметките</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Меню с елементи на %s</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">Затваряне на отметки</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Все още няма отметки</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -2411,7 +2423,7 @@
   <!-- Bullet point 1 for "Increased Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_increased_protection_info_1">Използва се избран от вас доставчик</string>
   <!-- Bullet point 2 for "Increased Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_increased_protection_info_2">Използва се вашият стандартен DNS (от доставчика ви на интернет), само ако има проблем със сигурния DNS.</string>
+  <string name="preference_doh_increased_protection_info_2">Използва се вашият стандартен DNS (от доставчика ви на интернет), само ако има проблем със сигурния DNS</string>
   <!-- Title displayed for "Max Protection" option under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection">Максимална защита</string>
   <!-- Summary displayed for "Max Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
@@ -2421,19 +2433,19 @@
   <!-- Bullet point 2 for "Max Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection_info_2">Винаги да се предупреждава, ако не е наличен защитен DNS</string>
   <!-- Bullet point 3 for "Max Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_max_protection_info_3">Ако защитеният DNS не е наличен, сайтовете няма да зареждат или да работят правилно.</string>
+  <string name="preference_doh_max_protection_info_3">Ако защитеният DNS не е наличен, сайтовете няма да зареждат или да работят правилно</string>
   <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off">Изключено</string>
   <!-- Summary displayed for "Off" option under "DNS over HTTPS" -->
-  <string name="preference_doh_off_summary">Използва се вашият DNS по подразбиране (от доставчика ви на Интернет).</string>
+  <string name="preference_doh_off_summary">Използва се вашият DNS по подразбиране (от доставчика ви на Интернет)</string>
   <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
-  <string name="preference_doh_choose_provider">Изберете доставчик</string>
+  <string name="preference_doh_choose_provider">Избор на доставчик</string>
   <!-- Text displayed for "Default provider" under "DNS over HTTPS" providers -->
   <string name="preference_doh_provider_default">(по подразбиране)</string>
   <!-- Text displayed for "Custom" under "DNS over HTTPS" providers -->
   <string name="preference_doh_provider_custom">По избор</string>
   <!-- Text displayed for "Custom provider" dialog under "DNS over HTTPS" -->
-  <string name="preference_doh_provider_custom_dialog_title">Персонализиран доставчик</string>
+  <string name="preference_doh_provider_custom_dialog_title">Личен доставчик</string>
   <!-- Text displayed above provider textfield under "DNS over HTTPS" -->
   <string name="preference_doh_provider_custom_dialog_textfield">Доставчик</string>
   <!-- Error text displayed for provider textfield under "DNS over HTTPS" if the URL does not start with "https://" or its scheme is not "https" -->
@@ -2591,7 +2603,7 @@
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Защитете запазените пароли</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
-  <string name="logins_warning_dialog_message_2">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените пароли от достъп, ако някой друг има вашето устройство.</string>
+  <string name="logins_warning_dialog_message_2">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените пароли от достъп, ако някой друг има достъп до вашето устройство.</string>
   <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_later">По-късно</string>
   <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -3287,7 +3299,7 @@
     Title text for the protection panel banner when tracking protection is enabled.
     %s is the name of the app (for example "Firefox").
   -->
-  <string name="protection_panel_banner_protected_title">%s е нащрек</string>
+  <string name="protection_panel_banner_protected_title">%s е на пост</string>
   <!-- Description text for the protection panel banner when tracking protection is enabled. -->
   <string name="protection_panel_banner_protected_description">Вие сте защитени. Ако забележим нещо, ще ви уведомим.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
@@ -3308,20 +3320,22 @@
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
   -->
-  <string name="protection_panel_num_trackers_blocked">Спирани проследявания: %d</string>
+  <string name="protection_panel_num_trackers_blocked">Спряни проследявания: %d</string>
   <!-- Text for when no trackers have been blocked. -->
-  <string name="protection_panel_no_trackers_blocked">Не са намерени тракери</string>
+  <string name="protection_panel_no_trackers_blocked">Не са намерени проследяващи програми</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">Проследяванията не са блокирани</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Настройки за поверителност и сигурност</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings_2">Настройки за поверителност</string>
   <!-- Title text for the protection panel permissions section. -->
-  <string name="protection_panel_permissions_title">Права</string>
+  <string name="protection_panel_permissions_title">Разрешения</string>
   <!--
     Text for displaying the total number of trackers blocked in the trackers blocked panel.
     %d is a placeholder for the number of trackers blocked.
   -->
-  <string name="trackers_blocked_panel_total_num_trackers_blocked">Спирани проследявания: %d</string>
+  <string name="trackers_blocked_panel_total_num_trackers_blocked">Спряни проследяващи програми : %d</string>
   <!--
     Text for displaying the number of trackers blocked for a specific tracker category in the trackers blocked panel.
     %s is a placeholder for the name of the tracker category.
@@ -3338,7 +3352,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Отказ</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">Бисквитките и данните на сайта са премахнати</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Бисквитките и данните на сайта са премахнати</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Защитена връзка</string>
   <!-- Text for the connection security panel when the site is not secure. -->
@@ -3347,7 +3361,7 @@
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.
   -->
-  <string name="connection_security_panel_verified_by">Потвърдено от %s</string>
+  <string name="connection_security_panel_verified_by">Проверено от %s</string>
   <!--
     Debug drawer
 
@@ -3357,7 +3371,7 @@
   <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
   <string name="debug_drawer_back_button_content_description">Връщане назад</string>
   <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
-  <string name="debug_drawer_fab_content_description">Отваряне на чекмеджето за отстраняване на грешки</string>
+  <string name="debug_drawer_fab_content_description">Отваряне на раздела за отстраняване на грешки</string>
   <!--
     Debug drawer tabs tools
 
@@ -3367,13 +3381,13 @@
   <!-- The title of the tab count section in Tab Tools. -->
   <string name="debug_drawer_tab_tools_tab_count_title">Брой на разделите</string>
   <!-- The active tab count category in the tab count section in Tab Tools. -->
-  <string name="debug_drawer_tab_tools_tab_count_active">Включен</string>
+  <string name="debug_drawer_tab_tools_tab_count_active">Включени</string>
   <!-- The inactive tab count category in the tab count section in Tab Tools. -->
   <string name="debug_drawer_tab_tools_tab_count_inactive">Изключени</string>
   <!-- The private tab count category in the tab count section in Tab Tools. -->
   <string name="debug_drawer_tab_tools_tab_count_private">Лични</string>
   <!-- The total tab count category in the tab count section in Tab Tools. -->
-  <string name="debug_drawer_tab_tools_tab_count_total">Всичко</string>
+  <string name="debug_drawer_tab_tools_tab_count_total">Всички</string>
   <!-- The title of the tab creation tool section in Tab Tools. -->
   <string name="debug_drawer_tab_tools_tab_creation_tool_title">Инструмент за създаване на раздели</string>
   <!-- The label of the text field in the tab creation tool. -->
@@ -3419,7 +3433,7 @@
   <!-- The survey completion header -->
   <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Проучването е завършено</string>
   <!-- The survey completion confirmation text -->
-  <string name="micro_survey_feedback_confirmation">Благодарим ви за отзива!</string>
+  <string name="micro_survey_feedback_confirmation">Благодарим ви за обратната връзка!</string>
   <!-- Option for likert scale -->
   <string name="likert_scale_option_1" tools:ignore="UnusedResources">Много доволен</string>
   <!-- Option for likert scale -->
@@ -3429,9 +3443,9 @@
   <!-- Option for likert scale -->
   <string name="likert_scale_option_4" tools:ignore="UnusedResources">Недоволен/а</string>
   <!-- Option for likert scale -->
-  <string name="likert_scale_option_5" tools:ignore="UnusedResources">Много недоволен</string>
+  <string name="likert_scale_option_5" tools:ignore="UnusedResources">Много недоволен/а</string>
   <!-- Option for likert scale -->
-  <string name="likert_scale_option_6" tools:ignore="UnusedResources">не го ползвам</string>
+  <string name="likert_scale_option_6" tools:ignore="UnusedResources">Не го използвам</string>
   <!-- Option for likert scale. Note: The word "Firefox" should NOT be translated. -->
   <string name="likert_scale_option_7" tools:ignore="BrandUsage,UnusedResources">Не използвам търсене във Firefox</string>
   <!-- Option for likert scale -->
@@ -3467,7 +3481,7 @@
 
     The title of the Logins feature in the Debug Drawer.
   -->
-  <string name="debug_drawer_logins_title">Регистрации</string>
+  <string name="debug_drawer_logins_title">Вписвания</string>
   <!-- The title of the logins section in the Logins feature. %s is the site domain. -->
   <string name="debug_drawer_logins_current_domain_label">Текущ домейн: %s</string>
   <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
@@ -3501,7 +3515,7 @@
 
     The title of the glean debugging feature
   -->
-  <string name="glean_debug_tools_title">Събиране на инструменти за дебъгване</string>
+  <string name="glean_debug_tools_title">Събиране на инструменти за отстраняване на грешки</string>
   <!--
     Debug drawer region tools
 
@@ -3561,7 +3575,7 @@
   -->
   <string name="certificate_warning_homepage_card_update_now_button" tools:ignore="UnusedResources">Обновяване</string>
   <!-- Homepage card title about old Firefox version. "Update" is a verb. Note: The word "Firefox" should NOT be translated. -->
-  <string name="certificate_warning_homepage_card_hca1_title" tools:ignore="BrandUsage,UnusedResources">Обновете своя браузър Firefox</string>
+  <string name="certificate_warning_homepage_card_hca1_title" tools:ignore="BrandUsage,UnusedResources">Обновете своя четец Firefox</string>
   <!-- Homepage card message about old Firefox version -->
   <string name="certificate_warning_homepage_card_hca1_message" tools:ignore="UnusedResources">Кореневият сертификат ще изтече, причинявайки някои функции да спрат да работят на 14 март.</string>
   <!-- Homepage card title about old Firefox version. "Update" is a verb. -->

@@ -2940,6 +2940,7 @@ export class nsContextMenu {
         // add support for its POST endpoint or another visual engine that does
         // support data URIs, we should revisit this.
         !this.imageInfo.currentSrc.startsWith("data:") &&
+        !this.contentData.contentDisposition?.startsWith("attachment") &&
         Services.prefs.getBoolPref("browser.search.visualSearch.featureGate"),
       searchTerms: this.imageInfo?.currentSrc,
       searchUrlType: lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH,

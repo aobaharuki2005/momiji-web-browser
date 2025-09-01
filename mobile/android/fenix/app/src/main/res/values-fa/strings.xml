@@ -194,7 +194,7 @@
   <!-- Browser menu group that contains additional settings in collapsed state -->
   <string name="browser_menu_more_settings">بیشتر</string>
   <!-- Browser menu group that contains additional settings in expanded state -->
-  <string name="browser_menu_less_settings">کمتر</string>
+  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">کمتر</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -838,9 +838,9 @@
   -->
   <string name="wallpapers_item_name_content_description">مورد کاغذدیواری: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">کاغذدیواری به‌روز شد!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">کاغذدیواری به‌روز شد!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">نمایش</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">نمایش</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">نتوانست کاغذدیواری را بارگیری کند</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
@@ -3073,7 +3073,7 @@
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">انصراف</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar">کوکی‌ها و داده‌های وبگاه پاک شدند</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">کوکی‌ها و داده‌های وبگاه پاک شدند</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">اتصال امن</string>
   <!-- Text for the connection security panel when the site is not secure. -->

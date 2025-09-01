@@ -609,9 +609,9 @@
   -->
   <string name="wallpapers_item_name_content_description">Фон рәсем элементы: %1$s</string>
   <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message">Фон рәсем яңартылды!</string>
+  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">Фон рәсем яңартылды!</string>
   <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action">Карау</string>
+  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Карау</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Фон рәсемен йөкләп булмады</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->

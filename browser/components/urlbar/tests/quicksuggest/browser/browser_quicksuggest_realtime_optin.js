@@ -87,23 +87,21 @@ async function doOptInTest(useKeyboard) {
   );
 
   let allowButton = element.row.querySelector(".urlbarView-button-0");
+  Assert.ok(
+    allowButton.hasAttribute("primary"),
+    "The allow button should be primary"
+  );
+
   if (!useKeyboard) {
     info("Picking allow button with mouse");
     EventUtils.synthesizeMouseAtCenter(allowButton, {});
   } else {
     info("Picking allow button with keyboard");
     EventUtils.synthesizeKey("KEY_ArrowDown");
-    // TODO: The tip buttons should be selected first probably.
-    Assert.equal(
-      UrlbarTestUtils.getSelectedElement(window).dataset.l10nName,
-      "learn-more-link",
-      "The learn-more link should be selected after pressing Down"
-    );
-    EventUtils.synthesizeKey("KEY_Tab");
     Assert.equal(
       UrlbarTestUtils.getSelectedElement(window),
       allowButton,
-      "The allow button should be selected after pressing Tab"
+      "The allow button should be selected after pressing Down"
     );
     Assert.equal(
       gURLBar.value,
@@ -161,6 +159,10 @@ add_task(async function dismiss() {
   let dismissButton = element.row.querySelector(".urlbarView-button-1");
   Assert.equal(dismissButton.dataset.command, "not_now");
   Assert.equal(dismissButton.textContent, "Not now");
+  Assert.ok(
+    !dismissButton.hasAttribute("primary"),
+    "The dismiss button should not be primary"
+  );
 
   info("Check 'Not now' button behavior");
   EventUtils.synthesizeMouseAtCenter(dismissButton, {});
