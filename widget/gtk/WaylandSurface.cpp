@@ -1145,7 +1145,7 @@ void WaylandSurface::RemoveTransactionLocked(
   if (mBufferTransactions.IsEmpty()) {
     return;
   }
-  LOGWAYLAND("WaylandSurface::RemoveTransactionLocked() [%p]",
+  LOGVERBOSE("WaylandSurface::RemoveTransactionLocked() [%p]",
              (void*)aTransaction);
   MOZ_DIAGNOSTIC_ASSERT(aTransaction->IsDeleted());
   [[maybe_unused]] bool removed =
@@ -1165,6 +1165,10 @@ BufferTransaction* WaylandSurface::GetNextTransactionLocked(
   // DeleteTransactionLocked() may delete BufferTransaction so
   // iterate with ref taken.
   for (auto t : transactions) {
+    LOGVERBOSE(
+        "WaylandSurface::GetNextTransactionLocked() transaction [%p] det %d "
+        "del %d",
+        t.get(), t->IsDetached(), t->IsDeleted());
     if (t == nextTransaction) {
       mBufferTransactions.AppendElement(nextTransaction);
       addedNext = true;
