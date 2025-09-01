@@ -345,12 +345,16 @@ var ctrlTab = {
       let canvas = aPreview._canvas;
       let canvasWidth = this.canvasWidth;
       let canvasHeight = this.canvasHeight;
-      let placeholder = document.createElement("img");
-      placeholder.className = "ctrlTab-placeholder";
-      placeholder.setAttribute("width", canvasWidth);
-      placeholder.setAttribute("height", canvasHeight);
-      placeholder.setAttribute("alt", "");
-      canvas.appendChild(placeholder);
+      let existingPreview = canvas.firstChild;
+      if (!existingPreview) {
+        let placeholder = document.createElement("img");
+        placeholder.className = "ctrlTab-placeholder";
+        placeholder.setAttribute("width", canvasWidth);
+        placeholder.setAttribute("height", canvasHeight);
+        placeholder.setAttribute("alt", "");
+        canvas.appendChild(placeholder);
+        existingPreview = placeholder;
+      }
       tabPreviews
         .get(aTab)
         .then(img => {
@@ -359,7 +363,7 @@ var ctrlTab = {
               if (img) {
                 img.style.width = canvasWidth + "px";
                 img.style.height = canvasHeight + "px";
-                canvas.replaceChild(img, placeholder);
+                canvas.replaceChild(img, existingPreview);
               }
               break;
             case null:
