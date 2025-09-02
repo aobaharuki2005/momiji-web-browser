@@ -25,6 +25,7 @@ else:
         OS_LIBS += [
             "-framework Foundation",
         ]
+        LDFLAGS += ["-Wl,-rpath,@executable_path/./"]
     elif CONFIG["OS_ARCH"] == "WINNT":
         OS_LIBS += [
             "advapi32",
