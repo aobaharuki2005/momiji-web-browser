@@ -169,6 +169,30 @@ async function toggleSidebarPanel(win, commandID) {
   await promiseFocused;
 }
 
+async function ensureSidebarLauncherIsVisible(win = window) {
+  const {
+    promiseInitialized,
+    toolbarButton,
+    sidebarMain: sidebarLauncher,
+    sidebarContainer,
+  } = win.SidebarController;
+  await promiseInitialized;
+  // Show the sidebar launcher if the container is hidden
+  if (sidebarContainer.hidden) {
+    toolbarButton.doCommand();
+    await sidebarLauncher.updateComplete;
+    await BrowserTestUtils.waitForMutationCondition(
+      sidebarContainer,
+      { attributes: true, attributeFilter: ["hidden"] },
+      () => !sidebarContainer.hidden
+    );
+  }
+  Assert.ok(
+    BrowserTestUtils.isVisible(sidebarLauncher),
+    "Sidebar launcher is visible"
+  );
+}
+
 async function waitForTabstripOrientation(
   toOrientation = "vertical",
   win = window
