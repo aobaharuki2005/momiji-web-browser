@@ -145,6 +145,9 @@
     <string name="preferences_start_profiler">Start Profiler</string>
     <string name="profiler_stop">Stop Profiler</string>
 
+
+    <string name="profiler_active_notification" translatable="false">Profiler active</string>
+    <string name="profiler_notification_text" translatable="false">Profiling is active. Tap to stop profiler</string>
     <string name="profiler_settings_title">Profiler Settings</string>
     <string name="profiler_filter_firefox">Firefox</string>
     <string name="profiler_running">Profiler is currently running</string>

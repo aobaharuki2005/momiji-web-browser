@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.perf
 
-import android.app.Application
 import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
@@ -27,8 +26,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.helpers.FenixRobolectricTestApplication
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
@@ -36,8 +35,6 @@ import org.robolectric.android.controller.ServiceController
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowNotificationManager
 import org.robolectric.shadows.ShadowService
-
-import org.mozilla.fenix.helpers.FenixRobolectricTestApplication
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = FenixRobolectricTestApplication::class)
@@ -60,20 +57,16 @@ class ProfilerServiceTest {
         context = ApplicationProvider.getApplicationContext()
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         shadowNotificationManager = Shadows.shadowOf(notificationManager)
-
-        // Get the mock components from FenixRobolectricTestApplication
         val fenixApp = context as FenixRobolectricTestApplication
         mockComponents = fenixApp.components
 
-        // Mock NotificationsDelegate with proper callback handling
         val mockNotificationsDelegate = mockk<NotificationsDelegate>(relaxed = true)
         every {
             mockNotificationsDelegate.requestNotificationPermission(
                 onPermissionGranted = any(),
-                showPermissionRationale = any()
+                showPermissionRationale = any(),
             )
         } answers {
-            // Immediately call the onPermissionGranted callback
             val onPermissionGranted = arg<() -> Unit>(0)
             onPermissionGranted.invoke()
         }
@@ -118,8 +111,8 @@ class ProfilerServiceTest {
         assertNotNull("Notification should be posted after start action", postedNotification)
 
         val shadowNotification = Shadows.shadowOf(postedNotification)
-        assertEquals("Notification title mismatch", "Profiler Running", shadowNotification.contentTitle.toString())
-        assertEquals("Notification text mismatch", "Profiling is active.", shadowNotification.contentText.toString())
+        assertEquals("Notification title mismatch", "Profiler active", shadowNotification.contentTitle.toString())
+        assertEquals("Notification text mismatch", "Profiling is active. Tap to stop profiler", shadowNotification.contentText.toString())
         assertNotEquals("FLAG_ONGOING_EVENT should be set", 0, postedNotification!!.flags and Notification.FLAG_ONGOING_EVENT)
         assertNotEquals("FLAG_FOREGROUND_SERVICE should be set", 0, postedNotification.flags and Notification.FLAG_FOREGROUND_SERVICE)
 

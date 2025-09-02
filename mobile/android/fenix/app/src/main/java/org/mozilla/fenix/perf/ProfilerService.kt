@@ -72,7 +72,6 @@ class ProfilerService : Service() {
      */
     private fun startProfilingWithNotification() {
         val notification = createNotification()
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationsDelegate.requestNotificationPermission(
                 onPermissionGranted = {
@@ -105,7 +104,6 @@ class ProfilerService : Service() {
         notificationManager.createNotificationChannel(profilingChannel)
     }
 
-
     private fun createNotification(): Notification {
         val notificationIntent = Intent(this, StopProfilerActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -119,15 +117,20 @@ class ProfilerService : Service() {
             pendingIntentFlags,
         )
 
-        return NotificationCompat.Builder(this, PROFILING_CHANNEL_ID)
-            .setContentTitle("Profiler Running")
-            .setContentText("Profiling is active.")
+        val notificationBuilder = NotificationCompat.Builder(this, PROFILING_CHANNEL_ID)
+            .setContentTitle(getString(R.string.profiler_active_notification))
+            .setContentText(getString(R.string.profiler_notification_text))
             .setSmallIcon(R.drawable.ic_profiler)
             .setOngoing(true)
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
-            .build()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            notificationBuilder.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+        }
+
+        return notificationBuilder.build()
     }
 
     override fun onBind(p0: Intent?): IBinder? {

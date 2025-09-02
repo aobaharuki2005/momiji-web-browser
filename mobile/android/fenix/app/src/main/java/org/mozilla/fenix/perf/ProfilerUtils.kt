@@ -184,26 +184,6 @@ object ProfilerUtils {
     }
 
     /**
-     * This will either save the profile locally or send it as a URL to the Firefox profiler server
-     *
-     * @param context Activity context to get access to the profiler API through components.core...
-     * @param profile Data returned from GeckoView as a GZIP ByteArray
-     * @param onUrlFinish function passed in to display a toast with the relevant information once the profile is saved
-     */
-    fun handleProfileSave(
-        context: Context,
-        profile: ByteArray,
-        onUrlFinish: (Int) -> Unit,
-    ) {
-        try {
-            val url = saveProfileUrlToClipboard(profile, context)
-            finishProfileSave(context, url, onUrlFinish)
-        } catch (e: IOException) {
-            onUrlFinish(R.string.profiler_io_error)
-        }
-    }
-
-    /**
      * Checks if the app has notification permission on Android 13+ (API level 33+).
      *
      * This permission check is required for profiler notifications on newer Android versions.

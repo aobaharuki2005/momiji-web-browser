@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.perf
 
-import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import androidx.annotation.StringRes

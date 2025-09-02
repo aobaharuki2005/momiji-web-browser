@@ -6,7 +6,6 @@ package org.mozilla.fenix.perf
 
 import android.app.Application
 import android.content.Context
-import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.MockKAnnotations
 import io.mockk.every
