@@ -65,10 +65,8 @@ if CONFIG["OS_ARCH"] == "WINNT":
     # we can enable it using a pref during testing.
     LINK_FLAGS["CETCOMPAT"] = []
 
-# reverting https://hg.mozilla.org/mozilla-unified/rev/1bc4ee894015268a6be66950b80705e73f17147e
-# because it hurts backwards compatibility
-#if CONFIG["OS_ARCH"] == "Darwin":
-#    LDFLAGS += ["-Wl,-rpath,@executable_path/../../../"]
+if CONFIG["OS_ARCH"] == "Darwin":
+    LDFLAGS += ["-Wl,-rpath,@executable_path/../../../"]
 
 if CONFIG["CC_TYPE"] == "clang-cl":
     # Always enter a Windows program through wmain, whether or not we're
