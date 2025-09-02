@@ -290,8 +290,10 @@ internal class BookmarksMiddleware(
             is BookmarksListMenuAction -> action.handleSideEffects(context.store, preReductionState)
             SnackbarAction.Dismissed -> when (preReductionState.bookmarksSnackbarState) {
                 is BookmarksSnackbarState.UndoDeletion -> scope.launch {
-                    preReductionState.bookmarksSnackbarState.guidsToDelete.forEach {
-                        bookmarksStorage.deleteNode(it)
+                    if (preReductionState.bookmarksDeletionSnackbarQueueCount <= 1) {
+                        preReductionState.bookmarksSnackbarState.guidsToDelete.forEach {
+                            bookmarksStorage.deleteNode(it)
+                        }
                     }
                 }
                 else -> {}

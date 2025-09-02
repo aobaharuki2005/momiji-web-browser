@@ -1267,6 +1267,41 @@ class BookmarksMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN two bookmarks WHEN each is deleted before a snackbar dismiss and undo is clicked after the first dismiss THEN the bookmarks are restored`() = runTestOnMain {
+        val tree = generateBookmarkTree()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(tree)
+        val items = tree.children!!.filter { it.type == BookmarkNodeType.ITEM }
+
+        val bookmarkItemOne = items[0].let {
+            BookmarkItem.Bookmark(it.guid, it.title!!, it.url!!, it.url!!, it.position!!)
+        }
+
+        val bookmarkItemTwo = items[1].let {
+            BookmarkItem.Bookmark(it.guid, it.title!!, it.url!!, it.url!!, it.position!!)
+        }
+
+        val middleware = buildMiddleware()
+        val store = middleware.makeStore()
+
+        store.dispatch(BookmarksListMenuAction.Bookmark.DeleteClicked(bookmarkItemOne))
+        assertEquals(store.state.bookmarksDeletionSnackbarQueueCount, 1)
+        store.dispatch(BookmarksListMenuAction.Bookmark.DeleteClicked(bookmarkItemTwo))
+        assertEquals(store.state.bookmarksDeletionSnackbarQueueCount, 2)
+        store.dispatch(SnackbarAction.Dismissed)
+        assertEquals(store.state.bookmarksDeletionSnackbarQueueCount, 1)
+        assertEquals(BookmarksSnackbarState.UndoDeletion(listOf(bookmarkItemOne.guid, bookmarkItemTwo.guid)), store.state.bookmarksSnackbarState)
+
+        store.dispatch(SnackbarAction.Undo)
+
+        val initialCount = store.state.bookmarkItems.size
+        assertEquals(BookmarksSnackbarState.None, store.state.bookmarksSnackbarState)
+        assertEquals(initialCount, store.state.bookmarkItems.size)
+
+        verify(bookmarksStorage, never()).deleteNode(bookmarkItemOne.guid)
+    }
+
+    @Test
     fun `GIVEN multiple selected items WHEN multi-select delete clicked THEN show the confirmation dialog`() = runTestOnMain {
         val tree = generateBookmarkTree()
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
