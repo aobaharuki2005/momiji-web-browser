@@ -3,13 +3,13 @@
 android-gradle-plugin = "8.12.1" # Keep lint version in sync
 lint = "31.12.1"
 
-python-envs-plugin = "0.0.31"
-androidsvg = "1.4"
-zxing = "3.5.3"
-disklrucache = "2.0.2"
-leakcanary = "2.14"
+# Kotlin
+coroutines = "1.10.2"
+kotlin = "2.2.10" # remember to change ksp-plugin
+ksp-plugin = "2.2.10-2.0.2"
+serialization = "1.9.0"
 
-# AndroidX versions
+# AndroidX
 activity = "1.10.1"
 annotation = "1.9.1"
 annotation-experimental = "1.5.1"
@@ -47,7 +47,7 @@ transition = "1.6.0"
 viewpager2 = "1.1.0"
 work = "2.10.3"
 
-# Google versions
+# Google other
 accompanist = "0.37.3"
 desugar-jdk-libs = "2.1.5"
 firebase-messaging = "25.0.0"
@@ -60,33 +60,25 @@ play-services-base = "18.7.2"
 play-services-fido = "21.2.0"
 protobuf = "4.31.1" # Keep Protobuf in sync with the version used by AppServices.
 
-# JNA
-jna = "5.17.0"
-
 # Gradle plugins
 jacoco = "0.8.13"
 kotlin-dsl = "5.2.0"
 protobuf-plugin = "0.9.5"
+python-envs-plugin = "0.0.31"
 semanticdb-javac = "0.11.0"
 semanticdb-kotlinc = "0.6.0"
 tomlj = "1.1.1"
 
-# Kotlin versions
-coroutines = "1.10.2"
-kotlin = "2.2.10" # remember to change ksp-plugin
-ksp-plugin = "2.2.10-2.0.2"
-serialization = "1.9.0"
-
-# Linter versions
+# Linters
 detekt = "1.23.8"
 google-java-format = "1.28.0"
 ktlint = "1.7.1"
 spotless = "7.2.1"
 
-# Mozilla versions
+# Mozilla
 glean = "65.0.2"
 
-# Testing versions
+# Testing libraries
 androidx-test = "1.7.0"
 androidx-test-espresso = "3.7.0"
 androidx-test-ext = "1.3.0"
@@ -96,39 +88,43 @@ androidx-test-runner = "1.7.0"
 androidx-test-uiautomator = "2.3.0"
 junit4 = "4.13.2"
 junit5 = "5.13.4"
+leakcanary = "2.14"
 mockito = "5.19.0"
 mockk = "1.14.5"
 robolectric = "4.16"
 
-# Third party library versions
+# Third party libraries
 adjust = "5.4.1"
+androidsvg = "1.4"
+disklrucache = "2.0.2"
+jna = "5.17.0"
 okhttp = "4.12.0"
 okio = "3.15.0"
 sentry = "8.20.0"
+zxing = "3.5.3"
 
 [libraries]
+# AGP
+tools-androidgradle = { group = "com.android.tools.build", name = "gradle", version.ref = "android-gradle-plugin" }
+tools-lint = { group = "com.android.tools.lint", name = "lint", version.ref = "lint" }
+tools-lintapi = { group = "com.android.tools.lint", name = "lint-api", version.ref = "lint" }
+tools-lintchecks = { group = "com.android.tools.lint", name = "lint-checks", version.ref = "lint" }
+tools-linttests = { group = "com.android.tools.lint", name = "lint-tests", version.ref = "lint" }
 
+# Kotlin
+kotlin-annotations-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-annotations-jvm", version.ref = "kotlin" }
 kotlin-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
 kotlin-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
-
-junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
-junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit5" }
-junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
-junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
-junit-vintage = { group = "org.junit.vintage", name = "junit-vintage-engine" }
-
-testing-robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
-testing-mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
-testing-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
-testing-mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
-testing-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
+ksp-symbol-processing-aa = { group = "com.google.devtools.ksp", name = "symbol-processing-aa", version.ref = "ksp-plugin" }
+ksp-symbol-processing-aa-embeddable = { group = "com.google.devtools.ksp", name = "symbol-processing-aa-embeddable", version.ref = "ksp-plugin" }
+ksp-symbol-processing-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp-plugin" }
+ksp-symbol-processing-common-deps = { group = "com.google.devtools.ksp", name = "symbol-processing-common-deps", version.ref = "ksp-plugin" }
+plugin-serialization = { group = "org.jetbrains.kotlin.plugin.serialization", name = "org.jetbrains.kotlin.plugin.serialization.gradle.plugin", version.ref = "kotlin" }
 testing-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
-testing-leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android-instrumentation", version.ref = "leakcanary" }
 
-accompanist-drawablepainter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "accompanist" }
-
+# AndroidX
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activity" }
 androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
@@ -143,26 +139,6 @@ androidx-biometric = { group = "androidx.biometric", name = "biometric", version
 androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 androidx-collection = { group = "androidx.collection", name = "collection", version.ref = "collection" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
-androidx-compose-animation = { group = "androidx.compose.animation", name = "animation" }
-androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
-androidx-compose-material = { group = "androidx.compose.material", name = "material" }
-androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
-androidx-compose-material3-adaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
-androidx-compose-material3-adaptivelayout = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout" }
-androidx-compose-material3-adaptivenavigation = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation" }
-androidx-compose-material3-adaptivenavigationsuite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
-androidx-compose-material3-windowsizeclass = { group = "androidx.compose.material3", name = "material3-window-size-class" }
-androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-core" }
-androidx-compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
-androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name = "runtime-saveable" }
-androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
-androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
-androidx-compose-ui-test = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-androidx-compose-ui-text-android = { group = "androidx.compose.ui", name = "ui-text-android" }
-androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-concurrent = { group = "androidx.concurrent", name = "concurrent-futures-ktx", version.ref = "concurrent" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-constraintlayout-compose = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version.ref = "constraintlayout-compose" }
@@ -175,6 +151,7 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 androidx-drawerlayout = { group = "androidx.drawerlayout", name = "drawerlayout", version.ref = "drawerlayout" }
 androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
 androidx-fragment-compose = { group = "androidx.fragment", name = "fragment-compose", version.ref = "fragment" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragment" }
 androidx-lifecycle-common = { group = "androidx.lifecycle", name = "lifecycle-common", version.ref = "lifecycle" }
 androidx-lifecycle-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-livedata = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycle" }
@@ -202,48 +179,36 @@ androidx-transition = { group = "androidx.transition", name = "transition", vers
 androidx-viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
 androidx-work-runtime = { group = "androidx.work", name = "work-runtime", version.ref = "work" }
 androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "work" }
-
-androidx-espresso-contrib = { group = "androidx.test.espresso", name = "espresso-contrib", version.ref = "androidx-test-espresso" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidx-test-espresso" }
-androidx-espresso-idling-resource = { group = "androidx.test.espresso", name = "espresso-idling-resource", version.ref = "androidx-test-espresso" }
-androidx-espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "androidx-test-espresso" }
-androidx-espresso-web = { group = "androidx.test.espresso", name = "espresso-web", version.ref = "androidx-test-espresso" }
-androidx-test-core = { group = "androidx.test", name = "core-ktx", version.ref = "androidx-test" }
-androidx-test-junit = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "androidx-test-ext" }
-androidx-test-monitor = { group = "androidx.test", name = "monitor", version.ref = "androidx-test-monitor" }
-androidx-test-orchestrator = { group = "androidx.test", name = "orchestrator", version.ref = "androidx-test-orchestrator" }
-androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test-runner" }
-androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidx-test" }
-androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "androidx-test-uiautomator" }
-
-google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-plugin-serialization = { group = "org.jetbrains.kotlin.plugin.serialization", name = "org.jetbrains.kotlin.plugin.serialization.gradle.plugin", version.ref = "kotlin" }
-leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
-
-tools-androidgradle = { group = "com.android.tools.build", name = "gradle", version.ref = "android-gradle-plugin" }
 tools-benchmarkgradle = { group = "androidx.benchmark", name = "benchmark-gradle-plugin", version.ref = "benchmark" }
-tools-lint = { group = "com.android.tools.lint", name = "lint", version.ref = "lint" }
-tools-lintapi = { group = "com.android.tools.lint", name = "lint-api", version.ref = "lint" }
-tools-lintchecks = { group = "com.android.tools.lint", name = "lint-checks", version.ref = "lint" }
-tools-linttests = { group = "com.android.tools.lint", name = "lint-tests", version.ref = "lint" }
-tools-detekt-api = { group = "io.gitlab.arturbosch.detekt", name = "detekt-api", version.ref = "detekt" }
-tools-detekt-test = { group = "io.gitlab.arturbosch.detekt", name = "detekt-test", version.ref = "detekt" }
 
-mozilla-glean = { group = "org.mozilla.telemetry", name = "glean", version.ref = "glean" }
-mozilla-glean-forUnitTests = { group = "org.mozilla.telemetry", name = "glean-native-forUnitTests", version.ref = "glean" }
-mozilla-glean-gradle-plugin = { group = "org.mozilla.telemetry", name = "glean-gradle-plugin", version.ref = "glean" }
+# AndroidX Compose
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
+androidx-compose-animation = { group = "androidx.compose.animation", name = "animation" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+androidx-compose-material = { group = "androidx.compose.material", name = "material" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-material3-adaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
+androidx-compose-material3-adaptivelayout = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout" }
+androidx-compose-material3-adaptivenavigation = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation" }
+androidx-compose-material3-adaptivenavigationsuite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
+androidx-compose-material3-windowsizeclass = { group = "androidx.compose.material3", name = "material3-window-size-class" }
+androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-core" }
+androidx-compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
+androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name = "runtime-saveable" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-compose-ui-test = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-compose-ui-text-android = { group = "androidx.compose.ui", name = "ui-text-android" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 
-thirdparty-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
-thirdparty-okhttp-urlconnection = { group = "com.squareup.okhttp3", name = "okhttp-urlconnection", version.ref = "okhttp" }
-thirdparty-okio = { group = "com.squareup.okio", name = "okio", version.ref = "okio" }
-thirdparty-sentry = { group = "io.sentry", name = "sentry-android", version.ref = "sentry" }
-thirdparty-zxing = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
-thirdparty-disklrucache = { group = "com.jakewharton", name = "disklrucache", version.ref = "disklrucache" }
-thirdparty-androidsvg = { group = "com.caverock", name = "androidsvg-aar", version.ref = "androidsvg" }
-
+# Google other
+accompanist-drawablepainter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "accompanist" }
 desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebase-messaging" }
 installreferrer = { group = "com.android.installreferrer", name = "installreferrer", version.ref = "installreferrer" }
+google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 osslicenses-plugin = { group = "com.google.android.gms", name = "oss-licenses-plugin", version.ref = "osslicenses-plugin" }
 play-review = { group = "com.google.android.play", name = "review", version.ref = "play-review" }
 play-review-ktx = { group = "com.google.android.play", name = "review-ktx", version.ref = "play-review" }
@@ -253,29 +218,59 @@ play-services-fido = { group = "com.google.android.gms", name = "play-services-f
 protobuf-compiler = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
 protobuf-javalite = { group = "com.google.protobuf", name = "protobuf-javalite", version.ref = "protobuf" }
 
-# JNA for app-services.
-jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
-
 # Gradle plugins
 semanticdb-java = { group = "com.sourcegraph", name = "semanticdb-javac", version.ref = "semanticdb-javac" }
 semanticdb-kotlin = { group = "com.github.mozsearch", name = "semanticdb-kotlinc", version.ref = "semanticdb-kotlinc" }
 tomlj = { group = "org.tomlj", name = "tomlj", version.ref = "tomlj" }
 
-kotlin-annotations-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-annotations-jvm", version.ref = "kotlin" }
-ktlint = { group = "com.pinterest.ktlint", name = "ktlint-cli", version.ref = "ktlint" }
-
-# Third party library versions
-adjust = { group = "com.adjust.sdk", name = "adjust-android", version.ref = "adjust" }
-
-spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
-google-java-format = { group = "com.google.googlejavaformat", name = "google-java-format", version.ref = "google-java-format" }
-
-ksp-symbol-processing-aa = { group = "com.google.devtools.ksp", name = "symbol-processing-aa", version.ref = "ksp-plugin" }
-ksp-symbol-processing-aa-embeddable = { group = "com.google.devtools.ksp", name = "symbol-processing-aa-embeddable", version.ref = "ksp-plugin" }
-ksp-symbol-processing-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp-plugin" }
-ksp-symbol-processing-common-deps = { group = "com.google.devtools.ksp", name = "symbol-processing-common-deps", version.ref = "ksp-plugin" }
-
+# Linters
 detekt-cli = { group = "io.gitlab.arturbosch.detekt", name = "detekt-cli", version.ref = "detekt" }
+google-java-format = { group = "com.google.googlejavaformat", name = "google-java-format", version.ref = "google-java-format" }
+ktlint = { group = "com.pinterest.ktlint", name = "ktlint-cli", version.ref = "ktlint" }
+tools-detekt-api = { group = "io.gitlab.arturbosch.detekt", name = "detekt-api", version.ref = "detekt" }
+tools-detekt-test = { group = "io.gitlab.arturbosch.detekt", name = "detekt-test", version.ref = "detekt" }
+
+# Mozilla
+mozilla-glean = { group = "org.mozilla.telemetry", name = "glean", version.ref = "glean" }
+mozilla-glean-forUnitTests = { group = "org.mozilla.telemetry", name = "glean-native-forUnitTests", version.ref = "glean" }
+mozilla-glean-gradle-plugin = { group = "org.mozilla.telemetry", name = "glean-gradle-plugin", version.ref = "glean" }
+
+# Testing libraries
+androidx-espresso-contrib = { group = "androidx.test.espresso", name = "espresso-contrib", version.ref = "androidx-test-espresso" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidx-test-espresso" }
+androidx-espresso-idling-resource = { group = "androidx.test.espresso", name = "espresso-idling-resource", version.ref = "androidx-test-espresso" }
+androidx-espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "androidx-test-espresso" }
+androidx-espresso-web = { group = "androidx.test.espresso", name = "espresso-web", version.ref = "androidx-test-espresso" }
+androidx-test-core = { group = "androidx.test", name = "core-ktx", version.ref = "androidx-test" }
+androidx-test-junit = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "androidx-test-ext" }
+androidx-test-monitor = { group = "androidx.test", name = "monitor", version.ref = "androidx-test-monitor" }
+androidx-test-orchestrator = { group = "androidx.test", name = "orchestrator", version.ref = "androidx-test-orchestrator" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidx-test" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test-runner" }
+androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "androidx-test-uiautomator" }
+junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit5" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
+junit-vintage = { group = "org.junit.vintage", name = "junit-vintage-engine" }
+leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
+testing-leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android-instrumentation", version.ref = "leakcanary" }
+testing-mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+testing-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+testing-mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
+testing-robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+
+# Third party libraries
+adjust = { group = "com.adjust.sdk", name = "adjust-android", version.ref = "adjust" }
+jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
+thirdparty-androidsvg = { group = "com.caverock", name = "androidsvg-aar", version.ref = "androidsvg" }
+thirdparty-disklrucache = { group = "com.jakewharton", name = "disklrucache", version.ref = "disklrucache" }
+testing-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
+thirdparty-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+thirdparty-okhttp-urlconnection = { group = "com.squareup.okhttp3", name = "okhttp-urlconnection", version.ref = "okhttp" }
+thirdparty-okio = { group = "com.squareup.okio", name = "okio", version.ref = "okio" }
+thirdparty-sentry = { group = "io.sentry", name = "sentry-android", version.ref = "sentry" }
+thirdparty-zxing = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 
 [plugins]
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
