@@ -20,12 +20,12 @@ kind-dependencies:
 only-for-build-platforms:
     - linux-shippable/opt
     - linux-devedition/opt
-     - linux64-shippable/opt
-     - linux64-devedition/opt
+    - linux64-shippable/opt
+    - linux64-devedition/opt
     - linux64-aarch64-shippable/opt
     - linux64-aarch64-devedition/opt
     - linux/opt
-     - linux64/opt
+    - linux64/opt
     - linux64-aarch64/opt
 
 task-defaults:
