@@ -114,6 +114,7 @@ def get_build_variables(
         "MANPAGE_DATE": timestamp.strftime("%B %d, %Y"),
         "ARCH_NAME": arch,
         "Icon": pkg_name,
+        "REMOTING_NAME": application_ini_data["remoting_name"],
     }
 
 

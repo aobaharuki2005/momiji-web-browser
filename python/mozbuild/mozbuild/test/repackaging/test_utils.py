@@ -96,6 +96,7 @@ def test_application_ini_data_from_directory():
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-nightly-try",
+                "REMOTING_NAME": "firefox-nightly-try",
                 "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
@@ -123,6 +124,7 @@ def test_application_ini_data_from_directory():
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-nightly-try-l10n-fr",
+                "REMOTING_NAME": "firefox-nightly-try",
                 "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
@@ -150,6 +152,7 @@ def test_application_ini_data_from_directory():
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-nightly-try",
+                "REMOTING_NAME": "firefox-nightly-try",
                 "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
@@ -177,6 +180,7 @@ def test_application_ini_data_from_directory():
                 "PKG_BUILD_NUMBER": 2,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-nightly-try",
+                "REMOTING_NAME": "firefox-nightly-try",
                 "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
@@ -191,7 +195,7 @@ def test_application_ini_data_from_directory():
                 "name": "Firefox",
                 "display_name": "Firefox Developer Edition",
                 "vendor": "Mozilla",
-                "remoting_name": "firefox-aurora",
+                "remoting_name": "firefox-dev",
                 "build_id": "20230222000000",
             },
             {
@@ -204,6 +208,7 @@ def test_application_ini_data_from_directory():
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-devedition",
+                "REMOTING_NAME": "firefox-dev",
                 "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
@@ -218,7 +223,7 @@ def test_application_ini_data_from_directory():
                 "name": "Firefox",
                 "display_name": "Firefox Developer Edition",
                 "vendor": "Mozilla",
-                "remoting_name": "firefox-aurora",
+                "remoting_name": "firefox-dev",
                 "build_id": "20230222000000",
             },
             {
@@ -231,6 +236,7 @@ def test_application_ini_data_from_directory():
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-devedition-l10n-ach",
+                "REMOTING_NAME": "firefox-dev",
                 "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
@@ -245,7 +251,7 @@ def test_application_ini_data_from_directory():
                 "name": "Firefox",
                 "display_name": "Firefox Developer Edition",
                 "vendor": "Mozilla",
-                "remoting_name": "firefox-aurora",
+                "remoting_name": "firefox-dev",
                 "build_id": "20230222000000",
             },
             {
@@ -258,6 +264,7 @@ def test_application_ini_data_from_directory():
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-devedition-l10n-ach",
+                "REMOTING_NAME": "firefox-dev",
                 "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
@@ -442,7 +449,7 @@ Exec=firefox-devedition %u
 Terminal=false
 X-MultipleArgs=false
 Icon=firefox-devedition
-StartupWMClass=firefox-aurora
+StartupWMClass=firefox-dev
 Categories=GNOME;GTK;Network;WebBrowser;
 MimeType=application/json;application/pdf;application/rdf+xml;application/rss+xml;application/x-xpinstall;application/xhtml+xml;application/xml;audio/flac;audio/ogg;audio/webm;image/avif;image/gif;image/jpeg;image/png;image/svg+xml;image/webp;text/html;text/xml;video/ogg;video/webm;x-scheme-handler/chrome;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/mailto;
 StartupNotify=true
