@@ -293,21 +293,21 @@ function setupService(
   }
 
   if (typeof isEnrolled != "undefined") {
-    stubs.isLinkedToGuardian.resolves(isEnrolled);
+    stubs.isLinkedToGuardian.returns(isEnrolled);
   }
 
   if (typeof canEnroll != "undefined") {
-    stubs.enroll.resolves({
+    stubs.enroll.returns({
       ok: canEnroll,
     });
   }
 
   if (typeof entitlement != "undefined") {
-    stubs.fetchUserInfo.resolves(entitlement);
+    stubs.fetchUserInfo.returns(entitlement);
   }
 
   if (typeof proxyPass != "undefined") {
-    stubs.fetchProxyPass.resolves(proxyPass);
+    stubs.fetchProxyPass.returns(proxyPass);
   }
 }
 /* exported setupService */

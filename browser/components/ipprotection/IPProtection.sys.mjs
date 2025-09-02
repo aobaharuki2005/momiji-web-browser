@@ -249,8 +249,6 @@ class IPProtectionWidget {
    * @param {Event} event - the panel shown.
    */
   #onViewShowing(event) {
-    lazy.IPProtectionService.maybeEnroll();
-
     let { ownerGlobal } = event.target;
     if (this.#panels.has(ownerGlobal)) {
       let panel = this.#panels.get(ownerGlobal);

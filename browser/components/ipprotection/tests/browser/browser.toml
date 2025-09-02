@@ -4,7 +4,6 @@ support-files = [
 ]
 
 prefs = [
-  "browser.ipProtection.log=true",
   "dom.security.https_first=false",
 ]
 
