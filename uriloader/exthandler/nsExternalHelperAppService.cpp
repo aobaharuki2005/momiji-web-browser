@@ -967,7 +967,7 @@ nsresult nsExternalHelperAppService::EscapeURI(nsIURI* aURI, nsIURI** aResult) {
   return ios->NewURI(escapedSpec, nullptr, nullptr, aResult);
 }
 
-bool ExternalProtocolIsBlockedBySandbox(
+bool nsExternalHelperAppService::ExternalProtocolIsBlockedBySandbox(
     BrowsingContext* aBrowsingContext,
     const bool aHasValidUserGestureActivation) {
   if (!StaticPrefs::dom_block_external_protocol_navigation_from_sandbox()) {
