@@ -252,6 +252,7 @@ add_setup(async function setupVPN() {
     IPProtectionService.uninit();
     setupSandbox.restore();
     cleanupExperiment();
+    CustomizableUI.reset();
   });
 });
 

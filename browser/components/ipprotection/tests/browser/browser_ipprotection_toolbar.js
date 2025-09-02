@@ -191,3 +191,52 @@ add_task(async function customize_toolbar_remove_widget() {
     prevPosition
   );
 });
+
+/**
+ * Tests that toolbar widget can be moved and will not reset
+ * back to the initial area on re-init.
+ */
+add_task(async function toolbar_placement_customized() {
+  let start = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);
+  Assert.equal(
+    start.area,
+    CustomizableUI.AREA_NAVBAR,
+    "IP Protection widget is initially added to the nav bar"
+  );
+
+  // Move widget to overflow
+  CustomizableUI.addWidgetToArea(
+    IPProtectionWidget.WIDGET_ID,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
+
+  let end = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);
+  Assert.equal(
+    end.area,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    "IP Protection widget moved to the overflow area"
+  );
+
+  // Disable the feature
+  await cleanupExperiment();
+  let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
+  Assert.equal(widget, null, "IP Protection widget is removed");
+
+  // Reenable the feature
+  await setupExperiment();
+
+  let restored = CustomizableUI.getPlacementOfWidget(
+    IPProtectionWidget.WIDGET_ID
+  );
+  Assert.equal(
+    restored.area,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    "IP Protection widget is still in the overflow area"
+  );
+
+  CustomizableUI.addWidgetToArea(
+    IPProtectionWidget.WIDGET_ID,
+    start.area,
+    start.position
+  );
+});

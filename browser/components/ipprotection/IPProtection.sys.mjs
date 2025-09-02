@@ -166,16 +166,24 @@ class IPProtectionWidget {
    * Places the widget in the nav bar, next to the FxA widget.
    */
   #placeWidget() {
-    let prevWidget = lazy.CustomizableUI.getPlacementOfWidget(FXA_WIDGET_ID);
-    if (!prevWidget) {
-      // Fallback to unremovable extensions button if fxa button isn't available.
-      prevWidget = lazy.CustomizableUI.getPlacementOfWidget(EXT_WIDGET_ID);
+    let alreadyPlaced = lazy.CustomizableUI.getPlacementOfWidget(
+      IPProtectionWidget.WIDGET_ID,
+      false,
+      true
+    );
+    if (alreadyPlaced) {
+      return;
     }
+
+    let prevWidget =
+      lazy.CustomizableUI.getPlacementOfWidget(FXA_WIDGET_ID) ||
+      lazy.CustomizableUI.getPlacementOfWidget(EXT_WIDGET_ID);
+    let pos = prevWidget ? prevWidget.position - 1 : null;
 
     lazy.CustomizableUI.addWidgetToArea(
       IPProtectionWidget.WIDGET_ID,
       lazy.CustomizableUI.AREA_NAVBAR,
-      prevWidget.position - 1
+      pos
     );
   }
 
