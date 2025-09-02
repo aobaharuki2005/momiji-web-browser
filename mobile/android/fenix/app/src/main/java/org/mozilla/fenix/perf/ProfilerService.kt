@@ -39,8 +39,8 @@ class ProfilerService : Service() {
     companion object {
         const val ACTION_START_PROFILING = "mozilla.perf.action.START_PROFILING"
         const val ACTION_STOP_PROFILING = "mozilla.perf.action.STOP_PROFILING"
-        private const val PROFILING_CHANNEL_ID = "mozilla.perf.profiling"
-        private const val PROFILING_NOTIFICATION_ID = 99
+        const val PROFILING_CHANNEL_ID = "mozilla.perf.profiling"
+        const val PROFILING_NOTIFICATION_ID = 99
         private const val REQUEST_CODE = 3
     }
 
