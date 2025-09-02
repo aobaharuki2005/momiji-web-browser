@@ -4494,7 +4494,9 @@ void Element::InsertAdjacentHTML(
   if (doc->IsHTMLDocument() && !OwnerDoc()->MayHaveDOMMutationObservers() &&
       (position == eBeforeEnd || (position == eAfterEnd && !GetNextSibling()) ||
        (position == eAfterBegin && !GetFirstChild()))) {
-    int32_t oldChildCount = destination->GetChildCount();
+    doc->SuspendDOMNotifications();
+    nsIContent* oldLastChild = destination->GetLastChild();
+    uint32_t oldChildCount = destination->GetChildCount();
     int32_t contextNs = destination->GetNameSpaceID();
     nsAtom* contextLocal = destination->NodeInfo()->NameAtom();
     if (contextLocal == nsGkAtoms::html && contextNs == kNameSpaceID_XHTML) {
@@ -4506,6 +4508,15 @@ void Element::InsertAdjacentHTML(
     aError = nsContentUtils::ParseFragmentHTML(
         *compliantString, destination, contextLocal, contextNs,
         doc->GetCompatibilityMode() == eCompatibility_NavQuirks, true);
+    doc->ResumeDOMNotifications();
+    nsIContent* firstNewChild = oldLastChild ? oldLastChild->GetNextSibling()
+                                             : destination->GetFirstChild();
+    if (!firstNewChild) {
+      firstNewChild = oldLastChild;
+    }
+    if (firstNewChild) {
+      MutationObservers::NotifyContentAppended(destination, firstNewChild, {});
+    }
     // HTML5 parser has notified, but not fired mutation events.
     nsContentUtils::FireMutationEventsForDirectParsing(doc, destination,
                                                        oldChildCount);

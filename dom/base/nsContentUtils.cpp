@@ -195,6 +195,7 @@
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MimeType.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NodeInfo.h"
@@ -6579,9 +6580,9 @@ already_AddRefed<Document> nsContentUtils::CreateInertHTMLDocument(
 }
 
 /* static */
-nsresult nsContentUtils::SetNodeTextContent(nsIContent* aContent,
-                                            const nsAString& aValue,
-                                            bool aTryReuse) {
+nsresult nsContentUtils::SetNodeTextContent(
+    nsIContent* aContent, const nsAString& aValue, bool aTryReuse,
+    MutationEffectOnScript aMutationEffectOnScript) {
   // Fire DOMNodeRemoved mutation events before we do anything else.
   nsCOMPtr<nsIContent> owningContent;
 
@@ -6625,7 +6626,8 @@ nsresult nsContentUtils::SetNodeTextContent(nsIContent* aContent,
       if (child->IsText()) {
         break;
       }
-      aContent->RemoveChildNode(child, true);
+      aContent->RemoveChildNode(child, true, nullptr, nullptr,
+                                aMutationEffectOnScript);
     }
 
     // If we have a node, it must be a eTEXT and we reuse it.
@@ -6639,7 +6641,8 @@ nsresult nsContentUtils::SetNodeTextContent(nsIContent* aContent,
         if (lastChild == child) {
           break;
         }
-        aContent->RemoveChildNode(lastChild, true);
+        aContent->RemoveChildNode(lastChild, true, nullptr, nullptr,
+                                  aMutationEffectOnScript);
       }
     }
 
@@ -6662,7 +6665,7 @@ nsresult nsContentUtils::SetNodeTextContent(nsIContent* aContent,
   textContent->SetText(aValue, true);
 
   ErrorResult rv;
-  aContent->AppendChildTo(textContent, true, rv);
+  aContent->AppendChildTo(textContent, true, rv, aMutationEffectOnScript);
   mb.NodesAdded();
   return rv.StealNSResult();
 }

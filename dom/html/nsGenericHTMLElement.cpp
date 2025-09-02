@@ -3176,9 +3176,10 @@ static already_AddRefed<nsINode> TextToNode(const nsAString& aString,
   return fragment.forget();
 }
 
-void nsGenericHTMLElement::SetInnerText(const nsAString& aValue) {
+void nsGenericHTMLElement::SetInnerTextInternal(
+    const nsAString& aValue, MutationEffectOnScript aMutationEffectOnScript) {
   RefPtr<nsINode> node = TextToNode(aValue, NodeInfo()->NodeInfoManager());
-  ReplaceChildren(node, IgnoreErrors());
+  ReplaceChildren(node, IgnoreErrors(), aMutationEffectOnScript);
 }
 
 // https://html.spec.whatwg.org/#merge-with-the-next-text-node
@@ -3189,7 +3190,8 @@ static void MergeWithNextTextNode(Text& aText, ErrorResult& aRv) {
   }
   nsAutoString data;
   nextSibling->GetData(data);
-  aText.AppendData(data, aRv);
+  aText.AppendDataInternal(data, MutationEffectOnScript::KeepTrustWorthiness,
+                           aRv);
   nextSibling->Remove();
 }
 
@@ -3214,7 +3216,8 @@ void nsGenericHTMLElement::SetOuterText(const nsAString& aValue,
     // https://github.com/whatwg/html/issues/7508
     node = new (nim) nsTextNode(nim);
   }
-  parent->ReplaceChild(*node, *this, aRv);
+  parent->ReplaceChildInternal(
+      *node, *this, MutationEffectOnScript::DropTrustWorthiness, aRv);
   if (aRv.Failed()) {
     return;
   }

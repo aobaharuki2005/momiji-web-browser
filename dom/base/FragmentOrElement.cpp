@@ -1166,9 +1166,9 @@ void FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
   }
 }
 
-void FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
-                                               nsIPrincipal* aSubjectPrincipal,
-                                               ErrorResult& aError) {
+void FragmentOrElement::SetTextContentInternal(
+    const nsAString& aTextContent, nsIPrincipal* aSubjectPrincipal,
+    ErrorResult& aError, MutationEffectOnScript aMutationEffectOnScript) {
   bool tryReuse = false;
   if (!aTextContent.IsEmpty()) {
     if (nsIContent* firstChild = GetFirstChild()) {
@@ -1185,7 +1185,8 @@ void FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
     }
   }
 
-  aError = nsContentUtils::SetNodeTextContent(this, aTextContent, tryReuse);
+  aError = nsContentUtils::SetNodeTextContent(this, aTextContent, tryReuse,
+                                              aMutationEffectOnScript);
 }
 
 void FragmentOrElement::DestroyContent() {

@@ -7856,9 +7856,9 @@ Element* Document::GetRootElementInternal() const {
   return nullptr;
 }
 
-void Document::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                 bool aNotify, ErrorResult& aRv,
-                                 nsINode* aOldParent) {
+void Document::InsertChildBefore(
+    nsIContent* aKid, nsIContent* aBeforeThis, bool aNotify, ErrorResult& aRv,
+    nsINode* aOldParent, MutationEffectOnScript aMutationEffectOnScript) {
   const bool isElementInsertion = aKid->IsElement();
   if (isElementInsertion && GetRootElement()) {
     NS_WARNING("Inserting root element when we already have one");
@@ -7866,7 +7866,8 @@ void Document::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
     return;
   }
 
-  nsINode::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv, aOldParent);
+  nsINode::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv, aOldParent,
+                             aMutationEffectOnScript);
   if (isElementInsertion && !aRv.Failed()) {
     CreateCustomContentContainerIfNeeded();
   }
@@ -7874,7 +7875,8 @@ void Document::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
 
 void Document::RemoveChildNode(nsIContent* aKid, bool aNotify,
                                const BatchRemovalState* aState,
-                               nsINode* aNewParent) {
+                               nsINode* aNewParent,
+                               MutationEffectOnScript aMutationEffectOnScript) {
   Maybe<mozAutoDocUpdate> updateBatch;
   const bool removingRoot = aKid->IsElement();
   if (removingRoot) {
@@ -7903,7 +7905,8 @@ void Document::RemoveChildNode(nsIContent* aKid, bool aNotify,
     mCachedRootElement = nullptr;
   }
 
-  nsINode::RemoveChildNode(aKid, aNotify, nullptr, aNewParent);
+  nsINode::RemoveChildNode(aKid, aNotify, nullptr, aNewParent,
+                           aMutationEffectOnScript);
   MOZ_ASSERT(mCachedRootElement != aKid,
              "Stale pointer in mCachedRootElement, after we tried to clear it "
              "(maybe somebody called GetRootElement() too early?)");

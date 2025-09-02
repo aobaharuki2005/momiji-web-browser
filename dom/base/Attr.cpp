@@ -195,7 +195,7 @@ void Attr::SetNodeValue(const nsAString& aNodeValue, ErrorResult& aError) {
 void Attr::GetNodeValueInternal(nsAString& aNodeValue) { GetValue(aNodeValue); }
 
 void Attr::SetNodeValueInternal(const nsAString& aNodeValue,
-                                ErrorResult& aError) {
+                                ErrorResult& aError, MutationEffectOnScript) {
   SetValueInternal(aNodeValue, aError);
 }
 
@@ -230,7 +230,7 @@ void Attr::GetTextContentInternal(nsAString& aTextContent,
 
 void Attr::SetTextContentInternal(const nsAString& aTextContent,
                                   nsIPrincipal* aSubjectPrincipal,
-                                  ErrorResult& aError) {
+                                  ErrorResult& aError, MutationEffectOnScript) {
   SetValueInternal(aTextContent, aError);
 }
 

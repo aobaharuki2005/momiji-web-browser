@@ -97,9 +97,10 @@ class FragmentOrElement : public nsIContent {
   // nsINode interface methods
   virtual void GetTextContentInternal(nsAString& aTextContent,
                                       mozilla::OOMReporter& aError) override;
-  virtual void SetTextContentInternal(const nsAString& aTextContent,
-                                      nsIPrincipal* aSubjectPrincipal,
-                                      mozilla::ErrorResult& aError) override;
+  virtual void SetTextContentInternal(
+      const nsAString& aTextContent, nsIPrincipal* aSubjectPrincipal,
+      mozilla::ErrorResult& aError,
+      MutationEffectOnScript aMutationEffectOnScript) override;
 
   // nsIContent interface methods
   const CharacterDataBuffer* GetCharacterDataBuffer() const override;

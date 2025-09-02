@@ -706,12 +706,16 @@ class Document : public nsINode,
   virtual bool SuppressParserErrorConsoleMessages() { return false; }
 
   // nsINode
-  void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                         bool aNotify, ErrorResult& aRv,
-                         nsINode* aOldParent = nullptr) override;
+  void InsertChildBefore(
+      nsIContent* aKid, nsIContent* aBeforeThis, bool aNotify, ErrorResult& aRv,
+      nsINode* aOldParent = nullptr,
+      MutationEffectOnScript aMutationEffectOnScript =
+          MutationEffectOnScript::DropTrustWorthiness) override;
   void RemoveChildNode(nsIContent* aKid, bool aNotify,
                        const BatchRemovalState* = nullptr,
-                       nsINode* aNewParent = nullptr) final;
+                       nsINode* aNewParent = nullptr,
+                       MutationEffectOnScript aMutationEffectOnScript =
+                           MutationEffectOnScript::DropTrustWorthiness) final;
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

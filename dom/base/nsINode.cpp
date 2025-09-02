@@ -1029,7 +1029,9 @@ static const char* NodeTypeAsString(nsINode* aNode) {
   return NodeTypeStrings[nodeType];
 }
 
-nsINode* nsINode::RemoveChild(nsINode& aOldChild, ErrorResult& aError) {
+nsINode* nsINode::RemoveChildInternal(
+    nsINode& aOldChild, MutationEffectOnScript aMutationEffectOnScript,
+    ErrorResult& aError) {
   if (!aOldChild.IsContent()) {
     // aOldChild can't be one of our children.
     aError.ThrowNotFoundError(
@@ -1051,7 +1053,8 @@ nsINode* nsINode::RemoveChild(nsINode& aOldChild, ErrorResult& aError) {
     return nullptr;
   }
 
-  RemoveChildNode(aOldChild.AsContent(), true);
+  RemoveChildNode(aOldChild.AsContent(), true, nullptr, nullptr,
+                  aMutationEffectOnScript);
   return &aOldChild;
 }
 
@@ -1139,7 +1142,8 @@ void nsINode::Normalize() {
                  "Should always have a parent unless "
                  "mutation events messed us up");
     if (parent) {
-      parent->RemoveChildNode(node, true);
+      parent->RemoveChildNode(node, true, nullptr, nullptr,
+                              MutationEffectOnScript::KeepTrustWorthiness);
     }
   }
 }
@@ -1714,9 +1718,9 @@ static nsresult UpdateGlobalsInSubtree(nsIContent* aRoot) {
   return NS_OK;
 }
 
-void nsINode::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                bool aNotify, ErrorResult& aRv,
-                                nsINode* aOldParent) {
+void nsINode::InsertChildBefore(
+    nsIContent* aKid, nsIContent* aBeforeThis, bool aNotify, ErrorResult& aRv,
+    nsINode* aOldParent, MutationEffectOnScript aMutationEffectOnScript) {
   if (!IsContainerNode()) {
     aRv.ThrowHierarchyRequestError(
         "Parent is not a Document, DocumentFragment, or Element node.");
@@ -1776,10 +1780,12 @@ void nsINode::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
     if (parent && !aBeforeThis) {
       ContentAppendInfo info;
       info.mOldParent = aOldParent;
+      info.mMutationEffectOnScript = aMutationEffectOnScript;
       MutationObservers::NotifyContentAppended(parent, aKid, info);
     } else {
       ContentInsertInfo info;
       info.mOldParent = aOldParent;
+      info.mMutationEffectOnScript = aMutationEffectOnScript;
       MutationObservers::NotifyContentInserted(this, aKid, info);
     }
 
@@ -2342,7 +2348,8 @@ void nsINode::ReplaceChildren(const Sequence<OwningNodeOrString>& aNodes,
   return ReplaceChildren(node, aRv);
 }
 
-void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv) {
+void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv,
+                              MutationEffectOnScript aMutationEffectOnScript) {
   if (aNode) {
     EnsurePreInsertionValidity(*aNode, nullptr, aRv);
     if (aRv.Failed()) {
@@ -2379,7 +2386,7 @@ void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv) {
   mb.RemovalDone();
 
   if (aNode) {
-    AppendChild(*aNode, aRv);
+    AppendChildInternal(*aNode, aMutationEffectOnScript, aRv);
     mb.NodesAdded();
   }
 }
@@ -2471,7 +2478,8 @@ void nsINode::MoveBefore(nsINode& aNode, nsINode* aChild, ErrorResult& aRv) {
 
 void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify,
                               const BatchRemovalState* aState,
-                              nsINode* aNewParent) {
+                              nsINode* aNewParent,
+                              MutationEffectOnScript aMutationEffectOnScript) {
   // NOTE: This function must not trigger any calls to
   // Document::GetRootElement() calls until *after* it has removed aKid from
   // aChildArray. Any calls before then could potentially restore a stale
@@ -2487,6 +2495,7 @@ void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify,
     ContentRemoveInfo info;
     info.mBatchRemovalState = aState;
     info.mNewParent = aNewParent;
+    info.mMutationEffectOnScript = aMutationEffectOnScript;
     MutationObservers::NotifyContentWillBeRemoved(this, aKid, info);
   }
 
@@ -2769,9 +2778,9 @@ void nsINode::EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
   EnsureAllowedAsChild(&aNewChild, this, aReplace, aRefChild, aError);
 }
 
-nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
-                                        nsINode* aRefChild,
-                                        ErrorResult& aError) {
+nsINode* nsINode::ReplaceOrInsertBefore(
+    bool aReplace, nsINode* aNewChild, nsINode* aRefChild,
+    MutationEffectOnScript aMutationEffectOnScript, ErrorResult& aError) {
   // XXXbz I wish I could assert that nsContentUtils::IsSafeToRunScript() so we
   // could rely on scriptblockers going out of scope to actually run XBL
   // teardown, but various crud adds nodes under scriptblockers (e.g. native
@@ -2863,7 +2872,8 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       // ScriptBlocker ensures previous and next stay alive.
       nsIContent* previous = aNewChild->GetPreviousSibling();
       nsIContent* next = aNewChild->GetNextSibling();
-      oldParent->RemoveChildNode(aNewChild->AsContent(), true);
+      oldParent->RemoveChildNode(aNewChild->AsContent(), true, nullptr, nullptr,
+                                 aMutationEffectOnScript);
       if (nsAutoMutationBatch::GetCurrentBatch() == &mb) {
         mb.RemovalDone();
         mb.SetPrevSibling(previous);
@@ -3020,7 +3030,8 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
                                   : GetLastChild();
     MOZ_ASSERT(toBeRemoved);
 
-    RemoveChildNode(toBeRemoved, true);
+    RemoveChildNode(toBeRemoved, true, nullptr, nullptr,
+                    aMutationEffectOnScript);
   }
 
   // Move new child over to our document if needed. Do this after removing
@@ -3077,8 +3088,10 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       if (aError.Failed()) {
         // Make sure to notify on any children that we did succeed to insert
         if (appending && i != 0) {
+          ContentAppendInfo info;
+          info.mMutationEffectOnScript = aMutationEffectOnScript;
           MutationObservers::NotifyContentAppended(
-              static_cast<nsIContent*>(this), firstInsertedContent, {});
+              static_cast<nsIContent*>(this), firstInsertedContent, info);
         }
         return nullptr;
       }
@@ -3090,8 +3103,10 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
 
     // Notify and fire mutation events when appending
     if (appending) {
+      ContentAppendInfo info;
+      info.mMutationEffectOnScript = aMutationEffectOnScript;
       MutationObservers::NotifyContentAppended(static_cast<nsIContent*>(this),
-                                               firstInsertedContent, {});
+                                               firstInsertedContent, info);
       if (mutationBatch) {
         mutationBatch->NodesAdded();
       }
@@ -3115,7 +3130,8 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
                             : GetLastChild());
       mb.SetNextSibling(nodeToInsertBefore);
     }
-    InsertChildBefore(newContent, nodeToInsertBefore, true, aError);
+    InsertChildBefore(newContent, nodeToInsertBefore, true, aError, nullptr,
+                      aMutationEffectOnScript);
     if (aError.Failed()) {
       return nullptr;
     }
