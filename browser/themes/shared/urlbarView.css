@@ -1406,8 +1406,23 @@
     > .urlbarView-market-description-bottom {
       font-size: var(--urlbarView-small-font-size);
 
+      .urlbarView-row[dynamicType="market"]:not([selected])
+        > .urlbarView-row-inner
+        > .urlbarView-market-item:not([selected])
+        > .urlbarView-market-description
+        > & {
+        color: var(--urlbarView-secondary-text-color);
+      }
+
       > .urlbarView-market-todays-change-perc {
         font-weight: var(--font-weight-bold);
+      }
+
+      > .urlbarView-market-last-price {
+        /* This value is a string like "$123.45 USD". The "USD" part should be small
+           caps and the rest should be normal size. */
+        text-transform: lowercase;
+        font-variant-caps: small-caps;
       }
     }
 
