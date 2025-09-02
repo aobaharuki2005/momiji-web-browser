@@ -389,15 +389,19 @@ private fun OnboardingPageForType(
 }
 
 private object PageContentLayout {
+    val MIN_HEIGHT_DP = 600.dp
+    val MIN_WIDTH_DP = 360.dp
     const val HEIGHT_RATIO = 0.8f
     const val WIDTH_RATIO = 0.85f
 }
 
 private fun pageContentHeight(scope: BoxWithConstraintsScope) =
     scope.maxHeight.times(PageContentLayout.HEIGHT_RATIO)
+        .coerceAtLeast(PageContentLayout.MIN_HEIGHT_DP)
 
 private fun pageContentWidth(scope: BoxWithConstraintsScope) =
     scope.maxWidth.times(PageContentLayout.WIDTH_RATIO)
+        .coerceAtLeast(PageContentLayout.MIN_WIDTH_DP)
 
 private class DisableForwardSwipeNestedScrollConnection(
     private val pagerState: PagerState,
