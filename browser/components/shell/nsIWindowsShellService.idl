@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "imgIContainer.idl"
 #include "nsIShellService.idl"
 
 interface nsIFile;
@@ -315,20 +314,6 @@ interface nsIWindowsShellService : nsIShellService
     in AString aAppUserModelId,
     in AString aShortcutFolder,
     in AString aShortcutRelativePath
-  );
-
-  /* This function can be used to convert compatible image formats into .ico
-   * files to be used for .lnk files (see createShortcut).
-   *
-   * @param  aFile
-   *         Output file to be written
-   * @param  aContainer
-   *         The graphics container
-   */
-  [implicit_jscontext]
-  Promise createWindowsIcon(
-    in nsIFile aFile,
-    in imgIContainer aContainer
   );
 
   /*

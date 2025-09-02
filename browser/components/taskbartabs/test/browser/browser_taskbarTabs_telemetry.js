@@ -27,7 +27,7 @@ const exposePinResult = () => {
 
 const proxyNativeShellService = {
   ...ShellService.shellService,
-  createWindowsIcon: sinon.stub().resolves(),
+  createIcon: sinon.stub().resolves(),
   createShortcut: sinon.stub().resolves("dummy_path"),
   deleteShortcut: sinon.stub().resolves("dummy_path"),
   pinShortcutToTaskbar: sinon.stub().callsFake(exposePinResult),

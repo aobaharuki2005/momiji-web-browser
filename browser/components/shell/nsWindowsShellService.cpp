@@ -455,14 +455,18 @@ nsWindowsShellService::SetDefaultBrowser(bool aForAllUsers) {
   return rv;
 }
 
+NS_IMETHODIMP nsWindowsShellService::GetIconExtension(nsACString& aExtension) {
+  aExtension.AssignLiteral("ico");
+  return NS_OK;
+}
+
 /*
  * Asynchronous function to Write an ico file to the disk / in a nsIFile.
  * Limitation: Only square images are supported as of now.
  */
 NS_IMETHODIMP
-nsWindowsShellService::CreateWindowsIcon(nsIFile* aIcoFile,
-                                         imgIContainer* aImage, JSContext* aCx,
-                                         dom::Promise** aPromise) {
+nsWindowsShellService::CreateIcon(nsIFile* aIcoFile, imgIContainer* aImage,
+                                  JSContext* aCx, dom::Promise** aPromise) {
   NS_ENSURE_ARG_POINTER(aIcoFile);
   NS_ENSURE_ARG_POINTER(aImage);
   NS_ENSURE_ARG_POINTER(aCx);
@@ -507,12 +511,12 @@ nsWindowsShellService::CreateWindowsIcon(nsIFile* aIcoFile,
 
   NS_DispatchBackgroundTask(
       NS_NewRunnableFunction(
-          "CreateWindowsIcon",
+          "CreateIcon",
           [icoFile = nsCOMPtr<nsIFile>(aIcoFile), dataSurface, promiseHolder] {
             nsresult rv = WriteIcon(icoFile, dataSurface);
 
             NS_DispatchToMainThread(NS_NewRunnableFunction(
-                "CreateWindowsIcon callback", [rv, promiseHolder] {
+                "CreateIcon callback", [rv, promiseHolder] {
                   dom::Promise* promise = promiseHolder.get()->get();
 
                   if (NS_SUCCEEDED(rv)) {

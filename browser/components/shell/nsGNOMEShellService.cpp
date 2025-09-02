@@ -26,6 +26,7 @@
 #include "mozilla/GUniquePtr.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Promise.h"
 #include "nsImageToPixbuf.h"
 #include "nsXULAppAPI.h"
 #include "gfxPlatform.h"
@@ -332,8 +333,10 @@ nsGNOMEShellService::GetCanSetDesktopBackground(bool* aResult) {
   return NS_OK;
 }
 
-static nsresult WriteImage(const nsCString& aPath, imgIContainer* aImage) {
-  RefPtr<GdkPixbuf> pixbuf = nsImageToPixbuf::ImageToPixbuf(aImage);
+static nsresult WriteImage(const nsCString& aPath, imgIContainer* aImage,
+                           const Maybe<nsIntSize>& aOverrideSize = Nothing()) {
+  RefPtr<GdkPixbuf> pixbuf =
+      nsImageToPixbuf::ImageToPixbuf(aImage, aOverrideSize);
   if (!pixbuf) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -491,5 +494,61 @@ nsGNOMEShellService::SetGSettingsString(const nsACString& aSchema,
                           PromiseFlatCString(aValue))) {
     return NS_ERROR_FAILURE;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsGNOMEShellService::GetIconExtension(nsACString& aExtension) {
+  aExtension.AssignLiteral("png");
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsGNOMEShellService::CreateIcon(nsIFile* aFile,
+                                              imgIContainer* aImage,
+                                              JSContext* aCx,
+                                              dom::Promise** aPromise) {
+  NS_ENSURE_ARG_POINTER(aFile);
+  NS_ENSURE_ARG_POINTER(aImage);
+  NS_ENSURE_ARG_POINTER(aCx);
+  NS_ENSURE_ARG_POINTER(aPromise);
+
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
+      "CreateIcon promise", promise);
+
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "CreateIcon",
+          [file = nsCOMPtr<nsIFile>(aFile),
+           image = nsCOMPtr<imgIContainer>(aImage),
+           promiseHolder = std::move(promiseHolder)] {
+            nsIntSize wanted{256, 256};
+            nsresult rv = WriteImage(file->NativePath(), image, Some(wanted));
+
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "CreateIcon callback",
+                [rv, promiseHolder = std::move(promiseHolder)] {
+                  dom::Promise* promise = promiseHolder.get()->get();
+
+                  if (NS_SUCCEEDED(rv)) {
+                    promise->MaybeResolveWithUndefined();
+                  } else {
+                    promise->MaybeReject(rv);
+                  }
+                }));
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+
+  promise.forget(aPromise);
   return NS_OK;
 }

@@ -2,5 +2,13 @@
 firefox-appdir = "browser"
 tags = "os_integration"
 
+["test_createIcon.js"]
+run-if = [
+  "os == 'win'",
+  # not implemented on macOS; see bug 1986113.
+  "os == 'linux'",
+]
+support-files = ["../../../../../image/test/gtest/downscaled.bmp"]
+
 ["test_macOS_showSecurityPreferences.js"]
 run-if = ["os == 'mac'"]
