@@ -1402,6 +1402,7 @@ class GeneratedFile(ContextDerived):
                         ".m",
                         ".mm",
                         ".def",
+                        ".s",
                         ".S",
                         "symverscript",
                     )
