@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -102,79 +103,82 @@ fun ToolbarOnboardingPageRedesign(
     pageState: OnboardingPageState,
     onToolbarSelectionClicked: (ToolbarOptionType) -> Unit,
 ) {
-    BoxWithConstraints {
-        val boxWithConstraintsScope = this
-        // Base
-        Column(
-            modifier = Modifier
-                .background(FirefoxTheme.colors.layer1)
-                .padding(horizontal = 16.dp, vertical = 24.dp)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            with(pageState) {
-                // Main content group
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(Modifier)
+    Card {
+        BoxWithConstraints {
+            val boxWithConstraintsScope = this
+            // Base
+            Column(
+                modifier = Modifier
+                    .background(FirefoxTheme.colors.layer1)
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                with(pageState) {
+                    // Main content group
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(Modifier)
 
-                    Image(
-                        painter = painterResource(id = imageRes),
-                        contentDescription = stringResource(
-                            R.string.onboarding_customize_toolbar_main_image_content_description,
-                        ),
-                        modifier = Modifier.height(mainImageHeight(boxWithConstraintsScope)),
-                    )
+                        Image(
+                            painter = painterResource(id = imageRes),
+                            contentDescription = stringResource(
+                                R.string.onboarding_customize_toolbar_main_image_content_description,
+                            ),
+                            modifier = Modifier.height(mainImageHeight(boxWithConstraintsScope)),
+                        )
 
-                    Spacer(Modifier.height(32.dp))
+                        Spacer(Modifier.height(32.dp))
 
-                    Text(
-                        text = title,
-                        color = FirefoxTheme.colors.textPrimary,
-                        textAlign = TextAlign.Center,
-                        style = FirefoxTheme.typography.headline5,
-                    )
+                        Text(
+                            text = title,
+                            color = FirefoxTheme.colors.textPrimary,
+                            textAlign = TextAlign.Center,
+                            style = FirefoxTheme.typography.headline5,
+                        )
 
-                    Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(16.dp))
 
-                    Text(
-                        text = description,
-                        color = FirefoxTheme.colors.textPrimary,
-                        textAlign = TextAlign.Center,
-                        style = FirefoxTheme.typography.body2,
-                    )
+                        Text(
+                            text = description,
+                            color = FirefoxTheme.colors.textPrimary,
+                            textAlign = TextAlign.Center,
+                            style = FirefoxTheme.typography.body2,
+                        )
 
-                    Spacer(Modifier.height(34.dp))
+                        Spacer(Modifier.height(34.dp))
 
-                    val state by onboardingStore.observeAsState(initialValue = onboardingStore.state) { state -> state }
+                        val state by
+                        onboardingStore.observeAsState(onboardingStore.state) { state -> state }
 
-                    Row(Modifier.width(176.dp), horizontalArrangement = Arrangement.Center) {
-                        toolbarOptions?.let {
-                            ToolbarOptions(
-                                boxWithConstraintsScope = boxWithConstraintsScope,
-                                options = it,
-                                selectedOption = state.toolbarOptionSelected,
-                                onClick = onToolbarSelectionClicked,
-                            )
+                        Row(Modifier.width(176.dp), horizontalArrangement = Arrangement.Center) {
+                            toolbarOptions?.let {
+                                ToolbarOptions(
+                                    boxWithConstraintsScope = boxWithConstraintsScope,
+                                    options = it,
+                                    selectedOption = state.toolbarOptionSelected,
+                                    onClick = onToolbarSelectionClicked,
+                                )
+                            }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    PrimaryButton(
+                        text = primaryButton.text,
+                        modifier = Modifier
+                            .width(width = FirefoxTheme.layout.size.maxWidth.small)
+                            .semantics { testTag = title + "onboarding_card.positive_button" },
+                        onClick = primaryButton.onClick,
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                PrimaryButton(
-                    text = primaryButton.text,
-                    modifier = Modifier
-                        .width(width = FirefoxTheme.layout.size.maxWidth.small)
-                        .semantics { testTag = title + "onboarding_card.positive_button" },
-                    onClick = primaryButton.onClick,
-                )
             }
-        }
 
-        LaunchedEffect(pageState) {
-            pageState.onRecordImpressionEvent()
+            LaunchedEffect(pageState) {
+                pageState.onRecordImpressionEvent()
+            }
         }
     }
 }

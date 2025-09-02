@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -81,103 +82,106 @@ fun OnboardingPageRedesign(
     modifier: Modifier = Modifier,
     onDismiss: (() -> Unit)? = null,
 ) {
-    BoxWithConstraints(
-        modifier = Modifier
-            .background(FirefoxTheme.colors.layer1)
-            .padding(bottom = if (pageState.secondaryButton == null) 32.dp else 24.dp)
-            .then(modifier),
-    ) {
-        val boxWithConstraintsScope = this
-        Column(
+    Card {
+        BoxWithConstraints(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
+                .background(FirefoxTheme.colors.layer1)
+                .padding(bottom = if (pageState.secondaryButton == null) 32.dp else 24.dp)
+                .then(modifier),
         ) {
-            if (onDismiss != null) {
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.align(Alignment.End),
+            val boxWithConstraintsScope = this
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                if (onDismiss != null) {
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.align(Alignment.End),
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.mozac_ic_cross_24),
+                            contentDescription =
+                                stringResource(R.string.onboarding_home_content_description_close_button),
+                            tint = FirefoxTheme.colors.iconPrimary,
+                        )
+                    }
+                } else {
+                    Spacer(Modifier)
+                }
+
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.mozac_ic_cross_24),
-                        contentDescription = stringResource(R.string.onboarding_home_content_description_close_button),
-                        tint = FirefoxTheme.colors.iconPrimary,
+                    Image(
+                        painter = painterResource(id = pageState.imageRes),
+                        contentDescription = null,
+                        modifier = Modifier.height(imageHeight(boxWithConstraintsScope)),
                     )
-                }
-            } else {
-                Spacer(Modifier)
-            }
 
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Image(
-                    painter = painterResource(id = pageState.imageRes),
-                    contentDescription = null,
-                    modifier = Modifier.height(imageHeight(boxWithConstraintsScope)),
-                )
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Text(
-                    text = pageState.title,
-                    color = FirefoxTheme.colors.textPrimary,
-                    textAlign = TextAlign.Center,
-                    style = FirefoxTheme.typography.headline5,
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = pageState.description,
-                    color = FirefoxTheme.colors.textSecondary,
-                    textAlign = TextAlign.Center,
-                    style = FirefoxTheme.typography.body2,
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                pageState.privacyCaption?.let { privacyCaption ->
-                    LinkText(
-                        text = privacyCaption.text,
-                        linkTextStates = listOf(privacyCaption.linkTextState),
+                    Text(
+                        text = pageState.title,
+                        color = FirefoxTheme.colors.textPrimary,
+                        textAlign = TextAlign.Center,
+                        style = FirefoxTheme.typography.headline5,
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = pageState.description,
+                        color = FirefoxTheme.colors.textSecondary,
+                        textAlign = TextAlign.Center,
+                        style = FirefoxTheme.typography.body2,
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    pageState.privacyCaption?.let { privacyCaption ->
+                        LinkText(
+                            text = privacyCaption.text,
+                            linkTextStates = listOf(privacyCaption.linkTextState),
+                        )
+                    }
                 }
-            }
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            ) {
-                PrimaryButton(
-                    modifier = Modifier
-                        .width(width = FirefoxTheme.layout.size.maxWidth.small)
-                        .semantics {
-                            testTag = pageState.title + "onboarding_card.positive_button"
-                        },
-                    text = pageState.primaryButton.text,
-                    onClick = pageState.primaryButton.onClick,
-                )
-
-                if (pageState.secondaryButton != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SecondaryButton(
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                ) {
+                    PrimaryButton(
                         modifier = Modifier
                             .width(width = FirefoxTheme.layout.size.maxWidth.small)
                             .semantics {
-                                testTag = pageState.title + "onboarding_card.negative_button"
+                                testTag = pageState.title + "onboarding_card.positive_button"
                             },
-                        text = pageState.secondaryButton.text,
-                        onClick = pageState.secondaryButton.onClick,
+                        text = pageState.primaryButton.text,
+                        onClick = pageState.primaryButton.onClick,
                     )
-                }
-            }
 
-            LaunchedEffect(pageState) {
-                pageState.onRecordImpressionEvent()
+                    if (pageState.secondaryButton != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SecondaryButton(
+                            modifier = Modifier
+                                .width(width = FirefoxTheme.layout.size.maxWidth.small)
+                                .semantics {
+                                    testTag = pageState.title + "onboarding_card.negative_button"
+                                },
+                            text = pageState.secondaryButton.text,
+                            onClick = pageState.secondaryButton.onClick,
+                        )
+                    }
+                }
+
+                LaunchedEffect(pageState) {
+                    pageState.onRecordImpressionEvent()
+                }
             }
         }
     }

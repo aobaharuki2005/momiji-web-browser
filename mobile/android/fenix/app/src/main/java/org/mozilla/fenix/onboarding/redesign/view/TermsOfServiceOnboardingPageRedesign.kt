@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,80 +51,82 @@ fun TermsOfServiceOnboardingPageRedesign(
     pageState: OnboardingPageState,
     eventHandler: OnboardingTermsOfServiceEventHandler,
 ) {
-    BoxWithConstraints(
-        modifier = Modifier
-            .background(FirefoxTheme.colors.layer1)
-            .padding(horizontal = 16.dp),
-    ) {
-        val boxWithConstraintsScope = this
-
-        // Base
-        Column(
+    Card {
+        BoxWithConstraints(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
+                .background(FirefoxTheme.colors.layer1)
+                .padding(horizontal = 16.dp),
         ) {
-            Spacer(Modifier)
+            val boxWithConstraintsScope = this
 
-            with(pageState) {
-                // Main content group
-                Column(
-                    modifier = Modifier
-                        .padding(vertical = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Image(
-                        painter = painterResource(id = imageRes),
-                        contentDescription = null,
+            // Base
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Spacer(Modifier)
+
+                with(pageState) {
+                    // Main content group
+                    Column(
                         modifier = Modifier
-                            .heightIn(max = imageHeight(boxWithConstraintsScope))
-                            .height(167.dp)
-                            .width(161.dp),
-                    )
+                            .padding(vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Image(
+                            painter = painterResource(id = imageRes),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .heightIn(max = imageHeight(boxWithConstraintsScope))
+                                .height(167.dp)
+                                .width(161.dp),
+                        )
 
-                    Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(24.dp))
 
-                    Text(
-                        text = title,
-                        color = FirefoxTheme.colors.textPrimary,
-                        textAlign = TextAlign.Center,
-                        style = FirefoxTheme.typography.headline5,
-                    )
+                        Text(
+                            text = title,
+                            color = FirefoxTheme.colors.textPrimary,
+                            textAlign = TextAlign.Center,
+                            style = FirefoxTheme.typography.headline5,
+                        )
 
-                    Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(8.dp))
 
-                    Text(
-                        text = description,
-                        color = FirefoxTheme.colors.textSecondary,
-                        textAlign = TextAlign.Center,
-                        style = FirefoxTheme.typography.subtitle1,
-                    )
-                }
+                        Text(
+                            text = description,
+                            color = FirefoxTheme.colors.textSecondary,
+                            textAlign = TextAlign.Center,
+                            style = FirefoxTheme.typography.subtitle1,
+                        )
+                    }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 24.dp),
-                ) {
-                    BodyText(pageState, eventHandler)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(bottom = 24.dp),
+                    ) {
+                        BodyText(pageState, eventHandler)
 
-                    Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(24.dp))
 
-                    PrimaryButton(
-                        text = primaryButton.text,
-                        modifier = Modifier
-                            .width(width = FirefoxTheme.layout.size.maxWidth.small)
-                            .semantics { testTag = title + "onboarding_card.positive_button" },
-                        onClick = primaryButton.onClick,
-                    )
+                        PrimaryButton(
+                            text = primaryButton.text,
+                            modifier = Modifier
+                                .width(width = FirefoxTheme.layout.size.maxWidth.small)
+                                .semantics { testTag = title + "onboarding_card.positive_button" },
+                            onClick = primaryButton.onClick,
+                        )
+                    }
                 }
             }
-        }
 
-        LaunchedEffect(pageState) {
-            pageState.onRecordImpressionEvent()
+            LaunchedEffect(pageState) {
+                pageState.onRecordImpressionEvent()
+            }
         }
     }
 }
