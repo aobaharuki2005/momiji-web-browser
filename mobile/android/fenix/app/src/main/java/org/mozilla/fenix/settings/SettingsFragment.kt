@@ -17,8 +17,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
@@ -165,13 +167,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
             }
 
-        profilerViewModel.getProfilerState().observe(
-            this,
-            Observer<Boolean> {
-                updateProfilerUI(it)
-            },
-        )
-
         findPreference<Preference>(
             getPreferenceKey(R.string.pref_key_translation),
         )?.isVisible = FxNimbus.features.translations.value().globalSettingsEnabled &&
@@ -184,6 +179,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                profilerViewModel.isProfilerActive.collect { isActive ->
+                    updateProfilerUI(isActive)
+                }
+            }
+        }
+
         snackbarBinding.set(
             feature = SnackbarBinding(
                 context = requireContext(),
@@ -225,7 +229,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         args.preferenceToScrollTo?.let {
             scrollToPreference(it)
         }
-
+        profilerViewModel.updateProfilerActiveStatus()
         // Consider finish of `onResume` to be the point at which we consider this fragment as 'created'.
         creatingFragment = false
     }
@@ -497,7 +501,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
             // Only displayed when secret settings are enabled
             resources.getString(R.string.pref_key_start_profiler) -> {
-                if (profilerViewModel.getProfilerState().value == true) {
+                if (profilerViewModel.isProfilerActive.value) {
                     SettingsFragmentDirections.actionSettingsFragmentToStopProfilerDialog()
                 } else {
                     SettingsFragmentDirections.actionSettingsFragmentToStartProfilerDialog()

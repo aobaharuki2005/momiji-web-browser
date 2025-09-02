@@ -4,27 +4,30 @@
 
 package org.mozilla.fenix.perf
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,194 +35,172 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.compose.content
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import mozilla.components.concept.base.profiler.Profiler
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Dialogue to start the Gecko profiler in Fenix without the use of ADB.
+ * Dialog fragment for starting profiling sessions. It handles profiler settings selection,
+ * permission requests for notifications (Android 13+).
+ *
+ * The dialog integrates with [ProfilerViewModel] to manage profiler state.
  */
 class ProfilerStartDialogFragment : AppCompatDialogFragment() {
 
-    private lateinit var viewScope: CoroutineScope
-
-    private val delayToPollProfilerForStatus = 100L
-    private lateinit var profiler: Profiler
     private val profilerViewModel: ProfilerViewModel by activityViewModels()
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            profilerViewModel.onPermissionResult(isGranted)
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View {
-        viewScope = MainScope()
-
-        profiler = requireContext().components.core.engine.profiler!!
-        return content {
-            StartProfileDialog(requireContext().components.core.engine.profiler!!::startProfiler)
-        }
+    ) = content {
+        StartProfilerScreen(profilerViewModel)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        viewScope.cancel()
-    }
-
-    override fun dismiss() {
-        profilerViewModel.setProfilerState(requireContext().components.core.engine.profiler!!.isProfilerActive())
-        super.dismiss()
+    override fun onDismiss(dialog: android.content.DialogInterface) {
+        profilerViewModel.resetUiState()
+        profilerViewModel.updateProfilerActiveStatus()
+        super.onDismiss(dialog)
     }
 
     @Composable
-    private fun StartProfileDialog(
-        startProfiler: (Array<String>, Array<String>) -> Unit,
-    ) {
-        val viewStateObserver = remember { mutableStateOf(CardState.ChooseSettings) }
+    private fun StartProfilerScreen(viewModel: ProfilerViewModel) {
+        val uiState by viewModel.uiState.collectAsState()
+        val context = LocalContext.current
+
+        LaunchedEffect(uiState) {
+            when (val state = uiState) {
+                is ProfilerUiState.ShowToast -> {
+                    Toast.makeText(
+                        context,
+                        context.getString(state.messageResId) + state.extra,
+                        Toast.LENGTH_LONG,
+                    ).show()
+                }
+                is ProfilerUiState.PermissionDenied -> {
+                    Toast.makeText(
+                        context,
+                        "Profiler started (Notification permission denied)",
+                        Toast.LENGTH_LONG,
+                        ).show()
+                }
+                is ProfilerUiState.NeedsPermissionRationale -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+                is ProfilerUiState.Running, is ProfilerUiState.Finished -> {
+                }
+                is ProfilerUiState.Error -> {
+                    Toast.makeText(
+                        context,
+                        context.getString(state.messageResId) + state.errorDetails,
+                        Toast.LENGTH_LONG,
+                        ).show()
+                }
+                else -> {}
+            }
+
+            if (uiState.shouldDismiss()) {
+                dismissAllowingStateLoss()
+            }
+        }
 
         Dialog(
             onDismissRequest = {
-                // In the wait for profiler state, the user needs to wait for the profiler to start
-                // so it'd be counterproductive to allow them dismiss the dialog.
-                if (viewStateObserver.value != CardState.WaitForProfilerToStart) {
+                if (uiState is ProfilerUiState.Idle) {
                     this@ProfilerStartDialogFragment.dismiss()
                 }
             },
         ) {
-            if (viewStateObserver.value == CardState.ChooseSettings) {
-                StartCard(viewStateObserver, startProfiler)
-            } else {
-                WaitForProfilerDialog(R.string.profiler_waiting_start)
-            }
-        }
-    }
-
-    @SuppressWarnings("LongMethod")
-    @Composable
-    private fun StartCard(
-        viewStateObserver: MutableState<CardState>,
-        startProfiler: (Array<String>, Array<String>) -> Unit,
-    ) {
-        val featureAndThreadsObserver = remember {
-            mutableStateOf(requireContext().resources.getString(R.string.profiler_filter_firefox))
-        }
-        ProfilerDialogueCard {
-            Column(modifier = Modifier.padding(8.dp)) {
-                Text(
-                    text = stringResource(R.string.preferences_start_profiler),
-                    fontWeight = FontWeight.ExtraBold,
-                    color = FirefoxTheme.colors.textPrimary,
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(8.dp),
-                )
-                Text(
-                    text = stringResource(R.string.profiler_settings_title),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = FirefoxTheme.colors.textPrimary,
-                    modifier = Modifier.padding(8.dp),
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                ProfilerLabeledRadioButton(
-                    text = stringResource(R.string.profiler_filter_firefox),
-                    subText = stringResource(R.string.profiler_filter_firefox_explain),
-                    selected = featureAndThreadsObserver.value == stringResource(R.string.profiler_filter_firefox),
-                    onClick = {
-                        featureAndThreadsObserver.value = getString(R.string.profiler_filter_firefox)
-                    },
-                )
-
-                ProfilerLabeledRadioButton(
-                    text = stringResource(R.string.profiler_filter_graphics),
-                    subText = stringResource(R.string.profiler_filter_graphics_explain),
-                    selected = featureAndThreadsObserver.value == stringResource(R.string.profiler_filter_graphics),
-                    onClick = {
-                        featureAndThreadsObserver.value = getString(R.string.profiler_filter_graphics)
-                    },
-                )
-
-                ProfilerLabeledRadioButton(
-                    text = stringResource(R.string.profiler_filter_media),
-                    subText = stringResource(R.string.profiler_filter_media_explain),
-                    selected = featureAndThreadsObserver.value == stringResource(R.string.profiler_filter_media),
-                    onClick = {
-                        featureAndThreadsObserver.value = getString(R.string.profiler_filter_media)
-                    },
-                )
-
-                ProfilerLabeledRadioButton(
-                    text = stringResource(R.string.profiler_filter_networking),
-                    subText = stringResource(R.string.profiler_filter_networking_explain),
-                    selected = featureAndThreadsObserver.value == stringResource(R.string.profiler_filter_networking),
-                    onClick = {
-                        featureAndThreadsObserver.value = getString(R.string.profiler_filter_networking)
-                    },
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    TextButton(
-                        onClick = {
-                            this@ProfilerStartDialogFragment.dismiss()
-                        },
-                    ) {
-                        Text(
-                            color = FirefoxTheme.colors.textAccent,
-                            text = stringResource(R.string.profiler_start_cancel),
+            when (uiState) {
+                is ProfilerUiState.Idle -> {
+                    StartCard(
+                        onStartProfiler = { settings -> viewModel.startProfiler(settings) },
+                        onCancel = { this@ProfilerStartDialogFragment.dismiss() },
+                    )
+                }
+                is ProfilerUiState.Starting -> {
+                    WaitForProfilerDialog(R.string.profiler_waiting_start)
+                }
+                else -> {
+                    if (uiState is ProfilerUiState.Error) {
+                        ErrorCard(
+                            message = "Failed to start profiler",
+                            onDismiss = { this@ProfilerStartDialogFragment.dismiss() },
                         )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    TextButton(
-                        onClick = {
-                            viewStateObserver.value = CardState.WaitForProfilerToStart
-                            executeStartProfilerOnClick(
-                                ProfilerSettings.valueOf(featureAndThreadsObserver.value),
-                                startProfiler,
-                            )
-                        },
-                    ) {
-                        Text(
-                            color = FirefoxTheme.colors.textAccent,
-                            text = stringResource(R.string.preferences_start_profiler),
-                        )
+                    } else {
+                        WaitForProfilerDialog(R.string.profiler_waiting_start)
                     }
                 }
             }
         }
     }
 
-    private fun waitForProfilerActiveAndDismissFragment() {
-        viewScope.launch {
-            while (!profiler.isProfilerActive()) {
-                delay(delayToPollProfilerForStatus)
-            }
-            this@ProfilerStartDialogFragment.dismiss()
+    @Composable
+    private fun StartCard(
+        onStartProfiler: (ProfilerSettings) -> Unit,
+        onCancel: () -> Unit,
+    ) {
+        var selectedSetting by remember { mutableStateOf(ProfilerSettings.Firefox) }
 
-            val toastString = requireContext().getString(R.string.profiler_start_dialog_started)
-            Toast.makeText(this@ProfilerStartDialogFragment.context, toastString, Toast.LENGTH_SHORT).show()
+        BaseProfilerDialogContent(
+            titleText = stringResource(R.string.preferences_start_profiler),
+            negativeActionText = stringResource(R.string.profiler_start_cancel),
+            onNegativeAction = onCancel,
+            positiveActionText = stringResource(R.string.preferences_start_profiler),
+            onPositiveAction = { onStartProfiler(selectedSetting) },
+        ) {
+            Text(
+                text = stringResource(R.string.profiler_settings_title),
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = FirefoxTheme.colors.textPrimary,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            ProfilerSettings.entries.forEach { setting ->
+                val settingName = when (setting) {
+                    ProfilerSettings.Firefox -> stringResource(R.string.profiler_filter_firefox)
+                    ProfilerSettings.Graphics -> stringResource(R.string.profiler_filter_graphics)
+                    ProfilerSettings.Media -> stringResource(R.string.profiler_filter_media)
+                    ProfilerSettings.Networking -> stringResource(R.string.profiler_filter_networking)
+                }
+                val settingDesc = when (setting) {
+                    ProfilerSettings.Firefox -> stringResource(R.string.profiler_filter_firefox_explain)
+                    ProfilerSettings.Graphics -> stringResource(R.string.profiler_filter_graphics_explain)
+                    ProfilerSettings.Media -> stringResource(R.string.profiler_filter_media_explain)
+                    ProfilerSettings.Networking -> stringResource(R.string.profiler_filter_networking_explain)
+                }
+
+                ProfilerLabeledRadioButton(
+                    text = settingName,
+                    subText = settingDesc,
+                    selected = selectedSetting == setting,
+                    onClick = { selectedSetting = setting },
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
     }
 
-    private fun executeStartProfilerOnClick(
-        featureAndThreads: ProfilerSettings,
-        startProfiler: (Array<String>, Array<String>) -> Unit,
-    ) {
-        startProfiler(featureAndThreads.threads, featureAndThreads.features)
-        waitForProfilerActiveAndDismissFragment()
-    }
-
     /**
-     * Card state to change what is displayed in the dialogue
+     * Composable that displays error messages for the profiler operations.
+     *
+     * @param messageResId Optional string resource ID for the error message
+     * @param message Optional direct string message to display
+     * @param onDismiss Callback invoked when user dismisses the error dialog
      */
-    enum class CardState {
-        ChooseSettings,
-        WaitForProfilerToStart,
+    @Composable
+    fun ErrorCard(@StringRes messageResId: Int? = null, message: String? = null, onDismiss: () -> Unit) {
+        val actualMessage = message ?: (messageResId?.let { stringResource(id = it) } ?: "An error occurred")
+        ProfilerErrorDialog(
+            errorMessage = actualMessage,
+            onDismiss = onDismiss,
+        )
     }
 }
