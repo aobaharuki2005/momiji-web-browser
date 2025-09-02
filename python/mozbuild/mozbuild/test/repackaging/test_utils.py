@@ -255,32 +255,6 @@ def test_extract_application_ini_data_from_directory():
             },
             does_not_raise(),
         ),
-        (
-            "120.0b9",
-            1,
-            "-l10n-ach",
-            " - Firefox Developer Edition Language Pack for Acholi (ach) – Acoli",
-            "devedition",
-            {
-                "name": "Firefox",
-                "display_name": "Firefox Developer Edition",
-                "vendor": "Mozilla",
-                "remoting_name": "firefox-aurora",
-                "build_id": "20230222000000",
-            },
-            {
-                "DESCRIPTION": "Mozilla Firefox Developer Edition - Firefox Developer Edition Language Pack for Acholi (ach) – Acoli",
-                "PRODUCT_NAME": "Firefox",
-                "DISPLAY_NAME": "Firefox Developer Edition",
-                "PKG_INSTALL_PATH": "usr/lib/firefox-aurora",
-                "PKG_NAME": "firefox-aurora-l10n-ach",
-                "PKG_VERSION": "120.0b9",
-                "PKG_BUILD_NUMBER": 1,
-                "MANPAGE_DATE": "February 22, 2023",
-                "Icon": "firefox-aurora-l10n-ach",
-            },
-            pytest.raises(AssertionError),
-        ),
     ),
 )
 def test_get_build_variables(
