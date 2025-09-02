@@ -10,7 +10,6 @@ import subprocess
 import tarfile
 import zipfile
 from datetime import datetime
-from email.utils import format_datetime
 from pathlib import Path
 from string import Template
 from tempfile import TemporaryDirectory
@@ -106,12 +105,16 @@ def get_build_variables(
     release_product="",
     build_number="1",
 ):
+    """
+    Massage the application.ini info and other metadata into a dict suitable for passing into packaging templates
+    """
     if release_product == "devedition":
         pkg_install_path = "usr/lib/firefox-devedition"
         pkg_name = f"firefox-devedition{package_name_suffix}"
     else:
         pkg_install_path = f"usr/lib/{application_ini_data['remoting_name']}"
         pkg_name = f"{application_ini_data['remoting_name']}{package_name_suffix}"
+    timestamp = datetime.strptime(application_ini_data["build_id"], "%Y%m%d%H%M%S")
 
     return {
         "DESCRIPTION": f"{application_ini_data['vendor']} {application_ini_data['display_name']}{description_suffix}",
@@ -121,8 +124,8 @@ def get_build_variables(
         "PKG_VERSION": version,
         "PRODUCT_NAME": application_ini_data["name"],
         "DISPLAY_NAME": application_ini_data["display_name"],
-        "CHANGELOG_DATE": format_datetime(application_ini_data["timestamp"]),
-        "MANPAGE_DATE": application_ini_data["timestamp"].strftime("%B %d, %Y"),
+        "TIMESTAMP": timestamp,
+        "MANPAGE_DATE": timestamp.strftime("%B %d, %Y"),
         "ARCH_NAME": arch,
         "Icon": pkg_name,
     }
