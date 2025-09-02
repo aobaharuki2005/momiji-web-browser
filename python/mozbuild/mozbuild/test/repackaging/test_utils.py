@@ -299,18 +299,10 @@ def test_get_build_variables(
         build_number,
     )
     with raises:
-        if not package_name_suffix:
-            depends = "${shlibs:Depends},"
-        elif release_product == "devedition":
-            depends = f"firefox-devedition (= {application_ini_data['pkg_version']})"
-        else:
-            depends = f"{application_ini_data['remoting_name']} (= {application_ini_data['pkg_version']})"
-
         build_variables = utils.get_build_variables(
             application_ini_data,
             "x86",
             version,
-            depends=depends,
             package_name_suffix=package_name_suffix,
             description_suffix=description_suffix,
             release_product=release_product,
@@ -321,7 +313,6 @@ def test_get_build_variables(
             **{
                 "CHANGELOG_DATE": "Wed, 22 Feb 2023 00:00:00 -0000",
                 "ARCH_NAME": "x86",
-                "DEPENDS": depends,
             },
             **expected,
         }

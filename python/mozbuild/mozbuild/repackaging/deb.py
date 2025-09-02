@@ -96,9 +96,9 @@ def repackage_deb(
             application_ini_data,
             _DEB_ARCH[arch],
             application_ini_data["pkg_version"],
-            depends="${shlibs:Depends},",
             release_product=release_product,
         )
+        build_variables["DEPENDS"] = "${shlibs:Depends},"
 
         deb_dir = mozpath.join(source_dir, "debian")
 
@@ -160,20 +160,20 @@ def repackage_deb_l10n(
             input_tar_file, version, build_number
         )
         langpack_id = langpack_metadata["langpack_id"]
-        if release_product == "devedition":
-            depends = f"firefox-devedition (= {application_ini_data['pkg_version']})"
-        else:
-            depends = f"{application_ini_data['remoting_name']} (= {application_ini_data['pkg_version']})"
         build_variables = get_build_variables(
             application_ini_data,
             _DEB_ARCH[arch],
             application_ini_data["pkg_version"],
-            depends=depends,
             # Debian package names are only lowercase
             package_name_suffix=f"-l10n-{langpack_id.lower()}",
             description_suffix=f" - {langpack_metadata['description']}",
             release_product=release_product,
         )
+        if release_product == "devedition":
+            depends = f"firefox-devedition (= {application_ini_data['pkg_version']})"
+        else:
+            depends = f"{application_ini_data['remoting_name']} (= {application_ini_data['pkg_version']})"
+        build_variables["DEPENDS"] = depends
 
         deb_dir = mozpath.join(source_dir, "debian")
 

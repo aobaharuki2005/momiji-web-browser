@@ -274,7 +274,6 @@ def test_get_build_variables(
             **{
                 "CHANGELOG_DATE": "Wed Feb 22 2023",
                 "ARCH_NAME": "x86",
-                "DEPENDS": "",
             },
             **expected,
         }
