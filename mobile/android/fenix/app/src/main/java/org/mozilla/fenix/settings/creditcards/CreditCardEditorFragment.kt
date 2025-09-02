@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.settings.creditcards
 
-import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.Menu
@@ -58,7 +57,6 @@ class CreditCardEditorFragment :
 
     private lateinit var interactor: CreditCardEditorInteractor
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.utils
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -33,7 +32,6 @@ class ClearableEditText @JvmOverloads constructor(
      * Since the icon is just a compound drawable, we check the tap location
      * to see if the X position of the tap is where the drawable is located.
      */
-    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (shouldShowClearButton(length()) && event.action == ACTION_UP && event.endDrawableTouched()) {
             setText("")
