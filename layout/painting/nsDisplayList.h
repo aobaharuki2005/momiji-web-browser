@@ -4847,7 +4847,7 @@ class nsDisplayCompositorHitTestInfo final : public nsDisplayItem {
       layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
-  bool isInvisible() const { return true; }
+  bool IsInvisible() const override { return true; }
 
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
