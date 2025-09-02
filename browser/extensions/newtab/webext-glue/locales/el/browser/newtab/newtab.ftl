@@ -323,15 +323,25 @@ newtab-custom-pocket-sponsored = Χορηγούμενα άρθρα
 newtab-custom-pocket-show-recent-saves = Εμφάνιση πρόσφατων αποθηκεύσεων
 newtab-custom-recent-title = Πρόσφατη δραστηριότητα
 newtab-custom-recent-subtitle = Συλλογή πρόσφατων ιστοτόπων και περιεχομένου
-newtab-custom-recent-toggle =
-    .label = Πρόσφατη δραστηριότητα
-    .description = Συλλογή πρόσφατων ιστοτόπων και περιεχομένου
 newtab-custom-weather-toggle =
     .label = Καιρός
     .description = Σημερινή πρόγνωση με μια ματιά
 newtab-custom-trending-search-toggle =
     .label = Δημοφιλείς αναζητήσεις
     .description = Δημοφιλή και συνήθη θέματα αναζήτησης
+newtab-custom-widget-weather-toggle =
+    .label = Καιρός
+newtab-custom-widget-trending-search-toggle =
+    .label = Δημοφιλείς αναζητήσεις
+newtab-custom-widget-lists-toggle =
+    .label = Λίστες
+newtab-custom-widget-timer-toggle =
+    .label = Αντίστροφη μέτρηση
+newtab-custom-widget-section-title = Γραφικά στοιχεία
+# Tooltip for close button
+newtab-custom-close-menu-button =
+    .title = Κλείσιμο
+    .aria-label = Κλείσιμο μενού
 newtab-custom-close-button = Κλείσιμο
 newtab-custom-settings = Διαχείριση περισσότερων ρυθμίσεων
 
@@ -449,7 +459,6 @@ newtab-weather-menu-change-location = Αλλαγή τοποθεσίας
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Αναζήτηση τοποθεσίας
     .aria-label = Αναζήτηση τοποθεσίας
-newtab-weather-change-location-search-input = Αναζήτηση τοποθεσίας
 newtab-weather-menu-weather-display = Προβολή καιρού
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
@@ -596,8 +605,6 @@ newtab-toast-thanks-for-reporting =
 
 ## Strings for trending searches
 
-# "Trending on Google" refers to the trending topics coming from Google Search, usually seen when a user is focused on the search bar
-newtab-trending-searches-trending-on-google = Τάσεις Google
 newtab-trending-searches-show-trending =
     .title = Εμφάνιση δημοφιλών αναζητήσεων
 newtab-trending-searches-hide-trending =
@@ -606,3 +613,72 @@ newtab-trending-searches-learn-more = Μάθετε περισσότερα
 newtab-trending-searches-dismiss = Απόκρυψη δημοφιλών αναζητήσεων
 # "Trending searches refers to popular searches from search engines
 newtab-trending-searches-title = Δημοφιλείς αναζητήσεις
+
+## Strings for task / to-do list productivity widget
+
+# "Add one" means adding a new task to the list (e.g., "Walk the dog")
+newtab-widget-lists-empty-cta = Οι δυνατότητες είναι απεριόριστες. Προσθέστε μια νέα.
+# A simple label next to the default list name letting users know this is a new / beta feature
+newtab-widget-lists-label-new =
+    .label = Νέο
+newtab-widget-lists-label-beta =
+    .label = Beta
+# When tasks have been previous marked as complete, they will appear in their own separate list beneath incomplete items
+# Variables:
+#   $number (number) - Amount of list items marked complete
+newtab-widget-lists-completed-list = Ολοκληρωμένες ({ $number })
+newtab-widget-task-list-menu-copy = Αντιγραφή
+newtab-widget-lists-menu-edit = Επεξεργασία ονόματος λίστας
+newtab-widget-lists-menu-create = Δημιουργία νέας λίστας
+newtab-widget-lists-menu-delete = Διαγραφή λίστας
+newtab-widget-lists-menu-copy = Αντιγραφή λίστας στο πρόχειρο
+newtab-widget-lists-menu-hide = Απόκρυψη όλων των λιστών
+newtab-widget-lists-menu-learn-more = Μάθετε περισσότερα
+newtab-widget-lists-input-add-an-item =
+    .placeholder = Προσθήκη στοιχείου
+newtab-widget-lists-input-error = Συμπεριλάβετε κείμενο για να προσθέσετε ένα στοιχείο.
+newtab-widget-lists-input-menu-open-link = Άνοιγμα συνδέσμου
+newtab-widget-lists-input-menu-move-up = Μετακίνηση πάνω
+newtab-widget-lists-input-menu-move-down = Μετακίνηση κάτω
+newtab-widget-lists-input-menu-delete = Διαγραφή
+newtab-widget-lists-input-menu-edit = Επεξεργασία
+newtab-widget-lists-name-label-default =
+    .label = Λίστα εργασιών
+newtab-widget-lists-name-placeholder-default =
+    .placeholder = Λίστα εργασιών
+# The placeholder value of the name field for a newly created list
+newtab-widget-lists-name-placeholder-new =
+    .placeholder = Νέα λίστα
+
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+
+newtab-widget-timer-notification-title = Αντίστροφη μέτρηση
+newtab-widget-timer-notification-focus = Ο χρόνος συγκέντρωσης τελείωσε. Καλή δουλειά. Χρειάζεστε διάλειμμα;
+newtab-widget-timer-notification-break = Το διάλειμμά σας τελείωσε. Έτοιμοι για συγκέντρωση;
+newtab-widget-timer-notification-warning = Οι ειδοποιήσεις είναι ανενεργές
+newtab-widget-timer-mode-focus =
+    .label = Συγκέντρωση
+newtab-widget-timer-mode-break =
+    .label = Διάλειμμα
+newtab-widget-timer-play =
+    .title = Αναπαραγωγή
+newtab-widget-timer-pause =
+    .title = Παύση
+newtab-widget-timer-reset =
+    .title = Επαναφορά
+newtab-widget-timer-menu-notifications = Απενεργοποίηση ειδοποιήσεων
+newtab-widget-timer-menu-notifications-on = Ενεργοποίηση ειδοποιήσεων
+newtab-widget-timer-menu-hide = Απόκρυψη αντίστροφης μέτρησης
+newtab-widget-timer-menu-learn-more = Μάθετε περισσότερα
+# Message that appears when widgets are full-height. This reminds users that there is more New Tab content to see if they scroll
+newtab-widget-keep-scrolling = Κάντε κύλιση για περισσότερα
+newtab-widget-message-title = Παραμείνετε συγκεντρωμένοι με τις λίστες και την ενσωματωμένη αντίστροφη μέτρηση
+# to-dos stands for "things to do".
+newtab-widget-message-copy = Από γρήγορες υπενθυμίσεις έως καθημερινές υποχρεώσεις, συνεδρίες συγκέντρωσης έως διαλείμματα: επικεντρωθείτε και ολοκληρώστε τις εργασίες σας εγκαίρως.
+newtab-promo-card-title = Υποστηρίξτε το { -brand-product-name }
+newtab-promo-card-body = Οι χορηγοί μας υποστηρίζουν την αποστολή μας για ένα καλύτερο διαδίκτυο
+newtab-promo-card-cta = Μάθετε περισσότερα
+newtab-promo-card-dismiss-button =
+    .title = Απόρριψη
+    .aria-label = Απόρριψη

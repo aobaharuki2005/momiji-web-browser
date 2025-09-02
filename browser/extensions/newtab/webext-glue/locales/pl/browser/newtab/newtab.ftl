@@ -88,6 +88,14 @@ newtab-confirm-delete-history-p2 = Tej czynności nie można cofnąć.
 
 newtab-topsite-sponsored = Sponsorowane
 
+## Label used by screen readers for pinned top sites
+
+# Variables:
+#   $title (string) - The label or hostname of the site.
+topsite-label-pinned =
+    .aria-label = { $title } (przypięte)
+    .title = { $title }
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.
@@ -315,9 +323,6 @@ newtab-custom-pocket-sponsored = Sponsorowane artykuły
 newtab-custom-pocket-show-recent-saves = Wyświetl ostatnio zapisane
 newtab-custom-recent-title = Ostatnia aktywność
 newtab-custom-recent-subtitle = Wybierane z ostatnio odwiedzanych stron i treści.
-newtab-custom-recent-toggle =
-    .label = Ostatnia aktywność
-    .description = Wybierane z ostatnio odwiedzanych stron i treści.
 newtab-custom-weather-toggle =
     .label = Pogoda
     .description = Dzisiejsza prognoza w skrócie
@@ -441,7 +446,6 @@ newtab-weather-menu-change-location = Zmień położenie
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Wyszukaj położenie
     .aria-label = Wyszukaj położenie
-newtab-weather-change-location-search-input = Wyszukaj położenie
 newtab-weather-menu-weather-display = Wyświetlanie pogody
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
@@ -542,6 +546,12 @@ newtab-custom-wallpaper-title = Własne tapety już tu są
 newtab-custom-wallpaper-subtitle = Ustaw własną tapetę lub wybierz dowolny kolor, aby { -brand-product-name } stał się Twój.
 newtab-custom-wallpaper-cta = Wypróbuj
 
+## Strings for new user activation custom wallpaper highlight
+
+newtab-new-user-custom-wallpaper-title = Wybierz tapetę, aby { -brand-product-name } stał się Twój
+newtab-new-user-custom-wallpaper-subtitle = Czuj się na każdej nowej karcie jak w domu dzięki własnej tapecie lub kolorowi.
+newtab-new-user-custom-wallpaper-cta = Wypróbuj teraz
+
 ## Strings for download mobile highlight
 
 newtab-download-mobile-highlight-title = Pobierz { -brand-product-name(case: "acc") } na telefon
@@ -582,8 +592,6 @@ newtab-toast-thanks-for-reporting =
 
 ## Strings for trending searches
 
-# "Trending on Google" refers to the trending topics coming from Google Search, usually seen when a user is focused on the search bar
-newtab-trending-searches-trending-on-google = Popularne w Google
 newtab-trending-searches-show-trending =
     .title = Wyświetlaj popularne wyszukiwania
 newtab-trending-searches-hide-trending =

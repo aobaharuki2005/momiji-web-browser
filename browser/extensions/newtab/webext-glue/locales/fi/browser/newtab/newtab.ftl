@@ -88,6 +88,14 @@ newtab-confirm-delete-history-p2 = Tämä toiminto on peruuttamaton.
 
 newtab-topsite-sponsored = Sponsoroitu
 
+## Label used by screen readers for pinned top sites
+
+# Variables:
+#   $title (string) - The label or hostname of the site.
+topsite-label-pinned =
+    .aria-label = { $title } (kiinnitetty)
+    .title = { $title }
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.
@@ -315,15 +323,22 @@ newtab-custom-pocket-sponsored = Sponsoroidut tarinat
 newtab-custom-pocket-show-recent-saves = Näytä viimeisimmät tallennukset
 newtab-custom-recent-title = Viimeisin toiminta
 newtab-custom-recent-subtitle = Valikoima viimeisimpiä sivustoja ja sisältöä
-newtab-custom-recent-toggle =
-    .label = Viimeisin toiminta
-    .description = Valikoima viimeisimpiä sivustoja ja sisältöä
 newtab-custom-weather-toggle =
     .label = Sää
     .description = Päivän sääennuste yhdellä vilkaisulla
 newtab-custom-trending-search-toggle =
     .label = Nousussa olevat haut
     .description = Suosittuja ja usein haettuja aiheita
+newtab-custom-widget-weather-toggle =
+    .label = Sää
+newtab-custom-widget-trending-search-toggle =
+    .label = Nousussa olevat haut
+newtab-custom-widget-timer-toggle =
+    .label = Ajastin
+# Tooltip for close button
+newtab-custom-close-menu-button =
+    .title = Sulje
+    .aria-label = Sulje valikko
 newtab-custom-close-button = Sulje
 newtab-custom-settings = Muokkaa lisää asetuksia
 
@@ -441,7 +456,6 @@ newtab-weather-menu-change-location = Vaihda sijaintia
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Hae sijaintia
     .aria-label = Hae sijaintia
-newtab-weather-change-location-search-input = Hae sijaintia
 newtab-weather-menu-weather-display = Sään näkymä
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
@@ -542,6 +556,12 @@ newtab-custom-wallpaper-title = Mukautetut taustakuvat ovat täällä
 newtab-custom-wallpaper-subtitle = Valitse oma taustakuvasi tai mukautettu väri ja tee { -brand-product-name }ista mieluisesi.
 newtab-custom-wallpaper-cta = Kokeile
 
+## Strings for new user activation custom wallpaper highlight
+
+newtab-new-user-custom-wallpaper-title = Valitse taustakuva ja tee { -brand-product-name }ista omasi
+newtab-new-user-custom-wallpaper-subtitle = Tee jokaisesta uudesta välilehdestä tutunomainen mukautetuilla taustakuvilla ja väreillä.
+newtab-new-user-custom-wallpaper-cta = Kokeile nyt
+
 ## Strings for download mobile highlight
 
 newtab-download-mobile-highlight-title = Lataa { -brand-product-name } mobiililaitteille
@@ -582,8 +602,6 @@ newtab-toast-thanks-for-reporting =
 
 ## Strings for trending searches
 
-# "Trending on Google" refers to the trending topics coming from Google Search, usually seen when a user is focused on the search bar
-newtab-trending-searches-trending-on-google = Nousussa Googlessa
 newtab-trending-searches-show-trending =
     .title = Näytä nousussa olevat haut
 newtab-trending-searches-hide-trending =
@@ -592,3 +610,22 @@ newtab-trending-searches-learn-more = Lue lisää
 newtab-trending-searches-dismiss = Piilota nousussa olevat haut
 # "Trending searches refers to popular searches from search engines
 newtab-trending-searches-title = Nousussa olevat haut
+
+## Strings for task / to-do list productivity widget
+
+newtab-widget-lists-menu-learn-more = Lue lisää
+newtab-widget-lists-input-menu-open-link = Avaa linkki
+newtab-widget-lists-input-menu-delete = Poista
+newtab-widget-lists-input-menu-edit = Muokkaa
+
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+
+newtab-widget-timer-notification-title = Ajastin
+newtab-widget-timer-menu-hide = Piilota ajastin
+newtab-widget-timer-menu-learn-more = Lue lisää
+newtab-promo-card-title = Tue { -brand-product-name }ia
+newtab-promo-card-cta = Lue lisää
+newtab-promo-card-dismiss-button =
+    .title = Hylkää
+    .aria-label = Hylkää

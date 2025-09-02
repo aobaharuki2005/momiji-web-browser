@@ -314,9 +314,6 @@ newtab-custom-pocket-sponsored = Демеушілер мақалалары
 newtab-custom-pocket-show-recent-saves = Соңғы сақтауларды көрсету
 newtab-custom-recent-title = Жуырдағы белсенділік
 newtab-custom-recent-subtitle = Жуырдағы сайттар мен құрама таңдауы
-newtab-custom-recent-toggle =
-    .label = Жуырдағы белсенділік
-    .description = Жуырдағы сайттар мен құрама таңдауы
 newtab-custom-weather-toggle =
     .label = Ауа райы
     .description = Бүгінге қысқа болжам
@@ -437,7 +434,6 @@ newtab-weather-menu-change-location = Орналасуды ауыстыру
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Орналасуды іздеу
     .aria-label = Орналасуды іздеу
-newtab-weather-change-location-search-input = Орналасуды іздеу
 newtab-weather-menu-weather-display = Ауа райын көрсету
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
@@ -562,6 +558,11 @@ newtab-toast-thanks-for-reporting =
 
 ## Strings for trending searches
 
-# "Trending on Google" refers to the trending topics coming from Google Search, usually seen when a user is focused on the search bar
-newtab-trending-searches-trending-on-google = Google-да әйгілі
 newtab-trending-searches-learn-more = Көбірек білу
+
+## Strings for task / to-do list productivity widget
+
+# A simple label next to the default list name letting users know this is a new / beta feature
+newtab-widget-lists-label-new =
+    .label = Жаңа
+newtab-widget-task-list-menu-copy = Көшіріп алу

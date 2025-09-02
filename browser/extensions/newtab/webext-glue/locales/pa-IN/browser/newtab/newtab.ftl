@@ -322,9 +322,6 @@ newtab-custom-pocket-sponsored = ਸਪਾਂਸਰ ਕੀਤੀਆਂ ਕਹਾ
 newtab-custom-pocket-show-recent-saves = ਸੱਜਰੇ ਸੰਭਾਲੇ ਵੇਖੋ
 newtab-custom-recent-title = ਤਾਜ਼ਾ ਸਰਗਰਮੀ
 newtab-custom-recent-subtitle = ਤਾਜ਼ਾ ਸਾਈਟਾਂ ਤੇ ਸਮੱਗਰੀ ਦੀ ਚੋਣ
-newtab-custom-recent-toggle =
-    .label = ਤਾਜ਼ਾ ਸਰਗਰਮੀ
-    .description = ਤਾਜ਼ਾ ਸਾਈਟਾਂ ਤੇ ਸਮੱਗਰੀ ਦੀ ਚੋਣ
 newtab-custom-weather-toggle =
     .label = ਮੌਸਮ
     .description = ਅੱਜ ਦੇ ਮੌਸਮ ਬਾਰੇ ਝਾਤ
@@ -448,7 +445,6 @@ newtab-weather-menu-change-location = ਟਿਕਾਣੇ ਨੂੰ ਬਦਲੋ
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = ਟਿਕਾਣੇ ਨੂੰ ਖੋਜੋ
     .aria-label = ਟਿਕਾਣੇ ਨੂੰ ਖੋਜੋ
-newtab-weather-change-location-search-input = ਟਿਕਾਣੇ ਨੂੰ ਖੋਜੋ
 newtab-weather-menu-weather-display = ਮੌਸਮ ਦੀ ਝਲਕ
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
@@ -595,8 +591,6 @@ newtab-toast-thanks-for-reporting =
 
 ## Strings for trending searches
 
-# "Trending on Google" refers to the trending topics coming from Google Search, usually seen when a user is focused on the search bar
-newtab-trending-searches-trending-on-google = Google ਉੱਤੇ ਰੁਝਾਨ
 newtab-trending-searches-show-trending =
     .title = ਰੁਝਾਨ ਵਿੱਚ ਖੋਜਾਂ ਨੂੰ ਵੇਖਾਓ
 newtab-trending-searches-hide-trending =

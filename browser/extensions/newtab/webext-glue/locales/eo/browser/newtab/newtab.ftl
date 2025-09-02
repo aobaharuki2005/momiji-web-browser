@@ -88,6 +88,14 @@ newtab-confirm-delete-history-p2 = Tiu ĉi ago ne estas malfarebla.
 
 newtab-topsite-sponsored = Patronita
 
+## Label used by screen readers for pinned top sites
+
+# Variables:
+#   $title (string) - The label or hostname of the site.
+topsite-label-pinned =
+    .aria-label = { $title } (alpinglita)
+    .title = { $title }
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.
@@ -106,8 +114,8 @@ newtab-menu-content-tooltip =
     .aria-label = Malfermi kuntekstan menu por { $title }
 # Tooltip on an empty topsite box to open the New Top Site dialog.
 newtab-menu-topsites-placeholder-tooltip =
-    .title = Redakti ĉi tiun retejon
-    .aria-label = Redakti ĉi tiun retejon
+    .title = Modifi tiun ĉi retejon
+    .aria-label = Modifi tiun ĉi retejon
 
 ## Context Menu: These strings are displayed in a context menu and are meant as a call to action for a given page.
 
@@ -311,15 +319,24 @@ newtab-custom-pocket-sponsored = Patronitaj artikoloj
 newtab-custom-pocket-show-recent-saves = Montri ĵusajn konservojn
 newtab-custom-recent-title = Ĵusa agado
 newtab-custom-recent-subtitle = Elekto de ĵusaj retejoj kaj enhavoj
-newtab-custom-recent-toggle =
-    .label = Ĵusa agado
-    .description = Elekto de ĵusaj retejoj kaj enhavoj
 newtab-custom-weather-toggle =
     .label = Vetero
     .description = Rapida rigardo al la veterprognozo hodiaŭa
 newtab-custom-trending-search-toggle =
     .label = Popularaj serĉoj
     .description = Popularaj kaj ofte serĉitaj temoj
+newtab-custom-widget-weather-toggle =
+    .label = Vetero
+newtab-custom-widget-trending-search-toggle =
+    .label = Popularaj serĉoj
+newtab-custom-widget-lists-toggle =
+    .label = Listoj
+newtab-custom-widget-timer-toggle =
+    .label = Tempumilo
+# Tooltip for close button
+newtab-custom-close-menu-button =
+    .title = Fermi
+    .aria-label = Fermi menuon
 newtab-custom-close-button = Fermi
 newtab-custom-settings = Administri aliajn agordojn
 
@@ -437,7 +454,6 @@ newtab-weather-menu-change-location = Ŝanĝi lokon
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Serĉi lokon
     .aria-label = Serĉi lokon
-newtab-weather-change-location-search-input = Serĉi lokon
 newtab-weather-menu-weather-display = Montro de vetero
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
@@ -540,6 +556,8 @@ newtab-custom-wallpaper-cta = Provi
 
 ## Strings for new user activation custom wallpaper highlight
 
+newtab-new-user-custom-wallpaper-title = Elekti ekranfonon por personecigi vian { -brand-product-name }
+newtab-new-user-custom-wallpaper-subtitle = Igu ĉiun novan langeton propra per personecigitaj ekranfonoj kaj koloroj.
 newtab-new-user-custom-wallpaper-cta = Provu nun
 
 ## Strings for download mobile highlight
@@ -582,8 +600,6 @@ newtab-toast-thanks-for-reporting =
 
 ## Strings for trending searches
 
-# "Trending on Google" refers to the trending topics coming from Google Search, usually seen when a user is focused on the search bar
-newtab-trending-searches-trending-on-google = Popularaĵoj en Google
 newtab-trending-searches-show-trending =
     .title = Montri popularajn serĉojn
 newtab-trending-searches-hide-trending =
@@ -592,3 +608,13 @@ newtab-trending-searches-learn-more = Pli da informo
 newtab-trending-searches-dismiss = Kaŝi popularajn serĉojn
 # "Trending searches refers to popular searches from search engines
 newtab-trending-searches-title = Popularaj serĉoj
+
+## Strings for task / to-do list productivity widget
+
+# A simple label next to the default list name letting users know this is a new / beta feature
+newtab-widget-lists-label-new =
+    .label = Nova
+newtab-widget-lists-label-beta =
+    .label = Beta
+newtab-widget-task-list-menu-copy = Kopii
+newtab-widget-lists-menu-learn-more = Pli da informo

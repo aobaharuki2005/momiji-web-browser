@@ -88,6 +88,14 @@ newtab-confirm-delete-history-p2 = Ин амал бекор карда наме�
 
 newtab-topsite-sponsored = Сарпарастӣ
 
+## Label used by screen readers for pinned top sites
+
+# Variables:
+#   $title (string) - The label or hostname of the site.
+topsite-label-pinned =
+    .aria-label = { $title } (васлшуда)
+    .title = { $title }
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.
@@ -313,15 +321,25 @@ newtab-custom-pocket-sponsored = Мақолаҳои сарпарастӣ
 newtab-custom-pocket-show-recent-saves = Намоиш додани маводҳои охирин
 newtab-custom-recent-title = Фаъолияти охирин
 newtab-custom-recent-subtitle = Интихоби сомонаҳо ва муҳтавои охирин
-newtab-custom-recent-toggle =
-    .label = Фаъолияти охирин
-    .description = Интихоби сомонаҳо ва муҳтавои охирин
 newtab-custom-weather-toggle =
     .label = Обу ҳаво
     .description = Ҳолати обу ҳаво барои имрӯз
 newtab-custom-trending-search-toggle =
     .label = Ҷустуҷӯҳои ҳавасангез
     .description = Мавзуъҳои маъмул ва ҷустуҷӯшавандаи такрорӣ
+newtab-custom-widget-weather-toggle =
+    .label = Обу ҳаво
+newtab-custom-widget-trending-search-toggle =
+    .label = Ҷустуҷӯҳои ҳавасангез
+newtab-custom-widget-lists-toggle =
+    .label = Рӯйхатҳо
+newtab-custom-widget-timer-toggle =
+    .label = Вақтсанҷ
+newtab-custom-widget-section-title = Виҷетҳо
+# Tooltip for close button
+newtab-custom-close-menu-button =
+    .title = Пӯшидан
+    .aria-label = Пӯшидани меню
 newtab-custom-close-button = Пӯшидан
 newtab-custom-settings = Идоракунии танзимоти бештар
 
@@ -439,7 +457,6 @@ newtab-weather-menu-change-location = Иваз кардани макон
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Ҷустуҷӯи макон
     .aria-label = Ҷустуҷӯи макон
-newtab-weather-change-location-search-input = Ҷустуҷӯи макон
 newtab-weather-menu-weather-display = Намоиши обу ҳаво
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
@@ -584,8 +601,6 @@ newtab-toast-thanks-for-reporting =
 
 ## Strings for trending searches
 
-# "Trending on Google" refers to the trending topics coming from Google Search, usually seen when a user is focused on the search bar
-newtab-trending-searches-trending-on-google = Ҳавасангез дар «Google»
 newtab-trending-searches-show-trending =
     .title = Намоиш додани ҷустуҷӯҳои ҳавасангез
 newtab-trending-searches-hide-trending =
@@ -594,3 +609,69 @@ newtab-trending-searches-learn-more = Маълумоти бештар
 newtab-trending-searches-dismiss = Пинҳон кардани ҷустуҷӯҳои ҳавасангез
 # "Trending searches refers to popular searches from search engines
 newtab-trending-searches-title = Ҷустуҷӯҳои ҳавасангез
+
+## Strings for task / to-do list productivity widget
+
+# "Add one" means adding a new task to the list (e.g., "Walk the dog")
+newtab-widget-lists-empty-cta = Имкониятҳо беохиранд. Вазифаи дилхоҳро илова намоед.
+# A simple label next to the default list name letting users know this is a new / beta feature
+newtab-widget-lists-label-new =
+    .label = Нав
+newtab-widget-lists-label-beta =
+    .label = Бета
+# When tasks have been previous marked as complete, they will appear in their own separate list beneath incomplete items
+# Variables:
+#   $number (number) - Amount of list items marked complete
+newtab-widget-lists-completed-list = Иҷро шуд ({ $number })
+newtab-widget-task-list-menu-copy = Нусха бардоштан
+newtab-widget-lists-menu-edit = Таҳрир кардани номи рӯйхат
+newtab-widget-lists-menu-create = Эҷод кардани рӯйхати нав
+newtab-widget-lists-menu-delete = Нест кардани ин рӯйхат
+newtab-widget-lists-menu-copy = Нусха бардоштани рӯйхат ба ҳофизаи муваққатӣ
+newtab-widget-lists-menu-hide = Пинҳон кардани ҳамаи варақаҳо
+newtab-widget-lists-menu-learn-more = Маълумоти бештар
+newtab-widget-lists-input-add-an-item =
+    .placeholder = Илова кардани унсур
+newtab-widget-lists-input-error = Лутфан, барои илова кардани унсур матнеро ворид намоед.
+newtab-widget-lists-input-menu-open-link = Кушодани пайванд
+newtab-widget-lists-input-menu-move-up = Ба боло гузоштан
+newtab-widget-lists-input-menu-move-down = Ба поён гузоштан
+newtab-widget-lists-input-menu-delete = Нест кардан
+newtab-widget-lists-input-menu-edit = Таҳрир кардан
+newtab-widget-lists-name-label-default =
+    .label = Рӯйхати вазифаҳо
+newtab-widget-lists-name-placeholder-default =
+    .placeholder = Рӯйхати вазифаҳо
+# The placeholder value of the name field for a newly created list
+newtab-widget-lists-name-placeholder-new =
+    .placeholder = Рӯйхати нав
+
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+
+newtab-widget-timer-notification-title = Вақтсанҷ
+newtab-widget-timer-notification-break = Танаффус ба анҷом расид. Омода ҳастед, ки боз диққат кунед?
+newtab-widget-timer-notification-warning = Огоҳномаҳо хомӯш мебошанд
+newtab-widget-timer-mode-focus =
+    .label = Марказонидан
+newtab-widget-timer-mode-break =
+    .label = Қатъ кардан
+newtab-widget-timer-play =
+    .title = Пахш кардан
+newtab-widget-timer-pause =
+    .title = Таваққуф кардан
+newtab-widget-timer-reset =
+    .title = Аз нав танзим кардан
+newtab-widget-timer-menu-notifications = Хомӯш кардани огоҳномаҳо
+newtab-widget-timer-menu-notifications-on = Фаъол кардани огоҳномаҳо
+newtab-widget-timer-menu-hide = Пинҳон кардани вақтсанҷ
+newtab-widget-timer-menu-learn-more = Маълумоти бештар
+# Message that appears when widgets are full-height. This reminds users that there is more New Tab content to see if they scroll
+newtab-widget-keep-scrolling = Барои дидани маълумоти бештар, ҳаракат кунед
+newtab-widget-message-title = Бо истифода аз рӯйхатҳо ва вақтсанҷи дарунсохт диққати худро нигоҳ доред
+newtab-promo-card-title = Дастгирӣ кардани «{ -brand-product-name }»
+newtab-promo-card-body = Сарпарастони мо рисолати моро барои ташкили таҷрибаи беҳтарини Интернет дастгирӣ менамоянд
+newtab-promo-card-cta = Маълумоти бештар
+newtab-promo-card-dismiss-button =
+    .title = Нодида гузарондан
+    .aria-label = Нодида гузарондан

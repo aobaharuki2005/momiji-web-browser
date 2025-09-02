@@ -325,15 +325,25 @@ newtab-custom-pocket-sponsored = Sponserowane stawizny
 newtab-custom-pocket-show-recent-saves = Najnowše składowanja pokazać
 newtab-custom-recent-title = Najnowša aktiwita
 newtab-custom-recent-subtitle = Wuběr najnowšich sydłow a najnowšeho wobsaha
-newtab-custom-recent-toggle =
-    .label = Najnowša aktiwita
-    .description = Wuběr najnowšich sydłow a najnowšeho wobsaha
 newtab-custom-weather-toggle =
     .label = Wjedro
     .description = Dźensniša wjedrowa předpowědź na jedyn pohlad
 newtab-custom-trending-search-toggle =
     .label = Woblubowane pytanja
     .description = Popularne a husto pytane temy
+newtab-custom-widget-weather-toggle =
+    .label = Wjedro
+newtab-custom-widget-trending-search-toggle =
+    .label = Woblubowane pytanja
+newtab-custom-widget-lists-toggle =
+    .label = Lisćiny
+newtab-custom-widget-timer-toggle =
+    .label = Časoměr
+newtab-custom-widget-section-title = Asistenty
+# Tooltip for close button
+newtab-custom-close-menu-button =
+    .title = Začinić
+    .aria-label = Meni začinić
 newtab-custom-close-button = Začinić
 newtab-custom-settings = Dalše nastajenja rjadować
 
@@ -430,7 +440,7 @@ feature-highlight-wallpaper =
 # “Celestial” referring to astronomy; positioned in or relating to the sky,
 # or outer space as observed in astronomy.
 # Not to be confused with religious definition of the word.
-newtab-wallpaper-category-title-celestial = Njebjeski
+newtab-wallpaper-category-title-celestial = Njebjeske
 newtab-wallpaper-celestial-lunar-eclipse = Zaćmiće měsačka
 newtab-wallpaper-celestial-earth-night = Nócne foto z delnjeho zemskeho orbita
 newtab-wallpaper-celestial-starry-sky = Hwězdne njebjo
@@ -451,7 +461,6 @@ newtab-weather-menu-change-location = Městno změnić
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Městno pytać
     .aria-label = Městno pytać
-newtab-weather-change-location-search-input = Městno pytać
 newtab-weather-menu-weather-display = Wjedrowe pokazanje
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
@@ -598,8 +607,6 @@ newtab-toast-thanks-for-reporting =
 
 ## Strings for trending searches
 
-# "Trending on Google" refers to the trending topics coming from Google Search, usually seen when a user is focused on the search bar
-newtab-trending-searches-trending-on-google = Woblubowane temy na Google
 newtab-trending-searches-show-trending =
     .title = Woblubowane pytanja pokazać
 newtab-trending-searches-hide-trending =
@@ -608,3 +615,72 @@ newtab-trending-searches-learn-more = Dalše informacije
 newtab-trending-searches-dismiss = Woblubowane pytanja schować
 # "Trending searches refers to popular searches from search engines
 newtab-trending-searches-title = Woblubowane pytanja
+
+## Strings for task / to-do list productivity widget
+
+# "Add one" means adding a new task to the list (e.g., "Walk the dog")
+newtab-widget-lists-empty-cta = Móžnosće su njeličomne. Přidajće jedyn nadawk.
+# A simple label next to the default list name letting users know this is a new / beta feature
+newtab-widget-lists-label-new =
+    .label = Nowy
+newtab-widget-lists-label-beta =
+    .label = Beta
+# When tasks have been previous marked as complete, they will appear in their own separate list beneath incomplete items
+# Variables:
+#   $number (number) - Amount of list items marked complete
+newtab-widget-lists-completed-list = Dokónčeny ({ $number })
+newtab-widget-task-list-menu-copy = Kopěrować
+newtab-widget-lists-menu-edit = Mjeno lisćiny wobdźěłać
+newtab-widget-lists-menu-create = Nowu lisćinu wutworić
+newtab-widget-lists-menu-delete = Tutu lisćinu zhašeć
+newtab-widget-lists-menu-copy = Lisćinu do mjezyskłada kopěrować
+newtab-widget-lists-menu-hide = Wšě lisćiny schować
+newtab-widget-lists-menu-learn-more = Dalše informacije
+newtab-widget-lists-input-add-an-item =
+    .placeholder = Zapisk přidać
+newtab-widget-lists-input-error = Prošu zapřijimujće tekst, zo byšće zapisk přidał.
+newtab-widget-lists-input-menu-open-link = Wotkaz wočinić
+newtab-widget-lists-input-menu-move-up = Horje
+newtab-widget-lists-input-menu-move-down = Dele
+newtab-widget-lists-input-menu-delete = Zhašeć
+newtab-widget-lists-input-menu-edit = Wobdźěłać
+newtab-widget-lists-name-label-default =
+    .label = Lisćiny nadawkow
+newtab-widget-lists-name-placeholder-default =
+    .placeholder = Lisćiny nadawkow
+# The placeholder value of the name field for a newly created list
+newtab-widget-lists-name-placeholder-new =
+    .placeholder = Nowa lisćina
+
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+
+newtab-widget-timer-notification-title = Časoměr
+newtab-widget-timer-notification-focus = Fokusowy čas je nimo. Wulkotne dźěło. Trjebaće přestawku?
+newtab-widget-timer-notification-break = Waša přestawka je nimo. Hotowy za fokus?
+newtab-widget-timer-notification-warning = Zdźělenja su znjemóžnjene
+newtab-widget-timer-mode-focus =
+    .label = Fokus
+newtab-widget-timer-mode-break =
+    .label = Přestawka
+newtab-widget-timer-play =
+    .title = Wothrać
+newtab-widget-timer-pause =
+    .title = Přestawka
+newtab-widget-timer-reset =
+    .title = Wróćo stajić
+newtab-widget-timer-menu-notifications = Zdźělenja znjemóžnić
+newtab-widget-timer-menu-notifications-on = Zdźělenja zmóžnić
+newtab-widget-timer-menu-hide = Časoměr schować
+newtab-widget-timer-menu-learn-more = Dalše informacije
+# Message that appears when widgets are full-height. This reminds users that there is more New Tab content to see if they scroll
+newtab-widget-keep-scrolling = Za dalše kulić
+newtab-widget-message-title = Wostańće koncentrowany z lisćinami a zatwarjenym časoměrom
+# to-dos stands for "things to do".
+newtab-widget-message-copy = Wot spěšnych dopomnjećow do wšědnych nadawkowych lisćinow, koncentrujće so na posedźenja, zo byšće přestawki podlěšił – njepopušćejće a budźće zdypkom.
+newtab-promo-card-title = { -brand-product-name } podpěrać
+newtab-promo-card-body = Naši sponsorojo našu misiju podpěruja, zo bychu lěpši web tworili
+newtab-promo-card-cta = Dalše informacije
+newtab-promo-card-dismiss-button =
+    .title = Zaćisnyć
+    .aria-label = Zaćisnyć

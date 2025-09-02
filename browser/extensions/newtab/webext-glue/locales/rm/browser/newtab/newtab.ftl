@@ -315,9 +315,6 @@ newtab-custom-pocket-sponsored = Artitgels sponsurads
 newtab-custom-pocket-show-recent-saves = Mussar ils elements memorisads dacurt
 newtab-custom-recent-title = Activitad recenta
 newtab-custom-recent-subtitle = Ina selecziun da websites e cuntegn visità dacurt
-newtab-custom-recent-toggle =
-    .label = Activitad recenta
-    .description = Ina selecziun da websites e cuntegn visità dacurt
 newtab-custom-weather-toggle =
     .label = Aura
     .description = La previsiun da l’aura actuala en in’egliada
@@ -441,7 +438,6 @@ newtab-weather-menu-change-location = Midar la posiziun
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Tschertgar in lieu
     .aria-label = Tschertgar in lieu
-newtab-weather-change-location-search-input = Tschertgar in lieu
 newtab-weather-menu-weather-display = Visualisaziun da l’aura
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
