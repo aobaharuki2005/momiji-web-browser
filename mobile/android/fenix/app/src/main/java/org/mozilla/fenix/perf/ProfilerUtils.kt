@@ -4,10 +4,14 @@
 
 package org.mozilla.fenix.perf
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Base64
+import androidx.core.content.ContextCompat
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
@@ -108,7 +112,15 @@ enum class ProfilerSettings(val threads: Array<String>, val features: Array<Stri
  */
 object ProfilerUtils {
 
-    private fun saveProfileUrlToClipboard(profileResult: ByteArray, context: Context): String {
+    /**
+     * Saves a profile to the Firefox Profiler server and returns the public URL.
+     *
+     * @param profileResult The compressed profile data as a ByteArray from GeckoView
+     * @param context Android context for accessing network services
+     * @return The public URL where the profile can be viewed
+     * @throws IOException If network upload fails or temporary file operations fail
+     */
+    fun saveProfileUrlToClipboard(profileResult: ByteArray, context: Context): String {
         // The profile is saved to a temporary file since our fetch API takes a file or a string.
         // Converting the ByteArray to a String would hurt the encoding, which we need to preserve.
         // The file may potentially contain sensitive data and should be handled carefully.
@@ -122,7 +134,14 @@ object ProfilerUtils {
         }
     }
 
-    private fun finishProfileSave(context: Context, url: String, onUrlFinish: (Int) -> Unit) {
+    /**
+     * Completes the profile saving process by copying the URL to clipboard and showing confirmation.
+     *
+     * @param context Android context for accessing clipboard service
+     * @param url The profiler URL to copy to clipboard
+     * @param onUrlFinish Callback function that receives a string resource ID for user feedback
+     */
+    fun finishProfileSave(context: Context, url: String, onUrlFinish: (Int) -> Unit) {
         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clipData = ClipData.newPlainText("Profiler URL", url)
         clipboardManager.setPrimaryClip(clipData)
@@ -181,6 +200,26 @@ object ProfilerUtils {
             finishProfileSave(context, url, onUrlFinish)
         } catch (e: IOException) {
             onUrlFinish(R.string.profiler_io_error)
+        }
+    }
+
+    /**
+     * Checks if the app has notification permission on Android 13+ (API level 33+).
+     *
+     * This permission check is required for profiler notifications on newer Android versions.
+     * On older versions, notification permission is granted by default.
+     *
+     * @param context Android context for permission checking
+     * @return true if notification permission is granted or not required, false otherwise
+     */
+    fun hasNotificationPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
         }
     }
 }
