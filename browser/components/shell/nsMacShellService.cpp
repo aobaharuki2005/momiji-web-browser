@@ -7,7 +7,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIImageLoadingContent.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/Promise.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIContent.h"
 #include "nsICookieJarSettings.h"
@@ -343,26 +342,4 @@ nsMacShellService::GetAvailableApplicationsForProtocol(
     aHandlerPaths.AppendElement(handlerPath.Clone());
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP nsMacShellService::GetIconExtension(nsACString& aExtension) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMacShellService::CreateIcon(nsIFile* aFile,
-                                            imgIContainer* aImage,
-                                            JSContext* aCx,
-                                            mozilla::dom::Promise** aPromise) {
-  NS_ENSURE_ARG_POINTER(aFile);
-  NS_ENSURE_ARG_POINTER(aImage);
-  NS_ENSURE_ARG_POINTER(aCx);
-  NS_ENSURE_ARG_POINTER(aPromise);
-
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  // This function is currently only available on Windows and Linux/BSD.
-  // Eventually, it should write an ICNS file; see bug 1986113.
-  return NS_ERROR_NOT_IMPLEMENTED;
 }

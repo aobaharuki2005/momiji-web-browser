@@ -21,16 +21,18 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 // We want to mock the native XPCOM interfaces of the initialized
 // `ShellService.shellService`, but those interfaces are frozen. Instead we
 // proxy `ShellService.shellService` and mock it.
-let gCreateIcon = ShellService.shellService.createIcon;
-let gOverrideIconFileOnce;
+let gCreateWindowsIcon = ShellService.shellService.createWindowsIcon;
+let gOverrideWindowsIconFileOnce;
 const kMockNativeShellService = {
   ...ShellService.shellService,
-  createIcon: sinon.stub().callsFake(async (aIconFile, aImgContainer) => {
-    if (gOverrideIconFileOnce) {
-      await gCreateIcon(gOverrideIconFileOnce, aImgContainer);
-      gOverrideIconFileOnce = null;
-    }
-  }),
+  createWindowsIcon: sinon
+    .stub()
+    .callsFake(async (aIconFile, aImgContainer) => {
+      if (gOverrideWindowsIconFileOnce) {
+        await gCreateWindowsIcon(gOverrideWindowsIconFileOnce, aImgContainer);
+        gOverrideWindowsIconFileOnce = null;
+      }
+    }),
   createShortcut: sinon.stub().resolves("dummy_path"),
   deleteShortcut: sinon.stub().resolves("dummy_path"),
   pinShortcutToTaskbar: sinon.stub().resolves(),
@@ -84,7 +86,7 @@ const kDefaultIconSpy = sinon.spy(kMockFaviconService, "defaultFavicon", [
 
 function shellPinCalled(aTaskbarTab) {
   ok(
-    kMockNativeShellService.createIcon.calledOnce,
+    kMockNativeShellService.createWindowsIcon.calledOnce,
     `Icon creation should have been called.`
   );
   ok(
@@ -167,7 +169,7 @@ add_task(async function test_pin_existing_favicon_raster() {
   gFavicon = gPngFavicon;
 
   let iconFile = getTempFile();
-  gOverrideIconFileOnce = iconFile;
+  gOverrideWindowsIconFileOnce = iconFile;
 
   await TaskbarTabsPin.pinTaskbarTab(taskbarTab, registry);
 
@@ -175,7 +177,8 @@ add_task(async function test_pin_existing_favicon_raster() {
     kMockFaviconService.getFaviconForPage.calledOnce,
     "The favicon for the page should have attempted to be retrieved."
   );
-  const imgContainer = kMockNativeShellService.createIcon.firstCall.args[1];
+  const imgContainer =
+    kMockNativeShellService.createWindowsIcon.firstCall.args[1];
   equal(imgContainer.width, 256, "Image should be scaled to 256px width.");
   equal(imgContainer.height, 256, "Image should be scaled to 256px height.");
   ok(
@@ -193,7 +196,7 @@ add_task(async function test_pin_existing_favicon_vector() {
   gFavicon = gSvgFavicon;
 
   let iconFile = getTempFile();
-  gOverrideIconFileOnce = iconFile;
+  gOverrideWindowsIconFileOnce = iconFile;
 
   await TaskbarTabsPin.pinTaskbarTab(taskbarTab, registry);
 

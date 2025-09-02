@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsIFile;
-interface imgIContainer;
 
 webidl Element;
 
@@ -64,29 +63,4 @@ interface nsIShellService : nsISupports
    * entire screen. A rgb value, where (r << 16 | g << 8 | b)
    */
   attribute unsigned long desktopBackgroundColor;
-
-  /**
-   * The file extension that should be used with createIcon.
-   */
-  readonly attribute ACString iconExtension;
-
-  /**
-   * This function can be used to convert compatible image formats into the
-   * platform's native icon format (e.g. .ICO on Windows). This is intended for
-   * use with shortcuts.
-   *
-   * Images over 256x256 might not be supported. Vector images will be
-   * rasterized to 256x256. It should only be used with square images due to a
-   * current limitation in the Windows implementation.
-   *
-   * @param  aFile
-   *         Output file to be written
-   * @param  aContainer
-   *         The graphics container
-   */
-  [implicit_jscontext]
-  Promise createIcon(
-    in nsIFile aFile,
-    in imgIContainer aContainer
-  );
 };
