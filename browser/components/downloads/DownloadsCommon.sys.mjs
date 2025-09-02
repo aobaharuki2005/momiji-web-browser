@@ -833,7 +833,7 @@ function DownloadsDataCtor({ isPrivate, isHistory, maxHistoryResults } = {}) {
     let list = await lazy.Downloads.getList(
       isPrivate ? lazy.Downloads.PRIVATE : lazy.Downloads.PUBLIC
     );
-    await list.addView(this);
+    list.addView(this);
     return list;
   })();
 }
