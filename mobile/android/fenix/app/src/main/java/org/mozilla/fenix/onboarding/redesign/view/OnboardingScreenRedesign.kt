@@ -83,7 +83,6 @@ private val logger: Logger = Logger("OnboardingScreenRedesign")
  * @param onMarketingOptInToggle callback for when the user toggles the opt-in checkbox
  * @param onMarketingDataContinueClick callback for when the user clicks the continue button on the
  * marketing data opt out screen.
- * on the marketing data opt out screen.
  * @param onFinish Invoked when the onboarding is completed.
  * @param onImpression Invoked when a page in the pager is displayed.
  * @param currentIndex callback for when the current horizontal pager page changes
