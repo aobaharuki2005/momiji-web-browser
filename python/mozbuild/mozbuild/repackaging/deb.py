@@ -16,12 +16,12 @@ import mozpack.path as mozpath
 from mozilla_version.gecko import GeckoVersion
 
 from mozbuild.repackaging.utils import (
+    application_ini_data_from_tar,
     copy_plain_config,
     get_build_variables,
     inject_desktop_entry_file,
     inject_distribution_folder,
     inject_prefs_file,
-    load_application_ini_data,
     mv_manpage_files,
     render_templates,
 )
@@ -92,11 +92,14 @@ def repackage_deb(
     source_dir = os.path.join(tmpdir, "source")
     try:
         mozfile.extract_tarball(infile, source_dir)
-        application_ini_data = _load_application_ini_data(infile, version, build_number)
+        application_ini_data = application_ini_data_from_tar(infile)
+        pkg_version = _get_deb_pkg_version(
+            version, application_ini_data["build_id"], build_number
+        )
         build_variables = get_build_variables(
             application_ini_data,
             _DEB_ARCH[arch],
-            application_ini_data["pkg_version"],
+            pkg_version,
             release_product=release_product,
         )
         build_variables["DEPENDS"] = "${shlibs:Depends},"
@@ -160,14 +163,15 @@ def repackage_deb_l10n(
     try:
         langpack_metadata = _extract_langpack_metadata(input_xpi_file)
         langpack_dir = mozpath.join(source_dir, "firefox", "distribution", "extensions")
-        application_ini_data = _load_application_ini_data(
-            input_tar_file, version, build_number
+        application_ini_data = application_ini_data_from_tar(input_tar_file)
+        pkg_version = _get_deb_pkg_version(
+            version, application_ini_data["build_id"], build_number
         )
         langpack_id = langpack_metadata["langpack_id"]
         build_variables = get_build_variables(
             application_ini_data,
             _DEB_ARCH[arch],
-            application_ini_data["pkg_version"],
+            pkg_version,
             # Debian package names are only lowercase
             package_name_suffix=f"-l10n-{langpack_id.lower()}",
             description_suffix=f" - {langpack_metadata['description']}",
@@ -204,17 +208,6 @@ def repackage_deb_l10n(
         )
     finally:
         shutil.rmtree(tmpdir)
-
-
-def _load_application_ini_data(infile, version, build_number):
-    application_ini_data = load_application_ini_data(infile, version, build_number)
-
-    # Replace the pkg_version with the Debian version format
-    application_ini_data["pkg_version"] = _get_deb_pkg_version(
-        version, application_ini_data["build_id"], build_number
-    )
-
-    return application_ini_data
 
 
 def _get_deb_pkg_version(version, build_id, build_number):
