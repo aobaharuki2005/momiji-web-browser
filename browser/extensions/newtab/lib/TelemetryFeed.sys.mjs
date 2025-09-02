@@ -643,7 +643,6 @@ export class TelemetryFeed {
           newtab_visit_id: session.session_id,
           is_sponsored: false,
           position: action.data.position,
-          is_pinned: !!action.data.isPinned,
         });
         break;
 
@@ -652,7 +651,6 @@ export class TelemetryFeed {
           newtab_visit_id: session.session_id,
           is_sponsored: false,
           position: action.data.position,
-          is_pinned: !!action.data.isPinned,
         });
         break;
 

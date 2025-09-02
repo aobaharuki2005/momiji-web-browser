@@ -1491,9 +1491,6 @@ topsites:
       position: &topsite_position
         description: The position (0-index) of the topsite tile.
         type: quantity
-      is_pinned: &is_pinned
-        description: Whether the topsite tile is pinned.
-        type: boolean
     send_in_pings:
       - newtab
 
@@ -1530,7 +1527,6 @@ topsites:
       newtab_visit_id: *newtab_visit_id
       is_sponsored: *is_sponsored
       position: *topsite_position
-      is_pinned: *is_pinned
     send_in_pings:
       - newtab
 
