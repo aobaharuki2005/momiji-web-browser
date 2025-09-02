@@ -1396,6 +1396,24 @@ MOZ_ALWAYS_INLINE void convertType<float, uint8_t>(const float* __restrict src,
 }
 
 template <>
+MOZ_ALWAYS_INLINE void convertType<uint16_t, float>(
+    const uint16_t* __restrict src, float* __restrict dst) {
+  dst[0] = unpackFromFloat16(src[0]);
+  dst[1] = unpackFromFloat16(src[1]);
+  dst[2] = unpackFromFloat16(src[2]);
+  dst[3] = unpackFromFloat16(src[3]);
+}
+
+template <>
+MOZ_ALWAYS_INLINE void convertType<float, uint16_t>(const float* __restrict src,
+                                                    uint16_t* __restrict dst) {
+  dst[0] = packToFloat16(src[0]);
+  dst[1] = packToFloat16(src[1]);
+  dst[2] = packToFloat16(src[2]);
+  dst[3] = packToFloat16(src[3]);
+}
+
+template <>
 MOZ_ALWAYS_INLINE void convertType<uint8_t, uint16_t>(
     const uint8_t* __restrict src, uint16_t* __restrict dst) {
   const float scaleFactor = 1.f / 255.0f;
