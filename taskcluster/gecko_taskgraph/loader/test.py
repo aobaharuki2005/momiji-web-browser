@@ -9,6 +9,8 @@ from taskgraph.loader.transform import loader as transform_loader
 from taskgraph.util.copy import deepcopy
 from taskgraph.util.yaml import load_yaml
 
+from gecko_taskgraph import TEST_CONFIGS
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,13 +27,13 @@ def loader(kind, path, config, params, loaded_tasks):
     )
 
     # get the test platforms for those build tasks
-    test_platforms_cfg = load_yaml(path, "test-platforms.yml")
+    test_platforms_cfg = load_yaml(TEST_CONFIGS, "test-platforms.yml")
     test_platforms = get_test_platforms(
         test_platforms_cfg, builds_by_platform, signed_builds_by_platform
     )
 
     # expand the test sets for each of those platforms
-    test_sets_cfg = load_yaml(path, "test-sets.yml")
+    test_sets_cfg = load_yaml(TEST_CONFIGS, "test-sets.yml")
     test_platforms = expand_tests(test_sets_cfg, test_platforms)
 
     # load the test descriptions
