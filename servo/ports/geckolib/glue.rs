@@ -10314,6 +10314,56 @@ fn resolve_anchor_fallback(
         })
 }
 
+fn resolve_anchor_function(
+    func: &AnchorFunction,
+    params: &AnchorPosOffsetResolutionParams,
+    prop_side: PhysicalSide,
+) -> AnchorPositioningFunctionResolution {
+    if !func.valid_for(prop_side, params.mBaseParams.mPosition) {
+        return resolve_inset_fallback(func.fallback.as_ref(), params, prop_side);
+    }
+    let result = AnchorFunction::resolve(&func.target_element, &func.side, prop_side, params);
+    match result {
+        Ok(l) => {
+            AnchorPositioningFunctionResolution::Resolved(computed::LengthPercentage::new_length(l))
+        },
+        Err(()) => resolve_inset_fallback(func.fallback.as_ref(), params, prop_side),
+    }
+}
+
+fn resolve_inset_fallback(
+    fallback: Option<&computed::Inset>,
+    params: &AnchorPosOffsetResolutionParams,
+    prop_side: PhysicalSide,
+) -> AnchorPositioningFunctionResolution {
+    use style::values::computed::length_percentage::Unpacked;
+    let Some(fallback) = fallback else {
+        return AnchorPositioningFunctionResolution::Invalid;
+    };
+    match fallback {
+        computed::Inset::Auto => AnchorPositioningFunctionResolution::Invalid,
+        computed::Inset::LengthPercentage(lp) => {
+            AnchorPositioningFunctionResolution::ResolvedReference(lp as *const _)
+        },
+        computed::Inset::AnchorSizeFunction(_) => AnchorPositioningFunctionResolution::Invalid, // TODO(dshin)
+        computed::Inset::AnchorFunction(f) => resolve_anchor_function(f, params, prop_side),
+        computed::Inset::AnchorContainingCalcFunction(clp) => {
+            let Unpacked::Calc(clp) = clp.unpack() else {
+                unreachable!();
+            };
+            match clp.resolve_anchor(
+                AllowAnchorPosResolutionInCalcPercentage::Both(prop_side),
+                params,
+            ) {
+                Ok((node, clamping_mode)) => AnchorPositioningFunctionResolution::Resolved(
+                    computed::LengthPercentage::new_calc(node, clamping_mode),
+                ),
+                Err(_) => AnchorPositioningFunctionResolution::Invalid,
+            }
+        },
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_ResolveAnchorFunction(
     func: &AnchorFunction,
@@ -10321,17 +10371,7 @@ pub extern "C" fn Servo_ResolveAnchorFunction(
     prop_side: PhysicalSide,
     out: &mut AnchorPositioningFunctionResolution,
 ) {
-    if !func.valid_for(prop_side, params.mBaseParams.mPosition) {
-        *out = resolve_anchor_fallback(&func.fallback);
-        return;
-    }
-    let result = AnchorFunction::resolve(&func.target_element, &func.side, prop_side, params);
-    *out = match result {
-        Ok(l) => {
-            AnchorPositioningFunctionResolution::Resolved(computed::LengthPercentage::new_length(l))
-        },
-        Err(()) => resolve_anchor_fallback(&func.fallback),
-    };
+    *out = resolve_anchor_function(func, params, prop_side);
 }
 
 #[no_mangle]
