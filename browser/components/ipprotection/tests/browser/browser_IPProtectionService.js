@@ -12,6 +12,12 @@ const { ERRORS } = ChromeUtils.importESModule(
   "chrome://browser/content/ipprotection/ipprotection-constants.mjs"
 );
 
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
+);
+
+AddonTestUtils.initMochitest(this);
+
 // Don't add an experiment so we can test adding and removing it.
 DEFAULT_EXPERIMENT = null;
 
@@ -441,4 +447,74 @@ add_task(async function test_IPProtectionService_reload() {
   await closePanel();
   await cleanupAlpha();
   cleanupService();
+});
+
+/**
+ * Tests the add-on manager interaction
+ */
+add_task(async function test_IPProtectionService_addon() {
+  let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
+  let prevPosition = CustomizableUI.getPlacementOfWidget(
+    IPProtectionWidget.WIDGET_ID
+  ).position;
+
+  Assert.ok(
+    BrowserTestUtils.isVisible(widget),
+    "IP-Protection toolbaritem is enabled"
+  );
+
+  IPProtectionService.hasUpgraded = true;
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      manifest_version: 2,
+      name: "Test VPN",
+      version: "1.0",
+      applications: { gecko: { id: "vpn@mozilla.com" } },
+    },
+  });
+
+  await extension.startup();
+
+  Assert.ok(
+    !BrowserTestUtils.isVisible(widget),
+    "IP-Protection toolbaritem is removed"
+  );
+
+  // Reset to the toolbar
+  CustomizableUI.addWidgetToArea(
+    IPProtectionWidget.WIDGET_ID,
+    CustomizableUI.AREA_NAVBAR,
+    prevPosition
+  );
+
+  widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
+  Assert.ok(
+    BrowserTestUtils.isVisible(widget),
+    "IP-Protection toolbaritem is re-added"
+  );
+
+  await extension.unload();
+
+  IPProtectionService.hasUpgraded = false;
+
+  const extension2 = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      manifest_version: 2,
+      name: "Test VPN",
+      version: "2.0",
+      applications: { gecko: { id: "vpn@mozilla.com" } },
+    },
+  });
+
+  await extension2.startup();
+
+  Assert.ok(
+    BrowserTestUtils.isVisible(widget),
+    "IP-Protection toolbaritem does not change when user has not upgraded"
+  );
+
+  await extension2.unload();
 });
