@@ -261,6 +261,14 @@ internal object AppStoreReducer {
         is AppAction.ReviewPromptAction -> ReviewPromptReducer.reduce(state, action)
 
         is AppAction.SearchAction -> SearchStateReducer.reduce(state, action)
+
+        is AppAction.MenuNotification.AddMenuNotification -> state.copy(
+            supportedMenuNotifications = state.supportedMenuNotifications + action.notification,
+        )
+
+        is AppAction.MenuNotification.RemoveMenuNotification -> state.copy(
+            supportedMenuNotifications = state.supportedMenuNotifications - action.notification,
+        )
     }
 }
 

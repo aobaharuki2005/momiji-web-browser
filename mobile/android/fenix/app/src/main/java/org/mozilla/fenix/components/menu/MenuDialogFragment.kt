@@ -68,6 +68,7 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.appstate.SupportedMenuNotifications
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.components.menu.compose.Addons
 import org.mozilla.fenix.components.menu.compose.CustomTabMenu
@@ -542,6 +543,12 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     browserWebExtensionMenuItems = browserWebExtensionMenuItem,
                                 )
 
+                                val isDownloadHighlighted by appStore.observeAsState(
+                                    initialValue = false,
+                                ) { state ->
+                                    state.supportedMenuNotifications.contains(SupportedMenuNotifications.Downloads)
+                                }
+
                                 MainMenu(
                                     accessPoint = args.accesspoint,
                                     account = account,
@@ -562,6 +569,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     extensionsMenuItemDescription = extensionsMenuItemDescription,
                                     scrollState = scrollState,
                                     showBanner = shouldShowMenuBanner && !defaultBrowser,
+                                    isDownloadHighlighted = isDownloadHighlighted,
                                     webExtensionMenuCount = webExtensionsCount,
                                     allWebExtensionsDisabled = allWebExtensionsDisabled,
                                     onMozillaAccountButtonClick = {

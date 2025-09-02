@@ -102,6 +102,7 @@ import org.mozilla.fenix.utils.DURATION_MS_MAIN_MENU_ITEM
  * @param canGoForward Whether or not the forward button is enabled.
  * @param scrollState The [ScrollState] used for vertical scrolling.
  * @param showBanner Whether or not the default browser banner should be shown.
+ * @param isDownloadHighlighted `true` if the downloads menu item should be visually highlighted.
  * @param webExtensionMenuCount The number of web extensions.
  * @param onMoreMenuClick Invoked when the user clicks on the more menu item.
  * @param onCustomizeReaderViewMenuClick Invoked when the user clicks on the Customize Reader View button.
@@ -151,6 +152,7 @@ fun MainMenu(
     canGoForward: Boolean,
     scrollState: ScrollState,
     showBanner: Boolean,
+    isDownloadHighlighted: Boolean,
     webExtensionMenuCount: Int,
     onMoreMenuClick: () -> Unit,
     onCustomizeReaderViewMenuClick: () -> Unit,
@@ -285,6 +287,7 @@ fun MainMenu(
         }
 
         LibraryMenuGroup(
+            isDownloadHighlighted = isDownloadHighlighted,
             onBookmarksMenuClick = onBookmarksMenuClick,
             onHistoryMenuClick = onHistoryMenuClick,
             onDownloadsMenuClick = onDownloadsMenuClick,
@@ -620,6 +623,7 @@ private fun MoreMenuButtonGroup(
 
 @Composable
 private fun LibraryMenuGroup(
+    isDownloadHighlighted: Boolean = false,
     onBookmarksMenuClick: () -> Unit,
     onHistoryMenuClick: () -> Unit,
     onDownloadsMenuClick: () -> Unit,
@@ -682,6 +686,7 @@ private fun LibraryMenuGroup(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight(),
+            isHighlighted = isDownloadHighlighted,
             iconRes = R.drawable.mozac_ic_download_24,
             labelRes = R.string.library_downloads,
             shape = middleShape,
@@ -930,6 +935,7 @@ private fun MenuDialogPreview() {
                 extensionsMenuItemDescription = "No extensions enabled",
                 scrollState = ScrollState(0),
                 showBanner = true,
+                isDownloadHighlighted = true,
                 webExtensionMenuCount = 1,
                 onMoreMenuClick = {},
                 onCustomizeReaderViewMenuClick = {},
@@ -991,6 +997,7 @@ private fun MenuDialogPrivatePreview(
                 extensionsMenuItemDescription = "No extensions enabled",
                 scrollState = ScrollState(0),
                 showBanner = true,
+                isDownloadHighlighted = true,
                 webExtensionMenuCount = 0,
                 onMoreMenuClick = {},
                 onCustomizeReaderViewMenuClick = {},
