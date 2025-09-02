@@ -108,7 +108,7 @@ Exec=firefox-devedition %u
 Terminal=false
 X-MultipleArgs=false
 Icon=firefox-devedition
-StartupWMClass=firefox-dev
+StartupWMClass=firefox-aurora
 Categories=GNOME;GTK;Network;WebBrowser;
 MimeType=application/json;application/pdf;application/rdf+xml;application/rss+xml;application/x-xpinstall;application/xhtml+xml;application/xml;audio/flac;audio/ogg;audio/webm;image/avif;image/gif;image/jpeg;image/png;image/svg+xml;image/webp;text/html;text/xml;video/ogg;video/webm;x-scheme-handler/chrome;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/mailto;
 StartupNotify=true
@@ -209,7 +209,6 @@ def test_generate_deb_desktop_entry_file_text(monkeypatch):
     build_variables = {
         "PKG_NAME": "firefox-nightly",
         "Icon": "firefox-nightly",
-        "REMOTING_NAME": "firefox-nightly",
     }
     release_product = "firefox"
     release_type = "nightly"
@@ -277,7 +276,6 @@ def test_generate_deb_desktop_entry_file_text(monkeypatch):
     build_variables = {
         "PKG_NAME": "firefox-devedition",
         "Icon": "firefox-devedition",
-        "REMOTING_NAME": "firefox-dev",
     }
     release_product = "devedition"
     release_type = "beta"

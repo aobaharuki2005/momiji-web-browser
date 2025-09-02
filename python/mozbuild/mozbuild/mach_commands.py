@@ -3413,15 +3413,15 @@ def repackage_snap_install(command_context, snap_file, snap_name, sudo=None):
 @SubCommand(
     "repackage",
     "desktop-file",
-    description="Prepare a firefox.desktop file for snap",
+    description="Prepare a firefox.desktop file",
     virtualenv_name="repackage-desktop-file",
 )
 @CommandArgument("--output", type=str, required=True, help="Output desktop file")
 @CommandArgument(
     "--flavor",
     type=str,
-    required=False,
-    choices=["snap"],
+    required=True,
+    choices=["snap", "flatpak"],
     help="Desktop file flavor to generate.",
 )
 @CommandArgument(
@@ -3450,16 +3450,49 @@ def repackage_desktop_file(
     release_type,
     wmclass,
 ):
-    from mozbuild.repackaging.snapcraft_transform import (
-        SnapDesktopFile,
-    )
+    desktop = None
+    if flavor == "flatpak":
+        from fluent.runtime.fallback import FluentLocalization, FluentResourceLoader
 
-    desktop = SnapDesktopFile(
-        command_context.log,
-        appname=release_product,
-        branchname=release_type,
-        wmclass=wmclass,
-    ).repack()
+        from mozbuild.repackaging.desktop_file import generate_browser_desktop_entry
+
+        # This relies in existing build variables usage inherited from the
+        # debian repackage code that serves the same purpose on Flatpak, so
+        # it is just directly re-used here.
+        build_variables = {
+            "PKG_NAME": release_product,
+            "DBusActivatable": "false",
+            "Icon": "org.mozilla.firefox",
+            "StartupWMClass": release_product,
+        }
+
+        desktop = "\n".join(
+            generate_browser_desktop_entry(
+                command_context.log,
+                build_variables,
+                release_product,
+                release_type,
+                FluentLocalization,
+                FluentResourceLoader,
+            )
+        )
+
+    if flavor == "snap":
+        from mozbuild.repackaging.snapcraft_transform import (
+            SnapDesktopFile,
+        )
+
+        desktop = SnapDesktopFile(
+            command_context.log,
+            appname=release_product,
+            branchname=release_type,
+            wmclass=wmclass,
+        ).repack()
+
+    if desktop is None:
+        raise NotImplementedError(
+            f"Couldn't generate a desktop file. Unknown flavor: {flavor}"
+        )
 
     with open(output, "w") as desktop_file:
         desktop_file.write(desktop)

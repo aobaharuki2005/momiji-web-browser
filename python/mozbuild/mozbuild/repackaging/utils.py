@@ -10,6 +10,7 @@ import subprocess
 import tarfile
 import zipfile
 from datetime import datetime
+from email.utils import format_datetime
 from pathlib import Path
 from string import Template
 from tempfile import TemporaryDirectory
@@ -21,7 +22,7 @@ from mozbuild.repackaging.application_ini import get_application_ini_values
 from mozbuild.repackaging.desktop_file import generate_browser_desktop_entry_file_text
 
 
-def application_ini_data_from_directory(application_directory):
+def _extract_application_ini_data_from_directory(application_directory):
     values = get_application_ini_values(
         application_directory,
         dict(section="App", value="Name"),
@@ -42,7 +43,7 @@ def application_ini_data_from_directory(application_directory):
     return data
 
 
-def application_ini_data_from_tar(input_tar_file):
+def _extract_application_ini_data(input_tar_file):
     with TemporaryDirectory() as d:
         with tarfile.open(input_tar_file) as tar:
             application_ini_files = [
@@ -62,7 +63,23 @@ def application_ini_data_from_tar(input_tar_file):
 
             tar.extract(application_ini_files[0], path=d)
 
-        return application_ini_data_from_directory(d)
+        application_ini_data = _extract_application_ini_data_from_directory(d)
+
+        return application_ini_data
+
+
+def _parse_application_ini_data(application_ini_data, version, build_number):
+    application_ini_data["timestamp"] = datetime.strptime(
+        application_ini_data["build_id"], "%Y%m%d%H%M%S"
+    )
+
+    application_ini_data["remoting_name"] = application_ini_data[
+        "remoting_name"
+    ].lower()
+
+    application_ini_data["pkg_version"] = f"{version}-{build_number}"
+
+    return application_ini_data
 
 
 def copy_plain_config(input_template_dir, source_dir):
@@ -84,23 +101,18 @@ def get_build_variables(
     application_ini_data,
     arch,
     version,
+    depends="",
     package_name_suffix="",
     description_suffix="",
     release_product="",
     build_number="1",
 ):
-    """
-    Massage the application.ini info and other metadata into a dict suitable for passing into packaging templates
-    """
     if release_product == "devedition":
         pkg_install_path = "usr/lib/firefox-devedition"
         pkg_name = f"firefox-devedition{package_name_suffix}"
     else:
-        pkg_install_path = f"usr/lib/{application_ini_data['remoting_name'].lower()}"
-        pkg_name = (
-            f"{application_ini_data['remoting_name'].lower()}{package_name_suffix}"
-        )
-    timestamp = datetime.strptime(application_ini_data["build_id"], "%Y%m%d%H%M%S")
+        pkg_install_path = f"usr/lib/{application_ini_data['remoting_name']}"
+        pkg_name = f"{application_ini_data['remoting_name']}{package_name_suffix}"
 
     return {
         "DESCRIPTION": f"{application_ini_data['vendor']} {application_ini_data['display_name']}{description_suffix}",
@@ -110,11 +122,11 @@ def get_build_variables(
         "PKG_VERSION": version,
         "PRODUCT_NAME": application_ini_data["name"],
         "DISPLAY_NAME": application_ini_data["display_name"],
-        "TIMESTAMP": timestamp,
-        "MANPAGE_DATE": timestamp.strftime("%B %d, %Y"),
+        "CHANGELOG_DATE": format_datetime(application_ini_data["timestamp"]),
+        "MANPAGE_DATE": application_ini_data["timestamp"].strftime("%B %d, %Y"),
         "ARCH_NAME": arch,
+        "DEPENDS": depends,
         "Icon": pkg_name,
-        "REMOTING_NAME": application_ini_data["remoting_name"],
     }
 
 
@@ -199,6 +211,11 @@ def inject_prefs_file(source_dir, app_name, template_dir):
     src = mozpath.join(template_dir, "package-prefs.js")
     dst = mozpath.join(source_dir, app_name.lower(), "defaults/pref")
     shutil.copy(src, dst)
+
+
+def load_application_ini_data(infile, version, build_number):
+    application_ini_data = _extract_application_ini_data(infile)
+    return _parse_application_ini_data(application_ini_data, version, build_number)
 
 
 def mv_manpage_files(source_dir, build_variables):
