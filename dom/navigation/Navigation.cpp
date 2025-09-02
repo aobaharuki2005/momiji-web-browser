@@ -796,8 +796,18 @@ static bool Equals(nsIURI* aURI, nsIURI* aOtherURI) {
          equals;
 }
 
+static bool HasRef(nsIURI* aURI) {
+  bool hasRef = false;
+  aURI->GetHasRef(&hasRef);
+  return hasRef;
+}
+
 static bool HasIdenticalFragment(nsIURI* aURI, nsIURI* aOtherURI) {
   nsAutoCString ref;
+
+  if (HasRef(aURI) != HasRef(aOtherURI)) {
+    return false;
+  }
 
   if (NS_FAILED(aURI->GetRef(ref))) {
     return false;
@@ -834,6 +844,10 @@ static void LogEvent(Event* aEvent, NavigateEvent* aOngoingEvent,
     if (RefPtr<NavigationDestination> destination =
             aOngoingEvent->Destination()) {
       log.AppendElement(destination->GetURI()->GetSpecOrDefault());
+    }
+
+    if (aOngoingEvent->HashChange()) {
+      log.AppendElement("hashchange"_ns);
     }
   }
 
