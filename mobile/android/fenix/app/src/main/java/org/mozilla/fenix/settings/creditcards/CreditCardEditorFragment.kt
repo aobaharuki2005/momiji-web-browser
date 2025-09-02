@@ -10,6 +10,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.AdapterView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
@@ -88,14 +89,20 @@ class CreditCardEditorFragment :
                     placeCursorAtEnd()
                     showKeyboard()
                 }
-                expiryMonthDropDown.setOnTouchListener { view, _ ->
-                    view?.hideKeyboard()
-                    false
-                }
-                expiryYearDropDown.setOnTouchListener { view, _ ->
-                    view?.hideKeyboard()
-                    false
-                }
+                expiryMonthDropDown.onItemSelectedListener =
+                    object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                            expiryMonthDropDown.hideKeyboard()
+                        }
+                        override fun onNothingSelected(parent: AdapterView<*>) = Unit
+                    }
+                expiryYearDropDown.onItemSelectedListener =
+                    object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                            expiryYearDropDown.hideKeyboard()
+                        }
+                        override fun onNothingSelected(parent: AdapterView<*>) = Unit
+                    }
             }
         }
     }
