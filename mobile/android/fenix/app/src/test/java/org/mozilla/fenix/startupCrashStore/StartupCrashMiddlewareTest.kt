@@ -3,16 +3,15 @@ package org.mozilla.fenix.startupCrashStore
 import android.text.format.DateUtils
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyLong
@@ -33,10 +32,6 @@ private const val FIVE_DAYS_IN_MILLIS = DateUtils.DAY_IN_MILLIS * 5
 
 @RunWith(AndroidJUnit4::class)
 class StartupCrashMiddlewareTest {
-
-    @get:Rule
-    val coroutineTestRule = MainCoroutineRule()
-    private val scope = coroutineTestRule.scope
 
     private lateinit var settings: Settings
     private lateinit var crashReporter: CrashReporter
@@ -64,10 +59,10 @@ class StartupCrashMiddlewareTest {
         `when`(crashReporter.unsentCrashReportsSince(anyLong())).thenReturn(listOf(crash))
         `when`(crashReporter.submitReport(any(), any())).thenReturn(CompletableDeferred(Unit))
 
-        val store = makeStore().first
+        val store = makeStore(scope = this).first
 
         store.dispatch(ReportTapped)
-        store.waitUntilIdle()
+        advanceUntilIdle()
 
         val crashCaptor = argumentCaptor<Crash>()
         verify(crashReporter).unsentCrashReportsSince(anyLong())
@@ -82,10 +77,10 @@ class StartupCrashMiddlewareTest {
     fun `when No is tapped then crash defer period is set and FenixReady is dispatched`() = runTest {
         val currentTime = System.currentTimeMillis()
 
-        val store = makeStore(currentTime = { currentTime }).first
+        val store = makeStore(currentTime = { currentTime }, scope = this).first
 
         store.dispatch(NoTapped)
-        store.waitUntilIdle()
+        advanceUntilIdle()
 
         verify(canaryRepo).clearCanary()
         verify(settings).crashReportDeferredUntil = currentTime + FIVE_DAYS_IN_MILLIS
@@ -93,15 +88,15 @@ class StartupCrashMiddlewareTest {
     }
 
     @Test
-    fun `when Reopen is tapped then initAndRestart handler is invoked and state is unchanged`() {
-        val storeAndFlag = makeStore()
+    fun `when Reopen is tapped then initAndRestart handler is invoked and state is unchanged`() = runTest {
+        val storeAndFlag = makeStore(scope = this)
 
         val store = storeAndFlag.first
         val initAndRestartInvoked = storeAndFlag.second
 
         val before = store.state
         store.dispatch(ReopenTapped)
-        store.waitUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(true, initAndRestartInvoked())
         assertEquals(before, store.state)
@@ -109,6 +104,7 @@ class StartupCrashMiddlewareTest {
 
     private fun makeStore(
         currentTime: () -> Long = { System.currentTimeMillis() },
+        scope: TestScope,
     ): Pair<StartupCrashStore, () -> Boolean> {
         var called = false
         val middleware = StartupCrashMiddleware(
