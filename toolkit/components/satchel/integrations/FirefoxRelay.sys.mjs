@@ -47,8 +47,8 @@ export const autocompleteUXTreatments = {
   control: {
     image: "chrome://browser/content/asrouter/assets/glyph-mail-mask-16.svg",
     messageIds: [
-      "firefox-relay-opt-in-title-1",
-      "firefox-relay-opt-in-subtitle-1",
+      "firefox-relay-opt-in-title-2",
+      "firefox-relay-opt-in-subtitle-2",
     ],
   },
   "basic-info": {
@@ -810,17 +810,30 @@ class RelayOffered {
       {
         autofocus: true,
         removeOnDismissal: true,
-        hideClose: true,
-        learnMoreURL: gConfig.learnMoreURL,
+        hideClose: false,
         eventCallback: event => {
           switch (event) {
             case "shown": {
               const document = notification.owner.panel.ownerDocument;
-              customizeNotificationHeader(notification);
-              document.getElementById("firefox-relay-offer-tos-url").href =
-                gConfig.termsOfServiceUrl;
-              document.getElementById("firefox-relay-offer-privacy-url").href =
-                gConfig.privacyPolicyUrl;
+              customizeNotificationHeader(notification, "with-domain");
+              const baseDomain = Services.eTLD.getBaseDomain(
+                Services.io.newURI(origin)
+              );
+              document.querySelector(
+                '[data-l10n-name="firefox-fxa-and-relay-offer-domain"]'
+              ).textContent = baseDomain;
+              const tosLink = document.querySelector(
+                ".firefox-fxa-and-relay-offer-tos-url"
+              );
+              if (tosLink) {
+                tosLink.href = gConfig.termsOfServiceUrl;
+              }
+              const privacyLink = document.querySelector(
+                ".firefox-fxa-and-relay-offer-privacy-url"
+              );
+              if (privacyLink) {
+                privacyLink.href = gConfig.privacyPolicyUrl;
+              }
               document.l10n.setAttributes(
                 document
                   .querySelector(
