@@ -87,9 +87,18 @@ fn map_method(
         None => (None, FfiType::VoidPointer),
     };
     let kind = match meth.callable.async_data.as_ref() {
-        // Callback interface methods defined as sync in the Rust code always `FireAndForget` (for now)
-        None => CallbackMethodKind::FireAndForget,
-        // Callback interface methods defined as async in the Rust code are always `Async`
+        // Callback interface methods defined as sync in the Rust code are either `Sync` or
+        // `FireAndForget`, depending on the configuration.
+        None => match &meth.callable.concurrency_mode {
+            ConcurrencyMode::Sync => CallbackMethodKind::Sync,
+            ConcurrencyMode::FireAndForget => CallbackMethodKind::FireAndForget,
+            _ => bail!(
+                "Invalid concurrency_mode for callback method: {} ({:?})",
+                meth.callable.name,
+                meth.callable.concurrency_mode,
+            ),
+        },
+        // Callback interface methods defined as async in the Rust code are always `Async`.
         Some(async_data) => CallbackMethodKind::Async(CppCallbackInterfaceMethodAsyncData {
             complete_callback_type_name: async_data.ffi_foreign_future_complete.0.clone(),
             result_type_name: async_data.ffi_foreign_future_result.0.clone(),

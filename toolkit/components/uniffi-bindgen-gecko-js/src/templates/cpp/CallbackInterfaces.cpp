@@ -269,6 +269,65 @@ extern "C" void {{ meth.fn_name }}(
   UniquePtr<AsyncCallbackMethodHandlerBase> handler = MakeUnique<{{ meth.async_handler_class_name }}>(aUniffiHandle{% for a in arguments %}, {{ a.name }}{%- endfor %});
   AsyncCallbackMethodHandlerBase::ScheduleAsyncCall(std::move(handler), &{{ cbi.handler_var }});
 }
+
+{%- when CallbackMethodKind::Sync %}
+/**
+ * {{ meth.fn_name }} -- C function to handle the callback method
+ *
+ * This is what Rust calls when it invokes a callback method.
+ */
+extern "C" void {{ meth.fn_name }}(
+  uint64_t aUniffiHandle,
+  {%- for a in meth.arguments %}
+  {{ a.ty.type_name }} {{ a.name }},
+  {%- endfor %}
+  {{ meth.out_pointer_ty.type_name }} aUniffiOutReturn,
+  RustCallStatus* aUniffiOutStatus
+) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  // Take our own reference to the callback handler to ensure that it
+  // stays alive for the duration of this call
+  RefPtr<dom::UniFFICallbackHandler> jsHandler = {{ cbi.handler_var }};
+  // Create a JS context for the call
+  JSObject* global = jsHandler->CallbackGlobalOrNull();
+  if (!global) {
+    MOZ_LOG(gUniffiLogger, LogLevel::Error, ("[{{ meth.fn_name }}] JS handler has null global"));
+    return;
+  }
+  dom::AutoEntryScript aes(global, "{{ meth.fn_name }}");
+
+  // Convert arguments
+  nsTArray<dom::OwningUniFFIScaffoldingValue> uniffiArgs;
+  if (!uniffiArgs.AppendElements({{ arguments.len()  }}, mozilla::fallible)) {
+    MOZ_LOG(gUniffiLogger, LogLevel::Error, ("[{{ meth.fn_name }}] Failed to allocate arguments"));
+    return;
+  }
+  IgnoredErrorResult error;
+  {%- for a in arguments %}
+  {{ a.ffi_value_class }} {{ a.var_name }} = {{ a.ffi_value_class }}::FromRust({{ a.name }});
+  {{ a.var_name }}.Lift(aes.cx(), &uniffiArgs[{{ loop.index0 }}], error);
+  if (error.Failed()) {
+    MOZ_LOG(
+        gUniffiLogger, LogLevel::Error,
+        ("[{{ meth.fn_name }}] Failed to lift {{ a.name }}"));
+    return;
+  }
+  {%- endfor %}
+
+  RootedDictionary<UniFFIScaffoldingCallResult> callResult(aes.cx());
+  jsHandler->CallSync(aUniffiHandle, {{ method_index }}, uniffiArgs, callResult, error);
+  if (error.Failed()) {
+    MOZ_LOG(
+        gUniffiLogger, LogLevel::Error,
+        ("[{{ meth.fn_name }}] Error invoking JS handler"));
+    return;
+  }
+  {% if meth.return_ty.is_some() -%}
+  *aUniffiOutReturn = {{ meth.return_handler_class_name}}::Lower(callResult, aUniffiOutStatus, error);
+  {% else -%}
+  {{ meth.return_handler_class_name}}::Lower(callResult, aUniffiOutStatus, error);
+  {% endif -%}
+}
 {%- endmatch %}
 {%- endfor %}
 

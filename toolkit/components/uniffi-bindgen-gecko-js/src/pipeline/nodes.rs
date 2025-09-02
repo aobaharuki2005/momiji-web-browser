@@ -47,6 +47,8 @@ pub struct FfiValueArgument {
     pub name: String,
     /// C++ class field name
     pub field_name: String,
+    /// C++ function variable name
+    pub var_name: String,
     pub ffi_value_class: String,
     /// Is this argument for a method receiver?
     pub receiver: bool,
@@ -125,6 +127,7 @@ pub struct CppCallbackInterfaceMethod {
 ///   - Sync Rust methods wrapped to be fire-and-forget JS methods
 #[derive(Debug, Clone, Node)]
 pub enum CallbackMethodKind {
+    Sync,
     FireAndForget,
     Async(CppCallbackInterfaceMethodAsyncData),
 }
@@ -144,7 +147,7 @@ pub struct CallbackReturnHandlerClass {
 
 /// Base class for an async callback method handler
 ///
-/// This derives from `UniffiCallbackMethodHandlerBase` and adds support for returning data to
+/// This derives from `AsyncCallbackMethodHandlerBase` and adds support for returning data to
 /// Rust.  The final callback method handler derives from this and adds support for argument
 /// handling.
 ///
