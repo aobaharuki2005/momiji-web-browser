@@ -146,11 +146,7 @@ xpcshell:
                     android-em.*/debug-isolated-process: 1
                     default: default
     mozharness:
-        extra-options:
-            by-test-platform:
-                windows1.*:
-                    - --threads=2
-                default: []
+        extra-options: []
     fetches:
         toolchain:
             by-test-platform:

@@ -68,8 +68,6 @@ TBPL_RETRY = 4  # defined in mozharness
 # Be also aware that we can override this value with the threadCount option
 # on the command line to tweak it for a concrete CPU/memory combination.
 NUM_THREADS = int(cpu_count() * 4)
-if sys.platform == "win32":
-    NUM_THREADS = NUM_THREADS / 2
 
 EXPECTED_LOG_ACTIONS = set(
     [
