@@ -815,9 +815,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * This refers to whether or not we are blocking or allowing requests that originate from
      * remote origins targeting either localhost addresses or local network addresses.
      */
-    var isLnaBlockingEnabled by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_enable_lna_blocking_enabled),
-        default = false,
+    var isLnaBlockingEnabled by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_lna_blocking_enabled),
+        featureFlag = true,
+        default = { FxNimbus.features.lnaBlocking.value().enabled },
     )
 
     /**

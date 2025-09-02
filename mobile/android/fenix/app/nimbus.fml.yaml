@@ -964,6 +964,15 @@ features:
         type: Boolean
         default: false
 
+  lna-blocking:
+    description: Feature that allows blocking local network or device access.
+    variables:
+      enabled:
+        description: >
+          Whether or not to turn on local network / device access blocking
+        type: Boolean
+        default: false
+
 types:
   objects:
     GleanServerKnobsConfiguration:
