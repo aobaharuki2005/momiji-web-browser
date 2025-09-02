@@ -469,6 +469,7 @@
     <string name="onboarding_preferences_dialog_usage_data_learn_more_2">Learn more</string>
     <!-- Positive button label for the privacy preferences dialog shown during onboarding. -->
     <string name="onboarding_preferences_dialog_positive_button">Done</string>
+
     <!-- Terms of service onboarding title card label. 'Firefox' intentionally hardcoded here-->
     <string name="onboarding_welcome_to_firefox" tools:ignore="BrandUsage">Welcome to Firefox</string>
     <!-- Terms of service sub header label. -->
@@ -487,6 +488,7 @@
     <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">To help improve the browser, Firefox sends diagnostic and interaction data to Mozilla. %1$s</string>
     <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
     <string name="onboarding_term_of_service_line_three_link_text">Manage</string>
+
     <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
     <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Help us grow Firefox</string>
     <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -499,7 +501,6 @@
     <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">How we use the data</string>
     <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
     <string name="onboarding_marketing_positive_button" tools:ignore="UnusedResources">Confirm and start browsing</string>
-
     <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
     <string name="onboarding_marketing_title_1" tools:ignore="UnusedResources">One last thing</string>
     <!-- Marketing onboarding page body variant. 'Firefox' is intentionally hardcoded. -->
