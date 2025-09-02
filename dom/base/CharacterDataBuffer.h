@@ -232,7 +232,7 @@ class CharacterDataBuffer final {
                         : static_cast<unsigned char>(m1b[aIndex]);
   }
   [[nodiscard]] char16_t SafeCharAt(uint32_t aIndex) const {
-    return MOZ_LIKELY(mState.mLength < aIndex) ? CharAt(aIndex)
+    return MOZ_LIKELY(aIndex < mState.mLength) ? CharAt(aIndex)
                                                : static_cast<char16_t>(0);
   }
 
