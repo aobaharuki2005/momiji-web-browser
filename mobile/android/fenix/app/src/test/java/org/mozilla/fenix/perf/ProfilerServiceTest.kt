@@ -4,12 +4,20 @@
 
 package org.mozilla.fenix.perf
 
+import android.app.Application
 import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
+import io.mockk.MockKAnnotations
+import io.mockk.every
+import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.mockk
+import io.mockk.unmockkAll
+import mozilla.components.support.base.android.NotificationsDelegate
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -19,6 +27,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.components.Components
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
@@ -27,7 +37,10 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowNotificationManager
 import org.robolectric.shadows.ShadowService
 
+import org.mozilla.fenix.helpers.FenixRobolectricTestApplication
+
 @RunWith(RobolectricTestRunner::class)
+@Config(application = FenixRobolectricTestApplication::class)
 class ProfilerServiceTest {
 
     private lateinit var context: Context
@@ -37,16 +50,45 @@ class ProfilerServiceTest {
     private lateinit var service: ProfilerService
     private lateinit var shadowService: ShadowService
 
+    @RelaxedMockK
+    lateinit var mockComponents: Components
+
     @Before
     fun setup() {
+        MockKAnnotations.init(this, relaxUnitFun = true)
+
         context = ApplicationProvider.getApplicationContext()
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         shadowNotificationManager = Shadows.shadowOf(notificationManager)
+
+        // Get the mock components from FenixRobolectricTestApplication
+        val fenixApp = context as FenixRobolectricTestApplication
+        mockComponents = fenixApp.components
+
+        // Mock NotificationsDelegate with proper callback handling
+        val mockNotificationsDelegate = mockk<NotificationsDelegate>(relaxed = true)
+        every {
+            mockNotificationsDelegate.requestNotificationPermission(
+                onPermissionGranted = any(),
+                showPermissionRationale = any()
+            )
+        } answers {
+            // Immediately call the onPermissionGranted callback
+            val onPermissionGranted = arg<() -> Unit>(0)
+            onPermissionGranted.invoke()
+        }
+
+        every { mockComponents.notificationsDelegate } returns mockNotificationsDelegate
 
         serviceController = Robolectric.buildService(ProfilerService::class.java)
         serviceController.create()
         service = serviceController.get()
         shadowService = Shadows.shadowOf(service)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
     }
 
     @Test
@@ -62,15 +104,6 @@ class ProfilerServiceTest {
         assertEquals("Channel ID mismatch", ProfilerService.PROFILING_CHANNEL_ID, channel?.id)
         assertEquals("Channel name mismatch", "App Profiling Status", channel?.name.toString())
         assertEquals("Channel importance mismatch", NotificationManager.IMPORTANCE_DEFAULT, channel?.importance)
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.N_MR1])
-    fun `GIVEN SDK is below O WHEN service is created THEN no notification channel is created`() {
-        assertTrue(
-            "Notification channel list should be empty below Oreo",
-            shadowNotificationManager.notificationChannels.isEmpty(),
-        )
     }
 
     @Test

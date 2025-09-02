@@ -40,7 +40,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowApplication
 
 @ExperimentalCoroutinesApi
@@ -80,6 +79,9 @@ class ProfilerViewModelTest {
         every { mockApplication.startForegroundService(any()) } answers {
             context.startForegroundService(firstArg())
         }
+        every { mockApplication.startService(any()) } answers {
+            context.startService(firstArg())
+        }
 
         // Extension function Context.components requires applicationContext to be FenixApplication
         every { mockFenixApplicationContext.components } returns mockComponents
@@ -95,7 +97,6 @@ class ProfilerViewModelTest {
         every { mockApplication.getSystemService(Context.CLIPBOARD_SERVICE) } returns context.getSystemService(Context.CLIPBOARD_SERVICE)
         every { mockApplication.cacheDir } returns context.cacheDir
 
-        every { mockProfilerUtils.hasNotificationPermission(any()) } returns true
         every { mockProfilerUtils.saveProfileUrlToClipboard(any(), any()) } returns "http://example.com/profile/123"
         every { mockProfilerUtils.finishProfileSave(any(), any(), any()) } answers {
             val callback = arg<(Int) -> Unit>(2)
@@ -173,7 +174,7 @@ class ProfilerViewModelTest {
         advanceUntilIdle()
 
         assertEquals(ProfilerUiState.Idle, viewModel.uiState.value)
-        viewModel.startProfiler(ProfilerSettings.Firefox)
+        viewModel.initiateProfilerStartProcess(ProfilerSettings.Firefox)
         advanceUntilIdle()
 
         val finalState = viewModel.uiState.value
@@ -194,53 +195,14 @@ class ProfilerViewModelTest {
         )
         advanceUntilIdle()
         assertEquals(ProfilerUiState.Idle, viewModel.uiState.value)
-        viewModel.startProfiler(ProfilerSettings.Firefox)
+        viewModel.initiateProfilerStartProcess(ProfilerSettings.Firefox)
         advanceUntilIdle()
         assertEquals(ProfilerUiState.Running, viewModel.uiState.value)
         verify(exactly = 0) { mockProfiler.startProfiler(any(), any()) }
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
-    fun `GIVEN Tiramisu plus with notification permission denied WHEN profiling is attempted THEN the profiler starts and the UI requests permission without launching the service`() = runTest(coroutineRule.testDispatcher.scheduler) {
-        initializeViewModel(
-            isInitiallyActive = false,
-            mainDispatcher = coroutineRule.testDispatcher,
-            ioDispatcher = coroutineRule.testDispatcher,
-        )
-        every { mockProfilerUtils.hasNotificationPermission(any()) } returns false
-
-        val collectedStates = mutableListOf<ProfilerUiState>()
-        val collectionJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.uiState.collect { state ->
-                collectedStates.add(state)
-            }
-        }
-
-        val settings = ProfilerSettings.Networking
-        viewModel.startProfiler(settings)
-        every { mockProfiler.isProfilerActive() } returns true
-        advanceUntilIdle()
-
-        collectionJob.cancel()
-        val expectedSequence = listOf(
-            ProfilerUiState.Idle::class,
-            ProfilerUiState.Starting::class,
-            ProfilerUiState.NeedsPermissionRationale::class,
-        )
-        val actualSequence = collectedStates.map { it::class }
-        assertEquals("The sequence of UI states was not as expected", expectedSequence, actualSequence)
-
-        verify { mockProfiler.startProfiler(settings.threads, settings.features) }
-        verify { mockProfilerUtils.hasNotificationPermission(any()) }
-
-        val startedServiceIntent = shadowApplication.nextStartedService
-        assertNull("No service should have been launched when permission is denied", startedServiceIntent)
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
-    fun `GIVEN Tiramisu plus with notification permission granted WHEN profiling is attempted THEN the profiler activates with service and UI shows running`() = runTest(coroutineRule.testDispatcher.scheduler) {
+    fun `WHEN profiling starts successfully THEN the profiler starts and service launches with notification`() = runTest(coroutineRule.testDispatcher.scheduler) {
         val testDispatcher = coroutineRule.testDispatcher
         initializeViewModel(
             isInitiallyActive = false,
@@ -254,7 +216,7 @@ class ProfilerViewModelTest {
             viewModel.uiState.toList(collectedStates)
         }
 
-        viewModel.startProfiler(settings)
+        viewModel.initiateProfilerStartProcess(settings)
         every { mockProfiler.isProfilerActive() } returns true
         advanceUntilIdle()
 
@@ -270,71 +232,10 @@ class ProfilerViewModelTest {
         assertEquals("The sequence of UI states was not as expected", expectedSequence, actualSequence)
 
         verify { mockProfiler.startProfiler(settings.threads, settings.features) }
-        verify { mockProfilerUtils.hasNotificationPermission(any()) }
 
         val startedServiceIntent = shadowApplication.nextStartedService
         assertNotNull("A service should have been started", startedServiceIntent)
         assertEquals(ProfilerService.ACTION_START_PROFILING, startedServiceIntent.action)
-    }
-
-    @Test
-    fun `GIVEN permissionWasRequested WHEN userGrantsPermission THEN serviceLaunchesAndUiShowsProfilerRunning`() = runTest(coroutineRule.testDispatcher.scheduler) {
-        val testDispatcher = coroutineRule.testDispatcher
-        initializeViewModel(
-            isInitiallyActive = true,
-            mainDispatcher = testDispatcher,
-            ioDispatcher = testDispatcher,
-        )
-
-        val collectedStates = mutableListOf<ProfilerUiState>()
-        val collectionJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.uiState.toList(collectedStates)
-        }
-
-        viewModel.onPermissionResult(true)
-        advanceUntilIdle()
-        collectionJob.cancel()
-
-        assertTrue(collectedStates.any { it is ProfilerUiState.ShowToast })
-        assertTrue(collectedStates.last() is ProfilerUiState.Running)
-
-        val startedServiceIntent = shadowApplication.nextStartedService
-        assertNotNull("A service should have been started", startedServiceIntent)
-        assertEquals(
-            "The correct service should be started",
-            ProfilerService::class.java.name,
-            startedServiceIntent.component?.className,
-        )
-        assertEquals(
-            "The service intent should have the correct action",
-            ProfilerService.ACTION_START_PROFILING,
-            startedServiceIntent.action,
-        )
-    }
-
-    @Test
-    fun `WHEN User denis permissions for notifications THEN the profiler starts without any UI indicators in the notification tray`() = runTest(coroutineRule.testDispatcher.scheduler) {
-        val testDispatcher = coroutineRule.testDispatcher
-        initializeViewModel(
-            isInitiallyActive = true,
-            mainDispatcher = testDispatcher,
-            ioDispatcher = testDispatcher,
-        )
-
-        val collectedStates = mutableListOf<ProfilerUiState>()
-        val collectionJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.uiState.toList(collectedStates)
-        }
-        viewModel.onPermissionResult(false)
-        advanceUntilIdle()
-        collectionJob.cancel()
-
-        assertTrue(collectedStates.any { it is ProfilerUiState.Idle })
-        assertTrue(collectedStates.any { it is ProfilerUiState.PermissionDenied })
-        assertTrue(collectedStates.last() is ProfilerUiState.Running)
-
-        val startedServiceIntent = shadowApplication.nextStartedService
-        assertNull("No service should have been started when permission is denied", startedServiceIntent)
     }
 
     @Test

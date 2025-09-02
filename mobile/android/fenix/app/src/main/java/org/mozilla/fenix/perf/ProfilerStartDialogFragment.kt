@@ -4,21 +4,18 @@
 
 package org.mozilla.fenix.perf
 
-import android.Manifest
-import android.os.Build
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,29 +36,22 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Dialog fragment for starting profiling sessions. It handles profiler settings selection,
- * permission requests for notifications (Android 13+).
- *
- * The dialog integrates with [ProfilerViewModel] to manage profiler state.
+ * Dialog fragment for starting profiling sessions. Simplified with all permission handling
+ * now delegated to the ProfilerService and NotificationsDelegate.
  */
 class ProfilerStartDialogFragment : AppCompatDialogFragment() {
 
     private val profilerViewModel: ProfilerViewModel by activityViewModels()
-
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            profilerViewModel.onPermissionResult(isGranted)
-        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ) = content {
-        StartProfilerScreen(profilerViewModel)
+        StartProfilerScreen(viewModel = profilerViewModel)
     }
 
-    override fun onDismiss(dialog: android.content.DialogInterface) {
+    override fun onDismiss(dialog: DialogInterface) {
         profilerViewModel.resetUiState()
         profilerViewModel.updateProfilerActiveStatus()
         super.onDismiss(dialog)
@@ -81,26 +71,15 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                         Toast.LENGTH_LONG,
                     ).show()
                 }
-                is ProfilerUiState.PermissionDenied -> {
-                    Toast.makeText(
-                        context,
-                        "Profiler started (Notification permission denied)",
-                        Toast.LENGTH_LONG,
-                        ).show()
-                }
-                is ProfilerUiState.NeedsPermissionRationale -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                }
                 is ProfilerUiState.Running, is ProfilerUiState.Finished -> {
+                    // No action needed - these states will auto-dismiss
                 }
                 is ProfilerUiState.Error -> {
                     Toast.makeText(
                         context,
-                        context.getString(state.messageResId) + state.errorDetails,
+                        context.getString(state.messageResId) + " " + state.errorDetails,
                         Toast.LENGTH_LONG,
-                        ).show()
+                    ).show()
                 }
                 else -> {}
             }
@@ -117,25 +96,26 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                 }
             },
         ) {
-            when (uiState) {
+            when (val currentState = uiState) {
                 is ProfilerUiState.Idle -> {
                     StartCard(
-                        onStartProfiler = { settings -> viewModel.startProfiler(settings) },
+                        onStartProfiler = { settings ->
+                            viewModel.initiateProfilerStartProcess(settings)
+                        },
                         onCancel = { this@ProfilerStartDialogFragment.dismiss() },
                     )
                 }
                 is ProfilerUiState.Starting -> {
-                    WaitForProfilerDialog(R.string.profiler_waiting_start)
+                    WaitForProfilerDialog(message = R.string.profiler_waiting_start)
+                }
+                is ProfilerUiState.Error -> {
+                    ErrorCard(
+                        message = "Failed to start profiler: ${currentState.errorDetails}",
+                        onDismiss = { this@ProfilerStartDialogFragment.dismiss() },
+                    )
                 }
                 else -> {
-                    if (uiState is ProfilerUiState.Error) {
-                        ErrorCard(
-                            message = "Failed to start profiler",
-                            onDismiss = { this@ProfilerStartDialogFragment.dismiss() },
-                        )
-                    } else {
-                        WaitForProfilerDialog(R.string.profiler_waiting_start)
-                    }
+                    WaitForProfilerDialog(message = R.string.profiler_waiting_start)
                 }
             }
         }
@@ -188,15 +168,12 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
         }
     }
 
-    /**
-     * Composable that displays error messages for the profiler operations.
-     *
-     * @param messageResId Optional string resource ID for the error message
-     * @param message Optional direct string message to display
-     * @param onDismiss Callback invoked when user dismisses the error dialog
-     */
     @Composable
-    fun ErrorCard(@StringRes messageResId: Int? = null, message: String? = null, onDismiss: () -> Unit) {
+    private fun ErrorCard(
+        @StringRes messageResId: Int? = null,
+        message: String? = null,
+        onDismiss: () -> Unit,
+    ) {
         val actualMessage = message ?: (messageResId?.let { stringResource(id = it) } ?: "An error occurred")
         ProfilerErrorDialog(
             errorMessage = actualMessage,
