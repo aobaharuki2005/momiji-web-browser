@@ -231,6 +231,7 @@ declare namespace MockedExports {
 
   const AppConstantsSYSMJS: {
     AppConstants: {
+      MOZ_APP_NAME: string;
       platform: string;
     };
   };
