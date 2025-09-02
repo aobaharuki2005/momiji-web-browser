@@ -130,6 +130,8 @@ export class BackupUIChild extends JSWindowActorChild {
       } else {
         target.rerunEncryptionErrorCode = result.errorCode;
       }
+    } else if (event.type == "BackupUI:FindIfABackupFileExists") {
+      this.sendAsyncMessage("FindIfABackupFileExists");
     } else if (event.type == "BackupUI:ShowBackupLocation") {
       this.sendAsyncMessage("ShowBackupLocation");
     } else if (event.type == "BackupUI:EditBackupLocation") {
