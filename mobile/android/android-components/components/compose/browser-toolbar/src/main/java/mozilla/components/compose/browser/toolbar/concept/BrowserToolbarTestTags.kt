@@ -10,8 +10,5 @@ import mozilla.components.compose.browser.toolbar.BrowserToolbar
  * Test tags for the [BrowserToolbar] composable.
  */
 object BrowserToolbarTestTags {
-    const val ADDRESSBAR_URL_BOX = "ADDRESSBAR_URL_BOX"
-    const val ADDRESSBAR_TITLE = "ADDRESSBAR_TITLE"
-    const val ADDRESSBAR_URL = "ADDRESSBAR_URL"
-    const val SEARCH_SELECTOR = "SEARCH_SELECTOR"
+    const val ADDRESSBAR_URL_BOX = "ADDRESSBAR_URL"
 }

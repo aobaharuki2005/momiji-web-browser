@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.longClick
-import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.PositionAssertions.isCompletelyAbove
 import androidx.test.espresso.assertion.PositionAssertions.isPartiallyBelow
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -34,7 +33,6 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.By.textContains
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_URL_BOX
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -307,25 +305,6 @@ class NavigationToolbarRobot {
                 )
                 Log.i(TAG, "enterURLAndEnterToBrowser: Asserted that home screen layout or download button or the total cookie protection contextual hint exist")
             }
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
-        fun enterURLAndEnterToBrowserWithComposableToolbar(
-            composeTestRule: ComposeTestRule,
-            url: Uri,
-            interact: BrowserRobot.() -> Unit,
-        ): BrowserRobot.Transition {
-            Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Trying to click navigation toolbar")
-            composeTestRule.onNodeWithTag(ADDRESSBAR_URL_BOX).performClick()
-            Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Clicked navigation toolbar")
-            Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Trying to set toolbar text to: $url")
-            onView(withId(R.id.mozac_addressbar_search_query_input)).perform(replaceText(url.toString()))
-            Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Toolbar text was set to: $url")
-            Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Trying to press device enter button")
-            mDevice.pressEnter()
-            Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Pressed device enter button")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
