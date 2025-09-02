@@ -10,6 +10,8 @@ import android.os.Build
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -93,6 +95,28 @@ sealed class ProfilerUiState {
                 this is Finished ||
                 this is Error ||
                 this is PermissionDenied
+    }
+}
+
+/**
+ * Factory for creating ProfilerViewModel instances with injectable coroutine dispatchers. The main
+ * goal is to facilitate unit testing. In tests, real dispatchers
+ * like [Dispatchers.Main] and [Dispatchers.IO] can be replaced with test dispatchers
+ * for deterministic and synchronous execution as mentioned in the
+ * [Testing Kotlin coroutines on Android]
+ * (https://developer.android.com/kotlin/coroutines/test#invoking-suspending-functions).
+ */
+class ProfilerViewModelFactory(
+    private val application: Application,
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProfilerViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ProfilerViewModel(application, mainDispatcher, ioDispatcher) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 

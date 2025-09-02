@@ -18,7 +18,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavDirections
@@ -64,6 +63,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.ProfilerViewModel
+import org.mozilla.fenix.perf.ProfilerViewModelFactory
 import org.mozilla.fenix.settings.account.AccountUiView
 import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
 import org.mozilla.fenix.snackbar.SnackbarBinding
@@ -78,7 +78,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private lateinit var accountUiView: AccountUiView
     private lateinit var addonFilePicker: AddonFilePicker
     private lateinit var components: Components
-    private val profilerViewModel: ProfilerViewModel by activityViewModels()
+    private val profilerViewModel: ProfilerViewModel by activityViewModels {
+        ProfilerViewModelFactory(requireActivity().application)
+    }
     private val snackbarBinding = ViewBoundFeatureWrapper<SnackbarBinding>()
 
     @VisibleForTesting
