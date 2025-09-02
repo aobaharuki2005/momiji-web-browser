@@ -11,6 +11,7 @@ import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -103,7 +104,12 @@ sealed class ProfilerUiState {
  * services, and coordinating profile data upload. Note: The actual state of the profiler is not
  * managed by the viewModel. This is merely a reflection of the state of the Profiler within Gecko.
  */
-class ProfilerViewModel(private val application: Application) : AndroidViewModel(application) {
+class ProfilerViewModel(
+    private val application: Application,
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val profilerUtils: ProfilerUtils = ProfilerUtils,
+) : AndroidViewModel(application) {
 
     private val delayToUpdateStatus = 50L
     private val profiler: Profiler? = application.components.core.engine.profiler
@@ -135,11 +141,11 @@ class ProfilerViewModel(private val application: Application) : AndroidViewModel
      */
     private fun pollUntilProfilerActive() {
         pollingJob?.cancel()
-        pollingJob = viewModelScope.launch(Dispatchers.IO) {
+        pollingJob = viewModelScope.launch(ioDispatcher) {
             try {
                 while (isActive) {
                     if (profiler?.isProfilerActive() == true) {
-                        withContext(Dispatchers.Main) {
+                        withContext(mainDispatcher) {
                             if (!_isProfilerActive.value) {
                                 _isProfilerActive.value = true
                             }
@@ -150,7 +156,7 @@ class ProfilerViewModel(private val application: Application) : AndroidViewModel
                     delay(delayToPollProfilerForStatus)
                 }
             } catch (e: CancellationException) {
-                withContext(Dispatchers.Main) {
+                withContext(mainDispatcher) {
                     if (_uiState.value == ProfilerUiState.Starting) {
                         _uiState.value =
                             ProfilerUiState.Idle
@@ -192,7 +198,7 @@ class ProfilerViewModel(private val application: Application) : AndroidViewModel
      * This method either proceeds with starting the service or triggers the permission request flow.
      */
     fun checkAndRequestPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || ProfilerUtils.hasNotificationPermission(
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || profilerUtils.hasNotificationPermission(
                 application,
             )
         ) {
@@ -271,7 +277,7 @@ class ProfilerViewModel(private val application: Application) : AndroidViewModel
         _isProfilerActive.value = false
         profiler.stopProfiler(
             onSuccess = { profileData ->
-                viewModelScope.launch(Dispatchers.Main) {
+                viewModelScope.launch(mainDispatcher) {
                     stopNotificationServiceInternal()
                     if (profileData != null) {
                         handleProfileSaveInternal(profileData)
@@ -281,7 +287,7 @@ class ProfilerViewModel(private val application: Application) : AndroidViewModel
                 }
             },
             onError = { error ->
-                viewModelScope.launch(Dispatchers.Main) {
+                viewModelScope.launch(mainDispatcher) {
                     stopNotificationServiceInternal()
                     updateProfilerActiveStatus()
                     val errorMessage = error.message ?: "Unknown stop error"
@@ -305,13 +311,13 @@ class ProfilerViewModel(private val application: Application) : AndroidViewModel
         _isProfilerActive.value = false
         profiler.stopProfiler(
             onSuccess = {
-                viewModelScope.launch(Dispatchers.Main) {
+                viewModelScope.launch(mainDispatcher) {
                     stopNotificationServiceInternal()
                     _uiState.value = ProfilerUiState.Finished(null)
                 }
             },
             onError = { error ->
-                viewModelScope.launch(Dispatchers.Main) {
+                viewModelScope.launch(mainDispatcher) {
                     stopNotificationServiceInternal()
                     updateProfilerActiveStatus()
                     val errorMessage = error.message ?: "Unknown stop error"
@@ -327,11 +333,11 @@ class ProfilerViewModel(private val application: Application) : AndroidViewModel
      * @param profileData The compressed profile data as ByteArray
      */
     private fun handleProfileSaveInternal(profileData: ByteArray) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             try {
-                val url = ProfilerUtils.saveProfileUrlToClipboard(profileData, application)
-                withContext(Dispatchers.Main) {
-                    ProfilerUtils.finishProfileSave(application, url) { messageResId ->
+                val url = profilerUtils.saveProfileUrlToClipboard(profileData, application)
+                withContext(mainDispatcher) {
+                    profilerUtils.finishProfileSave(application, url) { messageResId ->
                         _uiState.value = ProfilerUiState.ShowToast(messageResId)
                         launch {
                             delay(delayToUpdateStatus)
