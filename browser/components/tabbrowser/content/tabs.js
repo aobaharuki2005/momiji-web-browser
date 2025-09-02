@@ -1810,11 +1810,14 @@
       // remove arrowScrollbox periphery element.
       unpinnedChildren.pop();
 
-      // explode tab groups
+      // explode tab groups and split view wrappers
       // Iterate backwards over the array to preserve indices while we modify
       // things in place
       for (let i = unpinnedChildren.length - 1; i >= 0; i--) {
-        if (unpinnedChildren[i].tagName == "tab-group") {
+        if (
+          unpinnedChildren[i].tagName == "tab-group" ||
+          unpinnedChildren[i].tagName == "tab-split-view-wrapper"
+        ) {
           unpinnedChildren.splice(i, 1, ...unpinnedChildren[i].tabs);
         }
       }

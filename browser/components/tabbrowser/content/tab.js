@@ -378,6 +378,15 @@
       return null;
     }
 
+    get splitview() {
+      if (
+        this.parentElement?.parentElement?.tagName == "tab-split-view-wrapper"
+      ) {
+        return this.parentElement.parentElement;
+      }
+      return null;
+    }
+
     updateLastAccessed(aDate) {
       this._lastAccessed = this.selected ? Infinity : aDate || Date.now();
     }

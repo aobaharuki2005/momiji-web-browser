@@ -2997,6 +2997,88 @@
 
     /**
      * @param {string} id
+     * @returns {MozTabSplitViewWrapper}
+     */
+    _createTabSplitView(id) {
+      let splitview = document.createXULElement("tab-split-view-wrapper", {
+        is: "tab-split-view-wrapper",
+      });
+      splitview.splitViewId = id;
+      return splitview;
+    }
+
+    /**
+     * Adds a new tab split view.
+     * @param {object[]} tabs
+     *   The set of tabs to include in the split view.
+     * @param {object} [options]
+     * @param {string} [options.id]
+     *   Optionally assign an ID to the split view. Useful when rebuilding an
+     *   existing splitview e.g. when restoring. A pseudorandom string will be
+     *   generated if not set.
+     * @param {MozTabbrowserTab} [options.insertBefore]
+     *   An optional argument that accepts a single tab, which, if passed, will
+     *   cause the split view to be inserted just before this tab in the tab strip. By
+     *   default, the split view will be created at the end of the tab strip.
+     */
+    addTabSplitView(tabs, { id = null, insertBefore = null } = {}) {
+      if (!tabs?.length) {
+        throw new Error("Cannot create split view with zero tabs");
+      }
+
+      if (!id) {
+        id = `${Date.now()}-${Math.round(Math.random() * 100)}`;
+      }
+      let splitview = this._createTabSplitView(id);
+      this.tabContainer.insertBefore(
+        splitview,
+        insertBefore?.splitview ?? insertBefore
+      );
+      splitview.addTabs(tabs);
+
+      // Bail out if the split view is empty at this point. This can happen if all
+      // provided tabs are pinned and therefore cannot be grouped.
+      if (!splitview.tabs.length) {
+        splitview.remove();
+        return null;
+      }
+
+      return splitview;
+    }
+
+    /**
+     * Removes the split view. This has the effect of closing all the tabs
+     * in the split view.
+     *
+     * @param {MozTabSplitViewWrapper} [splitView]
+     *   The split view to remove.
+     */
+    async removeSplitView(splitView) {
+      this.removeTabs(splitView.tabs);
+      splitView.remove();
+    }
+
+    /**
+     * Removes a tab from a split view wrapper. This also removes the split view wrapper component
+     *
+     * @param {MozTabSplitViewWrapper} [splitView]
+     *   The split view to remove.
+     */
+    unsplitTabs(splitview) {
+      if (!splitview) {
+        return;
+      }
+
+      for (const tab of splitview.tabs) {
+        this.#handleTabMove(tab, () =>
+          gBrowser.tabContainer.insertBefore(tab, splitview.nextElementSibling)
+        );
+      }
+      splitview.remove();
+    }
+
+    /**
+     * @param {string} id
      * @param {string} color
      * @param {boolean} collapsed
      * @param {string} [label=]
@@ -6258,6 +6340,32 @@
           metricsContext
         );
       }
+    }
+
+    /**
+     *
+     * @param {MozTabbrowserTab} aTab
+     * @param {MozTabSplitViewWrapper} aSplitViewWrapper
+     */
+    moveTabToSplitView(aTab, aSplitViewWrapper) {
+      if (!this.isTab(aTab)) {
+        throw new Error("Can only move a tab into a split view wrapper");
+      }
+      if (aTab.pinned) {
+        return;
+      }
+      if (
+        aTab.splitview &&
+        aTab.splitview.splitViewId === aSplitViewWrapper.splitViewId
+      ) {
+        return;
+      }
+
+      this.#handleTabMove(aTab, () =>
+        aSplitViewWrapper.wrapper.appendChild(aTab)
+      );
+      this.removeFromMultiSelectedTabs(aTab);
+      this.tabContainer._notifyBackgroundTab(aTab);
     }
 
     /**
