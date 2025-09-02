@@ -1829,8 +1829,8 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
   }
 
   SetComputedLogicalOffsets(cbwm, offsets);
-
-  if (wm.IsOrthogonalTo(cbwm)) {
+  const bool isOrthogonal = wm.IsOrthogonalTo(cbwm);
+  if (isOrthogonal) {
     if (bStartIsAuto || bEndIsAuto) {
       mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
     }
@@ -1876,6 +1876,20 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
   bool marginIEndIsAuto = false;
   bool marginBStartIsAuto = false;
   bool marginBEndIsAuto = false;
+  const bool hasIntrinsicKeywordForBSize =
+      mFrame->HasIntrinsicKeywordForBSize();
+  // Unconstrained size implies fit-content sizing, so auto margin(s) cannot
+  // be resolved at this time, except for cases where any inset is auto (Which
+  // will take up available space and leave auto margins to be zero).
+  const bool nonZeroAutoMarginOnUnconstrainedSize =
+      isOrthogonal ? computedSize.ISize(cbwm) == NS_UNCONSTRAINEDSIZE &&
+                         !(iStartIsAuto || iEndIsAuto)
+                   : computedSize.BSize(cbwm) == NS_UNCONSTRAINEDSIZE &&
+                         !(bStartIsAuto || bEndIsAuto);
+  // TODO(dshin, Bug 1985982): We should defer _all_ auto margin computation for
+  // simplicity.
+  mFlags.mDeferAutoMarginComputation =
+      nonZeroAutoMarginOnUnconstrainedSize || hasIntrinsicKeywordForBSize;
   if (iStartIsAuto) {
     // We know 'right' is not 'auto' anymore thanks to the hypothetical
     // box code above.
@@ -1904,8 +1918,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
                            computedSize.ISize(cbwm) - margin.IStartEnd(cbwm) -
                            borderPadding.IStartEnd(cbwm);
     }
-  } else if (!mFrame->HasIntrinsicKeywordForBSize() ||
-             !wm.IsOrthogonalTo(cbwm)) {
+  } else if (!mFlags.mDeferAutoMarginComputation || !isOrthogonal) {
     // Neither 'inline-start' nor 'inline-end' is 'auto'.
     // The inline-size might not fill all the available space (even though we
     // didn't shrink-wrap) in case:
@@ -1950,8 +1963,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
                            borderPadding.BStartEnd(cbwm) -
                            computedSize.BSize(cbwm) - offsets.BStart(cbwm);
     }
-  } else if (!mFrame->HasIntrinsicKeywordForBSize() ||
-             wm.IsOrthogonalTo(cbwm)) {
+  } else if (!mFlags.mDeferAutoMarginComputation || isOrthogonal) {
     // Neither block-start nor -end is 'auto'.
     nscoord autoBSize = cbSize.BSize(cbwm) - margin.BStartEnd(cbwm) -
                         borderPadding.BStartEnd(cbwm) - offsets.BStartEnd(cbwm);
