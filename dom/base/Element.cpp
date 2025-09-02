@@ -5517,7 +5517,8 @@ static OffsetResult GetUnretargetedOffsetsFor(const Element& aElement) {
       }
     }
 
-    if (isAbsolutelyPositioned && !offsetParent) {
+    if (isAbsolutelyPositioned && !offsetParent &&
+        !frame->GetParent()->IsViewportFrame()) {
       // If this element is absolutely positioned, but we don't have
       // an offset parent it means this element is an absolutely
       // positioned child that's not nested inside another positioned
