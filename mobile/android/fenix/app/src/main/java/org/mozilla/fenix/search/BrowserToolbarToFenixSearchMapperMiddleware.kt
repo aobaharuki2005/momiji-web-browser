@@ -95,10 +95,12 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
             map { it.editState.query }
                 .distinctUntilChanged()
                 .collect { query ->
+                    val isSearchStartedForCurrentUrl = context.state.searchStartedForCurrentUrl
+                    val isQueryPrefilled = toolbarStore.state.editState.isQueryPrefilled
                     context.dispatch(
                         SearchFragmentAction.UpdateQuery(
-                            when (toolbarStore.state.editState.isQueryPrefilled) {
-                                true -> "" // consider a prefilled & preselected toolbar query as not entered by user
+                            when (isSearchStartedForCurrentUrl && isQueryPrefilled) {
+                                true -> "" // consider a prefilled query for the current URL as not entered by user
                                 false -> query
                             },
                         ),
