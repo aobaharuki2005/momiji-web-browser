@@ -749,11 +749,7 @@ dependencies {
     testImplementation libs.androidx.test.junit
     testImplementation libs.androidx.work.testing
     testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_libsForTests
-    testImplementation (libs.testing.robolectric) {
-        exclude group: 'org.apache.maven'
-    }
-
-    testImplementation libs.testing.maven.ant.tasks
+    testImplementation libs.testing.robolectric
 
     androidTestImplementation libs.testing.mockk.android
     testImplementation libs.testing.mockk

@@ -4,7 +4,6 @@ android-gradle-plugin = "8.12.1" # Keep lint version in sync
 lint = "31.12.1"
 
 python-envs-plugin = "0.0.31"
-maven-ant-tasks = "2.1.3"
 androidsvg = "1.4"
 zxing = "3.5.3"
 disklrucache = "2.0.2"
@@ -106,7 +105,6 @@ okhttp = "4.12.0"
 okio = "3.15.0"
 sentry = "8.20.0"
 
-commons-exec = "1.3"
 tomlj = "1.1.0"
 
 [libraries]
@@ -128,7 +126,6 @@ testing-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 testing-mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
 testing-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
 testing-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
-testing-maven-ant-tasks = { group = "org.apache.maven", name = "maven-ant-tasks", version.ref = "maven-ant-tasks" }
 testing-leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android-instrumentation", version.ref = "leakcanary" }
 
 accompanist-drawablepainter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "accompanist" }
@@ -270,7 +267,6 @@ ktlint = { group = "com.pinterest.ktlint", name = "ktlint-cli", version.ref = "k
 # Third party library versions
 adjust = { group = "com.adjust.sdk", name = "adjust-android", version.ref = "adjust" }
 
-commons-exec = { group = "org.apache.commons", name = "commons-exec", version.ref = "commons-exec" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 google-java-format = { group = "com.google.googlejavaformat", name = "google-java-format", version.ref = "google-java-format" }
 tomlj = { group = "org.tomlj", name = "tomlj", version.ref = "tomlj" }
