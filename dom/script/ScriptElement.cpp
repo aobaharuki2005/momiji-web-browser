@@ -14,6 +14,8 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/dom/TrustedTypeUtils.h"
+#include "mozilla/dom/TrustedTypesConstants.h"
 #include "nsContentSink.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
@@ -146,17 +148,51 @@ bool ScriptElement::MaybeProcessScript() {
     return false;
   }
 
-  bool hasScriptContent = HasExternalScriptContent() ||
-                          nsContentUtils::HasNonEmptyTextContent(cont);
-  if (!hasScriptContent) {
-    // In the case of an empty, non-external classic script, there is nothing
-    // to process. However, we must perform a microtask checkpoint afterwards,
-    // as per https://html.spec.whatwg.org/#clean-up-after-running-script
-    if (mKind == JS::loader::ScriptKind::eClassic && !mExternal) {
-      nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-          "ScriptElement::MaybeProcessScript", []() { nsAutoMicroTask mt; }));
-    }
+  // https://html.spec.whatwg.org/#prepare-the-script-element
+  // The spec says we should calculate "source text" of inline scripts at the
+  // beginning of the "Prepare the script element" algorithm.
+  // - If this is an inline script that is not trusted (i.e. we must execute the
+  // Trusted Type default policy callback to obtain a trusted "source text")
+  // then we must wrap the GetTrustedTypesCompliantInlineScriptText call in a
+  // script runner.
+  // - If it is an inline script that is trusted, we will actually retrieve the
+  // "source text" lazily for performance reasons (see bug 1376651) so we just
+  //  use a void string.
+  // - If it is an external script, we similarly just pass a void string.
+  if (!HasExternalScriptContent() && !mIsTrusted) {
+    // TODO: We should likely block parser if IsClassicNonAsyncDefer() returns
+    // true but this is tricky because the default policy callback can actually
+    // change the script type.
+    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+        "ScriptElement::MaybeProcessScript",
+        [self = RefPtr<nsIScriptElement>(this)]()
+            MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
+              nsString sourceText;
+              self->GetTrustedTypesCompliantInlineScriptText(sourceText);
+              ((ScriptElement*)self.get())->MaybeProcessScript(sourceText);
+            }));
     return false;
+  }
+  return MaybeProcessScript(VoidString());
+}
+
+bool ScriptElement::MaybeProcessScript(const nsAString& aSourceText) {
+  nsIContent* cont = GetAsContent();
+  if (!HasExternalScriptContent()) {
+    bool hasInlineScriptContent =
+        mIsTrusted ? nsContentUtils::HasNonEmptyTextContent(cont)
+                   : !aSourceText.IsEmpty();
+    if (!hasInlineScriptContent) {
+      // In the case of an empty, non-external classic script, there is nothing
+      // to process. However, we must perform a microtask checkpoint afterwards,
+      // as per https://html.spec.whatwg.org/#clean-up-after-running-script
+      if (mKind == JS::loader::ScriptKind::eClassic && !mExternal) {
+        nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+            "ScriptElement::MaybeProcessScript", []() { nsAutoMicroTask mt; }));
+      }
+      return false;
+    }
+    MOZ_ASSERT(mIsTrusted == aSourceText.IsVoid());
   }
 
   // Check the type attribute to determine language and version. If type exists,
@@ -214,7 +250,7 @@ bool ScriptElement::MaybeProcessScript() {
   }
 
   RefPtr<ScriptLoader> loader = ownerDoc->ScriptLoader();
-  return loader->ProcessScriptElement(this);
+  return loader->ProcessScriptElement(this, aSourceText);
 }
 
 bool ScriptElement::GetScriptType(nsAString& aType) {
@@ -249,4 +285,27 @@ void ScriptElement::UpdateTrustWorthiness(
       StaticPrefs::dom_security_trusted_types_enabled()) {
     mIsTrusted = false;
   }
+}
+
+nsresult ScriptElement::GetTrustedTypesCompliantInlineScriptText(
+    nsString& aSourceText) {
+  MOZ_ASSERT(!mIsTrusted);
+
+  RefPtr<Element> element = GetAsContent()->AsElement();
+  nsAutoString sourceText;
+  GetScriptText(sourceText);
+
+  MOZ_ASSERT(element->IsHTMLElement() || element->IsSVGElement());
+  Maybe<nsAutoString> compliantStringHolder;
+  constexpr nsLiteralString htmlSinkName = u"HTMLScriptElement text"_ns;
+  constexpr nsLiteralString svgSinkName = u"SVGScriptElement text"_ns;
+  ErrorResult error;
+  const nsAString* compliantString =
+      TrustedTypeUtils::GetTrustedTypesCompliantStringForTrustedScript(
+          sourceText, element->IsHTMLElement() ? htmlSinkName : svgSinkName,
+          kTrustedTypesOnlySinkGroup, *element, compliantStringHolder, error);
+  if (!error.Failed()) {
+    aSourceText.Assign(*compliantString);
+  }
+  return error.StealNSResult();
 }

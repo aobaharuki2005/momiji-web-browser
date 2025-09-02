@@ -215,10 +215,14 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * In this case ScriptAvailable is guaranteed to be called at a later
    * point (as well as possibly ScriptEvaluated).
    *
-   * @param aElement The element representing the script to be loaded and
-   *        evaluated.
+   * @param aElement    The element representing the script to be loaded and
+   * evaluated.
+   * @param aSourceText For inline non-trusted script, the source text after
+   * application of the default Trusted Types policy, a void string otherwise.
+   * See https://html.spec.whatwg.org/#prepare-the-script-element
    */
-  bool ProcessScriptElement(nsIScriptElement* aElement);
+  bool ProcessScriptElement(nsIScriptElement* aElement,
+                            const nsAString& aSourceText);
 
   /**
    * Gets the currently executing script. This is useful if you want to
@@ -470,9 +474,10 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   already_AddRefed<ScriptLoadRequest> CreateLoadRequest(
       ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
-      nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode aCORSMode,
-      const nsAString& aNonce, RequestPriority aRequestPriority,
-      const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy,
+      const nsAString& aScriptContent, nsIPrincipal* aTriggeringPrincipal,
+      mozilla::CORSMode aCORSMode, const nsAString& aNonce,
+      RequestPriority aRequestPriority, const SRIMetadata& aIntegrity,
+      ReferrerPolicy aReferrerPolicy,
       JS::loader::ParserMetadata aParserMetadata,
       ScriptLoadRequestType aRequestType);
 
@@ -508,7 +513,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   bool ProcessExternalScript(nsIScriptElement* aElement, ScriptKind aScriptKind,
                              nsIContent* aScriptContent);
 
-  bool ProcessInlineScript(nsIScriptElement* aElement, ScriptKind aScriptKind);
+  bool ProcessInlineScript(nsIScriptElement* aElement, ScriptKind aScriptKind,
+                           const nsAString& aSourceText);
 
   enum class CacheBehavior : uint8_t {
     DoNothing,

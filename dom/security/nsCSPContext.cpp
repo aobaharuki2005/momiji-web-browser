@@ -632,7 +632,7 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
                               const nsAString& aNonce, bool aParserCreated,
                               Element* aTriggeringElement,
                               nsICSPEventListener* aCSPEventListener,
-                              const nsAString& aContentOfPseudoScript,
+                              const nsAString& aSourceText,
                               uint32_t aLineNumber, uint32_t aColumnNumber,
                               bool* outAllowsInline) {
   *outAllowsInline = true;
@@ -684,14 +684,14 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
     // once. Even though we are in a for loop, it is probable that there is only
     // one policy, so this check may be unnecessary.
     if (content.IsEmpty()) {
-      if (aContentOfPseudoScript.IsVoid()) {
+      if (aSourceText.IsVoid()) {
         // Lazily retrieve the text of inline script, see bug 1376651.
         nsCOMPtr<nsIScriptElement> element =
             do_QueryInterface(aTriggeringElement);
         MOZ_ASSERT(element);
         element->GetScriptText(content);
       } else {
-        content = aContentOfPseudoScript;
+        content = aSourceText;
       }
     }
 
