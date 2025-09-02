@@ -182,6 +182,17 @@ spidermonkey
 Spidermonkey tasks check out the full gecko source tree, then compile only the
 spidermonkey portion.  Each task runs specific tests after the build.
 
+mochitest
+---------
+
+See the :doc:`test kind documentation <kinds/test>` for more info.
+
+.. toctree::
+   :hidden:
+
+   kinds/test
+
+
 test
 ----
 

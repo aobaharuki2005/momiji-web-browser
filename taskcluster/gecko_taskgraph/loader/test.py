@@ -119,7 +119,9 @@ def get_test_platforms(
     return test_platforms
 
 
-PREFIX_BY_KIND = {}
+PREFIX_BY_KIND = {
+    "mochitest": {"mochitest"},
+}
 
 
 @memoize
