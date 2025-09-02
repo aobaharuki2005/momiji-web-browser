@@ -102,14 +102,8 @@ bool IsAnchorLaidOutStrictlyBeforeElement(
   // Note: The containing block of an absolutely positioned element
   // is just the parent frame.
   const nsIFrame* positionedContainingBlock = aPositionedFrame->GetParent();
-  // Note(dshin, bug 1985654): Spec strictly uses the term "containing block,"
-  // corresponding to `GetContainingBlock()`. However, this leads to cases
-  // where an anchor's non-inline containing block prevents it from being a
-  // valid anchor for a absolutely positioned element (Which can explicitly
-  // have inline elements as a containing block). Some WPT rely on inline
-  // containing blocks as well.
-  // See also: https://github.com/w3c/csswg-drafts/issues/12674
-  const nsIFrame* anchorContainingBlock = aPossibleAnchorFrame->GetParent();
+  const nsIFrame* anchorContainingBlock =
+      aPossibleAnchorFrame->GetContainingBlock();
 
   // 2. Both elements are in the same top layer but have different
   // containing blocks and positioned el's containing block is an
@@ -128,7 +122,7 @@ bool IsAnchorLaidOutStrictlyBeforeElement(
          &positionedContainingBlock]() -> bool {
       const nsIFrame* it = anchorContainingBlock;
       while (it) {
-        const nsIFrame* parentContainingBlock = it->GetParent();
+        const nsIFrame* parentContainingBlock = it->GetContainingBlock();
         if (!parentContainingBlock) {
           return false;
         }
