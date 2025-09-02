@@ -108,7 +108,7 @@ input[type="text"] {
 
 .info-box {
   padding: 1em;
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
 }
 
 .info-box-label {
