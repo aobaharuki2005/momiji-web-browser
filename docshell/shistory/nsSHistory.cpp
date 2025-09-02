@@ -1471,15 +1471,17 @@ static bool MaybeCheckUnloadingIsCanceled(
   // This is a bit fishy since we don't have a direct way of performing
   // the step, but this does its best.
   RefPtr<nsDocShellLoadState> loadState =
-      needsBeforeUnload ? found->mLoadState : aLoadResults[0].mLoadState;
+      needsBeforeUnload ? found->mLoadState : nullptr;
   RefPtr<CanonicalBrowsingContext> browsingContext = aTraversable->Canonical();
   MOZ_DIAGNOSTIC_ASSERT(!needsBeforeUnload ||
                         found->mBrowsingContext == browsingContext);
 
-  nsCOMPtr<SessionHistoryEntry> targetEntry =
-      do_QueryInterface(loadState->SHEntry());
   nsCOMPtr<SessionHistoryEntry> currentEntry =
       browsingContext->GetActiveSessionHistoryEntry();
+  // If we didn't find a load state, it means that traversable stays at the
+  // current entry.
+  nsCOMPtr<SessionHistoryEntry> targetEntry =
+      loadState ? do_QueryInterface(loadState->SHEntry()) : currentEntry;
 
   // Step 4.3
   if (!currentEntry || currentEntry->GetID() == targetEntry->GetID()) {
