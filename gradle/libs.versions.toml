@@ -79,9 +79,9 @@ serialization = "1.9.0"
 
 # Linter versions
 detekt = "1.23.8"
+google-java-format = "1.28.0"
 ktlint = "1.7.1"
 spotless = "7.2.1"
-google-java-format = "1.27.0"
 
 # Mozilla versions
 mozilla-glean = "65.0.2"
