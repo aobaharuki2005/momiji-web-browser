@@ -414,6 +414,11 @@ export var AboutNewTabResourceMapping = {
       // Retrieve the new add-on wrapper if the xpi version has been uninstalled.
       if (changed) {
         addon = await lazy.AddonManager.getAddonByID(BUILTIN_ADDON_ID);
+
+        this.logger.debug(
+          "Invalidating AboutHomeStartupCache after train-hop uninstall"
+        );
+        lazy.AboutHomeStartupCache.clearCacheAndUninit();
       }
     }
 
