@@ -167,9 +167,10 @@ internal fun ProtectionPanel(
 
         if (!isLocalPdf) {
             MenuGroup {
-                MenuTextItem(
+                MenuItem(
                     label = stringResource(id = R.string.clear_site_data),
                     onClick = onClearSiteDataMenuClick,
+                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_delete_24),
                 )
             }
         }
