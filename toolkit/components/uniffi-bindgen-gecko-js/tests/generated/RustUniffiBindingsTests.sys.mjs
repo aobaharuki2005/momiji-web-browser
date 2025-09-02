@@ -4257,30 +4257,30 @@ export class TestAsyncCallbackInterface {
     /**
      * noop
      */
-    noop() {
+    async noop() {
       throw Error("noop not implemented");
     }
     /**
      * getValue
-     * @returns {number}
+     * @returns {Promise<number>}}
      */
-    getValue() {
+    async getValue() {
       throw Error("getValue not implemented");
     }
     /**
      * setValue
      * @param {number} value
      */
-    setValue(
+    async setValue(
         value) {
       throw Error("setValue not implemented");
     }
     /**
      * throwIfEqual
      * @param {CallbackInterfaceNumbers} numbers
-     * @returns {CallbackInterfaceNumbers}
+     * @returns {Promise<CallbackInterfaceNumbers>}}
      */
-    throwIfEqual(
+    async throwIfEqual(
         numbers) {
       throw Error("throwIfEqual not implemented");
     }
