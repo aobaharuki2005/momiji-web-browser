@@ -48,6 +48,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_URL_BOX
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -602,6 +603,16 @@ class HomeScreenRobot {
             return ThreeDotMenuMainRobotCompose.Transition(composeTestRule)
         }
 
+        fun openThreeDotMenuWithComposableToolbar(composeTestRule: ComposeTestRule, interact: ThreeDotMenuMainRobotCompose.() -> Unit): ThreeDotMenuMainRobotCompose.Transition {
+            Log.i(TAG, "openThreeDotMenuWithComposableToolbar: Trying to click main menu button")
+            composeTestRule.onNodeWithContentDescription(getStringResource(R.string.content_description_menu)).performClick()
+            Log.i(TAG, "openThreeDotMenuWithComposableToolbar: Clicked main menu button")
+            assertUIObjectExists(itemWithResId("$packageName:id/design_bottom_sheet"))
+
+            ThreeDotMenuMainRobotCompose(composeTestRule).interact()
+            return ThreeDotMenuMainRobotCompose.Transition(composeTestRule)
+        }
+
         fun openSearch(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             Log.i(TAG, "openSearch: Waiting for $waitingTime ms for the navigation toolbar to exist")
             navigationToolbar().waitForExists(waitingTime)
@@ -612,6 +623,17 @@ class HomeScreenRobot {
             Log.i(TAG, "openSearch: Waiting for device to be idle")
             mDevice.waitForIdle()
             Log.i(TAG, "openSearch: Device was idle")
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
+        }
+
+        @OptIn(ExperimentalTestApi::class)
+        fun openSearchWithComposableToolbar(composeTestRule: ComposeTestRule, interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            composeTestRule.waitUntilAtLeastOneExists(hasTestTag(ADDRESSBAR_URL_BOX), waitingTime)
+            Log.i(TAG, "openSearchWithComposableToolbar: Trying to click navigation toolbar")
+            composeTestRule.onNodeWithTag(ADDRESSBAR_URL_BOX).performClick()
+            Log.i(TAG, "openSearchWithComposableToolbar: Clicked navigation toolbar")
 
             SearchRobot().interact()
             return SearchRobot.Transition()

@@ -101,6 +101,12 @@ class CustomTabRobot {
         Log.i(TAG, "verifyCustomTabCloseButton: Verified that the close custom tab button is displayed")
     }
 
+    fun verifyCustomTabCloseButtonWithComposableToolbar(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyCustomTabCloseButtonWithComposableToolbar: Trying to verify that the close custom tab button is displayed")
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.mozac_feature_customtabs_exit_button)).assertIsDisplayed()
+        Log.i(TAG, "verifyCustomTabCloseButtonWithComposableToolbar: Verified that the close custom tab button is displayed")
+    }
+
     fun verifyCustomTabToolbarTitle(title: String) {
         waitForPageToLoad()
 
@@ -239,6 +245,15 @@ class CustomTabRobot {
                 it.click()
                 Log.i(TAG, "openMainMenuFromRedesignedToolbar: Clicked the main menu button")
             }
+
+            CustomTabRobot().interact()
+            return Transition()
+        }
+
+        fun openMainMenuWithComposableToolbar(composeTestRule: ComposeTestRule, interact: CustomTabRobot.() -> Unit): Transition {
+            Log.i(TAG, "openMainMenuWithComposableToolbar: Trying to click the main menu button")
+            composeTestRule.onNodeWithContentDescription(getStringResource(R.string.content_description_menu)).performClick()
+            Log.i(TAG, "openMainMenuWithComposableToolbar: Clicked the main menu button")
 
             CustomTabRobot().interact()
             return Transition()
