@@ -238,7 +238,7 @@ class CharacterDataBuffer final {
 
   /**
    * Return the first char, but if you're not sure whether this is empty, you
-   * should use GetFirstChar() instead.
+   * should use SafeFirstChar() instead.
    */
   [[nodiscard]] char16_t FirstChar() const {
     MOZ_ASSERT(mState.mLength);
@@ -247,9 +247,10 @@ class CharacterDataBuffer final {
   [[nodiscard]] char16_t SafeFirstChar() const {
     return MOZ_LIKELY(mState.mLength) ? FirstChar() : static_cast<char16_t>(0);
   }
+
   /**
    * Return the last char, but if you're not sure whether this is empty, you
-   * should use GetLastChar() instead.
+   * should use SafeLastChar() instead.
    */
   [[nodiscard]] char16_t LastChar() const {
     MOZ_ASSERT(mState.mLength);
