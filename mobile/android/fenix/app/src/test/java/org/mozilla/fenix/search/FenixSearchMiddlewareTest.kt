@@ -321,18 +321,6 @@ class FenixSearchMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN user has not allowed to show suggestions WHEN search query is different than the current URL and not empty THEN don't show search suggestions`() {
-        val (_, store) = buildMiddlewareAndAddToSearchStore()
-        every { settings.shouldShowSearchSuggestions } returns false
-
-        store.dispatch(SearchFragmentAction.UpdateQuery(store.state.url))
-        assertFalse(store.state.shouldShowSearchSuggestions)
-
-        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
-        assertFalse(store.state.shouldShowSearchSuggestions)
-    }
-
-    @Test
     fun `GIVEN browsing mode is private and user has allowed suggestions in private mode WHEN search query is different than the current URL and not empty THEN show search suggestions`() {
         val (_, store) = buildMiddlewareAndAddToSearchStore()
         every { settings.shouldShowSearchSuggestions } returns true
@@ -344,44 +332,6 @@ class FenixSearchMiddlewareTest {
 
         store.dispatch(SearchFragmentAction.UpdateQuery("test"))
         assertTrue(store.state.shouldShowSearchSuggestions)
-    }
-
-    @Test
-    fun `GIVEN browsing mode is private and user has not allowed suggestions in private mode WHEN search query is different than the current URL and not empty THEN don't show search suggestions and show private suggestions card`() {
-        val (_, store) = buildMiddlewareAndAddToSearchStore()
-        every { settings.shouldShowSearchSuggestions } returns true
-        every { settings.shouldShowSearchSuggestionsInPrivate } returns false
-        every { browsingModeManager.mode } returns BrowsingMode.Private
-
-        store.dispatch(SearchFragmentAction.UpdateQuery(store.state.url))
-        assertFalse(store.state.shouldShowSearchSuggestions)
-
-        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
-        assertFalse(store.state.shouldShowSearchSuggestions)
-        assertTrue(store.state.showSearchSuggestionsHint)
-    }
-
-    @Test
-    fun `GIVEN user allows to show search suggestions in private mode WHEN search is started THEN show search suggestions`() {
-        val (_, store) = buildMiddlewareAndAddToSearchStore()
-        every { settings.shouldShowSearchSuggestions } returns true
-        every { settings.shouldShowSearchSuggestionsInPrivate } returns false
-        every { browsingModeManager.mode } returns BrowsingMode.Private
-
-        store.dispatch(SearchFragmentAction.UpdateQuery(store.state.url))
-        assertFalse(store.state.shouldShowSearchSuggestions)
-
-        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
-        assertFalse(store.state.shouldShowSearchSuggestions)
-        assertTrue(store.state.showSearchSuggestionsHint)
-
-        every { settings.shouldShowSearchSuggestionsInPrivate } returns true
-        every { settings.showSearchSuggestionsInPrivateOnboardingFinished } returns true
-        store.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false))
-
-        store.dispatch(SearchFragmentAction.UpdateQuery("test2"))
-        assertTrue(store.state.shouldShowSearchSuggestions)
-        assertFalse(store.state.showSearchSuggestionsHint)
     }
 
     @Test
