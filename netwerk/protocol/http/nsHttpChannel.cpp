@@ -104,9 +104,6 @@
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/glean/DomSecurityMetrics.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Services.h"
-#include "nsISystemInfo.h"
-#include "mozilla/components/SystemInfo.h"
 #include "AlternateServices.h"
 #include "NetworkMarker.h"
 #include "nsIDNSRecord.h"
@@ -4427,41 +4424,6 @@ nsresult nsHttpChannel::OpenCacheEntry(bool isHttps) {
   return OpenCacheEntryInternal(isHttps);
 }
 
-#ifdef XP_WIN
-static mozilla::Maybe<bool> sHasSSD;
-#endif
-
-static bool RCWNEnabled() {
-  // State table for RCWN logic (race_with_non_ssd is Windows only):
-  // network.http.rcwn.enabled | Device  | race_with_non_ssd | Result
-  // true                      | any     | any               | Enabled
-  // false                     | SSD     | any               | Disabled
-  // false                     | non-SSD | true              | Enabled
-  // false                     | non-SSD | false             | Disabled
-
-  bool rcwnEnabled = StaticPrefs::network_http_rcwn_enabled();
-#ifdef XP_WIN
-  if (!rcwnEnabled) {
-    if (sHasSSD.isNothing()) {
-      bool hasSSD = true;
-      nsCOMPtr<nsIPropertyBag2> sysInfo =
-          mozilla::components::SystemInfo::Service();
-      if (NS_SUCCEEDED(sysInfo->GetPropertyAsBool(u"hasSSD"_ns, &hasSSD))) {
-        sHasSSD = Some(hasSSD);
-      } else {
-        // Failed to detect, assume SSD (conservative default)
-        sHasSSD = Some(true);
-      }
-    }
-    if (sHasSSD.isSome() && !sHasSSD.value()) {
-      // For non-SSD devices, check the non-SSD-specific preference
-      rcwnEnabled = StaticPrefs::network_http_rcwn_race_with_non_ssd();
-    }
-  }
-#endif
-  return rcwnEnabled;
-}
-
 nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
   nsresult rv;
 
@@ -4596,7 +4558,8 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
     maybeRCWN = false;
   }
 
-  if ((mNetworkTriggerDelay || RCWNEnabled()) && maybeRCWN && mAllowRCWN) {
+  if ((mNetworkTriggerDelay || StaticPrefs::network_http_rcwn_enabled()) &&
+      maybeRCWN && mAllowRCWN) {
     bool hasAltData = false;
     uint32_t sizeInKb = 0;
     rv = cacheStorage->GetCacheIndexEntryAttrs(
@@ -4614,7 +4577,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
   if (!mCacheOpenDelay) {
     MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread");
     if (mNetworkTriggered) {
-      mRaceCacheWithNetwork = RCWNEnabled();
+      mRaceCacheWithNetwork = StaticPrefs::network_http_rcwn_enabled();
     }
     rv = cacheStorage->AsyncOpenURI(mCacheEntryURI, mCacheIdExtension,
                                     cacheEntryOpenFlags, this);
