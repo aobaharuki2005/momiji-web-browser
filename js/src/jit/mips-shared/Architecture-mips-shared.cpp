@@ -19,7 +19,6 @@
 #  endif
 #endif
 
-#define HWCAP_MIPS (1 << 28)
 #define HWCAP_LOONGSON (1 << 27)
 #define HWCAP_R2 (1 << 26)
 #define HWCAP_FPU (1 << 0)
@@ -28,7 +27,7 @@ namespace js {
 namespace jit {
 
 static uint32_t get_mips_flags() {
-  uint32_t flags = HWCAP_MIPS;
+  uint32_t flags = 0;
 
 #if defined(JS_SIMULATOR_MIPS64)
   flags |= HWCAP_FPU;
