@@ -10,7 +10,6 @@ SOURCES += [
     "DeserializeCertTest.cpp",
     "HMACTest.cpp",
     "MD4Test.cpp",
-    "NSSBenchTest.cpp",
     "OCSPCacheTest.cpp",
     "TLSIntoleranceTest.cpp",
 ]
