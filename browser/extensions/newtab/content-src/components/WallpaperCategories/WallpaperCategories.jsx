@@ -43,6 +43,7 @@ export class _WallpaperCategories extends React.PureComponent {
     this.handleChange = this.handleChange.bind(this);
     this.handleReset = this.handleReset.bind(this);
     this.handleCategory = this.handleCategory.bind(this);
+    this.focusCategory = this.focusCategory.bind(this);
     this.handleUpload = this.handleUpload.bind(this);
     this.handleBack = this.handleBack.bind(this);
     this.getRGBColors = this.getRGBColors.bind(this);
@@ -59,6 +60,7 @@ export class _WallpaperCategories extends React.PureComponent {
       inputType: "radio",
       activeId: null,
       customWallpaperErrorType: null,
+      focusedCategoryIndex: 0,
     };
   }
 
@@ -138,6 +140,17 @@ export class _WallpaperCategories extends React.PureComponent {
     });
   }
 
+  focusCategory(focusIndex) {
+    if (!this.categoryRef) {
+      return;
+    }
+
+    const el = this.categoryRef[focusIndex];
+    if (el) {
+      el.focus();
+    }
+  }
+
   // function implementing arrow navigation for wallpaper category selection
   handleCategoryKeyDown(event, category) {
     const getIndex = this.categoryRef.findIndex(cat => cat.id === category);
@@ -163,7 +176,9 @@ export class _WallpaperCategories extends React.PureComponent {
       nextIndex = getIndex - 1 >= 0 ? getIndex - 1 : getIndex;
     }
 
-    this.categoryRef[nextIndex].focus();
+    this.setState({ focusedCategoryIndex: nextIndex }, () =>
+      this.focusCategory(nextIndex)
+    );
   }
 
   // function implementing arrow navigation for wallpaper selection
@@ -343,8 +358,12 @@ export class _WallpaperCategories extends React.PureComponent {
   }
 
   handleBack() {
-    this.setState({ activeCategory: null });
-    this.categoryRef[0]?.focus();
+    this.setState({ activeCategory: null }, () => {
+      // Wait for the category grid to be back in the DOM
+      requestAnimationFrame(() => {
+        this.focusCategory(this.state.focusedCategoryIndex);
+      });
+    });
   }
 
   // Record user interaction when changing wallpaper and reseting wallpaper to default
@@ -489,6 +508,10 @@ export class _WallpaperCategories extends React.PureComponent {
               const activeWallpaperObj =
                 activeWallpaper &&
                 filteredList.find(wp => wp.title === activeWallpaper);
+              // Detect custom solid color
+              const isCustomSolidColor =
+                category === "solid-colors" &&
+                activeWallpaper.startsWith("solid-color-picker");
               const thumbnail = activeWallpaperObj || filteredList[0];
               let fluent_id;
               switch (category) {
@@ -513,6 +536,14 @@ export class _WallpaperCategories extends React.PureComponent {
               } else {
                 style.backgroundColor = thumbnail?.solid_color || "";
               }
+              // If custom solid color is active, override the thumbnail to the chosen hex
+              if (isCustomSolidColor) {
+                const hex =
+                  activeWallpaper.split("solid-color-picker-")[1] || "";
+                style.backgroundColor = hex;
+              }
+              const isCategorySelected =
+                activeWallpaperObj || isCustomSolidColor;
               return (
                 <div key={category}>
                   <button
@@ -525,17 +556,20 @@ export class _WallpaperCategories extends React.PureComponent {
                     style={style}
                     onKeyDown={e => this.handleCategoryKeyDown(e, category)}
                     // Add overrides for custom wallpaper upload UI
-                    onClick={
-                      category !== "custom-wallpaper"
-                        ? this.handleCategory
-                        : this.handleUpload
+                    onClick={event => {
+                      this.setState({ focusedCategoryIndex: index });
+                      if (category !== "custom-wallpaper") {
+                        this.handleCategory(event);
+                      } else {
+                        this.handleUpload();
+                      }
+                    }}
+                    className={`wallpaper-input
+                      ${category === "custom-wallpaper" ? "theme-custom-wallpaper" : ""}
+                      ${isCategorySelected ? "selected" : ""}`}
+                    tabIndex={
+                      this.state.focusedCategoryIndex === index ? 0 : -1
                     }
-                    className={
-                      category !== "custom-wallpaper"
-                        ? `wallpaper-input`
-                        : `wallpaper-input theme-custom-wallpaper`
-                    }
-                    tabIndex={index === 0 ? 0 : -1}
                     {...(category === "custom-wallpaper"
                       ? { "aria-errormessage": "customWallpaperError" }
                       : {})}

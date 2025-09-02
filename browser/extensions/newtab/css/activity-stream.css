@@ -2477,6 +2477,9 @@ main section {
   padding: 0;
   width: 100%;
 }
+.wallpaper-input:checked, .wallpaper-input.selected {
+  box-shadow: inset 0 0 0 3px var(--color-accent-primary);
+}
 .wallpaper-input.theme-custom-wallpaper {
   border: 2px dashed var(--border-color-default, #CFCFD8);
   box-shadow: none;
@@ -2493,6 +2496,10 @@ main section {
   inset-block-start: 50%;
   inset-inline-start: 50%;
   transform: translate(-50%, -50%);
+}
+.wallpaper-input.theme-custom-wallpaper:focus {
+  outline-color: var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
 }
 .wallpaper-input.theme-custom-wallpaper::after {
   background: url("chrome://global/skin/icons/plus-20.svg") center no-repeat;
@@ -2534,16 +2541,12 @@ main section {
   background-image: url("chrome://newtab/content/data/content/assets/wallpapers/light-sky.avif");
 }
 .wallpaper-input:focus-visible {
-  outline-color: var(--newtab-primary-action-background);
+  outline-color: var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
 }
 .wallpaper-input:hover {
   filter: brightness(55%);
   outline-color: transparent;
-}
-.wallpaper-input:focus {
-  border-color: transparent;
-  outline-color: var(--color-accent-primary-active);
-  padding: var(--space-xxsmall);
 }
 
 .theme-custom-color-picker {
@@ -2553,15 +2556,13 @@ main section {
   outline: 2px dashed var(--border-color-default, #CFCFD8);
   outline-offset: 2px;
   position: relative;
-  color-scheme: light;
 }
 .theme-custom-color-picker .wallpaper-input {
   box-shadow: none;
 }
-.theme-custom-color-picker:focus-visible {
-  border-color: transparent;
-  outline-color: var(--color-accent-primary-active);
-  padding: var(--space-xxsmall);
+.theme-custom-color-picker .wallpaper-input:focus {
+  outline-color: var(--focus-outline-color);
+  outline-offset: 6px;
 }
 .theme-custom-color-picker.default-color-set #solid-color-picker {
   opacity: 0;
@@ -2596,6 +2597,7 @@ main section {
   transform: translate(-50%, -50%);
   pointer-events: none;
   cursor: pointer;
+  color-scheme: light;
 }
 .theme-custom-color-picker label {
   display: inline-block;
