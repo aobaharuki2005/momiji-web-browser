@@ -84,7 +84,7 @@ ktlint = "1.7.1"
 spotless = "7.2.1"
 
 # Mozilla versions
-mozilla-glean = "65.0.2"
+glean = "65.0.2"
 
 # Testing versions
 androidx-test = "1.7.0"
@@ -229,8 +229,9 @@ tools-linttests = { group = "com.android.tools.lint", name = "lint-tests", versi
 tools-detekt-api = { group = "io.gitlab.arturbosch.detekt", name = "detekt-api", version.ref = "detekt" }
 tools-detekt-test = { group = "io.gitlab.arturbosch.detekt", name = "detekt-test", version.ref = "detekt" }
 
-mozilla-glean = { group = "org.mozilla.telemetry", name = "glean", version.ref = "mozilla-glean" }
-mozilla-glean-forUnitTests = { group = "org.mozilla.telemetry", name = "glean-native-forUnitTests", version.ref = "mozilla-glean" }
+mozilla-glean = { group = "org.mozilla.telemetry", name = "glean", version.ref = "glean" }
+mozilla-glean-forUnitTests = { group = "org.mozilla.telemetry", name = "glean-native-forUnitTests", version.ref = "glean" }
+mozilla-glean-gradle-plugin = { group = "org.mozilla.telemetry", name = "glean-gradle-plugin", version.ref = "glean" }
 
 thirdparty-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 thirdparty-okhttp-urlconnection = { group = "com.squareup.okhttp3", name = "okhttp-urlconnection", version.ref = "okhttp" }
@@ -260,7 +261,6 @@ semanticdb-java = { group = "com.sourcegraph", name = "semanticdb-javac", versio
 semanticdb-kotlin = { group = "com.github.mozsearch", name = "semanticdb-kotlinc", version.ref = "semanticdb-kotlinc" }
 tomlj = { group = "org.tomlj", name = "tomlj", version.ref = "tomlj" }
 
-glean-gradle-plugin = { group = "org.mozilla.telemetry", name = "glean-gradle-plugin", version.ref = "mozilla-glean" }
 kotlin-annotations-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-annotations-jvm", version.ref = "kotlin" }
 ktlint = { group = "com.pinterest.ktlint", name = "ktlint-cli", version.ref = "ktlint" }
 

@@ -347,8 +347,6 @@ dependencies {
     implementation libs.kotlin.coroutines
     debugImplementation libs.leakcanary
 
-    testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
-
     testImplementation platform(libs.junit.bom)
     testImplementation libs.junit.jupiter
     testRuntimeOnly libs.junit.platform.launcher
@@ -358,6 +356,7 @@ dependencies {
     testImplementation libs.testing.coroutines
     testImplementation libs.androidx.work.testing
     testImplementation libs.androidx.arch.core.testing
+    testImplementation libs.mozilla.glean.forUnitTests
     testImplementation project(':components:support-test')
     testImplementation project(':components:support-test-libstate')
 

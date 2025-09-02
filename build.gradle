@@ -24,7 +24,7 @@ buildscript {
         classpath libs.androidx.navigation.safeargs
         classpath libs.osslicenses.plugin
         classpath libs.tools.benchmarkgradle
-        classpath libs.glean.gradle.plugin
+        classpath libs.mozilla.glean.gradle.plugin
         classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
     }
 }
@@ -96,7 +96,7 @@ allprojects {
         topsrcdir = gradle.mozconfig.topsrcdir
         topobjdir = gradle.mozconfig.topobjdir
 
-        gleanVersion = libs.versions.mozilla.glean.get() // Verification done in verifyGleanVersion task
+        gleanVersion = libs.versions.glean.get() // Verification done in verifyGleanVersion task
 
         artifactSuffix = getArtifactSuffix()
         versionName = getVersionName()
@@ -385,13 +385,13 @@ afterEvaluate {
                 if (details.requested.group == 'org.mozilla.telemetry'
                         && details.requested.name.contains('glean') ) {
                     def requested = details.requested.version.tokenize(".")
-                        def defined = libs.versions.mozilla.glean.get().tokenize(".")
+                        def defined = project.ext.gleanVersion.tokenize(".")
                         // Check the major version
                         if (requested[0] != defined[0]) {
                             throw new AssertionError("Cannot resolve to a single Glean version. Requested: ${details.requested.version}, A-C uses: ${libs.mozilla.glean}")
                         } else {
                             // Enforce that all (transitive) dependencies are using the defined Glean version
-                            details.useVersion libs.versions.mozilla.glean.get()
+                            details.useVersion project.ext.gleanVersion
                         }
                 }
             }

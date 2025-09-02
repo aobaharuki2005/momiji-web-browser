@@ -748,15 +748,12 @@ dependencies {
     testImplementation project(':components:support-test-libstate')
     testImplementation libs.androidx.test.junit
     testImplementation libs.androidx.work.testing
+    testImplementation libs.mozilla.glean.forUnitTests
     testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_libsForTests
     testImplementation libs.testing.robolectric
 
     androidTestImplementation libs.testing.mockk.android
     testImplementation libs.testing.mockk
-
-    // For the initial release of Glean 19, we require consumer applications to
-    // depend on a separate library for unit tests. This will be removed in future releases.
-    testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
 
     testImplementation testFixtures(project(':components:feature-downloads'))
 
