@@ -318,8 +318,10 @@ def show_taskgraph(options):
 
         non_fatal_failures = []
         for spec in parameters:
-            base_path = os.path.join(diffdir, f"{options['graph_attr']}_{base_ref}")
-            cur_path = os.path.join(diffdir, f"{options['graph_attr']}_{cur_ref}")
+            base_path = os.path.join(
+                diffdir, f"{options['graph_attr']}_{base_ref_file}"
+            )
+            cur_path = os.path.join(diffdir, f"{options['graph_attr']}_{cur_ref_file}")
 
             params_name = None
             if len(parameters) > 1:
