@@ -24,12 +24,16 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.home.interactor.HomepageInteractor
 import org.mozilla.fenix.home.pocket.ui.PocketSection
 import org.mozilla.fenix.home.store.HomepageState
+import org.mozilla.fenix.home.topsites.TopSiteColors
 import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
  * Top level composable for the middle search homepage.
@@ -70,7 +74,7 @@ internal fun MiddleSearchHomepage(
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (state.firstFrameDrawn) {
                 with(state) {
@@ -147,4 +151,44 @@ private fun Scrim(onDismiss: () -> Unit) {
                 detectTapGestures(onTap = { onDismiss() })
             },
     )
+}
+
+@Composable
+@PreviewLightDark
+private fun MiddleSearchHomepagePreview() {
+    FirefoxTheme {
+        MiddleSearchHomepage(
+            HomepageState.Normal(
+                nimbusMessage = null,
+                topSites = FakeHomepagePreview.topSites(),
+                recentTabs = FakeHomepagePreview.recentTabs(),
+                syncedTab = FakeHomepagePreview.recentSyncedTab(),
+                bookmarks = FakeHomepagePreview.bookmarks(),
+                recentlyVisited = FakeHomepagePreview.recentHistory(),
+                collectionsState = FakeHomepagePreview.collectionState(),
+                pocketState = FakeHomepagePreview.pocketState(),
+                showTopSites = true,
+                showRecentTabs = false,
+                showRecentSyncedTab = false,
+                showBookmarks = false,
+                showRecentlyVisited = true,
+                showPocketStories = true,
+                showCollections = true,
+                showHeader = false,
+                searchBarVisible = true,
+                searchBarEnabled = true,
+                firstFrameDrawn = true,
+                setupChecklistState = null,
+                topSiteColors = TopSiteColors.colors(),
+                cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
+                buttonTextColor = WallpaperState.default.buttonTextColor,
+                buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
+                bottomSpacerHeight = 188.dp,
+                isSearchInProgress = false,
+            ),
+            interactor = FakeHomepagePreview.homepageInteractor,
+            onTopSitesItemBound = {},
+            onMiddleSearchBarVisibilityChanged = {},
+        )
+    }
 }
