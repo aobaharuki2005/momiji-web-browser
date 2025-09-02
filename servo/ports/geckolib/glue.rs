@@ -158,14 +158,15 @@ use style::values::computed::effects::Filter;
 use style::values::computed::font::{
     FamilyName, FontFamily, FontFamilyList, FontStretch, FontStyle, FontWeight, GenericFontFamily,
 };
-use style::values::computed::length::AnchorSizeFunction;
-use style::values::computed::length_percentage::AllowAnchorPosResolutionInCalcPercentage;
+use style::values::computed::length_percentage::{
+    AllowAnchorPosResolutionInCalcPercentage, Unpacked,
+};
 use style::values::computed::position::AnchorFunction;
 use style::values::computed::{self, ContentVisibility, Context, ToComputedValue};
 use style::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use style::values::generics::color::ColorMixFlags;
 use style::values::generics::easing::BeforeFlag;
-use style::values::generics::Optional;
+use style::values::generics::length::GenericAnchorSizeFunction;
 use style::values::resolved;
 use style::values::specified::intersection_observer::IntersectionObserverMargin;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -10304,16 +10305,6 @@ pub enum AnchorPositioningFunctionResolution {
     Resolved(computed::LengthPercentage),
 }
 
-fn resolve_anchor_fallback(
-    fallback: &Optional<computed::LengthPercentage>,
-) -> AnchorPositioningFunctionResolution {
-    fallback
-        .as_ref()
-        .map_or(AnchorPositioningFunctionResolution::Invalid, |fb| {
-            AnchorPositioningFunctionResolution::ResolvedReference(fb as *const _)
-        })
-}
-
 fn resolve_anchor_function(
     func: &AnchorFunction,
     params: &AnchorPosOffsetResolutionParams,
@@ -10345,7 +10336,11 @@ fn resolve_inset_fallback(
         computed::Inset::LengthPercentage(lp) => {
             AnchorPositioningFunctionResolution::ResolvedReference(lp as *const _)
         },
-        computed::Inset::AnchorSizeFunction(_) => AnchorPositioningFunctionResolution::Invalid, // TODO(dshin)
+        computed::Inset::AnchorSizeFunction(f) => do_resolve_anchor_size(
+            f,
+            params,
+            AllowAnchorPosResolutionInCalcPercentage::Both(prop_side),
+        ),
         computed::Inset::AnchorFunction(f) => resolve_anchor_function(f, params, prop_side),
         computed::Inset::AnchorContainingCalcFunction(clp) => {
             let Unpacked::Calc(clp) = clp.unpack() else {
@@ -10374,22 +10369,247 @@ pub extern "C" fn Servo_ResolveAnchorFunction(
     *out = resolve_anchor_function(func, params, prop_side);
 }
 
+trait AnchorSizeFallbackResolver {
+    fn resolve_fallback(
+        fallback: Option<&Self>,
+        params: &AnchorPosOffsetResolutionParams,
+        allowed: AllowAnchorPosResolutionInCalcPercentage,
+    ) -> AnchorPositioningFunctionResolution;
+}
+
+impl AnchorSizeFallbackResolver for computed::Inset {
+    fn resolve_fallback(
+        fallback: Option<&Self>,
+        params: &AnchorPosOffsetResolutionParams,
+        allowed: AllowAnchorPosResolutionInCalcPercentage,
+    ) -> AnchorPositioningFunctionResolution {
+        let Some(fallback) = fallback else {
+            return AnchorPositioningFunctionResolution::Invalid;
+        };
+        match fallback {
+            computed::Inset::Auto => AnchorPositioningFunctionResolution::Invalid,
+            computed::Inset::LengthPercentage(lp) => {
+                AnchorPositioningFunctionResolution::ResolvedReference(lp as *const _)
+            },
+            computed::Inset::AnchorFunction(f) => {
+                let side = match allowed {
+                    AllowAnchorPosResolutionInCalcPercentage::Both(s) => s,
+                    AllowAnchorPosResolutionInCalcPercentage::AnchorSizeOnly(_) => {
+                        return AnchorPositioningFunctionResolution::Invalid
+                    },
+                };
+                resolve_anchor_function(f, params, side)
+            },
+            computed::Inset::AnchorSizeFunction(f) => do_resolve_anchor_size(f, params, allowed),
+            computed::Inset::AnchorContainingCalcFunction(clp) => {
+                let Unpacked::Calc(clp) = clp.unpack() else {
+                    unreachable!();
+                };
+                match clp.resolve_anchor(allowed, &params) {
+                    Ok((node, clamping_mode)) => AnchorPositioningFunctionResolution::Resolved(
+                        computed::LengthPercentage::new_calc(node, clamping_mode),
+                    ),
+                    Err(_) => AnchorPositioningFunctionResolution::Invalid,
+                }
+            },
+        }
+    }
+}
+
+impl AnchorSizeFallbackResolver for computed::Margin {
+    fn resolve_fallback(
+        fallback: Option<&Self>,
+        params: &AnchorPosOffsetResolutionParams,
+        allowed: AllowAnchorPosResolutionInCalcPercentage,
+    ) -> AnchorPositioningFunctionResolution {
+        let Some(fallback) = fallback else {
+            return AnchorPositioningFunctionResolution::Invalid;
+        };
+        match fallback {
+            computed::Margin::Auto => AnchorPositioningFunctionResolution::Invalid,
+            computed::Margin::LengthPercentage(lp) => {
+                AnchorPositioningFunctionResolution::ResolvedReference(lp as *const _)
+            },
+            computed::Margin::AnchorSizeFunction(f) => do_resolve_anchor_size(f, params, allowed),
+            computed::Margin::AnchorContainingCalcFunction(clp) => {
+                let Unpacked::Calc(clp) = clp.unpack() else {
+                    unreachable!();
+                };
+                match clp.resolve_anchor(allowed, &params) {
+                    Ok((node, clamping_mode)) => AnchorPositioningFunctionResolution::Resolved(
+                        computed::LengthPercentage::new_calc(node, clamping_mode),
+                    ),
+                    Err(_) => AnchorPositioningFunctionResolution::Invalid,
+                }
+            },
+        }
+    }
+}
+
+impl AnchorSizeFallbackResolver for computed::Size {
+    fn resolve_fallback(
+        fallback: Option<&Self>,
+        params: &AnchorPosOffsetResolutionParams,
+        allowed: AllowAnchorPosResolutionInCalcPercentage,
+    ) -> AnchorPositioningFunctionResolution {
+        let Some(fallback) = fallback else {
+            return AnchorPositioningFunctionResolution::Invalid;
+        };
+        match fallback {
+            computed::Size::Auto
+            | computed::Size::MaxContent
+            | computed::Size::MinContent
+            | computed::Size::FitContent
+            | computed::Size::MozAvailable
+            | computed::Size::WebkitFillAvailable
+            | computed::Size::Stretch
+            | computed::Size::FitContentFunction(_) => AnchorPositioningFunctionResolution::Invalid,
+            computed::Size::LengthPercentage(lp) => {
+                AnchorPositioningFunctionResolution::ResolvedReference(&lp.0 as *const _)
+            },
+            computed::Size::AnchorSizeFunction(f) => do_resolve_anchor_size(f, params, allowed),
+            computed::Size::AnchorContainingCalcFunction(clp) => {
+                let Unpacked::Calc(clp) = clp.0.unpack() else {
+                    unreachable!();
+                };
+                match clp.resolve_anchor(allowed, &params) {
+                    Ok((node, clamping_mode)) => AnchorPositioningFunctionResolution::Resolved(
+                        computed::LengthPercentage::new_calc(node, clamping_mode),
+                    ),
+                    Err(_) => AnchorPositioningFunctionResolution::Invalid,
+                }
+            },
+        }
+    }
+}
+
+impl AnchorSizeFallbackResolver for computed::MaxSize {
+    fn resolve_fallback(
+        fallback: Option<&Self>,
+        params: &AnchorPosOffsetResolutionParams,
+        allowed: AllowAnchorPosResolutionInCalcPercentage,
+    ) -> AnchorPositioningFunctionResolution {
+        let Some(fallback) = fallback else {
+            return AnchorPositioningFunctionResolution::Invalid;
+        };
+        match fallback {
+            computed::MaxSize::None
+            | computed::MaxSize::MaxContent
+            | computed::MaxSize::MinContent
+            | computed::MaxSize::FitContent
+            | computed::MaxSize::MozAvailable
+            | computed::MaxSize::WebkitFillAvailable
+            | computed::MaxSize::Stretch
+            | computed::MaxSize::FitContentFunction(_) => {
+                AnchorPositioningFunctionResolution::Invalid
+            },
+            computed::MaxSize::LengthPercentage(lp) => {
+                AnchorPositioningFunctionResolution::ResolvedReference(&lp.0 as *const _)
+            },
+            computed::MaxSize::AnchorSizeFunction(f) => do_resolve_anchor_size(f, params, allowed),
+            computed::MaxSize::AnchorContainingCalcFunction(clp) => {
+                let Unpacked::Calc(clp) = clp.0.unpack() else {
+                    unreachable!();
+                };
+                match clp.resolve_anchor(allowed, &params) {
+                    Ok((node, clamping_mode)) => AnchorPositioningFunctionResolution::Resolved(
+                        computed::LengthPercentage::new_calc(node, clamping_mode),
+                    ),
+                    Err(_) => AnchorPositioningFunctionResolution::Invalid,
+                }
+            },
+        }
+    }
+}
+
+fn do_resolve_anchor_size<Value: AnchorSizeFallbackResolver>(
+    func: &GenericAnchorSizeFunction<Value>,
+    params: &AnchorPosOffsetResolutionParams,
+    allowed: AllowAnchorPosResolutionInCalcPercentage,
+) -> AnchorPositioningFunctionResolution {
+    use style::values::computed::length::resolve_anchor_size;
+    if !func.valid_for(params.mBaseParams.mPosition) {
+        return Value::resolve_fallback(func.fallback.as_ref(), params, allowed);
+    }
+    let result = resolve_anchor_size(
+        &func.target_element,
+        allowed.to_axis(),
+        func.size,
+        &params.mBaseParams,
+    );
+    match result {
+        Ok(l) => {
+            AnchorPositioningFunctionResolution::Resolved(computed::LengthPercentage::new_length(l))
+        },
+        Err(()) => return Value::resolve_fallback(func.fallback.as_ref(), params, allowed),
+    }
+}
+
 #[no_mangle]
-pub extern "C" fn Servo_ResolveAnchorSizeFunction(
-    func: &AnchorSizeFunction,
+pub extern "C" fn Servo_ResolveAnchorSizeFunctionForInset(
+    func: &GenericAnchorSizeFunction<computed::Inset>,
+    params: &AnchorPosOffsetResolutionParams,
+    prop_axis: PhysicalAxis,
+    out: &mut AnchorPositioningFunctionResolution,
+) {
+    *out = do_resolve_anchor_size(
+        func,
+        params,
+        AllowAnchorPosResolutionInCalcPercentage::AnchorSizeOnly(prop_axis),
+    );
+}
+
+fn offset_params_from_base_params(
+    params: &AnchorPosResolutionParams,
+) -> AnchorPosOffsetResolutionParams {
+    AnchorPosOffsetResolutionParams {
+        mCBSize: ptr::null(),
+        mBaseParams: AnchorPosResolutionParams {
+            mFrame: params.mFrame,
+            mPosition: params.mPosition,
+            mReferencedAnchors: params.mReferencedAnchors,
+        },
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ResolveAnchorSizeFunctionForMargin(
+    func: &GenericAnchorSizeFunction<computed::Margin>,
     params: &AnchorPosResolutionParams,
     prop_axis: PhysicalAxis,
     out: &mut AnchorPositioningFunctionResolution,
 ) {
-    if !func.valid_for(params.mPosition) {
-        *out = resolve_anchor_fallback(&func.fallback);
-        return;
-    }
-    let result = AnchorSizeFunction::resolve(&func.target_element, prop_axis, func.size, params);
-    *out = match result {
-        Ok(l) => {
-            AnchorPositioningFunctionResolution::Resolved(computed::LengthPercentage::new_length(l))
-        },
-        Err(()) => resolve_anchor_fallback(&func.fallback),
-    };
+    *out = do_resolve_anchor_size(
+        func,
+        &offset_params_from_base_params(params),
+        AllowAnchorPosResolutionInCalcPercentage::AnchorSizeOnly(prop_axis),
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ResolveAnchorSizeFunctionForSize(
+    func: &GenericAnchorSizeFunction<computed::Size>,
+    params: &AnchorPosResolutionParams,
+    prop_axis: PhysicalAxis,
+    out: &mut AnchorPositioningFunctionResolution,
+) {
+    *out = do_resolve_anchor_size(
+        func,
+        &offset_params_from_base_params(params),
+        AllowAnchorPosResolutionInCalcPercentage::AnchorSizeOnly(prop_axis),
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ResolveAnchorSizeFunctionForMaxSize(
+    func: &GenericAnchorSizeFunction<computed::MaxSize>,
+    params: &AnchorPosResolutionParams,
+    prop_axis: PhysicalAxis,
+    out: &mut AnchorPositioningFunctionResolution,
+) {
+    *out = do_resolve_anchor_size(
+        func,
+        &offset_params_from_base_params(params),
+        AllowAnchorPosResolutionInCalcPercentage::AnchorSizeOnly(prop_axis),
+    );
 }
