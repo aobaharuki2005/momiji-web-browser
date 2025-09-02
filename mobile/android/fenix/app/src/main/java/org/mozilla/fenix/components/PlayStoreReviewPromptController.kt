@@ -38,16 +38,18 @@ class PlayStoreReviewPromptController(
      * Launch the in-app review flow, unless we've hit the quota.
      */
     suspend fun tryPromptReview(activity: Activity) {
+        logger.info("tryPromptReview in progress...")
         val reviewInfoFlow = withContext(Dispatchers.IO) { manager.requestReviewFlow() }
 
         reviewInfoFlow.addOnCompleteListener {
             if (it.isSuccessful) {
+                logger.info("Review flow launched.")
                 // Launch the in-app flow.
                 manager.launchReviewFlow(activity, it.result)
             } else {
                 // Launch the Play store flow.
                 @ReviewErrorCode val reviewErrorCode = (it.exception as ReviewException).errorCode
-                logger.warn("Failed to launch in-app review flow due to: $reviewErrorCode")
+                logger.warn("Failed to launch in-app review flow due to: $reviewErrorCode .")
 
                 tryLaunchPlayStoreReview(activity)
             }
@@ -58,13 +60,18 @@ class PlayStoreReviewPromptController(
                 now = Date(),
             )
         }
+
+        logger.info("tryPromptReview completed.")
     }
 
     /**
      * Try to launch the play store review flow.
      */
     fun tryLaunchPlayStoreReview(activity: Activity) {
+        logger.info("tryLaunchPlayStoreReview in progress...")
+
         try {
+            logger.info("Navigating to Play store listing.")
             activity.startActivity(
                 Intent(Intent.ACTION_VIEW, SupportUtils.RATE_APP_URL.toUri()),
             )
@@ -76,8 +83,10 @@ class PlayStoreReviewPromptController(
                 newTab = true,
                 from = BrowserDirection.FromSettings,
             )
-            logger.warn("Failed to launch play store review flow due to: $e")
+            logger.warn("Failed to launch play store review flow due to: $e .")
         }
+
+        logger.info("tryLaunchPlayStoreReview completed.")
     }
 }
 
