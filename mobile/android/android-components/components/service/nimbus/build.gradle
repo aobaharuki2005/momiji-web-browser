@@ -62,35 +62,34 @@ dependencies {
         exclude group: 'org.mozilla.telemetry', module: 'glean'
     }
 
-    implementation libs.androidx.core.ktx
-    implementation libs.androidx.constraintlayout
-    implementation libs.androidx.coordinatorlayout
-    implementation libs.androidx.recyclerview
-    implementation libs.androidx.work.runtime
-
-    implementation libs.kotlin.coroutines
-
-    implementation ComponentsDependencies.mozilla_appservices_nimbus
-
-    implementation project(':components:support-base')
-    implementation project(':components:support-locale')
-    implementation project(':components:support-ktx')
-    implementation project(':components:support-utils')
-
     // We only compile against GeckoView and Glean. It's up to the app to add those dependencies if it wants to
     // send crash reports to Socorro (GV).
     compileOnly libs.mozilla.glean
 
+    implementation project(':components:support-base')
+    implementation project(':components:support-ktx')
+    implementation project(':components:support-locale')
+    implementation project(':components:support-utils')
+
+    implementation ComponentsDependencies.mozilla_appservices_nimbus
+    implementation libs.androidx.constraintlayout
+    implementation libs.androidx.coordinatorlayout
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.recyclerview
+    implementation libs.androidx.work.runtime
+    implementation libs.kotlinx.coroutines
+
+    testImplementation project(':components:support-test')
+
     testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_libsForTests
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.junit
-    testImplementation libs.testing.mockwebserver
-    testImplementation libs.testing.robolectric
-    testImplementation libs.testing.coroutines
-    testImplementation libs.mozilla.glean.forUnitTests
     testImplementation libs.androidx.work.testing
-    testImplementation project(':components:support-test')
+    testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.mockwebserver
     testImplementation libs.mozilla.glean
+    testImplementation libs.mozilla.glean.forUnitTests
+    testImplementation libs.robolectric
 }
 
 apply from: '../../../android-lint.gradle'

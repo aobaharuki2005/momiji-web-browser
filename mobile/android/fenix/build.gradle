@@ -19,11 +19,11 @@ buildscript {
     }
 
     dependencies {
-        classpath libs.tools.androidgradle
-        classpath libs.tools.benchmarkgradle
+        classpath libs.android.gradle.plugin
+        classpath libs.androidx.benchmark.gradle
         classpath libs.androidx.navigation.safeargs
-        classpath libs.osslicenses.plugin
         classpath libs.mozilla.glean.gradle.plugin
+        classpath libs.osslicenses.plugin
         classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
 
         // NOTE: Do not place your application dependencies here; they belong

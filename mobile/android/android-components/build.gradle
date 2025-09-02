@@ -20,7 +20,7 @@ buildscript {
     }
 
     dependencies {
-        classpath libs.tools.androidgradle
+        classpath libs.android.gradle.plugin
     }
 }
 

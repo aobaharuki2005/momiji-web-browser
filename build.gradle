@@ -16,13 +16,13 @@ buildscript {
     }
 
     dependencies {
-        classpath libs.tools.androidgradle
+        classpath libs.android.gradle.plugin
         classpath libs.tomlj
 
         // Used in mobile/android/fenix/app/build.gradle
+        classpath libs.androidx.benchmark.gradle
         classpath libs.androidx.navigation.safeargs
         classpath libs.osslicenses.plugin
-        classpath libs.tools.benchmarkgradle
         classpath libs.mozilla.glean.gradle.plugin
         classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
     }

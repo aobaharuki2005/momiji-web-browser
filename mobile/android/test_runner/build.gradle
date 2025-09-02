@@ -39,11 +39,11 @@ android {
 }
 
 dependencies {
+    implementation project(path: ':geckoview')
+
     implementation libs.androidx.annotation
     implementation libs.androidx.appcompat
-    implementation libs.androidx.preferences
-
-    implementation project(path: ':geckoview')
     implementation libs.androidx.constraintlayout
+    implementation libs.androidx.preferences
     implementation libs.google.material
 }
