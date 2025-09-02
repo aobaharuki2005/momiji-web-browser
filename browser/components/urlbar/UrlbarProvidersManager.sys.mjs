@@ -30,63 +30,153 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.UrlbarUtils.getLogger({ prefix: "ProvidersManager" })
 );
 
-// List of available local providers, each is implemented in its own jsm module
-// and will track different queries internally by queryContext.
+// List of available local providers, each is implemented in its own module and
+// will track different queries internally by queryContext.
 // When adding new providers please remember to update the list in metrics.yaml.
-var localProviderModules = {
-  UrlbarProviderAboutPages:
-    "resource:///modules/UrlbarProviderAboutPages.sys.mjs",
-  UrlbarProviderActionsSearchMode:
-    "resource:///modules/UrlbarProviderActionsSearchMode.sys.mjs",
-  UrlbarProviderGlobalActions:
-    "resource:///modules/UrlbarProviderGlobalActions.sys.mjs",
-  UrlbarProviderAliasEngines:
-    "resource:///modules/UrlbarProviderAliasEngines.sys.mjs",
-  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
-  UrlbarProviderBookmarkKeywords:
-    "resource:///modules/UrlbarProviderBookmarkKeywords.sys.mjs",
-  UrlbarProviderCalculator:
-    "resource:///modules/UrlbarProviderCalculator.sys.mjs",
-  UrlbarProviderClipboard:
-    "resource:///modules/UrlbarProviderClipboard.sys.mjs",
-  UrlbarProviderHeuristicFallback:
-    "resource:///modules/UrlbarProviderHeuristicFallback.sys.mjs",
-  UrlbarProviderHistoryUrlHeuristic:
-    "resource:///modules/UrlbarProviderHistoryUrlHeuristic.sys.mjs",
-  UrlbarProviderInputHistory:
-    "resource:///modules/UrlbarProviderInputHistory.sys.mjs",
-  UrlbarProviderInterventions:
-    "resource:///modules/UrlbarProviderInterventions.sys.mjs",
-  UrlbarProviderOmnibox: "resource:///modules/UrlbarProviderOmnibox.sys.mjs",
-  UrlbarProviderPlaces: "resource:///modules/UrlbarProviderPlaces.sys.mjs",
-  UrlbarProviderPrivateSearch:
-    "resource:///modules/UrlbarProviderPrivateSearch.sys.mjs",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-  UrlbarProviderQuickSuggestContextualOptIn:
-    "resource:///modules/UrlbarProviderQuickSuggestContextualOptIn.sys.mjs",
-  UrlbarProviderRecentSearches:
-    "resource:///modules/UrlbarProviderRecentSearches.sys.mjs",
-  UrlbarProviderRemoteTabs:
-    "resource:///modules/UrlbarProviderRemoteTabs.sys.mjs",
-  UrlbarProviderRestrictKeywords:
-    "resource:///modules/UrlbarProviderRestrictKeywords.sys.mjs",
-  UrlbarProviderRestrictKeywordsAutofill:
-    "resource:///modules/UrlbarProviderRestrictKeywordsAutofill.sys.mjs",
-  UrlbarProviderSearchTips:
-    "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
-  UrlbarProviderSearchSuggestions:
-    "resource:///modules/UrlbarProviderSearchSuggestions.sys.mjs",
-  UrlbarProviderSemanticHistorySearch:
-    "resource:///modules/UrlbarProviderSemanticHistorySearch.sys.mjs",
-  UrlbarProviderTabToSearch:
-    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
-  UrlbarProviderTokenAliasEngines:
-    "resource:///modules/UrlbarProviderTokenAliasEngines.sys.mjs",
-  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
-  UrlbarProviderUnitConversion:
-    "resource:///modules/UrlbarProviderUnitConversion.sys.mjs",
-};
+var localProviderModules = [
+  {
+    name: "UrlbarProviderAboutPages",
+    module: "resource:///modules/UrlbarProviderAboutPages.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderActionsSearchMode",
+    module: "resource:///modules/UrlbarProviderActionsSearchMode.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderGlobalActions",
+    module: "resource:///modules/UrlbarProviderGlobalActions.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderAliasEngines",
+    module: "resource:///modules/UrlbarProviderAliasEngines.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+  {
+    name: "UrlbarProviderAutofill",
+    module: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderBookmarkKeywords",
+    module: "resource:///modules/UrlbarProviderBookmarkKeywords.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderCalculator",
+    module: "resource:///modules/UrlbarProviderCalculator.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+  {
+    name: "UrlbarProviderClipboard",
+    module: "resource:///modules/UrlbarProviderClipboard.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderHeuristicFallback",
+    module: "resource:///modules/UrlbarProviderHeuristicFallback.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+  {
+    name: "UrlbarProviderHistoryUrlHeuristic",
+    module: "resource:///modules/UrlbarProviderHistoryUrlHeuristic.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderInputHistory",
+    module: "resource:///modules/UrlbarProviderInputHistory.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderInterventions",
+    module: "resource:///modules/UrlbarProviderInterventions.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderOmnibox",
+    module: "resource:///modules/UrlbarProviderOmnibox.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderPlaces",
+    module: "resource:///modules/UrlbarProviderPlaces.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderPrivateSearch",
+    module: "resource:///modules/UrlbarProviderPrivateSearch.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+  {
+    name: "UrlbarProviderQuickSuggest",
+    module: "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderQuickSuggestContextualOptIn",
+    module:
+      "resource:///modules/UrlbarProviderQuickSuggestContextualOptIn.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderRecentSearches",
+    module: "resource:///modules/UrlbarProviderRecentSearches.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+  {
+    name: "UrlbarProviderRemoteTabs",
+    module: "resource:///modules/UrlbarProviderRemoteTabs.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderRestrictKeywords",
+    module: "resource:///modules/UrlbarProviderRestrictKeywords.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+  {
+    name: "UrlbarProviderRestrictKeywordsAutofill",
+    module:
+      "resource:///modules/UrlbarProviderRestrictKeywordsAutofill.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+  {
+    name: "UrlbarProviderSearchTips",
+    module: "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderSearchSuggestions",
+    module: "resource:///modules/UrlbarProviderSearchSuggestions.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+  {
+    name: "UrlbarProviderSemanticHistorySearch",
+    module: "resource:///modules/UrlbarProviderSemanticHistorySearch.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderTabToSearch",
+    module: "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderTokenAliasEngines",
+    module: "resource:///modules/UrlbarProviderTokenAliasEngines.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+  {
+    name: "UrlbarProviderTopSites",
+    module: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
+    supportedInputTypes: ["urlbar"],
+  },
+  {
+    name: "UrlbarProviderUnitConversion",
+    module: "resource:///modules/UrlbarProviderUnitConversion.sys.mjs",
+    supportedInputTypes: ["urlbar", "searchbar"],
+  },
+];
 
 // List of available local muxers, each is implemented in its own jsm module.
 var localMuxerModules = {
@@ -117,7 +207,7 @@ export class ProvidersManager {
    *   Object with symbol names as keys and module paths as values.
    *   Symbols should be UrlbarMuxer instances.
    */
-  constructor(providerModules, muxerModules) {
+  constructor(providerModules, muxerModules = localMuxerModules) {
     /**
      * Tracks the available providers. This is a sorted array, with HEURISTIC
      * providers at the front.
@@ -134,8 +224,10 @@ export class ProvidersManager {
       onAbandonment: new Set(),
       onSearchSessionEnd: new Set(),
     };
-    for (let [symbol, module] of Object.entries(providerModules)) {
-      let { [symbol]: providerClass } = ChromeUtils.importESModule(module);
+    for (let providerInfo of providerModules) {
+      let { [providerInfo.name]: providerClass } = ChromeUtils.importESModule(
+        providerInfo.module
+      );
       this.registerProvider(new providerClass());
     }
 
@@ -526,8 +618,15 @@ export class ProvidersManager {
 }
 
 export var UrlbarProvidersManager = new ProvidersManager(
-  localProviderModules,
-  localMuxerModules
+  localProviderModules.filter(info =>
+    info.supportedInputTypes.includes("urlbar")
+  )
+);
+
+export var SearchbarProvidersManager = new ProvidersManager(
+  localProviderModules.filter(info =>
+    info.supportedInputTypes.includes("searchbar")
+  )
 );
 
 /**

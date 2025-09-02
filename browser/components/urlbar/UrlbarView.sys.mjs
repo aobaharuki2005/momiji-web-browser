@@ -5,6 +5,10 @@
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+/**
+ * @import {ProvidersManager} from "UrlbarProvidersManager.sys.mjs"
+ */
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -18,7 +22,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchOneOffs: "resource:///modules/UrlbarSearchOneOffs.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
@@ -207,6 +210,13 @@ export class UrlbarView {
     }
 
     return this.#selectedElement;
+  }
+
+  /**
+   * @returns {ProvidersManager}
+   */
+  get #providersManager() {
+    return this.controller.manager;
   }
 
   /**
@@ -1552,7 +1562,7 @@ export class UrlbarView {
 
   #createRowContentForDynamicType(item, result) {
     let { dynamicType } = result.payload;
-    let provider = lazy.UrlbarProvidersManager.getProvider(result.providerName);
+    let provider = this.#providersManager.getProvider(result.providerName);
     let viewTemplate =
       provider.getViewTemplate?.(result) ||
       UrlbarView.dynamicViewTemplatesByName.get(dynamicType);
@@ -1841,7 +1851,7 @@ export class UrlbarView {
   #updateRow(item, result) {
     let oldResult = item.result;
     let oldResultType = item.result?.type;
-    let provider = lazy.UrlbarProvidersManager.getProvider(result.providerName);
+    let provider = this.#providersManager.getProvider(result.providerName);
     item.result = result;
     item.removeAttribute("stale");
     item.id = getUniqueId("urlbarView-row-");
@@ -2288,7 +2298,7 @@ export class UrlbarView {
     }
 
     // Get the view update from the result's provider.
-    let provider = lazy.UrlbarProvidersManager.getProvider(result.providerName);
+    let provider = this.#providersManager.getProvider(result.providerName);
     let viewUpdate = await provider.getViewUpdate(result, idsByName);
     if (item.result != result) {
       return;
@@ -2730,9 +2740,7 @@ export class UrlbarView {
     }
 
     let result = row?.result;
-    let provider = lazy.UrlbarProvidersManager.getProvider(
-      result?.providerName
-    );
+    let provider = this.#providersManager.getProvider(result?.providerName);
     if (provider) {
       provider.tryMethod("onBeforeSelection", result, element);
     }
@@ -3419,9 +3427,9 @@ export class UrlbarView {
     /**
      * @type {?UrlbarResultCommand[]}
      */
-    let commands = lazy.UrlbarProvidersManager.getProvider(
-      result.providerName
-    )?.tryMethod("getResultCommands", result);
+    let commands = this.#providersManager
+      .getProvider(result.providerName)
+      ?.tryMethod("getResultCommands", result);
     if (commands) {
       this.#resultMenuCommands.set(result, commands);
       return commands;

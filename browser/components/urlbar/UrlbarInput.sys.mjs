@@ -23,6 +23,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ReaderMode: "moz-src:///toolkit/components/reader/ReaderMode.sys.mjs",
+  SearchbarProvidersManager:
+    "resource:///modules/UrlbarProvidersManager.sys.mjs",
   SearchModeSwitcher: "resource:///modules/SearchModeSwitcher.sys.mjs",
   SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
@@ -109,6 +111,7 @@ export class UrlbarInput {
     this.controller = new lazy.UrlbarController({
       input: this,
       eventTelemetryCategory,
+      manager: isAddressbar ? null : lazy.SearchbarProvidersManager,
     });
     this.view = new lazy.UrlbarView(this);
     this.valueIsTyped = false;
@@ -983,7 +986,7 @@ export class UrlbarInput {
     // Increment rate denominator measuring how often Address Bar handleCommand fallback path is hit.
     Glean.urlbar.heuristicResultMissing.addToDenominator(1);
 
-    lazy.UrlbarUtils.getHeuristicResultFor(url, this.window)
+    lazy.UrlbarUtils.getHeuristicResultFor(url, this)
       .then(newResult => {
         // Because this happens asynchronously, we must verify that the browser
         // location did not change in the meanwhile.
