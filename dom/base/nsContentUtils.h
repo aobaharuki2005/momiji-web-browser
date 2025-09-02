@@ -470,7 +470,7 @@ class nsContentUtils {
    * Retarget an object A against an object B
    * @see https://dom.spec.whatwg.org/#retarget
    */
-  static nsINode* Retarget(nsINode* aTargetA, nsINode* aTargetB);
+  static nsINode* Retarget(nsINode* aTargetA, const nsINode* aTargetB);
 
   /**
    * @see https://wicg.github.io/element-timing/#get-an-element

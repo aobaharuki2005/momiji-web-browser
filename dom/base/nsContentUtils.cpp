@@ -3141,7 +3141,7 @@ bool nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(
 }
 
 // static
-nsINode* nsContentUtils::Retarget(nsINode* aTargetA, nsINode* aTargetB) {
+nsINode* nsContentUtils::Retarget(nsINode* aTargetA, const nsINode* aTargetB) {
   while (true && aTargetA) {
     // If A's root is not a shadow root...
     nsINode* root = aTargetA->SubtreeRoot();
