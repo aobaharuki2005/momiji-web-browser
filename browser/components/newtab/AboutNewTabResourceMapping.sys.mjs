@@ -84,6 +84,16 @@ export var AboutNewTabResourceMapping = {
   _updateAddonStateDeferredTask: null,
 
   /**
+   * Returns the version string for whichever version of New Tab is currently
+   * being used.
+   *
+   * @type {string}
+   */
+  get addonVersion() {
+    return this._addonVersion;
+  },
+
+  /**
    * This should be called early on in the lifetime of the browser, before any
    * attempt to load a resource from resource://newtab or chrome://newtab.
    *
