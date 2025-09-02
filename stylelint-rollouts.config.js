@@ -114,8 +114,6 @@ module.exports = [
       "toolkit/content/aboutwebrtc/aboutWebrtc.css",
       "toolkit/content/widgets/datetimebox.css",
       "toolkit/content/widgets/moz-visual-picker/moz-visual-picker-item.css",
-      "toolkit/content/widgets/panel-list/panel-item.css",
-      "toolkit/content/widgets/panel-list/panel-list.css",
       "toolkit/content/xul.css",
       "toolkit/mozapps/extensions/content/aboutaddons.css",
       "toolkit/mozapps/extensions/content/shortcuts.css",
