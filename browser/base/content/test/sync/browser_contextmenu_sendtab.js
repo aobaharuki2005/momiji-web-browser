@@ -3,7 +3,7 @@
 
 "use strict";
 
-const kForceOverflowWidthPx = 500;
+const kForceOverflowWidthPx = 450;
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/base/content/test/general/head.js",
@@ -127,51 +127,20 @@ add_task(
     let navbar = document.getElementById("nav-bar");
 
     // Resize the window so that the account button is in the overflow menu.
-    // As of bug 1960002, overflowing the navbar also requires adding an
-    // extra button.
     let originalWidth = window.outerWidth;
     window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-    CustomizableUI.addWidgetToArea(
-      "history-panelmenu",
-      CustomizableUI.AREA_NAVBAR,
-      0
-    );
-    CustomizableUI.addWidgetToArea(
-      "email-link-button",
-      CustomizableUI.AREA_NAVBAR,
-      0
-    );
-    CustomizableUI.addWidgetToArea(
-      "panic-button",
-      CustomizableUI.AREA_NAVBAR,
-      0
-    );
-
     await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
 
     await checkForConfirmationHint("PanelUI-menu-button");
     document.documentElement.setAttribute("fxastatus", "not_configured");
 
     window.resizeTo(originalWidth, window.outerHeight);
-    CustomizableUI.reset();
     await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
+    CustomizableUI.reset();
   }
 );
 
 add_task(async function test_sendTabToDevice_showsConfirmationHint_appMenu() {
-  // As of bug 1960002, overflowing the navbar for this test requires adding
-  // some extra buttons.
-  CustomizableUI.addWidgetToArea(
-    "history-panelmenu",
-    CustomizableUI.AREA_NAVBAR,
-    0
-  );
-  CustomizableUI.addWidgetToArea(
-    "wrapper-privatebrowsing-button",
-    CustomizableUI.AREA_NAVBAR,
-    0
-  );
-
   // If fxastatus is "not_configured" then the FxA button is hidden, and we
   // should use the appMenu.
   is(
