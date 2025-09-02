@@ -33,11 +33,20 @@ class ClearableEditText @JvmOverloads constructor(
      * to see if the X position of the tap is where the drawable is located.
      */
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (shouldShowClearButton(length()) && event.action == ACTION_UP && event.endDrawableTouched()) {
+        if (shouldShowClearButton(length()) &&
+            event.action == ACTION_UP &&
+            event.endDrawableTouched()
+        ) {
+            performClick()
             setText("")
             return true
         }
         return super.onTouchEvent(event)
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
     }
 
     /**
