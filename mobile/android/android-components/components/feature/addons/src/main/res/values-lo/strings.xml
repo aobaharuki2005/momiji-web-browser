@@ -354,6 +354,12 @@
   <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">%1$d ຕ້ອງການສິດໃຫມ່</string>
   <!-- The content of the notification displayed when an add-on needs a new permission -->
   <string name="mozac_feature_addons_updater_notification_content_singular" moz:removedIn="142" tools:ignore="UnusedResources">ຕ້ອງການສິດໃຫມ່</string>
+  <!-- A short explanation shown in the notification displayed when an add-on has a new update that requires new permissions. -->
+  <string name="mozac_feature_addons_updater_notification_short_intro">ຍົກເລີກເພື່ອຮັກສາເວີຊັນ ແລະ ການຕັ້ງຄ່າປັດຈຸບັນຂອງທ່ານ.</string>
+  <!-- The heading for the permissions section in the system notification shown when an add-on has an update that requires user confirmation. %1$s is a list of sentences. -->
+  <string name="mozac_feature_addons_updater_notification_heading_permissions">ການອະນຸຍາດໃໝ່ທີ່ຕ້ອງການ: %1$s</string>
+  <!-- The heading for the data collection permission section in the system notification shown when an add-on has an update that requires user confirmation. %1$s is a list of permissions. -->
+  <string name="mozac_feature_addons_updater_notification_heading_data_collection_permissions">ການເກັບກຳຂໍ້ມູນທີ່ຕ້ອງການໃໝ່: ຜູ້ພັດທະນາບອກວ່າສ່ວນຂະຫຍາຍຈະເກັບກຳ %1$s.</string>
   <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
   <string name="mozac_feature_addons_updater_notification_channel_2">ການປັບປຸງສ່ວນຂະຫຍາຍ</string>
   <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
@@ -436,8 +442,14 @@
   <string name="mozac_feature_addons_updater_dialog_status">ສະຖານະ:</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
   <string name="mozac_feature_addons_installed_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%1$s ໄດ້ຖືກເພີ່ມເຂົ້າໃນ %2$s</string>
+  <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+  <string name="mozac_feature_addons_installed_dialog_title_2">ເພີ່ມ %1$s ແລ້ວ</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
   <string name="mozac_feature_addons_installed_dialog_description_2" moz:removedIn="142" tools:ignore="UnusedResources">ເຂົ້າເຖິງ %1$s ຈາກເມນູ %2$s.</string>
+  <!-- Used as text for the link in the description of the post-installation dialog. -->
+  <string name="mozac_feature_addons_installed_dialog_description_link_text">ການຕັ້ງຄ່າການຂະຫຍາຍ</string>
+  <!-- Text shown in the dialog when add-on installation is completed. %1$s is replaced by an active link, using mozac_feature_addons_installed_dialog_description_link_text as text ("extension settings"). -->
+  <string name="mozac_feature_addons_installed_dialog_description_3">ອັບເດດການອະນຸຍາດ ແລະ ການຕັ້ງຄ່າຂໍ້ມູນໄດ້ທຸກເວລາໃນ %1$s.</string>
   <!-- Confirmation button text for the dialog when add-on installation is completed. -->
   <string name="mozac_feature_addons_installed_dialog_okay_button_2">ຕົກລົງ</string>
   <!-- "Learn more" link displayed below an add-on status message. -->
