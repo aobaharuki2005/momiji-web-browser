@@ -25,7 +25,6 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "ResolveResult.h"
 
 class nsIURI;
@@ -306,28 +305,16 @@ class ModuleLoaderBase : public nsISupports {
   // internally by ModuleLoaderBase.
 
  private:
-  // Determine the environment's referrer when the referrer script is empty.
-  //
-  // https://html.spec.whatwg.org/#hostloadimportedmodule
-  //   Step 5. Let fetchReferrer be "client".
-  //
-  // Then check the referrer policy specification for determining the referrer.
-  // https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
-  virtual nsIURI* GetClientReferrerURI() { return nullptr; }
+  // Create a module load request for a static module import.
+  virtual already_AddRefed<ModuleLoadRequest> CreateStaticImport(
+      nsIURI* aURI, ModuleType aModuleType, ModuleScript* aReferrerScript,
+      const mozilla::dom::SRIMetadata& aSriMetadata,
+      LoadContextBase* aLoadContext, ModuleLoaderBase* aLoader) = 0;
 
-  // Create default ScriptFetchOptions if the referrer script is empty.
-  virtual already_AddRefed<JS::loader::ScriptFetchOptions>
-  CreateDefaultScriptFetchOptions() {
-    return nullptr;
-  }
-
-  // Create a ModuleLoadRequest for static/dynamic imports.
-  virtual already_AddRefed<ModuleLoadRequest> CreateRequest(
-      JSContext* aCx, nsIURI* aURI, Handle<JSObject*> aModuleRequest,
-      Handle<Value> aHostDefined, Handle<Value> aPayload, bool aIsDynamicImport,
-      ScriptFetchOptions* aOptions,
-      mozilla::dom::ReferrerPolicy aReferrerPolicy, nsIURI* aBaseURL,
-      const mozilla::dom::SRIMetadata& aSriMetadata) = 0;
+  // Called by HostImportModuleDynamically hook.
+  virtual already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
+      JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
+      Handle<JSObject*> aModuleRequestObj, Handle<JSObject*> aPromise) = 0;
 
   virtual bool IsDynamicImportSupported() { return true; }
 
@@ -399,7 +386,7 @@ class ModuleLoaderBase : public nsISupports {
   nsresult EvaluateModuleInContext(JSContext* aCx, ModuleLoadRequest* aRequest,
                                    ModuleErrorBehaviour errorBehaviour);
 
-  void AppendDynamicImport(ModuleLoadRequest* aRequest);
+  nsresult StartDynamicImport(ModuleLoadRequest* aRequest);
   void ProcessDynamicImport(ModuleLoadRequest* aRequest);
   void CancelAndClearDynamicImports();
 
@@ -518,6 +505,13 @@ class ModuleLoaderBase : public nsISupports {
   void ResumeWaitingRequest(ModuleLoadRequest* aRequest, bool aSuccess);
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
+
+  void StartFetchingModuleAndDependencies(JSContext* aCx,
+                                          const ModuleMapKey& aRequestedModule,
+                                          Handle<JSScript*> aReferrer,
+                                          Handle<JSObject*> aModuleRequest,
+                                          Handle<Value> aHostDefined,
+                                          Handle<Value> aPayload);
 
   void InstantiateAndEvaluateDynamicImport(ModuleLoadRequest* aRequest);
 

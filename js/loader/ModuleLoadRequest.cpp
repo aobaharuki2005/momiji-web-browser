@@ -28,8 +28,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ModuleLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ModuleLoadRequest,
                                                 ScriptLoadRequest)
+  tmp->mReferrerScript = nullptr;
+  tmp->mModuleRequestObj = nullptr;
+  tmp->mPayload.setUndefined();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mRootModule, mModuleScript)
-  tmp->ClearImport();
+  tmp->ClearDynamicImport();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ModuleLoadRequest,
@@ -167,20 +170,18 @@ void ModuleLoadRequest::LoadFinished() {
   mLoader->OnModuleLoadComplete(request);
 }
 
-void ModuleLoadRequest::SetImport(Handle<JSScript*> aReferrerScript,
-                                  Handle<JSObject*> aModuleRequestObj,
-                                  Handle<Value> aPayload) {
+void ModuleLoadRequest::SetDynamicImport(LoadedScript* aReferencingScript,
+                                         Handle<JSObject*> aModuleRequestObj,
+                                         Handle<JSObject*> aPromise) {
   MOZ_ASSERT(mPayload.isUndefined());
 
-  mReferrerScript = aReferrerScript;
   mModuleRequestObj = aModuleRequestObj;
-  mPayload = aPayload;
+  mPayload = ObjectValue(*aPromise);
 
   mozilla::HoldJSObjects(this);
 }
 
-void ModuleLoadRequest::ClearImport() {
-  mReferrerScript = nullptr;
+void ModuleLoadRequest::ClearDynamicImport() {
   mModuleRequestObj = nullptr;
   mPayload = UndefinedValue();
 }

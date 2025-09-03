@@ -7,7 +7,6 @@
 #ifndef js_loader_ScriptFecthOptions_h
 #define js_loader_ScriptFecthOptions_h
 
-#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/RequestBinding.h"  // RequestPriority
@@ -55,12 +54,7 @@ class ScriptFetchOptions {
   ScriptFetchOptions(mozilla::CORSMode aCORSMode, const nsAString& aNonce,
                      mozilla::dom::RequestPriority aFetchPriority,
                      const ParserMetadata aParserMetadata,
-                     nsIPrincipal* aTriggeringPrincipal = nullptr);
-
-  // https://html.spec.whatwg.org/#default-script-fetch-options
-  static already_AddRefed<ScriptFetchOptions> CreateDefault();
-
-  void SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal);
+                     nsIPrincipal* aTriggeringPrincipal);
 
   /*
    *  The credentials mode used for the initial fetch (for module scripts)
