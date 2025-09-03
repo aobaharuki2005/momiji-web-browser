@@ -59,6 +59,16 @@ hr {
   }
 }
 
+#connection-toggle {
+  margin-inline-end: var(--space-small);
+}
+
+#connection-toggle {
+  --toggle-width: var(--size-item-xlarge);
+  --toggle-height: var(--size-item-medium);
+  --toggle-dot-margin: 2px;
+}
+
 #status-card-animation {
   display: block;
   position: absolute;
