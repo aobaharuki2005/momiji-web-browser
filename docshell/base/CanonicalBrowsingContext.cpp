@@ -632,28 +632,67 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
   // gets it's entries list initialized to the contiguous entries ending in the
   // new entry.
   if (Navigation::IsAPIEnabled()) {
-    if (mActiveEntry && mActiveEntry->isInList()) {
-      nsCOMPtr<nsIURI> uri = mActiveEntry->GetURI();
-      nsCOMPtr<nsIURI> targetURI = entry->GetURI();
-      if (NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
-              targetURI, uri, false, false))) {
-        nsSHistory::WalkContiguousEntriesInOrder(
-            mActiveEntry,
-            [activeEntry = mActiveEntry,
-             entries = &loadingInfo->mContiguousEntries](auto* aEntry) {
-              if (nsCOMPtr<SessionHistoryEntry> entry =
-                      do_QueryObject(aEntry)) {
-                entries->AppendElement(entry->Info());
-                // We only care about entries up to the current entry, since
-                // we'll be dropping the entries after the current when the
-                // load finishes.
-                if (entry == activeEntry) {
-                  return false;
-                }
-              }
+    nsCOMPtr<nsIURI> targetURI = entry->GetURI();
+    bool sessionHistoryLoad =
+        existingLoadingInfo && existingLoadingInfo->mLoadIsFromSessionHistory;
 
-              return true;
-            });
+    MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+                "Determining navigation type from loadType={}",
+                aLoadState->LoadType());
+    Maybe<NavigationType> navigationType =
+        NavigationUtils::NavigationTypeFromLoadType(aLoadState->LoadType());
+    if (!navigationType) {
+      MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+                  "Failed to determine navigation type");
+      return loadingInfo;
+    }
+
+    nsCOMPtr<nsIURI> uri = mActiveEntry ? mActiveEntry->GetURI() : nullptr;
+    bool sameOrigin =
+        NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
+            targetURI, uri, false, false));
+    MOZ_DIAGNOSTIC_ASSERT(mActiveEntry || !sameOrigin);
+    if (sameOrigin && mActiveEntry->isInList()) {
+      nsSHistory::WalkContiguousEntriesInOrder(
+          mActiveEntry, [activeEntry = mActiveEntry,
+                         entries = &loadingInfo->mContiguousEntries,
+                         navigationType = *navigationType](auto* aEntry) {
+            if (nsCOMPtr<SessionHistoryEntry> entry = do_QueryObject(aEntry)) {
+              if (navigationType == NavigationType::Replace &&
+                  entry == activeEntry) {
+                // In the case of a replace navigation, we end up dropping the
+                // active entry and all following entries.
+                return false;
+              }
+              entries->AppendElement(entry->Info());
+              if (navigationType == NavigationType::Push &&
+                  entry == activeEntry) {
+                // In the case of a push navigation, we end up keeping the
+                // current active entry but drop all following entries.
+                return false;
+              }
+            }
+            return true;
+          });
+    }
+
+    if (!sessionHistoryLoad || !sameOrigin) {
+      loadingInfo->mContiguousEntries.AppendElement(entry->Info());
+    }
+
+    if (MOZ_LOG_TEST(gNavigationLog, LogLevel::Debug)) {
+      int32_t index = 0;
+      MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+                  "Preparing contiguous for {} ({}load))",
+                  targetURI->GetSpecOrDefault(),
+                  sessionHistoryLoad ? "history " : "");
+      for (const auto& entry : loadingInfo->mContiguousEntries) {
+        MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+                    "{}+- {} SHI {} {}\n   URL = {}",
+                    (mActiveEntry && entry == mActiveEntry->Info()) ? ">" : " ",
+                    index++, entry.NavigationKey().ToString().get(),
+                    entry.NavigationId().ToString().get(),
+                    entry.GetURI()->GetSpecOrDefault());
       }
     }
 
@@ -664,11 +703,9 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
                              .map([](auto& entry) { return &entry; })
                              .valueOr(nullptr)));
 
-    loadingInfo->mTriggeringNavigationType = Some(
-        NavigationUtils::NavigationTypeFromLoadType(aLoadState->LoadType()));
+    loadingInfo->mTriggeringNavigationType = navigationType;
     MOZ_LOG_FMT(gNavigationLog, LogLevel::Verbose,
-                "Triggering navigation type was {}.",
-                loadingInfo->mTriggeringNavigationType.value());
+                "Triggering navigation type was {}.", *navigationType);
   }
 
   MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(loadingInfo->mLoadId)->mEntry ==
@@ -705,7 +742,9 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
       }
       loadingEntry->SetDocshellID(GetHistoryID());
       loadingEntry->SetIsDynamicallyAdded(CreatedDynamically());
-      return MakeUnique<LoadingSessionHistoryInfo>(loadingEntry, aInfo);
+      auto result = MakeUnique<LoadingSessionHistoryInfo>(loadingEntry, aInfo);
+      result->mContiguousEntries = aInfo->mContiguousEntries;
+      return result;
     }
   }
   return nullptr;

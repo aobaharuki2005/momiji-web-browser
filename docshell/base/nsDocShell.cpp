@@ -10762,6 +10762,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
         aLoadState->PartitionedPrincipalToInherit(),
         aLoadState->PolicyContainer(), mContentTypeHint);
     mozilla::dom::LoadingSessionHistoryInfo info(*entry);
+    info.mContiguousEntries.AppendElement(*entry);
     SetLoadingSessionHistoryInfo(info, true);
   }
 
@@ -14295,11 +14296,6 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aExpired, uint32_t aCacheKey,
         GetWindow()->GetCurrentInnerWindow()) {
       if (RefPtr navigation =
               GetWindow()->GetCurrentInnerWindow()->Navigation()) {
-        // When the current load is finished the currently loading entry will be
-        // last in the list of entries. This works because we've created
-        // `mContiguousEntries` to only hold the entries up to the old current
-        // entry.
-        loadingEntry->mContiguousEntries.AppendElement(*mActiveEntry);
         navigation->InitializeHistoryEntries(loadingEntry->mContiguousEntries,
                                              mActiveEntry.get());
 
