@@ -5334,24 +5334,8 @@ GeneralParser<ParseHandler, Unit>::importDeclaration() {
   NameNodeType moduleSpec;
   MOZ_TRY_VAR(moduleSpec, stringLiteral());
 
-  // The `assert` keyword has a [no LineTerminator here] production before it in
-  // the grammar -- `with` does not. We need to handle this distinction.
-  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
+  if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
     return errorResult();
-  }
-
-  // `with` may have an EOL prior, so peek the next token and replace
-  // EOL if the next token is `with`.
-  if (tt == TokenKind::Eol) {
-    // Doing a regular peek won't produce Eol, but the actual next token.
-    TokenKind peekedToken;
-    if (!tokenStream.peekToken(&peekedToken, TokenStream::SlashIsRegExp)) {
-      return errorResult();
-    }
-
-    if (peekedToken == TokenKind::With) {
-      tt = TokenKind::With;
-    }
   }
 
   ListNodeType importAttributeList;
@@ -5706,25 +5690,8 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
   MOZ_TRY_VAR(moduleSpec, stringLiteral());
 
   TokenKind tt;
-
-  // The `assert` keyword has a [no LineTerminator here] production before it in
-  // the grammar -- `with` does not. We need to handle this distinction.
-  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
+  if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
     return errorResult();
-  }
-
-  // `with` may have an EOL prior, so peek the next token and replace
-  // EOL if the next token is `with`.
-  if (tt == TokenKind::Eol) {
-    // Doing a regular peek won't produce Eol, but the actual next token.
-    TokenKind peekedToken;
-    if (!tokenStream.peekToken(&peekedToken, TokenStream::SlashIsRegExp)) {
-      return errorResult();
-    }
-
-    if (peekedToken == TokenKind::With) {
-      tt = TokenKind::With;
-    }
   }
 
   uint32_t moduleSpecPos = pos().begin;
