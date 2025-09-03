@@ -107,14 +107,14 @@ enum class AppIcon(
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_northern_lights_background),
         titleId = R.string.alternative_app_icon_option_gradient_northern_lights,
     ),
-    AppRetro2004V2(
-        aliasSuffix = "AppRetro2004_v2",
-        iconForegroundId = R.drawable.ic_retro_2004_v2,
+    AppRetro2004(
+        aliasSuffix = "AppRetro2004",
+        iconForegroundId = R.drawable.ic_retro_2004,
         titleId = R.string.alternative_app_icon_option_retro_2004,
     ),
-    AppPixelatedV2(
-        aliasSuffix = "AppPixelated_v2",
-        iconForegroundId = R.drawable.ic_pixelated_v2,
+    AppPixelated(
+        aliasSuffix = "AppPixelated",
+        iconForegroundId = R.drawable.ic_pixelated,
         titleId = R.string.alternative_app_icon_option_pixelated,
     ),
     AppCuddling(
@@ -123,9 +123,9 @@ enum class AppIcon(
         iconForegroundId = R.drawable.ic_cuddling,
         titleId = R.string.alternative_app_icon_option_cuddling,
     ),
-    AppPrideV2(
-        aliasSuffix = "AppPride_v2",
-        iconForegroundId = R.drawable.ic_pride_v2,
+    AppPride(
+        aliasSuffix = "AppPride",
+        iconForegroundId = R.drawable.ic_pride,
         titleId = R.string.alternative_app_icon_option_pride,
     ),
     AppFlaming(
@@ -134,14 +134,14 @@ enum class AppIcon(
         iconForegroundId = R.drawable.ic_flaming,
         titleId = R.string.alternative_app_icon_option_flaming,
     ),
-    AppMinimalV2(
-        aliasSuffix = "AppMinimal_v2",
-        iconForegroundId = R.drawable.ic_minimal_v2,
+    AppMinimal(
+        aliasSuffix = "AppMinimal",
+        iconForegroundId = R.drawable.ic_minimal,
         titleId = R.string.alternative_app_icon_option_minimal,
     ),
-    AppMomoV2(
-        aliasSuffix = "AppMomo_v2",
-        iconForegroundId = R.drawable.ic_momo_v2,
+    AppMomo(
+        aliasSuffix = "AppMomo",
+        iconForegroundId = R.drawable.ic_momo,
         titleId = R.string.alternative_app_icon_option_momo,
         subtitleId = R.string.alternative_app_icon_option_momo_subtitle,
     ),

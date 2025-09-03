@@ -9,7 +9,6 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import androidx.annotation.VisibleForTesting
 import org.mozilla.fenix.R
-import org.mozilla.fenix.iconpicker.ui.AppIcon
 
 /**
  * An interface for accessing available and selected app icon options, as well as persisting the
@@ -62,13 +61,13 @@ class DefaultAppIconRepository(
                 AppIcon.AppGradientNorthernLights,
             ),
             IconGroupTitle(R.string.alternative_app_icon_group_other) to listOf(
-                AppIcon.AppRetro2004V2,
-                AppIcon.AppPixelatedV2,
+                AppIcon.AppRetro2004,
+                AppIcon.AppPixelated,
                 AppIcon.AppCuddling,
-                AppIcon.AppPrideV2,
+                AppIcon.AppPride,
                 AppIcon.AppFlaming,
-                AppIcon.AppMinimalV2,
-                AppIcon.AppMomoV2,
+                AppIcon.AppMinimal,
+                AppIcon.AppMomo,
                 AppIcon.AppCool,
             ),
         )
