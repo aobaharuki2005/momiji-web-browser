@@ -1240,6 +1240,7 @@ class TreeMetadataEmitter(LoggingMixin):
         # desired abstraction of the build definition away from makefiles.
         passthru = VariablePassthru(context)
         varlist = [
+            "DUMP_SYMBOLS_FLAGS",
             "EXTRA_DSO_LDOPTS",
             "RCFILE",
             "RCINCLUDE",
