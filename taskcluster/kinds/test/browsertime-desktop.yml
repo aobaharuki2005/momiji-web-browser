@@ -381,13 +381,6 @@ browsertime-benchmark:
                             - [motionmark-1-3, mm-1.3]
                             - [motionmark-htmlsuite-1-3, mm-h-1.3]
                             - [jetstream2, js2]
-                # Bug 1909894, windows 10 + sp3 temporarily
-                windows10-64.*shippable.*:
-                    by-app:
-                        safari: []
-                        safari-tp: []
-                        default:
-                            - [speedometer3, sp3]
                 windows11-64-.*-hw-ref.*:
                     by-app:
                         safari: []
@@ -501,8 +494,6 @@ browsertime-benchmark:
                 by-app:
                     firefox:
                         by-test-platform:
-                            # Bug 1909894, windows 10 + sp3 temporarily
-                            windows10-64.*shippable.*: [mozilla-central]
                             windows11-64-.*-hw-ref-shippable/opt: [mozilla-central]
                             windows11-64-shippable(-qr)?/opt: [trunk]
                             windows11-64-24h2-shippable/opt: [trunk]
@@ -1063,7 +1054,6 @@ browsertime-video-playback-latency:
                 by-test-platform:
                     macosx1470.*shippable.*: [autoland, mozilla-central]
                     linux.*shippable.*: [autoland, mozilla-central]
-                    windows10-64.*shippable.*: [autoland, mozilla-central]
                     default: []
             default: []
     treeherder-symbol: Btime(vpl)
