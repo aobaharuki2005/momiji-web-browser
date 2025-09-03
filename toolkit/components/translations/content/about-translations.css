@@ -78,7 +78,7 @@ select.about-translations-select:dir(rtl) {
   max-width: 1200px;
   background-color: var(--AT-box-background);
   border: 1px solid var(--AT-box-border-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
 }
 
 .about-translations-input {
@@ -122,7 +122,7 @@ select.about-translations-select:dir(rtl) {
   display: none;
   padding: 10px;
   background-color: var(--AT-box-info-background);
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   margin-bottom: var(--AT-input-padding);
 }
 
