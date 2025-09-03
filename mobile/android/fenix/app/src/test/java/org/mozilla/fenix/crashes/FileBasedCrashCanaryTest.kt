@@ -53,14 +53,14 @@ class FileBasedCrashCanaryTest {
     }
 
     @Test
-    fun `GIVEN useNewCrashReporter is false AND canary does not exist WHEN createCanary THEN canary is touched AND detection remains false`() = runTest {
+    fun `GIVEN useNewCrashReporter is false AND canary does not exist WHEN createCanary THEN canary is not touched AND detection remains false`() = runTest {
         val fake = FakeCanary(existsState = false)
         val canary = FileBasedCrashCanary(fake.asCanaryFile(), useNewCrashReporter = false)
 
         canary.createCanary()
 
-        assertEquals(true, fake.touched)
-        assertTrue(fake.existsState)
+        assertEquals(false, fake.touched)
+        assertFalse(fake.existsState)
         assertFalse(canary.startupCrashDetected)
     }
 

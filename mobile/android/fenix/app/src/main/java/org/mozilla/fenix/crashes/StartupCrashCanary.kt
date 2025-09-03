@@ -57,15 +57,17 @@ internal data class CanaryFile(val exists: () -> Boolean, val touch: () -> Unit,
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal class FileBasedCrashCanary(
     val canaryFile: CanaryFile,
-    val useNewCrashReporter: Boolean = false,
+    val useNewCrashReporter: Boolean = Config.channel.isNightlyOrDebug,
 ) : StartupCrashCanary {
 
     override var startupCrashDetected = useNewCrashReporter && canaryFile.exists()
         private set
 
     override suspend fun createCanary() {
-        canaryFile.touch()
-        startupCrashDetected = useNewCrashReporter && true
+        if (useNewCrashReporter) {
+            canaryFile.touch()
+            startupCrashDetected = true
+        }
     }
 
     override suspend fun clearCanary() {
