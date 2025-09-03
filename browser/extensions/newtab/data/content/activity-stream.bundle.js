@@ -14180,7 +14180,9 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
         }
         this.props.dispatch(actionCreators.OnlyToMain({
           type: actionTypes.WALLPAPER_UPLOAD,
-          data: file
+          data: {
+            file
+          }
         }));
 
         // Set active wallpaper ID to "custom"
@@ -16123,19 +16125,6 @@ class _Base extends (external_React_default()).PureComponent {
   notifyContent(state) {
     this.setState(state);
   }
-  componentWillUnmount() {
-    this.updateTheme();
-  }
-  componentWillUpdate() {
-    this.updateTheme();
-  }
-  updateTheme() {
-    const bodyClassName = ["activity-stream",
-    // If we skipped the about:welcome overlay and removed the CSS classes
-    // we don't want to add them back to the Activity Stream view
-    document.body.classList.contains("inline-onboarding") ? "inline-onboarding" : ""].filter(v => v).join(" ");
-    globalThis.document.body.className = bodyClassName;
-  }
   render() {
     const {
       props
@@ -16172,6 +16161,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.shouldDisplayTopicSelectionModal = this.shouldDisplayTopicSelectionModal.bind(this);
     this.toggleDownloadHighlight = this.toggleDownloadHighlight.bind(this);
     this.handleDismissDownloadHighlight = this.handleDismissDownloadHighlight.bind(this);
+    this.applyBodyClasses = this.applyBodyClasses.bind(this);
     this.state = {
       fixedSearch: false,
       firstVisibleTimestamp: null,
@@ -16189,6 +16179,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     }
   }
   componentDidMount() {
+    this.applyBodyClasses();
     __webpack_require__.g.addEventListener("scroll", this.onWindowScroll);
     __webpack_require__.g.addEventListener("keydown", this.handleOnKeyDown);
     const prefs = this.props.Prefs.values;
@@ -16216,6 +16207,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     }
   }
   componentDidUpdate(prevProps) {
+    this.applyBodyClasses();
     const prefs = this.props.Prefs.values;
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
     if (wallpapersEnabled) {
@@ -16238,6 +16230,8 @@ class BaseContent extends (external_React_default()).PureComponent {
       } = prevProps;
       const selectedWallpaper = prefs["newtabWallpapers.wallpaper"];
       const prevSelectedWallpaper = prevPrefs["newtabWallpapers.wallpaper"];
+      const uploadedWallpaperTheme = prefs["newtabWallpapers.customWallpaper.theme"];
+      const prevUploadedWallpaperTheme = prevPrefs["newtabWallpapers.customWallpaper.theme"];
 
       // don't update wallpaper unless the wallpaper is being changed.
       if (selectedWallpaper !== prevSelectedWallpaper ||
@@ -16246,17 +16240,21 @@ class BaseContent extends (external_React_default()).PureComponent {
       // uploading a new wallpaper
       wallpaperList !== prevWallpaperList ||
       // remote settings wallpaper list updates
-      this.props.App.isForStartupCache.Wallpaper !== prevProps.App.isForStartupCache.Wallpaper // Startup cached page wallpaper is updating
-      ) {
+      this.props.App.isForStartupCache.Wallpaper !== prevProps.App.isForStartupCache.Wallpaper ||
+      // Startup cached page wallpaper is updating
+      uploadedWallpaperTheme !== prevUploadedWallpaperTheme) {
         this.updateWallpaper();
       }
     }
   }
   handleColorModeChange() {
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
-    this.setState({
-      colorMode
-    });
+    if (colorMode !== this.state.colorMode) {
+      this.setState({
+        colorMode
+      });
+      this.updateWallpaper();
+    }
   }
   componentWillUnmount() {
     this.prefersDarkQuery?.removeEventListener("change", this.handleColorModeChange);
@@ -16361,6 +16359,17 @@ class BaseContent extends (external_React_default()).PureComponent {
   setPref(pref, value) {
     this.props.dispatch(actionCreators.SetPref(pref, value));
   }
+  applyBodyClasses() {
+    const {
+      body
+    } = this.props.document;
+    if (!body) {
+      return;
+    }
+    if (!body.classList.contains("activity-stream")) {
+      body.classList.add("activity-stream");
+    }
+  }
   renderWallpaperAttribution() {
     const {
       wallpaperList
@@ -16403,65 +16412,45 @@ class BaseContent extends (external_React_default()).PureComponent {
       wallpaperList,
       uploadedWallpaper: uploadedWallpaperUrl
     } = this.props.Wallpapers;
-    let lightWallpaper = {};
-    let darkWallpaper = {};
+    const uploadedWallpaperTheme = prefs["newtabWallpapers.customWallpaper.theme"];
+    // Uuse this.prefersDarkQuery since this.state.colorMode can be undefined when this is called
+    const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
+    let url = "";
+    let color = "transparent";
+    let newTheme = colorMode;
+
+    // uploaded wallpaper
     if (selectedWallpaper === "custom" && uploadedWallpaperUrl) {
-      try {
-        __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper", `url(${uploadedWallpaperUrl})`);
-        __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper-color", "transparent");
-
-        // Based on the current colorMode, add the corresponding dark/light CSS classes
-        if (this.state.colorMode) {
-          this.setState(prevState => ({
-            wallpaperTheme: prevState.colorMode
-          }));
-        }
-      } catch (e) {}
-      return;
-    }
-    if (wallpaperList) {
-      let wallpaper = wallpaperList.find(wp => wp.title === selectedWallpaper);
-      if (selectedWallpaper && wallpaper) {
-        // if selectedWallpaper exists - we override what light and dark prefs are to match that
-        lightWallpaper = wallpaper;
-        darkWallpaper = wallpaper;
-      }
-
-      // solid-color-picker-#00d100
-      const regexRGB = /#([a-fA-F0-9]{6})/;
-
-      // Override Remote Settings to set custom HEX bg color
+      url = uploadedWallpaperUrl;
+      color = "transparent";
+      newTheme = uploadedWallpaperTheme || colorMode;
+    } else if (wallpaperList) {
+      const wallpaper = wallpaperList.find(wp => wp.title === selectedWallpaper);
+      // solid color picker
       if (selectedWallpaper.includes("solid-color-picker")) {
-        wallpaper = {
-          theme: wallpaper?.theme || "light",
-          title: "solid-color-picker",
-          category: "solid-colors",
-          solid_color: selectedWallpaper.match(regexRGB)?.[0]
-        };
-      }
-      const wallpaperColor = wallpaper?.solid_color || "";
-      __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper", `url(${wallpaper?.wallpaperUrl || ""})`);
-      __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper-color", wallpaperColor || "transparent");
-      let wallpaperTheme = "";
-
-      // If we have a solid colour set, let's see how dark it is.
-      if (wallpaperColor) {
-        const rgbColors = this.getRGBColors(wallpaperColor);
-        const isColorDark = this.isWallpaperColorDark(rgbColors);
-        wallpaperTheme = isColorDark ? "dark" : "light";
-      } else {
-        // Grab the contrast of the currently displayed wallpaper.
-        const {
-          theme
-        } = this.state.colorMode === "light" ? lightWallpaper : darkWallpaper;
-        if (theme) {
-          wallpaperTheme = theme;
+        const regexRGB = /#([a-fA-F0-9]{6})/;
+        const hex = selectedWallpaper.match(regexRGB)?.[0];
+        url = "";
+        color = hex;
+        const rgbColors = this.getRGBColors(hex);
+        newTheme = this.isWallpaperColorDark(rgbColors) ? "dark" : "light";
+        // standard wallpaper & solid colors
+      } else if (selectedWallpaper) {
+        url = wallpaper?.wallpaperUrl || "";
+        color = wallpaper?.solid_color || "transparent";
+        newTheme = wallpaper?.theme || colorMode;
+        // if a solid color, determine if dark or light
+        if (wallpaper?.solid_color) {
+          const rgbColors = this.getRGBColors(wallpaper.solid_color);
+          const isColorDark = this.isWallpaperColorDark(rgbColors);
+          newTheme = isColorDark ? "dark" : "light";
         }
       }
-      this.setState({
-        wallpaperTheme
-      });
     }
+    __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper", `url(${url})`);
+    __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper-color", color || "transparent");
+    __webpack_require__.g.document?.body.classList.remove("lightWallpaper", "darkWallpaper");
+    __webpack_require__.g.document?.body.classList.add(newTheme === "dark" ? "darkWallpaper" : "lightWallpaper");
   }
   shouldShowOMCHighlight(componentId) {
     const messageData = this.props.Messages?.messageData;
@@ -16612,17 +16601,6 @@ class BaseContent extends (external_React_default()).PureComponent {
     // layoutsVariantBEnabled ? "layout-variant-b" : "", // Layout experiment variant B
     pocketEnabled ? "has-recommended-stories" : "no-recommended-stories", sectionsEnabled ? "has-sections-grid" : ""].filter(v => v).join(" ");
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", prefs["feeds.topsites"] && !pocketEnabled && !prefs.showSearch && "only-topsites", noSectionsEnabled && "no-sections", prefs["logowordmark.alwaysVisible"] && "visible-logo", hasThumbsUpDownLayout && hasThumbsUpDown && "thumbs-ui-compact"].filter(v => v).join(" ");
-    if (wallpapersEnabled) {
-      // Add helper class to body if user has a wallpaper selected
-      if (this.state.wallpaperTheme === "light") {
-        __webpack_require__.g.document?.body.classList.add("lightWallpaper");
-        __webpack_require__.g.document?.body.classList.remove("darkWallpaper");
-      }
-      if (this.state.wallpaperTheme === "dark") {
-        __webpack_require__.g.document?.body.classList.add("darkWallpaper");
-        __webpack_require__.g.document?.body.classList.remove("lightWallpaper");
-      }
-    }
 
     // If state.showDownloadHighlightOverride has value, let it override the logic
     // Otherwise, defer to OMC message display logic

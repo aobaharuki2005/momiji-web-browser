@@ -335,7 +335,7 @@ export class _WallpaperCategories extends React.PureComponent {
         this.props.dispatch(
           ac.OnlyToMain({
             type: at.WALLPAPER_UPLOAD,
-            data: file,
+            data: { file },
           })
         );
 

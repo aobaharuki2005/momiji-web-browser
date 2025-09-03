@@ -44,7 +44,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TopSitesFeed: "resource://newtab/lib/TopSitesFeed.sys.mjs",
   TopStoriesFeed: "resource://newtab/lib/TopStoriesFeed.sys.mjs",
   TrendingSearchFeed: "resource://newtab/lib/TrendingSearchFeed.sys.mjs",
-  WallpaperFeed: "resource://newtab/lib/WallpaperFeed.sys.mjs",
+  WallpaperFeed: "resource://newtab/lib/Wallpapers/WallpaperFeed.sys.mjs",
   WeatherFeed: "resource://newtab/lib/WeatherFeed.sys.mjs",
 });
 
@@ -553,6 +553,13 @@ export const PREFS_CONFIG = new Map([
     {
       title: "Number pref of maximum file size (in MB) a user can upload",
       value: 0,
+    },
+  ],
+  [
+    "newtabWallpapers.customWallpaper.theme",
+    {
+      title: "theme ('light' | 'dark') of user uploaded wallpaper",
+      value: "",
     },
   ],
   [

@@ -156,7 +156,7 @@ module.exports = function (config) {
             /**
              * WallpaperFeed.sys.mjs is tested via an xpcshell test
              */
-            "lib/WallpaperFeed.sys.mjs": {
+            "lib/Wallpapers/WallpaperFeed.sys.mjs": {
               statements: 0,
               lines: 0,
               functions: 0,

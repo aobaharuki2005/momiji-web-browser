@@ -1759,7 +1759,7 @@ main section {
 }
 
 @media (height > 700px) {
-  body:not(.inline-onboarding) .fixed-search .search-wrapper {
+  .fixed-search .search-wrapper {
     border-bottom: solid 1px var(--newtab-border-color);
     padding: var(--space-xlarge) 0;
     background-color: var(--newtab-overlay-color);
@@ -1770,30 +1770,30 @@ main section {
     width: 100%;
     z-index: 3;
   }
-  body:not(.inline-onboarding) .fixed-search .search-wrapper .search-inner-wrapper {
+  .fixed-search .search-wrapper .search-inner-wrapper {
     min-height: 52px;
   }
-  body:not(.inline-onboarding) .fixed-search .search-wrapper input {
+  .fixed-search .search-wrapper input {
     background-position-x: 16px;
     background-size: 24px;
   }
-  body:not(.inline-onboarding) .fixed-search .search-wrapper input:dir(rtl) {
+  .fixed-search .search-wrapper input:dir(rtl) {
     background-position-x: right 16px;
   }
-  body:not(.inline-onboarding) .fixed-search .search-wrapper .search-handoff-button .fake-caret {
+  .fixed-search .search-wrapper .search-handoff-button .fake-caret {
     inset-block-start: var(--space-large);
   }
-  body:not(.inline-onboarding) .fixed-search .search-wrapper .logo-and-wordmark {
+  .fixed-search .search-wrapper .logo-and-wordmark {
     display: none;
   }
-  body:not(.inline-onboarding) .fixed-search .search-handoff-button {
+  .fixed-search .search-handoff-button {
     background-position-x: var(--space-large);
     background-size: 24px;
   }
-  body:not(.inline-onboarding) .fixed-search .search-handoff-button:dir(rtl) {
+  .fixed-search .search-handoff-button:dir(rtl) {
     background-position-x: right var(--space-large);
   }
-  body:not(.inline-onboarding) .fixed-search .search-handoff-button .fake-caret {
+  .fixed-search .search-handoff-button .fake-caret {
     inset-block-start: var(--space-small);
   }
 }
