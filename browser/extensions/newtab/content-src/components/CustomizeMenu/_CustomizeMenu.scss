@@ -111,8 +111,6 @@
   background-color: var(--newtab-background-color-secondary);
   width: 432px;
   height: 100%;
-  // Becomes block after first open; never reset (see .customize-animate-enter/exit)
-  display: none;
   position: fixed;
   inset-block: 0;
   inset-inline-end: 0;
@@ -133,9 +131,6 @@
     // Otherwise it's difficult to see and inspect this css because the transition is so fast.
     &.customize-animate-enter-done,
     &.customize-animate-exit-done {
-      // display: none avoids initial load cost
-      // Stays as display: block after initial load
-      display: block;
       transition: transform 250ms $customize-menu-slide-bezier, visibility 250ms;
     }
   }
