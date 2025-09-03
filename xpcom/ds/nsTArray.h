@@ -282,16 +282,15 @@ extern "C" {
 extern const nsTArrayHeader sEmptyTArrayHeader;
 }
 
+template <class T>
+class nsCOMPtr;
+
+namespace mozilla {
+template <class T>
+class OwningNonNull;
+}  // namespace mozilla
+
 namespace detail {
-// nsTArray_CopyDisabler disables copy operations.
-class nsTArray_CopyDisabler {
- public:
-  nsTArray_CopyDisabler() = default;
-
-  nsTArray_CopyDisabler(const nsTArray_CopyDisabler&) = delete;
-  nsTArray_CopyDisabler& operator=(const nsTArray_CopyDisabler&) = delete;
-};
-
 template <typename Iter, typename Comparator>
 void AssertStrictWeakOrder(Iter aBegin, Iter aEnd, const Comparator& aCmp) {
   // This check is present in newer libc++ versions, and it is a useful check,
@@ -333,89 +332,26 @@ void AssertStrictWeakOrder(Iter aBegin, Iter aEnd, const Comparator& aCmp) {
 #endif
 }
 
+template <typename T>
+struct SafeElementAtPointerValue;
+
+template <typename T>
+struct SafeElementAtPointerValue<T*> {
+  using type = T*;
+};
+template <typename T>
+struct SafeElementAtPointerValue<nsCOMPtr<T>> {
+  using type = T*;
+};
+template <typename T>
+struct SafeElementAtPointerValue<RefPtr<T>> {
+  using type = T*;
+};
+template <typename T>
+struct SafeElementAtPointerValue<mozilla::OwningNonNull<T>> {
+  using type = T*;
+};
 }  // namespace detail
-
-// This class provides a SafeElementAt method to nsTArray<E*> which does
-// not take a second default value parameter.
-template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper : public ::detail::nsTArray_CopyDisabler {
-  typedef E* elem_type;
-  typedef size_t index_type;
-
-  // No implementation is provided for these two methods, and that is on
-  // purpose, since we don't support these functions on non-pointer type
-  // instantiations.
-  elem_type& SafeElementAt(index_type aIndex);
-  const elem_type& SafeElementAt(index_type aIndex) const;
-};
-
-template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<E*, Derived>
-    : public ::detail::nsTArray_CopyDisabler {
-  typedef E* elem_type;
-  // typedef const E* const_elem_type;   XXX: see below
-  typedef size_t index_type;
-
-  elem_type SafeElementAt(index_type aIndex) {
-    return static_cast<Derived*>(this)->SafeElementAt(aIndex, nullptr);
-  }
-
-  // XXX: Probably should return const_elem_type, but callsites must be fixed.
-  // Also, the use of const_elem_type for nsTArray<xpcGCCallback> in
-  // xpcprivate.h causes build failures on Windows because xpcGCCallback is a
-  // function pointer and MSVC doesn't like qualifying it with |const|.
-  elem_type SafeElementAt(index_type aIndex) const {
-    return static_cast<const Derived*>(this)->SafeElementAt(aIndex, nullptr);
-  }
-};
-
-// E is a smart pointer type; the
-// smart pointer can act as its element_type*.
-template <class E, class Derived>
-struct nsTArray_SafeElementAtSmartPtrHelper
-    : public ::detail::nsTArray_CopyDisabler {
-  typedef typename E::element_type* elem_type;
-  typedef const typename E::element_type* const_elem_type;
-  typedef size_t index_type;
-
-  elem_type SafeElementAt(index_type aIndex) {
-    auto* derived = static_cast<Derived*>(this);
-    if (aIndex < derived->Length()) {
-      return derived->Elements()[aIndex];
-    }
-    return nullptr;
-  }
-
-  // XXX: Probably should return const_elem_type, but callsites must be fixed.
-  elem_type SafeElementAt(index_type aIndex) const {
-    auto* derived = static_cast<const Derived*>(this);
-    if (aIndex < derived->Length()) {
-      return derived->Elements()[aIndex];
-    }
-    return nullptr;
-  }
-};
-
-template <class T>
-class nsCOMPtr;
-
-template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<nsCOMPtr<E>, Derived>
-    : public nsTArray_SafeElementAtSmartPtrHelper<nsCOMPtr<E>, Derived> {};
-
-template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<RefPtr<E>, Derived>
-    : public nsTArray_SafeElementAtSmartPtrHelper<RefPtr<E>, Derived> {};
-
-namespace mozilla {
-template <class T>
-class OwningNonNull;
-}  // namespace mozilla
-
-template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived>
-    : public nsTArray_SafeElementAtSmartPtrHelper<mozilla::OwningNonNull<E>,
-                                                  Derived> {};
 
 // This class serves as a base class for nsTArray.  It shouldn't be used
 // directly.  It holds common implementation code that does not depend on the
@@ -456,12 +392,12 @@ class nsTArray_base {
   void* DebugGetHeader() const { return mHdr; }
 #endif
 
+  nsTArray_base(const nsTArray_base&) = delete;
+  nsTArray_base& operator=(const nsTArray_base&) = delete;
+
  protected:
   nsTArray_base() = default;
   ~nsTArray_base();
-
-  nsTArray_base(const nsTArray_base&);
-  nsTArray_base& operator=(const nsTArray_base&);
 
   // Resize the storage if necessary to achieve the requested capacity.
   // @param aCapacity The requested number of array elements.
@@ -836,41 +772,6 @@ MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::dom::MessageData)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::dom::RefMessageData)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::SourceBufferTask)
 
-//
-// Base class for nsTArray_Impl that is templated on element type and derived
-// nsTArray_Impl class, to allow extra conversions to be added for specific
-// types.
-//
-template <class E, class Derived>
-struct nsTArray_TypedBase : public nsTArray_SafeElementAtHelper<E, Derived> {};
-
-//
-// Specialization of nsTArray_TypedBase for arrays containing JS::Heap<E>
-// elements.
-//
-// These conversions are safe because JS::Heap<E> and E share the same
-// representation, and since the result of the conversions are const references
-// we won't miss any barriers.
-//
-// The static_cast is necessary to obtain the correct address for the derived
-// class since we are a base class used in multiple inheritance.
-//
-template <class E, class Derived>
-struct nsTArray_TypedBase<JS::Heap<E>, Derived>
-    : public nsTArray_SafeElementAtHelper<JS::Heap<E>, Derived> {
-  operator const nsTArray<E>&() {
-    static_assert(sizeof(E) == sizeof(JS::Heap<E>),
-                  "JS::Heap<E> must be binary compatible with E.");
-    Derived* self = static_cast<Derived*>(this);
-    return *reinterpret_cast<nsTArray<E>*>(self);
-  }
-
-  operator const FallibleTArray<E>&() {
-    Derived* self = static_cast<Derived*>(this);
-    return *reinterpret_cast<FallibleTArray<E>*>(self);
-  }
-};
-
 namespace detail {
 
 // These helpers allow us to differentiate between tri-state comparator
@@ -981,8 +882,7 @@ struct CompareWrapper<T, U, false> {
 template <class E, class Alloc>
 class nsTArray_Impl
     : public nsTArray_base<Alloc,
-                           typename nsTArray_RelocationStrategy<E>::Type>,
-      public nsTArray_TypedBase<E, nsTArray_Impl<E, Alloc>> {
+                           typename nsTArray_RelocationStrategy<E>::Type> {
  private:
   friend class nsTArray<E>;
 
@@ -997,14 +897,12 @@ class nsTArray_Impl
   typedef E value_type;
   typedef nsTArray_Impl<E, Alloc> self_type;
   typedef nsTArrayElementTraits<E> elem_traits;
-  typedef nsTArray_SafeElementAtHelper<E, self_type> safeelementat_helper_type;
   typedef mozilla::ArrayIterator<value_type&, self_type> iterator;
   typedef mozilla::ArrayIterator<const value_type&, self_type> const_iterator;
   typedef std::reverse_iterator<iterator> reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
   using base_type::EmptyHdr;
-  using safeelementat_helper_type::SafeElementAt;
 
   // A special value that is used to indicate an invalid or unknown index
   // into the array.
@@ -1213,6 +1111,16 @@ class nsTArray_Impl
   [[nodiscard]] const value_type& SafeElementAt(index_type aIndex,
                                                 const value_type& aDef) const {
     return aIndex < Length() ? Elements()[aIndex] : aDef;
+  }
+
+  [[nodiscard]] auto SafeElementAt(index_type aIndex) const {
+    typename ::detail::SafeElementAtPointerValue<E>::type result;
+    if (aIndex < Length()) {
+      result = Elements()[aIndex];
+    } else {
+      result = nullptr;
+    }
+    return result;
   }
 
   // Shorthand for ElementAt(aIndex)
@@ -3179,21 +3087,6 @@ nsTArray_base<Alloc, RelocationStrategy>::~nsTArray_base() {
   if (!HasEmptyHeader() && !UsesAutoArrayBuffer()) {
     Alloc::Free(mHdr);
   }
-}
-
-template <class Alloc, class RelocationStrategy>
-nsTArray_base<Alloc, RelocationStrategy>::nsTArray_base(const nsTArray_base&)
-    : mHdr(EmptyHdr()) {
-  // Actual copying happens through nsTArray_CopyEnabler, we just need to do the
-  // initialization of mHdr.
-}
-
-template <class Alloc, class RelocationStrategy>
-nsTArray_base<Alloc, RelocationStrategy>&
-nsTArray_base<Alloc, RelocationStrategy>::operator=(const nsTArray_base&) {
-  // Actual copying happens through nsTArray_CopyEnabler, so do nothing here (do
-  // not copy mHdr).
-  return *this;
 }
 
 // defined in nsTArray.cpp
