@@ -114,6 +114,8 @@
           "moz-src:///browser/components/tabbrowser/TabMetrics.sys.mjs",
         TabStateFlusher:
           "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
+        TaskbarTabsUtils:
+          "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
         UrlbarProviderOpenTabs:
           "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
       });
@@ -1182,6 +1184,15 @@
         // underlying widget implementations of nsWindow::SetTitle pass
         // null-terminated strings to system APIs.
         title += tab.getAttribute("label").replace(/\0/g, "");
+      }
+
+      if (this.TaskbarTabsUtils.isTaskbarTabWindow(window)) {
+        let userContextId = gBrowser.getTabForBrowser(aBrowser)?.userContextId;
+        if (userContextId) {
+          let container =
+            ContextualIdentityService.getUserContextLabel(userContextId);
+          title += (title && container ? " — " : "") + container;
+        }
       }
 
       if (title) {
