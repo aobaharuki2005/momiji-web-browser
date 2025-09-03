@@ -15,7 +15,7 @@ namespace mozilla::dom::quota {
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wunreachable-code-loop-increment"
 #endif
-TEST(Flatten, FlatEmpty)
+TEST(DOM_Quota_Flatten, FlatEmpty)
 {
   for (const auto& item : Flatten<int>(nsTArray<int>{})) {
     Unused << item;
@@ -23,7 +23,7 @@ TEST(Flatten, FlatEmpty)
   }
 }
 
-TEST(Flatten, NestedOuterEmpty)
+TEST(DOM_Quota_Flatten, NestedOuterEmpty)
 {
   for (const auto& item : Flatten<int>(nsTArray<CopyableTArray<int>>{})) {
     Unused << item;
@@ -31,7 +31,7 @@ TEST(Flatten, NestedOuterEmpty)
   }
 }
 
-TEST(Flatten, NestedInnerEmpty)
+TEST(DOM_Quota_Flatten, NestedInnerEmpty)
 {
   for (const auto& item :
        Flatten<int>(nsTArray<CopyableTArray<int>>{CopyableTArray<int>{}})) {
@@ -43,7 +43,7 @@ TEST(Flatten, NestedInnerEmpty)
 #  pragma clang diagnostic pop
 #endif
 
-TEST(Flatten, NestedInnerSingular)
+TEST(DOM_Quota_Flatten, NestedInnerSingular)
 {
   nsTArray<int> flattened;
   for (const auto& item :
@@ -54,7 +54,7 @@ TEST(Flatten, NestedInnerSingular)
   EXPECT_EQ(nsTArray{1}, flattened);
 }
 
-TEST(Flatten, NestedInnerSingulars)
+TEST(DOM_Quota_Flatten, NestedInnerSingulars)
 {
   nsTArray<int> flattened;
   for (const auto& item : Flatten<int>(nsTArray<CopyableTArray<int>>{
@@ -65,7 +65,7 @@ TEST(Flatten, NestedInnerSingulars)
   EXPECT_EQ((nsTArray<int>{{1, 2}}), flattened);
 }
 
-TEST(Flatten, NestedInnerNonSingulars)
+TEST(DOM_Quota_Flatten, NestedInnerNonSingulars)
 {
   nsTArray<int> flattened;
   for (const auto& item : Flatten<int>(nsTArray<CopyableTArray<int>>{
