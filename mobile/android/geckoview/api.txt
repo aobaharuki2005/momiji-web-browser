@@ -1004,7 +1004,6 @@ package org.mozilla.geckoview {
     method public boolean getGlobalPrivacyControl();
     method public boolean getGlobalPrivacyControlPrivateMode();
     method public boolean getInputAutoZoomEnabled();
-    method public boolean getIsolatedProcessEnabled();
     method public boolean getJavaScriptEnabled();
     method @NonNull public int getLargeKeepaliveFactor();
     method public boolean getLnaBlockingEnabled();
@@ -1126,7 +1125,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder glMsaaLevel(int);
     method @NonNull public GeckoRuntimeSettings.Builder globalPrivacyControlEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder inputAutoZoomEnabled(boolean);
-    method @NonNull public GeckoRuntimeSettings.Builder isolatedProcessEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder javaScriptEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder largeKeepaliveFactor(int);
     method @NonNull public GeckoRuntimeSettings.Builder locales(@Nullable String[]);

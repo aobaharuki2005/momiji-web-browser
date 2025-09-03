@@ -41,8 +41,6 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
   // This id univocally identifies the current process manager instance
   private final String mInstanceId;
 
-  private boolean mIsolatedProcess = false;
-
   public static GeckoProcessManager getInstance() {
     return INSTANCE;
   }
@@ -128,12 +126,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         throw new RuntimeException("Invalid PID");
       }
 
-      if (type == GeckoProcessType.CONTENT
-          && GeckoProcessManager.getInstance().isIsolatedProcessEnabled()) {
-        mType = GeckoProcessType.CONTENT_ISOLATED;
-      } else {
-        mType = type;
-      }
+      mType = type;
       mPid = pid;
     }
 
@@ -309,15 +302,11 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
   }
 
-  private static boolean isContent(final GeckoProcessType type) {
-    return type == GeckoProcessType.CONTENT || type == GeckoProcessType.CONTENT_ISOLATED;
-  }
-
   private static class NonContentConnection extends ChildConnection {
     public NonContentConnection(
         @NonNull final ServiceAllocator allocator, @NonNull final GeckoProcessType type) {
       super(allocator, type, PriorityLevel.FOREGROUND);
-      if (GeckoProcessManager.isContent(type)) {
+      if (type == GeckoProcessType.CONTENT) {
         throw new AssertionError("Attempt to create a NonContentConnection as CONTENT");
       }
     }
@@ -426,12 +415,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     public ContentConnection(
         @NonNull final ServiceAllocator allocator, @NonNull final PriorityLevel initialPriority) {
-      super(
-          allocator,
-          GeckoProcessManager.getInstance().isIsolatedProcessEnabled()
-              ? GeckoProcessType.CONTENT_ISOLATED
-              : GeckoProcessType.CONTENT,
-          initialPriority);
+      super(allocator, GeckoProcessType.CONTENT, initialPriority);
     }
 
     @Override
@@ -574,7 +558,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     public void removeConnection(@NonNull final ChildConnection conn) {
       XPCOMEventTarget.assertOnLauncherThread();
 
-      if (isContent(conn.getType())) {
+      if (conn.getType() == GeckoProcessType.CONTENT) {
         removeContentConnection(conn);
         return;
       }
@@ -588,7 +572,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     /** Saves any state information that was acquired upon start completion. */
     public void onBindComplete(@NonNull final ChildConnection conn) {
-      if (isContent(conn.getType())) {
+      if (conn.getType() == GeckoProcessType.CONTENT) {
         final int pid = conn.getPid();
         if (pid == INVALID_PID) {
           throw new AssertionError(
@@ -602,7 +586,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     /** Retrieve the ChildConnection for an already running content process. */
     private ContentConnection getExistingContentConnection(@NonNull final Selector selector) {
       XPCOMEventTarget.assertOnLauncherThread();
-      if (!isContent(selector.getType())) {
+      if (selector.getType() != GeckoProcessType.CONTENT) {
         throw new IllegalArgumentException("Selector is not for content!");
       }
 
@@ -623,7 +607,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
       final GeckoProcessType type = selector.getType();
 
-      if (isContent(type)) {
+      if (type == GeckoProcessType.CONTENT) {
         return getExistingContentConnection(selector);
       }
 
@@ -651,7 +635,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     /** Retrieve or create a new child process for the specified non-content process. */
     private ChildConnection getNonContentConnection(@NonNull final GeckoProcessType type) {
       XPCOMEventTarget.assertOnLauncherThread();
-      if (isContent(type)) {
+      if (type == GeckoProcessType.CONTENT) {
         throw new IllegalArgumentException("Content processes not supported by this method");
       }
 
@@ -673,7 +657,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     /** Retrieve a ChildConnection for the purposes of starting a new child process. */
     public ChildConnection getConnectionForStart(@NonNull final GeckoProcessType type) {
-      if (isContent(type)) {
+      if (type == GeckoProcessType.CONTENT) {
         return getContentConnectionForStart();
       }
 
@@ -682,7 +666,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     /** Retrieve a ChildConnection for the purposes of preloading a new child process. */
     public ChildConnection getConnectionForPreload(@NonNull final GeckoProcessType type) {
-      if (isContent(type)) {
+      if (type == GeckoProcessType.CONTENT) {
         final ContentConnection conn = getNewContentConnection(PriorityLevel.BACKGROUND);
         mNonStartedContentConnections.add(conn);
         return conn;
@@ -708,16 +692,6 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                 connection.bind();
               }
             });
-  }
-
-  /** Sets whether the content service runs on isolated process. */
-  public void setIsolatedProcessEnabled(final boolean enabled) {
-    mIsolatedProcess = enabled;
-  }
-
-  /** true if the content service runs on isolated process. */
-  public boolean isIsolatedProcessEnabled() {
-    return mIsolatedProcess;
   }
 
   public void crashChild(@NonNull final Selector selector) {

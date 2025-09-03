@@ -465,10 +465,6 @@ public final class GeckoRuntime implements Parcelable {
       flags |= GeckoThread.FLAG_DISABLE_LOW_MEMORY_DETECTION;
     }
 
-    if (settings.getIsolatedProcessEnabled()) {
-      flags |= GeckoThread.FLAG_CONTENT_ISOLATED;
-    }
-
     final Class<?> crashHandler = settings.getCrashHandler();
     if (crashHandler != null) {
       try {
