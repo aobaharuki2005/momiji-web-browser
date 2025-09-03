@@ -159,7 +159,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
     }
 
     private BindServiceDelegate getBindServiceDelegate() {
-      if (mType != GeckoProcessType.CONTENT) {
+      if (!isContent()) {
         // Non-content services just use default binding
         return this.new DefaultBindDelegate();
       }
@@ -210,7 +210,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
     }
 
     public boolean isContent() {
-      return mType == GeckoProcessType.CONTENT;
+      return mType == GeckoProcessType.CONTENT || mType == GeckoProcessType.CONTENT_ISOLATED;
     }
 
     public GeckoProcessType getType() {
@@ -466,7 +466,9 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
      */
     private static int getContentServiceCount() {
       return ServiceUtils.getServiceCount(
-          GeckoAppShell.getApplicationContext(), GeckoProcessType.CONTENT);
+              GeckoAppShell.getApplicationContext(), GeckoProcessType.CONTENT)
+          + ServiceUtils.getServiceCount(
+              GeckoAppShell.getApplicationContext(), GeckoProcessType.CONTENT_ISOLATED);
     }
   }
 
@@ -522,7 +524,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
    */
   private String allocate(@NonNull final GeckoProcessType type) {
     XPCOMEventTarget.assertOnLauncherThread();
-    if (type != GeckoProcessType.CONTENT) {
+    if (type != GeckoProcessType.CONTENT && type != GeckoProcessType.CONTENT_ISOLATED) {
       // No unique id necessary
       return null;
     }
@@ -530,7 +532,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
     // Lazy initialization of mContentAllocPolicy to ensure that it is constructed on the
     // launcher thread.
     if (mContentAllocPolicy == null) {
-      if (canBindIsolated(GeckoProcessType.CONTENT)) {
+      if (hasQApis() && type == GeckoProcessType.CONTENT_ISOLATED) {
         mContentAllocPolicy = new IsolatedContentPolicy();
       } else {
         mContentAllocPolicy = new DefaultContentPolicy();

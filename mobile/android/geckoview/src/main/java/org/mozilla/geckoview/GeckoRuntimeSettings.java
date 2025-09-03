@@ -669,6 +669,18 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       getSettings().setSameDocumentNavigationOverridesLoadTypeForceDisable(uri);
       return this;
     }
+
+    /**
+     * Set whether content service should be on isolated process or not. This must be set before
+     * startup.
+     *
+     * @param enabled A flag determining whether content service should be on isolated process.
+     * @return The builder instance.
+     */
+    public @NonNull Builder isolatedProcessEnabled(final boolean enabled) {
+      getSettings().mIsolatedProcess = enabled;
+      return this;
+    }
   }
 
   private GeckoRuntime mRuntime;
@@ -800,6 +812,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   /* package */ boolean mDebugPause;
   /* package */ boolean mUseMaxScreenDepth;
   /* package */ boolean mLowMemoryDetection = true;
+  /* package */ boolean mIsolatedProcess = false;
   /* package */ float mDisplayDensityOverride = -1.0f;
   /* package */ int mDisplayDpiOverride;
   /* package */ int mScreenWidthOverride;
@@ -851,6 +864,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     mDebugPause = settings.mDebugPause;
     mUseMaxScreenDepth = settings.mUseMaxScreenDepth;
     mLowMemoryDetection = settings.mLowMemoryDetection;
+    mIsolatedProcess = settings.mIsolatedProcess;
     mDisplayDensityOverride = settings.mDisplayDensityOverride;
     mDisplayDpiOverride = settings.mDisplayDpiOverride;
     mScreenWidthOverride = settings.mScreenWidthOverride;
@@ -2333,6 +2347,15 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     return mSameDocumentNavigationOverridesLoadTypeForceDisable.get();
   }
 
+  /**
+   * Gets whether the content service is isolated process or not.
+   *
+   * @return True if the content service runs on isolated process.
+   */
+  public boolean getIsolatedProcessEnabled() {
+    return mIsolatedProcess;
+  }
+
   @Override // Parcelable
   public void writeToParcel(final Parcel out, final int flags) {
     super.writeToParcel(out, flags);
@@ -2343,6 +2366,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     ParcelableUtils.writeBoolean(out, mDebugPause);
     ParcelableUtils.writeBoolean(out, mUseMaxScreenDepth);
     ParcelableUtils.writeBoolean(out, mLowMemoryDetection);
+    ParcelableUtils.writeBoolean(out, mIsolatedProcess);
     out.writeFloat(mDisplayDensityOverride);
     out.writeInt(mDisplayDpiOverride);
     out.writeInt(mScreenWidthOverride);
@@ -2362,6 +2386,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     mDebugPause = ParcelableUtils.readBoolean(source);
     mUseMaxScreenDepth = ParcelableUtils.readBoolean(source);
     mLowMemoryDetection = ParcelableUtils.readBoolean(source);
+    mIsolatedProcess = ParcelableUtils.readBoolean(source);
     mDisplayDensityOverride = source.readFloat();
     mDisplayDpiOverride = source.readInt();
     mScreenWidthOverride = source.readInt();
