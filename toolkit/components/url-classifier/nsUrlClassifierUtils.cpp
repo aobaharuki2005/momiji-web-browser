@@ -634,6 +634,33 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsUrlClassifierUtils::MakeFindFullHashRequestV5(
+    const nsTArray<nsCString>& aHashPrefixes, nsACString& aRequest) {
+  if (aHashPrefixes.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  aRequest.Truncate();
+
+  // See
+  // https://developers.google.com/safe-browsing/reference/rest/v5/hashes/search
+  // for the query parameter format.
+  for (uint32_t i = 0; i < aHashPrefixes.Length(); i++) {
+    nsAutoCString hashEncoded;
+    nsresult rv = Base64Encode(aHashPrefixes[i], hashEncoded);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aRequest.AppendLiteral("hashPrefixes=");
+    aRequest.Append(hashEncoded);
+    if (i != aHashPrefixes.Length() - 1) {
+      aRequest.AppendLiteral("&");
+    }
+  }
+
+  return NS_OK;
+}
+
 // Remove ref, query, userpass, anypart which may contain sensitive data
 static nsresult GetSpecWithoutSensitiveData(nsIURI* aUri, nsACString& aSpec) {
   if (NS_WARN_IF(!aUri)) {
