@@ -90,6 +90,7 @@ let px = number => number.toFixed(2) + "px";
 export class UrlbarInput {
   #allowBreakout = false;
   #breakoutBlockerCount = 0;
+  #userTypedValue;
 
   /**
    * @param {object} options
@@ -512,6 +513,11 @@ export class UrlbarInput {
     hideSearchTerms = false,
     isSameDocument = false
   ) {
+    if (!this.isAddressbar) {
+      throw new Error(
+        "Cannot set URI for UrlbarInput that is not an address bar"
+      );
+    }
     // We only need to update the searchModeUI on tab switch conditionally
     // as we only persist searchMode with ScotchBonnet enabled.
     if (
@@ -530,7 +536,7 @@ export class UrlbarInput {
       isSameDocument,
     });
 
-    let value = this.window.gBrowser.userTypedValue;
+    let value = this.userTypedValue;
     let valid = false;
     let isReverting = !uri;
 
@@ -1040,10 +1046,14 @@ export class UrlbarInput {
   }
 
   handleRevert() {
-    this.window.gBrowser.userTypedValue = null;
+    this.userTypedValue = null;
     // Nullify search mode before setURI so it won't try to restore it.
     this.searchMode = null;
-    this.setURI(null, true, false, true);
+    if (this.isAddressbar) {
+      this.setURI(null, true, false, true);
+    } else {
+      this.value = "";
+    }
     if (this.value && this.focused) {
       this.select();
     }
@@ -1797,7 +1807,7 @@ export class UrlbarInput {
       !this.value.endsWith(" ")
     ) {
       this._autofillPlaceholder = null;
-      this._setValue(this.window.gBrowser.userTypedValue);
+      this._setValue(this.userTypedValue);
     }
 
     return false;
@@ -2151,7 +2161,7 @@ export class UrlbarInput {
       if (searchMode) {
         // Set userTypedValue to the query string so that it's properly restored
         // when switching back to the current tab and across sessions.
-        this.window.gBrowser.userTypedValue = this.untrimmedValue;
+        this.userTypedValue = this.untrimmedValue;
         this.valueIsTyped = true;
         if (!searchMode.isPreview && !areSearchModesSame) {
           try {
@@ -2224,12 +2234,26 @@ export class UrlbarInput {
     return this.inputField.value;
   }
 
+  set value(val) {
+    this._setValue(val, { allowTrim: true });
+  }
+
   get untrimmedValue() {
     return this._untrimmedValue;
   }
 
-  set value(val) {
-    this._setValue(val, { allowTrim: true });
+  get userTypedValue() {
+    return this.isAddressbar
+      ? this.window.gBrowser.userTypedValue
+      : this.#userTypedValue;
+  }
+
+  set userTypedValue(val) {
+    if (this.isAddressbar) {
+      this.window.gBrowser.userTypedValue = val;
+    } else {
+      this.#userTypedValue = val;
+    }
   }
 
   get lastSearchString() {
@@ -2791,8 +2815,8 @@ export class UrlbarInput {
     let stripHttp =
       result.heuristic &&
       result.payload.url.startsWith("http://") &&
-      this.window.gBrowser.userTypedValue &&
-      this.#getSchemelessInput(this.window.gBrowser.userTypedValue) ==
+      this.userTypedValue &&
+      this.#getSchemelessInput(this.userTypedValue) ==
         Ci.nsILoadInfo.SchemelessInputTypeSchemeless;
     if (!stripHttp) {
       return url;
@@ -3356,39 +3380,33 @@ export class UrlbarInput {
    *
    * @param {string} url
    *   The URL to open.
-   * @param {Event} event
-   *   The event that triggered to load the url.
    * @param {string} openUILinkWhere
    *   Where we expect the result to be opened.
    * @param {object} params
    *   The parameters related to how and where the result will be opened.
-   *   Further supported paramters are listed in utilityOverlay.js#openUILinkIn.
+   *   Further supported paramters are listed in _loadURL.
    * @param {object} params.triggeringPrincipal
    *   The principal that the action was triggered from.
-   * @param {nsIInputStream} [params.postData]
-   *   The POST data associated with a search submission.
-   * @param {boolean} [params.allowInheritPrincipal]
-   *   Whether the principal can be inherited.
-   * @param {SchemelessInputType} [params.schemelessInput]
-   *   Whether the search/URL term was without an explicit scheme.
    * @param {object} [resultDetails]
    *   Details of the selected result, if any.
-   * @param {UrlbarUtils.RESULT_TYPE} [resultDetails.type]
-   *   Details of the result type, if any.
+   *   Further supported details are listed in _loadURL.
    * @param {string} [resultDetails.searchTerm]
    *   Search term of the result source, if any.
-   * @param {UrlbarUtils.RESULT_SOURCE} [resultDetails.source]
-   *   Details of the result source, if any.
-   * @param {object} browser [optional] the browser to use for the load.
+   * @param {object} browser the browser to use for the load.
    */
-  _loadURL(
+  #prepareAddressbarLoad(
     url,
-    event,
     openUILinkWhere,
     params,
     resultDetails = null,
-    browser = this.window.gBrowser.selectedBrowser
+    browser
   ) {
+    if (!this.isAddressbar) {
+      throw new Error(
+        "Can't prepare addressbar load when this isn't an addressbar input"
+      );
+    }
+
     // No point in setting these because we'll handleRevert() a few rows below.
     if (openUILinkWhere == "current") {
       // Make sure URL is formatted properly (don't show punycode).
@@ -3441,6 +3459,58 @@ export class UrlbarInput {
       }
     }
 
+    // Specifies that the URL load was initiated by the URL bar.
+    params.initiatedByURLBar = true;
+  }
+
+  /**
+   * Loads the url in the appropriate place.
+   *
+   * @param {string} url
+   *   The URL to open.
+   * @param {Event} event
+   *   The event that triggered to load the url.
+   * @param {string} openUILinkWhere
+   *   Where we expect the result to be opened.
+   * @param {object} params
+   *   The parameters related to how and where the result will be opened.
+   *   Further supported paramters are listed in utilityOverlay.js#openUILinkIn.
+   * @param {object} params.triggeringPrincipal
+   *   The principal that the action was triggered from.
+   * @param {nsIInputStream} [params.postData]
+   *   The POST data associated with a search submission.
+   * @param {boolean} [params.allowInheritPrincipal]
+   *   Whether the principal can be inherited.
+   * @param {SchemelessInputType} [params.schemelessInput]
+   *   Whether the search/URL term was without an explicit scheme.
+   * @param {object} [resultDetails]
+   *   Details of the selected result, if any.
+   * @param {UrlbarUtils.RESULT_TYPE} [resultDetails.type]
+   *   Details of the result type, if any.
+   * @param {string} [resultDetails.searchTerm]
+   *   Search term of the result source, if any.
+   * @param {UrlbarUtils.RESULT_SOURCE} [resultDetails.source]
+   *   Details of the result source, if any.
+   * @param {object} browser [optional] the browser to use for the load.
+   */
+  _loadURL(
+    url,
+    event,
+    openUILinkWhere,
+    params,
+    resultDetails = null,
+    browser = this.window.gBrowser.selectedBrowser
+  ) {
+    if (this.isAddressbar) {
+      this.#prepareAddressbarLoad(
+        url,
+        openUILinkWhere,
+        params,
+        resultDetails,
+        browser
+      );
+    }
+
     params.allowThirdPartyFixup = true;
 
     if (openUILinkWhere == "current") {
@@ -3489,10 +3559,7 @@ export class UrlbarInput {
     }
 
     // Notify about the start of navigation.
-    this._notifyStartNavigation(resultDetails);
-
-    // Specifies that the URL load was initiated by the URL bar.
-    params.initiatedByURLBar = true;
+    this.#notifyStartNavigation(resultDetails);
 
     try {
       this.window.openTrustedLinkIn(url, openUILinkWhere, params);
@@ -3837,8 +3904,10 @@ export class UrlbarInput {
    * @param {UrlbarResult} result
    *   Details of the result that was selected, if any.
    */
-  _notifyStartNavigation(result) {
-    Services.obs.notifyObservers({ result }, "urlbar-user-start-navigation");
+  #notifyStartNavigation(result) {
+    if (this.isAddressbar) {
+      Services.obs.notifyObservers({ result }, "urlbar-user-start-navigation");
+    }
   }
 
   /**
@@ -3972,8 +4041,8 @@ export class UrlbarInput {
 
     this.toggleAttribute("searchmode", true);
     // Clear autofill.
-    if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
-      this.value = this.window.gBrowser.userTypedValue;
+    if (this._autofillPlaceholder && this.userTypedValue) {
+      this.value = this.userTypedValue;
     }
     // Search mode should only be active when pageproxystate is invalid.
     if (this.getAttribute("pageproxystate") == "valid") {
@@ -4045,7 +4114,7 @@ export class UrlbarInput {
         dueToTabSwitch,
         isSameDocument,
         uri: uri ?? this.window.gBrowser.currentURI,
-        userTypedValue: this.window.gBrowser.userTypedValue,
+        userTypedValue: this.userTypedValue,
         firstView,
       });
     // When persisting, userTypedValue should have a value consistent with the
@@ -4055,9 +4124,9 @@ export class UrlbarInput {
     // application SERPs will load secondary search pages (e.g. Maps, Images)
     // with the same document, which won't unset userTypedValue.
     if (shouldPersist) {
-      this.window.gBrowser.userTypedValue = state.persist.searchTerms;
+      this.userTypedValue = state.persist.searchTerms;
     } else if (wasPersisting && !shouldPersist) {
-      this.window.gBrowser.userTypedValue = null;
+      this.userTypedValue = null;
     }
 
     state.persist.shouldPersist = shouldPersist;
@@ -4287,13 +4356,13 @@ export class UrlbarInput {
     this._isHandoffSession = false;
     this.removeAttribute("focused");
 
-    if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
+    if (this._autofillPlaceholder && this.userTypedValue) {
       // If we were autofilling, remove the autofilled portion, by restoring
       // the value to the last typed one.
-      this.value = this.window.gBrowser.userTypedValue;
+      this.value = this.userTypedValue;
     } else if (
       this.value == this._untrimmedValue &&
-      !this.window.gBrowser.userTypedValue &&
+      !this.userTypedValue &&
       !this.focused
     ) {
       // If the value was untrimmed by _on_focus and didn't change, trim it.
@@ -4534,7 +4603,7 @@ export class UrlbarInput {
   _on_input(event) {
     if (
       this._autofillPlaceholder &&
-      this.value === this.window.gBrowser.userTypedValue &&
+      this.value === this.userTypedValue &&
       (event.inputType === "deleteContentBackward" ||
         event.inputType === "deleteContentForward")
     ) {
@@ -4548,7 +4617,7 @@ export class UrlbarInput {
     this._protocolIsTrimmed = false;
     this._resultForCurrentValue = null;
 
-    this.window.gBrowser.userTypedValue = value;
+    this.userTypedValue = value;
     // Unset userSelectionBehavior because the user is modifying the search
     // string, thus there's no valid selection. This is also used by the view
     // to set "aria-activedescendant", thus it should never get stale.
@@ -4650,7 +4719,7 @@ export class UrlbarInput {
         this._autofillPlaceholder.selectionEnd != this.selectionEnd)
     ) {
       this._autofillPlaceholder = null;
-      this.window.gBrowser.userTypedValue = this.value;
+      this.userTypedValue = this.value;
     }
   }
 
@@ -4743,7 +4812,7 @@ export class UrlbarInput {
 
       const value = oldStart + pasteData + oldEnd;
       this._setValue(value, { valueIsTyped: true });
-      this.window.gBrowser.userTypedValue = value;
+      this.userTypedValue = value;
 
       this.toggleAttribute("usertyping", this._untrimmedValue);
 
@@ -5021,7 +5090,7 @@ export class UrlbarInput {
         // This can happen for example if we entered search mode typing a
         // a partial engine domain and selecting a tab-to-search result.
         if (!this.value) {
-          this.window.gBrowser.userTypedValue = null;
+          this.userTypedValue = null;
         }
         this.confirmSearchMode();
       }
@@ -5109,12 +5178,14 @@ export class UrlbarInput {
       this.controller.setLastQueryContextCache(queryContext);
       this.controller.engagementEvent.start(event, queryContext);
       this.handleNavigation({ triggeringPrincipal: principal });
-      // For safety reasons, in the drop case we don't want to immediately show
-      // the the dropped value, instead we want to keep showing the current page
-      // url until an onLocationChange happens.
-      // See the handling in `setURI` for further details.
-      this.window.gBrowser.userTypedValue = null;
-      this.setURI(null, true);
+      if (this.isAddressbar) {
+        // For safety reasons, in the drop case we don't want to immediately show
+        // the dropped value, instead we want to keep showing the current page
+        // url until an onLocationChange happens.
+        // See the handling in `setURI` for further details.
+        this.userTypedValue = null;
+        this.setURI(null, true);
+      }
     }
   }
 
