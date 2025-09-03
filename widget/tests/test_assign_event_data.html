@@ -109,7 +109,7 @@ function onEvent(aEvent) {
       gCopiedEvent.push({ name: attr, value: aEvent[attr]});
     }
   }
-  setTimeout(gCallback, 0);
+  SimpleTest.executeSoon(gCallback);
 }
 
 function observeKeyUpOnContent(aKeyCode, aCallback) {
@@ -669,9 +669,11 @@ const kTests = [
 
 async function doTest(aTest) {
   if (!aTest.canRun()) {
+    info(`skipping: ${aTest.description}`);
     SimpleTest.executeSoon(runNextTest);
     return;
   }
+  info(`starting: ${aTest.description}`);
   gEvent = null;
   gCopiedEvent = [];
   gDescription = aTest.description + " (gCallPreventDefault=" + gCallPreventDefault + ")";
@@ -727,7 +729,7 @@ function runNextTest() {
       document.activeElement.blur();
     }
     window.requestAnimationFrame(function() {
-      setTimeout(runNextTest, 0);
+      SimpleTest.executeSoon(runNextTest);
     });
     return;
   }
