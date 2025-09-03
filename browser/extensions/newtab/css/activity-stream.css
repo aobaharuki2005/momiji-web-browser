@@ -2061,6 +2061,7 @@ main section {
   background-color: var(--newtab-background-color-secondary);
   width: 432px;
   height: 100%;
+  display: none;
   position: fixed;
   inset-block: 0;
   inset-inline-end: 0;
@@ -2074,6 +2075,7 @@ main section {
 }
 @media (prefers-reduced-motion: no-preference) {
   .customize-menu.customize-animate-enter, .customize-menu.customize-animate-exit, .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-exit-done {
+    display: block;
     transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 250ms;
   }
 }
