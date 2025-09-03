@@ -2266,7 +2266,17 @@ static void CompareExchange(MacroAssembler& masm,
 
   masm.ma_b(output, valueTemp, &end, Assembler::NotEqual, ShortJump);
 
-  masm.as_sllv(valueTemp, newval, offsetTemp);
+  // truncate newval for 8-bit and 16-bit cmpxchg
+  switch (nbytes) {
+    case 1:
+      masm.as_andi(valueTemp, newval, 0xff);
+      break;
+    case 2:
+      masm.as_andi(valueTemp, newval, 0xffff);
+      break;
+  }
+
+  masm.as_sllv(valueTemp, valueTemp, offsetTemp);
   masm.as_and(ScratchRegister, ScratchRegister, maskTemp);
   masm.as_or(ScratchRegister, ScratchRegister, valueTemp);
 
