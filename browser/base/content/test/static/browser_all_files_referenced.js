@@ -328,11 +328,6 @@ var allowlist = [
   // A QA and dev debug tool.
   { file: "chrome://browser/content/places/interactionsViewer.html" },
 
-  // A uniffi-generated file which isn't used directly by 1969013 but will be by a followup.
-  {
-    file: "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustTracing.sys.mjs",
-  },
-
   // Bug 1984409: We're doing backups to cloud-synced locations first. We'll do local backups eventually,
   // and this file will be needed for that.
   {
