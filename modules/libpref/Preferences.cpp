@@ -1545,7 +1545,7 @@ static void AddAccessCount(const char* aPrefName) {
   AddAccessCount(nsDependentCString(aPrefName));
 }
 #else
-static void MOZ_MAYBE_UNUSED AddAccessCount(const nsACString& aPrefName) {}
+[[maybe_unused]] static void AddAccessCount(const nsACString& aPrefName) {}
 
 static void AddAccessCount(const char* aPrefName) {}
 #endif
@@ -1644,11 +1644,11 @@ class PrefsIter {
     struct Matcher {                                                    \
       PrefsIter& mIter;                                                 \
       type operator()(HashElem& pos) {                                  \
-        HashElem& end MOZ_MAYBE_UNUSED = mIter.mEnd.as<HashElem>();     \
+        [[maybe_unused]] HashElem& end = mIter.mEnd.as<HashElem>();     \
         __VA_ARGS__;                                                    \
       }                                                                 \
       type operator()(SharedElem& pos) {                                \
-        SharedElem& end MOZ_MAYBE_UNUSED = mIter.mEnd.as<SharedElem>(); \
+        [[maybe_unused]] SharedElem& end = mIter.mEnd.as<SharedElem>(); \
         __VA_ARGS__;                                                    \
       }                                                                 \
     };                                                                  \
@@ -6043,7 +6043,7 @@ static void ShutdownAlwaysPrefs() {
 
 }  // namespace StaticPrefs
 
-static MOZ_MAYBE_UNUSED void SaveOncePrefToSharedMap(
+[[maybe_unused]] static void SaveOncePrefToSharedMap(
     SharedPrefMapBuilder& aBuilder, const nsACString& aName, bool aValue) {
   auto oncePref = MakeUnique<Pref>(aName);
   oncePref->SetType(PrefType::Bool);
@@ -6056,7 +6056,7 @@ static MOZ_MAYBE_UNUSED void SaveOncePrefToSharedMap(
   oncePref->AddToMap(aBuilder);
 }
 
-static MOZ_MAYBE_UNUSED void SaveOncePrefToSharedMap(
+[[maybe_unused]] static void SaveOncePrefToSharedMap(
     SharedPrefMapBuilder& aBuilder, const nsACString& aName, int32_t aValue) {
   auto oncePref = MakeUnique<Pref>(aName);
   oncePref->SetType(PrefType::Int);
@@ -6069,12 +6069,12 @@ static MOZ_MAYBE_UNUSED void SaveOncePrefToSharedMap(
   oncePref->AddToMap(aBuilder);
 }
 
-static MOZ_MAYBE_UNUSED void SaveOncePrefToSharedMap(
+[[maybe_unused]] static void SaveOncePrefToSharedMap(
     SharedPrefMapBuilder& aBuilder, const nsACString& aName, uint32_t aValue) {
   SaveOncePrefToSharedMap(aBuilder, aName, int32_t(aValue));
 }
 
-static MOZ_MAYBE_UNUSED void SaveOncePrefToSharedMap(
+[[maybe_unused]] static void SaveOncePrefToSharedMap(
     SharedPrefMapBuilder& aBuilder, const nsACString& aName, float aValue) {
   auto oncePref = MakeUnique<Pref>(aName);
   oncePref->SetType(PrefType::String);

@@ -410,27 +410,6 @@
 #  define MOZ_INFALLIBLE_ALLOCATOR
 #endif
 
-/**
- * MOZ_MAYBE_UNUSED suppresses compiler warnings about functions that are
- * never called (in this build configuration, at least).
- *
- * Place this attribute at the very beginning of a function declaration. For
- * example, write
- *
- *   MOZ_MAYBE_UNUSED int foo();
- *
- * or
- *
- *   MOZ_MAYBE_UNUSED int foo() { return 42; }
- */
-#if defined(__GNUC__) || defined(__clang__)
-#  define MOZ_MAYBE_UNUSED __attribute__((__unused__))
-#elif defined(_MSC_VER)
-#  define MOZ_MAYBE_UNUSED __pragma(warning(suppress : 4505))
-#else
-#  define MOZ_MAYBE_UNUSED
-#endif
-
 /*
  * MOZ_NO_STACK_PROTECTOR, specified at the start of a function declaration,
  * indicates that the given function should *NOT* be instrumented to detect
