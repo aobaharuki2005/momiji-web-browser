@@ -2330,3 +2330,8 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
 #PanelUI-ipprotection-header {
   width: 100%;
 }
+
+#PanelUI-ipprotection .panel-header,
+#PanelUI-ipprotection .panel-header + toolbarseparator {
+  display: none;
+}
