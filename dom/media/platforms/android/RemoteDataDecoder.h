@@ -8,6 +8,7 @@
 #include "AndroidDecoderModule.h"
 #include "SurfaceTexture.h"
 #include "TimeUnits.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/java/CodecProxyWrappers.h"
 
@@ -100,6 +101,7 @@ class RemoteDataDecoder : public MediaDataDecoder,
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
   DecodedData mDecodedData;
+  Maybe<MediaResult> mDecodeError;
   State mState = State::DRAINED;
   size_t mNumPendingInputs;
 };
