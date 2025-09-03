@@ -129,6 +129,8 @@
   <string name="mozac_feature_prompt_folder_upload_confirm_message">ໃຫ້ແນ່ໃຈວ່າທ່ານໄວ້ວາງໃຈເວັບໄຊທ໌ນີ້ກ່ອນທີ່ທ່ານຈະອັບໂຫລດຈາກ “%1$s”.</string>
   <!-- Pressing this will dismiss the dialog and allow to upload folder -->
   <string name="mozac_feature_prompt_folder_upload_confirm_positive_button_text">ອັບໂຫລດ</string>
+  <!-- Pressing this will dismiss the dialog and disallow to upload folder -->
+  <string name="mozac_feature_prompt_folder_upload_confirm_negative_button_text">ຍົກເລີກ</string>
   <!--
     Credit Card Autofill
 
