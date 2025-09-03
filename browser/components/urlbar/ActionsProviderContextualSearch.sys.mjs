@@ -77,7 +77,12 @@ class ProviderContextualSearch extends ActionsProvider {
 
   async queryActions(queryContext) {
     this.#resultEngine = await this.matchEngine(queryContext);
-    if (this.#resultEngine) {
+    let defaultEngine = lazy.UrlbarSearchUtils.getDefaultEngine();
+
+    if (
+      this.#resultEngine &&
+      this.#resultEngine.engine?.name != defaultEngine?.name
+    ) {
       return [await this.#createActionResult(this.#resultEngine)];
     }
     return null;
