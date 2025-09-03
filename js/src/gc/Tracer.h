@@ -281,9 +281,7 @@ struct TraceWeakResult {
 
   MOZ_IMPLICIT operator bool() const { return isLive(); }
 
-  T initialTarget() const {
-    return initial_;
-  }
+  T initialTarget() const { return initial_; }
 
   T finalTarget() const {
     MOZ_ASSERT(isLive());
