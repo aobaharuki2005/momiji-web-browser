@@ -454,6 +454,133 @@
                 android:resource="@xml/shortcuts" />
         </activity-alias>
 
+        <activity-alias
+            android:name="${applicationId}.AppRetro2004_v2"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_retro_2004_v2"
+            android:roundIcon="@mipmap/ic_launcher_retro_2004_v2"
+            android:targetActivity="HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+
+        <activity-alias
+            android:name="${applicationId}.AppPixelated_v2"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_pixelated_v2"
+            android:roundIcon="@mipmap/ic_launcher_pixelated_v2"
+            android:targetActivity="HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+
+        <activity-alias
+            android:name="${applicationId}.AppCuddling"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_cuddling"
+            android:roundIcon="@mipmap/ic_launcher_cuddling"
+            android:targetActivity="HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+
+        <activity-alias
+            android:name="${applicationId}.AppPride_v2"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_pride_v2"
+            android:roundIcon="@mipmap/ic_launcher_pride_v2"
+            android:targetActivity="HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+
+        <activity-alias
+            android:name="${applicationId}.AppFlaming"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_flaming"
+            android:roundIcon="@mipmap/ic_launcher_flaming"
+            android:targetActivity="HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+
+        <activity-alias
+            android:name="${applicationId}.AppMinimal_v2"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_minimal_v2"
+            android:roundIcon="@mipmap/ic_launcher_minimal_v2"
+            android:targetActivity="HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+
+        <activity-alias
+            android:name="${applicationId}.AppMomo_v2"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_momo_v2"
+            android:roundIcon="@mipmap/ic_launcher_momo_v2"
+            android:targetActivity="HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+        <activity-alias
+            android:name="${applicationId}.AppCool"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_cool"
+            android:roundIcon="@mipmap/ic_launcher_cool"
+            android:targetActivity="HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+
         <!--
           Fennec declared entry for homescreen pinned shortcuts.
         -->

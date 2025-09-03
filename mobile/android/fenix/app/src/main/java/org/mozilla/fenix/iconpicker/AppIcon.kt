@@ -143,6 +143,50 @@ enum class AppIcon(
         titleId = R.string.alternative_app_icon_option_momo,
         subtitleId = R.string.alternative_app_icon_option_momo_subtitle,
     ),
+    AppRetro2004V2(
+        aliasSuffix = "AppRetro2004_v2",
+        iconForegroundId = R.drawable.ic_retro_2004_v2,
+        titleId = R.string.alternative_app_icon_option_retro_2004,
+    ),
+    AppPixelatedV2(
+        aliasSuffix = "AppPixelated_v2",
+        iconForegroundId = R.drawable.ic_pixelated_v2,
+        titleId = R.string.alternative_app_icon_option_pixelated,
+    ),
+    AppCuddling(
+        aliasSuffix = "AppCuddling",
+        iconBackground = IconBackground.Drawable(drawableResId = R.drawable.ic_launcher_background_cuddling),
+        iconForegroundId = R.drawable.ic_cuddling,
+        titleId = R.string.alternative_app_icon_option_cuddling,
+    ),
+    AppPrideV2(
+        aliasSuffix = "AppPride_v2",
+        iconForegroundId = R.drawable.ic_pride_v2,
+        titleId = R.string.alternative_app_icon_option_pride,
+    ),
+    AppFlaming(
+        aliasSuffix = "AppFlaming",
+        iconBackground = IconBackground.Color(colorResId = R.color.photonBlack),
+        iconForegroundId = R.drawable.ic_flaming,
+        titleId = R.string.alternative_app_icon_option_flaming,
+    ),
+    AppMinimalV2(
+        aliasSuffix = "AppMinimal_v2",
+        iconForegroundId = R.drawable.ic_minimal_v2,
+        titleId = R.string.alternative_app_icon_option_minimal,
+    ),
+    AppMomoV2(
+        aliasSuffix = "AppMomo_v2",
+        iconForegroundId = R.drawable.ic_momo_v2,
+        titleId = R.string.alternative_app_icon_option_momo,
+        subtitleId = R.string.alternative_app_icon_option_momo_subtitle,
+    ),
+    AppCool(
+        aliasSuffix = "AppCool",
+        iconBackground = IconBackground.Drawable(drawableResId = R.drawable.ic_launcher_background_cool),
+        iconForegroundId = R.drawable.ic_cool,
+        titleId = R.string.alternative_app_icon_option_cool,
+    ),
     ;
 
     /**
