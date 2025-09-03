@@ -175,21 +175,21 @@ bool ModuleLoaderBase::HostLoadImportedModule(JSContext* aCx,
     return false;
   }
 
+  RefPtr<ModuleLoaderBase> loader = GetCurrentModuleLoader(aCx);
+  if (!loader) {
+    return false;
+  }
+
+  if (isDynamicImport && !loader->IsDynamicImportSupported()) {
+    JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
+                              JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
+    return false;
+  }
+
   {
     // LoadedScript should only live in this block, otherwise it will be a GC
     // hazard
     RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aReferrer));
-
-    RefPtr<ModuleLoaderBase> loader = GetCurrentModuleLoader(aCx);
-    if (!loader) {
-      return false;
-    }
-
-    if (isDynamicImport && !loader->IsDynamicImportSupported()) {
-      JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
-                                JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
-      return false;
-    }
 
     // Step 7. Disallow further import maps given settingsObject.
     // Impl note: Disallow import maps is done in ModuleLoader::StartFetch

@@ -95,12 +95,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
     return nullptr;
   }
 
-  // Not supported for Service Workers.
-  // https://github.com/w3c/ServiceWorker/issues/1585 covers existing discussion
-  // about potentially supporting use of import().
-  if (workerPrivate->IsServiceWorker()) {
-    return nullptr;
-  }
+  MOZ_ASSERT(!workerPrivate->IsServiceWorker());
   MOZ_ASSERT(aModuleRequestObj);
   MOZ_ASSERT(aPromise);
 
@@ -155,11 +150,10 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
 
 bool WorkerModuleLoader::IsDynamicImportSupported() {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  if (workerPrivate->IsServiceWorker()) {
-    return false;
-  }
-
-  return true;
+  // Not supported for Service Workers.
+  // https://github.com/w3c/ServiceWorker/issues/1585 covers existing discussion
+  // about potentially supporting use of import().
+  return !workerPrivate->IsServiceWorker();
 }
 
 bool WorkerModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
