@@ -860,9 +860,13 @@ class QuotaManager final : public BackgroundThreadObject {
 
   OriginInfosNestedTraversable GetOriginInfosExceedingGlobalLimit() const;
 
+  OriginInfosNestedTraversable GetOriginInfosWithZeroUsage() const;
+
   void ClearOrigins(const OriginInfosNestedTraversable& aDoomedOriginInfos);
 
   void CleanupTemporaryStorage();
+
+  void RecordTemporaryStorageMetrics();
 
   void DeleteOriginDirectory(const OriginMetadata& aOriginMetadata);
 
@@ -1062,6 +1066,12 @@ class QuotaManager final : public BackgroundThreadObject {
 
   template <typename Iterator>
   static void MaybeInsertNonPersistedOriginInfos(
+      Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
+      const RefPtr<GroupInfo>& aDefaultGroupInfo,
+      const RefPtr<GroupInfo>& aPrivateGroupInfo);
+
+  template <typename Iterator>
+  static void MaybeInsertNonPersistedZeroUsageOriginInfos(
       Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
       const RefPtr<GroupInfo>& aDefaultGroupInfo,
       const RefPtr<GroupInfo>& aPrivateGroupInfo);

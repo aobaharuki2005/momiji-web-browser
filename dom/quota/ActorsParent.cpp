@@ -6884,8 +6884,12 @@ nsresult QuotaManager::InitializeTemporaryStorageInternal() {
   // partial quota information (origins accessed in a previous session
   // require full initialization). Given that, the cleanup can't be done
   // at this point yet.
+  // For the same reason, recording metrics like origins with zero usage can't
+  // be done either.
   if (!QuotaPrefs::LazyOriginInitializationEnabled()) {
     CleanupTemporaryStorage();
+
+    RecordTemporaryStorageMetrics();
   }
 
   if (mCacheUsable) {
@@ -7884,6 +7888,18 @@ void QuotaManager::MaybeInsertNonPersistedOriginInfos(
       [](const auto& originInfo) { return !originInfo->LockedPersisted(); });
 }
 
+template <typename Iterator>
+void QuotaManager::MaybeInsertNonPersistedZeroUsageOriginInfos(
+    Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
+    const RefPtr<GroupInfo>& aDefaultGroupInfo,
+    const RefPtr<GroupInfo>& aPrivateGroupInfo) {
+  return MaybeInsertOriginInfos(aDest, aTemporaryGroupInfo, aDefaultGroupInfo,
+                                aPrivateGroupInfo, [](const auto& originInfo) {
+                                  return !originInfo->LockedPersisted() &&
+                                         originInfo->LockedUsage() == 0;
+                                });
+}
+
 template <typename Collect, typename Pred>
 QuotaManager::OriginInfosFlatTraversable
 QuotaManager::CollectLRUOriginInfosUntil(Collect&& aCollect, Pred&& aPred) {
@@ -7957,6 +7973,8 @@ QuotaManager::GetOriginInfosExceedingGroupLimit() const {
   return originInfos;
 }
 
+// Uses the same return type as the methods above, so the result can
+// eventually be passed to ClearOrigins to easily clear such origins.
 QuotaManager::OriginInfosNestedTraversable
 QuotaManager::GetOriginInfosExceedingGlobalLimit() const {
   MutexAutoLock lock(mQuotaMutex);
@@ -7988,6 +8006,33 @@ QuotaManager::GetOriginInfosExceedingGlobalLimit() const {
         doomedUsage += originInfo->LockedUsage();
         return false;
       }));
+
+  return res;
+}
+
+QuotaManager::OriginInfosNestedTraversable
+QuotaManager::GetOriginInfosWithZeroUsage() const {
+  MutexAutoLock lock(mQuotaMutex);
+
+  QuotaManager::OriginInfosNestedTraversable res;
+
+  OriginInfosFlatTraversable originInfos;
+
+  auto inserter = MakeBackInserter(originInfos);
+
+  for (const auto& entry : mGroupInfoPairs) {
+    const auto& pair = entry.GetData();
+
+    MOZ_ASSERT(!entry.GetKey().IsEmpty());
+    MOZ_ASSERT(pair);
+
+    MaybeInsertNonPersistedZeroUsageOriginInfos(
+        inserter, pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY),
+        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT),
+        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_PRIVATE));
+  }
+
+  res.AppendElement(std::move(originInfos));
 
   return res;
 }
@@ -8050,6 +8095,10 @@ void QuotaManager::ClearOrigins(
 void QuotaManager::CleanupTemporaryStorage() {
   AssertIsOnIOThread();
 
+  // XXX Maybe clear non-persistent zero usage origins here. Ideally the
+  // clearing would be done asynchronously by storage maintenance service once
+  // available.
+
   // Evicting origins that exceed their group limit also affects the global
   // temporary storage usage, so these steps have to be taken sequentially.
   // Combining them doesn't seem worth the added complexity.
@@ -8059,6 +8108,21 @@ void QuotaManager::CleanupTemporaryStorage() {
   if (mTemporaryStorageUsage > mTemporaryStorageLimit) {
     // If disk space is still low after origin clear, notify storage pressure.
     NotifyStoragePressure(*this, mTemporaryStorageUsage);
+  }
+}
+
+void QuotaManager::RecordTemporaryStorageMetrics() {
+  AssertIsOnIOThread();
+
+  {
+    const auto originInfos = GetOriginInfosWithZeroUsage();
+
+    auto range = Flatten<OriginInfosFlatTraversable::value_type>(originInfos);
+
+    size_t count = std::distance(range.begin(), range.end());
+
+    glean::quotamanager_initialize_temporarystorage::
+        non_persisted_zero_usage_origins.AccumulateSingleSample(count);
   }
 }
 
