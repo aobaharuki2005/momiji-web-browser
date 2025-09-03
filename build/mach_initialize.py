@@ -422,7 +422,7 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success, topsrcdir):
     requests Glean to send the collected data.
     """
 
-    from mach.telemetry import MACH_METRICS_PATH, resolve_is_employee
+    from mach.telemetry import MACH_METRICS_PATH, resolve_is_employee_by_credentials
     from mozbuild.telemetry import (
         get_cpu_brand,
         get_crowdstrike_running,
@@ -454,7 +454,7 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success, topsrcdir):
     system_metrics.vscode_running.set(get_vscode_running())
 
     # Only collect Fleet and CrowdStrike metrics for Mozilla employees
-    if resolve_is_employee(topsrcdir):
+    if resolve_is_employee_by_credentials(topsrcdir):
         system_metrics.fleet_running.set(get_fleet_running())
         system_metrics.crowdstrike_running.set(get_crowdstrike_running())
 

@@ -160,11 +160,7 @@ def resolve_is_employee_by_credentials(topsrcdir: Path):
         )
 
         return "mozilla-employee-confidential" in bmo_result.json().get("groups", [])
-    except (
-        FileNotFoundError,
-        json.JSONDecodeError,
-        requests.exceptions.RequestException,
-    ):
+    except (json.JSONDecodeError, FileNotFoundError):
         return None
 
 
@@ -289,7 +285,10 @@ def initialize_telemetry_setting(settings, topsrcdir: str, state_dir: str):
     if os.environ.get("DISABLE_TELEMETRY") == "1":
         return
 
-    is_employee = resolve_is_employee(topsrcdir)
+    try:
+        is_employee = resolve_is_employee(topsrcdir)
+    except requests.exceptions.RequestException:
+        return
 
     if is_employee:
         is_enabled = True
