@@ -317,7 +317,6 @@ export default {
     InspectorCSSParser: "readonly",
     InspectorFontFace: "readonly",
     InspectorUtils: "readonly",
-    InstallTriggerImpl: "readonly",
     IntersectionObserver: "readonly",
     IntersectionObserverEntry: "readonly",
     IOUtils: "readonly",

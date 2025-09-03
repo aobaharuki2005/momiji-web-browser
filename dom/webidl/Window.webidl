@@ -555,12 +555,14 @@ partial interface Window {
   boolean shouldReportForServiceWorkerScope(USVString aScope);
 
   /**
-   * InstallTrigger is used for extension installs.  Ideally it would
-   * be something like a WebIDL namespace, but we don't support
-   * JS-implemented static things yet.  See bug 863952.
+   * InstallTrigger was an interface for installing extensions. It was disabled
+   * in bug 1772901 and the implementation was removed in bug 1776426.
+   *
+   * We maintain this stub to avoid breaking websites that do
+   * "typeof InstallTrigger !== 'undefined" to detect Firefox
    */
   [Replaceable, Deprecated="InstallTriggerDeprecated", Pref="extensions.InstallTrigger.enabled"]
-  readonly attribute InstallTriggerImpl? InstallTrigger;
+  readonly attribute object? InstallTrigger;
 
   /**
    * Get the nsIDOMWindowUtils for this window.

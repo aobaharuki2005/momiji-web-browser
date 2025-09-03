@@ -107,7 +107,6 @@ load 628599-1.html
 load 637116.html
 load 637214-1.svg
 load 637214-2.svg
-pref(extensions.InstallTrigger.enabled,true) pref(extensions.InstallTriggerImpl.enabled,true) load 642022-1.html
 load 646184.html
 load 666869.html
 load 667336-1.html

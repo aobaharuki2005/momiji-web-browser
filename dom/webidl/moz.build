@@ -175,9 +175,6 @@ with Files("ImageDecoder.webidl"):
 with Files("InputEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
-with Files("InstallTrigger.webidl"):
-    BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
-
 with Files("KeyAlgorithm.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
@@ -1199,10 +1196,6 @@ if CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
     XPCOM_MANIFESTS += [
         "components.conf",
     ]
-
-WEBIDL_FILES += [
-    "InstallTrigger.webidl",
-]
 
 if CONFIG["FUZZING"]:
     WEBIDL_FILES += [
