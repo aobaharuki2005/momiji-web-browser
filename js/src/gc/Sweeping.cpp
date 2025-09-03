@@ -1158,20 +1158,10 @@ void js::NotifyGCNukeWrapper(JSContext* cx, JSObject* wrapper) {
   RemoveFromGrayList(wrapper);
 
   /*
-   * Clean up WeakRef maps which might include this wrapper.
-   */
-  JSObject* target = UncheckedUnwrapWithoutExpose(wrapper);
-  if (target->is<WeakRefObject>()) {
-    WeakRefObject* weakRef = &target->as<WeakRefObject>();
-    if (weakRef->target()) {
-      cx->runtime()->gc.nukeWeakRefWrapper(wrapper, weakRef);
-    }
-  }
-
-  /*
    * Clean up FinalizationRecord record objects which might be the target of
    * this wrapper.
    */
+  JSObject* target = UncheckedUnwrapWithoutExpose(wrapper);
   if (target->is<FinalizationRecordObject>()) {
     auto* record = &target->as<FinalizationRecordObject>();
     cx->runtime()->gc.nukeFinalizationRecordWrapper(wrapper, record);

@@ -7,13 +7,14 @@
 #ifndef builtin_WeakRefObject_h
 #define builtin_WeakRefObject_h
 
+#include "gc/FinalizationObservers.h"
 #include "vm/NativeObject.h"
 
 namespace js {
 
-class WeakRefObject : public NativeObject {
+class WeakRefObject : public gc::ObserverListObject {
  public:
-  enum { TargetSlot, SlotCount };
+  enum { TargetSlot = ObserverListObject::SlotCount, SlotCount };
 
   static const JSClass class_;
   static const JSClass protoClass_;
@@ -21,7 +22,7 @@ class WeakRefObject : public NativeObject {
   JSObject* target() { return maybePtrFromReservedSlot<JSObject>(TargetSlot); }
 
   void setTargetUnbarriered(JSObject* target);
-  void clearTarget();
+  void clearTargetAndUnlink();
 
  private:
   static const JSClassOps classOps_;
@@ -40,4 +41,5 @@ class WeakRefObject : public NativeObject {
 };
 
 }  // namespace js
+
 #endif /* builtin_WeakRefObject_h */

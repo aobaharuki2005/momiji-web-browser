@@ -516,7 +516,6 @@ class GCRuntime {
 
   void nukeFinalizationRecordWrapper(JSObject* wrapper,
                                      FinalizationRecordObject* record);
-  void nukeWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef);
 
   void setFullCompartmentChecks(bool enable);
 
@@ -678,7 +677,8 @@ class GCRuntime {
   size_t markingWorkerCount() const;
 
   // WeakRefs
-  bool registerWeakRef(HandleObject target, HandleObject weakRef);
+  bool registerWeakRef(JSContext* cx, HandleObject target,
+                       Handle<WeakRefObject*> weakRef);
   void traceKeptObjects(JSTracer* trc);
 
   JS::GCReason lastStartReason() const { return initialReason; }

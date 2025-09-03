@@ -176,17 +176,10 @@ class FinalizationObservers {
   using WrapperWeakSet = ObjectValueWeakMap;
   WrapperWeakSet crossZoneRecords;
 
-  // A map of weak ref targets to a vector of weak refs that are observing the
-  // target. The weak refs may be in other zones and are wrapped appropriately.
-  using WeakRefHeapPtrVector =
-      GCVector<js::HeapPtr<JSObject*>, 1, js::ZoneAllocPolicy>;
   using WeakRefMap =
-      GCHashMap<HeapPtr<JSObject*>, WeakRefHeapPtrVector,
+      GCHashMap<HeapPtr<JSObject*>, ObserverList,
                 StableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
   WeakRefMap weakRefMap;
-
-  // A weak map used as a set of cross-zone weak refs wrappers.
-  WrapperWeakSet crossZoneWeakRefs;
 
  public:
   explicit FinalizationObservers(Zone* zone);
@@ -201,11 +194,10 @@ class FinalizationObservers {
                               FinalizationRecordObject* record);
 
   // WeakRef support:
-  bool addWeakRefTarget(Handle<JSObject*> target, Handle<JSObject*> weakRef);
+  bool addWeakRefTarget(Handle<JSObject*> target,
+                        Handle<WeakRefObject*> weakRef);
   void removeWeakRefTarget(Handle<JSObject*> target,
                            Handle<WeakRefObject*> weakRef);
-
-  void unregisterWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef);
 
   void traceRoots(JSTracer* trc);
   void traceWeakEdges(JSTracer* trc);
@@ -218,13 +210,10 @@ class FinalizationObservers {
   bool addCrossZoneWrapper(WrapperWeakSet& weakSet, JSObject* wrapper);
   void removeCrossZoneWrapper(WrapperWeakSet& weakSet, JSObject* wrapper);
 
-  void updateForRemovedWeakRef(JSObject* wrapper, WeakRefObject* weakRef);
-
   void traceWeakFinalizationRegistryEdges(JSTracer* trc);
   void traceWeakWeakRefEdges(JSTracer* trc);
-  void traceWeakWeakRefVector(JSTracer* trc, WeakRefHeapPtrVector& weakRefs,
-                              JSObject* target);
-
+  void traceWeakWeakRefList(JSTracer* trc, ObserverList& weakRefs,
+                            JSObject* target);
   static bool shouldRemoveRecord(FinalizationRecordObject* record);
 };
 
