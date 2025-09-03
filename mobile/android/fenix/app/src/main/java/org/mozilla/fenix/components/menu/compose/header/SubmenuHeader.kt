@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import mozilla.components.ui.icons.R as iconsR
 
 @Composable
 internal fun SubmenuHeader(
@@ -50,7 +51,7 @@ internal fun SubmenuHeader(
             },
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.mozac_ic_back_24),
+                painter = painterResource(id = iconsR.drawable.mozac_ic_back_24),
                 contentDescription = null,
                 tint = FirefoxTheme.colors.iconPrimary,
             )

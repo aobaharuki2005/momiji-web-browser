@@ -40,6 +40,7 @@ import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.onboarding.view.Action
 import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * The ratio of the image height to the parent height. This was determined from the designs in figma
@@ -103,7 +104,7 @@ fun OnboardingPageRedesign(
                         modifier = Modifier.align(Alignment.End),
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.mozac_ic_cross_24),
+                            painter = painterResource(id = iconsR.drawable.mozac_ic_cross_24),
                             contentDescription =
                                 stringResource(R.string.onboarding_home_content_description_close_button),
                             tint = FirefoxTheme.colors.iconPrimary,

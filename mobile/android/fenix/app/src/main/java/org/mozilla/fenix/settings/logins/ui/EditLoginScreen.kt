@@ -37,6 +37,7 @@ import mozilla.components.compose.base.textfield.TextFieldStyle
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 private val IconButtonHeight = 48.dp
 
@@ -111,7 +112,7 @@ internal fun EditLoginTopBar(store: LoginsStore, loginItem: LoginItem) {
                 ),
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_back_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                     contentDescription = null,
                     tint = FirefoxTheme.colors.iconPrimary,
                 )
@@ -133,7 +134,7 @@ internal fun EditLoginTopBar(store: LoginsStore, loginItem: LoginItem) {
                     enabled = isLoginValid,
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.mozac_ic_checkmark_24),
+                        painter = painterResource(iconsR.drawable.mozac_ic_checkmark_24),
                         contentDescription = null,
                         tint = if (isLoginValid) {
                             FirefoxTheme.colors.textPrimary

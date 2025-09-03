@@ -15,6 +15,7 @@ import androidx.core.graphics.BlendModeCompat.SRC_IN
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * An [AppCompatEditText] that shows a clear button to the user.
@@ -60,7 +61,7 @@ class ClearableEditText @JvmOverloads constructor(
         // lengthAfter has inconsistent behaviour when there are spaces in the entered text, so we'll use text.length.
         val textLength = text?.length ?: 0
         val drawable = if (shouldShowClearButton(textLength)) {
-            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_cross_circle_fill_24)?.apply {
+            AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_cross_circle_fill_24)?.apply {
                 colorFilter = createBlendModeColorFilterCompat(context.getColorFromAttr(R.attr.textPrimary), SRC_IN)
             }
         } else {

@@ -21,6 +21,7 @@ import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.settings.address.ext.getAddressLabel
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * A list of addresses.
@@ -49,7 +50,7 @@ fun AddressList(
         item {
             IconListItem(
                 label = stringResource(R.string.preferences_addresses_add_address),
-                beforeIconPainter = painterResource(R.drawable.mozac_ic_plus_24),
+                beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_plus_24),
                 onClick = onAddAddressButtonClick,
             )
         }

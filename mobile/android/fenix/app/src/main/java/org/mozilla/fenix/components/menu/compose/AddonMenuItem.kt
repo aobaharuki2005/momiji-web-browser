@@ -37,6 +37,7 @@ import org.mozilla.fenix.components.menu.MenuDialogTestTag.RECOMMENDED_ADDON_ITE
 import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.translations.rotationAnimation
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * An [Addon] menu item.
@@ -55,7 +56,7 @@ import org.mozilla.fenix.translations.rotationAnimation
 internal fun AddonMenuItem(
     addon: Addon,
     addonInstallationInProgress: Addon?,
-    iconPainter: Painter? = painterResource(id = R.drawable.mozac_ic_plus_24),
+    iconPainter: Painter? = painterResource(id = iconsR.drawable.mozac_ic_plus_24),
     iconDescription: String? = null,
     showDivider: Boolean = true,
     index: Int = 0,
@@ -98,7 +99,7 @@ internal fun AddonMenuItem(
             showDivider = showDivider,
             dividerColor = FirefoxTheme.colors.borderPrimary,
             iconPainter = if (isInstallAddonInProgress) {
-                painterResource(id = R.drawable.mozac_ic_sync_24)
+                painterResource(id = iconsR.drawable.mozac_ic_sync_24)
             } else {
                 iconPainter
             },
@@ -116,7 +117,7 @@ internal fun AddonMenuItem(
     } else {
         MenuItem(
             label = label,
-            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_extension_24),
+            beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_extension_24),
             description = description,
             onClick = onClick,
             showDivider = showDivider,

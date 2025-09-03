@@ -56,6 +56,7 @@ import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * List item used to display a tab that supports clicks,
@@ -225,7 +226,7 @@ private fun TabContent(
                     .testTag(TabsTrayTestTag.TAB_ITEM_CLOSE),
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_cross_24),
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_cross_24),
                     contentDescription = stringResource(
                         id = R.string.close_tab_title,
                         tab.toDisplayTitle(),
@@ -280,7 +281,7 @@ private fun Thumbnail(
                 colors = CardDefaults.cardColors(containerColor = FirefoxTheme.colors.layerAccent),
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_checkmark_24),
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_checkmark_24),
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(all = 8.dp),

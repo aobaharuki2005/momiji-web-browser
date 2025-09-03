@@ -66,6 +66,7 @@ import org.mozilla.fenix.compose.TabThumbnail
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Tab grid item used to display a tab that supports clicks,
@@ -212,7 +213,7 @@ private fun TabContent(
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.mozac_ic_globe_24),
+                                painter = painterResource(id = iconsR.drawable.mozac_ic_globe_24),
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
                                 tint = FirefoxTheme.colors.iconPrimary,
@@ -253,7 +254,7 @@ private fun TabContent(
                             },
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.mozac_ic_cross_20),
+                                painter = painterResource(id = iconsR.drawable.mozac_ic_cross_20),
                                 contentDescription = stringResource(
                                     id = R.string.close_tab_title,
                                     tab.toDisplayTitle(),
@@ -334,7 +335,7 @@ private fun Thumbnail(
                 colors = CardDefaults.cardColors(containerColor = FirefoxTheme.colors.layerAccent),
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_checkmark_24),
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_checkmark_24),
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(all = 8.dp),

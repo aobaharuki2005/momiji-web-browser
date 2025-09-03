@@ -15,6 +15,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.AccountShareListItemBinding
 import org.mozilla.fenix.share.ShareToAccountDevicesInteractor
 import org.mozilla.fenix.share.listadapters.SyncShareOption
+import mozilla.components.ui.icons.R as iconsR
 
 class AccountDeviceViewHolder(
     itemView: View,
@@ -70,38 +71,38 @@ class AccountDeviceViewHolder(
             when (option) {
                 SyncShareOption.SignIn -> Triple(
                     context.getText(R.string.sync_sign_in),
-                    R.drawable.mozac_ic_sync_24,
+                    iconsR.drawable.mozac_ic_sync_24,
                     R.color.default_share_background,
                 )
                 SyncShareOption.Reconnect -> Triple(
                     context.getText(R.string.sync_reconnect),
-                    R.drawable.mozac_ic_warning_fill_24,
+                    iconsR.drawable.mozac_ic_warning_fill_24,
                     R.color.default_share_background,
                 )
                 SyncShareOption.Offline -> Triple(
                     context.getText(R.string.sync_offline),
-                    R.drawable.mozac_ic_warning_fill_24,
+                    iconsR.drawable.mozac_ic_warning_fill_24,
                     R.color.default_share_background,
                 )
                 SyncShareOption.AddNewDevice -> Triple(
                     context.getText(R.string.sync_connect_device),
-                    R.drawable.mozac_ic_plus_24,
+                    iconsR.drawable.mozac_ic_plus_24,
                     R.color.default_share_background,
                 )
                 is SyncShareOption.SendAll -> Triple(
                     context.getText(R.string.sync_send_to_all),
-                    R.drawable.mozac_ic_select_all,
+                    iconsR.drawable.mozac_ic_select_all,
                     R.color.default_share_background,
                 )
                 is SyncShareOption.SingleDevice -> when (option.device.deviceType) {
                     DeviceType.MOBILE -> Triple(
                         option.device.displayName,
-                        R.drawable.mozac_ic_device_mobile_24,
+                        iconsR.drawable.mozac_ic_device_mobile_24,
                         R.color.device_type_mobile_background,
                     )
                     else -> Triple(
                         option.device.displayName,
-                        R.drawable.mozac_ic_device_desktop_24,
+                        iconsR.drawable.mozac_ic_device_desktop_24,
                         R.color.device_type_desktop_background,
                     )
                 }

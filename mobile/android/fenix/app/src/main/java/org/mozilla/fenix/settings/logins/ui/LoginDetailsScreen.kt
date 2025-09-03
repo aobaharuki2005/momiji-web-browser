@@ -53,6 +53,7 @@ import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 @Composable
 internal fun LoginDetailsScreen(store: LoginsStore) {
@@ -140,7 +141,7 @@ private fun LoginDetailTopBar(
         navigationIcon = {
             androidx.compose.material3.IconButton(onClick = onBackClick) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_back_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                     contentDescription = stringResource(
                         R.string.login_details_navigate_back_button_content_description,
                     ),
@@ -159,7 +160,7 @@ private fun LoginDetailTopBar(
                         .padding(horizontal = FirefoxTheme.layout.space.static50),
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
+                        painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
                         contentDescription = null,
                         tint = FirefoxTheme.colors.iconPrimary,
                     )

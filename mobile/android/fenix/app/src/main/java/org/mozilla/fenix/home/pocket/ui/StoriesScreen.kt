@@ -33,6 +33,7 @@ import org.mozilla.fenix.components.appstate.recommendations.ContentRecommendati
 import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.home.pocket.interactor.PocketStoriesInteractor
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Stories screen.
@@ -62,7 +63,7 @@ fun StoriesScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigationIconClick) {
                         Icon(
-                            painter = painterResource(R.drawable.mozac_ic_back_24),
+                            painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                             contentDescription = stringResource(R.string.stories_back_button_content_description),
                             tint = FirefoxTheme.colors.iconPrimary,
                         )

@@ -338,7 +338,7 @@ private fun BookmarksList(
         floatingActionButton = {
             if (!state.isLoading && state.emptyListState() == null) {
                 FloatingActionButton(
-                    icon = painterResource(R.drawable.mozac_ic_search_24),
+                    icon = painterResource(iconsR.drawable.mozac_ic_search_24),
                     contentDescription = stringResource(R.string.bookmark_search_button_content_description),
                     onClick = { store.dispatch(SearchClicked) },
                 )
@@ -387,7 +387,7 @@ private fun BookmarksList(
                         label = item.title,
                         isSelected = item in state.selectedItems,
                         onClick = { store.dispatch(FolderClicked(item)) },
-                        beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
+                        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                         modifier = Modifier
                             .semantics {
                                 collectionItemInfo = CollectionItemInfo(
@@ -405,7 +405,7 @@ private fun BookmarksList(
                         isSelected = item in state.selectedItems,
                         onClick = { store.dispatch(FolderClicked(item)) },
                         onLongClick = { store.dispatch(FolderLongClicked(item)) },
-                        beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
+                        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                         modifier = Modifier
                             .semantics {
                                 collectionItemInfo = CollectionItemInfo(
@@ -423,7 +423,7 @@ private fun BookmarksList(
                                 modifier = Modifier.size(24.dp),
                             ) {
                                 Icon(
-                                    painter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
+                                    painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
                                     contentDescription = stringResource(
                                         R.string.bookmark_item_menu_button_content_description,
                                         item.title,
@@ -479,7 +479,7 @@ private fun BookmarksList(
                             modifier = Modifier.size(24.dp),
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
+                                painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
                                 contentDescription = stringResource(
                                     R.string.bookmark_item_menu_button_content_description,
                                     item.title,
@@ -603,7 +603,7 @@ private fun BookmarksListTopBar(
             navigationIcon = {
                 IconButton(onClick = { store.dispatch(BackClicked) }) {
                     Icon(
-                        painter = painterResource(R.drawable.mozac_ic_back_24),
+                        painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                         contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
                         tint = iconColor,
                     )
@@ -617,7 +617,7 @@ private fun BookmarksListTopBar(
                                 store.dispatch(BookmarksListMenuAction.SortMenu.SortMenuButtonClicked)
                             }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.mozac_ic_filter),
+                                    painter = painterResource(iconsR.drawable.mozac_ic_filter),
                                     contentDescription = stringResource(
                                         R.string.bookmark_sort_menu_content_desc,
                                     ),
@@ -639,7 +639,7 @@ private fun BookmarksListTopBar(
                         } else {
                             IconButton(onClick = { store.dispatch(AddFolderClicked) }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.mozac_ic_folder_add_24),
+                                    painter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
                                     contentDescription = stringResource(
                                         R.string.bookmark_add_new_folder_button_content_description,
                                     ),
@@ -651,7 +651,7 @@ private fun BookmarksListTopBar(
                         if (!isCurrentFolderMobileRoot) {
                             IconButton(onClick = { store.dispatch(CloseClicked) }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.mozac_ic_cross_24),
+                                    painter = painterResource(iconsR.drawable.mozac_ic_cross_24),
                                     contentDescription = stringResource(
                                         R.string.bookmark_close_button_content_description,
                                     ),
@@ -663,7 +663,7 @@ private fun BookmarksListTopBar(
                     selectedItems.any { it is BookmarkItem.Folder } -> {
                         IconButton(onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.MoveClicked) }) {
                             Icon(
-                                painter = painterResource(R.drawable.mozac_ic_folder_arrow_right_24),
+                                painter = painterResource(iconsR.drawable.mozac_ic_folder_arrow_right_24),
                                 contentDescription = stringResource(R.string.bookmark_menu_move_button),
                                 tint = iconColor,
                             )
@@ -673,7 +673,7 @@ private fun BookmarksListTopBar(
                             store.dispatch(BookmarksListMenuAction.MultiSelect.DeleteClicked)
                         }) {
                             Icon(
-                                painter = painterResource(R.drawable.mozac_ic_delete_24),
+                                painter = painterResource(iconsR.drawable.mozac_ic_delete_24),
                                 contentDescription = stringResource(R.string.bookmark_menu_delete_button),
                                 tint = iconColor,
                             )
@@ -682,7 +682,7 @@ private fun BookmarksListTopBar(
                         Box {
                             IconButton(onClick = { showMenu = true }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
+                                    painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
                                     contentDescription = stringResource(
                                         R.string.content_description_menu,
                                     ),
@@ -701,7 +701,7 @@ private fun BookmarksListTopBar(
                         if (selectedItems.size == 1) {
                             IconButton(onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.EditClicked) }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.mozac_ic_edit_24),
+                                    painter = painterResource(iconsR.drawable.mozac_ic_edit_24),
                                     contentDescription = stringResource(R.string.bookmark_menu_edit_button),
                                     tint = iconColor,
                                 )
@@ -709,7 +709,7 @@ private fun BookmarksListTopBar(
                         }
                         IconButton(onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.MoveClicked) }) {
                             Icon(
-                                painter = painterResource(R.drawable.mozac_ic_folder_arrow_right_24),
+                                painter = painterResource(iconsR.drawable.mozac_ic_folder_arrow_right_24),
                                 contentDescription = stringResource(R.string.bookmark_menu_move_button),
                                 tint = iconColor,
                             )
@@ -717,7 +717,7 @@ private fun BookmarksListTopBar(
                         Box {
                             IconButton(onClick = { showMenu = true }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
+                                    painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
                                     contentDescription = stringResource(
                                         R.string.content_description_menu,
                                     ),
@@ -858,7 +858,7 @@ private fun SelectFolderScreen(
                     SelectableIconListItem(
                         label = folder.title,
                         isSelected = isSelected,
-                        beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
+                        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                         modifier = Modifier
                             .padding(start = folder.startPadding)
                             .width(FirefoxTheme.layout.size.containerMaxWidth)
@@ -876,7 +876,7 @@ private fun SelectFolderScreen(
                         label = stringResource(R.string.bookmark_select_folder_new_folder_button_title),
                         modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth),
                         labelTextColor = FirefoxTheme.colors.textAccent,
-                        beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_add_24),
+                        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
                         beforeIconTint = FirefoxTheme.colors.textAccent,
                         onClick = { store.dispatch(AddFolderClicked) },
                     )
@@ -903,7 +903,7 @@ private fun SelectFolderTopBar(
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_back_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                     contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
                     tint = FirefoxTheme.colors.iconPrimary,
                 )
@@ -913,7 +913,7 @@ private fun SelectFolderTopBar(
             if (onNewFolderClick != null) {
                 IconButton(onClick = onNewFolderClick) {
                     Icon(
-                        painter = painterResource(R.drawable.mozac_ic_folder_add_24),
+                        painter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
                         contentDescription = stringResource(
                             R.string.bookmark_add_new_folder_button_content_description,
                         ),
@@ -1280,7 +1280,7 @@ private fun EditFolderTopBar(
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_back_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                     contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
                     tint = FirefoxTheme.colors.iconPrimary,
                 )
@@ -1289,7 +1289,7 @@ private fun EditFolderTopBar(
         actions = {
             IconButton(onClick = onDeleteClick) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_delete_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_delete_24),
                     contentDescription = stringResource(R.string.bookmark_delete_folder_content_description),
                     tint = FirefoxTheme.colors.iconPrimary,
                 )
@@ -1371,7 +1371,7 @@ private fun AddFolderTopBar(onBackClick: () -> Unit) {
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_back_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                     contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
                     tint = FirefoxTheme.colors.iconPrimary,
                 )
@@ -1553,7 +1553,7 @@ private fun EditBookmarkTopBar(
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_back_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                     contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
                     tint = FirefoxTheme.colors.iconPrimary,
                 )
@@ -1562,7 +1562,7 @@ private fun EditBookmarkTopBar(
         actions = {
             IconButton(onClick = onDeleteClicked) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_delete_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_delete_24),
                     contentDescription = stringResource(R.string.bookmark_delete_bookmark_content_description),
                     tint = FirefoxTheme.colors.iconPrimary,
                 )

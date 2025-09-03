@@ -473,7 +473,7 @@ class BrowserToolbarSearchMiddleware(
         if (queryText.isNotEmpty()) {
             add(
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_cross_circle_fill_24,
+                    drawableResId = iconsR.drawable.mozac_ic_cross_circle_fill_24,
                     contentDescription = R.string.mozac_clear_button_description,
                     state = ActionButton.State.DEFAULT,
                     onClick = ClearSearchClicked,
@@ -482,7 +482,7 @@ class BrowserToolbarSearchMiddleware(
         } else if (isValidSearchEngine) {
             add(
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_qr_code_24,
+                    drawableResId = iconsR.drawable.mozac_ic_qr_code_24,
                     contentDescription = R.string.mozac_feature_qr_scanner,
                     state = ActionButton.State.DEFAULT,
                     onClick = QrScannerClicked,
@@ -594,7 +594,7 @@ class BrowserToolbarSearchMiddleware(
                 addAll(searchEngineShortcuts.toToolbarMenuItems(resources))
                 add(
                     BrowserToolbarMenuButton(
-                        icon = MenuItemIconRes(R.drawable.mozac_ic_settings_24),
+                        icon = MenuItemIconRes(iconsR.drawable.mozac_ic_settings_24),
                         text = MenuItemStringResText(R.string.search_settings_menu_item),
                         contentDescription = MenuItemDescriptionRes(R.string.search_settings_menu_item),
                         onClick = SearchSettingsItemClicked,

@@ -42,6 +42,7 @@ import org.mozilla.fenix.tabstray.TabsTrayState.Mode
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * [BottomAppBar] for the Tab Manager.
@@ -90,7 +91,7 @@ internal fun TabManagerBottomAppBar(
                     modifier = Modifier.testTag(TabsTrayTestTag.THREE_DOT_BUTTON),
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
+                        painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
                         contentDescription = stringResource(id = R.string.open_tabs_menu),
                     )
 
@@ -122,31 +123,31 @@ private fun generateMenuItems(
 ): List<MenuItem> {
     val enterSelectModeItem = MenuItem.IconItem(
         text = Text.Resource(R.string.tabs_tray_select_tabs),
-        drawableRes = R.drawable.mozac_ic_checkmark_24,
+        drawableRes = iconsR.drawable.mozac_ic_checkmark_24,
         testTag = TabsTrayTestTag.SELECT_TABS,
         onClick = onEnterMultiselectModeClick,
     )
     val recentlyClosedTabsItem = MenuItem.IconItem(
         text = Text.Resource(R.string.tab_tray_menu_recently_closed),
-        drawableRes = R.drawable.mozac_ic_history_24,
+        drawableRes = iconsR.drawable.mozac_ic_history_24,
         testTag = TabsTrayTestTag.RECENTLY_CLOSED_TABS,
         onClick = onRecentlyClosedClick,
     )
     val tabSettingsItem = MenuItem.IconItem(
         text = Text.Resource(R.string.tab_tray_menu_tab_settings),
-        drawableRes = R.drawable.mozac_ic_settings_24,
+        drawableRes = iconsR.drawable.mozac_ic_settings_24,
         testTag = TabsTrayTestTag.TAB_SETTINGS,
         onClick = onTabSettingsClick,
     )
     val deleteAllTabsItem = MenuItem.IconItem(
         text = Text.Resource(R.string.tab_tray_menu_item_close),
-        drawableRes = R.drawable.mozac_ic_delete_24,
+        drawableRes = iconsR.drawable.mozac_ic_delete_24,
         testTag = TabsTrayTestTag.CLOSE_ALL_TABS,
         onClick = onDeleteAllTabsClick,
     )
     val accountSettingsItem = MenuItem.IconItem(
         text = Text.Resource(R.string.tab_tray_menu_account_settings),
-        drawableRes = R.drawable.mozac_ic_avatar_circle_24,
+        drawableRes = iconsR.drawable.mozac_ic_avatar_circle_24,
         testTag = TabsTrayTestTag.ACCOUNT_SETTINGS,
         onClick = onAccountSettingsClick,
     )

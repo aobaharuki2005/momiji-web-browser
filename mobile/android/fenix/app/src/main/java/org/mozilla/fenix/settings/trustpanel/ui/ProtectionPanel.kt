@@ -61,6 +61,7 @@ import org.mozilla.fenix.settings.trustpanel.store.AutoplayValue
 import org.mozilla.fenix.settings.trustpanel.store.WebsiteInfoState
 import org.mozilla.fenix.settings.trustpanel.store.WebsitePermission
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 private val BANNER_ROUNDED_CORNER_SHAPE = RoundedCornerShape(
     topStart = 28.dp, topEnd = 28.dp, bottomStart = 4.dp, bottomEnd = 4.dp,
@@ -118,13 +119,13 @@ internal fun ProtectionPanel(
                 if (!isTrackingProtectionEnabled) {
                     MenuItem(
                         label = stringResource(id = R.string.protection_panel_etp_disabled_no_trackers_blocked),
-                        beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shield_slash_critical_24),
+                        beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_shield_slash_critical_24),
                         state = MenuItemState.CRITICAL,
                     )
                 } else if (numberOfTrackersBlocked == 0) {
                     MenuItem(
                         label = stringResource(id = R.string.protection_panel_no_trackers_blocked),
-                        beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shield_checkmark_24),
+                        beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_shield_checkmark_24),
                     )
                 } else {
                     MenuItem(
@@ -132,9 +133,9 @@ internal fun ProtectionPanel(
                             id = R.string.protection_panel_num_trackers_blocked,
                             numberOfTrackersBlocked,
                         ),
-                        beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shield_checkmark_24),
+                        beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_shield_checkmark_24),
                         onClick = onTrackerBlockedMenuClick,
-                        afterIconPainter = painterResource(id = R.drawable.mozac_ic_chevron_right_24),
+                        afterIconPainter = painterResource(id = iconsR.drawable.mozac_ic_chevron_right_24),
                     )
                 }
             }
@@ -144,12 +145,12 @@ internal fun ProtectionPanel(
             if (isLocalPdf) {
                 MenuItem(
                     label = stringResource(id = R.string.connection_security_panel_local_pdf),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_save_file_24),
+                    beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_save_file_24),
                 )
             } else if (websiteInfoState.isSecured) {
                 MenuItem(
                     label = stringResource(id = R.string.connection_security_panel_secure),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_lock_24),
+                    beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_lock_24),
                     description = stringResource(
                         id = R.string.connection_security_panel_verified_by,
                         websiteInfoState.certificateName,
@@ -159,7 +160,7 @@ internal fun ProtectionPanel(
             } else {
                 MenuItem(
                     label = stringResource(id = R.string.connection_security_panel_not_secure),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_lock_slash_critical_24),
+                    beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_lock_slash_critical_24),
                     state = MenuItemState.CRITICAL,
                 )
             }
@@ -170,7 +171,7 @@ internal fun ProtectionPanel(
                 MenuItem(
                     label = stringResource(id = R.string.clear_site_data),
                     onClick = onClearSiteDataMenuClick,
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_delete_24),
+                    beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_delete_24),
                 )
             }
         }
@@ -395,7 +396,7 @@ private fun AutoplayDropdownMenu(
 
             Box {
                 Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_dropdown_arrow),
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_dropdown_arrow),
                     contentDescription = null,
                     tint = FirefoxTheme.colors.iconAccentViolet,
                 )

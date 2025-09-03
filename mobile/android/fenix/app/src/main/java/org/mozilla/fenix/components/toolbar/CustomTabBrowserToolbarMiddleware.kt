@@ -70,6 +70,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.utils.Settings
 import mozilla.components.lib.state.Action as MVIAction
+import mozilla.components.ui.icons.R as iconsR
 
 private const val CUSTOM_BUTTON_CLICK_RETURN_CODE = 0
 
@@ -344,7 +345,7 @@ class CustomTabBrowserToolbarMiddleware(
                 ActionButton(
                     drawable = when (customIconBitmap) {
                         null -> AppCompatResources.getDrawable(
-                            environment.context, R.drawable.mozac_ic_cross_24,
+                            environment.context, iconsR.drawable.mozac_ic_cross_24,
                         )
 
                         else -> customIconBitmap.toDrawable(environment.context.resources)
@@ -362,7 +363,7 @@ class CustomTabBrowserToolbarMiddleware(
         if (customTab?.content?.url?.isContentUrl() == true) {
             add(
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_page_portrait_24,
+                    drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
                     contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = SiteInfoClicked,
                 ),
@@ -370,7 +371,7 @@ class CustomTabBrowserToolbarMiddleware(
         } else if (customTab?.content?.securityInfo?.secure == true) {
             add(
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_shield_checkmark_24,
+                    drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
                     contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = SiteInfoClicked,
                 ),
@@ -378,7 +379,7 @@ class CustomTabBrowserToolbarMiddleware(
         } else {
             add(
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_shield_slash_24,
+                    drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
                     contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = SiteInfoClicked,
                 ),
@@ -408,7 +409,7 @@ class CustomTabBrowserToolbarMiddleware(
         if (customTab?.config?.showShareMenuItem == true) {
             add(
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_share_android_24,
+                    drawableResId = iconsR.drawable.mozac_ic_share_android_24,
                     contentDescription = R.string.mozac_feature_customtabs_share_link,
                     onClick = ShareClicked,
                 ),
@@ -417,7 +418,7 @@ class CustomTabBrowserToolbarMiddleware(
 
         add(
             ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
+                drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
                 contentDescription = R.string.content_description_menu,
                 onClick = MenuClicked,
             ),

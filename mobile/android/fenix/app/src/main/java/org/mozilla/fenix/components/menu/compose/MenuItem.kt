@@ -53,6 +53,7 @@ import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.ImageListItem
 import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 private val MENU_ITEM_HEIGHT_WITHOUT_DESC = 52.dp
 
@@ -282,7 +283,7 @@ internal fun WebExtensionMenuItem(
                     onClick = onSettingsClick ?: {},
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.mozac_ic_settings_24),
+                        painter = painterResource(iconsR.drawable.mozac_ic_settings_24),
                         tint = FirefoxTheme.colors.iconPrimary,
                         contentDescription = null,
                     )
@@ -451,7 +452,7 @@ private fun WebExtensionMenuItemPreview() {
         ) {
             WebExtensionMenuItem(
                 label = "label",
-                iconPainter = painterResource(R.drawable.mozac_ic_web_extension_default_icon),
+                iconPainter = painterResource(iconsR.drawable.mozac_ic_web_extension_default_icon),
                 enabled = true,
                 badgeText = "17",
                 onClick = {},
@@ -474,7 +475,7 @@ private fun MenuItemPreview() {
                 for (state in MenuItemState.entries) {
                     MenuItem(
                         label = stringResource(id = R.string.browser_menu_translations),
-                        beforeIconPainter = painterResource(id = R.drawable.mozac_ic_translate_24),
+                        beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_translate_24),
                         state = state,
                         onClick = {},
                     )
@@ -485,10 +486,10 @@ private fun MenuItemPreview() {
                 for (state in MenuItemState.entries) {
                     MenuItem(
                         label = stringResource(id = R.string.browser_menu_extensions),
-                        beforeIconPainter = painterResource(id = R.drawable.mozac_ic_extension_24),
+                        beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_extension_24),
                         state = state,
                         onClick = {},
-                        afterIconPainter = painterResource(id = R.drawable.mozac_ic_chevron_right_24),
+                        afterIconPainter = painterResource(id = iconsR.drawable.mozac_ic_chevron_right_24),
                     )
 
                     Divider(color = FirefoxTheme.colors.borderSecondary)
@@ -497,11 +498,11 @@ private fun MenuItemPreview() {
                 for (state in MenuItemState.entries) {
                     MenuItem(
                         label = stringResource(id = R.string.browser_menu_extensions),
-                        beforeIconPainter = painterResource(id = R.drawable.mozac_ic_extension_24),
+                        beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_extension_24),
                         state = state,
                         onClick = {},
                         showDivider = true,
-                        afterIconPainter = painterResource(id = R.drawable.mozac_ic_plus_24),
+                        afterIconPainter = painterResource(id = iconsR.drawable.mozac_ic_plus_24),
                         onAfterIconClick = {},
                     )
 

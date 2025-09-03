@@ -50,6 +50,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.ThemeManager
 import kotlin.math.min
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * A 'dummy' view of a tab used by [ToolbarGestureHandler] to support switching tabs by swiping the address bar.
@@ -98,7 +99,7 @@ class TabPreview @JvmOverloads constructor(
 
         return when (toolbarAction) {
             ToolbarAction.NewTab -> ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_plus_24,
+                drawableResId = iconsR.drawable.mozac_ic_plus_24,
                 contentDescription = if (isPrivateMode) {
                     R.string.home_screen_shortcut_open_new_private_tab_2
                 } else {
@@ -108,7 +109,7 @@ class TabPreview @JvmOverloads constructor(
             )
 
             ToolbarAction.Back -> ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_back_24,
+                drawableResId = iconsR.drawable.mozac_ic_back_24,
                 contentDescription = R.string.browser_menu_back,
                 state = if (tab?.content?.canGoBack == true) {
                     ActionButton.State.DEFAULT
@@ -119,7 +120,7 @@ class TabPreview @JvmOverloads constructor(
             )
 
             ToolbarAction.Forward -> ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_forward_24,
+                drawableResId = iconsR.drawable.mozac_ic_forward_24,
                 contentDescription = R.string.browser_menu_forward,
                 state = if (tab?.content?.canGoForward == true) {
                     ActionButton.State.DEFAULT
@@ -130,13 +131,13 @@ class TabPreview @JvmOverloads constructor(
             )
 
             ToolbarAction.RefreshOrStop -> ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_arrow_clockwise_24,
+                drawableResId = iconsR.drawable.mozac_ic_arrow_clockwise_24,
                 contentDescription = R.string.browser_menu_refresh,
                 onClick = object : BrowserToolbarEvent {},
             )
 
             ToolbarAction.Menu -> ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
+                drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
                 contentDescription = R.string.content_description_menu,
                 onClick = object : BrowserToolbarEvent {},
             )
@@ -152,7 +153,7 @@ class TabPreview @JvmOverloads constructor(
 
             ToolbarAction.Bookmark -> {
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_bookmark_24,
+                    drawableResId = iconsR.drawable.mozac_ic_bookmark_24,
                     contentDescription = R.string.browser_menu_bookmark_this_page_2,
                     onClick = object : BrowserToolbarEvent {},
                 )
@@ -160,14 +161,14 @@ class TabPreview @JvmOverloads constructor(
 
             ToolbarAction.EditBookmark -> {
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_bookmark_fill_24,
+                    drawableResId = iconsR.drawable.mozac_ic_bookmark_fill_24,
                     contentDescription = R.string.browser_menu_edit_bookmark,
                     onClick = object : BrowserToolbarEvent {},
                 )
             }
 
             ToolbarAction.Share -> ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_share_android_24,
+                drawableResId = iconsR.drawable.mozac_ic_share_android_24,
                 contentDescription = R.string.browser_menu_share,
                 onClick = object : BrowserToolbarEvent {},
             )
@@ -175,19 +176,19 @@ class TabPreview @JvmOverloads constructor(
             ToolbarAction.SiteInfo -> {
                 if (tab?.content?.url?.isContentUrl() == true) {
                     ActionButtonRes(
-                        drawableResId = R.drawable.mozac_ic_page_portrait_24,
+                        drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
                         contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
                         onClick = object : BrowserToolbarEvent {},
                     )
                 } else if (tab?.content?.securityInfo?.secure == true) {
                     ActionButtonRes(
-                        drawableResId = R.drawable.mozac_ic_shield_checkmark_24,
+                        drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
                         contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
                         onClick = object : BrowserToolbarEvent {},
                     )
                 } else {
                     ActionButtonRes(
-                        drawableResId = R.drawable.mozac_ic_shield_slash_24,
+                        drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
                         contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
                         onClick = object : BrowserToolbarEvent {},
                     )

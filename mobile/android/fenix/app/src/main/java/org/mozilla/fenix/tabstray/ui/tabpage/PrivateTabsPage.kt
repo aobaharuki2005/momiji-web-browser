@@ -27,6 +27,7 @@ import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import mozilla.components.ui.icons.R as iconsR
 
 private val EmptyPageWidth = 190.dp
 
@@ -92,7 +93,7 @@ private fun EmptyPrivateTabsPage(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.mozac_ic_private_mode_72),
+                painter = painterResource(id = iconsR.drawable.mozac_ic_private_mode_72),
                 contentDescription = null,
             )
 

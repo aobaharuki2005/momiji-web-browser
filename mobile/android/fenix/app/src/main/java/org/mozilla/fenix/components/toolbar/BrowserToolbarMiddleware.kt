@@ -1057,7 +1057,7 @@ class BrowserToolbarMiddleware(
         source: Source = Source.AddressBar,
     ): Action = when (toolbarAction) {
         ToolbarAction.NewTab -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_plus_24,
+            drawableResId = iconsR.drawable.mozac_ic_plus_24,
             contentDescription = if (environment?.browsingModeManager?.mode == Private) {
                 R.string.home_screen_shortcut_open_new_private_tab_2
             } else {
@@ -1071,7 +1071,7 @@ class BrowserToolbarMiddleware(
         )
 
         ToolbarAction.Back -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_back_24,
+            drawableResId = iconsR.drawable.mozac_ic_back_24,
             contentDescription = R.string.browser_menu_back,
             state = if (browserStore.state.selectedTab?.content?.canGoBack == true) {
                 ActionButton.State.DEFAULT
@@ -1083,7 +1083,7 @@ class BrowserToolbarMiddleware(
         )
 
         ToolbarAction.Forward -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_forward_24,
+            drawableResId = iconsR.drawable.mozac_ic_forward_24,
             contentDescription = R.string.browser_menu_forward,
             state = if (browserStore.state.selectedTab?.content?.canGoForward == true) {
                 ActionButton.State.DEFAULT
@@ -1097,14 +1097,14 @@ class BrowserToolbarMiddleware(
         ToolbarAction.RefreshOrStop -> {
             if (browserStore.state.selectedTab?.content?.loading != true) {
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_arrow_clockwise_24,
+                    drawableResId = iconsR.drawable.mozac_ic_arrow_clockwise_24,
                     contentDescription = R.string.browser_menu_refresh,
                     onClick = RefreshClicked(bypassCache = false),
                     onLongClick = RefreshClicked(bypassCache = true),
                 )
             } else {
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_cross_24,
+                    drawableResId = iconsR.drawable.mozac_ic_cross_24,
                     contentDescription = R.string.browser_menu_stop,
                     onClick = StopRefreshClicked,
                 )
@@ -1112,7 +1112,7 @@ class BrowserToolbarMiddleware(
         }
 
         ToolbarAction.Menu -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
+            drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
             contentDescription = R.string.content_description_menu,
             onClick = MenuClicked(source),
         )
@@ -1133,7 +1133,7 @@ class BrowserToolbarMiddleware(
         )
 
         ToolbarAction.Translate -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_translate_24,
+            drawableResId = iconsR.drawable.mozac_ic_translate_24,
             contentDescription = R.string.browser_toolbar_translate,
             state = if (browserScreenStore.state.pageTranslationStatus.isTranslated) {
                 ActionButton.State.ACTIVE
@@ -1172,19 +1172,19 @@ class BrowserToolbarMiddleware(
         ToolbarAction.SiteInfo -> {
             if (browserStore.state.selectedTab?.content?.url?.isContentUrl() == true) {
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_page_portrait_24,
+                    drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
                     contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = StartPageActions.SiteInfoClicked,
                 )
             } else if (browserStore.state.selectedTab?.content?.securityInfo?.secure == true) {
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_shield_checkmark_24,
+                    drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
                     contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = StartPageActions.SiteInfoClicked,
                 )
             } else {
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_shield_slash_24,
+                    drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
                     contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = StartPageActions.SiteInfoClicked,
                 )
@@ -1193,7 +1193,7 @@ class BrowserToolbarMiddleware(
 
         ToolbarAction.Bookmark -> {
             ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_bookmark_24,
+                drawableResId = iconsR.drawable.mozac_ic_bookmark_24,
                 contentDescription = R.string.browser_menu_bookmark_this_page_2,
                 onClick = AddBookmarkClicked(source),
             )
@@ -1201,14 +1201,14 @@ class BrowserToolbarMiddleware(
 
         ToolbarAction.EditBookmark -> {
             ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_bookmark_fill_24,
+                drawableResId = iconsR.drawable.mozac_ic_bookmark_fill_24,
                 contentDescription = R.string.browser_menu_edit_bookmark,
                 onClick = EditBookmarkClicked(source),
             )
         }
 
         ToolbarAction.Share -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_share_android_24,
+            drawableResId = iconsR.drawable.mozac_ic_share_android_24,
             contentDescription = R.string.browser_menu_share,
             onClick = ShareClicked(source),
         )

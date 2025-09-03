@@ -31,6 +31,7 @@ import org.mozilla.fenix.settings.address.store.DeleteTapped
 import org.mozilla.fenix.settings.address.store.SaveTapped
 import org.mozilla.fenix.settings.address.store.isEditing
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Topbar for editing an address.
@@ -54,7 +55,7 @@ internal fun EditAddressTopBar(store: AddressStore) {
         navigationIcon = {
             IconButton(onClick = { store.dispatch(BackTapped) }) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_back_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                     contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
                 )
             }
@@ -66,7 +67,7 @@ internal fun EditAddressTopBar(store: AddressStore) {
                     modifier = Modifier.testTag(EditAddressTestTag.TOPBAR_DELETE_BUTTON),
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.mozac_ic_delete_24),
+                        painter = painterResource(iconsR.drawable.mozac_ic_delete_24),
                         contentDescription = stringResource(
                             R.string.address_menu_delete_address,
                         ),
@@ -76,7 +77,7 @@ internal fun EditAddressTopBar(store: AddressStore) {
 
             IconButton(onClick = { store.dispatch(SaveTapped) }) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_checkmark_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_checkmark_24),
                     contentDescription = stringResource(
                         R.string.address_menu_save_address,
                     ),

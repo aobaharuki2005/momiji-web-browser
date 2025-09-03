@@ -63,6 +63,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
+import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(RobolectricTestRunner::class)
 @Config(shadows = [ShadowInetAddresses::class])
@@ -98,7 +99,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         every { customTab.config.showCloseButton } returns true
         every { customTab.config.closeButtonIcon } returns null
         val expectedCloseButton = ActionButton(
-            drawable = AppCompatResources.getDrawable(testContext, R.drawable.mozac_ic_cross_24),
+            drawable = AppCompatResources.getDrawable(testContext, iconsR.drawable.mozac_ic_cross_24),
             contentDescription = testContext.getString(R.string.mozac_feature_customtabs_exit_button),
             onClick = CloseClicked,
         )
@@ -147,7 +148,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN the custom tab is configured to show a custom button WHEN initializing the toolbar THEN add a custom button with a custom icon`() {
-        val customButtonIcon: Bitmap = testContext.getDrawable(R.drawable.mozac_ic_logo_firefox_24)!!.toBitmap(10, 10)
+        val customButtonIcon: Bitmap = testContext.getDrawable(iconsR.drawable.mozac_ic_logo_firefox_24)!!.toBitmap(10, 10)
         every { customTab.config.actionButtonConfig?.icon } returns customButtonIcon
         every { customTab.config.actionButtonConfig?.description } returns "test"
         val expectedCustomButton = ActionButton(
@@ -171,7 +172,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN a private custom tab is configured to show a custom button WHEN initializing the toolbar THEN add a custom button with a custom icon`() {
-        val customButtonIcon: Bitmap = testContext.getDrawable(R.drawable.mozac_ic_logo_firefox_24)!!.toBitmap(10, 10)
+        val customButtonIcon: Bitmap = testContext.getDrawable(iconsR.drawable.mozac_ic_logo_firefox_24)!!.toBitmap(10, 10)
         every { customTab.config.actionButtonConfig?.icon } returns customButtonIcon
         every { customTab.config.actionButtonConfig?.description } returns "test"
         every { customTab.content.private } returns true
@@ -196,7 +197,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN a normal custom tab is configured to show a tinted custom button WHEN initializing the toolbar THEN add a custom button with a custom icon`() {
-        val customButtonIcon: Bitmap = testContext.getDrawable(R.drawable.mozac_ic_logo_firefox_24)!!.toBitmap(10, 10)
+        val customButtonIcon: Bitmap = testContext.getDrawable(iconsR.drawable.mozac_ic_logo_firefox_24)!!.toBitmap(10, 10)
         every { customTab.config.actionButtonConfig?.icon } returns customButtonIcon
         every { customTab.config.actionButtonConfig?.description } returns "test"
         every { customTab.config.actionButtonConfig?.tint } returns true
@@ -224,7 +225,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     fun `GIVEN the url if of a local file WHEN initializing the toolbar THEN add an appropriate security indicator`() {
         every { customTab.content.url } returns "content://test"
         val expectedSecurityIndicator = ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_page_portrait_24,
+            drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
             contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
@@ -241,7 +242,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     fun `GIVEN the website is secure WHEN initializing the toolbar THEN add an appropriate security indicator`() {
         every { customTab.content.securityInfo.secure } returns true
         val expectedSecurityIndicator = ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_shield_checkmark_24,
+            drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
             contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
@@ -258,7 +259,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     fun `GIVEN the website is insecure WHEN initializing the toolbar THEN add an appropriate security indicator`() {
         every { customTab.content.securityInfo.secure } returns false
         val expectedSecurityIndicator = ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_shield_slash_24,
+            drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
             contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
@@ -291,12 +292,12 @@ class CustomTabBrowserToolbarMiddlewareTest {
         )
         val middleware = buildMiddleware(browserStore)
         val expectedSecureIndicator = ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_shield_checkmark_24,
+            drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
             contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
         val expectedInsecureIndicator = ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_shield_slash_24,
+            drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
             contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
@@ -450,7 +451,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     fun `GIVEN the custom tab is not configured to show a share button WHEN initializing the toolbar THEN show just a menu button`() {
         every { customTab.config.showShareMenuItem } returns false
         val expectedMenuButton = ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
+            drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
             contentDescription = R.string.content_description_menu,
             onClick = MenuClicked,
         )
@@ -467,12 +468,12 @@ class CustomTabBrowserToolbarMiddlewareTest {
     fun `GIVEN the custom tab is configured to show a share button WHEN initializing the toolbar THEN show both a share and a menu buttons`() {
         every { customTab.config.showShareMenuItem } returns true
         val expectedShareButton = ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_share_android_24,
+            drawableResId = iconsR.drawable.mozac_ic_share_android_24,
             contentDescription = R.string.mozac_feature_customtabs_share_link,
             onClick = ShareClicked,
         )
         val expectedMenuButton = ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
+            drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
             contentDescription = R.string.content_description_menu,
             onClick = MenuClicked,
         )

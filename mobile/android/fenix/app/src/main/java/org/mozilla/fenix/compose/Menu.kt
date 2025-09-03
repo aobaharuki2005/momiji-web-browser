@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.PrimaryButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Root popup action dropdown menu.
@@ -105,7 +106,7 @@ private fun Menu(
                         selectedItemIndex = index
                         {
                             Icon(
-                                painter = painterResource(id = R.drawable.mozac_ic_checkmark_24),
+                                painter = painterResource(id = iconsR.drawable.mozac_ic_checkmark_24),
                                 modifier = Modifier
                                     .size(24.dp),
                                 contentDescription = null,

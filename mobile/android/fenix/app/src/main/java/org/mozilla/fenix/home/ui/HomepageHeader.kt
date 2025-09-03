@@ -37,6 +37,7 @@ import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE_WORDMARK_TEXT
 import org.mozilla.fenix.home.ui.HomepageTestTag.PRIVATE_BROWSING_HOMEPAGE_BUTTON
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Header for the homepage.
@@ -118,7 +119,7 @@ private fun PrivateBrowsingButton(
     ) {
         Icon(
             tint = colorResource(getAttr(R.attr.mozac_ic_private_mode_circle_fill_icon_color)),
-            painter = painterResource(R.drawable.mozac_ic_private_mode_24),
+            painter = painterResource(iconsR.drawable.mozac_ic_private_mode_24),
             contentDescription = stringResource(R.string.content_description_private_browsing),
         )
     }

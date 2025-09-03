@@ -54,6 +54,7 @@ import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 private val ThumbnailWidth = 78.dp
 private val ThumbnailHeight = 68.dp
@@ -222,7 +223,7 @@ private fun TabContent(
                     .testTag(TabsTrayTestTag.TAB_ITEM_CLOSE),
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_cross_24),
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_cross_24),
                     contentDescription = stringResource(
                         id = R.string.close_tab_title,
                         tab.toDisplayTitle(),

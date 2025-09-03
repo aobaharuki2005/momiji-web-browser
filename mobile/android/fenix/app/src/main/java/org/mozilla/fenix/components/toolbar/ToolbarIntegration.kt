@@ -35,6 +35,7 @@ import org.mozilla.fenix.components.toolbar.ui.createShareBrowserAction
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Feature configuring the toolbar when in display mode.
@@ -111,7 +112,7 @@ abstract class ToolbarIntegration(
         val menuAction = Toolbar.ActionButton(
             imageDrawable = AppCompatResources.getDrawable(
                 context,
-                R.drawable.mozac_ic_ellipsis_vertical_24,
+                iconsR.drawable.mozac_ic_ellipsis_vertical_24,
             )!!,
             contentDescription = context.getString(R.string.content_description_menu),
             visible = {
@@ -182,7 +183,7 @@ class DefaultToolbarIntegration(
 
     private fun addNewTabBrowserAction() {
         val newTabAction = BrowserToolbar.Button(
-            imageDrawable = AppCompatResources.getDrawable(context, R.drawable.mozac_ic_plus_24)!!,
+            imageDrawable = AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_plus_24)!!,
             contentDescription = context.getString(R.string.library_new_tab),
             visible = { false },
             weight = { NEW_TAB_ACTION_WEIGHT },

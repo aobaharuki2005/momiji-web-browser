@@ -33,6 +33,7 @@ import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.debugsettings.gleandebugtools.ui.GleanDebugToolsScreen
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * [Fragment] for displaying the Glean Debug Tools in the about:glean page.
@@ -91,7 +92,7 @@ class GleanDebugToolsFragment : Fragment() {
                             val directions = GleanDebugToolsFragmentDirections.actionGlobalBrowser()
                             IconButton(onClick = { findNavController().navigate(directions) }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.mozac_ic_back_24),
+                                    painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                                     contentDescription = stringResource(
                                         R.string.bookmark_navigate_back_button_content_description,
                                     ),

@@ -30,6 +30,7 @@ import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.getAppNightMode
+import mozilla.components.ui.icons.R as iconsR
 
 @Suppress("LongParameterList")
 class CustomTabsIntegration(
@@ -164,14 +165,14 @@ class CustomTabsIntegration(
         if (forwardAction == null) {
             val primaryDrawable = getDrawable(
                 context,
-                R.drawable.mozac_ic_forward_24,
+                iconsR.drawable.mozac_ic_forward_24,
             )?.apply {
                 setTint(enableTint)
             } ?: return
 
             val secondaryDrawable = getDrawable(
                 context,
-                R.drawable.mozac_ic_forward_24,
+                iconsR.drawable.mozac_ic_forward_24,
             )?.apply {
                 setTint(disableTint)
             } ?: return
@@ -211,14 +212,14 @@ class CustomTabsIntegration(
         if (backAction == null) {
             val primaryDrawable = getDrawable(
                 context,
-                R.drawable.mozac_ic_back_24,
+                iconsR.drawable.mozac_ic_back_24,
             )?.apply {
                 setTint(enableTint)
             } ?: return
 
             val secondaryDrawable = getDrawable(
                 context,
-                R.drawable.mozac_ic_back_24,
+                iconsR.drawable.mozac_ic_back_24,
             )?.apply {
                 setTint(disableTint)
             } ?: return
@@ -271,14 +272,14 @@ class CustomTabsIntegration(
         if (openInAction == null) {
             val primaryDrawable = getDrawable(
                 context,
-                R.drawable.mozac_ic_open_in,
+                iconsR.drawable.mozac_ic_open_in,
             )?.apply {
                 setTint(enableTint)
             } ?: return
 
             val secondaryDrawable = getDrawable(
                 context,
-                R.drawable.mozac_ic_open_in,
+                iconsR.drawable.mozac_ic_open_in,
             )?.apply {
                 setTint(disableTint)
             } ?: return

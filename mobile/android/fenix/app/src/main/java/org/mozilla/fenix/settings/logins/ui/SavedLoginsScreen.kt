@@ -67,6 +67,7 @@ import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.SelectableFaviconListItem
 import org.mozilla.fenix.settings.logins.ui.LoginsSortOrder.Alphabetical.isGuidToDelete
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * The UI host for the Saved Logins list screen and related sub screens.
@@ -205,7 +206,7 @@ private fun AddPasswordItem(
     IconListItem(
         label = stringResource(R.string.preferences_logins_add_login_2),
         modifier = modifier,
-        beforeIconPainter = painterResource(R.drawable.mozac_ic_plus_24),
+        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_plus_24),
         onClick = { onAddPasswordClicked() },
     )
 }
@@ -304,7 +305,7 @@ private fun LoginsListTopBar(
                     contentDescription = null,
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.mozac_ic_back_24),
+                        painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                         contentDescription = stringResource(R.string.logins_navigate_back_button_content_description),
                         tint = iconColor,
                     )
@@ -391,7 +392,7 @@ private fun SearchBar(
                         contentDescription = null,
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.mozac_ic_cross_24),
+                            painter = painterResource(iconsR.drawable.mozac_ic_cross_24),
                             contentDescription = null,
                             tint = FirefoxTheme.colors.iconPrimary,
                         )

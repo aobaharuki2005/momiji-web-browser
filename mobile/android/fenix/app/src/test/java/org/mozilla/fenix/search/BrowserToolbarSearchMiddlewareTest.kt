@@ -824,14 +824,14 @@ class BrowserToolbarSearchMiddlewareTest {
     )
 
     private val expectedClearButton = ActionButtonRes(
-        drawableResId = R.drawable.mozac_ic_cross_circle_fill_24,
+        drawableResId = iconsR.drawable.mozac_ic_cross_circle_fill_24,
         contentDescription = R.string.mozac_clear_button_description,
         state = ActionButton.State.DEFAULT,
         onClick = ClearSearchClicked,
     )
 
     private val expectedQrButton = ActionButtonRes(
-        drawableResId = R.drawable.mozac_ic_qr_code_24,
+        drawableResId = iconsR.drawable.mozac_ic_qr_code_24,
         contentDescription = R.string.mozac_feature_qr_scanner,
         state = ActionButton.State.DEFAULT,
         onClick = QrScannerClicked,

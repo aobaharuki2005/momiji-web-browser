@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import org.mozilla.fenix.R
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Updates views in [R.id.bottom_button_bar_layout] for collection creation.
@@ -86,7 +87,7 @@ class CollectionCreationBottomBarView(
 
         iconButton.apply {
             val drawable = context.getDrawableWithTint(
-                R.drawable.mozac_ic_plus_24,
+                iconsR.drawable.mozac_ic_plus_24,
                 ContextCompat.getColor(context, R.color.photonWhite),
             )
             setImageDrawable(drawable)

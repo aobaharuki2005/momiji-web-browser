@@ -480,27 +480,27 @@ class BrowserToolbarMiddleware(
         }
 
         HomeToolbarAction.Menu -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
+            drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
             contentDescription = R.string.content_description_menu,
             onClick = MenuClicked(source),
         )
 
         HomeToolbarAction.FakeBookmark -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_bookmark_24,
+            drawableResId = iconsR.drawable.mozac_ic_bookmark_24,
             contentDescription = R.string.browser_menu_bookmark_this_page_2,
             state = ActionButton.State.DISABLED,
             onClick = FakeClicked,
         )
 
         HomeToolbarAction.FakeShare -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_share_android_24,
+            drawableResId = iconsR.drawable.mozac_ic_share_android_24,
             contentDescription = R.string.browser_menu_share,
             state = ActionButton.State.DISABLED,
             onClick = FakeClicked,
         )
 
         HomeToolbarAction.NewTab -> ActionButtonRes(
-            drawableResId = R.drawable.mozac_ic_plus_24,
+            drawableResId = iconsR.drawable.mozac_ic_plus_24,
             contentDescription = if (environment?.browsingModeManager?.mode == Private) {
                 R.string.home_screen_shortcut_open_new_private_tab_2
             } else {

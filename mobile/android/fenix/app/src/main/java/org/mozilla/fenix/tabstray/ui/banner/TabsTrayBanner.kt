@@ -56,6 +56,7 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ui.tabstray.TabsTray
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.max
+import mozilla.components.ui.icons.R as iconsR
 
 private const val TAB_COUNT_SHOW_CFR = 6
 private const val ROW_HEIGHT_DP = 48
@@ -371,7 +372,7 @@ private fun MultiSelectBanner(
         navigationIcon = {
             IconButton(onClick = onExitSelectModeClick) {
                 Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_back_24),
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_back_24),
                     contentDescription = stringResource(id = R.string.tab_tray_close_multiselect_content_description),
                 )
             }
@@ -394,7 +395,7 @@ private fun MultiSelectBanner(
                 enabled = buttonsEnabled,
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_delete_24),
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_delete_24),
                     contentDescription = stringResource(
                         id = R.string.tab_manager_multiselect_menu_item_close_content_description,
                     ),
@@ -413,7 +414,7 @@ private fun MultiSelectBanner(
                 )
 
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
+                    painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
                     contentDescription = stringResource(id = R.string.tab_tray_multiselect_menu_content_description),
                 )
             }
@@ -449,7 +450,7 @@ private fun generateMultiSelectBannerMenuItems(
         menuItems.add(
             MenuItem.IconItem(
                 text = Text.Resource(R.string.inactive_tabs_menu_item_2),
-                drawableRes = R.drawable.mozac_ic_cross_circle_24,
+                drawableRes = iconsR.drawable.mozac_ic_cross_circle_24,
                 onClick = onMakeSelectedTabsInactive,
             ),
         )

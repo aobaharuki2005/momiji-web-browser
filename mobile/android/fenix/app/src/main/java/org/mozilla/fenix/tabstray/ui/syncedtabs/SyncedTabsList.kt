@@ -52,6 +52,7 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.browser.storage.sync.Tab as SyncTab
+import mozilla.components.ui.icons.R as iconsR
 
 private const val EXPANDED_BY_DEFAULT = true
 private val CardRoundedCornerShape = RoundedCornerShape(12.dp)
@@ -132,7 +133,7 @@ fun SyncedTabsList(
                                                     description = syncedTab.displayURL,
                                                     onClick = { onTabClick(syncedTab.tab) },
                                                     iconDescription = stringResource(R.string.close_tab),
-                                                    iconPainter = painterResource(R.drawable.mozac_ic_cross_20),
+                                                    iconPainter = painterResource(iconsR.drawable.mozac_ic_cross_20),
                                                     onIconClick = {
                                                         onTabCloseClick(
                                                             syncedTab.action.deviceId,
