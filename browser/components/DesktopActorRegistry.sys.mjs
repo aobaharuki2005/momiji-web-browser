@@ -501,6 +501,17 @@ let JSWINDOWACTORS = {
     enablePreference: "browser.ml.linkPreview.enabled",
   },
 
+  PageAssist: {
+    parent: {
+      esModuleURI: "resource:///actors/PageAssistParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource:///actors/PageAssistChild.sys.mjs",
+    },
+    includeChrome: true,
+    enablePreference: "browser.ml.pageAssist.enabled",
+  },
+
   PageInfo: {
     child: {
       esModuleURI: "resource:///actors/PageInfoChild.sys.mjs",
