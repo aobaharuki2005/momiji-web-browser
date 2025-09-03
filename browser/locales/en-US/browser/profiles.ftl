@@ -241,6 +241,70 @@ sparkle-single-avatar = Sparkle
 star-avatar = Star
 video-game-controller-avatar = Video game controller
 
+## Tooltips for default avatar icons
+
+barbell-avatar-tooltip =
+    .tooltiptext = Apply barbell avatar
+bike-avatar-tooltip =
+    .tooltiptext = Apply bike avatar
+book-avatar-tooltip =
+    .tooltiptext = Apply book avatar
+briefcase-avatar-tooltip =
+    .tooltiptext = Apply briefcase avatar
+picture-avatar-tooltip =
+    .tooltiptext = Apply picture avatar
+# Craft refers to hobby arts and crafts, represented by a button/fastener commonly found on clothing like shirts
+craft-avatar-tooltip =
+    .tooltiptext = Apply craft avatar
+# Globe refers to the generic globe/world icon that appears in browser tabs when a website doesn't have its own favicon.
+globe-avatar-tooltip =
+    .tooltiptext = Apply globe avatar
+diamond-avatar-tooltip =
+    .tooltiptext = Apply diamond avatar
+flower-avatar-tooltip =
+    .tooltiptext = Apply flower avatar
+folder-avatar-tooltip =
+    .tooltiptext = Apply folder avatar
+hammer-avatar-tooltip =
+    .tooltiptext = Apply hammer avatar
+heart-avatar-tooltip =
+    .tooltiptext = Apply heart avatar
+heart-rate-avatar-tooltip =
+    .tooltiptext = Apply heart rate avatar
+clock-avatar-tooltip =
+    .tooltiptext = Apply clock avatar
+leaf-avatar-tooltip =
+    .tooltiptext = Apply leaf avatar
+lightbulb-avatar-tooltip =
+    .tooltiptext = Apply lightbulb avatar
+makeup-avatar-tooltip =
+    .tooltiptext = Apply makeup avatar
+# Message refers to a text message, not a traditional letter/envelope message
+message-avatar-tooltip =
+    .tooltiptext = Apply message avatar
+musical-note-avatar-tooltip =
+    .tooltiptext = Apply musical note avatar
+palette-avatar-tooltip =
+    .tooltiptext = Apply palette avatar
+paw-print-avatar-tooltip =
+    .tooltiptext = Apply paw print avatar
+plane-avatar-tooltip =
+    .tooltiptext = Apply plane avatar
+# Present refers to a gift box, not the current time period
+present-avatar-tooltip =
+    .tooltiptext = Apply present avatar
+shopping-avatar-tooltip =
+    .tooltiptext = Apply shopping cart avatar
+soccer-ball-avatar-tooltip =
+    .tooltiptext = Apply soccer ball avatar
+sparkle-single-avatar-tooltip =
+    .tooltiptext = Apply sparkle avatar
+star-avatar-tooltip =
+    .tooltiptext = Apply star avatar
+video-game-controller-avatar-tooltip =
+    .tooltiptext = Apply video game controller avatar
+
+
 custom-avatar-crop-back-button =
   .aria-label = Back
 custom-avatar-crop-view =
