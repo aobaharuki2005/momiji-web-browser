@@ -61,7 +61,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aModuleType, aReferrerScript->ReferrerPolicy(),
       aReferrerScript->GetFetchOptions(), SRIMetadata(),
-      aReferrerScript->GetURI(), loadContext,
+      aReferrerScript->BaseURL(), loadContext,
       ModuleLoadRequest::Kind::StaticImport, this,
       aLoadContext->mRequest->AsModuleRequest()->GetRootModule());
 
