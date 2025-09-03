@@ -76,6 +76,10 @@ new-profile-card {
   border-radius: var(--border-radius-circle);
 }
 
+#more-themes {
+  width: fit-content;
+}
+
 .sub-header {
   font-size: var(--font-size-large);
   color: var(--text-color-deemphasized);
