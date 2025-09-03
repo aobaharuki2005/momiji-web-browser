@@ -11,6 +11,14 @@ const lazy = XPCOMUtils.declareLazy({
   },
 });
 const { TRANSPARENT_PROXY_RESOLVES_HOST } = Ci.nsIProxyInfo;
+const failOverTimeout = 10; // seconds
+
+const DEFAULT_EXCLUDED_URL_PREFS = [
+  "browser.ipProtection.guardian.endpoint",
+  "identity.fxaccounts.remote.profile.uri",
+  "identity.fxaccounts.auth.uri",
+  "identity.fxaccounts.remote.profile.uri",
+];
 
 /**
  * IPPChannelFilter is a class that implements the nsIProtocolProxyChannelFilter
@@ -27,20 +35,21 @@ export class IPPChannelFilter {
    * @param {string} host - the host of the proxy server.
    * @param {number} port - the port of the proxy server.
    * @param {string} proxyType - "socks" or "http" or "https"
+   * @param {Array<string>} [excludedPages] - list of page URLs whose *origin* should bypass the proxy
    */
-  static create(authToken = "", host = "", port = 433, proxyType = "https") {
-    const isolationkey = Math.random()
-      .toString(36)
-      .slice(2, 18)
-      .padEnd(16, "0");
-    const failOverTimeout = 10; // seconds
-
+  static create(
+    authToken = "",
+    host = "",
+    port = 443,
+    proxyType = "https",
+    excludedPages = []
+  ) {
     const proxyInfo = lazy.ProxyService.newProxyInfo(
       proxyType,
       host,
       port,
       authToken,
-      isolationkey,
+      IPPChannelFilter.makeIsolationKey(),
       TRANSPARENT_PROXY_RESOLVES_HOST,
       failOverTimeout,
       null // Failover proxy info
@@ -48,17 +57,34 @@ export class IPPChannelFilter {
     if (!proxyInfo) {
       throw new Error("Failed to create proxy info");
     }
-    return new IPPChannelFilter(proxyInfo);
+    return new IPPChannelFilter(proxyInfo, excludedPages);
   }
 
-  constructor(proxyInfo) {
+  /**
+   * @param {nsIProxyInfo} proxyInfo
+   * @param {Array<string>} [excludedPages]
+   */
+  constructor(proxyInfo, excludedPages = []) {
     if (!proxyInfo) {
       throw new Error("ProxyInfo is required for IPPChannelFilter");
     }
 
     Object.freeze(proxyInfo);
     this.proxyInfo = proxyInfo;
+
+    // Normalize and store excluded origins (scheme://host[:port])
+    this.#excludedOrigins = new Set();
+    excludedPages.forEach(url => {
+      this.addPageExclusion(url);
+    });
+    DEFAULT_EXCLUDED_URL_PREFS.forEach(pref => {
+      const prefValue = Services.prefs.getStringPref(pref, "");
+      if (prefValue) {
+        this.addPageExclusion(prefValue);
+      }
+    });
   }
+
   /**
    * This method (which is required by the nsIProtocolProxyService interface)
    * is called to apply proxy filter rules for the given URI and proxy object
@@ -70,12 +96,55 @@ export class IPPChannelFilter {
    * @param {nsIProxyProtocolFilterResult} proxyFilter
    */
   async applyFilter(channel, _defaultProxyInfo, proxyFilter) {
+    // If this channel should be excluded (origin match), do nothing
+    if (this.shouldExclude(channel)) {
+      // Calling this with "null" will enforce a non-proxy connection
+      proxyFilter.onProxyFilterResult(null);
+      return;
+    }
+
     proxyFilter.onProxyFilterResult(this.proxyInfo);
+
     // Notify observers that the channel is being proxied
     this.#observers.forEach(observer => {
       observer(channel);
     });
   }
+
+  /**
+   * Decide whether a channel should bypass the proxy based on origin.
+   *
+   * @param {nsIChannel} channel
+   * @returns {boolean}
+   */
+  shouldExclude(channel) {
+    try {
+      const uri = channel.URI; // nsIURI
+      if (!uri) {
+        return false;
+      }
+      const origin = uri.prePath; // scheme://host[:port]
+      return this.#excludedOrigins.has(origin);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /**
+   * Adds a page URL to the exclusion list.
+   *
+   * @param {string} url - The URL to exclude.
+   */
+  addPageExclusion(url) {
+    try {
+      const uri = Services.io.newURI(url);
+      // prePath is scheme://host[:port]
+      this.#excludedOrigins.add(uri.prePath);
+    } catch (_) {
+      // ignore bad entries
+    }
+  }
+
   /**
    * Starts the Channel Filter, feeding all following Requests through the proxy.
    */
@@ -86,20 +155,46 @@ export class IPPChannelFilter {
     );
     this.#active = true;
   }
+
   /**
    * Stops the Channel Filter, stopping all following Requests from being proxied.
    */
   stop() {
+    if (!this.#active) {
+      return;
+    }
     lazy.ProxyService.unregisterChannelFilter(this);
     this.#active = false;
     this.#abort.abort();
   }
+
   /**
    * Returns the isolation key of the proxy connection.
    * All ProxyInfo objects related to this Connection will have the same isolation key.
    */
   get isolationKey() {
     return this.proxyInfo.connectionIsolationKey;
+  }
+
+  /**
+   * Replaces the authentication token used by the proxy connection.
+   * --> Important <--: This Changes the isolationKey of the Connection!
+   *
+   * @param {string} newToken - The new authentication token.
+   */
+  replaceAuthToken(newToken) {
+    const newInfo = lazy.ProxyService.newProxyInfo(
+      this.proxyInfo.type,
+      this.proxyInfo.host,
+      this.proxyInfo.port,
+      newToken,
+      IPPChannelFilter.makeIsolationKey(),
+      TRANSPARENT_PROXY_RESOLVES_HOST,
+      failOverTimeout,
+      null // Failover proxy info
+    );
+    Object.freeze(newInfo);
+    this.proxyInfo = newInfo;
   }
 
   /**
@@ -134,13 +229,20 @@ export class IPPChannelFilter {
       }
     }
   }
+
   /**
    * Returns true if this filter is active.
    */
   get active() {
     return this.#active;
   }
+
   #abort = new AbortController();
   #observers = [];
   #active = false;
+  #excludedOrigins = new Set();
+
+  static makeIsolationKey() {
+    return Math.random().toString(36).slice(2, 18).padEnd(16, "0");
+  }
 }
