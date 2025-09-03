@@ -1,6 +1,10 @@
 [DEFAULT]
 head = "../../unit/head.js head.js"
 firefox-appdir = "browser"
+prefs = [
+  'browser.newtabpage.activity-stream.discoverystream.ohttp.relayURL=',
+  'browser.newtabpage.activity-stream.discoverystream.ohttp.configURL=',
+]
 
 ["test_merinoClient.js"]
 
