@@ -5216,8 +5216,8 @@ bool nsDisplayBlendContainer::CreateWebRenderCommands(
     sc = layer.ptr();
   }
 
-  return nsDisplayWrapList::CreateWebRenderCommands(
-      aBuilder, aResources, *sc, aManager, aDisplayListBuilder);
+  return nsDisplayWrapList::CreateWebRenderCommandsNewClipListOption(
+      aBuilder, aResources, *sc, aManager, aDisplayListBuilder, layer.isSome());
 }
 
 void nsDisplayTableBlendContainer::Destroy(nsDisplayListBuilder* aBuilder) {
