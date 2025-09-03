@@ -170,6 +170,10 @@
   }
 }
 
+#tabbrowser-arrowscrollbox-periphery {
+  position: relative;
+}
+
 .tabbrowser-tab {
   --tab-label-mask-size: 1em;
 
