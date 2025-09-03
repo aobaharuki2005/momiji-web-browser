@@ -879,7 +879,11 @@ var FullScreen = {
     }
 
     this._isChromeCollapsed = false;
-    Services.obs.notifyObservers(null, "fullscreen-nav-toolbox", "shown");
+    Services.obs.notifyObservers(
+      gNavToolbox,
+      "fullscreen-nav-toolbox",
+      "shown"
+    );
   },
 
   hideNavToolbox(aAnimate = false) {

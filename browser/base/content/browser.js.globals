@@ -63,7 +63,6 @@
   "handleDroppedLink",
   "ToolbarContextMenu",
   "BrowserOffline",
-  "WebAuthnPromptHelper",
   "CanCloseWindow",
   "WindowIsClosing",
   "warnAboutClosingWindow",

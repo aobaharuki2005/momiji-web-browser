@@ -403,7 +403,6 @@ var gBrowserInit = {
     Services.obs.addObserver(gLocaleChangeObserver, "intl:app-locales-changed");
 
     BrowserOffline.init();
-    WebAuthnPromptHelper.init();
 
     BrowserUtils.callModulesFromCategory(
       {
@@ -1144,7 +1143,6 @@ var gBrowserInit = {
       );
 
       BrowserOffline.uninit();
-      WebAuthnPromptHelper.uninit();
       PanelUI.uninit();
     }
 
