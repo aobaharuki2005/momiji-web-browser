@@ -317,10 +317,13 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     override fun onResume() {
         super.onResume()
 
-        if (context?.components?.appStore?.state?.searchState?.isSearchActive != true) {
-            (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary().show()
-        } else {
+        val shouldUseComposableToolbar = context?.settings()?.shouldUseComposableToolbar == true
+        val isSearchActive = context?.components?.appStore?.state?.searchState?.isSearchActive == true
+
+        if (shouldUseComposableToolbar && isSearchActive) {
             handleShowingSearchUX()
+        } else {
+            (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary().show()
         }
     }
 
