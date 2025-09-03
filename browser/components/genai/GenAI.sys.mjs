@@ -75,7 +75,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "chatProviders",
   "browser.ml.chat.providers",
-  "claude,chatgpt,gemini,lechat",
+  "claude,chatgpt,copilot,gemini,lechat",
   reorderChatProviders
 );
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -162,7 +162,7 @@ export const GenAI = {
       },
     ],
     [
-      "https://copilot.microsoft.com",
+      "https://copilot.microsoft.com/?form=MOZCMC",
       {
         choiceIds: [
           "genai-onboarding-copilot-generate",
@@ -1101,9 +1101,6 @@ export const GenAI = {
       source: context.entry,
     });
 
-    await this.prepareChatPromptPrefix();
-    const prompt = this.buildChatPrompt(promptObj, context);
-
     // If no provider is configured, open sidebar and wait once for onboarding
     const { SidebarController } = context.window;
 
@@ -1114,6 +1111,10 @@ export const GenAI = {
         return;
       }
     }
+
+    // Build prompt after provider is confirmed to use correct length limits
+    await this.prepareChatPromptPrefix();
+    const prompt = this.buildChatPrompt(promptObj, context);
 
     // Pass the prompt via GET url ?q= param or request header
     const { header, queryParam = "q" } =
