@@ -1053,6 +1053,13 @@ class QuotaManager final : public BackgroundThreadObject {
    */
   void IncreaseSaveOriginAccessTimeCountInternal();
 
+  // XXX These insertion helpers probably belong to GroupInfoPair
+  template <typename Iterator, typename Pred>
+  static void MaybeInsertOriginInfos(
+      Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
+      const RefPtr<GroupInfo>& aDefaultGroupInfo,
+      const RefPtr<GroupInfo>& aPrivateGroupInfo, Pred aPred);
+
   template <typename Iterator>
   static void MaybeInsertNonPersistedOriginInfos(
       Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,

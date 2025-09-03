@@ -7845,15 +7845,14 @@ already_AddRefed<OriginInfo> QuotaManager::LockedGetOriginInfo(
   return nullptr;
 }
 
-template <typename Iterator>
-void QuotaManager::MaybeInsertNonPersistedOriginInfos(
+template <typename Iterator, typename Pred>
+void QuotaManager::MaybeInsertOriginInfos(
     Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
     const RefPtr<GroupInfo>& aDefaultGroupInfo,
-    const RefPtr<GroupInfo>& aPrivateGroupInfo) {
-  const auto copy = [&aDest](const GroupInfo& groupInfo) {
-    std::copy_if(
-        groupInfo.mOriginInfos.cbegin(), groupInfo.mOriginInfos.cend(), aDest,
-        [](const auto& originInfo) { return !originInfo->LockedPersisted(); });
+    const RefPtr<GroupInfo>& aPrivateGroupInfo, Pred aPred) {
+  const auto copy = [&aDest, &aPred](const GroupInfo& groupInfo) {
+    std::copy_if(groupInfo.mOriginInfos.cbegin(), groupInfo.mOriginInfos.cend(),
+                 aDest, aPred);
   };
 
   if (aTemporaryGroupInfo) {
@@ -7873,6 +7872,16 @@ void QuotaManager::MaybeInsertNonPersistedOriginInfos(
                aPrivateGroupInfo->GetPersistenceType());
     copy(*aPrivateGroupInfo);
   }
+}
+
+template <typename Iterator>
+void QuotaManager::MaybeInsertNonPersistedOriginInfos(
+    Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
+    const RefPtr<GroupInfo>& aDefaultGroupInfo,
+    const RefPtr<GroupInfo>& aPrivateGroupInfo) {
+  return MaybeInsertOriginInfos(
+      aDest, aTemporaryGroupInfo, aDefaultGroupInfo, aPrivateGroupInfo,
+      [](const auto& originInfo) { return !originInfo->LockedPersisted(); });
 }
 
 template <typename Collect, typename Pred>
