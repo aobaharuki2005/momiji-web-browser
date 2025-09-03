@@ -40,5 +40,3 @@ if CONFIG["OS_ARCH"] == "Linux":
     # in the build directory.
     DEFINES["topsrcdir"] = TOPSRCDIR
     OBJDIR_FILES.dist.bin += ["../libxul.so-gdb.py"]
-
-DUMP_SYMBOLS_FLAGS += ["--count-ctors"]
