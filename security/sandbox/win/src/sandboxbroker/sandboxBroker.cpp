@@ -1293,7 +1293,9 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
 
   AddShaderCachesToPolicy(&trackingConfig, aSandboxLevel);
 
-  if (aSandboxLevel >= 2) {
+  // The GPU process is launched without GeckoDependentInitialize for the
+  // profile picker making sLocalAppDataDir null.
+  if (aSandboxLevel >= 2 && sLocalAppDataDir) {
     // We don't want to add a rule directly here but use the same retrieval and
     // caching mechanism to get the Windows user profile dir.
     EnsureWindowsDirCached(FOLDERID_Profile, sWindowsProfileDir,
