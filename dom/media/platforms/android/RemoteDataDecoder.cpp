@@ -408,10 +408,13 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
     ok = mInputInfos.Find(presentationTimeUs, inputInfo);
     bool isEOS = !!(flags & java::sdk::MediaCodec::BUFFER_FLAG_END_OF_STREAM);
     if (!ok && !isEOS) {
+      LOG("No corresponding input");
       // Ignore output with no corresponding input.
       return;
     }
 
+    LOG("flags=%" PRIx32 " size=%" PRIi32 " presentationTimeUs=%" PRIi64, flags,
+        size, presentationTimeUs);
     if (ok && (size > 0 || presentationTimeUs >= 0)) {
       bool forceBT709ColorSpace = false;
       // On certain devices SMPTE 432 color primaries are rendered incorrectly,
@@ -833,7 +836,6 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
     }
 
     if (isEOS) {
-      LOG("EOS: drain complete");
       DrainComplete();
     }
   }
@@ -1147,6 +1149,9 @@ void RemoteDataDecoder::ReturnDecodedData() {
   MOZ_ASSERT(GetState() != State::SHUTDOWN);
 
   // We only want to clear mDecodedData when we have resolved the promises.
+  LOG("have decode promise=%i, have drain promise=%i, state=%i",
+      static_cast<int>(!mDecodePromise.IsEmpty()),
+      static_cast<int>(!mDrainPromise.IsEmpty()), static_cast<int>(GetState()));
   if (!mDecodePromise.IsEmpty()) {
     mDecodePromise.Resolve(std::move(mDecodedData), __func__);
     mDecodedData = DecodedData();
@@ -1166,6 +1171,7 @@ void RemoteDataDecoder::DrainComplete() {
     Unused << rv;
     return;
   }
+  LOG("EOS");
   AssertOnThread();
   if (GetState() == State::SHUTDOWN) {
     return;
@@ -1187,6 +1193,8 @@ void RemoteDataDecoder::Error(const MediaResult& aError) {
     return;
   }
 
+  LOG("ErrorName=%s Message=%s", aError.ErrorName().get(),
+      aError.Message().get());
   // If we know we need a new decoder (eg because RemoteVideoDecoder's mSurface
   // has been released due to a GPU process crash) then override the error to
   // request a new decoder.
@@ -1197,6 +1205,12 @@ void RemoteDataDecoder::Error(const MediaResult& aError) {
 
   mDecodePromise.RejectIfExists(error, __func__);
   mDrainPromise.RejectIfExists(error, __func__);
+}
+
+void RemoteDataDecoder::SetState(RemoteDataDecoder::State aState) {
+  LOG("%i", static_cast<int>(aState));
+  AssertOnThread();
+  mState = aState;
 }
 
 }  // namespace mozilla

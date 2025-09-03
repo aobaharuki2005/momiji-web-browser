@@ -54,10 +54,7 @@ class RemoteDataDecoder : public MediaDataDecoder,
   }
 
   enum class State { DRAINED, DRAINABLE, DRAINING, SHUTDOWN };
-  void SetState(State aState) {
-    AssertOnThread();
-    mState = aState;
-  }
+  void SetState(State aState);
   State GetState() const {
     AssertOnThread();
     return mState;
