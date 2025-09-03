@@ -160,7 +160,3 @@ https_first_disabled = true
 ["browser_session_store_pageproxystate.js"]
 
 ["browser_tab_sharing_state.js"]
-
-["browser_trust_panel_security_view.js"]
-https_first_disabled = true
-skip-if = ["os == 'win'"]

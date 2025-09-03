@@ -108,7 +108,6 @@ export default [
       "browser/base/content/browser-sync.js",
       "browser/base/content/browser-thumbnails.js",
       "browser/base/content/browser-toolbarKeyNav.js",
-      "browser/base/content/browser-trustPanel.js",
       "browser/base/content/browser-unified-extensions.js",
       "browser/base/content/browser-webrtc.js",
       "browser/base/content/global-scripts.js",
