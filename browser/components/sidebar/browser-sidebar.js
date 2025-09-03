@@ -2191,6 +2191,7 @@ var SidebarController = {
       this._animateSidebarMain();
     }
     this._state.launcherExpanded = true;
+    this._mouseEnterDeferred.resolve();
   },
 
   onMouseLeave() {
@@ -2198,6 +2199,7 @@ var SidebarController = {
       return;
     }
     this.mouseEnterTask.disarm();
+    this._mouseEnterDeferred.resolve();
     const contentArea = document.getElementById("tabbrowser-tabbox");
     this._box.toggleAttribute("sidebar-launcher-hovered", false);
     contentArea.toggleAttribute("sidebar-launcher-hovered", false);
@@ -2212,6 +2214,7 @@ var SidebarController = {
     if (this._state.launcherExpanded) {
       return;
     }
+    this._mouseEnterDeferred = Promise.withResolvers();
     this.mouseEnterTask = new DeferredTask(
       () => {
         this.debouncedMouseEnter();
@@ -2220,6 +2223,10 @@ var SidebarController = {
       EXPAND_ON_HOVER_DEBOUNCE_TIMEOUT_MS
     );
     this.mouseEnterTask?.arm();
+  },
+
+  get expandOnHoverComplete() {
+    return this._mouseEnterDeferred?.promise || Promise.resolve();
   },
 
   async setLauncherCollapsedWidth() {
