@@ -72,6 +72,7 @@ moz-card {
   .sidebar-panel-scrollable-content {
     overflow-y: auto;
     height: 100%;
+    padding: var(--space-xsmall);
   }
 }
 
