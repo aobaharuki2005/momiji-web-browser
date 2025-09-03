@@ -1268,21 +1268,23 @@ bool Navigation::InnerFireNavigateEvent(
           [successSteps, failureSteps](
               JSContext*, JS::Handle<JS::Value>, ErrorResult&,
               nsIGlobalObject* aGlobalObject,
-              const Span<RefPtr<Promise>>& aPromiseList)
-              MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+              const Span<RefPtr<Promise>>& aPromiseList,
+              const RefPtr<NavigationWaitForAllScope>& aScope)
+              MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
                 Promise::WaitForAll(aGlobalObject, aPromiseList, successSteps,
-                                    failureSteps);
+                                    failureSteps, aScope);
               },
           [](JSContext*, JS::Handle<JS::Value>, ErrorResult&, nsIGlobalObject*,
-             const Span<RefPtr<Promise>>&) {},
+             const Span<RefPtr<Promise>>&,
+             const RefPtr<NavigationWaitForAllScope>&) {},
           nsCOMPtr(globalObject),
-          nsTArray<RefPtr<Promise>>(std::move(promiseList)));
+          nsTArray<RefPtr<Promise>>(std::move(promiseList)), scope);
     } else {
       LOG_FMT("No API method tracker, not waiting for committed");
       // If we don't have an apiMethodTracker we can immediately start waiting
       // for the promise list.
-      Promise::WaitForAll(globalObject, promiseList, successSteps,
-                          failureSteps);
+      Promise::WaitForAll(globalObject, promiseList, successSteps, failureSteps,
+                          scope);
     }
   } else if (apiMethodTracker && mOngoingAPIMethodTracker) {
     // In contrast to spec we add a check that we're still the ongoing tracker.
