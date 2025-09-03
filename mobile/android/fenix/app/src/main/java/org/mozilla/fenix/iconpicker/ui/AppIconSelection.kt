@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -169,12 +170,23 @@ private fun AppIconOption(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Text(
-            text = stringResource(appIcon.titleId),
-            modifier = Modifier.weight(1f),
-            style = FirefoxTheme.typography.subtitle1,
-            color = FirefoxTheme.colors.textPrimary,
-        )
+        Column {
+            Text(
+                text = stringResource(appIcon.titleId),
+                style = FirefoxTheme.typography.subtitle1,
+                color = FirefoxTheme.colors.textPrimary,
+            )
+
+            appIcon.subtitleId?.let {
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = stringResource(it),
+                    style = FirefoxTheme.typography.body2,
+                    color = FirefoxTheme.colors.textSecondary,
+                )
+            }
+        }
     }
 }
 
@@ -292,6 +304,14 @@ private fun AppIconSelectionPreview() {
 private fun AppIconOptionPreview() {
     FirefoxTheme {
         AppIconOption(AppIcon.AppDefault, false) {}
+    }
+}
+
+@FlexibleWindowLightDarkPreview
+@Composable
+private fun AppIconOptionWithSubtitlePreview() {
+    FirefoxTheme {
+        AppIconOption(AppIcon.AppMomo, false) {}
     }
 }
 
