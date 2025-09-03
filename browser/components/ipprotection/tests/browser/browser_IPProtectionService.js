@@ -75,7 +75,7 @@ add_task(async function test_IPProtectionService_updateEnrollment() {
 });
 
 /**
- * Tests a user in the experiment can enroll with Guardian on sign-in.
+ * Tests a user in the experiment can enroll with Guardian on opening the panel.
  */
 add_task(async function test_IPProtectionService_enroll() {
   setupService({
@@ -92,6 +92,8 @@ add_task(async function test_IPProtectionService_enroll() {
   });
 
   await IPProtectionService.updateSignInStatus();
+  await openPanel();
+  await IPProtectionService.enrolling;
 
   Assert.ok(IPProtectionService.isEnrolled, "User should now be enrolled");
 
@@ -118,7 +120,8 @@ add_task(
 
     await waitForWidgetAdded();
 
-    await IPProtectionService.updateSignInStatus();
+    await openPanel();
+    await IPProtectionService.enrolling;
 
     Assert.ok(IPProtectionService.isEnrolled, "User should now be enrolled");
 
@@ -146,6 +149,9 @@ add_task(
     await waitForWidgetAdded();
 
     await IPProtectionService.updateSignInStatus();
+
+    await openPanel();
+    await IPProtectionService.enrolling;
 
     Assert.equal(
       IPProtectionService.isEntitled,
@@ -196,10 +202,10 @@ add_task(async function test_IPProtectionService_proxyPass() {
   IPProtectionService.isSignedIn = false;
   await IPProtectionService.updateSignInStatus();
 
+  let content = await openPanel();
+
   Assert.ok(IPProtectionService.isEnrolled, "User should be enrolled");
   Assert.equal(IPProtectionService.isEntitled, true, "User should be entitled");
-
-  let content = await openPanel();
 
   Assert.ok(
     BrowserTestUtils.isVisible(content),
@@ -298,6 +304,10 @@ add_task(async function test_IPProtectionService_pass_errors() {
 
   Assert.equal(content.state.error, "", "Should have no error");
 
+  // Reset the errors
+  IPProtectionService.hasError = false;
+  IPProtectionService.errors = [];
+
   await cleanupAlpha();
   cleanupService();
 });
@@ -308,7 +318,7 @@ add_task(async function test_IPProtectionService_pass_errors() {
 add_task(async function test_IPProtectionService_retry_errors() {
   setupService({
     isSignedIn: true,
-    isEnrolled: false,
+    isEnrolled: true,
     canEnroll: true,
   });
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
@@ -418,10 +428,10 @@ add_task(async function test_IPProtectionService_reload() {
   IPProtectionService.isSignedIn = false;
   await IPProtectionService.updateSignInStatus();
 
+  let content = await openPanel();
+
   Assert.ok(IPProtectionService.isEnrolled, "User should be enrolled");
   Assert.equal(IPProtectionService.isEntitled, true, "User should be entitled");
-
-  let content = await openPanel();
 
   Assert.ok(
     BrowserTestUtils.isVisible(content),
@@ -525,6 +535,8 @@ add_task(async function test_IPProtectionService_handleProxyErrorEvent() {
     canEnroll: true,
   });
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
+
+  await openPanel();
 
   await IPProtectionService.start();
 
