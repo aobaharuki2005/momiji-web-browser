@@ -2071,7 +2071,6 @@ export class DiscoveryStreamFeed {
     }
     const requestMetadata = {
       utc_offset: lazy.NewTabUtils.getUtcOffset(prefs[PREF_SURFACE_ID]),
-      coarse_os: lazy.NewTabUtils.normalizeOs(),
       surface_id: prefs[PREF_SURFACE_ID] || "",
       inferredInterests,
     };

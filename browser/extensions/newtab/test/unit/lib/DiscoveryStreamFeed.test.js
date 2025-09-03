@@ -151,7 +151,6 @@ describe("DiscoveryStreamFeed", () => {
         isBlocked: () => false,
       },
       getUtcOffset: () => 0,
-      normalizeOs: () => "",
     };
     globals.set("NewTabUtils", fakeNewTabUtils);
     globals.set("ClientEnvironmentBase", {
