@@ -72,6 +72,12 @@ extern "C" {
 #define NESTEGG_CODEC_VP9     2       /**< Track uses Google On2 VP9 codec. */
 #define NESTEGG_CODEC_OPUS    3       /**< Track uses Xiph Opus codec. */
 #define NESTEGG_CODEC_AV1     4       /**< Track uses AOMedia AV1 codec. */
+#define NESTEGG_CODEC_AVC     5       /**< Track uses H.264/AVC codec. */
+#define NESTEGG_CODEC_HEVC    6       /**< Track uses H.265/HEVC codec. */
+#define NESTEGG_CODEC_AAC     7       /**< Track uses AAC codec. */
+#define NESTEGG_CODEC_FLAC    8       /**< Track uses FLAC codec. */
+#define NESTEGG_CODEC_MP3     9       /**< Track uses MP3 codec */
+#define NESTEGG_CODEC_PCM     10      /**< Track uses PCM codec. */
 #define NESTEGG_CODEC_UNKNOWN INT_MAX /**< Track uses unknown codec. */
 
 #define NESTEGG_VIDEO_MONO              0 /**< Track is mono video. */
@@ -370,6 +376,16 @@ int nestegg_read_reset(nestegg * context);
     @retval  0 End of stream.
     @retval -1 Error. */
 int nestegg_read_packet(nestegg * context, nestegg_packet ** packet);
+
+/** Read the last packet for a track without affecting current parser state.
+    @param context  Stream context initialized by #nestegg_init.
+    @param track    Zero based track number.
+    @param packet   Storage for the returned nestegg_packet.
+    @retval 0       Success.
+    @retval -1      Error. */
+int nestegg_read_last_packet(nestegg * context,
+                             unsigned int track,
+                             nestegg_packet ** packet);
 
 /** Destroy a nestegg_packet and free associated memory.
     @param packet #nestegg_packet to be freed. @see nestegg_read_packet */
