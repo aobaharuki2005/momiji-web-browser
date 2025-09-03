@@ -275,6 +275,10 @@ abstract class MachExec extends Exec {
             task.logger.lifecycle("Skipping task ${task.path} because: MOZILLA_OFFICIAL")
             return false
         }
+        if (mozconfig.substs.ENABLE_MOZSEARCH_PLUGIN) {
+            task.logger.lifecycle("Skipping task ${task.path} because: ENABLE_MOZSEARCH_PLUGIN")
+            return false
+        }
 
         // Multi-l10n builds set `AB_CD=multi`, which isn't a valid locale, and
         // `MOZ_CHROME_MULTILOCALE`.  To avoid failures, if Gradle is invoked with
