@@ -131,6 +131,9 @@ private fun List<CustomizationToolbarData>.toOnboardingToolbarOptions() = map { 
 
 private fun TermsOfServiceData.toOnboardingTermsOfService() = with(this) {
     OnboardingTermsOfService(
+        subheaderOneText = subheaderOneText,
+        subheaderTwoText = subheaderTwoText,
+        subheaderThreeText = subheaderThreeText,
         lineOneText = lineOneText,
         lineOneLinkText = lineOneLinkText,
         lineOneLinkUrl = lineOneLinkUrl,

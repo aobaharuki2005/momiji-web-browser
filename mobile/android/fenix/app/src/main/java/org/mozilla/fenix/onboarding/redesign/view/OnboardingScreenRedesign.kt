@@ -58,6 +58,7 @@ import org.mozilla.fenix.onboarding.store.OnboardingStore
 import org.mozilla.fenix.onboarding.view.Caption
 import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.onboarding.view.OnboardingPageUiData
+import org.mozilla.fenix.onboarding.view.OnboardingTermsOfService
 import org.mozilla.fenix.onboarding.view.OnboardingTermsOfServiceEventHandler
 import org.mozilla.fenix.onboarding.view.ToolbarOption
 import org.mozilla.fenix.onboarding.view.ToolbarOptionType
@@ -391,7 +392,7 @@ private fun OnboardingPageForType(
 private object PageContentLayout {
     val MIN_HEIGHT_DP = 600.dp
     val MIN_WIDTH_DP = 360.dp
-    const val HEIGHT_RATIO = 0.8f
+    const val HEIGHT_RATIO = 0.7f
     const val WIDTH_RATIO = 0.85f
 }
 
@@ -454,55 +455,89 @@ private fun OnboardingScreenPreview() {
 
 @Composable
 private fun defaultPreviewPages() = listOf(
-    OnboardingPageUiData(
-        type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
-        imageRes = R.drawable.ic_onboarding_welcome,
-        title = stringResource(R.string.juno_onboarding_default_browser_title_nimbus_2),
-        description = stringResource(R.string.juno_onboarding_default_browser_description_nimbus_3),
-        primaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_positive_button),
-        secondaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_negative_button),
-        privacyCaption = Caption(
+    touPageUIData(),
+    defaultBrowserPageUiData(),
+    syncPageUiData(),
+    toolbarPlacementPageUiData(),
+)
+
+@Composable
+private fun touPageUIData() = OnboardingPageUiData(
+    type = OnboardingPageUiData.Type.TERMS_OF_SERVICE,
+    title = stringResource(id = R.string.onboarding_redesign_tou_title),
+    description = "",
+    termsOfService = OnboardingTermsOfService(
+        subheaderOneText = stringResource(id = R.string.onboarding_redesign_tou_subheader_one),
+        subheaderTwoText = stringResource(id = R.string.onboarding_redesign_tou_subheader_two),
+        subheaderThreeText = stringResource(id = R.string.onboarding_redesign_tou_subheader_three),
+        lineOneText = stringResource(id = R.string.onboarding_redesign_tou_body_one),
+        lineOneLinkText = stringResource(id = R.string.onboarding_redesign_tou_body_one_link_text),
+        lineOneLinkUrl = "URL",
+        lineTwoText = stringResource(id = R.string.onboarding_redesign_tou_body_two),
+        lineTwoLinkText = stringResource(id = R.string.onboarding_redesign_tou_body_two_link_text),
+        lineTwoLinkUrl = "URL",
+        lineThreeText = stringResource(id = R.string.onboarding_redesign_tou_body_three),
+        lineThreeLinkText = stringResource(id = R.string.onboarding_redesign_tou_body_three_link_text),
+    ),
+    imageRes = R.drawable.ic_firefox,
+    primaryButtonLabel = stringResource(
+        id = R.string.onboarding_redesign_tou_agree_and_continue_button_label,
+    ),
+)
+
+@Composable
+private fun defaultBrowserPageUiData() = OnboardingPageUiData(
+    type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
+    imageRes = R.drawable.ic_onboarding_welcome,
+    title = stringResource(R.string.juno_onboarding_default_browser_title_nimbus_2),
+    description = stringResource(R.string.juno_onboarding_default_browser_description_nimbus_3),
+    primaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_positive_button),
+    secondaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_negative_button),
+    privacyCaption = Caption(
+        text = stringResource(R.string.juno_onboarding_privacy_notice_text),
+        linkTextState = LinkTextState(
             text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-            linkTextState = LinkTextState(
-                text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-                url = "",
-                onClick = {},
-            ),
+            url = "",
+            onClick = {},
         ),
     ),
-    OnboardingPageUiData(
-        type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
-        imageRes = R.drawable.ic_onboarding_sync,
-        title = stringResource(R.string.juno_onboarding_sign_in_title_2),
-        description = stringResource(R.string.juno_onboarding_sign_in_description_3),
-        primaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_positive_button),
-        secondaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_negative_button),
-        privacyCaption = Caption(
+)
+
+@Composable
+private fun syncPageUiData() = OnboardingPageUiData(
+    type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
+    imageRes = R.drawable.ic_onboarding_sync,
+    title = stringResource(R.string.juno_onboarding_sign_in_title_2),
+    description = stringResource(R.string.juno_onboarding_sign_in_description_3),
+    primaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_positive_button),
+    secondaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_negative_button),
+    privacyCaption = Caption(
+        text = stringResource(R.string.juno_onboarding_privacy_notice_text),
+        linkTextState = LinkTextState(
             text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-            linkTextState = LinkTextState(
-                text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-                url = "",
-                onClick = {},
-            ),
+            url = "",
+            onClick = {},
         ),
     ),
-    OnboardingPageUiData(
-        type = OnboardingPageUiData.Type.TOOLBAR_PLACEMENT,
-        imageRes = R.drawable.ic_onboarding_customize_toolbar,
-        title = stringResource(R.string.onboarding_customize_toolbar_title),
-        description = stringResource(R.string.onboarding_customize_toolbar_description),
-        primaryButtonLabel = stringResource(R.string.onboarding_save_and_start_button),
-        toolbarOptions = listOf(
-            ToolbarOption(
-                toolbarType = ToolbarOptionType.TOOLBAR_TOP,
-                imageRes = R.drawable.ic_onboarding_top_toolbar,
-                label = stringResource(R.string.onboarding_customize_toolbar_top_option),
-            ),
-            ToolbarOption(
-                toolbarType = ToolbarOptionType.TOOLBAR_BOTTOM,
-                imageRes = R.drawable.ic_onboarding_bottom_toolbar,
-                label = stringResource(R.string.onboarding_customize_toolbar_bottom_option),
-            ),
+)
+
+@Composable
+private fun toolbarPlacementPageUiData() = OnboardingPageUiData(
+    type = OnboardingPageUiData.Type.TOOLBAR_PLACEMENT,
+    imageRes = R.drawable.ic_onboarding_customize_toolbar,
+    title = stringResource(R.string.onboarding_customize_toolbar_title),
+    description = stringResource(R.string.onboarding_customize_toolbar_description),
+    primaryButtonLabel = stringResource(R.string.onboarding_save_and_start_button),
+    toolbarOptions = listOf(
+        ToolbarOption(
+            toolbarType = ToolbarOptionType.TOOLBAR_TOP,
+            imageRes = R.drawable.ic_onboarding_top_toolbar,
+            label = stringResource(R.string.onboarding_customize_toolbar_top_option),
+        ),
+        ToolbarOption(
+            toolbarType = ToolbarOptionType.TOOLBAR_BOTTOM,
+            imageRes = R.drawable.ic_onboarding_bottom_toolbar,
+            label = stringResource(R.string.onboarding_customize_toolbar_bottom_option),
         ),
     ),
 )
