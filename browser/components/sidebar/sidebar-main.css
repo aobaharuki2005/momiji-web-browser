@@ -68,7 +68,6 @@
 .actions-list {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
   align-items: start;
   max-width: 100%;
   overflow: hidden;
@@ -95,6 +94,10 @@
     &::part(button) {
       background-color: var(--toolbarbutton-active-background);
     }
+  }
+
+  &.overflow-button {
+    flex-shrink: 0;
   }
 }
 
@@ -134,22 +137,15 @@
 }
 
 .buttons-wrapper {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
   min-height: calc(var(--button-min-height) + (var(--space-small) * 2));
   overflow: hidden;
 
   :host([expanded]) & {
+    flex-direction: row;
     align-items: flex-end;
-  }
-
-  &[overflowing] {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto min-content;
-
-    :host([expanded]) & {
-      grid-template-columns: 1fr min-content;
-      grid-template-rows: 1fr;
-    }
   }
 
   /* stylelint-disable-next-line media-query-no-invalid */
