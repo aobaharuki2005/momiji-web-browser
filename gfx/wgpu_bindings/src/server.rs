@@ -2812,19 +2812,23 @@ unsafe fn process_message(
         Message::BufferUnmap(device_id, buffer_id, flush) => {
             wgpu_parent_buffer_unmap(global.owner, device_id, buffer_id, flush);
         }
-        Message::QueueSubmit(device_id, queue_id, command_buffer_ids, texture_ids, external_texture_source_ids) => {
-            wgpu_parent_queue_submit(
-                global.owner,
-                device_id,
-                queue_id,
-                command_buffer_ids.as_ptr(),
-                command_buffer_ids.len(),
-                texture_ids.as_ptr(),
-                texture_ids.len(),
-                external_texture_source_ids.as_ptr(),
-                external_texture_source_ids.len(),
-            )
-        }
+        Message::QueueSubmit(
+            device_id,
+            queue_id,
+            command_buffer_ids,
+            texture_ids,
+            external_texture_source_ids,
+        ) => wgpu_parent_queue_submit(
+            global.owner,
+            device_id,
+            queue_id,
+            command_buffer_ids.as_ptr(),
+            command_buffer_ids.len(),
+            texture_ids.as_ptr(),
+            texture_ids.len(),
+            external_texture_source_ids.as_ptr(),
+            external_texture_source_ids.len(),
+        ),
         Message::QueueOnSubmittedWorkDone(queue_id) => {
             let closure = wgpu_parent_build_submitted_work_done_closure(global.owner, queue_id);
             let closure = Box::new(move || {
