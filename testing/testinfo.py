@@ -474,7 +474,7 @@ class TestInfoReport(TestInfo):
         summary_groups = {key: runcounts[key] for key in days if key in runcounts}
         tasks_and_count = {"manifests": []}
         for day in days:
-            if day not in summary_groups:
+            if day not in summary_groups or not summary_groups[day]:
                 continue
             all_task_labels = summary_groups[day]["job_type_names"]
             for tasks_by_manifest in summary_groups[day]["manifests"]:
@@ -485,10 +485,13 @@ class TestInfoReport(TestInfo):
                         if task_label not in tasks_and_count["manifests"]:
                             tasks_and_count["manifests"].append(task_label)
                             new_index = len(tasks_and_count["manifests"]) - 1
-                            tasks_and_count[manifest][new_index] = 0
                         else:
                             new_index = tasks_and_count["manifests"].index(task_label)
+
+                        if new_index not in tasks_and_count[manifest]:
+                            tasks_and_count[manifest][new_index] = 0
                         tasks_and_count[manifest][new_index] += count
+
         return tasks_and_count
 
     def squash_runcounts(self, runcounts, days=MAX_DAYS):
@@ -639,6 +642,15 @@ class TestInfoReport(TestInfo):
             show_manifests = True
             show_summary = True
 
+        trunk = False
+        if os.environ.get("GECKO_HEAD_REPOSITORY", "") in [
+            "https://hg.mozilla.org/mozilla-central",
+            "https://hg.mozilla.org/try",
+        ]:
+            trunk = True
+        else:
+            show_testruns = False
+
         by_component = {}
         if components:
             components = components.split(",")
@@ -653,10 +665,7 @@ class TestInfoReport(TestInfo):
         ifd = self.get_intermittent_failure_data(start, end)
 
         runcount = {}
-        if show_testruns and os.environ.get("GECKO_HEAD_REPOSITORY", "") in [
-            "https://hg.mozilla.org/mozilla-central",
-            "https://hg.mozilla.org/try",
-        ]:
+        if show_testruns and trunk:
             runcount = self.get_runcount_data(runcounts_input_file, start, end)
 
         print("Finding tests...")
@@ -678,7 +687,7 @@ class TestInfoReport(TestInfo):
         manifest_count = len(manifest_paths)
         print(f"Resolver found {len(tests)} tests, {manifest_count} manifests")
 
-        if config_matrix_output_file:
+        if config_matrix_output_file and trunk:
             topsrcdir = self.build_obj.topsrcdir
             config_matrix = {}
             for manifest in manifest_paths:
