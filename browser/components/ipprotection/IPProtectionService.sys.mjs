@@ -22,6 +22,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  CustomizableUI:
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 });
 
 import {
@@ -411,10 +413,15 @@ class IPProtectionServiceSingleton extends EventTarget {
    * Adds an observer to monitor the VPN add-on installation
    */
   addVPNAddonObserver() {
+    let service = this;
     this.addonVPNListener = {
-      onInstallEnded(install, addon) {
-        if (addon.id === VPN_ADDON_ID) {
-          Services.prefs.setBoolPref(ENABLED_PREF, false);
+      onInstallEnded(_install, addon) {
+        if (addon.id === VPN_ADDON_ID && service.hasUpgraded) {
+          // Place the widget in the customization palette.
+          lazy.CustomizableUI.removeWidgetFromArea(
+            IPProtectionServiceSingleton.WIDGET_ID
+          );
+          lazy.logConsole.info("VPN Extension: Installed");
         }
       },
     };
