@@ -197,7 +197,7 @@ def find_task_id(index_path, use_proxy=False):
     try:
         response = _do_request(get_index_url(index_path, use_proxy))
     except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 404:  # type: ignore
+        if e.response.status_code == 404:
             raise KeyError(f"index path {index_path} not found")
         raise
     return response.json()["taskId"]
@@ -306,7 +306,7 @@ def cancel_task(task_id, use_proxy=False):
 def status_task(task_id, use_proxy=False):
     """Gets the status of a task given a task_id.
 
-    In testing mode, just logs that it would have retrieved status.
+    In testing mode, just logs that it would have retrieved status and return an empty dict.
 
     Args:
         task_id (str): A task id.
@@ -318,6 +318,7 @@ def status_task(task_id, use_proxy=False):
     """
     if testing:
         logger.info(f"Would have gotten status for {task_id}.")
+        return {}
     else:
         resp = _do_request(get_task_url(task_id, use_proxy) + "/status")
         status = resp.json().get("status", {})
@@ -385,7 +386,7 @@ def state_task(task_id, use_proxy=False):
     if testing:
         logger.info(f"Would have gotten state for {task_id}.")
     else:
-        status = status_task(task_id, use_proxy=use_proxy).get("state") or "unknown"  # type: ignore
+        status = status_task(task_id, use_proxy=use_proxy).get("state") or "unknown"
         return status
 
 

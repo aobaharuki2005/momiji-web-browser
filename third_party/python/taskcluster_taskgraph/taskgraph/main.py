@@ -590,10 +590,10 @@ def build_image(args):
     graph_config = load_graph_config(root)
 
     if args["context_only"] is None:
-        build_image(args["image_name"], args["tag"], os.environ, graph_config)
+        build_image(args["image_name"], args["tag"], graph_config, os.environ)
     else:
         build_context(
-            args["image_name"], args["context_only"], os.environ, graph_config
+            args["image_name"], args["context_only"], graph_config, os.environ
         )
 
 

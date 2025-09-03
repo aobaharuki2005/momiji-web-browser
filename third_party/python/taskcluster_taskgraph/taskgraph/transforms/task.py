@@ -1092,11 +1092,6 @@ def set_defaults(config, tasks):
         elif worker["implementation"] == "generic-worker":
             worker.setdefault("env", {})
             worker.setdefault("os-groups", [])
-            if worker["os-groups"] and worker["os"] != "windows":
-                raise Exception(
-                    "os-groups feature of generic-worker is only supported on "
-                    "Windows, not on {}".format(worker["os"])
-                )
             worker.setdefault("chain-of-trust", False)
         elif worker["implementation"] in (
             "scriptworker-signing",

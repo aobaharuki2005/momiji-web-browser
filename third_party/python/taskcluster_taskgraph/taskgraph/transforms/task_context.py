@@ -11,7 +11,7 @@ from taskgraph.util.yaml import load_yaml
 SCHEMA = Schema(
     {
         Optional("name"): str,
-        Required(
+        Optional(
             "task-context",
             description=dedent(
                 """

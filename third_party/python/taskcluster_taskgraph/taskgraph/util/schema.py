@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import collections
 import pprint
 import re
+from collections.abc import Mapping
 
 import voluptuous
 
@@ -184,7 +184,7 @@ def check_schema(schema):
                     f"Unexpected type in YAML schema: {type(k).__name__} @ {path}"
                 )
 
-        if isinstance(sch, collections.abc.Mapping):  # type: ignore
+        if isinstance(sch, Mapping):
             for k, v in sch.items():
                 child = f"{path}[{k!r}]"
                 check_identifier(child, k)

@@ -374,7 +374,7 @@ class TaskGraphGenerator:
         if parameters["enable_always_target"]:
             always_target_tasks = {
                 t.label
-                for t in full_task_graph.tasks.values()  # type: ignore
+                for t in full_task_graph.tasks.values()
                 if t.attributes.get("always_target")
                 if parameters["enable_always_target"] is True
                 or t.kind in parameters["enable_always_target"]
@@ -388,7 +388,7 @@ class TaskGraphGenerator:
         target_graph = full_task_graph.graph.transitive_closure(requested_tasks)
         target_task_graph = TaskGraph(
             {l: all_tasks[l] for l in target_graph.nodes},
-            target_graph,  # type: ignore
+            target_graph,
         )
         yield self.verify(
             "target_task_graph", target_task_graph, graph_config, parameters
@@ -446,19 +446,28 @@ class TaskGraphGenerator:
             return name, args[0]
 
 
+def load_tasks_for_kinds(parameters, kinds, root_dir=None):
+    """
+    Get all the tasks of the given kinds.
+
+    This function is designed to be called from outside of taskgraph.
+    """
+    # make parameters read-write
+    parameters = dict(parameters)
+    parameters["target-kinds"] = kinds
+    parameters = parameters_loader(spec=None, strict=False, overrides=parameters)
+    tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters)
+    return {
+        task.task["metadata"]["name"]: task
+        for task in tgg.full_task_set
+        if task.kind in kinds
+    }
+
+
 def load_tasks_for_kind(parameters, kind, root_dir=None):
     """
     Get all the tasks of a given kind.
 
     This function is designed to be called from outside of taskgraph.
     """
-    # make parameters read-write
-    parameters = dict(parameters)
-    parameters["target-kinds"] = [kind]
-    parameters = parameters_loader(spec=None, strict=False, overrides=parameters)
-    tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters)
-    return {
-        task.task["metadata"]["name"]: task
-        for task in tgg.full_task_set
-        if task.kind == kind
-    }
+    return load_tasks_for_kinds(parameters, [kind], root_dir)
