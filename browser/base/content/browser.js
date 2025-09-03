@@ -3743,7 +3743,10 @@ var WebAuthnPromptHelper = {
   _l10n: null,
 
   init() {
-    this._l10n = new Localization(["browser/webauthnDialog.ftl"], true);
+    this._l10n = new Localization(
+      ["branding/brand.ftl", "browser/webauthnDialog.ftl"],
+      true
+    );
     Services.obs.addObserver(this, this._topic);
   },
 
@@ -3811,7 +3814,7 @@ var WebAuthnPromptHelper = {
         data.origin,
         data.tid,
         "alreadyRegistered",
-        "webauthn.alreadyRegisteredPrompt"
+        "webauthn-already-registered-prompt"
       );
     } else if (data.prompt.type == "select-device") {
       this.show_info(
@@ -3819,7 +3822,7 @@ var WebAuthnPromptHelper = {
         data.origin,
         data.tid,
         "selectDevice",
-        "webauthn.selectDevicePrompt"
+        "webauthn-select-device-prompt"
       );
     } else if (data.prompt.type == "pin-auth-blocked") {
       this.show_info(
@@ -3827,7 +3830,7 @@ var WebAuthnPromptHelper = {
         data.origin,
         data.tid,
         "pinAuthBlocked",
-        "webauthn.pinAuthBlockedPrompt"
+        "webauthn-pin-auth-blocked-prompt"
       );
     } else if (data.prompt.type == "uv-blocked") {
       this.show_info(
@@ -3835,7 +3838,7 @@ var WebAuthnPromptHelper = {
         data.origin,
         data.tid,
         "uvBlocked",
-        "webauthn.uvBlockedPrompt"
+        "webauthn-uv-blocked-prompt"
       );
     } else if (data.prompt.type == "uv-invalid") {
       let retriesLeft = data.prompt.retries;
@@ -3862,7 +3865,7 @@ var WebAuthnPromptHelper = {
         data.origin,
         data.tid,
         "deviceBlocked",
-        "webauthn.deviceBlockedPrompt"
+        "webauthn-device-blocked-prompt"
       );
     } else if (data.prompt.type == "pin-not-set") {
       this.show_info(
@@ -3870,7 +3873,7 @@ var WebAuthnPromptHelper = {
         data.origin,
         data.tid,
         "pinNotSet",
-        "webauthn.pinNotSetPrompt"
+        "webauthn-pin-not-set-prompt"
       );
     }
   },
@@ -3929,7 +3932,7 @@ var WebAuthnPromptHelper = {
     this.show(
       tid,
       "select-sign-result",
-      "webauthn.selectSignResultPrompt",
+      "webauthn-select-sign-result-prompt",
       origin,
       mainAction,
       secondaryActions,
@@ -3951,7 +3954,7 @@ var WebAuthnPromptHelper = {
     let mainAction = this.buildCancelAction(mgr, tid);
     let options = { escAction: "buttoncommand" };
     let secondaryActions = [];
-    let message = "webauthn.userPresencePrompt";
+    let message = "webauthn-user-presence-prompt";
     this.show(
       tid,
       "presence",
@@ -3964,17 +3967,21 @@ var WebAuthnPromptHelper = {
   },
 
   attestation_consent(mgr, { origin, tid }) {
+    let [allowMsg, blockMsg] = this._l10n.formatMessagesSync([
+      { id: "webauthn-allow" },
+      { id: "webauthn-block" },
+    ]);
     let mainAction = {
-      label: gNavigatorBundle.getString("webauthn.allow"),
-      accessKey: gNavigatorBundle.getString("webauthn.allow.accesskey"),
+      label: allowMsg.value,
+      accessKey: allowMsg.attributes.find(a => a.name == "accesskey").value,
       callback(_state) {
         mgr.setHasAttestationConsent(tid, true);
       },
     };
     let secondaryActions = [
       {
-        label: gNavigatorBundle.getString("webauthn.block"),
-        accessKey: gNavigatorBundle.getString("webauthn.block.accesskey"),
+        label: blockMsg.value,
+        accessKey: blockMsg.attributes.find(a => a.name == "accesskey").value,
         callback(_state) {
           mgr.setHasAttestationConsent(tid, false);
         },
@@ -3987,12 +3994,14 @@ var WebAuthnPromptHelper = {
 
     let options = {
       learnMoreURL,
-      hintText: "webauthn.registerDirectPromptHint",
+      hintText: this._l10n.formatValueSync(
+        "webauthn-register-direct-prompt-hint"
+      ),
     };
     this.show(
       tid,
       "register-direct",
-      "webauthn.registerDirectPrompt3",
+      "webauthn-register-direct-prompt",
       origin,
       mainAction,
       secondaryActions,
@@ -4014,13 +4023,7 @@ var WebAuthnPromptHelper = {
     secondaryActions = [],
     options = {}
   ) {
-    let brandShortName = document
-      .getElementById("bundle_brand")
-      .getString("brandShortName");
-    let message = gNavigatorBundle.getFormattedString(stringId, [
-      "<>",
-      brandShortName,
-    ]);
+    let message = this._l10n.formatValueSync(stringId, { hostname: "<>" });
 
     try {
       origin = Services.io.newURI(origin).asciiHost;
@@ -4066,15 +4069,6 @@ var WebAuthnPromptHelper = {
       FullScreen.showNavToolbox();
     }
 
-    let brandShortName = document
-      .getElementById("bundle_brand")
-      .getString("brandShortName");
-    if (options.hintText) {
-      options.hintText = gNavigatorBundle.getFormattedString(options.hintText, [
-        brandShortName,
-      ]);
-    }
-
     options.hideClose = true;
     options.persistent = true;
     options.eventCallback = event => {
@@ -4110,9 +4104,12 @@ var WebAuthnPromptHelper = {
   },
 
   buildCancelAction(mgr, tid) {
+    let [cancelMsg] = this._l10n.formatMessagesSync([
+      { id: "webauthn-cancel" },
+    ]);
     return {
-      label: gNavigatorBundle.getString("webauthn.cancel"),
-      accessKey: gNavigatorBundle.getString("webauthn.cancel.accesskey"),
+      label: cancelMsg.value,
+      accessKey: cancelMsg.attributes.find(a => a.name == "accesskey").value,
       callback() {
         mgr.cancel(tid);
       },
