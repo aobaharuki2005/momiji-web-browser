@@ -510,12 +510,10 @@ class GCRuntime {
 
   bool addFinalizationRegistry(JSContext* cx,
                                Handle<FinalizationRegistryObject*> registry);
-  bool registerWithFinalizationRegistry(JSContext* cx, HandleObject target,
-                                        HandleObject record);
+  bool registerWithFinalizationRegistry(
+      JSContext* cx, HandleObject target,
+      Handle<FinalizationRecordObject*> record);
   void queueFinalizationRegistryForCleanup(FinalizationQueueObject* queue);
-
-  void nukeFinalizationRecordWrapper(JSObject* wrapper,
-                                     FinalizationRecordObject* record);
 
   void setFullCompartmentChecks(bool enable);
 

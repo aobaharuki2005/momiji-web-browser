@@ -8,7 +8,7 @@
 #define gc_FinalizationObservers_h
 
 #include "gc/Barrier.h"
-#include "gc/WeakMap.h"
+#include "gc/WeakMap.h"  // For WeakTargetHasher
 #include "gc/ZoneAllocator.h"
 #include "js/GCHashTable.h"
 #include "js/GCVector.h"
@@ -146,35 +146,21 @@ class ObserverList {
 
 // Per-zone data structures to support FinalizationRegistry and WeakRef.
 class FinalizationObservers {
-  Zone* const zone;
-
-  // The set of all finalization registries in the associated zone. These are
-  // direct pointers and are not wrapped.
+  // The set of all finalization registries in the associated zone.
   using RegistrySet =
-      GCHashSet<HeapPtr<JSObject*>, StableCellHasher<HeapPtr<JSObject*>>,
+      GCHashSet<HeapPtr<FinalizationRegistryObject*>,
+                StableCellHasher<HeapPtr<FinalizationRegistryObject*>>,
                 ZoneAllocPolicy>;
   RegistrySet registries;
 
-  // A vector of FinalizationRecord objects, or CCWs to them.
-  using RecordVector = GCVector<HeapPtr<JSObject*>, 1, ZoneAllocPolicy>;
-
-  // A map from finalization registry targets to a vector of finalization
-  // records representing registries that the target is registered with and
-  // their associated held values. The records may be in other zones and are
-  // wrapped appropriately.
+  // A map from finalization registry targets in the associated zone to a list
+  // of finalization records representing registries that the target is
+  // registered with and their associated held values. The records may be in
+  // other zones. They are direct pointers and are not wrapped.
   using RecordMap =
-      GCHashMap<HeapPtr<JSObject*>, RecordVector,
+      GCHashMap<HeapPtr<JSObject*>, ObserverList,
                 StableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
   RecordMap recordMap;
-
-  // A weak map used as a set of cross-zone wrappers. This is used for both
-  // finalization registries and weak refs. For the former it has wrappers to
-  // finalization record objects and for the latter wrappers to weak refs.
-  //
-  // The weak map marking rules keep the wrappers alive while their targets are
-  // alive and ensure that they are both swept in the same sweep group.
-  using WrapperWeakSet = ObjectValueWeakMap;
-  WrapperWeakSet crossZoneRecords;
 
   using WeakRefMap =
       GCHashMap<HeapPtr<JSObject*>, ObserverList,
@@ -187,11 +173,10 @@ class FinalizationObservers {
 
   // FinalizationRegistry support:
   bool addRegistry(Handle<FinalizationRegistryObject*> registry);
-  bool addRecord(HandleObject target, HandleObject record);
+  bool addRecord(HandleObject target, Handle<FinalizationRecordObject*> record);
   void clearRecords();
 
-  void updateForRemovedRecord(JSObject* wrapper,
-                              FinalizationRecordObject* record);
+  void removeRecord(FinalizationRecordObject* record);
 
   // WeakRef support:
   bool addWeakRefTarget(Handle<JSObject*> target,
@@ -199,17 +184,9 @@ class FinalizationObservers {
   void removeWeakRefTarget(Handle<JSObject*> target,
                            Handle<WeakRefObject*> weakRef);
 
-  void traceRoots(JSTracer* trc);
   void traceWeakEdges(JSTracer* trc);
 
-#ifdef DEBUG
-  void checkTables() const;
-#endif
-
  private:
-  bool addCrossZoneWrapper(WrapperWeakSet& weakSet, JSObject* wrapper);
-  void removeCrossZoneWrapper(WrapperWeakSet& weakSet, JSObject* wrapper);
-
   void traceWeakFinalizationRegistryEdges(JSTracer* trc);
   void traceWeakWeakRefEdges(JSTracer* trc);
   void traceWeakWeakRefList(JSTracer* trc, ObserverList& weakRefs,

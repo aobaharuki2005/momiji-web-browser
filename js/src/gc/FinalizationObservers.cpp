@@ -175,6 +175,9 @@ ObserverList::Iter ObserverList::iter() { return Iter(*this); }
 void ObserverList::insertFront(ObserverListObject* obj) {
   MOZ_ASSERT(!obj->isInList());
 
+  // The other things in this list might be gray.
+  AutoTouchingGrayThings atgt;
+
   Ptr oldNext = getNext();
 
   setNext(obj);
@@ -268,16 +271,11 @@ void ObserverListObject::setPrev(Ptr prev) {
 }
 
 FinalizationObservers::FinalizationObservers(Zone* zone)
-    : zone(zone),
-      registries(zone),
-      recordMap(zone),
-      crossZoneRecords(zone),
-      weakRefMap(zone) {}
+    : registries(zone), recordMap(zone), weakRefMap(zone) {}
 
 FinalizationObservers::~FinalizationObservers() {
   MOZ_ASSERT(registries.empty());
   MOZ_ASSERT(recordMap.empty());
-  MOZ_ASSERT(crossZoneRecords.empty());
 }
 
 bool GCRuntime::addFinalizationRegistry(
@@ -296,15 +294,12 @@ bool FinalizationObservers::addRegistry(
   return registries.put(registry);
 }
 
-bool GCRuntime::registerWithFinalizationRegistry(JSContext* cx,
-                                                 HandleObject target,
-                                                 HandleObject record) {
+bool GCRuntime::registerWithFinalizationRegistry(
+    JSContext* cx, HandleObject target,
+    Handle<FinalizationRecordObject*> record) {
   MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
-  MOZ_ASSERT(
-      UncheckedUnwrapWithoutExpose(record)->is<FinalizationRecordObject>());
-  MOZ_ASSERT(target->compartment() == record->compartment());
 
-  Zone* zone = cx->zone();
+  Zone* zone = target->zone();
   if (!zone->ensureFinalizationObservers() ||
       !zone->finalizationObservers()->addRecord(target, record)) {
     ReportOutOfMemory(cx);
@@ -314,84 +309,30 @@ bool GCRuntime::registerWithFinalizationRegistry(JSContext* cx,
   return true;
 }
 
-bool FinalizationObservers::addRecord(HandleObject target,
-                                      HandleObject record) {
+bool FinalizationObservers::addRecord(
+    HandleObject target, Handle<FinalizationRecordObject*> record) {
   // Add a record to the record map and clean up on failure.
   //
   // The following must be updated and kept in sync:
   //  - the zone's recordMap (to observe the target)
   //  - the registry's global objects's recordSet (to trace the record)
-  //  - the count of cross zone records (to calculate sweep groups)
 
-  MOZ_ASSERT(target->zone() == zone);
-
-  FinalizationRecordObject* unwrappedRecord =
-      &UncheckedUnwrapWithoutExpose(record)->as<FinalizationRecordObject>();
-
-  Zone* registryZone = unwrappedRecord->zone();
-  bool crossZone = registryZone != zone;
-  if (crossZone && !addCrossZoneWrapper(crossZoneRecords, record)) {
-    return false;
-  }
-  auto wrapperGuard = mozilla::MakeScopeExit([&] {
-    if (crossZone) {
-      removeCrossZoneWrapper(crossZoneRecords, record);
-    }
-  });
-
-  GlobalObject* registryGlobal = &unwrappedRecord->global();
+  GlobalObject* registryGlobal = &record->global();
   auto* globalData = registryGlobal->getOrCreateFinalizationRegistryData();
-  if (!globalData || !globalData->addRecord(unwrappedRecord)) {
+  if (!globalData || !globalData->addRecord(record)) {
     return false;
   }
-  auto globalDataGuard = mozilla::MakeScopeExit(
-      [&] { globalData->removeRecord(unwrappedRecord); });
 
   auto ptr = recordMap.lookupForAdd(target);
-  if (!ptr && !recordMap.add(ptr, target, RecordVector(zone))) {
+  if (!ptr && !recordMap.add(ptr, target, ObserverList())) {
+    globalData->removeRecord(record);
     return false;
   }
 
-  if (!ptr->value().append(record)) {
-    return false;
-  }
+  ptr->value().insertFront(record);
 
-  unwrappedRecord->setInRecordMap(true);
-
-  globalDataGuard.release();
-  wrapperGuard.release();
+  record->setInRecordMap(true);
   return true;
-}
-
-bool FinalizationObservers::addCrossZoneWrapper(WrapperWeakSet& weakSet,
-                                                JSObject* wrapper) {
-  MOZ_ASSERT(IsCrossCompartmentWrapper(wrapper));
-  MOZ_ASSERT(UncheckedUnwrapWithoutExpose(wrapper)->zone() != zone);
-
-  auto ptr = weakSet.lookupForAdd(wrapper);
-  MOZ_ASSERT(!ptr);
-  return weakSet.add(ptr, wrapper, UndefinedValue());
-}
-
-void FinalizationObservers::removeCrossZoneWrapper(WrapperWeakSet& weakSet,
-                                                   JSObject* wrapper) {
-  MOZ_ASSERT(IsCrossCompartmentWrapper(wrapper));
-  MOZ_ASSERT(UncheckedUnwrapWithoutExpose(wrapper)->zone() != zone);
-
-  auto ptr = weakSet.lookupForAdd(wrapper);
-  MOZ_ASSERT(ptr);
-  weakSet.remove(ptr);
-}
-
-static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
-  obj = UncheckedUnwrapWithoutExpose(obj);
-  if (!obj->is<FinalizationRecordObject>()) {
-    MOZ_ASSERT(JS_IsDeadWrapper(obj));
-    // CCWs between the compartments have been nuked. The
-    // FinalizationRegistry's callback doesn't run in this case.
-    return nullptr;
-  }
-  return &obj->as<FinalizationRecordObject>();
 }
 
 void FinalizationObservers::clearRecords() {
@@ -400,13 +341,13 @@ void FinalizationObservers::clearRecords() {
   //
   // WeakRefs are still updated during shutdown to avoid the possibility of
   // stale or dangling pointers.
-
-#ifdef DEBUG
-  checkTables();
-#endif
-
+  for (RecordMap::Enum e(recordMap); !e.empty(); e.popFront()) {
+    ObserverList& records = e.front().value();
+    for (auto iter = records.iter(); !iter.done(); iter.next()) {
+      iter->unlink();
+    }
+  }
   recordMap.clear();
-  crossZoneRecords.clear();
 }
 
 void GCRuntime::traceWeakFinalizationObserverEdges(JSTracer* trc, Zone* zone) {
@@ -415,12 +356,6 @@ void GCRuntime::traceWeakFinalizationObserverEdges(JSTracer* trc, Zone* zone) {
   if (observers) {
     observers->traceWeakEdges(trc);
   }
-}
-
-void FinalizationObservers::traceRoots(JSTracer* trc) {
-  // The cross-zone wrapper weak maps are traced as roots; this does not keep
-  // any of their entries alive by itself.
-  crossZoneRecords.trace(trc);
 }
 
 void FinalizationObservers::traceWeakEdges(JSTracer* trc) {
@@ -441,50 +376,62 @@ void FinalizationObservers::traceWeakFinalizationRegistryEdges(JSTracer* trc) {
   for (RegistrySet::Enum e(registries); !e.empty(); e.popFront()) {
     auto result = TraceWeakEdge(trc, &e.mutableFront(), "FinalizationRegistry");
     if (result.isDead()) {
-      auto* registry =
-          &result.initialTarget()->as<FinalizationRegistryObject>();
+      auto* registry = result.initialTarget();
       registry->queue()->setHasRegistry(false);
       e.removeFront();
     } else {
-      result.finalTarget()->as<FinalizationRegistryObject>().traceWeak(trc);
+      FinalizationRegistryObject* registry = result.finalTarget();
+      registry->traceWeak(trc);
+
+      // Now we know the registry is alive we can queue any records for cleanup
+      // if this didn't happen already.
+      FinalizationQueueObject* queue = registry->queue();
+      if (queue->hasRecordsToCleanUp()) {
+        gc->queueFinalizationRegistryForCleanup(queue);
+      }
     }
   }
 
   for (RecordMap::Enum e(recordMap); !e.empty(); e.popFront()) {
-    RecordVector& records = e.front().value();
+    ObserverList& records = e.front().value();
 
-    // Sweep finalization records, updating any pointers moved by the GC and
-    // remove if necessary.
-    records.mutableEraseIf([&](HeapPtr<JSObject*>& heapPtr) {
-      auto result = TraceWeakEdge(trc, &heapPtr, "FinalizationRecord");
-      JSObject* obj =
-          result.isLive() ? result.finalTarget() : result.initialTarget();
-      FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
-      MOZ_ASSERT_IF(record, record->isInRecordMap());
-
-      bool shouldRemove = !result.isLive() || shouldRemoveRecord(record);
-      if (shouldRemove && record && record->isInRecordMap()) {
-        updateForRemovedRecord(obj, record);
+    // Sweep finalization records, removing any dead or unregistered ones.
+    for (auto iter = records.iter(); !iter.done(); iter.next()) {
+      auto* record = &iter->as<FinalizationRecordObject>();
+      MOZ_ASSERT(record->isInRecordMap());
+      auto result =
+          TraceManuallyBarrieredWeakEdge(trc, &record, "FinalizationRecord");
+      MOZ_ASSERT_IF(result.isLive(),
+                    result.finalTarget() == result.initialTarget());
+      bool shouldRemove = result.isDead() || shouldRemoveRecord(record);
+      if (shouldRemove) {
+        record = result.initialTarget();
+        removeRecord(record);
+        record->unlink();
       }
-
-      return shouldRemove;
-    });
-
-#ifdef DEBUG
-    for (JSObject* obj : records) {
-      MOZ_ASSERT(UnwrapFinalizationRecord(obj)->isInRecordMap());
     }
-#endif
 
-    // Queue finalization records for targets that are dying.
+    // Queue remaining finalization records if the target dying.
     if (!TraceWeakEdge(trc, &e.front().mutableKey(),
                        "FinalizationRecord target")) {
-      for (JSObject* obj : records) {
-        FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
+      for (auto iter = records.iter(); !iter.done(); iter.next()) {
+        auto* record = &iter->as<FinalizationRecordObject>();
+        removeRecord(record);
+
         FinalizationQueueObject* queue = record->queue();
-        updateForRemovedRecord(obj, record);
+        MOZ_ASSERT(queue->hasRegistry());
         queue->queueRecordToBeCleanedUp(record);
-        gc->queueFinalizationRegistryForCleanup(queue);
+
+        // The registry may be in another zone that is being collected and may
+        // die itself, so check whether to queue at this time.
+        Zone* zone = record->zone();
+        bool shouldQueue =
+            !zone->wasGCStarted() || zone->gcState() >= Zone::Sweep;
+        if (shouldQueue) {
+          gc->queueFinalizationRegistryForCleanup(queue);
+        }
+
+        record->unlink();
       }
       e.removeFront();
     }
@@ -494,22 +441,16 @@ void FinalizationObservers::traceWeakFinalizationRegistryEdges(JSTracer* trc) {
 // static
 bool FinalizationObservers::shouldRemoveRecord(
     FinalizationRecordObject* record) {
+  MOZ_ASSERT(record);
   // Records are removed from the target's vector for the following reasons:
-  return !record ||                        // Nuked CCW to record.
-         !record->isRegistered() ||        // Unregistered record.
+  return !record->isRegistered() ||        // Unregistered record.
          !record->queue()->hasRegistry();  // Dead finalization registry.
 }
 
-void FinalizationObservers::updateForRemovedRecord(
-    JSObject* wrapper, FinalizationRecordObject* record) {
+void FinalizationObservers::removeRecord(FinalizationRecordObject* record) {
   // Remove other references to a record when it has been removed from the
   // zone's record map. See addRecord().
   MOZ_ASSERT(record->isInRecordMap());
-
-  Zone* registryZone = record->zone();
-  if (registryZone != zone) {
-    removeCrossZoneWrapper(crossZoneRecords, wrapper);
-  }
 
   GlobalObject* registryGlobal = &record->global();
   auto* globalData = registryGlobal->maybeFinalizationRegistryData();
@@ -521,23 +462,13 @@ void FinalizationObservers::updateForRemovedRecord(
   record->setInRecordMap(false);
 }
 
-void GCRuntime::nukeFinalizationRecordWrapper(
-    JSObject* wrapper, FinalizationRecordObject* record) {
-  // The target of the nuked wrapper may be gray, and that's OK.
-  AutoTouchingGrayThings atgt;
-
-  if (record->isInRecordMap()) {
-    FinalizationRegistryObject::unregisterRecord(record);
-    FinalizationObservers* observers = wrapper->zone()->finalizationObservers();
-    observers->updateForRemovedRecord(wrapper, record);
-  }
-}
-
 void GCRuntime::queueFinalizationRegistryForCleanup(
     FinalizationQueueObject* queue) {
   // Prod the embedding to call us back later to run the finalization callbacks,
   // if necessary.
 
+  MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(queue));
+  MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(queue->doCleanupFunction()));
   if (queue->isQueuedForCleanup()) {
     return;
   }
@@ -639,23 +570,6 @@ void FinalizationObservers::traceWeakWeakRefList(JSTracer* trc,
     }
   }
 }
-
-#ifdef DEBUG
-void FinalizationObservers::checkTables() const {
-  // Check all cross-zone wrappers are present in the appropriate table.
-  size_t recordCount = 0;
-  for (auto r = recordMap.all(); !r.empty(); r.popFront()) {
-    for (JSObject* object : r.front().value()) {
-      FinalizationRecordObject* record = UnwrapFinalizationRecord(object);
-      if (record && record->isInRecordMap() && record->zone() != zone) {
-        MOZ_ASSERT(crossZoneRecords.has(object));
-        recordCount++;
-      }
-    }
-  }
-  MOZ_ASSERT(crossZoneRecords.count() == recordCount);
-}
-#endif
 
 FinalizationRegistryGlobalData::FinalizationRegistryGlobalData(Zone* zone)
     : recordSet(zone) {}

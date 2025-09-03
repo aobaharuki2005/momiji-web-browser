@@ -799,10 +799,6 @@ void Zone::traceRootsInMajorGC(JSTracer* trc) {
   // Trace zone script-table roots. See comment below for justification re:
   // calling this only during major (non-nursery) collections.
   traceScriptTableRoots(trc);
-
-  if (FinalizationObservers* observers = finalizationObservers()) {
-    observers->traceRoots(trc);
-  }
 }
 
 void Zone::traceScriptTableRoots(JSTracer* trc) {
