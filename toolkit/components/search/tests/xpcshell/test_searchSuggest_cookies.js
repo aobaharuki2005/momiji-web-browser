@@ -108,14 +108,22 @@ add_task(async function test_normal_mode() {
   await test_engine(false);
 });
 
-async function test_engine(privateMode) {
-  info(`Testing ${privateMode ? "private" : "normal"} mode`);
+async function test_engine(inPrivateBrowsing) {
+  info(`Testing ${inPrivateBrowsing ? "private" : "normal"} mode`);
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("no results", privateMode, engines[0]);
+  let result = await controller.fetch({
+    searchString: "no results",
+    inPrivateBrowsing,
+    engine: engines[0],
+  });
   Assert.equal(result.local.length, 0, "Should have no local suggestions");
   Assert.equal(result.remote.length, 0, "Should have no remote suggestions");
 
-  result = await controller.fetch("cookie", privateMode, engines[1]);
+  result = await controller.fetch({
+    searchString: "cookie",
+    inPrivateBrowsing,
+    engine: engines[1],
+  });
   Assert.equal(result.local.length, 0, "Should have no local suggestions");
   Assert.equal(result.remote.length, 0, "Should have no remote suggestions");
   Assert.equal(await countCacheEntries(), 0, "The cache should be empty");

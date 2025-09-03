@@ -46,6 +46,47 @@ const lazy = XPCOMUtils.declareLazy({
  */
 
 /**
+ * @typedef {object} SuggestionFetchOptions
+ * @property {string} searchString
+ *   The term to provide suggestions for.
+ * @property {boolean} inPrivateBrowsing
+ *   Whether the request is being made in the context of private browsing.
+ * @property {nsISearchEngine} engine
+ *   The search engine to use for suggestions.
+ * @property {number} [userContextId]
+ *   The userContextId of the selected tab.
+ * @property {boolean} [restrictToEngine]
+ *   Whether to restrict local historical suggestions to the ones registered
+ *   under the given engine.
+ * @property {boolean} [dedupeRemoteAndLocal]
+ *   Whether to remove remote suggestions that duplicate local suggestions.
+ * @property {boolean} [fetchTrending]
+ *   Whether we should fetch trending suggestions.
+ */
+
+/**
+ * @typedef {object} SuggestionExtraContext
+ * @property {boolean} awaitingLocalResults
+ *   Indicates if this request context is awaiting local results.
+ * @property {string} engineId
+ *   The engine identifier to use for some telemetry.
+ * @property {XMLHttpRequest} [request]
+ *   The request for this suggestion context.
+ * @property {number} gleanTimerId
+ *   The identifier of the Glean timer that is measuring latency of the request.
+ * @property {nsITimer} timer
+ *   A timer that is monitoring the connection for timeouts.
+ * @property {boolean} [aborted]
+ *   Set to true if the request is being aborted.
+ * @property {boolean} [errorWasReceived]
+ *   Set to true if there was an error on the request.
+ */
+
+/**
+ * @typedef {SuggestionExtraContext & SuggestionFetchOptions} SuggestionRequestContext
+ */
+
+/**
  * Generates an UUID.
  *
  * @returns {string}
@@ -274,35 +315,25 @@ export class SearchSuggestionController {
    * Fetch search suggestions from all of the providers. Fetches in progress
    * will be stopped and results from them will not be provided.
    *
-   * @param {string} searchTerm - the term to provide suggestions for
-   * @param {boolean} privateMode - whether the request is being made in the
-   *                                context of private browsing.
-   * @param {nsISearchEngine} engine - search engine for the suggestions.
-   * @param {number} userContextId - the userContextId of the selected tab.
-   * @param {boolean} restrictToEngine - whether to restrict local historical
-   *   suggestions to the ones registered under the given engine.
-   * @param {boolean} dedupeRemoteAndLocal - whether to remove remote
-   *   suggestions that dupe local suggestions
-   * @param {boolean} fetchTrending - Whether we should fetch trending suggestions.
-   *
+   * @param {SuggestionFetchOptions} options
    * @returns {Promise<FetchResult>}
    */
-  fetch(
-    searchTerm,
-    privateMode,
+  fetch({
+    searchString,
+    inPrivateBrowsing,
     engine,
     userContextId = 0,
     restrictToEngine = false,
     dedupeRemoteAndLocal = true,
-    fetchTrending = false
-  ) {
+    fetchTrending = false,
+  }) {
     // There is no smart filtering from previous results here (as there is when
     // looking through history/form data) because the result set returned by the
     // server is different for every typed value - e.g. "ocean breathes" does
     // not return a subset of the results returned for "ocean".
 
     lazy.logConsole.debug(
-      `SearchSuggestionController.fetch() called with searchTerm: ${searchTerm}`
+      `SearchSuggestionController.fetch() called with searchString: ${searchString}`
     );
 
     this.stop();
@@ -310,9 +341,9 @@ export class SearchSuggestionController {
     if (!Services.search.isInitialized) {
       throw new Error("Search not initialized yet (how did you get here?)");
     }
-    if (typeof privateMode === "undefined") {
+    if (typeof inPrivateBrowsing === "undefined") {
       throw new Error(
-        "The privateMode argument is required to avoid unintentional privacy leaks"
+        "The inPrivateBrowsing argument is required to avoid unintentional privacy leaks"
       );
     }
     if (!engine.getSubmission) {
@@ -327,36 +358,34 @@ export class SearchSuggestionController {
 
     // Array of promises to resolve before returning results.
     let promises = [];
-    let context = (this.#context = {
+    this.#context = {
       awaitingLocalResults: false,
       dedupeRemoteAndLocal,
       engine,
       engineId: engine?.identifier || "other",
       fetchTrending,
-      privateMode,
-      request: null,
+      inPrivateBrowsing,
       restrictToEngine,
-      searchString: searchTerm,
-      telemetryHandled: false,
+      searchString,
       gleanTimerId: 0,
       timer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
       userContextId,
-    });
+    };
 
     // Fetch local results from Form History, if requested.
     if (this.maxLocalResults && !fetchTrending) {
-      context.awaitingLocalResults = true;
-      promises.push(this.#fetchFormHistory(context));
+      this.#context.awaitingLocalResults = true;
+      promises.push(this.#fetchFormHistory(this.#context));
     }
     // Fetch remote results from Search Service, if requested.
     if (
-      (searchTerm || fetchTrending) &&
+      (searchString || fetchTrending) &&
       lazy.suggestionsEnabled &&
-      (!privateMode || lazy.suggestionsInPrivateBrowsingEnabled) &&
+      (!inPrivateBrowsing || lazy.suggestionsInPrivateBrowsingEnabled) &&
       this.maxRemoteResults &&
       SearchSuggestionController.engineOffersSuggestions(engine, fetchTrending)
     ) {
-      promises.push(this.#fetchRemote(context));
+      promises.push(this.#fetchRemote(this.#context));
     }
 
     function handleRejection(reason) {
@@ -369,7 +398,7 @@ export class SearchSuggestionController {
       return null;
     }
     return Promise.all(promises).then(
-      results => this.#dedupeAndReturnResults(context, results),
+      results => this.#dedupeAndReturnResults(this.#context, results),
       handleRejection
     );
   }
@@ -383,14 +412,22 @@ export class SearchSuggestionController {
    */
   stop() {
     if (this.#context) {
-      this.#context.abort = true;
+      this.#context.aborted = true;
       this.#context.request?.abort();
     }
     this.#context = null;
   }
 
+  /**
+   * @type {SuggestionRequestContext}
+   */
   #context;
 
+  /**
+   * Fetches search suggestions from the form history.
+   *
+   * @param {SuggestionRequestContext} context
+   */
   async #fetchFormHistory(context) {
     // We don't cache these results as we assume that the in-memory SQL cache is
     // good enough in performance.
@@ -415,13 +452,15 @@ export class SearchSuggestionController {
   /**
    * Records per-engine telemetry after a search has finished.
    *
-   * @param {object} context
+   * @param {SuggestionRequestContext} context
    *   The search context.
    */
   #reportTelemetryForEngine(context) {
-    if (!context.telemetryHandled) {
+    // If the timer id has been reset, then we have already handled telemetry.
+    // This might occur in the context of an abort or or cancel.
+    if (context.gleanTimerId) {
       // Stop the latency stopwatch.
-      if (context.abort) {
+      if (context.aborted) {
         Glean.search.suggestionsLatency[context.engineId].cancel(
           context.gleanTimerId
         );
@@ -431,11 +470,10 @@ export class SearchSuggestionController {
         );
       }
       context.gleanTimerId = 0;
-      context.telemetryHandled = true;
       if (context.engine.isConfigEngine) {
-        if (context.abort) {
+        if (context.aborted) {
           Glean.searchSuggestions.abortedRequests[context.engine.id].add();
-        } else if (context.error) {
+        } else if (context.errorWasReceived) {
           Glean.searchSuggestions.failedRequests[context.engine.id].add();
         } else {
           Glean.searchSuggestions.successfulRequests[context.engine.id].add();
@@ -447,7 +485,7 @@ export class SearchSuggestionController {
   /**
    * Fetch suggestions from the search engine over the network.
    *
-   * @param {object} context
+   * @param {SuggestionRequestContext} context
    *   The search context.
    * @returns {Promise}
    *   Returns a promise that is resolved when the response is received, or
@@ -494,7 +532,7 @@ export class SearchSuggestionController {
 
     request.setOriginAttributes({
       userContextId: context.userContextId,
-      privateBrowsingId: context.privateMode ? 1 : 0,
+      privateBrowsingId: context.inPrivateBrowsing ? 1 : 0,
       firstPartyDomain,
     });
 
@@ -517,7 +555,7 @@ export class SearchSuggestionController {
     request.addEventListener("load", () => {
       context.timer.cancel();
       this.#reportTelemetryForEngine(context);
-      if (!this.#context || context != this.#context || context.abort) {
+      if (!this.#context || context != this.#context || context.aborted) {
         deferredResponse.resolve(
           "Got HTTP response after the request was cancelled"
         );
@@ -527,7 +565,7 @@ export class SearchSuggestionController {
     });
 
     request.addEventListener("error", () => {
-      this.#context.error = true;
+      this.#context.errorWasReceived = true;
       this.#reportTelemetryForEngine(context);
       deferredResponse.resolve("HTTP error");
     });
@@ -558,7 +596,7 @@ export class SearchSuggestionController {
    * Called when the request completed successfully (thought the HTTP status
    * could be anything) so we can handle the response data.
    *
-   * @param {object} context
+   * @param {SuggestionRequestContext} context
    *   The search context.
    * @param {PromiseWithResolvers} deferredResponse
    *   The promise to resolve when a response is received.
@@ -624,7 +662,7 @@ export class SearchSuggestionController {
   }
 
   /**
-   * @param {object} context
+   * @param {SuggestionRequestContext} context
    *   The search context.
    * @param {{
    *   localResults?:FormHistoryResultType, result:SuggestionRemoteResult
@@ -633,7 +671,7 @@ export class SearchSuggestionController {
    * @returns {FetchResult?}
    */
   #dedupeAndReturnResults(context, suggestResults) {
-    if (context.abort) {
+    if (context.aborted) {
       return null;
     }
 

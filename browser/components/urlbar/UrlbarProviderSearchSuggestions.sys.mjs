@@ -413,15 +413,15 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
 
     // See `SearchSuggestionsController.fetch` documentation for a description
     // of `fetchData`.
-    let fetchData = await this._suggestionsController.fetch(
+    let fetchData = await this._suggestionsController.fetch({
       searchString,
-      queryContext.isPrivate,
+      inPrivateBrowsing: queryContext.isPrivate,
       engine,
-      queryContext.userContextId,
-      this._isTokenOrRestrictionPresent(queryContext),
-      false,
-      this.#shouldFetchTrending(queryContext)
-    );
+      userContextId: queryContext.userContextId,
+      restrictToEngine: this._isTokenOrRestrictionPresent(queryContext),
+      dedupeRemoteAndLocal: false,
+      fetchTrending: this.#shouldFetchTrending(queryContext),
+    });
 
     // The fetch was canceled.
     if (!fetchData) {
