@@ -19,20 +19,8 @@ class CssSelectorWarningsTooltipHelper {
    * Fill the tooltip with selector warnings.
    */
   async setContent(data, tooltip) {
-    const { doc } = tooltip;
     const fragment = this.#getTemplate(data, tooltip);
-    tooltip.panel.innerHTML = "";
-
-    // Because Fluent is async we need to manually translate the fragment and
-    // then insert it into the tooltip. This is needed in order for the tooltip
-    // to size to the contents properly and for tests.
-    await doc.l10n.translateFragment(fragment);
-    doc.l10n.pauseObserving();
-    tooltip.panel.appendChild(fragment);
-    doc.l10n.resumeObserving();
-
-    // Size the content.
-    tooltip.setContentSize({ width: 267 });
+    await tooltip.setLocalizedFragment(fragment, { width: 267 });
   }
 
   /**
