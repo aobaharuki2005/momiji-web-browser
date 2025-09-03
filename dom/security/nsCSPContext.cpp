@@ -517,8 +517,14 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
     }
   }
 
+  bool trustedTypesRequired = (mRequireTrustedTypesForDirectiveState ==
+                               RequireTrustedTypesForDirectiveState::ENFORCE);
+
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    if (!mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_UNSAFE_EVAL, u""_ns)) {
+    if (!(trustedTypesRequired &&
+          mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_TRUSTED_TYPES_EVAL,
+                               u""_ns)) &&
+        !mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_UNSAFE_EVAL, u""_ns)) {
       // policy is violated: must report the violation and allow the inline
       // script if the policy is report-only.
       *outShouldReportViolation = true;
