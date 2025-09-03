@@ -75,9 +75,10 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
    *
-   * @param {UrlbarQueryContext} queryContext The query context object
+   * @param {UrlbarQueryContext} queryContext The query context object.
+   * @param {UrlbarController} controller The current controller.
    */
-  async isActive(queryContext) {
+  async isActive(queryContext, controller) {
     // If the sources don't include search or the user used a restriction
     // character other than search, don't allow any suggestions.
     if (
@@ -98,7 +99,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
       return false;
     }
 
-    if (!this._allowSuggestions(queryContext)) {
+    if (!this._allowSuggestions(queryContext, controller)) {
       return false;
     }
 
@@ -138,15 +139,17 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
    * context.  If this returns false, then we shouldn't fetch either form
    * history or remote suggestions.
    *
-   * @param {object} queryContext The query context object
+   * @param {UrlbarQueryContext} queryContext The query context object.
+   * @param {UrlbarController} controller The current controller.
    * @returns {boolean} True if suggestions in general are allowed and false if
    *   not.
    */
-  _allowSuggestions(queryContext) {
+  _allowSuggestions(queryContext, controller) {
     if (
       // If the user typed a restriction token or token alias, we ignore the
       // pref to disable suggestions in the Urlbar.
-      (!lazy.UrlbarPrefs.get("suggest.searches") &&
+      (controller.input.isAddressbar &&
+        !lazy.UrlbarPrefs.get("suggest.searches") &&
         !this._isTokenOrRestrictionPresent(queryContext)) ||
       !lazy.UrlbarPrefs.get("browser.search.suggest.enabled") ||
       (queryContext.isPrivate &&

@@ -396,7 +396,7 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
           lazy.UrlbarPrefs.get("showSearchSuggestionsFirst") &&
           (await this.queryInstance
             .getProvider("UrlbarProviderSearchSuggestions")
-            ?.isActive(queryContext)) &&
+            ?.isActive(queryContext, this.queryInstance.controller)) &&
           lazy.UrlbarSearchUtils.getDefaultEngine(
             queryContext.isPrivate
           ).supportsResponseType(lazy.SearchUtils.URL_TYPE.SUGGEST_JSON)
