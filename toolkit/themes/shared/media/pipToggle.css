@@ -267,7 +267,7 @@
   box-shadow: 0 4px 4px rgba(12, 12, 13, 0.25);
   width: var(--pip-expanded-max-width);
   min-width: var(--pip-expanded-min-width);
-  border-radius: 8px;
+  border-radius: var(--border-radius-medium);
 }
 
 .pip-wrapper:not(.experiment).hovering > .pip-expanded {
