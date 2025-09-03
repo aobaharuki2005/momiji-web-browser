@@ -587,10 +587,19 @@ add_task(async function testAndroidUI() {
     info("Click the save button");
     const saveButton = await getElementFromDocumentByText(document, "Save");
     EventUtils.synthesizeMouseAtCenter(saveButton, {}, window);
+
     const savedText = await getElementFromDocumentByText(document, "Saved to");
     ok(savedText, "The text path is being displayed");
-    info(`The text displayed is: ${savedText.textContent}`);
-    const savedPath = savedText.textContent.slice("Saved to ".length);
+
+    // Extract the file path from the l10n arguments
+    const savedPath = JSON.parse(savedText.getAttribute("data-l10n-args")).path;
+    info(`Profile saved to: ${savedPath}`);
+
+    Assert.ok(
+      savedPath && !!savedPath.length,
+      "Saved path should not be empty"
+    );
+
     const fileinfo = await IOUtils.stat(savedPath);
     Assert.greater(
       fileinfo.size,
