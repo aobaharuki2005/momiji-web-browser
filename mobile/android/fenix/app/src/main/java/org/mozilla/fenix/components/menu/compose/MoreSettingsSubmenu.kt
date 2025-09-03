@@ -31,6 +31,7 @@ internal fun MoreSettingsSubmenu(
     isWebCompatReporterSupported: Boolean,
     isWebCompatEnabled: Boolean,
     translationInfo: TranslationInfo,
+    showShortcuts: Boolean,
     onWebCompatReporterClick: () -> Unit,
     onShortcutsMenuClick: () -> Unit,
     onAddToHomeScreenMenuClick: () -> Unit,
@@ -58,10 +59,12 @@ internal fun MoreSettingsSubmenu(
             )
         }
 
-        ShortcutsMenuItem(
-            isPinned = isPinned,
-            onShortcutsMenuClick = onShortcutsMenuClick,
-        )
+        if (showShortcuts) {
+            ShortcutsMenuItem(
+                isPinned = isPinned,
+                onShortcutsMenuClick = onShortcutsMenuClick,
+            )
+        }
 
         MenuItem(
             label = if (isInstallable) {
@@ -189,6 +192,7 @@ private fun MoreSettingsSubmenuPreview() {
                         translatedLanguage = "English",
                         onTranslatePageMenuClick = {},
                     ),
+                    showShortcuts = true,
                     onWebCompatReporterClick = {},
                     onShortcutsMenuClick = {},
                     onAddToHomeScreenMenuClick = {},
@@ -225,6 +229,7 @@ private fun MoreSettingsSubmenuPrivatePreview() {
                         translatedLanguage = "English",
                         onTranslatePageMenuClick = {},
                     ),
+                    showShortcuts = true,
                     onWebCompatReporterClick = {},
                     onShortcutsMenuClick = {},
                     onAddToHomeScreenMenuClick = {},
