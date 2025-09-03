@@ -3880,12 +3880,13 @@ impl Renderer {
 
         if window_is_opaque {
             match input_layers.last_mut() {
-                Some(layer) => {
+                Some(_layer) => {
                     // If the window is opaque, and the last(back) layer is
                     //  a content layer then mark that as opaque.
-                    if let CompositorSurfaceUsage::Content = layer.usage {
-                        layer.is_opaque = true;
-                    }
+                    // TODO: This causes talos performance regressions.
+                    // if let CompositorSurfaceUsage::Content = layer.usage {
+                    //     layer.is_opaque = true;
+                    // }
                 }
                 None => {
                     // If no tiles were present, and we expect an opaque window,

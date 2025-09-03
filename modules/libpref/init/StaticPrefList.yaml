@@ -7799,7 +7799,7 @@
     mirror: always
 -   name: gfx.webrender.swap-chain-allow-tearing
     type: bool
-    value: true
+    value: false
     mirror: once
 #endif
 
