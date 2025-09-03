@@ -2071,6 +2071,12 @@ VARIABLES = {
         will be made explicit.
         """,
     ),
+    "DUMP_SYMBOLS_FLAGS": (
+        List,
+        list,
+        """Extra flags passed to the dumpsymbols utility when generating symbols for the crash reporter.
+        """,
+    ),
     "JAR_MANIFESTS": (
         ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList),
         list,
