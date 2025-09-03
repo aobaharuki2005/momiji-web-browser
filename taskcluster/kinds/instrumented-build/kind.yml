@@ -26,6 +26,7 @@ task-defaults:
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: instrumented
+            DISABLE_CLANG_PLUGIN: "1"
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
     use-python: default
     run:
