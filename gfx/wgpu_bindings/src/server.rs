@@ -396,6 +396,17 @@ unsafe fn adapter_request_device(
         }
     }
 
+    if desc.experimental_features.is_enabled() {
+        log::warn!(
+            concat!(
+                "DeviceDescriptor from child process ",
+                "should not enable experimental features, ",
+                "but it did request {:?}"
+            ),
+            desc.experimental_features
+        );
+    }
+
     if wgpu_parent_is_external_texture_enabled() {
         // Enable features used for external texture support, if available. We
         // avoid adding unsupported features to required_features so that we
