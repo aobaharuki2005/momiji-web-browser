@@ -520,13 +520,6 @@ class ModuleLoaderBase : public nsISupports {
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
-  void StartFetchingModuleAndDependencies(JSContext* aCx,
-                                          const ModuleMapKey& aRequestedModule,
-                                          Handle<JSScript*> aReferrer,
-                                          Handle<JSObject*> aModuleRequest,
-                                          Handle<Value> aHostDefined,
-                                          Handle<Value> aPayload);
-
   void InstantiateAndEvaluateDynamicImport(ModuleLoadRequest* aRequest);
 
   static bool OnLoadRequestedModulesResolved(JSContext* aCx, unsigned aArgc,
