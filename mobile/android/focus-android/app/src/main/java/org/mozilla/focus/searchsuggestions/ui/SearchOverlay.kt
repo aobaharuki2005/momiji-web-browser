@@ -28,6 +28,7 @@ import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
 import org.mozilla.focus.topsites.TopSitesOverlay
 import org.mozilla.focus.ui.theme.focusColors
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Composable function that displays the search overlay.
@@ -89,7 +90,7 @@ private fun SearchSuggestions(
     val context = LocalContext.current
     val components = components
 
-    val icon = AppCompatResources.getDrawable(context, R.drawable.mozac_ic_search_24)?.toBitmap()
+    val icon = AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_search_24)?.toBitmap()
     val provider = remember {
         SearchSuggestionProvider(
             components.store,

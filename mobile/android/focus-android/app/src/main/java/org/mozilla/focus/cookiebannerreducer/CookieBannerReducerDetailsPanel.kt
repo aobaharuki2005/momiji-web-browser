@@ -62,7 +62,7 @@ class CookieBannerReducerDetailsPanel(
 
     private fun expandBottomSheet() {
         val bottomSheet =
-            findViewById<View>(R.id.design_bottom_sheet) as FrameLayout
+            findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as FrameLayout
         BottomSheetBehavior.from(bottomSheet).state = BottomSheetBehavior.STATE_EXPANDED
     }
 

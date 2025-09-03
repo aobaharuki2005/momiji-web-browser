@@ -28,6 +28,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
 import java.lang.ref.WeakReference
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Custom exception class for handling errors related to the SessionNotificationService.
@@ -147,7 +148,7 @@ class SessionNotificationService : Service() {
             )
             .addAction(
                 NotificationCompat.Action(
-                    R.drawable.mozac_ic_delete_24,
+                    iconsR.drawable.mozac_ic_delete_24,
                     applicationContext.getString(R.string.notification_action_erase_and_open),
                     createOpenAndEraseActionIntent(),
                 ),

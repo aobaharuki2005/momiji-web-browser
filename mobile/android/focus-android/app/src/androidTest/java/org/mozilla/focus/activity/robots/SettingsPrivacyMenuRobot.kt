@@ -94,7 +94,7 @@ class SettingsPrivacyMenuRobot {
                     matches(
                         hasCousin(
                             allOf(
-                                withId(R.id.switchWidget),
+                                withId(androidx.preference.R.id.switchWidget),
                                 isChecked(),
                             ),
                         ),
@@ -106,7 +106,7 @@ class SettingsPrivacyMenuRobot {
                     matches(
                         hasCousin(
                             allOf(
-                                withId(R.id.switchWidget),
+                                withId(androidx.preference.R.id.switchWidget),
                                 isNotChecked(),
                             ),
                         ),
@@ -122,7 +122,7 @@ class SettingsPrivacyMenuRobot {
                     matches(
                         hasCousin(
                             allOf(
-                                withId(R.id.switchWidget),
+                                withId(androidx.preference.R.id.switchWidget),
                                 isChecked(),
                             ),
                         ),
@@ -134,7 +134,7 @@ class SettingsPrivacyMenuRobot {
                     matches(
                         hasCousin(
                             allOf(
-                                withId(R.id.switchWidget),
+                                withId(androidx.preference.R.id.switchWidget),
                                 isNotChecked(),
                             ),
                         ),
@@ -150,7 +150,7 @@ class SettingsPrivacyMenuRobot {
                     matches(
                         hasCousin(
                             allOf(
-                                withId(R.id.switchWidget),
+                                withId(androidx.preference.R.id.switchWidget),
                                 isChecked(),
                             ),
                         ),
@@ -162,7 +162,7 @@ class SettingsPrivacyMenuRobot {
                     matches(
                         hasCousin(
                             allOf(
-                                withId(R.id.switchWidget),
+                                withId(androidx.preference.R.id.switchWidget),
                                 isNotChecked(),
                             ),
                         ),
@@ -178,7 +178,7 @@ class SettingsPrivacyMenuRobot {
                     matches(
                         hasCousin(
                             allOf(
-                                withId(R.id.switchWidget),
+                                withId(androidx.preference.R.id.switchWidget),
                                 isChecked(),
                             ),
                         ),
@@ -190,7 +190,7 @@ class SettingsPrivacyMenuRobot {
                     matches(
                         hasCousin(
                             allOf(
-                                withId(R.id.switchWidget),
+                                withId(androidx.preference.R.id.switchWidget),
                                 isNotChecked(),
                             ),
                         ),
@@ -283,7 +283,7 @@ private fun assertAdTrackersBlockSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -295,7 +295,7 @@ private fun assertAdTrackersBlockSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -317,7 +317,7 @@ private fun assertAnalyticTrackersBlockSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -329,7 +329,7 @@ private fun assertAnalyticTrackersBlockSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -351,7 +351,7 @@ private fun assertSocialTrackersBlockSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -363,7 +363,7 @@ private fun assertSocialTrackersBlockSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -385,7 +385,7 @@ private fun assertOtherContentTrackersBlockSwitchState(enabled: Boolean = false)
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -397,7 +397,7 @@ private fun assertOtherContentTrackersBlockSwitchState(enabled: Boolean = false)
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -419,7 +419,7 @@ private fun assertBlockWebFontsSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -431,7 +431,7 @@ private fun assertBlockWebFontsSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -453,7 +453,7 @@ private fun assertBlockJavaScriptSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -465,7 +465,7 @@ private fun assertBlockJavaScriptSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -515,7 +515,7 @@ private fun assertUseFingerprintSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -527,7 +527,7 @@ private fun assertUseFingerprintSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -549,7 +549,7 @@ private fun assertStealthModeSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -561,7 +561,7 @@ private fun assertStealthModeSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -589,7 +589,7 @@ private fun assertSafeBrowsingSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -601,7 +601,7 @@ private fun assertSafeBrowsingSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -623,7 +623,7 @@ private fun assertHttpsOnlyModeSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -635,7 +635,7 @@ private fun assertHttpsOnlyModeSwitchState(enabled: Boolean = true) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),
@@ -657,7 +657,7 @@ private fun assertSendDataSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isChecked(),
                         ),
                     ),
@@ -669,7 +669,7 @@ private fun assertSendDataSwitchState(enabled: Boolean = false) {
                 matches(
                     hasCousin(
                         allOf(
-                            withId(R.id.switchWidget),
+                            withId(androidx.preference.R.id.switchWidget),
                             isNotChecked(),
                         ),
                     ),

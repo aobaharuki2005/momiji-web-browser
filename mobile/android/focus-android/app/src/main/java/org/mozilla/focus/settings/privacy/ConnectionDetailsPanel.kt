@@ -15,6 +15,7 @@ import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeW
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.ConnectionDetailsBinding
 import org.mozilla.focus.ext.components
+import mozilla.components.ui.icons.R as iconsR
 
 @SuppressWarnings("LongParameterList")
 class ConnectionDetailsPanel(
@@ -61,9 +62,9 @@ class ConnectionDetailsPanel(
         }
 
         val securityIcon = if (isConnectionSecure) {
-            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_lock_24)
+            AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_lock_24)
         } else {
-            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_warning_fill_24)
+            AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_warning_fill_24)
         }
 
         binding.securityInfo.putCompoundDrawablesRelativeWithIntrinsicBounds(

@@ -17,6 +17,7 @@ import org.mozilla.focus.activity.IntentReceiverActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
 import org.mozilla.focus.state.AppAction
+import mozilla.components.ui.icons.R as iconsR
 
 class SearchWidgetProvider : AppSearchWidgetProvider() {
 
@@ -36,7 +37,7 @@ class SearchWidgetProvider : AppSearchWidgetProvider() {
     override val config: SearchWidgetConfig =
         SearchWidgetConfig(
             searchWidgetIconResource = R.drawable.ic_splash_screen,
-            searchWidgetMicrophoneResource = R.drawable.mozac_ic_microphone_24,
+            searchWidgetMicrophoneResource = iconsR.drawable.mozac_ic_microphone_24,
             appName = R.string.app_name,
         )
 

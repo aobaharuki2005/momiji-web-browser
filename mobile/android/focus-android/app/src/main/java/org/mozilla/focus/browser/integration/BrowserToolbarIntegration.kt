@@ -61,6 +61,9 @@ import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.ui.theme.focusTypography
 import org.mozilla.focus.utils.ClickableSubstringLink
+import androidx.cardview.R as cardViewR
+import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.ui.icons.R as iconsR
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 class BrowserToolbarIntegration(
@@ -124,7 +127,7 @@ class BrowserToolbarIntegration(
     private val eraseAction = BrowserToolbar.Button(
         imageDrawable = AppCompatResources.getDrawable(
             toolbar.context,
-            R.drawable.mozac_ic_delete_24,
+            iconsR.drawable.mozac_ic_delete_24,
         )!!,
         contentDescription = toolbar.context.getString(R.string.content_description_erase),
         iconTintColorResource = R.color.primaryText,
@@ -179,15 +182,15 @@ class BrowserToolbarIntegration(
             icons = icons.copy(
                 trackingProtectionTrackersBlocked = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield_checkmark_24,
+                    iconsR.drawable.mozac_ic_shield_checkmark_24,
                 )!!,
                 trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield_checkmark_24,
+                    iconsR.drawable.mozac_ic_shield_checkmark_24,
                 )!!,
                 trackingProtectionException = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield_slash_24,
+                    iconsR.drawable.mozac_ic_shield_slash_24,
                 )!!,
             )
         }
@@ -290,7 +293,7 @@ class BrowserToolbarIntegration(
                 .collect { showEraseCfr ->
                     if (showEraseCfr) {
                         val eraseActionView =
-                            toolbar.findViewById<LinearLayout>(R.id.mozac_browser_toolbar_navigation_actions)
+                            toolbar.findViewById<LinearLayout>(toolbarR.id.mozac_browser_toolbar_navigation_actions)
                                 .children
                                 .last()
                         CFRPopup(
@@ -310,7 +313,7 @@ class BrowserToolbarIntegration(
                                 ),
                                 dismissButtonColor = ContextCompat.getColor(
                                     fragment.requireContext(),
-                                    R.color.cardview_light_background,
+                                    cardViewR.color.cardview_light_background,
                                 ),
                                 popupVerticalOffset = 0.dp,
                             ),
@@ -343,7 +346,9 @@ class BrowserToolbarIntegration(
                 .collect { showCookieBannerCfr ->
                     if (showCookieBannerCfr) {
                         CFRPopup(
-                            anchor = toolbar.findViewById<AppCompatEditText>(R.id.mozac_browser_toolbar_background),
+                            anchor = toolbar.findViewById<AppCompatEditText>(
+                                toolbarR.id.mozac_browser_toolbar_background,
+                            ),
                             properties = CFRPopupProperties(
                                 popupWidth = 256.dp,
                                 popupAlignment = CFRPopup.PopupAlignment.BODY_TO_ANCHOR_START,
@@ -359,7 +364,7 @@ class BrowserToolbarIntegration(
                                 ),
                                 dismissButtonColor = ContextCompat.getColor(
                                     fragment.requireContext(),
-                                    R.color.cardview_light_background,
+                                    cardViewR.color.cardview_light_background,
                                 ),
                                 popupVerticalOffset = 0.dp,
                                 indicatorArrowStartOffset = 10.dp,
@@ -408,7 +413,7 @@ class BrowserToolbarIntegration(
                     if (showTrackingProtectionCfrForTab[store.state.selectedTabId] == true) {
                         CFRPopup(
                             anchor = toolbar.findViewById(
-                                R.id.mozac_browser_toolbar_tracking_protection_indicator,
+                                toolbarR.id.mozac_browser_toolbar_tracking_protection_indicator,
                             ),
                             properties = CFRPopupProperties(
                                 popupWidth = 256.dp,
@@ -425,7 +430,7 @@ class BrowserToolbarIntegration(
                                 ),
                                 dismissButtonColor = ContextCompat.getColor(
                                     fragment.requireContext(),
-                                    R.color.cardview_light_background,
+                                    cardViewR.color.cardview_light_background,
                                 ),
                                 popupVerticalOffset = 0.dp,
                             ),
