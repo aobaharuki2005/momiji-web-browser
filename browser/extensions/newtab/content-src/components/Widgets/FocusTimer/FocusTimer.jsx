@@ -83,7 +83,7 @@ export const getClipPath = progress => {
   return `polygon(${points.join(", ")})`;
 };
 
-export const FocusTimer = ({ dispatch }) => {
+export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   // calculated value for the progress circle; 1 = 100%
   const [progress, setProgress] = useState(0);
@@ -101,6 +101,11 @@ export const FocusTimer = ({ dispatch }) => {
     timerData[timerType];
   const initialTimerDuration = timerData[timerType].initialDuration;
 
+  const handleTimerInteraction = useCallback(
+    () => handleUserInteraction("focusTimer"),
+    [handleUserInteraction]
+  );
+
   const handleIntersection = useCallback(() => {
     dispatch(
       ac.AlsoToMain({
@@ -117,7 +122,8 @@ export const FocusTimer = ({ dispatch }) => {
       arcRef.current.style.webkitClipPath = "polygon(50% 50%)";
     }
     setProgress(0);
-  }, [arcRef]);
+    handleTimerInteraction();
+  }, [arcRef, handleTimerInteraction]);
 
   const prefs = useSelector(state => state.Prefs.values);
   const showSystemNotifications =
@@ -277,6 +283,7 @@ export const FocusTimer = ({ dispatch }) => {
         );
       });
     }
+    handleTimerInteraction();
   };
 
   // Pause timer function
@@ -319,6 +326,7 @@ export const FocusTimer = ({ dispatch }) => {
         );
       });
     }
+    handleTimerInteraction();
   };
 
   // reset timer function
@@ -350,6 +358,7 @@ export const FocusTimer = ({ dispatch }) => {
     if (progressVisible) {
       setProgressVisible(false);
     }
+    handleTimerInteraction();
   };
 
   // Toggles between "focus" and "break" timer types
@@ -397,16 +406,19 @@ export const FocusTimer = ({ dispatch }) => {
         })
       );
     });
+    handleTimerInteraction();
   };
 
   const handleKeyDown = e => {
     if (e.key === "Enter") {
       e.preventDefault();
       setTimerDuration(e);
+      handleTimerInteraction();
     }
 
     if (e.key === "Tab") {
       setTimerDuration(e);
+      handleTimerInteraction();
     }
   };
 
@@ -488,6 +500,7 @@ export const FocusTimer = ({ dispatch }) => {
         },
       })
     );
+    handleTimerInteraction();
   }
 
   function handlePrefUpdate(prefName, prefValue) {
@@ -500,6 +513,7 @@ export const FocusTimer = ({ dispatch }) => {
         },
       })
     );
+    handleTimerInteraction();
   }
 
   return timerData ? (

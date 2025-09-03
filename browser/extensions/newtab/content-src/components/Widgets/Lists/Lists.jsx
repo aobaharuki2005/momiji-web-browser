@@ -32,7 +32,7 @@ const USER_ACTION_TYPES = {
 const PREF_WIDGETS_LISTS_MAX_LISTS = "widgets.lists.maxLists";
 const PREF_WIDGETS_LISTS_MAX_LISTITEMS = "widgets.lists.maxListItems";
 
-function Lists({ dispatch }) {
+function Lists({ dispatch, handleUserInteraction }) {
   const prefs = useSelector(state => state.Prefs.values);
   const { selected, lists } = useSelector(state => state.ListsWidget);
   const [newTask, setNewTask] = useState("");
@@ -45,6 +45,11 @@ function Lists({ dispatch }) {
   const selectRef = useRef(null);
   const reorderListRef = useRef(null);
   const [canvasRef, fireConfetti] = useConfetti();
+
+  const handleListInteraction = useCallback(
+    () => handleUserInteraction("lists"),
+    [handleUserInteraction]
+  );
 
   // store selectedList with useMemo so it isnt re-calculated on every re-render
   const isValidUrl = useCallback(str => URL.canParse(str), []);
@@ -101,8 +106,9 @@ function Lists({ dispatch }) {
           data: { lists: updatedLists },
         })
       );
+      handleListInteraction();
     },
-    [lists, selected, selectedList, dispatch]
+    [lists, selected, selectedList, dispatch, handleListInteraction]
   );
 
   const moveTask = useCallback(
@@ -140,6 +146,7 @@ function Lists({ dispatch }) {
           data: e.target.value,
         })
       );
+      handleListInteraction();
     }
 
     function handleReorder(e) {
@@ -154,7 +161,7 @@ function Lists({ dispatch }) {
       selectNode.removeEventListener("change", handleSelectChange);
       reorderNode.removeEventListener("reorder", handleReorder);
     };
-  }, [dispatch, isEditing, reorderLists]);
+  }, [dispatch, isEditing, reorderLists, handleListInteraction]);
 
   // effect that enables editing new list name only after store has been hydrated
   useEffect(() => {
@@ -197,6 +204,7 @@ function Lists({ dispatch }) {
         );
       });
       setNewTask("");
+      handleListInteraction();
     }
   }
 
@@ -265,6 +273,7 @@ function Lists({ dispatch }) {
         );
       }
     });
+    handleListInteraction();
   }
 
   function deleteTask(task, type) {
@@ -292,6 +301,7 @@ function Lists({ dispatch }) {
         })
       );
     });
+    handleListInteraction();
   }
 
   function handleKeyDown(e) {
@@ -331,6 +341,7 @@ function Lists({ dispatch }) {
         );
       });
       setIsEditing(false);
+      handleListInteraction();
     }
   }
 
@@ -366,6 +377,7 @@ function Lists({ dispatch }) {
       );
     });
     setPendingNewList(id);
+    handleListInteraction();
   }
 
   function handleDeleteList() {
@@ -406,6 +418,7 @@ function Lists({ dispatch }) {
         );
       });
     }
+    handleListInteraction();
   }
 
   function handleHideLists() {
@@ -418,6 +431,7 @@ function Lists({ dispatch }) {
         },
       })
     );
+    handleListInteraction();
   }
 
   function handleCopyListToClipboard() {
@@ -453,6 +467,7 @@ function Lists({ dispatch }) {
         data: { userAction: USER_ACTION_TYPES.LIST_COPY },
       })
     );
+    handleListInteraction();
   }
 
   function handleLearnMore() {
@@ -464,6 +479,7 @@ function Lists({ dispatch }) {
         },
       })
     );
+    handleListInteraction();
   }
 
   // Reset baseline only when switching lists

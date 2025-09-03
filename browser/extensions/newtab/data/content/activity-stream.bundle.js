@@ -11998,7 +11998,8 @@ const USER_ACTION_TYPES = {
 const PREF_WIDGETS_LISTS_MAX_LISTS = "widgets.lists.maxLists";
 const PREF_WIDGETS_LISTS_MAX_LISTITEMS = "widgets.lists.maxListItems";
 function Lists({
-  dispatch
+  dispatch,
+  handleUserInteraction
 }) {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const {
@@ -12014,6 +12015,7 @@ function Lists({
   const selectRef = (0,external_React_namespaceObject.useRef)(null);
   const reorderListRef = (0,external_React_namespaceObject.useRef)(null);
   const [canvasRef, fireConfetti] = useConfetti();
+  const handleListInteraction = (0,external_React_namespaceObject.useCallback)(() => handleUserInteraction("lists"), [handleUserInteraction]);
 
   // store selectedList with useMemo so it isnt re-calculated on every re-render
   const isValidUrl = (0,external_React_namespaceObject.useCallback)(str => URL.canParse(str), []);
@@ -12052,7 +12054,8 @@ function Lists({
         lists: updatedLists
       }
     }));
-  }, [lists, selected, selectedList, dispatch]);
+    handleListInteraction();
+  }, [lists, selected, selectedList, dispatch, handleListInteraction]);
   const moveTask = (0,external_React_namespaceObject.useCallback)((task, direction) => {
     const index = selectedList.tasks.findIndex(({
       id
@@ -12080,6 +12083,7 @@ function Lists({
         type: actionTypes.WIDGETS_LISTS_CHANGE_SELECTED,
         data: e.target.value
       }));
+      handleListInteraction();
     }
     function handleReorder(e) {
       const {
@@ -12095,7 +12099,7 @@ function Lists({
       selectNode.removeEventListener("change", handleSelectChange);
       reorderNode.removeEventListener("reorder", handleReorder);
     };
-  }, [dispatch, isEditing, reorderLists]);
+  }, [dispatch, isEditing, reorderLists, handleListInteraction]);
 
   // effect that enables editing new list name only after store has been hydrated
   (0,external_React_namespaceObject.useEffect)(() => {
@@ -12137,6 +12141,7 @@ function Lists({
         }));
       });
       setNewTask("");
+      handleListInteraction();
     }
   }
   function updateTask(updatedTask, type) {
@@ -12196,6 +12201,7 @@ function Lists({
         }));
       }
     });
+    handleListInteraction();
   }
   function deleteTask(task, type) {
     const selectedTasks = lists[selected][type];
@@ -12223,6 +12229,7 @@ function Lists({
         }
       }));
     });
+    handleListInteraction();
   }
   function handleKeyDown(e) {
     if (e.key === "Enter" && document.activeElement === inputRef.current) {
@@ -12257,6 +12264,7 @@ function Lists({
         }));
       });
       setIsEditing(false);
+      handleListInteraction();
     }
   }
   function handleCreateNewList() {
@@ -12288,6 +12296,7 @@ function Lists({
       }));
     });
     setPendingNewList(id);
+    handleListInteraction();
   }
   function handleDeleteList() {
     let updatedLists = {
@@ -12327,6 +12336,7 @@ function Lists({
         }));
       });
     }
+    handleListInteraction();
   }
   function handleHideLists() {
     dispatch(actionCreators.OnlyToMain({
@@ -12336,6 +12346,7 @@ function Lists({
         value: false
       }
     }));
+    handleListInteraction();
   }
   function handleCopyListToClipboard() {
     const currentList = lists[selected];
@@ -12363,6 +12374,7 @@ function Lists({
         userAction: USER_ACTION_TYPES.LIST_COPY
       }
     }));
+    handleListInteraction();
   }
   function handleLearnMore() {
     dispatch(actionCreators.OnlyToMain({
@@ -12371,6 +12383,7 @@ function Lists({
         url: "https://support.mozilla.org/kb/firefox-new-tab-widgets"
       }
     }));
+    handleListInteraction();
   }
 
   // Reset baseline only when switching lists
@@ -12766,7 +12779,8 @@ const getClipPath = progress => {
   return `polygon(${points.join(", ")})`;
 };
 const FocusTimer = ({
-  dispatch
+  dispatch,
+  handleUserInteraction
 }) => {
   const [timeLeft, setTimeLeft] = (0,external_React_namespaceObject.useState)(0);
   // calculated value for the progress circle; 1 = 100%
@@ -12786,6 +12800,7 @@ const FocusTimer = ({
     isRunning
   } = timerData[timerType];
   const initialTimerDuration = timerData[timerType].initialDuration;
+  const handleTimerInteraction = (0,external_React_namespaceObject.useCallback)(() => handleUserInteraction("focusTimer"), [handleUserInteraction]);
   const handleIntersection = (0,external_React_namespaceObject.useCallback)(() => {
     dispatch(actionCreators.AlsoToMain({
       type: actionTypes.WIDGETS_TIMER_USER_IMPRESSION
@@ -12798,7 +12813,8 @@ const FocusTimer = ({
       arcRef.current.style.webkitClipPath = "polygon(50% 50%)";
     }
     setProgress(0);
-  }, [arcRef]);
+    handleTimerInteraction();
+  }, [arcRef, handleTimerInteraction]);
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const showSystemNotifications = prefs["widgets.focusTimer.showSystemNotifications"];
 
@@ -12917,6 +12933,7 @@ const FocusTimer = ({
         }));
       });
     }
+    handleTimerInteraction();
   };
 
   // Pause timer function
@@ -12956,6 +12973,7 @@ const FocusTimer = ({
         }));
       });
     }
+    handleTimerInteraction();
   };
 
   // reset timer function
@@ -12984,6 +13002,7 @@ const FocusTimer = ({
     if (progressVisible) {
       setProgressVisible(false);
     }
+    handleTimerInteraction();
   };
 
   // Toggles between "focus" and "break" timer types
@@ -13019,14 +13038,17 @@ const FocusTimer = ({
         }
       }));
     });
+    handleTimerInteraction();
   };
   const handleKeyDown = e => {
     if (e.key === "Enter") {
       e.preventDefault();
       setTimerDuration(e);
+      handleTimerInteraction();
     }
     if (e.key === "Tab") {
       setTimerDuration(e);
+      handleTimerInteraction();
     }
   };
   const handleBeforeInput = e => {
@@ -13099,6 +13121,7 @@ const FocusTimer = ({
         url: "https://support.mozilla.org/kb/firefox-new-tab-widgets"
       }
     }));
+    handleTimerInteraction();
   }
   function handlePrefUpdate(prefName, prefValue) {
     dispatch(actionCreators.OnlyToMain({
@@ -13108,6 +13131,7 @@ const FocusTimer = ({
         value: prefValue
       }
     }));
+    handleTimerInteraction();
   }
   return timerData ? /*#__PURE__*/external_React_default().createElement("article", {
     className: "focus-timer",
@@ -13282,6 +13306,7 @@ function WidgetsFeatureHighlight({
 
 
 
+
 const PREF_WIDGETS_LISTS_ENABLED = "widgets.lists.enabled";
 const PREF_WIDGETS_SYSTEM_LISTS_ENABLED = "widgets.system.lists.enabled";
 const PREF_WIDGETS_TIMER_ENABLED = "widgets.focusTimer.enabled";
@@ -13303,14 +13328,24 @@ function Widgets() {
   const manyTasks = tasksCount >= 4;
   const isTimerRunning = timerState?.[timerType].isRunning;
   const showScrollMessage = manyTasks || isTimerRunning;
+  function handleUserInteraction(widgetName) {
+    const prefName = `widgets.${widgetName}.interaction`;
+    const hasInteracted = prefs[prefName];
+    // we want to make sure that the value is a strict false (and that the property exists)
+    if (hasInteracted === false) {
+      dispatch(actionCreators.SetPref(prefName, true));
+    }
+  }
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-container"
   }, listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, {
-    dispatch: dispatch
+    dispatch: dispatch,
+    handleUserInteraction: handleUserInteraction
   }), timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, {
-    dispatch: dispatch
+    dispatch: dispatch,
+    handleUserInteraction: handleUserInteraction
   })), showScrollMessage && /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-scroll-message fade-in",
     "aria-live": "polite"

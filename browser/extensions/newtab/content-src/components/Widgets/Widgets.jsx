@@ -8,6 +8,7 @@ import { Lists } from "./Lists/Lists";
 import { FocusTimer } from "./FocusTimer/FocusTimer";
 import { MessageWrapper } from "content-src/components/MessageWrapper/MessageWrapper";
 import { WidgetsFeatureHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/WidgetsFeatureHighlight";
+import { actionCreators as ac } from "common/Actions.mjs";
 
 const PREF_WIDGETS_LISTS_ENABLED = "widgets.lists.enabled";
 const PREF_WIDGETS_SYSTEM_LISTS_ENABLED = "widgets.system.lists.enabled";
@@ -42,11 +43,30 @@ function Widgets() {
   const isTimerRunning = timerState?.[timerType].isRunning;
   const showScrollMessage = manyTasks || isTimerRunning;
 
+  function handleUserInteraction(widgetName) {
+    const prefName = `widgets.${widgetName}.interaction`;
+    const hasInteracted = prefs[prefName];
+    // we want to make sure that the value is a strict false (and that the property exists)
+    if (hasInteracted === false) {
+      dispatch(ac.SetPref(prefName, true));
+    }
+  }
+
   return (
     <div className="widgets-wrapper">
       <div className="widgets-container">
-        {listsEnabled && <Lists dispatch={dispatch} />}
-        {timerEnabled && <FocusTimer dispatch={dispatch} />}
+        {listsEnabled && (
+          <Lists
+            dispatch={dispatch}
+            handleUserInteraction={handleUserInteraction}
+          />
+        )}
+        {timerEnabled && (
+          <FocusTimer
+            dispatch={dispatch}
+            handleUserInteraction={handleUserInteraction}
+          />
+        )}
       </div>
       {showScrollMessage && (
         <div className="widgets-scroll-message fade-in" aria-live="polite">

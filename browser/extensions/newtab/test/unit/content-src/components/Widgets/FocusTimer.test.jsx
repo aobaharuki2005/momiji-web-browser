@@ -45,15 +45,20 @@ describe("<FocusTimer>", () => {
   let sandbox;
   let dispatch;
   let clock; // for use with the sinon fake timers api
+  let handleUserInteraction;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     dispatch = sandbox.stub();
     clock = sandbox.useFakeTimers();
+    handleUserInteraction = sandbox.stub();
 
     wrapper = mount(
       <WrapWithProvider state={mockState}>
-        <FocusTimer dispatch={dispatch} />
+        <FocusTimer
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
   });
@@ -87,7 +92,10 @@ describe("<FocusTimer>", () => {
 
     wrapper = mount(
       <WrapWithProvider state={breakState}>
-        <FocusTimer dispatch={dispatch} />
+        <FocusTimer
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -124,7 +132,10 @@ describe("<FocusTimer>", () => {
 
     wrapper = mount(
       <WrapWithProvider state={runningState}>
-        <FocusTimer dispatch={dispatch} />
+        <FocusTimer
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -161,7 +172,10 @@ describe("<FocusTimer>", () => {
 
     wrapper = mount(
       <WrapWithProvider state={resetState}>
-        <FocusTimer dispatch={dispatch} />
+        <FocusTimer
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -244,7 +258,10 @@ describe("<FocusTimer>", () => {
 
     wrapper = mount(
       <WrapWithProvider state={endState}>
-        <FocusTimer dispatch={dispatch} />
+        <FocusTimer
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -293,7 +310,10 @@ describe("<FocusTimer>", () => {
 
     wrapper = mount(
       <WrapWithProvider state={endState}>
-        <FocusTimer dispatch={dispatch} />
+        <FocusTimer
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -336,7 +356,10 @@ describe("<FocusTimer>", () => {
 
     const activeWrapper = mount(
       <WrapWithProvider state={activeState}>
-        <FocusTimer dispatch={dispatch} />
+        <FocusTimer
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -369,7 +392,10 @@ describe("<FocusTimer>", () => {
 
     wrapper = mount(
       <WrapWithProvider state={endState}>
-        <FocusTimer dispatch={dispatch} />
+        <FocusTimer
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -452,7 +478,10 @@ describe("<FocusTimer>", () => {
 
       wrapper = mount(
         <WrapWithProvider state={noNotificationsState}>
-          <FocusTimer dispatch={dispatch} />
+          <FocusTimer
+            dispatch={dispatch}
+            handleUserInteraction={handleUserInteraction}
+          />
         </WrapWithProvider>
       );
 
