@@ -24,7 +24,6 @@ buildscript {
         classpath libs.androidx.navigation.safeargs
         classpath libs.osslicenses.plugin
         classpath libs.mozilla.glean.gradle.plugin
-        classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
     }
 }
 

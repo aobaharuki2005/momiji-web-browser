@@ -12,12 +12,12 @@ buildscript {
     }
 
     dependencies {
-        classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
     }
 }
 
 plugins {
     alias(libs.plugins.python.envs.plugin)
+    id 'org.mozilla.nimbus-gradle-plugin'
 }
 
 apply plugin: 'com.android.library'
@@ -70,7 +70,6 @@ dependencies {
 
 apply from: '../../../android-lint.gradle'
 apply from: '../../../publish.gradle'
-apply plugin: "org.mozilla.appservices.nimbus-gradle-plugin"
 nimbus {
     // The path to the Nimbus feature manifest file
     manifestFile = "fxsuggest.fml.yaml"

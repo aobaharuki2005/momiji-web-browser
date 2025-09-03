@@ -23,6 +23,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.python.envs.plugin)
     alias(libs.plugins.protobuf.plugin)
+    id 'org.mozilla.nimbus-gradle-plugin'
 }
 
 apply plugin: 'com.android.application'
@@ -515,7 +516,6 @@ ext {
     gleanPythonEnvDir = gradle.mozconfig.substs.GRADLE_GLEAN_PARSER_VENV
 }
 apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
-apply plugin: "org.mozilla.appservices.nimbus-gradle-plugin"
 
 nimbus {
     // The path to the Nimbus feature manifest file
