@@ -67,6 +67,7 @@
   contain: inherit; /* needed if table has 'contain:layout' or 'paint' */
   container: inherit; /* Bug 1805588 */
   scroll-margin: inherit; /* Bug 1633192 */
+  view-transition-name: inherit; /* Bug 1985925 */
 }
 
 *|*::-moz-table-row {

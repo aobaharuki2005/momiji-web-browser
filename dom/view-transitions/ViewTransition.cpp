@@ -104,67 +104,6 @@ static inline nsRect CapturedRect(const nsIFrame* aFrame,
                   aFrame->PresContext()->AppUnitsPerDevPixel());
 }
 
-// TODO(emilio): Bug 1970954. These aren't quite correct, per spec we're
-// supposed to only honor names and classes coming from the document, but that's
-// quite some magic, and it's getting actively discussed, see:
-// https://github.com/w3c/csswg-drafts/issues/10808 and related
-// https://drafts.csswg.org/css-view-transitions-1/#document-scoped-view-transition-name
-// https://drafts.csswg.org/css-view-transitions-2/#additions-to-vt-name
-template <typename IDGenerator>
-static already_AddRefed<nsAtom> DocumentScopedTransitionNameForWithGenerator(
-    nsIFrame* aFrame, IDGenerator&& aFunc) {
-  // 1. Let computed be the computed value of view-transition-name.
-  const auto& computed = aFrame->StyleUIReset()->mViewTransitionName;
-
-  // 2. If computed is none, return null.
-  if (computed.IsNone()) {
-    return nullptr;
-  }
-
-  // 3. If computed is a <custom-ident>, return computed.
-  if (computed.IsIdent()) {
-    return RefPtr<nsAtom>{computed.AsIdent().AsAtom()}.forget();
-  }
-
-  // 4. Assert: computed is auto or match-element.
-  // TODO: Bug 1918218. Implement auto or others, depending on the spec issue.
-  // https://github.com/w3c/csswg-drafts/issues/12091
-  MOZ_ASSERT(computed.IsMatchElement());
-
-  // 5. If computed is auto, element has an associated id, and computed is
-  // associated with the same root as element’s root, then return a unique
-  // string starting with "-ua-". Two elements with the same id must return the
-  // same string, regardless of their node document.
-  // TODO: Bug 1918218. auto keyword may be changed. See the spec issue
-  // mentioned above..
-
-  // 6. Return a unique string starting with "-ua-". The string should remain
-  // consistent and unique for this element and Document, at least for the
-  // lifetime of element’s node document’s active view transition.
-  nsIContent* content = aFrame->GetContent();
-  if (MOZ_UNLIKELY(!content || !content->IsElement())) {
-    return nullptr;
-  }
-
-  // We generate the unique identifier (not id attribute) of the element lazily.
-  // If failed, we just return nullptr.
-  Maybe<uint64_t> id = aFunc(content->AsElement());
-  if (!id) {
-    return nullptr;
-  }
-
-  // FIXME: We may have to revist here when working on cross document because we
-  // may have to return a warning and nullptr, per the comment in the design
-  // review.
-  // https://github.com/w3ctag/design-reviews/issues/1001#issuecomment-2750966335
-  nsCString name;
-  // Note: Add the "view-transition-name" in the prefix so we know this is for
-  // auto-generated view-transition-name.
-  name.AppendLiteral("-ua-view-transition-name-");
-  name.AppendInt(*id);
-  return NS_Atomize(name);
-}
-
 static StyleViewTransitionClass DocumentScopedClassListFor(
     const nsIFrame* aFrame) {
   return aFrame->StyleUIReset()->mViewTransitionClass;
@@ -1841,10 +1780,63 @@ uint64_t ViewTransition::EnsureElementIdentifier(Element* aElement) {
 
 already_AddRefed<nsAtom> ViewTransition::DocumentScopedTransitionNameFor(
     nsIFrame* aFrame) {
-  return DocumentScopedTransitionNameForWithGenerator(
-      aFrame, [this](Element* aElement) {
-        return Some(EnsureElementIdentifier(aElement));
-      });
+  // TODO(emilio): Bug 1970954. These aren't quite correct, per spec we're
+  // supposed to only honor names and classes coming from the document, but
+  // that's quite some magic, and it's getting actively discussed, see:
+  // https://github.com/w3c/csswg-drafts/issues/10808 and related
+  // https://drafts.csswg.org/css-view-transitions-1/#document-scoped-view-transition-name
+  // https://drafts.csswg.org/css-view-transitions-2/#additions-to-vt-name
+  // 1. Let computed be the computed value of view-transition-name.
+  const auto& computed = aFrame->StyleUIReset()->mViewTransitionName;
+
+  // 2. If computed is none, return null.
+  if (computed.IsNone()) {
+    return nullptr;
+  }
+
+  // As a special case, if we're a <table> element, the table wrapper is what's
+  // captured.
+  if (aFrame->IsTableFrame()) {
+    return nullptr;
+  }
+
+  // 3. If computed is a <custom-ident>, return computed.
+  if (computed.IsIdent()) {
+    return RefPtr<nsAtom>{computed.AsIdent().AsAtom()}.forget();
+  }
+
+  // 4. Assert: computed is auto or match-element.
+  // TODO: Bug 1918218. Implement auto or others, depending on the spec issue.
+  // https://github.com/w3c/csswg-drafts/issues/12091
+  MOZ_ASSERT(computed.IsMatchElement());
+
+  // 5. If computed is auto, element has an associated id, and computed is
+  // associated with the same root as element’s root, then return a unique
+  // string starting with "-ua-". Two elements with the same id must return the
+  // same string, regardless of their node document.
+  // TODO: Bug 1918218. auto keyword may be changed. See the spec issue
+  // mentioned above..
+
+  // 6. Return a unique string starting with "-ua-". The string should remain
+  // consistent and unique for this element and Document, at least for the
+  // lifetime of element’s node document’s active view transition.
+  nsIContent* content = aFrame->GetContent();
+  if (MOZ_UNLIKELY(!content || !content->IsElement())) {
+    return nullptr;
+  }
+
+  uint64_t id = EnsureElementIdentifier(content->AsElement());
+
+  // FIXME: We may have to revist here when working on cross document because we
+  // may have to return a warning and nullptr, per the comment in the design
+  // review.
+  // https://github.com/w3ctag/design-reviews/issues/1001#issuecomment-2750966335
+  nsCString name;
+  // Note: Add the "view-transition-name" in the prefix so we know this is for
+  // auto-generated view-transition-name.
+  name.AppendLiteral("-ua-view-transition-name-");
+  name.AppendInt(id);
+  return NS_Atomize(name);
 }
 
 JSObject* ViewTransition::WrapObject(JSContext* aCx,
