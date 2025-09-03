@@ -376,7 +376,7 @@ unsafe fn adapter_request_device(
     if let wgt::Trace::Directory(ref path) = desc.trace {
         log::warn!(
             concat!(
-                "DeviceDescriptor from child process ",
+                "`DeviceDescriptor` from child process ",
                 "should not request wgpu trace path, ",
                 "but it did request `{}`"
             ),
@@ -399,7 +399,7 @@ unsafe fn adapter_request_device(
     if desc.experimental_features.is_enabled() {
         log::warn!(
             concat!(
-                "DeviceDescriptor from child process ",
+                "`DeviceDescriptor` from child process ",
                 "should not enable experimental features, ",
                 "but it did request {:?}"
             ),
