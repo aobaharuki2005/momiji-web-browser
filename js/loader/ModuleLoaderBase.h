@@ -306,16 +306,6 @@ class ModuleLoaderBase : public nsISupports {
   // internally by ModuleLoaderBase.
 
  private:
-  // Create a module load request for a static module import.
-  virtual already_AddRefed<ModuleLoadRequest> CreateStaticImport(
-      nsIURI* aURI, ModuleType aModuleType, ModuleScript* aReferrerScript,
-      const mozilla::dom::SRIMetadata& aSriMetadata,
-      LoadContextBase* aLoadContext, ModuleLoaderBase* aLoader) = 0;
-
-  // Called by HostImportModuleDynamically hook.
-  virtual already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
-      JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
-      Handle<JSObject*> aModuleRequestObj, Handle<JSObject*> aPromise) = 0;
 
   // Determine the environment's referrer when the referrer script is empty.
   //
@@ -331,6 +321,14 @@ class ModuleLoaderBase : public nsISupports {
   CreateDefaultScriptFetchOptions() {
     return nullptr;
   }
+
+  // Create a ModuleLoadRequest for static/dynamic imports.
+  virtual already_AddRefed<ModuleLoadRequest> CreateRequest(
+      JSContext* aCx, nsIURI* aURI, Handle<JSObject*> aModuleRequest,
+      Handle<Value> aHostDefined, Handle<Value> aPayload, bool aIsDynamicImport,
+      ScriptFetchOptions* aOptions,
+      mozilla::dom::ReferrerPolicy aReferrerPolicy, nsIURI* aBaseURL,
+      const mozilla::dom::SRIMetadata& aSriMetadata) = 0;
 
   virtual bool IsDynamicImportSupported() { return true; }
 
@@ -402,7 +400,7 @@ class ModuleLoaderBase : public nsISupports {
   nsresult EvaluateModuleInContext(JSContext* aCx, ModuleLoadRequest* aRequest,
                                    ModuleErrorBehaviour errorBehaviour);
 
-  nsresult StartDynamicImport(ModuleLoadRequest* aRequest);
+  void AppendDynamicImport(ModuleLoadRequest* aRequest);
   void ProcessDynamicImport(ModuleLoadRequest* aRequest);
   void CancelAndClearDynamicImports();
 

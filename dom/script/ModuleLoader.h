@@ -66,24 +66,17 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
       nsIURI* aReferrer, ScriptLoadContext* aContext,
       ScriptLoadRequestType aRequestType);
 
-  // Create a module load request for a static module import.
-  already_AddRefed<ModuleLoadRequest> CreateStaticImport(
-      nsIURI* aURI, JS::ModuleType aModuleType,
-      JS::loader::ModuleScript* aReferrerScript,
-      const mozilla::dom::SRIMetadata& aSriMetadata,
-      JS::loader::LoadContextBase* aLoadContext,
-      JS::loader::ModuleLoaderBase* aLoader) override;
-
-  // Create a module load request for a dynamic module import.
-  already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
-      JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
-      JS::Handle<JSObject*> aModuleRequestObj,
-      JS::Handle<JSObject*> aPromise) override;
-
   nsIURI* GetClientReferrerURI() override;
 
   already_AddRefed<ScriptFetchOptions> CreateDefaultScriptFetchOptions()
       override;
+
+  already_AddRefed<ModuleLoadRequest> CreateRequest(
+      JSContext* aCx, nsIURI* aURI, JS::Handle<JSObject*> aModuleRequest,
+      JS::Handle<JS::Value> aHostDefined, JS::Handle<JS::Value> aPayload,
+      bool aIsDynamicImport, ScriptFetchOptions* aOptions,
+      ReferrerPolicy aReferrerPolicy, nsIURI* aBaseURL,
+      const SRIMetadata& aSriMetadata) override;
 
   static ModuleLoader* From(ModuleLoaderBase* aLoader) {
     return static_cast<ModuleLoader*>(aLoader);
