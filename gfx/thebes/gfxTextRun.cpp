@@ -3300,6 +3300,12 @@ already_AddRefed<gfxFont> gfxFontGroup::FindFontForChar(
   // Handle a candidate font that could support the character, returning true
   // if we should go ahead and return |f|, false to continue searching.
   auto CheckCandidate = [&](gfxFont* f, FontMatchType t) -> bool {
+    // If a given character is a Private Use Area Unicode codepoint, user
+    // agents must only match font families named in the font-family list that
+    // are not generic families.
+    if (t.generic != StyleGenericFontFamily::None && IsPUA(aCh)) {
+      return false;
+    }
     // If no preference, or if it's an explicitly-named family in the fontgroup
     // and font-variant-emoji is 'normal', then we accept the font.
     if (presentation == FontPresentation::Any ||
