@@ -5000,8 +5000,7 @@ GeneralParser<ParseHandler, Unit>::moduleExportName() {
 
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType attributesSet) {
-  MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assert) ||
-             anyChars.isCurrentTokenType(TokenKind::With));
+  MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::With));
 
   if (!abortIfSyntaxParser()) {
     return false;
@@ -5011,7 +5010,7 @@ bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType attributesSet) {
     return false;
   }
 
-  // Handle the form |... assert {}|
+  // Handle the form |... with {}|
   TokenKind token;
   if (!tokenStream.getToken(&token)) {
     return false;
