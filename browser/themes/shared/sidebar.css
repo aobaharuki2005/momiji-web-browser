@@ -92,16 +92,7 @@
   appearance: none;
   border: none;
   transition: background-color 0.5s ease-in-out;
-
-  /* We don't let the splitter overlap the sidebar on Linux since the
-   * scrollbar is too narrow. */
-  @media not (-moz-platform: linux) {
-    margin-inline-start: calc(-1 * var(--splitter-width));
-
-    #sidebar-main[sidebar-positionend] + & {
-      margin-inline: 0 calc(-1 * var(--splitter-width));
-    }
-  }
+  margin-inline: 0;
 
   /* stylelint-disable-next-line media-query-no-invalid */
   @media -moz-pref("sidebar.revamp") {
@@ -128,11 +119,20 @@
     width: var(--space-medium);
     border-inline: calc((var(--space-medium) - var(--splitter-width)) / 2) solid transparent;
     background-clip: padding-box;
-    margin-inline: 0;
   }
 }
 
 #sidebar-launcher-splitter {
+  /* We don't let the splitter overlap the sidebar on Linux since the
+   * scrollbar is too narrow. */
+  @media not (-moz-platform: linux) {
+    margin-inline-start: calc(-1 * var(--splitter-width));
+
+    #sidebar-main[sidebar-positionend] + & {
+      margin-inline: 0 calc(-1 * var(--splitter-width));
+    }
+  }
+
   /* stylelint-disable-next-line media-query-no-invalid */
   @media not -moz-pref("sidebar.verticalTabs") {
     display: none;
