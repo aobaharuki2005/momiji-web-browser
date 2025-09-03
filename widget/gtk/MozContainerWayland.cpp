@@ -263,7 +263,8 @@ static bool moz_container_wayland_ensure_surface(MozContainer* container,
     fractionalScale = surface->EnableFractionalScaleLocked(
         lock,
         [win = RefPtr{window}]() {
-          win->RefreshScale(/* aRefreshScreen */ true);
+          win->RefreshScale(/* aRefreshScreen */ true,
+                            /* aForceRefresh */ true);
         },
         /* aManageViewport */ true);
   }

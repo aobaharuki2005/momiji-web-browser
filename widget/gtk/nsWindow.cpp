@@ -5560,7 +5560,7 @@ void nsWindow::OnScaleEvent() {
   RefreshScale(/* aRefreshScreen */ true);
 }
 
-void nsWindow::RefreshScale(bool aRefreshScreen) {
+void nsWindow::RefreshScale(bool aRefreshScreen, bool aForceRefresh) {
   if (!IsTopLevelWidget()) {
     return;
   }
@@ -5570,8 +5570,8 @@ void nsWindow::RefreshScale(bool aRefreshScreen) {
 
   MOZ_DIAGNOSTIC_ASSERT(mIsMapped && mGdkWindow);
   int ceiledScale = gdk_window_get_scale_factor(mGdkWindow);
-  const bool scaleChanged = GdkCeiledScaleFactor() != ceiledScale;
-
+  const bool scaleChanged =
+      aForceRefresh || GdkCeiledScaleFactor() != ceiledScale;
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
     WaylandSurfaceLock lock(mSurface);
