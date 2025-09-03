@@ -40,6 +40,22 @@ nsIURI* WorkerModuleLoader::GetBaseURI() const {
   return workerPrivate->GetBaseURI();
 }
 
+nsIURI* WorkerModuleLoader::GetClientReferrerURI() {
+  // https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
+  // Step 3. "client":
+  //   2. let referrerSource be environment’s creation URL.
+  //
+  // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-creation-url
+  // https://html.spec.whatwg.org/multipage/workers.html#set-up-a-worker-environment-settings-object
+  return GetBaseURI();
+}
+
+already_AddRefed<JS::loader::ScriptFetchOptions>
+WorkerModuleLoader::CreateDefaultScriptFetchOptions() {
+  RefPtr<ScriptFetchOptions> options = ScriptFetchOptions::CreateDefault();
+  return options.forget();
+}
+
 already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
     nsIURI* aURI, JS::ModuleType aModuleType,
     JS::loader::ModuleScript* aReferrerScript,

@@ -44,6 +44,11 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
  private:
   ~WorkerModuleLoader() = default;
 
+  nsIURI* GetClientReferrerURI() override;
+
+  already_AddRefed<JS::loader::ScriptFetchOptions>
+  CreateDefaultScriptFetchOptions() override;
+
   bool CreateDynamicImportLoader();
   void SetScriptLoader(JS::loader::ScriptLoaderInterface* aLoader) {
     mLoader = aLoader;
