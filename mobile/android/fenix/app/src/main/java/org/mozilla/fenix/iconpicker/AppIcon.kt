@@ -107,42 +107,6 @@ enum class AppIcon(
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_northern_lights_background),
         titleId = R.string.alternative_app_icon_option_gradient_northern_lights,
     ),
-    AppRetro2004(
-        aliasSuffix = "AppRetro2004",
-        iconForegroundId = R.drawable.ic_launcher_foreground_retro_2004,
-        titleId = R.string.alternative_app_icon_option_retro_2004,
-    ),
-    AppRetro2017(
-        aliasSuffix = "AppRetro2017",
-        iconForegroundId = R.drawable.ic_launcher_foreground_retro_2017,
-        titleId = R.string.alternative_app_icon_option_retro_2017,
-    ),
-    AppPixelated(
-        aliasSuffix = "AppPixelated",
-        iconForegroundId = R.drawable.ic_launcher_foreground_pixelated,
-        titleId = R.string.alternative_app_icon_option_pixelated,
-    ),
-    AppMinimal(
-        aliasSuffix = "AppMinimal",
-        iconForegroundId = R.drawable.ic_launcher_foreground_minimal,
-        titleId = R.string.alternative_app_icon_option_minimal,
-    ),
-    AppPride(
-        aliasSuffix = "AppPride",
-        iconForegroundId = R.drawable.ic_launcher_foreground_pride,
-        titleId = R.string.alternative_app_icon_option_pride,
-    ),
-    AppCute(
-        aliasSuffix = "AppCute",
-        iconForegroundId = R.drawable.ic_launcher_foreground_cute,
-        titleId = R.string.alternative_app_icon_option_cute,
-    ),
-    AppMomo(
-        aliasSuffix = "AppMomo",
-        iconForegroundId = R.drawable.ic_launcher_foreground_momo,
-        titleId = R.string.alternative_app_icon_option_momo,
-        subtitleId = R.string.alternative_app_icon_option_momo_subtitle,
-    ),
     AppRetro2004V2(
         aliasSuffix = "AppRetro2004_v2",
         iconForegroundId = R.drawable.ic_retro_2004_v2,
