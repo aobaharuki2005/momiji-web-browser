@@ -11,11 +11,6 @@ import { PromoCard } from "../PromoCard/PromoCard.jsx";
 
 const PREF_SECTIONS_ENABLED = "discoverystream.sections.enabled";
 const PREF_OHTTP_UNIFIED_ADS = "unifiedAds.ohttp.enabled";
-const PREF_CONTEXTUAL_ADS = "discoverystream.sections.contextualAds.enabled";
-const PREF_USER_INFERRED_PERSONALIZATION =
-  "discoverystream.sections.personalization.inferred.user.enabled";
-const PREF_SYSTEM_INFERRED_PERSONALIZATION =
-  "discoverystream.sections.personalization.inferred.enabled";
 const PREF_REPORT_ADS_ENABLED = "discoverystream.reportAds.enabled";
 const PREF_PROMOCARD_ENABLED = "discoverystream.promoCard.enabled";
 const PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
@@ -66,10 +61,6 @@ export const AdBanner = ({
 
   const sectionsEnabled = prefs[PREF_SECTIONS_ENABLED];
   const ohttpEnabled = prefs[PREF_OHTTP_UNIFIED_ADS];
-  const contextualAds = prefs[PREF_CONTEXTUAL_ADS];
-  const inferredPersonalization =
-    prefs[PREF_USER_INFERRED_PERSONALIZATION] &&
-    prefs[PREF_SYSTEM_INFERRED_PERSONALIZATION];
   const showAdReporting = prefs[PREF_REPORT_ADS_ENABLED];
   const ohttpImagesEnabled = prefs.ohttpImagesConfig?.enabled;
   const [menuActive, setMenuActive] = useState(false);
@@ -110,12 +101,7 @@ export const AdBanner = ({
   // using clamp to make sure its between valid values (1-9)
   const clampedRow = Math.max(1, Math.min(9, row));
 
-  const secureImage =
-    ohttpImagesEnabled &&
-    ohttpEnabled &&
-    contextualAds &&
-    inferredPersonalization &&
-    sectionsEnabled;
+  const secureImage = ohttpImagesEnabled && ohttpEnabled;
 
   let rawImageSrc = spoc.raw_image_src;
 
