@@ -61,6 +61,7 @@
     #maxTabsPerRow;
     #mustUpdateTabMinHeight = false;
     #tabMinHeight = 36;
+    #pinnedDropIndicatorTimeout = null;
 
     constructor() {
       super();
@@ -2804,16 +2805,19 @@
         translate = Math.min(Math.max(translate, startBound), endBound);
       }
 
-      if (!gBrowser.pinnedTabCount) {
+      if (!gBrowser.pinnedTabCount && !this.dragToPinPromoCard.shouldRender) {
+        let pinnedDropIndicatorMargin = parseFloat(
+          window.getComputedStyle(this.pinnedDropIndicator).marginInline
+        );
         this.#checkWithinPinnedContainerBounds({
           firstMovingTabScreen,
           lastMovingTabScreen,
           pinnedTabsStartEdge: this.#rtlMode
-            ? endEdge(this.arrowScrollbox)
+            ? endEdge(this.arrowScrollbox) + pinnedDropIndicatorMargin
             : this[screenAxis],
           pinnedTabsEndEdge: this.#rtlMode
             ? endEdge(this)
-            : this.arrowScrollbox[screenAxis],
+            : this.arrowScrollbox[screenAxis] - pinnedDropIndicatorMargin,
           translate,
           draggedTab,
         });
@@ -3247,34 +3251,48 @@
       // distance.
       let firstMovingTabPosition = firstMovingTabScreen + translate;
       let lastMovingTabPosition = lastMovingTabScreen + translate;
-      // Approximation of pinned tabs width and height in horizontal or grid mode (40) is a sufficient
+      // Approximation of half pinned tabs width and height in horizontal or grid mode (40) is a sufficient
       // buffer to display the pinned drop indicator slightly before dragging over it. Exact value is
       // not necessary.
-      let buffer = 40;
+      let buffer = 20;
       let inPinnedRange = this.#rtlMode
         ? lastMovingTabPosition >= pinnedTabsStartEdge
         : firstMovingTabPosition <= pinnedTabsEndEdge;
       let inVisibleRange = this.#rtlMode
         ? lastMovingTabPosition >= pinnedTabsStartEdge - buffer
         : firstMovingTabPosition <= pinnedTabsEndEdge + buffer;
+      let isVisible = this.pinnedDropIndicator.hasAttribute("visible");
+      let isInteractive = this.pinnedDropIndicator.hasAttribute("interactive");
+
       if (
+        this.#pinnedDropIndicatorTimeout &&
+        !inPinnedRange &&
+        !inVisibleRange &&
+        !isVisible &&
+        !isInteractive
+      ) {
+        this.#resetPinnedDropIndicator();
+      } else if (
         isTab(draggedTab) &&
-        ((inVisibleRange &&
-          !this.pinnedDropIndicator.hasAttribute("visible")) ||
-          (inPinnedRange &&
-            !this.pinnedDropIndicator.hasAttribute("interactive")))
+        ((inVisibleRange && !isVisible) || (inPinnedRange && !isInteractive))
       ) {
         // On drag into pinned container
-        if (!gBrowser.pinnedTabCount && !this.dragToPinPromoCard.shouldRender) {
-          let tabbrowserTabsRect =
-            window.windowUtils.getBoundsWithoutFlushing(this);
-          if (!this.verticalMode) {
-            // The tabbrowser container expands with the expansion of the
-            // drop indicator - prevent that by setting maxWidth first.
-            this.style.maxWidth = tabbrowserTabsRect.width + "px";
-          }
-          this.pinnedDropIndicator.setAttribute("visible", "");
+        let tabbrowserTabsRect =
+          window.windowUtils.getBoundsWithoutFlushing(this);
+        if (!this.verticalMode) {
+          // The tabbrowser container expands with the expansion of the
+          // drop indicator - prevent that by setting maxWidth first.
+          this.style.maxWidth = tabbrowserTabsRect.width + "px";
+        }
+        if (isVisible) {
           this.pinnedDropIndicator.setAttribute("interactive", "");
+        } else if (!this.#pinnedDropIndicatorTimeout) {
+          this.#pinnedDropIndicatorTimeout = setTimeout(() => {
+            if (this.#isMovingTab()) {
+              this.pinnedDropIndicator.setAttribute("visible", "");
+              this.pinnedDropIndicator.setAttribute("interactive", "");
+            }
+          }, 350);
         }
       } else if (!inPinnedRange) {
         this.pinnedDropIndicator.removeAttribute("interactive");
@@ -3345,6 +3363,16 @@
       this.removeAttribute("movingtab-addToGroup");
       this.#setDragOverGroupColor(null);
       this.#clearDragOverGroupingTimer();
+      this.#resetPinnedDropIndicator();
+    }
+
+    #resetPinnedDropIndicator() {
+      if (this.#pinnedDropIndicatorTimeout) {
+        clearTimeout(this.#pinnedDropIndicatorTimeout);
+        this.#pinnedDropIndicatorTimeout = null;
+      }
+      this.pinnedDropIndicator.removeAttribute("visible");
+      this.pinnedDropIndicator.removeAttribute("interactive");
     }
 
     // If the tab is dropped in another window, we need to pass in the original window document
