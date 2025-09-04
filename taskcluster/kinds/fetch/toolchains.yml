@@ -755,8 +755,6 @@ cpython-3.11.7.exe:
 
 windows-rs:
     description: Source of the windows rust crate
-    attributes:
-        local-fetch: true
     fetch:
         type: static-url
         url: https://crates.io/api/v1/crates/windows/0.58.0/download

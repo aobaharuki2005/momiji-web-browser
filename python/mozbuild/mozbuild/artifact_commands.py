@@ -402,10 +402,10 @@ def artifact_toolchain(
         for b in from_build:
             user_value = b
 
-            task = tasks.get(b)
-            if not task and not b.startswith("toolchain-"):
-                task = tasks.get(f"toolchain-{b}")
+            if not b.startswith("toolchain-"):
+                b = f"toolchain-{b}"
 
+            task = tasks.get(b)
             if not task:
                 command_context.log(
                     logging.ERROR,
@@ -428,7 +428,7 @@ def artifact_toolchain(
                 )
                 return 1
 
-            artifact_name = task.attributes.get(f"{task.kind}-artifact")
+            artifact_name = task.attributes.get("toolchain-artifact")
             command_context.log(
                 logging.DEBUG,
                 "artifact",
