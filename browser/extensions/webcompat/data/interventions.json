@@ -113,6 +113,10 @@
       "1968640": {
         "issue": "broken-interactive-elements",
         "matches": ["*://shop.ticket-center-hohenschwangau.de/*"]
+      },
+      "1982550": {
+        "issue": "broken-interactive-elements",
+        "matches": ["*://www.passline.com/*"]
       }
     },
     "interventions": [
