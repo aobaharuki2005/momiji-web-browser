@@ -659,6 +659,10 @@ void MacroAssembler::negateDouble(FloatRegister reg) {
 }
 
 void MacroAssembler::abs32(Register src, Register dest) {
+  if (CPUHas(vixl::CPUFeatures::kCSSC)) {
+    Abs(ARMRegister(dest, 32), ARMRegister(src, 32));
+    return;
+  }
   Cmp(ARMRegister(src, 32), wzr);
   Cneg(ARMRegister(dest, 32), ARMRegister(src, 32), Assembler::LessThan);
 }
@@ -1037,6 +1041,10 @@ void MacroAssembler::clz32(Register src, Register dest, bool knownNotZero) {
 }
 
 void MacroAssembler::ctz32(Register src, Register dest, bool knownNotZero) {
+  if (CPUHas(vixl::CPUFeatures::kCSSC)) {
+    Ctz(ARMRegister(dest, 32), ARMRegister(src, 32));
+    return;
+  }
   Rbit(ARMRegister(dest, 32), ARMRegister(src, 32));
   Clz(ARMRegister(dest, 32), ARMRegister(dest, 32));
 }
@@ -1046,17 +1054,27 @@ void MacroAssembler::clz64(Register64 src, Register64 dest) {
 }
 
 void MacroAssembler::ctz64(Register64 src, Register64 dest) {
+  if (CPUHas(vixl::CPUFeatures::kCSSC)) {
+    Ctz(ARMRegister(dest.reg, 64), ARMRegister(src.reg, 64));
+    return;
+  }
   Rbit(ARMRegister(dest.reg, 64), ARMRegister(src.reg, 64));
   Clz(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64));
 }
 
 void MacroAssembler::popcnt32(Register src_, Register dest_, Register tmp_) {
+  ARMRegister src(src_, 32);
+  ARMRegister dest(dest_, 32);
+
+  if (CPUHas(vixl::CPUFeatures::kCSSC)) {
+    Cnt(dest, src);
+    return;
+  }
+
   MOZ_ASSERT(tmp_ != Register::Invalid());
 
   // Equivalent to mozilla::CountPopulation32().
 
-  ARMRegister src(src_, 32);
-  ARMRegister dest(dest_, 32);
   ARMRegister tmp(tmp_, 32);
 
   Mov(tmp, src);
@@ -1079,12 +1097,18 @@ void MacroAssembler::popcnt32(Register src_, Register dest_, Register tmp_) {
 
 void MacroAssembler::popcnt64(Register64 src_, Register64 dest_,
                               Register tmp_) {
+  ARMRegister src(src_.reg, 64);
+  ARMRegister dest(dest_.reg, 64);
+
+  if (CPUHas(vixl::CPUFeatures::kCSSC)) {
+    Cnt(dest, src);
+    return;
+  }
+
   MOZ_ASSERT(tmp_ != Register::Invalid());
 
   // Equivalent to mozilla::CountPopulation64(), though likely more efficient.
 
-  ARMRegister src(src_.reg, 64);
-  ARMRegister dest(dest_.reg, 64);
   ARMRegister tmp(tmp_, 64);
 
   Mov(tmp, src);
