@@ -11,8 +11,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -55,6 +59,7 @@ fun Snackbar(
     modifier: Modifier = Modifier,
     actionOnNewLine: Boolean = false,
 ) {
+    val dismissState = rememberSwipeToDismissBoxState()
     val actionLabel = snackbarData.visuals.actionLabel
     val actionComposable: (@Composable () -> Unit)? =
         actionLabel?.let {
@@ -68,31 +73,46 @@ fun Snackbar(
             null
         }
 
-    M3Snackbar(
-        modifier = modifier
-            .padding(SnackbarPadding)
-            .semantics { testTagsAsResourceId = true }
-            .testTag(SNACKBAR_TEST_TAG),
-        action = actionComposable,
-        dismissAction = dismissActionComposable,
-        actionOnNewLine = actionOnNewLine,
-    ) {
-        Column {
-            val visuals = snackbarData.visuals as? SnackbarVisuals
-            Text(
-                text = snackbarData.visuals.message,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 2,
-                style = AcornTheme.typography.body2,
-            )
+    LaunchedEffect(dismissState.currentValue) {
+        val value = dismissState.currentValue
+        when (value) {
+            SwipeToDismissBoxValue.StartToEnd, SwipeToDismissBoxValue.EndToStart -> {
+                snackbarData.dismiss()
+            }
+            SwipeToDismissBoxValue.Settled -> {} // no-op
+        }
+    }
 
-            visuals?.subMessage?.let {
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {},
+    ) {
+        M3Snackbar(
+            modifier = modifier
+                .padding(SnackbarPadding)
+                .semantics { testTagsAsResourceId = true }
+                .testTag(SNACKBAR_TEST_TAG),
+            action = actionComposable,
+            dismissAction = dismissActionComposable,
+            actionOnNewLine = actionOnNewLine,
+        ) {
+            Column {
+                val visuals = snackbarData.visuals as? SnackbarVisuals
                 Text(
-                    text = it,
-                    overflow = visuals.subMessageTextOverflow,
-                    maxLines = 1,
+                    text = snackbarData.visuals.message,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
                     style = AcornTheme.typography.body2,
                 )
+
+                visuals?.subMessage?.let {
+                    Text(
+                        text = it,
+                        overflow = visuals.subMessageTextOverflow,
+                        maxLines = 1,
+                        style = AcornTheme.typography.body2,
+                    )
+                }
             }
         }
     }

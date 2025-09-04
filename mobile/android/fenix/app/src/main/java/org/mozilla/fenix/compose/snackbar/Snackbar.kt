@@ -7,8 +7,6 @@ package org.mozilla.fenix.compose.snackbar
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.compose.animation.core.DecayAnimationSpec
-import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,9 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -45,8 +40,6 @@ import mozilla.components.compose.base.snackbar.SnackbarVisuals
 import mozilla.components.compose.base.snackbar.displaySnackbar
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.SnackbarBehavior
-import org.mozilla.fenix.compose.SwipeToDismissBox2
-import org.mozilla.fenix.compose.SwipeToDismissState2
 import org.mozilla.fenix.compose.core.Action
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -126,29 +119,9 @@ class Snackbar private constructor(
 
                 contentView.setContent {
                     FirefoxTheme {
-                        val density = LocalDensity.current
-                        val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-                        val decayAnimationSpec: DecayAnimationSpec<Float> = rememberSplineBasedDecay()
-                        val swipeState = remember {
-                            SwipeToDismissState2(
-                                density = density,
-                                decayAnimationSpec = decayAnimationSpec,
-                                isRtl = isRtl,
-                            )
-                        }
-
-                        SwipeToDismissBox2(
-                            state = swipeState,
-                            modifier = Modifier.fillMaxWidth(),
-                            onItemDismiss = {
-                                snackbarState.onDismiss.invoke()
-                            },
-                            backgroundContent = {},
-                        ) {
-                            Snackbar(
-                                snackbarData = snackbarState.copy(action = action).toSnackbarData(),
-                            )
-                        }
+                        Snackbar(
+                            snackbarData = snackbarState.copy(action = action).toSnackbarData(),
+                        )
                     }
                 }
 
