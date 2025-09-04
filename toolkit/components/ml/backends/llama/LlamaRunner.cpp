@@ -6,6 +6,16 @@
 
 #include "LlamaRunner.h"
 
+#include "mozilla/dom/LlamaRunnerBinding.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsIEventTarget.h"
+#include "nsIFileStreams.h"
+#include "nsINode.h"
+#include "nsISupports.h"
+#include "nsWrapperCache.h"
+#include "nsXPCOM.h"
 #include "prsystem.h"
 #include "mozilla/Casting.h"
 #include "mozilla/SPSCQueue.h"
@@ -15,6 +25,8 @@
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
+
+#include "nsIFileStreams.h"
 
 #include "nsThreadUtils.h"
 #include "mozilla/RefPtr.h"
@@ -28,6 +40,12 @@
 #include "nsThreadManager.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/dom/Promise-inl.h"
+#include "nsQueryObject.h"
+#include "private/pprio.h"
+
+#ifdef XP_WIN
+#  include <fcntl.h>
+#endif
 
 mozilla::LazyLogModule gLlamaRunnerLog("GeckoMLLlamaRunnerNative");
 
@@ -42,14 +60,6 @@ mozilla::LazyLogModule gLlamaRunnerLog("GeckoMLLlamaRunnerNative");
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(LlamaRunner, mStreamSource, mGlobal)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(LlamaRunner)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(LlamaRunner)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LlamaRunner)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(LlamaStreamSource,
                                    UnderlyingSourceAlgorithmsWrapper, mTask,
                                    mOriginalEventTarget, mControllerStream,
@@ -58,6 +68,14 @@ NS_IMPL_ADDREF_INHERITED(LlamaStreamSource, UnderlyingSourceAlgorithmsWrapper)
 NS_IMPL_RELEASE_INHERITED(LlamaStreamSource, UnderlyingSourceAlgorithmsWrapper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LlamaStreamSource)
 NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceAlgorithmsWrapper)
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(LlamaRunner, mStreamSource, mGlobal)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(LlamaRunner)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(LlamaRunner)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LlamaRunner)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 }  // namespace mozilla::dom
 
@@ -509,16 +527,107 @@ bool LlamaRunner::InInferenceProcess(JSContext*, JSObject*) {
       INFERENCE_REMOTE_TYPE);
 }
 
-already_AddRefed<LlamaRunner> LlamaRunner::Constructor(
-    const GlobalObject& aGlobal, const LlamaModelOptions& aOptions,
-    ErrorResult& aRv) {
-  RefPtr<LlamaRunner> runner = new LlamaRunner(aGlobal);
-  auto result = runner->mBackend->Reinitialize(aOptions);
+
+class MetadataCallback final : public nsIFileMetadataCallback {
+  public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  explicit MetadataCallback(LlamaRunner* aRunner) : mRunner(aRunner) {}
+  NS_IMETHOD OnFileMetadataReady(nsIAsyncFileMetadata* aObject) override {
+    mRunner->OnMetadataReceived();
+    return NS_OK;
+  }
+  LlamaRunner* mRunner = nullptr;
+  private:
+  virtual ~MetadataCallback() = default;
+};
+
+NS_IMPL_ISUPPORTS(MetadataCallback, nsIFileMetadataCallback)
+
+void LlamaRunner::OnMetadataReceived() {
+  mMetadataCallback = nullptr;
+  const nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(mStream);
+  if (NS_WARN_IF(!fileMetadata)) {
+    LOGE_RUNNER("QI fileMetadata failed");
+    return;
+  }
+  PRFileDesc* fileDesc;
+  const nsresult rv = fileMetadata->GetFileDescriptor(&fileDesc);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOGE_RUNNER("GetFileDescriptor failed");
+    return;
+  }
+
+  MOZ_ASSERT(fileDesc);
+
+#ifdef XP_WIN
+  // Convert our file descriptor to FILE*
+  void* handle = mozilla::ipc::FileDescriptor::PlatformHandleType(
+      PR_FileDesc2NativeHandle(fileDesc));
+  int fd =
+      _open_osfhandle(reinterpret_cast<intptr_t>(handle), _O_RDONLY);
+  if (fd == -1) {
+    LOGE_RUNNER("Convertion to integer fd failed");
+    return;
+  }
+  FILE* fp = fdopen(fd, "rb");
+  if (!fp) {
+    LOGE_RUNNER("Conversion to FILE* failed");
+    return;
+  }
+#else
+  PROsfd fd = PR_FileDesc2NativeHandle(fileDesc);
+  FILE* fp = fdopen(fd, "r");
+#endif
+
+  auto result = mBackend->Reinitialize(LlamaModelOptions(mModelOptions), fp);
+
+  LOGD_RUNNER("LLamaRunner: Reinitialize OK");
+
   if (result.isErr()) {
     LOGE_RUNNER("{}", result.inspectErr().mMessage);
-
-    aRv.ThrowTypeError(result.inspectErr().mMessage);
+    mInitPromise->MaybeReject(NS_ERROR_FAILURE);
+    return;
   }
+
+  mInitPromise->MaybeResolve(NS_OK);
+}
+
+already_AddRefed<Promise> LlamaRunner::Initialize(
+    const LlamaModelOptions& aOptions, Blob& aModelBlob, ErrorResult& aRv) {
+  LOGD_RUNNER("Entered {}", __PRETTY_FUNCTION__);
+  RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  mModelOptions = aOptions;
+
+  RefPtr<Blob> domBlob = do_QueryObject(&aModelBlob);
+  domBlob->CreateInputStream(getter_AddRefs(mStream), aRv);
+  const nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(mStream);
+  if (NS_WARN_IF(!fileMetadata)) {
+    return nullptr;
+  }
+
+  mInitPromise = promise;
+  nsCOMPtr<nsIEventTarget> eventTarget = mozilla::GetCurrentSerialEventTarget();
+  nsCOMPtr<nsIAsyncFileMetadata> asyncFileMetadata = do_QueryInterface(mStream);
+  mMetadataCallback = MakeAndAddRef<MetadataCallback>(this);
+  nsresult rv = asyncFileMetadata->AsyncFileMetadataWait(
+      mMetadataCallback.get(), eventTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOGD_RUNNER("{} AsyncFileMetadataWait failed", __PRETTY_FUNCTION__);
+    return nullptr;
+  }
+
+  LOGD_RUNNER("{} Initialization successfully complete", __PRETTY_FUNCTION__);
+
+  return promise.forget();
+}
+
+already_AddRefed<LlamaRunner> LlamaRunner::Constructor(
+    const GlobalObject& aGlobal, ErrorResult& aRv) {
+  RefPtr<LlamaRunner> runner = new LlamaRunner(aGlobal);
   return runner.forget();
 }
 

@@ -60,7 +60,7 @@ class LlamaBackend {
 
   // Reinitializes the entire backend (model + context).
   // Use this if you need to load a different model.
-  ResultStatus Reinitialize(const LlamaModelOptions& aOptions);
+  ResultStatus Reinitialize(const LlamaModelOptions& aOptions, FILE* aFp);
 
   // Converts structured chat messages into a flat prompt string.
   // Useful for models expecting a plain-text prompt.

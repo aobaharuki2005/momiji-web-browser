@@ -10,8 +10,10 @@
 #include <cstddef>
 
 #include <functional>
+#include "llama.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/HashTable.h"
+#include "nsIFileStreams.h"
 #include "nsTArray.h"
 
 #include "llama/llama.h"
@@ -60,7 +62,9 @@ ggml_type GgmlTypeFromKVCacheDtype(LlamaKVCacheDtype aDtype) {
 
 LlamaBackend::~LlamaBackend() { LOGD("Entered {}", __PRETTY_FUNCTION__); }
 
-ResultStatus LlamaBackend::Reinitialize(const LlamaModelOptions& aOptions) {
+ResultStatus LlamaBackend::Reinitialize(
+    const LlamaModelOptions& aOptions,
+    FILE* aFp) {
   LOGV("Entered {}", __PRETTY_FUNCTION__);
   mModelOptions = aOptions;
   llama_log_set(
@@ -97,8 +101,8 @@ ResultStatus LlamaBackend::Reinitialize(const LlamaModelOptions& aOptions) {
   modelParams.use_mmap = aOptions.mUseMmap;
   modelParams.use_mlock = aOptions.mUseMlock;
   modelParams.check_tensors = aOptions.mCheckTensors;
-  mModel.reset(
-      llama_model_load_from_file(aOptions.mModelPath.get(), modelParams));
+
+  mModel.reset(llama_model_load_from_file_handle(aFp , modelParams));
 
   if (!mModel) {
     auto msg = nsFmtCString(

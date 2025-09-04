@@ -11,8 +11,12 @@
 // integration. Exposes LLM-backed ReadableStream generation and chat prompt
 // formatting to JavaScript via LlamaRunner.
 
+#include "MediaInfo.h"
 #include "mozilla/dom/LlamaRunnerBinding.h"
+#include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/ReadableStream.h"
+#include "nsIFileStreams.h"
+#include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "mozilla/llama/LlamaBackend.h"
 
@@ -44,6 +48,7 @@
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/EventQueue.h"
 #include "nsDeque.h"
+#include "mozilla/dom/Blob.h"
 
 namespace mozilla::dom {
 
@@ -219,6 +224,8 @@ class LlamaStreamSource final : public UnderlyingSourceAlgorithmsWrapper {
   RefPtr<ReadableStream> mControllerStream;
 };
 
+class MetadataCallback;
+
 /**
  * LlamaRunner is the primary WebIDL-exposed controller for llama.cpp chat.
  *
@@ -238,9 +245,12 @@ class LlamaRunner final : public nsISupports, public nsWrapperCache {
 
   nsISupports* GetParentObject() const { return mGlobal; }
 
-  static already_AddRefed<LlamaRunner> Constructor(
-      const GlobalObject& aGlobal, const LlamaModelOptions& aOptions,
-      ErrorResult& aRv);
+  static already_AddRefed<LlamaRunner> Constructor(const GlobalObject& aGlobal,
+                                                   ErrorResult& aRv);
+
+  already_AddRefed<Promise> Initialize(const LlamaModelOptions& aOptions,
+                                       Blob& aModelBlob,
+                                       ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -312,6 +322,8 @@ class LlamaRunner final : public nsISupports, public nsWrapperCache {
 
   static bool InInferenceProcess(JSContext*, JSObject*);
 
+  void OnMetadataReceived();
+
  private:
   ~LlamaRunner() = default;
 
@@ -319,7 +331,11 @@ class LlamaRunner final : public nsISupports, public nsWrapperCache {
   RefPtr<LlamaStreamSource> mStreamSource;
 
  protected:
+  LlamaModelOptions mModelOptions;
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<Promise> mInitPromise;
+  nsCOMPtr<nsIInputStream> mStream;
+  RefPtr<MetadataCallback> mMetadataCallback;
 };
 
 }  // namespace mozilla::dom

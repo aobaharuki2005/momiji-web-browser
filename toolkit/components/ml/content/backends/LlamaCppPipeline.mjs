@@ -15,6 +15,8 @@ import {
   Progress,
 } from "chrome://global/content/ml/Utils.sys.mjs";
 
+import { OPFS } from "chrome://global/content/ml/OPFS.sys.mjs";
+
 /**
  * Log level set by the pipeline.
  *
@@ -102,11 +104,10 @@ export class LlamaCppPipeline {
           urlTemplate: modelHubUrlTemplate,
           rootUrl: modelHubRootUrl,
         }),
-        returnFullPath: true,
       })
     ).ok[2];
 
-    lazy.console.debug("Model path is", { modelFilePath });
+    lazy.console.debug("Model local path is", { modelFilePath });
 
     let options = {};
 
@@ -148,16 +149,20 @@ export class LlamaCppPipeline {
       modelFilePath,
     };
 
-    const generator = new LlamaRunner({
-      modelPath: modelFilePath,
-      useMmap,
-      useMlock,
-      context: {
-        nThreads: options.n_threads,
-        nThreadsBatch: options.n_threads_decoding,
-        nCtx: numContext,
+    const generator = new LlamaRunner();
+
+    await generator.initialize(
+      {
+        useMmap,
+        useMlock,
+        context: {
+          nThreads: options.n_threads,
+          nThreadsBatch: options.n_threads_decoding,
+          nCtx: numContext,
+        },
       },
-    });
+      await (await OPFS.getFileHandle(modelFilePath)).getFile()
+    );
 
     lazy.console.debug("Init time", performance.now() - startInitTime);
 
