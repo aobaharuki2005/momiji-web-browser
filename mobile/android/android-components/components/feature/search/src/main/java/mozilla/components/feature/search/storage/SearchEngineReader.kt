@@ -72,6 +72,7 @@ internal class SearchEngineReader(
         var icon: Bitmap? = null
         var inputEncoding: String? = null
         var isGeneral: Boolean = false
+        var isOptional: Boolean = false
 
         fun toSearchEngine() = SearchEngine(
             id = identifier,
@@ -83,6 +84,7 @@ internal class SearchEngineReader(
             trendingUrl = trendingUrl,
             inputEncoding = inputEncoding,
             isGeneral = isGeneralSearchEngine(identifier, type), // Will be replaced with builder.isGeneral
+            isOptional = isOptional,
             telemetrySuffix = telemetrySuffix,
         )
 
@@ -281,6 +283,7 @@ internal class SearchEngineReader(
         builder.name = engineDefinition.name
         builder.inputEncoding = engineDefinition.charset
         builder.isGeneral = engineDefinition.classification == SearchEngineClassification.GENERAL
+        builder.isOptional = engineDefinition.optional
         readUrlAPI(engineDefinition, builder)
         readImageAPI(attachmentModel, mimetype, builder, defaultIcon)
 
