@@ -56,6 +56,8 @@ body {
 }
 
 #metrics-table {
+  max-height: 90vh;
+  overflow-y: scroll;
   width: var(--table-width);
 }
 
@@ -65,11 +67,6 @@ body {
 
 #metrics-table table td {
   vertical-align: middle;
-}
-
-#metrics-table-instance {
-  max-height: calc(100vh - 205px);
-  overflow-y: scroll;
 }
 
 td[data-d3-cell="actions"] > div {
