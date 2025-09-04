@@ -31,6 +31,39 @@ add_task(async function test_createConnection_and_proxy() {
   });
 });
 
+add_task(async function test_exclusion_and_proxy() {
+  const server = new HttpServer();
+  server.registerPathHandler("/", (request, response) => {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.setHeader("Content-Type", "text/plain");
+    response.write("Hello World");
+  });
+  server.start(-1);
+
+  await withProxyServer(async proxyInfo => {
+    // Create the IPP connection filter
+    const filter = IPPChannelFilter.create(
+      "",
+      proxyInfo.host,
+      proxyInfo.port,
+      proxyInfo.type,
+      ["http://localhost:" + server.identity.primaryPort]
+    );
+    proxyInfo.gotConnection.then(() => {
+      Assert.ok(false, "Proxy connection should not be made for excluded URL");
+    });
+    filter.start();
+
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      "http://localhost:" + server.identity.primaryPort
+    );
+    await BrowserTestUtils.removeTab(tab);
+    filter.stop();
+  });
+});
+
 // Second test: check observer and proxy info on channel
 add_task(async function channelfilter_proxiedChannels() {
   // Disable DOH, as otherwise the iterator will have

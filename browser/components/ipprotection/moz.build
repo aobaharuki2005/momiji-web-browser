@@ -12,6 +12,7 @@ JAR_MANIFESTS += ["jar.mn"]
 EXTRA_JS_MODULES.ipprotection += [
     "GuardianClient.sys.mjs",
     "IPPChannelFilter.sys.mjs",
+    "IPPNetworkErrorObserver.sys.mjs",
     "IPProtection.sys.mjs",
     "IPProtectionPanel.sys.mjs",
     "IPProtectionServerlist.sys.mjs",
