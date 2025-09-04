@@ -3602,6 +3602,21 @@
       }
     ]
   },
+  "1913720": {
+    "label": "CitrusLab",
+    "bugs": {
+      "1913720": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://h2breeze.com/*", "https://is-sets.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1913744": {
     "label": "confetti.buzz",
     "bugs": {
