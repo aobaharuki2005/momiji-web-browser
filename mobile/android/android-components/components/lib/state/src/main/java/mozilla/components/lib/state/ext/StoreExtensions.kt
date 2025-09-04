@@ -10,7 +10,6 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.channels.Channel
@@ -20,7 +19,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Observer
 import mozilla.components.lib.state.State
@@ -119,15 +117,7 @@ fun <S : State, A : Action> Store<S, A>.channel(
     val channel = Channel<S>(Channel.CONFLATED)
 
     val subscription = observeManually { state ->
-        runBlocking {
-            try {
-                channel.send(state)
-            } catch (e: CancellationException) {
-                // It's possible for this channel to have been closed concurrently before
-                // we had a chance to unsubscribe. In this case we can just ignore this
-                // one subscription and keep going.
-            }
-        }
+        channel.trySend(state)
     }
 
     subscription.binding = SubscriptionLifecycleBinding(owner, subscription).apply {
@@ -171,15 +161,7 @@ fun <S : State, A : Action> Store<S, A>.flow(
         owner?.lifecycle?.removeObserver(ownerDestroyedObserver)
 
         val subscription = observeManually { state ->
-            runBlocking {
-                try {
-                    send(state)
-                } catch (e: CancellationException) {
-                    // It's possible for this channel to have been closed concurrently before
-                    // we had a chance to unsubscribe. In this case we can just ignore this
-                    // one subscription and keep going.
-                }
-            }
+            trySend(state)
         }
 
         if (owner == null) {
