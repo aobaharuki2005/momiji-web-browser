@@ -29,14 +29,19 @@ describe("<Lists>", () => {
   let wrapper;
   let sandbox;
   let dispatch;
+  let handleUserInteraction;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     dispatch = sandbox.stub();
+    handleUserInteraction = sandbox.stub();
 
     wrapper = mount(
       <WrapWithProvider state={mockState}>
-        <Lists dispatch={dispatch} />
+        <Lists
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
   });
@@ -219,7 +224,10 @@ describe("<Lists>", () => {
 
     wrapper = mount(
       <WrapWithProvider state={mockState}>
-        <Lists dispatch={dispatch} />
+        <Lists
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -274,7 +282,10 @@ describe("<Lists>", () => {
 
     wrapper = mount(
       <WrapWithProvider state={mockState}>
-        <Lists dispatch={dispatch} />
+        <Lists
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -324,7 +335,10 @@ describe("<Lists>", () => {
 
     const localWrapper = mount(
       <WrapWithProvider state={stateAtMax}>
-        <Lists dispatch={dispatch} />
+        <Lists
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -345,7 +359,10 @@ describe("<Lists>", () => {
     };
     const localWrapper = mount(
       <WrapWithProvider state={state}>
-        <Lists dispatch={dispatch} />
+        <Lists
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
     const createListBtn = localWrapper.find("panel-item.create-list").at(0);
@@ -373,7 +390,10 @@ describe("<Lists>", () => {
     };
     const localWrapper = mount(
       <WrapWithProvider state={state}>
-        <Lists dispatch={dispatch} />
+        <Lists
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
     const createListBtn = localWrapper.find("panel-item.create-list").at(0);
@@ -412,7 +432,10 @@ describe("<Lists>", () => {
 
     const localWrapper = mount(
       <WrapWithProvider state={state}>
-        <Lists dispatch={dispatch} />
+        <Lists
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 
@@ -448,7 +471,10 @@ describe("<Lists>", () => {
 
     const localWrapper = mount(
       <WrapWithProvider state={state}>
-        <Lists dispatch={dispatch} />
+        <Lists
+          dispatch={dispatch}
+          handleUserInteraction={handleUserInteraction}
+        />
       </WrapWithProvider>
     );
 

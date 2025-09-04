@@ -924,6 +924,14 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "widgets.lists.interaction",
+    {
+      title:
+        "Boolean flag for determining if a user has interacted with the lists widget",
+      value: false,
+    },
+  ],
+  [
     "widgets.focusTimer.enabled",
     {
       title: "Enables the focus timer widget",
@@ -934,6 +942,14 @@ export const PREFS_CONFIG = new Map([
     "widgets.system.focusTimer.enabled",
     {
       title: "Enables the focus timer widget experiment in Nimbus",
+      value: false,
+    },
+  ],
+  [
+    "widgets.focusTimer.interaction",
+    {
+      title:
+        "Boolean flag for determining if a user has interacted with the timer widget",
       value: false,
     },
   ],
