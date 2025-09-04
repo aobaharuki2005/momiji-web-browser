@@ -24,6 +24,7 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.geckoview.AllowOrDeny;
+import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ExperimentDelegate;
 import org.mozilla.geckoview.GeckoDisplay;
@@ -453,7 +454,8 @@ public class TestRunnerActivity extends Activity {
               new ContentBlocking.Settings.Builder()
                   .safeBrowsingProviders(google, googleLegacy)
                   .build())
-          .lowMemoryDetection(false); // Avoid unpredictability in tests
+          .lowMemoryDetection(false) // Avoid unpredictability in tests
+          .isolatedProcessEnabled(BuildConfig.MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS);
 
       sRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
 
