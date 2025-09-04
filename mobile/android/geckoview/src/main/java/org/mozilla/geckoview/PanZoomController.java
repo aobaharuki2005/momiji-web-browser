@@ -16,7 +16,6 @@ import android.util.Pair;
 import android.view.DragEvent;
 import android.view.InputDevice;
 import android.view.MotionEvent;
-import android.view.View;
 import androidx.annotation.AnyThread;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -850,12 +849,6 @@ public class PanZoomController {
         }
         break;
       case MotionEvent.ACTION_POINTER_DOWN:
-        // Android 14 workaround: The view is never focused by our synthesized
-        // touch events (bug 1982949).
-        final View view = mSession.getTextInput().getView();
-        if (view != null) {
-          view.requestFocus();
-        }
         if (pointerIndex < 0) {
           // Adding a new pointer
           pointerIndex = mPointerState.addPointer(pointerId, source);
