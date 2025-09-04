@@ -1702,6 +1702,36 @@ bool WarpCacheIRTranspiler::emitLoadValueResult(uint32_t valOffset) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitUncheckedLoadWeakValueResult(
+    uint32_t valOffset) {
+  // This op is currently not used for nursery-allocated values.
+  ValueOrNurseryValueIndex val = valueStubField(valOffset);
+  MOZ_RELEASE_ASSERT(val.isValue(), "Unexpected nursery Value");
+  pushResult(constant(val.toValue()));
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitUncheckedLoadWeakObjectResult(
+    uint32_t objOffset) {
+  MInstruction* ins = objectStubField(objOffset);
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitCheckWeakValueResultForFixedSlot(
+    ObjOperandId objId, uint32_t offsetOffset, uint32_t valOffset) {
+  // This is a no-op because we use strong references for weak BaselineIC stub
+  // fields in Warp.
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitCheckWeakValueResultForDynamicSlot(
+    ObjOperandId objId, uint32_t offsetOffset, uint32_t valOffset) {
+  // This is a no-op because we use strong references for weak BaselineIC stub
+  // fields in Warp.
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadInt32Constant(uint32_t valOffset,
                                                   Int32OperandId resultId) {
   int32_t val = int32StubField(valOffset);

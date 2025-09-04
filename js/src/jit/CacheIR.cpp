@@ -2235,9 +2235,14 @@ bool IRGenerator::canOptimizeConstantDataProperty(NativeObject* holder,
     return false;
   }
 
-  // Warp supports nursery objects and nursery strings (all strings are
-  // atomized) but not nursery BigInts. This is very uncommon so we currently
-  // don't optimize such properties.
+  if (!(*objFuse)->tryOptimizeConstantProperty(prop)) {
+    return false;
+  }
+
+  // Warp supports nursery objects and strings. Strings are atomized below,
+  // and if that were not the case, WarpOracle would handle it. Warp does not
+  // support nursery BigInts, a very uncommon case, so we currently don't
+  // optimize such properties.
   Value result = holder->getSlot(prop.slot());
   if (result.isGCThing() && !result.toGCThing()->isTenured() &&
       !result.isObject() && !result.isString()) {
@@ -2245,7 +2250,21 @@ bool IRGenerator::canOptimizeConstantDataProperty(NativeObject* holder,
     return false;
   }
 
-  return (*objFuse)->tryOptimizeConstantProperty(prop);
+  // Atomize strings to ensure the slot's value won't be mutated by the
+  // LLoadFixedSlotAndAtomize or LLoadDynamicSlotAndAtomize instructions in Ion.
+  // This matters because we'll emit CacheIR instructions to assert the slot's
+  // Value matches the current Value in emitConstantDataPropertyResult.
+  if (result.isString() && !result.toString()->isAtom()) {
+    JSAtom* atom = AtomizeString(cx_, result.toString());
+    if (!atom) {
+      cx_->recoverFromOutOfMemory();
+      return false;
+    }
+    result.setString(atom);
+    holder->setSlot(prop.slot(), result);
+  }
+
+  return true;
 }
 
 void IRGenerator::emitConstantDataPropertyResult(NativeObject* holder,
@@ -2263,14 +2282,38 @@ void IRGenerator::emitConstantDataPropertyResult(NativeObject* holder,
   writer.assertPropertyLookup(holderId, key, prop.slot());
 #endif
 
-  // Use LoadObjectResult if the value is an object to support nursery objects
-  // in Warp.
   Value result = holder->getSlot(prop.slot());
-  if (result.isObject()) {
-    ObjOperandId resObjId = writer.loadObject(&result.toObject());
-    writer.loadObjectResult(resObjId);
+  MOZ_RELEASE_ASSERT(!result.isMagic());
+  MOZ_ASSERT_IF(result.isString(), result.toString()->isAtom());
+
+  if (result.isGCThing()) {
+    // We store the property Value in the IC stub in a WeakValueField (or
+    // WeakObjectField) to ensure the stub doesn't keep GC things alive after
+    // the property is mutated. Weak references normally require a read barrier
+    // but not using a barrier here should be safe, because this property Value
+    // is also stored in the holder object's slot and Watchtower should pop the
+    // fuse when that slot is mutated.
+    //
+    // To make sure a Watchtower correctness bug doesn't become a GC security
+    // bug, we check the slot Value still matches the current value before we
+    // use the weak reference. This only affects Baseline IC code because we
+    // don't use weak references in the transpiler or for Ion ICs.
+    if (holder->isFixedSlot(prop.slot())) {
+      size_t offset = NativeObject::getFixedSlotOffset(prop.slot());
+      writer.checkWeakValueResultForFixedSlot(holderId, offset, result);
+    } else {
+      size_t offset = holder->dynamicSlotIndex(prop.slot()) * sizeof(Value);
+      writer.checkWeakValueResultForDynamicSlot(holderId, offset, result);
+    }
+
+    // Use a different CacheIR instruction for objects, to support nursery
+    // objects in Warp.
+    if (result.isObject()) {
+      writer.uncheckedLoadWeakObjectResult(&result.toObject());
+    } else {
+      writer.uncheckedLoadWeakValueResult(result);
+    }
   } else {
-    MOZ_RELEASE_ASSERT(!result.isMagic());
     writer.loadValueResult(result);
   }
 }
