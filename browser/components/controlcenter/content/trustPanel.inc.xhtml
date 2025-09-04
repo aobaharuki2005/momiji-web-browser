@@ -4,7 +4,7 @@
 
 <html:template id="template-trustpanel-popup">
 <panel id="trustpanel-popup"
-       class="panel-no-padding site-information-popup"
+       class="panel-no-padding"
        type="arrow"
        role="alertdialog"
        noautofocus="true"
@@ -67,10 +67,14 @@
       </vbox>
     </panelview>
 
-    <panelview id="trustpanel-securityInformationView"
+    <panelview id="trustpanel-siteInformationView"
                class="PanelUI-subView"
                role="document">
-#include securityInformation.inc.xhtml
+      <hbox class="trustpanel-section">
+        <image id="trustpanel-siteinfo-icon" class="toolbarbutton-icon"></image>
+        <label id="trustpanel-siteinfo-label"></label>
+      </hbox>
+
       <toolbarseparator></toolbarseparator>
       <html:a id="trustpanel-siteinformation-morelink" data-l10n-id="trustpanel-siteinformation-morelink" role="link" class="trustpanel-section panel-subview-footer-button"></html:a>
     </panelview>
