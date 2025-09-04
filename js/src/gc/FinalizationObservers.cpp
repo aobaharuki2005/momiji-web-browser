@@ -300,11 +300,12 @@ bool FinalizationObservers::addRegistry(
 }
 
 bool GCRuntime::registerWithFinalizationRegistry(
-    JSContext* cx, HandleObject target,
+    JSContext* cx, HandleValue target,
     Handle<FinalizationRecordObject*> record) {
-  MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
+  MOZ_ASSERT_IF(target.isObject(),
+                !IsCrossCompartmentWrapper(&target.toObject()));
 
-  Zone* zone = target->zone();
+  Zone* zone = GetWeakTargetZone(target);
   if (!zone->ensureFinalizationObservers() ||
       !zone->finalizationObservers()->addRecord(target, record)) {
     ReportOutOfMemory(cx);
@@ -315,7 +316,7 @@ bool GCRuntime::registerWithFinalizationRegistry(
 }
 
 bool FinalizationObservers::addRecord(
-    HandleObject target, Handle<FinalizationRecordObject*> record) {
+    HandleValue target, Handle<FinalizationRecordObject*> record) {
   // Add a record to the record map and clean up on failure.
   //
   // The following must be updated and kept in sync:

@@ -159,9 +159,8 @@ class FinalizationObservers {
   // of finalization records representing registries that the target is
   // registered with and their associated held values. The records may be in
   // other zones. They are direct pointers and are not wrapped.
-  using RecordMap =
-      GCHashMap<HeapPtr<JSObject*>, ObserverList,
-                StableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
+  using RecordMap = GCHashMap<HeapPtr<Value>, ObserverList, WeakTargetHasher,
+                              ZoneAllocPolicy>;
   RecordMap recordMap;
 
   using WeakRefMap = GCHashMap<HeapPtr<Value>, ObserverList, WeakTargetHasher,
@@ -174,7 +173,7 @@ class FinalizationObservers {
 
   // FinalizationRegistry support:
   bool addRegistry(Handle<FinalizationRegistryObject*> registry);
-  bool addRecord(HandleObject target, Handle<FinalizationRecordObject*> record);
+  bool addRecord(HandleValue target, Handle<FinalizationRecordObject*> record);
   void clearRecords();
 
   void removeRecord(FinalizationRecordObject* record);
