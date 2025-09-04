@@ -9,6 +9,7 @@ import subprocess
 import tarfile
 import tempfile
 import zipfile
+from email.utils import format_datetime
 
 import mozfile
 import mozpack.path as mozpath
@@ -99,6 +100,9 @@ def repackage_deb(
             release_product=release_product,
         )
         build_variables["DEPENDS"] = "${shlibs:Depends},"
+        build_variables["CHANGELOG_DATE"] = format_datetime(
+            build_variables["TIMESTAMP"]
+        )
 
         deb_dir = mozpath.join(source_dir, "debian")
 
@@ -174,6 +178,9 @@ def repackage_deb_l10n(
         else:
             depends = f"{application_ini_data['remoting_name']} (= {application_ini_data['pkg_version']})"
         build_variables["DEPENDS"] = depends
+        build_variables["CHANGELOG_DATE"] = format_datetime(
+            build_variables["TIMESTAMP"]
+        )
 
         deb_dir = mozpath.join(source_dir, "debian")
 

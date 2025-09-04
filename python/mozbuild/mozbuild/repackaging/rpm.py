@@ -181,8 +181,8 @@ def _get_build_variables(
         build_number=build_number,
     )
 
-    # The format of the date must use the same format as “Wen Jan 22 2024”
-    build_variables["CHANGELOG_DATE"] = application_ini_data["timestamp"].strftime(
+    # The format of the date must use the same format as “Wed Jan 22 2024”
+    build_variables["CHANGELOG_DATE"] = build_variables["TIMESTAMP"].strftime(
         "%a %b %d %Y"
     )
 

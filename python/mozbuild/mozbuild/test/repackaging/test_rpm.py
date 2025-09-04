@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import pathlib
 import sys
 import tempfile
@@ -57,6 +58,7 @@ _APPLICATION_INI_CONTENT_DATA = {
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-nightly-try",
+                "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
         ),
@@ -83,6 +85,7 @@ _APPLICATION_INI_CONTENT_DATA = {
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-nightly-try-l10n-fr",
+                "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
         ),
@@ -109,6 +112,7 @@ _APPLICATION_INI_CONTENT_DATA = {
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-nightly-try",
+                "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
         ),
@@ -135,6 +139,7 @@ _APPLICATION_INI_CONTENT_DATA = {
                 "PKG_BUILD_NUMBER": 2,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-nightly-try",
+                "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
         ),
@@ -161,6 +166,7 @@ _APPLICATION_INI_CONTENT_DATA = {
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-devedition",
+                "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
         ),
@@ -187,6 +193,7 @@ _APPLICATION_INI_CONTENT_DATA = {
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-devedition-l10n-ach",
+                "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
         ),
@@ -213,6 +220,7 @@ _APPLICATION_INI_CONTENT_DATA = {
                 "PKG_BUILD_NUMBER": 1,
                 "MANPAGE_DATE": "February 22, 2023",
                 "Icon": "firefox-devedition-l10n-ach",
+                "TIMESTAMP": datetime.datetime(2023, 2, 22, 0, 0),
             },
             does_not_raise(),
         ),
