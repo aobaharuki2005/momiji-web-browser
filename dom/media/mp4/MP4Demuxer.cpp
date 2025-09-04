@@ -17,6 +17,7 @@
 #include "H265.h"
 #include "MP4Decoder.h"
 #include "MP4Metadata.h"
+#include "MediaDataDemuxer.h"
 #include "MoofParser.h"
 #include "ResourceStream.h"
 #include "SampleIterator.h"
@@ -25,9 +26,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsPrintfCString.h"
-
-extern mozilla::LazyLogModule gMediaDemuxerLog;
-mozilla::LogModule* GetDemuxerLog() { return gMediaDemuxerLog; }
 
 #define LOG(arg, ...)                                                 \
   DDMOZ_LOG(gMediaDemuxerLog, mozilla::LogLevel::Debug, "::%s: " arg, \
@@ -505,7 +503,7 @@ MP4TrackDemuxer::GetNextSample() {
     }
   }
 
-  if (MOZ_LOG_TEST(GetDemuxerLog(), LogLevel::Verbose)) {
+  if (MOZ_LOG_TEST(gMediaDemuxerLog, LogLevel::Verbose)) {
     bool isAudio = mInfo->GetAsAudioInfo();
     TimeUnit originalStart = TimeUnit::Invalid();
     TimeUnit originalEnd = TimeUnit::Invalid();
