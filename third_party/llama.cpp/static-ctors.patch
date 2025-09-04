@@ -4662,10 +4662,10 @@ index 18dcc6ddfe..335eff7976 100644
  }
  
  bool llm_arch_is_recurrent(const llm_arch & arch) {
-diff --git a/third_party/llama.cpp/src/llama-arch.cpp b/third_party/llama.cpp/src/llama-arch.cpp
+diff --git a/src/llama-arch.cpp b/src/llama-arch.cpp
 index 335eff7976..63529f0a64 100644
---- a/third_party/llama.cpp/src/llama-arch.cpp
-+++ b/third_party/llama.cpp/src/llama-arch.cpp
+--- a/src/llama-arch.cpp
++++ b/src/llama-arch.cpp
 @@ -2352,7 +2352,150 @@
              {LLM_TENSOR_FFN_GATE,                   {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
              {LLM_TENSOR_FFN_DOWN,                   {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
@@ -4851,3 +4851,453 @@ index 335eff7976..63529f0a64 100644
  }
  
  bool llm_arch_is_recurrent(const llm_arch & arch) {
+diff --git a/ggml/src/gguf.cpp b/ggml/src/gguf.cpp
+index ed5fd9fe8e..6ae404cffb 100644
+--- a/ggml/src/gguf.cpp
++++ b/ggml/src/gguf.cpp
+@@ -80,41 +80,48 @@
+     static constexpr enum gguf_type value = GGUF_TYPE_FLOAT64;
+ };
+ 
+-static const std::map<gguf_type, size_t> GGUF_TYPE_SIZE = {
+-    {GGUF_TYPE_UINT8,   sizeof(uint8_t)},
+-    {GGUF_TYPE_INT8,    sizeof(int8_t)},
+-    {GGUF_TYPE_UINT16,  sizeof(uint16_t)},
+-    {GGUF_TYPE_INT16,   sizeof(int16_t)},
+-    {GGUF_TYPE_UINT32,  sizeof(uint32_t)},
+-    {GGUF_TYPE_INT32,   sizeof(int32_t)},
+-    {GGUF_TYPE_FLOAT32, sizeof(float)},
+-    {GGUF_TYPE_BOOL,    sizeof(int8_t)},
+-    {GGUF_TYPE_STRING,  0}, // undefined
+-    {GGUF_TYPE_ARRAY,   0}, // undefined
+-    {GGUF_TYPE_UINT64,  sizeof(uint64_t)},
+-    {GGUF_TYPE_INT64,   sizeof(int64_t)},
+-    {GGUF_TYPE_FLOAT64, sizeof(double)},
+-};
+-static_assert(GGUF_TYPE_COUNT == 13, "GGUF_TYPE_COUNT != 13");
++static const std::map<gguf_type, size_t> & get_gguf_type_size_map() {
++    static const std::map<gguf_type, size_t> GGUF_TYPE_SIZE = {
++        {GGUF_TYPE_UINT8,   sizeof(uint8_t)},
++        {GGUF_TYPE_INT8,    sizeof(int8_t)},
++        {GGUF_TYPE_UINT16,  sizeof(uint16_t)},
++        {GGUF_TYPE_INT16,   sizeof(int16_t)},
++        {GGUF_TYPE_UINT32,  sizeof(uint32_t)},
++        {GGUF_TYPE_INT32,   sizeof(int32_t)},
++        {GGUF_TYPE_FLOAT32, sizeof(float)},
++        {GGUF_TYPE_BOOL,    sizeof(int8_t)},
++        {GGUF_TYPE_STRING,  0}, // undefined
++        {GGUF_TYPE_ARRAY,   0}, // undefined
++        {GGUF_TYPE_UINT64,  sizeof(uint64_t)},
++        {GGUF_TYPE_INT64,   sizeof(int64_t)},
++        {GGUF_TYPE_FLOAT64, sizeof(double)},
++    };
++    static_assert(GGUF_TYPE_COUNT == 13, "GGUF_TYPE_COUNT != 13");
++    return GGUF_TYPE_SIZE;
++}
+ 
+-static const std::map<gguf_type, const char *> GGUF_TYPE_NAME = {
+-    {GGUF_TYPE_UINT8,   "u8"},
+-    {GGUF_TYPE_INT8,    "i8"},
+-    {GGUF_TYPE_UINT16,  "u16"},
+-    {GGUF_TYPE_INT16,   "i16"},
+-    {GGUF_TYPE_UINT32,  "u32"},
+-    {GGUF_TYPE_INT32,   "i32"},
+-    {GGUF_TYPE_FLOAT32, "f32"},
+-    {GGUF_TYPE_BOOL,    "bool"},
+-    {GGUF_TYPE_STRING,  "str"},
+-    {GGUF_TYPE_ARRAY,   "arr"},
+-    {GGUF_TYPE_UINT64,  "u64"},
+-    {GGUF_TYPE_INT64,   "i64"},
+-    {GGUF_TYPE_FLOAT64, "f64"},
+-};
+-static_assert(GGUF_TYPE_COUNT == 13, "GGUF_TYPE_COUNT != 13");
++static const std::map<gguf_type, const char *> & get_gguf_type_name_map() {
++    static const std::map<gguf_type, const char *> GGUF_TYPE_NAME = {
++        {GGUF_TYPE_UINT8,   "u8"},
++        {GGUF_TYPE_INT8,    "i8"},
++        {GGUF_TYPE_UINT16,  "u16"},
++        {GGUF_TYPE_INT16,   "i16"},
++        {GGUF_TYPE_UINT32,  "u32"},
++        {GGUF_TYPE_INT32,   "i32"},
++        {GGUF_TYPE_FLOAT32, "f32"},
++        {GGUF_TYPE_BOOL,    "bool"},
++        {GGUF_TYPE_STRING,  "str"},
++        {GGUF_TYPE_ARRAY,   "arr"},
++        {GGUF_TYPE_UINT64,  "u64"},
++        {GGUF_TYPE_INT64,   "i64"},
++        {GGUF_TYPE_FLOAT64, "f64"},
++    };
++    static_assert(GGUF_TYPE_COUNT == 13, "GGUF_TYPE_COUNT != 13");
++    return GGUF_TYPE_NAME;
++}
+ 
+ size_t gguf_type_size(enum gguf_type type) {
++    const auto & GGUF_TYPE_SIZE = get_gguf_type_size_map();
+     auto it = GGUF_TYPE_SIZE.find(type);
+     return it == GGUF_TYPE_SIZE.end() ? 0 : it->second;
+ }
+@@ -922,6 +929,7 @@
+ }
+ 
+ const char * gguf_type_name(enum gguf_type type) {
++    const auto & GGUF_TYPE_NAME = get_gguf_type_name_map();
+     auto it = GGUF_TYPE_NAME.find(type);
+     return it == GGUF_TYPE_NAME.end() ? nullptr : it->second;
+ }
+diff --git a/src/llama-chat.cpp b/src/llama-chat.cpp
+index 046f4df897..8f3df17be2 100644
+--- a/src/llama-chat.cpp
++++ b/src/llama-chat.cpp
+@@ -27,53 +27,57 @@
+     return str.substr(start, end - start);
+ }
+ 
+-static const std::map<std::string, llm_chat_template> LLM_CHAT_TEMPLATES = {
+-    { "chatml",            LLM_CHAT_TEMPLATE_CHATML            },
+-    { "llama2",            LLM_CHAT_TEMPLATE_LLAMA_2           },
+-    { "llama2-sys",        LLM_CHAT_TEMPLATE_LLAMA_2_SYS       },
+-    { "llama2-sys-bos",    LLM_CHAT_TEMPLATE_LLAMA_2_SYS_BOS   },
+-    { "llama2-sys-strip",  LLM_CHAT_TEMPLATE_LLAMA_2_SYS_STRIP },
+-    { "mistral-v1",        LLM_CHAT_TEMPLATE_MISTRAL_V1        },
+-    { "mistral-v3",        LLM_CHAT_TEMPLATE_MISTRAL_V3        },
+-    { "mistral-v3-tekken", LLM_CHAT_TEMPLATE_MISTRAL_V3_TEKKEN },
+-    { "mistral-v7",        LLM_CHAT_TEMPLATE_MISTRAL_V7        },
+-    { "mistral-v7-tekken", LLM_CHAT_TEMPLATE_MISTRAL_V7_TEKKEN },
+-    { "phi3",              LLM_CHAT_TEMPLATE_PHI_3             },
+-    { "phi4",              LLM_CHAT_TEMPLATE_PHI_4             },
+-    { "falcon3",           LLM_CHAT_TEMPLATE_FALCON_3          },
+-    { "zephyr",            LLM_CHAT_TEMPLATE_ZEPHYR            },
+-    { "monarch",           LLM_CHAT_TEMPLATE_MONARCH           },
+-    { "gemma",             LLM_CHAT_TEMPLATE_GEMMA             },
+-    { "orion",             LLM_CHAT_TEMPLATE_ORION             },
+-    { "openchat",          LLM_CHAT_TEMPLATE_OPENCHAT          },
+-    { "vicuna",            LLM_CHAT_TEMPLATE_VICUNA            },
+-    { "vicuna-orca",       LLM_CHAT_TEMPLATE_VICUNA_ORCA       },
+-    { "deepseek",          LLM_CHAT_TEMPLATE_DEEPSEEK          },
+-    { "deepseek2",         LLM_CHAT_TEMPLATE_DEEPSEEK_2        },
+-    { "deepseek3",         LLM_CHAT_TEMPLATE_DEEPSEEK_3        },
+-    { "command-r",         LLM_CHAT_TEMPLATE_COMMAND_R         },
+-    { "llama3",            LLM_CHAT_TEMPLATE_LLAMA_3           },
+-    { "chatglm3",          LLM_CHAT_TEMPLATE_CHATGLM_3         },
+-    { "chatglm4",          LLM_CHAT_TEMPLATE_CHATGLM_4         },
+-    { "glmedge",           LLM_CHAT_TEMPLATE_GLMEDGE           },
+-    { "minicpm",           LLM_CHAT_TEMPLATE_MINICPM           },
+-    { "exaone3",           LLM_CHAT_TEMPLATE_EXAONE_3          },
+-    { "exaone4",           LLM_CHAT_TEMPLATE_EXAONE_4          },
+-    { "rwkv-world",        LLM_CHAT_TEMPLATE_RWKV_WORLD        },
+-    { "granite",           LLM_CHAT_TEMPLATE_GRANITE           },
+-    { "gigachat",          LLM_CHAT_TEMPLATE_GIGACHAT          },
+-    { "megrez",            LLM_CHAT_TEMPLATE_MEGREZ            },
+-    { "yandex",            LLM_CHAT_TEMPLATE_YANDEX            },
+-    { "bailing",           LLM_CHAT_TEMPLATE_BAILING           },
+-    { "llama4",            LLM_CHAT_TEMPLATE_LLAMA4            },
+-    { "smolvlm",           LLM_CHAT_TEMPLATE_SMOLVLM           },
+-    { "hunyuan-moe",       LLM_CHAT_TEMPLATE_HUNYUAN_MOE       },
+-    { "gpt-oss",           LLM_CHAT_TEMPLATE_OPENAI_MOE        },
+-    { "hunyuan-dense",     LLM_CHAT_TEMPLATE_HUNYUAN_DENSE     },
+-    { "kimi-k2",           LLM_CHAT_TEMPLATE_KIMI_K2           },
+-};
++static const std::map<std::string, llm_chat_template> & get_llm_chat_templates() {
++    static const std::map<std::string, llm_chat_template> LLM_CHAT_TEMPLATES = {
++        { "chatml",            LLM_CHAT_TEMPLATE_CHATML            },
++        { "llama2",            LLM_CHAT_TEMPLATE_LLAMA_2           },
++        { "llama2-sys",        LLM_CHAT_TEMPLATE_LLAMA_2_SYS       },
++        { "llama2-sys-bos",    LLM_CHAT_TEMPLATE_LLAMA_2_SYS_BOS   },
++        { "llama2-sys-strip",  LLM_CHAT_TEMPLATE_LLAMA_2_SYS_STRIP },
++        { "mistral-v1",        LLM_CHAT_TEMPLATE_MISTRAL_V1        },
++        { "mistral-v3",        LLM_CHAT_TEMPLATE_MISTRAL_V3        },
++        { "mistral-v3-tekken", LLM_CHAT_TEMPLATE_MISTRAL_V3_TEKKEN },
++        { "mistral-v7",        LLM_CHAT_TEMPLATE_MISTRAL_V7        },
++        { "mistral-v7-tekken", LLM_CHAT_TEMPLATE_MISTRAL_V7_TEKKEN },
++        { "phi3",              LLM_CHAT_TEMPLATE_PHI_3             },
++        { "phi4",              LLM_CHAT_TEMPLATE_PHI_4             },
++        { "falcon3",           LLM_CHAT_TEMPLATE_FALCON_3          },
++        { "zephyr",            LLM_CHAT_TEMPLATE_ZEPHYR            },
++        { "monarch",           LLM_CHAT_TEMPLATE_MONARCH           },
++        { "gemma",             LLM_CHAT_TEMPLATE_GEMMA             },
++        { "orion",             LLM_CHAT_TEMPLATE_ORION             },
++        { "openchat",          LLM_CHAT_TEMPLATE_OPENCHAT          },
++        { "vicuna",            LLM_CHAT_TEMPLATE_VICUNA            },
++        { "vicuna-orca",       LLM_CHAT_TEMPLATE_VICUNA_ORCA       },
++        { "deepseek",          LLM_CHAT_TEMPLATE_DEEPSEEK          },
++        { "deepseek2",         LLM_CHAT_TEMPLATE_DEEPSEEK_2        },
++        { "deepseek3",         LLM_CHAT_TEMPLATE_DEEPSEEK_3        },
++        { "command-r",         LLM_CHAT_TEMPLATE_COMMAND_R         },
++        { "llama3",            LLM_CHAT_TEMPLATE_LLAMA_3           },
++        { "chatglm3",          LLM_CHAT_TEMPLATE_CHATGLM_3         },
++        { "chatglm4",          LLM_CHAT_TEMPLATE_CHATGLM_4         },
++        { "glmedge",           LLM_CHAT_TEMPLATE_GLMEDGE           },
++        { "minicpm",           LLM_CHAT_TEMPLATE_MINICPM           },
++        { "exaone3",           LLM_CHAT_TEMPLATE_EXAONE_3          },
++        { "exaone4",           LLM_CHAT_TEMPLATE_EXAONE_4          },
++        { "rwkv-world",        LLM_CHAT_TEMPLATE_RWKV_WORLD        },
++        { "granite",           LLM_CHAT_TEMPLATE_GRANITE           },
++        { "gigachat",          LLM_CHAT_TEMPLATE_GIGACHAT          },
++        { "megrez",            LLM_CHAT_TEMPLATE_MEGREZ            },
++        { "yandex",            LLM_CHAT_TEMPLATE_YANDEX            },
++        { "bailing",           LLM_CHAT_TEMPLATE_BAILING           },
++        { "llama4",            LLM_CHAT_TEMPLATE_LLAMA4            },
++        { "smolvlm",           LLM_CHAT_TEMPLATE_SMOLVLM           },
++        { "hunyuan-moe",       LLM_CHAT_TEMPLATE_HUNYUAN_MOE       },
++        { "gpt-oss",           LLM_CHAT_TEMPLATE_OPENAI_MOE        },
++        { "hunyuan-dense",     LLM_CHAT_TEMPLATE_HUNYUAN_DENSE     },
++        { "kimi-k2",           LLM_CHAT_TEMPLATE_KIMI_K2           },
++    };
++    return LLM_CHAT_TEMPLATES;
++}
+ 
+ llm_chat_template llm_chat_template_from_str(const std::string & name) {
++    const auto & LLM_CHAT_TEMPLATES = get_llm_chat_templates();
+     return LLM_CHAT_TEMPLATES.at(name);
+ }
+ 
+@@ -85,6 +89,7 @@
+         // ignore
+     }
+ #endif
++    const auto & LLM_CHAT_TEMPLATES = get_llm_chat_templates();
+     auto chat_template = LLM_CHAT_TEMPLATES.find(tmpl);
+     if (chat_template != LLM_CHAT_TEMPLATES.end()) {
+         return chat_template->second;
+@@ -771,6 +776,7 @@
+ // public interface
+ 
+ int32_t llama_chat_builtin_templates(const char ** output, size_t len) {
++    const auto & LLM_CHAT_TEMPLATES = get_llm_chat_templates();
+     auto it = LLM_CHAT_TEMPLATES.begin();
+     for (size_t i = 0; i < std::min(len, LLM_CHAT_TEMPLATES.size()); i++) {
+         output[i] = it->first.c_str();
+diff --git a/src/llama-model.cpp b/src/llama-model.cpp
+index 46500302e2..65a972fae8 100644
+--- a/src/llama-model.cpp
++++ b/src/llama-model.cpp
+@@ -129,18 +129,23 @@
+     }
+ }
+ 
+-static const std::map<llama_rope_scaling_type, const char *> LLAMA_ROPE_SCALING_TYPES = {
+-    { LLAMA_ROPE_SCALING_TYPE_NONE,       "none"       },
+-    { LLAMA_ROPE_SCALING_TYPE_LINEAR,     "linear"     },
+-    { LLAMA_ROPE_SCALING_TYPE_YARN,       "yarn"       },
+-    { LLAMA_ROPE_SCALING_TYPE_LONGROPE,   "longrope"   },
+-};
++static const std::map<llama_rope_scaling_type, const char *> & get_llama_rope_scaling_types() {
++    static const std::map<llama_rope_scaling_type, const char *> LLAMA_ROPE_SCALING_TYPES = {
++        { LLAMA_ROPE_SCALING_TYPE_NONE,       "none"       },
++        { LLAMA_ROPE_SCALING_TYPE_LINEAR,     "linear"     },
++        { LLAMA_ROPE_SCALING_TYPE_YARN,       "yarn"       },
++        { LLAMA_ROPE_SCALING_TYPE_LONGROPE,   "longrope"   },
++    };
++    return LLAMA_ROPE_SCALING_TYPES;
++}
+ 
+ std::string llama_rope_scaling_type_name(llama_rope_scaling_type rope_scaling_type) {
++    const auto & LLAMA_ROPE_SCALING_TYPES = get_llama_rope_scaling_types();
+     return LLAMA_ROPE_SCALING_TYPES.at(rope_scaling_type);
+ }
+ 
+ static llama_rope_scaling_type llama_rope_scaling_type_from_string(const std::string & name) {
++    const auto & LLAMA_ROPE_SCALING_TYPES = get_llama_rope_scaling_types();
+     for (const auto & kv : LLAMA_ROPE_SCALING_TYPES) {
+         if (kv.second == name) {
+             return (llama_rope_scaling_type) kv.first;
+diff --git a/src/unicode-data.cpp b/src/unicode-data.cpp
+index 04dcd7fcfb..cd1b7e499b 100644
+--- a/src/unicode-data.cpp
++++ b/src/unicode-data.cpp
+@@ -7,7 +7,8 @@
+ #include <unordered_map>
+ #include <unordered_set>
+ 
+-const std::initializer_list<std::pair<uint32_t, uint16_t>> unicode_ranges_flags = {  // start, flags // last=next_start-1
++const std::initializer_list<std::pair<uint32_t, uint16_t>>& get_unicode_ranges_flags() {
++    static const std::initializer_list<std::pair<uint32_t, uint16_t>> unicode_ranges_flags = {  // start, flags // last=next_start-1
+ {0x000000, 0x0080},
+ {0x000020, 0x0008},
+ {0x000021, 0x0020},
+@@ -2281,9 +2282,12 @@
+ {0x100000, 0x0080},
+ {0x10FFFE, 0x0001},
+ {0x110000, 0x0000},
+-};
++    };
++    return unicode_ranges_flags;
++}
+ 
+-const std::unordered_set<uint32_t> unicode_set_whitespace = {
++const std::unordered_set<uint32_t>& get_unicode_set_whitespace() {
++    static const std::unordered_set<uint32_t> unicode_set_whitespace = {
+ 0x000009,
+ 0x00000A,
+ 0x00000B,
+@@ -2309,10 +2313,13 @@
+ 0x00202F,
+ 0x00205F,
+ 0x003000,
+-};
++    };
++    return unicode_set_whitespace;
++}
+ 
+ // list is always in ascending order, to enable binary search
+-const std::initializer_list<std::pair<uint32_t, uint32_t>> unicode_map_lowercase = {
++const std::initializer_list<std::pair<uint32_t, uint32_t>>& get_unicode_map_lowercase() {
++    static const std::initializer_list<std::pair<uint32_t, uint32_t>> unicode_map_lowercase = {
+ {0x000041, 0x000061},
+ {0x000042, 0x000062},
+ {0x000043, 0x000063},
+@@ -3746,10 +3753,13 @@
+ {0x01E91F, 0x01E941},
+ {0x01E920, 0x01E942},
+ {0x01E921, 0x01E943},
+-};
++    };
++    return unicode_map_lowercase;
++}
+ 
+ // list is always in ascending order, to enable binary search
+-const std::initializer_list<std::pair<uint32_t, uint32_t>> unicode_map_uppercase = {
++const std::initializer_list<std::pair<uint32_t, uint32_t>>& get_unicode_map_uppercase() {
++    static const std::initializer_list<std::pair<uint32_t, uint32_t>> unicode_map_uppercase = {
+ {0x000061, 0x000041},
+ {0x000062, 0x000042},
+ {0x000063, 0x000043},
+@@ -5200,9 +5210,12 @@
+ {0x01E941, 0x01E91F},
+ {0x01E942, 0x01E920},
+ {0x01E943, 0x01E921},
+-};
++    };
++    return unicode_map_uppercase;
++}
+ 
+-const std::initializer_list<range_nfd> unicode_ranges_nfd = {  // start, last, nfd
++const std::initializer_list<range_nfd>& get_unicode_ranges_nfd() {
++    static const std::initializer_list<range_nfd> unicode_ranges_nfd = {  // start, last, nfd
+ {0x000000, 0x000000, 0x000000},
+ {0x0000C0, 0x0000C5, 0x000041},
+ {0x0000C7, 0x0000C7, 0x000043},
+@@ -7031,4 +7044,6 @@
+ {0x02FA1B, 0x02FA1B, 0x009F16},
+ {0x02FA1C, 0x02FA1C, 0x009F3B},
+ {0x02FA1D, 0x02FA1D, 0x02A600},
+-};
++    };
++    return unicode_ranges_nfd;
++}
+diff --git a/src/unicode-data.h b/src/unicode-data.h
+index f6973ebd2e..5b7bdf78fa 100644
+--- a/src/unicode-data.h
++++ b/src/unicode-data.h
+@@ -13,8 +13,8 @@
+ 
+ static const uint32_t MAX_CODEPOINTS = 0x110000;
+ 
+-extern const std::initializer_list<std::pair<uint32_t, uint16_t>> unicode_ranges_flags;
+-extern const std::unordered_set<uint32_t> unicode_set_whitespace;
+-extern const std::initializer_list<std::pair<uint32_t, uint32_t>> unicode_map_lowercase;
+-extern const std::initializer_list<std::pair<uint32_t, uint32_t>> unicode_map_uppercase;
+-extern const std::initializer_list<range_nfd> unicode_ranges_nfd;
++const std::initializer_list<std::pair<uint32_t, uint16_t>>& get_unicode_ranges_flags();
++const std::unordered_set<uint32_t>& get_unicode_set_whitespace();
++const std::initializer_list<std::pair<uint32_t, uint32_t>>& get_unicode_map_lowercase();
++const std::initializer_list<std::pair<uint32_t, uint32_t>>& get_unicode_map_uppercase();
++const std::initializer_list<range_nfd>& get_unicode_ranges_nfd();
+diff --git a/src/unicode.cpp b/src/unicode.cpp
+index 6ff7075db3..b2e0ef7bf4 100644
+--- a/src/unicode.cpp
++++ b/src/unicode.cpp
+@@ -124,6 +124,7 @@
+ static std::vector<unicode_cpt_flags> unicode_cpt_flags_array() {
+     std::vector<unicode_cpt_flags> cpt_flags(MAX_CODEPOINTS, unicode_cpt_flags::UNDEFINED);
+ 
++    const auto & unicode_ranges_flags = get_unicode_ranges_flags();
+     assert (unicode_ranges_flags.begin()[0].first == 0);
+     assert (unicode_ranges_flags.begin()[unicode_ranges_flags.size()-1].first == MAX_CODEPOINTS);
+     for (size_t i = 1; i < unicode_ranges_flags.size(); ++i) {
+@@ -134,18 +135,22 @@
+         }
+     }
+ 
++    const auto & unicode_set_whitespace = get_unicode_set_whitespace();
+     for (auto cpt : unicode_set_whitespace) {
+         cpt_flags[cpt].is_whitespace = true;
+     }
+ 
++    const auto & unicode_map_lowercase = get_unicode_map_lowercase();
+     for (auto p : unicode_map_lowercase) {
+         cpt_flags[p.second].is_lowercase = true;
+     }
+ 
++    const auto & unicode_map_uppercase = get_unicode_map_uppercase();
+     for (auto p : unicode_map_uppercase) {
+         cpt_flags[p.second].is_uppercase = true;
+     }
+ 
++    const auto & unicode_ranges_nfd = get_unicode_ranges_nfd();
+     for (auto &range : unicode_ranges_nfd) {  // start, last, nfd
+         cpt_flags[range.nfd].is_nfd = true;
+     }
+@@ -788,6 +793,7 @@
+     auto comp = [] (const uint32_t cpt, const range_nfd & range) {
+         return cpt < range.first;
+     };
++    const auto & unicode_ranges_nfd = get_unicode_ranges_nfd();
+     std::vector<uint32_t> result(cpts.size());
+     for (size_t i = 0; i < cpts.size(); ++i) {
+         const uint32_t cpt = cpts[i];
+@@ -841,6 +847,7 @@
+ 
+ uint32_t unicode_tolower(uint32_t cpt) {
+     // binary search
++    const auto & unicode_map_lowercase = get_unicode_map_lowercase();
+     auto it = std::lower_bound(unicode_map_lowercase.begin(), unicode_map_lowercase.end(), cpt,
+         [](const std::pair<uint32_t, uint32_t> & pair, uint32_t value) {
+             return pair.first < value;
+@@ -883,8 +890,7 @@
+     return false;
+ }
+ 
+-std::vector<std::string> unicode_regex_split(const std::string & text, const std::vector<std::string> & regex_exprs) {
+-    // unicode categories
++static const std::map<std::string, int> & get_k_ucat_enum() {
+     static const std::map<std::string, int> k_ucat_enum = {
+         { "\\p{N}", unicode_cpt_flags::NUMBER },
+         { "\\p{L}", unicode_cpt_flags::LETTER },
+@@ -892,7 +898,10 @@
+         { "\\p{M}", unicode_cpt_flags::ACCENT_MARK },
+         { "\\p{S}", unicode_cpt_flags::SYMBOL },
+     };
++    return k_ucat_enum;
++}
+ 
++static const std::map<int, int> & get_k_ucat_cpt() {
+     static const std::map<int, int> k_ucat_cpt = {
+         { unicode_cpt_flags::NUMBER,      0xD1 },
+         { unicode_cpt_flags::LETTER,      0xD2 },
+@@ -900,7 +909,10 @@
+         { unicode_cpt_flags::ACCENT_MARK, 0xD4 },
+         { unicode_cpt_flags::SYMBOL,      0xD5 },
+     };
++    return k_ucat_cpt;
++}
+ 
++static const std::map<int, std::string> & get_k_ucat_map() {
+     static const std::map<int, std::string> k_ucat_map = {
+         { unicode_cpt_flags::NUMBER,      "\x30-\x39" }, // 0-9
+         { unicode_cpt_flags::LETTER,      "\x41-\x5A\x61-\x7A" }, // A-Za-z
+@@ -908,6 +920,14 @@
+         { unicode_cpt_flags::ACCENT_MARK, "" }, // no sub-128 codepoints
+         { unicode_cpt_flags::SYMBOL,      "\\\x24\\\x2B\x3C-\x3E\x5E\x60\\\x7C" }, // $+<=>^`|
+     };
++    return k_ucat_map;
++}
++
++std::vector<std::string> unicode_regex_split(const std::string & text, const std::vector<std::string> & regex_exprs) {
++    // unicode categories
++    const auto & k_ucat_enum = get_k_ucat_enum();
++    const auto & k_ucat_cpt = get_k_ucat_cpt();
++    const auto & k_ucat_map = get_k_ucat_map();
+ 
+     // compute collapsed codepoints only if needed by at least one regex
+     bool need_collapse = false;

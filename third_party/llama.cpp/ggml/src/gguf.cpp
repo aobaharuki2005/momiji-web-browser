@@ -80,41 +80,48 @@ struct type_to_gguf_type<double> {
     static constexpr enum gguf_type value = GGUF_TYPE_FLOAT64;
 };
 
-static const std::map<gguf_type, size_t> GGUF_TYPE_SIZE = {
-    {GGUF_TYPE_UINT8,   sizeof(uint8_t)},
-    {GGUF_TYPE_INT8,    sizeof(int8_t)},
-    {GGUF_TYPE_UINT16,  sizeof(uint16_t)},
-    {GGUF_TYPE_INT16,   sizeof(int16_t)},
-    {GGUF_TYPE_UINT32,  sizeof(uint32_t)},
-    {GGUF_TYPE_INT32,   sizeof(int32_t)},
-    {GGUF_TYPE_FLOAT32, sizeof(float)},
-    {GGUF_TYPE_BOOL,    sizeof(int8_t)},
-    {GGUF_TYPE_STRING,  0}, // undefined
-    {GGUF_TYPE_ARRAY,   0}, // undefined
-    {GGUF_TYPE_UINT64,  sizeof(uint64_t)},
-    {GGUF_TYPE_INT64,   sizeof(int64_t)},
-    {GGUF_TYPE_FLOAT64, sizeof(double)},
-};
-static_assert(GGUF_TYPE_COUNT == 13, "GGUF_TYPE_COUNT != 13");
+static const std::map<gguf_type, size_t> & get_gguf_type_size_map() {
+    static const std::map<gguf_type, size_t> GGUF_TYPE_SIZE = {
+        {GGUF_TYPE_UINT8,   sizeof(uint8_t)},
+        {GGUF_TYPE_INT8,    sizeof(int8_t)},
+        {GGUF_TYPE_UINT16,  sizeof(uint16_t)},
+        {GGUF_TYPE_INT16,   sizeof(int16_t)},
+        {GGUF_TYPE_UINT32,  sizeof(uint32_t)},
+        {GGUF_TYPE_INT32,   sizeof(int32_t)},
+        {GGUF_TYPE_FLOAT32, sizeof(float)},
+        {GGUF_TYPE_BOOL,    sizeof(int8_t)},
+        {GGUF_TYPE_STRING,  0}, // undefined
+        {GGUF_TYPE_ARRAY,   0}, // undefined
+        {GGUF_TYPE_UINT64,  sizeof(uint64_t)},
+        {GGUF_TYPE_INT64,   sizeof(int64_t)},
+        {GGUF_TYPE_FLOAT64, sizeof(double)},
+    };
+    static_assert(GGUF_TYPE_COUNT == 13, "GGUF_TYPE_COUNT != 13");
+    return GGUF_TYPE_SIZE;
+}
 
-static const std::map<gguf_type, const char *> GGUF_TYPE_NAME = {
-    {GGUF_TYPE_UINT8,   "u8"},
-    {GGUF_TYPE_INT8,    "i8"},
-    {GGUF_TYPE_UINT16,  "u16"},
-    {GGUF_TYPE_INT16,   "i16"},
-    {GGUF_TYPE_UINT32,  "u32"},
-    {GGUF_TYPE_INT32,   "i32"},
-    {GGUF_TYPE_FLOAT32, "f32"},
-    {GGUF_TYPE_BOOL,    "bool"},
-    {GGUF_TYPE_STRING,  "str"},
-    {GGUF_TYPE_ARRAY,   "arr"},
-    {GGUF_TYPE_UINT64,  "u64"},
-    {GGUF_TYPE_INT64,   "i64"},
-    {GGUF_TYPE_FLOAT64, "f64"},
-};
-static_assert(GGUF_TYPE_COUNT == 13, "GGUF_TYPE_COUNT != 13");
+static const std::map<gguf_type, const char *> & get_gguf_type_name_map() {
+    static const std::map<gguf_type, const char *> GGUF_TYPE_NAME = {
+        {GGUF_TYPE_UINT8,   "u8"},
+        {GGUF_TYPE_INT8,    "i8"},
+        {GGUF_TYPE_UINT16,  "u16"},
+        {GGUF_TYPE_INT16,   "i16"},
+        {GGUF_TYPE_UINT32,  "u32"},
+        {GGUF_TYPE_INT32,   "i32"},
+        {GGUF_TYPE_FLOAT32, "f32"},
+        {GGUF_TYPE_BOOL,    "bool"},
+        {GGUF_TYPE_STRING,  "str"},
+        {GGUF_TYPE_ARRAY,   "arr"},
+        {GGUF_TYPE_UINT64,  "u64"},
+        {GGUF_TYPE_INT64,   "i64"},
+        {GGUF_TYPE_FLOAT64, "f64"},
+    };
+    static_assert(GGUF_TYPE_COUNT == 13, "GGUF_TYPE_COUNT != 13");
+    return GGUF_TYPE_NAME;
+}
 
 size_t gguf_type_size(enum gguf_type type) {
+    const auto & GGUF_TYPE_SIZE = get_gguf_type_size_map();
     auto it = GGUF_TYPE_SIZE.find(type);
     return it == GGUF_TYPE_SIZE.end() ? 0 : it->second;
 }
@@ -922,6 +929,7 @@ void gguf_free(struct gguf_context * ctx) {
 }
 
 const char * gguf_type_name(enum gguf_type type) {
+    const auto & GGUF_TYPE_NAME = get_gguf_type_name_map();
     auto it = GGUF_TYPE_NAME.find(type);
     return it == GGUF_TYPE_NAME.end() ? nullptr : it->second;
 }
