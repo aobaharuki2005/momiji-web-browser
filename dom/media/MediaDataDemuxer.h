@@ -26,8 +26,6 @@ class TrackMetadataHolder;
 DDLoggedTypeDeclName(MediaDataDemuxer);
 DDLoggedTypeName(MediaTrackDemuxer);
 
-inline mozilla::LazyLogModule gMediaDemuxerLog("MediaDemuxer");
-
 // Allows reading the media data: to retrieve the metadata and demux samples.
 // MediaDataDemuxer isn't designed to be thread safe.
 // When used by the MediaFormatDecoder, care is taken to ensure that the demuxer
