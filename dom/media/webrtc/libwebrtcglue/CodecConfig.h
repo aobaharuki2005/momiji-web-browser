@@ -34,6 +34,8 @@ struct AudioCodecConfig {
   uint32_t mMaxFrameSizeMs;
   uint32_t mMinFrameSizeMs;
 
+  AudioEncodingConstraints mEncodingConstraints;
+
   // OPUS-specific
   bool mDTXEnabled;
   uint32_t mMaxAverageBitrate;
@@ -64,6 +66,7 @@ struct AudioCodecConfig {
            mFrameSizeMs == aOther.mFrameSizeMs &&
            mMaxFrameSizeMs == aOther.mMaxFrameSizeMs &&
            mMinFrameSizeMs == aOther.mMinFrameSizeMs &&
+           mEncodingConstraints == aOther.mEncodingConstraints &&
            mDTXEnabled == aOther.mDTXEnabled &&
            mMaxAverageBitrate == aOther.mMaxAverageBitrate &&
            mMaxPlaybackRate == aOther.mMaxPlaybackRate &&

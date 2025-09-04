@@ -2073,6 +2073,13 @@ Maybe<RTCRtpSender::AudioConfig> RTCRtpSender::GetNewAudioConfig() {
     auto encoding = encodings.IsEmpty() ? Nothing() : SomeRef(encodings[0]);
     AudioCodecConfig& sendCodec = findMatchingCodec(configs, encoding);
 
+    if (encoding) {
+      if (encoding->mMaxBitrate.WasPassed()) {
+        sendCodec.mEncodingConstraints.maxBitrateBps.emplace(
+            encoding->mMaxBitrate.Value());
+      }
+    }
+
     std::vector<AudioCodecConfig> dtmfConfigs;
     std::copy_if(
         configs.begin(), configs.end(), std::back_inserter(dtmfConfigs),

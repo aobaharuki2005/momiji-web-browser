@@ -10,6 +10,15 @@
 #include "mozilla/Maybe.h"
 
 namespace mozilla {
+class AudioEncodingConstraints {
+ public:
+  bool operator==(const AudioEncodingConstraints& constraints) const {
+    return maxBitrateBps == constraints.maxBitrateBps;
+  }
+
+  Maybe<uint32_t> maxBitrateBps;
+};
+
 class VideoEncodingConstraints {
  public:
   VideoEncodingConstraints()
