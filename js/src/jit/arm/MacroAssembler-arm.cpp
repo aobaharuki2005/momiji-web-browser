@@ -2364,46 +2364,35 @@ void MacroAssemblerARMCompat::minMaxDouble(FloatRegister srcDest,
 
 void MacroAssemblerARMCompat::minMax32(Register lhs, Register rhs,
                                        Register dest, bool isMax) {
-  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
+  if (rhs == dest) {
+    std::swap(lhs, rhs);
+  }
+
+  auto cond = isMax ? Assembler::LessThan : Assembler::GreaterThan;
   if (lhs != dest) {
     move32(lhs, dest);
   }
-  asMasm().cmp32Move32(cond, rhs, lhs, rhs, dest);
+  cmp32(lhs, rhs);
+  ma_mov(rhs, dest, LeaveCC, cond);
 }
 
 void MacroAssemblerARMCompat::minMax32(Register lhs, Imm32 rhs, Register dest,
                                        bool isMax) {
-  auto cond =
-      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
+  // We need a scratch register when |rhs| can't be encoded in the compare
+  // instruction.
+  if (Imm8(rhs.value).invalid() && Imm8(~rhs.value).invalid()) {
+    ScratchRegisterScope scratch(asMasm());
+    move32(rhs, scratch);
+    minMax32(lhs, scratch, dest, isMax);
+    return;
+  }
+
+  auto cond = isMax ? Assembler::LessThan : Assembler::GreaterThan;
   if (lhs != dest) {
     move32(lhs, dest);
   }
-  Label done;
-  asMasm().branch32(cond, lhs, rhs, &done);
-  move32(rhs, dest);
-  bind(&done);
-}
-
-void MacroAssemblerARMCompat::minMaxPtr(Register lhs, Register rhs,
-                                        Register dest, bool isMax) {
-  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
-  if (lhs != dest) {
-    movePtr(lhs, dest);
-  }
-  asMasm().cmpPtrMovePtr(cond, rhs, lhs, rhs, dest);
-}
-
-void MacroAssemblerARMCompat::minMaxPtr(Register lhs, ImmWord rhs,
-                                        Register dest, bool isMax) {
-  auto cond =
-      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
-  if (lhs != dest) {
-    movePtr(lhs, dest);
-  }
-  Label done;
-  asMasm().branchPtr(cond, lhs, rhs, &done);
-  movePtr(rhs, dest);
-  bind(&done);
+  cmp32(lhs, rhs);
+  ma_mov(rhs, dest, cond);
 }
 
 void MacroAssemblerARMCompat::minMaxFloat32(FloatRegister srcDest,
