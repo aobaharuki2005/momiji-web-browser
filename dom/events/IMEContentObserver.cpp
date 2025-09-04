@@ -71,7 +71,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditableNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootEditableNodeOrTextControlElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorBase)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentObserver)
@@ -90,7 +90,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedWidget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditableNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootEditableNodeOrTextControlElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditorBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentObserver)
@@ -214,12 +214,12 @@ void IMEContentObserver::OnIMEReceivedFocus() {
 bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
                                         Element* aElement,
                                         EditorBase& aEditorBase) {
-  // mEditableNode is one of
-  // - Anonymous <div> in <input> or <textarea>
-  // - Editing host if it's not in the design mode
-  // - Document if it's in the design mode
-  mEditableNode = IMEStateManager::GetRootEditableNode(aPresContext, aElement);
-  if (NS_WARN_IF(!mEditableNode)) {
+  mRootEditableNodeOrTextControlElement =
+      aEditorBase.IsTextEditor()
+          ? aEditorBase.GetExposedRoot()
+          : IMEContentObserver::GetMostDistantInclusiveEditableAncestorNode(
+                aPresContext, aElement);
+  if (NS_WARN_IF(!mRootEditableNodeOrTextControlElement)) {
     return false;
   }
 
@@ -229,20 +229,17 @@ bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
 
   // get selection and root content
   nsCOMPtr<nsISelectionController> selCon;
-  if (mEditableNode->IsContent()) {
-    nsIFrame* frame = mEditableNode->AsContent()->GetPrimaryFrame();
-    if (NS_WARN_IF(!frame)) {
+  if (mRootEditableNodeOrTextControlElement->IsElement()) {
+    selCon = aEditorBase.GetSelectionController();
+    if (NS_WARN_IF(!selCon)) {
       return false;
     }
-
-    frame->GetSelectionController(&aPresContext, getter_AddRefs(selCon));
   } else {
-    // mEditableNode is a document
+    MOZ_ASSERT(mRootEditableNodeOrTextControlElement->IsDocument());
     selCon = presShell;
-  }
-
-  if (NS_WARN_IF(!selCon)) {
-    return false;
+    if (NS_WARN_IF(!selCon)) {
+      return false;
+    }
   }
 
   mSelection = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
@@ -272,22 +269,21 @@ bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
     nsCOMPtr<nsINode> startContainer = selRange->GetStartContainer();
     mRootElement =
         Element::FromNodeOrNull(startContainer->GetSelectionRootContent(
-            presShell,
-            nsINode::IgnoreOwnIndependentSelection::No,  // XXX "Yes"?
+            presShell, nsINode::IgnoreOwnIndependentSelection::Yes,
             nsINode::AllowCrossShadowBoundary::No));
   } else {
     MOZ_ASSERT(!mIsTextControl);
     // If an editing host has focus, mRootElement is it.
     // Otherwise, if we're in the design mode, mRootElement is the <body> if
     // there is.  Otherwise, the document element is used instead.
-    nsCOMPtr<nsINode> editableNode = mEditableNode;
+    const OwningNonNull<nsINode> rootEditableNode(
+        *mRootEditableNodeOrTextControlElement);
     mRootElement =
-        Element::FromNodeOrNull(editableNode->GetSelectionRootContent(
-            presShell,
-            nsINode::IgnoreOwnIndependentSelection::No,  // XXX "Yes"?
+        Element::FromNodeOrNull(rootEditableNode->GetSelectionRootContent(
+            presShell, nsINode::IgnoreOwnIndependentSelection::Yes,
             nsINode::AllowCrossShadowBoundary::No));
   }
-  if (!mRootElement && mEditableNode->IsDocument()) {
+  if (!mRootElement && mRootEditableNodeOrTextControlElement->IsDocument()) {
     // The document node is editable, but there are no contents, this document
     // is not editable.
     return false;
@@ -310,7 +306,7 @@ bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
 void IMEContentObserver::Clear() {
   mEditorBase = nullptr;
   mSelection = nullptr;
-  mEditableNode = nullptr;
+  mRootEditableNodeOrTextControlElement = nullptr;
   mRootElement = nullptr;
   mDocShell = nullptr;
   // Should be safe to clear mDocumentObserver here even though it grabs
@@ -465,7 +461,7 @@ bool IMEContentObserver::MaybeReinitialize(nsIWidget& aWidget,
                                            nsPresContext& aPresContext,
                                            Element* aElement,
                                            EditorBase& aEditorBase) {
-  if (!IsObservingContent(aPresContext, aElement)) {
+  if (!IsObservingElement(aPresContext, aElement)) {
     return false;
   }
 
@@ -483,9 +479,10 @@ bool IMEContentObserver::IsObserving(const nsPresContext& aPresContext,
   // If aElement is not a text control, aElement is an editing host or entire
   // the document is editable in the design mode.  Therefore, return false if
   // we're observing an anonymous subtree of a text control.
-  if (!aElement || !aElement->IsTextControlElement() ||
-      !static_cast<const TextControlElement*>(aElement)
-           ->IsSingleLineTextControlOrTextArea()) {
+  const auto* const textControlElement =
+      TextControlElement::FromNodeOrNull(aElement);
+  if (!textControlElement ||
+      !textControlElement->IsSingleLineTextControlOrTextArea()) {
     if (mIsTextControl) {
       return false;
     }
@@ -496,14 +493,14 @@ bool IMEContentObserver::IsObserving(const nsPresContext& aPresContext,
   else if (!mIsTextControl) {
     return false;
   }
-  return IsObservingContent(aPresContext, aElement);
+  return IsObservingElement(aPresContext, aElement);
 }
 
 bool IMEContentObserver::IsBeingInitializedFor(
     const nsPresContext& aPresContext, const Element* aElement,
     const EditorBase& aEditorBase) const {
   return GetState() == eState_Initializing && mEditorBase == &aEditorBase &&
-         IsObservingContent(aPresContext, aElement);
+         IsObservingElement(aPresContext, aElement);
 }
 
 bool IMEContentObserver::IsObserving(
@@ -520,7 +517,7 @@ bool IMEContentObserver::IsObserving(
   }
   auto* const elementHavingComposition =
       Element::FromNodeOrNull(aTextComposition.GetEventTargetNode());
-  bool isObserving = IsObservingContent(*presContext, elementHavingComposition);
+  bool isObserving = IsObservingElement(*presContext, elementHavingComposition);
 #ifdef DEBUG
   if (isObserving) {
     if (mIsTextControl) {
@@ -558,7 +555,7 @@ bool IMEContentObserver::IsObserving(
 }
 
 IMEContentObserver::State IMEContentObserver::GetState() const {
-  if (!mSelection || !mRootElement || !mEditableNode) {
+  if (!mSelection || !mRootElement || !mRootEditableNodeOrTextControlElement) {
     return eState_NotObserving;  // failed to initialize or finalized.
   }
   if (!mRootElement->IsInComposedDoc()) {
@@ -568,10 +565,47 @@ IMEContentObserver::State IMEContentObserver::GetState() const {
   return mIsObserving ? eState_Observing : eState_Initializing;
 }
 
-bool IMEContentObserver::IsObservingContent(const nsPresContext& aPresContext,
+bool IMEContentObserver::IsObservingElement(const nsPresContext& aPresContext,
                                             const Element* aElement) const {
-  return mEditableNode ==
-         IMEStateManager::GetRootEditableNode(aPresContext, aElement);
+  MOZ_ASSERT_IF(aElement,
+                aElement->GetPresContext(
+                    Element::PresContextFor::eForComposedDoc) == &aPresContext);
+
+  if (GetPresContext() != &aPresContext) {
+    return false;
+  }
+  // If this is initialized with a TextEditor,
+  // mRootEditableNodeOrTextControlElement is a text control element. Therefore,
+  // aElement should be aElement.
+  if (mIsTextControl) {
+    return !aElement->IsInDesignMode() &&
+           aElement == mRootEditableNodeOrTextControlElement;
+  }
+  // If this is initialized with an HTMLEditor,
+  // mRootEditableNodeOrTextControlElement is an editing host when this is
+  // initialized.  However, its ancestor may become editable.  Therefore, we
+  // need to check whether it's still an editing host.
+  return mRootEditableNodeOrTextControlElement ==
+         IMEContentObserver::GetMostDistantInclusiveEditableAncestorNode(
+             aPresContext, aElement);
+}
+
+// static
+nsINode* IMEContentObserver::GetMostDistantInclusiveEditableAncestorNode(
+    const nsPresContext& aPresContext, const Element* aElement) {
+  if (aElement) {
+    // If the focused content is in design mode, return is composed document
+    // because aElement may be in UA widget shadow tree.
+    if (aElement->IsInDesignMode()) {
+      return aElement->GetComposedDoc();
+    }
+    // Otherwise, return the editing host.
+    return aElement->GetEditingHost();
+  }
+
+  return aPresContext.Document() && aPresContext.Document()->IsInDesignMode()
+             ? aPresContext.Document()
+             : nullptr;
 }
 
 bool IMEContentObserver::IsEditorHandlingEventForComposition() const {
@@ -599,7 +633,7 @@ bool IMEContentObserver::IsEditorComposing() const {
 
 nsresult IMEContentObserver::GetSelectionAndRoot(Selection** aSelection,
                                                  Element** aRootElement) const {
-  if (!mEditableNode || !mSelection) {
+  if (!mRootEditableNodeOrTextControlElement || !mSelection) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1258,6 +1292,7 @@ void IMEContentObserver::ContentWillBeRemoved(nsIContent* aChild,
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void IMEContentObserver::ParentChainChanged(
     nsIContent* aContent) {
+  MOZ_ASSERT(aContent);
   // When the observing element itself is directly removed from the document
   // without a focus move, i.e., it's the root of the removed document fragment
   // and the editor was handling the design mode, we have already stopped
@@ -1273,7 +1308,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void IMEContentObserver::ParentChainChanged(
   // content.
   MOZ_ASSERT(mIsObserving);
   OwningNonNull<IMEContentObserver> observer(*this);
-  IMEStateManager::OnParentChainChangedOfObservingElement(observer);
+  IMEStateManager::OnParentChainChangedOfObservingElement(observer, *aContent);
 }
 
 void IMEContentObserver::OnTextControlValueChangedWhileNotObservable(
@@ -1314,7 +1349,6 @@ void IMEContentObserver::UnsuppressNotifyingIME() {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
           ("0x%p UnsuppressNotifyingIME(), mSuppressNotifications=%u", this,
            mSuppressNotifications));
-
   if (!mSuppressNotifications || --mSuppressNotifications) {
     return;
   }

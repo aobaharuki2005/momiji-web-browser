@@ -434,7 +434,9 @@ nsresult IMEStateManager::OnRemoveContent(nsPresContext& aPresContext,
       // document when the observing element (typically, <body>) is removed.
       (!sFocusedElement &&
        (!sActiveIMEContentObserver ||
-        sActiveIMEContentObserver->GetObservingElement() != &aElement))) {
+        sActiveIMEContentObserver
+                ->GetObservingEditingHostOrTextControlElement() !=
+            &aElement))) {
     return NS_OK;
   }
   MOZ_ASSERT(sFocusedPresContext == &aPresContext);
@@ -490,23 +492,37 @@ nsresult IMEStateManager::OnRemoveContent(nsPresContext& aPresContext,
 
 // static
 void IMEStateManager::OnParentChainChangedOfObservingElement(
-    IMEContentObserver& aObserver) {
+    IMEContentObserver& aObserver, nsIContent& aContent) {
   if (!sFocusedPresContext || sActiveIMEContentObserver != &aObserver) {
     return;
   }
-  RefPtr<nsPresContext> presContext = aObserver.GetPresContext();
-  RefPtr<Element> element = aObserver.GetObservingElement();
-  if (NS_WARN_IF(!presContext) || NS_WARN_IF(!element)) {
+  if (Element* const textControlElement =
+          aObserver.GetObservingTextControlElement()) {
+    // If a text control has focus, the parent chain changed is notified when
+    // the anonymous <div> is removed since aObserver is observing it. However,
+    // we want to be notified only when the focused element, i.e., the text
+    // control itself, is removed.  So, when the text control element is not an
+    // inclusive descendant of aContent, we don't need to handle this.
+    MOZ_ASSERT(textControlElement->IsTextControlElement());
+    if (!textControlElement->IsInclusiveDescendantOf(&aContent)) {
+      return;
+    }
+  }
+  const RefPtr<nsPresContext> presContext = aObserver.GetPresContext();
+  const RefPtr<Element> editingHostOrTextControlElement =
+      aObserver.GetObservingEditingHostOrTextControlElement();
+  if (NS_WARN_IF(!presContext) ||
+      NS_WARN_IF(!editingHostOrTextControlElement)) {
     return;
   }
   MOZ_LOG(sISMLog, LogLevel::Info,
           ("OnParentChainChangedOfObservingElement(aObserver=0x%p), "
            "sFocusedPresContext=0x%p, sFocusedElement=0x%p, "
            "aObserver->GetPresContext()=0x%p, "
-           "aObserver->GetObservingElement()=0x%p",
+           "aObserver->GetObservingEditingHostOrTextControlElement()=0x%p",
            &aObserver, sFocusedPresContext.get(), sFocusedElement.get(),
-           presContext.get(), element.get()));
-  OnRemoveContent(*presContext, *element);
+           presContext.get(), editingHostOrTextControlElement.get()));
+  OnRemoveContent(*presContext, *editingHostOrTextControlElement);
 }
 
 // static
@@ -2491,53 +2507,6 @@ nsresult IMEStateManager::NotifyIME(IMEMessage aMessage,
     return NS_ERROR_NOT_AVAILABLE;
   }
   return NotifyIME(aMessage, widget, aBrowserParent);
-}
-
-// static
-bool IMEStateManager::IsEditable(nsINode* node) {
-  if (node->IsEditable()) {
-    return true;
-  }
-  // |node| might be readwrite (for example, a text control)
-  if (node->IsElement() &&
-      node->AsElement()->State().HasState(ElementState::READWRITE)) {
-    return true;
-  }
-  return false;
-}
-
-// static
-nsINode* IMEStateManager::GetRootEditableNode(const nsPresContext& aPresContext,
-                                              const Element* aElement) {
-  if (aElement) {
-    // If the focused content is in design mode, return is composed document
-    // because aElement may be in UA widget shadow tree.
-    if (aElement->IsInDesignMode()) {
-      return aElement->GetComposedDoc();
-    }
-
-    nsINode* candidateRootNode = const_cast<Element*>(aElement);
-    for (nsINode* node = candidateRootNode; node && IsEditable(node);
-         node = node->GetParentNode()) {
-      // If the node has independent selection like <input type="text"> or
-      // <textarea>, the node should be the root editable node for aElement.
-      // FYI: <select> element also has independent selection but IsEditable()
-      //      returns false.
-      // XXX: If somebody adds new editable element which has independent
-      //      selection but doesn't own editor, we'll need more checks here.
-      // XXX: If aElement is not in native anonymous subtree, checking
-      //      independent selection must be wrong, see bug 1731005.
-      if (node->IsContent() && node->AsContent()->HasIndependentSelection()) {
-        return node;
-      }
-      candidateRootNode = node;
-    }
-    return candidateRootNode;
-  }
-
-  return aPresContext.Document() && aPresContext.Document()->IsInDesignMode()
-             ? aPresContext.Document()
-             : nullptr;
 }
 
 // static
