@@ -36,6 +36,8 @@
   <string name="tab_manager_empty_private_tabs_page_header">ການທ່ອງເວັບແບບສ່ວນຕົວ</string>
   <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
   <string name="tab_manager_empty_private_tabs_page_description">%1$s ຈະບໍ່ຈື່ປະຫວັດ ຫຼື ຄຸກກີ້ໃດໆຂອງທ່ານ, ແຕ່ບຸກມາກໃໝ່ຈະຖືກບັນທຶກໄວ້.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">ສ້າງແຖບໃຫມ່ເພື່ອເລີ່ມຕົ້ນການຄົ້ນຫາ</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">ເລືອກ %1$d ແລ້ວ</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -50,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">ອອກຈາກໂຫມດ multiselect</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">ບັນທຶກແທັບທີ່ເລືອກແລ້ວໄປໄວ້ທີ່ການເກັບສະສົມ</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">ຈັບແຖບຈາກອຸປະກອນໃດກໍໄດ້</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">ເຂົ້າສູ່ລະບົບເພື່ອຈັດການແຖບທີ່ຊິ້ງແລ້ວຈາກທຸກອຸປະກອນຂອງທ່ານ.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">ເຂົ້າສູ່ລະບົບ</string>
   <!--
     Home - Bookmarks
 
@@ -64,6 +72,8 @@
   <string name="about_content">%1$s ແມ່ນຜະລິດຂື້ນໂດຍ Mozilla.</string>
   <!-- Private Browsing -->
   <string name="private_browsing_common_myths">ຄວາມເຂົ້າໃຈຜິດທີ່ມັກພົບຕະລອດກ່ຽວກັບການທ່ອງເວັບແບບສ່ວນຕົວ</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">ເຊສຊັນການທ່ອງເວັບແບບສ່ວນຕົວ</string>
   <!--
     True Private Browsing Mode
 
@@ -191,6 +201,10 @@
   <string name="browser_menu_disabled_extensions_banner_onboarding_header">ທ່ານໄດ້ຕິດຕັ້ງສ່ວນຂະຫຍາຍ, ແຕ່ບໍ່ໄດ້ເປີດໃຊ້ງານ</string>
   <!-- Browser menu button that opens the extensions manager -->
   <string name="browser_menu_manage_extensions">ຈັດການສ່ວນເສີມ</string>
+  <!-- Browser menu group that contains additional settings in collapsed state -->
+  <string name="browser_menu_more_settings">ເພີ່ມເຕີມ</string>
+  <!-- Browser menu group that contains additional settings in expanded state -->
+  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">ສະແດງນ້ອຍລົງ</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -202,6 +216,8 @@
   <string name="browser_menu_extensions_disabled_description">ປິດການໃຊ້ງານຊົ່ວຄາວ</string>
   <!-- The description of the browser menu appears when the user hasn't installed any extensions. -->
   <string name="browser_menu_no_extensions_installed_description">ບໍ່ມີສ່ວນຂະຫຍາຍຢູ່ທີ່ນີ້</string>
+  <!-- The description of the browser menu appears when the user hasn't installed any extensions and there are recommended extensions. -->
+  <string name="browser_menu_try_a_recommended_extension_description">ລອງໃຊ້ສ່ວນຂະຫຍາຍທີ່ແນະນຳ</string>
   <!-- Browser menu button that opens account settings -->
   <string name="browser_menu_account_settings">ຂໍ້ມູນບັນຊີ</string>
   <!-- Browser menu button that sends a user to help articles -->
@@ -265,10 +281,14 @@
   <string name="browser_menu_customize_home_1">ປັບແຕ່ງຫນ້າທຳອິດ</string>
   <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
   <string name="browser_menu_sign_in">ເຂົ້າສູ່ລະບົບ</string>
+  <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+  <string name="browser_menu_sign_in_caption_3">ຊິງຄ໌ລະຫັດຜ່ານ, ບຸກມາກສ໌, ແລະ ອື່ນໆອີກ</string>
   <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
   <string name="browser_menu_sign_back_in_to_sync">ກັບຄືນເຂົ້າສູ່ລະບົບເພື່ອຊິ້ງ</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">ຢຸດການຊິງຄ໌ໄວ້ຊົ່ວຄາວ</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">ຈັດການສິ່ງທີ່ທ່ານສຳຮອງ ແລະ ຊິ້ງຂໍ້ມູນ</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">ແທັບສ່ວນຕົວໃຫມ່</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -277,6 +297,8 @@
   <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">ປ່ຽນໄປຫາເວັບໄຊທ໌ມືຖື</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">ປິດແຜ່ນເມນູຫຼັກ</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">ປິດເມນູ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">ຊ່ວຍເຫລືອ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
