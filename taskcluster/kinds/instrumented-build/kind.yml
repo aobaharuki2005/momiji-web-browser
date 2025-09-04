@@ -147,7 +147,7 @@ tasks:
             env:
                 PERFHERDER_EXTRA_OPTIONS: instrumented
             artifacts:
-                - name: public/build/security/browser.xml
+                - name: public/build/security/{browser_entitlement}.xml
                   path: checkouts/gecko/security/mac/hardenedruntime/{entitlement_directory}/{browser_entitlement}.xml
                   type: file
                 - name: public/build/security/media-plugin-helper.xml
@@ -193,7 +193,7 @@ tasks:
             env:
                 PERFHERDER_EXTRA_OPTIONS: instrumented
             artifacts:
-                - name: public/build/security/browser.xml
+                - name: public/build/security/{browser_entitlement}.xml
                   path: checkouts/gecko/security/mac/hardenedruntime/{entitlement_directory}/{browser_entitlement}.xml
                   type: file
                 - name: public/build/security/media-plugin-helper.xml
