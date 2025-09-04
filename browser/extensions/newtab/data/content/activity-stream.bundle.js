@@ -16454,6 +16454,14 @@ class BaseContent extends (external_React_default()).PureComponent {
     let color = "transparent";
     let newTheme = colorMode;
 
+    // if no selected wallpaper fallback to browser/theme styles
+    if (!selectedWallpaper) {
+      __webpack_require__.g.document?.body.style.removeProperty("--newtab-wallpaper");
+      __webpack_require__.g.document?.body.style.removeProperty("--newtab-wallpaper-color");
+      __webpack_require__.g.document?.body.classList.remove("lightWallpaper", "darkWallpaper");
+      return;
+    }
+
     // uploaded wallpaper
     if (selectedWallpaper === "custom" && uploadedWallpaperUrl) {
       url = uploadedWallpaperUrl;

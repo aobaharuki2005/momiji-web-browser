@@ -380,6 +380,14 @@ export class BaseContent extends React.PureComponent {
     let color = "transparent";
     let newTheme = colorMode;
 
+    // if no selected wallpaper fallback to browser/theme styles
+    if (!selectedWallpaper) {
+      global.document?.body.style.removeProperty("--newtab-wallpaper");
+      global.document?.body.style.removeProperty("--newtab-wallpaper-color");
+      global.document?.body.classList.remove("lightWallpaper", "darkWallpaper");
+      return;
+    }
+
     // uploaded wallpaper
     if (selectedWallpaper === "custom" && uploadedWallpaperUrl) {
       url = uploadedWallpaperUrl;
