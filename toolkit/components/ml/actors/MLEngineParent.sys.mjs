@@ -33,6 +33,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Progress: "chrome://global/content/ml/Utils.sys.mjs",
   isAddonEngineId: "chrome://global/content/ml/Utils.sys.mjs",
   OPFS: "chrome://global/content/ml/OPFS.sys.mjs",
+  BACKENDS: "chrome://global/content/ml/EngineProcess.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -140,8 +141,8 @@ export class MLEngineParent extends JSProcessActorParent {
    * - 4 => wllama 2.3.x
    */
   static WASM_MAJOR_VERSION = {
-    onnx: 5,
-    wllama: 4,
+    [lazy.BACKENDS.onnx]: 5,
+    [lazy.BACKENDS.wllama]: 4,
   };
 
   /**
@@ -151,14 +152,14 @@ export class MLEngineParent extends JSProcessActorParent {
    * We also serve the threaded build since we can simply set numThreads to 1 to disable multi-threading.
    */
   static WASM_FILENAME = {
-    onnx: "ort-wasm-simd-threaded.jsep.wasm",
-    wllama: "wllama.wasm",
+    [lazy.BACKENDS.onnx]: "ort-wasm-simd-threaded.jsep.wasm",
+    [lazy.BACKENDS.wllama]: "wllama.wasm",
   };
 
   /**
    * This default backend to use when none is specified.
    */
-  static DEFAULT_BACKEND = "onnx";
+  static DEFAULT_BACKEND = lazy.BACKENDS.onnx;
 
   /**
    * The modelhub used to retrieve files.
@@ -318,6 +319,9 @@ export class MLEngineParent extends JSProcessActorParent {
 
       case "MLEngine:GetWorkerConfig":
         return MLEngineParent.getWorkerConfig();
+
+      case "MLEngine:ChooseBestBackend":
+        return MLEngineParent.chooseBestBackend(message.data);
 
       case "MLEngine:DestroyEngineProcess":
         if (this.processKeepAlive) {
@@ -533,6 +537,29 @@ export class MLEngineParent extends JSProcessActorParent {
       url: "chrome://global/content/ml/MLEngine.worker.mjs",
       options: { type: "module" },
     };
+  }
+
+  /**
+   * Selects the most appropriate backend for the current environment.
+   *
+   * @static
+   * @param {string} backend - Requested backend or an auto-select sentinel.
+   * @returns {string} Resolved backend identifier.
+   */
+  static chooseBestBackend(backend) {
+    let bestBackend = backend;
+    if (backend === lazy.BACKENDS.bestLlama) {
+      bestBackend = lazy.BACKENDS.wllama;
+      if (lazy.mlUtils?.canUseLlamaCpp()) {
+        bestBackend = lazy.BACKENDS.llamaCpp;
+      }
+
+      lazy.console.debug(
+        `The best available llama backend detected for this machine is ${bestBackend}`
+      );
+    }
+
+    return bestBackend;
   }
 
   /**
