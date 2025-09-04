@@ -249,8 +249,7 @@ class LlamaRunner final : public nsISupports, public nsWrapperCache {
                                                    ErrorResult& aRv);
 
   already_AddRefed<Promise> Initialize(const LlamaModelOptions& aOptions,
-                                       Blob& aModelBlob,
-                                       ErrorResult& aRv);
+                                       Blob& aModelBlob, ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

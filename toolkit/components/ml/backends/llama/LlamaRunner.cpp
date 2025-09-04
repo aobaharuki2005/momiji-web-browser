@@ -527,9 +527,8 @@ bool LlamaRunner::InInferenceProcess(JSContext*, JSObject*) {
       INFERENCE_REMOTE_TYPE);
 }
 
-
 class MetadataCallback final : public nsIFileMetadataCallback {
-  public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   explicit MetadataCallback(LlamaRunner* aRunner) : mRunner(aRunner) {}
   NS_IMETHOD OnFileMetadataReady(nsIAsyncFileMetadata* aObject) override {
@@ -537,7 +536,8 @@ class MetadataCallback final : public nsIFileMetadataCallback {
     return NS_OK;
   }
   LlamaRunner* mRunner = nullptr;
-  private:
+
+ private:
   virtual ~MetadataCallback() = default;
 };
 
@@ -563,8 +563,7 @@ void LlamaRunner::OnMetadataReceived() {
   // Convert our file descriptor to FILE*
   void* handle = mozilla::ipc::FileDescriptor::PlatformHandleType(
       PR_FileDesc2NativeHandle(fileDesc));
-  int fd =
-      _open_osfhandle(reinterpret_cast<intptr_t>(handle), _O_RDONLY);
+  int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handle), _O_RDONLY);
   if (fd == -1) {
     LOGE_RUNNER("Convertion to integer fd failed");
     return;
