@@ -1990,6 +1990,24 @@ void Simulator::VisitDataProcessing1Source(const Instruction* instr) {
       set_xreg(dst, CountLeadingSignBits(xreg(src)));
       break;
     }
+    case ABS_w:
+      set_wreg(dst, Abs(wreg(src)));
+      break;
+    case ABS_x:
+      set_xreg(dst, Abs(xreg(src)));
+      break;
+    case CNT_w:
+      set_wreg(dst, CountSetBits(wreg(src)));
+      break;
+    case CNT_x:
+      set_xreg(dst, CountSetBits(xreg(src)));
+      break;
+    case CTZ_w:
+      set_wreg(dst, CountTrailingZeros(wreg(src)));
+      break;
+    case CTZ_x:
+      set_xreg(dst, CountTrailingZeros(xreg(src)));
+      break;
     default: VIXL_UNIMPLEMENTED();
   }
 }
@@ -2138,6 +2156,54 @@ void Simulator::VisitDataProcessing2Source(const Instruction* instr) {
       reg_size = kWRegSize;
       break;
     }
+    case SMAX_w: {
+      int32_t rn = wreg(instr->Rn());
+      int32_t rm = wreg(instr->Rm());
+      result = std::max(rn, rm);
+      break;
+    }
+    case SMAX_x: {
+      int64_t rn = xreg(instr->Rn());
+      int64_t rm = xreg(instr->Rm());
+      result = std::max(rn, rm);
+      break;
+    }
+    case SMIN_w: {
+      int32_t rn = wreg(instr->Rn());
+      int32_t rm = wreg(instr->Rm());
+      result = std::min(rn, rm);
+      break;
+    }
+    case SMIN_x: {
+      int64_t rn = xreg(instr->Rn());
+      int64_t rm = xreg(instr->Rm());
+      result = std::min(rn, rm);
+      break;
+    }
+    case UMAX_w: {
+      uint32_t rn = static_cast<uint32_t>(wreg(instr->Rn()));
+      uint32_t rm = static_cast<uint32_t>(wreg(instr->Rm()));
+      result = std::max(rn, rm);
+      break;
+    }
+    case UMAX_x: {
+      uint64_t rn = static_cast<uint64_t>(xreg(instr->Rn()));
+      uint64_t rm = static_cast<uint64_t>(xreg(instr->Rm()));
+      result = std::max(rn, rm);
+      break;
+    }
+    case UMIN_w: {
+      uint32_t rn = static_cast<uint32_t>(wreg(instr->Rn()));
+      uint32_t rm = static_cast<uint32_t>(wreg(instr->Rm()));
+      result = std::min(rn, rm);
+      break;
+    }
+    case UMIN_x: {
+      uint64_t rn = static_cast<uint64_t>(xreg(instr->Rn()));
+      uint64_t rm = static_cast<uint64_t>(xreg(instr->Rm()));
+      result = std::min(rn, rm);
+      break;
+    }
     default: VIXL_UNIMPLEMENTED();
   }
 
@@ -2148,6 +2214,67 @@ void Simulator::VisitDataProcessing2Source(const Instruction* instr) {
     unsigned shift = wreg(instr->Rm()) & mask;
     result = ShiftOperand(reg_size, reg(reg_size, instr->Rn()), shift_op,
                           shift);
+  }
+  set_reg(reg_size, instr->Rd(), result);
+}
+
+
+void Simulator::VisitMaxMinImmediate(const Instruction *instr) {
+  int64_t result = 0;
+  unsigned reg_size = instr->SixtyFourBits() ? kXRegSize : kWRegSize;
+
+  int32_t imm = instr->ExtractSignedBits(17, 10);
+
+  switch (instr->Mask(MaxMinImmediateMask)) {
+    case SMAX_w_imm: {
+      int32_t rn = wreg(instr->Rn());
+      int32_t rm = imm;
+      result = std::max(rn, rm);
+      break;
+    }
+    case SMAX_x_imm: {
+      int64_t rn = xreg(instr->Rn());
+      int64_t rm = imm;
+      result = std::max(rn, rm);
+      break;
+    }
+    case SMIN_w_imm: {
+      int32_t rn = wreg(instr->Rn());
+      int32_t rm = imm;
+      result = std::min(rn, rm);
+      break;
+    }
+    case SMIN_x_imm: {
+      int64_t rn = xreg(instr->Rn());
+      int64_t rm = imm;
+      result = std::min(rn, rm);
+      break;
+    }
+    case UMAX_w_imm: {
+      uint32_t rn = static_cast<uint32_t>(wreg(instr->Rn()));
+      uint32_t rm = static_cast<uint32_t>(imm);
+      result = std::max(rn, rm);
+      break;
+    }
+    case UMAX_x_imm: {
+      uint64_t rn = static_cast<uint64_t>(xreg(instr->Rn()));
+      uint64_t rm = static_cast<uint64_t>(imm);
+      result = std::max(rn, rm);
+      break;
+    }
+    case UMIN_w_imm: {
+      uint32_t rn = static_cast<uint32_t>(wreg(instr->Rn()));
+      uint32_t rm = static_cast<uint32_t>(imm);
+      result = std::min(rn, rm);
+      break;
+    }
+    case UMIN_x_imm: {
+      uint64_t rn = static_cast<uint64_t>(xreg(instr->Rn()));
+      uint64_t rm = static_cast<uint64_t>(imm);
+      result = std::min(rn, rm);
+      break;
+    }
+    default: VIXL_UNIMPLEMENTED();
   }
   set_reg(reg_size, instr->Rd(), result);
 }
