@@ -84,6 +84,7 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_CHOOSE_REASON_BUTTON
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_SEND_BUTTON
 import java.time.LocalDate
+import mozilla.components.feature.downloads.R as downloadsR
 
 class BrowserRobot {
     private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
@@ -1010,7 +1011,7 @@ class BrowserRobot {
         assertUIObjectExists(
             itemWithResIdContainingText(
                 "$packageName:id/title",
-                getStringResource(R.string.mozac_feature_downloads_cancel_active_downloads_warning_content_title),
+                getStringResource(downloadsR.string.mozac_feature_downloads_cancel_active_downloads_warning_content_title),
             ),
             itemWithResIdContainingText(
                 "$packageName:id/body",
@@ -1018,11 +1019,11 @@ class BrowserRobot {
             ),
             itemWithResIdContainingText(
                 "$packageName:id/deny_button",
-                getStringResource(R.string.mozac_feature_downloads_cancel_active_private_downloads_deny),
+                getStringResource(downloadsR.string.mozac_feature_downloads_cancel_active_private_downloads_deny),
             ),
             itemWithResIdContainingText(
                 "$packageName:id/accept_button",
-                getStringResource(R.string.mozac_feature_downloads_cancel_active_downloads_accept),
+                getStringResource(downloadsR.string.mozac_feature_downloads_cancel_active_downloads_accept),
             ),
         )
     }
@@ -1031,7 +1032,7 @@ class BrowserRobot {
         Log.i(TAG, "clickStayInPrivateBrowsingPromptButton: Trying to click the \"STAY IN PRIVATE BROWSING\" prompt button")
         itemWithResIdContainingText(
             "$packageName:id/deny_button",
-            getStringResource(R.string.mozac_feature_downloads_cancel_active_private_downloads_deny),
+            getStringResource(downloadsR.string.mozac_feature_downloads_cancel_active_private_downloads_deny),
         ).click()
         Log.i(TAG, "clickStayInPrivateBrowsingPromptButton: Clicked the \"STAY IN PRIVATE BROWSING\" prompt button")
     }
@@ -1040,7 +1041,7 @@ class BrowserRobot {
         Log.i(TAG, "clickCancelPrivateDownloadsPromptButton: Trying to click the \"CANCEL DOWNLOADS\" prompt button")
         itemWithResIdContainingText(
             "$packageName:id/accept_button",
-            getStringResource(R.string.mozac_feature_downloads_cancel_active_downloads_accept),
+            getStringResource(downloadsR.string.mozac_feature_downloads_cancel_active_downloads_accept),
         ).click()
         Log.i(TAG, "clickCancelPrivateDownloadsPromptButton: Clicked the \"CANCEL DOWNLOADS\" prompt button")
         Log.i(TAG, "clickCancelPrivateDownloadsPromptButton: Waiting for $waitingTime ms for $packageName window to be updated")
