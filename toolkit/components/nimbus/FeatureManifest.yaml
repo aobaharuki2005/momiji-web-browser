@@ -1414,6 +1414,10 @@ newtabSmartShortcuts:
       type: boolean
       description: >-
         Enable personalized shortcuts
+    force_log:
+      type: boolean
+      description: >-
+        Enable logging of shortcut interactions independent of ranking
     over_sample_multiplier:
       type: int
       description: >-
