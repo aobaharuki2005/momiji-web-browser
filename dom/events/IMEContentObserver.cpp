@@ -53,6 +53,17 @@ LazyLogModule sCacheLog("IMEContentObserverCache");
 
 static const char* ToChar(bool aBool) { return aBool ? "true" : "false"; }
 
+static const char* ShortenFunctionName(const char* aFunctionName) {
+  const nsDependentCString name(aFunctionName);
+  const int32_t startIndexOfIMEContentObserverPrefix =
+      name.Find("IMEContentObserver::", 0);
+  if (startIndexOfIMEContentObserverPrefix >= 0) {
+    return aFunctionName + startIndexOfIMEContentObserverPrefix +
+           strlen("IMEContentObserver::");
+  }
+  return aFunctionName;
+}
+
 /******************************************************************************
  * mozilla::IMEContentObserver
  ******************************************************************************/
@@ -1111,10 +1122,11 @@ void IMEContentObserver::NotifyIMEOfCachedConsecutiveNewNodes(
            "IMEContentObserver::NotifyIMEOfCachedConsecutiveNewNodes(), "
            "flushing stored consecutive nodes",
            this));
-  MOZ_LOG(sCacheLog, LogLevel::Info,
-          ("NotifyIMEOfCachedConsecutiveNewNodes: called by %s "
-           "(mAddedContentCache=%s)",
-           aCallerName, ToString(mAddedContentCache).c_str()));
+  MOZ_LOG(
+      sCacheLog, LogLevel::Info,
+      ("NotifyIMEOfCachedConsecutiveNewNodes: called by %s "
+       "(mAddedContentCache=%s)",
+       ShortenFunctionName(aCallerName), ToString(mAddedContentCache).c_str()));
 
   // If 2 <div> elements are inserted into the DOM, we wan't the text length
   // from start of the first <div> (including line break caused by its open
@@ -1225,8 +1237,10 @@ void IMEContentObserver::ContentWillBeRemoved(nsIContent* aChild,
   }
 
   if (mAddedContentCache.HasCache()) {
-    mEndOfAddedTextCache.Clear(__FUNCTION__);
-    mStartOfRemovingTextRangeCache.Clear(__FUNCTION__);
+    mEndOfAddedTextCache.ContentWillBeRemoved(
+        *aChild, textLengthOrError.inspect(), mRootElement);
+    mStartOfRemovingTextRangeCache.ContentWillBeRemoved(
+        *aChild, textLengthOrError.inspect(), mRootElement);
     NotifyIMEOfCachedConsecutiveNewNodes(__FUNCTION__);
     MOZ_DIAGNOSTIC_ASSERT(!mAddedContentCache.HasCache());
   }
@@ -2371,8 +2385,8 @@ void IMEContentObserver::FlatTextCache::CacheFlatTextLengthBeforeEndOfContent(
   mFlatTextLength = aFlatTextLength;
   MOZ_ASSERT(IsCachingToEndOfContent());
   MOZ_LOG(sCacheLog, LogLevel::Info,
-          ("%s.%s: called by %s -> %s", mInstanceName, __FUNCTION__,
-           aCallerName, ToString(*this).c_str()));
+          ("%s.%s: called by %s -> %s", mInstanceName, __func__,
+           ShortenFunctionName(aCallerName), ToString(*this).c_str()));
   AssertValidCache(aRootElement);
 }
 
@@ -2407,8 +2421,8 @@ void IMEContentObserver::FlatTextCache::CacheFlatTextLengthBeforeFirstContent(
   mFlatTextLength = aFlatTextLength;
   MOZ_ASSERT(IsCachingToStartOfContainer());
   MOZ_LOG(sCacheLog, LogLevel::Info,
-          ("%s.%s: called by %s -> %s", mInstanceName, __FUNCTION__,
-           aCallerName, ToString(*this).c_str()));
+          ("%s.%s: called by %s -> %s", mInstanceName, __func__,
+           ShortenFunctionName(aCallerName), ToString(*this).c_str()));
   AssertValidCache(aRootElement);
 }
 
@@ -2715,6 +2729,33 @@ void IMEContentObserver::FlatTextCache::ContentAdded(
         aRootElement);
     return;
   }
+
+  // If empty nodes are appended, we can avoid to clear the cache because the
+  // new nodes won't affect to the flattened text content.
+  const bool addingEmptyNode = [&]() {
+    if (aAddedFlatTextLength.isSome()) {
+      return !aAddedFlatTextLength.value();
+    }
+    if (&aFirstContent != &aLastContent) {
+      return false;  // If it's better to check here strictly, please do that.
+    }
+    if (aFirstContent.IsText()) {
+      return !aFirstContent.AsText()->TextDataLength();
+    }
+    if (aFirstContent.IsCharacterData()) {
+      return true;  // Should be invisible.
+    }
+    if (aFirstContent.HasChildren()) {
+      return false;  // If it's better to check here strictly, please do that.
+    }
+    Result<uint32_t, nsresult> lengthOrError =
+        ComputeTextLengthOfContent(aFirstContent, aRootElement, ForRemoval::No);
+    return lengthOrError.isOk() && !lengthOrError.unwrap();
+  }();
+  if (addingEmptyNode) {
+    return;
+  }
+
   // Let's clear the cache for avoiding to do anything expensive for a hot
   // path only for not frequent cases.  Be aware, this is a hot code path here.
   // Therefore, expensive computation would make the DOM mutation slower.
@@ -2747,7 +2788,7 @@ void IMEContentObserver::FlatTextCache::ContentWillBeRemoved(
     // path only for not frequent cases.  Be aware, this is a hot code path
     // here.  Therefore, expensive computation would make the DOM mutation
     // slower.
-    Clear("FlatTextCache::ContentRemoved");
+    Clear(__FUNCTION__);
     return;
   }
 
@@ -2755,7 +2796,7 @@ void IMEContentObserver::FlatTextCache::ContentWillBeRemoved(
   if (&aContent == mContent) {
     MOZ_ASSERT(mFlatTextLength >= aFlatTextLengthOfContent);
     if (NS_WARN_IF(mFlatTextLength < aFlatTextLengthOfContent)) {
-      Clear("FlatTextCache::ContentRemoved");
+      Clear(__FUNCTION__);
       return;
     }
     // We're caching text length before end of aContent.  So, if there is a
@@ -2763,7 +2804,7 @@ void IMEContentObserver::FlatTextCache::ContentWillBeRemoved(
     // subtracting the text length caused by aContent from the cached value.
     if (nsIContent* prevSibling = aContent.GetPreviousSibling()) {
       CacheFlatTextLengthBeforeEndOfContent(
-          "FlatTextCache::ContentRemoved", *prevSibling,
+          __FUNCTION__, *prevSibling,
           mFlatTextLength - aFlatTextLengthOfContent, aRootElement);
       return;
     }
@@ -2771,14 +2812,21 @@ void IMEContentObserver::FlatTextCache::ContentWillBeRemoved(
     // cache text length before first content of mContainerNode with subtracting
     // the text length caused by aContent from the cached value.
     CacheFlatTextLengthBeforeFirstContent(
-        "FlatTextCache::ContentRemoved", *mContainerNode,
+        __FUNCTION__, *mContainerNode,
         mFlatTextLength - aFlatTextLengthOfContent, aRootElement);
     return;
   }
+
+  // If the removing content is empty, removing that won't affect to the
+  // flattened text.  Therefore, we can avoid to clear the cache.
+  if (!aFlatTextLengthOfContent) {
+    return;
+  }
+
   // Let's clear the cache for avoiding to do anything expensive for a hot
   // path only for not frequent cases.  Be aware, this is a hot code path here.
   // Therefore, expensive computation would make the DOM mutation slower.
-  Clear("FlatTextCache::ContentRemoved");
+  Clear(__FUNCTION__);
 }
 
 /******************************************************************************
@@ -2789,7 +2837,8 @@ void IMEContentObserver::AddedContentCache::Clear(const char* aCallerName) {
   mFirst = nullptr;
   mLast = nullptr;
   MOZ_LOG(sCacheLog, LogLevel::Info,
-          ("AddedContentCache::Clear: called by %s", aCallerName));
+          ("AddedContentCache::Clear: called by %s",
+           ShortenFunctionName(aCallerName)));
 }
 
 bool IMEContentObserver::AddedContentCache::IsInRange(
