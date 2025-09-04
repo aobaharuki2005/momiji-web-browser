@@ -1706,6 +1706,8 @@ void DCSwapChain::Present(const wr::DeviceIntRect* aDirtyRects,
   HRESULT hr = S_OK;
   int rectsCount = 0;
   StackArray<RECT, 1> rects(aNumDirtyRects);
+  const UINT flags =
+      mDCLayerTree->SupportsSwapChainTearing() ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
   if (aNumDirtyRects > 0) {
     for (size_t i = 0; i < aNumDirtyRects; ++i) {
@@ -1732,17 +1734,13 @@ void DCSwapChain::Present(const wr::DeviceIntRect* aDirtyRects,
       params.DirtyRectsCount = rectsCount;
       params.pDirtyRects = rects.data();
 
-      const UINT flags = mDCLayerTree->SupportsSwapChainTearing()
-                             ? DXGI_PRESENT_ALLOW_TEARING
-                             : 0;
-
       hr = mSwapChain->Present1(0, flags, &params);
       if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) {
         gfxCriticalNote << "Present1 failed: " << gfx::hexa(hr);
       }
     }
   } else {
-    mSwapChain->Present(0, 0);
+    mSwapChain->Present(0, flags);
   }
 
   if (mFirstPresent) {
