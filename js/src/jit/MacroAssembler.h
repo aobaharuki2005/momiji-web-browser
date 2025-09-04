@@ -1332,23 +1332,17 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void randomDouble(Register rng, FloatRegister dest, Register64 temp0,
                     Register64 temp1);
 
-  inline void min32(Register lhs, Register rhs,
-                    Register result) PER_SHARED_ARCH;
-  inline void min32(Register lhs, Imm32 rhs, Register result) PER_SHARED_ARCH;
+  inline void min32(Register lhs, Register rhs, Register result) PER_ARCH;
+  inline void min32(Register lhs, Imm32 rhs, Register result) PER_ARCH;
 
-  inline void max32(Register lhs, Register rhs,
-                    Register result) PER_SHARED_ARCH;
-  inline void max32(Register lhs, Imm32 rhs, Register result) PER_SHARED_ARCH;
+  inline void max32(Register lhs, Register rhs, Register result) PER_ARCH;
+  inline void max32(Register lhs, Imm32 rhs, Register result) PER_ARCH;
 
-  inline void minPtr(Register lhs, Register rhs,
-                     Register result) PER_SHARED_ARCH;
-  inline void minPtr(Register lhs, ImmWord rhs,
-                     Register result) PER_SHARED_ARCH;
+  inline void minPtr(Register lhs, Register rhs, Register result) PER_ARCH;
+  inline void minPtr(Register lhs, ImmWord rhs, Register result) PER_ARCH;
 
-  inline void maxPtr(Register lhs, Register rhs,
-                     Register result) PER_SHARED_ARCH;
-  inline void maxPtr(Register lhs, ImmWord rhs,
-                     Register result) PER_SHARED_ARCH;
+  inline void maxPtr(Register lhs, Register rhs, Register result) PER_ARCH;
+  inline void maxPtr(Register lhs, ImmWord rhs, Register result) PER_ARCH;
 
   // srcDest = {min,max}{Float32,Double}(srcDest, other)
   // For min and max, handle NaN specially if handleNaN is true.

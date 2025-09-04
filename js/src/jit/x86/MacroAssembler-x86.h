@@ -1170,6 +1170,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     addl(Imm32(1), payloadOf(addr));
   }
 
+  void minMax32(Register lhs, Register rhs, Register dest, bool isMax);
+  void minMax32(Register lhs, Imm32 rhs, Register dest, bool isMax);
+
  public:
   // Used from within an Exit frame to handle a pending exception.
   void handleFailureWithHandlerTail(Label* profilerExitTail, Label* bailoutTail,
