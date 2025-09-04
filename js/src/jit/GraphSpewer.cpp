@@ -148,6 +148,11 @@ void GraphSpewer::spewMDef(MDefinition* def) {
   endObject();
 }
 
+static uint32_t StableBlockId(const MBasicBlock* block) {
+  uintptr_t pointer = (uintptr_t)block;
+  return mozilla::HashGeneric(pointer);
+}
+
 void GraphSpewer::spewMIR(MIRGraph* mir) {
   beginObjectProperty("mir");
   beginListProperty("blocks");
@@ -155,6 +160,13 @@ void GraphSpewer::spewMIR(MIRGraph* mir) {
   for (MBasicBlockIterator block(mir->begin()); block != mir->end(); block++) {
     beginObject();
 
+    // iongraph needs both the block 'number' (which is unstable and changes as
+    // blocks are moved around), and also a stable 'id' it can use to not lose
+    // focus as the user switches passes.
+    //
+    // Note: the terminology here is backwards from on MBasicBlock for backwards
+    // compat reasons.
+    property("id", StableBlockId(*block));
     property("number", block->id());
     property("loopDepth", block->loopDepth());
 
