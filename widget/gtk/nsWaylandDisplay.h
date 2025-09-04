@@ -131,20 +131,6 @@ class nsWaylandDisplay {
   void RequestAsyncRoundtrip();
   void WaitForAsyncRoundtrips();
 
-  struct MonitorConfig {
-    int id = 0;
-    int x = 0;
-    int y = 0;
-    int pixelWidth = 0;
-    int pixelHeight = 0;
-    explicit MonitorConfig(int aId) : id(aId) {}
-  };
-
-  MonitorConfig* AddMonitorConfig(int aId);
-  MonitorConfig* GetMonitorConfig(int x, int y);
-  bool RemoveMonitorConfig(int aId);
-  void AddWlOutput(wl_output* aWlOutput, int aId);
-
   ~nsWaylandDisplay();
 
  private:
@@ -197,8 +183,6 @@ class nsWaylandDisplay {
 
   bool mExplicitSync = false;
   bool mIsPrimarySelectionEnabled = false;
-
-  AutoTArray<UniquePtr<MonitorConfig>, 4> mMonitors;
 };
 
 wl_display* WaylandDisplayGetWLDisplay();
