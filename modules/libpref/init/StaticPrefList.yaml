@@ -3024,7 +3024,7 @@
 # Whether to dispatch `beforescriptexecute` and `afterscriptexecute` event.
 - name: dom.events.script_execute.enabled
   type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # Whether to expose test interfaces of various sorts
