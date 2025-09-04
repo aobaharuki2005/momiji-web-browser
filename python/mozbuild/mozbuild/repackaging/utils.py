@@ -101,7 +101,6 @@ def get_build_variables(
     application_ini_data,
     arch,
     version,
-    depends="",
     package_name_suffix="",
     description_suffix="",
     release_product="",
@@ -125,7 +124,6 @@ def get_build_variables(
         "CHANGELOG_DATE": format_datetime(application_ini_data["timestamp"]),
         "MANPAGE_DATE": application_ini_data["timestamp"].strftime("%B %d, %Y"),
         "ARCH_NAME": arch,
-        "DEPENDS": depends,
         "Icon": pkg_name,
     }
 
