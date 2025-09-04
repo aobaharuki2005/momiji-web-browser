@@ -29,6 +29,8 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import android.view.WindowMetrics
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -161,12 +163,14 @@ class QrFragmentTest {
         val textureView: AutoFitTextureView = mock()
         val viewFinder: CustomViewFinder = mock()
         val cameraErrorView: TextView = mock()
+        val backButtonView: AppCompatImageButton = mock()
 
         whenever(view.getContext()).thenReturn(testContext)
 
         whenever(view.findViewById<AutoFitTextureView>(R.id.texture)).thenReturn(textureView)
         whenever(view.findViewById<CustomViewFinder>(R.id.view_finder)).thenReturn(viewFinder)
         whenever(view.findViewById<TextView>(R.id.camera_error)).thenReturn(cameraErrorView)
+        whenever(view.findViewById<AppCompatImageButton>(R.id.back_button)).thenReturn(backButtonView)
 
         qrFragment.onViewCreated(view, mock())
         assertEquals(QrFragment.STATE_FIND_QRCODE, QrFragment.qrState)

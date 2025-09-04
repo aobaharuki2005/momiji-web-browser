@@ -55,6 +55,7 @@ import android.view.WindowManager
 import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat.getColor
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -123,6 +124,7 @@ class QrFragment : Fragment() {
     internal lateinit var textureView: AutoFitTextureView
     internal lateinit var customViewFinder: CustomViewFinder
     internal lateinit var cameraErrorView: TextView
+    internal lateinit var backButton: AppCompatImageButton
 
     @StringRes
     internal var scanMessage: Int? = null
@@ -270,6 +272,11 @@ class QrFragment : Fragment() {
         textureView = view.findViewById<View>(R.id.texture) as AutoFitTextureView
         customViewFinder = view.findViewById<View>(R.id.view_finder) as CustomViewFinder
         cameraErrorView = view.findViewById<View>(R.id.camera_error) as TextView
+        backButton = view.findViewById<View>(R.id.back_button) as AppCompatImageButton
+        backButton.setOnClickListener {
+            stopServices()
+            scanCompleteListener?.onScanComplete("")
+        }
 
         CustomViewFinder.setMessage(scanMessage)
         qrState = STATE_FIND_QRCODE
