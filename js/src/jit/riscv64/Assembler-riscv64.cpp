@@ -1149,7 +1149,7 @@ int32_t Assembler::branch_long_offset(Label* L) {
     target_pos = L->offset();
   } else {
     if (L->used()) {
-      LabelCahe::Ptr p = label_cache_.lookup(L->offset());
+      LabelCache::Ptr p = label_cache_.lookup(L->offset());
       MOZ_ASSERT(p);
       MOZ_ASSERT(p->key() == L->offset());
       target_pos = p->value().getOffset();
@@ -1206,7 +1206,7 @@ int32_t Assembler::branch_offset_helper(Label* L, OffsetSize bits) {
     m_buffer.registerBranchDeadline(OffsetSizeToImmBranchRangeType(bits),
                                     deadline);
     if (L->used()) {
-      LabelCahe::Ptr p = label_cache_.lookup(L->offset());
+      LabelCache::Ptr p = label_cache_.lookup(L->offset());
       MOZ_ASSERT(p);
       MOZ_ASSERT(p->key() == L->offset());
       target_pos = p->value().getOffset();

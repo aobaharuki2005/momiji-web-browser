@@ -141,10 +141,10 @@ class Assembler : public AssemblerShared,
 
  protected:
   using LabelOffset = int32_t;
-  using LabelCahe =
+  using LabelCache =
       HashMap<LabelOffset, BufferOffset, js::DefaultHasher<LabelOffset>,
               js::SystemAllocPolicy>;
-  LabelCahe label_cache_;
+  LabelCache label_cache_;
   void NoEnoughLabelCache() { enoughLabelCache_ = false; }
   CompactBufferWriter jumpRelocations_;
   CompactBufferWriter dataRelocations_;
