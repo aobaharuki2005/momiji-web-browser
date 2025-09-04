@@ -37,6 +37,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TemplateLib.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/UserData.h"

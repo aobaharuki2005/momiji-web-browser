@@ -6,14 +6,13 @@
 
 /* A template class for tagged unions. */
 
-#include <algorithm>
 #include <new>
 #include <stdint.h>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/OperatorNewExtensions.h"
-
+#include "mozilla/TemplateLib.h"
 #include <type_traits>
 #include <utility>
 
@@ -583,8 +582,8 @@ MOZ_NON_PARAM MOZ_GSL_OWNER Variant {
   using Tag = typename detail::VariantTag<Ts...>::Type;
   using Impl = detail::VariantImplementation<Tag, 0, Ts...>;
 
-  static constexpr size_t RawDataAlignment = std::max({alignof(Ts)...});
-  static constexpr size_t RawDataSize = std::max({sizeof(Ts)...});
+  static constexpr size_t RawDataAlignment = tl::Max<alignof(Ts)...>::value;
+  static constexpr size_t RawDataSize = tl::Max<sizeof(Ts)...>::value;
 
   // Raw storage for the contained variant value.
   alignas(RawDataAlignment) unsigned char rawData[RawDataSize];

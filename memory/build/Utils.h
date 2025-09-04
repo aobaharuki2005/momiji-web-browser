@@ -15,9 +15,15 @@
 #endif
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/TemplateLib.h"
 
 // Helper for log2 of powers of 2 at compile time.
-constexpr size_t LOG2(size_t N) { return mozilla::CeilingLog2(N); }
+template <size_t N>
+struct Log2 : mozilla::tl::CeilingLog2<N> {
+  using mozilla::tl::CeilingLog2<N>::value;
+  static_assert(1ULL << value == N, "Number is not a power of 2");
+};
+#define LOG2(N) Log2<N>::value
 
 enum class Order {
   eLess = -1,

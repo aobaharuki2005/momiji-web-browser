@@ -8,10 +8,11 @@
 #define ds_LifoAlloc_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/MulOverflowMask.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TemplateLib.h"
 
 #include <algorithm>
 #include <new>
@@ -1212,7 +1213,7 @@ class LifoAllocPolicy {
     if (MOZ_UNLIKELY(!n)) {
       return nullptr;
     }
-    MOZ_ASSERT(!(oldSize & mozilla::MulOverflowMask<sizeof(T)>()));
+    MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
     memcpy(n, p, std::min(oldSize * sizeof(T), newSize * sizeof(T)));
     return n;
   }
