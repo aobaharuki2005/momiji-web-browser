@@ -277,11 +277,6 @@
   margin-inline-end: 6px;
 }
 
-.content-blocking-exceptions {
-  border-top: 1px solid var(--border-color);
-  padding-top: 18px;
-}
-
 #blockCookiesMenu {
   width: 450px;
 }
