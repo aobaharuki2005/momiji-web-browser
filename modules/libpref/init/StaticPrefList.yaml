@@ -4239,7 +4239,7 @@
 # Enable Screen Orientation lock
 - name: dom.screenorientation.allow-lock
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Enable Screen Wake Lock API
