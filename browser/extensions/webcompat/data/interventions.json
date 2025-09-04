@@ -2484,6 +2484,24 @@
       }
     ]
   },
+  "1898996": {
+    "label": "oculus.com and meta.com",
+    "bugs": {
+      "1898996": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://*.oculus.com/cast*", "*://horizon.meta.com/casting*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "js": ["bug1898996-oculus.com-chrome-shims.js"]
+        },
+        "ua_string": ["Chrome"]
+      }
+    ]
+  },
   "1899049": {
     "label": "bcbs.pinpointglobal.com",
     "bugs": {
