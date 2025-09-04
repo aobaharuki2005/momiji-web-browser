@@ -1452,6 +1452,12 @@ skip-if = [
 
 ["test_nodelist_holes.html"]
 
+["test_omt_eager_baseline.html"]
+support-files = [
+  "file_omt_eager_baseline.html",
+  "file_omt_eager_baseline.js"
+]
+
 ["test_openDialogChromeOnly.html"]
 tags = "openwindow"
 

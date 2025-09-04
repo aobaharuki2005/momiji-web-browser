@@ -39,6 +39,7 @@
 #include "jit/JitScript.h"      // AutoKeepJitScripts
 #include "js/CallArgs.h"        // JSNative
 #include "js/CompileOptions.h"  // JS::DecodeOptions, JS::ReadOnlyDecodeOptions
+#include "js/DOMEventDispatch.h"            // TRACE_FOR_TEST_DOM
 #include "js/experimental/CompileScript.h"  // JS::PrepareForInstantiate
 #include "js/experimental/JSStencil.h"      // JS::Stencil
 #include "js/GCAPI.h"                       // JS::AutoCheckCannotGC
@@ -2723,12 +2724,14 @@ static bool MaybeDoEagerBaselineCompilations(JSContext* cx,
       if (!jit::DispatchOffThreadBaselineBatchEager(cx)) {
         return false;
       }
+      TRACE_FOR_TEST_DOM(cx, "omt_eager_baseline_dispatch");
     }
 
     // Add script to queue
     if (!queue.enqueue(script)) {
       return false;
     }
+    TRACE_FOR_TEST_DOM(cx, "omt_eager_baseline_function", script);
   }
 
   // Dispatch any remaining scripts in the queue
@@ -2736,6 +2739,7 @@ static bool MaybeDoEagerBaselineCompilations(JSContext* cx,
     if (!jit::DispatchOffThreadBaselineBatchEager(cx)) {
       return false;
     }
+    TRACE_FOR_TEST_DOM(cx, "omt_eager_baseline_dispatch");
   }
 
   return true;
