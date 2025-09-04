@@ -32,7 +32,7 @@ using namespace js;
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(is(args.thisv()));
 
-  if (!CanBeHeldWeakly(cx, args.get(0))) {
+  if (!CanBeHeldWeakly(args.get(0))) {
     args.rval().setBoolean(false);
     return true;
   }
@@ -68,7 +68,7 @@ bool WeakMapObject::hasObject(WeakMapObject* weakMap, JSObject* obj) {
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
-  if (!CanBeHeldWeakly(cx, args.get(0))) {
+  if (!CanBeHeldWeakly(args.get(0))) {
     args.rval().setUndefined();
     return true;
   }
@@ -110,7 +110,7 @@ void WeakMapObject::getObject(WeakMapObject* weakMap, JSObject* obj,
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
-  if (!CanBeHeldWeakly(cx, args.get(0))) {
+  if (!CanBeHeldWeakly(args.get(0))) {
     args.rval().setBoolean(false);
     return true;
   }
@@ -140,7 +140,7 @@ bool WeakMapObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool EnsureValidWeakMapKey(JSContext* cx, Handle<Value> keyVal) {
-  if (MOZ_UNLIKELY(!CanBeHeldWeakly(cx, keyVal))) {
+  if (MOZ_UNLIKELY(!CanBeHeldWeakly(keyVal))) {
     unsigned errorNum = GetErrorNumber(true);
     ReportValueError(cx, errorNum, JSDVG_IGNORE_STACK, keyVal, nullptr);
     return false;
@@ -299,7 +299,7 @@ JS_PUBLIC_API bool JS::GetWeakMapEntry(JSContext* cx, HandleObject mapObj,
   cx->check(key);
   rval.setUndefined();
 
-  if (!CanBeHeldWeakly(cx, key)) {
+  if (!CanBeHeldWeakly(key)) {
     return true;
   }
 
