@@ -1611,7 +1611,7 @@ wheels = [
 
 [[package]]
 name = "taskcluster-taskgraph"
-version = "15.1.1"
+version = "15.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "appdirs" },
@@ -1625,9 +1625,9 @@ dependencies = [
     { name = "taskcluster-urls" },
     { name = "voluptuous" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/3d/7e3337f5f64ca2a94cffdbb3acc2e73f68ea47369053ed366d304600f771/taskcluster_taskgraph-15.1.1.tar.gz", hash = "sha256:6f92b2865bc730119adf00c37d23218b87a6e682b7dedf1970231fa2b306d336", size = 452429, upload-time = "2025-09-02T16:26:37.606Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/68/4b/a508d409f1822e54af264299d055b15248b0cbddeb01d69447e2437e54db/taskcluster_taskgraph-15.1.2.tar.gz", hash = "sha256:36a34c3d693a97f01f130a1afb8e308d1fbcd455bb923bacea7b63a61890f6a0", size = 452687, upload-time = "2025-09-04T13:04:51.934Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f9/2e/b21f4510e9243359036fc51b4ae8fb317c442b8ede5169e3aba2a5d07c53/taskcluster_taskgraph-15.1.1-py3-none-any.whl", hash = "sha256:dc3c038101c57bcf9024f49674c6552f39076a16fc6a826c127e700af27c82db", size = 200328, upload-time = "2025-09-02T16:26:35.482Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/4e/e00239f6c4b9ba5c1c51d06a683e40a05c019a7aad9071e28fff8fcddcf5/taskcluster_taskgraph-15.1.2-py3-none-any.whl", hash = "sha256:fe3096d7d2cc649751cf2a4349a02462de67c227c2645b866fb7c8a8bac4d665", size = 200412, upload-time = "2025-09-04T13:04:49.827Z" },
 ]
 
 [[package]]
