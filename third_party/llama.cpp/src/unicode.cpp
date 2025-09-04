@@ -124,6 +124,7 @@ uint32_t unicode_cpt_from_utf8(const std::string & utf8, size_t & offset) {
 static std::vector<unicode_cpt_flags> unicode_cpt_flags_array() {
     std::vector<unicode_cpt_flags> cpt_flags(MAX_CODEPOINTS, unicode_cpt_flags::UNDEFINED);
 
+    const auto & unicode_ranges_flags = get_unicode_ranges_flags();
     assert (unicode_ranges_flags.begin()[0].first == 0);
     assert (unicode_ranges_flags.begin()[unicode_ranges_flags.size()-1].first == MAX_CODEPOINTS);
     for (size_t i = 1; i < unicode_ranges_flags.size(); ++i) {
@@ -134,18 +135,22 @@ static std::vector<unicode_cpt_flags> unicode_cpt_flags_array() {
         }
     }
 
+    const auto & unicode_set_whitespace = get_unicode_set_whitespace();
     for (auto cpt : unicode_set_whitespace) {
         cpt_flags[cpt].is_whitespace = true;
     }
 
+    const auto & unicode_map_lowercase = get_unicode_map_lowercase();
     for (auto p : unicode_map_lowercase) {
         cpt_flags[p.second].is_lowercase = true;
     }
 
+    const auto & unicode_map_uppercase = get_unicode_map_uppercase();
     for (auto p : unicode_map_uppercase) {
         cpt_flags[p.second].is_uppercase = true;
     }
 
+    const auto & unicode_ranges_nfd = get_unicode_ranges_nfd();
     for (auto &range : unicode_ranges_nfd) {  // start, last, nfd
         cpt_flags[range.nfd].is_nfd = true;
     }
@@ -788,6 +793,7 @@ std::vector<uint32_t> unicode_cpts_normalize_nfd(const std::vector<uint32_t> & c
     auto comp = [] (const uint32_t cpt, const range_nfd & range) {
         return cpt < range.first;
     };
+    const auto & unicode_ranges_nfd = get_unicode_ranges_nfd();
     std::vector<uint32_t> result(cpts.size());
     for (size_t i = 0; i < cpts.size(); ++i) {
         const uint32_t cpt = cpts[i];
@@ -841,6 +847,7 @@ uint8_t unicode_utf8_to_byte(const std::string & utf8) {
 
 uint32_t unicode_tolower(uint32_t cpt) {
     // binary search
+    const auto & unicode_map_lowercase = get_unicode_map_lowercase();
     auto it = std::lower_bound(unicode_map_lowercase.begin(), unicode_map_lowercase.end(), cpt,
         [](const std::pair<uint32_t, uint32_t> & pair, uint32_t value) {
             return pair.first < value;
@@ -883,8 +890,7 @@ bool unicode_cpt_is_han(uint32_t cpt) {
     return false;
 }
 
-std::vector<std::string> unicode_regex_split(const std::string & text, const std::vector<std::string> & regex_exprs) {
-    // unicode categories
+static const std::map<std::string, int> & get_k_ucat_enum() {
     static const std::map<std::string, int> k_ucat_enum = {
         { "\\p{N}", unicode_cpt_flags::NUMBER },
         { "\\p{L}", unicode_cpt_flags::LETTER },
@@ -892,7 +898,10 @@ std::vector<std::string> unicode_regex_split(const std::string & text, const std
         { "\\p{M}", unicode_cpt_flags::ACCENT_MARK },
         { "\\p{S}", unicode_cpt_flags::SYMBOL },
     };
+    return k_ucat_enum;
+}
 
+static const std::map<int, int> & get_k_ucat_cpt() {
     static const std::map<int, int> k_ucat_cpt = {
         { unicode_cpt_flags::NUMBER,      0xD1 },
         { unicode_cpt_flags::LETTER,      0xD2 },
@@ -900,7 +909,10 @@ std::vector<std::string> unicode_regex_split(const std::string & text, const std
         { unicode_cpt_flags::ACCENT_MARK, 0xD4 },
         { unicode_cpt_flags::SYMBOL,      0xD5 },
     };
+    return k_ucat_cpt;
+}
 
+static const std::map<int, std::string> & get_k_ucat_map() {
     static const std::map<int, std::string> k_ucat_map = {
         { unicode_cpt_flags::NUMBER,      "\x30-\x39" }, // 0-9
         { unicode_cpt_flags::LETTER,      "\x41-\x5A\x61-\x7A" }, // A-Za-z
@@ -908,6 +920,14 @@ std::vector<std::string> unicode_regex_split(const std::string & text, const std
         { unicode_cpt_flags::ACCENT_MARK, "" }, // no sub-128 codepoints
         { unicode_cpt_flags::SYMBOL,      "\\\x24\\\x2B\x3C-\x3E\x5E\x60\\\x7C" }, // $+<=>^`|
     };
+    return k_ucat_map;
+}
+
+std::vector<std::string> unicode_regex_split(const std::string & text, const std::vector<std::string> & regex_exprs) {
+    // unicode categories
+    const auto & k_ucat_enum = get_k_ucat_enum();
+    const auto & k_ucat_cpt = get_k_ucat_cpt();
+    const auto & k_ucat_map = get_k_ucat_map();
 
     // compute collapsed codepoints only if needed by at least one regex
     bool need_collapse = false;
