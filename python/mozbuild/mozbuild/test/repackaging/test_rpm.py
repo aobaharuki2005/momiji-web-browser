@@ -33,7 +33,7 @@ _APPLICATION_INI_CONTENT_DATA = {
 
 
 @pytest.mark.parametrize(
-    "version, build_number, package_name_suffix, description_suffix, release_product, application_ini_data, expected, raises",
+    "version, build_number, package_name_suffix, description_suffix, product, application_ini_data, expected, raises",
     (
         (
             "112.0a1",
@@ -238,7 +238,7 @@ def test_get_build_variables(
     build_number,
     package_name_suffix,
     description_suffix,
-    release_product,
+    product,
     application_ini_data,
     expected,
     raises,
@@ -248,7 +248,7 @@ def test_get_build_variables(
             application_ini_data,
             "x86",
             version,
-            release_product=release_product,
+            product=product,
             package_name_suffix=package_name_suffix,
             description_suffix=description_suffix,
             build_number=build_number,

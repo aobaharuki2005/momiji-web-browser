@@ -86,13 +86,13 @@ def get_build_variables(
     version,
     package_name_suffix="",
     description_suffix="",
-    release_product="",
+    product="",
     build_number="1",
 ):
     """
     Massage the application.ini info and other metadata into a dict suitable for passing into packaging templates
     """
-    if release_product == "devedition":
+    if product == "devedition":
         pkg_install_path = "usr/lib/firefox-devedition"
         pkg_name = f"firefox-devedition{package_name_suffix}"
     else:
@@ -131,7 +131,7 @@ def inject_desktop_entry_file(
     log,
     source_dir,
     build_variables,
-    release_product,
+    product,
     release_type,
     fluent_localization,
     fluent_resource_loader,
@@ -154,7 +154,7 @@ def inject_desktop_entry_file(
     desktop_entry_file_text = generate_browser_desktop_entry_file_text(
         log,
         build_variables,
-        release_product,
+        product,
         release_type,
         fluent_localization,
         fluent_resource_loader,

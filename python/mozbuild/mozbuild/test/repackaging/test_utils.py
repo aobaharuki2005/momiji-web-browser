@@ -71,7 +71,7 @@ def test_application_ini_data_from_directory():
 
 
 @pytest.mark.parametrize(
-    "version, build_number, package_name_suffix, description_suffix, release_product, application_ini_data, expected, raises",
+    "version, build_number, package_name_suffix, description_suffix, product, application_ini_data, expected, raises",
     (
         (
             "112.0a1",
@@ -276,7 +276,7 @@ def test_get_build_variables(
     build_number,
     package_name_suffix,
     description_suffix,
-    release_product,
+    product,
     application_ini_data,
     expected,
     raises,
@@ -288,7 +288,7 @@ def test_get_build_variables(
             version,
             package_name_suffix=package_name_suffix,
             description_suffix=description_suffix,
-            release_product=release_product,
+            product=product,
             build_number=build_number,
         )
 
@@ -488,7 +488,7 @@ def test_inject_desktop_entry_file(monkeypatch):
         "PRODUCT_NAME": "Firefox",
         "PKG_NAME": "firefox-nightly",
     }
-    release_product = "firefox"
+    product = "firefox"
     release_type = "nightly"
 
     desktop_entry_template_path = mozpath.join(
@@ -508,7 +508,7 @@ def test_inject_desktop_entry_file(monkeypatch):
     def mock_generate_browser_desktop_entry_file_text(
         log,
         build_variables,
-        release_product,
+        product,
         release_type,
         fluent_localization,
         fluent_resource_loader,
@@ -527,7 +527,7 @@ def test_inject_desktop_entry_file(monkeypatch):
             None,
             mozpath.join(source_dir, "debian"),
             build_variables,
-            release_product,
+            product,
             release_type,
             None,
             None,

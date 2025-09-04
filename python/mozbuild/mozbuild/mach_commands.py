@@ -2467,7 +2467,7 @@ def repackage(command_context):
     help="Location of the templates used to generate the debian/ directory files",
 )
 @CommandArgument(
-    "--release-product",
+    "--product",
     type=str,
     required=True,
     help="The product being shipped. Used to disambiguate beta/devedition etc.",
@@ -2486,7 +2486,7 @@ def repackage_deb(
     version,
     build_number,
     templates,
-    release_product,
+    product,
     release_type,
 ):
     if not os.path.exists(input):
@@ -2510,7 +2510,7 @@ def repackage_deb(
         arch,
         version,
         build_number,
-        release_product,
+        product,
         release_type,
         FluentLocalization,
         FluentResourceLoader,
@@ -2551,7 +2551,7 @@ def repackage_deb(
     help="Location of the templates used to generate the debian/ directory files",
 )
 @CommandArgument(
-    "--release-product",
+    "--product",
     type=str,
     required=True,
     help="The product being shipped. Used to disambiguate beta/devedition etc.",
@@ -2564,7 +2564,7 @@ def repackage_deb_l10n(
     version,
     build_number,
     templates,
-    release_product,
+    product,
 ):
     for input_file in (input_xpi_file, input_tar_file):
         if not os.path.exists(input_file):
@@ -2585,7 +2585,7 @@ def repackage_deb_l10n(
         template_dir,
         version,
         build_number,
-        release_product,
+        product,
     )
 
 
@@ -2632,7 +2632,7 @@ def repackage_deb_l10n(
     help="Location of the templates used to generate the rpm/ directory files",
 )
 @CommandArgument(
-    "--release-product",
+    "--product",
     type=str,
     required=True,
     help="The product being shipped. Used to disambiguate beta/devedition etc.",
@@ -2652,7 +2652,7 @@ def repackage_rpm(
     version,
     build_number,
     templates,
-    release_product,
+    product,
     release_type,
 ):
     if not os.path.exists(input):
@@ -2677,7 +2677,7 @@ def repackage_rpm(
         arch,
         version,
         build_number,
-        release_product,
+        product,
         release_type,
         FluentLocalization,
         FluentResourceLoader,

@@ -80,7 +80,7 @@ def repackage_deb(
     arch,
     version,
     build_number,
-    release_product,
+    product,
     release_type,
     fluent_localization,
     fluent_resource_loader,
@@ -100,7 +100,7 @@ def repackage_deb(
             application_ini_data,
             _DEB_ARCH[arch],
             pkg_version,
-            release_product=release_product,
+            product=product,
         )
         build_variables["DEPENDS"] = "${shlibs:Depends},"
         build_variables["CHANGELOG_DATE"] = format_datetime(
@@ -128,7 +128,7 @@ def repackage_deb(
             log,
             deb_dir,
             build_variables,
-            release_product,
+            product,
             release_type,
             fluent_localization,
             fluent_resource_loader,
@@ -154,7 +154,7 @@ def repackage_deb_l10n(
     template_dir,
     version,
     build_number,
-    release_product,
+    product,
 ):
     arch = "all"
 
@@ -175,9 +175,9 @@ def repackage_deb_l10n(
             # Debian package names are only lowercase
             package_name_suffix=f"-l10n-{langpack_id.lower()}",
             description_suffix=f" - {langpack_metadata['description']}",
-            release_product=release_product,
+            product=product,
         )
-        if release_product == "devedition":
+        if product == "devedition":
             depends = f"firefox-devedition (= {build_variables['PKG_VERSION']})"
         else:
             depends = f"{application_ini_data['remoting_name']} (= {build_variables['PKG_VERSION']})"

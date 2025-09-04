@@ -90,7 +90,7 @@ def repackage_flatpak(
     output,
     arch,
     version,
-    release_product,
+    product,
     release_type,
     flatpak_name,
     flatpak_branch,
@@ -143,7 +143,7 @@ def repackage_flatpak(
             log, ["tar", "xf", os.path.abspath(infile)], cwd=lib_dir, check=True
         )
 
-        if release_product == "firefox":
+        if product == "firefox":
             distribution_ini = lib_dir / "firefox" / "distribution" / "distribution.ini"
             distribution_ini.parent.mkdir(parents=True)
             _inject_flatpak_distribution_ini(log, distribution_ini)
@@ -157,7 +157,7 @@ def repackage_flatpak(
                 "FLATPAK_BRANCH": flatpak_branch,
                 "DATE": variables["TIMESTAMP"].strftime("%Y-%m-%d"),
                 # Override PKG_NAME since we use branches for beta vs release
-                "PKG_NAME": release_product,
+                "PKG_NAME": product,
                 "DBusActivatable": "false",
                 # Override Icon to match the flatpak's name
                 "Icon": flatpak_name,
@@ -172,7 +172,7 @@ def repackage_flatpak(
         desktop = generate_browser_desktop_entry(
             log,
             variables,
-            release_product,
+            product,
             release_type,
             FluentLocalization,
             FluentResourceLoader,
@@ -184,9 +184,9 @@ def repackage_flatpak(
             for line in desktop:
                 print(line, file=f)
 
-        if release_product == "firefox":
+        if product == "firefox":
             icon_path = "lib/firefox/browser/chrome/icons/default"
-        elif release_product == "thunderbird":
+        elif product == "thunderbird":
             icon_path = "lib/thunderbird/chrome/icons/default"
         else:
             raise NotImplementedError()
@@ -225,9 +225,7 @@ def repackage_flatpak(
             cwd=tmpdir,
         )
 
-        os.makedirs(
-            app_dir / f"lib/{release_product}/distribution/extensions", exist_ok=True
-        )
+        os.makedirs(app_dir / f"lib/{product}/distribution/extensions", exist_ok=True)
         for langpack in glob.iglob(langpack_pattern):
             manifest = _langpack_manifest(langpack)
             locale = manifest["langpack_id"]
@@ -240,7 +238,7 @@ def repackage_flatpak(
             )
             os.symlink(
                 f"/app/share/runtime/langpack/{lang}/{name}.xpi",
-                app_dir / f"lib/{release_product}/distribution/extensions/{name}.xpi",
+                app_dir / f"lib/{product}/distribution/extensions/{name}.xpi",
             )
 
         run_command(
