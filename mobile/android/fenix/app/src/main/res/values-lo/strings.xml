@@ -32,8 +32,14 @@
   <string name="no_open_tabs_description">ແທັບທີ່ເປີດຂອງທ່ານຈະຖືກສະແດງຢູ່ບ່ອນນີ້.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">ແທັບສ່ວນຕົວຂອງທ່ານຈະຖືກສະແດງຢູ່ບ່ອນນີ້.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">ການທ່ອງເວັບແບບສ່ວນຕົວ</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s ຈະບໍ່ຈື່ປະຫວັດ ຫຼື ຄຸກກີ້ໃດໆຂອງທ່ານ, ແຕ່ບຸກມາກໃໝ່ຈະຖືກບັນທຶກໄວ້.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">ເລືອກ %1$d ແລ້ວ</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">ເລືອກແທັບ</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">ເພີ່ມການເກັບສະສົມໃຫມ່</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->

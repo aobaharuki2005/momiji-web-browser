@@ -521,6 +521,8 @@
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Lue lisää</string>
   <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
   <string name="startup_crash_title">%s täytyy käynnistää uudelleen</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">%sin avaamisessa oli ongelma.\n\nKaatumisraportin lähettäminen auttaa meitä diagnosoimaan ja korjaamaan selaimen ongelmia. Raportit voivat sisältää henkilökohtaisia tai arkaluonteisia tietoja.</string>
   <!-- Button text to submit a startup crash report -->
   <string name="startup_crash_positive">Lähetä kaatumisilmoitus</string>
   <!-- Button text to continue and not send a startup crash report -->
@@ -1662,6 +1664,8 @@
   <string name="webcompat_reporter_label_description">Kuvaa ongelma (valinnainen)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Lähetä lisätietoja</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">Lisää lisätietoja</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Peruuta</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1771,6 +1775,8 @@
   <string name="bookmark_menu_delete_button">Poista</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Tallenna</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">Lajitteluvalinnat</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Lajittele mukautetun järjestyksen mukaan</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
