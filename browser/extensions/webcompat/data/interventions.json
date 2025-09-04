@@ -5380,5 +5380,20 @@
         "ua_string": ["change_Firefox_to_FireFox"]
       }
     ]
+  },
+  "1984434": {
+    "label": "fxnetworkspressroom.com",
+    "bugs": {
+      "1984434": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://www.fxnetworkspressroom.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
   }
 }
