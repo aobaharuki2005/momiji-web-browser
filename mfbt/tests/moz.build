@@ -46,6 +46,7 @@ CppUnitTests(
         "TestMacroForEach",
         "TestMathAlgorithms",
         "TestMaybe",
+        "TestMulOverflowMask",
         "TestNonDereferenceable",
         "TestNotNull",
         "TestRandomNum",

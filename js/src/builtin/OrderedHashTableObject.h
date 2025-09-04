@@ -49,7 +49,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/TemplateLib.h"
 
 #include <memory>
 #include <tuple>

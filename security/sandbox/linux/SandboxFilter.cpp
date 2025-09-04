@@ -41,7 +41,6 @@
 #include "SandboxOpenedFiles.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ProcInfo_linux.h"
-#include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
 #include "prenv.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
