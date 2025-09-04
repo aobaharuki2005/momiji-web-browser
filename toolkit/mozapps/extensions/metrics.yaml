@@ -296,19 +296,24 @@ addons_manager:
       - https://bugzilla.mozilla.org/1653020
       - https://bugzilla.mozilla.org/1699225
       - https://bugzilla.mozilla.org/1820153
+      - https://bugzilla.mozilla.org/1982913
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1653020#c6
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1820153#c3
+      - https://bugzilla.mozilla.org/1982913
     data_sensitivity:
       - interaction
     notification_emails:
       - addons-dev-internal@mozilla.com
     extra_keys:
       addon_id:
-        description: Id of the addon.
+        description: Full id of the addon.
         type: string
       addon_type:
         description: Type of the add-on.
+        type: string
+      hashed_addon_id:
+        description: The hashed addon id.
         type: string
       taar_based:
         description: |
