@@ -1290,7 +1290,7 @@ GlobalLexicalEnvironmentObject* GlobalLexicalEnvironmentObject::create(
     return nullptr;
   }
 
-  if (JS::Prefs::objectfuse_for_global()) {
+  if (ShouldUseObjectFuses() && JS::Prefs::objectfuse_for_global()) {
     if (!NativeObject::setHasObjectFuse(cx, env)) {
       return nullptr;
     }

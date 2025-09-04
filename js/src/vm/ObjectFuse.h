@@ -12,6 +12,7 @@
 
 #include "gc/Barrier.h"
 #include "jit/InvalidationScriptSet.h"
+#include "jit/JitOptions.h"
 #include "js/SweepingAPI.h"
 #include "vm/PropertyInfo.h"
 
@@ -279,6 +280,14 @@ class ObjectFuseMap {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
+
+// ObjectFuses can have some performance overhead due to the Watchtower code for
+// property changes, so we only use them if we can take advantage of object
+// fuses with IC stubs. Note that we don't check this for the |addObjectFuse|
+// testing function.
+inline bool ShouldUseObjectFuses() {
+  return jit::IsBaselineInterpreterEnabled();
+}
 
 }  // namespace js
 
