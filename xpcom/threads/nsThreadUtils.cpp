@@ -322,6 +322,7 @@ class IdleRunnableWrapper final : public Runnable,
     RefPtr<IdleRunnableWrapper> runnable =
         static_cast<IdleRunnableWrapper*>(aClosure);
     LogRunnable::Run log(runnable);
+    AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable);
     runnable->Run();
     runnable = nullptr;
   }
