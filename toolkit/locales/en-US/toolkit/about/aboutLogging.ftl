@@ -128,3 +128,15 @@ about-logging-save-error = An error happened while saving the file: { $errorText
 # Variables:
 #   $date (date) - The date and time when the profile was uploaded
 about-logging-uploaded-profile-name = Profile { DATETIME($date, dateStyle: "short", timeStyle: "medium") }
+
+about-logging-uploaded-profiles-title = Uploaded Profiles
+about-logging-no-uploaded-profiles = No profiles have been uploaded yet.
+about-logging-delete-uploaded-profile = Delete
+about-logging-view-uploaded-profile = View Profile
+about-logging-delete-profile-confirm-title = Delete Profile
+
+# Confirmation message shown when deleting an uploaded profile.
+# Variables:
+#   $profileName (string) - The name of the profile being deleted.
+about-logging-delete-profile-confirm = Are you sure you want to delete the profile “{ $profileName }”? This cannot be undone.
+about-logging-deleting-profile = Deleting…
