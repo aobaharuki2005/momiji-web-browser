@@ -117,6 +117,10 @@
       "1982550": {
         "issue": "broken-interactive-elements",
         "matches": ["*://www.passline.com/*"]
+      },
+      "1982801": {
+        "issue": "broken-interactive-elements",
+        "matches": ["*://www.linguee.de/*"]
       }
     },
     "interventions": [
