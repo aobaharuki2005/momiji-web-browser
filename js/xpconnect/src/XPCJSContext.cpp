@@ -882,12 +882,11 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
         javascript_options_self_hosted_use_shared_memory_DoNotUseDirectly();
   }
 
-#ifdef NIGHTLY_BUILD
-  JS_SetOffthreadBaselineCompilationEnabled(
-      cx,
-      StaticPrefs::
-          javascript_options_experimental_baselinejit_offthread_compilation_DoNotUseDirectly());
-#endif
+  uint32_t strategyIndex = StaticPrefs::
+      javascript_options_baselinejit_offthread_compilation_strategy();
+  bool onDemandOMTBaselineEnabled = strategyIndex == 1 || strategyIndex == 3;
+  JS_SetOffthreadBaselineCompilationEnabled(cx, onDemandOMTBaselineEnabled);
+
   JS_SetOffthreadIonCompilationEnabled(
       cx, StaticPrefs::
               javascript_options_ion_offthread_compilation_DoNotUseDirectly());

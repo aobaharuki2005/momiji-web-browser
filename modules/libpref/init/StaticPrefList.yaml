@@ -8678,14 +8678,27 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-#ifdef NIGHTLY_BUILD
-# Experimental support for off-main-thread baseline compilation.
-- name: javascript.options.experimental.baselinejit.offthread_compilation
-  type: bool
-  value: false
+# Select which OMT baseline compilation strategy to use:
+#    0:  None.  Disables OMT baseline compilation entirely.
+#
+#    1:  On-demand only.  Only perform OMT baseline compilation
+#        when needed during execution.
+#
+#    2:  Eager compilation only.  This will perform OMT baseline
+#        compilation eagerly when JitHints and bytecode is available.
+#
+#    3:  Eager and on-demand.  Perform eager compilation when
+#        JitHints and bytecode is available whenever possible,
+#        and also perform on-demand OMT baseline compilation.
+#
+#    4:  Aggressive eager compilation.  This is aggressively
+#        compiling all functions eagerly when bytecode is available,
+#        regardless of JitHints.  Not recommended for normal use.
+#
+- name: javascript.options.baselinejit.offthread_compilation_strategy
+  type: uint32_t
+  value: 2
   mirror: always  # LoadStartupJSPrefs
-  do_not_use_directly: true
-#endif
 
 # Enable off-main-thread Warp compilation.
 - name: javascript.options.ion.offthread_compilation
