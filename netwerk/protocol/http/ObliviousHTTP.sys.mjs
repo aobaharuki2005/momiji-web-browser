@@ -83,7 +83,7 @@ export class ObliviousHTTP {
    *   The URL of the OHTTP relay to use.
    * @param {Uint8Array} config
    *   A byte array representing the OHTTP config.
-   * @param {string} requestURL
+   * @param {URL|string} requestURL
    *   The URL of the request we want to make over the relay.
    * @param {object} options
    * @param {string} [options.method]
@@ -110,7 +110,9 @@ export class ObliviousHTTP {
     { method = "GET", body, headers, signal, abortCallback }
   ) {
     let relayURI = Services.io.newURI(obliviousHTTPRelay);
-    let requestURI = Services.io.newURI(requestURL);
+    let requestURI = URL.isInstance(requestURL)
+      ? requestURL.URI
+      : Services.io.newURI(requestURL);
     let obliviousHttpChannel = lazy.ohttpService
       .newChannel(relayURI, requestURI, config)
       .QueryInterface(Ci.nsIHttpChannel);
