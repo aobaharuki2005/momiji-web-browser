@@ -1839,7 +1839,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     AutoLockHelperThreadState lock;
     if (!StartOffThreadIonCompile(task, lock)) {
       JitSpew(JitSpew_IonAbort, "Unable to start off-thread ion compilation.");
-      mirGen->graphSpewer().endFunction();
+      mirGen->spewEndFunction();
       return AbortReason::Alloc;
     }
 

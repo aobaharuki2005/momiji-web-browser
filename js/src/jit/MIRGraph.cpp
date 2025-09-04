@@ -43,7 +43,7 @@ MIRGenerator::MIRGenerator(CompileRealm* realm,
       bigIntsCanBeInNursery_(realm ? realm->zone()->canNurseryAllocateBigInts()
                                    : false),
       options(options),
-      gs_(alloc, wasmCodeMeta) {}
+      jitSpewer_(alloc, wasmCodeMeta) {}
 
 bool MIRGenerator::licmEnabled() const {
   return optimizationInfo().licmEnabled() && !disableLICM_ &&
@@ -75,24 +75,44 @@ mozilla::GenericErrorResult<AbortReason> MIRGenerator::abort(AbortReason r) {
 }
 
 void MIRGenerator::spewBeginFunction(JSScript* function) {
-  graphSpewer().init(&graph(), function);
-  graphSpewer().beginFunction(function);
+  jitSpewer_.init(&graph(), function);
+  jitSpewer_.beginFunction(function);
+#ifdef JS_JITSPEW
+  if (graphSpewer_) {
+    graphSpewer_->beginFunction(function);
+  }
+#endif
   perfSpewer().startRecording();
 }
 
 void MIRGenerator::spewBeginWasmFunction(unsigned funcIndex) {
-  graphSpewer().init(&graph(), nullptr);
-  graphSpewer().beginWasmFunction(funcIndex);
+  jitSpewer_.init(&graph(), nullptr);
+  jitSpewer_.beginWasmFunction(funcIndex);
+#ifdef JS_JITSPEW
+  if (graphSpewer_) {
+    graphSpewer_->beginWasmFunction(funcIndex);
+  }
+#endif
   perfSpewer().startRecording(wasmCodeMeta_);
 }
 
 void MIRGenerator::spewPass(const char* name, BacktrackingAllocator* ra) {
-  graphSpewer().spewPass(name, ra);
+  jitSpewer_.spewPass(name, ra);
+#ifdef JS_JITSPEW
+  if (graphSpewer_) {
+    graphSpewer_->spewPass(name, &graph(), ra);
+  }
+#endif
   perfSpewer().recordPass(name, &graph(), ra);
 }
 
 void MIRGenerator::spewEndFunction() {
-  graphSpewer().endFunction();
+  jitSpewer_.endFunction();
+#ifdef JS_JITSPEW
+  if (graphSpewer_) {
+    graphSpewer_->endFunction();
+  }
+#endif
   perfSpewer().endRecording();
 }
 

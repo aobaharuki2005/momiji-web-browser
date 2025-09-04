@@ -2179,34 +2179,6 @@ static bool WasmFunctionTier(JSContext* cx, unsigned argc, Value* vp) {
   return false;
 }
 
-static bool ToIonDumpContents(JSContext* cx, HandleValue value,
-                              wasm::IonDumpContents* contents) {
-  RootedString option(cx, JS::ToString(cx, value));
-
-  if (!option) {
-    return false;
-  }
-
-  bool isEqual = false;
-  if (!JS_StringEqualsLiteral(cx, option, "mir", &isEqual) || isEqual) {
-    *contents = wasm::IonDumpContents::UnoptimizedMIR;
-    return isEqual;
-  } else if (!JS_StringEqualsLiteral(cx, option, "unopt-mir", &isEqual) ||
-             isEqual) {
-    *contents = wasm::IonDumpContents::UnoptimizedMIR;
-    return isEqual;
-  } else if (!JS_StringEqualsLiteral(cx, option, "opt-mir", &isEqual) ||
-             isEqual) {
-    *contents = wasm::IonDumpContents::OptimizedMIR;
-    return isEqual;
-  } else if (!JS_StringEqualsLiteral(cx, option, "lir", &isEqual) || isEqual) {
-    *contents = wasm::IonDumpContents::LIR;
-    return isEqual;
-  } else {
-    return false;
-  }
-}
-
 static bool WasmDumpIon(JSContext* cx, unsigned argc, Value* vp) {
   if (!wasm::HasSupport(cx)) {
     JS_ReportErrorASCII(cx, "wasm support unavailable");
@@ -2225,12 +2197,6 @@ static bool WasmDumpIon(JSContext* cx, unsigned argc, Value* vp) {
   uint32_t targetFuncIndex;
   if (!ToUint32(cx, args.get(1), &targetFuncIndex)) {
     JS_ReportErrorASCII(cx, "argument is not a func index");
-    return false;
-  }
-
-  wasm::IonDumpContents contents = wasm::IonDumpContents::Default;
-  if (args.length() > 2 && !ToIonDumpContents(cx, args.get(2), &contents)) {
-    JS_ReportErrorASCII(cx, "argument is not a valid dump contents");
     return false;
   }
 
@@ -2258,8 +2224,7 @@ static bool WasmDumpIon(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!wasm::DumpIonFunctionInModule(*bytecode, targetFuncIndex, contents, out,
-                                     &error)) {
+  if (!wasm::DumpIonFunctionInModule(*bytecode, targetFuncIndex, out, &error)) {
     if (error) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_COMPILE_ERROR, error.get());

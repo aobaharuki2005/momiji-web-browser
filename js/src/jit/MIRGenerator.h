@@ -169,11 +169,19 @@ class MIRGenerator final {
   const JitCompileOptions options;
 
  private:
-  JitSpewGraphSpewer gs_;
+#ifdef JS_JITSPEW
+  GraphSpewer* graphSpewer_ = nullptr;
+#endif
+  JitSpewGraphSpewer jitSpewer_;
   IonPerfSpewer perfSpewer_;
 
  public:
-  JitSpewGraphSpewer& graphSpewer() { return gs_; }
+#ifdef JS_JITSPEW
+  void setGraphSpewer(GraphSpewer* graphSpewer) {
+    MOZ_ASSERT(!graphSpewer_);
+    graphSpewer_ = graphSpewer;
+  }
+#endif
   IonPerfSpewer& perfSpewer() { return perfSpewer_; }
 
   void spewBeginFunction(JSScript* function);

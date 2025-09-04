@@ -1225,19 +1225,16 @@ class DumpIonModuleGenerator {
   const CompilerEnvironment& compilerEnv_;
   CodeMetadata& codeMeta_;
   uint32_t targetFuncIndex_;
-  IonDumpContents contents_;
   GenericPrinter& out_;
   UniqueChars* error_;
 
  public:
   DumpIonModuleGenerator(const CompilerEnvironment& compilerEnv,
                          CodeMetadata& codeMeta, uint32_t targetFuncIndex,
-                         IonDumpContents contents, GenericPrinter& out,
-                         UniqueChars* error)
+                         GenericPrinter& out, UniqueChars* error)
       : compilerEnv_(compilerEnv),
         codeMeta_(codeMeta),
         targetFuncIndex_(targetFuncIndex),
-        contents_(contents),
         out_(out),
         error_(error) {}
 
@@ -1250,14 +1247,12 @@ class DumpIonModuleGenerator {
 
     FuncCompileInput input(funcIndex, lineOrBytecode, begin, end,
                            Uint32Vector());
-    return IonDumpFunction(compilerEnv_, codeMeta_, input, contents_, out_,
-                           error_);
+    return IonDumpFunction(compilerEnv_, codeMeta_, input, out_, error_);
   }
 };
 
 bool wasm::DumpIonFunctionInModule(const ShareableBytes& bytecode,
                                    uint32_t targetFuncIndex,
-                                   IonDumpContents contents,
                                    GenericPrinter& out, UniqueChars* error) {
   SharedCompileArgs compileArgs =
       CompileArgs::buildForValidation(FeatureArgs::allEnabled());
@@ -1280,7 +1275,7 @@ bool wasm::DumpIonFunctionInModule(const ShareableBytes& bytecode,
   }
 
   DumpIonModuleGenerator mg(compilerEnv, *moduleMeta->codeMeta, targetFuncIndex,
-                            contents, out, error);
+                            out, error);
   return moduleMeta->prepareForCompile(CompileMode::Once) &&
          DecodeCodeSection(*moduleMeta->codeMeta, d, mg);
 }
