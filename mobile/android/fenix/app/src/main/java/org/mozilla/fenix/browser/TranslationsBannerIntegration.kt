@@ -42,12 +42,16 @@ class TranslationsBannerIntegration(
                     }
                 } else {
                     // Ensure we're not inflating the stub just to hide it.
-                    (binding.root.findViewById<View>(R.id.translationsBanner) as? ComposeView)?.apply {
-                        isVisible = false
-                        disposeComposition()
-                    }
+                    dismissBanner()
                 }
             }
+    }
+
+    private fun dismissBanner() {
+        (binding.root.findViewById<View>(R.id.translationsBanner) as? ComposeView)?.apply {
+            isVisible = false
+            disposeComposition()
+        }
     }
 
     @Composable
@@ -67,6 +71,7 @@ class TranslationsBannerIntegration(
                     targetLanguage,
                 ),
                 onExpand = onExpand,
+                onClose = { dismissBanner() },
             )
         }
     }
