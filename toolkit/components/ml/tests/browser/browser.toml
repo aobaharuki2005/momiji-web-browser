@@ -13,6 +13,7 @@ support-files = [
 ["browser_ml_embeddings_generator.js"]
 
 ["browser_ml_engine.js"]
+skip-if = [ "verify" ]
 
 ["browser_ml_engine_process.js"]
 
@@ -34,6 +35,7 @@ skip-if = [
 ["browser_ml_privatebrowsing.js"]
 
 ["browser_ml_telemetry.js"]
+skip-if = [ "verify" ]
 
 ["browser_ml_thompson_sample.js"]
 
