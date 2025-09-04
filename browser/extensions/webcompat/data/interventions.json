@@ -5350,5 +5350,20 @@
         "ua_string": ["Chrome_with_FxQuantum"]
       }
     ]
+  },
+  "1983558": {
+    "label": "filmyworlds.boutique",
+    "bugs": {
+      "1983558": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://filmyworlds.boutique/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["change_Firefox_to_FireFox"]
+      }
+    ]
   }
 }
