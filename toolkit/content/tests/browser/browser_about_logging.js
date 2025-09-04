@@ -2,8 +2,26 @@ const PAGE = "about:logging";
 
 function clearLoggingPrefs() {
   for (let pref of Services.prefs.getBranch("logging.").getChildList("")) {
+    if (pref === "config.clear_on_startup") {
+      // Do not reset logging.config.clear_on_startup which is set by the
+      // testing framework.
+      continue;
+    }
     info(`Clearing: ${pref}`);
     Services.prefs.clearUserPref("logging." + pref);
+  }
+
+  // Clear devtools.performance.recording preferences that may be set by about:logging
+  const devtoolsPrefs = [
+    "devtools.performance.recording.preset",
+    "devtools.performance.recording.entries",
+    "devtools.performance.recording.threads",
+    "devtools.performance.recording.features",
+    "devtools.performance.popup.intro-displayed",
+  ];
+
+  for (let pref of devtoolsPrefs) {
+    Services.prefs.clearUserPref(pref);
   }
 }
 
@@ -56,11 +74,6 @@ add_setup(async function saveRestoreLogModules() {
   registerCleanupFunction(() => {
     clearLoggingPrefs();
     info(" -- Restoring log modules: " + savedLogModules);
-    for (let pref of savedLogModules.split(",")) {
-      let [logModule, level] = pref.split(":");
-      Services.prefs.setIntPref("logging." + logModule, parseInt(level));
-    }
-    // Removing this line causes a sandboxxing error in nsTraceRefCnt.cpp (!).
     Services.env.set("MOZ_LOG", savedLogModules);
   });
 });
