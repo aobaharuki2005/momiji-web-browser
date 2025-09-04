@@ -19,9 +19,9 @@ class WeakRefObject : public gc::ObserverListObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  JSObject* target() { return maybePtrFromReservedSlot<JSObject>(TargetSlot); }
+  Value target();
 
-  void setTargetUnbarriered(JSObject* target);
+  void setTargetUnbarriered(Value target);
   void clearTargetAndUnlink();
 
  private:

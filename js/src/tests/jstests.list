@@ -54,8 +54,6 @@ skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/Sha
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1863140
 skip script test262/built-ins/FinalizationRegistry/prototype/register/return-undefined-register-symbol.js
 skip script test262/built-ins/FinalizationRegistry/prototype/unregister/unregister-symbol-token.js
-skip script test262/built-ins/WeakRef/returns-new-object-from-constructor-with-symbol-target.js
-skip script test262/built-ins/WeakRef/prototype/deref/return-symbol-target.js
 
 #####################################
 # Test262 tests disabled on browser #

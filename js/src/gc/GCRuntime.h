@@ -675,7 +675,7 @@ class GCRuntime {
   size_t markingWorkerCount() const;
 
   // WeakRefs
-  bool registerWeakRef(JSContext* cx, HandleObject target,
+  bool registerWeakRef(JSContext* cx, HandleValue target,
                        Handle<WeakRefObject*> weakRef);
   void traceKeptObjects(JSTracer* trc);
 

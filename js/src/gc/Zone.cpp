@@ -175,7 +175,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       keepPropMapTables_(false),
       wasCollected_(false),
       listNext_(NotOnList),
-      keptObjects(this),
+      keptAliveSet(this),
       objectFuses(rt) {
   /* Ensure that there are no vtables to mess us up here. */
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
@@ -963,13 +963,14 @@ void Zone::finishRoots() {
   }
 }
 
-void Zone::traceKeptObjects(JSTracer* trc) { keptObjects.ref().trace(trc); }
+void Zone::traceKeptObjects(JSTracer* trc) { keptAliveSet.ref().trace(trc); }
 
-bool Zone::addToKeptObjects(HandleObject target) {
-  return keptObjects.ref().put(target);
+bool Zone::addToKeptObjects(HandleValue target) {
+  MOZ_ASSERT(CanBeHeldWeakly(target));
+  return keptAliveSet.ref().put(target);
 }
 
-void Zone::clearKeptObjects() { keptObjects.ref().clear(); }
+void Zone::clearKeptObjects() { keptAliveSet.ref().clear(); }
 
 bool Zone::ensureFinalizationObservers() {
   if (finalizationObservers_.ref()) {

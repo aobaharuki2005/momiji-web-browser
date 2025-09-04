@@ -25,6 +25,11 @@
 using namespace js;
 using namespace js::gc;
 
+Zone* js::gc::GetWeakTargetZone(const Value& value) {
+  MOZ_ASSERT(CanBeHeldWeakly(value));
+  return value.toGCThing()->zone();
+}
+
 /* static */
 ObserverListPtr ObserverListPtr::fromValue(Value value) {
   MOZ_ASSERT(value.isDouble());  // Stored as PrivateValue.
@@ -497,11 +502,12 @@ void GCRuntime::queueFinalizationRegistryForCleanup(
 
 // Register |target| such that when it dies |weakRef| will have its pointer to
 // |target| cleared.
-bool GCRuntime::registerWeakRef(JSContext* cx, HandleObject target,
+bool GCRuntime::registerWeakRef(JSContext* cx, HandleValue target,
                                 Handle<WeakRefObject*> weakRef) {
-  MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
+  MOZ_ASSERT_IF(target.isObject(),
+                !IsCrossCompartmentWrapper(&target.toObject()));
 
-  Zone* zone = target->zone();
+  Zone* zone = GetWeakTargetZone(target);
   if (!zone->ensureFinalizationObservers() ||
       !zone->finalizationObservers()->addWeakRefTarget(target, weakRef)) {
     ReportOutOfMemory(cx);
@@ -511,7 +517,7 @@ bool GCRuntime::registerWeakRef(JSContext* cx, HandleObject target,
   return true;
 }
 
-bool FinalizationObservers::addWeakRefTarget(HandleObject target,
+bool FinalizationObservers::addWeakRefTarget(HandleValue target,
                                              Handle<WeakRefObject*> weakRef) {
   auto ptr = weakRefMap.lookupForAdd(target);
   if (!ptr && !weakRefMap.relookupOrAdd(ptr, target, ObserverList())) {
@@ -523,8 +529,8 @@ bool FinalizationObservers::addWeakRefTarget(HandleObject target,
 }
 
 void FinalizationObservers::removeWeakRefTarget(
-    Handle<JSObject*> target, Handle<WeakRefObject*> weakRef) {
-  MOZ_ASSERT(target);
+    Handle<Value> target, Handle<WeakRefObject*> weakRef) {
+  MOZ_ASSERT(CanBeHeldWeakly(target));
   MOZ_ASSERT(weakRef->target() == target);
 
   MOZ_ASSERT(weakRef->isInList());
@@ -558,14 +564,15 @@ void FinalizationObservers::traceWeakWeakRefEdges(JSTracer* trc) {
 
 void FinalizationObservers::traceWeakWeakRefList(JSTracer* trc,
                                                  ObserverList& weakRefs,
-                                                 JSObject* target) {
-  MOZ_ASSERT(!IsForwarded(target));
+                                                 Value target) {
+  MOZ_ASSERT(!IsForwarded(target.toGCThing()));
 
   for (auto iter = weakRefs.iter(); !iter.done(); iter.next()) {
     auto* weakRef = &iter.get()->as<WeakRefObject>();
     MOZ_ASSERT(!IsForwarded(weakRef));
     if (weakRef->target() != target) {
-      MOZ_ASSERT(MaybeForwarded(weakRef->target()) == target);
+      MOZ_ASSERT(MaybeForwarded(weakRef->target().toGCThing()) ==
+                 target.toGCThing());
       weakRef->setTargetUnbarriered(target);
     }
   }

@@ -23,6 +23,8 @@ class WeakRefObject;
 
 namespace gc {
 
+JS::Zone* GetWeakTargetZone(const Value& value);
+
 // ObserverList
 //
 // The following classes provide ObserverList, a circular doubly linked list of
@@ -162,9 +164,8 @@ class FinalizationObservers {
                 StableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
   RecordMap recordMap;
 
-  using WeakRefMap =
-      GCHashMap<HeapPtr<JSObject*>, ObserverList,
-                StableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
+  using WeakRefMap = GCHashMap<HeapPtr<Value>, ObserverList, WeakTargetHasher,
+                               ZoneAllocPolicy>;
   WeakRefMap weakRefMap;
 
  public:
@@ -179,9 +180,8 @@ class FinalizationObservers {
   void removeRecord(FinalizationRecordObject* record);
 
   // WeakRef support:
-  bool addWeakRefTarget(Handle<JSObject*> target,
-                        Handle<WeakRefObject*> weakRef);
-  void removeWeakRefTarget(Handle<JSObject*> target,
+  bool addWeakRefTarget(Handle<Value> target, Handle<WeakRefObject*> weakRef);
+  void removeWeakRefTarget(Handle<Value> target,
                            Handle<WeakRefObject*> weakRef);
 
   void traceWeakEdges(JSTracer* trc);
@@ -190,7 +190,7 @@ class FinalizationObservers {
   void traceWeakFinalizationRegistryEdges(JSTracer* trc);
   void traceWeakWeakRefEdges(JSTracer* trc);
   void traceWeakWeakRefList(JSTracer* trc, ObserverList& weakRefs,
-                            JSObject* target);
+                            Value target);
   static bool shouldRemoveRecord(FinalizationRecordObject* record);
 };
 
