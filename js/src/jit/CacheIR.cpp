@@ -2270,6 +2270,7 @@ void IRGenerator::emitConstantDataPropertyResult(NativeObject* holder,
     ObjOperandId resObjId = writer.loadObject(&result.toObject());
     writer.loadObjectResult(resObjId);
   } else {
+    MOZ_RELEASE_ASSERT(!result.isMagic());
     writer.loadValueResult(result);
   }
 }
@@ -3711,9 +3712,14 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
   if (holder == globalLexical) {
     // There is no need to guard on the shape. Lexical bindings are
     // non-configurable, and this stub cannot be shared across globals.
-    size_t dynamicSlotOffset =
-        holder->dynamicSlotIndex(prop->slot()) * sizeof(Value);
-    writer.loadDynamicSlotResult(objId, dynamicSlotOffset);
+    ObjectFuse* objFuse = nullptr;
+    if (canOptimizeConstantDataProperty(holder, *prop, &objFuse)) {
+      emitConstantDataPropertyResult(holder, objId, id, *prop, objFuse);
+    } else {
+      size_t dynamicSlotOffset =
+          holder->dynamicSlotIndex(prop->slot()) * sizeof(Value);
+      writer.loadDynamicSlotResult(objId, dynamicSlotOffset);
+    }
   } else if (holder == &globalLexical->global()) {
     MOZ_ASSERT(globalLexical->global().isGenerationCountedGlobal());
     ObjectFuse* objFuse = nullptr;

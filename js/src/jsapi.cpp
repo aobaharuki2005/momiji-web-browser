@@ -2196,11 +2196,13 @@ JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JS::HandleObject obj) {
 
   NativeObject& nobj = obj->as<NativeObject>();
 
-  // XPConnect calls this for global objects that won't be used anymore. Globals
-  // can have an associated ObjectFuse but we can ignore that here because the
-  // global is effectively dead (after clearing all slots below it'd be hard to
-  // execute JS code in this global without breaking JS semantics).
+  // XPConnect calls this for global objects and global lexical environments
+  // that won't be used anymore. These objects can have an associated ObjectFuse
+  // but we can ignore them here because the objects are effectively dead (after
+  // clearing all slots below it'd be hard to execute JS code without breaking
+  // JS semantics).
   MOZ_RELEASE_ASSERT(nobj.is<GlobalObject>() ||
+                     nobj.is<GlobalLexicalEnvironmentObject>() ||
                      !Watchtower::watchesPropertyValueChange(&nobj));
 
   const JSClass* clasp = obj->getClass();
