@@ -53,6 +53,7 @@ import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
@@ -280,6 +281,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 feature = TranslationsBannerIntegration(
                     browserScreenStore = browserScreenStore,
                     binding = binding,
+                    onExpand = {
+                        val directions =
+                            BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment()
+                        findNavController().navigateSafe(R.id.browserFragment, directions)
+                    },
                 ),
                 owner = this,
                 view = rootView,

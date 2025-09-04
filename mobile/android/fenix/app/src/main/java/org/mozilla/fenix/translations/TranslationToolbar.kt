@@ -30,14 +30,16 @@ import org.mozilla.fenix.R
 import mozilla.components.ui.icons.R as iconsR
 
 /**
-     * A translation toolbar for browsers.
-     *
-     * @param label Translation toolbar label that is displayed when the current page has been
-     * translated by the translation feature.
-     */
+ * A translation toolbar for browsers.
+ *
+ * @param label Translation toolbar label that is displayed when the current page has been
+ * translated by the translation feature.
+ * @param onExpand Invoked when user wants to expand the translations controls..
+ */
 @Composable
 fun TranslationToolbar(
     label: String,
+    onExpand: () -> Unit = {},
 ) {
     val shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
 
@@ -72,7 +74,7 @@ fun TranslationToolbar(
                 color = AcornTheme.colors.textPrimary,
             )
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onExpand) {
                 Icon(
                     painter = painterResource(iconsR.drawable.mozac_ic_chevron_up_24),
                     contentDescription = stringResource(R.string.translation_toolbar_expand_action),
