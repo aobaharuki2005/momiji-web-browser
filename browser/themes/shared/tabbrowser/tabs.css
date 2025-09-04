@@ -1270,6 +1270,49 @@ tab-group {
   }
 }
 
+tab-group[collapsed] .tab-group-label-hover-highlight {
+  border-radius: 2px;
+
+  #tabbrowser-tabs[orient="horizontal"] & {
+    padding-block: 4px;
+  }
+
+  #tabbrowser-tabs[orient="vertical"]:not([expanded]) & {
+    /*
+     * Keep tab group label square in collapsed sidebar centered without
+     * margin: auto, similar to how tabs' .tab-background use margin in order
+     * to stay centered in the collapsed sidebar. This helps prevent the tab
+     * group label from jumping around during the sidebar collapsed-to-expanded
+     * transition.
+     *
+     * This is applied to the highlight wrapper class to ensure that the
+     * highlight doesn't stretch to fill the full width of the tab strip.
+     */
+    margin-inline: calc(var(--tab-inner-inline-margin) + (var(--tab-collapsed-background-width) - 24px) / 2);
+  }
+
+  #tabbrowser-tabs[orient="vertical"][expanded] & {
+    margin-inline-end: var(--space-medium);
+  }
+}
+
+tab-group[collapsed]:not([movingtabgroup]) .tab-group-label-hover-highlight:hover,
+tab-group[previewpanelactive] .tab-group-label-hover-highlight {
+  background-color: var(--tab-hover-background-color);
+
+  #tabbrowser-tabs[orient="horizontal"] & {
+    box-shadow: 0 0 0 2px var(--tab-hover-background-color);
+  }
+
+  #tabbrowser-tabs[orient="vertical"] & {
+    box-shadow: 0 0 0 3px var(--tab-hover-background-color);
+  }
+
+  #tabbrowser-tabs[orient="vertical"][expanded] & {
+    box-shadow: 0 0 0 4px var(--tab-hover-background-color);
+  }
+}
+
 .tab-group-label {
   -moz-window-dragging: no-drag;
   text-align: center;
@@ -1298,7 +1341,7 @@ tab-group {
       var(--tab-group-label-highlight-thickness);
   }
 
-  tab-group[collapsed] > .tab-group-label-container > & {
+  tab-group[collapsed] > .tab-group-label-container & {
     background-color: light-dark(var(--tab-group-color-pale), var(--tab-group-color));
     color: light-dark(var(--tab-group-color), var(--tab-group-color-pale));
     outline: 1px solid light-dark(var(--tab-group-color), var(--tab-group-color-pale));
@@ -1320,15 +1363,6 @@ tab-group {
       width: 24px;
       max-width: 24px;
       font-size-adjust: 0;
-
-      /*
-       * Keep tab group label square in collapsed sidebar centered without
-       * margin: auto, similar to how tabs' .tab-background use margin in order
-       * to stay centered in the collapsed sidebar. This helps prevent the tab
-       * group label from jumping around during the sidebar collapsed-to-expanded
-       * transition.
-       */
-      margin-inline: calc(var(--tab-inner-inline-margin) + (var(--tab-collapsed-background-width) - 24px) / 2);
 
       &::first-letter {
         font: message-box;
