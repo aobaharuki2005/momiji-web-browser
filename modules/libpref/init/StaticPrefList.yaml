@@ -5417,7 +5417,7 @@
 
 - name: dom.w3c_pointer_events.getcoalescedevents_only_in_securecontext
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # `click` event target is defined as overridden by pointer capture target in
