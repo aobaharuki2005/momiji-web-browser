@@ -10,5 +10,5 @@
 
 #app > .wrap-scale {
   height: auto !important;
-  overflow: none;
+  overflow: visible;
 }
