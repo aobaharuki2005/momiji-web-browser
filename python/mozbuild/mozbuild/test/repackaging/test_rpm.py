@@ -13,7 +13,7 @@ import mozpack.path as mozpath
 import mozunit
 import pytest
 
-from mozbuild.repackaging import rpm, utils
+from mozbuild.repackaging import rpm
 
 _APPLICATION_INI_CONTENT = """[App]
 Vendor=Mozilla
@@ -236,11 +236,6 @@ def test_get_build_variables(
     expected,
     raises,
 ):
-    application_ini_data = utils._parse_application_ini_data(
-        application_ini_data,
-        version,
-        build_number,
-    )
     with raises:
         build_variables = rpm._get_build_variables(
             application_ini_data,

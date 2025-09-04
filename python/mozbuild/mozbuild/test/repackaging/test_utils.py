@@ -35,15 +35,15 @@ _APPLICATION_INI_CONTENT_DATA = {
 
 
 @pytest.mark.parametrize(
-    "number_of_application_ini_files, expectaction, expected_result",
+    "number_of_application_ini_files, expectation, expected_result",
     (
         (0, pytest.raises(ValueError), None),
         (1, does_not_raise(), _APPLICATION_INI_CONTENT_DATA),
         (2, pytest.raises(ValueError), None),
     ),
 )
-def test_extract_application_ini_data(
-    number_of_application_ini_files, expectaction, expected_result
+def test_application_ini_data_from_tar(
+    number_of_application_ini_files, expectation, expected_result
 ):
     with tempfile.TemporaryDirectory() as d:
         tar_path = os.path.join(d, "input.tar")
@@ -55,17 +55,17 @@ def test_extract_application_ini_data(
             for i in range(number_of_application_ini_files):
                 tar.add(application_ini_path, f"{i}/application.ini")
 
-        with expectaction:
-            assert utils._extract_application_ini_data(tar_path) == expected_result
+        with expectation:
+            assert utils.application_ini_data_from_tar(tar_path) == expected_result
 
 
-def test_extract_application_ini_data_from_directory():
+def test_application_ini_data_from_directory():
     with tempfile.TemporaryDirectory() as d:
         with open(os.path.join(d, "application.ini"), "w") as f:
             f.write(_APPLICATION_INI_CONTENT)
 
         assert (
-            utils._extract_application_ini_data_from_directory(d)
+            utils.application_ini_data_from_directory(d)
             == _APPLICATION_INI_CONTENT_DATA
         )
 
@@ -274,11 +274,6 @@ def test_get_build_variables(
     expected,
     raises,
 ):
-    application_ini_data = utils._parse_application_ini_data(
-        application_ini_data,
-        version,
-        build_number,
-    )
     with raises:
         build_variables = utils.get_build_variables(
             application_ini_data,
@@ -534,64 +529,6 @@ def test_inject_desktop_entry_file(monkeypatch):
         assert os.path.exists(
             os.path.join(source_dir, "debian", desktop_entry_file_filename)
         )
-
-
-@pytest.mark.parametrize(
-    "version, build_number, expected",
-    (
-        (
-            "112.0a1",
-            1,
-            {
-                "build_id": "20230222000000",
-                "display_name": "Firefox Nightly",
-                "name": "Firefox",
-                "pkg_version": "112.0a1-1",
-                "remoting_name": "firefox-nightly-try",
-                "timestamp": datetime.datetime(2023, 2, 22, 0, 0),
-                "vendor": "Mozilla",
-            },
-        ),
-        (
-            "112.0b1",
-            1,
-            {
-                "build_id": "20230222000000",
-                "display_name": "Firefox Nightly",
-                "name": "Firefox",
-                "pkg_version": "112.0b1-1",
-                "remoting_name": "firefox-nightly-try",
-                "timestamp": datetime.datetime(2023, 2, 22, 0, 0),
-                "vendor": "Mozilla",
-            },
-        ),
-        (
-            "112.0",
-            2,
-            {
-                "build_id": "20230222000000",
-                "display_name": "Firefox Nightly",
-                "name": "Firefox",
-                "pkg_version": "112.0-2",
-                "remoting_name": "firefox-nightly-try",
-                "timestamp": datetime.datetime(2023, 2, 22, 0, 0),
-                "vendor": "Mozilla",
-            },
-        ),
-    ),
-)
-def test_load_application_ini_data(version, build_number, expected):
-    with tempfile.TemporaryDirectory() as d:
-        tar_path = os.path.join(d, "input.tar")
-        with tarfile.open(tar_path, "w") as tar:
-            application_ini_path = os.path.join(d, "application.ini")
-            with open(application_ini_path, "w") as application_ini_file:
-                application_ini_file.write(_APPLICATION_INI_CONTENT)
-            tar.add(application_ini_path)
-        application_ini_data = utils.load_application_ini_data(
-            tar_path, version, build_number
-        )
-        assert application_ini_data == expected
 
 
 _MINIMAL_MANIFEST_JSON = """{
