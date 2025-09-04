@@ -5264,6 +5264,21 @@
       }
     ]
   },
+  "1982878": {
+    "label": "fanplus.co.jp",
+    "bugs": {
+      "1982878": {
+        "issue": "broken-redirect",
+        "matches": ["*://fanplus.co.jp/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1934908": {
     "label": "www.cbsnews.com",
     "bugs": {
