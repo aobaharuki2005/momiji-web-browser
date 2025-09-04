@@ -242,7 +242,7 @@ def _get_command(arch):
     deb_arch = _DEB_ARCH[arch]
     command = [
         "dpkg-buildpackage",
-        # TODO: Use long options once we stop supporting Debian Jesse. They're more
+        # TODO: Use long options once we stop supporting Debian Jessie. They're more
         # explicit.
         #
         # Long options were added in dpkg 1.18.8 which is part of Debian Stretch.
