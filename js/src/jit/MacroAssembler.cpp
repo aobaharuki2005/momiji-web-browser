@@ -5422,9 +5422,11 @@ void MacroAssembler::minMaxArrayInt32(Register array, Register result,
   fallibleUnboxInt32(Address(elements, 0), temp3, fail);
 
   // Update result if necessary.
-  Assembler::Condition cond =
-      isMax ? Assembler::GreaterThan : Assembler::LessThan;
-  cmp32Move32(cond, temp3, result, temp3, result);
+  if (isMax) {
+    max32(result, temp3, result);
+  } else {
+    min32(result, temp3, result);
+  }
 
   jump(&loop);
   bind(&done);

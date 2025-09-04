@@ -436,6 +436,50 @@ void MacroAssemblerCompat::breakpoint() {
   Brk(0xf000);
 }
 
+void MacroAssemblerCompat::minMax32(Register lhs, Register rhs, Register dest,
+                                    bool isMax) {
+  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
+  if (lhs != dest) {
+    move32(lhs, dest);
+  }
+  asMasm().cmp32Move32(cond, rhs, lhs, rhs, dest);
+}
+
+void MacroAssemblerCompat::minMax32(Register lhs, Imm32 rhs, Register dest,
+                                    bool isMax) {
+  auto cond =
+      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
+  if (lhs != dest) {
+    move32(lhs, dest);
+  }
+  Label done;
+  asMasm().branch32(cond, lhs, rhs, &done);
+  move32(rhs, dest);
+  bind(&done);
+}
+
+void MacroAssemblerCompat::minMaxPtr(Register lhs, Register rhs, Register dest,
+                                     bool isMax) {
+  auto cond = isMax ? Assembler::GreaterThan : Assembler::LessThan;
+  if (lhs != dest) {
+    movePtr(lhs, dest);
+  }
+  asMasm().cmpPtrMovePtr(cond, rhs, lhs, rhs, dest);
+}
+
+void MacroAssemblerCompat::minMaxPtr(Register lhs, ImmWord rhs, Register dest,
+                                     bool isMax) {
+  auto cond =
+      isMax ? Assembler::GreaterThanOrEqual : Assembler::LessThanOrEqual;
+  if (lhs != dest) {
+    movePtr(lhs, dest);
+  }
+  Label done;
+  asMasm().branchPtr(cond, lhs, rhs, &done);
+  movePtr(rhs, dest);
+  bind(&done);
+}
+
 // Either `any` is valid or `sixtyfour` is valid.  Return a 32-bit ARMRegister
 // in the first case and an ARMRegister of the desired size in the latter case.
 
