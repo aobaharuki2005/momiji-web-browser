@@ -7,10 +7,6 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/profiles/tests/browser/head.js",
   this
 );
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/customizableui/test/head.js",
-  this
-);
 
 const { FX_RELAY_OAUTH_CLIENT_ID } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsCommon.sys.mjs"
@@ -22,6 +18,8 @@ ChromeUtils.defineESModuleGetters(this, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   NimbusTestUtils: "resource://testing-common/NimbusTestUtils.sys.mjs",
 });
+
+let gCUITestUtils = new CustomizableUITestUtils(window);
 
 add_setup(async function () {
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
@@ -99,18 +97,18 @@ add_task(async function test_overflow_navBar_button_visibility() {
   let overflowPanel = document.getElementById("widget-overflow");
   overflowPanel.setAttribute("animate", "false");
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-  let originalWindowWidth;
+  let originalWindowWidth = window.outerWidth;
 
   registerCleanupFunction(function () {
     overflowPanel.removeAttribute("animate");
-    unensureToolbarOverflow(window, originalWindowWidth);
+    window.resizeTo(originalWindowWidth, window.outerHeight);
     return TestUtils.waitForCondition(
       () => !navbar.hasAttribute("overflowing")
     );
   });
 
-  // As of bug 1960002, overflowing the navbar requires adding buttons.
-  originalWindowWidth = ensureToolbarOverflow(window, false);
+  window.resizeTo(450, window.outerHeight);
+
   await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 

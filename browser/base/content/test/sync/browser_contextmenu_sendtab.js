@@ -3,12 +3,10 @@
 
 "use strict";
 
+const kForceOverflowWidthPx = 450;
+
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/base/content/test/general/head.js",
-  this
-);
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/customizableui/test/head.js",
   this
 );
 
@@ -129,24 +127,20 @@ add_task(
     let navbar = document.getElementById("nav-bar");
 
     // Resize the window so that the account button is in the overflow menu.
-    // As of bug 1960002, overflowing the navbar also requires adding extra
-    // buttons.
-    let originalWidth = ensureToolbarOverflow(window, false);
-
+    let originalWidth = window.outerWidth;
+    window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
     await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
 
     await checkForConfirmationHint("PanelUI-menu-button");
     document.documentElement.setAttribute("fxastatus", "not_configured");
 
-    unensureToolbarOverflow(window, originalWidth);
+    window.resizeTo(originalWidth, window.outerHeight);
     await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
     CustomizableUI.reset();
   }
 );
 
 add_task(async function test_sendTabToDevice_showsConfirmationHint_appMenu() {
-  ensureToolbarOverflow(window);
-
   // If fxastatus is "not_configured" then the FxA button is hidden, and we
   // should use the appMenu.
   is(
