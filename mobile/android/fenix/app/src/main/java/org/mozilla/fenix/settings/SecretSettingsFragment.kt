@@ -365,6 +365,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().isDebugTermsOfServiceTriggerTimeEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_isolated_process).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().isIsolatedProcessEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
