@@ -8,7 +8,7 @@
 #include "gmock/gmock.h"
 
 #include <string>
-#include <winreg.h>
+#include <windows.h>
 
 #include "nsLiteralString.h"
 #include "sandbox/win/src/sandbox.h"
