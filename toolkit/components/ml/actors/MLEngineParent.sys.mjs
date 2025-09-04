@@ -391,6 +391,7 @@ export class MLEngineParent extends JSProcessActorParent {
    * the model hub root or an absolute URL.
    * @param {string} config.featureId - The engine id.
    * @param {string} config.sessionId - Shared across the same model download session.
+   * @param {boolean} config.returnFullPath - Return the absolute path on disk.
    * @returns {Promise<[string, object]>} The file local path and headers
    */
   async getModelFile({
@@ -401,6 +402,7 @@ export class MLEngineParent extends JSProcessActorParent {
     urlTemplate,
     featureId,
     sessionId,
+    returnFullPath,
   }) {
     // Create the model hub instance if needed
     if (!this.modelHub) {
@@ -435,6 +437,7 @@ export class MLEngineParent extends JSProcessActorParent {
       progressCallback: this.notificationsCallback?.bind(this),
       featureId,
       sessionId,
+      returnFullPath,
     });
 
     // Keep the latest revision for each task, model
