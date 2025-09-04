@@ -395,7 +395,19 @@ export class SearchModeSwitcher {
       this.#popup.insertBefore(menuitem, separator);
     }
 
-    // Add local options.
+    await this.#buildLocalSearchModeList(separator);
+
+    this.#popup.dispatchEvent(new Event("rebuild"));
+  }
+
+  /**
+   * Adds local options to the popup.
+   */
+  async #buildLocalSearchModeList(separator) {
+    if (this.#input.isAddressbar) {
+      return;
+    }
+
     for (let { source, pref, restrict } of lazy.UrlbarUtils
       .LOCAL_SEARCH_MODES) {
       if (!lazy.UrlbarPrefs.get(pref)) {
@@ -424,8 +436,6 @@ export class SearchModeSwitcher {
 
       this.#popup.insertBefore(menuitem, separator);
     }
-
-    this.#popup.dispatchEvent(new Event("rebuild"));
   }
 
   search({ engine = null, restrict = null, openEngineHomePage = false } = {}) {
