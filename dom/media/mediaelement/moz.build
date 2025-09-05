@@ -25,6 +25,9 @@ UNIFIED_SOURCES += [
     "TimeRanges.cpp",
 ]
 
+if CONFIG["MOZ_ANDROID_HLS_SUPPORT"]:
+    DEFINES["MOZ_ANDROID_HLS_SUPPORT"] = True
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
