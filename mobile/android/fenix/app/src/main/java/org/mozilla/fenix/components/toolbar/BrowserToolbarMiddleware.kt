@@ -130,8 +130,10 @@ import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.lastSavedFolderCache
+import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
+import mozilla.components.ui.tabcounter.R as tabcounterR
 
 private const val TALL_SCREEN_HEIGHT_DP = 480
 
@@ -818,15 +820,15 @@ class BrowserToolbarMiddleware(
         listOf(
             BrowserToolbarMenuButton(
                 icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
-                text = StringResText(R.string.mozac_browser_menu_new_tab),
-                contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_tab),
+                text = StringResText(tabcounterR.string.mozac_browser_menu_new_tab),
+                contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_tab),
                 onClick = AddNewTab(source),
             ),
 
             BrowserToolbarMenuButton(
                 icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
-                text = StringResText(R.string.mozac_browser_menu_new_private_tab),
-                contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_private_tab),
+                text = StringResText(tabcounterR.string.mozac_browser_menu_new_private_tab),
+                contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_private_tab),
                 onClick = AddNewPrivateTab(source),
             ),
 
@@ -834,8 +836,8 @@ class BrowserToolbarMiddleware(
 
             BrowserToolbarMenuButton(
                 icon = DrawableResIcon(iconsR.drawable.mozac_ic_cross_24),
-                text = StringResText(R.string.mozac_close_tab),
-                contentDescription = StringResContentDescription(R.string.mozac_close_tab),
+                text = StringResText(tabcounterR.string.mozac_close_tab),
+                contentDescription = StringResContentDescription(tabcounterR.string.mozac_close_tab),
                 onClick = CloseCurrentTab,
             ),
         )
@@ -1149,15 +1151,9 @@ class BrowserToolbarMiddleware(
             val tabsCount = browserStore.state.getNormalOrPrivateTabs(isInPrivateMode).size
 
             val tabCounterDescription = if (isInPrivateMode) {
-                environment.context.getString(
-                    R.string.mozac_tab_counter_private,
-                    tabsCount.toString(),
-                )
+                environment.context.getString(tabcounterR.string.mozac_tab_counter_private, tabsCount.toString())
             } else {
-                environment.context.getString(
-                    R.string.mozac_tab_counter_open_tab_tray,
-                    tabsCount.toString(),
-                )
+                environment.context.getString(tabcounterR.string.mozac_tab_counter_open_tab_tray, tabsCount.toString())
             }
 
             TabCounterAction(
@@ -1173,19 +1169,19 @@ class BrowserToolbarMiddleware(
             if (browserStore.state.selectedTab?.content?.url?.isContentUrl() == true) {
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
-                    contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                    contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = StartPageActions.SiteInfoClicked,
                 )
             } else if (browserStore.state.selectedTab?.content?.securityInfo?.secure == true) {
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
-                    contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                    contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = StartPageActions.SiteInfoClicked,
                 )
             } else {
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
-                    contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                    contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = StartPageActions.SiteInfoClicked,
                 )
             }

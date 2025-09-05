@@ -109,6 +109,7 @@ import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.search.toolbar.SearchSelectorToolbarAction
 import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
+import mozilla.components.browser.toolbar.R as toolbarR
 
 typealias SearchDialogFragmentStore = SearchFragmentStore
 
@@ -296,7 +297,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             binding.toolbar,
             fromHomeFragment,
         ).also {
-            inlineAutocompleteEditText = it.view.findViewById(R.id.mozac_browser_toolbar_edit_url_view)
+            inlineAutocompleteEditText = it.view.findViewById(toolbarR.id.mozac_browser_toolbar_edit_url_view)
             inlineAutocompleteEditText.increaseTapArea(TAP_INCREASE_DPS_4)
         }
 

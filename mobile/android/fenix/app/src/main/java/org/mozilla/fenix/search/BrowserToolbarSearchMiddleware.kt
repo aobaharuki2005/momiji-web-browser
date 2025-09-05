@@ -89,6 +89,7 @@ import org.mozilla.fenix.search.SearchSelectorEvents.SearchSettingsItemClicked
 import org.mozilla.fenix.search.ext.searchEngineShortcuts
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
+import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.ContentDescription.StringContentDescription as SearchSelectorDescription
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.Icon.DrawableIcon as SearchSelectorIcon
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.ContentDescription.StringContentDescription as MenuItemStringDescription
@@ -474,7 +475,7 @@ class BrowserToolbarSearchMiddleware(
             add(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_cross_circle_fill_24,
-                    contentDescription = R.string.mozac_clear_button_description,
+                    contentDescription = toolbarR.string.mozac_clear_button_description,
                     state = ActionButton.State.DEFAULT,
                     onClick = ClearSearchClicked,
                 ),

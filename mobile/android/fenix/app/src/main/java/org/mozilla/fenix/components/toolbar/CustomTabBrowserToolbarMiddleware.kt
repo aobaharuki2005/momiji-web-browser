@@ -69,6 +69,7 @@ import org.mozilla.fenix.customtabs.ExternalAppBrowserFragmentDirections
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.utils.Settings
+import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
 
@@ -364,7 +365,7 @@ class CustomTabBrowserToolbarMiddleware(
             add(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
-                    contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                    contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = SiteInfoClicked,
                 ),
             )
@@ -372,7 +373,7 @@ class CustomTabBrowserToolbarMiddleware(
             add(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
-                    contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                    contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = SiteInfoClicked,
                 ),
             )
@@ -380,7 +381,7 @@ class CustomTabBrowserToolbarMiddleware(
             add(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
-                    contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                    contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                     onClick = SiteInfoClicked,
                 ),
             )

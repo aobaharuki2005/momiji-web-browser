@@ -50,7 +50,9 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.ThemeManager
 import kotlin.math.min
+import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.ui.icons.R as iconsR
+import mozilla.components.ui.tabcounter.R as tabcounterR
 
 /**
  * A 'dummy' view of a tab used by [ToolbarGestureHandler] to support switching tabs by swiping the address bar.
@@ -177,19 +179,19 @@ class TabPreview @JvmOverloads constructor(
                 if (tab?.content?.url?.isContentUrl() == true) {
                     ActionButtonRes(
                         drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
-                        contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                        contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                         onClick = object : BrowserToolbarEvent {},
                     )
                 } else if (tab?.content?.securityInfo?.secure == true) {
                     ActionButtonRes(
                         drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
-                        contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                        contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                         onClick = object : BrowserToolbarEvent {},
                     )
                 } else {
                     ActionButtonRes(
                         drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
-                        contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                        contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                         onClick = object : BrowserToolbarEvent {},
                     )
                 }
@@ -311,8 +313,8 @@ class TabPreview @JvmOverloads constructor(
 
     private fun buildToolbarView(): View {
         // Change view properties to avoid confusing the UI tests
-        binding.tabButton.findViewById<View>(R.id.counter_box)?.id = NO_ID
-        binding.tabButton.findViewById<View>(R.id.counter_text)?.id = NO_ID
+        binding.tabButton.findViewById<View>(tabcounterR.id.counter_box)?.id = NO_ID
+        binding.tabButton.findViewById<View>(tabcounterR.id.counter_text)?.id = NO_ID
 
         binding.fakeToolbar.isVisible = true
         binding.fakeToolbar.background = AppCompatResources.getDrawable(

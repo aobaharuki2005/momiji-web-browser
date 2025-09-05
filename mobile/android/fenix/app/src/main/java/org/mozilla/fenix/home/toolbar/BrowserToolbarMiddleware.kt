@@ -77,6 +77,7 @@ import org.mozilla.fenix.search.ext.searchEngineShortcuts
 import org.mozilla.fenix.tabstray.Page
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
+import mozilla.components.ui.tabcounter.R as tabcounterR
 
 private const val TALL_SCREEN_HEIGHT_DP = 480
 
@@ -376,8 +377,10 @@ class BrowserToolbarMiddleware(
                 Private -> listOf(
                     BrowserToolbarMenuButton(
                         icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
-                        text = StringResText(R.string.mozac_browser_menu_new_tab),
-                        contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_tab),
+                        text = StringResText(tabcounterR.string.mozac_browser_menu_new_tab),
+                        contentDescription = StringResContentDescription(
+                            tabcounterR.string.mozac_browser_menu_new_tab,
+                        ),
                         onClick = AddNewTab(source),
                     ),
                 )
@@ -385,8 +388,10 @@ class BrowserToolbarMiddleware(
                 else -> listOf(
                     BrowserToolbarMenuButton(
                         icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
-                        text = StringResText(R.string.mozac_browser_menu_new_private_tab),
-                        contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_private_tab),
+                        text = StringResText(tabcounterR.string.mozac_browser_menu_new_private_tab),
+                        contentDescription = StringResContentDescription(
+                            tabcounterR.string.mozac_browser_menu_new_private_tab,
+                        ),
                         onClick = AddNewPrivateTab(source),
                     ),
                 )
@@ -459,15 +464,9 @@ class BrowserToolbarMiddleware(
             val tabsCount = browserStore.state.getNormalOrPrivateTabs(isInPrivateMode).size
 
             val tabCounterDescription = if (isInPrivateMode) {
-                environment.context.getString(
-                    R.string.mozac_tab_counter_private,
-                    tabsCount.toString(),
-                )
+                environment.context.getString(tabcounterR.string.mozac_tab_counter_private, tabsCount.toString())
             } else {
-                environment.context.getString(
-                    R.string.mozac_tab_counter_open_tab_tray,
-                    tabsCount.toString(),
-                )
+                environment.context.getString(tabcounterR.string.mozac_tab_counter_open_tab_tray, tabsCount.toString())
             }
 
             TabCounterAction(
