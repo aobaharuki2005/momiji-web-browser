@@ -23,6 +23,7 @@ const val OS_SEARCH_ENGINE_TERMS_PARAM = "{" + "searchTerms" + "}"
  * @property suggestUrl the search suggestion url.
  * @property trendingUrl the trending search url.
  * @property isGeneral whether the search engine is a general search engine.
+ * @property isOptional whether the search engine is an additional engine not included in the default list.
  * @property telemetrySuffix the telemetry suffix of this search engine.
  */
 data class SearchEngine(
@@ -35,6 +36,7 @@ data class SearchEngine(
     val suggestUrl: String? = null,
     val trendingUrl: String? = null,
     val isGeneral: Boolean = false,
+    val isOptional: Boolean = false,
     val telemetrySuffix: String? = null,
 ) {
     /**
