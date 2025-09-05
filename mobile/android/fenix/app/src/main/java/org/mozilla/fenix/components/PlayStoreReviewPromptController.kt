@@ -42,23 +42,31 @@ class PlayStoreReviewPromptController(
      */
     suspend fun tryPromptReview(activity: Activity) {
         logger.info("tryPromptReview in progress...")
-        val reviewInfoFlow = withContext(Dispatchers.IO) { manager.requestReviewFlow() }
+        val request = withContext(Dispatchers.IO) { manager.requestReviewFlow() }
 
-        reviewInfoFlow.addOnCompleteListener {
-            if (it.isSuccessful) {
-                logger.info("Review flow launched.")
-                // Launch the in-app flow.
-                manager.launchReviewFlow(activity, it.result)
+        request.addOnCompleteListener { task ->
+            val promptWasDisplayed: Boolean
+
+            if (task.isSuccessful) {
+                logger.info("Launching in-app review flow.")
+                manager.launchReviewFlow(activity, task.result)
+                promptWasDisplayed = task.result.promptDisplayState == Displayed
+                if (!promptWasDisplayed) {
+                    logger.warn("Looks like in-app review flow wasn't displayed, even though there was no error.")
+                }
             } else {
-                // Launch the Play store flow.
-                @ReviewErrorCode val reviewErrorCode = (it.exception as ReviewException).errorCode
-                logger.warn("Failed to launch in-app review flow due to: $reviewErrorCode .")
+                promptWasDisplayed = false
 
+                @ReviewErrorCode val reviewErrorCode = (task.exception as ReviewException).errorCode
+                logger.warn("Failed to launch in-app review flow due to: $reviewErrorCode.")
+            }
+
+            if (!promptWasDisplayed) {
                 tryLaunchPlayStoreReview(activity)
             }
 
             recordReviewPromptEvent(
-                promptDisplayState = it.result.promptDisplayState,
+                promptDisplayState = task.result.promptDisplayState,
                 numberOfAppLaunches = numberOfAppLaunches(),
                 now = Date(),
             )
@@ -86,7 +94,7 @@ class PlayStoreReviewPromptController(
                 newTab = true,
                 from = BrowserDirection.FromSettings,
             )
-            logger.warn("Failed to launch play store review flow due to: $e .")
+            logger.warn("Failed to launch play store review flow due to: $e.")
         }
 
         logger.info("tryLaunchPlayStoreReview completed.")
