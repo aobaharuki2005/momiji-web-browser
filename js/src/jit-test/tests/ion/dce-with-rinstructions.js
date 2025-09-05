@@ -2010,6 +2010,16 @@ function rint32tobigint(i) {
     return i;
 }
 
+let uceFault_int32tobigint_nonnegative = eval(`(${uceFault})`.replace('uceFault', 'uceFault_int32tobigint_nonnegative'));
+function rint32tobigint_nonnegative(i) {
+    i = Math.max(i, 0);
+    var x = BigInt(i);
+    if (uceFault_int32tobigint_nonnegative(i) || uceFault_int32tobigint_nonnegative(i))
+        assertEq(x, 99n);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 let uceFault_nantozero_nan = eval(`(${uceFault})`.replace('uceFault', 'uceFault_nantozero_nan'));
 function rnantozero_nan(i) {
     // Note: |x| must be Double-typed.
@@ -2267,6 +2277,7 @@ for (j = 100 - max; j < 100; j++) {
     rbigintasint(BigInt(i));
     rbigintasuint(BigInt(i));
     rint32tobigint(i);
+    rint32tobigint_nonnegative(i);
     rnantozero_nan(i);
     rnantozero_poszero(i);
     rnantozero_negzero(i);
