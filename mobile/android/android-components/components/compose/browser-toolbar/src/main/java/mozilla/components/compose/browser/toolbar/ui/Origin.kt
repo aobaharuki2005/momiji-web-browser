@@ -35,6 +35,7 @@ import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -51,6 +52,8 @@ import mozilla.components.compose.base.text.TruncationDirection.END
 import mozilla.components.compose.base.text.TruncationDirection.START
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.R
+import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_TITLE
+import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_URL
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.ContextualMenuOption
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.TextGravity
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.TextGravity.TEXT_GRAVITY_END
@@ -166,6 +169,7 @@ private fun Title(
     if (title != null && title.isNotBlank()) {
         FadedText(
             text = title,
+            modifier = Modifier.testTag(ADDRESSBAR_TITLE),
             style = TextStyle(
                 fontSize = URL_TEXT_SIZE_ALONE.sp,
                 color = AcornTheme.colors.textSecondary,
@@ -199,6 +203,7 @@ private fun Url(
             fontSize = fontSize.sp,
             color = AcornTheme.colors.textPrimary,
         ),
+        modifier = Modifier.testTag(ADDRESSBAR_URL),
     )
 }
 
