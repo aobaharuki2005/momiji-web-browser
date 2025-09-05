@@ -17,6 +17,9 @@ const { AppConstants } = ChromeUtils.importESModule(
 const METRIC_DATA = {};
 let MAPPED_METRIC_DATA = [];
 let FILTERED_METRIC_DATA = [];
+let LIMITED_METRIC_DATA = [];
+let LIMIT_OFFSET = 0;
+let LIMIT_COUNT = 200;
 let METRIC_DATA_INITIALIZED = false;
 const INVALID_VALUE_REASONS = {
   LABELED_METRIC: 0,
@@ -170,12 +173,42 @@ function showTab(button) {
   let current_button = document.querySelector("[selected=true]");
   current_button.removeAttribute("selected");
   button.setAttribute("selected", "true");
+
+  if (category == "metrics-table") {
+    // Init base level metric data
+    initializeMetricData();
+
+    const table = document.getElementById("metrics-table-instance");
+    table.removeAttribute("hidden");
+
+    // Map the metric data into a better defined type structure
+    MAPPED_METRIC_DATA = Object.entries(METRIC_DATA).flatMap(
+      ([category, metrics]) =>
+        Object.entries(metrics).map(([name, metric]) => ({
+          category,
+          name,
+          fullName: `${category}.${name}`,
+          ...metric,
+        }))
+    );
+    updateFilteredMetricData();
+    updateTable();
+  }
 }
 
 function onLoad() {
   let menu = document.getElementById("categories");
   menu.addEventListener("click", function click(e) {
     if (e.target && e.target.parentNode == menu) {
+      showTab(e.target);
+    }
+  });
+  menu.addEventListener("keydown", function keypress(e) {
+    if (
+      e.target &&
+      e.target.parentNode == menu &&
+      (e.key == " " || e.key == "Enter")
+    ) {
       showTab(e.target);
     }
   });
@@ -221,6 +254,8 @@ function onLoad() {
     const div = document.createElement("div");
     div.id = "category-metrics-table";
     div.className = "category";
+    div.setAttribute("role", "menuitem");
+    div.setAttribute("tabindex", 0);
     const span = document.createElement("span");
     span.className = "category-name";
     span.setAttribute("data-l10n-id", "about-glean-category-metrics-table");
@@ -229,29 +264,6 @@ function onLoad() {
   }
 
   DOCUMENT_BODY_SEL = d3.select(document.body);
-  // Handle navigating to the metrics-table nav category
-  document
-    .getElementById("category-metrics-table")
-    ?.addEventListener("click", () => {
-      // Init base level metric data
-      initializeMetricData();
-
-      const table = document.getElementById("metrics-table-instance");
-      table.removeAttribute("hidden");
-
-      // Map the metric data into a better defined type structure
-      MAPPED_METRIC_DATA = Object.entries(METRIC_DATA).flatMap(
-        ([category, metrics]) =>
-          Object.entries(metrics).map(([name, metric]) => ({
-            category,
-            name,
-            fullName: `${category}.${name}`,
-            ...metric,
-          }))
-      );
-      updateFilteredMetricData();
-      updateTable();
-    });
 
   /**
    * Handle metric filter input.
@@ -404,6 +416,10 @@ function prettyPrint(jsonValue) {
  * Updates the `about:glean` metrics table body based on the data points in FILTERED_METRIC_DATA.
  */
 function updateTable() {
+  LIMITED_METRIC_DATA = FILTERED_METRIC_DATA.toSorted((a, b) =>
+    d3.ascending(a.fullName, b.fullName)
+  ).filter((_, i) => i >= LIMIT_OFFSET && i < LIMIT_COUNT + LIMIT_OFFSET);
+
   // Let's talk about d3.js
   // `d3.select` is a rough equivalent to `document.querySelector`, but the resulting object(s) are things d3 knows how to manipulate.
   const tbody = DOCUMENT_BODY_SEL.select("#metrics-table-body");
@@ -411,7 +427,7 @@ function updateTable() {
   const rows = tbody
     .selectAll("tr")
     // Set the data for the `tr` elements to be the FILTERED_METRIC_DATA, keyed off the data element's full name
-    .data(FILTERED_METRIC_DATA, d => d.fullName);
+    .data(LIMITED_METRIC_DATA, d => d.fullName);
 
   // `.enter()` means this section determines how we handle new data elements in the array.
   // We class them and insert the appropriate data cells
@@ -535,6 +551,56 @@ function updateFilteredMetricData(searchString) {
         simpleTypeValueSearch(datum)
     );
   }
+
+  if (FILTERED_METRIC_DATA.length > LIMIT_COUNT + LIMIT_OFFSET) {
+    const table = document.getElementById("metrics-table-instance");
+    let scrollTimeout,
+      scrollTimeoutIsCleared = true;
+    table.addEventListener("scroll", el => {
+      if (scrollTimeoutIsCleared) {
+        scrollTimeout = setTimeout(
+          ({ target }) => {
+            clearTimeout(scrollTimeout);
+            scrollTimeoutIsCleared = true;
+            let changes = false;
+            if (target.scrollTop < 1500) {
+              if (LIMIT_COUNT >= 500 && LIMIT_OFFSET > 0) {
+                LIMIT_OFFSET = LIMIT_OFFSET - 100 < 0 ? 0 : LIMIT_OFFSET - 100;
+                changes = true;
+              }
+            } else if (target.scrollHeight - target.scrollTop < 1500) {
+              if (LIMIT_COUNT >= 500) {
+                if (
+                  LIMIT_OFFSET + LIMIT_COUNT + 100 >
+                  FILTERED_METRIC_DATA.length
+                ) {
+                  LIMIT_OFFSET = FILTERED_METRIC_DATA.length - LIMIT_COUNT;
+                } else if (
+                  LIMIT_OFFSET + LIMIT_COUNT <
+                  FILTERED_METRIC_DATA.length - 100
+                ) {
+                  LIMIT_OFFSET += 100;
+                }
+              } else {
+                LIMIT_COUNT += 100;
+              }
+              changes = true;
+            }
+            if (changes) {
+              updateTable();
+            }
+          },
+          10,
+          el
+        );
+        scrollTimeoutIsCleared = false;
+      }
+    });
+  } else {
+    LIMIT_COUNT = 200;
+    LIMIT_OFFSET = 0;
+  }
+
   updateTable();
 }
 
