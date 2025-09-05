@@ -867,7 +867,7 @@ void ScreenOrientation::MaybeDispatchEventsForOverride(
   // from device metrics or the override was reset and it is different from
   // device metrics.
   if ((aBrowsingContext->HasOrientationOverride() &&
-          (aOldHasOrientationOverride || aOverrideIsDifferentThanDevice)) ||
+       (aOldHasOrientationOverride || aOverrideIsDifferentThanDevice)) ||
       (!aBrowsingContext->HasOrientationOverride() &&
        aOldHasOrientationOverride && aOverrideIsDifferentThanDevice)) {
     outerWindow->DispatchCustomEvent(u"orientationchange"_ns);
