@@ -154,6 +154,10 @@ export class SettingControl extends MozLitElement {
     return this;
   }
 
+  focus() {
+    this.controlRef.value.focus();
+  }
+
   get controlEl() {
     return this.controlRef.value;
   }
