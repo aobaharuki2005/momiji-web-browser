@@ -15,6 +15,7 @@ import androidx.core.graphics.BlendModeCompat.SRC_IN
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
+import androidx.appcompat.R as appcompatR
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -23,7 +24,7 @@ import mozilla.components.ui.icons.R as iconsR
 class ClearableEditText @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = R.attr.editTextStyle,
+    defStyleAttr: Int = appcompatR.attr.editTextStyle,
 ) :
     AppCompatEditText(context, attrs, defStyleAttr) {
 

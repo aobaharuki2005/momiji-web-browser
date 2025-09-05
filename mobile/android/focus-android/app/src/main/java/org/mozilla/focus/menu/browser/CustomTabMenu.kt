@@ -21,7 +21,7 @@ import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import org.mozilla.focus.R
 import org.mozilla.focus.menu.ToolbarMenu
 import org.mozilla.focus.theme.resolveAttribute
-import androidx.appcompat.R as appCompatR
+import androidx.appcompat.R as appcompatR
 import mozilla.components.ui.icons.R as iconsR
 
 class CustomTabMenu(
@@ -157,7 +157,7 @@ class CustomTabMenu(
             ),
             textSize = CAPTION_TEXT_SIZE,
             textColorResource = context.theme.resolveAttribute(R.attr.secondaryText),
-            backgroundColorResource = context.theme.resolveAttribute(appCompatR.attr.colorPrimary),
+            backgroundColorResource = context.theme.resolveAttribute(appcompatR.attr.colorPrimary),
             textStyle = Typeface.NORMAL,
         )
 

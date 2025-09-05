@@ -111,6 +111,7 @@ import org.mozilla.fenix.utils.slideDown
 import org.mozilla.fenix.webcompat.DefaultWebCompatReporterMoreInfoSender
 import org.mozilla.fenix.webcompat.middleware.DefaultWebCompatReporterRetrievalService
 import org.mozilla.fenix.webcompat.middleware.WebCompatInfoDeserializer
+import com.google.android.material.R as materialR
 
 // EXPANDED_MIN_RATIO is used for BottomSheetBehavior.halfExpandedRatio().
 // That value needs to be less than the PEEK_HEIGHT.
@@ -166,7 +167,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     )
                 }
 
-                val bottomSheet = findViewById<View?>(R.id.design_bottom_sheet)
+                val bottomSheet = findViewById<View?>(materialR.id.design_bottom_sheet)
                 if (Config.channel.isNightlyOrDebug) {
                     bottomSheet?.setBackgroundResource(R.drawable.bottom_sheet_with_top_rounded_corners)
                     bottomSheet?.let { sheet ->
@@ -898,7 +899,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun calculateMenuSheetHeight(): Int {
-        val bottomSheet = dialog?.findViewById<View?>(R.id.design_bottom_sheet)
+        val bottomSheet = dialog?.findViewById<View?>(materialR.id.design_bottom_sheet)
         val topBarHeight = bottomSheet?.getWindowInsets()?.top() ?: 0
 
         val orientationMaxHeight = if (requireContext().isLandscape()) {

@@ -30,6 +30,7 @@ import org.mozilla.focus.ext.settings
 import org.mozilla.focus.ui.theme.FocusTheme
 import java.text.NumberFormat
 import java.util.Locale
+import com.google.android.material.R as materialR
 import mozilla.components.ui.icons.R as iconsR
 
 @SuppressWarnings("LongParameterList")
@@ -73,8 +74,7 @@ class TrackingProtectionPanel(
     }
 
     private fun expand() {
-        val bottomSheet =
-            findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as FrameLayout
+        val bottomSheet = findViewById<View>(materialR.id.design_bottom_sheet) as FrameLayout
         BottomSheetBehavior.from(bottomSheet).state = BottomSheetBehavior.STATE_EXPANDED
     }
 

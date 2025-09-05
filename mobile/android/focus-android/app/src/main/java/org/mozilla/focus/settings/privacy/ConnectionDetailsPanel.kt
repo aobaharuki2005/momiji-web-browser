@@ -15,6 +15,7 @@ import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeW
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.ConnectionDetailsBinding
 import org.mozilla.focus.ext.components
+import com.google.android.material.R as materialR
 import mozilla.components.ui.icons.R as iconsR
 
 @SuppressWarnings("LongParameterList")
@@ -39,8 +40,7 @@ class ConnectionDetailsPanel(
     }
 
     private fun expandBottomSheet() {
-        val bottomSheet =
-            findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as FrameLayout
+        val bottomSheet = findViewById<View>(materialR.id.design_bottom_sheet) as FrameLayout
         BottomSheetBehavior.from(bottomSheet).state = BottomSheetBehavior.STATE_EXPANDED
     }
 

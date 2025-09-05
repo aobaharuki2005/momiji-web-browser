@@ -23,6 +23,7 @@ import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptPreferencesMiddleware
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptStore
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptTelemetryMiddleware
 import org.mozilla.fenix.theme.FirefoxTheme
+import com.google.android.material.R as materialR
 
 /**
  * [BottomSheetDialogFragment] wrapper for the compose [TermsOfUseBottomSheet].
@@ -48,7 +49,7 @@ class TermsOfUseBottomSheetFragment : BottomSheetDialogFragment() {
         super.onCreateDialog(savedInstanceState).apply {
             window?.setDimAmount(0f)
             setOnShowListener {
-                val bottomSheet = findViewById<View?>(R.id.design_bottom_sheet)
+                val bottomSheet = findViewById<View?>(materialR.id.design_bottom_sheet)
                 bottomSheet?.setBackgroundResource(android.R.color.transparent)
 
                 termsOfUsePromptStore.dispatch(TermsOfUsePromptAction.OnImpression(args.surface))

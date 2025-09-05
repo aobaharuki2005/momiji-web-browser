@@ -77,6 +77,7 @@ import org.mozilla.fenix.utils.enterMenu
 import org.mozilla.fenix.utils.enterSubmenu
 import org.mozilla.fenix.utils.exitMenu
 import org.mozilla.fenix.utils.exitSubmenu
+import com.google.android.material.R as materialR
 
 /**
  * A bottom sheet dialog fragment displaying the unified trust panel.
@@ -104,7 +105,7 @@ class TrustPanelFragment : BottomSheetDialogFragment() {
 
                 window?.setNavigationBarColorCompat(navigationBarColor)
 
-                val bottomSheet = findViewById<View?>(R.id.design_bottom_sheet)
+                val bottomSheet = findViewById<View?>(materialR.id.design_bottom_sheet)
                 bottomSheet?.setBackgroundResource(android.R.color.transparent)
 
                 val behavior = BottomSheetBehavior.from(bottomSheet)
