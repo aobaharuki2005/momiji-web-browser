@@ -72,6 +72,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     const nsTArray<Input>& thirdPartyRootInputs,
     const nsTArray<Input>& thirdPartyIntermediateInputs,
     const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
+    const mozilla::pkix::Input& encodedSCTsFromTLS,
     /*out*/ nsTArray<nsTArray<uint8_t>>& builtChain,
     /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
     /*optional*/ const char* hostname)
@@ -90,6 +91,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mThirdPartyRootInputs(thirdPartyRootInputs),
       mThirdPartyIntermediateInputs(thirdPartyIntermediateInputs),
       mExtraCertificates(extraCertificates),
+      mEncodedSCTsFromTLS(encodedSCTsFromTLS),
       mBuiltChain(builtChain),
       mIsBuiltChainRootBuiltInRoot(false),
       mPinningTelemetryInfo(pinningTelemetryInfo),
@@ -675,26 +677,6 @@ CRLiteTimestamp::GetTimestamp(uint64_t* aTimestamp) {
   return NS_OK;
 }
 
-Result BuildCRLiteTimestampArray(
-    Input sctExtension,
-    /*out*/ nsTArray<RefPtr<nsICRLiteTimestamp>>& timestamps) {
-  Input sctList;
-  Result rv =
-      ExtractSignedCertificateTimestampListFromExtension(sctExtension, sctList);
-  if (rv != Success) {
-    return rv;
-  }
-  std::vector<SignedCertificateTimestamp> decodedSCTs;
-  size_t decodingErrors;
-  DecodeSCTs(sctList, decodedSCTs, decodingErrors);
-  Unused << decodingErrors;
-
-  for (const auto& sct : decodedSCTs) {
-    timestamps.AppendElement(new CRLiteTimestamp(sct));
-  }
-  return Success;
-}
-
 Result NSSCertDBTrustDomain::CheckCRLite(
     const nsTArray<uint8_t>& issuerSubjectPublicKeyInfoBytes,
     const nsTArray<uint8_t>& serialNumberBytes,
@@ -782,9 +764,10 @@ Result NSSCertDBTrustDomain::CheckRevocation(
 
   bool crliteCoversCertificate = false;
   Result crliteResult = Success;
-  if (mCRLiteMode != CRLiteMode::Disabled && sctExtension) {
+  if (mCRLiteMode != CRLiteMode::Disabled &&
+      (sctExtension || mEncodedSCTsFromTLS.GetLength() > 0)) {
     crliteResult =
-        CheckRevocationByCRLite(certID, *sctExtension, crliteCoversCertificate);
+        CheckRevocationByCRLite(certID, sctExtension, crliteCoversCertificate);
 
     // If CheckCRLite returned an error other than "revoked certificate",
     // propagate that error.
@@ -839,7 +822,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
 }
 
 Result NSSCertDBTrustDomain::CheckRevocationByCRLite(
-    const CertID& certID, const Input& sctExtension,
+    const CertID& certID, const Input* sctExtension,
     /*out*/ bool& crliteCoversCertificate) {
   crliteCoversCertificate = false;
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
@@ -853,13 +836,33 @@ Result NSSCertDBTrustDomain::CheckRevocationByCRLite(
                                    certID.serialNumber.GetLength());
 
   nsTArray<RefPtr<nsICRLiteTimestamp>> timestamps;
-  Result rv = BuildCRLiteTimestampArray(sctExtension, timestamps);
-  if (rv != Success) {
-    MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-            ("decoding SCT extension failed - CRLite will be not be "
-             "consulted"));
-    return Success;
+
+  // include timestamps from embedded SCTs
+  if (sctExtension) {
+    Input encodedSCTsFromExtension;
+    Result rv = ExtractSignedCertificateTimestampListFromExtension(
+        *sctExtension, encodedSCTsFromExtension);
+    if (rv == Success) {
+      size_t decodingErrors;
+      std::vector<SignedCertificateTimestamp> decodedSCTsFromExtension;
+      DecodeSCTs(encodedSCTsFromExtension, decodedSCTsFromExtension,
+                 decodingErrors);
+      Unused << decodingErrors;
+      for (const auto& sct : decodedSCTsFromExtension) {
+        timestamps.AppendElement(new CRLiteTimestamp(sct));
+      }
+    }
   }
+
+  // include timestamps from SCTs from the TLS handshake
+  size_t decodingErrors;
+  std::vector<SignedCertificateTimestamp> decodedSCTsFromTLS;
+  DecodeSCTs(mEncodedSCTsFromTLS, decodedSCTsFromTLS, decodingErrors);
+  Unused << decodingErrors;
+  for (const auto& sct : decodedSCTsFromTLS) {
+    timestamps.AppendElement(new CRLiteTimestamp(sct));
+  }
+
   return CheckCRLite(issuerSubjectPublicKeyInfoBytes, serialNumberBytes,
                      timestamps, crliteCoversCertificate);
 }
