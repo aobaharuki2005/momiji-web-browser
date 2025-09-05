@@ -63,6 +63,7 @@ const TASKS = [
   "feature-extraction",
   "image-feature-extraction",
   "wllama-text-generation",
+  "moz-text-to-goal",
 ];
 
 const DTYPE = ["fp32", "fp16", "q8", "int8", "uint8", "q4", "bnb4", "q4f16"];
