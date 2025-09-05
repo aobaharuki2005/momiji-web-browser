@@ -672,6 +672,7 @@ class PeerConnectionImpl final
   RefPtr<PeerConnectionObserver> mPCObserver;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  nsString mOrigin;
 
   // The SDP sent in from JS
   std::string mLocalRequestedSDP;

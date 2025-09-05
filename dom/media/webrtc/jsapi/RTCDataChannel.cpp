@@ -83,7 +83,8 @@ NS_IMPL_RELEASE_INHERITED(RTCDataChannel, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RTCDataChannel)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-RTCDataChannel::RTCDataChannel(const nsACString& aLabel, bool aOrdered,
+RTCDataChannel::RTCDataChannel(const nsACString& aLabel,
+                               const nsAString& aOrigin, bool aOrdered,
                                Nullable<uint16_t> aMaxLifeTime,
                                Nullable<uint16_t> aMaxRetransmits,
                                const nsACString& aProtocol, bool aNegotiated,
@@ -91,6 +92,7 @@ RTCDataChannel::RTCDataChannel(const nsACString& aLabel, bool aOrdered,
                                nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow),
       mUuid(nsID::GenerateUUID()),
+      mOrigin(aOrigin),
       mLabel(aLabel),
       mOrdered(aOrdered),
       mMaxPacketLifeTime(aMaxLifeTime),
@@ -99,34 +101,18 @@ RTCDataChannel::RTCDataChannel(const nsACString& aLabel, bool aOrdered,
       mNegotiated(aNegotiated),
       mDataChannel(aDataChannel) {}
 
-nsresult RTCDataChannel::Init(nsPIDOMWindowInner* aDOMWindow) {
-  nsresult rv;
-  nsAutoString urlParam;
-
+nsresult RTCDataChannel::Init() {
   MOZ_ASSERT(mDataChannel);
   mDataChannel->SetDomDataChannel(this);
 
-  // Now grovel through the objects to get a usable origin for onMessage
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aDOMWindow);
-  NS_ENSURE_STATE(sgo);
-  nsCOMPtr<nsIScriptContext> scriptContext = sgo->GetContext();
-  NS_ENSURE_STATE(scriptContext);
-
-  nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal(
-      do_QueryInterface(aDOMWindow));
-  NS_ENSURE_STATE(scriptPrincipal);
-  nsCOMPtr<nsIPrincipal> principal = scriptPrincipal->GetPrincipal();
-  NS_ENSURE_STATE(principal);
-
   // Attempt to kill "ghost" DataChannel (if one can happen): but usually too
   // early for check to fail
-  rv = CheckCurrentGlobalCorrectness();
+  nsresult rv = CheckCurrentGlobalCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsContentUtils::GetWebExposedOriginSerialization(principal, mOrigin);
   DC_DEBUG(("%s: origin = %s\n", __FUNCTION__,
             NS_LossyConvertUTF16toASCII(mOrigin).get()));
-  return rv;
+  return NS_OK;
 }
 
 // Most of the GetFoo()/SetFoo()s don't need to touch shared resources and
@@ -678,17 +664,18 @@ void RTCDataChannel::EventListenerRemoved(nsAtom* aType) {
 
 /* static */
 nsresult NS_NewDOMDataChannel(already_AddRefed<DataChannel>&& aDataChannel,
-                              const nsACString& aLabel, bool aOrdered,
+                              const nsACString& aLabel,
+                              const nsAString& aOrigin, bool aOrdered,
                               Nullable<uint16_t> aMaxLifeTime,
                               Nullable<uint16_t> aMaxRetransmits,
                               const nsACString& aProtocol, bool aNegotiated,
                               nsPIDOMWindowInner* aWindow,
                               RTCDataChannel** aDomDataChannel) {
-  RefPtr<RTCDataChannel> domdc =
-      new RTCDataChannel(aLabel, aOrdered, aMaxLifeTime, aMaxRetransmits,
-                         aProtocol, aNegotiated, aDataChannel, aWindow);
+  RefPtr<RTCDataChannel> domdc = new RTCDataChannel(
+      aLabel, aOrigin, aOrdered, aMaxLifeTime, aMaxRetransmits, aProtocol,
+      aNegotiated, aDataChannel, aWindow);
 
-  nsresult rv = domdc->Init(aWindow);
+  nsresult rv = domdc->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   domdc.forget(aDomDataChannel);
