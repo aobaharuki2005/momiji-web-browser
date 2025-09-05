@@ -410,6 +410,7 @@ void IonPerfSpewer::startRecording(const wasm::CodeMetadata* wasmCodeMeta) {
     if (!graphSpewer_) {
       disable();
     }
+    graphSpewer_->begin();
     graphSpewer_->beginAnonFunction();
   }
 #endif
@@ -419,6 +420,7 @@ void IonPerfSpewer::endRecording() {
 #ifdef JS_JITSPEW
   if (graphSpewer_) {
     graphSpewer_->endFunction();
+    graphSpewer_->end();
     graphPrinter_.finish();
     graphSpewer_ = nullptr;
   }

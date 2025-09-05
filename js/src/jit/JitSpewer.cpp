@@ -168,7 +168,7 @@ bool JitSpewGraphOutput::init() {
     return false;
   }
 
-  jsonOutput_.printf("{\n  \"functions\": [\n");
+  GraphSpewer(jsonOutput_).begin();
   firstFunction_ = true;
 
   inited_ = true;
@@ -207,7 +207,7 @@ JitSpewGraphOutput::~JitSpewGraphOutput() {
     return;
   }
 
-  jsonOutput_.printf("\n]}\n");
+  GraphSpewer(jsonOutput_).end();
   release();
 }
 

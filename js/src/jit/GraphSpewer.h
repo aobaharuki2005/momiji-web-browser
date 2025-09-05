@@ -43,12 +43,14 @@ class GraphSpewer : JSONPrinter {
                        const wasm::CodeMetadata* wasmCodeMeta = nullptr)
       : JSONPrinter(out, /*indent*/ false), wasmCodeMeta_(wasmCodeMeta) {}
 
+  void begin();
   void beginFunction(JSScript* script);
   void beginWasmFunction(unsigned funcIndex);
   void beginAnonFunction();
   void spewPass(const char* pass, MIRGraph* graph,
                 BacktrackingAllocator* ra = nullptr);
   void endFunction();
+  void end();
 };
 
 using UniqueGraphSpewer = UniquePtr<GraphSpewer>;
