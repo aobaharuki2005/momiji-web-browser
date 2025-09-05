@@ -285,7 +285,7 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
         .mRotation = 0,
     };
     framerate = input.mCanCropAndScale.valueOr(false)
-                    ? mConstraints->mFrameRate.Get(maxFPS)
+                    ? std::min(mConstraints->mFrameRate.Get(maxFPS), maxFPS)
                     : maxFPS;
   }
 
@@ -513,7 +513,8 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
         .mRotation = 0,
     };
     framerate = distanceMode == kFeasibility
-                    ? mConstraints->mFrameRate.Get(mCapability.maxFPS)
+                    ? std::min(mConstraints->mFrameRate.Get(mCapability.maxFPS),
+                               AssertedCast<double>(mCapability.maxFPS))
                     : mCapability.maxFPS;
   }
 
@@ -910,13 +911,14 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
       // DesktopCaptureImpl polls for frames and so must know the framerate to
       // capture at. This is signaled through CamerasParent as the capability's
       // maxFPS. Note that DesktopCaptureImpl does not expose any capabilities.
-      constexpr int32_t nativeRefreshRate = 60;
+      constexpr int32_t probablyNativeFramerate = 60;
+      constexpr int32_t cap = 120;
       const int32_t constrainedFramerate =
           SaturatingCast<int32_t>(std::lround(c.mFrameRate.Get(aPrefs.mFPS)));
       aCapability.maxFPS =
           aCalculate == kFeasibility
-              ? constrainedFramerate
-              : std::max(constrainedFramerate, nativeRefreshRate);
+              ? std::min(constrainedFramerate, cap)
+              : std::clamp(constrainedFramerate, probablyNativeFramerate, cap);
       return true;
     }
     default:
