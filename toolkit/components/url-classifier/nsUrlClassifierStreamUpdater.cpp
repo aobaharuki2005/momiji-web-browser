@@ -306,7 +306,8 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     mInitialized = true;
   }
 
-  rv = mDBService->BeginUpdate(this, aRequestTables);
+  // TODO: Add the provider to the update request in the next patch.
+  rv = mDBService->BeginUpdate(this, aRequestTables, ""_ns);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     LOG(("Service busy, already updating, queuing update %s from %s",
          aRequestPayload.Data(), aUpdateUrl.Data()));
