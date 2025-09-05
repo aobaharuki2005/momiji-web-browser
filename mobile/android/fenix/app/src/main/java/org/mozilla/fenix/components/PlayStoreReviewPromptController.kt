@@ -19,6 +19,9 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.ReviewPrompt
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.ReviewPromptDisplayState.Displayed
+import org.mozilla.fenix.components.ReviewPromptDisplayState.NotDisplayed
+import org.mozilla.fenix.components.ReviewPromptDisplayState.Unknown
 import org.mozilla.fenix.settings.SupportUtils
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -55,7 +58,7 @@ class PlayStoreReviewPromptController(
             }
 
             recordReviewPromptEvent(
-                reviewInfoAsString = it.result.toString(),
+                promptDisplayState = it.result.promptDisplayState,
                 numberOfAppLaunches = numberOfAppLaunches(),
                 now = Date(),
             )
@@ -90,36 +93,61 @@ class PlayStoreReviewPromptController(
     }
 }
 
+private val ReviewInfo.promptDisplayState: ReviewPromptDisplayState
+    get() {
+        // The internals of ReviewInfo cannot be accessed directly or cast nicely, so let's simply use
+        // the object as a string.
+        return ReviewPromptDisplayState.from(reviewInfoAsString = toString())
+    }
+
+/**
+ * Result of an attempt to determine if Play Store In-App Review Prompt was displayed.
+ */
+@VisibleForTesting
+enum class ReviewPromptDisplayState {
+    NotDisplayed, Displayed, Unknown;
+
+    /**
+     * @see [ReviewPromptDisplayState]
+     */
+    companion object {
+        /**
+         * The docs for [ReviewManager.launchReviewFlow] state 'In some circumstances the review
+         * flow will not be shown to the user, e.g. they have already seen it recently, so do not assume that
+         * calling this method will always display the review dialog.'
+         * However, investigation has shown that a [ReviewInfo] instance with the flag:
+         * - 'isNoOp=true' indicates that the prompt has NOT been displayed.
+         * - 'isNoOp=false' indicates that a prompt has been displayed.
+         * [ReviewManager.launchReviewFlow] will modify the ReviewInfo instance which can be used to determine
+         * which of these flags is present.
+         */
+        fun from(reviewInfoAsString: String): ReviewPromptDisplayState {
+            return when {
+                reviewInfoAsString.contains("isNoOp=true") -> NotDisplayed
+                reviewInfoAsString.contains("isNoOp=false") -> Displayed
+                // ReviewInfo is susceptible to changes outside of our control hence the catch-all 'else' statement.
+                else -> Unknown
+            }
+        }
+    }
+}
+
 /**
  * Records a [ReviewPrompt] with the required data.
- *
- * **Note:** The docs for [ReviewManager.launchReviewFlow] state 'In some circumstances the review
- * flow will not be shown to the user, e.g. they have already seen it recently, so do not assume that
- * calling this method will always display the review dialog.'
- * However, investigation has shown that a [ReviewInfo] instance with the flag:
- * - 'isNoOp=true' indicates that the prompt has NOT been displayed.
- * - 'isNoOp=false' indicates that a prompt has been displayed.
- * [ReviewManager.launchReviewFlow] will modify the ReviewInfo instance which can be used to determine
- * which of these flags is present.
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 fun recordReviewPromptEvent(
-    reviewInfoAsString: String,
+    promptDisplayState: ReviewPromptDisplayState,
     numberOfAppLaunches: Int,
     now: Date,
 ) {
     val formattedLocalDatetime =
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(now)
 
-    // The internals of ReviewInfo cannot be accessed directly or cast nicely, so lets simply use
-    // the object as a string.
-    // ReviewInfo is susceptible to changes outside of our control hence the catch-all 'else' statement.
-    val promptWasDisplayed = if (reviewInfoAsString.contains("isNoOp=true")) {
-        "false"
-    } else if (reviewInfoAsString.contains("isNoOp=false")) {
-        "true"
-    } else {
-        "error"
+    val promptWasDisplayed = when (promptDisplayState) {
+        NotDisplayed -> "false"
+        Displayed -> "true"
+        Unknown -> "error"
     }
 
     ReviewPrompt.promptAttempt.record(
