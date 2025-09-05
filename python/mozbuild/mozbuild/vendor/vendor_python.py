@@ -49,7 +49,7 @@ EXCLUDED_PACKAGES = {
 
 class VendorPython(MozbuildObject):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, virtualenv_name="vendor", **kwargs)
+        super().__init__(*args, virtualenv_name="uv", **kwargs)
         self.removed = []
         self.added = []
 
