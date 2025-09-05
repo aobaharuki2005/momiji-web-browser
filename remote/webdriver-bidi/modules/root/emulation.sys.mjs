@@ -19,6 +19,48 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/UserContextManager.sys.mjs",
 });
 
+/**
+ * Enum of possible natural orientations supported by the
+ * emulation.setOrientationOverride command.
+ *
+ * @readonly
+ * @enum {ScreenOrientationNatural}
+ */
+const ScreenOrientationNatural = {
+  Landscape: "landscape",
+  Portrait: "portrait",
+};
+
+/**
+ * Enum of possible orientation types supported by the
+ * emulation.setOrientationOverride command.
+ *
+ * @readonly
+ * @enum {ScreenOrientationType}
+ */
+const ScreenOrientationType = {
+  PortraitPrimary: "portrait-primary",
+  PortraitSecondary: "portrait-secondary",
+  LandscapePrimary: "landscape-primary",
+  LandscapeSecondary: "landscape-secondary",
+};
+
+// see https://www.w3.org/TR/screen-orientation/#dfn-screen-orientation-values-lists.
+const SCREEN_ORIENTATION_VALUES_LISTS = {
+  [ScreenOrientationNatural.Portrait]: {
+    [ScreenOrientationType.PortraitPrimary]: 0,
+    [ScreenOrientationType.LandscapePrimary]: 90,
+    [ScreenOrientationType.PortraitSecondary]: 180,
+    [ScreenOrientationType.LandscapeSecondary]: 270,
+  },
+  [ScreenOrientationNatural.Landscape]: {
+    [ScreenOrientationType.LandscapePrimary]: 0,
+    [ScreenOrientationType.PortraitPrimary]: 90,
+    [ScreenOrientationType.LandscapeSecondary]: 180,
+    [ScreenOrientationType.PortraitSecondary]: 270,
+  },
+};
+
 class EmulationModule extends RootBiDiModule {
   /**
    * Create a new module instance.
@@ -445,6 +487,192 @@ class EmulationModule extends RootBiDiModule {
   }
 
   /**
+   * Used as an argument for emulation.setScreenOrientationOverride command
+   * to represent an object which holds screen orientation settings which
+   * should override screen settings.
+   *
+   * @typedef {object} ScreenOrientation
+   *
+   * @property {ScreenOrientationNatural} natural
+   * @property {ScreenOrientationType} type
+   */
+
+  /**
+   * Set the screen orientation override to the list of
+   * top-level navigables or user contexts.
+   *
+   * @param {object=} options
+   * @param {Array<string>=} options.contexts
+   *     Optional list of browsing context ids.
+   * @param {(ScreenOrientation|null)} options.screenOrientation
+   *     Screen orientation object which have to override
+   *     screen settings.
+   *     Null value resets the override.
+   * @param {Array<string>=} options.userContexts
+   *     Optional list of user context ids.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   * @throws {NoSuchUserContextError}
+   *     Raised if the user context id could not be found.
+   */
+  async setScreenOrientationOverride(options = {}) {
+    const {
+      contexts: contextIds = null,
+      screenOrientation,
+      userContexts: userContextIds = null,
+    } = options;
+
+    let orientationOverride;
+
+    if (screenOrientation !== null) {
+      lazy.assert.object(
+        screenOrientation,
+        lazy.pprint`Expected "screenOrientation" to be an object or null, got ${screenOrientation}`
+      );
+
+      const { natural, type } = screenOrientation;
+
+      const naturalValues = Object.keys(SCREEN_ORIENTATION_VALUES_LISTS);
+
+      lazy.assert.in(
+        natural,
+        naturalValues,
+        `Expected "screenOrientation.natural" to be one of ${naturalValues},` +
+          lazy.pprint`got ${natural}`
+      );
+
+      const orientationTypes = Object.keys(
+        SCREEN_ORIENTATION_VALUES_LISTS[natural]
+      );
+
+      lazy.assert.in(
+        type,
+        orientationTypes,
+        lazy.pprint`Expected "screenOrientation.type" to be one of ${orientationTypes}` +
+          lazy.pprint`got ${type}`
+      );
+
+      const angle = SCREEN_ORIENTATION_VALUES_LISTS[natural][type];
+
+      orientationOverride = { angle, type };
+    } else {
+      orientationOverride = null;
+    }
+
+    if (contextIds !== null && userContextIds !== null) {
+      throw new lazy.error.InvalidArgumentError(
+        `Providing both "contexts" and "userContexts" arguments is not supported`
+      );
+    }
+
+    const navigables = new Set();
+    const userContexts = new Set();
+    if (contextIds !== null) {
+      lazy.assert.isNonEmptyArray(
+        contextIds,
+        lazy.pprint`Expected "contexts" to be a non-empty array, got ${contextIds}`
+      );
+
+      for (const contextId of contextIds) {
+        lazy.assert.string(
+          contextId,
+          lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
+        );
+
+        const context = this.#getBrowsingContext(contextId);
+
+        lazy.assert.topLevel(
+          context,
+          `Browsing context with id ${contextId} is not top-level`
+        );
+
+        navigables.add(context);
+      }
+    } else if (userContextIds !== null) {
+      lazy.assert.isNonEmptyArray(
+        userContextIds,
+        lazy.pprint`Expected "userContexts" to be a non-empty array, got ${userContextIds}`
+      );
+
+      for (const userContextId of userContextIds) {
+        lazy.assert.string(
+          userContextId,
+          lazy.pprint`Expected elements of "userContexts" to be a string, got ${userContextId}`
+        );
+
+        const internalId =
+          lazy.UserContextManager.getInternalIdById(userContextId);
+
+        if (internalId === null) {
+          throw new lazy.error.NoSuchUserContextError(
+            `User context with id: ${userContextId} doesn't exist`
+          );
+        }
+
+        userContexts.add(internalId);
+
+        // Prepare the list of navigables to update.
+        lazy.UserContextManager.getTabsForUserContext(internalId).forEach(
+          tab => {
+            const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
+            navigables.add(contentBrowser.browsingContext);
+          }
+        );
+      }
+    } else {
+      throw new lazy.error.InvalidArgumentError(
+        `At least one of "contexts" or "userContexts" arguments should be provided`
+      );
+    }
+
+    const sessionDataItems = [];
+    if (userContextIds !== null) {
+      for (const userContext of userContexts) {
+        sessionDataItems.push({
+          category: "screen-orientation-override",
+          moduleName: "_configuration",
+          values: [orientationOverride],
+          contextDescriptor: {
+            type: lazy.ContextDescriptorType.UserContext,
+            id: userContext,
+          },
+          method: lazy.SessionDataMethod.Add,
+        });
+      }
+    } else {
+      for (const navigable of navigables) {
+        sessionDataItems.push({
+          category: "screen-orientation-override",
+          moduleName: "_configuration",
+          values: [orientationOverride],
+          contextDescriptor: {
+            type: lazy.ContextDescriptorType.TopBrowsingContext,
+            id: navigable.browserId,
+          },
+          method: lazy.SessionDataMethod.Add,
+        });
+      }
+    }
+
+    if (sessionDataItems.length) {
+      // TODO: Bug 1953079. Saving the screen orientation override in the session data works fine
+      // with one session, but when we start supporting multiple BiDi session, we will
+      // have to rethink this approach.
+      await this.messageHandler.updateSessionData(sessionDataItems);
+    }
+
+    for (const navigable of navigables) {
+      this._setEmulatedScreenOrientation({
+        context: navigable,
+        orientationOverride,
+      });
+    }
+  }
+
+  /**
    * Set the timezone override to the list of top-level navigables
    * or user contexts.
    *
@@ -602,6 +830,28 @@ class EmulationModule extends RootBiDiModule {
 
     for (const navigable of navigables) {
       this._setTimezoneOverride({ context: navigable, timezone });
+    }
+  }
+
+  /**
+   * Set the screen orientation override to the top-level browsing context.
+   *
+   * @param {object} options
+   * @param {BrowsingContext} options.context
+   *     Top-level browsing context object which is a target
+   *     for the screen orientation override.
+   * @param {(object|null)} options.orientationOverride
+   *     Screen orientation object which have to override
+   *     screen settings.
+   *     Null value resets the override.
+   */
+  _setEmulatedScreenOrientation(options) {
+    const { context, orientationOverride } = options;
+    if (orientationOverride) {
+      const { angle, type } = orientationOverride;
+      context.setOrientationOverride(type, angle);
+    } else {
+      context.resetOrientationOverride();
     }
   }
 

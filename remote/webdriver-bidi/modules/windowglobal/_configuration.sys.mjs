@@ -21,6 +21,7 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
   #localeOverride;
   #preloadScripts;
   #resolveBlockerPromise;
+  #screenOrientationOverride;
   #timezoneOverride;
   #viewportConfiguration;
 
@@ -30,6 +31,7 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
     this.#geolocationConfiguration = undefined;
     this.#localeOverride = null;
     this.#preloadScripts = new Set();
+    this.#screenOrientationOverride = undefined;
     this.#timezoneOverride = null;
     this.#viewportConfiguration = new Map();
 
@@ -62,6 +64,7 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
         this.#viewportConfiguration.size === 0 &&
         this.#geolocationConfiguration === undefined &&
         this.#localeOverride === null &&
+        this.#screenOrientationOverride === undefined &&
         this.#timezoneOverride === null
       ) {
         this.#onConfigurationComplete(window);
@@ -125,6 +128,20 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
         });
       }
 
+      if (this.#screenOrientationOverride !== undefined) {
+        await this.messageHandler.forwardCommand({
+          moduleName: "emulation",
+          commandName: "_setEmulatedScreenOrientation",
+          destination: {
+            type: lazy.RootMessageHandler.type,
+          },
+          params: {
+            context: this.messageHandler.context,
+            orientationOverride: this.#screenOrientationOverride,
+          },
+        });
+      }
+
       if (this.#viewportConfiguration.size !== 0) {
         await this.messageHandler.forwardCommand({
           moduleName: "browsingContext",
@@ -178,11 +195,12 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       }
     }
 
-    // Geolocation and viewport overrides apply only to top-level traversables.
+    // The following overrides apply only to top-level traversables.
     if (
       (category === "geolocation-override" ||
         category === "viewport-overrides" ||
         category === "locale-override" ||
+        category === "screen-orientation-override" ||
         category === "timezone-override") &&
       !this.messageHandler.context.parent
     ) {
@@ -211,6 +229,10 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
           }
           case "locale-override": {
             this.#localeOverride = value;
+            break;
+          }
+          case "screen-orientation-override": {
+            this.#screenOrientationOverride = value;
             break;
           }
           case "timezone-override": {
