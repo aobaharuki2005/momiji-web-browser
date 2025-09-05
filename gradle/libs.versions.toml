@@ -58,7 +58,7 @@ play-review = "2.0.2"
 play-services-ads-id = "18.2.0"
 play-services-base = "18.7.2"
 play-services-fido = "21.2.0"
-protobuf = "4.31.1" # Keep Protobuf in sync with the version used by AppServices.
+protobuf = "4.32.0" # Keep Protobuf in sync with the version used by AppServices.
 
 # Gradle plugins
 jacoco = "0.8.13"
