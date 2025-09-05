@@ -1529,4 +1529,18 @@ TEST(TArray, test_TArray_Move_EmptyWithCapacity)
   ASSERT_EQ(oneArray.Capacity(), 0u);
 }
 
+TEST(TArray, test_TArray_SwapElements_EmptyWithCapacity)
+{
+  nsTArray<void*> oneArray;
+  nsTArray<void*> otherArray;
+
+  oneArray.SetCapacity(50);
+  auto cap = oneArray.Capacity();
+  ASSERT_TRUE(cap >= 50);
+
+  otherArray.SwapElements(oneArray);
+  ASSERT_EQ(otherArray.Capacity(), cap);
+  ASSERT_EQ(oneArray.Capacity(), 0u);
+}
+
 }  // namespace TestTArray

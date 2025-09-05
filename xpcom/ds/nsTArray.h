@@ -3548,10 +3548,6 @@ template <class RelocationStrategy>
 template <typename Alloc>
 auto nsTArray_base<RelocationStrategy>::TakeHeaderForMove(size_type aElemSize)
     -> Header* {
-  if (IsEmpty()) {
-    return EmptyHdr();
-  }
-
   auto* autoHdr = GetAutoArrayHeader();
   if (!autoHdr) {
     return std::exchange(mHdr, EmptyHdr());
@@ -3565,15 +3561,20 @@ auto nsTArray_base<RelocationStrategy>::TakeHeaderForMove(size_type aElemSize)
     return std::exchange(mHdr, autoHdr);
   }
 
-  size_type size = sizeof(Header) + Length() * aElemSize;
+  const auto length = Length();
+  if (!length) {
+    return EmptyHdr();
+  }
+
+  size_type size = sizeof(Header) + length * aElemSize;
   Header* header = static_cast<Header*>(Alloc::Malloc(size));
   if (!header) {
     return nullptr;
   }
 
-  RelocationStrategy::RelocateNonOverlappingRegionWithHeader(
-      header, mHdr, Length(), aElemSize);
-  header->mCapacity = Length();
+  RelocationStrategy::RelocateNonOverlappingRegionWithHeader(header, mHdr,
+                                                             length, aElemSize);
+  header->mCapacity = length;
   // This will be set by our caller if needed.
   header->mIsAutoArray = false;
 
