@@ -6447,6 +6447,12 @@ MDefinition::AliasType MLoadFixedSlot::mightAlias(
   return AliasType::MayAlias;
 }
 
+HashNumber MLoadFixedSlot::valueHash() const {
+  HashNumber hash = MUnaryInstruction::valueHash();
+  hash = addU32ToHash(hash, slot());
+  return hash;
+}
+
 MDefinition* MLoadFixedSlot::foldsTo(TempAllocator& alloc) {
   if (MDefinition* def = foldsToStore(alloc)) {
     return def;
@@ -7371,6 +7377,12 @@ bool MMegamorphicHasProp::congruentTo(const MDefinition* ins) const {
 AliasSet MMegamorphicHasProp::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
                         AliasSet::DynamicSlot);
+}
+
+HashNumber MNurseryObject::valueHash() const {
+  HashNumber hash = MNullaryInstruction::valueHash();
+  hash = addU32ToHash(hash, nurseryObjectIndex());
+  return hash;
 }
 
 bool MNurseryObject::congruentTo(const MDefinition* ins) const {

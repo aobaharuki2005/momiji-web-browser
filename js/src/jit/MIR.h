@@ -7744,6 +7744,9 @@ class MLoadFixedSlot : public MUnaryInstruction,
   NAMED_OPERANDS((0, object))
 
   size_t slot() const { return slot_; }
+
+  HashNumber valueHash() const override;
+
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isLoadFixedSlot()) {
       return false;
