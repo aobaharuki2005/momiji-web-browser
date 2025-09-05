@@ -82,3 +82,5 @@ vendoring:
      - random_device.patch # use of std::random_device, also too recent on linux
      - detect-chat-template.patch # don't crash on exception caught for control flow
      - load-from-buffer-or-fd.patch # add an API to load a model from a buffer or a fd
+     - static-ctors.patch # remove some static ctors
+     - fix-RLIMIT_MEMLOCK-solaris.patch # fix the build on solaris
