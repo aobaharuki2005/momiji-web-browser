@@ -274,7 +274,7 @@ TEST(UrlClassifierUtils, MakeUpdateRequestV5)
   // 1. The V5 list name "uws-4b"
   // 2. The decoded state for the above kTestState.
   ASSERT_TRUE(request.EqualsLiteral(
-      "CgZ1d3MtNGISGwoNCAMQBhgBIgMwMDEwARDHyhEaAhgJuW4h-A=="));
+      "&names=uws-4b&version=Cg0IAxAGGAEiAzAwMTABEMfKERoCGAm5biH4"));
 }
 
 TEST(UrlClassifierUtils, makeFindFullHashRequestV5)
