@@ -364,11 +364,11 @@ static bool DispatchOffThreadBaselineBatchImpl(JSContext* cx, bool isEager) {
 }
 
 bool jit::DispatchOffThreadBaselineBatchEager(JSContext* cx) {
-  return DispatchOffThreadBaselineBatchImpl(cx, /* isEager = */true);
+  return DispatchOffThreadBaselineBatchImpl(cx, /* isEager = */ true);
 }
 
 bool jit::DispatchOffThreadBaselineBatch(JSContext* cx) {
-  return DispatchOffThreadBaselineBatchImpl(cx, /* isEager = */false);
+  return DispatchOffThreadBaselineBatchImpl(cx, /* isEager = */ false);
 }
 
 MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
