@@ -925,9 +925,7 @@ class MDefinition : public MNode {
 #endif
 
   MDefinition* dependency() const {
-    if (getAliasSet().isStore()) {
-      return nullptr;
-    }
+    MOZ_ASSERT_IF(getAliasSet().isStore(), !loadDependency_);
     return loadDependency_;
   }
   void setDependency(MDefinition* dependency) {
