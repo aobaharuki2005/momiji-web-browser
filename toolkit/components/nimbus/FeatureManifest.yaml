@@ -105,7 +105,10 @@ nimbusStore:
 search:
   description: Search service related features.
   owner: search-and-suggest-program@mozilla.com
-  hasExposure: false
+  hasExposure: true
+  exposureDescription: >
+    Exposure is recorded when the visual search context menu item is shown or
+    would have been shown.
   variables:
     scotchBonnetEnableOverride:
       type: boolean

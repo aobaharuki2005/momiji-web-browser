@@ -10,6 +10,9 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   EngineURL: "moz-src:///toolkit/components/search/SearchEngine.sys.mjs",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  NimbusTestUtils: "resource://testing-common/NimbusTestUtils.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 // Expected source and action recorded by `BrowserSearchTelemetry`.
@@ -107,10 +110,7 @@ SearchUITestUtils.init(this);
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["test.wait300msAfterTabSwitch", true],
-      ["browser.search.visualSearch.featureGate", true],
-    ],
+    set: [["test.wait300msAfterTabSwitch", true]],
   });
 
   // Install the primary visual search engine via the search config.
@@ -163,6 +163,10 @@ add_setup(async function () {
 });
 
 add_task(async function nonPrivateWindow() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.visualSearch.featureGate", true]],
+  });
+
   Services.fog.testResetFOG();
   TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
@@ -222,6 +226,8 @@ add_task(async function nonPrivateWindow() {
     1,
     "contextmenuVisual should be recorded once for metric browserEngagementNavigation"
   );
+
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function privateWindow_countsEnabled() {
@@ -233,13 +239,16 @@ add_task(async function privateWindow_countsDisabled() {
 });
 
 async function doPrivateWindowTest(shouldRecordCounts) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.search.visualSearch.featureGate", true],
+      // This pref is the opposite of what it seems like it should be.
+      ["browser.engagement.search_counts.pbm", !shouldRecordCounts],
+    ],
+  });
+
   Services.fog.testResetFOG();
   TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
-
-  await SpecialPowers.pushPrefEnv({
-    // This pref is the opposite of what it seems like it should be.
-    set: [["browser.engagement.search_counts.pbm", !shouldRecordCounts]],
-  });
 
   let win = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
@@ -328,6 +337,10 @@ async function doPrivateWindowTest(shouldRecordCounts) {
 // For nonconfig engines with visual search URLs, the `sap.impression_counts`
 // labeled counter should be recorded with "none" as the engine name.
 add_task(async function nonconfigEngine() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.visualSearch.featureGate", true]],
+  });
+
   Services.fog.testResetFOG();
 
   let engine = Services.search.getEngineByName(NONCONFIG_ENGINE_NAME);
@@ -364,7 +377,116 @@ add_task(async function nonconfigEngine() {
     previousEngine,
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
+  await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function nimbusExposure_visualSearchEnabled() {
+  await doNimbusExposureTest({
+    visualSearchEnabled: true,
+    selector: "#image",
+    shouldBeShown: true,
+    shouldBeRecorded: true,
+  });
+});
+
+add_task(async function nimbusExposure_visualSearchDisabled() {
+  await doNimbusExposureTest({
+    visualSearchEnabled: false,
+    selector: "#image",
+    shouldBeShown: false,
+    shouldBeRecorded: true,
+  });
+});
+
+add_task(async function nimbusExposure_notAnImage() {
+  await doNimbusExposureTest({
+    visualSearchEnabled: true,
+    selector: "#plainText",
+    shouldBeShown: false,
+    shouldBeRecorded: false,
+  });
+});
+
+async function doNimbusExposureTest({
+  visualSearchEnabled,
+  selector,
+  shouldBeShown,
+  shouldBeRecorded,
+}) {
+  // The `visualSearchEnabled` variable sets this pref on the default branch.
+  // Get the original value to make sure it's properly reset on unenrollment.
+  let defaults = new Preferences({
+    branch: "browser.search.visualSearch.featureGate",
+    defaultBranch: true,
+  });
+  let originalDefault = defaults.get("");
+
+  await ExperimentAPI.ready();
+  Services.fog.testResetFOG();
+
+  // Enroll in an experiment that defines `visualSearchEnabled`.
+  let slug = "dummy-search-experiment";
+  let doExperimentCleanup = await NimbusTestUtils.enrollWithFeatureConfig(
+    {
+      featureId: "search",
+      value: {
+        visualSearchEnabled,
+        enabled: true,
+      },
+    },
+    {
+      slug,
+    }
+  );
+
+  let meta = NimbusFeatures.search.getEnrollmentMetadata();
+  Assert.ok(meta, "Enrollment metadata should be non-null");
+  Assert.equal(meta.slug, slug, "Experiment slug should be correct");
+
+  // The exposure event should be recorded every time the menu item is shown or
+  // would have been shown, not just once per app session, so open the menu more
+  // than once and make sure the event is recorded each time.
+  for (let i = 0; i < 2; i++) {
+    info("Opening the menu for iteration " + i);
+
+    await openAndCheckMenu({
+      selector,
+      shouldBeShown,
+      expectedEngineNameInLabel: ENGINE_NAME,
+    });
+    await closeMenu();
+
+    TelemetryTestUtils.assertEvents(
+      shouldBeRecorded
+        ? [
+            {
+              method: "expose",
+              object: "nimbus_experiment",
+              value: slug,
+              extra: {
+                branchSlug: meta.branch,
+                featureId: "search",
+              },
+            },
+          ]
+        : [],
+      {
+        category: "normandy",
+        method: "expose",
+      },
+      { clear: true }
+    );
+  }
+
+  await doExperimentCleanup();
+
+  defaults.set("", originalDefault);
+  Assert.strictEqual(
+    defaults.get(""),
+    originalDefault,
+    "The original default pref value should be restored"
+  );
+}
 
 async function openMenuAndClickItem({
   expectedEngineNameInLabel = ENGINE_NAME,
