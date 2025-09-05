@@ -98,6 +98,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.B
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Icon.DrawableResIcon as MenuItemIconRes
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Text.StringResText as MenuItemStringResText
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Text.StringText as MenuItemStringText
+import mozilla.components.feature.qr.R as qrR
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
 
@@ -484,7 +485,7 @@ class BrowserToolbarSearchMiddleware(
             add(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_qr_code_24,
-                    contentDescription = R.string.mozac_feature_qr_scanner,
+                    contentDescription = qrR.string.mozac_feature_qr_scanner,
                     state = ActionButton.State.DEFAULT,
                     onClick = QrScannerClicked,
                 ),

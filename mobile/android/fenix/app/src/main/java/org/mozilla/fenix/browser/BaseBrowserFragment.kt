@@ -239,6 +239,7 @@ import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 import kotlin.coroutines.cancellation.CancellationException
 import mozilla.components.feature.downloads.R as downloadsR
+import mozilla.components.ui.widgets.R as widgetsR
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -1464,7 +1465,7 @@ abstract class BaseBrowserFragment :
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
             ContextMenuSnackbarDelegate().show(
                 snackBarParentView = binding.dynamicSnackbarContainer,
-                text = R.string.snackbar_copy_image_to_clipboard_confirmation,
+                text = widgetsR.string.snackbar_copy_image_to_clipboard_confirmation,
                 duration = LENGTH_LONG,
             )
         }

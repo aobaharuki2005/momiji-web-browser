@@ -56,6 +56,7 @@ import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.browser.tabstray.R as tabstrayR
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -262,7 +263,7 @@ private fun Thumbnail(
             modifier = Modifier
                 .size(width = 92.dp, height = 72.dp)
                 .testTag(TabsTrayTestTag.TAB_ITEM_THUMBNAIL),
-            contentDescription = stringResource(id = R.string.mozac_browser_tabstray_open_tab),
+            contentDescription = stringResource(id = tabstrayR.string.mozac_browser_tabstray_open_tab),
         )
 
         if (isSelected) {

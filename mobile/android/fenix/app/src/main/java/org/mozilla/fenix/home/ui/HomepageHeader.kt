@@ -104,7 +104,7 @@ private fun PrivateBrowsingButton(
     IconToggleButton(
         modifier = Modifier
             .background(
-                color = colorResource(getAttr(R.attr.mozac_ic_private_mode_circle_fill_background_color)),
+                color = colorResource(getAttr(iconsR.attr.mozac_ic_private_mode_circle_fill_background_color)),
                 shape = CircleShape,
             )
             .size(40.dp)
@@ -118,7 +118,7 @@ private fun PrivateBrowsingButton(
         },
     ) {
         Icon(
-            tint = colorResource(getAttr(R.attr.mozac_ic_private_mode_circle_fill_icon_color)),
+            tint = colorResource(getAttr(iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color)),
             painter = painterResource(iconsR.drawable.mozac_ic_private_mode_24),
             contentDescription = stringResource(R.string.content_description_private_browsing),
         )

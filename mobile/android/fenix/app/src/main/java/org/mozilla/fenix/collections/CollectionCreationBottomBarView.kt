@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import org.mozilla.fenix.R
+import mozilla.components.ui.colors.R as colorsR
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -41,7 +42,7 @@ class CollectionCreationBottomBarView(
         iconButton.apply {
             val drawable = context.getDrawableWithTint(
                 R.drawable.ic_close,
-                ContextCompat.getColor(context, R.color.photonWhite),
+                ContextCompat.getColor(context, colorsR.color.photonWhite),
             )
             setImageDrawable(drawable)
             contentDescription = context.getString(R.string.create_collection_close)
@@ -88,7 +89,7 @@ class CollectionCreationBottomBarView(
         iconButton.apply {
             val drawable = context.getDrawableWithTint(
                 iconsR.drawable.mozac_ic_plus_24,
-                ContextCompat.getColor(context, R.color.photonWhite),
+                ContextCompat.getColor(context, colorsR.color.photonWhite),
             )
             setImageDrawable(drawable)
             contentDescription = null

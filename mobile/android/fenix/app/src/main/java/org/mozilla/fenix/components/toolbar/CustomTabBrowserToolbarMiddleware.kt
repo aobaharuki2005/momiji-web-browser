@@ -70,6 +70,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.utils.Settings
 import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.feature.customtabs.R as customtabsR
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
 
@@ -351,7 +352,9 @@ class CustomTabBrowserToolbarMiddleware(
 
                         else -> customIconBitmap.toDrawable(environment.context.resources)
                     },
-                    contentDescription = environment.context.getString(R.string.mozac_feature_customtabs_exit_button),
+                    contentDescription = environment.context.getString(
+                        customtabsR.string.mozac_feature_customtabs_exit_button,
+                    ),
                     onClick = CloseClicked,
                 ),
             )
@@ -411,7 +414,7 @@ class CustomTabBrowserToolbarMiddleware(
             add(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_share_android_24,
-                    contentDescription = R.string.mozac_feature_customtabs_share_link,
+                    contentDescription = customtabsR.string.mozac_feature_customtabs_share_link,
                     onClick = ShareClicked,
                 ),
             )
