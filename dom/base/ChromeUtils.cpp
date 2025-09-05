@@ -2623,27 +2623,25 @@ void ChromeUtils::CallFunctionAndLogException(
   }
 }
 
-std::atomic<uint32_t> ChromeUtils::sDevToolsOpenedCount = 0;
+static Atomic<uint32_t, Relaxed> sDevToolsOpenedCount{0};
 
 /* static */
-bool ChromeUtils::IsDevToolsOpened() {
-  return ChromeUtils::sDevToolsOpenedCount > 0;
-}
+bool ChromeUtils::IsDevToolsOpened() { return sDevToolsOpenedCount > 0; }
 
 /* static */
 bool ChromeUtils::IsDevToolsOpened(GlobalObject& aGlobal) {
-  return ChromeUtils::IsDevToolsOpened();
+  return IsDevToolsOpened();
 }
 
 /* static */
 void ChromeUtils::NotifyDevToolsOpened(GlobalObject& aGlobal) {
-  ChromeUtils::sDevToolsOpenedCount++;
+  sDevToolsOpenedCount++;
 }
 
 /* static */
 void ChromeUtils::NotifyDevToolsClosed(GlobalObject& aGlobal) {
-  MOZ_ASSERT(ChromeUtils::sDevToolsOpenedCount >= 1);
-  ChromeUtils::sDevToolsOpenedCount--;
+  MOZ_ASSERT(sDevToolsOpenedCount >= 1);
+  sDevToolsOpenedCount--;
 }
 
 /* static */
