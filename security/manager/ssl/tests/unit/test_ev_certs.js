@@ -109,7 +109,6 @@ function asyncTestEV(
       0,
       "ev-test.example.com",
       now,
-      [],
       result
     );
   });
@@ -175,7 +174,6 @@ function verifyWithFlags_LOCAL_ONLY_and_MUST_BE_EV(testcase, expectSuccess) {
       flags,
       "ev-test.example.com",
       now,
-      [],
       result
     );
   });

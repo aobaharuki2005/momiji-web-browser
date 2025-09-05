@@ -94,46 +94,4 @@ add_task(async function () {
     "revoked-in-delta.example.com",
     0
   );
-
-  // This certificate has no embedded SCTs, but it should be considered revoked
-  // if the appropriate SCT is side-loaded.
-  let revokedNoSctCert = constructCertFromFile(
-    "test_crlite_filters/revoked-no-sct.example.com.pem"
-  );
-
-  let sctFile = do_get_file(
-    "test_crlite_filters/revoked-no-sct.example.com.sct",
-    false
-  );
-  let sctBytes = readBinaryFile(sctFile);
-  let sctList = new Uint8Array(2 + 2 + sctBytes.length);
-  sctList[0] = (2 + sctBytes.length) / 256;
-  sctList[1] = (2 + sctBytes.length) % 256;
-  sctList[2] = sctBytes.length / 256;
-  sctList[3] = sctBytes.length % 256;
-  sctList.set(sctBytes, 4);
-
-  await checkCertErrorGenericAtTime(
-    certdb,
-    revokedNoSctCert,
-    PRErrorCodeSuccess,
-    Ci.nsIX509CertDB.verifyUsageTLSServer,
-    CHECK_AT_TIME,
-    false,
-    "revoked-no-sct.example.com",
-    0,
-    [] // no side-loaded SCTs
-  );
-
-  await checkCertErrorGenericAtTime(
-    certdb,
-    revokedNoSctCert,
-    SEC_ERROR_REVOKED_CERTIFICATE,
-    Ci.nsIX509CertDB.verifyUsageTLSServer,
-    CHECK_AT_TIME,
-    false,
-    "revoked-no-sct.example.com",
-    0,
-    sctList
-  );
 });
