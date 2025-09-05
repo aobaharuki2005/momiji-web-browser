@@ -56,7 +56,6 @@ UNIFIED_SOURCES += [
     "TestSnappyStreams.cpp",
     "TestStateMirroring.cpp",
     "TestStateWatching.cpp",
-    "TestStopGapEventTarget.cpp",
     "TestStorageStream.cpp",
     "TestStrings.cpp",
     "TestStringStream.cpp",
