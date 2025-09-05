@@ -74,6 +74,17 @@ public class ContentBlocking {
           .dataSharingEnabled(false)
           .build();
 
+  /** {@link SafeBrowsingProvider} configuration for Google's SafeBrowsing V5 server. */
+  public static final SafeBrowsingProvider GOOGLE_SAFE_BROWSING_V5_PROVIDER =
+      SafeBrowsingProvider.withName("google5")
+          .lists("")
+          .updateUrl(
+              "https://safebrowsing.googleapis.com/v5/hashLists:batchGet?key=%GOOGLE_SAFEBROWSING_API_KEY%")
+          .getHashUrl(
+              "https://safebrowsing.googleapis.com/v5/hashes:search?key=%GOOGLE_SAFEBROWSING_API_KEY%")
+          .enabled(false)
+          .build();
+
   /** Protected constructor - this class shouldn't be instantiated. */
   protected ContentBlocking() {}
 
@@ -84,7 +95,8 @@ public class ContentBlocking {
 
     private static final SafeBrowsingProvider[] DEFAULT_PROVIDERS = {
       ContentBlocking.GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER,
-      ContentBlocking.GOOGLE_SAFE_BROWSING_PROVIDER
+      ContentBlocking.GOOGLE_SAFE_BROWSING_PROVIDER,
+      ContentBlocking.GOOGLE_SAFE_BROWSING_V5_PROVIDER
     };
 
     /** Builder for constructing ContentBlocking Settings instances. */
@@ -566,8 +578,9 @@ public class ContentBlocking {
      * Sets the collection of {@link SafeBrowsingProvider} for this runtime.
      *
      * <p>By default the collection is composed of {@link
-     * ContentBlocking#GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER} and {@link
-     * ContentBlocking#GOOGLE_SAFE_BROWSING_PROVIDER}.
+     * ContentBlocking#GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER}, {@link
+     * ContentBlocking#GOOGLE_SAFE_BROWSING_PROVIDER} and {@link
+     * ContentBlocking#GOOGLE_SAFE_BROWSING_V5_PROVIDER}.
      *
      * @param providers {@link SafeBrowsingProvider} instances for this runtime.
      * @return the {@link Settings} instance.
@@ -1150,8 +1163,9 @@ public class ContentBlocking {
    * custom SafeBrowsing provider to the app. <br>
    * <br>
    * Default configuration for Google's SafeBrowsing servers can be found at {@link
-   * ContentBlocking#GOOGLE_SAFE_BROWSING_PROVIDER} and {@link
-   * ContentBlocking#GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER}. <br>
+   * ContentBlocking#GOOGLE_SAFE_BROWSING_PROVIDER}, {@link
+   * ContentBlocking#GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER} and {@link
+   * ContentBlocking#GOOGLE_SAFE_BROWSING_V5_PROVIDER}. <br>
    * <br>
    * This class is immutable, once constructed its values cannot be changed. <br>
    * <br>
@@ -1191,6 +1205,7 @@ public class ContentBlocking {
    *         custom,
    *         // Add this if you want to keep the existing configuration too.
    *         ContentBlocking.GOOGLE_SAFE_BROWSING_PROVIDER,
+   *         ContentBlocking.GOOGLE_SAFE_BROWSING_V5_PROVIDER,
    *         ContentBlocking.GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER);
    * </code></pre>
    *
@@ -1225,6 +1240,7 @@ public class ContentBlocking {
     /* package */ final Pref<String> mAdvisoryName;
     /* package */ final Pref<String> mDataSharingUrl;
     /* package */ final Pref<Boolean> mDataSharingEnabled;
+    /* package */ final Pref<Boolean> mEnabled;
 
     /**
      * Creates a {@link SafeBrowsingProvider.Builder} for a provider with the given name.
@@ -1407,6 +1423,17 @@ public class ContentBlocking {
       }
 
       /**
+       * Set whether to enable this provider. This is currently only used for the SafeBrowsing V5.
+       *
+       * @param enabled <code>true</code> if the provider should be enabled.
+       * @return this {@link Builder} instance.
+       */
+      public @NonNull Builder enabled(final boolean enabled) {
+        mProvider.mEnabled.set(enabled);
+        return this;
+      }
+
+      /**
        * Build the {@link SafeBrowsingProvider} based on this {@link Builder} instance.
        *
        * @return thie {@link SafeBrowsingProvider} instance.
@@ -1452,6 +1479,7 @@ public class ContentBlocking {
       mAdvisoryName = new Pref<>(ROOT + mName + ".advisoryName", null);
       mDataSharingUrl = new Pref<>(ROOT + mName + ".dataSharingURL", null);
       mDataSharingEnabled = new Pref<>(ROOT + mName + ".dataSharing.enabled", false);
+      mEnabled = new Pref<>(ROOT + mName + ".enabled", false);
 
       if (source != null) {
         updatePrefs(source);
@@ -1576,6 +1604,15 @@ public class ContentBlocking {
      */
     public @Nullable Boolean getDataSharingEnabled() {
       return mDataSharingEnabled.get();
+    }
+
+    /**
+     * Get whether this provider is enabled. This is currently only used for the SafeBrowsing V5.
+     *
+     * @return <code>true</code> if the provider is enabled, <code>false</code> otherwise.
+     */
+    public @Nullable Boolean getEnabled() {
+      return mEnabled.get();
     }
 
     @Override // Parcelable

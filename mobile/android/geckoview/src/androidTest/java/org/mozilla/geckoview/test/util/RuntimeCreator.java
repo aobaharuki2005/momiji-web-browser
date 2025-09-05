@@ -188,11 +188,17 @@ public class RuntimeCreator {
             .updateUrl("http://mochi.test:8888/safebrowsing4-dummy/update")
             .build();
 
+    final SafeBrowsingProvider google5 =
+        SafeBrowsingProvider.from(ContentBlocking.GOOGLE_SAFE_BROWSING_V5_PROVIDER)
+            .getHashUrl("http://mochi.test:8888/safebrowsing5-dummy/gethash")
+            .updateUrl("http://mochi.test:8888/safebrowsing5-dummy/update")
+            .build();
+
     final GeckoRuntimeSettings runtimeSettings =
         new GeckoRuntimeSettings.Builder()
             .contentBlocking(
                 new ContentBlocking.Settings.Builder()
-                    .safeBrowsingProviders(googleLegacy, google)
+                    .safeBrowsingProviders(googleLegacy, google, google5)
                     .build())
             .arguments(new String[] {"-purgecaches"})
             .extras(InstrumentationRegistry.getArguments())
