@@ -14,7 +14,7 @@ enum RTCDataChannelType {
   "blob"
 };
 
-[Exposed=Window]
+[Exposed=(Window,DedicatedWorker)]
 interface RTCDataChannel : EventTarget
 {
   readonly attribute UTF8String label;
