@@ -125,10 +125,8 @@ export class MerinoClient {
     this.#sessionTimeoutMs = value;
   }
 
-  /**
-   * @returns {string}
-   *   The current session ID. Null when there is no active session.
-   */
+  // Note: Cannot be JSDoc due to https://github.com/pyodide/sphinx-js/issues/242
+  // The current session ID. Null when there is no active session.
   get sessionID() {
     return this.#sessionID;
   }
@@ -142,11 +140,9 @@ export class MerinoClient {
     return this.#sequenceNumber;
   }
 
-  /**
-   * @returns {string}
-   *   A string that indicates the status of the last fetch. Possible values:
-   *   success, timeout, network_error, http_error
-   */
+  // Note: Cannot be JSDoc due to https://github.com/pyodide/sphinx-js/issues/242
+  // A string that indicates the status of the last fetch. Possible values:
+  // success, timeout, network_error, http_error
   get lastFetchStatus() {
     return this.#lastFetchStatus;
   }
