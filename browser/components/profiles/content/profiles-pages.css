@@ -6,6 +6,10 @@
   --header-avatar-size: 80px;
 }
 
+:root {
+  background-color: var(--newtab-background-color, var(--background-color-canvas));
+}
+
 html,
 body {
   min-width: 100%;
@@ -16,8 +20,6 @@ body {
 body {
   display: flex;
   justify-content: center;
-
-  background-color: var(--newtab-background-color, var(--background-color-canvas));
 }
 
 edit-profile-card,
