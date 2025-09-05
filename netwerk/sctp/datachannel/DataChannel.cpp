@@ -1204,7 +1204,7 @@ void DataChannelConnection::FinishClose(DataChannel* aChannel) {
 }
 
 void DataChannel::FinishClose() {
-  MOZ_ASSERT(mDomEventTarget->IsOnCurrentThread());
+  // This can happen before mDomEventTarget is actually ready.
   if (mConnection) {
     mConnection->FinishClose(this);
   }
@@ -1475,7 +1475,7 @@ int DataChannel::SendBinaryBlob(nsIInputStream* aBlob) {
 }
 
 void DataChannel::SetStream(uint16_t aId) {
-  MOZ_ASSERT(mDomEventTarget->IsOnCurrentThread());
+  MOZ_ASSERT(NS_IsMainThread());
   mStream = aId;
 
   // TODO(bug 1209163): Spec says we set all of these in a single queued task

@@ -130,6 +130,7 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   Nullable<uint16_t> mId;
   double mMaxMessageSize = 0;
   RTCDataChannelState mReadyState = RTCDataChannelState::Connecting;
+  RefPtr<nsISerialEventTarget> mEventTarget;
   size_t mBufferedAmount = 0;
   size_t mBufferedThreshold = 0;
   size_t mMessagesSent = 0;
