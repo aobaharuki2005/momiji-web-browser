@@ -256,7 +256,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.isActive = false;
 
     let deactivatedAt = Cu.now();
-    let sessionLength = this.activatedAt - deactivatedAt;
+    let sessionLength = deactivatedAt - this.activatedAt;
 
     Glean.ipprotection.toggled.record({
       userAction,
