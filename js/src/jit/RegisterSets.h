@@ -72,6 +72,35 @@
  * it up. One useful pattern is to pass InvalidReg in cases where a register is
  * not available, and decide whether to spill depending on whether a real
  * register is free. See, for example, CacheIRCompiler::emitDataViewBoundsCheck.
+ *
+ *
+ * ### CallTempReg, ABINonArgReg, ABINonArgReturnReg, et al
+ *
+ * There are other more-or-less architecture-independent register definitions
+ * that can be useful. These include:
+ *
+ * - CallTempReg<0-5>: Six registers that are not part of the call machinery
+ *   itself (not the stack pointer, frame pointer, or the link register). They
+ *   are useful when setting up a call that does not use the system ABI. In Ion,
+ *   JS uses these to allocate temporary registers for LIR ops that will
+ *   generate a call. No more CallTempRegs can be added for use in architecture-
+ *   independent code, because x86 doesn't have enough registers.
+ *
+ * - ABINonArgReg<0-3>: Four registers that are not part of the call machinery,
+ *   and are also not used for passing arguments according to the system/Wasm
+ *   ABI. These are primarily used for Wasm. ABINonArgReg4 could be added if
+ *   needed. After that, we run out of registers on x86, because Wasm also pins
+ *   the InstanceReg. See the "Wasm ABIs" SMDOC for more information.
+ *
+ * - ABINonArgReturnReg<0-1> / ABINonVolatileReg: Three registers that are not
+ *   part of the call machinery, and not used by the system ABI for passing
+ *   arguments or return values. ABINonVolatileReg is also required to have its
+ *   value preserved over a call. This set is (again) constrained by x86: esp
+ *   and ebp are claimed by the call machinery, eax/edx are return registers,
+ *   and esi is the instance register.
+ *   ABINonArgReturnVolatileReg is a register that is not used for calls but is
+ *   *not* preserved over a call; it may or may not be the same as
+ *   ABINonArgReturn<0-1>.
  */
 
 namespace js {
