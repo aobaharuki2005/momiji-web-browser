@@ -45,7 +45,6 @@
 #include "nsFrameSelection.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIController.h"
-#include "nsIControllerContext.h"
 #include "nsIControllers.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDocumentEncoder.h"

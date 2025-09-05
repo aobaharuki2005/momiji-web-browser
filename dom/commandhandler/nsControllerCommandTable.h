@@ -23,13 +23,11 @@ class nsControllerCommandTable final {
 
   NS_INLINE_DECL_REFCOUNTING(nsControllerCommandTable);
 
-  static already_AddRefed<nsControllerCommandTable> CreateEditorCommandTable();
-  static already_AddRefed<nsControllerCommandTable> CreateEditingCommandTable();
-  static already_AddRefed<nsControllerCommandTable>
-  CreateHTMLEditorCommandTable();
-  static already_AddRefed<nsControllerCommandTable>
-  CreateHTMLEditorDocStateCommandTable();
-  static already_AddRefed<nsControllerCommandTable> CreateWindowCommandTable();
+  static nsControllerCommandTable* EditorCommandTable();
+  static nsControllerCommandTable* EditingCommandTable();
+  static nsControllerCommandTable* HTMLEditorCommandTable();
+  static nsControllerCommandTable* HTMLEditorDocStateCommandTable();
+  static nsControllerCommandTable* WindowCommandTable();
 
   void RegisterCommand(const nsACString&, mozilla::ControllerCommand*);
   void UnregisterCommand(const nsACString&, mozilla::ControllerCommand*);

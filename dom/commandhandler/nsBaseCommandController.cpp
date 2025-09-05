@@ -100,49 +100,32 @@ nsBaseCommandController::GetSupportedCommands(nsTArray<nsCString>& aCommands) {
   return NS_OK;
 }
 
-using CommandTableCreatorFn = already_AddRefed<nsControllerCommandTable> (*)();
-
-static already_AddRefed<nsBaseCommandController>
-CreateControllerWithSingletonCommandTable(CommandTableCreatorFn aCreatorFn) {
-  RefPtr<nsControllerCommandTable> commandTable = aCreatorFn();
-  if (!commandTable) {
-    return nullptr;
-  }
-
-  // this is a singleton; make it immutable
-  commandTable->MakeImmutable();
-
-  RefPtr<nsBaseCommandController> commandController =
-      new nsBaseCommandController(commandTable);
-  return commandController.forget();
-}
-
 already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateWindowController() {
-  return CreateControllerWithSingletonCommandTable(
-      nsControllerCommandTable::CreateWindowCommandTable);
+  return mozilla::MakeAndAddRef<nsBaseCommandController>(
+      nsControllerCommandTable::WindowCommandTable());
 }
 
 already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateEditorController() {
-  return CreateControllerWithSingletonCommandTable(
-      nsControllerCommandTable::CreateEditorCommandTable);
+  return mozilla::MakeAndAddRef<nsBaseCommandController>(
+      nsControllerCommandTable::EditorCommandTable());
 }
 
 already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateEditingController() {
-  return CreateControllerWithSingletonCommandTable(
-      nsControllerCommandTable::CreateEditingCommandTable);
+  return mozilla::MakeAndAddRef<nsBaseCommandController>(
+      nsControllerCommandTable::EditingCommandTable());
 }
 
 already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateHTMLEditorController() {
-  return CreateControllerWithSingletonCommandTable(
-      nsControllerCommandTable::CreateHTMLEditorCommandTable);
+  return mozilla::MakeAndAddRef<nsBaseCommandController>(
+      nsControllerCommandTable::HTMLEditorCommandTable());
 }
 
 already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateHTMLEditorDocStateController() {
-  return CreateControllerWithSingletonCommandTable(
-      nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable);
+  return mozilla::MakeAndAddRef<nsBaseCommandController>(
+      nsControllerCommandTable::HTMLEditorDocStateCommandTable());
 }

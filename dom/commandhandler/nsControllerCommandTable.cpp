@@ -6,9 +6,11 @@
 
 #include "nsControllerCommandTable.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ControllerCommand.h"
 #include "mozilla/EditorController.h"
 #include "mozilla/HTMLEditorController.h"
+#include "mozilla/StaticPtr.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsString.h"
 
@@ -58,49 +60,50 @@ void nsControllerCommandTable::GetSupportedCommands(
 
 using CommandTableRegistrar = void (*)(nsControllerCommandTable*);
 
-static already_AddRefed<nsControllerCommandTable>
-CreateCommandTableWithCommands(CommandTableRegistrar aRegistrar) {
-  RefPtr<nsControllerCommandTable> commandTable =
-      new nsControllerCommandTable();
-
-  aRegistrar(commandTable);
-
-  // we don't know here whether we're being created as an instance,
-  // or a service, so we can't become immutable
-  return commandTable.forget();
+static nsControllerCommandTable* EnsureCommandTableWithCommands(
+    mozilla::StaticRefPtr<nsControllerCommandTable>& aTable,
+    CommandTableRegistrar aRegistrar) {
+  if (!aTable) {
+    aTable = new nsControllerCommandTable();
+    aRegistrar(aTable);
+    aTable->MakeImmutable();
+    ClearOnShutdown(&aTable);
+  }
+  return aTable;
 }
 
 // static
-already_AddRefed<nsControllerCommandTable>
-nsControllerCommandTable::CreateEditorCommandTable() {
-  return CreateCommandTableWithCommands(
-      mozilla::EditorController::RegisterEditorCommands);
+nsControllerCommandTable* nsControllerCommandTable::EditorCommandTable() {
+  static mozilla::StaticRefPtr<nsControllerCommandTable> sTable;
+  return EnsureCommandTableWithCommands(
+      sTable, mozilla::EditorController::RegisterEditorCommands);
 }
 
 // static
-already_AddRefed<nsControllerCommandTable>
-nsControllerCommandTable::CreateEditingCommandTable() {
-  return CreateCommandTableWithCommands(
-      mozilla::EditorController::RegisterEditingCommands);
+nsControllerCommandTable* nsControllerCommandTable::EditingCommandTable() {
+  static mozilla::StaticRefPtr<nsControllerCommandTable> sTable;
+  return EnsureCommandTableWithCommands(
+      sTable, mozilla::EditorController::RegisterEditingCommands);
 }
 
 // static
-already_AddRefed<nsControllerCommandTable>
-nsControllerCommandTable::CreateHTMLEditorCommandTable() {
-  return CreateCommandTableWithCommands(
-      mozilla::HTMLEditorController::RegisterHTMLEditorCommands);
+nsControllerCommandTable* nsControllerCommandTable::HTMLEditorCommandTable() {
+  static mozilla::StaticRefPtr<nsControllerCommandTable> sTable;
+  return EnsureCommandTableWithCommands(
+      sTable, mozilla::HTMLEditorController::RegisterHTMLEditorCommands);
 }
 
 // static
-already_AddRefed<nsControllerCommandTable>
-nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable() {
-  return CreateCommandTableWithCommands(
-      mozilla::HTMLEditorController::RegisterEditorDocStateCommands);
+nsControllerCommandTable*
+nsControllerCommandTable::HTMLEditorDocStateCommandTable() {
+  static mozilla::StaticRefPtr<nsControllerCommandTable> sTable;
+  return EnsureCommandTableWithCommands(
+      sTable, mozilla::HTMLEditorController::RegisterEditorDocStateCommands);
 }
 
 // static
-already_AddRefed<nsControllerCommandTable>
-nsControllerCommandTable::CreateWindowCommandTable() {
-  return CreateCommandTableWithCommands(
-      nsWindowCommandRegistration::RegisterWindowCommands);
+nsControllerCommandTable* nsControllerCommandTable::WindowCommandTable() {
+  static mozilla::StaticRefPtr<nsControllerCommandTable> sTable;
+  return EnsureCommandTableWithCommands(
+      sTable, nsWindowCommandRegistration::RegisterWindowCommands);
 }
