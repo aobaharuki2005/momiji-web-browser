@@ -380,6 +380,8 @@ void RTCDataChannel::Send(const nsAString& aData, ErrorResult& aRv) {
 
   size_t length = msgString.Length();
   if (!mDataChannel->SendMsg(std::move(msgString))) {
+    ++mMessagesSent;
+    mBytesSent += length;
     IncrementBufferedAmount(length);
   } else {
     aRv.ThrowOperationError("Failed to queue message");
@@ -416,6 +418,8 @@ void RTCDataChannel::Send(Blob& aData, ErrorResult& aRv) {
   }
 
   if (!mDataChannel->SendBinaryBlob(msgStream)) {
+    ++mMessagesSent;
+    mBytesSent += msgLength;
     IncrementBufferedAmount(msgLength);
   } else {
     aRv.ThrowOperationError("Failed to queue message");
@@ -442,6 +446,8 @@ void RTCDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
 
   size_t length = msgString.Length();
   if (!mDataChannel->SendBinaryMsg(std::move(msgString))) {
+    ++mMessagesSent;
+    mBytesSent += length;
     IncrementBufferedAmount(length);
   } else {
     aRv.ThrowOperationError("Failed to queue message");
