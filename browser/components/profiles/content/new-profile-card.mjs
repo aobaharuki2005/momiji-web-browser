@@ -115,7 +115,7 @@ export class NewProfileCard extends EditProfileCard {
       size="64"
       aria-errormessage="error-message"
       data-l10n-id="new-profile-page-input-placeholder"
-      value=${this.profile.name}
+      .value=${this.profile.name}
       @input=${super.handleInputEvent}
     />`;
   }

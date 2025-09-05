@@ -133,6 +133,7 @@ let config = [
     rules: {
       "lit/quoted-expressions": ["error", "never"],
       "lit/no-invalid-html": "error",
+      "lit/no-value-attribute": "error",
     },
   },
   {

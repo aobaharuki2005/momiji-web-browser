@@ -184,7 +184,7 @@ export default class RestoreFromBackup extends MozLitElement {
               id="backup-filepicker-input"
               type="text"
               readonly
-              value=${this.backupFileToRestore || ""}
+              .value=${this.backupFileToRestore || ""}
               style="background-image: url(${ifDefined(iconURL)})"
             />
             <moz-button

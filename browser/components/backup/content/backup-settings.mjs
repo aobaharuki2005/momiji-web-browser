@@ -369,7 +369,7 @@ export default class BackupSettings extends MozLitElement {
           class="backup-location-filepicker-input"
           type="text"
           readonly
-          value=${backupDirPath}
+          .value=${backupDirPath}
           style=${`background-image: url(${iconURL})`}></input>
         <moz-button
           id="backup-location-show"
