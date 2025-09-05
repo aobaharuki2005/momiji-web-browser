@@ -1082,6 +1082,7 @@ usage:
       - usage-reporting
       - baseline
       - onboarding-opt-out
+      - events
     no_lint:
       - BASELINE_PING
     description: |
