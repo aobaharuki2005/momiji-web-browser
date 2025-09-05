@@ -46,7 +46,7 @@ class JujutsuRepository(Repository):
     # Revset for a "HEAD-like" change. Use @ (the working copy commit) unless it
     # would be discarded when switching away (because it's empty and has no
     # description.)
-    HEAD_REVSET = "latest((@ ~ (empty() & description(exact:'')) ~ bookmarks()) | @-)"
+    HEAD_REVSET = 'coalesce(@ ~ (empty() & description(exact:"")) ~ bookmarks(), @-)'
 
     def __init__(self, path: Path, jj="jj", git="git"):
         super(JujutsuRepository, self).__init__(path, tool=jj)
