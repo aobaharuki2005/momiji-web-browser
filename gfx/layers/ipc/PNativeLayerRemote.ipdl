@@ -22,7 +22,6 @@ union NativeLayerCommand {
   CommandLayerDestroyed;
   CommandSetLayers;
   CommandLayerInfo;
-  CommandChangedSurface;
 };
 
 struct CommandCreateLayer {
@@ -51,21 +50,17 @@ struct CommandSetLayers {
 
 struct CommandLayerInfo {
   uint64_t ID;
+  uint32_t SurfaceID;
+  bool IsDRM;
+  bool IsHDR;
   IntPoint Position;
+  IntSize Size;
   IntRect DisplayRect;
   IntRect? ClipRect;
   RoundedRect? RoundedClipRect;
   Matrix4x4 Transform;
   int8_t SamplingFilter;
   bool SurfaceIsFlipped;
-};
-
-struct CommandChangedSurface {
-  uint64_t ID;
-  uint32_t SurfaceID;
-  bool IsDRM;
-  bool IsHDR;
-  IntSize Size;
 };
 
 // This protocol allows a NativeLayerRoot implementation on the GPU
