@@ -5593,6 +5593,10 @@
         }
         modifiedAttrs.push("muted");
       }
+      if (aOtherTab.hasAttribute("discarded")) {
+        aOurTab.toggleAttribute("discarded", true);
+        modifiedAttrs.push("discarded");
+      }
       if (aOtherTab.hasAttribute("undiscardable")) {
         aOurTab.toggleAttribute("undiscardable", true);
         modifiedAttrs.push("undiscardable");

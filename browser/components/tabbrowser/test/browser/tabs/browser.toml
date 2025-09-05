@@ -64,6 +64,8 @@ tags = "vertical-tabs"
 
 ["browser_ctrlTab.js"]
 
+["browser_discarded_tab_move.js"]
+
 ["browser_dont_process_switch_204.js"]
 support-files = [
   "blank.html",
