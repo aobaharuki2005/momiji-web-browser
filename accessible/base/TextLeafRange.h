@@ -356,10 +356,11 @@ class TextLeafRange final {
    * that the first and last lines might be partial if the range begins or ends
    * in the middle of a line. They are exclusive of mEnd, since range ends are
    * always exclusive, so including mEnd would include the bounds for 1
-   * character past the end of the range. Each rectangle is screen-relative. The
-   * function returns true if it walks any lines, and false if it could not walk
-   * any lines, which could happen if the start and end points are improperly
-   * positioned.
+   * character past the end of the range. Each rectangle is screen-relative. If
+   * this range is collapsed, the callback is called with the insertion point
+   * bounds. The function returns true if it walks any lines, and false if it
+   * could not walk any lines, which could happen if the start and end points
+   * are improperly positioned.
    */
   using LineRectCallback =
       FunctionRef<void(TextLeafRange, LayoutDeviceIntRect)>;
