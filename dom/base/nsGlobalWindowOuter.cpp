@@ -1493,9 +1493,10 @@ void nsGlobalWindowOuter::ClearControllers() {
     while (count--) {
       nsCOMPtr<nsIController> controller;
       mControllers->GetControllerAt(count, getter_AddRefs(controller));
-
-      nsCOMPtr<nsIControllerContext> context = do_QueryInterface(controller);
-      if (context) context->SetCommandContext(nullptr);
+      if (nsCOMPtr<nsBaseCommandController> context =
+              do_QueryInterface(controller)) {
+        context->SetContext(nullptr);
+      }
     }
 
     mControllers = nullptr;
@@ -3316,7 +3317,7 @@ nsIControllers* nsGlobalWindowOuter::GetControllersOuter(ErrorResult& aError) {
     }
 
     mControllers->InsertControllerAt(0, commandController);
-    commandController->SetCommandContext(static_cast<nsIDOMWindow*>(this));
+    commandController->SetContext(this);
   }
 
   return mControllers;

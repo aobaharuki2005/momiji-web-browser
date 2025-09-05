@@ -36,6 +36,7 @@
 #include "mozilla/dom/Text.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
+#include "nsBaseCommandController.h"
 #include "nsCOMPtr.h"
 #include "nsCaret.h"
 #include "nsContentCreatorFunctions.h"
@@ -1863,11 +1864,10 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
         nsCOMPtr<nsIController> controller;
         rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
         if (NS_SUCCEEDED(rv) && controller) {
-          nsCOMPtr<nsIControllerContext> editController =
+          nsCOMPtr<nsBaseCommandController> baseController =
               do_QueryInterface(controller);
-          if (editController) {
-            editController->SetCommandContext(
-                static_cast<nsIEditor*>(newTextEditor));
+          if (baseController) {
+            baseController->SetContext(newTextEditor);
             found = true;
           }
         }
@@ -2443,10 +2443,10 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
         nsCOMPtr<nsIController> controller;
         rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
         if (NS_SUCCEEDED(rv) && controller) {
-          nsCOMPtr<nsIControllerContext> editController =
+          nsCOMPtr<nsBaseCommandController> editController =
               do_QueryInterface(controller);
           if (editController) {
-            editController->SetCommandContext(nullptr);
+            editController->SetContext(nullptr);
           }
         }
       }
