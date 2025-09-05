@@ -149,7 +149,7 @@ bool KeyEventHandler::TryConvertToKeyboardShortcut(
 
   NS_LossyConvertUTF16toASCII commandText(mCommand);
   KeyboardScrollAction action;
-  if (!nsGlobalWindowCommands::FindScrollCommand(commandText.get(), &action)) {
+  if (!nsGlobalWindowCommands::FindScrollCommand(commandText, &action)) {
     // This action doesn't represent a scroll so we need to create a dispatch
     // to content keyboard shortcut so APZ handles this command correctly
     *aOut = KeyboardShortcut(eventType, keyCode, charCode, modifiers,

@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIControllerCommandTable.idl"
 
 [scriptable, builtinclass, uuid(47B82B60-A36F-4167-8072-6F421151ED50)]
 interface nsIControllerContext : nsISupports

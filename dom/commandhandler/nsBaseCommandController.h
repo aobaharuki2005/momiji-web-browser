@@ -10,14 +10,12 @@
 #include "nsControllerCommandTable.h"
 #include "nsIController.h"
 #include "nsIControllerContext.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIWeakReferenceUtils.h"
 
 // The base editor controller is used for both text widgets, and all other text
 // and html editing
 class nsBaseCommandController final : public nsIController,
                                       public nsIControllerContext,
-                                      public nsIInterfaceRequestor,
                                       public nsICommandController {
  public:
   /**
@@ -33,7 +31,6 @@ class nsBaseCommandController final : public nsIController,
   NS_DECL_NSICONTROLLER
   NS_DECL_NSICOMMANDCONTROLLER
   NS_DECL_NSICONTROLLERCONTEXT
-  NS_DECL_NSIINTERFACEREQUESTOR
 
   static already_AddRefed<nsBaseCommandController> CreateWindowController();
   static already_AddRefed<nsBaseCommandController> CreateEditorController();
