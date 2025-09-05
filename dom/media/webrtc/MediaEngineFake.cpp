@@ -249,6 +249,7 @@ nsresult MediaEngineFakeVideoSource::Allocate(
 
   mOpts.mWidth = std::clamp(mOpts.mWidth, 1, VIDEO_WIDTH_MAX);
   mOpts.mHeight = std::clamp(mOpts.mHeight, 1, VIDEO_HEIGHT_MAX);
+  mOpts.mFPS = std::clamp(mOpts.mFPS, 0, MediaEnginePrefs::DEFAULT_VIDEO_FPS);
 
   nsCOMPtr<nsISerialEventTarget> target = GetCurrentSerialEventTarget();
   mCapturer = MakeRefPtr<FakeVideoSource>(target);
