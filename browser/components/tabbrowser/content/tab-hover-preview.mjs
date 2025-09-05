@@ -495,7 +495,14 @@ class TabGroupPanel extends Panel {
   }
 
   activate(group) {
+    if (this.#group && this.#group != group) {
+      this.#group.hoverPreviewPanelActive = false;
+    }
+
     this.#group = group;
+    this.#movePanel();
+    this.#updatePanelContents();
+
     this.#panelSet.panelOpener.execute(() => {
       if (!this.#panelSet.shouldActivate() || !this.#group.collapsed) {
         return;
@@ -550,6 +557,10 @@ class TabGroupPanel extends Panel {
 
     this.#group.hoverPreviewPanelActive = true;
 
+    this.panelElement.openPopup(this.#popupTarget, this.popupOptions);
+  }
+
+  #updatePanelContents() {
     const fragment = this.win.document.createDocumentFragment();
     for (let tab of this.#group.tabs) {
       let menuitem = this.win.document.createXULElement("menuitem");
@@ -564,10 +575,6 @@ class TabGroupPanel extends Panel {
       fragment.appendChild(menuitem);
     }
     this.panelElement.replaceChildren(fragment);
-    const targetElement = this.#group.querySelector(
-      ".tab-group-label-container"
-    );
-    this.panelElement.openPopup(targetElement, this.popupOptions);
   }
 
   handleEvent(event) {
@@ -600,6 +607,22 @@ class TabGroupPanel extends Panel {
       x: 0,
       y: -5,
     };
+  }
+
+  get #popupTarget() {
+    return this.#group?.labelContainerElement;
+  }
+
+  #movePanel() {
+    if (!this.#popupTarget) {
+      return;
+    }
+    this.panelElement.moveToAnchor(
+      this.#popupTarget,
+      this.popupOptions.position,
+      this.popupOptions.x,
+      this.popupOptions.y
+    );
   }
 }
 
