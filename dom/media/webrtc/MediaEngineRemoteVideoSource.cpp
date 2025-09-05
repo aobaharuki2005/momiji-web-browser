@@ -296,17 +296,18 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
       [settings = mSettings, caps = mTrackCapabilities, dstSize, framerate,
        facingMode = mFacingMode, resizeMode]() {
         *settings = dom::MediaTrackSettings();
-        *caps = dom::MediaTrackCapabilities();
 
         settings->mWidth.Construct(dstSize.width);
         settings->mHeight.Construct(dstSize.height);
         settings->mFrameRate.Construct(framerate);
 
+        caps->mFacingMode.Reset();
         if (facingMode) {
           settings->mFacingMode.Construct(*facingMode);
           caps->mFacingMode.Construct(nsTArray{*facingMode});
         }
 
+        caps->mResizeMode.Reset();
         if (resizeMode) {
           nsString noneString, cropString;
           noneString.AssignASCII(dom::GetEnumString(VideoResizeModeEnum::None));
