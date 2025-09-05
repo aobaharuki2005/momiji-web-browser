@@ -17814,7 +17814,7 @@
 #ifdef XP_WIN
 - name: ui.key.layout.load_when_first_needed
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 #endif
 
