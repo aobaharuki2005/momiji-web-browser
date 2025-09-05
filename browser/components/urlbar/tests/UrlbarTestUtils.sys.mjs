@@ -1427,6 +1427,36 @@ export var UrlbarTestUtils = {
     );
   },
 
+  async openTrustPanel(win) {
+    let btn = win.document.getElementById("trust-icon");
+    let popupShown = lazy.BrowserTestUtils.waitForEvent(
+      win.document,
+      "popupshown"
+    );
+    this.EventUtils.synthesizeMouseAtCenter(btn, {}, win);
+    await popupShown;
+  },
+
+  async openTrustPanelSubview(win, viewId) {
+    let view = win.document.getElementById(viewId);
+    let shown = lazy.BrowserTestUtils.waitForEvent(view, "ViewShown");
+    this.EventUtils.synthesizeMouseAtCenter(
+      win.document.getElementById("trustpanel-popup-connection"),
+      {},
+      win
+    );
+    await shown;
+  },
+
+  async closeTrustPanel(win) {
+    let popupHidden = lazy.BrowserTestUtils.waitForEvent(
+      win.document,
+      "popuphidden"
+    );
+    this.EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
+    await popupHidden;
+  },
+
   async selectMenuItem(menupopup, targetSelector) {
     let target = menupopup.querySelector(targetSelector);
     let selected;
