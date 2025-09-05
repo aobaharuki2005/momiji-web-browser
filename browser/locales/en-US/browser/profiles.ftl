@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 profile-window-title-2 = { -brand-short-name } - Choose a profile
-
 profile-window-logo =
     .alt = { -brand-short-name } logo
 profile-window-heading = Choose a { -brand-short-name } profile
@@ -136,17 +135,6 @@ profiles-custom-theme-title =
 profiles-system-theme = System
 profiles-system-theme-title =
     .title = Apply system theme
-
-## Data collection settings changed (multi-profile)
-
-# Full infobar message with inline bold title followed by body text
-multiprofile-data-collection-message = <strong>Data collection settings changed.</strong> The changes made in another profile apply to all profiles on this device.
-
-# Primary button label to open the Data collection section in Settings
-multiprofile-data-collection-view-settings = View settings
-
-# Secondary button label to dismiss the infobar without action
-multiprofile-data-collection-dismiss = Dismiss
 
 ## Alternative text for default profile icons
 

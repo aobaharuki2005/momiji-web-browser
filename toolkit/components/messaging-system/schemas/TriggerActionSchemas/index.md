@@ -64,7 +64,6 @@ let patterns: string[];
 - [`sidebarToolOpened`](#sidebartoolopened)
 - [`elementClicked`](#elementclicked)
 - [`ipProtectionReady`](#ipprotectionready)
-- [`selectableProfilesUpdated`](#selectableprofilesupdated)
 
 ### `openArticleURL`
 
@@ -438,17 +437,5 @@ Targets users with the `browser.ipProtection.enabled` pref set to true, along wi
   trigger: { "ipProtectionReady" },
   targeting: "'browser.ipProtection.enabled' | preferenceValue && !(messageImpressions.IP_PROTECTION_INTRODUCTION_CALLOUT[messageImpressions.IP_PROTECTION_INTRODUCTION_CALLOUT | length - 1] < currentDate|date - (3600000 * 24))",
 
-}
-```
-
-### `selectableProfilesUpdated`
-
-Fires when shared profile data in a profile group changes due to another running profile instance. Only triggers for remote changes and after a tracked data-collection preference actually changes.
-
-```js
-{
-  trigger: { id: "selectableProfilesUpdated" },
-  template: "infobar",
-  frequency: { lifetime: 1 }
 }
 ```
