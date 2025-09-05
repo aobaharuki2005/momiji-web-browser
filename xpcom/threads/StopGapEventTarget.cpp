@@ -15,7 +15,7 @@ StopGapEventTarget::StopGapEventTarget()
 
 StopGapEventTarget::~StopGapEventTarget() {
   MOZ_ASSERT(!mRealEventTarget || mTasks.IsEmpty(),
-      "mRealEventTarget is set, but mTasks has not been drained. How?");
+             "mRealEventTarget is set, but mTasks has not been drained. How?");
 
   for (auto& [event, flags] : mTasks) {
     if (nsCOMPtr<nsICancelableRunnable> cancelable = do_QueryInterface(event)) {
@@ -75,7 +75,8 @@ nsresult StopGapEventTarget::SetRealEventTarget(
   {
     MutexAutoLock lock(mMutex);
     if (mRealEventTarget) {
-      MOZ_ASSERT_UNREACHABLE("SetRealEventTarget cannot be called more than once.");
+      MOZ_ASSERT_UNREACHABLE(
+          "SetRealEventTarget cannot be called more than once.");
       return NS_ERROR_ALREADY_INITIALIZED;
     }
     tasks = std::move(mTasks);
