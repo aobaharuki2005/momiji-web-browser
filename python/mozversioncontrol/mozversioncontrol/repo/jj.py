@@ -122,8 +122,7 @@ class JujutsuRepository(Repository):
 
     @property
     def base_ref(self):
-        ref = self._resolve_to_change("latest(roots(::@ & mutable())-)")
-        return ref if ref else self.head_ref
+        return self._resolve_to_change("roots((::@ & mutable())-)")
 
     def _resolve_to_commit(self, revset):
         commit = self._run_read_only(
@@ -199,13 +198,55 @@ class JujutsuRepository(Repository):
 
         return changed
 
+    # Convert a line in a regexp-based ignore file (in this case,
+    # .clang-format-ignore) to a jj fileset expression. Support the small number
+    # of regexp expressions used in practice.
+    #
+    # Note: it is possible that jj filesets will acquire regex patterns (cf
+    # https://github.com/jj-vcs/jj/issues/6893 for strings), which would allow
+    # drastically simplifying this code.
+    def _translate_exclude_expr(self, pattern):
+        if not pattern or pattern.startswith("#"):
+            return None  # empty or comment
+        # .*/.ignore -> **/.ignore
+        pattern = pattern.replace(".*/", "**/")
+        # .*/.*.pb.h --> **/*.pb.h
+        pattern = re.sub(r"[.][*][^/]", "*", pattern)
+        # gfx/angle/.* -> gfx/angle/**/*
+        pattern = pattern.replace("(^|[^/]).*", "**/*")
+        # js/src/dtoa.c.* -> js/src/dtoa.c*/**/*
+        pattern = pattern.replace(".*", "*/**/*")
+        selector = "glob"
+        if pattern.startswith("^"):
+            selector = "root-glob"
+            pattern = pattern[1:]
+        elif "*" not in pattern:
+            selector = "root-file"
+        return f'{selector}:"{pattern}"'
+
     def diff_stream(self, rev=None, extensions=(), exclude_file=None, context=8):
         if rev is None:
             rev = self.HEAD_REVSET
-        rev = self._resolve_to_commit(rev)
-        return self._git.diff_stream(
-            rev=rev, extensions=extensions, exclude_file=exclude_file, context=context
-        )
+        args = ["diff", "--from", f"roots({rev})-", "--to", f"heads({rev})", "--git"]
+
+        # File patterns to include
+        patterns = [f'glob:"*{dot_extension}"' for dot_extension in extensions]
+        if not patterns:
+            patterns = ["all()"]
+
+        # File patterns to exclude
+        excludes = []
+        if exclude_file is not None:
+            with open(exclude_file) as fh:
+                excludes.extend(line.strip() for line in fh)
+        exclude_patterns = []
+
+        # Construct "(F1 | F2 | F3) ~ F4 ~ F5" (Patterns F1-3 are included, F4-5
+        # are excluded.)
+        fileset = " ~ ".join(["(" + " | ".join(patterns) + ")"] + exclude_patterns)
+        args.append(fileset)
+
+        return self._pipefrom(*args)
 
     def get_outgoing_files(self, diff_filter="ADM", upstream=None):
         assert all(f.lower() in self._valid_diff_filter for f in diff_filter)

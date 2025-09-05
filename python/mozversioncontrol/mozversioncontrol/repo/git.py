@@ -272,11 +272,12 @@ class GitRepository(Repository):
         # git-diff doesn't support an 'exclude-from-files' param, but
         # allow to add individual exclude pattern since v1.9, see
         # https://git-scm.com/docs/gitglossary#gitglossary-aiddefpathspecapathspec
-        with open(exclude_file) as exclude_pattern_file:
-            for pattern in exclude_pattern_file.readlines():
-                pattern = self._translate_exclude_expr(pattern.rstrip())
-                if pattern is not None:
-                    args.append(pattern)
+        if exclude_file is not None:
+            with open(exclude_file) as exclude_pattern_file:
+                for pattern in exclude_pattern_file.readlines():
+                    pattern = self._translate_exclude_expr(pattern.rstrip())
+                    if pattern is not None:
+                        args.append(pattern)
         return self._pipefrom(*args)
 
     def working_directory_clean(self, untracked=False, ignored=False):
