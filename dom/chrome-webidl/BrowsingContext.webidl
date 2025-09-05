@@ -198,8 +198,11 @@ interface BrowsingContext {
   [SetterThrows] attribute boolean useGlobalHistory;
 
   // Extension to give chrome JS the ability to set the window screen
-  // orientation while in RDM.
-  [Throws] undefined setRDMPaneOrientation(OrientationType type, float rotationAngle);
+  // orientation override with WebDriver BiDi and DevTools.
+  [Throws] undefined setOrientationOverride(OrientationType type, float rotationAngle);
+  // Extension to give chrome JS the ability to reset the window screen
+  // orientation override with WebDriver BiDi and DevTools.
+  undefined resetOrientationOverride();
 
   // Extension to give chrome JS the ability to set a maxTouchPoints override
   // while in RDM.

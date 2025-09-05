@@ -208,6 +208,7 @@ struct EmbedderColorSchemes {
   FIELD(CurrentOrientationAngle, float)                                       \
   FIELD(CurrentOrientationType, mozilla::dom::OrientationType)                \
   FIELD(OrientationLock, mozilla::hal::ScreenOrientation)                     \
+  FIELD(HasOrientationOverride, bool)                                         \
   FIELD(UserAgentOverride, nsString)                                          \
   FIELD(TouchEventsOverrideInternal, mozilla::dom::TouchEventsOverride)       \
   FIELD(EmbedderElementType, Maybe<nsString>)                                 \
@@ -691,13 +692,37 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return txn.Commit(this);
   }
 
-  void SetRDMPaneOrientation(OrientationType aType, float aAngle,
-                             ErrorResult& aRv) {
-    if (InRDMPane()) {
-      if (NS_FAILED(SetCurrentOrientation(aType, aAngle))) {
-        aRv.ThrowInvalidStateError("Browsing context is discarded");
-      }
+  bool HasOrientationOverride() const {
+    return Top()->GetHasOrientationOverride();
+  }
+
+  [[nodiscard]] nsresult SetOrientationOverride(OrientationType aType,
+                                                float aAngle) {
+    if (GetHasOrientationOverride() && GetCurrentOrientationType() == aType &&
+        GetCurrentOrientationAngle() == aAngle) {
+      return NS_OK;
     }
+
+    Transaction txn;
+    txn.SetCurrentOrientationType(aType);
+    txn.SetCurrentOrientationAngle(aAngle);
+    txn.SetHasOrientationOverride(true);
+    return txn.Commit(this);
+  }
+
+  void SetOrientationOverride(OrientationType aType, float aAngle,
+                              ErrorResult& aRv) {
+    MOZ_ASSERT(IsTop());
+
+    if (NS_FAILED(SetOrientationOverride(aType, aAngle))) {
+      aRv.ThrowInvalidStateError("Browsing context is discarded");
+    }
+  }
+
+  void ResetOrientationOverride() {
+    MOZ_ASSERT(IsTop());
+
+    Unused << SetHasOrientationOverride(false);
   }
 
   void SetRDMPaneMaxTouchPoints(uint8_t aMaxTouchPoints, ErrorResult& aRv) {
@@ -1171,6 +1196,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   void DidSet(FieldIndex<IDX_InRDMPane>, bool aOldValue);
+  void DidSet(FieldIndex<IDX_HasOrientationOverride>, bool aOldValue);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DidSet(FieldIndex<IDX_ForceDesktopViewport>,
                                           bool aOldValue);
 
