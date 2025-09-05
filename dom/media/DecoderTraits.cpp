@@ -11,6 +11,7 @@
 #include "OggDemuxer.h"
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/glean/DomMediaHlsMetrics.h"
 #include "mozilla/glean/DomMediaMetrics.h"
@@ -32,6 +33,10 @@
 #include "WaveDemuxer.h"
 
 namespace mozilla {
+
+extern LazyLogModule gMediaDecoderLog;
+#define LOGD(x, ...) \
+  MOZ_LOG_FMT(gMediaDecoderLog, LogLevel::Debug, x, ##__VA_ARGS__)
 
 /* static */
 bool DecoderTraits::IsHttpLiveStreamingType(const MediaContainerType& aType) {
@@ -217,6 +222,8 @@ already_AddRefed<MediaDataDemuxer> DecoderTraits::CreateDemuxer(
     demuxer = new OggDemuxer(aResource);
   } else if (WebMDecoder::IsSupportedType(aType)) {
     demuxer = new WebMDemuxer(aResource);
+  } else {
+    LOGD("CreateDemuxer: unsupported type {}", aType.OriginalString().get());
   }
 
   return demuxer.forget();
@@ -302,3 +309,6 @@ nsTArray<UniquePtr<TrackInfo>> DecoderTraits::GetTracksInfo(
 }
 
 }  // namespace mozilla
+
+// avoid redefined macro in unified build
+#undef LOGD

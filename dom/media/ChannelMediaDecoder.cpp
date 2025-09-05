@@ -222,6 +222,9 @@ MediaDecoderStateMachineBase* ChannelMediaDecoder::CreateStateMachine(
                            sTrackingIdCounter++,
                            TrackingId::TrackAcrossProcesses::Yes);
   mReader = DecoderTraits::CreateReader(ContainerType(), init);
+  if (NS_WARN_IF(!mReader)) {
+    return nullptr;
+  }
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
   // This state machine is mainly used for the encrypted playback. However, for
