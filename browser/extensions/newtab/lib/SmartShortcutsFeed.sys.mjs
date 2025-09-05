@@ -12,6 +12,8 @@ import { actionTypes as at } from "resource://newtab/common/Actions.mjs";
 const PREF_SYSTEM_SHORTCUTS_PERSONALIZATION =
   "discoverystream.shortcuts.personalization.enabled";
 
+const PREF_SYSTEM_SHORTCUTS_LOG = "discoverystream.shortcuts.force_log.enabled";
+
 function timeMSToSeconds(timeMS) {
   return Math.round(timeMS / 1000);
 }
@@ -28,8 +30,12 @@ export class SmartShortcutsFeed {
     const { values } = this.store.getState().Prefs;
     const systemPref = values[PREF_SYSTEM_SHORTCUTS_PERSONALIZATION];
     const experimentVariable = values.smartShortcutsConfig?.enabled;
+    const systemLogPref = values[PREF_SYSTEM_SHORTCUTS_LOG];
+    const experimentLogPref = values.smartShortcutsConfig?.force_log;
 
-    return systemPref || experimentVariable;
+    return (
+      systemPref || experimentVariable || systemLogPref || experimentLogPref
+    );
   }
 
   async init() {
