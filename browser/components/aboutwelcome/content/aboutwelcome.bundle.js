@@ -446,55 +446,112 @@ const MultiStageAboutWelcome = props => {
     }) : null;
   })));
 };
-const SecondaryCTA = props => {
-  const targetElement = props.position ? `secondary_button_${props.position}` : `secondary_button`;
-  let buttonStyling = props.content.secondary_button?.has_arrow_icon ? `secondary arrow-icon` : `secondary`;
-  const isPrimary = props.content.secondary_button?.style === "primary";
-  const isTextLink = !["split", "callout"].includes(props.content.position) && props.content.tiles?.type !== "addons-picker" && !isPrimary;
-  const isSplitButton = props.content.submenu_button?.attached_to === targetElement;
+const renderSingleSecondaryCTAButton = ({
+  content,
+  button,
+  targetElement,
+  position,
+  handleAction,
+  activeMultiSelect,
+  isArrayItem,
+  index = null
+}) => {
+  let buttonStyling = button?.has_arrow_icon ? `secondary arrow-icon` : `secondary`;
+  const isPrimary = button?.style === "primary";
+  const isTextLink = !["split", "callout"].includes(content.position) && content.tiles?.type !== "addons-picker" && !isPrimary;
+  const isSplitButton = content.submenu_button?.attached_to === targetElement;
   let className = "secondary-cta";
-  if (props.position) {
-    className += ` ${props.position}`;
+  if (position) {
+    className += ` ${position}`;
   }
   if (isSplitButton) {
     className += " split-button-container";
   }
   const isDisabled = react__WEBPACK_IMPORTED_MODULE_0___default().useCallback(disabledValue => {
     if (disabledValue === "hasActiveMultiSelect") {
-      if (!props.activeMultiSelect) {
+      if (!activeMultiSelect) {
         return true;
       }
-      for (const key in props.activeMultiSelect) {
-        if (props.activeMultiSelect[key]?.length > 0) {
+      for (const key in activeMultiSelect) {
+        if (activeMultiSelect[key]?.length > 0) {
           return false;
         }
       }
       return true;
     }
     return disabledValue;
-  }, [props.activeMultiSelect]);
+  }, [activeMultiSelect]);
   if (isTextLink) {
     buttonStyling += " text-link";
   }
   if (isPrimary) {
-    buttonStyling = props.content.secondary_button?.has_arrow_icon ? `primary arrow-icon` : `primary`;
+    buttonStyling = button?.has_arrow_icon ? `primary arrow-icon` : `primary`;
   }
+
+  // We have to provide handleAction with the expected action here,
+  // since the data doesn't actually exist in JSON content
+  const shimmedHandleAction = event => {
+    if (isArrayItem && button?.action) {
+      return handleAction(event, button.action);
+    }
+    return handleAction(event);
+  };
+  let buttonId = "secondary_button";
+  buttonId += index !== null ? `_${index}` : "";
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: className
+    className: className,
+    key: targetElement
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: props.content[targetElement].text
+    text: button?.text
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: props.content[targetElement].label
+    text: button?.label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    id: "secondary_button",
+    id: buttonId,
     className: buttonStyling,
     value: targetElement,
-    disabled: isDisabled(props.content.secondary_button?.disabled),
-    onClick: props.handleAction
+    disabled: isDisabled(button?.disabled),
+    onClick: shimmedHandleAction
   })), isSplitButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmenuButton__WEBPACK_IMPORTED_MODULE_5__.SubmenuButton, {
-    content: props.content,
-    handleAction: props.handleAction
+    content: content,
+    handleAction: handleAction
   }) : null);
+};
+const SecondaryCTA = props => {
+  const {
+    content,
+    position
+  } = props;
+  const targetElement = position ? `secondary_button_${position}` : "secondary_button";
+  const buttonData = content[targetElement];
+  if (!buttonData) {
+    return null;
+  }
+  if (Array.isArray(buttonData)) {
+    if (buttonData.length === 0) {
+      return null;
+    }
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      className: "secondary-buttons-top-container"
+    }, buttonData.map((button, index) => renderSingleSecondaryCTAButton({
+      content,
+      button,
+      targetElement: `${targetElement}_${index}`,
+      position,
+      handleAction: props.handleAction,
+      activeMultiSelect: props.activeMultiSelect,
+      isArrayItem: true,
+      index
+    })));
+  }
+  return renderSingleSecondaryCTAButton({
+    content,
+    button: buttonData,
+    targetElement,
+    position,
+    handleAction: props.handleAction,
+    activeMultiSelect: props.activeMultiSelect,
+    isArrayItem: false
+  });
 };
 const StepsIndicator = props => {
   let steps = [];
@@ -617,35 +674,40 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       }
     }
   }
-  async handleAction(event) {
+  resolveActionFromContent(value, event, props) {
+    if (value === "submenu_button" && event.action) {
+      return event.action;
+    }
+    const {
+      content
+    } = props;
+    const targetContent = content[value] || content.tiles || content.languageSwitcher;
+    if (!targetContent) {
+      return null;
+    }
+    if (Array.isArray(targetContent)) {
+      for (const tile of targetContent) {
+        const matchedTile = tile.data.find(t => t.id === value);
+        if (matchedTile?.action) {
+          return matchedTile.action;
+        }
+      }
+      return null;
+    }
+    return targetContent.action ?? null;
+  }
+  async handleAction(event, providedAction = null) {
     const {
       props
     } = this;
     const value = event.currentTarget.value ?? event.currentTarget.getAttribute("value");
     const source = event.source || value;
-    let targetContent = props.content[value] || props.content.tiles || props.content.languageSwitcher;
-    if (value === "submenu_button" && event.action) {
-      targetContent = {
-        action: event.action
-      };
-    }
-    if (!targetContent) {
+    let action = providedAction || this.resolveActionFromContent(value, event, props);
+    if (!action) {
+      console.error("Failed to resolve action");
       return;
     }
-    let action;
-    if (Array.isArray(targetContent)) {
-      for (const tile of targetContent) {
-        const matchedTile = tile.data.find(t => t.id === value);
-        if (matchedTile?.action) {
-          action = matchedTile.action;
-          break;
-        }
-      }
-    } else if (!targetContent.action) {
-      return;
-    } else {
-      action = targetContent.action;
-    }
+
     // Send telemetry before waiting on actions
     this.logTelemetry({
       value,
@@ -3490,7 +3552,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4);
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
