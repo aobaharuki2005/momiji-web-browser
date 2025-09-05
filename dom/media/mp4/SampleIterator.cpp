@@ -10,10 +10,9 @@
 #include "BufferReader.h"
 #include "MP4Interval.h"
 #include "MP4Metadata.h"
+#include "MediaDataDemuxer.h"
 #include "SinfParser.h"
 #include "mozilla/RefPtr.h"
-
-extern mozilla::LazyLogModule gMediaDemuxerLog;
 
 using namespace mozilla::media;
 

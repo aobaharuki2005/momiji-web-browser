@@ -8,10 +8,10 @@
 
 #include <algorithm>
 
+#include "MediaDataDemuxer.h"
 #include "mozilla/CheckedInt.h"
 #include "nsThreadUtils.h"
 
-extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define WEBM_DEBUG(arg, ...)                          \
   MOZ_LOG(gMediaDemuxerLog, mozilla::LogLevel::Debug, \
           ("WebMBufferedParser(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))

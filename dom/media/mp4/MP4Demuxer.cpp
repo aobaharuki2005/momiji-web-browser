@@ -26,9 +26,6 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "nsPrintfCString.h"
 
-extern mozilla::LazyLogModule gMediaDemuxerLog;
-mozilla::LogModule* GetDemuxerLog() { return gMediaDemuxerLog; }
-
 #define LOG(arg, ...)                                                 \
   DDMOZ_LOG(gMediaDemuxerLog, mozilla::LogLevel::Debug, "::%s: " arg, \
             __func__, ##__VA_ARGS__)
@@ -505,7 +502,7 @@ MP4TrackDemuxer::GetNextSample() {
     }
   }
 
-  if (MOZ_LOG_TEST(GetDemuxerLog(), LogLevel::Verbose)) {
+  if (MOZ_LOG_TEST(gMediaDemuxerLog, LogLevel::Verbose)) {
     bool isAudio = mInfo->GetAsAudioInfo();
     TimeUnit originalStart = TimeUnit::Invalid();
     TimeUnit originalEnd = TimeUnit::Invalid();
