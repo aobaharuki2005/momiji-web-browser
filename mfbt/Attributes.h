@@ -495,6 +495,22 @@
 #  define MOZ_LIFETIME_CAPTURE_BY(x) /* nothing */
 #endif
 
+/**
+ * MOZ_STANDALONE_DEBUG causes complete debug information to be emitted
+ * for a record type when clang would otherwise try to elide some of it.
+ * This helps certain third party debugging tools introspect types.
+ * See: https://clang.llvm.org/docs/AttributeReference.html#standalone-debug
+ */
+#if defined(__clang__) && defined(__has_cpp_attribute)
+#  if __has_cpp_attribute(clang::standalone_debug)
+#    define MOZ_STANDALONE_DEBUG [[clang::standalone_debug]]
+#  else
+#    define MOZ_STANDALONE_DEBUG /* nothing */
+#  endif
+#else
+#  define MOZ_STANDALONE_DEBUG /* nothing */
+#endif
+
 #ifdef __cplusplus
 
 /**
