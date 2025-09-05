@@ -17,6 +17,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   UserContextManager:
     "chrome://remote/content/shared/UserContextManager.sys.mjs",
+  WindowGlobalMessageHandler:
+    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
 
 /**
@@ -481,9 +483,15 @@ class EmulationModule extends RootBiDiModule {
       await this.messageHandler.updateSessionData(sessionDataItems);
     }
 
+    const commands = [];
+
     for (const navigable of navigables) {
-      this._setLocaleForBrowsingContext({ locale, context: navigable });
+      commands.push(
+        this._setLocaleForBrowsingContext({ locale, context: navigable })
+      );
     }
+
+    await Promise.all(commands);
   }
 
   /**
@@ -828,9 +836,15 @@ class EmulationModule extends RootBiDiModule {
       await this.messageHandler.updateSessionData(sessionDataItems);
     }
 
+    const commands = [];
+
     for (const navigable of navigables) {
-      this._setTimezoneOverride({ context: navigable, timezone });
+      commands.push(
+        this._setTimezoneOverride({ context: navigable, timezone })
+      );
     }
+
+    await Promise.all(commands);
   }
 
   /**
@@ -858,7 +872,7 @@ class EmulationModule extends RootBiDiModule {
   /**
    * Set the locale override to the top-level browsing context.
    *
-   * @param {object=} options
+   * @param {object} options
    * @param {BrowsingContext} options.context
    *     Top-level browsing context object which is a target
    *     for the locale override.
@@ -867,16 +881,58 @@ class EmulationModule extends RootBiDiModule {
    *     the return result of JavaScript Intl APIs.
    *     Null value resets the override.
    */
-  _setLocaleForBrowsingContext(options) {
+  async _setLocaleForBrowsingContext(options) {
     const { context, locale } = options;
 
     context.languageOverride = locale;
+
+    await this.messageHandler.handleCommand({
+      moduleName: "emulation",
+      commandName: "_setLocaleOverrideToSandboxes",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        contextDescriptor: {
+          type: lazy.ContextDescriptorType.TopBrowsingContext,
+          id: context.browserId,
+        },
+      },
+      params: {
+        locale,
+      },
+    });
   }
 
-  _setTimezoneOverride(params) {
-    const { context, timezone } = params;
+  /**
+   * Set the timezone override to the top-level browsing context.
+   *
+   * @param {object} options
+   * @param {BrowsingContext} options.context
+   *     Top-level browsing context object which is a target
+   *     for the locale override.
+   * @param {(string|null)} options.timezone
+   *     Timezone string which has to override
+   *     the return result of JavaScript Intl/Date APIs.
+   *     Null value resets the override.
+   */
+  async _setTimezoneOverride(options) {
+    const { context, timezone } = options;
 
     context.timezoneOverride = timezone;
+
+    await this.messageHandler.handleCommand({
+      moduleName: "emulation",
+      commandName: "_setTimezoneOverrideToSandboxes",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        contextDescriptor: {
+          type: lazy.ContextDescriptorType.TopBrowsingContext,
+          id: context.browserId,
+        },
+      },
+      params: {
+        timezone,
+      },
+    });
   }
 
   #getBrowsingContext(contextId) {
