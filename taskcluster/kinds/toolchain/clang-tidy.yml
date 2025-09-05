@@ -41,6 +41,7 @@ linux64-clang-tidy:
     fetches:
         toolchain:
             - linux64-clang-toolchain
+            - linux64-libxml2
             - linux64-toolchain-sysroot
 
 macosx64-clang-tidy:
