@@ -1460,6 +1460,11 @@ class MWasmDerivedPointer : public MUnaryInstruction,
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
+  HashNumber valueHash() const override {
+    HashNumber hash = MUnaryInstruction::valueHash();
+    hash = addU32ToHash(hash, offset());
+    return hash;
+  }
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins) &&
            ins->toWasmDerivedPointer()->offset() == offset();
