@@ -516,6 +516,8 @@ support-files = ["window_empty_document.html"]
 
 ["test_passive_listeners.html"]
 
+["test_query_content_when_selection_in_text_control.html"]
+
 ["test_scroll_per_page.html"]
 support-files = ["window_empty_document.html"]
 skip-if = ["os == 'android'"] # fail

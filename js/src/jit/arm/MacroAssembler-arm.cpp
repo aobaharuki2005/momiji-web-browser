@@ -2362,6 +2362,39 @@ void MacroAssemblerARMCompat::minMaxDouble(FloatRegister srcDest,
   bind(&done);
 }
 
+void MacroAssemblerARMCompat::minMax32(Register lhs, Register rhs,
+                                       Register dest, bool isMax) {
+  if (rhs == dest) {
+    std::swap(lhs, rhs);
+  }
+
+  auto cond = isMax ? Assembler::LessThan : Assembler::GreaterThan;
+  if (lhs != dest) {
+    move32(lhs, dest);
+  }
+  cmp32(lhs, rhs);
+  ma_mov(rhs, dest, LeaveCC, cond);
+}
+
+void MacroAssemblerARMCompat::minMax32(Register lhs, Imm32 rhs, Register dest,
+                                       bool isMax) {
+  // We need a scratch register when |rhs| can't be encoded in the compare
+  // instruction.
+  if (Imm8(rhs.value).invalid() && Imm8(~rhs.value).invalid()) {
+    ScratchRegisterScope scratch(asMasm());
+    move32(rhs, scratch);
+    minMax32(lhs, scratch, dest, isMax);
+    return;
+  }
+
+  auto cond = isMax ? Assembler::LessThan : Assembler::GreaterThan;
+  if (lhs != dest) {
+    move32(lhs, dest);
+  }
+  cmp32(lhs, rhs);
+  ma_mov(rhs, dest, cond);
+}
+
 void MacroAssemblerARMCompat::minMaxFloat32(FloatRegister srcDest,
                                             FloatRegister second, bool canBeNaN,
                                             bool isMax) {

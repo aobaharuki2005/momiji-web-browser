@@ -106,10 +106,6 @@ constexpr const char* sSelectRight2String = "cmd_selectRight2";
 constexpr const char* sSelectUp2String = "cmd_selectUp2";
 constexpr const char* sSelectDown2String = "cmd_selectDown2";
 
-#if 0
-#  pragma mark -
-#endif
-
 // a base class for selection-related commands, for code sharing
 class nsSelectionCommandsBase : public nsIControllerCommand {
  public:
@@ -172,10 +168,6 @@ class nsPhysicalSelectCommand : public nsSelectionCommandsBase {
   // no member variables, please, we're stateless!
 };
 
-#if 0
-#  pragma mark -
-#endif
-
 NS_IMPL_ISUPPORTS(nsSelectionCommandsBase, nsIControllerCommand)
 
 NS_IMETHODIMP
@@ -228,10 +220,6 @@ nsresult nsSelectionCommandsBase::GetSelectionControllerFromWindow(
   *aSelCon = presShell.forget().take();
   return NS_OK;
 }
-
-#if 0
-#  pragma mark -
-#endif
 
 // Helpers for nsSelectMoveScrollCommand and nsPhysicalSelectMoveScrollCommand
 static void AdjustFocusAfterCaretMove(nsPIDOMWindowOuter* aWindow) {
@@ -410,10 +398,6 @@ nsresult nsPhysicalSelectMoveScrollCommand::DoCommand(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#if 0
-#  pragma mark -
-#endif
-
 static const struct SelectCommand {
   Command reverse, forward;
   nsresult (NS_STDCALL nsISelectionController::*select)(bool, bool);
@@ -461,10 +445,6 @@ nsresult nsSelectCommand::DoCommand(const char* aCommandName,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#if 0
-#  pragma mark -
-#endif
-
 static const struct PhysicalSelectCommand {
   Command command;
   int16_t direction, amount;
@@ -506,10 +486,6 @@ nsresult nsPhysicalSelectCommand::DoCommand(const char* aCommandName,
   MOZ_ASSERT(false, "Forgot to handle new command?");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-#if 0
-#  pragma mark -
-#endif
 
 class nsClipboardCommand final : public nsIControllerCommand {
   ~nsClipboardCommand() = default;
@@ -592,10 +568,6 @@ nsresult nsClipboardCommand::DoCommandParams(const char* aCommandName,
                                              nsISupports* aContext) {
   return DoCommand(aCommandName, aContext);
 }
-
-#if 0
-#  pragma mark -
-#endif
 
 class nsSelectionCommand : public nsIControllerCommand {
  public:
@@ -691,10 +663,6 @@ nsresult nsSelectionCommand::GetDocumentViewerEditFromContext(
   return NS_OK;
 }
 
-#if 0
-#  pragma mark -
-#endif
-
 #define NS_DECL_CLIPBOARD_COMMAND(_cmd)                                       \
   class _cmd : public nsSelectionCommand {                                    \
    protected:                                                                 \
@@ -723,10 +691,6 @@ nsresult nsClipboardCopyLinkCommand::DoClipboardCommand(
   return aEdit->CopyLinkLocation();
 }
 
-#if 0
-#  pragma mark -
-#endif
-
 nsresult nsClipboardImageCommands::IsClipboardCommandEnabled(
     const char* aCommandName, nsIDocumentViewerEdit* aEdit,
     bool* outCmdEnabled) {
@@ -748,10 +712,6 @@ nsresult nsClipboardImageCommands::DoClipboardCommand(
   return aEdit->CopyImage(copyFlags);
 }
 
-#if 0
-#  pragma mark -
-#endif
-
 nsresult nsClipboardSelectAllNoneCommands::IsClipboardCommandEnabled(
     const char* aCommandName, nsIDocumentViewerEdit* aEdit,
     bool* outCmdEnabled) {
@@ -766,129 +726,6 @@ nsresult nsClipboardSelectAllNoneCommands::DoClipboardCommand(
 
   return aEdit->ClearSelection();
 }
-
-#if 0
-#  pragma mark -
-#endif
-
-#if 0  // Remove unless needed again, bug 204777
-class nsWebNavigationBaseCommand : public nsIControllerCommand
-{
-public:
-  virtual ~nsWebNavigationBaseCommand() {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICONTROLLERCOMMAND
-
-protected:
-
-  virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled) = 0;
-  virtual nsresult    DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation) = 0;
-
-  static nsresult     GetWebNavigationFromContext(nsISupports *aContext, nsIWebNavigation **aWebNavigation);
-
-  // no member variables, please, we're stateless!
-};
-
-class nsGoForwardCommand : public nsWebNavigationBaseCommand
-{
-protected:
-
-  virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled);
-  virtual nsresult    DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation);
-  // no member variables, please, we're stateless!
-};
-
-class nsGoBackCommand : public nsWebNavigationBaseCommand
-{
-protected:
-
-  virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled);
-  virtual nsresult    DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation);
-  // no member variables, please, we're stateless!
-};
-
-/*---------------------------------------------------------------------------
-
-  nsWebNavigationCommands
-     no params
-----------------------------------------------------------------------------*/
-
-NS_IMPL_ISUPPORTS(nsWebNavigationBaseCommand, nsIControllerCommand)
-
-NS_IMETHODIMP
-nsWebNavigationBaseCommand::IsCommandEnabled(const char * aCommandName,
-                                          nsISupports *aCommandContext,
-                                          bool *outCmdEnabled)
-{
-  NS_ENSURE_ARG_POINTER(outCmdEnabled);
-  *outCmdEnabled = false;
-
-  nsCOMPtr<nsIWebNavigation> webNav;
-  GetWebNavigationFromContext(aCommandContext, getter_AddRefs(webNav));
-  NS_ENSURE_TRUE(webNav, NS_ERROR_INVALID_ARG);
-
-  return IsCommandEnabled(aCommandName, webNav, outCmdEnabled);
-}
-
-NS_IMETHODIMP
-nsWebNavigationBaseCommand::GetCommandStateParams(const char *aCommandName,
-                                            nsICommandParams *aParams, nsISupports *aCommandContext)
-{
-  // XXX we should probably return the enabled state
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsWebNavigationBaseCommand::DoCommand(const char *aCommandName,
-                                   nsISupports *aCommandContext)
-{
-  nsCOMPtr<nsIWebNavigation> webNav;
-  GetWebNavigationFromContext(aCommandContext, getter_AddRefs(webNav));
-  NS_ENSURE_TRUE(webNav, NS_ERROR_INVALID_ARG);
-
-  return DoWebNavCommand(aCommandName, webNav);
-}
-
-NS_IMETHODIMP
-nsWebNavigationBaseCommand::DoCommandParams(const char *aCommandName,
-                                       nsICommandParams *aParams, nsISupports *aCommandContext)
-{
-  return DoCommand(aCommandName, aCommandContext);
-}
-
-nsresult
-nsWebNavigationBaseCommand::GetWebNavigationFromContext(nsISupports *aContext, nsIWebNavigation **aWebNavigation)
-{
-  nsCOMPtr<nsIInterfaceRequestor> windowReq = do_QueryInterface(aContext);
-  CallGetInterface(windowReq.get(), aWebNavigation);
-  return (*aWebNavigation) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGoForwardCommand::IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled)
-{
-  return aWebNavigation->GetCanGoForward(outCmdEnabled);
-}
-
-nsresult
-nsGoForwardCommand::DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation)
-{
-  return aWebNavigation->GoForward();
-}
-
-nsresult
-nsGoBackCommand::IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled)
-{
-  return aWebNavigation->GetCanGoBack(outCmdEnabled);
-}
-
-nsresult
-nsGoBackCommand::DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation)
-{
-  return aWebNavigation->GoBack();
-}
-#endif
 
 class nsLookUpDictionaryCommand final : public nsIControllerCommand {
  public:
@@ -1147,12 +984,6 @@ nsresult nsWindowCommandRegistration::RegisterWindowCommands(
   NS_REGISTER_LAST_COMMAND(nsClipboardImageCommands, sCopyImageString);
   NS_REGISTER_FIRST_COMMAND(nsClipboardSelectAllNoneCommands, sSelectAllString);
   NS_REGISTER_LAST_COMMAND(nsClipboardSelectAllNoneCommands, sSelectNoneString);
-
-#if 0  // Remove unless needed again, bug 204777
-  NS_REGISTER_ONE_COMMAND(nsGoBackCommand, "cmd_browserBack");
-  NS_REGISTER_ONE_COMMAND(nsGoForwardCommand, "cmd_browserForward");
-#endif
-
   NS_REGISTER_ONE_COMMAND(nsLookUpDictionaryCommand, "cmd_lookUpDictionary");
 
   return rv;

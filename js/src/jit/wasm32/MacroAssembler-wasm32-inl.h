@@ -1163,6 +1163,38 @@ void MacroAssembler::branch64(Condition cond, const Address& lhs,
   MOZ_CRASH();
 }
 
+void MacroAssembler::min32(Register lhs, Register rhs, Register dest) {
+  MOZ_CRASH();
+}
+
+void MacroAssembler::min32(Register lhs, Imm32 rhs, Register dest) {
+  MOZ_CRASH();
+}
+
+void MacroAssembler::max32(Register lhs, Register rhs, Register dest) {
+  MOZ_CRASH();
+}
+
+void MacroAssembler::max32(Register lhs, Imm32 rhs, Register dest) {
+  MOZ_CRASH();
+}
+
+void MacroAssembler::minPtr(Register lhs, Register rhs, Register dest) {
+  MOZ_CRASH();
+}
+
+void MacroAssembler::minPtr(Register lhs, ImmWord rhs, Register dest) {
+  MOZ_CRASH();
+}
+
+void MacroAssembler::maxPtr(Register lhs, Register rhs, Register dest) {
+  MOZ_CRASH();
+}
+
+void MacroAssembler::maxPtr(Register lhs, ImmWord rhs, Register dest) {
+  MOZ_CRASH();
+}
+
 void MacroAssembler::minFloat32(FloatRegister other, FloatRegister srcDest,
                                 bool handleNaN) {
   MOZ_CRASH();

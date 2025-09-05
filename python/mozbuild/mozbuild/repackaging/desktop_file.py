@@ -268,13 +268,7 @@ def _generate_browser_desktop_entry(build_variables, localizations):
             },
             {
                 "key": "StartupWMClass",
-                "value": (
-                    "firefox-aurora"
-                    if build_variables["PKG_NAME"] == "firefox-devedition"
-                    else build_variables.get(
-                        "StartupWMClass", build_variables["PKG_NAME"]
-                    )
-                ),
+                "value": build_variables["REMOTING_NAME"],
             },
             {
                 "key": "DBusActivatable",

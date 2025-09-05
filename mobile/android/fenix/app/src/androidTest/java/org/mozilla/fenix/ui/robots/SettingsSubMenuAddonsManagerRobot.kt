@@ -62,6 +62,7 @@ import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import mozilla.components.feature.addons.R as addonsR
 
 /**
  * Implementation of Robot Pattern for the Addons Management Settings.
@@ -94,23 +95,23 @@ class SettingsSubMenuAddonsManagerRobot {
             ),
             itemWithResIdContainingText(
                 "$packageName:id/optional_settings_title",
-                getStringResource(R.string.mozac_feature_addons_permissions_dialog_heading_optional_settings),
+                getStringResource(addonsR.string.mozac_feature_addons_permissions_dialog_heading_optional_settings),
             ),
             itemWithResIdContainingText(
                 "$packageName:id/allow_in_private_browsing",
-                getStringResource(R.string.mozac_feature_addons_settings_allow_in_private_browsing_2),
+                getStringResource(addonsR.string.mozac_feature_addons_settings_allow_in_private_browsing_2),
             ),
             itemWithResIdContainingText(
                 "$packageName:id/learn_more_link",
-                getStringResource(R.string.mozac_feature_addons_permissions_dialog_learn_more),
+                getStringResource(addonsR.string.mozac_feature_addons_permissions_dialog_learn_more),
             ),
             itemWithResIdContainingText(
                 "$packageName:id/deny_button",
-                getStringResource(R.string.mozac_feature_addons_permissions_dialog_cancel),
+                getStringResource(addonsR.string.mozac_feature_addons_permissions_dialog_cancel),
             ),
             itemWithResIdContainingText(
                 "$packageName:id/allow_button",
-                getStringResource(R.string.mozac_feature_addons_permissions_dialog_add),
+                getStringResource(addonsR.string.mozac_feature_addons_permissions_dialog_add),
             ),
         )
     }
@@ -508,7 +509,7 @@ class SettingsSubMenuAddonsManagerRobot {
         Log.i(TAG, "allowPermissionToInstall: Trying to click the \"Add\" button")
         itemWithResIdContainingText(
             "$packageName:id/allow_button",
-            getStringResource(R.string.mozac_feature_addons_permissions_dialog_add),
+            getStringResource(addonsR.string.mozac_feature_addons_permissions_dialog_add),
         ).click()
         Log.i(TAG, "allowPermissionToInstall: Clicked the \"Add\" button")
     }

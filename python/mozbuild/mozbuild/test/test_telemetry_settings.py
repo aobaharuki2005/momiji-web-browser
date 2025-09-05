@@ -140,13 +140,22 @@ def test_initialize_noop_when_telemetry_disabled_env(monkeypatch):
         assert not did_prompt
 
 
-def test_initialize_noop_when_request_error(settings):
+def test_initialize_when_request_error_falls_back_to_vcs(settings):
     with mock.patch(
-        "mach.telemetry.resolve_is_employee",
+        "requests.get",
         side_effect=requests.exceptions.RequestException("Unlucky"),
-    ), mock.patch("mach.telemetry.record_telemetry_settings") as record_mock:
-        initialize_telemetry_setting(None, None, None)
-        assert record_mock.call_count == 0
+    ), mock.patch(
+        "mach.telemetry.resolve_is_employee_by_vcs", return_value=True
+    ), mock.patch(
+        "mach.telemetry.prompt_telemetry_message_contributor"
+    ) as prompt_mock, mock.patch(
+        "mach.telemetry.record_telemetry_settings"
+    ) as record_mock:
+        initialize_telemetry_setting(settings, "", "")
+        assert prompt_mock.call_count == 0
+        assert record_mock.call_count == 1
+        args, kwargs = record_mock.call_args
+        assert args[2]
 
 
 def test_resolve_is_employee():

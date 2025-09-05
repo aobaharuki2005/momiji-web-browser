@@ -7,7 +7,7 @@ task-defaults:
     run:
         using: mozharness
     fetches:
-        toolchain:
+        fetch:
             - windows-rs
 
 win32/debug:

@@ -588,7 +588,7 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
       ObjectFlag::QualifiedVarObj,
       ObjectFlag::GenerationCountedGlobal,
   };
-  if (JS::Prefs::objectfuse_for_global()) {
+  if (ShouldUseObjectFuses() && JS::Prefs::objectfuse_for_global()) {
     objectFlags.setFlag(ObjectFlag::HasObjectFuse);
   }
 

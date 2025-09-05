@@ -202,11 +202,13 @@ class FinalizationRegistryObject : public NativeObject {
   enum { QueueSlot = 0, RegistrationsSlot, SlotCount };
 
  public:
+  using RegistrationsWeakMap = WeakMap<Value, JSObject*>;
+
   static const JSClass class_;
   static const JSClass protoClass_;
 
   FinalizationQueueObject* queue() const;
-  ObjectWeakMap* registrations() const;
+  RegistrationsWeakMap* registrations() const;
 
   void traceWeak(JSTracer* trc);
 
@@ -229,10 +231,10 @@ class FinalizationRegistryObject : public NativeObject {
 
   static bool addRegistration(JSContext* cx,
                               HandleFinalizationRegistryObject registry,
-                              HandleObject unregisterToken,
+                              HandleValue unregisterToken,
                               HandleFinalizationRecordObject record);
   static void removeRegistrationOnError(
-      HandleFinalizationRegistryObject registry, HandleObject unregisterToken,
+      HandleFinalizationRegistryObject registry, HandleValue unregisterToken,
       HandleFinalizationRecordObject record);
 
   static bool preserveDOMWrapper(JSContext* cx, HandleObject obj);

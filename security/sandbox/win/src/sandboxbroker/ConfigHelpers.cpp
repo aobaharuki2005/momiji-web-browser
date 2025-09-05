@@ -6,8 +6,7 @@
 
 #include "ConfigHelpers.h"
 
-#include <winerror.h>
-#include <winreg.h>
+#include <windows.h>
 
 #include "mozilla/Logging.h"
 #include "nsStringFwd.h"

@@ -43,6 +43,7 @@ import org.mozilla.fenix.downloads.listscreen.DownloadsListTestTag
 import org.mozilla.fenix.downloads.listscreen.store.FileItem
 import org.mozilla.fenix.downloads.listscreen.store.TimeCategory
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.feature.media.R as mediaR
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -142,7 +143,7 @@ private fun AfterListItemAction(
                 onClick = { onPauseClick(fileItem.id) },
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_feature_media_action_pause),
+                    painter = painterResource(mediaR.drawable.mozac_feature_media_action_pause),
                     contentDescription = stringResource(R.string.download_pause_action),
                     tint = FirefoxTheme.colors.iconPrimary,
                 )
@@ -153,7 +154,7 @@ private fun AfterListItemAction(
                 onClick = { onResumeClick(fileItem.id) },
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_feature_media_action_play),
+                    painter = painterResource(mediaR.drawable.mozac_feature_media_action_play),
                     contentDescription = stringResource(R.string.download_resume_action),
                     tint = FirefoxTheme.colors.iconPrimary,
                 )

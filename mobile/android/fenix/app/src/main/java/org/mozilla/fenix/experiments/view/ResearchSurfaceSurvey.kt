@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -122,6 +123,9 @@ fun ResearchSurfaceSurvey(
                     Image(
                         painter = painterResource(R.drawable.ic_firefox),
                         contentDescription = null,
+                        modifier = Modifier
+                            .height(112.dp)
+                            .width(108.dp),
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(

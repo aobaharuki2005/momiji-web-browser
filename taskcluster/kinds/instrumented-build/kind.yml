@@ -147,7 +147,7 @@ tasks:
             env:
                 PERFHERDER_EXTRA_OPTIONS: instrumented
             artifacts:
-                - name: public/build/security/browser.xml
+                - name: public/build/security/{browser_entitlement}.xml
                   path: checkouts/gecko/security/mac/hardenedruntime/{entitlement_directory}/{browser_entitlement}.xml
                   type: file
                 - name: public/build/security/media-plugin-helper.xml
@@ -193,7 +193,7 @@ tasks:
             env:
                 PERFHERDER_EXTRA_OPTIONS: instrumented
             artifacts:
-                - name: public/build/security/browser.xml
+                - name: public/build/security/{browser_entitlement}.xml
                   path: checkouts/gecko/security/mac/hardenedruntime/{entitlement_directory}/{browser_entitlement}.xml
                   type: file
                 - name: public/build/security/media-plugin-helper.xml
@@ -483,9 +483,9 @@ tasks:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
                 - vs
-                - windows-rs
             fetch:
                 - upx-3.95-win
+                - windows-rs
 
     win64-nightlyasrelease/opt:
         description: "Win64 Shippable PGO Instrumented"
@@ -523,10 +523,10 @@ tasks:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
                 - vs
-                - windows-rs
                 - dxc-x86_64-pc-windows-msvc
             fetch:
                 - upx-3.95-win
+                - windows-rs
 
     win64-shippable/opt:
         description: "Win64 Shippable PGO Instrumented"
@@ -562,10 +562,10 @@ tasks:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
                 - vs
-                - windows-rs
                 - dxc-x86_64-pc-windows-msvc
             fetch:
                 - upx-3.95-win
+                - windows-rs
 
     win64-aarch64-shippable/opt:
         description: "Win64 AArch64 Shippable PGO Instrumented"
@@ -601,7 +601,7 @@ tasks:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
                 - vs
-                - windows-rs
                 - dxc-aarch64-pc-windows-msvc
             fetch:
                 - upx-3.95-win
+                - windows-rs

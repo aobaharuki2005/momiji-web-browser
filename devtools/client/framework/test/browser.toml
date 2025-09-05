@@ -211,6 +211,7 @@ skip-if = [
 ["browser_toolbox_options_enable_serviceworkers_testing.js"]
 skip-if = [
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && debug && http3", # Bug 1829298
+  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && tsan", # Bug 1986611
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && debug && http3", # Bug 1829298
 ]
 

@@ -23,6 +23,8 @@ class WeakRefObject;
 
 namespace gc {
 
+JS::Zone* GetWeakTargetZone(const Value& value);
+
 // ObserverList
 //
 // The following classes provide ObserverList, a circular doubly linked list of
@@ -157,14 +159,12 @@ class FinalizationObservers {
   // of finalization records representing registries that the target is
   // registered with and their associated held values. The records may be in
   // other zones. They are direct pointers and are not wrapped.
-  using RecordMap =
-      GCHashMap<HeapPtr<JSObject*>, ObserverList,
-                StableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
+  using RecordMap = GCHashMap<HeapPtr<Value>, ObserverList, WeakTargetHasher,
+                              ZoneAllocPolicy>;
   RecordMap recordMap;
 
-  using WeakRefMap =
-      GCHashMap<HeapPtr<JSObject*>, ObserverList,
-                StableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
+  using WeakRefMap = GCHashMap<HeapPtr<Value>, ObserverList, WeakTargetHasher,
+                               ZoneAllocPolicy>;
   WeakRefMap weakRefMap;
 
  public:
@@ -173,15 +173,14 @@ class FinalizationObservers {
 
   // FinalizationRegistry support:
   bool addRegistry(Handle<FinalizationRegistryObject*> registry);
-  bool addRecord(HandleObject target, Handle<FinalizationRecordObject*> record);
+  bool addRecord(HandleValue target, Handle<FinalizationRecordObject*> record);
   void clearRecords();
 
   void removeRecord(FinalizationRecordObject* record);
 
   // WeakRef support:
-  bool addWeakRefTarget(Handle<JSObject*> target,
-                        Handle<WeakRefObject*> weakRef);
-  void removeWeakRefTarget(Handle<JSObject*> target,
+  bool addWeakRefTarget(Handle<Value> target, Handle<WeakRefObject*> weakRef);
+  void removeWeakRefTarget(Handle<Value> target,
                            Handle<WeakRefObject*> weakRef);
 
   void traceWeakEdges(JSTracer* trc);
@@ -190,7 +189,7 @@ class FinalizationObservers {
   void traceWeakFinalizationRegistryEdges(JSTracer* trc);
   void traceWeakWeakRefEdges(JSTracer* trc);
   void traceWeakWeakRefList(JSTracer* trc, ObserverList& weakRefs,
-                            JSObject* target);
+                            Value target);
   static bool shouldRemoveRecord(FinalizationRecordObject* record);
 };
 

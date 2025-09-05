@@ -37,12 +37,14 @@ class Kind:
     config: Dict
     graph_config: GraphConfig
 
-    def _get_loader(self):
+    def _get_loader(self) -> Callable:
         try:
-            loader = self.config["loader"]
+            loader_path = self.config["loader"]
         except KeyError:
-            loader = "taskgraph.loader.default:loader"
-        return find_object(loader)
+            loader_path = "taskgraph.loader.default:loader"
+        loader = find_object(loader_path)
+        assert callable(loader)
+        return loader
 
     def load_tasks(self, parameters, loaded_tasks, write_artifacts):
         loader = self._get_loader()

@@ -48,6 +48,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import mozilla.components.feature.downloads.R as downloadsR
 
 /**
  * Implementation of Robot Pattern for download UI handling.
@@ -342,7 +343,7 @@ fun downloadRobot(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition 
 }
 
 private fun downloadButton() =
-    itemWithResIdContainingText("android:id/button1", getStringResource(R.string.mozac_feature_downloads_dialog_download))
+    itemWithResIdContainingText("android:id/button1", getStringResource(downloadsR.string.mozac_feature_downloads_dialog_download))
 
 private fun cancelButton() =
     itemWithResIdContainingText("android:id/button2", "CANCEL")

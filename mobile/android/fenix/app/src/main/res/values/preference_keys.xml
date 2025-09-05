@@ -437,6 +437,7 @@
     <string name="pref_key_enable_simple_toolbar_customization">pref_key_enable_simple_toolbar_customization</string>
     <string name="pref_key_enable_expanded_toolbar_customization">pref_key_enable_expanded_toolbar_customization</string>
     <string name="pref_key_enable_lna_blocking_enabled" translatable="false">pref_key_enable_lna_blocking_enabled</string>
+    <string name="pref_key_enable_isolated_process" translatable="false">pref_key_enable_isolated_process</string>
 
     <!-- Logins -->
     <string name="pref_key_enable_compose_logins" translatable="false">pref_key_enable_compose_logins</string>

@@ -26,10 +26,12 @@ import org.mozilla.fenix.translations.TranslationToolbar
  *
  * @param browserScreenStore [BrowserScreenStore] to sync the current translations status from.
  * @param binding [FragmentBrowserBinding] to inflate the banner into when needed.
+ * @param onExpand invoked when user wants to expand the translations controls.
  */
 class TranslationsBannerIntegration(
     private val browserScreenStore: BrowserScreenStore,
     private val binding: FragmentBrowserBinding,
+    private val onExpand: () -> Unit = {},
 ) : AbstractBinding<BrowserScreenState>(browserScreenStore) {
     override suspend fun onState(flow: Flow<BrowserScreenState>) {
         flow.distinctUntilChangedBy { it.pageTranslationStatus.isTranslated }
@@ -40,12 +42,16 @@ class TranslationsBannerIntegration(
                     }
                 } else {
                     // Ensure we're not inflating the stub just to hide it.
-                    (binding.root.findViewById<View>(R.id.translationsBanner) as? ComposeView)?.apply {
-                        isVisible = false
-                        disposeComposition()
-                    }
+                    dismissBanner()
                 }
             }
+    }
+
+    private fun dismissBanner() {
+        (binding.root.findViewById<View>(R.id.translationsBanner) as? ComposeView)?.apply {
+            isVisible = false
+            disposeComposition()
+        }
     }
 
     @Composable
@@ -64,6 +70,8 @@ class TranslationsBannerIntegration(
                     sourceLanguage,
                     targetLanguage,
                 ),
+                onExpand = onExpand,
+                onClose = { dismissBanner() },
             )
         }
     }

@@ -14,6 +14,7 @@
 #include "vm/JSContext.h"
 
 #include "gc/PrivateIterators-inl.h"
+#include "gc/WeakMap-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -35,8 +36,9 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   // https://tc39.es/proposal-weakrefs/#sec-weak-ref-target
   // 1. If NewTarget is undefined, throw a TypeError exception.
   // 2. If Type(target) is not Object, throw a TypeError exception.
-  if (!args.get(0).isObject()) {
-    ReportNotObject(cx, args.get(0));
+  if (!CanBeHeldWeakly(args.get(0))) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_WEAKREF_TARGET);
     return false;
   }
 
@@ -53,20 +55,24 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject target(cx);
-  target = CheckedUnwrapDynamic(&args[0].toObject(), cx);
-  if (!target) {
-    ReportAccessDenied(cx);
-    return false;
-  }
+  RootedValue target(cx, args[0]);
+  if (target.isObject()) {
+    RootedObject object(cx, CheckedUnwrapDynamic(&target.toObject(), cx));
+    if (!object) {
+      ReportAccessDenied(cx);
+      return false;
+    }
 
-  // If the target is a DOM wrapper, preserve it.
-  if (!preserveDOMWrapper(cx, target)) {
-    return false;
+    target = ObjectValue(*object);
+
+    // If the target is a DOM wrapper, preserve it.
+    if (!preserveDOMWrapper(cx, object)) {
+      return false;
+    }
   }
 
   // 4. Perform AddToKeptObjects(target).
-  if (!target->zone()->addToKeptObjects(target)) {
+  if (!target.toGCThing()->zone()->addToKeptObjects(target)) {
     ReportOutOfMemory(cx);
     return false;
   };
@@ -80,7 +86,7 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   };
 
   // 5. Set weakRef.[[Target]] to target.
-  weakRef->setReservedSlotGCThingAsPrivate(TargetSlot, target);
+  weakRef->setReservedSlotGCThingAsPrivate(TargetSlot, target.toGCThing());
 
   // 6. Return weakRef.
   args.rval().setObject(*weakRef);
@@ -109,9 +115,10 @@ void WeakRefObject::trace(JSTracer* trc, JSObject* obj) {
   // internal weak pointers and are not traced, even if requested by the tracer.
 
   if (trc->traceWeakEdges()) {
-    JSObject* target = weakRef->target();
-    if (target) {
-      TraceManuallyBarrieredEdge(trc, &target, "WeakRefObject::target");
+    Value target = weakRef->target();
+    Value prior = target;
+    TraceManuallyBarrieredEdge(trc, &target, "WeakRefObject::target");
+    if (target != prior) {
       weakRef->setTargetUnbarriered(target);
     }
   }
@@ -171,6 +178,20 @@ const JSFunctionSpec WeakRefObject::methods[] = {
     JS_FS_END,
 };
 
+Value WeakRefObject::target() {
+  Value value = getReservedSlot(TargetSlot);
+  if (value.isUndefined()) {
+    return UndefinedValue();
+  }
+
+  auto* cell = static_cast<Cell*>(value.toPrivate());
+  if (cell->is<JSObject>()) {
+    return ObjectValue(*cell->as<JSObject>());
+  }
+
+  return SymbolValue(cell->as<JS::Symbol>());
+}
+
 /* static */
 bool WeakRefObject::deref(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -199,28 +220,27 @@ bool WeakRefObject::deref(JSContext* cx, unsigned argc, Value* vp) {
   //    a. Perform AddToKeptObjects(target).
   //    b. Return target.
   // 6. Return undefined.
-  if (!weakRef->target()) {
+  RootedValue target(cx, weakRef->target());
+  if (target.isUndefined()) {
     args.rval().setUndefined();
     return true;
   }
 
-  RootedObject target(cx, weakRef->target());
-  if (!target->zone()->addToKeptObjects(target)) {
+  if (!target.toGCThing()->zone()->addToKeptObjects(target)) {
     return false;
   }
 
   // Target should be wrapped into the current realm before returning it.
-  RootedObject wrappedTarget(cx, target);
-  if (!JS_WrapObject(cx, &wrappedTarget)) {
+  if (!JS_WrapValue(cx, &target)) {
     return false;
   }
 
-  args.rval().setObject(*wrappedTarget);
+  args.rval().set(target);
   return true;
 }
 
-void WeakRefObject::setTargetUnbarriered(JSObject* target) {
-  setReservedSlotGCThingAsPrivateUnbarriered(TargetSlot, target);
+void WeakRefObject::setTargetUnbarriered(Value target) {
+  setReservedSlotGCThingAsPrivateUnbarriered(TargetSlot, target.toGCThing());
 }
 
 void WeakRefObject::clearTargetAndUnlink() {
@@ -230,24 +250,25 @@ void WeakRefObject::clearTargetAndUnlink() {
 
 /* static */
 void WeakRefObject::readBarrier(JSContext* cx, Handle<WeakRefObject*> self) {
-  RootedObject obj(cx, self->target());
-  if (!obj) {
+  RootedValue target(cx, self->target());
+  if (target.isUndefined()) {
     return;
   }
 
-  if (obj->getClass()->isDOMClass()) {
+  if (target.isObject() && target.toObject().getClass()->isDOMClass()) {
     // We preserved the target when the WeakRef was created. If it has since
     // been released then the DOM object it wraps has been collected, so clear
     // the target.
+    RootedObject obj(cx, &target.toObject());
     MOZ_ASSERT(cx->runtime()->hasReleasedWrapperCallback);
     bool wasReleased = cx->runtime()->hasReleasedWrapperCallback(obj);
     if (wasReleased) {
-      obj->zone()->finalizationObservers()->removeWeakRefTarget(obj, self);
+      obj->zone()->finalizationObservers()->removeWeakRefTarget(target, self);
       return;
     }
   }
 
-  gc::ReadBarrier(obj.get());
+  gc::ValueReadBarrier(target);
 }
 
 namespace gc {

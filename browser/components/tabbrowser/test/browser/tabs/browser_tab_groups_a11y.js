@@ -158,6 +158,10 @@ add_task(async function test_collapsedTabGroupTooltips() {
     "Group label tooltip indicates its expanded state"
   );
 
+  info("Enable tab group hover preview");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.groups.hoverPreview.enabled", true]],
+  });
   info(
     "Collapse the group to confirm tooltip state when tab group hover preview is enabled"
   );
@@ -169,10 +173,6 @@ add_task(async function test_collapsedTabGroupTooltips() {
   await collapseFinished;
   await flushL10n();
 
-  info("Enable tab group hover preview");
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.groups.hoverPreview.enabled", true]],
-  });
   Assert.equal(
     group._showTabGroupHoverPreview,
     true,

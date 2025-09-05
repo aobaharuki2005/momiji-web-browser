@@ -240,8 +240,8 @@ def find_task_id_batched(index_paths, use_proxy=False):
             raise ValueError("more task ids were returned than were asked for")
         task_ids.update((t["namespace"], t["taskId"]) for t in response_tasks)
 
-        continuationToken = response_data.get("continuationToken")
-        if continuationToken is None:
+        continuation_token = response_data.get("continuationToken")
+        if continuation_token is None:
             break
     return task_ids
 

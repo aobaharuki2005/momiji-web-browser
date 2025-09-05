@@ -263,9 +263,9 @@ def get_decision_parameters(graph_config, options):
         parameters["optimize_target_tasks"] = options["optimize_target_tasks"]
 
     if "decision-parameters" in graph_config["taskgraph"]:
-        find_object(graph_config["taskgraph"]["decision-parameters"])(
-            graph_config, parameters
-        )
+        decision_params = find_object(graph_config["taskgraph"]["decision-parameters"])
+        assert callable(decision_params)
+        decision_params(graph_config, parameters)
 
     if options.get("try_task_config_file"):
         task_config_file = os.path.abspath(options.get("try_task_config_file"))

@@ -22,7 +22,7 @@ const ZERO_DELAY_ACTIVATION_TIME = 300;
 // will remain open after the user's mouse leaves the tab group label. This
 // is necessary to allow the user to move their mouse between the tab group
 // label and the open panel without having it disappear before they get there.
-const TAB_GROUP_PANEL_STICKY_TIME = 300;
+const TAB_GROUP_PANEL_STICKY_TIME = 100;
 
 /**
  * Shared module that contains logic for the tab hover preview (THP) and tab
@@ -31,9 +31,6 @@ const TAB_GROUP_PANEL_STICKY_TIME = 300;
 export default class TabHoverPanelSet {
   /** @type {Window} */
   #win;
-
-  /** @type {number | null} */
-  #tabGroupDeactivateTimer;
 
   /** @type {Set<HTMLElement>} */
   #openPopups;
@@ -52,7 +49,6 @@ export default class TabHoverPanelSet {
     );
 
     this.#win = win;
-    this.#tabGroupDeactivateTimer = null;
 
     this.panelOpener = new TabPreviewPanelTimedFunction(
       this._prefPreviewDelay,
@@ -88,12 +84,8 @@ export default class TabHoverPanelSet {
     }
 
     if (this.#win.gBrowser.isTab(tabOrGroup)) {
-      if (this.#tabGroupDeactivateTimer) {
-        this.#win.clearTimeout(this.#tabGroupDeactivateTimer);
-        this.#tabGroupDeactivateTimer = null;
-        if (this.tabGroupPanel.isActive) {
-          this.tabGroupPanel.deactivate();
-        }
+      if (this.tabGroupPanel.isActive) {
+        this.tabGroupPanel.deactivate({ force: true });
       }
       this.tabPanel.activate(tabOrGroup);
     } else if (this.#win.gBrowser.isTabGroup(tabOrGroup)) {
@@ -138,21 +130,7 @@ export default class TabHoverPanelSet {
     }
 
     if (this.#win.gBrowser.isTabGroup(tabOrGroup) || !tabOrGroup) {
-      if (force) {
-        this.tabGroupPanel.deactivate();
-      } else {
-        if (this.#tabGroupDeactivateTimer) {
-          return;
-        }
-
-        this.#tabGroupDeactivateTimer = this.#win.setTimeout(() => {
-          this.#tabGroupDeactivateTimer = null;
-          if (this.tabGroupPanel.hasHoverState()) {
-            return;
-          }
-          this.tabGroupPanel.deactivate();
-        }, TAB_GROUP_PANEL_STICKY_TIME);
-      }
+      this.tabGroupPanel.deactivate({ force });
     }
   }
 
@@ -202,28 +180,6 @@ export default class TabHoverPanelSet {
 }
 
 class Panel {
-  get popupOptions() {
-    if (!this.win.gBrowser.tabContainer.verticalMode) {
-      return {
-        position: "bottomleft topleft",
-        x: 0,
-        y: -2,
-      };
-    }
-    if (!this.win.SidebarController._positionStart) {
-      return {
-        position: "topleft topright",
-        x: 0,
-        y: 3,
-      };
-    }
-    return {
-      position: "topright topleft",
-      x: 0,
-      y: 3,
-    };
-  }
-
   get isActive() {
     return this.panelElement.state == "open";
   }
@@ -494,6 +450,28 @@ class TabPanel extends Panel {
       );
     }
   }
+
+  get popupOptions() {
+    if (!this.win.gBrowser.tabContainer.verticalMode) {
+      return {
+        position: "bottomleft topleft",
+        x: 0,
+        y: -2,
+      };
+    }
+    if (!this.win.SidebarController._positionStart) {
+      return {
+        position: "topleft topright",
+        x: 0,
+        y: 3,
+      };
+    }
+    return {
+      position: "topright topleft",
+      x: 0,
+      y: 3,
+    };
+  }
 }
 
 class TabGroupPanel extends Panel {
@@ -503,11 +481,16 @@ class TabGroupPanel extends Panel {
   /** @type {TabHoverPanelSet} */
   #panelSet;
 
+  /** @type {number | null} */
+  #deactivateTimer;
+
   constructor(panel, panelSet) {
     super();
+
     this.panelElement = panel;
-    this.#panelSet = panelSet;
     this.win = this.panelElement.ownerGlobal;
+
+    this.#panelSet = panelSet;
     this.#group = null;
   }
 
@@ -521,16 +504,42 @@ class TabGroupPanel extends Panel {
     });
   }
 
-  deactivate() {
+  deactivate({ force = false } = {}) {
+    if (force) {
+      this.win.clearTimeout(this.#deactivateTimer);
+      this.#deactivateTimer = null;
+      this.#doDeactivate();
+      return;
+    }
+
+    if (this.#deactivateTimer) {
+      return;
+    }
+
+    this.#deactivateTimer = this.win.setTimeout(() => {
+      this.#deactivateTimer = null;
+      if (this.#hasHoverState()) {
+        return;
+      }
+      this.#doDeactivate();
+    }, TAB_GROUP_PANEL_STICKY_TIME);
+  }
+
+  #doDeactivate() {
     this.panelElement.removeEventListener("mouseout", this);
     this.panelElement.removeEventListener("command", this);
+
+    if (this.#group) {
+      this.#group.hoverPreviewPanelActive = false;
+    }
+
     this.panelElement.hidePopup();
     this.#panelSet.panelOpener.setZeroDelay();
   }
 
-  hasHoverState() {
+  #hasHoverState() {
     return (
-      this.#group?.labelElement.matches(":hover") ||
+      this.#group?.labelContainerElement?.matches(":hover") ||
       this.panelElement.matches(":hover")
     );
   }
@@ -538,6 +547,8 @@ class TabGroupPanel extends Panel {
   #doOpenPanel() {
     this.panelElement.addEventListener("mouseout", this);
     this.panelElement.addEventListener("command", this);
+
+    this.#group.hoverPreviewPanelActive = true;
 
     const fragment = this.win.document.createDocumentFragment();
     for (let tab of this.#group.tabs) {
@@ -553,7 +564,10 @@ class TabGroupPanel extends Panel {
       fragment.appendChild(menuitem);
     }
     this.panelElement.replaceChildren(fragment);
-    this.panelElement.openPopup(this.#group.labelElement, this.popupOptions);
+    const targetElement = this.#group.querySelector(
+      ".tab-group-label-container"
+    );
+    this.panelElement.openPopup(targetElement, this.popupOptions);
   }
 
   handleEvent(event) {
@@ -562,8 +576,30 @@ class TabGroupPanel extends Panel {
     }
 
     if (event.type == "mouseout" && event.target == this.panelElement) {
-      this.#panelSet.deactivate();
+      this.deactivate();
     }
+  }
+
+  get popupOptions() {
+    if (!this.win.gBrowser.tabContainer.verticalMode) {
+      return {
+        position: "bottomleft topleft",
+        x: 0,
+        y: -2,
+      };
+    }
+    if (!this.win.SidebarController._positionStart) {
+      return {
+        position: "topleft topright",
+        x: 0,
+        y: -5,
+      };
+    }
+    return {
+      position: "topright topleft",
+      x: 0,
+      y: -5,
+    };
   }
 }
 

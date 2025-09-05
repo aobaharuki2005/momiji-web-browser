@@ -1223,6 +1223,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
 
   inline void incrementInt32Value(const Address& addr);
 
+  void minMax32(Register lhs, Register rhs, Register dest, bool isMax);
+  void minMax32(Register lhs, Imm32 rhs, Register dest, bool isMax);
+
+  void minMaxPtr(Register lhs, Register rhs, Register dest, bool isMax);
+  void minMaxPtr(Register lhs, ImmWord rhs, Register dest, bool isMax);
+
  public:
   void handleFailureWithHandlerTail(Label* profilerExitTail, Label* bailoutTail,
                                     uint32_t* returnValueCheckOffset);

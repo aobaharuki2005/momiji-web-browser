@@ -48,7 +48,7 @@
       return element;
     }
     if (isTabGroupLabel(element)) {
-      return element.closest(".tab-group-label-container");
+      return element.group.labelContainerElement;
     }
     throw new Error(`Element "${element.tagName}" is not expected to move`);
   };

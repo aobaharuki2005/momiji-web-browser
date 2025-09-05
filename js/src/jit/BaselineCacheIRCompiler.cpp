@@ -533,6 +533,25 @@ bool BaselineCacheIRCompiler::emitLoadValueResult(uint32_t valOffset) {
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitUncheckedLoadWeakValueResult(
+    uint32_t valOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  masm.loadValue(stubAddress(valOffset), output.valueReg());
+  return true;
+}
+
+bool BaselineCacheIRCompiler::emitUncheckedLoadWeakObjectResult(
+    uint32_t objOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  masm.loadPtr(stubAddress(objOffset), scratch);
+  masm.tagValue(JSVAL_TYPE_OBJECT, scratch, output.valueReg());
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitLoadFixedSlotResult(ObjOperandId objId,
                                                       uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

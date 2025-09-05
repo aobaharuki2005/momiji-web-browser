@@ -2165,6 +2165,40 @@ void MacroAssemblerLOONG64::compareFloatingPoint(FloatFormat fmt,
   }
 }
 
+void MacroAssemblerLOONG64::minMaxPtr(Register lhs, Register rhs, Register dest,
+                                      bool isMax) {
+  ScratchRegisterScope scratch(asMasm());
+  SecondScratchRegisterScope scratch2(asMasm());
+
+  as_slt(scratch, rhs, lhs);
+  if (isMax) {
+    as_masknez(scratch2, rhs, scratch);
+    as_maskeqz(dest, lhs, scratch);
+  } else {
+    as_masknez(scratch2, lhs, scratch);
+    as_maskeqz(dest, rhs, scratch);
+  }
+  as_or(dest, dest, scratch2);
+}
+
+void MacroAssemblerLOONG64::minMaxPtr(Register lhs, ImmWord rhs, Register dest,
+                                      bool isMax) {
+  ScratchRegisterScope scratch(asMasm());
+  SecondScratchRegisterScope scratch2(asMasm());
+
+  ma_li(scratch2, rhs);
+
+  as_slt(scratch, scratch2, lhs);
+  if (isMax) {
+    as_masknez(scratch2, scratch2, scratch);
+    as_maskeqz(dest, lhs, scratch);
+  } else {
+    as_maskeqz(scratch2, scratch2, scratch);
+    as_masknez(dest, lhs, scratch);
+  }
+  as_or(dest, dest, scratch2);
+}
+
 void MacroAssemblerLOONG64::minMaxDouble(FloatRegister srcDest,
                                          FloatRegister second, bool handleNaN,
                                          bool isMax) {

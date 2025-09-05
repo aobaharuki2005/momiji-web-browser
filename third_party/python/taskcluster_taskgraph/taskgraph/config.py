@@ -148,7 +148,9 @@ class GraphConfig:
         sys.path.insert(0, self.root_dir)
         register_path = self["taskgraph"].get("register")
         if register_path:
-            find_object(register_path)(self)
+            register = find_object(register_path)
+            assert callable(register)
+            register(self)
 
     @property
     def vcs_root(self):

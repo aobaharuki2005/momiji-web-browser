@@ -4423,6 +4423,25 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+  isolated_content_processes_enabled:
+    type: boolean
+    lifetime: application
+    description: True when isolated content processes are enabled on the runtime.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1983811
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D263564
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Settings
+        - Performance
 
 search.default_engine:
   code:

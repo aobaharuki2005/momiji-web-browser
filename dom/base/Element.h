@@ -1998,7 +1998,7 @@ class Element : public FragmentOrElement {
    * @return the presentation context
    */
   enum PresContextFor { eForComposedDoc, eForUncomposedDoc };
-  nsPresContext* GetPresContext(PresContextFor aFor);
+  nsPresContext* GetPresContext(PresContextFor aFor) const;
 
   /**
    * The method focuses (or activates) element that accesskey is bound to. It is

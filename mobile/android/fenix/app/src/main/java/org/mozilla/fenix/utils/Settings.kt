@@ -822,6 +822,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates whether isolated content processes are enabled or not.
+     */
+    var isIsolatedProcessEnabled by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_isolated_process),
+        default = false,
+    )
+
+    /**
      * Indicates if the user should start on the home screen, based on the user's preferences.
      */
     fun shouldStartOnHome(): Boolean {
@@ -2095,7 +2103,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var shouldUseComposableToolbar by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_composable_toolbar),
         default = { FxNimbus.features.composableToolbar.value().enabled },
-        featureFlag = FeatureFlags.composableToolbar,
+        featureFlag = true,
     )
 
     /**

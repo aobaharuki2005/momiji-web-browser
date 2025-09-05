@@ -29,7 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -151,9 +150,7 @@ private fun MenuNavItem(
 
         Text(
             text = label,
-            style = FirefoxTheme.typography.caption.merge(
-                platformStyle = PlatformTextStyle(includeFontPadding = true),
-            ).copy(hyphens = Hyphens.Auto),
+            style = FirefoxTheme.typography.caption.copy(hyphens = Hyphens.Auto),
             color = getLabelTextColor(state = state),
             maxLines = 2,
             softWrap = true,

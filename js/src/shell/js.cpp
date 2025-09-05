@@ -12992,6 +12992,8 @@ bool InitOptionParser(OptionParser& op) {
 #endif
       !op.addBoolOption('\0', "no-fjcvtzs",
                         "Pretend CPU does not support FJCVTZS instruction.") ||
+      !op.addBoolOption('\0', "no-cssc",
+                        "Pretend CPU does not support CSSC extension.") ||
       !op.addBoolOption('\0', "more-compartments",
                         "Make newGlobal default to creating a new "
                         "compartment.") ||
@@ -13364,6 +13366,10 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   if (op.getBoolOption("no-fjcvtzs")) {
     vixl::CPUFeatures fjcvtzs(vixl::CPUFeatures::kJSCVT);
     jit::ARM64Flags::DisableCPUFeatures(fjcvtzs);
+  }
+  if (op.getBoolOption("no-cssc")) {
+    vixl::CPUFeatures cssc(vixl::CPUFeatures::kCSSC);
+    jit::ARM64Flags::DisableCPUFeatures(cssc);
   }
 #endif
 #ifndef __wasi__

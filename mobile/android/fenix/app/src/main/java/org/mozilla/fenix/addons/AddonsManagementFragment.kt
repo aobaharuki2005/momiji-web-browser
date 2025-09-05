@@ -36,6 +36,7 @@ import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils.AMO_HOMEPAGE_FOR_ANDROID
 import org.mozilla.fenix.theme.ThemeManager
+import mozilla.components.feature.addons.R as addonsR
 
 /**
  * Fragment use for managing add-ons.
@@ -147,7 +148,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                         binding?.let {
                             showSnackBar(
                                 it.root,
-                                getString(R.string.mozac_feature_addons_failed_to_query_extensions),
+                                getString(addonsR.string.mozac_feature_addons_failed_to_query_extensions),
                             )
                         }
                         binding?.addOnsProgressBar?.isVisible = false

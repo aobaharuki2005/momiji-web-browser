@@ -114,13 +114,15 @@ RemoteLazyInputStreamThread::DelayedDispatch(already_AddRefed<nsIRunnable>,
 }
 
 NS_IMETHODIMP
-RemoteLazyInputStreamThread::RegisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+RemoteLazyInputStreamThread::RegisterShutdownTask(
+    nsITargetShutdownTask* aTask) {
+  return mThread->RegisterShutdownTask(aTask);
 }
 
 NS_IMETHODIMP
-RemoteLazyInputStreamThread::UnregisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+RemoteLazyInputStreamThread::UnregisterShutdownTask(
+    nsITargetShutdownTask* aTask) {
+  return mThread->UnregisterShutdownTask(aTask);
 }
 
 NS_IMETHODIMP

@@ -175,6 +175,7 @@ class FenixApplicationTest {
         every { application.reportHomeScreenMetrics(settings) } just Runs
         every { application.getDeviceTotalRAM() } returns 7L
         every { settings.inactiveTabsAreEnabled } returns true
+        every { settings.isIsolatedProcessEnabled } returns true
         every { application.isDeviceRamAboveThreshold } returns true
 
         assertTrue(settings.contileContextId.isNotEmpty())
@@ -223,6 +224,7 @@ class FenixApplicationTest {
         assertEquals("standard", Preferences.enhancedTrackingProtection.testGetValue())
         assertEquals(listOf("switch", "touch exploration"), Preferences.accessibilityServices.testGetValue())
         assertEquals(true, Preferences.inactiveTabsEnabled.testGetValue())
+        assertEquals(true, Preferences.isolatedContentProcessesEnabled.testGetValue())
         assertEquals(true, Metrics.defaultWallpaper.testGetValue())
         assertEquals(true, Metrics.ramMoreThanThreshold.testGetValue())
         assertEquals(7L, Metrics.deviceTotalRam.testGetValue())

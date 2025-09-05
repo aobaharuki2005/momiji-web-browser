@@ -867,6 +867,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Permissions for the request to make local network access
   LNAPerms mLNAPermission{};
 
+  // Track if we are waiting for OnPermissionPromptResult callback
+  // Used to handle cancellation while suspended waiting for LNA permission
+  bool mWaitingForLNAPermission{false};
+
  protected:
   virtual void DoNotifyListenerCleanup() override;
 

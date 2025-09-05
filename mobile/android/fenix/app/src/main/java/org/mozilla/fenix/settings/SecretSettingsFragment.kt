@@ -63,7 +63,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_enable_composable_toolbar).apply {
-            isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().shouldUseComposableToolbar
             onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
                 (newValue as? Boolean)?.let { newOption ->
@@ -363,6 +362,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         requirePreference<SwitchPreference>(R.string.pref_key_debug_terms_trigger_time).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().isDebugTermsOfServiceTriggerTimeEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_isolated_process).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().isIsolatedProcessEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }

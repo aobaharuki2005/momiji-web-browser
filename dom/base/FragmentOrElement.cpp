@@ -221,7 +221,7 @@ bool nsIContent::HasIndependentSelection() const {
   return (frame && frame->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION));
 }
 
-dom::Element* nsIContent::GetEditingHost() {
+dom::Element* nsIContent::GetEditingHost() const {
   // If this isn't editable, return nullptr.
   if (!IsEditable()) {
     return nullptr;
@@ -245,8 +245,9 @@ dom::Element* nsIContent::GetEditingHost() {
        parent = editableParentElement->GetParentElement()) {
     editableParentElement = parent;
   }
-  return editableParentElement ? editableParentElement
-                               : dom::Element::FromNode(this);
+  return editableParentElement
+             ? editableParentElement
+             : dom::Element::FromNode(const_cast<nsIContent*>(this));
 }
 
 nsresult nsIContent::LookupNamespaceURIInternal(

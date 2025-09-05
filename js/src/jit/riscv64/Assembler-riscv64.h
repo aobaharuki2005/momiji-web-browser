@@ -141,10 +141,10 @@ class Assembler : public AssemblerShared,
 
  protected:
   using LabelOffset = int32_t;
-  using LabelCahe =
+  using LabelCache =
       HashMap<LabelOffset, BufferOffset, js::DefaultHasher<LabelOffset>,
               js::SystemAllocPolicy>;
-  LabelCahe label_cache_;
+  LabelCache label_cache_;
   void NoEnoughLabelCache() { enoughLabelCache_ = false; }
   CompactBufferWriter jumpRelocations_;
   CompactBufferWriter dataRelocations_;
@@ -372,9 +372,10 @@ class Assembler : public AssemblerShared,
   uint32_t next_link(Label* label, bool is_internal);
   static uint64_t target_address_at(Instruction* pos);
   static void set_target_value_at(Instruction* pc, uint64_t target);
-  void target_at_put(BufferOffset pos, BufferOffset target_pos,
+  // Returns true if the target was successfully assembled and spewed.
+  bool target_at_put(BufferOffset pos, BufferOffset target_pos,
                      bool trampoline = false);
-  virtual int32_t branch_offset_helper(Label* L, OffsetSize bits);
+  int32_t branch_offset_helper(Label* L, OffsetSize bits);
   int32_t branch_long_offset(Label* L);
 
   // Determines if Label is bound and near enough so that branch instruction

@@ -5,11 +5,9 @@
 package org.mozilla.fenix.translations
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,14 +28,18 @@ import org.mozilla.fenix.R
 import mozilla.components.ui.icons.R as iconsR
 
 /**
-     * A translation toolbar for browsers.
-     *
-     * @param label Translation toolbar label that is displayed when the current page has been
-     * translated by the translation feature.
-     */
+ * A translation toolbar for browsers.
+ *
+ * @param label Translation toolbar label that is displayed when the current page has been
+ * translated by the translation feature.
+ * @param onExpand Invoked when user wants to expand the translations controls..
+ * @param onClose Invoked when user wants to close the translation toolbar.
+ */
 @Composable
 fun TranslationToolbar(
     label: String,
+    onExpand: () -> Unit = {},
+    onClose: () -> Unit = {},
 ) {
     val shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
 
@@ -72,7 +74,7 @@ fun TranslationToolbar(
                 color = AcornTheme.colors.textPrimary,
             )
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onExpand) {
                 Icon(
                     painter = painterResource(iconsR.drawable.mozac_ic_chevron_up_24),
                     contentDescription = stringResource(R.string.translation_toolbar_expand_action),
@@ -80,9 +82,7 @@ fun TranslationToolbar(
                 )
             }
 
-            IconButton(
-                onClick = {},
-            ) {
+            IconButton(onClick = onClose) {
                 Icon(
                     painter = painterResource(iconsR.drawable.mozac_ic_cross_20),
                     contentDescription = stringResource(R.string.translation_toolbar_close_action),

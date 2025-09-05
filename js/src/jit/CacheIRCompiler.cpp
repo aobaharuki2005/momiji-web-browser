@@ -2399,6 +2399,68 @@ bool CacheIRCompiler::emitGuardDynamicSlotValue(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitCheckWeakValueResultForFixedSlot(
+    ObjOperandId objId, uint32_t offsetOffset, uint32_t valOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  // Ion IC stubs use a strong reference for UncheckedLoadWeakValueResult and
+  // UncheckedLoadWeakObjectResult (the value is baked into IC JIT code as a
+  // constant), so we don't need this check there.
+  if (isIon()) {
+    return true;
+  }
+
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchValueRegister scratchVal(allocator, masm);
+
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawInt32);
+  emitLoadStubField(offset, scratch);
+
+  StubFieldOffset val(valOffset, StubField::Type::WeakValue);
+  emitLoadValueStubField(val, scratchVal);
+
+  Label done;
+  BaseIndex slotVal(obj, scratch, TimesOne);
+  masm.branchTestValue(Assembler::Equal, slotVal, scratchVal, &done);
+  masm.assumeUnreachable("CheckWeakValueResultForFixedSlot failed");
+  masm.bind(&done);
+  return true;
+}
+
+bool CacheIRCompiler::emitCheckWeakValueResultForDynamicSlot(
+    ObjOperandId objId, uint32_t offsetOffset, uint32_t valOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  // Ion IC stubs use a strong reference for UncheckedLoadWeakValueResult and
+  // UncheckedLoadWeakObjectResult (the value is baked into IC JIT code as a
+  // constant), so we don't need this check there.
+  if (isIon()) {
+    return true;
+  }
+
+  Register obj = allocator.useRegister(masm, objId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchValueRegister scratchVal(allocator, masm);
+
+  masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
+
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawInt32);
+  emitLoadStubField(offset, scratch2);
+
+  StubFieldOffset val(valOffset, StubField::Type::WeakValue);
+  emitLoadValueStubField(val, scratchVal);
+
+  Label done;
+  BaseIndex slotVal(scratch1, scratch2, TimesOne);
+  masm.branchTestValue(Assembler::Equal, slotVal, scratchVal, &done);
+  masm.assumeUnreachable("CheckWeakValueResultForDynamicSlot failed");
+  masm.bind(&done);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadScriptedProxyHandler(ObjOperandId resultId,
                                                    ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -6919,10 +6981,11 @@ bool CacheIRCompiler::emitInt32MinMax(bool isMax, Int32OperandId firstId,
   Register second = allocator.useRegister(masm, secondId);
   Register result = allocator.defineRegister(masm, resultId);
 
-  Assembler::Condition cond =
-      isMax ? Assembler::GreaterThan : Assembler::LessThan;
-  masm.move32(first, result);
-  masm.cmp32Move32(cond, second, first, second, result);
+  if (isMax) {
+    masm.max32(first, second, result);
+  } else {
+    masm.min32(first, second, result);
+  }
   return true;
 }
 

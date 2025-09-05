@@ -2637,7 +2637,13 @@ static inline void CheckIsMarkedThing(T* thing) {
   // Allow any thread access to uncollected things.
   Zone* zone = thing->zoneFromAnyThread();
   if (thing->isPermanentAndMayBeShared()) {
-    MOZ_ASSERT(!zone->wasGCStarted());
+    // Shared things are not collected and should always be marked, except
+    // during shutdown when we've merged shared atoms back into the main atoms
+    // zone.
+    if (zone->wasGCStarted()) {
+      MOZ_ASSERT(!zone->runtimeFromAnyThread()->gc.maybeSharedAtomsZone());
+      return;
+    }
     MOZ_ASSERT(!zone->needsIncrementalBarrier());
     MOZ_ASSERT(thing->isMarkedBlack());
     return;

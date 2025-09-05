@@ -3024,7 +3024,7 @@
 # Whether to dispatch `beforescriptexecute` and `afterscriptexecute` event.
 - name: dom.events.script_execute.enabled
   type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # Whether to expose test interfaces of various sorts
@@ -4239,7 +4239,7 @@
 # Enable Screen Orientation lock
 - name: dom.screenorientation.allow-lock
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Enable Screen Wake Lock API
@@ -5417,7 +5417,7 @@
 
 - name: dom.w3c_pointer_events.getcoalescedevents_only_in_securecontext
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # `click` event target is defined as overridden by pointer capture target in
@@ -8726,7 +8726,7 @@
   do_not_use_directly: true
 
 # Whether object fuses are used to optimize constant properties on the global
-# object.
+# object and its lexical environment object.
 - name: javascript.options.objectfuse_for_global
   type: bool
   value: true
@@ -13073,6 +13073,13 @@
 - name: network.auth.sort_challenge_in_progress
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# When true, the hashing of the certificate will be done with the hashing
+# algorithm specified in the cert instead of SHA256.
+- name: network.auth.sspi_detect_hash
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 # See the full list of values in nsICookieService.idl.

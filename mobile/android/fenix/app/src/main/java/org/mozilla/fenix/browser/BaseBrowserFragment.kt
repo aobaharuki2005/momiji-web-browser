@@ -238,6 +238,7 @@ import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 import kotlin.coroutines.cancellation.CancellationException
+import mozilla.components.feature.downloads.R as downloadsR
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -786,21 +787,21 @@ abstract class BaseBrowserFragment :
                                     contentSize.value,
                                 )
                             getString(
-                                R.string.mozac_feature_downloads_dialog_title_3,
+                                downloadsR.string.mozac_feature_downloads_dialog_title_3,
                                 contentSizeInBytes,
                             )
                         } else {
-                            getString(R.string.mozac_feature_downloads_dialog_title_with_unknown_size)
+                            getString(downloadsR.string.mozac_feature_downloads_dialog_title_with_unknown_size)
                         }
 
                         downloadDialog = AlertDialog.Builder(requireContext())
                             .setTitle(title)
                             .setMessage(filename.value)
-                            .setPositiveButton(R.string.mozac_feature_downloads_dialog_download) { dialog, _ ->
+                            .setPositiveButton(downloadsR.string.mozac_feature_downloads_dialog_download) { dialog, _ ->
                                 positiveAction.value.invoke()
                                 dialog.dismiss()
                             }
-                            .setNegativeButton(R.string.mozac_feature_downloads_dialog_cancel) { dialog, _ ->
+                            .setNegativeButton(downloadsR.string.mozac_feature_downloads_dialog_cancel) { dialog, _ ->
                                 negativeAction.value.invoke()
                                 dialog.dismiss()
                             }.setOnDismissListener {

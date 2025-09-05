@@ -3429,7 +3429,29 @@ class Assembler : public MozBaseAssembler {
   void fminnmp(const VRegister& vd,
                const VRegister& vn);
 
+  // Absolute value.
+  void abs(const Register& rd, const Register& rn);
+
+  // Count bits.
+  void cnt(const Register& rd, const Register& rn);
+
+  // Count Trailing Zeros.
+  void ctz(const Register& rd, const Register& rn);
+
+  // Signed Maximum.
+  void smax(const Register& rd, const Register& rn, const Operand& op);
+
+  // Signed Minimum.
+  void smin(const Register& rd, const Register& rn, const Operand& op);
+
+  // Unsigned Maximum.
+  void umax(const Register& rd, const Register& rn, const Operand& op);
+
+  // Unsigned Minimum.
+  void umin(const Register& rd, const Register& rn, const Operand& op);
+
   // Emit generic instructions.
+
   // Emit raw instructions into the instruction stream.
   void dci(Instr raw_inst) { Emit(raw_inst); }
 
@@ -3512,6 +3534,26 @@ class Assembler : public MozBaseAssembler {
 
   static Instr Cond(Condition cond) {
     return cond << Condition_offset;
+  }
+
+  // Generic immediate encoding.
+  template <int hibit, int lobit>
+  static Instr ImmField(int64_t imm) {
+    VIXL_STATIC_ASSERT((hibit >= lobit) && (lobit >= 0));
+    VIXL_STATIC_ASSERT(hibit < (sizeof(Instr) * kBitsPerByte));
+    int fieldsize = hibit - lobit + 1;
+    VIXL_ASSERT(IsIntN(fieldsize, imm));
+    return static_cast<Instr>(TruncateToUintN(fieldsize, imm) << lobit);
+  }
+
+  // For unsigned immediate encoding.
+  // TODO: Handle signed and unsigned immediate in satisfactory way.
+  template <int hibit, int lobit>
+  static Instr ImmUnsignedField(uint64_t imm) {
+    VIXL_STATIC_ASSERT((hibit >= lobit) && (lobit >= 0));
+    VIXL_STATIC_ASSERT(hibit < (sizeof(Instr) * kBitsPerByte));
+    VIXL_ASSERT(IsUintN(hibit - lobit + 1, imm));
+    return static_cast<Instr>(imm << lobit);
   }
 
   // PC-relative address encoding.

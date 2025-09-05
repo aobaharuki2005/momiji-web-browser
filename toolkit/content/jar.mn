@@ -10,6 +10,8 @@ toolkit.jar:
    content/global/aboutLogging/aboutLogging.mjs (aboutLogging/aboutLogging.mjs)
    content/global/aboutLogging/jwt.mjs (aboutLogging/jwt.mjs)
    content/global/aboutLogging/profileSaveUploadLogic.mjs (aboutLogging/profileSaveUploadLogic.mjs)
+   content/global/aboutLogging/profileStorage.mjs (aboutLogging/profileStorage.mjs)
+   content/global/aboutLogging/uploadedProfilesManager.mjs (aboutLogging/uploadedProfilesManager.mjs)
    content/global/aboutNetError.mjs
    content/global/aboutNetError.html
    content/global/aboutNetErrorHelpers.mjs

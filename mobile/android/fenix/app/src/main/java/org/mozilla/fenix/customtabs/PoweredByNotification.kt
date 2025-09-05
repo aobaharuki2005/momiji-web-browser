@@ -22,6 +22,7 @@ import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.ids.cancel
 import org.mozilla.fenix.R
+import mozilla.components.feature.pwa.R as pwaR
 
 /**
  * Displays a "Powered by Firefox Preview" notification when a Trusted Web Activity is running.
@@ -78,7 +79,7 @@ class PoweredByNotification(
 
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
-            applicationContext.getString(R.string.mozac_feature_pwa_site_controls_notification_channel),
+            applicationContext.getString(pwaR.string.mozac_feature_pwa_site_controls_notification_channel),
             NotificationManager.IMPORTANCE_MIN,
         )
 
