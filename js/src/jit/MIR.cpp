@@ -1703,7 +1703,7 @@ void MParameter::printOpcode(GenericPrinter& out) const {
 #endif
 
 HashNumber MParameter::valueHash() const {
-  HashNumber hash = MDefinition::valueHash();
+  HashNumber hash = MNullaryInstruction::valueHash();
   hash = addU32ToHash(hash, index_);
   return hash;
 }
@@ -6496,7 +6496,7 @@ MDefinition::AliasType MLoadDynamicSlot::mightAlias(
 }
 
 HashNumber MLoadDynamicSlot::valueHash() const {
-  HashNumber hash = MDefinition::valueHash();
+  HashNumber hash = MUnaryInstruction::valueHash();
   hash = addU32ToHash(hash, slot_);
   return hash;
 }
