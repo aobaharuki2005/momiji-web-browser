@@ -72,7 +72,6 @@ import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_ON
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.EXTENSIONS
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.EXTENSIONS_OPTION_CHEVRON
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.MORE_OPTION_CHEVRON
-import org.mozilla.fenix.components.menu.compose.MenuNavigation
 import org.mozilla.fenix.components.menu.compose.header.MozillaAccountMenuItem
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
 import org.mozilla.fenix.theme.FirefoxTheme

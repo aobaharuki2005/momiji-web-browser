@@ -53,7 +53,6 @@ import org.mozilla.fenix.components.menu.compose.MenuGroup
 import org.mozilla.fenix.components.menu.compose.MenuItem
 import org.mozilla.fenix.components.menu.compose.MenuItemState
 import org.mozilla.fenix.components.menu.compose.MenuScaffold
-import org.mozilla.fenix.components.menu.compose.MenuTextItem
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.settings.PhoneFeature

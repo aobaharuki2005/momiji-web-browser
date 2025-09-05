@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.modifier.thenConditional
 import mozilla.components.ui.colors.PhotonColors
-import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.theme.FirefoxTheme

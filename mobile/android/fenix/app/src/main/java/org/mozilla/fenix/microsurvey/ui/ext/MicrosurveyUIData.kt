@@ -8,7 +8,6 @@ import androidx.annotation.DrawableRes
 import mozilla.components.service.nimbus.messaging.Message
 import mozilla.components.service.nimbus.messaging.MicrosurveyAnswer
 import mozilla.components.service.nimbus.messaging.MicrosurveyConfig
-import org.mozilla.fenix.R
 import mozilla.components.ui.icons.R as iconsR
 
 /**

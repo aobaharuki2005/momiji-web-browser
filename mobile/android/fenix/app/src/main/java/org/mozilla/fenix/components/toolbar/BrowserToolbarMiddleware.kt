@@ -120,7 +120,6 @@ import org.mozilla.fenix.components.toolbar.TabCounterInteractions.AddNewTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.CloseCurrentTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterClicked
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterLongClicked
-import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe

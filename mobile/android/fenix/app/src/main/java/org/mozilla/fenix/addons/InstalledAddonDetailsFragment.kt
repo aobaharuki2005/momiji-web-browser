@@ -31,7 +31,6 @@ import mozilla.components.support.ktx.android.content.appVersionName
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentInstalledAddOnDetailsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.runIfFragmentIsAttached

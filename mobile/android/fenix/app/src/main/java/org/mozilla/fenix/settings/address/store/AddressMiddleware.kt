@@ -4,13 +4,10 @@
 
 package org.mozilla.fenix.settings.address.store
 
-import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import mozilla.components.concept.storage.Address
-import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 

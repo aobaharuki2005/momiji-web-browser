@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings.address
 
 import androidx.annotation.StringRes
-import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.storage.Address
 import org.mozilla.fenix.R
 
