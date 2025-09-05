@@ -8,25 +8,24 @@
 
 #include "Box.h"
 #include "MP4Interval.h"
+#include "MediaDataDemuxer.h"
 #include "SinfParser.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/HelperMacros.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Try.h"
 
-extern mozilla::LogModule* GetDemuxerLog();
-
-#define LOG_ERROR(name, arg, ...)                \
-  MOZ_LOG(                                       \
-      GetDemuxerLog(), mozilla::LogLevel::Error, \
+#define LOG_ERROR(name, arg, ...)                 \
+  MOZ_LOG(                                        \
+      gMediaDemuxerLog, mozilla::LogLevel::Error, \
       (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define LOG_WARN(name, arg, ...)                   \
-  MOZ_LOG(                                         \
-      GetDemuxerLog(), mozilla::LogLevel::Warning, \
+#define LOG_WARN(name, arg, ...)                    \
+  MOZ_LOG(                                          \
+      gMediaDemuxerLog, mozilla::LogLevel::Warning, \
       (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define LOG_DEBUG(name, arg, ...)                \
-  MOZ_LOG(                                       \
-      GetDemuxerLog(), mozilla::LogLevel::Debug, \
+#define LOG_DEBUG(name, arg, ...)                 \
+  MOZ_LOG(                                        \
+      gMediaDemuxerLog, mozilla::LogLevel::Debug, \
       (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
