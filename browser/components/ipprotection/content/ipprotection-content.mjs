@@ -155,6 +155,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     const win = event.target.ownerGlobal;
 
     if (event.target === this.supportLinkEl) {
+      event.preventDefault();
       win.openWebLinkIn(LINKS.PRODUCT_URL, "tab");
       this.dispatchEvent(
         new CustomEvent("IPProtection:Close", { bubbles: true })
