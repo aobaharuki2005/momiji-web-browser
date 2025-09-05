@@ -1,6 +1,6 @@
 // This library is patched, this considered first-party. Ignore warnings
 // as if it were third-party.
-#![allow(dangerous_implicit_autorefs)]
+#![allow(warnings)]
 
 //!
 //! allocator-api2 crate.
