@@ -26,6 +26,7 @@
 #include "nsTArray.h"
 #include "nsWindow.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 struct wl_registry;
 
@@ -66,13 +67,67 @@ static uint32_t GetGTKPixelDepth() {
 
 static already_AddRefed<Screen> MakeScreenGtk(unsigned int aMonitor,
                                               bool aIsHDR) {
+  gint geometryScaleFactor =
+      ScreenHelperGTK::GetGTKMonitorScaleFactor(aMonitor);
   GdkScreen* defaultScreen = gdk_screen_get_default();
-  gint gdkScaleFactor = ScreenHelperGTK::GetGTKMonitorScaleFactor(aMonitor);
 
-  // gdk_screen_get_monitor_geometry / workarea returns application pixels
-  // (desktop pixels), so we need to convert it to device pixels with
-  // gdkScaleFactor.
-  gint geometryScaleFactor = gdkScaleFactor;
+  GdkRectangle workarea;
+  gdk_screen_get_monitor_workarea(defaultScreen, aMonitor, &workarea);
+  LayoutDeviceIntRect availRect(workarea.x * geometryScaleFactor,
+                                workarea.y * geometryScaleFactor,
+                                workarea.width * geometryScaleFactor,
+                                workarea.height * geometryScaleFactor);
+
+  LayoutDeviceIntRect rect;
+  DesktopToLayoutDeviceScale contentsScale(1.0);
+  CSSToLayoutDeviceScale defaultCssScale(geometryScaleFactor);
+  if (GdkIsX11Display()) {
+    GdkRectangle monitor;
+    gdk_screen_get_monitor_geometry(defaultScreen, aMonitor, &monitor);
+    rect = LayoutDeviceIntRect(monitor.x * geometryScaleFactor,
+                               monitor.y * geometryScaleFactor,
+                               monitor.width * geometryScaleFactor,
+                               monitor.height * geometryScaleFactor);
+  } else {
+    // Use per-monitor scaling factor in Wayland.
+    contentsScale.scale = geometryScaleFactor;
+
+    if (StaticPrefs::widget_wayland_fractional_scale_enabled()) {
+      // Check if we're using fractional scale (see Bug 1985720).
+      // In such case use workarea is already scaled by fractional scale factor.
+      nsWaylandDisplay::MonitorConfig* config =
+          WaylandDisplayGet()->GetMonitorConfig(workarea.x, workarea.y);
+      Unused << NS_WARN_IF(!config);
+      if (config && workarea.width > config->pixelWidth / geometryScaleFactor &&
+          workarea.height > config->pixelHeight / geometryScaleFactor) {
+        float fractionalScale = (float)config->pixelWidth / workarea.width;
+        LOG_SCREEN("Monitor %d uses fractional scale %f", aMonitor,
+                   fractionalScale);
+        availRect.width = config->pixelWidth;
+        availRect.height = config->pixelHeight;
+        defaultCssScale = CSSToLayoutDeviceScale(fractionalScale);
+        contentsScale.scale = fractionalScale;
+      }
+    }
+    // Don't report screen shift in Wayland, see bug 1795066.
+    availRect.MoveTo(0, 0);
+    // We use Gtk workarea on Wayland as it matches our needs (Bug 1732682).
+    rect = availRect;
+  }
+
+  uint32_t pixelDepth = GetGTKPixelDepth();
+  if (pixelDepth == 32) {
+    // If a device uses 32 bits per pixel, it's still only using 8 bits
+    // per color component, which is what our callers want to know.
+    // (Some devices report 32 and some devices report 24.)
+    pixelDepth = 24;
+  }
+
+  float dpi = 96.0f;
+  gint heightMM = gdk_screen_get_monitor_height_mm(defaultScreen, aMonitor);
+  if (heightMM > 0) {
+    dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
+  }
 
   gint refreshRate = [&] {
     // Since gtk 3.22
@@ -89,46 +144,6 @@ static already_AddRefed<Screen> MakeScreenGtk(unsigned int aMonitor,
     // Convert to Hz.
     return NSToIntRound(s_gdk_monitor_get_refresh_rate(monitor) / 1000.0f);
   }();
-
-  GdkRectangle workarea;
-  gdk_screen_get_monitor_workarea(defaultScreen, aMonitor, &workarea);
-  LayoutDeviceIntRect availRect(workarea.x * geometryScaleFactor,
-                                workarea.y * geometryScaleFactor,
-                                workarea.width * geometryScaleFactor,
-                                workarea.height * geometryScaleFactor);
-  LayoutDeviceIntRect rect;
-  DesktopToLayoutDeviceScale contentsScale(1.0);
-  if (GdkIsX11Display()) {
-    GdkRectangle monitor;
-    gdk_screen_get_monitor_geometry(defaultScreen, aMonitor, &monitor);
-    rect = LayoutDeviceIntRect(monitor.x * geometryScaleFactor,
-                               monitor.y * geometryScaleFactor,
-                               monitor.width * geometryScaleFactor,
-                               monitor.height * geometryScaleFactor);
-  } else {
-    // Don't report screen shift in Wayland, see bug 1795066.
-    availRect.MoveTo(0, 0);
-    // We use Gtk workarea on Wayland as it matches our needs (Bug 1732682).
-    rect = availRect;
-    // Use per-monitor scaling factor in Wayland.
-    contentsScale.scale = gdkScaleFactor;
-  }
-
-  uint32_t pixelDepth = GetGTKPixelDepth();
-  if (pixelDepth == 32) {
-    // If a device uses 32 bits per pixel, it's still only using 8 bits
-    // per color component, which is what our callers want to know.
-    // (Some devices report 32 and some devices report 24.)
-    pixelDepth = 24;
-  }
-
-  CSSToLayoutDeviceScale defaultCssScale(gdkScaleFactor);
-
-  float dpi = 96.0f;
-  gint heightMM = gdk_screen_get_monitor_height_mm(defaultScreen, aMonitor);
-  if (heightMM > 0) {
-    dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
-  }
 
   LOG_SCREEN(
       "New monitor %d size [%d,%d -> %d x %d] depth %d scale %f CssScale %f  "

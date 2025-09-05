@@ -18808,7 +18808,7 @@
 - name: widget.wayland.fractional-scale.enabled
   type: bool
   value: false
-  mirror: once
+  mirror: always
 
 # Use opaque region for MozContainer wl_surface
 - name: widget.wayland.opaque-region.enabled
