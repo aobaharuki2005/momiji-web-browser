@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <cstdlib>
-#include <climits>
 
 #if defined(XP_WIN)
 #  include <windows.h>  // for HANDLE
