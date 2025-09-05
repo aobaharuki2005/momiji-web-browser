@@ -416,10 +416,7 @@ void RTCDataChannel::AnnounceClosed() {
   DontKeepAliveAnyMore();
 }
 
-// TODO(bug 1209163): This will need to be converted to MozPromise similar to
-// other stats that might not live on main, once this can be on a worker.
-void RTCDataChannel::AppendStatsToReport(
-    const UniquePtr<dom::RTCStatsCollection>& aReport,
+dom::RTCDataChannelStats RTCDataChannel::GetStats(
     const DOMHighResTimeStamp aTimestamp) const {
   mozilla::dom::RTCDataChannelStats stats;
   nsString id = u"dc"_ns;
@@ -440,9 +437,7 @@ void RTCDataChannel::AppendStatsToReport(
   stats.mBytesSent.Construct(mBytesSent);
   stats.mMessagesReceived.Construct(mMessagesReceived);
   stats.mBytesReceived.Construct(mBytesReceived);
-  if (!aReport->mDataChannelStats.AppendElement(stats, fallible)) {
-    mozalloc_handle_oom(0);
-  }
+  return stats;
 }
 
 void RTCDataChannel::IncrementBufferedAmount(size_t aSize) {
