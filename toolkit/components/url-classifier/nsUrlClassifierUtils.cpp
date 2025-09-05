@@ -1000,8 +1000,17 @@ nsresult nsUrlClassifierUtils::ReadProvidersFromPrefs(ProviderDictType& aDict) {
     // Build the dictionary for the owning list and the current provider.
     nsTArray<nsCString> tables;
     Classifier::SplitTables(owningLists, tables);
+    nsAutoCString providerToUse(provider);
     for (auto tableName : tables) {
-      aDict.InsertOrUpdate(tableName, MakeUnique<nsCString>(provider));
+      // If the Safe Browsing V5 is disabled, we will use V4 instead. This means
+      // that we will put the V5 lists to the V4 provider to instruct using
+      // Safe Browsing V4 for those tables.
+      if (!mozilla::Preferences::GetBool(
+              "browser.safebrowsing.provider.google5.enabled") &&
+          providerToUse.EqualsLiteral("google5")) {
+        providerToUse.AssignLiteral("google4");
+      }
+      aDict.InsertOrUpdate(tableName, MakeUnique<nsCString>(providerToUse));
     }
   }
 
