@@ -2211,7 +2211,6 @@ main section {
 .home-section .section .more-info-top-wrapper,
 .home-section .section .more-info-pocket-wrapper {
   margin-inline-start: calc(var(--space-xxsmall) * -1);
-  overflow: hidden;
 }
 .home-section .section .more-info-top-wrapper .more-information,
 .home-section .section .more-info-pocket-wrapper .more-information {
