@@ -21,6 +21,7 @@
 #include "mozilla/net/CookieCommons.h"
 #include "mozilla/net/CookiePrefixes.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "nsGlobalWindowInner.h"
 #include "nsICookie.h"
 #include "nsIGlobalObject.h"
 #include "nsIPrincipal.h"
