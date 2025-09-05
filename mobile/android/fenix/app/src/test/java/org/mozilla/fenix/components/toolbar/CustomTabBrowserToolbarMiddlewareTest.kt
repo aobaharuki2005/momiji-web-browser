@@ -63,6 +63,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
+import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.feature.customtabs.R as customtabsR
 import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(RobolectricTestRunner::class)
@@ -100,7 +102,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         every { customTab.config.closeButtonIcon } returns null
         val expectedCloseButton = ActionButton(
             drawable = AppCompatResources.getDrawable(testContext, iconsR.drawable.mozac_ic_cross_24),
-            contentDescription = testContext.getString(R.string.mozac_feature_customtabs_exit_button),
+            contentDescription = testContext.getString(customtabsR.string.mozac_feature_customtabs_exit_button),
             onClick = CloseClicked,
         )
 
@@ -120,7 +122,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         every { customTab.config.closeButtonIcon } returns closeButtonIcon
         val expectedCloseButton = ActionButton(
             drawable = closeButtonIcon.toDrawable(testContext.resources),
-            contentDescription = testContext.getString(R.string.mozac_feature_customtabs_exit_button),
+            contentDescription = testContext.getString(customtabsR.string.mozac_feature_customtabs_exit_button),
             onClick = CloseClicked,
         )
 
@@ -226,7 +228,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         every { customTab.content.url } returns "content://test"
         val expectedSecurityIndicator = ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
-            contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+            contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
 
@@ -243,7 +245,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         every { customTab.content.securityInfo.secure } returns true
         val expectedSecurityIndicator = ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
-            contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+            contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
 
@@ -260,7 +262,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         every { customTab.content.securityInfo.secure } returns false
         val expectedSecurityIndicator = ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
-            contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+            contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
 
@@ -293,12 +295,12 @@ class CustomTabBrowserToolbarMiddlewareTest {
         val middleware = buildMiddleware(browserStore)
         val expectedSecureIndicator = ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
-            contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+            contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
         val expectedInsecureIndicator = ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
-            contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+            contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
             onClick = SiteInfoClicked,
         )
         val toolbarStore = buildStore(middleware)
@@ -469,7 +471,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
         every { customTab.config.showShareMenuItem } returns true
         val expectedShareButton = ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_share_android_24,
-            contentDescription = R.string.mozac_feature_customtabs_share_link,
+            contentDescription = customtabsR.string.mozac_feature_customtabs_share_link,
             onClick = ShareClicked,
         )
         val expectedMenuButton = ActionButtonRes(

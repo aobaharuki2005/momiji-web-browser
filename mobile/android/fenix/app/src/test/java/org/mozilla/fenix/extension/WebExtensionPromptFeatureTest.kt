@@ -456,7 +456,7 @@ class WebExtensionPromptFeatureTest {
         doReturn(testContext).`when`(fragment)?.requireContext()
 
         val dialog = fragment?.onCreateDialog(null)
-        dialog?.findViewById<TextView>(R.id.learn_more_link)?.performClick()
+        dialog?.findViewById<TextView>(addonsR.id.learn_more_link)?.performClick()
 
         val expectedUrl = SupportUtils.getSumoURLForTopic(
             testContext,

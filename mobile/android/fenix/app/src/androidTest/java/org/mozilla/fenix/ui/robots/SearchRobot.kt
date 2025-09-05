@@ -57,6 +57,9 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.compose.browser.toolbar.R as composeToolbarR
+import mozilla.components.feature.qr.R as qrR
 
 /**
  * Implementation of Robot Pattern for the search fragment.
@@ -340,7 +343,7 @@ class SearchRobot {
 
     fun clickScanButtonWithComposableToolbar(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickScanButtonWithComposableToolbar: Trying to click the scan button")
-        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.mozac_feature_qr_scanner)).performClick()
+        composeTestRule.onNodeWithContentDescription(getStringResource(qrR.string.mozac_feature_qr_scanner)).performClick()
         Log.i(TAG, "clickScanButtonWithComposableToolbar: Clicked the scan button")
     }
 
@@ -389,7 +392,7 @@ class SearchRobot {
 
     fun typeSearchWithComposableToolbar(searchTerm: String) {
         Log.i(TAG, "typeSearchWithComposableToolbar: Trying to set the edit mode toolbar text to $searchTerm")
-        onView(withId(R.id.mozac_addressbar_search_query_input)).perform(replaceText(searchTerm))
+        onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(replaceText(searchTerm))
         Log.i(TAG, "typeSearchWithComposableToolbar: Edit mode toolbar text was set to $searchTerm")
     }
 
@@ -401,7 +404,7 @@ class SearchRobot {
 
     fun clickClearButtonWithComposableToolbar(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickClearButtonWithComposableToolbar: Trying to click the clear button")
-        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.mozac_clear_button_description)).performClick()
+        composeTestRule.onNodeWithContentDescription(getStringResource(toolbarR.string.mozac_clear_button_description)).performClick()
         Log.i(TAG, "clickClearButtonWithComposableToolbar: Clicked the clear button")
     }
 
@@ -527,7 +530,7 @@ class SearchRobot {
 
         fun submitQueryWithComposableToolbar(query: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             Log.i(TAG, "submitQueryWithComposableToolbar: Trying to set toolbar text to: $query")
-            onView(withId(R.id.mozac_addressbar_search_query_input)).perform(replaceText(query))
+            onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(replaceText(query))
             Log.i(TAG, "submitQueryWithComposableToolbar: Toolbar text was set to: $query")
             Log.i(TAG, "submitQueryWithComposableToolbar: Trying to click device enter button")
             mDevice.pressEnter()

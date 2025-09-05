@@ -94,6 +94,7 @@ import org.mozilla.fenix.search.fixtures.buildExpectedSearchSelector
 import org.mozilla.fenix.tabstray.Page
 import org.robolectric.Shadows.shadowOf
 import mozilla.components.ui.icons.R as iconsR
+import mozilla.components.ui.tabcounter.R as tabcounterR
 
 @RunWith(AndroidJUnit4::class)
 class BrowserToolbarMiddlewareTest {
@@ -627,7 +628,7 @@ class BrowserToolbarMiddlewareTest {
 
         assertEquals(3, action.count)
         assertEquals(
-            testContext.getString(R.string.mozac_tab_counter_open_tab_tray, 3),
+            testContext.getString(tabcounterR.string.mozac_tab_counter_open_tab_tray, 3),
             action.contentDescription,
         )
         assertEquals(
@@ -717,12 +718,12 @@ class BrowserToolbarMiddlewareTest {
         count = tabCount,
         contentDescription = if (isPrivate) {
             testContext.getString(
-                R.string.mozac_tab_counter_private,
+                tabcounterR.string.mozac_tab_counter_private,
                 tabCount.toString(),
             )
         } else {
             testContext.getString(
-                R.string.mozac_tab_counter_open_tab_tray,
+                tabcounterR.string.mozac_tab_counter_open_tab_tray,
                 tabCount.toString(),
             )
         },
@@ -733,8 +734,8 @@ class BrowserToolbarMiddlewareTest {
                 true -> listOf(
                     BrowserToolbarMenuButton(
                         icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
-                        text = StringResText(R.string.mozac_browser_menu_new_tab),
-                        contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_tab),
+                        text = StringResText(tabcounterR.string.mozac_browser_menu_new_tab),
+                        contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_tab),
                         onClick = AddNewTab(source),
                     ),
                 )
@@ -742,8 +743,8 @@ class BrowserToolbarMiddlewareTest {
                 false -> listOf(
                     BrowserToolbarMenuButton(
                         icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
-                        text = StringResText(R.string.mozac_browser_menu_new_private_tab),
-                        contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_private_tab),
+                        text = StringResText(tabcounterR.string.mozac_browser_menu_new_private_tab),
+                        contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_private_tab),
                         onClick = AddNewPrivateTab(source),
                     ),
                 )

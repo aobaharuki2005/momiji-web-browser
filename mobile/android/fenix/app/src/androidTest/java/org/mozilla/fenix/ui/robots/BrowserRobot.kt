@@ -91,7 +91,13 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_CHOOSE_REASON_BUTTON
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_SEND_BUTTON
 import java.time.LocalDate
+import mozilla.components.browser.errorpages.R as errorpagesR
+import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.feature.app.links.R as applinksR
+import mozilla.components.feature.contextmenu.R as contextmenuR
 import mozilla.components.feature.downloads.R as downloadsR
+import mozilla.components.feature.prompts.R as promptsR
+import mozilla.components.ui.tabcounter.R as tabcounterR
 
 class BrowserRobot {
     private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
@@ -299,7 +305,7 @@ class BrowserRobot {
     fun verifyTabCounter(numberOfOpenTabs: String) =
         onView(
             allOf(
-                withId(R.id.counter_text),
+                withId(tabcounterR.id.counter_text),
                 withText(numberOfOpenTabs),
                 withEffectiveVisibility(Visibility.VISIBLE),
             ),
@@ -651,7 +657,7 @@ class BrowserRobot {
         Log.i(TAG, "fillAndSaveCreditCard: Waited for $waitingTime ms for $packageName window to be updated")
     }
 
-    fun clickNegativeSaveCreditCardPromptButton() = onView(withId(R.id.save_cancel)).inRoot(isDialog()).click()
+    fun clickNegativeSaveCreditCardPromptButton() = onView(withId(promptsR.id.save_cancel)).inRoot(isDialog()).click()
 
     fun verifyUpdateOrSaveCreditCardPromptExists(exists: Boolean) =
         assertUIObjectExists(
@@ -913,10 +919,15 @@ class BrowserRobot {
         assertUIObjectExists(
             itemWithResId("$packageName:id/parentPanel"),
             itemContainingText(
-                getStringResource(R.string.mozac_feature_applinks_normal_confirm_dialog_title_with_app_name, appName),
+                getStringResource(
+                    applinksR.string.mozac_feature_applinks_normal_confirm_dialog_title_with_app_name,
+                    appName,
+                ),
             ),
             itemContainingText(
-                getStringResource(R.string.mozac_feature_applinks_normal_confirm_dialog_message),
+                getStringResource(
+                    applinksR.string.mozac_feature_applinks_normal_confirm_dialog_message,
+                ),
             ),
         )
     }
@@ -927,7 +938,10 @@ class BrowserRobot {
                 Log.i(TAG, "verifyPrivateBrowsingOpenLinkInAnotherAppPrompt: Started try #$i")
                 assertUIObjectExists(
                     itemContainingText(
-                        getStringResource(R.string.mozac_feature_applinks_confirm_dialog_title_with_app_name, appName),
+                        getStringResource(
+                            applinksR.string.mozac_feature_applinks_confirm_dialog_title_with_app_name,
+                            appName,
+                        ),
                     ),
                     itemContainingText(url),
                 )
@@ -957,19 +971,31 @@ class BrowserRobot {
 
     fun verifyConnectionErrorMessage() =
         assertUIObjectExists(
-            itemContainingText(getStringResource(R.string.mozac_browser_errorpages_connection_failure_title)),
+            itemContainingText(
+                getStringResource(
+                    errorpagesR.string.mozac_browser_errorpages_connection_failure_title,
+                ),
+            ),
             itemWithResId("errorTryAgain"),
         )
 
     fun verifyAddressNotFoundErrorMessage() =
         assertUIObjectExists(
-            itemContainingText(getStringResource(R.string.mozac_browser_errorpages_unknown_host_title)),
+            itemContainingText(
+                getStringResource(
+                    errorpagesR.string.mozac_browser_errorpages_unknown_host_title,
+                ),
+            ),
             itemWithResId("errorTryAgain"),
         )
 
     fun verifyNoInternetConnectionErrorMessage() =
         assertUIObjectExists(
-            itemContainingText(getStringResource(R.string.mozac_browser_errorpages_no_internet_title_2)),
+            itemContainingText(
+                getStringResource(
+                    errorpagesR.string.mozac_browser_errorpages_no_internet_title_2,
+                ),
+            ),
             itemWithResId("errorTryAgain"),
         )
 
@@ -1045,7 +1071,7 @@ class BrowserRobot {
 
     fun longClickToolbar() {
         Log.i(TAG, "longClickToolbar: Trying to long click the toolbar")
-        onView(withId(R.id.mozac_browser_toolbar_url_view)).perform(longClick())
+        onView(withId(toolbarR.id.mozac_browser_toolbar_url_view)).perform(longClick())
         Log.i(TAG, "longClickToolbar: Long clicked the toolbar")
     }
 
@@ -1618,7 +1644,7 @@ class BrowserRobot {
 
         fun openSiteSecuritySheetWithComposableToolbar(composeTestRule: ComposeTestRule, interact: SiteSecurityRobot.() -> Unit): SiteSecurityRobot.Transition {
             Log.i(TAG, "openSiteSecuritySheetWithComposableToolbar: Trying to click the site security toolbar button and wait for $waitingTime ms for a new window")
-            composeTestRule.onNodeWithContentDescription(getStringResource(R.string.mozac_browser_toolbar_content_description_site_info)).performClick()
+            composeTestRule.onNodeWithContentDescription(getStringResource(toolbarR.string.mozac_browser_toolbar_content_description_site_info)).performClick()
             Log.i(TAG, "openSiteSecuritySheetWithComposableToolbar: Clicked the site security toolbar button and waited for $waitingTime ms for a new window")
 
             SiteSecurityRobot().interact()
@@ -1829,24 +1855,24 @@ private fun contextMenuLinkUrl(linkUrl: String) =
 
 // Open link in new tab option
 private fun contextMenuOpenLinkInNewTab() =
-    itemContainingText(getStringResource(R.string.mozac_feature_contextmenu_open_link_in_new_tab))
+    itemContainingText(getStringResource(contextmenuR.string.mozac_feature_contextmenu_open_link_in_new_tab))
 
 // Open link in private tab option
 private fun contextMenuOpenLinkInPrivateTab() =
-    itemContainingText(getStringResource(R.string.mozac_feature_contextmenu_open_link_in_private_tab))
+    itemContainingText(getStringResource(contextmenuR.string.mozac_feature_contextmenu_open_link_in_private_tab))
 
 // Copy link option
 private fun contextMenuCopyLink() =
-    itemContainingText(getStringResource(R.string.mozac_feature_contextmenu_copy_link))
+    itemContainingText(getStringResource(contextmenuR.string.mozac_feature_contextmenu_copy_link))
 
 // Download link option
 private fun contextMenuDownloadLink() =
-    itemContainingText(getStringResource(R.string.mozac_feature_contextmenu_download_link))
+    itemContainingText(getStringResource(contextmenuR.string.mozac_feature_contextmenu_download_link))
 
 // Share link option
 private fun contextMenuShareLink() =
-    itemContainingText(getStringResource(R.string.mozac_feature_contextmenu_share_link))
+    itemContainingText(getStringResource(contextmenuR.string.mozac_feature_contextmenu_share_link))
 
 // Open in external app option
 private fun contextMenuOpenInExternalApp() =
-    itemContainingText(getStringResource(R.string.mozac_feature_contextmenu_open_link_in_external_app))
+    itemContainingText(getStringResource(contextmenuR.string.mozac_feature_contextmenu_open_link_in_external_app))

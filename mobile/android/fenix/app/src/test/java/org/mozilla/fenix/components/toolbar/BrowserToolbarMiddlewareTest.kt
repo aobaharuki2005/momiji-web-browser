@@ -161,7 +161,9 @@ import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.ui.icons.R as iconsR
+import mozilla.components.ui.tabcounter.R as tabcounterR
 
 @RunWith(AndroidJUnit4::class)
 class BrowserToolbarMiddlewareTest {
@@ -1976,7 +1978,7 @@ class BrowserToolbarMiddlewareTest {
         every { tab.content.url } returns "content://test"
         val expectedSecurityIndicator = ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
-            contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+            contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
             onClick = StartPageActions.SiteInfoClicked,
         )
 
@@ -2003,7 +2005,7 @@ class BrowserToolbarMiddlewareTest {
         every { tab.content.securityInfo.secure } returns true
         val expectedSecurityIndicator = ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
-            contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+            contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
             onClick = StartPageActions.SiteInfoClicked,
         )
 
@@ -2024,7 +2026,7 @@ class BrowserToolbarMiddlewareTest {
         every { tab.content.securityInfo.secure } returns false
         val expectedSecurityIndicator = ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
-            contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+            contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
             onClick = StartPageActions.SiteInfoClicked,
         )
 
@@ -2054,12 +2056,12 @@ class BrowserToolbarMiddlewareTest {
             )
             val expectedSecureIndicator = ActionButtonRes(
                 drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
-                contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                 onClick = StartPageActions.SiteInfoClicked,
             )
             val expectedInsecureIndicator = ActionButtonRes(
                 drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
-                contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                 onClick = StartPageActions.SiteInfoClicked,
             )
             val toolbarStore = buildStore(middleware).also {
@@ -2112,7 +2114,7 @@ class BrowserToolbarMiddlewareTest {
 
             val expectedSecurityIndicator = ActionButtonRes(
                 drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
-                contentDescription = R.string.mozac_browser_toolbar_content_description_site_info,
+                contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                 onClick = StartPageActions.SiteInfoClicked,
             )
 
@@ -2398,7 +2400,7 @@ class BrowserToolbarMiddlewareTest {
 
         assertEquals(3, action.count)
         assertEquals(
-            testContext.getString(R.string.mozac_tab_counter_open_tab_tray, 3),
+            testContext.getString(tabcounterR.string.mozac_tab_counter_open_tab_tray, 3),
             action.contentDescription,
         )
         assertEquals(
@@ -2591,12 +2593,12 @@ class BrowserToolbarMiddlewareTest {
         count = tabCount,
         contentDescription = if (isPrivate) {
             testContext.getString(
-                R.string.mozac_tab_counter_private,
+                tabcounterR.string.mozac_tab_counter_private,
                 tabCount.toString(),
             )
         } else {
             testContext.getString(
-                R.string.mozac_tab_counter_open_tab_tray,
+                tabcounterR.string.mozac_tab_counter_open_tab_tray,
                 tabCount.toString(),
             )
         },
@@ -2606,15 +2608,15 @@ class BrowserToolbarMiddlewareTest {
             listOf(
                 BrowserToolbarMenuButton(
                     icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
-                    text = StringResText(R.string.mozac_browser_menu_new_tab),
-                    contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_tab),
+                    text = StringResText(tabcounterR.string.mozac_browser_menu_new_tab),
+                    contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_tab),
                     onClick = AddNewTab(source),
                 ),
 
                 BrowserToolbarMenuButton(
                     icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
-                    text = StringResText(R.string.mozac_browser_menu_new_private_tab),
-                    contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_private_tab),
+                    text = StringResText(tabcounterR.string.mozac_browser_menu_new_private_tab),
+                    contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_private_tab),
                     onClick = AddNewPrivateTab(source),
                 ),
 
@@ -2622,8 +2624,8 @@ class BrowserToolbarMiddlewareTest {
 
                 BrowserToolbarMenuButton(
                     icon = DrawableResIcon(iconsR.drawable.mozac_ic_cross_24),
-                    text = StringResText(R.string.mozac_close_tab),
-                    contentDescription = StringResContentDescription(R.string.mozac_close_tab),
+                    text = StringResText(tabcounterR.string.mozac_close_tab),
+                    contentDescription = StringResContentDescription(tabcounterR.string.mozac_close_tab),
                     onClick = CloseCurrentTab,
                 ),
             ).apply {

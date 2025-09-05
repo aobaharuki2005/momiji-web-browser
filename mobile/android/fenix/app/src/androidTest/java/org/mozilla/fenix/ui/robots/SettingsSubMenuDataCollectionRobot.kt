@@ -26,6 +26,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
+import mozilla.components.lib.crash.R as crashR
 
 /**
  * Implementation of Robot Pattern for the settings Data Collection sub menu.
@@ -64,9 +65,9 @@ class SettingsSubMenuDataCollectionRobot {
             itemWithDescription("Learn more about daily usage ping Links available"),
             // Crash reports section
             itemContainingText(getStringResource(R.string.crash_reporting_description)),
-            itemContainingText(getStringResource(R.string.crash_reporting_ask)),
-            itemContainingText(getStringResource(R.string.crash_reporting_auto)),
-            itemContainingText(getStringResource(R.string.crash_reporting_never)),
+            itemContainingText(getStringResource(crashR.string.crash_reporting_ask)),
+            itemContainingText(getStringResource(crashR.string.crash_reporting_auto)),
+            itemContainingText(getStringResource(crashR.string.crash_reporting_never)),
         )
 
         // Technical Data toggle

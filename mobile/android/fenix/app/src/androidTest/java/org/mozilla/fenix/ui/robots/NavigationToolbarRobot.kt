@@ -62,6 +62,10 @@ import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.matchers.hasItemsCount
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
+import mozilla.components.browser.menu.R as menuR
+import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.compose.browser.toolbar.R as composeToolbarR
+import mozilla.components.ui.tabcounter.R as tabcounterR
 
 /**
  * Implementation of Robot Pattern for the URL toolbar.
@@ -69,13 +73,13 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 class NavigationToolbarRobot {
     fun verifyUrl(url: String) {
         Log.i(TAG, "verifyUrl: Trying to verify toolbar text matches $url")
-        onView(withId(R.id.mozac_browser_toolbar_url_view)).check(matches(withText(url)))
+        onView(withId(toolbarR.id.mozac_browser_toolbar_url_view)).check(matches(withText(url)))
         Log.i(TAG, "verifyUrl: Verified toolbar text matches $url")
     }
 
     fun verifyTabButtonShortcutMenuItems() {
         Log.i(TAG, "verifyTabButtonShortcutMenuItems: Trying to verify tab counter shortcut options")
-        onView(withId(R.id.mozac_browser_menu_recyclerView))
+        onView(withId(menuR.id.mozac_browser_menu_recyclerView))
             .check(matches(hasDescendant(withText("Close tab"))))
             .check(matches(hasDescendant(withText("New private tab"))))
             .check(matches(hasDescendant(withText("New tab"))))
@@ -84,7 +88,7 @@ class NavigationToolbarRobot {
 
     fun verifyTabButtonShortcutMenuItemsForNormalHomescreen() {
         Log.i(TAG, "verifyTabButtonShortcutMenuItemsForNormalHomescreen: Trying to verify tab counter shortcut options")
-        onView(withId(R.id.mozac_browser_menu_recyclerView))
+        onView(withId(menuR.id.mozac_browser_menu_recyclerView))
             .check(matches(hasItemsCount(2)))
             .check(matches(hasDescendant(withText("New tab"))))
             .check(matches(hasDescendant(withText("New private tab"))))
@@ -93,7 +97,7 @@ class NavigationToolbarRobot {
 
     fun verifyTabButtonShortcutMenuItemsForPrivateHomescreen() {
         Log.i(TAG, "verifyTabButtonShortcutMenuItemsForPrivateHomescreen: Trying to verify tab counter shortcut options")
-        onView(withId(R.id.mozac_browser_menu_recyclerView))
+        onView(withId(menuR.id.mozac_browser_menu_recyclerView))
             .check(matches(hasItemsCount(2)))
             .check(matches(hasDescendant(withText("New tab"))))
             .check(matches(hasDescendant(withText("New private tab"))))
@@ -321,7 +325,7 @@ class NavigationToolbarRobot {
             composeTestRule.onNodeWithTag(ADDRESSBAR_URL_BOX).performClick()
             Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Clicked navigation toolbar")
             Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Trying to set toolbar text to: $url")
-            onView(withId(R.id.mozac_addressbar_search_query_input)).perform(replaceText(url.toString()))
+            onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(replaceText(url.toString()))
             Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Toolbar text was set to: $url")
             Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Trying to press device enter button")
             mDevice.pressEnter()
@@ -493,7 +497,7 @@ class NavigationToolbarRobot {
             mDevice.waitForIdle(waitingTime)
             Log.i(TAG, "closeTabFromShortcutsMenu: Waited for device to be idle for $waitingTime ms")
             Log.i(TAG, "closeTabFromShortcutsMenu: Trying to click the \"Close tab\" button")
-            onView(withId(R.id.mozac_browser_menu_recyclerView))
+            onView(withId(menuR.id.mozac_browser_menu_recyclerView))
                 .perform(
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
                         hasDescendant(
@@ -513,7 +517,7 @@ class NavigationToolbarRobot {
             mDevice.waitForIdle(waitingTime)
             Log.i(TAG, "openNewTabFromShortcutsMenu: Waited for device to be idle for $waitingTime ms")
             Log.i(TAG, "openNewTabFromShortcutsMenu: Trying to click the \"New tab\" button")
-            onView(withId(R.id.mozac_browser_menu_recyclerView))
+            onView(withId(menuR.id.mozac_browser_menu_recyclerView))
                 .perform(
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
                         hasDescendant(
@@ -533,7 +537,7 @@ class NavigationToolbarRobot {
             mDevice.waitForIdle(waitingTime)
             Log.i(TAG, "openNewPrivateTabFromShortcutsMenu: Waited for device to be idle for $waitingTime ms")
             Log.i(TAG, "openNewPrivateTabFromShortcutsMenu: Trying to click the \"New private tab\" button")
-            onView(withId(R.id.mozac_browser_menu_recyclerView))
+            onView(withId(menuR.id.mozac_browser_menu_recyclerView))
                 .perform(
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
                         hasDescendant(
@@ -632,11 +636,11 @@ private fun urlBar() = mDevice.findObject(UiSelector().resourceId("$packageName:
 private fun homeUrlBar() = mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar_text"))
 private fun awesomeBar() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
-private fun threeDotButton() = onView(withId(R.id.mozac_browser_toolbar_menu))
+private fun threeDotButton() = onView(withId(toolbarR.id.mozac_browser_toolbar_menu))
 private fun tabTrayButton() = onView(withId(R.id.tab_button))
 private fun tabsCounter() = onView(
     allOf(
-        withId(R.id.counter_root),
+        withId(tabcounterR.id.counter_root),
         withEffectiveVisibility(Visibility.VISIBLE),
     ),
 )

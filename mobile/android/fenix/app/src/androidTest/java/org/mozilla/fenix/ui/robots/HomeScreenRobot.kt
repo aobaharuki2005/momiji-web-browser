@@ -82,6 +82,8 @@ import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE_WORDMARK_LOGO
 import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE_WORDMARK_TEXT
 import org.mozilla.fenix.home.ui.HomepageTestTag.PRIVATE_BROWSING_HOMEPAGE_BUTTON
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
+import mozilla.components.browser.menu.R as menuR
+import mozilla.components.ui.tabcounter.R as tabcounterR
 
 /**
  * Implementation of Robot Pattern for the home screen menu.
@@ -140,7 +142,7 @@ class HomeScreenRobot {
     fun verifyTabCounter(numberOfOpenTabs: String) =
         onView(
             allOf(
-                withId(R.id.counter_text),
+                withId(tabcounterR.id.counter_text),
                 withText(numberOfOpenTabs),
                 withEffectiveVisibility(Visibility.VISIBLE),
             ),
@@ -958,7 +960,7 @@ private fun tabCounter(numberOfOpenTabs: String) =
 fun deleteFromHistory() =
     onView(
         allOf(
-            withId(R.id.simple_text),
+            withId(menuR.id.simple_text),
             withText(R.string.delete_from_history),
         ),
     ).inRoot(RootMatchers.isPlatformPopup())

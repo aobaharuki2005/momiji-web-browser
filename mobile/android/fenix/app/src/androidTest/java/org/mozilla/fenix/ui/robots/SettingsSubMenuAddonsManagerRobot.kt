@@ -78,7 +78,7 @@ class SettingsSubMenuAddonsManagerRobot {
 
     fun verifyAddonDownloadOverlay() {
         Log.i(TAG, "verifyAddonDownloadOverlay: Trying to verify that the \"Downloading and verifying extension\" prompt is displayed")
-        onView(withText(R.string.mozac_extension_install_progress_caption)).check(matches(isDisplayed()))
+        onView(withText(addonsR.string.mozac_extension_install_progress_caption)).check(matches(isDisplayed()))
         Log.i(TAG, "verifyAddonDownloadOverlay: Verified that the \"Downloading and verifying extension\" prompt is displayed")
     }
 
@@ -203,7 +203,7 @@ class SettingsSubMenuAddonsManagerRobot {
         onView(
             allOf(
                 withId(R.id.add_button),
-                isDescendantOfA(withId(R.id.add_on_item)),
+                isDescendantOfA(withId(addonsR.id.add_on_item)),
                 hasSibling(hasDescendant(withText(addonName))),
             ),
         ).check(matches(withEffectiveVisibility(Visibility.INVISIBLE)))
@@ -228,11 +228,11 @@ class SettingsSubMenuAddonsManagerRobot {
         onView(
             allOf(
                 isAssignableFrom(RelativeLayout::class.java),
-                withId(R.id.add_on_item),
-                hasDescendant(allOf(withId(R.id.add_on_icon), isCompletelyDisplayed())),
+                withId(addonsR.id.add_on_item),
+                hasDescendant(allOf(withId(addonsR.id.add_on_icon), isCompletelyDisplayed())),
                 hasDescendant(
                     allOf(
-                        withId(R.id.details_container),
+                        withId(addonsR.id.details_container),
                         hasDescendant(withText("uBlock Origin")),
                         hasDescendant(withText("Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.")),
                         hasDescendant(withId(R.id.rating)),
@@ -254,7 +254,7 @@ class SettingsSubMenuAddonsManagerRobot {
                 hasSibling(
                     hasDescendant(
                         allOf(
-                            withId(R.id.add_on_name),
+                            withId(addonsR.id.add_on_name),
                             withText(addonName),
                         ),
                     ),
@@ -267,7 +267,7 @@ class SettingsSubMenuAddonsManagerRobot {
     fun selectAllowInPrivateBrowsing() {
         assertUIObjectExists(itemWithText("Allow extension to run in private browsing"), waitingTime = waitingTimeLong)
         Log.i(TAG, "selectAllowInPrivateBrowsing: Trying to click the \"Allow in private browsing\" check box")
-        onView(withId(R.id.allow_in_private_browsing)).click()
+        onView(withId(addonsR.id.allow_in_private_browsing)).click()
         Log.i(TAG, "selectAllowInPrivateBrowsing: Clicked the \"Allow in private browsing\" check box")
     }
 
@@ -491,17 +491,17 @@ class SettingsSubMenuAddonsManagerRobot {
         onView(
             allOf(
                 withContentDescription("Install $addonName"),
-                isDescendantOfA(withId(R.id.add_on_item)),
+                isDescendantOfA(withId(addonsR.id.add_on_item)),
                 hasSibling(hasDescendant(withText(addonName))),
             ),
         )
 
     private fun cancelInstall() {
         Log.i(TAG, "cancelInstall: Trying to verify that the \"Cancel\" button is completely displayed")
-        onView(allOf(withId(R.id.deny_button), withText("Cancel"))).check(matches(isCompletelyDisplayed()))
+        onView(allOf(withId(addonsR.id.deny_button), withText("Cancel"))).check(matches(isCompletelyDisplayed()))
         Log.i(TAG, "cancelInstall: Verified that the \"Cancel\" button is completely displayed")
         Log.i(TAG, "cancelInstall: Trying to click the \"Cancel\" button")
-        onView(allOf(withId(R.id.deny_button), withText("Cancel"))).perform(click())
+        onView(allOf(withId(addonsR.id.deny_button), withText("Cancel"))).perform(click())
         Log.i(TAG, "cancelInstall: Clicked the \"Cancel\" button")
     }
 
@@ -558,10 +558,10 @@ private fun scrollToAddon(addonName: String) {
 private fun addonItem(addonName: String) =
     onView(
         allOf(
-            withId(R.id.add_on_item),
+            withId(addonsR.id.add_on_item),
             hasDescendant(
                 allOf(
-                    withId(R.id.add_on_name),
+                    withId(addonsR.id.add_on_name),
                     withText(addonName),
                 ),
             ),

@@ -85,6 +85,8 @@ import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.feature.qr.R as qrR
 import mozilla.components.ui.icons.R as iconsR
 import org.mozilla.fenix.components.appstate.search.SearchState as AppSearchState
 
@@ -825,14 +827,14 @@ class BrowserToolbarSearchMiddlewareTest {
 
     private val expectedClearButton = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_cross_circle_fill_24,
-        contentDescription = R.string.mozac_clear_button_description,
+        contentDescription = toolbarR.string.mozac_clear_button_description,
         state = ActionButton.State.DEFAULT,
         onClick = ClearSearchClicked,
     )
 
     private val expectedQrButton = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_qr_code_24,
-        contentDescription = R.string.mozac_feature_qr_scanner,
+        contentDescription = qrR.string.mozac_feature_qr_scanner,
         state = ActionButton.State.DEFAULT,
         onClick = QrScannerClicked,
     )

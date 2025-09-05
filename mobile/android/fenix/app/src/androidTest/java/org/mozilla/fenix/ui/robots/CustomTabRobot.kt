@@ -40,6 +40,7 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
+import mozilla.components.feature.customtabs.R as customtabsR
 
 /**
  *  Implementation of the robot pattern for Custom tabs
@@ -53,7 +54,7 @@ class CustomTabRobot {
 
     fun verifyCustomTabsShareButton() =
         assertUIObjectExists(
-            itemWithDescription(getStringResource(R.string.mozac_feature_customtabs_share_link)),
+            itemWithDescription(getStringResource(customtabsR.string.mozac_feature_customtabs_share_link)),
         )
 
     fun verifyMainMenuButton() = assertUIObjectExists(mainMenuButton())
@@ -103,7 +104,7 @@ class CustomTabRobot {
 
     fun verifyCustomTabCloseButtonWithComposableToolbar(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "verifyCustomTabCloseButtonWithComposableToolbar: Trying to verify that the close custom tab button is displayed")
-        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.mozac_feature_customtabs_exit_button)).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription(getStringResource(customtabsR.string.mozac_feature_customtabs_exit_button)).assertIsDisplayed()
         Log.i(TAG, "verifyCustomTabCloseButtonWithComposableToolbar: Verified that the close custom tab button is displayed")
     }
 
@@ -282,8 +283,8 @@ class CustomTabRobot {
 
         fun clickShareButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
             Log.i(TAG, "clickShareButton: Trying to click the share button")
-            itemWithDescription(getStringResource(R.string.mozac_feature_customtabs_share_link)).waitForExists(waitingTime)
-            itemWithDescription(getStringResource(R.string.mozac_feature_customtabs_share_link)).click()
+            itemWithDescription(getStringResource(customtabsR.string.mozac_feature_customtabs_share_link)).waitForExists(waitingTime)
+            itemWithDescription(getStringResource(customtabsR.string.mozac_feature_customtabs_share_link)).click()
             Log.i(TAG, "clickShareButton: Clicked the share button")
 
             ShareOverlayRobot().interact()
