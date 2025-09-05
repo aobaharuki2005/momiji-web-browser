@@ -68,7 +68,7 @@
   "warnAboutClosingWindow",
   "MailIntegration",
   "gRemoteControl",
-  "gPrivateBrowsingUI",
+  "PrivateBrowsingUI",
   "switchToTabHavingURI",
   "gRestoreLastSessionObserver",
   "safeModeRestart",
