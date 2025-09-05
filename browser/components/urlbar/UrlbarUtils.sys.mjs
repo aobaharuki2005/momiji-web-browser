@@ -1516,6 +1516,10 @@ export var UrlbarUtils = {
       return "experimental_addon";
     }
 
+    if (result.providerName == "UrlbarProviderQuickSuggest") {
+      return this._getQuickSuggestTelemetryType(result);
+    }
+
     // Appends subtype to certain result types.
     function checkForSubType(type, res) {
       if (res.providerName == "SemanticHistorySearch") {
@@ -1541,8 +1545,6 @@ export var UrlbarUtils = {
             return "tab_to_search";
           case "UnitConversion":
             return "unit";
-          case "UrlbarProviderQuickSuggest":
-            return this._getQuickSuggestTelemetryType(result);
           case "UrlbarProviderQuickSuggestContextualOptIn":
             return "fxsuggest_data_sharing_opt_in";
           case "UrlbarProviderGlobalActions":
@@ -1594,11 +1596,6 @@ export var UrlbarUtils = {
               return "intervention_unknown";
           }
         }
-
-        if (result.providerName === "UrlbarProviderQuickSuggest") {
-          return this._getQuickSuggestTelemetryType(result);
-        }
-
         switch (result.payload.type) {
           case lazy.UrlbarProviderSearchTips.TIP_TYPE.ONBOARD:
             return "tip_onboard";
@@ -1618,9 +1615,6 @@ export var UrlbarUtils = {
         }
         if (result.autofill) {
           return `autofill_${result.autofill.type ?? "unknown"}`;
-        }
-        if (result.providerName === "UrlbarProviderQuickSuggest") {
-          return this._getQuickSuggestTelemetryType(result);
         }
         if (result.providerName === "UrlbarProviderTopSites") {
           return "top_site";
