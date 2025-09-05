@@ -87,12 +87,21 @@ class DownloadRobot {
             itemContainingText(fileName),
         )
 
-    fun verifyDownloadFailedSnackbar(fileName: String) =
-        assertUIObjectExists(
-            itemContainingText(getStringResource(R.string.download_failed_snackbar_action_details)),
-            itemContainingText(getStringResource(R.string.download_item_status_failed)),
-            itemWithText(fileName),
-        )
+    @OptIn(ExperimentalTestApi::class)
+    fun verifyDownloadFailedSnackbar(composeTestRule: ComposeTestRule, fileName: String) {
+        Log.i(TAG, "verifyDownloadFailedSnackbar: Waiting for the snackbar to exist")
+        composeTestRule.waitUntilExactlyOneExists(hasTestTag(SNACKBAR_TEST_TAG))
+        Log.i(TAG, "verifyDownloadFailedSnackbar: Waited for the snackbar to exist")
+        Log.i(TAG, "verifyDownloadFailedSnackbar: Trying to verify that the \"Download failed\" snackbar message exists")
+        composeTestRule.onNodeWithText(getStringResource(R.string.download_item_status_failed), useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyDownloadFailedSnackbar: Verified that the \"Download failed\" snackbar message exists")
+        Log.i(TAG, "verifyDownloadFailedSnackbar: Trying to verify that the \"Details\" snackbar button exists")
+        composeTestRule.onNodeWithText(getStringResource(R.string.download_failed_snackbar_action_details), useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyDownloadFailedSnackbar: Verified that the \"Details\" snackbar button exists")
+        Log.i(TAG, "verifyDownloadFailedSnackbar: Trying to verify that the file name: $fileName exists")
+        composeTestRule.onNodeWithText(fileName, useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyDownloadFailedSnackbar: Verified that the file name: $fileName exists")
+    }
 
     fun waitUntilDownloadSnackbarGone() {
         // Auto dismiss timeout for download snackbars is 20 seconds
