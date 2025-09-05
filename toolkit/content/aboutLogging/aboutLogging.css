@@ -132,7 +132,7 @@ input[type="text"] {
 }
 
 #some-elements-unavailable {
-  background-color: var(--in-content-box-info-background);
+  background-color: var(--background-color-box-info);
   border-color: var(--aboutlogging-box-border-color);
 }
 

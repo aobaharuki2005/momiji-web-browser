@@ -984,7 +984,7 @@ dialog > .sync-engines-list + hbox {
 }
 
 .info-box-container {
-  background-color: var(--in-content-box-info-background);
+  background-color: var(--background-color-box-info);
   padding: 9px;
   border: 1px solid transparent;
   border-radius: var(--border-radius-small);
@@ -1305,7 +1305,7 @@ richlistitem .text-link:hover {
   min-height: 204px;
   margin-block: 10px 0;
   margin-inline-start: 30px;
-  background-color: var(--in-content-box-info-background);
+  background-color: var(--background-color-box-info);
   display: flex;
   flex-direction: column;
   align-items: center;

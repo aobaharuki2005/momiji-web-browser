@@ -11,7 +11,7 @@
      look nice by default in "toolkit". */
   --AT-box-background: var(--background-color-box);
   --AT-box-border-color: var(--in-content-box-border-color, #9e9ea0);
-  --AT-box-info-background: var(--in-content-box-info-background, #f0f0f4);
+  --AT-box-info-background: var(--background-color-box-info, #f0f0f4);
 
   /* Variables used in the page layout */
   --AT-page-margin: 20px;

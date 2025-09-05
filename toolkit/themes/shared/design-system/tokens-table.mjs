@@ -190,6 +190,20 @@ export const tokensTable = {
     },
     {
       value: {
+        prefersContrast: "var(--background-color-canvas)",
+        brand: {
+          light: "var(--color-gray-20)",
+          dark: "var(--color-gray-80)",
+          default: "light-dark(var(--color-gray-20), var(--color-gray-80))",
+        },
+        platform: {
+          default: "color-mix(in srgb, currentColor 20%, transparent)",
+        },
+      },
+      name: "--background-color-box-info",
+    },
+    {
+      value: {
         prefersContrast: "Canvas",
         brand: {
           light: "var(--color-white)",
@@ -349,6 +363,10 @@ export const tokensTable = {
       name: "--button-background-color-ghost-hover",
     },
     {
+      value: "var(--background-color-box-info)",
+      name: "--promo-background-color",
+    },
+    {
       value: { default: "var(--background-color-canvas)" },
       name: "--table-row-background-color",
     },
@@ -361,9 +379,9 @@ export const tokensTable = {
           default: "light-dark(#f0f0f4, var(--color-gray-80))",
         },
         platform: {
-          light: "rgba(0,0,0,5%)",
-          dark: "rgba(255,255,255,5%)",
-          default: "light-dark(rgba(0,0,0,5%), rgba(255,255,255,5%))",
+          light: "rgba(0, 0, 0, 0.05)",
+          dark: "rgba(255, 255, 255, 0.05)",
+          default: "light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05))",
         },
       },
       name: "--table-row-background-color-alternate",
@@ -1016,6 +1034,15 @@ export const variableLookupTable = {
     prefersContrast: "var(--background-color-canvas)",
     default: "light-dark(var(--color-white), var(--color-gray-80))",
   },
+  "background-color-box-info": {
+    prefersContrast: "var(--background-color-canvas)",
+    brand: {
+      light: "var(--color-gray-20)",
+      dark: "var(--color-gray-80)",
+      default: "light-dark(var(--color-gray-20), var(--color-gray-80))",
+    },
+    platform: { default: "color-mix(in srgb, currentColor 20%, transparent)" },
+  },
   "background-color-canvas": {
     prefersContrast: "Canvas",
     brand: {
@@ -1573,6 +1600,7 @@ export const variableLookupTable = {
     default: "light-dark(var(--color-red-70), var(--color-red-20))",
   },
   "page-main-content-width": { brand: { default: "664px" } },
+  "promo-background-color": "var(--background-color-box-info)",
   "size-item-xsmall": "12px",
   "size-item-small": "16px",
   "size-item-medium": "24px",
@@ -1626,9 +1654,9 @@ export const variableLookupTable = {
       default: "light-dark(#f0f0f4, var(--color-gray-80))",
     },
     platform: {
-      light: "rgba(0,0,0,5%)",
-      dark: "rgba(255,255,255,5%)",
-      default: "light-dark(rgba(0,0,0,5%), rgba(255,255,255,5%))",
+      light: "rgba(0, 0, 0, 0.05)",
+      dark: "rgba(255, 255, 255, 0.05)",
+      default: "light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05))",
     },
   },
   "text-color": {
