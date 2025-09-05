@@ -3408,6 +3408,12 @@ pref("browser.safebrowsing.provider.google4.advisoryName", "Google Safe Browsing
 pref("browser.safebrowsing.provider.google4.dataSharingURL", "https://safebrowsing.googleapis.com/v4/threatHits?$ct=application/x-protobuf&key=%GOOGLE_SAFEBROWSING_API_KEY%&$httpMethod=POST");
 pref("browser.safebrowsing.provider.google4.dataSharing.enabled", false);
 
+// Google Safe Browsing V5 prefs.
+pref("browser.safebrowsing.provider.google5.enabled", false);
+pref("browser.safebrowsing.provider.google5.updateURL", "https://safebrowsing.googleapis.com/v5/hashLists:batchGet?key=%GOOGLE_SAFEBROWSING_API_KEY%");
+pref("browser.safebrowsing.provider.google5.gethashURL", "https://safebrowsing.googleapis.com/v5/hashes:search?key=%GOOGLE_SAFEBROWSING_API_KEY%");
+pref("browser.safebrowsing.provider.google5.lists", "");
+
 #endif // ifndef MOZ_WIDGET_ANDROID
 
 pref("browser.safebrowsing.reportPhishURL", "https://%LOCALE%.phish-report.mozilla.com/?url=");
