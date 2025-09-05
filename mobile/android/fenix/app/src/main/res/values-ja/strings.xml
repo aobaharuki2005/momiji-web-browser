@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">開いているタブがここに表示されます。</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">プライベートタブがここに表示されます。</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">プライベートブラウジング</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s は履歴や Cookie を保存しませんが、新しいブックマークは保存できます。</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">新しいタブで検索を開始します</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d 個選択</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">複数選択モードを終了</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">選択したタブをコレクションに保存</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">どの端末からでもタブを取り出す</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">すべての端末からの同期されたタブを管理するには、ログインしてください。</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">ログイン</string>
   <!--
     Home - Bookmarks
 
@@ -366,6 +378,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">ページを %1$s から %2$s に翻訳しました。</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">%1$s から %2$s に翻訳しました</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">翻訳シートを開く</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">メッセージを閉じる</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -495,6 +519,16 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">クラッシュレポートが送信されることにより、ブラウザーの問題の診断と修正に役立てられます。レポートには個人情報や機密性の高い情報が含まれる場合があります。</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">詳細情報</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s を再起動する必要があります</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">%s の起動時に問題が発生しました。\n\n送信されるクラッシュレポートは、ブラウザーの問題の診断と修正に役立てられます。レポートには個人情報や機密性の高い情報が含まれる場合があります。</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">クラッシュレポートを送信</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">いいえ、結構です</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">%s を再起動</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">技術データと対話データを Mozilla に送信する</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">端末、ハードウェア構成、Firefox の使用状況に関するデータは、すべてのユーザーのために、機能やパフォーマンス、安定性の向上に役立てられます。</string>
@@ -974,8 +1008,12 @@
   <string name="restart_warning_dialog_title">アプリアイコンを変更しますか？</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">アイコンを変更するにはアプリを再起動する必要があります。</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">アプリを終了します。新しいアイコンをタップして %1$s を再起動してください。</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">今すぐ再起動</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">アイコンを変更</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">キャンセル</string>
   <!--
@@ -1350,6 +1388,12 @@
   <string name="tabs_header_normal_tabs_title">タブ</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">同期</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">新しいタブ</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">新しいプライベートタブ</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">タブを同期</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">タブを追加</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1372,8 +1416,16 @@
   <string name="tab_tray_menu_item_close">すべてのタブを閉じる</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">ブックマーク</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">選択したタブをブックマークに追加します</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">閉じる</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">選択したタブを閉じます</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">共有</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">コレクションに追加</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">選択したタブを共有</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1612,6 +1664,8 @@
   <string name="webcompat_reporter_label_description">問題の詳細を記入してください (任意)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">詳しい情報を送信</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">詳細情報を追加</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">キャンセル</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1721,6 +1775,8 @@
   <string name="bookmark_menu_delete_button">削除</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">保存</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">並べ替えオプション</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">指定の順序で並べ替え</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1791,6 +1847,8 @@
   <string name="bookmark_search_button_content_description">ブックマークを検索します</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">%s の項目メニュー</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">ブックマークを閉じます</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">ブックマークがありません</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -1833,6 +1891,10 @@
   <string name="clear_permissions_on_all_sites">全サイトの許可設定を消去</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">自動再生</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">端末のアプリとサービス</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">ローカルネットワークの端末</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">カメラ</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2859,6 +2921,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">ショートカット</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">すべてのショートカットを表示します</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">ショートカット数の上限に達しました</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -2954,6 +3021,13 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">ストーリー</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">その他の記事を見つける</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">前のページへ戻る</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">広告</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3277,6 +3351,8 @@
   <string name="protection_panel_num_trackers_blocked">ブロックされた追跡: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">トラッカーが見つかりませんでした</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">トラッカーがブロックされません</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">プライバシーとセキュリティの設定</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
@@ -3309,6 +3385,8 @@
   <string name="connection_security_panel_secure">安全な接続</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">安全でない接続</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">このページは端末に保存されています</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.
