@@ -2642,6 +2642,11 @@ const DSLinkMenu = (0,external_ReactRedux_namespaceObject.connect)(state => ({
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+const PREF_WEATHER_PLACEMENT = "weather.placement";
+const PREF_DAILY_BRIEF_SECTIONID = "discoverystream.dailyBrief.sectionId";
+const PREF_DAILY_BRIEF_ENABLED = "discoverystream.dailyBrief.enabled";
+const PREF_STORIES_ENABLED = "feeds.section.topstories";
+const PREF_SYSTEM_STORIES_ENABLED = "feeds.system.topstories";
 
 /**
  * A custom react hook that sets up an IntersectionObserver to observe a single
@@ -2871,6 +2876,31 @@ function useConfetti(count = 80, spread = Math.PI / 3) {
     }
   }, [initializeConfetti, animateParticles, prefersReducedMotion]);
   return [canvasRef, fireConfetti];
+}
+function selectWeatherPlacement(state) {
+  const prefs = state.Prefs.values || {};
+
+  // Intent: only placed in section if explicitly requested
+  const placementPref = prefs[PREF_WEATHER_PLACEMENT];
+  if (placementPref === "header" || !placementPref) {
+    return "header";
+  }
+  const sections = state.DiscoveryStream.feeds.data["https://merino.services.mozilla.com/api/v1/curated-recommendations"]?.data.sections ?? [];
+  // check the following prefs to make sure weather is elligible to be placed in sections
+  // 1. The daily brieifng section must be availible and in the top position
+  // 2. That the daily briefing section has not been blocked
+  // 3. That reccomended stories are truned on
+  // Otherwise it should be placed in the header
+  const pocketEnabled = prefs[PREF_STORIES_ENABLED] && prefs[PREF_SYSTEM_STORIES_ENABLED];
+  const sectionPersonalization = state.DiscoveryStream?.sectionPersonalization || {};
+  const dailyBriefEnabled = prefs.trainHopConfig?.dailyBriefing?.enabled || prefs[PREF_DAILY_BRIEF_ENABLED];
+  const sectionId = prefs.trainHopConfig?.dailyBriefing?.sectionId || prefs[PREF_DAILY_BRIEF_SECTIONID];
+  const notBlocked = sectionId && !sectionPersonalization[sectionId]?.isBlocked;
+  let filteredSections = sections.filter(section => !sectionPersonalization[section.sectionKey]?.isBlocked);
+  const foundSection = filteredSections.find(section => section.sectionKey === sectionId);
+  const isTopSection = foundSection?.receivedRank === 0 || filteredSections.indexOf(foundSection) === 0;
+  const eligible = pocketEnabled && dailyBriefEnabled && sectionId && notBlocked && isTopSection;
+  return eligible ? "section" : "header";
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSitesConstants.mjs
@@ -11513,10 +11543,404 @@ function FollowSectionButtonHighlight({
     outsideClickCallback: handleDismiss
   }));
 }
+;// CONCATENATED MODULE: ./content-src/components/Weather/LocationSearch.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+function LocationSearch({
+  outerClassName
+}) {
+  // should be the location object from suggestedLocations
+  const [selectedLocation, setSelectedLocation] = (0,external_React_namespaceObject.useState)("");
+  const suggestedLocations = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Weather.suggestedLocations);
+  const locationSearchString = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Weather.locationSearchString);
+  const [userInput, setUserInput] = (0,external_React_namespaceObject.useState)(locationSearchString || "");
+  const inputRef = (0,external_React_namespaceObject.useRef)(null);
+  const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (selectedLocation) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WEATHER_LOCATION_DATA_UPDATE,
+        data: {
+          city: selectedLocation.localized_name,
+          adminName: selectedLocation.administrative_area,
+          country: selectedLocation.country
+        }
+      }));
+      dispatch(actionCreators.SetPref("weather.query", selectedLocation.key));
+      dispatch(actionCreators.BroadcastToContent({
+        type: actionTypes.WEATHER_SEARCH_ACTIVE,
+        data: false
+      }));
+    }
+  }, [selectedLocation, dispatch]);
+
+  // when component mounts, set focus to input
+  (0,external_React_namespaceObject.useEffect)(() => {
+    inputRef?.current?.focus();
+  }, [inputRef]);
+  function handleChange(event) {
+    const {
+      value
+    } = event.target;
+    setUserInput(value);
+    // if the user input contains less than three characters and suggestedLocations is not an empty array,
+    // reset suggestedLocations to [] so there arent incorrect items in the datalist
+    if (value.length < 3 && suggestedLocations.length) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WEATHER_LOCATION_SUGGESTIONS_UPDATE,
+        data: []
+      }));
+    }
+    // find match in suggestedLocation array
+    const match = suggestedLocations?.find(({
+      key
+    }) => key === value);
+    if (match) {
+      setSelectedLocation(match);
+      setUserInput(`${match.localized_name}, ${match.administrative_area.localized_name}`);
+    } else if (value.length >= 3 && !match) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WEATHER_LOCATION_SEARCH_UPDATE,
+        data: value
+      }));
+    }
+  }
+  function handleCloseSearch() {
+    dispatch(actionCreators.BroadcastToContent({
+      type: actionTypes.WEATHER_SEARCH_ACTIVE,
+      data: false
+    }));
+    setUserInput("");
+  }
+  function handleKeyDown(e) {
+    if (e.key === "Escape") {
+      handleCloseSearch();
+    }
+  }
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: `${outerClassName} location-search`
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "location-input-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "search-icon"
+  }), /*#__PURE__*/external_React_default().createElement("input", {
+    ref: inputRef,
+    list: "merino-location-list",
+    type: "text",
+    "data-l10n-id": "newtab-weather-change-location-search-input-placeholder",
+    onChange: handleChange,
+    value: userInput,
+    onKeyDown: handleKeyDown
+  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
+    class: "close-icon",
+    type: "icon ghost",
+    size: "small",
+    iconSrc: "chrome://global/skin/icons/close.svg",
+    onClick: handleCloseSearch
+  }), /*#__PURE__*/external_React_default().createElement("datalist", {
+    id: "merino-location-list"
+  }, (suggestedLocations || []).map(merinoLcation => /*#__PURE__*/external_React_default().createElement("option", {
+    value: merinoLcation.key,
+    key: merinoLcation.key
+  }, merinoLcation.localized_name, ",", " ", merinoLcation.administrative_area.localized_name)))));
+}
+
+;// CONCATENATED MODULE: ./content-src/components/Weather/Weather.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+
+
+
+const Weather_VISIBLE = "visible";
+const Weather_VISIBILITY_CHANGE_EVENT = "visibilitychange";
+function WeatherPlaceholder() {
+  const [isSeen, setIsSeen] = (0,external_React_namespaceObject.useState)(false);
+
+  // We are setting up a visibility and intersection event
+  // so animations don't happen with headless automation.
+  // The animations causes tests to fail beause they never stop,
+  // and many tests wait until everything has stopped before passing.
+  const ref = useIntersectionObserver(() => setIsSeen(true), 1);
+  const isSeenClassName = isSeen ? `placeholder-seen` : ``;
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: `weather weather-placeholder ${isSeenClassName}`,
+    ref: el => {
+      ref.current = [el];
+    }
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "placeholder-image placeholder-fill"
+  }), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "placeholder-context"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "placeholder-header placeholder-fill"
+  }), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "placeholder-description placeholder-fill"
+  })));
+}
+class _Weather extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      contextMenuKeyboard: false,
+      showContextMenu: false,
+      url: "https://example.com",
+      impressionSeen: false,
+      errorSeen: false
+    };
+    this.setImpressionRef = element => {
+      this.impressionElement = element;
+    };
+    this.setErrorRef = element => {
+      this.errorElement = element;
+    };
+    this.onClick = this.onClick.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onUpdate = this.onUpdate.bind(this);
+    this.onProviderClick = this.onProviderClick.bind(this);
+  }
+  componentDidMount() {
+    const {
+      props
+    } = this;
+    if (!props.dispatch) {
+      return;
+    }
+    if (props.document.visibilityState === Weather_VISIBLE) {
+      // Setup the impression observer once the page is visible.
+      this.setImpressionObservers();
+    } else {
+      // We should only ever send the latest impression stats ping, so remove any
+      // older listeners.
+      if (this._onVisibilityChange) {
+        props.document.removeEventListener(Weather_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      }
+      this._onVisibilityChange = () => {
+        if (props.document.visibilityState === Weather_VISIBLE) {
+          // Setup the impression observer once the page is visible.
+          this.setImpressionObservers();
+          props.document.removeEventListener(Weather_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+        }
+      };
+      props.document.addEventListener(Weather_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+  componentWillUnmount() {
+    // Remove observers on unmount
+    if (this.observer && this.impressionElement) {
+      this.observer.unobserve(this.impressionElement);
+    }
+    if (this.observer && this.errorElement) {
+      this.observer.unobserve(this.errorElement);
+    }
+    if (this._onVisibilityChange) {
+      this.props.document.removeEventListener(Weather_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+  setImpressionObservers() {
+    if (this.impressionElement) {
+      this.observer = new IntersectionObserver(this.onImpression.bind(this));
+      this.observer.observe(this.impressionElement);
+    }
+    if (this.errorElement) {
+      this.observer = new IntersectionObserver(this.onError.bind(this));
+      this.observer.observe(this.errorElement);
+    }
+  }
+  onImpression(entries) {
+    if (this.state) {
+      const entry = entries.find(e => e.isIntersecting);
+      if (entry) {
+        if (this.impressionElement) {
+          this.observer.unobserve(this.impressionElement);
+        }
+        this.props.dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.WEATHER_IMPRESSION
+        }));
+
+        // Stop observing since element has been seen
+        this.setState({
+          impressionSeen: true
+        });
+      }
+    }
+  }
+  onError(entries) {
+    if (this.state) {
+      const entry = entries.find(e => e.isIntersecting);
+      if (entry) {
+        if (this.errorElement) {
+          this.observer.unobserve(this.errorElement);
+        }
+        this.props.dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.WEATHER_LOAD_ERROR
+        }));
+
+        // Stop observing since element has been seen
+        this.setState({
+          errorSeen: true
+        });
+      }
+    }
+  }
+  openContextMenu(isKeyBoard) {
+    if (this.props.onUpdate) {
+      this.props.onUpdate(true);
+    }
+    this.setState({
+      showContextMenu: true,
+      contextMenuKeyboard: isKeyBoard
+    });
+  }
+  onClick(event) {
+    event.preventDefault();
+    this.openContextMenu(false, event);
+  }
+  onKeyDown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      this.openContextMenu(true, event);
+    }
+  }
+  onUpdate(showContextMenu) {
+    if (this.props.onUpdate) {
+      this.props.onUpdate(showContextMenu);
+    }
+    this.setState({
+      showContextMenu
+    });
+  }
+  onProviderClick() {
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.WEATHER_OPEN_PROVIDER_URL,
+      data: {
+        source: "WEATHER"
+      }
+    }));
+  }
+  render() {
+    // Check if weather should be rendered
+    const isWeatherEnabled = this.props.Prefs.values["system.showWeather"];
+    if (!isWeatherEnabled) {
+      return false;
+    }
+    if (this.props.App.isForStartupCache.Weather || !this.props.Weather.initialized) {
+      return /*#__PURE__*/external_React_default().createElement(WeatherPlaceholder, null);
+    }
+    const {
+      showContextMenu
+    } = this.state;
+    const {
+      props
+    } = this;
+    const {
+      dispatch,
+      Prefs,
+      Weather
+    } = props;
+    const WEATHER_SUGGESTION = Weather.suggestions?.[0];
+    const outerClassName = ["weather", Weather.searchActive && "search", props.isInSection && "section-weather"].filter(v => v).join(" ");
+    const showDetailedView = Prefs.values["weather.display"] === "detailed";
+
+    // Note: The temperature units/display options will become secondary menu items
+    const WEATHER_SOURCE_CONTEXT_MENU_OPTIONS = [...(Prefs.values["weather.locationSearchEnabled"] ? ["ChangeWeatherLocation"] : []), ...(Prefs.values["weather.temperatureUnits"] === "f" ? ["ChangeTempUnitCelsius"] : ["ChangeTempUnitFahrenheit"]), ...(Prefs.values["weather.display"] === "simple" ? ["ChangeWeatherDisplayDetailed"] : ["ChangeWeatherDisplaySimple"]), "HideWeather", "OpenLearnMoreURL"];
+    const WEATHER_SOURCE_ERROR_CONTEXT_MENU_OPTIONS = [...(Prefs.values["weather.locationSearchEnabled"] ? ["ChangeWeatherLocation"] : []), "HideWeather", "OpenLearnMoreURL"];
+    const contextMenu = contextOpts => /*#__PURE__*/external_React_default().createElement("div", {
+      className: "weatherButtonContextMenuWrapper"
+    }, /*#__PURE__*/external_React_default().createElement("button", {
+      "aria-haspopup": "true",
+      onKeyDown: this.onKeyDown,
+      onClick: this.onClick,
+      "data-l10n-id": "newtab-menu-section-tooltip",
+      className: "weatherButtonContextMenu"
+    }, showContextMenu ? /*#__PURE__*/external_React_default().createElement(LinkMenu, {
+      dispatch: dispatch,
+      index: 0,
+      source: "WEATHER",
+      onUpdate: this.onUpdate,
+      options: contextOpts,
+      site: {
+        url: "https://support.mozilla.org/kb/customize-items-on-firefox-new-tab-page"
+      },
+      link: "https://support.mozilla.org/kb/customize-items-on-firefox-new-tab-page",
+      shouldSendImpressionStats: false
+    }) : null));
+    if (Weather.searchActive) {
+      return /*#__PURE__*/external_React_default().createElement(LocationSearch, {
+        outerClassName: outerClassName
+      });
+    } else if (WEATHER_SUGGESTION) {
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        ref: this.setImpressionRef,
+        className: outerClassName
+      }, /*#__PURE__*/external_React_default().createElement("div", {
+        className: "weatherCard"
+      }, /*#__PURE__*/external_React_default().createElement("a", {
+        "data-l10n-id": "newtab-weather-see-forecast",
+        "data-l10n-args": "{\"provider\": \"AccuWeather\xAE\"}",
+        href: WEATHER_SUGGESTION.forecast.url,
+        className: "weatherInfoLink",
+        onClick: this.onProviderClick
+      }, /*#__PURE__*/external_React_default().createElement("div", {
+        className: "weatherIconCol"
+      }, /*#__PURE__*/external_React_default().createElement("span", {
+        className: `weatherIcon iconId${WEATHER_SUGGESTION.current_conditions.icon_id}`
+      })), /*#__PURE__*/external_React_default().createElement("div", {
+        className: "weatherText"
+      }, /*#__PURE__*/external_React_default().createElement("div", {
+        className: "weatherForecastRow"
+      }, /*#__PURE__*/external_React_default().createElement("span", {
+        className: "weatherTemperature"
+      }, WEATHER_SUGGESTION.current_conditions.temperature[Prefs.values["weather.temperatureUnits"]], "\xB0", Prefs.values["weather.temperatureUnits"])), /*#__PURE__*/external_React_default().createElement("div", {
+        className: "weatherCityRow"
+      }, /*#__PURE__*/external_React_default().createElement("span", {
+        className: "weatherCity"
+      }, Weather.locationData.city)), showDetailedView ? /*#__PURE__*/external_React_default().createElement("div", {
+        className: "weatherDetailedSummaryRow"
+      }, /*#__PURE__*/external_React_default().createElement("div", {
+        className: "weatherHighLowTemps"
+      }, /*#__PURE__*/external_React_default().createElement("span", null, WEATHER_SUGGESTION.forecast.high[Prefs.values["weather.temperatureUnits"]], "\xB0", Prefs.values["weather.temperatureUnits"]), /*#__PURE__*/external_React_default().createElement("span", null, "\u2022"), /*#__PURE__*/external_React_default().createElement("span", null, WEATHER_SUGGESTION.forecast.low[Prefs.values["weather.temperatureUnits"]], "\xB0", Prefs.values["weather.temperatureUnits"])), /*#__PURE__*/external_React_default().createElement("span", {
+        className: "weatherTextSummary"
+      }, WEATHER_SUGGESTION.current_conditions.summary)) : null)), contextMenu(WEATHER_SOURCE_CONTEXT_MENU_OPTIONS)), /*#__PURE__*/external_React_default().createElement("span", {
+        className: "weatherSponsorText"
+      }, /*#__PURE__*/external_React_default().createElement("span", {
+        "data-l10n-id": "newtab-weather-sponsored",
+        "data-l10n-args": "{\"provider\": \"AccuWeather\xAE\"}"
+      })));
+    }
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      ref: this.setErrorRef,
+      className: outerClassName
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "weatherNotAvailable"
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "icon icon-info-warning"
+    }), " ", /*#__PURE__*/external_React_default().createElement("p", {
+      "data-l10n-id": "newtab-weather-error-not-available"
+    }), contextMenu(WEATHER_SOURCE_ERROR_CONTEXT_MENU_OPTIONS)));
+  }
+}
+const Weather_Weather = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  App: state.App,
+  Weather: state.Weather,
+  Prefs: state.Prefs,
+  IntersectionObserver: globalThis.IntersectionObserver,
+  document: globalThis.document
+}))(_Weather);
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/CardSections/CardSections.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -11552,6 +11976,7 @@ const CardSections_PREF_TRENDING_SEARCH = "trendingSearch.enabled";
 const CardSections_PREF_TRENDING_SEARCH_SYSTEM = "system.trendingSearch.enabled";
 const CardSections_PREF_SEARCH_ENGINE = "trendingSearch.defaultSearchEngine";
 const CardSections_PREF_TRENDING_SEARCH_VARIANT = "trendingSearch.variant";
+const CardSections_PREF_DAILY_BRIEF_SECTIONID = "discoverystream.dailyBrief.sectionId";
 function getLayoutData(responsiveLayouts, index, refinedCardsLayout, sectionKey) {
   let layoutData = {
     classNames: [],
@@ -11629,7 +12054,8 @@ function CardSection({
   firstVisibleTimestamp,
   ctaButtonVariant,
   ctaButtonSponsors,
-  anySectionsFollowed
+  anySectionsFollowed,
+  showWeather
 }) {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const {
@@ -11778,12 +12204,16 @@ function CardSection({
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "section-heading"
   }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "section-heading-inline-start"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "section-title-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("h2", {
     className: "section-title"
   }, title), subtitle && /*#__PURE__*/external_React_default().createElement("p", {
     className: "section-subtitle"
-  }, subtitle)), mayHaveSectionsPersonalization ? sectionContextWrapper : null), /*#__PURE__*/external_React_default().createElement("div", {
+  }, subtitle)), showWeather && /*#__PURE__*/external_React_default().createElement(Weather_Weather, {
+    isInSection: true
+  })), mayHaveSectionsPersonalization ? sectionContextWrapper : null), /*#__PURE__*/external_React_default().createElement("div", {
     className: `ds-section-grid ds-card-grid`
   }, section.data.slice(0, maxTile).map((rec, index) => {
     const layoutData = getLayoutData(responsiveLayouts, index, refinedCardsLayout, shouldShowTrendingSearch && sectionKey);
@@ -11868,6 +12298,9 @@ function CardSections({
   const {
     messageData
   } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Messages);
+  const weatherPlacement = (0,external_ReactRedux_namespaceObject.useSelector)(selectWeatherPlacement);
+  const dailyBriefSectionId = prefs.trainHopConfig?.dailyBriefing.sectionId || prefs[CardSections_PREF_DAILY_BRIEF_SECTIONID];
+  const weatherEnabled = prefs.showWeather;
   const personalizationEnabled = prefs[PREF_SECTIONS_PERSONALIZATION_ENABLED];
   const interestPickerEnabled = prefs[PREF_INTEREST_PICKER_ENABLED];
 
@@ -11903,7 +12336,8 @@ function CardSections({
     firstVisibleTimestamp: firstVisibleTimestamp,
     ctaButtonVariant: ctaButtonVariant,
     ctaButtonSponsors: ctaButtonSponsors,
-    anySectionsFollowed: anySectionsFollowed
+    anySectionsFollowed: anySectionsFollowed,
+    showWeather: weatherEnabled && weatherPlacement === "section" && sectionPosition === 0 && section.sectionKey === dailyBriefSectionId
   }));
 
   // Add a billboard/leaderboard IAB ad to the sectionsToRender array (if enabled/possible).
@@ -15136,399 +15570,6 @@ class _Search extends (external_React_default()).PureComponent {
 const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs
 }))(_Search);
-;// CONCATENATED MODULE: ./content-src/components/Weather/LocationSearch.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-function LocationSearch({
-  outerClassName
-}) {
-  // should be the location object from suggestedLocations
-  const [selectedLocation, setSelectedLocation] = (0,external_React_namespaceObject.useState)("");
-  const suggestedLocations = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Weather.suggestedLocations);
-  const locationSearchString = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Weather.locationSearchString);
-  const [userInput, setUserInput] = (0,external_React_namespaceObject.useState)(locationSearchString || "");
-  const inputRef = (0,external_React_namespaceObject.useRef)(null);
-  const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
-  (0,external_React_namespaceObject.useEffect)(() => {
-    if (selectedLocation) {
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WEATHER_LOCATION_DATA_UPDATE,
-        data: {
-          city: selectedLocation.localized_name,
-          adminName: selectedLocation.administrative_area,
-          country: selectedLocation.country
-        }
-      }));
-      dispatch(actionCreators.SetPref("weather.query", selectedLocation.key));
-      dispatch(actionCreators.BroadcastToContent({
-        type: actionTypes.WEATHER_SEARCH_ACTIVE,
-        data: false
-      }));
-    }
-  }, [selectedLocation, dispatch]);
-
-  // when component mounts, set focus to input
-  (0,external_React_namespaceObject.useEffect)(() => {
-    inputRef?.current?.focus();
-  }, [inputRef]);
-  function handleChange(event) {
-    const {
-      value
-    } = event.target;
-    setUserInput(value);
-    // if the user input contains less than three characters and suggestedLocations is not an empty array,
-    // reset suggestedLocations to [] so there arent incorrect items in the datalist
-    if (value.length < 3 && suggestedLocations.length) {
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WEATHER_LOCATION_SUGGESTIONS_UPDATE,
-        data: []
-      }));
-    }
-    // find match in suggestedLocation array
-    const match = suggestedLocations?.find(({
-      key
-    }) => key === value);
-    if (match) {
-      setSelectedLocation(match);
-      setUserInput(`${match.localized_name}, ${match.administrative_area.localized_name}`);
-    } else if (value.length >= 3 && !match) {
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WEATHER_LOCATION_SEARCH_UPDATE,
-        data: value
-      }));
-    }
-  }
-  function handleCloseSearch() {
-    dispatch(actionCreators.BroadcastToContent({
-      type: actionTypes.WEATHER_SEARCH_ACTIVE,
-      data: false
-    }));
-    setUserInput("");
-  }
-  function handleKeyDown(e) {
-    if (e.key === "Escape") {
-      handleCloseSearch();
-    }
-  }
-  return /*#__PURE__*/external_React_default().createElement("div", {
-    className: `${outerClassName} location-search`
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "location-input-wrapper"
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "search-icon"
-  }), /*#__PURE__*/external_React_default().createElement("input", {
-    ref: inputRef,
-    list: "merino-location-list",
-    type: "text",
-    "data-l10n-id": "newtab-weather-change-location-search-input-placeholder",
-    onChange: handleChange,
-    value: userInput,
-    onKeyDown: handleKeyDown
-  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
-    class: "close-icon",
-    type: "icon ghost",
-    size: "small",
-    iconSrc: "chrome://global/skin/icons/close.svg",
-    onClick: handleCloseSearch
-  }), /*#__PURE__*/external_React_default().createElement("datalist", {
-    id: "merino-location-list"
-  }, (suggestedLocations || []).map(merinoLcation => /*#__PURE__*/external_React_default().createElement("option", {
-    value: merinoLcation.key,
-    key: merinoLcation.key
-  }, merinoLcation.localized_name, ",", " ", merinoLcation.administrative_area.localized_name)))));
-}
-
-;// CONCATENATED MODULE: ./content-src/components/Weather/Weather.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-
-
-const Weather_VISIBLE = "visible";
-const Weather_VISIBILITY_CHANGE_EVENT = "visibilitychange";
-function WeatherPlaceholder() {
-  const [isSeen, setIsSeen] = (0,external_React_namespaceObject.useState)(false);
-
-  // We are setting up a visibility and intersection event
-  // so animations don't happen with headless automation.
-  // The animations causes tests to fail beause they never stop,
-  // and many tests wait until everything has stopped before passing.
-  const ref = useIntersectionObserver(() => setIsSeen(true), 1);
-  const isSeenClassName = isSeen ? `placeholder-seen` : ``;
-  return /*#__PURE__*/external_React_default().createElement("div", {
-    className: `weather weather-placeholder ${isSeenClassName}`,
-    ref: el => {
-      ref.current = [el];
-    }
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "placeholder-image placeholder-fill"
-  }), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "placeholder-context"
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "placeholder-header placeholder-fill"
-  }), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "placeholder-description placeholder-fill"
-  })));
-}
-class _Weather extends (external_React_default()).PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      contextMenuKeyboard: false,
-      showContextMenu: false,
-      url: "https://example.com",
-      impressionSeen: false,
-      errorSeen: false
-    };
-    this.setImpressionRef = element => {
-      this.impressionElement = element;
-    };
-    this.setErrorRef = element => {
-      this.errorElement = element;
-    };
-    this.onClick = this.onClick.bind(this);
-    this.onKeyDown = this.onKeyDown.bind(this);
-    this.onUpdate = this.onUpdate.bind(this);
-    this.onProviderClick = this.onProviderClick.bind(this);
-  }
-  componentDidMount() {
-    const {
-      props
-    } = this;
-    if (!props.dispatch) {
-      return;
-    }
-    if (props.document.visibilityState === Weather_VISIBLE) {
-      // Setup the impression observer once the page is visible.
-      this.setImpressionObservers();
-    } else {
-      // We should only ever send the latest impression stats ping, so remove any
-      // older listeners.
-      if (this._onVisibilityChange) {
-        props.document.removeEventListener(Weather_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-      }
-      this._onVisibilityChange = () => {
-        if (props.document.visibilityState === Weather_VISIBLE) {
-          // Setup the impression observer once the page is visible.
-          this.setImpressionObservers();
-          props.document.removeEventListener(Weather_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-        }
-      };
-      props.document.addEventListener(Weather_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-    }
-  }
-  componentWillUnmount() {
-    // Remove observers on unmount
-    if (this.observer && this.impressionElement) {
-      this.observer.unobserve(this.impressionElement);
-    }
-    if (this.observer && this.errorElement) {
-      this.observer.unobserve(this.errorElement);
-    }
-    if (this._onVisibilityChange) {
-      this.props.document.removeEventListener(Weather_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-    }
-  }
-  setImpressionObservers() {
-    if (this.impressionElement) {
-      this.observer = new IntersectionObserver(this.onImpression.bind(this));
-      this.observer.observe(this.impressionElement);
-    }
-    if (this.errorElement) {
-      this.observer = new IntersectionObserver(this.onError.bind(this));
-      this.observer.observe(this.errorElement);
-    }
-  }
-  onImpression(entries) {
-    if (this.state) {
-      const entry = entries.find(e => e.isIntersecting);
-      if (entry) {
-        if (this.impressionElement) {
-          this.observer.unobserve(this.impressionElement);
-        }
-        this.props.dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WEATHER_IMPRESSION
-        }));
-
-        // Stop observing since element has been seen
-        this.setState({
-          impressionSeen: true
-        });
-      }
-    }
-  }
-  onError(entries) {
-    if (this.state) {
-      const entry = entries.find(e => e.isIntersecting);
-      if (entry) {
-        if (this.errorElement) {
-          this.observer.unobserve(this.errorElement);
-        }
-        this.props.dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WEATHER_LOAD_ERROR
-        }));
-
-        // Stop observing since element has been seen
-        this.setState({
-          errorSeen: true
-        });
-      }
-    }
-  }
-  openContextMenu(isKeyBoard) {
-    if (this.props.onUpdate) {
-      this.props.onUpdate(true);
-    }
-    this.setState({
-      showContextMenu: true,
-      contextMenuKeyboard: isKeyBoard
-    });
-  }
-  onClick(event) {
-    event.preventDefault();
-    this.openContextMenu(false, event);
-  }
-  onKeyDown(event) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      this.openContextMenu(true, event);
-    }
-  }
-  onUpdate(showContextMenu) {
-    if (this.props.onUpdate) {
-      this.props.onUpdate(showContextMenu);
-    }
-    this.setState({
-      showContextMenu
-    });
-  }
-  onProviderClick() {
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.WEATHER_OPEN_PROVIDER_URL,
-      data: {
-        source: "WEATHER"
-      }
-    }));
-  }
-  render() {
-    // Check if weather should be rendered
-    const isWeatherEnabled = this.props.Prefs.values["system.showWeather"];
-    if (!isWeatherEnabled) {
-      return false;
-    }
-    if (this.props.App.isForStartupCache.Weather || !this.props.Weather.initialized) {
-      return /*#__PURE__*/external_React_default().createElement(WeatherPlaceholder, null);
-    }
-    const {
-      showContextMenu
-    } = this.state;
-    const {
-      props
-    } = this;
-    const {
-      dispatch,
-      Prefs,
-      Weather
-    } = props;
-    const WEATHER_SUGGESTION = Weather.suggestions?.[0];
-    const outerClassName = ["weather", Weather.searchActive && "search"].filter(v => v).join(" ");
-    const showDetailedView = Prefs.values["weather.display"] === "detailed";
-
-    // Note: The temperature units/display options will become secondary menu items
-    const WEATHER_SOURCE_CONTEXT_MENU_OPTIONS = [...(Prefs.values["weather.locationSearchEnabled"] ? ["ChangeWeatherLocation"] : []), ...(Prefs.values["weather.temperatureUnits"] === "f" ? ["ChangeTempUnitCelsius"] : ["ChangeTempUnitFahrenheit"]), ...(Prefs.values["weather.display"] === "simple" ? ["ChangeWeatherDisplayDetailed"] : ["ChangeWeatherDisplaySimple"]), "HideWeather", "OpenLearnMoreURL"];
-    const WEATHER_SOURCE_ERROR_CONTEXT_MENU_OPTIONS = [...(Prefs.values["weather.locationSearchEnabled"] ? ["ChangeWeatherLocation"] : []), "HideWeather", "OpenLearnMoreURL"];
-    const contextMenu = contextOpts => /*#__PURE__*/external_React_default().createElement("div", {
-      className: "weatherButtonContextMenuWrapper"
-    }, /*#__PURE__*/external_React_default().createElement("button", {
-      "aria-haspopup": "true",
-      onKeyDown: this.onKeyDown,
-      onClick: this.onClick,
-      "data-l10n-id": "newtab-menu-section-tooltip",
-      className: "weatherButtonContextMenu"
-    }, showContextMenu ? /*#__PURE__*/external_React_default().createElement(LinkMenu, {
-      dispatch: dispatch,
-      index: 0,
-      source: "WEATHER",
-      onUpdate: this.onUpdate,
-      options: contextOpts,
-      site: {
-        url: "https://support.mozilla.org/kb/customize-items-on-firefox-new-tab-page"
-      },
-      link: "https://support.mozilla.org/kb/customize-items-on-firefox-new-tab-page",
-      shouldSendImpressionStats: false
-    }) : null));
-    if (Weather.searchActive) {
-      return /*#__PURE__*/external_React_default().createElement(LocationSearch, {
-        outerClassName: outerClassName
-      });
-    } else if (WEATHER_SUGGESTION) {
-      return /*#__PURE__*/external_React_default().createElement("div", {
-        ref: this.setImpressionRef,
-        className: outerClassName
-      }, /*#__PURE__*/external_React_default().createElement("div", {
-        className: "weatherCard"
-      }, /*#__PURE__*/external_React_default().createElement("a", {
-        "data-l10n-id": "newtab-weather-see-forecast",
-        "data-l10n-args": "{\"provider\": \"AccuWeather\xAE\"}",
-        href: WEATHER_SUGGESTION.forecast.url,
-        className: "weatherInfoLink",
-        onClick: this.onProviderClick
-      }, /*#__PURE__*/external_React_default().createElement("div", {
-        className: "weatherIconCol"
-      }, /*#__PURE__*/external_React_default().createElement("span", {
-        className: `weatherIcon iconId${WEATHER_SUGGESTION.current_conditions.icon_id}`
-      })), /*#__PURE__*/external_React_default().createElement("div", {
-        className: "weatherText"
-      }, /*#__PURE__*/external_React_default().createElement("div", {
-        className: "weatherForecastRow"
-      }, /*#__PURE__*/external_React_default().createElement("span", {
-        className: "weatherTemperature"
-      }, WEATHER_SUGGESTION.current_conditions.temperature[Prefs.values["weather.temperatureUnits"]], "\xB0", Prefs.values["weather.temperatureUnits"])), /*#__PURE__*/external_React_default().createElement("div", {
-        className: "weatherCityRow"
-      }, /*#__PURE__*/external_React_default().createElement("span", {
-        className: "weatherCity"
-      }, Weather.locationData.city)), showDetailedView ? /*#__PURE__*/external_React_default().createElement("div", {
-        className: "weatherDetailedSummaryRow"
-      }, /*#__PURE__*/external_React_default().createElement("div", {
-        className: "weatherHighLowTemps"
-      }, /*#__PURE__*/external_React_default().createElement("span", null, WEATHER_SUGGESTION.forecast.high[Prefs.values["weather.temperatureUnits"]], "\xB0", Prefs.values["weather.temperatureUnits"]), /*#__PURE__*/external_React_default().createElement("span", null, "\u2022"), /*#__PURE__*/external_React_default().createElement("span", null, WEATHER_SUGGESTION.forecast.low[Prefs.values["weather.temperatureUnits"]], "\xB0", Prefs.values["weather.temperatureUnits"])), /*#__PURE__*/external_React_default().createElement("span", {
-        className: "weatherTextSummary"
-      }, WEATHER_SUGGESTION.current_conditions.summary)) : null)), contextMenu(WEATHER_SOURCE_CONTEXT_MENU_OPTIONS)), /*#__PURE__*/external_React_default().createElement("span", {
-        className: "weatherSponsorText"
-      }, /*#__PURE__*/external_React_default().createElement("span", {
-        "data-l10n-id": "newtab-weather-sponsored",
-        "data-l10n-args": "{\"provider\": \"AccuWeather\xAE\"}"
-      })));
-    }
-    return /*#__PURE__*/external_React_default().createElement("div", {
-      ref: this.setErrorRef,
-      className: outerClassName
-    }, /*#__PURE__*/external_React_default().createElement("div", {
-      className: "weatherNotAvailable"
-    }, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "icon icon-info-warning"
-    }), " ", /*#__PURE__*/external_React_default().createElement("p", {
-      "data-l10n-id": "newtab-weather-error-not-available"
-    }), contextMenu(WEATHER_SOURCE_ERROR_CONTEXT_MENU_OPTIONS)));
-  }
-}
-const Weather_Weather = (0,external_ReactRedux_namespaceObject.connect)(state => ({
-  App: state.App,
-  Weather: state.Weather,
-  Prefs: state.Prefs,
-  IntersectionObserver: globalThis.IntersectionObserver,
-  document: globalThis.document
-}))(_Weather);
 ;// CONCATENATED MODULE: ./content-src/components/DownloadModalToggle/DownloadModalToggle.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -16129,6 +16170,7 @@ function Base_extends() { return Base_extends = Object.assign ? Object.assign.bi
 
 
 
+
 const Base_VISIBLE = "visible";
 const Base_VISIBILITY_CHANGE_EVENT = "visibilitychange";
 const PREF_INFERRED_PERSONALIZATION_SYSTEM = "discoverystream.sections.personalization.inferred.enabled";
@@ -16600,6 +16642,9 @@ class BaseContent extends (external_React_default()).PureComponent {
     const mayHaveWeather = prefs["system.showWeather"];
     const supportUrl = prefs["support.url"];
 
+    // Weather can be enabled and not rendered in the top right corner
+    const shouldDisplayWeather = prefs.showWeather && this.props.weatherPlacement === "header";
+
     // Widgets experiment pref check
     const nimbusWidgetsEnabled = prefs.widgetsConfig?.enabled;
     const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
@@ -16625,7 +16670,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     const mobileDownloadPromoVariantBEnabled = prefs["mobileDownloadModal.variant-b"];
     const mobileDownloadPromoVariantCEnabled = prefs["mobileDownloadModal.variant-c"];
     const mobileDownloadPromoVariantABorC = mobileDownloadPromoVariantAEnabled || mobileDownloadPromoVariantBEnabled || mobileDownloadPromoVariantCEnabled;
-    const mobileDownloadPromoWrapperHeightModifier = prefs["weather.display"] === "detailed" && weatherEnabled && mayHaveWeather ? "is-tall" : "";
+    const mobileDownloadPromoWrapperHeightModifier = prefs["weather.display"] === "detailed" && weatherEnabled && shouldDisplayWeather && mayHaveWeather ? "is-tall" : "";
     const hasThumbsUpDownLayout = prefs["discoverystream.thumbsUpDown.searchTopsitesCompact"];
     const hasThumbsUpDown = prefs["discoverystream.thumbsUpDown.enabled"];
     const sectionsEnabled = prefs["discoverystream.sections.enabled"];
@@ -16637,7 +16682,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     const mayHavePersonalizedTopicSections = sectionsPersonalizationEnabled && topicLabelsEnabled && sectionsEnabled && sectionsCustomizeMenuPanelEnabled && DiscoveryStream.feeds.loaded;
     const featureClassName = [mobileDownloadPromoEnabled && mobileDownloadPromoVariantABorC && "has-mobile-download-promo",
     // Mobile download promo modal is enabled/visible
-    weatherEnabled && mayHaveWeather && "has-weather",
+    weatherEnabled && mayHaveWeather && shouldDisplayWeather && "has-weather",
     // Weather widget is enabled/visible
     prefs.showSearch ? "has-search" : "no-search",
     // layoutsVariantAEnabled ? "layout-variant-a" : "", // Layout experiment variant A
@@ -16677,7 +16722,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       dispatch: this.props.dispatch
     }))), /*#__PURE__*/external_React_default().createElement("div", {
       className: "weatherWrapper"
-    }, weatherEnabled && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Weather_Weather, null))), /*#__PURE__*/external_React_default().createElement("div", {
+    }, shouldDisplayWeather && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Weather_Weather, null))), /*#__PURE__*/external_React_default().createElement("div", {
       className: `mobileDownloadPromoWrapper ${mobileDownloadPromoWrapperHeightModifier}`
     }, mobileDownloadPromoEnabled && mobileDownloadPromoVariantABorC && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(DownloadModalToggle, {
       isActive: shouldShowDownloadHighlight,
@@ -16726,7 +16771,8 @@ const Base = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Notifications: state.Notifications,
   Search: state.Search,
   Wallpapers: state.Wallpapers,
-  Weather: state.Weather
+  Weather: state.Weather,
+  weatherPlacement: selectWeatherPlacement(state)
 }))(_Base);
 ;// CONCATENATED MODULE: ./content-src/lib/detect-user-session-start.mjs
 /* This Source Code Form is subject to the terms of the Mozilla Public

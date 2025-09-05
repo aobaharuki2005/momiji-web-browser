@@ -363,6 +363,14 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "weather.placement",
+    {
+      title:
+        "weather widget can be rendered in a variety of positions. Either in `header` or `sections`",
+      value: "header",
+    },
+  ],
+  [
     "images.smart",
     {
       title: "Smart crop images on newtab",
@@ -645,6 +653,20 @@ export const PREFS_CONFIG = new Map([
       title: "Boolean flag to enable inferred personalizaton",
       // pref is dynamic
       getValue: useInferredPersonalization,
+    },
+  ],
+  [
+    "discoverystream.dailyBrief.enabled",
+    {
+      title: "Boolean flag to enable the daily brief section",
+      value: false,
+    },
+  ],
+  [
+    "discoverystream.dailyBrief.sectionId",
+    {
+      title: "sectionId for the Daily brief section",
+      value: "top_stories_section",
     },
   ],
   [

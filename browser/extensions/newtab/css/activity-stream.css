@@ -2726,6 +2726,13 @@ main section {
     inset-inline-end: var(--space-xxlarge);
   }
 }
+.weather.section-weather {
+  position: initial;
+  margin-inline-start: var(--space-medium);
+}
+.weather.section-weather .weatherInfoLink {
+  max-width: unset;
+}
 .no-search .weather {
   position: absolute;
   inset-block-start: var(--space-xxlarge);
@@ -5030,6 +5037,11 @@ main section {
   justify-content: space-between;
   align-items: center;
   margin-block: var(--space-small) var(--space-medium);
+}
+.ds-section-wrapper .ds-section .section-heading .section-heading-inline-start {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
 }
 .ds-section-wrapper .ds-section .section-title {
   font-weight: var(--font-weight-bold);

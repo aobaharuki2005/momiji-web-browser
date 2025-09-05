@@ -20,6 +20,7 @@ import { TopicSelection } from "content-src/components/DiscoveryStreamComponents
 import { DownloadMobilePromoHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/DownloadMobilePromoHighlight";
 import { WallpaperFeatureHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/WallpaperFeatureHighlight";
 import { MessageWrapper } from "content-src/components/MessageWrapper/MessageWrapper";
+import { selectWeatherPlacement } from "../../lib/utils";
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
@@ -569,6 +570,10 @@ export class BaseContent extends React.PureComponent {
     const mayHaveWeather = prefs["system.showWeather"];
     const supportUrl = prefs["support.url"];
 
+    // Weather can be enabled and not rendered in the top right corner
+    const shouldDisplayWeather =
+      prefs.showWeather && this.props.weatherPlacement === "header";
+
     // Widgets experiment pref check
     const nimbusWidgetsEnabled = prefs.widgetsConfig?.enabled;
     const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
@@ -609,6 +614,7 @@ export class BaseContent extends React.PureComponent {
     const mobileDownloadPromoWrapperHeightModifier =
       prefs["weather.display"] === "detailed" &&
       weatherEnabled &&
+      shouldDisplayWeather &&
       mayHaveWeather
         ? "is-tall"
         : "";
@@ -635,7 +641,7 @@ export class BaseContent extends React.PureComponent {
       mobileDownloadPromoEnabled &&
         mobileDownloadPromoVariantABorC &&
         "has-mobile-download-promo", // Mobile download promo modal is enabled/visible
-      weatherEnabled && mayHaveWeather && "has-weather", // Weather widget is enabled/visible
+      weatherEnabled && mayHaveWeather && shouldDisplayWeather && "has-weather", // Weather widget is enabled/visible
       prefs.showSearch ? "has-search" : "no-search",
       // layoutsVariantAEnabled ? "layout-variant-a" : "", // Layout experiment variant A
       // layoutsVariantBEnabled ? "layout-variant-b" : "", // Layout experiment variant B
@@ -704,7 +710,7 @@ export class BaseContent extends React.PureComponent {
           )}
         </menu>
         <div className="weatherWrapper">
-          {weatherEnabled && (
+          {shouldDisplayWeather && (
             <ErrorBoundary>
               <Weather />
             </ErrorBoundary>
@@ -799,4 +805,5 @@ export const Base = connect(state => ({
   Search: state.Search,
   Wallpapers: state.Wallpapers,
   Weather: state.Weather,
+  weatherPlacement: selectWeatherPlacement(state),
 }))(_Base);
