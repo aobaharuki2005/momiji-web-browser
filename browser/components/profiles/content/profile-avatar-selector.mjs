@@ -220,11 +220,11 @@ export class ProfileAvatarSelector extends MozLitElement {
       case "briefcase":
         return "briefcase-avatar";
       case "canvas":
-        return "canvas-avatar";
+        return "picture-avatar";
       case "craft":
         return "craft-avatar";
       case "default-favicon":
-        return "default-favicon-avatar";
+        return "globe-avatar";
       case "diamond":
         return "diamond-avatar";
       case "flower":
@@ -238,7 +238,7 @@ export class ProfileAvatarSelector extends MozLitElement {
       case "heart-rate":
         return "heart-rate-avatar";
       case "history":
-        return "history-avatar";
+        return "clock-avatar";
       case "leaf":
         return "leaf-avatar";
       case "lightbulb":
@@ -260,7 +260,7 @@ export class ProfileAvatarSelector extends MozLitElement {
       case "shopping":
         return "shopping-avatar";
       case "soccer":
-        return "soccer-avatar";
+        return "soccer-ball-avatar";
       case "sparkle-single":
         return "sparkle-single-avatar";
       case "star":
