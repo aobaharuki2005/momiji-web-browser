@@ -100,7 +100,6 @@
   }
 
   &:focus-visible {
-    outline-color: var(--focus-outline-color);
     outline-offset: var(--focus-outline-offset);
   }
 
@@ -288,6 +287,10 @@
 
   &:hover {
     text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline-offset: -2px;
   }
 }
 

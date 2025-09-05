@@ -168,6 +168,9 @@
     }
   }
 
+  *:focus-visible {
+    outline: var(--focus-outline);
+  }
 }
 
 .grid-skip {
