@@ -2220,6 +2220,26 @@ nsresult xpc::GetSandboxMetadata(JSContext* cx, HandleObject sandbox,
   return NS_OK;
 }
 
+nsresult xpc::SetSandboxLocaleOverride(JSContext* cx, HandleObject sandbox,
+                                       const char* locale) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsSandbox(sandbox));
+
+  JS::SetRealmLocaleOverride(JS::GetObjectRealmOrNull(sandbox), locale);
+
+  return NS_OK;
+}
+
+nsresult xpc::SetSandboxTimezoneOverride(JSContext* cx, HandleObject sandbox,
+                                         const char* timezone) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsSandbox(sandbox));
+
+  JS::SetRealmTimezoneOverride(JS::GetObjectRealmOrNull(sandbox), timezone);
+
+  return NS_OK;
+}
+
 nsresult xpc::SetSandboxMetadata(JSContext* cx, HandleObject sandbox,
                                  HandleValue metadataArg) {
   MOZ_ASSERT(NS_IsMainThread());
