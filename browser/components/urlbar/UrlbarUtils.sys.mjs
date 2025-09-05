@@ -2646,14 +2646,16 @@ export class UrlbarQueryContext {
       return false;
     }
 
-    // Disallow remote results if only an origin is typed to avoid disclosing
-    // sites the user visits. This also catches partially typed origins, like
-    // mozilla.o, because the fixup check below can't validate them.
-    if (
-      this.tokens.length == 1 &&
-      this.tokens[0].type == lazy.UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN
-    ) {
-      return false;
+    // Prohibit remote results if the search string is likely an origin to avoid
+    // disclosing sites the user visits. If the search string may or may not be
+    // an origin but we've determined a search is allowed, then allow it.
+    if (this.tokens.length == 1) {
+      switch (this.tokens[0].type) {
+        case lazy.UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN:
+          return false;
+        case lazy.UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN_BUT_SEARCH_ALLOWED:
+          return true;
+      }
     }
 
     // Disallow remote results for strings containing tokens that look like URIs

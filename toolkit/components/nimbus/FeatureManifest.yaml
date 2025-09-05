@@ -234,6 +234,14 @@ urlbar:
         will be able to click the "Show less frequently" command for addon
         suggestions. If undefined or zero, the user will be able to click the
         command without any limit.
+    allowSearchSuggestionsForSimpleOrigins:
+      type: boolean
+      fallbackPref: browser.urlbar.allowSearchSuggestionsForSimpleOrigins
+      description: >-
+        Whether remote search suggestions should be fetched for search strings
+        that look like possible simple origins like "mozilla.org". Search
+        suggestions will remain prohibited for search strings that look like
+        more complex origins that include userinfo or ports or are IP addresses.
     ampFeatureGate:
       type: boolean
       fallbackPref: browser.urlbar.amp.featureGate
