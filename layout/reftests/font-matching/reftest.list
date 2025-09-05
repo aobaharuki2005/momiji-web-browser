@@ -222,3 +222,5 @@ fuzzy-if(Android&&/34/.test(AndroidVersion),255-255,25-26) == 1971148-digits-col
 fuzzy-if(Android&&/34/.test(AndroidVersion),255-255,25-26) == 1971148-digits-color-font-06.html 1971148-digits-color-font-01-ref.html # Android, Bug 1983177
 == 1971148-digits-color-font-07.html 1971148-digits-color-font-03-ref.html
 == 1971148-digits-color-font-08.html 1971148-digits-color-font-03-ref.html
+
+fails-if(Android&&/24/.test(AndroidVersion)) != regional-flags.html regional-flags-notref.html # fails on Android 7 due to old Noto Color Emoji font
