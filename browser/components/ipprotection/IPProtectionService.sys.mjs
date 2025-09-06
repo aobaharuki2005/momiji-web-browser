@@ -335,6 +335,10 @@ class IPProtectionServiceSingleton extends EventTarget {
     let inExperiment = lazy.NimbusFeatures.ipProtection.getEnrollmentMetadata();
     let isEligible = inExperiment?.branch && inExperiment.branch !== "control";
 
+    if (inExperiment) {
+      lazy.NimbusFeatures.ipProtection.recordExposureEvent();
+    }
+
     if (isEligible) {
       lazy.logConsole.info("Device: Eligible");
     }

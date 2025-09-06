@@ -16,6 +16,10 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
 AddonTestUtils.initMochitest(this);
 
 // Don't add an experiment so we can test adding and removing it.
@@ -624,4 +628,46 @@ add_task(async function test_IPProtectionService_handleProxyErrorEvent() {
 
   await cleanupAlpha();
   cleanupService();
+});
+
+/**
+ * Tests that exposure events will be sent for branches and control
+ */
+add_task(async function test_IPProtectionService_exposure() {
+  Services.telemetry.clearEvents();
+
+  let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
+
+  await cleanupAlpha();
+
+  let cleanupControl = await setupExperiment({
+    enabled: true,
+    variant: "control",
+  });
+
+  await cleanupControl();
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        method: "expose",
+        object: "nimbus_experiment",
+        value: "vpn-test",
+        extra: {
+          branchSlug: "alpha",
+          featureId: "ipProtection",
+        },
+      },
+      {
+        method: "expose",
+        object: "nimbus_experiment",
+        value: "vpn-test",
+        extra: {
+          branchSlug: "control",
+          featureId: "ipProtection",
+        },
+      },
+    ],
+    { method: "expose" }
+  );
 });
