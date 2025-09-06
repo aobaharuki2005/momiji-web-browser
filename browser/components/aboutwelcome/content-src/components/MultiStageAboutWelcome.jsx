@@ -356,43 +356,36 @@ export const MultiStageAboutWelcome = props => {
   );
 };
 
-const renderSingleSecondaryCTAButton = ({
-  content,
-  button,
-  targetElement,
-  position,
-  handleAction,
-  activeMultiSelect,
-  isArrayItem,
-  index = null,
-}) => {
-  let buttonStyling = button?.has_arrow_icon
+export const SecondaryCTA = props => {
+  const targetElement = props.position
+    ? `secondary_button_${props.position}`
+    : `secondary_button`;
+  let buttonStyling = props.content.secondary_button?.has_arrow_icon
     ? `secondary arrow-icon`
     : `secondary`;
-  const isPrimary = button?.style === "primary";
+  const isPrimary = props.content.secondary_button?.style === "primary";
   const isTextLink =
-    !["split", "callout"].includes(content.position) &&
-    content.tiles?.type !== "addons-picker" &&
+    !["split", "callout"].includes(props.content.position) &&
+    props.content.tiles?.type !== "addons-picker" &&
     !isPrimary;
-  const isSplitButton = content.submenu_button?.attached_to === targetElement;
-
+  const isSplitButton =
+    props.content.submenu_button?.attached_to === targetElement;
   let className = "secondary-cta";
-  if (position) {
-    className += ` ${position}`;
+  if (props.position) {
+    className += ` ${props.position}`;
   }
   if (isSplitButton) {
     className += " split-button-container";
   }
-
   const isDisabled = React.useCallback(
     disabledValue => {
       if (disabledValue === "hasActiveMultiSelect") {
-        if (!activeMultiSelect) {
+        if (!props.activeMultiSelect) {
           return true;
         }
 
-        for (const key in activeMultiSelect) {
-          if (activeMultiSelect[key]?.length > 0) {
+        for (const key in props.activeMultiSelect) {
+          if (props.activeMultiSelect[key]?.length > 0) {
             return false;
           }
         }
@@ -402,7 +395,7 @@ const renderSingleSecondaryCTAButton = ({
 
       return disabledValue;
     },
-    [activeMultiSelect]
+    [props.activeMultiSelect]
   );
 
   if (isTextLink) {
@@ -410,86 +403,33 @@ const renderSingleSecondaryCTAButton = ({
   }
 
   if (isPrimary) {
-    buttonStyling = button?.has_arrow_icon ? `primary arrow-icon` : `primary`;
+    buttonStyling = props.content.secondary_button?.has_arrow_icon
+      ? `primary arrow-icon`
+      : `primary`;
   }
 
-  // We have to provide handleAction with the expected action here,
-  // since the data doesn't actually exist in JSON content
-  const shimmedHandleAction = event => {
-    if (isArrayItem && button?.action) {
-      return handleAction(event, button.action);
-    }
-    return handleAction(event);
-  };
-
-  let buttonId = "secondary_button";
-  buttonId += index !== null ? `_${index}` : "";
-
   return (
-    <div className={className} key={targetElement}>
-      <Localized text={button?.text}>
+    <div className={className}>
+      <Localized text={props.content[targetElement].text}>
         <span />
       </Localized>
-      <Localized text={button?.label}>
+      <Localized text={props.content[targetElement].label}>
         <button
-          id={buttonId}
+          id="secondary_button"
           className={buttonStyling}
           value={targetElement}
-          disabled={isDisabled(button?.disabled)}
-          onClick={shimmedHandleAction}
+          disabled={isDisabled(props.content.secondary_button?.disabled)}
+          onClick={props.handleAction}
         />
       </Localized>
       {isSplitButton ? (
-        <SubmenuButton content={content} handleAction={handleAction} />
+        <SubmenuButton
+          content={props.content}
+          handleAction={props.handleAction}
+        />
       ) : null}
     </div>
   );
-};
-
-export const SecondaryCTA = props => {
-  const { content, position } = props;
-
-  const targetElement = position
-    ? `secondary_button_${position}`
-    : "secondary_button";
-  const buttonData = content[targetElement];
-
-  if (!buttonData) {
-    return null;
-  }
-
-  if (Array.isArray(buttonData)) {
-    if (buttonData.length === 0) {
-      return null;
-    }
-
-    return (
-      <div className="secondary-buttons-top-container">
-        {buttonData.map((button, index) =>
-          renderSingleSecondaryCTAButton({
-            content,
-            button,
-            targetElement: `${targetElement}_${index}`,
-            position,
-            handleAction: props.handleAction,
-            activeMultiSelect: props.activeMultiSelect,
-            isArrayItem: true,
-            index,
-          })
-        )}
-      </div>
-    );
-  }
-
-  return renderSingleSecondaryCTAButton({
-    content,
-    button: buttonData,
-    targetElement,
-    position,
-    handleAction: props.handleAction,
-    activeMultiSelect: props.activeMultiSelect,
-    isArrayItem: false,
-  });
 };
 
 export const StepsIndicator = props => {
@@ -614,46 +554,38 @@ export class WelcomeScreen extends React.PureComponent {
     }
   }
 
-  resolveActionFromContent(value, event, props) {
-    if (value === "submenu_button" && event.action) {
-      return event.action;
-    }
-
-    const { content } = props;
-    const targetContent =
-      content[value] || content.tiles || content.languageSwitcher;
-
-    if (!targetContent) {
-      return null;
-    }
-
-    if (Array.isArray(targetContent)) {
-      for (const tile of targetContent) {
-        const matchedTile = tile.data.find(t => t.id === value);
-        if (matchedTile?.action) {
-          return matchedTile.action;
-        }
-      }
-      return null;
-    }
-
-    return targetContent.action ?? null;
-  }
-
-  async handleAction(event, providedAction = null) {
+  async handleAction(event) {
     const { props } = this;
     const value =
       event.currentTarget.value ?? event.currentTarget.getAttribute("value");
     const source = event.source || value;
+    let targetContent =
+      props.content[value] ||
+      props.content.tiles ||
+      props.content.languageSwitcher;
 
-    let action =
-      providedAction || this.resolveActionFromContent(value, event, props);
+    if (value === "submenu_button" && event.action) {
+      targetContent = { action: event.action };
+    }
 
-    if (!action) {
-      console.error("Failed to resolve action");
+    if (!targetContent) {
       return;
     }
 
+    let action;
+    if (Array.isArray(targetContent)) {
+      for (const tile of targetContent) {
+        const matchedTile = tile.data.find(t => t.id === value);
+        if (matchedTile?.action) {
+          action = matchedTile.action;
+          break;
+        }
+      }
+    } else if (!targetContent.action) {
+      return;
+    } else {
+      action = targetContent.action;
+    }
     // Send telemetry before waiting on actions
     this.logTelemetry({ value, event, source, props });
 
