@@ -299,12 +299,12 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
        facingMode = mFacingMode,
        resizeModeEnabled = aPrefs.mResizeModeEnabled]() {
         *settings = dom::MediaTrackSettings();
-        *caps = dom::MediaTrackCapabilities();
 
         settings->mWidth.Construct(0);
         settings->mHeight.Construct(0);
         settings->mFrameRate.Construct(0);
 
+        caps->mFacingMode.Reset();
         if (facingMode.isSome()) {
           settings->mFacingMode.Construct(*facingMode);
           nsTArray<nsString> facing;
@@ -312,6 +312,7 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
           caps->mFacingMode.Construct(std::move(facing));
         }
 
+        caps->mResizeMode.Reset();
         if (resizeModeEnabled) {
           NS_ConvertASCIItoUTF16 noneString(
               dom::GetEnumString(VideoResizeModeEnum::None));
