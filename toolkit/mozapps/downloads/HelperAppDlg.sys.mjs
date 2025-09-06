@@ -215,7 +215,12 @@ export class nsUnknownContentTypeDialog {
         prefix: "HelperAppService",
       });
       let info = this.mLauncher.MIMEInfo;
-      this.#logprefix = `${info.MIMEType} - ${info.primaryExtension}`;
+      // primaryExtension can throw if there are no extensions on this mimetype.
+      // Check if we have any before accessing it.
+      let primaryExtension = info.getFileExtensions().hasMore()
+        ? info.primaryExtension
+        : "";
+      this.#logprefix = `${info.MIMEType} - ${primaryExtension}`;
     }
     this.#log.debug(this.#logprefix, ...args);
   }
