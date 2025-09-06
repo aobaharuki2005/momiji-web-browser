@@ -15867,6 +15867,13 @@
   value: true
   mirror: always
 
+# Whether simpler monochrome printing set-up is enabled for CUPS.
+# TODO(emilio): remove after a few releases on-by-default
+- name: print.cups.monochrome-gtk-simple.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Disabling this will no-op window.print()
 - name: print.enabled
   type: RelaxedAtomicBool
