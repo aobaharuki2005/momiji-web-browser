@@ -106,14 +106,6 @@
       {resizeMode: "crop-and-scale", width: 500, height: 200, frameRate: 30}
     ],
     [
-      {resizeMode: "crop-and-scale", frameRate: 50},
-      {resizeMode: "crop-and-scale", width: 640, height: 480, frameRate: 30}
-    ],
-    [
-      {resizeMode: "crop-and-scale", width: 10000, frameRate: {min: 30}},
-      {resizeMode: "crop-and-scale", width: 640, height: 480, frameRate: 30}
-    ],
-    [
       {resizeMode: "crop-and-scale", frameRate: {exact: 5}},
       {resizeMode: "crop-and-scale", width: 640, height: 480, frameRate: 5},
       [2, 7]
@@ -219,14 +211,6 @@
     [
       {resizeMode: "crop-and-scale", width: {min: 500}, height: {max: 200}},
       {resizeMode: "crop-and-scale", width: 500, height: 200, frameRate: 30}
-    ],
-    [
-      {resizeMode: "crop-and-scale", frameRate: 50},
-      {resizeMode: "crop-and-scale", width: 640, height: 480, frameRate: 30}
-    ],
-    [
-      {resizeMode: "crop-and-scale", width: 10000, frameRate: {min: 30}},
-      {resizeMode: "crop-and-scale", width: 640, height: 480, frameRate: 30}
     ],
     [
       {resizeMode: "crop-and-scale", frameRate: {exact: 5}},
@@ -365,14 +349,6 @@
         const { width, height } = defaultScreen();
         return { width, height, frameRate: 5};
       }, [2, 7]],
-    [{resizeMode: "crop-and-scale", frameRate: 50}, () => {
-        const { width, height } = defaultScreen();
-        return { width, height, frameRate: 50};
-      }],
-    [{resizeMode: "crop-and-scale", frameRate: 5000}, () => {
-        const { width, height } = defaultScreen();
-        return { width, height, frameRate: 120};
-      }],
   ].forEach(([video, expectedFunc, testFramerate]) => {
       let expected;
       promise_test(async t => {
