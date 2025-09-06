@@ -1522,6 +1522,10 @@
   <string name="browser_menu_add_to_shortcuts">o awen lon lipu open</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
   <string name="browser_menu_remove_from_shortcuts">o awen ala lon lipu open</string>
+  <!-- Login overflow menu delete button -->
+  <string name="login_menu_delete_button">o weka</string>
+  <!-- Login overflow menu edit button -->
+  <string name="login_menu_edit_button">o ante</string>
   <!-- Error text displayed underneath the password field when it is in an error case. -->
   <string name="saved_login_password_required_2">o pana e nimi open</string>
   <!-- The error message in add login view when username field is blank. -->
@@ -1550,6 +1554,10 @@
   <string name="inactive_tabs_delete_all">o pini e poki ale pi pali ala</string>
   <!-- Content description for expanding the inactive tabs section. -->
   <string name="inactive_tabs_expand_content_description">o lukin e poki pi pali ala</string>
+  <!-- Content description for close button in collection placeholder. -->
+  <string name="remove_home_collection_placeholder_content_description">o weka</string>
+  <!-- Content description for privacy content close button -->
+  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">o pini</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">jan li pana e mani tawa lipu ni</string>
   <!-- Snackbar button text to navigate to telemetry settings. -->
