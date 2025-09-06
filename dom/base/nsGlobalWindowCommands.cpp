@@ -431,11 +431,6 @@ class nsClipboardCommand final : public ControllerCommand {
 
 bool nsClipboardCommand::IsCommandEnabled(const nsACString& aCommandName,
                                           nsISupports* aContext) {
-  if (!aCommandName.EqualsLiteral("cmd_copy") &&
-      !aCommandName.EqualsLiteral("cmd_cut") &&
-      !aCommandName.EqualsLiteral("cmd_paste")) {
-    return false;
-  }
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
   if (!window) {
     return false;
@@ -459,12 +454,6 @@ bool nsClipboardCommand::IsCommandEnabled(const nsACString& aCommandName,
 nsresult nsClipboardCommand::DoCommand(const nsACString& aCommandName,
                                        nsICommandParams*,
                                        nsISupports* aContext) {
-  if (!aCommandName.EqualsLiteral("cmd_copy") &&
-      !aCommandName.EqualsLiteral("cmd_cut") &&
-      !aCommandName.EqualsLiteral("cmd_paste")) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
@@ -474,12 +463,16 @@ nsresult nsClipboardCommand::DoCommand(const nsACString& aCommandName,
   RefPtr<PresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  EventMessage eventMessage = eCopy;
-  if (aCommandName.EqualsLiteral("cmd_cut")) {
-    eventMessage = eCut;
-  } else if (aCommandName.EqualsLiteral("cmd_paste")) {
-    eventMessage = ePaste;
-  }
+  const EventMessage eventMessage = [&] {
+    if (aCommandName.EqualsLiteral("cmd_cut")) {
+      return eCut;
+    }
+    if (aCommandName.EqualsLiteral("cmd_paste")) {
+      return ePaste;
+    }
+    MOZ_ASSERT(aCommandName.EqualsLiteral("cmd_copy"));
+    return eCopy;
+  }();
 
   bool actionTaken = false;
   nsCopySupport::FireClipboardEvent(eventMessage,
