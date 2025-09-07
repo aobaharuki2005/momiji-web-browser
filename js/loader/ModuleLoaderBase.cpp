@@ -1325,46 +1325,6 @@ bool ModuleLoaderBase::GetImportMapSRI(
   return true;
 }
 
-void ModuleLoaderBase::StartFetchingModuleAndDependencies(
-    JSContext* aCx, const ModuleMapKey& aRequestedModule,
-    Handle<JSScript*> aReferrer, Handle<JSObject*> aModuleRequest,
-    Handle<Value> aHostDefined, Handle<Value> aPayload) {
-  MOZ_ASSERT(aReferrer);
-  Rooted<Value> referrerPrivate(aCx, GetScriptPrivate(aReferrer));
-  RefPtr<LoadedScript> referrer = GetLoadedScriptOrNull(aReferrer);
-
-  // Check import map for integrity information
-  mozilla::dom::SRIMetadata sriMetadata;
-  GetImportMapSRI(aRequestedModule.mUri, referrer->GetURI(),
-                  mLoader->GetConsoleReportCollector(), &sriMetadata);
-
-  ModuleLoadRequest* root =
-      static_cast<ModuleLoadRequest*>(aHostDefined.toPrivate());
-  MOZ_ASSERT(root);
-  LoadContextBase* loadContext = root->mLoadContext;
-
-  RefPtr<ModuleLoadRequest> childRequest = CreateStaticImport(
-      aRequestedModule.mUri, aRequestedModule.mModuleType,
-      referrer->AsModuleScript(), sriMetadata, loadContext, this);
-  LOG(("ScriptLoadRequest (%p): start fetch dependencies: root (%p)",
-       childRequest.get(), root));
-
-  childRequest->mReferrerScript = aReferrer;
-  childRequest->mModuleRequestObj = aModuleRequest;
-  childRequest->mPayload = aPayload;
-
-  // To prevent mPayload from being GCed.
-  mozilla::HoldJSObjects(childRequest.get());
-
-  nsresult rv = StartModuleLoad(childRequest);
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(!childRequest->mModuleScript);
-    mLoader->ReportErrorToConsole(childRequest, rv);
-    childRequest->LoadFailed();
-    OnFetchFailed(childRequest);
-  }
-}
-
 void ModuleLoaderBase::AppendDynamicImport(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mLoader == this);
   mDynamicImportRequests.AppendElement(aRequest);
