@@ -484,6 +484,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         Performance.processIntentIfPerformanceTest(intent, this)
 
+        // This will record an event in Nimbus' internal event store. Used for behavioral targeting
+        recordEventInNimbus("app_opened")
         if (settings().isTelemetryEnabled) {
             lifecycle.addObserver(
                 BreadcrumbsRecorder(
@@ -502,8 +504,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                             source = source,
                         ),
                     )
-                    // This will record an event in Nimbus' internal event store. Used for behavioral targeting
-                    recordEventInNimbus("app_opened")
 
                     if (safeIntent.action.equals(ACTION_OPEN_PRIVATE_TAB) && source == APP_ICON) {
                         AppIcon.newPrivateTabTapped.record(NoExtras())

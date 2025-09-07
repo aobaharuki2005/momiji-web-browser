@@ -11,6 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
   // eslint-disable-next-line mozilla/valid-lazy
   IPPChannelFilter: "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs",
+  IPPNetworkErrorObserver:
+    "resource:///modules/ipprotection/IPPNetworkErrorObserver.sys.mjs",
   getDefaultLocation:
     "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
   selectServer:
@@ -22,6 +24,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  CustomizableUI:
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 });
 
 import {
@@ -86,6 +90,9 @@ class IPProtectionServiceSingleton extends EventTarget {
   #pass = null;
   #inited = false;
   #usageObserver = null;
+  #networkErrorObserver = null;
+  // If this is set, we're awating a proxy pass rotation
+  #rotateProxyPassPromise = null;
 
   constructor() {
     super();
@@ -95,6 +102,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.updateEnabled = this.#updateEnabled.bind(this);
     this.updateSignInStatus = this.#updateSignInStatus.bind(this);
     this.updateEligibility = this.#updateEligibility.bind(this);
+    this.handleProxyErrorEvent = this.#handleProxyErrorEvent.bind(this);
   }
 
   /**
@@ -215,6 +223,9 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.usageObserver.start();
     this.usageObserver.addIsolationKey(this.connection.isolationKey);
 
+    this.networkErrorObserver.start();
+    this.networkErrorObserver.addIsolationKey(this.connection.isolationKey);
+
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Started", {
         bubbles: true,
@@ -245,7 +256,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.isActive = false;
 
     let deactivatedAt = Cu.now();
-    let sessionLength = this.activatedAt - deactivatedAt;
+    let sessionLength = deactivatedAt - this.activatedAt;
 
     Glean.ipprotection.toggled.record({
       userAction,
@@ -255,6 +266,7 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.activatedAt = null;
     this.connection?.stop();
+    this.networkErrorObserver.stop();
     this.connection = null;
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Stopped", {
@@ -322,6 +334,10 @@ class IPProtectionServiceSingleton extends EventTarget {
   #isEligible() {
     let inExperiment = lazy.NimbusFeatures.ipProtection.getEnrollmentMetadata();
     let isEligible = inExperiment?.branch && inExperiment.branch !== "control";
+
+    if (inExperiment) {
+      lazy.NimbusFeatures.ipProtection.recordExposureEvent();
+    }
 
     if (isEligible) {
       lazy.logConsole.info("Device: Eligible");
@@ -411,10 +427,15 @@ class IPProtectionServiceSingleton extends EventTarget {
    * Adds an observer to monitor the VPN add-on installation
    */
   addVPNAddonObserver() {
+    let service = this;
     this.addonVPNListener = {
-      onInstallEnded(install, addon) {
-        if (addon.id === VPN_ADDON_ID) {
-          Services.prefs.setBoolPref(ENABLED_PREF, false);
+      onInstallEnded(_install, addon) {
+        if (addon.id === VPN_ADDON_ID && service.hasUpgraded) {
+          // Place the widget in the customization palette.
+          lazy.CustomizableUI.removeWidgetFromArea(
+            IPProtectionServiceSingleton.WIDGET_ID
+          );
+          lazy.logConsole.info("VPN Extension: Installed");
         }
       },
     };
@@ -542,6 +563,33 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
+   * Starts a flow to get a new ProxyPass and replace the current one.
+   *
+   * @returns {Promise<void>} - Returns a promise that resolves when the rotation is complete or failed.
+   * When it's called again while a rotation is in progress, it will return the existing promise.
+   */
+  async rotateProxyPass() {
+    if (this.#rotateProxyPassPromise) {
+      return this.#rotateProxyPassPromise;
+    }
+    this.#rotateProxyPassPromise = this.#getProxyPass();
+    const pass = await this.#rotateProxyPassPromise;
+    this.#rotateProxyPassPromise = null;
+    if (!pass) {
+      return null;
+    }
+    // Inject the new token in the current connection
+    if (this.connection?.active) {
+      this.connection.replaceAuthToken(pass.asBearerToken());
+      this.usageObserver.addIsolationKey(this.connection.isolationKey);
+      this.networkErrorObserver.addIsolationKey(this.connection.isolationKey);
+    }
+    lazy.logConsole.debug("Successfully rotated token!");
+    this.#pass = pass;
+    return null;
+  }
+
+  /**
    * Enrolls a users FxA account to use the proxy if they are eligible and not already
    * enrolled then updates the enrollment status.
    *
@@ -615,7 +663,15 @@ class IPProtectionServiceSingleton extends EventTarget {
    * @returns {Promise<ProxyPass|null>} - the proxy pass if it available.
    */
   async #getProxyPass() {
-    let { status, error, pass } = await this.guardian.fetchProxyPass();
+    let proxyPass;
+    try {
+      proxyPass = await this.guardian.fetchProxyPass();
+    } catch (error) {
+      this.#dispatchError(error);
+      return null;
+    }
+
+    let { status, error, pass } = proxyPass;
     lazy.logConsole.debug("ProxyPass:", {
       status,
       valid: pass?.isValid(),
@@ -638,6 +694,40 @@ class IPProtectionServiceSingleton extends EventTarget {
       this.#usageObserver = new lazy.IPProtectionUsage();
     }
     return this.#usageObserver;
+  }
+
+  get networkErrorObserver() {
+    if (!this.#networkErrorObserver) {
+      this.#networkErrorObserver = new lazy.IPPNetworkErrorObserver();
+      this.#networkErrorObserver.addEventListener(
+        "proxy-http-error",
+        this.handleProxyErrorEvent
+      );
+    }
+    return this.#networkErrorObserver;
+  }
+
+  #handleProxyErrorEvent(event) {
+    if (!this.connection?.active) {
+      return null;
+    }
+    const { isolationKey, level, httpStatus } = event.detail;
+    if (isolationKey != this.connection?.isolationKey) {
+      // This error does not concern our current connection.
+      // This could be due to an old request after a token refresh.
+      return null;
+    }
+
+    if (httpStatus !== 401) {
+      // Envoy returns a 401 if the token is rejected
+      // So for now as we only care about rotating tokens we can exit here.
+      return null;
+    }
+    if (level == "error" || this.#pass.shouldRotate()) {
+      // If this is a visible top-level error force a rotation
+      return this.rotateProxyPass();
+    }
+    return null;
   }
 
   /**

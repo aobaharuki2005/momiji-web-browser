@@ -1085,7 +1085,7 @@
   -->
   <string name="default_device_name_2">%1$s ری %2$s %3$s</string>
   <!-- Preference for syncing payment methods -->
-  <string name="preferences_sync_credit_cards_2">روشا پرداخت</string>
+  <string name="preferences_sync_credit_cards_2">بارتا پرداخت</string>
   <!-- Preference for syncing addresses -->
   <string name="preferences_sync_address">نشۊویا</string>
   <!--
@@ -2657,11 +2657,11 @@
   <!-- Preference and title for managing the settings for addresses -->
   <string name="preferences_addresses">نشۊویا</string>
   <!-- Preference and title for managing the settings for payment methods -->
-  <string name="preferences_credit_cards_2">روشا پرداخت</string>
+  <string name="preferences_credit_cards_2">بارتا پرداخت</string>
   <!-- Preference for saving and autofilling credit cards -->
-  <string name="preferences_credit_cards_save_and_autofill_cards_2">زفت وو پور کردن روشا پرداخت</string>
+  <string name="preferences_credit_cards_save_and_autofill_cards_2">زفت وو پور کردن بارتا پرداخت</string>
   <!-- Preference summary for saving and autofilling payment method data. %s is the name of the app (for example "Firefox"). -->
-  <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s پوی روشا پرداختی ک زفت اکۊنی ن رزم انه ریسۉݩ</string>
+  <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s پوی بارتا پرداختی ک زفت اکۊنی ن رزم انه ریسۉݩ</string>
   <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
   <string name="preferences_credit_cards_sync_cards_across_devices">هوم گوم کردن کارتا منجا دسگا یل</string>
   <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -2719,9 +2719,9 @@
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
   <string name="credit_cards_biometric_prompt_message">سی نیشتن کارتا اعتواری چفت ن بۊگۊشین</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
-  <string name="credit_cards_warning_dialog_title_2">ایمن کردن روشا پرداخت زفت وابیڌه ایسا</string>
+  <string name="credit_cards_warning_dialog_title_2">ایمن کردن بارتا پرداخت زفت وابیڌه ایسا</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
-  <string name="credit_cards_warning_dialog_message_3">ی اولگۊی چفت دسگا، پین یا رزم ن سی زفت وابیڌن روشا پرداخت زفت وابیڌه خوتووݩ سامووݩ کۊنین تا ز دسرسی آڌومیل دی جلاوگری کۊنین.</string>
+  <string name="credit_cards_warning_dialog_message_3">ی اولگۊی چفت دسگا، پین یا رزم ن سی زفت وابیڌن بارتا پرداخت زفت وابیڌه خوتووݩ سامووݩ کۊنین تا ز دسرسی آڌومیل دی جلاوگری کۊنین.</string>
   <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
   <string name="credit_cards_warning_dialog_set_up_now">هیم سکو ر ونین</string>
   <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2729,7 +2729,7 @@
   <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
   <string name="credit_cards_biometric_prompt_message_pin">گۊشیڌن رزم دسگا</string>
   <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-  <string name="credit_cards_biometric_prompt_unlock_message_2">گۊشیڌن رزم سی و کار گرؽڌن روشا پرداخت زفت وابیڌه</string>
+  <string name="credit_cards_biometric_prompt_unlock_message_2">گۊشیڌن رزم سی و کار گرؽڌن بارتا پرداخت زفت وابیڌه</string>
   <!-- Title of the "Add address" screen -->
   <string name="addresses_add_address">ٱووردن نشۊوی</string>
   <!-- Title of the "Edit address" screen -->

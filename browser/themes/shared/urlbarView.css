@@ -414,8 +414,15 @@
 
   &[selected] {
     outline: var(--focus-outline);
+    /* This color assumes that the row is selected and therefore has the usual
+       selection background color. */
     outline-color: var(--urlbarView-highlight-color);
     outline-offset: 1px;
+
+    .urlbarView-row:not([selected]) > .urlbarView-row-buttons > & {
+      /* If the row is not selected, use the accent color instead. */
+      outline-color: var(--color-accent-primary);
+    }
   }
 
   .urlbarView-row:is([row-selectable]:hover, [selected]) > &:not(:hover, [open]) {
@@ -1256,7 +1263,10 @@
   padding-block: 0;
   border-block: none;
   border-radius: var(--border-radius-medium);
-  background-color: color-mix(in srgb, var(--urlbarView-highlight-background) 20%, transparent);
+
+  @media not (prefers-contrast) {
+    background-color: color-mix(in srgb, var(--button-background-color) 30%, transparent);
+  }
 
   > .urlbarView-row-inner {
     padding: 0;
@@ -1341,6 +1351,7 @@
   }
 
   &[selected] {
+    color: var(--urlbarView-highlight-color);
     background-color: var(--urlbarView-highlight-background);
   }
 
@@ -1406,8 +1417,23 @@
     > .urlbarView-market-description-bottom {
       font-size: var(--urlbarView-small-font-size);
 
+      .urlbarView-row[dynamicType="market"]:not([selected])
+        > .urlbarView-row-inner
+        > .urlbarView-market-item:not([selected])
+        > .urlbarView-market-description
+        > & {
+        color: var(--urlbarView-secondary-text-color);
+      }
+
       > .urlbarView-market-todays-change-perc {
         font-weight: var(--font-weight-bold);
+      }
+
+      > .urlbarView-market-last-price {
+        /* This value is a string like "$123.45 USD". The "USD" part should be small
+           caps and the rest should be normal size. */
+        text-transform: lowercase;
+        font-variant-caps: small-caps;
       }
     }
 

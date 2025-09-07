@@ -60,6 +60,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [memoryMB](#memorymb)
 * [messageImpressions](#messageimpressions)
 * [needsUpdate](#needsupdate)
+* [newtabAddonVersion](#newtabaddonversion)
 * [newtabSettings](#newtabsettings)
 * [packageFamilyName](#packagefamilyname)
 * [pinnedSites](#pinnedsites)
@@ -954,6 +955,17 @@ Object {
     { url: "moz-extension://123dsa43213acklncd/home.html", host: "" }
   ],
 }
+```
+
+### `newtabAddonVersion`
+
+The full version string of the built-in New Tab add-on that is actively in use.
+Comparisons should be done with the `versionCompare` filter expression.
+
+#### Definition
+
+```ts
+declare const newtabAddonVersion: string;
 ```
 
 ### `newtabSettings`

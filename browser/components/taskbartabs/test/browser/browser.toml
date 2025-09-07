@@ -18,6 +18,8 @@ skip-if = ["msix"] # Bug 1984762 - Web Apps page action has been disabled until 
 
 ["browser_taskbarTabs_telemetry.js"]
 
+["browser_taskbarTabs_title.js"]
+
 ["browser_taskbarTabs_uriTest.js"]
 
 ["browser_taskbarTabs_windowManager.js"]

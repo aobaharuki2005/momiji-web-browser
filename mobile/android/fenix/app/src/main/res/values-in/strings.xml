@@ -56,6 +56,8 @@
   <string name="tab_manager_empty_synced_tabs_page_header">Ambil tab dari perangkat apa pun</string>
   <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
   <string name="tab_manager_empty_synced_tabs_page_description">Masuk untuk mengelola tab yang disinkronkan dari semua perangkat Anda.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Masuk</string>
   <!--
     Home - Bookmarks
 
@@ -376,6 +378,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">Laman diterjemahkan dari %1$s ke %2$s.</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Diterjemahkan dari %1$s ke %2$s</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">Buka lembar terjemahan</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">Tutup pesan</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -505,6 +519,16 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Laporan kerusakan memungkinkan kami mendiagnosis dan memperbaiki masalah pada peramban. Laporan mungkin termasuk data pribadi atau sensitif.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Pelajari lebih lanjut</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s perlu dimulai ulang</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">Terjadi masalah saat membuka %s.\n\nMengirim laporan kerusakan membantu kami mendiagnosis dan memperbaiki masalah pada peramban. Laporan mungkin termasuk data pribadi atau sensitif.</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">Kirim laporan kerusakan</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">Tidak, terima kasih</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">Buka kembali %s</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Kirim data teknis dan interaksi ke Mozilla</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Data tentang perangkat Anda, konfigurasi perangkat keras, dan bagaimana Anda menggunakan Firefox membantu meningkatkan fitur, kinerja, dan stabilitas untuk semua orang.</string>
@@ -535,6 +559,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Ketika Anda berbagi bagaimana Anda menemukan Firefox dan bahwa Anda menggunakannya, Anda membantu kami memperkenalkan peramban kami kepada lebih banyak orang.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Bagikan data minimal dengan mitra teknologi pemasaran Mozilla. Data ini tidak pernah dijual atau digunakan untuk menampilkan iklan kepada Anda.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Bagikan data dengan mitra teknologi pemasaran Mozilla. Data ini tidak pernah dijual atau digunakan untuk menampilkan iklan kepada Anda.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Bagaimana kami menggunakan data</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -813,6 +839,8 @@
   <string name="preferences_choose_app_for_downloads">Kelola unduhan dengan aplikasi lain</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_downloads_settings_clean_up_files_title">Hapus dari %s dan perangkat</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">Menghapus berkas dari pengelola unduhan Anda juga akan menghapusnya dari perangkat Anda</string>
   <!-- Preference for downloads -->
   <string name="preferences_downloads">Unduhan</string>
   <!-- Preference for enabling gecko engine logs -->
@@ -980,8 +1008,12 @@
   <string name="restart_warning_dialog_title">Ubah ikon aplikasi?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Mengubah ikon mengharuskan aplikasi untuk memulai ulang.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">Aplikasi mungkin akan ditutup. Cukup ketuk ikon baru Anda yang berkilau untuk membuka kembali %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Mulai ulang sekarang</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">Ubah ikon</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Batal</string>
   <!--
@@ -1384,8 +1416,16 @@
   <string name="tab_tray_menu_item_close">Tutup semua tab</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Markah</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Markahi tab yang dipilih</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Tutup</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Tutup tab yang dipilih</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">Bagikan</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">Tambahkan ke koleksi</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">Bagikan tab terpilih</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1624,6 +1664,8 @@
   <string name="webcompat_reporter_label_description">Jelaskan masalahnya (opsional)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Kirim info lebih lanjut</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">Tambahkan info lebih lanjut</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Batal</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1670,6 +1712,8 @@
   <string name="tab_crash_restore">Pulihkan tab</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s harus dimulai ulang</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s rusak. Kirim laporan?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Anda memiliki laporan kerusakan yang belum terkirim terkait kerusakan yang sedang diselidiki. Mengirimnya akan membantu kami meningkatkan %1$s. Menutup pemberitahuan ini akan mengabaikan laporan ini.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1686,7 +1730,11 @@
   <string name="unsubmitted_crash_dialog_positive_button_2">KIRIM</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Kirim laporan kerusakan</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Laporan kerusakan membantu kami mendiagnosis dan memperbaiki masalah pada peramban. Laporan mungkin termasuk data pribadi atau sensitif. %s</string>
   <string name="unsubmitted_crash_dialog_learn_more">Pelajari lebih lanjut</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">Pelajari Lebih Lanjut</string>
   <!--
     Bookmarks
 
@@ -1727,6 +1775,8 @@
   <string name="bookmark_menu_delete_button">Hapus</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Simpan</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">Opsi pengurutan</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Urut berdasarkan urutan khusus</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1841,6 +1891,10 @@
   <string name="clear_permissions_on_all_sites">Hapus izin pada semua situs</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">Putar Otomatis</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">Aplikasi dan layanan perangkat</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">Perangkat jaringan lokal</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Kamera</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2119,6 +2173,8 @@
   <string name="preference_accessibility_text_size_summary">Besarkan atau kecilkan teks pada situs web</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Ukuran Fon</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Ukuran fon otomatis</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2250,6 +2306,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Ketat</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Perlindungan pelacakan yang lebih kuat dan kinerja yang lebih cepat, tetapi beberapa situs mungkin tidak berfungsi dengan baik.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Izinkan %1$s untuk secara otomatis menerapkan pengecualian yang diperlukan untuk menghindari kerusakan situs web yang besar.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Terapkan juga pengecualian secara otomatis yang hanya diperlukan untuk memperbaiki masalah kecil dan menyediakan fitur kenyamanan.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Apa yang diblokir oleh perlindungan pelacakan ketat</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2544,10 +2604,22 @@
   <string name="saved_login_clear_username">Hapus nama pengguna</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Hapus nama host</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Menu detail masuk</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Navigasi balik</string>
   <!-- Edit text for the login detail menu edit button -->
   <string name="login_detail_menu_edit_button">Sunting</string>
   <!-- Delete text for the login detail menu delete button -->
   <string name="login_detail_menu_delete_button">Hapus</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">Navigasi balik</string>
+  <!-- Content description, used by tools like screenreaders, to press on the save new login button. -->
+  <string name="add_login_save_new_login_button_content_description">Simpan info masuk baru</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">Navigasi balik</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">Edit info masuk</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Buka situs di peramban</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2606,6 +2678,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Simpan dan isi alamat</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Termasuk nomor telepon dan alamat surel</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Sinkronkan alamat lintas perangkat</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Sinkronkan alamat</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Tambah kartu</string>
   <!-- Title of the "Edit card" screen -->
@@ -2839,6 +2915,17 @@
   <string name="synced_tabs_expand_group">Bentangkan grup tab yang disinkronkan</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Ciutkan grup tab yang disinkronkan</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Pintasan</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">Tampilkan semua pintasan</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Batas pintasan tercapai</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -2934,6 +3021,13 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Cerita</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">Temukan lebih banyak cerita</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">Navigasi balik</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">Bersponsor</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3244,8 +3338,12 @@
   <string name="protection_panel_etp_toggle_off">Mati</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Jika ada yang tampak rusak di situs ini, coba matikan perlindungan.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Jika ada yang tampak rusak pada situs ini, coba matikan.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Perlindungan NONAKTIF. Kami sarankan untuk mengaktifkannya kembali.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Disarankan untuk mengaktifkan perlindungan pelacakan.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3253,8 +3351,12 @@
   <string name="protection_panel_num_trackers_blocked">Pelacak diblokir: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Tidak ada pelacak ditemukan</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">Pelacak tidak diblokir</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Setelan privasi dan keamanan</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Pengaturan Privasi</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Hak Akses</string>
   <!--
@@ -3283,6 +3385,8 @@
   <string name="connection_security_panel_secure">Sambungan aman</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Sambungan tidak aman</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">Laman ini disimpan di perangkat Anda</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.
@@ -3465,6 +3569,14 @@
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Timpa wilayah asal secara permanen</string>
   <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Alat Pengaya</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Periksa pembaruan</string>
+  <!--
     Messages explaining how to exit fullscreen mode
 
     Message shown to explain how to exit fullscreen mode when gesture navigation is enabled.
@@ -3592,6 +3704,8 @@
   <string name="setup_checklist_task_explore_extensions">Jelajahi ekstensi</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Pasang widget pencarian</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Jelajahi widget pencarian</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3638,6 +3752,42 @@
   <string name="private_tab_cfr_negative">Tidak, terima kasih</string>
   <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->
   <string name="private_tab_cfr_positive">Kunci tab</string>
+  <!--
+    Review prompt
+
+    Title for a prompt asking the user about their experience using the app. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="review_prompt_pre_prompt_header">Apa pendapat Anda tentang %1$s?</string>
+  <!-- Label for a button negatively rating the user's experience with the app -->
+  <string name="review_prompt_negative_button">Saya punya masalah</string>
+  <!-- Label for a button positively rating the user's experience with the app -->
+  <string name="review_prompt_positive_button">Bagus!</string>
+  <!-- Title for a prompt asking the user to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_rate_header">Terima kasih telah menyukai %1$s. Punya waktu sebentar untuk menyebarkan cinta dengan peringkat?</string>
+  <!-- Label for a button proceeding to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_rate_button">Beri peringkat %1$s di Play Store</string>
+  <!-- Title for a prompt asking the user send us feedback. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_feedback_header">Kami mohon maaf jika Anda mengalami masalah. Beri tahu kami bagaimana kami dapat meningkatkan %1$s.</string>
+  <!-- Label for a button opening a feedback forum -->
+  <string name="review_prompt_feedback_button">Tinggalkan umpan balik</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Kami punya pembaruan</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Kami telah memperkenalkan %1$s %2$s dan memperbarui %3$s kami.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Mohon luangkan waktu untuk meninjau dan menyetujuinya. %1$s.</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Ketentuan Penggunaan</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->

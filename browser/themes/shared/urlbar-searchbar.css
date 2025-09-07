@@ -5,9 +5,23 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
+  --urlbar-container-min-width: 310px;
   --urlbar-container-padding: 1px;
   --urlbar-margin-inline: 5px;
   --urlbar-padding-block: 4px;
+
+  &[taskbartab] {
+    /* Taskbar tab windows are more size-constrained due to window controls
+       being in the nav bar, so we use the not-yet-default value from below as
+       if the trust panel was enabled. */
+    --urlbar-container-min-width: 275px;
+  }
+  /* stylelint-disable-next-line media-query-no-invalid */
+  @media -moz-pref("browser.urlbar.trustPanel.featureGate") {
+    /* Enabling the trust panel saves up to two icons in the front part of the
+       address bar. */
+    --urlbar-container-min-width: 275px;
+  }
 }
 
 #urlbar[actiontype="switchtab"][action-override] > .urlbar-input-container > #urlbar-label-box,
@@ -341,30 +355,30 @@
 
 #urlbar-container {
   align-items: center;
-  /* We leave 310px plus whatever space the download and unified extensions
+  /* We leave a base width plus whatever space the download and unified extensions
    * buttons will need when they *both* appear. Normally, for each button, this
    * should be 16px for the icon, plus 2 * 2px padding plus the
    * toolbarbutton-inner-padding. We're adding 4px to ensure things like rounding
    * on hidpi don't accidentally result in the buttons going into overflow.
    */
-  width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
+  width: calc(var(--urlbar-container-min-width) + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
 
   /* When the download button OR the unified extensions button is shown, we leave
-   * 310px plus the space needed for a single button as described above. */
+   * the base width plus the space needed for a single button as described above. */
   #nav-bar:is([downloadsbuttonshown], [unifiedextensionsbuttonshown]) & {
-    width: calc(310px + 24px + 2 * var(--toolbarbutton-inner-padding));
+    width: calc(var(--urlbar-container-min-width) + 24px + 2 * var(--toolbarbutton-inner-padding));
   }
 
   /* When both the download and unified extensions buttons are visible, we use
    * the base min-width value. */
   #nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] & {
-    width: 310px;
+    width: var(--urlbar-container-min-width);
   }
 
   /* Customize mode is difficult to use at moderate window width if the Urlbar
-   * remains 310px wide. */
+   * remains as wide. */
   :root[customizing] & {
-    width: 280px;
+    width: calc(var(--urlbar-container-min-width) - 30px);
   }
 }
 

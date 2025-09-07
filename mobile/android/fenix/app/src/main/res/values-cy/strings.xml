@@ -384,9 +384,9 @@
     %1$s is the name of the language that is displayed in the original page. (For example: English)
     %2$s is the name of the language which the page was translated to. (For example: French)
   -->
-  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Cyfieithwyd o %1$s i %2$s</string>
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Cyfieithwyd o\'r %1$s i\'r %2$s</string>
   <!-- Content description for the translate toolbar action that opens the translations dialog. -->
-  <string name="translation_toolbar_expand_action">Agor taflen gyfieithu</string>
+  <string name="translation_toolbar_expand_action">Agor dalen gyfieithu</string>
   <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
   <string name="translation_toolbar_close_action">Cau\'r neges</string>
   <!--
@@ -1009,7 +1009,7 @@
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Mae newid yr eicon yn golygu fod rhaid i\'r ap ailgychwyn.</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
-  <string name="restart_warning_dialog_body_2">Efallai y bydd yr app yn cau. Tapiwch eich eicon newydd sgleiniog i ailagor %1$s.</string>
+  <string name="restart_warning_dialog_body_2">Efallai y bydd yr ap yn cau. Tapiwch eich eicon newydd sgleiniog i ailagor %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Ailgychwyn nawr</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->

@@ -267,6 +267,7 @@ export class ProxyPass {
     }
     this.token = token;
     this.until = until;
+    this.from = Date.now();
     const [header, body] = this.token.split(".");
     try {
       const parses = [header, body].every(json =>
@@ -284,6 +285,17 @@ export class ProxyPass {
     const now = Date.now();
     return this.until > now;
   }
+
+  shouldRotate() {
+    if (!this.isValid) {
+      return true;
+    }
+    const totalLifespan = this.until - this.from;
+    const rotationPoint =
+      this.from + totalLifespan * (ProxyPass.ROTATION_PERCENTAGE / 100);
+    return Date.now() > rotationPoint;
+  }
+
   /**
    * Parses a ProxyPass from a Response object.
    *
@@ -333,9 +345,12 @@ export class ProxyPass {
       return null;
     }
   }
+
   asBearerToken() {
     return `Bearer ${this.token}`;
   }
+
+  static ROTATION_PERCENTAGE = 90; // 0-100 % - how long in the duration until the pass should be rotated.
 }
 
 /**

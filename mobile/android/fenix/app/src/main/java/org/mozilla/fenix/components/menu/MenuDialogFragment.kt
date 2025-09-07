@@ -678,6 +678,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                             externalAppName = appLinksRedirect?.appName ?: "",
                                             isWebCompatReporterSupported = isWebCompatReporterSupported,
                                             translationInfo = translationInfo,
+                                            showShortcuts = settings.showTopSitesFeature,
                                             onWebCompatReporterClick = {
                                                 store.dispatch(MenuAction.Navigate.WebCompatReporter)
                                             },

@@ -41,14 +41,21 @@ export class RealtimeSuggestProvider extends SuggestProvider {
   // The following getters depend on `realtimeType` and should be overridden as
   // necessary.
 
+  /**
+   * @returns {string[]}
+   *   The opt-in suggestion is a dynamic Rust suggestion. `suggestion_type` in
+   *   the RS record is `${this.realtimeType}_opt_in` by default.
+   */
   get dynamicRustSuggestionTypes() {
-    // The realtime type's opt-in suggestion is a dynamic Rust suggestion whose
-    // `suggestion_type` is `this.realtimeType` in the RS record.
-    return [this.realtimeType];
+    return [this.realtimeType + "_opt_in"];
   }
 
+  /**
+   * @returns {string}
+   *   The online suggestions are served by Merino. The Merino provider is
+   *   `this.realtimeType` by default.
+   */
   get merinoProvider() {
-    // The realtime type's online suggestions are served by Merino.
     return this.realtimeType;
   }
 

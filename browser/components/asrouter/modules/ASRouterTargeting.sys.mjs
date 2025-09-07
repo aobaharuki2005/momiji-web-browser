@@ -41,6 +41,8 @@ const { ClientID } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutNewTabResourceMapping:
+    "resource:///modules/AboutNewTabResourceMapping.sys.mjs",
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   ASRouterPreferences:
@@ -1132,6 +1134,15 @@ const TargetingGetters = {
    */
   get useEmbeddedMigrationWizard() {
     return lazy.useEmbeddedMigrationWizard;
+  },
+
+  /**
+   * Returns the version number of the New Tab built-in addon being used
+   * by the build.
+   * @return {string}
+   */
+  get newtabAddonVersion() {
+    return lazy.AboutNewTabResourceMapping.addonVersion;
   },
 
   /**

@@ -32,6 +32,8 @@
   <string name="no_open_tabs_description">Тут будуць паказаны вашы адкрытыя карткі.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Тут будуць паказаны вашы прыватныя карткі.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Прыватнае агляданне</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d абрана</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->

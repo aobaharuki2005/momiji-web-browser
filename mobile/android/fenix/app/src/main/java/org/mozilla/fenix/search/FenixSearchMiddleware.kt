@@ -240,11 +240,10 @@ class FenixSearchMiddleware(
     ) {
         val shouldShowTrendingSearches = context.state.run {
             (showTrendingSearches || showRecentSearches || showShortcutsSuggestions) &&
-                (searchStartedForCurrentUrl || FxNimbus.features.searchSuggestionsOnHomepage.value().enabled) &&
-                isSearchSuggestionsFeatureEnabled()
+                (searchStartedForCurrentUrl || FxNimbus.features.searchSuggestionsOnHomepage.value().enabled)
         }
         val shouldShowSearchSuggestions = with(context.state) {
-            (url != query && query.isNotBlank() || showSearchShortcuts) && isSearchSuggestionsFeatureEnabled()
+            (url != query && query.isNotBlank() || showSearchShortcuts)
         }
         val shouldShowSuggestions = shouldShowTrendingSearches || shouldShowSearchSuggestions
 

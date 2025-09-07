@@ -386,7 +386,7 @@
   -->
   <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Преведено от %1$s на %2$s</string>
   <!-- Content description for the translate toolbar action that opens the translations dialog. -->
-  <string name="translation_toolbar_expand_action">Отваряне на преводен лист</string>
+  <string name="translation_toolbar_expand_action">Отваряне на преводния лист</string>
   <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
   <string name="translation_toolbar_close_action">Отхвърляне на съобщението</string>
   <!--
@@ -522,7 +522,7 @@
   <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
   <string name="startup_crash_title">%s трябва да се рестартира</string>
   <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
-  <string name="startup_crash_body">Имаше проблем при отварянето на %s.\n\nИзпращането на доклад за срив ни помага да диагностицираме и отстраним проблеми с браузъра. Докладите може да включват лични или чувствителни данни.</string>
+  <string name="startup_crash_body">Имаше проблем при отварянето на %s.\n\nИзпращането на доклад за срив ни помага да диагностицираме и отстраним проблеми с четеца. Докладите може да включват лични или чувствителни данни.</string>
   <!-- Button text to submit a startup crash report -->
   <string name="startup_crash_positive">Изпращане на доклад за срив</string>
   <!-- Button text to continue and not send a startup crash report -->
@@ -1009,11 +1009,11 @@
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Смяната на иконата изисква приложението да се рестартира.</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
-  <string name="restart_warning_dialog_body_2">Приложението може да се затвори. Просто докоснете лъскавата нова икона, за да отворите отново %1$s.</string>
+  <string name="restart_warning_dialog_body_2">Приложението може да се затвори. Просто докоснете новата ни лъскава иконка, за да го отворите отново %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Рестартиране</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
-  <string name="restart_warning_dialog_button_positive_2">Промяна на иконата</string>
+  <string name="restart_warning_dialog_button_positive_2">Промяна на иконката</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Отказ</string>
   <!--
@@ -2345,7 +2345,7 @@
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
   <string name="preference_enhanced_tracking_protection_custom_cryptominers">Добиване на криптовалути</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
-  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Известни снемащи отпечатъци</string>
+  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Известни цифрови отпечатъци</string>
   <!-- Button label for navigating to the Enhanced Tracking Protection details -->
   <string name="enhanced_tracking_protection_details">Подробности</string>
   <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
@@ -2369,7 +2369,7 @@
   <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_cryptominers_description">Предотвратява зловредни скриптове, придобиващи достъп до устройството ви, с цел добив на цифрова валута.</string>
   <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_known_fingerprinters_description">Предотвратява събирането на уникални данни за обратно установяване, които могат да бъдат използвани за проследяване.</string>
+  <string name="etp_known_fingerprinters_description">Предотвратява събирането на уникални данни, които могат да бъдат използвани за проследяване.</string>
   <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_tracking_content_title">Проследяващо съдържание</string>
   <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
@@ -2397,11 +2397,11 @@
   <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_redirect_trackers_description">Изчиства бисквитки за пренасочване към известни проследяващи страници.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
-  <string name="etp_suspected_fingerprinters_title">Съмнения за изпозлване на цифрови отпечатци</string>
+  <string name="etp_suspected_fingerprinters_title">Съмнения за използване на цифрови отпечатци</string>
   <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
   <string name="etp_suspected_fingerprinters_description">Активира защита от цифрови отпечатъци и спирането им.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_known_fingerprinters_title">Известни снемащи отпечатъци</string>
+  <string name="etp_known_fingerprinters_title">Известни цифрови отпечатъци</string>
   <!--
     Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
     as we use it on the UI to indicate which trackers have been partially unblocked.

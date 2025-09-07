@@ -21,6 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginManagerContextMenu:
     "resource://gre/modules/LoginManagerContextMenu.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
@@ -2940,13 +2941,24 @@ export class nsContextMenu {
         // add support for its POST endpoint or another visual engine that does
         // support data URIs, we should revisit this.
         !this.imageInfo.currentSrc.startsWith("data:") &&
-        !this.contentData.contentDisposition?.startsWith("attachment") &&
-        Services.prefs.getBoolPref("browser.search.visualSearch.featureGate"),
+        !this.contentData.contentDisposition?.startsWith("attachment"),
       searchTerms: this.imageInfo?.currentSrc,
       searchUrlType: lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH,
     });
 
     if (!menuitem.hidden) {
+      // Record the Nimbus exposure if the menu item is shown *or would have
+      // been shown* if the feature were enabled.
+      lazy.NimbusFeatures.search.recordExposureEvent();
+
+      // If the feature is not enabled, hide the menu item.
+      if (
+        !Services.prefs.getBoolPref("browser.search.visualSearch.featureGate")
+      ) {
+        menuitem.hidden = true;
+        return;
+      }
+
       let visualSearchUrl = menuitem.engine.wrappedJSObject.getURLOfType(
         lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH
       );

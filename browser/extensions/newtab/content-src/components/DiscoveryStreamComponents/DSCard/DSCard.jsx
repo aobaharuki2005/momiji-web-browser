@@ -19,14 +19,8 @@ import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import { connect } from "react-redux";
 import { LinkMenuOptions } from "content-src/lib/link-menu-options";
 const READING_WPM = 220;
-
 const PREF_OHTTP_MERINO = "discoverystream.merino-provider.ohttp.enabled";
 const PREF_OHTTP_UNIFIED_ADS = "unifiedAds.ohttp.enabled";
-const PREF_CONTEXTUAL_ADS = "discoverystream.sections.contextualAds.enabled";
-const PREF_INFERRED_PERSONALIZATION_SYSTEM =
-  "discoverystream.sections.personalization.inferred.enabled";
-const PREF_INFERRED_PERSONALIZATION_USER =
-  "discoverystream.sections.personalization.inferred.user.enabled";
 const PREF_SECTIONS_ENABLED = "discoverystream.sections.enabled";
 const PREF_FAVICONS_ENABLED = "discoverystream.publisherFavicon.enabled";
 
@@ -716,35 +710,22 @@ export class _DSCard extends React.PureComponent {
 
     let ohttpEnabled = false;
     if (flightId) {
-      ohttpEnabled =
-        Prefs.values[PREF_CONTEXTUAL_ADS] &&
-        Prefs.values[PREF_OHTTP_UNIFIED_ADS];
+      ohttpEnabled = Prefs.values[PREF_OHTTP_UNIFIED_ADS];
     } else {
       ohttpEnabled = Prefs.values[PREF_OHTTP_MERINO];
     }
 
-    const inferredPersonalizationUser =
-      Prefs.values[PREF_INFERRED_PERSONALIZATION_USER];
-    const inferredPersonalizationSystem =
-      Prefs.values[PREF_INFERRED_PERSONALIZATION_SYSTEM];
-    const inferredPersonalization =
-      inferredPersonalizationSystem && inferredPersonalizationUser;
     const ohttpImagesEnabled = Prefs.values.ohttpImagesConfig?.enabled;
     const includeTopStoriesSection =
       Prefs.values.ohttpImagesConfig?.includeTopStoriesSection;
 
-    const sectionsEnabled = Prefs.values[PREF_SECTIONS_ENABLED];
     const nonPersonalizedSections = ["top_stories_section"];
     const sectionPersonalized =
       !nonPersonalizedSections.includes(this.props.section) ||
       includeTopStoriesSection;
 
     const secureImage =
-      sectionsEnabled &&
-      ohttpImagesEnabled &&
-      ohttpEnabled &&
-      sectionPersonalized &&
-      inferredPersonalization;
+      ohttpImagesEnabled && ohttpEnabled && sectionPersonalized;
 
     return secureImage;
   }

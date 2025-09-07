@@ -5127,8 +5127,9 @@ AMTelemetry = {
     });
     Glean.addonsManager.installStats.record(
       this.formatExtraVars({
-        addon_id: extra.addon_id,
+        addon_id: addonId,
         addon_type: object,
+        hashed_addon_id: install.hashedAddonId,
         taar_based: extra.taar_based,
         utm_campaign: extra.utm_campaign,
         utm_content: extra.utm_content,

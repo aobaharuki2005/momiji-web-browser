@@ -6,7 +6,8 @@
 
 #include "SandboxFilter.h"
 
-#include <asm/termbits.h>  // For termios2 / TCGETS2
+#include <asm/ioctls.h>    // For TCGETS2
+#include <asm/termbits.h>  // For termios2
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/ioctl.h>
