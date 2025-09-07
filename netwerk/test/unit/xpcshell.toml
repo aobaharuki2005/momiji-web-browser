@@ -695,12 +695,12 @@ skip-if = [
 run-sequentially = "node server exceptions dont replay well"
 head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js head_http3.js http2_test_common.js"
 
+["test_http2_proxy_concurrent_stream.js"]
+skip-if = ["os == 'android'"]
+
 ["test_http2_with_proxy.js"]
 run-sequentially = "node server exceptions dont replay well"
 head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js head_http3.js http2_test_common.js"
-
-["test_http2_proxy_concurrent_stream.js"]
-skip-if = ["os == 'android'"]
 
 ["test_http3.js"]
 run-sequentially = "http3server"
@@ -1036,15 +1036,6 @@ skip-if = ["os == 'android' && android_version == '24' && processor == 'x86_64'"
 
 ["test_node_execute_npm.js"]
 usesNPM = true
-skip-if = [
-  "os == 'mac' && os_version == '10.15' && processor == 'x86_64'",
-  "os == 'mac' && os_version == '11.20' && arch == 'aarch64'",
-  "os == 'mac' && os_version == '14.70' && processor == 'x86_64'",
-  "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt",
-  "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
-  "os == 'win' && os_version == '11.26100' && processor == 'x86'",
-  "os == 'win' && os_version == '11.26100' && processor == 'x86_64'",
-]
 
 ["test_nojsredir.js"]
 

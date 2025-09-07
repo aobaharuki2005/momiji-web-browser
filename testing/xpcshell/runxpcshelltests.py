@@ -1964,25 +1964,35 @@ class XPCShellTests:
                 break
 
         if installNPM:
-            npm = "npm"
+            env = os.environ.copy()
             nodePath = os.environ.get("MOZ_NODE_PATH", "")
             if nodePath:
-                npm = f"PATH=$PATH:{'/'.join(nodePath.split('/')[:-1])} {'/'.join(nodePath.split('/')[:-1])}/npm"
-            command = f"{npm} ci"
-            working_directory = os.path.join(SCRIPT_DIR, "moz-http2")
-            result = subprocess.run(
-                command,
-                shell=True,
-                cwd=working_directory,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
+                node_bin_path = os.path.dirname(nodePath)
+                env["PATH"] = f"{node_bin_path}{os.pathsep}{env.get('PATH', '')}"
 
-            # Print the output
-            self.log.info("npm output: " + result.stdout)
-            self.log.info("npm error: " + result.stderr)
-            self.log.info("npm return code: " + str(result.returncode))
+            # Try to find npm in PATH
+            npm_executable = shutil.which("npm", path=env.get("PATH"))
+
+            if npm_executable:
+                command = [npm_executable, "ci"]
+                working_directory = os.path.join(SCRIPT_DIR, "moz-http2")
+                result = subprocess.run(
+                    command,
+                    cwd=working_directory,
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+
+                # Print the output
+                self.log.info("npm output: " + result.stdout)
+                self.log.info("npm error: " + result.stderr)
+                self.log.info("npm return code: " + str(result.returncode))
+            else:
+                self.log.warning(
+                    "npm step was skipped because no executable could be resolved."
+                )
 
         kwargs = {
             "appPath": self.appPath,
