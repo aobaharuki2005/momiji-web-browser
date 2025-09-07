@@ -118,6 +118,10 @@
   <string name="mozac_feature_addons_installed_section">ilo li open ala</string>
   <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
   <string name="mozac_feature_addons_recommended_section">ona li pona tawa jan</string>
+  <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+  <string name="mozac_feature_addons_unsupported_section">tenpo ni la ni li ken ala</string>
+  <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+  <string name="mozac_feature_addons_unavailable_section">tenpo ni la ni li lon ala</string>
   <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
   <string name="mozac_feature_addons_disabled_section">ilo li pini</string>
   <!-- Displays a page with all the details of an add-on. -->
@@ -138,6 +142,8 @@
   <string name="mozac_feature_addons_permissions_dialog_heading_optional_settings">ken ni li ken lon li ken weka:</string>
   <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
   <string name="mozac_feature_addons_optional_permissions_dialog_subtitle" moz:removedIn="142" tools:ignore="UnusedResources">ona li wile e ni:</string>
+  <!-- This is a button to add (install) an add-on . -->
+  <string name="mozac_feature_addons_permissions_dialog_add">o pana</string>
   <!-- This is a button to allow the optional permissions requested by an add-on . -->
   <string name="mozac_feature_addons_permissions_dialog_allow">o ken</string>
   <!-- This is a button to deny the optional permissions requested by an add-on . -->
