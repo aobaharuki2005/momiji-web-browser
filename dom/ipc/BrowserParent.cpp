@@ -170,7 +170,8 @@ using namespace mozilla::gfx;
 
 using mozilla::LazyLogModule;
 
-extern mozilla::LazyLogModule gSHIPBFCacheLog;
+extern LazyLogModule gBCWebProgressLog;
+extern LazyLogModule gSHIPBFCacheLog;
 
 LazyLogModule gBrowserFocusLog("BrowserFocus");
 
@@ -3171,7 +3172,8 @@ bool BrowserParent::ReceiveProgressListenerData(
 
   // Look up the BrowsingContext which this notification was fired for.
   if (aWebProgressData.browsingContext().IsNullOrDiscarded()) {
-    NS_WARNING("WebProgress Ignored: BrowsingContext is null or discarded");
+    MOZ_LOG(gBCWebProgressLog, LogLevel::Warning,
+            ("WebProgress Ignored: BrowsingContext is null or discarded"));
     return false;
   }
   RefPtr<CanonicalBrowsingContext> browsingContext =
@@ -3184,7 +3186,8 @@ bool BrowserParent::ReceiveProgressListenerData(
   if (browsingContext != mBrowsingContext) {
     WindowGlobalParent* embedder = browsingContext->GetParentWindowContext();
     if (!embedder || embedder->GetBrowserParent() != this) {
-      NS_WARNING("WebProgress Ignored: wrong embedder process");
+      MOZ_LOG(gBCWebProgressLog, LogLevel::Warning,
+              ("WebProgress Ignored: wrong embedder process"));
       return false;
     }
   }
@@ -3195,7 +3198,8 @@ bool BrowserParent::ReceiveProgressListenerData(
   if (RefPtr<WindowGlobalParent> current =
           browsingContext->GetCurrentWindowGlobal();
       current && current->GetBrowserParent() != this) {
-    NS_WARNING("WebProgress Ignored: no longer current window global");
+    MOZ_LOG(gBCWebProgressLog, LogLevel::Warning,
+            ("WebProgress Ignored: no longer current window global"));
     return false;
   }
 
