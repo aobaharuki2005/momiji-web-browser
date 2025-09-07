@@ -21,6 +21,8 @@ class nsIRequest;
 class nsILoadGroup;
 class nsIFrame;
 
+#define OBSERVER_SVC_CID "@mozilla.org/observer-service;1"
+
 namespace mozilla {
 class PresShell;
 namespace dom {
@@ -47,25 +49,25 @@ class SVGDocumentWrapper final : public nsIStreamListener,
   /**
    * Returns the wrapped document, or nullptr on failure. (No AddRef.)
    */
-  mozilla::dom::SVGDocument* GetDocument() const;
+  mozilla::dom::SVGDocument* GetDocument();
 
   /**
    * Returns the root <svg> element for the wrapped document, or nullptr on
    * failure.
    */
-  mozilla::dom::SVGSVGElement* GetRootSVGElem() const;
+  mozilla::dom::SVGSVGElement* GetRootSVGElem();
 
   /**
    * Returns the root nsIFrame* for the wrapped document, or nullptr on failure.
    *
    * @return the root nsIFrame* for the wrapped document, or nullptr on failure.
    */
-  nsIFrame* GetRootLayoutFrame() const;
+  nsIFrame* GetRootLayoutFrame();
 
   /**
    * Returns the mozilla::PresShell for the wrapped document.
    */
-  mozilla::PresShell* GetPresShell() const { return mViewer->GetPresShell(); }
+  inline mozilla::PresShell* GetPresShell() { return mViewer->GetPresShell(); }
 
   /**
    * Modifier to update the viewport dimensions of the wrapped document. This
@@ -90,7 +92,7 @@ class SVGDocumentWrapper final : public nsIStreamListener,
    *
    * @return true if the document has any SMIL animations. Else, false.
    */
-  bool IsAnimated() const;
+  bool IsAnimated();
 
   /**
    * Indicates whether we should currently ignore rendering invalidations sent
@@ -113,7 +115,7 @@ class SVGDocumentWrapper final : public nsIStreamListener,
   void StartAnimation();
   void StopAnimation();
   void ResetAnimation();
-  float GetCurrentTimeAsFloat() const;
+  float GetCurrentTimeAsFloat();
   void SetCurrentTime(float aTime);
   void TickRefreshDriver();
 

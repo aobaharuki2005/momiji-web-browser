@@ -5,7 +5,6 @@
 
 #include "SVGDocumentWrapper.h"
 
-#include "mozilla/Components.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SVGObserverUtils.h"
@@ -27,6 +26,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsNetCID.h"
 #include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsMimeTypes.h"
 #include "nsRefreshDriver.h"
 
@@ -34,7 +34,6 @@ namespace mozilla {
 
 using namespace dom;
 using namespace gfx;
-using namespace components;
 
 namespace image {
 
@@ -63,7 +62,7 @@ void SVGDocumentWrapper::DestroyViewer() {
   }
 }
 
-nsIFrame* SVGDocumentWrapper::GetRootLayoutFrame() const {
+nsIFrame* SVGDocumentWrapper::GetRootLayoutFrame() {
   Element* rootElem = GetRootSVGElem();
   return rootElem ? rootElem->GetPrimaryFrame() : nullptr;
 }
@@ -100,7 +99,7 @@ void SVGDocumentWrapper::FlushImageTransformInvalidation() {
   mIgnoreInvalidation = false;
 }
 
-bool SVGDocumentWrapper::IsAnimated() const {
+bool SVGDocumentWrapper::IsAnimated() {
   // Can be called for animated images during shutdown, after we've
   // already Observe()'d XPCOM shutdown and cleared out our mViewer pointer.
   if (!mViewer) {
@@ -167,7 +166,7 @@ void SVGDocumentWrapper::ResetAnimation() {
   svgElem->SetCurrentTime(0.0f);
 }
 
-float SVGDocumentWrapper::GetCurrentTimeAsFloat() const {
+float SVGDocumentWrapper::GetCurrentTimeAsFloat() {
   SVGSVGElement* svgElem = GetRootSVGElem();
   return svgElem ? svgElem->GetCurrentTimeAsFloat() : 0.0f;
 }
@@ -335,7 +334,7 @@ void SVGDocumentWrapper::RegisterForXPCOMShutdown() {
   // until imgLoader::Shutdown, which can happen after the JAR service
   // and RDF service have been unregistered.)
   nsresult rv;
-  nsCOMPtr<nsIObserverService> obsSvc = Observer::Service(&rv);
+  nsCOMPtr<nsIObserverService> obsSvc = do_GetService(OBSERVER_SVC_CID, &rv);
   if (NS_FAILED(rv) || NS_FAILED(obsSvc->AddObserver(
                            this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true))) {
     NS_WARNING("Failed to register as observer of XPCOM shutdown");
@@ -349,7 +348,7 @@ void SVGDocumentWrapper::UnregisterForXPCOMShutdown() {
              "unregistering for XPCOM shutdown w/out being registered");
 
   nsresult rv;
-  nsCOMPtr<nsIObserverService> obsSvc = Observer::Service(&rv);
+  nsCOMPtr<nsIObserverService> obsSvc = do_GetService(OBSERVER_SVC_CID, &rv);
   if (NS_FAILED(rv) ||
       NS_FAILED(obsSvc->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
     NS_WARNING("Failed to unregister as observer of XPCOM shutdown");
@@ -364,7 +363,7 @@ void SVGDocumentWrapper::FlushLayout() {
   }
 }
 
-SVGDocument* SVGDocumentWrapper::GetDocument() const {
+SVGDocument* SVGDocumentWrapper::GetDocument() {
   if (!mViewer) {
     return nullptr;
   }
@@ -375,7 +374,7 @@ SVGDocument* SVGDocumentWrapper::GetDocument() const {
   return doc->AsSVGDocument();
 }
 
-SVGSVGElement* SVGDocumentWrapper::GetRootSVGElem() const {
+SVGSVGElement* SVGDocumentWrapper::GetRootSVGElem() {
   if (!mViewer) {
     return nullptr;  // Can happen during destruction
   }
