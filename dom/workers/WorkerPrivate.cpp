@@ -6765,7 +6765,9 @@ Maybe<FontVisibility> WorkerPrivate::MaybeInheritFontVisibility() const {
   }
 
   dom::Document* doc = GetDocument();
-  NS_ENSURE_TRUE(doc, Nothing());
+  if (!doc) {
+    return Nothing();
+  }
 
   nsPresContext* presContext = doc->GetPresContext();
   NS_ENSURE_TRUE(presContext, Nothing());
