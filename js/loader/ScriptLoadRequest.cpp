@@ -44,6 +44,20 @@ ScriptFetchOptions::ScriptFetchOptions(
       mParserMetadata(aParserMetadata),
       mTriggeringPrincipal(aTriggeringPrincipal) {}
 
+void ScriptFetchOptions::SetTriggeringPrincipal(
+    nsIPrincipal* aTriggeringPrincipal) {
+  MOZ_ASSERT(!mTriggeringPrincipal);
+  mTriggeringPrincipal = aTriggeringPrincipal;
+}
+
+// static
+already_AddRefed<ScriptFetchOptions> ScriptFetchOptions::CreateDefault() {
+  RefPtr<ScriptFetchOptions> options = new ScriptFetchOptions(
+      mozilla::CORS_NONE, /* aNonce = */ u""_ns,
+      mozilla::dom::RequestPriority::Auto, ParserMetadata::NotParserInserted);
+  return options.forget();
+}
+
 ScriptFetchOptions::~ScriptFetchOptions() = default;
 
 //////////////////////////////////////////////////////////////

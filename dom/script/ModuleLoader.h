@@ -80,6 +80,11 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
       JS::Handle<JSObject*> aModuleRequestObj,
       JS::Handle<JSObject*> aPromise) override;
 
+  nsIURI* GetClientReferrerURI() override;
+
+  already_AddRefed<ScriptFetchOptions> CreateDefaultScriptFetchOptions()
+      override;
+
   static ModuleLoader* From(ModuleLoaderBase* aLoader) {
     return static_cast<ModuleLoader*>(aLoader);
   }

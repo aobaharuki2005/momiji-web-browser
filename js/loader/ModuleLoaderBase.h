@@ -25,6 +25,7 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "ResolveResult.h"
 
 class nsIURI;
@@ -315,6 +316,21 @@ class ModuleLoaderBase : public nsISupports {
   virtual already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
       JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
       Handle<JSObject*> aModuleRequestObj, Handle<JSObject*> aPromise) = 0;
+
+  // Determine the environment's referrer when the referrer script is empty.
+  //
+  // https://html.spec.whatwg.org/#hostloadimportedmodule
+  //   Step 5. Let fetchReferrer be "client".
+  //
+  // Then check the referrer policy specification for determining the referrer.
+  // https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
+  virtual nsIURI* GetClientReferrerURI() { return nullptr; }
+
+  // Create default ScriptFetchOptions if the referrer script is empty.
+  virtual already_AddRefed<JS::loader::ScriptFetchOptions>
+  CreateDefaultScriptFetchOptions() {
+    return nullptr;
+  }
 
   virtual bool IsDynamicImportSupported() { return true; }
 

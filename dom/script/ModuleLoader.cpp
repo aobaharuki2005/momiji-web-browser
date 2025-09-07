@@ -456,6 +456,26 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
   return request.forget();
 }
 
+already_AddRefed<ScriptFetchOptions>
+ModuleLoader::CreateDefaultScriptFetchOptions() {
+  RefPtr<ScriptFetchOptions> options = ScriptFetchOptions::CreateDefault();
+  nsCOMPtr<nsIPrincipal> principal = GetGlobalObject()->PrincipalOrNull();
+  options->SetTriggeringPrincipal(principal);
+  return options.forget();
+}
+
+nsIURI* ModuleLoader::GetClientReferrerURI() {
+  Document* document = GetScriptLoader()->GetDocument();
+#ifdef DEBUG
+  nsCOMPtr<nsIPrincipal> principal = GetGlobalObject()->PrincipalOrNull();
+#endif  // DEBUG
+  MOZ_ASSERT_IF(GetKind() == WebExtension,
+                BasePrincipal::Cast(principal)->ContentScriptAddonPolicy());
+  MOZ_ASSERT_IF(GetKind() == Normal, principal == document->NodePrincipal());
+
+  return document->GetDocBaseURI();
+}
+
 ModuleLoader::~ModuleLoader() {
   LOG(("ModuleLoader::~ModuleLoader %p", this));
   mLoader = nullptr;
