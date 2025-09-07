@@ -572,9 +572,9 @@
     Terms of use (ToU) second body text. 'Firefox' is intentionally hardcoded.
     %1$s is replaced by an active link, using onboarding_redesign_tou_body_two_link_text as text (“Privacy Notice”).
   -->
-  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox bryr sig om din integritet. Läs mer i våra %1$s.</string>
+  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox bryr sig om din integritet. Läs mer i vårt %1$s.</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
-  <string name="onboarding_redesign_tou_body_two_link_text">Sekretesspolicy</string>
+  <string name="onboarding_redesign_tou_body_two_link_text">sekretessmeddelande</string>
   <!--
     Terms of use (ToU) third body text. 'Firefox' and 'Mozilla' are intentionally hardcoded.
     %1$s is replaced by an active link using onboarding_redesign_tou_body_three_link_text as text (“Manage Settings”).
@@ -1030,7 +1030,7 @@
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Skapad av @heyheymomomodraws</string>
   <!-- Title for the "Cuddling" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
-  <string name="alternative_app_icon_option_cuddling">Gos</string>
+  <string name="alternative_app_icon_option_cuddling">Mysig</string>
   <!-- Title for the "Flaming" themed alternative app icon variant in the icon picker screen. The app icon features a fiery design, with the Firefox logo surrounded by flames for a bold, energetic look. -->
   <string name="alternative_app_icon_option_flaming">Flammande</string>
   <!-- Title for the "Cool" themed alternative app icon variant in the icon picker screen. The app icon uses a warm orange-to-yellow gradient background with a sleek, modern twist on the Firefox logo, giving it a fresh and stylish appearance. -->
