@@ -815,12 +815,6 @@ partial namespace ChromeUtils {
   // innerWindowID in order to appear in the tab's DevTools.
   [ChromeOnly, Throws]
   any callFunctionAndLogException(any targetGlobal, any func);
-
-  // For a given command name, returns:
-  //  * Null if not all windows handle this command.
-  //  * true if all windows handle it _and_ it's unconditionally enabled.
-  //  * false if all windows handle and it is not unconditionally enabled.
-  boolean? getGlobalWindowCommand(UTF8String name);
 };
 
 /*

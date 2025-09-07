@@ -335,9 +335,6 @@ class ChromeUtils {
                                           JS::MutableHandle<JS::Value> aRetval,
                                           ErrorResult& aRv);
 
-  static Nullable<bool> GetGlobalWindowCommand(GlobalObject&,
-                                               const nsACString& aName);
-
 #ifdef MOZ_WMF_CDM
   static already_AddRefed<Promise> GetWMFContentDecryptionModuleInformation(
       GlobalObject& aGlobal, ErrorResult& aRv);

@@ -29,25 +29,18 @@ export class ControllersParent extends JSWindowActorParent {
       this.supportedCommands[command] = false;
     }
 
-    this.browser?.ownerGlobal.updateCommands(aAction);
+    let browser = this.browser;
+    if (browser) {
+      browser.ownerGlobal.updateCommands(aAction);
+    }
   }
 
   isCommandEnabled(aCommand) {
-    // Some commands are always supported or enabled for a given window.
-    // We don't want to rely on the child having sent us its command list, so
-    // check with ChromeUtils.
-    return (
-      this.supportedCommands[aCommand] ||
-      !!ChromeUtils.getGlobalWindowCommand(aCommand)
-    );
+    return this.supportedCommands[aCommand] || false;
   }
 
   supportsCommand(aCommand) {
-    if (aCommand in this.supportedCommands) {
-      return true;
-    }
-    // See isCommandEnabled().
-    return ChromeUtils.getGlobalWindowCommand(aCommand) !== null;
+    return aCommand in this.supportedCommands;
   }
 
   doCommand(aCommand) {

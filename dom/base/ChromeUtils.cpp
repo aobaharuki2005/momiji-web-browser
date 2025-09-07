@@ -23,7 +23,6 @@
 #include "jsfriendapi.h"
 #include "mozJSModuleLoader.h"
 #include "mozilla/Base64.h"
-#include "mozilla/ControllerCommand.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/EventStateManager.h"
@@ -67,7 +66,6 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsContentUtils.h"
-#include "nsControllerCommandTable.h"
 #include "nsDocShell.h"
 #include "nsIException.h"
 #include "nsIRFPTargetSetIDL.h"
@@ -2691,16 +2689,6 @@ already_AddRefed<nsIContentSecurityPolicy> ChromeUtils::CreateCSPFromHeader(
     GlobalObject& aGlobal, const nsAString& aHeader, nsIURI* aSelfURI,
     nsIPrincipal* aLoadingPrincipal, ErrorResult& aRv) {
   return CSP_CreateFromHeader(aHeader, aSelfURI, aLoadingPrincipal, aRv);
-}
-
-Nullable<bool> ChromeUtils::GetGlobalWindowCommand(GlobalObject&,
-                                                   const nsACString& aName) {
-  const auto* table = nsControllerCommandTable::WindowCommandTable();
-  RefPtr handler = table->FindCommandHandler(aName);
-  if (!handler) {
-    return nullptr;
-  }
-  return handler->IsCommandEnabled(aName, nullptr);
 }
 
 }  // namespace mozilla::dom
