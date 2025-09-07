@@ -75,6 +75,8 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
       JS::Handle<JSObject*> aModuleRequestObj,
       JS::Handle<JSObject*> aPromise) override;
 
+  bool IsDynamicImportSupported() override { return false; }
+
   bool CanStartLoad(JS::loader::ModuleLoadRequest* aRequest,
                     nsresult* aRvOut) override;
 
