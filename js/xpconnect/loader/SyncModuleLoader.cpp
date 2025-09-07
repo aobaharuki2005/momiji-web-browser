@@ -70,8 +70,9 @@ already_AddRefed<ModuleLoadRequest> SyncModuleLoader::CreateStaticImport(
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aModuleType, aReferrerScript->ReferrerPolicy(),
       aReferrerScript->GetFetchOptions(), dom::SRIMetadata(),
-      aReferrerScript->GetURI(), context, ModuleLoadRequest::Kind::StaticImport,
-      this, aLoadContext->mRequest->AsModuleRequest()->GetRootModule());
+      aReferrerScript->BaseURL(), context,
+      ModuleLoadRequest::Kind::StaticImport, this,
+      aLoadContext->mRequest->AsModuleRequest()->GetRootModule());
   request->NoCacheEntryFound();
   return request.forget();
 }

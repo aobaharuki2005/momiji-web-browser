@@ -71,7 +71,7 @@ already_AddRefed<ModuleLoadRequest> WorkletModuleLoader::CreateStaticImport(
   // https://html.spec.whatwg.org/multipage/webappapis.html#internal-module-script-graph-fetching-procedure
   // Step 5. Fetch a single module script with referrer is referringScript's
   // base URL,
-  nsIURI* referrer = aReferrerScript->GetURI();
+  nsIURI* referrer = aReferrerScript->BaseURL();
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aModuleType, aReferrerScript->ReferrerPolicy(),
       aReferrerScript->GetFetchOptions(), SRIMetadata(), referrer, loadContext,

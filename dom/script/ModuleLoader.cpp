@@ -383,7 +383,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aModuleType, aReferrerScript->ReferrerPolicy(),
       aReferrerScript->GetFetchOptions(), aSriMetadata,
-      aReferrerScript->GetURI(), newContext,
+      aReferrerScript->BaseURL(), newContext,
       ModuleLoadRequest::Kind::StaticImport, aLoader,
       aLoadContext->mRequest->AsModuleRequest()->GetRootModule());
 
