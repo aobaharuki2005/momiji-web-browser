@@ -306,7 +306,6 @@ class ModuleLoaderBase : public nsISupports {
   // internally by ModuleLoaderBase.
 
  private:
-
   // Determine the environment's referrer when the referrer script is empty.
   //
   // https://html.spec.whatwg.org/#hostloadimportedmodule
