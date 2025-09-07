@@ -8545,7 +8545,7 @@
   # TSF/TIP requests to select from/by middle of a cluster.
 -   name: intl.tsf.hack.extend_setting_selection_range_to_cluster_boundaries
     type: bool
-    value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+    value: false
     mirror: always
 
   # Whether Gecko supports IMM even if TSF is enabled.  This pref exists
