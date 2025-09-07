@@ -369,90 +369,35 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
   return request.forget();
 }
 
-already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
-    nsIURI* aURI, JS::ModuleType aModuleType, ModuleScript* aReferrerScript,
-    const mozilla::dom::SRIMetadata& aSriMetadata,
-    JS::loader::LoadContextBase* aLoadContext,
-    JS::loader::ModuleLoaderBase* aLoader) {
-  RefPtr<ScriptLoadContext> newContext = new ScriptLoadContext();
-  newContext->mIsInline = false;
-  // Propagated Parent values. TODO: allow child modules to use root module's
-  // script mode.
-  newContext->mScriptMode = aLoadContext->AsWindowContext()->mScriptMode;
-
-  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aModuleType, aReferrerScript->ReferrerPolicy(),
-      aReferrerScript->GetFetchOptions(), aSriMetadata,
-      aReferrerScript->BaseURL(), newContext,
-      ModuleLoadRequest::Kind::StaticImport, aLoader,
-      aLoadContext->mRequest->AsModuleRequest()->GetRootModule());
-
-  GetScriptLoader()->TryUseCache(request);
-
-  return request.forget();
-}
-
-already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
-    JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
-    JS::Handle<JSObject*> aModuleRequestObj, JS::Handle<JSObject*> aPromise) {
-  MOZ_ASSERT(aModuleRequestObj);
-  MOZ_ASSERT(aPromise);
-
-  RefPtr<ScriptFetchOptions> options = nullptr;
-  nsIURI* baseURL = nullptr;
+already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateRequest(
+    JSContext* aCx, nsIURI* aURI, JS::Handle<JSObject*> aModuleRequest,
+    JS::Handle<JS::Value> aHostDefined, JS::Handle<JS::Value> aPayload,
+    bool aIsDynamicImport, ScriptFetchOptions* aOptions,
+    ReferrerPolicy aReferrerPolicy, nsIURI* aBaseURL,
+    const SRIMetadata& aSriMetadata) {
   RefPtr<ScriptLoadContext> context = new ScriptLoadContext();
-  ReferrerPolicy referrerPolicy;
-
-  if (aMaybeActiveScript) {
-    // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
-    // Step 6.3. Set fetchOptions to the new descendant script fetch options for
-    // referencingScript's fetch options.
-    options = aMaybeActiveScript->GetFetchOptions();
-    referrerPolicy = aMaybeActiveScript->ReferrerPolicy();
-    baseURL = aMaybeActiveScript->BaseURL();
+  context->mIsInline = false;
+  ModuleLoadRequest::Kind kind;
+  ModuleLoadRequest* root = nullptr;
+  if (aIsDynamicImport) {
+    context->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
+    kind = ModuleLoadRequest::Kind::DynamicImport;
   } else {
-    // We don't have a referencing script so fall back on using
-    // options from the document. This can happen when the user
-    // triggers an inline event handler, as there is no active script
-    // there.
-    Document* document = GetScriptLoader()->GetDocument();
-
-    nsCOMPtr<nsIPrincipal> principal = GetGlobalObject()->PrincipalOrNull();
-    MOZ_ASSERT_IF(GetKind() == WebExtension,
-                  BasePrincipal::Cast(principal)->ContentScriptAddonPolicy());
-    MOZ_ASSERT_IF(GetKind() == Normal, principal == document->NodePrincipal());
-
-    // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
-    // Step 4. Let fetchOptions be the default classic script fetch options.
-    //
-    // https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options
-    // The default classic script fetch options are a script fetch options whose
-    // cryptographic nonce is the empty string, integrity metadata is the empty
-    // string, parser metadata is "not-parser-inserted", credentials mode is
-    // "same-origin", referrer policy is the empty string, and fetch priority is
-    // "auto".
-    options = new ScriptFetchOptions(
-        mozilla::CORS_NONE, /* aNonce = */ u""_ns, RequestPriority::Auto,
-        ParserMetadata::NotParserInserted, principal);
-    referrerPolicy = document->GetReferrerPolicy();
-    baseURL = document->GetDocBaseURI();
+    MOZ_ASSERT(!aHostDefined.isUndefined());
+    root = static_cast<ModuleLoadRequest*>(aHostDefined.toPrivate());
+    MOZ_ASSERT(root);
+    LoadContextBase* loadContext = root->mLoadContext;
+    context->mScriptMode = loadContext->AsWindowContext()->mScriptMode;
+    kind = ModuleLoadRequest::Kind::StaticImport;
   }
 
-  context->mIsInline = false;
-  context->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
-
-  JS::ModuleType moduleType = JS::GetModuleRequestType(aCx, aModuleRequestObj);
-  SRIMetadata sriMetadata;
-  GetImportMapSRI(aURI, baseURL, mLoader->GetConsoleReportCollector(),
-                  &sriMetadata);
-
-  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, moduleType, referrerPolicy, options, sriMetadata, baseURL, context,
-      ModuleLoadRequest::Kind::DynamicImport, this, nullptr);
-
-  request->SetDynamicImport(aMaybeActiveScript, aModuleRequestObj, aPromise);
+  JS::ModuleType moduleType = GetModuleRequestType(aCx, aModuleRequest);
+  RefPtr<ModuleLoadRequest> request =
+      new ModuleLoadRequest(aURI, moduleType, aReferrerPolicy, aOptions,
+                            aSriMetadata, aBaseURL, context, kind, this, root);
 
   GetScriptLoader()->TryUseCache(request);
+
   return request.forget();
 }
 

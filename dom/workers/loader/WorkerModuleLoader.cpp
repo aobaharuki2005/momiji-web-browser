@@ -56,30 +56,49 @@ WorkerModuleLoader::CreateDefaultScriptFetchOptions() {
   return options.forget();
 }
 
-already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
-    nsIURI* aURI, JS::ModuleType aModuleType,
-    JS::loader::ModuleScript* aReferrerScript,
-    const mozilla::dom::SRIMetadata& aSriMetadata,
-    JS::loader::LoadContextBase* aLoadContext,
-    JS::loader::ModuleLoaderBase* aLoader) {
-  // We are intentionally deviating from the specification here and using the
-  // worker's CSP rather than the document CSP. The spec otherwise requires our
-  // service worker integration to be changed, and additionally the decision
-  // here did not make sense as we are treating static imports as different from
-  // other kinds of subresources.
-  // See Discussion in https://github.com/w3c/webappsec-csp/issues/336
+already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateRequest(
+    JSContext* aCx, nsIURI* aURI, JS::Handle<JSObject*> aModuleRequest,
+    JS::Handle<JS::Value> aHostDefined, JS::Handle<JS::Value> aPayload,
+    bool aIsDynamicImport, ScriptFetchOptions* aOptions,
+    mozilla::dom::ReferrerPolicy aReferrerPolicy, nsIURI* aBaseURL,
+    const mozilla::dom::SRIMetadata& aSriMetadata) {
   Maybe<ClientInfo> clientInfo = GetGlobalObject()->GetClientInfo();
 
-  WorkerLoadContext* context = aLoadContext->AsWorkerContext();
-  RefPtr<WorkerLoadContext> loadContext = new WorkerLoadContext(
-      WorkerLoadContext::Kind::StaticImport, clientInfo, context->mScriptLoader,
-      context->mOnlyExistingCachedResourcesAllowed);
+  ModuleLoadRequest::Kind kind;
+  RefPtr<WorkerLoadContext> loadContext;
+  ModuleLoadRequest* root = nullptr;
+  if (aIsDynamicImport) {
+    if (!CreateDynamicImportLoader()) {
+      return nullptr;
+    }
+
+    loadContext = new WorkerLoadContext(
+        WorkerLoadContext::Kind::DynamicImport, clientInfo,
+        GetCurrentScriptLoader(),
+        // When dynamic import is supported in ServiceWorkers,
+        // the current plan in onlyExistingCachedResourcesAllowed
+        // is that only existing cached resources will be
+        // allowed.  (`import()` will not be used for caching
+        // side effects, but instead a specific method will be
+        // used during installation.)
+        true);
+
+    kind = ModuleLoadRequest::Kind::DynamicImport;
+  } else {
+    MOZ_ASSERT(!aHostDefined.isUndefined());
+    root = static_cast<ModuleLoadRequest*>(aHostDefined.toPrivate());
+    MOZ_ASSERT(root);
+    WorkerLoadContext* context = root->mLoadContext->AsWorkerContext();
+    loadContext = new WorkerLoadContext(
+        WorkerLoadContext::Kind::StaticImport, clientInfo,
+        context->mScriptLoader, context->mOnlyExistingCachedResourcesAllowed);
+    kind = ModuleLoadRequest::Kind::StaticImport;
+  }
+
+  JS::ModuleType moduleType = JS::GetModuleRequestType(aCx, aModuleRequest);
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aModuleType, aReferrerScript->ReferrerPolicy(),
-      aReferrerScript->GetFetchOptions(), SRIMetadata(),
-      aReferrerScript->BaseURL(), loadContext,
-      ModuleLoadRequest::Kind::StaticImport, this,
-      aLoadContext->mRequest->AsModuleRequest()->GetRootModule());
+      aURI, moduleType, aReferrerPolicy, aOptions, SRIMetadata(), aBaseURL,
+      loadContext, kind, this, root);
 
   request->mURL = request->mURI->GetSpecOrDefault();
   request->NoCacheEntryFound();
@@ -100,70 +119,6 @@ bool WorkerModuleLoader::CreateDynamicImportLoader() {
 
   SetScriptLoader(loader);
   return true;
-}
-
-already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
-    JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
-    JS::Handle<JSObject*> aModuleRequestObj, JS::Handle<JSObject*> aPromise) {
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-
-  if (!CreateDynamicImportLoader()) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(!workerPrivate->IsServiceWorker());
-  MOZ_ASSERT(aModuleRequestObj);
-  MOZ_ASSERT(aPromise);
-
-  RefPtr<ScriptFetchOptions> options;
-  nsIURI* baseURL = nullptr;
-  ReferrerPolicy referrerPolicy;
-  if (aMaybeActiveScript) {
-    // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
-    // Step 6.3. Set fetchOptions to the new descendant script fetch options for
-    // referencingScript's fetch options.
-    options = aMaybeActiveScript->GetFetchOptions();
-    baseURL = aMaybeActiveScript->BaseURL();
-    referrerPolicy = aMaybeActiveScript->ReferrerPolicy();
-  } else {
-    // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
-    // Step 4. Let fetchOptions be the default classic script fetch options.
-    //
-    // https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options
-    // The default classic script fetch options are a script fetch options whose
-    // cryptographic nonce is the empty string, integrity metadata is the empty
-    // string, parser metadata is "not-parser-inserted", credentials mode is
-    // "same-origin", referrer policy is the empty string, and fetch priority is
-    // "auto".
-    options = new ScriptFetchOptions(
-        CORSMode::CORS_NONE, /* aNonce = */ u""_ns, RequestPriority::Auto,
-        JS::loader::ParserMetadata::NotParserInserted, nullptr);
-    baseURL = GetBaseURI();
-    referrerPolicy = workerPrivate->GetReferrerPolicy();
-  }
-
-  Maybe<ClientInfo> clientInfo = GetGlobalObject()->GetClientInfo();
-
-  RefPtr<WorkerLoadContext> context = new WorkerLoadContext(
-      WorkerLoadContext::Kind::DynamicImport, clientInfo,
-      GetCurrentScriptLoader(),
-      // When dynamic import is supported in ServiceWorkers,
-      // the current plan in onlyExistingCachedResourcesAllowed
-      // is that only existing cached resources will be
-      // allowed.  (`import()` will not be used for caching
-      // side effects, but instead a specific method will be
-      // used during installation.)
-      true);
-
-  JS::ModuleType moduleType = JS::GetModuleRequestType(aCx, aModuleRequestObj);
-  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, moduleType, referrerPolicy, options, SRIMetadata(), baseURL,
-      context, ModuleLoadRequest::Kind::DynamicImport, this, nullptr);
-
-  request->SetDynamicImport(aMaybeActiveScript, aModuleRequestObj, aPromise);
-  request->NoCacheEntryFound();
-
-  return request.forget();
 }
 
 bool WorkerModuleLoader::IsDynamicImportSupported() {

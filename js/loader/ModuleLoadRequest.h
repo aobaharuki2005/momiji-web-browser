@@ -73,10 +73,9 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void SetReady() override;
   void Cancel() override;
 
-  void SetDynamicImport(LoadedScript* aReferencingScript,
-                        Handle<JSObject*> aModuleRequestObj,
-                        Handle<JSObject*> aPromise);
-  void ClearDynamicImport();
+  void SetImport(Handle<JSScript*> aReferrerScript,
+                 Handle<JSObject*> aModuleRequestObj, Handle<Value> aPayload);
+  void ClearImport();
 
   void ModuleLoaded();
   void ModuleErrored();
@@ -111,7 +110,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
     return mLoader->InstantiateModuleGraph(this);
   }
   nsresult EvaluateModule() { return mLoader->EvaluateModule(this); }
-  void StartDynamicImport() { mLoader->StartDynamicImport(this); }
   void ProcessDynamicImport() { mLoader->ProcessDynamicImport(this); }
 
   void LoadFinished();
