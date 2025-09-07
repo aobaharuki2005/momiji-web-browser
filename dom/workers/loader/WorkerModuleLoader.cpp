@@ -101,12 +101,14 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
 
   RefPtr<ScriptFetchOptions> options;
   nsIURI* baseURL = nullptr;
+  ReferrerPolicy referrerPolicy;
   if (aMaybeActiveScript) {
     // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
     // Step 6.3. Set fetchOptions to the new descendant script fetch options for
     // referencingScript's fetch options.
     options = aMaybeActiveScript->GetFetchOptions();
     baseURL = aMaybeActiveScript->BaseURL();
+    referrerPolicy = aMaybeActiveScript->ReferrerPolicy();
   } else {
     // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
     // Step 4. Let fetchOptions be the default classic script fetch options.
@@ -121,6 +123,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
         CORSMode::CORS_NONE, /* aNonce = */ u""_ns, RequestPriority::Auto,
         JS::loader::ParserMetadata::NotParserInserted, nullptr);
     baseURL = GetBaseURI();
+    referrerPolicy = workerPrivate->GetReferrerPolicy();
   }
 
   Maybe<ClientInfo> clientInfo = GetGlobalObject()->GetClientInfo();
@@ -137,7 +140,6 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
       true);
 
   JS::ModuleType moduleType = JS::GetModuleRequestType(aCx, aModuleRequestObj);
-  ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, moduleType, referrerPolicy, options, SRIMetadata(), baseURL,
       context, ModuleLoadRequest::Kind::DynamicImport, this, nullptr);
