@@ -88,6 +88,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @param showQuitMenu Whether or not the button to delete browsing data and quit
  * should be visible.
  * @param isBottomToolbar Whether or not the browser toolbar is at the bottom.
+ * @param isExpandedToolbarEnabled Whether or not the expanded toolbar layout is enabled.
  * @param isSiteLoading Whether or not the tab is loading.
  * @param isExtensionsExpanded Whether or not the extensions menu is expanded.
  * @param isMoreMenuExpanded Whether or not the more menu is expanded.
@@ -138,6 +139,7 @@ fun MainMenu(
     accountState: AccountState,
     showQuitMenu: Boolean,
     isBottomToolbar: Boolean,
+    isExpandedToolbarEnabled: Boolean,
     isSiteLoading: Boolean,
     isExtensionsExpanded: Boolean,
     isMoreMenuExpanded: Boolean,
@@ -183,13 +185,25 @@ fun MainMenu(
         contentModifier = Modifier
             .padding(
                 start = 8.dp,
-                top = if (isBottomToolbar && accessPoint != MenuAccessPoint.Home) 0.dp else 8.dp,
+                top = if (accessPoint != MenuAccessPoint.Home &&
+                    (isBottomToolbar || isExpandedToolbarEnabled)
+                ) {
+                    0.dp
+                } else {
+                    8.dp
+                },
                 end = 8.dp,
-                bottom = if (isBottomToolbar && accessPoint != MenuAccessPoint.Home) 84.dp else 16.dp,
+                bottom = if (accessPoint != MenuAccessPoint.Home &&
+                    (isBottomToolbar || isExpandedToolbarEnabled)
+                ) {
+                    84.dp
+                } else {
+                    16.dp
+                },
             ),
         scrollState = scrollState,
         header = {
-            if (accessPoint != MenuAccessPoint.Home && !isBottomToolbar) {
+            if (accessPoint != MenuAccessPoint.Home && !isBottomToolbar && !isExpandedToolbarEnabled) {
                 MenuNavigation(
                     state = MenuItemState.ENABLED,
                     goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
@@ -209,7 +223,7 @@ fun MainMenu(
             }
         },
         footer = {
-            if (accessPoint != MenuAccessPoint.Home && isBottomToolbar) {
+            if (accessPoint != MenuAccessPoint.Home && (isBottomToolbar || isExpandedToolbarEnabled)) {
                 if (scrollState.value != 0) {
                     Divider(color = FirefoxTheme.colors.borderPrimary)
                 }
@@ -921,6 +935,7 @@ private fun MenuDialogPreview() {
                 isPrivate = false,
                 showQuitMenu = true,
                 isBottomToolbar = false,
+                isExpandedToolbarEnabled = false,
                 isSiteLoading = false,
                 isExtensionsExpanded = false,
                 isMoreMenuExpanded = true,
@@ -983,6 +998,7 @@ private fun MenuDialogPrivatePreview(
                 isPrivate = false,
                 showQuitMenu = true,
                 isBottomToolbar = true,
+                isExpandedToolbarEnabled = false,
                 isSiteLoading = isSiteLoading,
                 isExtensionsExpanded = true,
                 isMoreMenuExpanded = true,

@@ -352,6 +352,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     onRequestDismiss = ::dismiss,
                     handlebarContentDescription = handlebarContentDescription,
                     isMenuDragBarDark = !settings.shouldUseBottomToolbar &&
+                            !settings.shouldUseExpandedToolbar &&
                             (isExtensionsExpanded || isMoreMenuExpanded),
                     cornerShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                     handleColor = FirefoxTheme.colors.borderInverted.copy(0.4f),
@@ -556,6 +557,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     accountState = accountState,
                                     showQuitMenu = settings.shouldDeleteBrowsingDataOnQuit,
                                     isBottomToolbar = settings.shouldUseBottomToolbar,
+                                    isExpandedToolbarEnabled = settings.shouldUseExpandedToolbar,
                                     isSiteLoading = isSiteLoading,
                                     isExtensionsProcessDisabled = isExtensionsProcessDisabled,
                                     isExtensionsExpanded = isExtensionsExpanded,
