@@ -607,38 +607,6 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "InternalMutationEvent (DOMAttrModified)",
-    targetID: "animated-div", eventType: "DOMAttrModified",
-    dispatchEvent() {
-      document.getElementById(this.targetID).setAttribute("x-data", "foo");
-    },
-    canRun() {
-      return true;
-    },
-    todoMismatch: [],
-  },
-  { description: "InternalMutationEvent (DOMNodeInserted)",
-    targetID: "animated-div", eventType: "DOMNodeInserted",
-    dispatchEvent() {
-      var div = document.createElement("div");
-      div.id = "inserted-div";
-      document.getElementById("animated-div").appendChild(div);
-    },
-    canRun() {
-      return true;
-    },
-    todoMismatch: [],
-  },
-  { description: "InternalMutationEvent (DOMNodeRemoved)",
-    targetID: "animated-div", eventType: "DOMNodeRemoved",
-    dispatchEvent() {
-      document.getElementById("animated-div").removeChild(document.getElementById("inserted-div"));
-    },
-    canRun() {
-      return true;
-    },
-    todoMismatch: [],
-  },
   { description: "PointerEvent (pointerdown)",
     targetID: "pointer-target", eventType: "mousedown",
     dispatchEvent() {
@@ -750,8 +718,7 @@ function init() {
                                     ["mousewheel.with_alt.action.override_x", -1],
                                     ["mousewheel.with_meta.action", 0],
                                     ["mousewheel.with_meta.action.override_x", -1],
-                                    ["dom.events.textevent.enabled", true],
-                                    ["dom.mutation_events.enabled", true]]}, runNextTest);
+                                    ["dom.events.textevent.enabled", true]]}, runNextTest);
 }
 
 function finish() {

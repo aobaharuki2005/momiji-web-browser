@@ -8195,16 +8195,6 @@ void Document::SetScopeObject(nsIGlobalObject* aGlobal) {
     MOZ_ASSERT_IF(
         mNodeInfoManager->GetArenaAllocator(),
         mNodeInfoManager->GetArenaAllocator() == mDocGroup->ArenaAllocator());
-
-    // Update data document's mMutationEventsEnabled early on so that we can
-    // avoid extra IsURIInPrefList calls.
-    if (mLoadedAsData && window->GetExtantDoc() &&
-        window->GetExtantDoc() != this &&
-        window->GetExtantDoc()->NodePrincipal() == NodePrincipal() &&
-        mMutationEventsEnabled.isNothing()) {
-      mMutationEventsEnabled.emplace(
-          window->GetExtantDoc()->MutationEventsEnabled());
-    }
   }
 }
 
@@ -20742,17 +20732,6 @@ already_AddRefed<Document> Document::ParseHTML(GlobalObject& aGlobal,
 
   // Step 6. Return document.
   return doc.forget();
-}
-
-bool Document::MutationEventsEnabled() {
-  if (StaticPrefs::dom_mutation_events_enabled()) {
-    return true;
-  }
-  if (mMutationEventsEnabled.isNothing()) {
-    mMutationEventsEnabled.emplace(
-        NodePrincipal()->IsURIInPrefList("dom.mutation_events.forceEnable"));
-  }
-  return mMutationEventsEnabled.value();
 }
 
 void Document::GetAllInProcessDocuments(

@@ -3789,10 +3789,6 @@ class Document : public nsINode,
   void ClearClipboardCopyTriggered() { mClipboardCopyTriggered = false; }
   void SetClipboardCopyTriggered() { mClipboardCopyTriggered = true; }
 
-  // Even if mutation events are disabled by default,
-  // dom.mutation_events.forceEnable can be used to enable them per site.
-  bool MutationEventsEnabled();
-
   // This should be called when this document receives events which are likely
   // to be user interaction with the document, rather than the byproduct of
   // interaction with the browser (i.e. a keypress to scroll the view port,
@@ -5097,8 +5093,6 @@ class Document : public nsINode,
   // Whether a copy event happened. Used to detect when this happens
   // while a paste event is being handled in JS.
   bool mClipboardCopyTriggered : 1;
-
-  Maybe<bool> mMutationEventsEnabled;
 
   // The fingerprinting protections overrides for this document. The value will
   // override the default enabled fingerprinting protections for this document.
