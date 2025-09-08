@@ -160,7 +160,7 @@ add_task(async function test_status_card() {
   let timerUpdatedPromise = BrowserTestUtils.waitForMutationCondition(
     content.shadowRoot,
     { childList: true, subtree: true },
-    () => content._connectionTimeInterval
+    () => JSON.parse(content.statusCardEl.dataset.l10nArgs).time != ""
   );
 
   // Set state as if protection is enabled
@@ -188,7 +188,7 @@ add_task(async function test_status_card() {
   let timerStoppedPromise = BrowserTestUtils.waitForMutationCondition(
     content.shadowRoot,
     { childList: true, subtree: true },
-    () => !content._connectionTimeInterval
+    () => JSON.parse(content.statusCardEl.dataset.l10nArgs).time === ""
   );
 
   // Set state as if protection is disabled
