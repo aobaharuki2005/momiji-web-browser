@@ -1,5 +1,3 @@
-// |jit-test| error: TypeError
-
 let src = `
 function f0() {
     return f0;
