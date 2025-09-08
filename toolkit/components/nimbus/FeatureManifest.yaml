@@ -699,6 +699,12 @@ urlbar:
         If this variable is true, the following things are processed.
         * Change the suggested index to 1.
         * Handle as top pick.
+    yelpRealtimeFeatureGate:
+      type: boolean
+      fallbackPref: browser.urlbar.yelpRealtime.featureGate
+      description: >-
+        Feature gate that controls whether all aspects of Yelp realtime suggestions
+        feature are exposed to the user.
     originsAlternativeEnable:
       description: >-
         Use an alternative ranking algorithm for autofilling origins, that is

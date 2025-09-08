@@ -767,6 +767,18 @@ pref("browser.urlbar.importantDates.featureGate", false);
 // important-dates suggestions are turned on.
 pref("browser.urlbar.suggest.importantDates", true);
 
+// Feature gate pref for Yelp realtime suggestions in the urlbar.
+pref("browser.urlbar.yelpRealtime.featureGate", false);
+
+// If `browser.urlbar.yelpRealtime.featureGate` is true, this controls whether
+// Yelp realtime suggestions are turned on.
+pref("browser.urlbar.suggest.yelpRealtime", true);
+
+// The minimum prefix length of a Yelp keyword the user must type to trigger
+// the suggestion. 0 means the min length should be taken from Nimbus or remote
+// settings.
+pref("browser.urlbar.yelpRealtime.minKeywordLength", 0);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.

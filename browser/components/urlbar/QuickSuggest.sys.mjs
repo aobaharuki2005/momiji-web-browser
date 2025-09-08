@@ -179,6 +179,8 @@ const FEATURES = {
     "resource:///modules/urlbar/private/WeatherSuggestions.sys.mjs",
   WikipediaSuggestions:
     "resource:///modules/urlbar/private/WikipediaSuggestions.sys.mjs",
+  YelpRealtimeSuggestions:
+    "resource:///modules/urlbar/private/YelpRealtimeSuggestions.sys.mjs",
   YelpSuggestions: "resource:///modules/urlbar/private/YelpSuggestions.sys.mjs",
 };
 

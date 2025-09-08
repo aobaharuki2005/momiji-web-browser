@@ -803,6 +803,11 @@ function triggerCommand({
       removeResult() {
         addCall("removeResult");
       },
+      input: {
+        startQuery() {
+          addCall("startQuery");
+        },
+      },
       view: {
         acknowledgeFeedback() {
           addCall("acknowledgeFeedback");
