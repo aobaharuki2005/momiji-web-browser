@@ -237,4 +237,45 @@ TEST_F(TestDecodedStreamA, LastOutputSystemTime) {
 
   mDecodedStream->Stop();
 }
+
+TEST_F(TestDecodedStreamA, InterpolatedPosition) {
+  BlankAudioDataCreator creator(2, kRate);
+  auto raw = MakeRefPtr<MediaRawData>();
+  raw->mDuration = TimeUnit(kRate, kRate);
+  mAudioQueue.Push(RefPtr(creator.Create(raw))->As<AudioData>());
+
+  mDecodedStream->Start(TimeUnit::Zero(), CreateMediaInfo());
+  mDecodedStream->SetPlaying(true);
+  NS_ProcessPendingEvents(nullptr);
+  mMockCubebStream->ManualDataCallback(0);
+
+  auto now = TimeStamp::Now();
+  auto awakeNow = AwakeTimeStamp::Now();
+  TimeStamp outNow;
+  TimeUnit pos = mDecodedStream->GetPositionImpl(now, awakeNow, &outNow);
+  EXPECT_EQ(now, outNow);
+  EXPECT_EQ(pos, TimeUnit::Zero()) << pos.ToMilliseconds();
+
+  mMockCubebStream->ManualDataCallback(512);
+  NS_ProcessPendingEvents(nullptr);
+
+  now += TimeDuration::FromSeconds(
+      (mDecodedStream->LastOutputSystemTime() - awakeNow).ToSeconds());
+  awakeNow = mDecodedStream->LastOutputSystemTime();
+  pos = mDecodedStream->GetPositionImpl(now, awakeNow);
+  EXPECT_EQ(pos.ToMicroseconds(), TimeUnit(512, kRate).ToMicroseconds());
+
+  // Check that the position is interpolated based on wall clock time since last
+  // output notification.
+  now += TimeDuration::FromSeconds(
+             (mDecodedStream->LastOutputSystemTime() - awakeNow).ToSeconds()) +
+         TimeDuration::FromMilliseconds(10);
+  awakeNow = mDecodedStream->LastOutputSystemTime() +
+             AwakeTimeDuration::FromMilliseconds(10);
+  pos = mDecodedStream->GetPositionImpl(now, awakeNow);
+  EXPECT_EQ(pos.ToMicroseconds(),
+            (TimeUnit(512, kRate) + TimeUnit(10, 1000)).ToMicroseconds());
+
+  mDecodedStream->Stop();
+}
 }  // namespace mozilla
