@@ -65,10 +65,10 @@ vendoring:
         - '../checkout/'
 
     - action: delete-path
-      path: '../../../../../testing/web-platform/mozilla/tests/webgpu/'
+      path: '{topsrcdir}/testing/web-platform/mozilla/tests/webgpu/'
     - action: move-dir
       from: '{yaml_dir}/checkout/out-wpt/'
-      to: '../../../../../testing/web-platform/mozilla/tests/webgpu/'
+      to: '{topsrcdir}/testing/web-platform/mozilla/tests/webgpu/'
 
     - action: delete-path
       path: '{yaml_dir}/checkout/node_modules/'
@@ -79,4 +79,4 @@ vendoring:
     - action: delete-path
       path: '{yaml_dir}/checkout/deploy_key.enc'
     - action: vcs-add-remove-files
-      path: '../../../../../testing/web-platform/mozilla/tests/webgpu/'
+      path: '{topsrcdir}/testing/web-platform/mozilla/tests/webgpu/'
