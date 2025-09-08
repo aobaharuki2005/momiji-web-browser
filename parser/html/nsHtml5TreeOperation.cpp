@@ -952,7 +952,8 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
           *aOperation.mHost, aOperation.mShadowRootMode,
           aOperation.mShadowRootIsClonable,
           aOperation.mShadowRootIsSerializable,
-          aOperation.mShadowRootDelegatesFocus);
+          aOperation.mShadowRootDelegatesFocus,
+          aOperation.mShadowRootReferenceTarget);
       if (root) {
         *aOperation.mFragHandle = root;
         return NS_OK;

@@ -1478,7 +1478,8 @@ class Element : public FragmentOrElement {
       ShadowRootMode aMode, DelegatesFocus = DelegatesFocus::No,
       SlotAssignmentMode aSlotAssignmentMode = SlotAssignmentMode::Named,
       ShadowRootClonable aClonable = ShadowRootClonable::No,
-      ShadowRootSerializable aSerializable = ShadowRootSerializable::No);
+      ShadowRootSerializable aSerializable = ShadowRootSerializable::No,
+      const nsAString& aReferenceTarget = EmptyString());
 
   // Attach UA Shadow Root if it is not attached.
   enum class NotifyUAWidgetSetup : bool { No, Yes };

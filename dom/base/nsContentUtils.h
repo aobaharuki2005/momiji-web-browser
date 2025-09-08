@@ -3562,7 +3562,7 @@ class nsContentUtils {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static nsIContent* AttachDeclarativeShadowRoot(
       nsIContent* aHost, mozilla::dom::ShadowRootMode aMode, bool aIsClonable,
-      bool aIsSerializable, bool aDelegatesFocus);
+      bool aIsSerializable, bool aDelegatesFocus, const nsAString&);
 
   static bool NavigationMustBeAReplace(nsIURI& aURI, const Document& aDocument);
 

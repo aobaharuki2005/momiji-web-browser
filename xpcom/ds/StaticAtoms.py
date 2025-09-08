@@ -1163,6 +1163,7 @@ STATIC_ATOMS = [
     Atom("setcookie", "set-cookie"),
     Atom("setter", "setter"),
     Atom("shadow", "shadow"),
+    Atom("shadowrootreferencetarget", "shadowrootreferencetarget"),
     Atom("shape", "shape"),
     Atom("show", "show"),
     Atom("showcaret", "showcaret"),
