@@ -193,6 +193,8 @@
   <string name="browser_menu_open_in_regular_tab">معمولی تاغدا آچ</string>
   <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
   <string name="browser_menu_add_to_homescreen">آناصفحه‌یه آرتیر</string>
+  <!-- Text for notifying users that Xiaomi devices require additional permissions to add to home screen -->
+  <string name="browser_menu_add_to_homescreen_xiaomi">شیائومی دستگاه‌لاریندا آناصفحه‌یه شورتکات آرتیرماق اوچون آرتیق اجازه‌لره احتیاج اولا بیلر. لطفاً تنظیملریزی چک ائله‌یین.</string>
   <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
   <string name="resync_button_content_description">گئنه دؤنگل</string>
   <!-- Browser menu button that opens the find in page menu -->
