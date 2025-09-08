@@ -46,9 +46,7 @@
 #include <time.h>
 #include <dlfcn.h>
 
-#define StandardFonts
 #include "StandardFonts-macos.inc"
-#undef StandardFonts
 
 using namespace mozilla;
 using namespace mozilla::gfx;

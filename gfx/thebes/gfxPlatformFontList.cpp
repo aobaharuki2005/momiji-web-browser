@@ -278,9 +278,6 @@ bool gfxPlatformFontList::Initialize(gfxPlatformFontList* aList) {
       StaticPrefs::gfx_font_list_omt_enabled_AtStartup() &&
       StaticPrefs::gfx_e10s_font_list_shared_AtStartup() &&
       !gfxPlatform::InSafeMode()) {
-    // We call nsRFPService::CalculateFontLocaleAllowlist so that it reads
-    // intl.accept_languages while we are still on the main thread.
-    nsRFPService::CalculateFontLocaleAllowlist();
     sInitFontListThread = PR_CreateThread(
         PR_USER_THREAD, InitFontListCallback, aList, PR_PRIORITY_NORMAL,
         PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
