@@ -99,7 +99,7 @@ def _make_artifacts(
         hg = command_context.substs["HG"]
 
     git = None
-    if conditions.is_git(command_context):
+    if conditions.is_git(command_context) or conditions.is_jj(command_context):
         git = command_context.substs["GIT"]
 
     # If we're building Thunderbird, we should be checking for comm-central artifacts.
