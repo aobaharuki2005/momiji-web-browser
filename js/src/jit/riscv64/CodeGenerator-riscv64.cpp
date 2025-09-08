@@ -1158,89 +1158,60 @@ void CodeGenerator::visitModI(LModI* ins) {
   Register dest = ToRegister(ins->output());
   Register callTemp = ToRegister(ins->temp0());
   MMod* mir = ins->mir();
-  Label done, prevent;
+  Label done;
 
   masm.move32(lhs, callTemp);
 
   // Prevent INT_MIN % -1;
   // The integer division will give INT_MIN, but we want -(double)INT_MIN.
   if (mir->canBeNegativeDividend()) {
-    masm.ma_b(lhs, Imm32(INT_MIN), &prevent, Assembler::NotEqual, ShortJump);
+    Label skip;
+    masm.ma_b(lhs, Imm32(INT_MIN), &skip, Assembler::NotEqual, ShortJump);
     if (mir->isTruncated()) {
       // (INT_MIN % -1)|0 == 0
-      Label skip;
       masm.ma_b(rhs, Imm32(-1), &skip, Assembler::NotEqual, ShortJump);
       masm.move32(Imm32(0), dest);
       masm.ma_branch(&done, ShortJump);
-      masm.bind(&skip);
     } else {
       MOZ_ASSERT(mir->fallible());
       bailoutCmp32(Assembler::Equal, rhs, Imm32(-1), ins->snapshot());
     }
-    masm.bind(&prevent);
+    masm.bind(&skip);
   }
 
-  // 0/X (with X < 0) is bad because both of these values *should* be
-  // doubles, and the result should be -0.0, which cannot be represented in
-  // integers. X/0 is bad because it will give garbage (or abort), when it
+  // X % Y (with X < 0, Y != 0) is bad because the result should
+  // have the sign of X, but -0 cannot be represented in
+  // integers.
+  // X % 0 is bad because it will give garbage, when it
   // should give either \infty, -\infty or NAN.
 
-  // Prevent 0 / X (with X < 0) and X / 0
-  // testing X / Y.  Compare Y with 0.
-  // There are three cases: (Y < 0), (Y == 0) and (Y > 0)
-  // If (Y < 0), then we compare X with 0, and bail if X == 0
-  // If (Y == 0), then we simply want to bail.
-  // if (Y > 0), we don't bail.
-
+  // Testing X % Y. Compare Y with 0.
+  // If Y == 0, we bailout.
   if (mir->canBeDivideByZero()) {
     if (mir->isTruncated()) {
+      Label yNonZero;
+      masm.ma_b(rhs, Imm32(0), &yNonZero, Assembler::NotEqual, ShortJump);
       if (mir->trapOnError()) {
-        Label nonZero;
-        masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
         masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
-        masm.bind(&nonZero);
       } else {
-        Label skip;
-        masm.ma_b(rhs, Imm32(0), &skip, Assembler::NotEqual, ShortJump);
         masm.move32(Imm32(0), dest);
         masm.ma_branch(&done, ShortJump);
-        masm.bind(&skip);
       }
+      masm.bind(&yNonZero);
     } else {
       MOZ_ASSERT(mir->fallible());
-      bailoutCmp32(Assembler::Equal, rhs, Imm32(0), ins->snapshot());
+      bailoutCmp32(Assembler::Zero, rhs, rhs, ins->snapshot());
     }
-  }
-
-  if (mir->canBeNegativeDividend()) {
-    Label notNegative;
-    masm.ma_b(rhs, Imm32(0), &notNegative, Assembler::GreaterThan, ShortJump);
-    if (mir->isTruncated()) {
-      // NaN|0 == 0 and (0 % -X)|0 == 0
-      Label skip;
-      masm.ma_b(lhs, Imm32(0), &skip, Assembler::NotEqual, ShortJump);
-      masm.move32(Imm32(0), dest);
-      masm.ma_branch(&done, ShortJump);
-      masm.bind(&skip);
-    } else {
-      MOZ_ASSERT(mir->fallible());
-      bailoutCmp32(Assembler::Equal, lhs, Imm32(0), ins->snapshot());
-    }
-    masm.bind(&notNegative);
   }
 
   masm.ma_mod32(dest, lhs, rhs);
 
-  // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
-  if (mir->canBeNegativeDividend()) {
-    if (mir->isTruncated()) {
-      // -0.0|0 == 0
-    } else {
-      MOZ_ASSERT(mir->fallible());
-      // See if X < 0
-      masm.ma_b(dest, Imm32(0), &done, Assembler::NotEqual, ShortJump);
-      bailoutCmp32(Assembler::Signed, callTemp, Imm32(0), ins->snapshot());
-    }
+  // If X%Y == 0 and X < 0, then we *actually* wanted to return -0, so bailing out.
+  // -0.0|0 == 0
+  if (mir->canBeNegativeDividend() && !mir->isTruncated()) {
+    MOZ_ASSERT(mir->fallible());
+    masm.ma_b(dest, Imm32(0), &done, Assembler::NotEqual, ShortJump);
+    bailoutCmp32(Assembler::Signed, callTemp, callTemp, ins->snapshot());
   }
   masm.bind(&done);
 }
