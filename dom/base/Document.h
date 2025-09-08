@@ -2530,19 +2530,6 @@ class Document : public nsINode,
   bool HaveFiredDOMTitleChange() const { return mHaveFiredTitleChange; }
 
   /**
-   * To batch DOMSubtreeModified, document needs to be informed when
-   * a mutation event might be dispatched, even if the event isn't actually
-   * created because there are no listeners for it.
-   *
-   * @param aTarget is the target for the mutation event.
-   */
-  void MayDispatchMutationEvent(nsINode* aTarget) {
-    if (mSubtreeModifiedDepth > 0) {
-      mSubtreeModifiedTargets.AppendObject(aTarget);
-    }
-  }
-
-  /**
    * Marks as not-going-to-be-collected for the given generation of
    * cycle collection.
    */
@@ -4642,16 +4629,6 @@ class Document : public nsINode,
   // Never ever call this. Only call AllowXULXBL!
   bool InternalAllowXULXBL();
 
-  /**
-   * These methods should be called before and after dispatching
-   * a mutation event.
-   * To make this easy and painless, use the mozAutoSubtreeModified helper
-   * class.
-   */
-  void WillDispatchMutationEvent(nsINode* aTarget);
-  void MutationEventDispatched(nsINode* aTarget);
-  friend class mozAutoSubtreeModified;
-
   virtual Element* GetNameSpaceElement() override { return GetRootElement(); }
 
   nsCString GetContentTypeInternal() const { return mContentType; }
@@ -5228,9 +5205,6 @@ class Document : public nsINode,
 
   PresShell* mPresShell;
 
-  nsCOMArray<nsINode> mSubtreeModifiedTargets;
-  uint32_t mSubtreeModifiedDepth;
-
   // All images in process of being preloaded.  This is a hashtable so
   // we can remove them as the real image loads start; that way we
   // make sure to not keep the image load going when no one cares
@@ -5674,42 +5648,6 @@ class Document : public nsINode,
                                               const nsAString& aHTML,
                                               const SetHTMLOptions& aOptions,
                                               ErrorResult& aError);
-};
-
-/**
- * mozAutoSubtreeModified batches DOM mutations so that a DOMSubtreeModified
- * event is dispatched, if necessary, when the outermost mozAutoSubtreeModified
- * object is deleted.
- */
-class MOZ_STACK_CLASS mozAutoSubtreeModified {
- public:
-  /**
-   * @param aSubTreeOwner The document in which a subtree will be modified.
-   * @param aTarget       The target of the possible DOMSubtreeModified event.
-   *                      Can be nullptr, in which case mozAutoSubtreeModified
-   *                      is just used to batch DOM mutations.
-   */
-  mozAutoSubtreeModified(Document* aSubtreeOwner, nsINode* aTarget) {
-    UpdateTarget(aSubtreeOwner, aTarget);
-  }
-
-  ~mozAutoSubtreeModified() { UpdateTarget(nullptr, nullptr); }
-
-  void UpdateTarget(Document* aSubtreeOwner, nsINode* aTarget) {
-    if (mSubtreeOwner) {
-      mSubtreeOwner->MutationEventDispatched(mTarget);
-    }
-
-    mTarget = aTarget;
-    mSubtreeOwner = aSubtreeOwner;
-    if (mSubtreeOwner) {
-      mSubtreeOwner->WillDispatchMutationEvent(mTarget);
-    }
-  }
-
- private:
-  nsCOMPtr<nsINode> mTarget;
-  RefPtr<Document> mSubtreeOwner;
 };
 
 enum class SyncOperationBehavior { eSuspendInput, eAllowInput };

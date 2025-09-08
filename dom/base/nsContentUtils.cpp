@@ -5752,7 +5752,7 @@ bool nsContentUtils::HasNonEmptyAttr(const nsIContent* aContent,
 
 /* static */
 bool nsContentUtils::WantMutationEvents(
-    nsINode* aNode, uint32_t aType, nsINode* aTargetForSubtreeModified,
+    nsINode* aNode, uint32_t aType,
     IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver /* = No */) {
   Document* doc = aNode->OwnerDoc();
   if (MOZ_LIKELY(!doc->MutationEventsEnabled() &&
@@ -5765,8 +5765,7 @@ bool nsContentUtils::WantMutationEvents(
     return false;
   }
 
-  // This relies on EventListenerManager::AddEventListener, which sets
-  // all mutation bits when there is a listener for DOMSubtreeModified event.
+  // This relies on EventListenerManager::AddEventListener.
   if (!nsContentUtils::HasMutationListeners(doc, aType,
                                             aIgnoreDevToolsMutationObserver)) {
     return false;
@@ -5775,8 +5774,6 @@ bool nsContentUtils::WantMutationEvents(
   if (aNode->ChromeOnlyAccess() || aNode->IsInShadowTree()) {
     return false;
   }
-
-  doc->MayDispatchMutationEvent(aTargetForSubtreeModified);
 
   // If we have a window, we can check it for mutation listeners now.
   if (aNode->IsInUncomposedDoc()) {
@@ -5812,8 +5809,7 @@ bool nsContentUtils::HasMutationListeners(
   nsPIDOMWindowInner* window =
       aDocument ? aDocument->GetInnerWindow() : nullptr;
 
-  // This relies on EventListenerManager::AddEventListener, which sets
-  // all mutation bits when there is a listener for DOMSubtreeModified event.
+  // This relies on EventListenerManager::AddEventListener.
   if (!window || window->HasMutationListeners(aType)) {
     return true;
   }
@@ -5870,12 +5866,10 @@ void nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent) {
     }
   }
 
-  if (WantMutationEvents(aChild, NS_EVENT_BITS_MUTATION_NODEREMOVED, aParent,
+  if (WantMutationEvents(aChild, NS_EVENT_BITS_MUTATION_NODEREMOVED,
                          IgnoreDevToolsMutationObserver::Yes)) {
     InternalMutationEvent mutation(true, eLegacyNodeRemoved);
     mutation.mRelatedNode = aParent;
-
-    mozAutoSubtreeModified subtree(aParent->OwnerDoc(), aParent);
     EventDispatcher::Dispatch(aChild, nullptr, &mutation);
   }
 }
@@ -6176,7 +6170,7 @@ static void SetAndFilterHTML(
     FragmentOrElement* aTarget, Element* aContext, const nsAString& aHTML,
     const OwningSanitizerOrSanitizerConfigOrSanitizerPresets& aSanitizerOptions,
     const bool aSafe, ErrorResult& aError) {
-  RefPtr<Document> doc = aTarget->OwnerDoc();
+  const RefPtr<Document> doc = aTarget->OwnerDoc();
 
   // Step 1. If safe and contextElement’s local name is "script" and
   // contextElement’s namespace is the HTML namespace or the SVG namespace, then
@@ -6201,9 +6195,6 @@ static void SetAndFilterHTML(
   if (aError.Failed()) {
     return;
   }
-
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(doc, nullptr);
 
   aTarget->FireNodeRemovedForChildren();
 
@@ -6582,31 +6573,20 @@ nsresult nsContentUtils::SetNodeTextContent(
   // Fire DOMNodeRemoved mutation events before we do anything else.
   nsCOMPtr<nsIContent> owningContent;
 
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(nullptr, nullptr);
-
-  // Scope firing mutation events so that we don't carry any state that
-  // might be stale
-  {
-    // We're relying on mozAutoSubtreeModified to keep a strong reference if
-    // needed.
-    Document* doc = aContent->OwnerDoc();
-
-    // Optimize the common case of there being no observers
-    if (HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-      subtree.UpdateTarget(doc, nullptr);
-      owningContent = aContent;
-      nsCOMPtr<nsINode> child;
-      bool skipFirst = aTryReuse;
-      for (child = aContent->GetFirstChild();
-           child && child->GetParentNode() == aContent;
-           child = child->GetNextSibling()) {
-        if (skipFirst && child->IsText()) {
-          skipFirst = false;
-          continue;
-        }
-        nsContentUtils::MaybeFireNodeRemoved(child, aContent);
+  // Optimize the common case of there being no observers
+  if (HasMutationListeners(aContent->OwnerDoc(),
+                           NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+    owningContent = aContent;
+    nsCOMPtr<nsINode> child;
+    bool skipFirst = aTryReuse;
+    for (child = aContent->GetFirstChild();
+         child && child->GetParentNode() == aContent;
+         child = child->GetNextSibling()) {
+      if (skipFirst && child->IsText()) {
+        skipFirst = false;
+        continue;
       }
+      nsContentUtils::MaybeFireNodeRemoved(child, aContent);
     }
   }
 

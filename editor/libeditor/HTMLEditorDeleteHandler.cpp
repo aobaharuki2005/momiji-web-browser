@@ -1156,7 +1156,6 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::Run(
             return Err(NS_ERROR_FAILURE);
           }
           if (aHTMLEditor.MayHaveMutationEventListeners(
-                  NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
                   NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
             // Let's check whether there is new invisible `<br>` element
             // for avoiding infinite recursive calls.
@@ -3137,8 +3136,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
           "CaretPoint::SuggestCaretPointTo() failed, but ignored");
       if (NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->IsPositioned()) ||
           (aHTMLEditor.MayHaveMutationEventListeners(
-               NS_EVENT_BITS_MUTATION_NODEREMOVED |
-               NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED) &&
+               NS_EVENT_BITS_MUTATION_NODEREMOVED) &&
            NS_WARN_IF(!aRangesToDelete.IsFirstRangeEditable(aEditingHost)))) {
         NS_WARNING(
             "HTMLEditor::DeleteRangesWithTransaction() made the first range "

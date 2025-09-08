@@ -4419,9 +4419,6 @@ void Element::InsertAdjacentHTML(
   mozAutoDocUpdate updateBatch(doc, true);
   nsAutoScriptLoaderDisabler sld(doc);
 
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(doc, nullptr);
-
   // Parse directly into destination if possible
   if (doc->IsHTMLDocument() && !OwnerDoc()->MayHaveDOMMutationObservers() &&
       (position == eBeforeEnd || (position == eAfterEnd && !GetNextSibling()) ||

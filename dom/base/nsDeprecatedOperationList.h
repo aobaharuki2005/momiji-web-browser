@@ -10,7 +10,6 @@
  * designed to be used as input to the C preprocessor *only*.
  */
 
-DEPRECATED_OPERATION(DOMSubtreeModified)
 DEPRECATED_OPERATION(DOMNodeRemoved)
 DEPRECATED_OPERATION(Components)
 DEPRECATED_OPERATION(NodeIteratorDetach)

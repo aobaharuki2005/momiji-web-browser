@@ -72,8 +72,6 @@ using namespace hal;
 
 static uint32_t MutationBitForEventType(EventMessage aEventType) {
   switch (aEventType) {
-    case eLegacySubtreeModified:
-      return NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
     case eLegacyNodeRemoved:
       return NS_EVENT_BITS_MUTATION_NODEREMOVED;
     default:
@@ -84,8 +82,6 @@ static uint32_t MutationBitForEventType(EventMessage aEventType) {
 
 static DeprecatedOperations DeprecatedMutationOperation(EventMessage aMessage) {
   switch (aMessage) {
-    case eLegacySubtreeModified:
-      return DeprecatedOperations::eDOMSubtreeModified;
     case eLegacyNodeRemoved:
       return DeprecatedOperations::eDOMNodeRemoved;
     default:
@@ -370,7 +366,6 @@ void EventListenerManager::AddEventListenerInternal(
           window->SetHasDOMActivateEventListeners();
         }
         break;
-      case eLegacySubtreeModified:
       case eLegacyNodeRemoved: {
         MOZ_ASSERT(!aFlags.mInSystemGroup,
                    "Legacy mutation events shouldn't be handled by ourselves");
@@ -393,13 +388,8 @@ void EventListenerManager::AddEventListenerInternal(
             doc->WarnOnceAbout(
                 DeprecatedMutationOperation(resolvedEventMessage));
           }
-          // If resolvedEventMessage is eLegacySubtreeModified, we need to
-          // listen all mutations. nsContentUtils::HasMutationListeners relies
-          // on this.
           window->SetMutationListeners(
-              (resolvedEventMessage == eLegacySubtreeModified)
-                  ? NS_EVENT_BITS_MUTATION_ALL
-                  : MutationBitForEventType(resolvedEventMessage));
+              MutationBitForEventType(resolvedEventMessage));
         }
         break;
       }
@@ -1818,9 +1808,6 @@ uint32_t EventListenerManager::MutationListenerBits() {
       EventMessage message = GetEventMessage(entry.mTypeAtom);
       if (message >= eLegacyMutationEventFirst &&
           message <= eLegacyMutationEventLast) {
-        if (message == eLegacySubtreeModified) {
-          return NS_EVENT_BITS_MUTATION_ALL;
-        }
         bits |= MutationBitForEventType(message);
       }
     }

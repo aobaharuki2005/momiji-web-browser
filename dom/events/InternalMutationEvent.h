@@ -56,11 +56,9 @@ class InternalMutationEvent : public WidgetEvent {
 // Bits are actually checked to optimize mutation event firing.
 // That's why I don't number from 0x00.  The first event should
 // always be 0x01.
-#define NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED 0x01
 #define NS_EVENT_BITS_MUTATION_NODEREMOVED 0x04
 
-#define NS_EVENT_BITS_MUTATION_ALL \
-  (NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED | NS_EVENT_BITS_MUTATION_NODEREMOVED)
+#define NS_EVENT_BITS_MUTATION_ALL (NS_EVENT_BITS_MUTATION_NODEREMOVED)
 
 }  // namespace mozilla
 

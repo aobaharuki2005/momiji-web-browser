@@ -1519,18 +1519,14 @@ class nsContentUtils {
    * Quick helper to determine whether mutation events are enabled and there are
    * any mutation listeners of a given type that apply to this content or any of
    * its ancestors.
-   * The method has the side effect to call document's MayDispatchMutationEvent
-   * using aTargetForSubtreeModified as the parameter.
    *
    * @param aNode  The node to search for listeners
    * @param aType  The type of listener (NS_EVENT_BITS_MUTATION_*)
-   * @param aTargetForSubtreeModified The node which is the target of the
-   *                                  possible DOMSubtreeModified event.
    *
    * @return true if there are mutation listeners of the specified type
    */
   static bool WantMutationEvents(
-      nsINode* aNode, uint32_t aType, nsINode* aTargetForSubtreeModified,
+      nsINode* aNode, uint32_t aType,
       IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver =
           IgnoreDevToolsMutationObserver::No);
 

@@ -1494,7 +1494,6 @@ Document::Document(const char* aContentType)
       mPartID(0),
       mMarkedCCGeneration(0),
       mPresShell(nullptr),
-      mSubtreeModifiedDepth(0),
       mPreloadPictureDepth(0),
       mEventsSuppressed(0),
       mIgnoreDestructiveWritesCounter(0),
@@ -12673,68 +12672,6 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
     // The fullscreenchange event is to be queued in the refresh driver,
     // however a hidden page wouldn't trigger that again, so it makes no
     // sense to dispatch such event here.
-  }
-}
-
-void Document::WillDispatchMutationEvent(nsINode* aTarget) {
-  NS_ASSERTION(
-      mSubtreeModifiedDepth != 0 || mSubtreeModifiedTargets.Count() == 0,
-      "mSubtreeModifiedTargets not cleared after dispatching?");
-  ++mSubtreeModifiedDepth;
-  if (aTarget) {
-    // MayDispatchMutationEvent is often called just before this method,
-    // so it has already appended the node to mSubtreeModifiedTargets.
-    int32_t count = mSubtreeModifiedTargets.Count();
-    if (!count || mSubtreeModifiedTargets[count - 1] != aTarget) {
-      mSubtreeModifiedTargets.AppendObject(aTarget);
-    }
-  }
-}
-
-void Document::MutationEventDispatched(nsINode* aTarget) {
-  if (--mSubtreeModifiedDepth) {
-    return;
-  }
-
-  int32_t count = mSubtreeModifiedTargets.Count();
-  if (!count) {
-    return;
-  }
-
-  nsPIDOMWindowInner* window = GetInnerWindow();
-  if (window &&
-      !window->HasMutationListeners(NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
-    mSubtreeModifiedTargets.Clear();
-    return;
-  }
-
-  nsCOMArray<nsINode> realTargets;
-  for (nsINode* possibleTarget : mSubtreeModifiedTargets) {
-    if (possibleTarget->ChromeOnlyAccess()) {
-      continue;
-    }
-
-    nsINode* commonAncestor = nullptr;
-    int32_t realTargetCount = realTargets.Count();
-    for (int32_t j = 0; j < realTargetCount; ++j) {
-      commonAncestor = nsContentUtils::GetClosestCommonInclusiveAncestor(
-          possibleTarget, realTargets[j]);
-      if (commonAncestor) {
-        realTargets.ReplaceObjectAt(commonAncestor, j);
-        break;
-      }
-    }
-    if (!commonAncestor) {
-      realTargets.AppendObject(possibleTarget);
-    }
-  }
-
-  mSubtreeModifiedTargets.Clear();
-
-  for (const nsCOMPtr<nsINode>& target : realTargets) {
-    InternalMutationEvent mutation(true, eLegacySubtreeModified);
-    // MOZ_KnownLive due to bug 1620312
-    AsyncEventDispatcher::RunDOMEventWhenSafe(MOZ_KnownLive(*target), mutation);
   }
 }
 

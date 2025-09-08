@@ -3206,9 +3206,6 @@ void nsGenericHTMLElement::SetOuterText(const nsAString& aValue,
   RefPtr<nsINode> next = GetNextSibling();
   RefPtr<nsINode> previous = GetPreviousSibling();
 
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
-
   nsNodeInfoManager* nim = NodeInfo()->NodeInfoManager();
   RefPtr<nsINode> node = TextToNode(aValue, nim);
   if (!node) {

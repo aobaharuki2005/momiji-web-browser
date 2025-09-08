@@ -1970,12 +1970,7 @@ void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
     return;
   }
 
-  // mozAutoSubtreeModified keeps the owner document alive.  Therefore, using a
-  // raw pointer here is safe.
-  Document* const doc = target->OwnerDoc();
-
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(doc, nullptr);
+  const RefPtr<Document> doc = target->OwnerDoc();
 
   target->FireNodeRemovedForChildren();
 

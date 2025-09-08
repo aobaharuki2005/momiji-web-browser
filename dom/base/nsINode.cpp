@@ -1087,11 +1087,7 @@ void nsINode::Normalize() {
     return;
   }
 
-  // We're relying on mozAutoSubtreeModified to keep the doc alive here.
-  RefPtr<Document> doc = OwnerDoc();
-
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(doc, nullptr);
+  const RefPtr<Document> doc = OwnerDoc();
 
   // Fire all DOMNodeRemoved events. Optimize the common case of there being
   // no listeners
@@ -2348,12 +2344,10 @@ void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv,
     }
   }
   nsCOMPtr<nsINode> node = aNode;
-
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
+  const RefPtr<Document> doc = OwnerDoc();
 
   if (nsContentUtils::HasMutationListeners(
-          OwnerDoc(), NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+          doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
     FireNodeRemovedForChildren();
     if (node) {
       if (node->NodeType() == DOCUMENT_FRAGMENT_NODE) {
@@ -2365,7 +2359,7 @@ void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv,
   }
 
   // Needed when used in combination with contenteditable (maybe)
-  mozAutoDocUpdate updateBatch(OwnerDoc(), true);
+  mozAutoDocUpdate updateBatch(doc, true);
 
   nsAutoMutationBatch mb(this, true, true);
 
