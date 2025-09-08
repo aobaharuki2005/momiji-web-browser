@@ -418,7 +418,15 @@ class ModuleLoaderBase : public nsISupports {
   void DisallowImportMaps() { mImportMapsAllowed = false; }
 
   virtual bool IsModuleTypeAllowed(ModuleType aModuleType) {
-    return aModuleType != ModuleType::Unknown;
+    if (aModuleType == ModuleType::Unknown) {
+      return false;
+    }
+
+    if (aModuleType == ModuleType::CSS && !mozilla::StaticPrefs::layout_css_module_scripts_enabled()) {
+      return false;
+    }
+
+    return true;
   }
 
   // Returns whether there has been an entry in the import map
