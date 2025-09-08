@@ -994,9 +994,10 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
       // video frame). E.g. if we have a video frame that is 30 sec long
       // and capture happens at 15 sec, we'll have to append a black frame
       // that is 15 sec long.
-      TimeStamp t =
-          std::max(mData->mLastVideoTimeStamp,
-                   currentTime + (lastEnd - currentPosition).ToTimeDuration());
+      TimeStamp t = std::max(mData->mLastVideoTimeStamp,
+                             currentTime + (lastEnd - currentPosition)
+                                               .ToTimeDuration()
+                                               .MultDouble(1 / mPlaybackRate));
       mData->WriteVideoToSegment(mData->mLastVideoImage, lastEnd, v->mTime,
                                  mData->mLastVideoImageDisplaySize, t, &output,
                                  aPrincipalHandle, mPlaybackRate);
@@ -1008,9 +1009,10 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
       // before the last frame's end time for some videos. This only matters for
       // the track's lifetime in the MTG, as rendering is based on timestamps,
       // aka frame start times.
-      TimeStamp t =
-          std::max(mData->mLastVideoTimeStamp,
-                   currentTime + (lastEnd - currentPosition).ToTimeDuration());
+      TimeStamp t = std::max(mData->mLastVideoTimeStamp,
+                             currentTime + (lastEnd - currentPosition)
+                                               .ToTimeDuration()
+                                               .MultDouble(1 / mPlaybackRate));
       TimeUnit end = std::max(
           v->GetEndTime(),
           lastEnd + TimeUnit::FromMicroseconds(
@@ -1143,6 +1145,11 @@ TimeUnit DecodedStream::GetPositionImpl(TimeStamp aNow,
 AwakeTimeStamp DecodedStream::LastOutputSystemTime() const {
   AssertOwnerThread();
   return *mLastOutputSystemTime;
+}
+
+TimeStamp DecodedStream::LastVideoTimeStamp() const {
+  AssertOwnerThread();
+  return mData->mLastVideoTimeStamp;
 }
 
 void DecodedStream::NotifyOutput(int64_t aTime, TimeStamp aSystemTime,
