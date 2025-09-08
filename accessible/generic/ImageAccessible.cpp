@@ -18,7 +18,6 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "nsContentUtils.h"
 #include "nsIImageLoadingContent.h"
 #include "nsPIDOMWindow.h"

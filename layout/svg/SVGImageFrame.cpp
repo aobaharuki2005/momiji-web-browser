@@ -21,7 +21,6 @@
 #include "mozilla/SVGUtils.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/dom/LargestContentfulPaint.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGImageElement.h"
 #include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/RenderRootStateManager.h"

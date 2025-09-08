@@ -37,7 +37,6 @@
 #include "mozilla/FlushType.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/IntegerRange.h"  // for IntegerRange
-#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/mozInlineSpellChecker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"

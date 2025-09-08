@@ -17,7 +17,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/HTMLTextAreaElementBinding.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "nsAttrValueInlines.h"
 #include "nsBaseCommandController.h"
 #include "nsContentCreatorFunctions.h"

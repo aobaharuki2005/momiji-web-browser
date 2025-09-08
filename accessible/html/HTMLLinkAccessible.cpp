@@ -14,7 +14,6 @@
 #include "nsIMutationObserver.h"
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

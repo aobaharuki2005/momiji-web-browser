@@ -15,7 +15,6 @@
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/CSSStylePropertiesBinding.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "nsCOMPtr.h"
 #include "nsCSSProps.h"
 #include "nsQueryObject.h"

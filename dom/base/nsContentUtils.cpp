@@ -91,7 +91,6 @@
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/InputEventOptions.h"
-#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Latin1.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LoadInfo.h"

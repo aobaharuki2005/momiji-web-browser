@@ -13,7 +13,6 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/DirectionalityUtils.h"

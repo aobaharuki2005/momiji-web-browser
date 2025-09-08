@@ -7,7 +7,6 @@
 #include "SVGTransformableElement.h"
 
 #include "DOMSVGAnimatedTransformList.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 

@@ -19,7 +19,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/HTMLEditor.h"
-#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MouseEvents.h"
@@ -863,16 +862,6 @@ void nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   // Event may need to be retargeted if this is the root of a native anonymous
   // content subtree.
   if (isAnonForEvents) {
-#ifdef DEBUG
-    // If a DOM event is explicitly dispatched using node.dispatchEvent(), then
-    // all the events are allowed even in the native anonymous content..
-    nsIContent* t =
-        nsIContent::FromEventTargetOrNull(aVisitor.mEvent->mOriginalTarget);
-    NS_ASSERTION(!t || !t->ChromeOnlyAccessForEvents() ||
-                     aVisitor.mEvent->mClass != eMutationEventClass ||
-                     aVisitor.mDOMEvent,
-                 "Mutation event dispatched in native anonymous content!?!");
-#endif
     aVisitor.mEventTargetAtParent = parent;
   } else if (parent && aVisitor.mOriginalTargetIsInAnon) {
     nsIContent* content =

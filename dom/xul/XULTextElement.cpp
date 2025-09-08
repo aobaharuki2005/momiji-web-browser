@@ -7,7 +7,6 @@
 #include "mozilla/dom/XULTextElement.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/XULTextElementBinding.h"
 #include "nsCOMPtr.h"

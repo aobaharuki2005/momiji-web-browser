@@ -8,7 +8,6 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/DeclarationBlock.h"
-#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/BindContext.h"

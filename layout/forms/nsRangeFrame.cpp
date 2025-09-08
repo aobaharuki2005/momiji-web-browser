@@ -17,7 +17,6 @@
 #include "mozilla/dom/HTMLDataListElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "nsCSSRendering.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsDisplayList.h"

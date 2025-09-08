@@ -14,7 +14,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsICSSDeclaration.h"

@@ -229,9 +229,6 @@ with Files("MIDI*"):
 with Files("Mouse*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
-with Files("MutationEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
-
 with Files("NavigationPreloadManager.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
 
@@ -805,7 +802,6 @@ WEBIDL_FILES = [
     "MouseEvent.webidl",
     "MouseScrollEvent.webidl",
     "MozFrameLoaderOwner.webidl",
-    "MutationEvent.webidl",
     "MutationObserver.webidl",
     "NamedNodeMap.webidl",
     "NavigateEvent.webidl",

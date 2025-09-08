@@ -8,7 +8,6 @@
 
 #include "jsapi.h"
 #include "mozilla/dom/DOMStringMapBinding.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsGenericHTMLElement.h"

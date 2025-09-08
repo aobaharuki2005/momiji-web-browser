@@ -31,7 +31,6 @@
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorForwards.h"
 #include "mozilla/IntegerRange.h"
-#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"

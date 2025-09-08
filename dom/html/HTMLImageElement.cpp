@@ -17,7 +17,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLImageElementBinding.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/UnbindContext.h"
 #include "mozilla/dom/UserActivation.h"

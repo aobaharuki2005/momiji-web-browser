@@ -13,7 +13,6 @@
 #include "NodeUbiReporting.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/AttrBinding.h"
 #include "mozilla/dom/Document.h"

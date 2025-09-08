@@ -19,7 +19,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "mozInlineSpellChecker.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"

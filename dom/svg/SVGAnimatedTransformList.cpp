@@ -13,7 +13,6 @@
 #include "SVGTransformListSMILType.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
