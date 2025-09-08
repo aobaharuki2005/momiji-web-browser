@@ -126,6 +126,10 @@ var gExceptionPaths = [
   // Used for Market suggestions on the urlbar. This is specified from Remote
   // Settings.
   "chrome://browser/skin/illustrations/market-opt-in.svg",
+
+  // Used for Yelp realtime suggestions on the urlbar. This is specified from
+  // Remote Settings.
+  "chrome://browser/skin/illustrations/yelpRealtime-opt-in.svg",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
