@@ -74,8 +74,6 @@ static uint32_t MutationBitForEventType(EventMessage aEventType) {
   switch (aEventType) {
     case eLegacySubtreeModified:
       return NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
-    case eLegacyNodeInserted:
-      return NS_EVENT_BITS_MUTATION_NODEINSERTED;
     case eLegacyNodeRemoved:
       return NS_EVENT_BITS_MUTATION_NODEREMOVED;
     case eLegacyNodeRemovedFromDocument:
@@ -92,8 +90,6 @@ static DeprecatedOperations DeprecatedMutationOperation(EventMessage aMessage) {
   switch (aMessage) {
     case eLegacySubtreeModified:
       return DeprecatedOperations::eDOMSubtreeModified;
-    case eLegacyNodeInserted:
-      return DeprecatedOperations::eDOMNodeInserted;
     case eLegacyNodeRemoved:
       return DeprecatedOperations::eDOMNodeRemoved;
     case eLegacyNodeRemovedFromDocument:
@@ -383,7 +379,6 @@ void EventListenerManager::AddEventListenerInternal(
         }
         break;
       case eLegacySubtreeModified:
-      case eLegacyNodeInserted:
       case eLegacyNodeRemoved:
       case eLegacyNodeRemovedFromDocument:
       case eLegacyNodeInsertedIntoDocument: {

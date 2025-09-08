@@ -1788,15 +1788,6 @@ void nsINode::InsertChildBefore(
       info.mMutationEffectOnScript = aMutationEffectOnScript;
       MutationObservers::NotifyContentInserted(this, aKid, info);
     }
-
-    if (nsContentUtils::WantMutationEvents(
-            aKid, NS_EVENT_BITS_MUTATION_NODEINSERTED, this)) {
-      InternalMutationEvent mutation(true, eLegacyNodeInserted);
-      mutation.mRelatedNode = this;
-
-      mozAutoSubtreeModified subtree(OwnerDoc(), this);
-      AsyncEventDispatcher::RunDOMEventWhenSafe(*aKid, mutation);
-    }
   }
 }
 
@@ -3109,11 +3100,6 @@ nsINode* nsINode::ReplaceOrInsertBefore(
                                                firstInsertedContent, info);
       if (mutationBatch) {
         mutationBatch->NodesAdded();
-      }
-      // Optimize for the case when there are no listeners
-      if (nsContentUtils::HasMutationListeners(
-              doc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-        Element::FireNodeInserted(doc, this, *fragChildren);
       }
     }
   } else {

@@ -820,7 +820,6 @@ STATIC_ATOMS = [
     Atom("onDOMFocusIn", "onDOMFocusIn"),
     Atom("onDOMFocusOut", "onDOMFocusOut"),
     Atom("onDOMMouseScroll", "onDOMMouseScroll"),
-    Atom("onDOMNodeInserted", "onDOMNodeInserted"),
     Atom("onDOMNodeInsertedIntoDocument", "onDOMNodeInsertedIntoDocument"),
     Atom("onDOMNodeRemoved", "onDOMNodeRemoved"),
     Atom("onDOMNodeRemovedFromDocument", "onDOMNodeRemovedFromDocument"),

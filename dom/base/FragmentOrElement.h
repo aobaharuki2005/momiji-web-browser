@@ -128,13 +128,6 @@ class FragmentOrElement : public nsIContent {
   }
 
  public:
-  /**
-   * If there are listeners for DOMNodeInserted event, fires the event on all
-   * aNodes
-   */
-  static void FireNodeInserted(Document* aDoc, nsINode* aParent,
-                               const nsTArray<nsCOMPtr<nsIContent>>& aNodes);
-
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS_INHERITED(
       FragmentOrElement, nsIContent)
 

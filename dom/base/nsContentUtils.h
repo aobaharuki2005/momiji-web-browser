@@ -2584,18 +2584,6 @@ class nsContentUtils {
   }
 
   /**
-   * Fire mutation events for changes caused by parsing directly into a
-   * context node.
-   *
-   * @param aDoc the document of the node
-   * @param aDest the destination node that got stuff appended to it
-   * @param aOldChildCount the number of children the node had before parsing
-   */
-  static void FireMutationEventsForDirectParsing(Document* aDoc,
-                                                 nsIContent* aDest,
-                                                 int32_t aOldChildCount);
-
-  /**
    * Returns the in-process subtree root document in a document hierarchy.
    * This could be a chrome document.
    */
