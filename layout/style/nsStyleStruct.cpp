@@ -285,7 +285,7 @@ static StyleRect<T> StyleRectWithAllSides(const T& aSide) {
   return {aSide, aSide, aSide, aSide};
 }
 
-AnchorPosReferencedAnchors::Result AnchorPosReferencedAnchors::Lookup(
+AnchorPosReferencedAnchors::Result AnchorPosReferencedAnchors::InsertOrModify(
     const nsAtom* aAnchorName, bool aNeedOffset) {
   bool exists = true;
   auto* result = &mMap.LookupOrInsertWith(aAnchorName, [&exists]() {

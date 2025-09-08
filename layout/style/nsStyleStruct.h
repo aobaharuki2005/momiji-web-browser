@@ -413,7 +413,7 @@ class AnchorPosReferencedAnchors {
     mozilla::Maybe<AnchorPosResolutionData>* mEntry;
   };
 
-  Result Lookup(const nsAtom* aAnchorName, bool aNeedOffset);
+  Result InsertOrModify(const nsAtom* aAnchorName, bool aNeedOffset);
 
   bool IsEmpty() const { return mMap.IsEmpty(); }
 

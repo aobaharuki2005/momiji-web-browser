@@ -1884,7 +1884,7 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
 
   Maybe<AnchorPosResolutionData>* entry = nullptr;
   if (aReferencedAnchors) {
-    const auto result = aReferencedAnchors->Lookup(anchorName, true);
+    const auto result = aReferencedAnchors->InsertOrModify(anchorName, true);
     if (result.mAlreadyResolved) {
       MOZ_ASSERT(result.mEntry, "Entry exists but null?");
       return result.mEntry->map([&](const AnchorPosResolutionData& aData) {
@@ -2005,7 +2005,7 @@ bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
     Maybe<AnchorPosResolutionData>* entry = nullptr;
     if (aParams->mReferencedAnchors) {
       const auto result =
-          aParams->mReferencedAnchors->Lookup(anchorName, false);
+          aParams->mReferencedAnchors->InsertOrModify(anchorName, false);
       if (result.mAlreadyResolved) {
         MOZ_ASSERT(result.mEntry, "Entry exists but null?");
         return result.mEntry->map(
