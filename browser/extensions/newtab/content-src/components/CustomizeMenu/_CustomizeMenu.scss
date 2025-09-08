@@ -295,6 +295,7 @@
     .more-info-top-wrapper,
     .more-info-pocket-wrapper {
       margin-inline-start: calc(var(--space-xxsmall) * -1);
+      overflow: hidden;
 
       .more-information {
         position: relative;
@@ -311,6 +312,11 @@
 
       .check-wrapper {
         margin-block-end: var(--space-small);
+      }
+
+      // Prevent focus outline clipping by allowing overflow
+      &:has(moz-box-button:focus-within) {
+        overflow: visible;
       }
     }
 

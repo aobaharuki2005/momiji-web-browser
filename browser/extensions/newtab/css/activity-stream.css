@@ -2214,6 +2214,7 @@ main section {
 .home-section .section .more-info-top-wrapper,
 .home-section .section .more-info-pocket-wrapper {
   margin-inline-start: calc(var(--space-xxsmall) * -1);
+  overflow: hidden;
 }
 .home-section .section .more-info-top-wrapper .more-information,
 .home-section .section .more-info-pocket-wrapper .more-information {
@@ -2225,6 +2226,9 @@ main section {
 }
 .home-section .section .more-info-pocket-wrapper .check-wrapper {
   margin-block-end: var(--space-small);
+}
+.home-section .section .more-info-pocket-wrapper:has(moz-box-button:focus-within) {
+  overflow: visible;
 }
 .home-section .section .more-info-top-wrapper .check-wrapper {
   margin-block-start: var(--space-large);
