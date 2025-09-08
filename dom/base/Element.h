@@ -518,7 +518,7 @@ class Element : public FragmentOrElement {
    * mapped into style data via any type of style rule.
    */
   virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
-                                              int32_t aModType) const;
+                                              AttrModType aModType) const;
 
   inline Directionality GetDirectionality() const {
     ElementState state = State();

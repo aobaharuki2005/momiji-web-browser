@@ -2562,7 +2562,7 @@ nsMapRuleToAttributesFunc Element::GetAttributeMappingFunction() const {
 void Element::MapNoAttributesInto(mozilla::MappedDeclarationsBuilder&) {}
 
 nsChangeHint Element::GetAttributeChangeHint(const nsAtom* aAttribute,
-                                             int32_t aModType) const {
+                                             AttrModType) const {
   return nsChangeHint(0);
 }
 

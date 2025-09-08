@@ -70,6 +70,7 @@
 #include "nsIFilePicker.h"
 #include "nsIFormControl.h"
 #include "nsIFrame.h"
+#include "nsIMutationObserver.h"
 #include "nsIPromptCollection.h"
 #include "nsIStringBundle.h"
 #include "nsLayoutUtils.h"
@@ -5535,16 +5536,13 @@ void HTMLInputElement::ImageInputMapAttributesIntoRule(
   nsGenericHTMLFormControlElementWithState::MapCommonAttributesInto(aBuilder);
 }
 
-nsChangeHint HTMLInputElement::GetAttributeChangeHint(const nsAtom* aAttribute,
-                                                      int32_t aModType) const {
+nsChangeHint HTMLInputElement::GetAttributeChangeHint(
+    const nsAtom* aAttribute, AttrModType aModType) const {
   nsChangeHint retval =
       nsGenericHTMLFormControlElementWithState::GetAttributeChangeHint(
           aAttribute, aModType);
 
-  const bool isAdditionOrRemoval =
-      aModType == MutationEvent_Binding::ADDITION ||
-      aModType == MutationEvent_Binding::REMOVAL;
-
+  const bool isAdditionOrRemoval = IsAdditionOrRemoval(aModType);
   const bool reconstruct = [&] {
     if (aAttribute == nsGkAtoms::type) {
       return true;

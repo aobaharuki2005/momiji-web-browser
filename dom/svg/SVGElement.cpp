@@ -940,7 +940,7 @@ void SVGElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
 }
 
 nsChangeHint SVGElement::GetAttributeChangeHint(const nsAtom* aAttribute,
-                                                int32_t aModType) const {
+                                                AttrModType aModType) const {
   nsChangeHint retval =
       SVGElementBase::GetAttributeChangeHint(aAttribute, aModType);
 

@@ -112,7 +112,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
-                                      int32_t aModType) const override;
+                                      AttrModType aModType) const override;
 
   /**
    * We override the default to unschedule computation of Servo declaration

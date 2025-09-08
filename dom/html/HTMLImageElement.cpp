@@ -27,6 +27,7 @@
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
+#include "nsIMutationObserver.h"
 #include "nsImageFrame.h"
 #include "nsNodeInfoManager.h"
 #include "nsPresContext.h"
@@ -204,15 +205,14 @@ void HTMLImageElement::MapAttributesIntoRule(
   MapCommonAttributesInto(aBuilder);
 }
 
-nsChangeHint HTMLImageElement::GetAttributeChangeHint(const nsAtom* aAttribute,
-                                                      int32_t aModType) const {
+nsChangeHint HTMLImageElement::GetAttributeChangeHint(
+    const nsAtom* aAttribute, AttrModType aModType) const {
   nsChangeHint retval =
       nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::usemap || aAttribute == nsGkAtoms::ismap) {
     retval |= nsChangeHint_ReconstructFrame;
   } else if (aAttribute == nsGkAtoms::alt) {
-    if (aModType == MutationEvent_Binding::ADDITION ||
-        aModType == MutationEvent_Binding::REMOVAL) {
+    if (IsAdditionOrRemoval(aModType)) {
       retval |= nsChangeHint_ReconstructFrame;
     }
   }

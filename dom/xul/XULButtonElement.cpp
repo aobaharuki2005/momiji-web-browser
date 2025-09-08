@@ -45,8 +45,8 @@ XULButtonElement::~XULButtonElement() {
   KillMenuOpenTimer();
 }
 
-nsChangeHint XULButtonElement::GetAttributeChangeHint(const nsAtom* aAttribute,
-                                                      int32_t aModType) const {
+nsChangeHint XULButtonElement::GetAttributeChangeHint(
+    const nsAtom* aAttribute, AttrModType aModType) const {
   if (aAttribute == nsGkAtoms::type &&
       IsAnyOfXULElements(nsGkAtoms::button, nsGkAtoms::toolbarbutton)) {
     // type=menu switches to a menu frame.

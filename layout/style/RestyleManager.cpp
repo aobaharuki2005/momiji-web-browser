@@ -3659,8 +3659,7 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   auto changeHint = nsChangeHint(0);
   auto restyleHint = RestyleHint{0};
 
-  changeHint |= aElement->GetAttributeChangeHint(
-      aAttribute, static_cast<uint8_t>(aModType));
+  changeHint |= aElement->GetAttributeChangeHint(aAttribute, aModType);
 
   MaybeRestyleForNthOfAttribute(aElement, aNameSpaceID, aAttribute, aOldValue);
   MaybeRestyleForRelativeSelectorAttribute(aElement, aNameSpaceID, aAttribute,
