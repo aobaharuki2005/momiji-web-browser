@@ -7,8 +7,6 @@ import {
   html,
   classMap,
   ifDefined,
-  asyncReplace,
-  until,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import {
   LINKS,
@@ -46,6 +44,12 @@ export default class IPProtectionContentElement extends MozLitElement {
   static properties = {
     state: { type: Object, attribute: false },
     showAnimation: { type: Boolean, state: true },
+    /**
+     * _timeString is the current value shown on the panel,
+     * and is separate from protectionEnabledSince. We will use
+     * protectionEnabledSince to calculate what _timeString should be.
+     */
+    _timeString: { type: String, state: true },
     _showMessageBar: { type: Boolean, state: true },
     _messageDismissed: { type: Boolean, state: true },
     _enabled: { type: Boolean, state: true },
@@ -61,6 +65,8 @@ export default class IPProtectionContentElement extends MozLitElement {
     this._showMessageBar = false;
     this._messageDismissed = false;
     this.showAnimation = false;
+    this._timeString = "";
+    this._connectionTimeInterval = null;
     this._enabled = null;
   }
 
@@ -72,6 +78,13 @@ export default class IPProtectionContentElement extends MozLitElement {
       "ipprotection-message-bar:user-dismissed",
       this.#messageBarListener
     );
+
+    // If we're able to show the time string right away, do it.
+    if (this.canShowConnectionTime) {
+      this._timeString = this.#getFormattedTime(
+        this.state.protectionEnabledSince
+      );
+    }
   }
 
   disconnectedCallback() {
@@ -82,6 +95,8 @@ export default class IPProtectionContentElement extends MozLitElement {
       "ipprotection-message-bar:user-dismissed",
       this.#messageBarListener
     );
+
+    this.#stopTimer();
   }
 
   get canShowConnectionTime() {
@@ -95,6 +110,24 @@ export default class IPProtectionContentElement extends MozLitElement {
 
   get #hasErrors() {
     return !this.state || this.state.error !== "";
+  }
+
+  #startTimerIfUnset() {
+    if (this._connectionTimeInterval) {
+      return;
+    }
+
+    this._connectionTimeInterval = setInterval(() => {
+      this._timeString = this.#getFormattedTime(
+        this.state.protectionEnabledSince
+      );
+    }, TIMER_INTERVAL_MS);
+  }
+
+  #stopTimer() {
+    clearInterval(this._connectionTimeInterval);
+    this._connectionTimeInterval = null;
+    this._timeString = "";
   }
 
   /**
@@ -116,23 +149,6 @@ export default class IPProtectionContentElement extends MozLitElement {
       hours: "2-digit",
     });
     return formatter.format(duration);
-  }
-
-  /**
-   * Returns a generator that yields a l10n args object with the current connection time
-   * every second.
-   *
-   * @returns {AsyncGenerator<string>}
-   */
-  async *currentTime() {
-    while (true) {
-      if (!this.canShowConnectionTime) {
-        return;
-      }
-      const time = this.#getFormattedTime(this.state.protectionEnabledSince);
-      yield JSON.stringify({ time });
-      await new Promise(resolve => setTimeout(resolve, TIMER_INTERVAL_MS));
-    }
   }
 
   handleClickSupportLink(event) {
@@ -226,6 +242,11 @@ export default class IPProtectionContentElement extends MozLitElement {
   updated(changedProperties) {
     super.updated(changedProperties);
 
+    // If the only updates are time string changes, ignore them.
+    if (changedProperties.size == 1 && changedProperties.has("_timeString")) {
+      return;
+    }
+
     // Set the toggle to the protection enabled state, if it hasn't just changed.
     if (!changedProperties.has("_enabled")) {
       this._enabled = this.state.isProtectionEnabled;
@@ -246,6 +267,12 @@ export default class IPProtectionContentElement extends MozLitElement {
       this.showAnimation = true;
     } else {
       this.showAnimation = false;
+    }
+
+    if (this.canShowConnectionTime && this.isConnected) {
+      this.#startTimerIfUnset(this.state.protectionEnabledSince);
+    } else {
+      this.#stopTimer();
     }
   }
 
@@ -287,16 +314,10 @@ export default class IPProtectionContentElement extends MozLitElement {
       ? "chrome://browser/content/ipprotection/assets/ipprotection-connection-on.svg"
       : "chrome://browser/content/ipprotection/assets/ipprotection-connection-off.svg";
 
-    // Returns a promise until asnyncReplace has yielded at least once.
-    const hasYielded = async asyncReplaceDirective => {
-      await asyncReplaceDirective.values[0].next();
-      return asyncReplaceDirective;
-    };
-    const defaultTime = `{"time":""}`;
     // Time is rendered as blank until we have a value to show.
-    let time = this.canShowConnectionTime
-      ? until(hasYielded(asyncReplace(this.currentTime())), defaultTime)
-      : defaultTime;
+    let time =
+      this.canShowConnectionTime && this._timeString ? this._timeString : "";
+
     return html` <moz-box-group class="vpn-status-group">
       ${this.showAnimation ? this.animationRingsTemplate() : null}
       <moz-box-item
@@ -307,7 +328,7 @@ export default class IPProtectionContentElement extends MozLitElement {
         layout="large-icon"
         iconsrc=${statusIcon}
         data-l10n-id=${statusCardL10nId}
-        data-l10n-args=${time}
+        data-l10n-args=${JSON.stringify({ time })}
       >
         <moz-toggle
           id="connection-toggle"
