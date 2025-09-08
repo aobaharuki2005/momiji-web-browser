@@ -1842,11 +1842,8 @@ static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
       [&] { return GetSpaceWidthAppUnits(aTextRun); });
 }
 
-// Returns gfxTextRunFactory::TEXT_ENABLE_SPACING if non-standard
-// letter-spacing or word-spacing is present.
-static gfx::ShapedTextFlags GetSpacingFlags(
-    nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr) {
-  const nsStyleText* styleText = aFrame->StyleText();
+gfx::ShapedTextFlags nsTextFrame::GetSpacingFlags() const {
+  const nsStyleText* styleText = StyleText();
   const auto& ls = styleText->mLetterSpacing;
   const auto& ws = styleText->mWordSpacing;
 
@@ -2281,7 +2278,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
     if (textStyle->HasEffectiveTextEmphasis()) {
       anyTextEmphasis = true;
     }
-    flags |= GetSpacingFlags(f);
+    flags |= f->GetSpacingFlags();
     nsTextFrameUtils::CompressionMode compression =
         GetCSSWhitespaceToCompressionMode(f, textStyle);
     if ((enabledJustification || f->ShouldSuppressLineBreak()) && !isSVG) {

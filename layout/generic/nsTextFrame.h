@@ -795,6 +795,10 @@ class nsTextFrame : public nsIFrame {
   gfxTextRun::TrimmableWS GetTrimmableWS() const;
   void ClearTrimmableWS();
 
+  // Return ShapedTextFlags::TEXT_ENABLE_SPACING if spacing is needed due to
+  // letter-spacing, word-spacing, etc.
+  mozilla::gfx::ShapedTextFlags GetSpacingFlags() const;
+
  protected:
   virtual ~nsTextFrame();
 
