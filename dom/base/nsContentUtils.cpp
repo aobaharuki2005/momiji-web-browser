@@ -8659,6 +8659,11 @@ bool nsContentUtils::IsJsonMimeType(const nsAString& aMimeType) {
   return StringEndsWith(subtype, u"+json"_ns);
 }
 
+// https://html.spec.whatwg.org/#fetch-a-single-module-script, 7.3
+bool nsContentUtils::IsCssMimeType(const nsAString& aMimeType) {
+  return aMimeType.LowerCaseEqualsLiteral("text/css");
+}
+
 bool nsContentUtils::PrefetchPreloadEnabled(nsIDocShell* aDocShell) {
   //
   // SECURITY CHECK: disable prefetching and preloading from mailnews!
