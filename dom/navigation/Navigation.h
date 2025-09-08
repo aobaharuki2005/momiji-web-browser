@@ -75,12 +75,11 @@ class Navigation final : public DOMEventTargetHelper {
                                  NavigationResult& aResult);
 
   void TraverseTo(JSContext* aCx, const nsAString& aKey,
-                  const NavigationOptions& aOptions,
-                  NavigationResult& aResult) {}
+                  const NavigationOptions& aOptions, NavigationResult& aResult);
   void Back(JSContext* aCx, const NavigationOptions& aOptions,
-            NavigationResult& aResult) {}
+            NavigationResult& aResult);
   void Forward(JSContext* aCx, const NavigationOptions& aOptions,
-               NavigationResult& aResult) {}
+               NavigationResult& aResult);
 
   IMPL_EVENT_HANDLER(navigate);
   IMPL_EVENT_HANDLER(navigatesuccess);
@@ -207,6 +206,10 @@ class Navigation final : public DOMEventTargetHelper {
   void UpdateNeedsTraverse();
 
   void LogHistory() const;
+
+  void PerformNavigationTraversal(JSContext* aCx, const nsID& aKey,
+                                  const NavigationOptions& aOptions,
+                                  NavigationResult& aResult);
 
   // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-entry-list
   nsTArray<RefPtr<NavigationHistoryEntry>> mEntries;
