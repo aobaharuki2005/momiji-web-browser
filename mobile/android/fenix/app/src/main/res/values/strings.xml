@@ -2138,17 +2138,6 @@
     <string name="preference_enhanced_tracking_protection_allow_list_baseline">Allow %1$s to automatically apply exceptions required to avoid major website breakage.</string>
     <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
     <string name="preference_enhanced_tracking_protection_allow_list_convenience">Also apply exceptions automatically that are only required to fix minor issues and make convenience features available.</string>
-
-    <!-- Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection -->
-    <!-- Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
-    <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Are you sure you want to turn off fixes?</string>
-    <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
-    <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">This setting helps fix the most common site problems. If you turn it off, some sites may not work, and %1$s won\’t be able to help troubleshoot those issues.</string>
-    <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
-    <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Turn fixes off</string>
-    <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
-    <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">Keep fixes on</string>
-
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">What’s blocked by strict tracking protection</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
