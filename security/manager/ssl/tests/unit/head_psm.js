@@ -1323,6 +1323,7 @@ function append_line_to_data_storage_file(
 }
 
 // Helper constants for setting security.pki.certificate_transparency.mode.
+const CT_MODE_DISABLE = 0;
 const CT_MODE_COLLECT_TELEMETRY = 1;
 const CT_MODE_ENFORCE = 2;
 

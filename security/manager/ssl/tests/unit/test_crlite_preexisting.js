@@ -10,48 +10,10 @@
 
 const CHECK_AT_TIME = new Date("2020-01-01T00:00:00Z").getTime() / 1000;
 
-add_task(async function () {
-  Services.prefs.setIntPref(
-    "security.pki.crlite_mode",
-    CRLiteModeEnforcePrefValue
-  );
-
-  let securityStateDirectory = do_get_profile();
-  securityStateDirectory.append("security_state");
-
-  // For simplicity, re-use the filters from test_crlite_filters.js.
-  do_get_file("test_crlite_filters/20200101-0-filter").copyTo(
-    securityStateDirectory,
-    "crlite.filter"
-  );
-
-  do_get_file("test_crlite_filters/20200101-1-filter.delta").copyTo(
-    securityStateDirectory,
-    "20201017-1-filter.delta"
-  );
-
-  let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
-    Ci.nsICertStorage
-  );
-
+async function test_crlite_preexisting() {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
-
-  // These need to be available for path building.
-  let ca = addCertFromFile(certdb, "test_crlite_filters/ca.pem", "C,C,");
-  ok(ca, "ca certificate should decode successfully");
-
-  let issuerCert = constructCertFromFile("test_crlite_filters/int.pem");
-  ok(issuerCert, "issuer certificate should decode successfully");
-
-  // Mark CRLite filter as fresh
-  await new Promise(resolve => {
-    certStorage.testNoteCRLiteUpdateTime((rv, _) => {
-      Assert.equal(rv, Cr.NS_OK, "marked filter as fresh");
-      resolve();
-    });
-  });
 
   let validCert = constructCertFromFile(
     "test_crlite_filters/valid.example.com.pem"
@@ -136,4 +98,61 @@ add_task(async function () {
     0,
     sctList
   );
+}
+
+add_task(async function () {
+  Services.prefs.setIntPref(
+    "security.pki.crlite_mode",
+    CRLiteModeEnforcePrefValue
+  );
+
+  let securityStateDirectory = do_get_profile();
+  securityStateDirectory.append("security_state");
+
+  // For simplicity, re-use the filters from test_crlite_filters.js.
+  do_get_file("test_crlite_filters/20200101-0-filter").copyTo(
+    securityStateDirectory,
+    "crlite.filter"
+  );
+
+  do_get_file("test_crlite_filters/20200101-1-filter.delta").copyTo(
+    securityStateDirectory,
+    "20201017-1-filter.delta"
+  );
+
+  let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
+    Ci.nsICertStorage
+  );
+
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+
+  // These need to be available for path building.
+  let ca = addCertFromFile(certdb, "test_crlite_filters/ca.pem", "C,C,");
+  ok(ca, "ca certificate should decode successfully");
+
+  let issuerCert = constructCertFromFile("test_crlite_filters/int.pem");
+  ok(issuerCert, "issuer certificate should decode successfully");
+
+  // Mark CRLite filter as fresh
+  await new Promise(resolve => {
+    certStorage.testNoteCRLiteUpdateTime((rv, _) => {
+      Assert.equal(rv, Cr.NS_OK, "marked filter as fresh");
+      resolve();
+    });
+  });
+
+  info(`disabling CT`);
+  Services.prefs.setIntPref(
+    "security.pki.certificate_transparency.mode",
+    CT_MODE_DISABLE
+  );
+  await test_crlite_preexisting();
+  info(`enabling CT`);
+  Services.prefs.setIntPref(
+    "security.pki.certificate_transparency.mode",
+    CT_MODE_ENFORCE
+  );
+  await test_crlite_preexisting();
 });
