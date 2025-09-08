@@ -15,10 +15,26 @@ import org.mozilla.fenix.compose.snackbar.Snackbar
 import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.compose.snackbar.toSnackbarDuration
 
+typealias SnackbarFactory = (
+    parentView: View,
+    state: SnackbarState,
+) -> Snackbar
+
 /**
  * An implementation of [SnackbarDelegate] used to display the snackbar.
+ *
+ * @param view The view to find a parent from.
+ * @param snackbarFactory A lambda function to create a [Snackbar].
  */
-class FenixSnackbarDelegate(private val view: View) : SnackbarDelegate {
+class FenixSnackbarDelegate(
+    private val view: View,
+    private val snackbarFactory: SnackbarFactory = { parent, state ->
+        Snackbar.make(
+            parent,
+            state,
+        )
+    },
+) : SnackbarDelegate {
 
     // Holds onto a reference of a [Snackbar] that is displayed.
     private var snackbar: Snackbar? = null
@@ -113,9 +129,9 @@ class FenixSnackbarDelegate(private val view: View) : SnackbarDelegate {
         action: String?,
         listener: ((v: View) -> Unit)?,
     ) {
-        val snackbar = Snackbar.make(
-            snackBarParentView = snackBarParentView,
-            snackbarState = makeSnackbarState(
+        val snackbar = snackbarFactory(
+            snackBarParentView,
+            makeSnackbarState(
                 snackBarParentView = snackBarParentView,
                 text = text,
                 subText = subText,
