@@ -890,7 +890,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                     const Args&... args) const {
     MOZ_ASSERT(FuncName());
     nsCString text;
-    text.AppendPrintf("WebGL warning: %s: ", FuncName());
 
 #ifdef __clang__
 #  pragma clang diagnostic push
@@ -898,7 +897,9 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 #elif defined(__GNUC__)
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wformat-security"
+#  pragma GCC diagnostic ignored "-Wformat-overflow"
 #endif
+    text.AppendPrintf("WebGL warning: %s: ", FuncName());
     text.AppendPrintf(format, args...);
 #ifdef __clang__
 #  pragma clang diagnostic pop
