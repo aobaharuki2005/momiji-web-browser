@@ -83,6 +83,7 @@ gecko_metrics = [
     "toolkit/components/enterprisepolicies/metrics.yaml",
     "toolkit/components/extensions/metrics.yaml",
     "toolkit/components/formautofill/metrics.yaml",
+    "toolkit/components/gecko-trace/generated-metrics.yaml",
     "toolkit/components/glean/metrics.yaml",
     "toolkit/components/mediasniffer/metrics.yaml",
     "toolkit/components/messaging-system/metrics.yaml",
@@ -207,6 +208,7 @@ gecko_pings = [
     "toolkit/components/antitracking/bouncetrackingprotection/pings.yaml",
     "toolkit/components/backgroundhangmonitor/pings.yaml",
     "toolkit/components/captchadetection/pings.yaml",
+    "toolkit/components/gecko-trace/pings.yaml",
     "toolkit/components/glean/pings.yaml",
     "toolkit/components/resistfingerprinting/pings.yaml",
 ]

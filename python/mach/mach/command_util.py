@@ -123,6 +123,9 @@ MACH_COMMANDS = {
     "gifft": MachCommandReference(
         "toolkit/components/telemetry/build_scripts/mach_commands.py"
     ),
+    "gecko-trace": MachCommandReference(
+        "toolkit/components/gecko-trace/mach_commands.py"
+    ),
     "glean": MachCommandReference(
         "toolkit/components/glean/build_scripts/mach_commands.py"
     ),
