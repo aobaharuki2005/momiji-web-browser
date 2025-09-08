@@ -143,7 +143,6 @@ abstract class AbstractFetchDownloadService : Service() {
             return getSecondsSinceTheLastNotificationUpdate() >= 1
         }
 
-        @Suppress("MagicNumber")
         internal fun getSecondsSinceTheLastNotificationUpdate(): Long {
             return (System.currentTimeMillis() - lastNotificationUpdate) / 1000
         }

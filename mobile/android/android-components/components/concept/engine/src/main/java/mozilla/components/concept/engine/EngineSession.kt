@@ -390,7 +390,6 @@ abstract class EngineSession(
      * Represents a safe browsing policy, which is indicates with type of site should be alerted
      * to user as possible harmful.
      */
-    @Suppress("MagicNumber")
     enum class SafeBrowsingPolicy(val id: Int) {
         NONE(0),
 
@@ -482,7 +481,6 @@ abstract class EngineSession(
             ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS(5),
         }
 
-        @Suppress("MagicNumber")
         enum class TrackingCategory(val id: Int) {
 
             NONE(0),
@@ -699,7 +697,6 @@ abstract class EngineSession(
     /**
      * Represents settings options for bounce tracking protection.
      */
-    @Suppress("MagicNumber")
     enum class BounceTrackingProtectionMode(val mode: Int) {
         /**
          * Fully disabled.
