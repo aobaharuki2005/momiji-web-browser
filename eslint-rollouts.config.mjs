@@ -1138,7 +1138,7 @@ export default [
       "devtools/client/inspector/markup/test/browser_markup_tag_edit_05.js",
       "devtools/client/inspector/shared/test/browser_styleinspector_output-parser.js",
       "devtools/client/inspector/shared/test/head.js",
-      "devtools/client/inspector/test/browser_inspector_highlighter-eyedropper-zoom.js",
+      "devtools/client/inspector/test/highlighter/browser_inspector_highlighter-eyedropper-zoom.js",
       "devtools/client/jsonview/test/browser_jsonview_data_blocking.js",
       "devtools/client/memory/test/browser/browser_memory_allocationStackDisplay_01.js",
       "devtools/client/memory/test/browser/browser_memory_clear_snapshots.js",
