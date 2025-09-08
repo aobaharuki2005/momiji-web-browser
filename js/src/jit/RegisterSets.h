@@ -1033,10 +1033,10 @@ class CommonRegSet : public SpecializedRegSet<Accessors, Set> {
   }
   void addUnchecked(Register64 reg) {
 #if JS_BITS_PER_WORD == 32
-    take(reg.high);
-    take(reg.low);
+    addUnchecked(reg.high);
+    addUnchecked(reg.low);
 #else
-    take(reg.reg);
+    addUnchecked(reg.reg);
 #endif
   }
 
