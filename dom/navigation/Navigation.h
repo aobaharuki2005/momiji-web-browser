@@ -186,6 +186,9 @@ class Navigation final : public DOMEventTargetHelper {
   void SetEarlyErrorResult(JSContext* aCx, NavigationResult& aResult,
                            ErrorResult&& aRv) const;
 
+  void SetEarlyStateErrorResult(JSContext* aCx, NavigationResult& aResult,
+                                const nsACString& aMessage) const;
+
   bool CheckIfDocumentIsFullyActiveAndMaybeSetEarlyErrorResult(
       JSContext* aCx, const Document* aDocument,
       NavigationResult& aResult) const;

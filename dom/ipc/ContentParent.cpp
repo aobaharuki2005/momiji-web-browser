@@ -7567,6 +7567,18 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvNavigationTraverse(
+    const MaybeDiscarded<BrowsingContext>& aContext, const nsID& aKey,
+    uint64_t aHistoryEpoch, bool aUserActivation,
+    NavigationTraverseResolver&& aResolver) {
+  if (!aContext.IsNullOrDiscarded()) {
+    RefPtr<CanonicalBrowsingContext> canonical = aContext.get_canonical();
+    canonical->NavigationTraverse(aKey, aHistoryEpoch, aUserActivation,
+                                  Some(ChildID()), aResolver);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvSynchronizeLayoutHistoryState(
     const MaybeDiscarded<BrowsingContext>& aContext,
     nsILayoutHistoryState* aState) {

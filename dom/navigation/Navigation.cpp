@@ -49,6 +49,20 @@ mozilla::LazyLogModule gNavigationLog("Navigation");
 
 namespace mozilla::dom {
 
+static void InitNavigationResult(NavigationResult& aResult,
+                                 const RefPtr<Promise>& aCommitted,
+                                 const RefPtr<Promise>& aFinished) {
+  if (aCommitted) {
+    aResult.mCommitted.Reset();
+    aResult.mCommitted.Construct(*aCommitted);
+  }
+
+  if (aFinished) {
+    aResult.mFinished.Reset();
+    aResult.mFinished.Construct(*aFinished);
+  }
+}
+
 struct NavigationAPIMethodTracker final : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(NavigationAPIMethodTracker)
@@ -117,13 +131,11 @@ struct NavigationAPIMethodTracker final : public nsISupports {
     // method tracker is a NavigationResult dictionary instance given by
     // «[ "committed" → apiMethodTracker's committed promise,
     //    "finished" → apiMethodTracker's finished promise ]».
-    aResult.mCommitted.Reset();
-    aResult.mCommitted.Construct(OwningNonNull<Promise>(*mCommittedPromise));
-    aResult.mFinished.Reset();
-    aResult.mFinished.Construct(OwningNonNull<Promise>(*mFinishedPromise));
+    InitNavigationResult(aResult, mCommittedPromise, mFinishedPromise);
   }
 
   Promise* CommittedPromise() { return mCommittedPromise; }
+  Promise* FinishedPromise() { return mFinishedPromise; }
 
   RefPtr<Navigation> mNavigationObject;
   Maybe<nsID> mKey;
@@ -394,13 +406,18 @@ void Navigation::SetEarlyErrorResult(JSContext* aCx, NavigationResult& aResult,
   }
   JS::Rooted<JS::Value> rootedExceptionValue(aCx);
   MOZ_ALWAYS_TRUE(ToJSValue(aCx, std::move(aRv), &rootedExceptionValue));
-  aResult.mCommitted.Reset();
-  aResult.mCommitted.Construct(Promise::CreateInfallible(global));
-  aResult.mCommitted.Value()->MaybeReject(rootedExceptionValue);
 
-  aResult.mFinished.Reset();
-  aResult.mFinished.Construct(Promise::CreateInfallible(global));
-  aResult.mFinished.Value()->MaybeReject(rootedExceptionValue);
+  InitNavigationResult(
+      aResult, Promise::Reject(global, rootedExceptionValue, IgnoreErrors()),
+      Promise::Reject(global, rootedExceptionValue, IgnoreErrors()));
+}
+
+void Navigation::SetEarlyStateErrorResult(JSContext* aCx,
+                                          NavigationResult& aResult,
+                                          const nsACString& aMessage) const {
+  ErrorResult rv;
+  rv.ThrowInvalidStateError(aMessage);
+  SetEarlyErrorResult(aCx, aResult, std::move(rv));
 }
 
 bool Navigation::CheckIfDocumentIsFullyActiveAndMaybeSetEarlyErrorResult(
@@ -441,12 +458,9 @@ Navigation::CreateSerializedStateAndMaybeSetEarlyErrorResult(
     JS::Rooted<JS::Value> exception(aCx);
     if (JS_GetPendingException(aCx, &exception)) {
       JS_ClearPendingException(aCx);
-      aResult.mCommitted.Reset();
-      aResult.mCommitted.Construct(
-          Promise::Reject(global, exception, IgnoreErrors()));
-      aResult.mFinished.Reset();
-      aResult.mFinished.Construct(
-          Promise::Reject(global, exception, IgnoreErrors()));
+      InitNavigationResult(aResult,
+                           Promise::Reject(global, exception, IgnoreErrors()),
+                           Promise::Reject(global, exception, IgnoreErrors()));
       return nullptr;
     }
     SetEarlyErrorResult(aCx, aResult, ErrorResult(rv));
@@ -571,7 +585,125 @@ void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
 // https://html.spec.whatwg.org/#performing-a-navigation-api-traversal
 void Navigation::PerformNavigationTraversal(JSContext* aCx, const nsID& aKey,
                                             const NavigationOptions& aOptions,
-                                            NavigationResult& aResult) {}
+                                            NavigationResult& aResult) {
+  LOG_FMT("traverse navigation to {}", aKey.ToString().get());
+  // 1. Let document be navigation's relevant global object's associated
+  //    Document.
+  const Document* document = GetAssociatedDocument();
+
+  // 2. If document is not fully active, then return an early error result for
+  //    an "InvalidStateError" DOMException.
+  if (!document || !document->IsFullyActive()) {
+    SetEarlyStateErrorResult(aCx, aResult, "Document is not fully active"_ns);
+    return;
+  }
+
+  // 3. If document's unload counter is greater than 0, then return an early
+  //    error result for an "InvalidStateError" DOMException.
+  if (document->ShouldIgnoreOpens()) {
+    SetEarlyStateErrorResult(aCx, aResult, "Document is unloading"_ns);
+    return;
+  }
+
+  // 4. Let current be the current entry of navigation.
+  RefPtr<NavigationHistoryEntry> current = GetCurrentEntry();
+  if (!current) {
+    SetEarlyStateErrorResult(aCx, aResult,
+                             "No current navigation history entry"_ns);
+    return;
+  }
+
+  // 5. If key equals current's session history entry's navigation API key, then
+  //    return «[ "committed" → a promise resolved with current, "finished" → a
+  //    promise resolved with current ]».
+  RefPtr global = GetOwnerGlobal();
+  if (!global) {
+    return;
+  }
+
+  if (current->Key() == aKey) {
+    InitNavigationResult(aResult,
+                         Promise::Resolve(global, current, IgnoreErrors()),
+                         Promise::Resolve(global, current, IgnoreErrors()));
+    return;
+  }
+
+  // 6. If navigation's upcoming traverse API method trackers[key] exists, then
+  //    return a navigation API method tracker-derived result for navigation's
+  //    upcoming traverse API method trackers[key].
+  if (auto maybeTracker =
+          mUpcomingTraverseAPIMethodTrackers.MaybeGet(aKey).valueOr(nullptr)) {
+    maybeTracker->CreateResult(aResult);
+    return;
+  }
+
+  // 7. Let info be options["info"], if it exists; otherwise, undefined.
+  JS::Rooted<JS::Value> info(aCx, aOptions.mInfo);
+
+  // 8. Let apiMethodTracker be the result of adding an upcoming traverse API
+  //    method tracker for navigation given key and info.
+  RefPtr apiMethodTracker = AddUpcomingTraverseAPIMethodTracker(aKey, info);
+
+  // 9. Let navigable be document's node navigable.
+  RefPtr<BrowsingContext> navigable = document->GetBrowsingContext();
+
+  // 10. Let traversable be navigable's traversable navigable.
+  RefPtr<BrowsingContext> traversable = navigable->Top();
+  // 11. Let sourceSnapshotParams be the result of snapshotting source snapshot
+  //     params given document.
+
+  // 13. Return a navigation API method tracker-derived result for
+  //     apiMethodTracker.
+  apiMethodTracker->CreateResult(aResult);
+
+  // 12. Append the following session history traversal steps to traversable:
+  auto* childSHistory = traversable->GetChildSessionHistory();
+  auto performNaviationTraversalSteps =
+      [finished =
+           RefPtr(apiMethodTracker->FinishedPromise())](nsresult aResult) {
+        switch (aResult) {
+          case NS_ERROR_DOM_INVALID_STATE_ERR:
+            // 12.2 Let targetSHE be the session history entry in navigableSHEs
+            //      whose navigation API key is key. If no such entry exists,
+            //      then:
+            finished->MaybeRejectWithInvalidStateError(
+                "No such entry with key found");
+            break;
+          case NS_ERROR_DOM_ABORT_ERR:
+            // 12.5 If result is "canceled-by-beforeunload", then queue a global
+            // task on the navigation and traversal task source given
+            // navigation's relevant global object to reject the finished
+            // promise for apiMethodTracker with a new "AbortError" DOMException
+            // created in navigation's relevant realm.
+            finished->MaybeRejectWithAbortError("Navigation was canceled");
+            break;
+          case NS_ERROR_DOM_SECURITY_ERR:
+            // 12.6 If result is "initiator-disallowed", then queue a global
+            // task on the
+            //      navigation and traversal task source given navigation's
+            //      relevant global object to reject the finished promise for
+            //      apiMethodTracker with a new "SecurityError" DOMException
+            //      created in navigation's relevant realm.
+            finished->MaybeRejectWithSecurityError(
+                "Navigation was not allowed");
+            break;
+          case NS_OK:
+            // 12.3 If targetSHE is navigable's active session history entry,
+            // then abort these steps.
+            break;
+          default:
+            MOZ_DIAGNOSTIC_ASSERT(false, "Unexpected result");
+            break;
+        }
+      };
+
+  // 12.4 Let result be the result of applying the traverse history step given
+  //      by targetSHE's step to traversable, given sourceSnapshotParams,
+  //      navigable, and "none".
+  childSHistory->AsyncGo(aKey, navigable, /*aRequireUserInteraction=*/false,
+                         /*aUserActivation=*/false,
+                         performNaviationTraversalSteps);
+}
 
 // https://html.spec.whatwg.org/#dom-navigation-reload
 void Navigation::Reload(JSContext* aCx, const NavigationReloadOptions& aOptions,
@@ -683,9 +815,8 @@ void Navigation::Back(JSContext* aCx, const NavigationOptions& aOptions,
   //    result for an "InvalidStateError" DOMException.
   if (mCurrentEntryIndex.isNothing() || *mCurrentEntryIndex == 0 ||
       *mCurrentEntryIndex > mEntries.Length() - 1) {
-    ErrorResult rv;
-    rv.ThrowInvalidStateError("Current entry index is unexpectedly -1 or 0");
-    SetEarlyErrorResult(aCx, aResult, std::move(rv));
+    SetEarlyStateErrorResult(aCx, aResult,
+                             "Current entry index is unexpectedly -1 or 0"_ns);
     return;
   }
 

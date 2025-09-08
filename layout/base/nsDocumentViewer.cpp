@@ -1179,7 +1179,7 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
       }
     } else if (aBC->GetDocShell()) {
       nsCOMPtr<nsIDocumentViewer> viewer(aBC->GetDocShell()->GetDocViewer());
-      if (viewer && viewer->DispatchBeforeUnload() == eRequestBlockNavigation) {
+      if (viewer && viewer->DispatchBeforeUnload() != eContinue) {
         foundBlocker = true;
       }
     }
@@ -1240,7 +1240,7 @@ nsDocumentViewer::DispatchBeforeUnload() {
   AutoDontWarnAboutSyncXHR disableSyncXHRWarning;
 
   if (!mDocument || mInPermitUnload || mInPermitUnloadPrompt || !mContainer) {
-    return eAllowNavigation;
+    return eContinue;
   }
 
   // First, get the script global object from the document...
@@ -1249,7 +1249,7 @@ nsDocumentViewer::DispatchBeforeUnload() {
   if (!window) {
     // This is odd, but not fatal
     NS_WARNING("window not set for document!");
-    return eAllowNavigation;
+    return eContinue;
   }
 
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(), "This is unsafe");
@@ -1305,9 +1305,9 @@ nsDocumentViewer::DispatchBeforeUnload() {
       (!StaticPrefs::dom_require_user_interaction_for_beforeunload() ||
        mDocument->ChromeRulesEnabled() || mDocument->UserHasInteracted()) &&
       (event->WidgetEventPtr()->DefaultPrevented() || !text.IsEmpty())) {
-    return eRequestBlockNavigation;
+    return eCanceledByBeforeUnload;
   }
-  return eAllowNavigation;
+  return eContinue;
 }
 
 NS_IMETHODIMP

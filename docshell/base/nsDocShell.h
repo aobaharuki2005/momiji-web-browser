@@ -24,6 +24,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocumentViewer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
 #include "nsINetworkInterceptController.h"
@@ -1024,7 +1025,7 @@ class nsDocShell final : public nsDocLoader,
   // participates in #checking-if-unloading-is-canceled we return false to
   // indicate that we should cancel the navigation.
   MOZ_CAN_RUN_SCRIPT
-  bool MaybeFireTraversableTraverseHistory(
+  nsIDocumentViewer::PermitUnloadResult MaybeFireTraversableTraverseHistory(
       const mozilla::dom::SessionHistoryInfo& aInfo,
       mozilla::Maybe<mozilla::dom::UserNavigationInvolvement> aUserInvolvement);
 
