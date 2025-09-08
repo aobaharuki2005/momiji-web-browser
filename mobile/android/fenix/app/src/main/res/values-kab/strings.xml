@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Iccaren-ik yeldin ad ttwaseknen dagi.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Accaren-ik n tbaḍnit ad d-ttwaseknen dagi.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Tunigin tusligt</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s ur iceffu ara ɣef umazray akked yinagan n tuqqna-inek, acukan ticraḍ n yisebtar ad ttwakelsent.</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Rnu iccer amaynut i beddu n unadi</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d yettwafren</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->

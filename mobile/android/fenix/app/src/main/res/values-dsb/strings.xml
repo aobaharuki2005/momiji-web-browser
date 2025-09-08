@@ -2382,7 +2382,7 @@
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
   <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptokopaki</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
-  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Znate palcowe wótśišće</string>
+  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Znate zběrarje palcowych wótśišćow</string>
   <!-- Button label for navigating to the Enhanced Tracking Protection details -->
   <string name="enhanced_tracking_protection_details">Drobnostki</string>
   <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
@@ -2434,11 +2434,11 @@
   <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_redirect_trackers_description">Wulašujo cookije, kótarež su se stajili pśez dalejpósrědnjenja k znatym slědujucym websedłam.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
-  <string name="etp_suspected_fingerprinters_title">Suspektne palcowe wótśišće</string>
+  <string name="etp_suspected_fingerprinters_title">Suspektne zběrarje palcowych wótśišćow</string>
   <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
-  <string name="etp_suspected_fingerprinters_description">Zmóžnja šćit pśeśiwo palcowym wótśišćam, aby suspektne kšadnjenja palcowych wótśišćow blokěrował.</string>
+  <string name="etp_suspected_fingerprinters_description">Zmóžnja šćit pśeśiwo zběrarjam palcowych wótśišćow, aby suspektne zběrarje palcowych wótśišćow blokěrował.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_known_fingerprinters_title">Znate palcowe wótśišće</string>
+  <string name="etp_known_fingerprinters_title">Znate zběrarje palcowych wótśišćow</string>
   <!--
     Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
     as we use it on the UI to indicate which trackers have been partially unblocked.
