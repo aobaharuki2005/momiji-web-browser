@@ -32,6 +32,12 @@
   <string name="no_open_tabs_description">Tutaj będą wyświetlane otwarte karty.</string>
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">Tutaj będą wyświetlane prywatne karty.</string>
+  <!-- The header text displayed on the private tabs page when no private tabs are open -->
+  <string name="tab_manager_empty_private_tabs_page_header">Tryb prywatny</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s nie zachowa historii przeglądania ani ciasteczek (dodane zakładki zostaną zachowane).</string>
+  <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
+  <string name="tab_manager_empty_normal_tabs_page_header">Otwórz nową kartę, aby zacząć szukać</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">Zaznaczone: %1$d</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -46,6 +52,12 @@
   <string name="tab_tray_close_multiselect_content_description">Opuść tryb wielokrotnego wyboru</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Zachowaj zaznaczone karty w kolekcji</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Otwieraj karty z\u00a0każdego urządzenia</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Zaloguj się, aby zarządzać kartami ze wszystkich swoich urządzeń.</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Zaloguj się</string>
   <!--
     Home - Bookmarks
 
@@ -366,6 +378,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">Język oryginalnej strony: %1$s, język tłumaczenia: %2$s.</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Język oryginalny: %1$s, język tłumaczenia: %2$s</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">Otwórz funkcję tłumaczenia</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">Zamknij komunikat</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -495,6 +519,16 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Zgłoszenia awarii umożliwiają nam diagnozowanie i naprawianie problemów z przeglądarką. Mogą one zawierać dane osobowe lub prywatne informacje.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Więcej informacji</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s musi zostać ponownie uruchomiony</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">Wystąpił problem podczas otwierania przeglądarki %s.\n\nWysłanie zgłoszenia awarii pomaga nam diagnozować i\u00a0naprawiać problemy z\u00a0przeglądarką. Mogą one zawierać dane osobowe lub prywatne informacje.</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">Wyślij zgłoszenie awarii</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">Nie, dziękuję</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">Otwórz przeglądarkę %s ponownie</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Wysyłaj dane techniczne i o interakcjach do Mozilli</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Informacje o Twoim urządzeniu, konfiguracji sprzętowej i sposobu korzystania z Firefoksa pomagają ulepszać jego funkcje oraz zwiększać wydajność i stabilność dla wszystkich.</string>
@@ -519,6 +553,37 @@
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">Aby pomóc w ulepszaniu przeglądarki, Firefox wysyła dane diagnostyczne i o interakcjach do Mozilli. %1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">Zarządzaj</string>
+  <!-- Terms of use (ToU) onboarding redesign title. -->
+  <string name="onboarding_redesign_tou_title">Uruchom najlepszą przeglądarkę na Androida</string>
+  <!-- Terms of use (ToU) first subheader. -->
+  <string name="onboarding_redesign_tou_subheader_one">Błyskawiczne wczytywanie stron</string>
+  <!-- Terms of use (ToU) second subheader. -->
+  <string name="onboarding_redesign_tou_subheader_two">Automatyczna ochrona przed śledzeniem</string>
+  <!-- Terms of use (ToU) third subheader. -->
+  <string name="onboarding_redesign_tou_subheader_three">Tysiące modyfikacji</string>
+  <!--
+    Terms of use (ToU) first body text. %1$s is replaced by an active link,
+    using onboarding_redesign_tou_body_one_link_text as text (“Firefox Terms of Use”).
+  -->
+  <string name="onboarding_redesign_tou_body_one">Kontynuując, zgadzasz się na %1$s.</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
+  <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">warunki korzystania z\u00a0Firefoksa</string>
+  <!--
+    Terms of use (ToU) second body text. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link, using onboarding_redesign_tou_body_two_link_text as text (“Privacy Notice”).
+  -->
+  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox dba o\u00a0Twoją prywatność. Dowiedz się więcej w\u00a0naszych %1$s.</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
+  <string name="onboarding_redesign_tou_body_two_link_text">zasadach ochrony prywatności</string>
+  <!--
+    Terms of use (ToU) third body text. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link using onboarding_redesign_tou_body_three_link_text as text (“Manage Settings”).
+  -->
+  <string name="onboarding_redesign_tou_body_three" tools:ignore="BrandUsage">Aby pomóc w\u00a0ulepszaniu przeglądarki, Firefox wysyła dane diagnostyczne i\u00a0o\u00a0interakcjach do Mozilli. %1$s</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_three. -->
+  <string name="onboarding_redesign_tou_body_three_link_text">Zarządzaj ustawieniami</string>
+  <!-- Terms of use (ToU) onboarding page continue button label. -->
+  <string name="onboarding_redesign_tou_agree_and_continue_button_label">Kontynuuj</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Pomóż nam rozwijać Firefoksa</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -949,13 +1014,13 @@
   <!-- Title for the "Northern Lights" gradient alternative app icon variant in the icon picker screen. The app icon has a dynamic green, blue, and purple gradient background, resembling the aurora borealis. -->
   <string name="alternative_app_icon_option_gradient_northern_lights">Zorza polarna</string>
   <!-- Title for the "Retro 2004" themed alternative app icon variant in the icon picker screen. This app icon uses the classic Firefox logo from 2004. -->
-  <string name="alternative_app_icon_option_retro_2004">Retro 2004</string>
+  <string name="alternative_app_icon_option_retro_2004">Retrolis 2004</string>
   <!-- Title for the "Retro 2017" themed alternative app icon variant in the icon picker screen. This app icon uses the Firefox logo from 2017, with a more modernized design. -->
-  <string name="alternative_app_icon_option_retro_2017" tools:ignore="UnusedResources" moz:removedIn="144">Retro 2017</string>
+  <string name="alternative_app_icon_option_retro_2017" tools:ignore="UnusedResources" moz:removedIn="144">Retrolis 2017</string>
   <!-- Title for the "Pixelated" themed alternative app icon variant in the icon picker screen. This app icon features a pixel-art style, resembling retro 8-bit graphics. -->
-  <string name="alternative_app_icon_option_pixelated">Pikselowa</string>
+  <string name="alternative_app_icon_option_pixelated">Pikselis</string>
   <!-- Title for the "Minimal" themed alternative app icon variant in the icon picker screen. The app icon presents a simplified, flat and monochrome version of the Firefox logo. -->
-  <string name="alternative_app_icon_option_minimal">Minimalistyczna</string>
+  <string name="alternative_app_icon_option_minimal">Minimalis</string>
   <!-- Title for the "Pride" themed alternative app icon variant in the icon picker screen. The app icon incorporates a rainbow color scheme in support of the LGBTQ+ community. -->
   <string name="alternative_app_icon_option_pride">Duma</string>
   <!-- Title for the "Cute" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
@@ -964,6 +1029,12 @@
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Autorstwa @heyheymomodraws</string>
+  <!-- Title for the "Cuddling" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
+  <string name="alternative_app_icon_option_cuddling">Przytulis</string>
+  <!-- Title for the "Flaming" themed alternative app icon variant in the icon picker screen. The app icon features a fiery design, with the Firefox logo surrounded by flames for a bold, energetic look. -->
+  <string name="alternative_app_icon_option_flaming">Ogniolis</string>
+  <!-- Title for the "Cool" themed alternative app icon variant in the icon picker screen. The app icon uses a warm orange-to-yellow gradient background with a sleek, modern twist on the Firefox logo, giving it a fresh and stylish appearance. -->
+  <string name="alternative_app_icon_option_cool">Superlis</string>
   <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
   <string name="alternative_app_icon_group_solid_colors">Jednolite kolory</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
@@ -974,8 +1045,12 @@
   <string name="restart_warning_dialog_title">Czy zmienić ikonę aplikacji?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Zmiana ikony wymaga ponownego uruchomienia aplikacji.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">Aplikacja może zostać zamknięta. Wystarczy stuknąć nową, śliczną ikonę, aby ponownie otworzyć przeglądarkę %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Uruchom ponownie</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">Zmień ikonę</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Anuluj</string>
   <!--
@@ -1350,6 +1425,12 @@
   <string name="tabs_header_normal_tabs_title">Karty</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">Karty z\u00a0innych urządzeń</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">Nowa karta</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">Nowa karta prywatna</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">Synchronizuj karty</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Otwórz nową kartę</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1372,8 +1453,16 @@
   <string name="tab_tray_menu_item_close">Zamknij wszystkie karty</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Dodaj zakładkę</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Dodaj zakładki do zaznaczonych kart</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Zamknij</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Zamknij zaznaczone karty</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">Udostępnij</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">Dodaj do kolekcji</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">Udostępnij zaznaczone karty</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1612,6 +1701,8 @@
   <string name="webcompat_reporter_label_description">Opisz problem (opcjonalne)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Wyślij więcej informacji</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">Dodaj więcej informacji</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Anuluj</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1721,6 +1812,8 @@
   <string name="bookmark_menu_delete_button">Usuń</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Zachowaj</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">Opcje sortowania</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Sortuj według innej kolejności</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1791,6 +1884,8 @@
   <string name="bookmark_search_button_content_description">Szukaj w zakładkach</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Menu elementów „%s”</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">Zamknij zakładki</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Nie ma jeszcze zakładek</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -1833,6 +1928,10 @@
   <string name="clear_permissions_on_all_sites">Przywróć domyślne uprawnienia na wszystkich witrynach</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">Automatyczne odtwarzanie</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">Aplikacje i\u00a0usługi na urządzeniu</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">Urządzenia w\u00a0sieci lokalnej</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Aparat</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2859,6 +2958,11 @@
     Title text displayed for the shortcuts home screen section.
   -->
   <string name="homepage_shortcuts_title">Skróty</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">Pokaż wszystkie skróty</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Osiągnięto limit skrótów</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -2954,6 +3058,13 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Artykuły</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">Odkryj więcej artykułów</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">Przejdź wstecz</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">Sponsorowane</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3267,6 +3378,8 @@
   <string name="protection_panel_num_trackers_blocked">Zablokowane elementy śledzące: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Nie odnaleziono żadnych elementów śledzących</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">Elementy śledzące nie są blokowane</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Ustawienia prywatności i bezpieczeństwa</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
@@ -3299,6 +3412,8 @@
   <string name="connection_security_panel_secure">Zabezpieczone połączenie</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Niezabezpieczone połączenie</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">Strona wczytana z\u00a0tego urządzenia</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.
