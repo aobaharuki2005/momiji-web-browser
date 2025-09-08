@@ -117,14 +117,8 @@ nsresult SVGAnimatedTransformList::SetAnimValue(const SVGTransformList& aValue,
     ClearAnimValue(aElement);
     return rv;
   }
-  int32_t modType;
-  if (prevSet) {
-    modType = MutationEvent_Binding::MODIFICATION;
-  } else {
-    modType = MutationEvent_Binding::ADDITION;
-  }
-  mCreatedOrRemovedOnLastChange = modType == MutationEvent_Binding::ADDITION;
-  aElement->DidAnimateTransformList(modType);
+  mCreatedOrRemovedOnLastChange = !prevSet;
+  aElement->DidAnimateTransformList();
   return NS_OK;
 }
 
@@ -140,14 +134,9 @@ void SVGAnimatedTransformList::ClearAnimValue(SVGElement* aElement) {
     domWrapper->InternalAnimValListWillChangeLengthTo(mBaseVal.Length());
   }
   mAnimVal = nullptr;
-  int32_t modType;
-  if (HasTransform() || aElement->GetAnimateMotionTransform()) {
-    modType = MutationEvent_Binding::MODIFICATION;
-  } else {
-    modType = MutationEvent_Binding::REMOVAL;
-  }
-  mCreatedOrRemovedOnLastChange = modType == MutationEvent_Binding::REMOVAL;
-  aElement->DidAnimateTransformList(modType);
+  mCreatedOrRemovedOnLastChange =
+      !HasTransform() && !aElement->GetAnimateMotionTransform();
+  aElement->DidAnimateTransformList();
 }
 
 bool SVGAnimatedTransformList::IsExplicitlySet() const {

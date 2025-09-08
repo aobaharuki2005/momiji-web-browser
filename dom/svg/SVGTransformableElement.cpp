@@ -50,20 +50,9 @@ void SVGTransformableElement::SetAnimateMotionTransform(
        aMatrix->FuzzyEquals(*mAnimateMotionTransform))) {
     return;
   }
-  bool transformSet = mTransforms && mTransforms->IsExplicitlySet();
-  bool prevSet = mAnimateMotionTransform || transformSet;
   mAnimateMotionTransform =
       aMatrix ? MakeUnique<gfx::Matrix>(*aMatrix) : nullptr;
-  bool nowSet = mAnimateMotionTransform || transformSet;
-  int32_t modType;
-  if (prevSet && !nowSet) {
-    modType = MutationEvent_Binding::REMOVAL;
-  } else if (!prevSet && nowSet) {
-    modType = MutationEvent_Binding::ADDITION;
-  } else {
-    modType = MutationEvent_Binding::MODIFICATION;
-  }
-  DidAnimateTransformList(modType);
+  DidAnimateTransformList();
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
     // If the result of this transform and any other transforms on this frame
