@@ -263,7 +263,7 @@ body {
   -moz-window-dragging: drag;
 
   :root[customtitlebar] &,
-  :root[customtitlebar] & #urlbar:popover-open {
+  :root[customtitlebar] & .urlbar:popover-open {
     will-change: opacity;
     transition: opacity var(--inactive-window-transition);
 
