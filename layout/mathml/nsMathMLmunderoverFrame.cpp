@@ -40,7 +40,7 @@ nsMathMLmunderoverFrame::~nsMathMLmunderoverFrame() = default;
 
 nsresult nsMathMLmunderoverFrame::AttributeChanged(int32_t aNameSpaceID,
                                                    nsAtom* aAttribute,
-                                                   int32_t aModType) {
+                                                   AttrModType aModType) {
   if (aNameSpaceID == kNameSpaceID_None &&
       (nsGkAtoms::accent == aAttribute ||
        nsGkAtoms::accentunder == aAttribute)) {

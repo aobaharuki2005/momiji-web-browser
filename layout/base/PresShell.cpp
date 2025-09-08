@@ -168,6 +168,7 @@
 #include "nsIFrameInlines.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILineIterator.h"  // for ScrollContentIntoView
+#include "nsIMutationObserver.h"
 #include "nsIObserverService.h"
 #include "nsIReflowCallback.h"
 #include "nsIScreen.h"
@@ -4759,8 +4760,8 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::AttributeWillChange(
   // squelch any other inappropriate notifications as well.
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mPresContext->RestyleManager()->AttributeWillChange(aElement, aNameSpaceID,
-                                                        aAttribute, aModType);
+    mPresContext->RestyleManager()->AttributeWillChange(
+        aElement, aNameSpaceID, aAttribute, static_cast<AttrModType>(aModType));
   }
 }
 
@@ -4777,7 +4778,8 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::AttributeChanged(
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
     mPresContext->RestyleManager()->AttributeChanged(
-        aElement, aNameSpaceID, aAttribute, aModType, aOldValue);
+        aElement, aNameSpaceID, aAttribute, static_cast<AttrModType>(aModType),
+        aOldValue);
   }
 }
 

@@ -126,6 +126,8 @@ class nsStyleChangeList;
 class nsViewManager;
 class nsWindowSizes;
 
+enum class AttrModType : uint8_t;  // Defined by nsIMutationObserver.h
+
 struct CharacterDataChangeInfo;
 
 namespace mozilla {
@@ -2588,10 +2590,10 @@ class nsIFrame : public nsQueryFrame {
    * @param aNameSpaceID the namespace of the attribute
    * @param aAttribute the atom name of the attribute
    * @param aModType Whether or not the attribute was added, changed, or
-   * removed. The constants are defined in MutationEvent.webidl.
+   * removed.
    */
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType);
+                                    AttrModType aModType);
 
   /**
    * When the element states of mContent change, this method is invoked on the

@@ -121,7 +121,7 @@ void nsMathMLmfracFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 nsresult nsMathMLmfracFrame::AttributeChanged(int32_t aNameSpaceID,
                                               nsAtom* aAttribute,
-                                              int32_t aModType) {
+                                              AttrModType aModType) {
   if (aNameSpaceID == kNameSpaceID_None &&
       nsGkAtoms::linethickness == aAttribute) {
     // The thickness changes, so a repaint of the bar is needed.

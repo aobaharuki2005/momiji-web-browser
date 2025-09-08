@@ -61,6 +61,7 @@
 #include "nsICSSDeclaration.h"
 #include "nsIContentInlines.h"
 #include "nsIFrame.h"
+#include "nsIMutationObserver.h"
 #include "nsLayoutUtils.h"
 #include "nsQueryObject.h"
 
@@ -2176,7 +2177,7 @@ void SVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
 void SVGElement::DidAnimateAttribute(int32_t aNameSpaceID, nsAtom* aAttribute) {
   if (auto* frame = GetPrimaryFrame()) {
     frame->AttributeChanged(aNameSpaceID, aAttribute,
-                            MutationEvent_Binding::MODIFICATION);
+                            AttrModType::Modification);
     SVGObserverUtils::InvalidateRenderingObservers(frame);
     return;
   }

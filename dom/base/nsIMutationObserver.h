@@ -43,6 +43,13 @@ inline std::ostream& operator<<(
                          : "KeepTrustWorthiness");
 }
 
+// AttrModType is same as the legacy MutationEvent.attrChange value.
+enum class AttrModType : uint8_t {
+  Modification = 1,
+  Addition = 2,
+  Removal = 3,
+};
+
 /**
  * Information details about a characterdata change.  Basically, we
  * view all changes as replacements of a length of text at some offset

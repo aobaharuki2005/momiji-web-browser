@@ -28,6 +28,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "nsContainerFrame.h"
 #include "nsIImageLoadingContent.h"
+#include "nsIMutationObserver.h"
 #include "nsIReflowCallback.h"
 #include "nsLayoutUtils.h"
 
@@ -179,7 +180,8 @@ bool SVGImageFrame::DoGetParentSVGTransforms(
 // nsIFrame methods:
 
 nsresult SVGImageFrame::AttributeChanged(int32_t aNameSpaceID,
-                                         nsAtom* aAttribute, int32_t aModType) {
+                                         nsAtom* aAttribute,
+                                         AttrModType aModType) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::preserveAspectRatio) {
       // We don't paint the content of the image using display lists, therefore
@@ -190,7 +192,7 @@ nsresult SVGImageFrame::AttributeChanged(int32_t aNameSpaceID,
       return NS_OK;
     }
   }
-  if (aModType == dom::MutationEvent_Binding::REMOVAL &&
+  if (aModType == AttrModType::Removal &&
       (aNameSpaceID == kNameSpaceID_None ||
        aNameSpaceID == kNameSpaceID_XLink) &&
       aAttribute == nsGkAtoms::href) {

@@ -759,8 +759,7 @@ void nsSubDocumentFrame::ReflowCallbackCanceled() {
 }
 
 nsresult nsSubDocumentFrame::AttributeChanged(int32_t aNameSpaceID,
-                                              nsAtom* aAttribute,
-                                              int32_t aModType) {
+                                              nsAtom* aAttribute, AttrModType) {
   if (aNameSpaceID != kNameSpaceID_None) {
     return NS_OK;
   }

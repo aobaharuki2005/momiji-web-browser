@@ -7703,7 +7703,7 @@ nsresult nsIFrame::CharacterDataChanged(const CharacterDataChangeInfo&) {
 }
 
 nsresult nsIFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) {
+                                    AttrModType) {
   return NS_OK;
 }
 

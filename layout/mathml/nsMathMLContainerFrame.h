@@ -120,7 +120,7 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   //        re-laid too (e.g., this happens with <munder>, <mover>,
   //        <munderover>).
   // nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-  //                           int32_t aModType) override;
+  //                           AttrModType aModType) override;
 
   // helper function to apply mirroring to a horizontal coordinate, if needed.
   nscoord MirrorIfRTL(nscoord aParentWidth, nscoord aChildWidth,

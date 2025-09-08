@@ -2936,7 +2936,8 @@ nsIFrame::Cursor nsImageFrame::GetCursor(const nsPoint& aPoint) {
 }
 
 nsresult nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
-                                        nsAtom* aAttribute, int32_t aModType) {
+                                        nsAtom* aAttribute,
+                                        AttrModType aModType) {
   nsresult rv = nsAtomicContainerFrame::AttributeChanged(aNameSpaceID,
                                                          aAttribute, aModType);
   if (NS_FAILED(rv)) {

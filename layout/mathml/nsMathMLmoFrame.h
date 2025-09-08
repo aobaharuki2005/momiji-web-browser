@@ -55,7 +55,7 @@ class nsMathMLmoFrame final : public nsMathMLTokenFrame {
                                 ReflowOutput& aDesiredSize) override;
 
   nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                            int32_t aModType) override;
+                            AttrModType aModType) override;
 
   // This method is called by the parent frame to ask <mo>
   // to stretch itself.

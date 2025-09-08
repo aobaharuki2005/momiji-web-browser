@@ -2086,7 +2086,7 @@ nsIWidget* nsMenuPopupFrame::GetWidget() const {
 
 nsresult nsMenuPopupFrame::AttributeChanged(int32_t aNameSpaceID,
                                             nsAtom* aAttribute,
-                                            int32_t aModType)
+                                            AttrModType aModType)
 
 {
   nsresult rv =

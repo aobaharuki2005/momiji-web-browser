@@ -51,7 +51,7 @@ class SVGFEImageFrame final : public nsIFrame {
 #endif
 
   nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                            int32_t aModType) override;
+                            AttrModType aModType) override;
 
   void OnVisibilityChange(
       Visibility aNewVisibility,
@@ -112,7 +112,7 @@ void SVGFEImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 nsresult SVGFEImageFrame::AttributeChanged(int32_t aNameSpaceID,
                                            nsAtom* aAttribute,
-                                           int32_t aModType) {
+                                           AttrModType aModType) {
   SVGFEImageElement* element = static_cast<SVGFEImageElement*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
     MOZ_ASSERT(

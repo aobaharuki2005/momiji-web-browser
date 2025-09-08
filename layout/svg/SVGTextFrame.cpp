@@ -2804,7 +2804,7 @@ void SVGTextFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 }
 
 nsresult SVGTextFrame::AttributeChanged(int32_t aNameSpaceID,
-                                        nsAtom* aAttribute, int32_t aModType) {
+                                        nsAtom* aAttribute, AttrModType) {
   if (aNameSpaceID != kNameSpaceID_None) {
     return NS_OK;
   }
