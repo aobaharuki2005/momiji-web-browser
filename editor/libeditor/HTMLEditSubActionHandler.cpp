@@ -2479,12 +2479,6 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
           break;  // There is no more text which we need to delete.
         }
       }
-      if (MayHaveMutationEventListeners(
-              NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED) &&
-          (NS_WARN_IF(!trackingEndToDelete.IsSetAndValid()) ||
-           NS_WARN_IF(!trackingEndToDelete.IsInTextNode()))) {
-        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-      }
       MOZ_ASSERT(trackingEndToDelete.IsInTextNode());
       endToDelete.Set(trackingEndToDelete.ContainerAs<Text>(),
                       trackingEndToDelete.Offset());
@@ -2492,11 +2486,6 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
       // we should stop handling the deletion.
       startToDelete =
           EditorDOMPointInText::AtEndOf(*startToDelete.ContainerAs<Text>());
-      if (MayHaveMutationEventListeners(
-              NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED) &&
-          NS_WARN_IF(!startToDelete.IsBefore(endToDelete))) {
-        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-      }
     }
     // Delete ASCII whiteSpaces in the range simpley if there are some text
     // nodes which we don't need to replace their text.
@@ -2533,7 +2522,6 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
           break;  // There is no more text which we need to delete.
         }
         if (MayHaveMutationEventListeners(
-                NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED |
                 NS_EVENT_BITS_MUTATION_NODEREMOVED |
                 NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
                 NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED) &&

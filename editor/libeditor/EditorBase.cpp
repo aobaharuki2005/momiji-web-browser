@@ -47,13 +47,12 @@
 #include "mozilla/DebugOnly.h"                // for DebugOnly
 #include "mozilla/EditorSpellCheck.h"         // for EditorSpellCheck
 #include "mozilla/Encoding.h"  // for Encoding (used in Document::GetDocumentCharacterSet)
-#include "mozilla/EventDispatcher.h"     // for EventChainPreVisitor, etc.
-#include "mozilla/FlushType.h"           // for FlushType::Frames
-#include "mozilla/IMEContentObserver.h"  // for IMEContentObserver
-#include "mozilla/IMEStateManager.h"     // for IMEStateManager
-#include "mozilla/InputEventOptions.h"   // for InputEventOptions
-#include "mozilla/IntegerRange.h"        // for IntegerRange
-#include "mozilla/InternalMutationEvent.h"  // for NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED
+#include "mozilla/EventDispatcher.h"        // for EventChainPreVisitor, etc.
+#include "mozilla/FlushType.h"              // for FlushType::Frames
+#include "mozilla/IMEContentObserver.h"     // for IMEContentObserver
+#include "mozilla/IMEStateManager.h"        // for IMEStateManager
+#include "mozilla/InputEventOptions.h"      // for InputEventOptions
+#include "mozilla/IntegerRange.h"           // for IntegerRange
 #include "mozilla/Logging.h"                //for MOZ_LOG
 #include "mozilla/mozalloc.h"               // for operator new, etc.
 #include "mozilla/mozInlineSpellChecker.h"  // for mozInlineSpellChecker
@@ -3435,59 +3434,15 @@ Result<InsertTextResult, nsresult> EditorBase::InsertTextWithTransaction(
                           EditorDOMPoint::AtEndOf(*newTextNode));
 }
 
-static bool TextFragmentBeginsWithStringAtOffset(
-    const CharacterDataBuffer& aCharacterDataBuffer, const uint32_t aOffset,
-    const nsAString& aString) {
-  const uint32_t stringLength = aString.Length();
-
-  if (aOffset + stringLength > aCharacterDataBuffer.GetLength()) {
-    return false;
-  }
-
-  if (aCharacterDataBuffer.Is2b()) {
-    return aString.Equals(aCharacterDataBuffer.Get2b() + aOffset);
-  }
-
-  return aString.EqualsLatin1(aCharacterDataBuffer.Get1b() + aOffset,
-                              stringLength);
-}
-
-static std::tuple<EditorDOMPointInText, EditorDOMPointInText>
-AdjustTextInsertionRange(const EditorDOMPointInText& aInsertedPoint,
-                         const nsAString& aInsertedString) {
-  if (TextFragmentBeginsWithStringAtOffset(
-          aInsertedPoint.ContainerAs<Text>()->DataBuffer(),
-          aInsertedPoint.Offset(), aInsertedString)) {
-    return {aInsertedPoint,
-            EditorDOMPointInText(
-                aInsertedPoint.ContainerAs<Text>(),
-                aInsertedPoint.Offset() + aInsertedString.Length())};
-  }
-
-  return {EditorDOMPointInText(aInsertedPoint.ContainerAs<Text>(), 0),
-          EditorDOMPointInText::AtEndOf(*aInsertedPoint.ContainerAs<Text>())};
-}
-
 std::tuple<EditorDOMPointInText, EditorDOMPointInText>
 EditorBase::ComputeInsertedRange(const EditorDOMPointInText& aInsertedPoint,
                                  const nsAString& aInsertedString) const {
   MOZ_ASSERT(aInsertedPoint.IsSet());
 
-  // The DOM was potentially modified during the transaction. This is possible
-  // through mutation event listeners. That is, the node could've been removed
-  // from the doc or otherwise modified.
-  if (!MayHaveMutationEventListeners(
-          NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
-    EditorDOMPointInText endOfInsertion(
-        aInsertedPoint.ContainerAs<Text>(),
-        aInsertedPoint.Offset() + aInsertedString.Length());
-    return {aInsertedPoint, endOfInsertion};
-  }
-  if (aInsertedPoint.ContainerAs<Text>()->IsInComposedDoc()) {
-    EditorDOMPointInText begin, end;
-    return AdjustTextInsertionRange(aInsertedPoint, aInsertedString);
-  }
-  return {EditorDOMPointInText(), EditorDOMPointInText()};
+  EditorDOMPointInText endOfInsertion(
+      aInsertedPoint.ContainerAs<Text>(),
+      aInsertedPoint.Offset() + aInsertedString.Length());
+  return {aInsertedPoint, endOfInsertion};
 }
 
 Result<InsertTextResult, nsresult>

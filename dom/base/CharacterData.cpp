@@ -243,15 +243,6 @@ nsresult CharacterData::SetTextInternal(
   Document* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, aNotify);
 
-  bool haveMutationListeners =
-      aNotify && nsContentUtils::WantMutationEvents(
-                     this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED, this);
-
-  RefPtr<nsAtom> oldValue;
-  if (haveMutationListeners) {
-    oldValue = GetCurrentValueAtom();
-  }
-
   if (aNotify) {
     CharacterDataChangeInfo info = {
         aOffset == textLength,   aOffset, endOffset, aLength,
@@ -332,20 +323,6 @@ nsresult CharacterData::SetTextInternal(
         aOffset == textLength,   aOffset, endOffset, aLength,
         aMutationEffectOnScript, aDetails};
     MutationObservers::NotifyCharacterDataChanged(this, info);
-
-    if (haveMutationListeners) {
-      InternalMutationEvent mutation(true, eLegacyCharacterDataModified);
-
-      mutation.mPrevAttrValue = oldValue;
-      if (aLength > 0) {
-        nsAutoString val;
-        mBuffer.AppendTo(val);
-        mutation.mNewAttrValue = NS_Atomize(val);
-      }
-
-      mozAutoSubtreeModified subtree(OwnerDoc(), this);
-      AsyncEventDispatcher::RunDOMEventWhenSafe(*this, mutation);
-    }
   }
 
   return NS_OK;

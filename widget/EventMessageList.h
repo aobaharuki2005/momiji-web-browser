@@ -197,9 +197,8 @@ NS_EVENT_MESSAGE(eLegacyNodeRemoved)
 NS_EVENT_MESSAGE(eLegacyNodeRemovedFromDocument)
 NS_EVENT_MESSAGE(eLegacyNodeInsertedIntoDocument)
 NS_EVENT_MESSAGE(eLegacyAttrModified)
-NS_EVENT_MESSAGE(eLegacyCharacterDataModified)
 NS_EVENT_MESSAGE_FIRST_LAST(eLegacyMutationEvent, eLegacySubtreeModified,
-                            eLegacyCharacterDataModified)
+                            eLegacyAttrModified)
 
 NS_EVENT_MESSAGE(eUnidentifiedEvent)
 

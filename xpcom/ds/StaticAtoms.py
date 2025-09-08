@@ -818,7 +818,6 @@ STATIC_ATOMS = [
     Atom("ondownloading", "ondownloading"),
     Atom("onDOMActivate", "onDOMActivate"),
     Atom("onDOMAttrModified", "onDOMAttrModified"),
-    Atom("onDOMCharacterDataModified", "onDOMCharacterDataModified"),
     Atom("onDOMFocusIn", "onDOMFocusIn"),
     Atom("onDOMFocusOut", "onDOMFocusOut"),
     Atom("onDOMMouseScroll", "onDOMMouseScroll"),
