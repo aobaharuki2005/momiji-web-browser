@@ -201,10 +201,12 @@ public final class GeckoRuntime implements Parcelable {
       // OnPrimaryClipChangedListener() won’t be triggered for a background
       // application, so update the clipboard sequence number once the
       // application returns to the foreground.
-      ThreadUtils.sGeckoHandler.post(
-          () -> {
-            Clipboard.updateSequenceNumber(GeckoAppShell.getApplicationContext());
-          });
+      if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+        ThreadUtils.sGeckoHandler.post(
+            () -> {
+              Clipboard.updateSequenceNumber(GeckoAppShell.getApplicationContext());
+            });
+      }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
