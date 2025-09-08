@@ -105,6 +105,137 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
+namespace mozilla {
+
+bool TextAutospace::Enabled(const StyleTextAutospace& aStyleTextAutospace,
+                            const StyleTextOrientation aStyleTextOrientation,
+                            const CharacterDataBuffer* aBuffer) {
+  if (aStyleTextAutospace == StyleTextAutospace::NO_AUTOSPACE) {
+    return false;
+  }
+
+  if (aStyleTextAutospace == StyleTextAutospace::AUTO) {
+    // 'text-autospace: auto' is UA-defined. Currently, WebKit parses `auto` but
+    // does not add spacing; Blink does not parse 'auto' (treated as invalid).
+    // To align with other engines, we treat 'auto' the same as a no-op.
+    return false;
+  }
+
+  if (aStyleTextOrientation == StyleTextOrientation::Upright) {
+    // If 'text-orientation: upright', a character cannot be a non-ideographic
+    // letter nor a non-ideographic numeral, so ideograph-alpha or
+    // ideograph-numeric boundaries cannot occur.
+    //
+    // Note: 'text-combine-upright' is checked in
+    // PropertyProvider::GetSpacingInternal(), so we do not check it here.
+    return false;
+  }
+
+  if (!aBuffer || !aBuffer->Is2b()) {
+    // An 8-bit character cannot be an ideograph.
+    return false;
+  }
+
+  return true;
+}
+
+TextAutospace::TextAutospace(const StyleTextAutospace& aStyleTextAutospace,
+                             nscoord aInterScriptSpacing)
+    : mBoundarySet(InitBoundarySet(aStyleTextAutospace)),
+      mInterScriptSpacing(aInterScriptSpacing) {}
+
+bool TextAutospace::ShouldApplySpacing(CharClass aPrevClass,
+                                       CharClass aCurrClass) const {
+  const EnumSet<CharClass> classes{aPrevClass, aCurrClass};
+  if (mBoundarySet.contains(Boundary::IdeographAlpha)) {
+    constexpr EnumSet<CharClass> kIdeographAlphaMask{
+        CharClass::Ideograph, CharClass::NonIdeographicLetter};
+    if (classes == kIdeographAlphaMask) {
+      return true;
+    }
+  }
+
+  if (mBoundarySet.contains(Boundary::IdeographNumeric)) {
+    constexpr EnumSet<CharClass> kIdeographNumericMask{
+        CharClass::Ideograph, CharClass::NonIdeographicNumeral};
+    if (classes == kIdeographNumericMask) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool TextAutospace::IsIdeograph(char32_t aChar) const {
+  // All characters in the range of U+3041 to U+30FF, except those that belong
+  // to Unicode Punctuation [P*] general category.
+  if (0x3041 <= aChar && aChar <= 0x30FF) {
+    return !intl::UnicodeProperties::IsPunctuation(aChar);
+  }
+
+  // CJK Strokes (U+31C0 to U+31EF).
+  if (0x31C0 <= aChar && aChar <= 0x31EF) {
+    return true;
+  }
+
+  // Katakana Phonetic Extensions (U+31F0 to U+31FF).
+  if (0x31F0 <= aChar && aChar <= 0x31FF) {
+    return true;
+  }
+
+  // All characters that have the Han script property.
+  if (intl::UnicodeProperties::GetScriptCode(aChar) == intl::Script::HAN) {
+    return true;
+  }
+
+  return false;
+}
+
+TextAutospace::CharClass TextAutospace::GetCharClass(char32_t aChar) const {
+  if (IsIdeograph(aChar)) {
+    return CharClass::Ideograph;
+  }
+
+  // From now on, aChar is *not* an ideograph.
+  if (intl::UnicodeProperties::IsCombiningMark(aChar)) {
+    // Do not treat combining mark as letter.
+    return CharClass::CombiningMark;
+  }
+
+  if (intl::UnicodeProperties::IsLetter(aChar) &&
+      !intl::UnicodeProperties::IsEastAsianFullWidth(aChar)) {
+    return CharClass::NonIdeographicLetter;
+  }
+
+  if (intl::UnicodeProperties::CharType(aChar) ==
+      intl::GeneralCategory::Decimal_Number) {
+    if (!intl::UnicodeProperties::IsEastAsianFullWidth(aChar)) {
+      return CharClass::NonIdeographicNumeral;
+    }
+  }
+
+  return CharClass::Other;
+}
+
+TextAutospace::BoundarySet TextAutospace::InitBoundarySet(
+    const StyleTextAutospace& aStyleTextAutospace) const {
+  if (aStyleTextAutospace == StyleTextAutospace::NORMAL) {
+    return {Boundary::IdeographAlpha, Boundary::IdeographNumeric};
+  }
+
+  if (aStyleTextAutospace == StyleTextAutospace::IDEOGRAPH_ALPHA) {
+    return {Boundary::IdeographAlpha};
+  }
+
+  if (aStyleTextAutospace == StyleTextAutospace::IDEOGRAPH_NUMERIC) {
+    return {Boundary::IdeographNumeric};
+  }
+
+  return {};
+}
+
+}  // namespace mozilla
+
 static bool NeedsToMaskPassword(nsTextFrame* aFrame) {
   MOZ_ASSERT(aFrame);
   MOZ_ASSERT(aFrame->GetContent());
