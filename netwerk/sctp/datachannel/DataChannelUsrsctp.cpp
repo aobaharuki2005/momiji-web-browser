@@ -797,6 +797,16 @@ void DataChannelConnectionUsrsctp::OnStreamOpen(uint16_t stream) {
   });
 }
 
+bool DataChannelConnectionUsrsctp::HasQueuedData(uint16_t aStream) const {
+  MOZ_ASSERT(mSTS->IsOnCurrentThread());
+  for (const auto& data : mQueuedData) {
+    if (data->mStream == aStream) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void DataChannelConnectionUsrsctp::HandleDataMessageChunk(
     const void* data, size_t length, uint32_t ppid, uint16_t stream,
     uint16_t messageId, int flags) {
@@ -810,7 +820,7 @@ void DataChannelConnectionUsrsctp::HandleDataMessageChunk(
   // NOTE: the updated spec from the IETF says we should set in-order until we
   // receive an ACK. That would make this code moot.  Keep it for now for
   // backwards compatibility.
-  if (!channel) {
+  if (!channel || HasQueuedData(stream)) {
     // In the updated 0-RTT open case, the sender can send data immediately
     // after Open, and doesn't set the in-order bit (since we don't have a
     // response or ack).  Also, with external negotiation, data can come in
