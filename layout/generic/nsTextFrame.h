@@ -71,7 +71,7 @@ class nsTextFrame : public nsIFrame {
      * cannot be called, nor can GetOriginalLength().
      */
     PropertyProvider(gfxTextRun* aTextRun, const nsStyleText* aTextStyle,
-                     const mozilla::dom::CharacterDataBuffer* aFrag,
+                     const mozilla::dom::CharacterDataBuffer* aBuffer,
                      nsTextFrame* aFrame, const gfxSkipCharsIterator& aStart,
                      int32_t aLength, nsIFrame* aLineContainer,
                      nscoord aOffsetFromBlockOriginForTabs,
@@ -745,7 +745,7 @@ class nsTextFrame : public nsIFrame {
     NoTrimBefore = 1 << 2
   };
   TrimmedOffsets GetTrimmedOffsets(
-      const mozilla::dom::CharacterDataBuffer* aFrag,
+      const mozilla::dom::CharacterDataBuffer* aBuffer,
       TrimmedOffsetFlags aFlags = TrimmedOffsetFlags::Default) const;
 
   // Similar to Reflow(), but for use from nsLineLayout
