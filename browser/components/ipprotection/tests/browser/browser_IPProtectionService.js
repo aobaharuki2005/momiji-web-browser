@@ -124,10 +124,17 @@ add_task(
 
     await waitForWidgetAdded();
 
-    await openPanel();
+    let content = await openPanel();
+
     await IPProtectionService.enrolling;
 
     Assert.ok(IPProtectionService.isEnrolled, "User should now be enrolled");
+
+    // User is already signed in so the toggle should be available.
+    Assert.ok(
+      content.connectionToggleEl,
+      "Status card connection toggle should be present"
+    );
 
     cleanupService();
     await cleanupAlpha();

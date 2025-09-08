@@ -114,13 +114,13 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    this.#addSignInStateObserver();
-    this.addVPNAddonObserver();
-    this.#addEligibilityListeners();
-
     this.#updateSignInStatus();
     this.#updateEligibility();
     this.#updateEnrollment(true /* onlyCached */);
+
+    this.#addSignInStateObserver();
+    this.addVPNAddonObserver();
+    this.#addEligibilityListeners();
 
     this.#inited = true;
   }
