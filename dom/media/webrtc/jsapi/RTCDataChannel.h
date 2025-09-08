@@ -61,12 +61,8 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   void Close();
   IMPL_EVENT_HANDLER(message)
   IMPL_EVENT_HANDLER(bufferedamountlow)
-  RTCDataChannelType BinaryType() const {
-    return static_cast<RTCDataChannelType>(static_cast<int>(mBinaryType));
-  }
-  void SetBinaryType(RTCDataChannelType aType) {
-    mBinaryType = static_cast<DataChannelBinaryType>(static_cast<int>(aType));
-  }
+  RTCDataChannelType BinaryType() const { return mBinaryType; }
+  void SetBinaryType(RTCDataChannelType aType) { mBinaryType = aType; }
   void Send(const nsAString& aData, ErrorResult& aRv);
   void Send(Blob& aData, ErrorResult& aRv);
   void Send(const ArrayBuffer& aData, ErrorResult& aRv);
@@ -124,12 +120,8 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   // Owning reference
   RefPtr<DataChannel> mDataChannel;
   nsString mOrigin;
-  enum DataChannelBinaryType {
-    DC_BINARY_TYPE_ARRAYBUFFER,
-    DC_BINARY_TYPE_BLOB,
-  };
-  DataChannelBinaryType mBinaryType = DC_BINARY_TYPE_BLOB;
   bool mCheckMustKeepAlive = true;
+  RTCDataChannelType mBinaryType = RTCDataChannelType::Arraybuffer;
 
   Nullable<uint16_t> mId;
   double mMaxMessageSize = 0;

@@ -514,10 +514,11 @@ nsresult RTCDataChannel::DoOnMessageAvailable(const nsACString& aData,
     return NS_OK;
   }
 
-  DC_VERBOSE((
-      "DoOnMessageAvailable%s\n",
-      aBinary ? ((mBinaryType == DC_BINARY_TYPE_BLOB) ? " (blob)" : " (binary)")
-              : ""));
+  DC_VERBOSE(("DoOnMessageAvailable%s\n",
+              aBinary
+                  ? ((mBinaryType == RTCDataChannelType::Blob) ? " (blob)"
+                                                               : " (binary)")
+                  : ""));
 
   nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
@@ -533,7 +534,7 @@ nsresult RTCDataChannel::DoOnMessageAvailable(const nsACString& aData,
   JS::Rooted<JS::Value> jsData(cx);
 
   if (aBinary) {
-    if (mBinaryType == DC_BINARY_TYPE_BLOB) {
+    if (mBinaryType == RTCDataChannelType::Blob) {
       RefPtr<Blob> blob =
           Blob::CreateStringBlob(GetOwnerGlobal(), aData, u""_ns);
       if (NS_WARN_IF(!blob)) {
@@ -543,7 +544,7 @@ nsresult RTCDataChannel::DoOnMessageAvailable(const nsACString& aData,
       if (!ToJSValue(cx, blob, &jsData)) {
         return NS_ERROR_FAILURE;
       }
-    } else if (mBinaryType == DC_BINARY_TYPE_ARRAYBUFFER) {
+    } else if (mBinaryType == RTCDataChannelType::Arraybuffer) {
       ErrorResult error;
       JS::Rooted<JSObject*> arrayBuf(cx, ArrayBuffer::Create(cx, aData, error));
       RETURN_NSRESULT_ON_FAILURE(error);
