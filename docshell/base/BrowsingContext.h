@@ -953,11 +953,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                  bool aRequireUserInteraction, bool aUserActivation,
                  std::function<void(Maybe<int32_t>&&)>&& aResolver);
 
-  MOZ_CAN_RUN_SCRIPT
-  void NavigationTraverse(const nsID& aKey, uint64_t aHistoryEpoch,
-                          bool aUserActivation,
-                          std::function<void(nsresult)>&& aResolver);
-
   bool ShouldUpdateSessionHistory(uint32_t aLoadType);
 
   // Checks if we reached the rate limit for calls to Location and History API.

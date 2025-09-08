@@ -1007,12 +1007,6 @@ static void LogEntry(nsISHEntry* aEntry, int32_t aIndex, int32_t aTotal,
           (" %s%s  Has User Interaction = %s\n", prefix.get(),
            childCount > 0 ? "|" : " ",
            aEntry->GetHasUserInteraction() ? "true" : "false"));
-  if (nsCOMPtr<SessionHistoryEntry> entry = do_QueryInterface(aEntry)) {
-    MOZ_LOG(gSHLog, LogLevel::Debug,
-            (" %s%s  Navigation key = %s\n", prefix.get(),
-             childCount > 0 ? "|" : " ",
-             entry->Info().NavigationKey().ToString().get()));
-  }
 
   nsCOMPtr<nsISHEntry> prevChild;
   for (int32_t i = 0; i < childCount; ++i) {
@@ -1400,24 +1394,22 @@ static bool MaybeLoadBFCache(nsSHistory::LoadEntryResult& aLoadEntry) {
                     ->GetCurrentWindowGlobal()) {
           wgp->PermitUnload(
               [canonicalBC, loadState, she, frameLoader, currentFrameLoader,
-               canSave](nsIDocumentViewer::PermitUnloadResult aResult)
-                  MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
-                    bool allow = aResult == nsIDocumentViewer::eContinue;
-                    if (allow && !canonicalBC->IsReplaced()) {
-                      FinishRestore(canonicalBC, loadState, she, frameLoader,
-                                    canSave && canonicalBC->AllowedInBFCache(
-                                                   Nothing(), nullptr));
-                    } else if (currentFrameLoader
-                                   ->GetMaybePendingBrowsingContext()) {
-                      nsISHistory* shistory =
-                          currentFrameLoader->GetMaybePendingBrowsingContext()
-                              ->Canonical()
-                              ->GetSessionHistory();
-                      if (shistory) {
-                        shistory->InternalSetRequestedIndex(-1);
-                      }
-                    }
-                  });
+               canSave](bool aAllow) MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
+                if (aAllow && !canonicalBC->IsReplaced()) {
+                  FinishRestore(canonicalBC, loadState, she, frameLoader,
+                                canSave && canonicalBC->AllowedInBFCache(
+                                               Nothing(), nullptr));
+                } else if (currentFrameLoader
+                               ->GetMaybePendingBrowsingContext()) {
+                  nsISHistory* shistory =
+                      currentFrameLoader->GetMaybePendingBrowsingContext()
+                          ->Canonical()
+                          ->GetSessionHistory();
+                  if (shistory) {
+                    shistory->InternalSetRequestedIndex(-1);
+                  }
+                }
+              });
           return true;
         }
       }
@@ -1458,8 +1450,8 @@ MOZ_CAN_RUN_SCRIPT
 static bool MaybeCheckUnloadingIsCanceled(
     nsTArray<nsSHistory::LoadEntryResult>& aLoadResults,
     BrowsingContext* aTraversable,
-    std::function<void(nsTArray<nsSHistory::LoadEntryResult>&,
-                       nsIDocumentViewer::PermitUnloadResult)>&& aResolver) {
+    std::function<void(nsTArray<nsSHistory::LoadEntryResult>&, bool)>&&
+        aResolver) {
   // Step 4
   if (!aTraversable || !aTraversable->IsTop() || !SessionHistoryInParent() ||
       !aLoadResults.Length() || !Navigation::IsAPIEnabled()) {
@@ -1535,20 +1527,18 @@ static bool MaybeCheckUnloadingIsCanceled(
   windowGlobalParent->PermitUnloadTraversable(
       targetEntry->Info(), action,
       [action, loadResults = CopyableTArray(std::move(aLoadResults)),
-       windowGlobalParent,
-       aResolver](nsIDocumentViewer::PermitUnloadResult aResult) mutable {
-        if (aResult != nsIDocumentViewer::eContinue) {
-          aResolver(loadResults, aResult);
+       windowGlobalParent, aResolver](bool aAllow) mutable {
+        if (!aAllow) {
+          aResolver(loadResults, aAllow);
           return;
         }
 
         // PermitUnloadTraversable includes everything except the process of the
         // top level browsing context.
         windowGlobalParent->PermitUnloadChildNavigables(
-            action, [loadResults = std::move(loadResults), aResolver](
-                        nsIDocumentViewer::PermitUnloadResult aResult) mutable {
-              aResolver(loadResults, aResult);
-            });
+            action,
+            [loadResults = std::move(loadResults), aResolver](
+                bool aAllow) mutable { aResolver(loadResults, aAllow); });
       });
 
   return true;
@@ -1556,56 +1546,38 @@ static bool MaybeCheckUnloadingIsCanceled(
 
 /* static */
 void nsSHistory::LoadURIs(nsTArray<LoadEntryResult>& aLoadResults,
-                          const std::function<void(nsresult)>& aResolver,
                           BrowsingContext* aTraversable) {
   // Here we have call a path that handles firing the "traverse" navigate event
   // if applicable.
   if (MaybeCheckUnloadingIsCanceled(
           aLoadResults, aTraversable,
-          [traversable = RefPtr{aTraversable}, aResolver](
+          [traversable = RefPtr{aTraversable}](
               nsTArray<LoadEntryResult>& aLoadResults,
-              nsIDocumentViewer::PermitUnloadResult aResult)
-              MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
-                if (aResult != nsIDocumentViewer::eContinue) {
-                  if (nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner =
-                          do_QueryInterface(
-                              traversable->GetEmbedderElement())) {
-                    if (RefPtr<nsFrameLoader> currentFrameLoader =
-                            frameLoaderOwner->GetFrameLoader()) {
-                      nsISHistory* shistory =
-                          currentFrameLoader->GetMaybePendingBrowsingContext()
-                              ->Canonical()
-                              ->GetSessionHistory();
-                      if (shistory) {
-                        shistory->InternalSetRequestedIndex(-1);
-                      }
-                    }
+              bool aAllow) MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
+            if (!aAllow) {
+              if (nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner =
+                      do_QueryInterface(traversable->GetEmbedderElement())) {
+                if (RefPtr<nsFrameLoader> currentFrameLoader =
+                        frameLoaderOwner->GetFrameLoader()) {
+                  nsISHistory* shistory =
+                      currentFrameLoader->GetMaybePendingBrowsingContext()
+                          ->Canonical()
+                          ->GetSessionHistory();
+                  if (shistory) {
+                    shistory->InternalSetRequestedIndex(-1);
                   }
-
-                  // https://html.spec.whatwg.org/#performing-a-navigation-api-traversal
-                  // 12.5 If result is "canceled-by-beforeunload", then queue a
-                  //      global task on the navigation and traversal task
-                  //      source given navigation's relevant global object to
-                  //      reject the finished promise for apiMethodTracker with
-                  //      a new "AbortError" DOMException created in
-                  //      navigation's relevant realm.
-                  if (aResult == nsIDocumentViewer::eCanceledByBeforeUnload) {
-                    return aResolver(nsresult::NS_ERROR_DOM_ABORT_ERR);
-                  }
-
-                  return aResolver(NS_OK);
                 }
+              }
+              return;
+            }
 
-                for (LoadEntryResult& loadEntry : aLoadResults) {
-                  loadEntry.mLoadState->SetNotifiedBeforeUnloadListeners(true);
-                  LoadURIOrBFCache(loadEntry);
-                }
-              })) {
+            for (LoadEntryResult& loadEntry : aLoadResults) {
+              loadEntry.mLoadState->SetNotifiedBeforeUnloadListeners(true);
+              LoadURIOrBFCache(loadEntry);
+            }
+          })) {
     return;
   }
-
-  // There's no unload handlers, resolve immediately.
-  aResolver(NS_OK);
 
   // And we fall back to the simple case if we shouldn't fire a "traverse"
   // navigate event.

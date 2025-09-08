@@ -197,13 +197,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   MOZ_CAN_RUN_SCRIPT Maybe<int32_t> HistoryGo(
       int32_t aOffset, uint64_t aHistoryEpoch, bool aRequireUserInteraction,
-      bool aUserActivation, Maybe<ContentParentId> aContentId,
-      std::function<void(nsresult)>&& aResolver = [](nsresult) {});
-
-  MOZ_CAN_RUN_SCRIPT void NavigationTraverse(
-      const nsID& aKey, uint64_t aHistoryEpoch, bool aUserActivation,
-      Maybe<ContentParentId> aContentId,
-      std::function<void(nsresult)>&& aResolver);
+      bool aUserActivation, Maybe<ContentParentId> aContentId);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

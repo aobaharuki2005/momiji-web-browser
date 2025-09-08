@@ -781,10 +781,9 @@ namespace {
 class CheckPermitUnloadRequest final : public PromiseNativeHandler,
                                        public nsITimerCallback {
  public:
-  CheckPermitUnloadRequest(
-      WindowGlobalParent* aWGP, bool aHasInProcessBlocker,
-      nsIDocumentViewer::PermitUnloadAction aAction,
-      std::function<void(nsIDocumentViewer::PermitUnloadResult)>&& aResolver)
+  CheckPermitUnloadRequest(WindowGlobalParent* aWGP, bool aHasInProcessBlocker,
+                           nsIDocumentViewer::PermitUnloadAction aAction,
+                           std::function<void(bool)>&& aResolver)
       : mResolver(std::move(aResolver)),
         mWGP(aWGP),
         mAction(aAction),
@@ -823,10 +822,9 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     }
 
     BrowsingContext* bc = mWGP->GetBrowsingContext();
-    auto resolve = [self](nsIDocumentViewer::PermitUnloadResult aResult) {
-      if (aResult != nsIDocumentViewer::eContinue) {
+    auto resolve = [self](bool blockNavigation) {
+      if (blockNavigation) {
         self->mFoundBlocker = true;
-        self->mReason = aResult;
       }
       self->ResolveRequest();
     };
@@ -898,7 +896,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     mTimer = nullptr;
 
     if (!mFoundBlocker) {
-      SendReply();
+      SendReply(true);
       return;
     }
 
@@ -907,19 +905,13 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
       action = nsIDocumentViewer::eDontPromptAndUnload;
     }
     if (action != nsIDocumentViewer::ePrompt) {
-      if (action == nsIDocumentViewer::eDontPromptAndUnload) {
-        mReason = nsIDocumentViewer::eContinue;
-      }
-      SendReply();
+      SendReply(action == nsIDocumentViewer::eDontPromptAndUnload);
       return;
     }
 
     // Handle any failure in prompting by aborting the navigation. See comment
     // in nsDocumentViewer::PermitUnload for reasoning.
-    auto cleanup = MakeScopeExit([&]() {
-      mReason = nsIDocumentViewer::eCanceledByBeforeUnload;
-      SendReply();
-    });
+    auto cleanup = MakeScopeExit([&]() { SendReply(false); });
 
     if (nsCOMPtr<nsIPromptCollection> prompt =
             do_GetService("@mozilla.org/embedcomp/prompt-collection;1")) {
@@ -936,28 +928,24 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     }
   }
 
-  void SendReply() {
+  void SendReply(bool aAllow) {
     MOZ_ASSERT(mState != State::REPLIED);
-    mResolver(mReason);
+    mResolver(aAllow);
     mState = State::REPLIED;
   }
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override {
     MOZ_ASSERT(mState == State::PROMPTING);
-    if (!JS::ToBoolean(aValue)) {
-      mReason = nsIDocumentViewer::eCanceledByBeforeUnload;
-    }
 
-    SendReply();
+    SendReply(JS::ToBoolean(aValue));
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override {
     MOZ_ASSERT(mState == State::PROMPTING);
 
-    mReason = nsIDocumentViewer::eCanceledByBeforeUnload;
-    SendReply();
+    SendReply(false);
   }
 
   NS_DECL_ISUPPORTS
@@ -967,8 +955,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     // We may get here without having sent a reply if the promise we're waiting
     // on is destroyed without being resolved or rejected.
     if (mState != State::REPLIED) {
-      mReason = nsIDocumentViewer::eCanceledByBeforeUnload;
-      SendReply();
+      SendReply(false);
     }
   }
 
@@ -980,7 +967,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     REPLIED,
   };
 
-  std::function<void(nsIDocumentViewer::PermitUnloadResult)> mResolver;
+  std::function<void(bool)> mResolver;
 
   RefPtr<WindowGlobalParent> mWGP;
   nsCOMPtr<nsITimer> mTimer;
@@ -992,8 +979,6 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
   State mState = State::UNINITIALIZED;
 
   bool mFoundBlocker = false;
-
-  nsIDocumentViewer::PermitUnloadResult mReason = nsIDocumentViewer::eContinue;
 };
 
 NS_IMPL_ISUPPORTS(CheckPermitUnloadRequest, nsITimerCallback)
@@ -1026,16 +1011,13 @@ already_AddRefed<Promise> WindowGlobalParent::PermitUnload(
   auto request = MakeRefPtr<CheckPermitUnloadRequest>(
       this, /* aHasInProcessBlocker */ false,
       nsIDocumentViewer::PermitUnloadAction(aAction),
-      [promise](nsIDocumentViewer::PermitUnloadResult aResult) {
-        promise->MaybeResolve(aResult == nsIDocumentViewer::eContinue);
-      });
+      [promise](bool aAllow) { promise->MaybeResolve(aAllow); });
   request->Run(/* aIgnoreProcess */ nullptr, aTimeout);
 
   return promise.forget();
 }
 
-void WindowGlobalParent::PermitUnload(
-    std::function<void(nsIDocumentViewer::PermitUnloadResult)>&& aResolver) {
+void WindowGlobalParent::PermitUnload(std::function<void(bool)>&& aResolver) {
   RefPtr<CheckPermitUnloadRequest> request =
       MakeRefPtr<CheckPermitUnloadRequest>(
           this, /* aHasInProcessBlocker */ false,
@@ -1046,7 +1028,7 @@ void WindowGlobalParent::PermitUnload(
 void WindowGlobalParent::PermitUnloadTraversable(
     const SessionHistoryInfo& aInfo,
     nsIDocumentViewer::PermitUnloadAction aAction,
-    std::function<void(nsIDocumentViewer::PermitUnloadResult)>&& aResolver) {
+    std::function<void(bool)>&& aResolver) {
   MOZ_DIAGNOSTIC_ASSERT(BrowsingContext()->IsTop());
   RefPtr<CheckPermitUnloadRequest> request =
       MakeRefPtr<CheckPermitUnloadRequest>(this,
@@ -1057,7 +1039,7 @@ void WindowGlobalParent::PermitUnloadTraversable(
 
 void WindowGlobalParent::PermitUnloadChildNavigables(
     nsIDocumentViewer::PermitUnloadAction aAction,
-    std::function<void(nsIDocumentViewer::PermitUnloadResult)>&& aResolver) {
+    std::function<void(bool)>&& aResolver) {
   RefPtr<CheckPermitUnloadRequest> request =
       MakeRefPtr<CheckPermitUnloadRequest>(this,
                                            /* aHasInProcessBlocker */ false,

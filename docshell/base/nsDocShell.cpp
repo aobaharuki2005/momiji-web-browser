@@ -12571,8 +12571,7 @@ void nsDocShell::MaybeFireTraverseHistory(nsDocShellLoadState* aLoadState) {
   }
 }
 
-nsIDocumentViewer::PermitUnloadResult
-nsDocShell::MaybeFireTraversableTraverseHistory(
+bool nsDocShell::MaybeFireTraversableTraverseHistory(
     const SessionHistoryInfo& aInfo,
     Maybe<UserNavigationInvolvement> aUserInvolvement) {
   MOZ_DIAGNOSTIC_ASSERT(GetBrowsingContext());
@@ -12580,22 +12579,16 @@ nsDocShell::MaybeFireTraversableTraverseHistory(
 
   SetOngoingNavigation(Some(OngoingNavigation::Traversal));
 
-  nsIDocumentViewer::PermitUnloadResult finalStatus =
-      nsIDocumentViewer::eContinue;
   if (RefPtr<nsPIDOMWindowInner> activeWindow = GetActiveWindow()) {
     if (RefPtr navigation = activeWindow->Navigation()) {
       if (AutoJSAPI jsapi; jsapi.Init(activeWindow)) {
-        bool shouldContinue = navigation->FireTraverseNavigateEvent(
-            jsapi.cx(), aInfo, aUserInvolvement);
-
-        if (!shouldContinue) {
-          finalStatus = nsIDocumentViewer::eCanceledByNavigate;
-        }
+        return navigation->FireTraverseNavigateEvent(jsapi.cx(), aInfo,
+                                                     aUserInvolvement);
       }
     }
   }
 
-  return finalStatus;
+  return true;
 }
 
 nsresult nsDocShell::LoadHistoryEntry(nsDocShellLoadState* aLoadState,

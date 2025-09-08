@@ -4207,24 +4207,6 @@ void BrowsingContext::HistoryGo(
   }
 }
 
-void BrowsingContext::NavigationTraverse(
-    const nsID& aKey, uint64_t aHistoryEpoch, bool aUserActivation,
-    std::function<void(nsresult)>&& aResolver) {
-  if (XRE_IsContentProcess()) {
-    ContentChild::GetSingleton()->SendNavigationTraverse(
-        this, aKey, aHistoryEpoch, aUserActivation, std::move(aResolver),
-        [](mozilla::ipc::
-               ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
-  } else {
-    RefPtr<CanonicalBrowsingContext> self = Canonical();
-    self->NavigationTraverse(aKey, aHistoryEpoch, aUserActivation,
-                             self->GetContentParent()
-                                 ? Some(self->GetContentParent()->ChildID())
-                                 : Nothing(),
-                             std::move(aResolver));
-  }
-}
-
 void BrowsingContext::SetChildSHistory(ChildSHistory* aChildSHistory) {
   mChildSessionHistory = aChildSHistory;
   mChildSessionHistory->SetBrowsingContext(this);

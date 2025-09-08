@@ -1497,8 +1497,7 @@ void CanonicalBrowsingContext::RemoveFromSessionHistory(const nsID& aChangeID) {
 
 Maybe<int32_t> CanonicalBrowsingContext::HistoryGo(
     int32_t aOffset, uint64_t aHistoryEpoch, bool aRequireUserInteraction,
-    bool aUserActivation, Maybe<ContentParentId> aContentId,
-    std::function<void(nsresult)>&& aResolver) {
+    bool aUserActivation, Maybe<ContentParentId> aContentId) {
   if (aRequireUserInteraction && aOffset != -1 && aOffset != 1) {
     NS_ERROR(
         "aRequireUserInteraction may only be used with an offset of -1 or 1");
@@ -1567,65 +1566,8 @@ Maybe<int32_t> CanonicalBrowsingContext::HistoryGo(
   }
   int32_t requestedIndex = shistory->GetRequestedIndex();
   RefPtr traversable = Top();
-  nsSHistory::LoadURIs(loadResults, aResolver, traversable);
+  nsSHistory::LoadURIs(loadResults, traversable);
   return Some(requestedIndex);
-}
-
-// https://html.spec.whatwg.org/#performing-a-navigation-api-traversal
-// Sub-steps for step 12
-void CanonicalBrowsingContext::NavigationTraverse(
-    const nsID& aKey, uint64_t aHistoryEpoch, bool aUserActivation,
-    Maybe<ContentParentId> aContentId,
-    std::function<void(nsresult)>&& aResolver) {
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Traverse navigation to {}",
-              aKey.ToString().get());
-  nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
-  if (!shistory) {
-    return aResolver(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-
-  RefPtr<SessionHistoryEntry> targetEntry;
-  // 12.1 Let navigableSHEs be the result of getting session history entries
-  //      given navigable.
-  Maybe<int32_t> activeIndex;
-  Maybe<int32_t> targetIndex;
-  uint32_t index = 0;
-  nsSHistory::WalkContiguousEntriesInOrder(
-      mActiveEntry, [&targetEntry, aKey, activeEntry = mActiveEntry,
-                     &activeIndex, &targetIndex, &index](auto* aEntry) {
-        if (nsCOMPtr<SessionHistoryEntry> entry = do_QueryObject(aEntry)) {
-          if (entry->Info().NavigationKey() == aKey) {
-            targetEntry = entry;
-            targetIndex = Some(index);
-          }
-
-          if (entry == activeEntry) {
-            activeIndex = Some(index);
-          }
-        }
-
-        index++;
-        return !targetIndex || !activeIndex;
-      });
-
-  if (!targetEntry) {
-    return aResolver(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-
-  if (targetEntry == mActiveEntry) {
-    return aResolver(NS_OK);
-  }
-
-  if (!activeIndex || !targetIndex) {
-    return aResolver(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-  int32_t offset = *targetIndex - *activeIndex;
-
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Performing traversal by {}",
-              offset);
-
-  HistoryGo(offset, aHistoryEpoch, false, aUserActivation, aContentId,
-            std::move(aResolver));
 }
 
 JSObject* CanonicalBrowsingContext::WrapObject(
