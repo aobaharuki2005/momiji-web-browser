@@ -3025,6 +3025,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mLineBreak(aSource.mLineBreak),
       mWordBreak(aSource.mWordBreak),
       mOverflowWrap(aSource.mOverflowWrap),
+      mTextAutospace(aSource.mTextAutospace),
       mHyphens(aSource.mHyphens),
       mRubyAlign(aSource.mRubyAlign),
       mRubyPosition(aSource.mRubyPosition),
@@ -3049,8 +3050,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mHyphenateCharacter(aSource.mHyphenateCharacter),
       mHyphenateLimitChars(aSource.mHyphenateLimitChars),
       mWebkitTextSecurity(aSource.mWebkitTextSecurity),
-      mTextWrapStyle(aSource.mTextWrapStyle),
-      mTextAutospace(aSource.mTextAutospace) {
+      mTextWrapStyle(aSource.mTextWrapStyle) {
   MOZ_COUNT_CTOR(nsStyleText);
 }
 
