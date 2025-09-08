@@ -198,6 +198,4 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ISUPPORTS(LengthCallback, nsIInputStreamLengthCallback)
 
-NS_IMPL_ISUPPORTS(RunnableQueue, nsIEventTarget, nsISerialEventTarget)
-
 }  // namespace testing

@@ -11,7 +11,6 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
-#include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsID.h"
 
@@ -21,20 +20,20 @@ class DataChannel;
 namespace dom {
 class Blob;
 struct RTCStatsCollection;
-class StrongWorkerRef;
 
 class RTCDataChannel final : public DOMEventTargetHelper {
  public:
-  RTCDataChannel(const nsACString& aLabel, const nsAString& aOrigin,
-                 bool aOrdered, Nullable<uint16_t> aMaxLifeTime,
+  RTCDataChannel(const nsACString& aLabel, bool aOrdered,
+                 Nullable<uint16_t> aMaxLifeTime,
                  Nullable<uint16_t> aMaxRetransmits,
                  const nsACString& aProtocol, bool aNegotiated,
                  already_AddRefed<DataChannel>& aDataChannel,
                  nsPIDOMWindowInner* aWindow);
 
-  nsresult Init();
+  nsresult Init(nsPIDOMWindowInner* aDOMWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RTCDataChannel, DOMEventTargetHelper)
 
   // EventTarget
@@ -58,13 +57,16 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   void SetBufferedAmountLowThreshold(size_t aThreshold);
   IMPL_EVENT_HANDLER(open)
   IMPL_EVENT_HANDLER(error)
-  IMPL_EVENT_HANDLER(closing)
   IMPL_EVENT_HANDLER(close)
   void Close();
   IMPL_EVENT_HANDLER(message)
   IMPL_EVENT_HANDLER(bufferedamountlow)
-  RTCDataChannelType BinaryType() const { return mBinaryType; }
-  void SetBinaryType(RTCDataChannelType aType) { mBinaryType = aType; }
+  RTCDataChannelType BinaryType() const {
+    return static_cast<RTCDataChannelType>(static_cast<int>(mBinaryType));
+  }
+  void SetBinaryType(RTCDataChannelType aType) {
+    mBinaryType = static_cast<DataChannelBinaryType>(static_cast<int>(aType));
+  }
   void Send(const nsAString& aData, ErrorResult& aRv);
   void Send(Blob& aData, ErrorResult& aRv);
   void Send(const ArrayBuffer& aData, ErrorResult& aRv);
@@ -74,34 +76,6 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   bool Ordered() const;
   Nullable<uint16_t> GetId() const;
 
-  // Transferable support, see
-  // https://w3c.github.io/webrtc-pc/#transfering-a-data-channel
-
-  // - Implementation of 'dataHolder'
-  struct DataHolder {
-   public:
-    explicit DataHolder(const RTCDataChannel& aValue);
-    ~DataHolder();
-    const RTCDataChannelState mReadyState;
-    const nsCString mLabel;
-    const bool mOrdered;
-    const Nullable<uint16_t> mMaxPacketLifeTime;
-    const Nullable<uint16_t> mMaxRetransmits;
-    const nsCString mDataChannelProtocol;
-    const bool mNegotiated;
-    const Nullable<uint16_t> mDataChannelId;
-    const RefPtr<DataChannel> mDataChannel;
-    const double mMaxMessageSize;
-    const nsString mOrigin;
-  };
-
-  // - Implementation of the 'transfer steps'
-  UniquePtr<DataHolder> Transfer();
-
-  // - Implementation of the 'transfer receiving steps'
-  explicit RTCDataChannel(nsIGlobalObject* aGlobal,
-                          const DataHolder& aDataHolder);
-
   nsresult DoOnMessageAvailable(const nsACString& aMessage, bool aBinary);
 
   void SetId(uint16_t aId);
@@ -110,20 +84,11 @@ class RTCDataChannel final : public DOMEventTargetHelper {
 
   void AnnounceOpen();
   void AnnounceClosed();
-  void GracefulClose();
 
   void DecrementBufferedAmount(size_t aSize);
 
-  dom::RTCDataChannelStats GetStats(const DOMHighResTimeStamp aTimestamp) const;
-
   void AppendStatsToReport(const UniquePtr<RTCStatsCollection>& aReport,
                            const DOMHighResTimeStamp aTimestamp) const;
-
-  void UnsetWorkerNeedsUs() {
-    MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
-    mWorkerNeedsUs = false;
-    UpdateMustKeepAlive();
-  }
 
  protected:
   ~RTCDataChannel();
@@ -139,36 +104,36 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   // (and possibly collected).
   void DontKeepAliveAnyMore();
 
+  void GracefulClose();
   void IncrementBufferedAmount(size_t aSize);
   bool CheckReadyState(ErrorResult& aRv);
   bool CheckSendSize(uint64_t aSize, ErrorResult& aRv) const;
-  void DisableWorkerTransfer();
 
   void ReleaseSelf();
 
   const nsID mUuid;  // Solely for stats. Probably overkill.
-  const nsString mOrigin;
   const nsCString mLabel;
   const bool mOrdered;
   const Nullable<uint16_t> mMaxPacketLifeTime;
   const Nullable<uint16_t> mMaxRetransmits;
-  const nsCString mDataChannelProtocol;
+  const nsCString mProtocol;
   const bool mNegotiated;
 
   // to keep us alive while we have listeners
   RefPtr<RTCDataChannel> mSelfRef;
-  RefPtr<StrongWorkerRef> mWorkerRef;
   // Owning reference
-  const RefPtr<DataChannel> mDataChannel;
-  RTCDataChannelType mBinaryType = RTCDataChannelType::Arraybuffer;
-
-  Nullable<uint16_t> mDataChannelId;
-  RTCDataChannelState mReadyState = RTCDataChannelState::Connecting;
-  bool mWorkerNeedsUs = false;
+  RefPtr<DataChannel> mDataChannel;
+  nsString mOrigin;
+  enum DataChannelBinaryType {
+    DC_BINARY_TYPE_ARRAYBUFFER,
+    DC_BINARY_TYPE_BLOB,
+  };
+  DataChannelBinaryType mBinaryType = DC_BINARY_TYPE_BLOB;
   bool mCheckMustKeepAlive = true;
-  bool mIsTransferable = true;
+
+  Nullable<uint16_t> mId;
   double mMaxMessageSize = 0;
-  RefPtr<nsISerialEventTarget> mEventTarget;
+  RTCDataChannelState mReadyState = RTCDataChannelState::Connecting;
   size_t mBufferedAmount = 0;
   size_t mBufferedThreshold = 0;
   size_t mMessagesSent = 0;

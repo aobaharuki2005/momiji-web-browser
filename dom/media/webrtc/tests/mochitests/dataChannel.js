@@ -17,17 +17,6 @@ function getBlobContent(blob) {
   });
 }
 
-/**
- * Returns the contents of a blob as text
- *
- * @param {ArrayBuffer} arraybuffer
-          The ArrayBuffer to retrieve the contents from
- */
-function getArrayBufferContent(arraybuffer) {
-  const decoder = new TextDecoder("utf-8");
-  return decoder.decode(arraybuffer);
-}
-
 var commandsCreateDataChannel = [
   function PC_REMOTE_EXPECT_DATA_CHANNEL(test) {
     test.pcRemote.expectDataChannel();
@@ -35,11 +24,7 @@ var commandsCreateDataChannel = [
 
   function PC_LOCAL_CREATE_DATA_CHANNEL(test) {
     var channel = test.pcLocal.createDataChannel({});
-    is(
-      channel.binaryType,
-      "arraybuffer",
-      channel + " is of binary type 'arraybuffer'"
-    );
+    is(channel.binaryType, "blob", channel + " is of binary type 'blob'");
 
     is(
       test.pcLocal.signalingState,
@@ -79,28 +64,25 @@ var commandsCheckDataChannel = [
     var blob = new Blob([contents], { type: "text/plain" });
 
     info("Sending blob");
-    return test.send(blob).then(result => {
-      ok(
-        result.data instanceof ArrayBuffer,
-        "Received data is of instance ArrayBuffer"
-      );
-      is(
-        result.data.byteLength,
-        blob.size,
-        "Received data has the correct size."
-      );
+    return test
+      .send(blob)
+      .then(result => {
+        ok(result.data instanceof Blob, "Received data is of instance Blob");
+        is(result.data.size, blob.size, "Received data has the correct size.");
 
-      const recv_contents = getArrayBufferContent(result.data);
-      is(recv_contents, contents, "Received data has the correct content.");
-    });
+        return getBlobContent(result.data);
+      })
+      .then(recv_contents =>
+        is(recv_contents, contents, "Received data has the correct content.")
+      );
   },
 
   function CREATE_SECOND_DATA_CHANNEL(test) {
     return test.createDataChannel({}).then(result => {
       is(
         result.remote.binaryType,
-        "arraybuffer",
-        "remote data channel is of binary type 'arraybuffer'"
+        "blob",
+        "remote data channel is of binary type 'blob'"
       );
     });
   },
@@ -167,8 +149,8 @@ var commandsCheckDataChannel = [
     return test.createDataChannel(options).then(result => {
       is(
         result.local.binaryType,
-        "arraybuffer",
-        result.remote + " is of binary type 'arraybuffer'"
+        "blob",
+        result.remote + " is of binary type 'blob'"
       );
       is(
         result.local.id,
@@ -198,8 +180,8 @@ var commandsCheckDataChannel = [
 
       is(
         result.remote.binaryType,
-        "arraybuffer",
-        result.remote + " is of binary type 'arraybuffer'"
+        "blob",
+        result.remote + " is of binary type 'blob'"
       );
       is(
         result.remote.id,
@@ -254,8 +236,8 @@ var commandsCheckDataChannel = [
     return test.createDataChannel(options).then(result => {
       is(
         result.local.binaryType,
-        "arraybuffer",
-        result.local + " is of binary type 'arraybuffer'"
+        "blob",
+        result.local + " is of binary type 'blob'"
       );
       is(
         result.local.protocol,
@@ -280,8 +262,8 @@ var commandsCheckDataChannel = [
 
       is(
         result.remote.binaryType,
-        "arraybuffer",
-        result.remote + " is of binary type 'arraybuffer'"
+        "blob",
+        result.remote + " is of binary type 'blob'"
       );
       is(
         result.remote.protocol,
@@ -328,15 +310,13 @@ var commandsCheckLargeXfer = [
   function SEND_BIG_BUFFER(test) {
     var size = 2 * 1024 * 1024; // SCTP internal buffer is now 1MB, so use 2MB to ensure the buffer gets full
     var buffer = new ArrayBuffer(size);
+    // note: type received is always blob for binary data
     var options = {};
     options.bufferedAmountLowThreshold = 64 * 1024;
     info("Sending arraybuffer");
     return test.send(buffer, options).then(result => {
-      ok(
-        result.data instanceof ArrayBuffer,
-        "Received data is of instance ArrayBuffer"
-      );
-      is(result.data.byteLength, size, "Received data has the correct size.");
+      ok(result.data instanceof Blob, "Received data is of instance Blob");
+      is(result.data.size, size, "Received data has the correct size.");
     });
   },
 ];
