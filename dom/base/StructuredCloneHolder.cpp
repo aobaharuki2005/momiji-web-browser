@@ -87,6 +87,10 @@
 #include "nsXPCOM.h"
 #include "xpcpublic.h"
 
+#ifdef MOZ_WEBRTC
+#  include "mozilla/dom/RTCDataChannel.h"
+#endif
+
 using namespace mozilla::ipc;
 
 namespace mozilla::dom {
@@ -1508,6 +1512,45 @@ StructuredCloneHolder::CustomReadTransferHandler(
     return true;
   }
 
+#ifdef MOZ_WEBRTC
+  if (aTag == SCTAG_DOM_RTCDATACHANNEL &&
+      CloneScope() == StructuredCloneScope::SameProcess) {
+    if (!CheckExposedGlobals(
+            aCx, mGlobal,
+            GlobalNames::Window | GlobalNames::DedicatedWorkerGlobalScope)) {
+      return false;
+    }
+    MOZ_ASSERT(aContent);
+
+    // This DataHolder was created over in CustomWriteTransferHandler
+    RTCDataChannel::DataHolder* dataHolder =
+        static_cast<RTCDataChannel::DataHolder*>(aContent);
+    aContent = nullptr;
+
+    RefPtr<RTCDataChannel> channel = new RTCDataChannel(mGlobal, *dataHolder);
+
+    // dataHolder will be released in CustomFreeTransferHandler if we return
+    // false. Ordinarily, I would prefer taking ownership in here, but
+    // CustomFreeTransferHandler is called in situations other than failure
+    // here, and in those situations it *does* need to handle the cleanup.
+    if (!channel) {
+      // This should only happen on OOM
+      return false;
+    }
+    channel->Init();
+
+    JS::Rooted<JS::Value> value(aCx);
+    if (!GetOrCreateDOMReflector(aCx, channel, &value)) {
+      JS_ClearPendingException(aCx);
+      return false;
+    }
+
+    delete dataHolder;
+    aReturnObject.set(&value.toObject());
+    return true;
+  }
+#endif
+
   return false;
 }
 
@@ -1629,6 +1672,35 @@ StructuredCloneHolder::CustomWriteTransferHandler(
           return true;
         }
       }
+
+#ifdef MOZ_WEBRTC
+      {
+        mozilla::dom::RTCDataChannel* channel = nullptr;
+        rv = UNWRAP_OBJECT(RTCDataChannel, &obj, channel);
+        if (NS_SUCCEEDED(rv)) {
+          MOZ_ASSERT(channel);
+          // We check above that CloneScope() == SameProcess
+
+          UniquePtr<RTCDataChannel::DataHolder> dataHolder =
+              channel->Transfer();
+          if (!dataHolder) {
+            // RTCDataChannel.[[IsTransferable]] is false, apparently
+            return false;
+          }
+
+          *aExtraData = 0;
+          *aTag = SCTAG_DOM_RTCDATACHANNEL;
+
+          // Transfer ownership out (JS::SCTAG_TMO_CUSTOM signals this)
+          // This will be processed by CustomReadTransferHandler, or freed by
+          // CustomFreeTransferHandler if there's some error.
+          *aContent = dataHolder.release();
+          *aOwnership = JS::SCTAG_TMO_CUSTOM;
+
+          return true;
+        }
+      }
+#endif
     }
 
     {
@@ -1774,6 +1846,17 @@ void StructuredCloneHolder::CustomFreeTransferHandler(
     }
     return;
   }
+#ifdef MOZ_WEBRTC
+  if (aTag == SCTAG_DOM_RTCDATACHANNEL &&
+      CloneScope() == StructuredCloneScope::SameProcess) {
+    if (aContent) {
+      RTCDataChannel::DataHolder* dataHolder =
+          static_cast<RTCDataChannel::DataHolder*>(aContent);
+      delete dataHolder;
+    }
+    return;
+  }
+#endif
 }
 
 bool StructuredCloneHolder::CustomCanTransferHandler(
@@ -1865,6 +1948,17 @@ bool StructuredCloneHolder::CustomCanTransferHandler(
       return CloneScope() == StructuredCloneScope::SameProcess;
     }
   }
+
+#ifdef MOZ_WEBRTC
+  {
+    mozilla::dom::RTCDataChannel* channel = nullptr;
+    nsresult rv = UNWRAP_OBJECT(RTCDataChannel, &obj, channel);
+    if (NS_SUCCEEDED(rv)) {
+      SameProcessScopeRequired(aSameProcessScopeRequired);
+      return CloneScope() == StructuredCloneScope::SameProcess;
+    }
+  }
+#endif
 
   return false;
 }

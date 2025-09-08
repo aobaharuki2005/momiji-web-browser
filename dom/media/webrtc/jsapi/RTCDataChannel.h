@@ -21,6 +21,7 @@ class DataChannel;
 namespace dom {
 class Blob;
 struct RTCStatsCollection;
+class StrongWorkerRef;
 
 class RTCDataChannel final : public DOMEventTargetHelper {
  public:
@@ -34,7 +35,6 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   nsresult Init();
 
   NS_DECL_ISUPPORTS_INHERITED
-
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RTCDataChannel, DOMEventTargetHelper)
 
   // EventTarget
@@ -74,6 +74,34 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   bool Ordered() const;
   Nullable<uint16_t> GetId() const;
 
+  // Transferable support, see
+  // https://w3c.github.io/webrtc-pc/#transfering-a-data-channel
+
+  // - Implementation of 'dataHolder'
+  struct DataHolder {
+   public:
+    explicit DataHolder(const RTCDataChannel& aValue);
+    ~DataHolder();
+    const RTCDataChannelState mReadyState;
+    const nsCString mLabel;
+    const bool mOrdered;
+    const Nullable<uint16_t> mMaxPacketLifeTime;
+    const Nullable<uint16_t> mMaxRetransmits;
+    const nsCString mDataChannelProtocol;
+    const bool mNegotiated;
+    const Nullable<uint16_t> mDataChannelId;
+    const RefPtr<DataChannel> mDataChannel;
+    const double mMaxMessageSize;
+    const nsString mOrigin;
+  };
+
+  // - Implementation of the 'transfer steps'
+  UniquePtr<DataHolder> Transfer();
+
+  // - Implementation of the 'transfer receiving steps'
+  explicit RTCDataChannel(nsIGlobalObject* aGlobal,
+                          const DataHolder& aDataHolder);
+
   nsresult DoOnMessageAvailable(const nsACString& aMessage, bool aBinary);
 
   void SetId(uint16_t aId);
@@ -90,6 +118,12 @@ class RTCDataChannel final : public DOMEventTargetHelper {
 
   void AppendStatsToReport(const UniquePtr<RTCStatsCollection>& aReport,
                            const DOMHighResTimeStamp aTimestamp) const;
+
+  void UnsetWorkerNeedsUs() {
+    MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+    mWorkerNeedsUs = false;
+    UpdateMustKeepAlive();
+  }
 
  protected:
   ~RTCDataChannel();
@@ -108,6 +142,7 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   void IncrementBufferedAmount(size_t aSize);
   bool CheckReadyState(ErrorResult& aRv);
   bool CheckSendSize(uint64_t aSize, ErrorResult& aRv) const;
+  void DisableWorkerTransfer();
 
   void ReleaseSelf();
 
@@ -117,19 +152,22 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   const bool mOrdered;
   const Nullable<uint16_t> mMaxPacketLifeTime;
   const Nullable<uint16_t> mMaxRetransmits;
-  const nsCString mProtocol;
+  const nsCString mDataChannelProtocol;
   const bool mNegotiated;
 
   // to keep us alive while we have listeners
   RefPtr<RTCDataChannel> mSelfRef;
+  RefPtr<StrongWorkerRef> mWorkerRef;
   // Owning reference
   const RefPtr<DataChannel> mDataChannel;
-  bool mCheckMustKeepAlive = true;
   RTCDataChannelType mBinaryType = RTCDataChannelType::Arraybuffer;
 
-  Nullable<uint16_t> mId;
-  double mMaxMessageSize = 0;
+  Nullable<uint16_t> mDataChannelId;
   RTCDataChannelState mReadyState = RTCDataChannelState::Connecting;
+  bool mWorkerNeedsUs = false;
+  bool mCheckMustKeepAlive = true;
+  bool mIsTransferable = true;
+  double mMaxMessageSize = 0;
   RefPtr<nsISerialEventTarget> mEventTarget;
   size_t mBufferedAmount = 0;
   size_t mBufferedThreshold = 0;
