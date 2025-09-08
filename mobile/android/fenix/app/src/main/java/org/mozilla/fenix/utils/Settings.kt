@@ -824,9 +824,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates whether isolated content processes are enabled or not.
      */
-    var isIsolatedProcessEnabled by booleanPreference(
+    var isIsolatedProcessEnabled by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_isolated_process),
-        default = false,
+        featureFlag = true,
+        default = { FxNimbus.features.isolatedContentProcesses.value().enabled },
     )
 
     /**
