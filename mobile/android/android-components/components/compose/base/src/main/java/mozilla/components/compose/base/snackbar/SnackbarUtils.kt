@@ -4,6 +4,7 @@
 
 package mozilla.components.compose.base.snackbar
 
+import android.annotation.SuppressLint
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -25,6 +26,7 @@ private const val ACCESSIBLE_SNACKBAR_TIMEOUT = 20000L
  * @param onActionPerformed Callback invoked when the action is clicked before dismissal.
  * @param onDismissPerformed Callback invoked when Snackbar is dismissed.
  */
+@SuppressLint("DisallowedDirectShowSnackbarCall")
 suspend fun SnackbarHostState.displaySnackbar(
     message: String,
     actionLabel: String? = null,
@@ -49,6 +51,7 @@ suspend fun SnackbarHostState.displaySnackbar(
  * @param onActionPerformed Callback invoked when the action is clicked before dismissal.
  * @param onDismissPerformed Callback invoked when Snackbar is dismissed.
  */
+@SuppressLint("DisallowedDirectShowSnackbarCall")
 suspend fun SnackbarHostState.displaySnackbar(
     visuals: SnackbarVisuals,
     timeout: SnackbarTimeout = visuals.toSnackbarTimeout(),
