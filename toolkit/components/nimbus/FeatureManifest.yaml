@@ -1463,6 +1463,22 @@ newtabSmartShortcuts:
       type: int
       description: >-
         Percentage weight of daily seasonality
+    bmark_weight:
+      type: int
+      description: >-
+        Percentage weight of is_bookmark
+    rece_weight:
+      type: int
+      description: >-
+        Percentage weight of recency
+    freq_weight:
+      type: int
+      description: >-
+        Percentage weight of frequency
+    refre_weight:
+      type: int
+      description: >-
+        Percentage weight of redone frecency
     bias_weight:
       type: int
       description: >-

@@ -5,6 +5,7 @@
 const SHORTCUT_TABLE = "moz_newtab_shortcuts_interaction";
 const PLACES_TABLE = "moz_places";
 const VISITS_TABLE = "moz_historyvisits";
+const BOOKMARK_TABLE = "moz_bookmarks";
 const BASE_SEASONALITY_CACHE_EXPIRATION = 1e3 * 60 * 60 * 24 * 7; // 7 day in miliseconds
 const ETA = 100;
 const CLICK_BONUS = 10;
@@ -14,10 +15,14 @@ const FEATURE_META = {
   frec: { pref: "frec_weight", def: 70 },
   hour: { pref: "hour_weight", def: 5 },
   daily: { pref: "daily_weight", def: 5 },
+  bmark: { pref: "bmark_weight", def: 5 },
+  rece: { pref: "rece_weight", def: 5 },
+  freq: { pref: "freq_weight", def: 5 },
+  refre: { pref: "refre_weight", def: 5 },
   bias: { pref: "bias_weight", def: 1 },
 };
 
-const SHORTCUT_FSET = 6;
+const SHORTCUT_FSET = 8;
 const SHORTCUT_FSETS = {
   0: ["frec"],
   1: ["frec", "thom", "bias"],
@@ -26,8 +31,19 @@ const SHORTCUT_FSETS = {
   4: ["frec", "hour", "daily", "bias"],
   5: ["thom", "hour", "daily", "bias"],
   6: ["frec", "thom", "hour", "daily", "bias"],
+  7: ["frec", "thom", "hour", "daily", "bmark", "bias"],
+  8: [
+    "frec",
+    "thom",
+    "hour",
+    "daily",
+    "bmark",
+    "rece",
+    "freq",
+    "refre",
+    "bias",
+  ],
 };
-
 const SHORTCUT_POSITIVE_PRIOR = 1;
 const SHORTCUT_NEGATIVE_PRIOR = 100;
 
@@ -42,6 +58,162 @@ ChromeUtils.defineESModuleGetters(lazy, {
 import { sortKeysValues } from "resource://newtab/lib/SmartShortcutsRanker/ThomSample.mjs";
 
 /**
+ * For each input places GUID, report the total visits
+ *
+ * @param {object[]} topsites Array of objects with a `guid` field (moz_places.guid)
+ * @param {string} [placesTable='moz_places'] Table name for places
+ * @returns {Promise<object>} Map of guid -> visit total
+ */
+export async function fetchVisitCountsByGuid(topsites, placeTable) {
+  if (!topsites?.length) {
+    return {};
+  }
+
+  const guidList = topsites.map(site => site.guid);
+
+  // Safely quote each guid for VALUES(), escaping single quotes
+  const values = guidList
+    .map(guid => `('${String(guid).replace(/'/g, "''")}')`)
+    .join(", ");
+
+  const sql = `
+    WITH input(guid) AS (VALUES ${values})
+    SELECT i.guid, COALESCE(p.visit_count, 0) AS visit_count
+    FROM input i
+    LEFT JOIN ${placeTable} p ON p.guid = i.guid
+    ORDER BY i.guid;
+  `;
+
+  const { activityStreamProvider } = lazy.NewTabUtils;
+  const rows = await activityStreamProvider.executePlacesQuery(sql);
+  const out = Object.create(null);
+  for (const [guid, visit_count] of rows) {
+    out[guid] = visit_count;
+  }
+  return out; // { guid: visit_count }
+}
+
+/**
+ * For each input places GUID, return the time and type of the last 10 visits
+ * this is a replication of what is done during frecency calculation
+ *
+ * @param {object[]} topsites Array of objects with a `guid` field (moz_places.guid)
+ * @param {string} [table='moz_historyvisits'] Table name for history
+ * @param {string} [placeTable='moz_places'] Table name for places
+ * @returns {Promise<object>} Map of guid -> {visit_time, visit_type}
+ */
+export async function fetchLast10VisitsByGuid(topsites, table, placeTable) {
+  if (!topsites?.length) {
+    return {};
+  }
+
+  const guids = topsites.map(s => String(s.guid));
+  const valuesClause = guids
+    .map(g => `('${g.replace(/'/g, "''")}')`)
+    .join(", ");
+
+  // Mirrors Firefox's pattern:
+  // SELECT ... FROM moz_historyvisits WHERE place_id = h.id ORDER BY visit_date DESC LIMIT 10
+  const sql = `
+    WITH input(guid) AS (VALUES ${valuesClause})
+    SELECT
+      i.guid,
+      v.visit_date AS visit_date_us,
+      v.visit_type
+    FROM input i
+    JOIN ${placeTable} h ON h.guid = i.guid
+    JOIN ${table} v ON v.place_id = h.id
+    WHERE v.id IN (
+      SELECT vv.id
+      FROM ${table} vv
+      WHERE vv.place_id = h.id
+      ORDER BY vv.visit_date DESC
+      LIMIT 10  /* limit to the last 10 visits */
+    )
+    ORDER BY i.guid, v.visit_date DESC;
+  `;
+
+  const { activityStreamProvider } = lazy.NewTabUtils;
+  const rows = await activityStreamProvider.executePlacesQuery(sql);
+  // `guids` is the array you queried with
+  // `rows` is the result from runQuery(sql) -> Array<[guid, visit_date_us, visit_type]>
+
+  const out = Object.fromEntries(guids.map(g => [g, []]));
+
+  for (const [guid, visit_date_us, visit_type] of rows) {
+    // rows are already ordered by guid, visit_date DESC per your SQL
+    out[guid].push({ visit_date_us, visit_type });
+  }
+
+  // `out` is: { [guid]: [ { visit_date_us, visit_type }, ... ] }
+  return out;
+}
+
+/**
+ * For each input places GUID, report whether it is bookmarked.
+ * Walks guid -> moz_places.id -> moz_bookmarks.fk (type=1).
+ *
+ * @param {object[]} topsites Array of objects with a `guid` field (moz_places.guid)
+ * @param {string} [placesTable='moz_places'] Table name for places
+ * @param {string} [bookmarksTable='moz_bookmarks'] Table name for bookmarks
+ * @returns {Promise<object>} Map of guid -> boolean (true if bookmarked)
+ */
+export async function fetchBookmarkedFlags(
+  topsites,
+  bookmarksTable = "moz_bookmarks",
+  placesTable = "moz_places"
+) {
+  if (!topsites.length) {
+    return {};
+  }
+
+  const guidList = topsites.map(site => site.guid);
+
+  // Safely quote each guid for VALUES(), escaping single quotes
+  const valuesClause = guidList
+    .map(guid => `('${String(guid).replace(/'/g, "''")}')`)
+    .join(", ");
+
+  // We LEFT JOIN so every input guid appears once, even if not found/bookmarked.
+  const sql = `
+    WITH input_keys(guid) AS (
+      VALUES ${valuesClause}
+    )
+    SELECT
+      ik.guid AS key,
+      COALESCE(COUNT(b.id), 0) AS bookmark_count
+    FROM input_keys AS ik
+    LEFT JOIN ${placesTable} AS p
+      ON p.guid = ik.guid
+    LEFT JOIN ${bookmarksTable} AS b
+      ON b.fk = p.id
+      AND b.type = 1            -- only actual bookmark items
+    GROUP BY ik.guid
+    ORDER BY ik.guid;
+  `;
+
+  const { activityStreamProvider } = lazy.NewTabUtils;
+  const rows = await activityStreamProvider.executePlacesQuery(sql);
+
+  // rows: [key, bookmark_count]
+  const result = {};
+  for (const [key, count] of rows) {
+    if (key) {
+      result[key] = count > 0;
+    }
+  }
+
+  // Ensure every requested guid is present (defensive)
+  for (const site of topsites) {
+    if (!(site.guid in result)) {
+      result[site.guid] = false;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Get histogram of all site visits over day-of-week
  *
  * @param {object[]} topsites Array of topsites objects
@@ -49,7 +221,7 @@ import { sortKeysValues } from "resource://newtab/lib/SmartShortcutsRanker/ThomS
  * @param {string} placeTable Table to map guid->place_id
  * @returns {result: object} Dictionary of histograms of day-of-week site opens
  */
-async function fetchDailyVisitsSpecific(topsites, table, placeTable) {
+export async function fetchDailyVisitsSpecific(topsites, table, placeTable) {
   if (!topsites.length) {
     return {};
   }
@@ -104,7 +276,7 @@ async function fetchDailyVisitsSpecific(topsites, table, placeTable) {
  * @param {string} table Table to query
  * @returns {number[]} Histogram of day-of-week site opens
  */
-async function fetchDailyVisitsAll(table) {
+export async function fetchDailyVisitsAll(table) {
   const sql = `
     SELECT
       CAST(strftime('%w', ${table}.visit_date / 1e6, 'unixepoch') AS INTEGER) AS day_of_week,
@@ -133,7 +305,7 @@ async function fetchDailyVisitsAll(table) {
  * @param {string} placeTable Table to map guid->place_id
  * @returns {object} Dictionary of histograms of hour-of-day site opens
  */
-async function fetchHourlyVisitsSpecific(topsites, table, placeTable) {
+export async function fetchHourlyVisitsSpecific(topsites, table, placeTable) {
   if (!topsites.length) {
     return {};
   }
@@ -188,7 +360,7 @@ async function fetchHourlyVisitsSpecific(topsites, table, placeTable) {
  * @param {string} table Table to query
  * @returns {number[]} Histogram of hour-of-day site opens
  */
-async function fetchHourlyVisitsAll(table) {
+export async function fetchHourlyVisitsAll(table) {
   const sql = `
     SELECT
       CAST(strftime('%H', ${table}.visit_date / 1e6, 'unixepoch') AS INTEGER) AS hour_of_day,
@@ -421,6 +593,15 @@ export class RankShortcutsProvider {
     return { pvec: daily_prob, hists: daily_hists };
   }
 
+  /**
+   * Check the shortcut interaction table for new events since
+   * the last time we updated the model weights
+   *
+   * @param {object} cahce_data shortcut cache
+   * @param {string} table Shortcuts interaction table
+   * @param {string} placeTable moz_places table
+   * @returns {Promise<object>} Map of guid -> clicks and impression counts
+   */
   async getLatestInteractions(cache_data, table, placeTable = "moz_places") {
     const now_s = Math.floor(Date.now() / 1000);
     let tlu = Number(cache_data.time_last_update ?? 0);
@@ -462,6 +643,38 @@ export class RankShortcutsProvider {
     return dict;
   }
 
+  /**
+   * Get "frecency" features: frequency, recency, and re-frecency
+   *
+   * @param {Array<object>} withGuid topsites we are building features for
+   * @param {string[]} features names of the features we are including
+   * @returns {Promise<{}>} guid -> rece, freq, and refre features
+   */
+  async fetchRefreFeatures(withGuid, features) {
+    let output = { rece: null, freq: null, refre: null };
+    if (["rece", "freq", "refre"].some(k => features?.includes?.(k))) {
+      const raw_frec = await fetchLast10VisitsByGuid(
+        withGuid,
+        VISITS_TABLE,
+        PLACES_TABLE
+      );
+      const visit_totals = await fetchVisitCountsByGuid(withGuid, PLACES_TABLE);
+      output = await this.rankShortcutsWorker.post("buildFrecencyFeatures", [
+        raw_frec,
+        visit_totals,
+      ]);
+    }
+    return output;
+  }
+
+  /**
+   * Smart Shortcuts ranking main call
+   *
+   * @param {Array<object>} topsites
+   * @param {object} prefValues
+   * @param {object} isStartup stores the boolean isStartup
+   * @returns {Promise<{}>} topsites reordered
+   */
   async rankTopSites(topsites, prefValues, isStartup) {
     // get our feature set
     const fset = prefValues.smartShortcutsConfig?.fset ?? SHORTCUT_FSET;
@@ -478,6 +691,7 @@ export class RankShortcutsProvider {
       },
       [[], []]
     );
+
     // query for interactions, sql cant be on promise
     const [clicks, impressions] = await fetchShortcutInteractions(
       withGuid,
@@ -520,6 +734,22 @@ export class RankShortcutsProvider {
     await this.sc_obj.set("weights", weights);
     await this.sc_obj.set("init_weights", init_weights);
 
+    // feature data
+    const hourly_seasonality = features?.includes?.("hour")
+      ? await this.getHourlySeasonalityData(withGuid, sc_cache, isStartup)
+      : null;
+    const daily_seasonality = features?.includes?.("daily")
+      ? await this.getDailySeasonalityData(withGuid, sc_cache, isStartup)
+      : null;
+    const bmark_scores = features?.includes?.("bmark")
+      ? await fetchBookmarkedFlags(withGuid, BOOKMARK_TABLE, PLACES_TABLE)
+      : null;
+    const refrec_scores = ["rece", "freq", "refre"].some(f =>
+      features.includes(f)
+    )
+      ? await this.fetchRefreFeatures(withGuid, features)
+      : null;
+
     // call to the promise worker to do the ranking
     const frecency_scores = withGuid.map(t => t.frecency);
     const output = await this.rankShortcutsWorker.post(
@@ -542,16 +772,12 @@ export class RankShortcutsProvider {
             Object.fromEntries(features.map(key => [key, null])),
           weights,
           frecency: frecency_scores,
-          hourly_seasonality: await this.getHourlySeasonalityData(
-            withGuid,
-            sc_cache,
-            isStartup
-          ),
-          daily_seasonality: await this.getDailySeasonalityData(
-            withGuid,
-            sc_cache,
-            isStartup
-          ),
+          hourly_seasonality,
+          daily_seasonality,
+          bmark_scores,
+          rece_scores: refrec_scores.rece,
+          freq_scores: refrec_scores.freq,
+          refre_scores: refrec_scores.refre,
         },
       ]
     );
