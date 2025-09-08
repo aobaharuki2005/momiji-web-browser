@@ -78,6 +78,11 @@ class DecodedStream : public MediaSink {
  protected:
   virtual ~DecodedStream();
 
+  // A bit many clocks to sample, but what do you do...
+  media::TimeUnit GetPositionImpl(TimeStamp aNow, AwakeTimeStamp aAwakeNow,
+                                  TimeStamp* aTimeStamp = nullptr);
+  AwakeTimeStamp LastOutputSystemTime() const;
+
  private:
   void DestroyData(UniquePtr<DecodedStreamData>&& aData);
   void SendAudio(const PrincipalHandle& aPrincipalHandle);
@@ -85,7 +90,8 @@ class DecodedStream : public MediaSink {
   void ResetAudio();
   void ResetVideo(const PrincipalHandle& aPrincipalHandle);
   void SendData();
-  void NotifyOutput(int64_t aTime, AwakeTimeStamp aSystemTime);
+  void NotifyOutput(int64_t aTime, TimeStamp aSystemTime,
+                    AwakeTimeStamp aAwakeSystemTime);
   void CheckIsDataAudible(const AudioData* aData);
 
   void AssertOwnerThread() const {
