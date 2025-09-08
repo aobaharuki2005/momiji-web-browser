@@ -884,6 +884,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     ) {
         with(Preferences) {
             searchSuggestionsEnabled.set(settings.shouldShowSearchSuggestions)
+            showSponsorSuggestionsEnabled.set(settings.showSponsoredSuggestions)
+            showNonSponsorSuggestionsEnabled.set(settings.showNonSponsoredSuggestions)
             remoteDebuggingEnabled.set(settings.isRemoteDebuggingEnabled)
             studiesEnabled.set(settings.isExperimentationEnabled)
             telemetryEnabled.set(settings.isTelemetryEnabled)

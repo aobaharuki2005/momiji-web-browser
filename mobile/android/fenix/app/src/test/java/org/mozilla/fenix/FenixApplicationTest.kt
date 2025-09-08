@@ -208,6 +208,8 @@ class FenixApplicationTest {
         assertEquals(true, Addons.hasEnabledAddons.testGetValue())
         assertEquals(listOf("test1", "test2"), Addons.enabledAddons.testGetValue())
         assertEquals(true, Preferences.searchSuggestionsEnabled.testGetValue())
+        assertEquals(true, Preferences.showSponsorSuggestionsEnabled.testGetValue())
+        assertEquals(true, Preferences.showNonSponsorSuggestionsEnabled.testGetValue())
         assertEquals(true, Preferences.remoteDebuggingEnabled.testGetValue())
         assertEquals(true, Preferences.telemetryEnabled.testGetValue())
         assertEquals(true, Preferences.studiesEnabled.testGetValue())
