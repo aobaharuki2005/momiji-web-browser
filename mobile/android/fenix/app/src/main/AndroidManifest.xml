@@ -666,6 +666,12 @@
             android:excludeFromRecents="true"
             />
 
+        <activity android:name="mozilla.components.feature.qr.QrScanActivity"
+            android:theme="@style/Theme.AppCompat.Translucent"
+            android:exported="false"
+            android:taskAffinity=""
+            />
+
         <activity
             android:name=".settings.account.AuthCustomTabActivity"
             android:autoRemoveFromRecents="false"

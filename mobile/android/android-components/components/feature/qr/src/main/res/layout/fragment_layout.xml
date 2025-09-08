@@ -18,7 +18,7 @@
         android:layout_height="48dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="48dp"
         android:layout_marginLeft="12dp"
         app:srcCompat="@drawable/mozac_ic_back_24"
         android:backgroundTint="@android:color/transparent"
@@ -37,6 +37,7 @@
         android:id="@+id/texture"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@null"
         android:layout_centerInParent="true" />
 
     <mozilla.components.feature.qr.views.CustomViewFinder
