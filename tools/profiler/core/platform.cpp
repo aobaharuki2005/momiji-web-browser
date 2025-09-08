@@ -7739,7 +7739,8 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   if (!profiler_is_active() ||
-      aCaptureOptions == StackCaptureOptions::NoStack) {
+      aCaptureOptions == StackCaptureOptions::NoStack ||
+      profiler_is_locked_on_current_thread()) {
     return false;
   }
 
