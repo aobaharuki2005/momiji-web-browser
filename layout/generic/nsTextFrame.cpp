@@ -1982,7 +1982,11 @@ gfx::ShapedTextFlags nsTextFrame::GetSpacingFlags() const {
   // IsDefinitelyZero() is false, in which case we'll return
   // TEXT_ENABLE_SPACING unnecessarily. That's ok because such cases are likely
   // to be rare, and avoiding TEXT_ENABLE_SPACING is just an optimization.
-  bool nonStandardSpacing = !ls.IsDefinitelyZero() || !ws.IsDefinitelyZero();
+  bool nonStandardSpacing =
+      !ls.IsDefinitelyZero() || !ws.IsDefinitelyZero() ||
+      TextAutospace::Enabled(styleText->EffectiveTextAutospace(),
+                             StyleVisibility()->mTextOrientation,
+                             CharacterDataBuffer());
   return nonStandardSpacing ? gfx::ShapedTextFlags::TEXT_ENABLE_SPACING
                             : gfx::ShapedTextFlags();
 }
@@ -3467,6 +3471,7 @@ nsTextFrame::PropertyProvider::PropertyProvider(
   if (aAtStartOfLine) {
     mStartOfLineOffset = mStart.GetSkippedOffset();
   }
+  InitTextAutospace();
 }
 
 nsTextFrame::PropertyProvider::PropertyProvider(
@@ -3493,6 +3498,7 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mReflowing(false),
       mWhichTextRun(aWhichTextRun) {
   NS_ASSERTION(mTextRun, "Textrun not initialized!");
+  InitTextAutospace();
 }
 
 gfx::ShapedTextFlags nsTextFrame::PropertyProvider::GetShapedTextFlags() const {
@@ -3895,8 +3901,9 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
   gfxSkipCharsIterator start(mStart);
   start.SetSkippedOffset(aRange.start);
 
-  // First, compute the word and letter spacing
-  if (mWordSpacing || mLetterSpacing) {
+  // First, compute the word spacing, letter spacing, and text-autospace
+  // spacing.
+  if (mWordSpacing || mLetterSpacing || mTextAutospace) {
     // Iterate over non-skipped characters
     nsSkipCharsRunIterator run(
         start, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aRange.Length());
@@ -3928,6 +3935,28 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
     }
     bool atStart = mStartOfLineOffset == start.GetSkippedOffset() &&
                    !mFrame->IsInSVGTextSubtree();
+
+    using CharClass = TextAutospace::CharClass;
+    // Previous non-mark class of a scalar at a cluster start.
+    CharClass prevClass = CharClass::Other;
+    if (mTextAutospace) {
+      // We may need the class of the scalar immediately before the current
+      // aRange.
+      if (aRange.start > 0 && start.GetOriginalOffset() > 0) {
+        gfxSkipCharsIterator findPrevCluster = start;
+        do {
+          findPrevCluster.AdvanceOriginal(-1);
+          FindClusterStart(mTextRun, 0, &findPrevCluster);
+          const char32_t prevScalar = mCharacterDataBuffer->ScalarValueAt(
+              findPrevCluster.GetOriginalOffset());
+          prevClass = mTextAutospace->GetCharClass(prevScalar);
+        } while (prevClass == CharClass::CombiningMark &&
+                 findPrevCluster.GetOriginalOffset() > 0);
+      } else {
+        // Bug 1986837: Look for the last non-mark cluster start of the
+        // preceding frame, if any.
+      }
+    }
     while (run.NextRun()) {
       uint32_t runOffsetInSubstring = run.GetSkippedOffset() - aRange.start;
       gfxSkipCharsIterator iter = run.GetPos();
@@ -3953,6 +3982,24 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
                          &iter);
           uint32_t runOffset = iter.GetSkippedOffset() - aRange.start;
           aSpacing[runOffset].mAfter += mWordSpacing;
+        }
+        // Add text-autospace spacing.
+        if (mTextAutospace &&
+            mTextRun->IsClusterStart(run.GetSkippedOffset() + i)) {
+          const char32_t currScalar =
+              mCharacterDataBuffer->ScalarValueAt(run.GetOriginalOffset() + i);
+          const auto currClass = mTextAutospace->GetCharClass(currScalar);
+
+          // It is rare for the current class to be is a combining mark, as
+          // combining marks are not cluster starts. We still check in case a
+          // stray mark appears at the start of a frame.
+          if (currClass != CharClass::CombiningMark) {
+            if (mTextAutospace->ShouldApplySpacing(prevClass, currClass)) {
+              aSpacing[runOffsetInSubstring + i].mBefore +=
+                  mTextAutospace->InterScriptSpacing();
+            }
+            prevClass = currClass;
+          }
         }
         atStart = false;
       }
@@ -4265,6 +4312,16 @@ void nsTextFrame::PropertyProvider::InitFontGroupAndFontMetrics() const {
     }
   }
   mFontGroup = mFontMetrics->GetThebesFontGroup();
+}
+
+void nsTextFrame::PropertyProvider::InitTextAutospace() {
+  const auto styleTextAutospace = mTextStyle->EffectiveTextAutospace();
+  if (TextAutospace::Enabled(styleTextAutospace,
+                             mFrame->StyleVisibility()->mTextOrientation,
+                             mCharacterDataBuffer)) {
+    mTextAutospace.emplace(styleTextAutospace,
+                           GetFontMetrics()->InterScriptSpacingWidth());
+  }
 }
 
 #ifdef ACCESSIBILITY
