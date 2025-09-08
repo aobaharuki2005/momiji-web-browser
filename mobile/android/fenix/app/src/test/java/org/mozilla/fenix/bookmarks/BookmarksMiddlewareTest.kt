@@ -96,6 +96,32 @@ class BookmarksMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN a nested bookmark structure WHEN the store is initialized on create THEN all the folders have nested child counts`() = runTestOnMain {
+        val tree = generateBookmarkTree()
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(tree)
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Mobile.id))).thenReturn(30u)
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf("folder guid 0"))).thenReturn(8u)
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf("folder guid 1"))).thenReturn(7u)
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf("folder guid 2"))).thenReturn(3u)
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf("folder guid 3"))).thenReturn(9u)
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf("folder guid 4"))).thenReturn(1u)
+
+        val middleware = buildMiddleware()
+        val store = middleware.makeStore()
+
+        val expectedMap =
+            mapOf(
+                "folder guid 0" to 8,
+                "folder guid 1" to 7,
+                "folder guid 2" to 3,
+                "folder guid 3" to 9,
+                "folder guid 4" to 1,
+            )
+        assertEquals(expectedMap, store.state.bookmarkItems.folders().associate { it.guid to it.nestedItemCount })
+    }
+
+    @Test
     fun `GIVEN a nested bookmark structure WHEN SelectAll is clicked THEN all bookmarks are selected and reflected in state`() = runTestOnMain {
         val tree = generateBookmarkTree()
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
@@ -113,6 +139,7 @@ class BookmarksMiddlewareTest {
     fun `GIVEN bookmarks in storage and not signed into sync WHEN store is initialized THEN bookmarks will be loaded as display format`() = runTestOnMain {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(generateBookmarkTree())
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(0u)
         val middleware = buildMiddleware()
 
         val store = middleware.makeStore()
@@ -203,7 +230,7 @@ class BookmarksMiddlewareTest {
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(generateBookmarkTree())
         `when`(bookmarksStorage.getTree(BookmarkRoot.Root.id)).thenReturn(generateDesktopRootTree())
         val middleware = buildMiddleware()
-
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(1u)
         val store = middleware.makeStore(
             initialState = BookmarksState.default.copy(isSignedIntoSync = true),
         )
@@ -217,7 +244,7 @@ class BookmarksMiddlewareTest {
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(generateBookmarkTree())
         `when`(bookmarksStorage.getTree(BookmarkRoot.Root.id)).thenReturn(generateDesktopRootTree())
         val middleware = buildMiddleware()
-
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(1u)
         val store = middleware.makeStore()
 
         assertEquals(11, store.state.bookmarkItems.size)
@@ -467,6 +494,7 @@ class BookmarksMiddlewareTest {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(generateBookmarkTree())
         val middleware = buildMiddleware()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(0u)
         val store = middleware.makeStore(
             initialState = BookmarksState.default.copy(
                 bookmarksEditFolderState = BookmarksEditFolderState(
@@ -661,6 +689,7 @@ class BookmarksMiddlewareTest {
         `when`(bookmarksStorage.getTree(firstFolderNode.guid)).thenReturn(generateBookmarkTree())
         `when`(bookmarksStorage.getBookmark(firstFolderNode.guid)).thenReturn(firstFolderNode)
         val middleware = buildMiddleware()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(0u)
         val store = middleware.makeStore()
 
         store.dispatch(
@@ -685,6 +714,7 @@ class BookmarksMiddlewareTest {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = true)).thenReturn(generateBookmarkTree())
         val middleware = buildMiddleware()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(0u)
         val store = middleware.makeStore(
             initialState = BookmarksState.default.copy(
                 bookmarksSelectFolderState = BookmarksSelectFolderState(outerSelectionGuid = "selection guid"),
@@ -771,6 +801,7 @@ class BookmarksMiddlewareTest {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(1u)
         `when`(bookmarksStorage.getTree(BookmarkRoot.Root.id, recursive = true)).thenReturn(generateDesktopRootTree())
         val middleware = buildMiddleware()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(1u)
         val store = middleware.makeStore(
             initialState = BookmarksState.default.copy(
                 bookmarksSelectFolderState = BookmarksSelectFolderState(outerSelectionGuid = "selection guid"),
@@ -787,6 +818,7 @@ class BookmarksMiddlewareTest {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(1u)
         `when`(bookmarksStorage.getTree(BookmarkRoot.Root.id, recursive = true)).thenReturn(generateDesktopRootTree())
         val middleware = buildMiddleware()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(1u)
         val store = middleware.makeStore(
             initialState = BookmarksState.default.copy(
                 isSignedIntoSync = true,
@@ -949,6 +981,7 @@ class BookmarksMiddlewareTest {
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(tree)
         val bookmarkItem = BookmarkItem.Bookmark(url = "url", title = "title", previewImageUrl = "url", guid = firstGuid, position = 0u)
         val middleware = buildMiddleware()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(0u)
         val store = middleware.makeStore()
 
         store.dispatch(BookmarksListMenuAction.Bookmark.DeleteClicked(bookmarkItem))
@@ -1433,6 +1466,7 @@ class BookmarksMiddlewareTest {
         val newParentItem = BookmarkItem.Folder(title = newParent.title!!, guid = newParent.guid, position = newParent.position)
 
         val middleware = buildMiddleware()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(0u)
         val store = middleware.makeStore()
 
         store.dispatch(BookmarksListMenuAction.Folder.EditClicked(folderItem))
@@ -1471,6 +1505,7 @@ class BookmarksMiddlewareTest {
         val parentForNewFolderItem = BookmarkItem.Folder(title = parentForNewFolder.title!!, guid = parentForNewFolder.guid, position = parentForNewFolder.position)
 
         val middleware = buildMiddleware()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(0u)
         val store = middleware.makeStore()
 
         store.dispatch(BookmarksListMenuAction.Bookmark.EditClicked(bookmarkItem))

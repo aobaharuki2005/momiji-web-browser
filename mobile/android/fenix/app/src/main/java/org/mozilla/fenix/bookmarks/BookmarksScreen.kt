@@ -387,6 +387,11 @@ private fun BookmarksList(
                     SelectableIconListItem(
                         label = item.title,
                         isSelected = item in state.selectedItems,
+                        description =
+                            stringResource(
+                                R.string.bookmarks_folder_description,
+                                item.nestedItemCount.toString(),
+                            ),
                         onClick = { store.dispatch(FolderClicked(item)) },
                         beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                         modifier = Modifier
@@ -404,6 +409,10 @@ private fun BookmarksList(
                     SelectableIconListItem(
                         label = item.title,
                         isSelected = item in state.selectedItems,
+                        description = stringResource(
+                            id = R.string.bookmarks_folder_description,
+                            item.nestedItemCount.toString(),
+                        ),
                         onClick = { store.dispatch(FolderClicked(item)) },
                         onLongClick = { store.dispatch(FolderLongClicked(item)) },
                         beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),

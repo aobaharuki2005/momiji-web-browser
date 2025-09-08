@@ -1712,6 +1712,8 @@
     <string name="bookmark_close_button_content_description">Close bookmarks</string>
     <!-- Title for the bookmark list empty state-->
     <string name="bookmark_empty_list_title">No bookmarks yet</string>
+    <!-- Bookmark screen folder description. %s is the count of bookmark folder children -->
+    <string name="bookmarks_folder_description">Bookmarks in folder: %s</string>
     <!-- Description for the bookmark list empty state when you're not signed into sync. -->
     <string name="bookmark_empty_list_guest_description">Save sites as you browse. Sign in to grab bookmarks from other synced devices.</string>
     <!-- Text for the button to navigate to sync authentication -->
