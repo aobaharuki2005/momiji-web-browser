@@ -1539,9 +1539,11 @@
     <!-- The button text for the send button to submit the provided form data. -->
     <string name="webcompat_reporter_send">Send</string>
     <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
-    <string name="webcompat_reporter_success_snackbar_text">Your report was sent</string>
+    <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Your report was sent</string>
+    <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+    <string name="webcompat_reporter_success_snackbar_text_2">Report sent</string>
     <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
-    <string name="webcompat_reporter_dismiss_success_snackbar_text">Close</string>
+    <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Close</string>
     <!-- Placeholder text for the description field to prompt the user on what they should type. -->
     <string name="webcompat_reporter_problem_description_placeholder_text">What happened? What should have happened?</string>
 

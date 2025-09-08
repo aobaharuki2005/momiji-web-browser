@@ -655,12 +655,12 @@ class SnackbarBindingTest {
         waitForStoreToSettle()
 
         verify(snackbarDelegate).show(
-            text = eq(testContext.getString(R.string.webcompat_reporter_success_snackbar_text)),
+            text = eq(testContext.getString(R.string.webcompat_reporter_success_snackbar_text_2)),
             subText = eq(null),
             subTextOverflow = eq(null),
-            duration = eq(testContext.getSnackbarTimeout(hasAction = true).value.toInt()),
+            duration = eq(testContext.getSnackbarTimeout().value.toInt()),
             isError = eq(false),
-            action = eq(testContext.getString(R.string.webcompat_reporter_dismiss_success_snackbar_text)),
+            action = eq(null),
             listener = snackbarAction.capture(),
         )
 

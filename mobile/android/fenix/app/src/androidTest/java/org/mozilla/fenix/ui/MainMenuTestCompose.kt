@@ -898,7 +898,7 @@ class MainMenuTestCompose : TestSetup() {
             clickBrokenSiteFormSendButton(composeTestRule)
         }
         browserScreen {
-            verifySnackBarText("Your report was sent")
+            verifySnackBarText("Report sent")
         }.openThreeDotMenu(composeTestRule) {
             openToolsMenu()
         }.openReportBrokenSite {

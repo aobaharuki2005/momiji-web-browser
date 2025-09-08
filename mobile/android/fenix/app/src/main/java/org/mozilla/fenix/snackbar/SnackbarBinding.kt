@@ -241,9 +241,8 @@ class SnackbarBinding(
 
                     SnackbarState.WebCompatReportSent -> {
                         snackbarDelegate.show(
-                            text = context.getString(R.string.webcompat_reporter_success_snackbar_text),
-                            duration = context.getSnackbarTimeout(hasAction = true).value.toInt(),
-                            action = context.getString(R.string.webcompat_reporter_dismiss_success_snackbar_text),
+                            text = context.getString(R.string.webcompat_reporter_success_snackbar_text_2),
+                            duration = context.getSnackbarTimeout().value.toInt(),
                             listener = { snackbarDelegate.dismiss() },
                         )
 
