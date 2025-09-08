@@ -78,6 +78,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.tabstrip.TabStrip
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.HomepageThumbnailIntegration
+import org.mozilla.fenix.components.QrScanFenixFeature
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.VoiceSearchFeature
 import org.mozilla.fenix.components.appstate.AppAction
@@ -87,7 +88,6 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Microsurv
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.CheckIfEligibleForReviewPrompt
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.ReviewPromptShown
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.components.toolbar.BottomToolbarContainerView
 import org.mozilla.fenix.compose.snackbar.Snackbar
@@ -255,9 +255,18 @@ class HomeFragment : Fragment() {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
     }
 
+    private val qrScanFenixFeature by lazy(LazyThreadSafetyMode.NONE) {
+        ViewBoundFeatureWrapper<QrScanFenixFeature>()
+    }
+
     private val voiceSearchLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             voiceSearchFeature.get()?.handleVoiceSearchResult(result.resultCode, result.data)
+        }
+
+    private val qrScanLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            qrScanFenixFeature.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -907,7 +916,15 @@ class HomeFragment : Fragment() {
         }
 
         if (requireContext().settings().shouldUseComposableToolbar) {
-            QrScannerBinding.register(this)
+            qrScanFenixFeature.set(
+                feature = QrScanFenixFeature(
+                    context = requireContext(),
+                    appStore = requireContext().components.appStore,
+                    qrScanActivityLauncher = qrScanLauncher,
+                ),
+                owner = viewLifecycleOwner,
+                view = binding.root,
+            )
         }
 
         (toolbarView as? HomeToolbarView)?.let {

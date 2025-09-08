@@ -31,10 +31,10 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.QrScanFenixFeature
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.VoiceSearchFeature
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
-import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
@@ -58,7 +58,6 @@ import org.mozilla.fenix.search.createInitialSearchFragmentState
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.lastSavedFolderCache
-import kotlin.getValue
 
 /**
  * The screen that displays the user's bookmark list in their Library.
@@ -67,6 +66,14 @@ import kotlin.getValue
 class BookmarkFragment : Fragment() {
 
     private val verificationResultLauncher = registerForVerification()
+
+    private val qrScanFenixFeature by lazy(LazyThreadSafetyMode.NONE) {
+        ViewBoundFeatureWrapper<QrScanFenixFeature>()
+    }
+    private val qrScannerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            qrScanFenixFeature.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
+        }
 
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
@@ -205,7 +212,15 @@ class BookmarkFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (requireContext().settings().shouldUseComposableToolbar) {
-            QrScannerBinding.register(this)
+            qrScanFenixFeature.set(
+                feature = QrScanFenixFeature(
+                    context = requireContext(),
+                    appStore = requireContext().components.appStore,
+                    qrScanActivityLauncher = qrScannerLauncher,
+                ),
+                owner = viewLifecycleOwner,
+                view = view,
+            )
             voiceSearchFeature.set(
                 feature = VoiceSearchFeature(
                     context = requireContext(),

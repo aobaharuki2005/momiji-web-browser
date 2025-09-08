@@ -40,9 +40,9 @@ import org.mozilla.fenix.GleanMetrics.AddressToolbar
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.store.BrowserScreenAction.ReaderModeStatusUpdated
+import org.mozilla.fenix.components.QrScanFenixFeature
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.VoiceSearchFeature
-import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
 import org.mozilla.fenix.components.toolbar.BrowserToolbarComposable
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.FenixBrowserToolbarView
@@ -74,6 +74,15 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
     private val translationsBinding = ViewBoundFeatureWrapper<TranslationsBinding>()
     private val translationsBannerIntegration = ViewBoundFeatureWrapper<TranslationsBannerIntegration>()
+
+    private val qrScanFenixFeature by lazy(LazyThreadSafetyMode.NONE) {
+        ViewBoundFeatureWrapper<QrScanFenixFeature>()
+    }
+
+    private val qrScanLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            qrScanFenixFeature.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
+        }
 
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
@@ -173,7 +182,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private fun initBrowserToolbarComposableUpdates(rootView: View) {
         initReaderModeUpdates(rootView.context, rootView)
-        QrScannerBinding.register(this)
+        initQrScannerSupport(rootView.context)
         initVoiceSearchSupport(rootView.context)
     }
 
@@ -316,6 +325,18 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 context = context,
                 appStore = context.components.appStore,
                 voiceSearchLauncher = voiceSearchLauncher,
+            ),
+            owner = viewLifecycleOwner,
+            view = binding.root,
+        )
+    }
+
+    private fun initQrScannerSupport(context: Context) {
+        qrScanFenixFeature.set(
+            feature = QrScanFenixFeature(
+                context = context,
+                appStore = context.components.appStore,
+                qrScanActivityLauncher = qrScanLauncher,
             ),
             owner = viewLifecycleOwner,
             view = binding.root,
