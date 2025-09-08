@@ -1594,6 +1594,9 @@ static bool SetTimeout(JSContext* cx, unsigned argc, Value* vp) {
   }
   if (delay != 0) {
     JS::WarnASCII(cx, "Treating non-zero delay as zero in setTimeout");
+    if (cx->isThrowingOutOfMemory()) {
+      return false;
+    }
   }
 
   ShellContext* sc = GetShellContext(cx);
