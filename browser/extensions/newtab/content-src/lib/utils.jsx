@@ -267,7 +267,9 @@ function selectWeatherPlacement(state) {
   const prefs = state.Prefs.values || {};
 
   // Intent: only placed in section if explicitly requested
-  const placementPref = prefs[PREF_WEATHER_PLACEMENT];
+  const placementPref =
+    prefs.trainhopConfig?.dailyBriefing?.placement ||
+    prefs[PREF_WEATHER_PLACEMENT];
 
   if (placementPref === "header" || !placementPref) {
     return "header";
@@ -287,10 +289,10 @@ function selectWeatherPlacement(state) {
   const sectionPersonalization =
     state.DiscoveryStream?.sectionPersonalization || {};
   const dailyBriefEnabled =
-    prefs.trainHopConfig?.dailyBriefing?.enabled ||
+    prefs.trainhopConfig?.dailyBriefing?.enabled ||
     prefs[PREF_DAILY_BRIEF_ENABLED];
   const sectionId =
-    prefs.trainHopConfig?.dailyBriefing?.sectionId ||
+    prefs.trainhopConfig?.dailyBriefing?.sectionId ||
     prefs[PREF_DAILY_BRIEF_SECTIONID];
   const notBlocked = sectionId && !sectionPersonalization[sectionId]?.isBlocked;
   let filteredSections = sections.filter(
@@ -309,7 +311,6 @@ function selectWeatherPlacement(state) {
     sectionId &&
     notBlocked &&
     isTopSection;
-
   return eligible ? "section" : "header";
 }
 

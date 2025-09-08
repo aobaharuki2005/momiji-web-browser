@@ -254,11 +254,11 @@ describe("selectWeatherPlacement", () => {
           // story feed prefs used by selector in this file
           "feeds.section.topstories": pocketEnabled,
           "feeds.system.topstories": systemEnabled,
-          // daily brief prefs; selector uses trainHopConfig first, falls back to these
+          // daily brief prefs; selector uses trainhopConfig first, falls back to these
           "discoverystream.dailyBrief.enabled": dailyBriefEnabled,
           "discoverystream.dailyBrief.sectionId": sectionId,
-          // include trainHopConfig for parity with production (optional)
-          trainHopConfig: {
+          // include trainhopConfig for parity with production (optional)
+          trainhopConfig: {
             dailyBriefing: {
               enabled: dailyBriefEnabled,
               sectionId,

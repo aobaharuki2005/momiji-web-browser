@@ -2881,7 +2881,7 @@ function selectWeatherPlacement(state) {
   const prefs = state.Prefs.values || {};
 
   // Intent: only placed in section if explicitly requested
-  const placementPref = prefs[PREF_WEATHER_PLACEMENT];
+  const placementPref = prefs.trainhopConfig?.dailyBriefing?.placement || prefs[PREF_WEATHER_PLACEMENT];
   if (placementPref === "header" || !placementPref) {
     return "header";
   }
@@ -2893,8 +2893,8 @@ function selectWeatherPlacement(state) {
   // Otherwise it should be placed in the header
   const pocketEnabled = prefs[PREF_STORIES_ENABLED] && prefs[PREF_SYSTEM_STORIES_ENABLED];
   const sectionPersonalization = state.DiscoveryStream?.sectionPersonalization || {};
-  const dailyBriefEnabled = prefs.trainHopConfig?.dailyBriefing?.enabled || prefs[PREF_DAILY_BRIEF_ENABLED];
-  const sectionId = prefs.trainHopConfig?.dailyBriefing?.sectionId || prefs[PREF_DAILY_BRIEF_SECTIONID];
+  const dailyBriefEnabled = prefs.trainhopConfig?.dailyBriefing?.enabled || prefs[PREF_DAILY_BRIEF_ENABLED];
+  const sectionId = prefs.trainhopConfig?.dailyBriefing?.sectionId || prefs[PREF_DAILY_BRIEF_SECTIONID];
   const notBlocked = sectionId && !sectionPersonalization[sectionId]?.isBlocked;
   let filteredSections = sections.filter(section => !sectionPersonalization[section.sectionKey]?.isBlocked);
   const foundSection = filteredSections.find(section => section.sectionKey === sectionId);
@@ -12299,7 +12299,7 @@ function CardSections({
     messageData
   } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Messages);
   const weatherPlacement = (0,external_ReactRedux_namespaceObject.useSelector)(selectWeatherPlacement);
-  const dailyBriefSectionId = prefs.trainHopConfig?.dailyBriefing.sectionId || prefs[CardSections_PREF_DAILY_BRIEF_SECTIONID];
+  const dailyBriefSectionId = prefs.trainhopConfig?.dailyBriefing.sectionId || prefs[CardSections_PREF_DAILY_BRIEF_SECTIONID];
   const weatherEnabled = prefs.showWeather;
   const personalizationEnabled = prefs[PREF_SECTIONS_PERSONALIZATION_ENABLED];
   const interestPickerEnabled = prefs[PREF_INTEREST_PICKER_ENABLED];
