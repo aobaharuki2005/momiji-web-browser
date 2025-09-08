@@ -99,11 +99,13 @@ RTCDataChannel::RTCDataChannel(const nsACString& aLabel,
       mMaxRetransmits(aMaxRetransmits),
       mProtocol(aProtocol),
       mNegotiated(aNegotiated),
-      mDataChannel(aDataChannel) {}
+      mDataChannel(aDataChannel),
+      mEventTarget(GetCurrentSerialEventTarget()) {}
 
 nsresult RTCDataChannel::Init() {
   MOZ_ASSERT(mDataChannel);
   mDataChannel->SetDomDataChannel(this);
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   // Attempt to kill "ghost" DataChannel (if one can happen): but usually too
   // early for check to fail
@@ -117,36 +119,58 @@ nsresult RTCDataChannel::Init() {
 
 // Most of the GetFoo()/SetFoo()s don't need to touch shared resources and
 // are safe after Close()
-void RTCDataChannel::GetLabel(nsACString& aLabel) const { aLabel = mLabel; }
+void RTCDataChannel::GetLabel(nsACString& aLabel) const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  aLabel = mLabel;
+}
 
 void RTCDataChannel::GetProtocol(nsACString& aProtocol) const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   aProtocol = mProtocol;
 }
 
-Nullable<uint16_t> RTCDataChannel::GetId() const { return mId; }
+Nullable<uint16_t> RTCDataChannel::GetId() const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  return mId;
+}
 
-void RTCDataChannel::SetId(uint16_t aId) { mId.SetValue(aId); }
+void RTCDataChannel::SetId(uint16_t aId) {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  mId.SetValue(aId);
+}
 
 void RTCDataChannel::SetMaxMessageSize(double aMaxMessageSize) {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   mMaxMessageSize = aMaxMessageSize;
 }
 
 Nullable<uint16_t> RTCDataChannel::GetMaxPacketLifeTime() const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   return mMaxPacketLifeTime;
 }
 
 Nullable<uint16_t> RTCDataChannel::GetMaxRetransmits() const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   return mMaxRetransmits;
 }
 
-bool RTCDataChannel::Negotiated() const { return mNegotiated; }
+bool RTCDataChannel::Negotiated() const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  return mNegotiated;
+}
 
-bool RTCDataChannel::Ordered() const { return mOrdered; }
+bool RTCDataChannel::Ordered() const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  return mOrdered;
+}
 
-RTCDataChannelState RTCDataChannel::ReadyState() const { return mReadyState; }
+RTCDataChannelState RTCDataChannel::ReadyState() const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  return mReadyState;
+}
 
 void RTCDataChannel::SetReadyState(const RTCDataChannelState aState) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   DC_DEBUG(
       ("RTCDataChannel labeled %s(%p) (stream %d) changing ready "
@@ -158,13 +182,18 @@ void RTCDataChannel::SetReadyState(const RTCDataChannelState aState) {
   mReadyState = aState;
 }
 
-size_t RTCDataChannel::BufferedAmount() const { return mBufferedAmount; }
+size_t RTCDataChannel::BufferedAmount() const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  return mBufferedAmount;
+}
 
 size_t RTCDataChannel::BufferedAmountLowThreshold() const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   return mBufferedThreshold;
 }
 
 void RTCDataChannel::SetBufferedAmountLowThreshold(size_t aThreshold) {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   mBufferedThreshold = aThreshold;
 }
 
@@ -174,6 +203,7 @@ void RTCDataChannel::Close() {
   // Closes the RTCDataChannel. It may be called regardless of whether the
   // RTCDataChannel object was created by this peer or the remote peer.
 
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   // When the close method is called, the user agent MUST run the following
   // steps:
 
@@ -197,6 +227,8 @@ void RTCDataChannel::Close() {
 }
 
 void RTCDataChannel::Send(const nsAString& aData, ErrorResult& aRv) {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+
   if (!CheckReadyState(aRv)) {
     return;
   }
@@ -221,7 +253,7 @@ void RTCDataChannel::Send(const nsAString& aData, ErrorResult& aRv) {
 }
 
 void RTCDataChannel::Send(Blob& aData, ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   if (!CheckReadyState(aRv)) {
     return;
@@ -256,7 +288,7 @@ void RTCDataChannel::Send(Blob& aData, ErrorResult& aRv) {
 }
 
 void RTCDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   if (!CheckReadyState(aRv)) {
     return;
@@ -281,7 +313,7 @@ void RTCDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
 }
 
 void RTCDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   if (!CheckReadyState(aRv)) {
     return;
@@ -308,6 +340,8 @@ void RTCDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
 }
 
 void RTCDataChannel::GracefulClose() {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+
   // An RTCDataChannel object's underlying data transport may be torn down in a
   // non-abrupt manner by running the closing procedure. When that happens the
   // user agent MUST queue a task to run the following steps:
@@ -353,6 +387,7 @@ void RTCDataChannel::GracefulClose() {
 }
 
 void RTCDataChannel::AnnounceOpen() {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   // If the associated RTCPeerConnection object's [[IsClosed]] slot is true,
   // abort these steps.
   // TODO(bug 1978901): Fix this
@@ -372,6 +407,7 @@ void RTCDataChannel::AnnounceOpen() {
 }
 
 void RTCDataChannel::AnnounceClosed() {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   // Let channel be the RTCDataChannel object whose
   // underlying data transport was closed. If
   // channel.[[ReadyState]] is "closed", abort
@@ -404,6 +440,7 @@ void RTCDataChannel::AnnounceClosed() {
 
 dom::RTCDataChannelStats RTCDataChannel::GetStats(
     const DOMHighResTimeStamp aTimestamp) const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   mozilla::dom::RTCDataChannelStats stats;
   nsString id = u"dc"_ns;
   id.Append(NS_ConvertASCIItoUTF16(mUuid.ToString().get()));
@@ -427,11 +464,12 @@ dom::RTCDataChannelStats RTCDataChannel::GetStats(
 }
 
 void RTCDataChannel::IncrementBufferedAmount(size_t aSize) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   mBufferedAmount += aSize;
 }
 
 void RTCDataChannel::DecrementBufferedAmount(size_t aSize) {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   MOZ_ASSERT(aSize <= mBufferedAmount);
   aSize = std::min(aSize, mBufferedAmount);
   bool wasLow = mBufferedAmount <= mBufferedThreshold;
@@ -456,6 +494,7 @@ void RTCDataChannel::DecrementBufferedAmount(size_t aSize) {
 }
 
 bool RTCDataChannel::CheckSendSize(uint64_t aSize, ErrorResult& aRv) const {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   if (aSize > mMaxMessageSize) {
     nsPrintfCString err("Message size (%" PRIu64 ") exceeds maxMessageSize",
                         aSize);
@@ -466,7 +505,7 @@ bool RTCDataChannel::CheckSendSize(uint64_t aSize, ErrorResult& aRv) const {
 }
 
 bool RTCDataChannel::CheckReadyState(ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   // In reality, the DataChannel protocol allows this, but we want it to
   // look like WebSockets
   if (mReadyState == RTCDataChannelState::Connecting) {
@@ -487,7 +526,7 @@ bool RTCDataChannel::CheckReadyState(ErrorResult& aRv) {
 
 nsresult RTCDataChannel::DoOnMessageAvailable(const nsACString& aData,
                                               bool aBinary) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   if (mReadyState == RTCDataChannelState::Closed ||
       mReadyState == RTCDataChannelState::Closing) {
@@ -566,7 +605,7 @@ nsresult RTCDataChannel::DoOnMessageAvailable(const nsACString& aData,
 }
 
 nsresult RTCDataChannel::OnSimpleEvent(const nsAString& aName) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
@@ -591,7 +630,7 @@ nsresult RTCDataChannel::OnSimpleEvent(const nsAString& aName) {
 //-----------------------------------------------------------------------------
 
 void RTCDataChannel::UpdateMustKeepAlive() {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   if (!mCheckMustKeepAlive) {
     return;
@@ -636,7 +675,7 @@ void RTCDataChannel::UpdateMustKeepAlive() {
 }
 
 void RTCDataChannel::DontKeepAliveAnyMore() {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   if (mSelfRef) {
     // Since we're on MainThread, force an eventloop trip to avoid deleting
@@ -648,17 +687,18 @@ void RTCDataChannel::DontKeepAliveAnyMore() {
 }
 
 void RTCDataChannel::ReleaseSelf() {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   // release our self-reference (safely) by putting it in an event (always)
-  NS_ReleaseOnMainThread("RTCDataChannel::mSelfRef", mSelfRef.forget(), true);
+  NS_ProxyRelease("RTCDataChannel::mSelfRef", mEventTarget, mSelfRef.forget());
 }
 
 void RTCDataChannel::EventListenerAdded(nsAtom* aType) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   UpdateMustKeepAlive();
 }
 
 void RTCDataChannel::EventListenerRemoved(nsAtom* aType) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   UpdateMustKeepAlive();
 }
 
