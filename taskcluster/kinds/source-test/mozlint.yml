@@ -783,3 +783,14 @@ ignorefile-test:
         files-changed:
             - '.gitignore'
             - '.hgignore'
+
+gecko-trace:
+    description: Check that all `gecko-trace.yaml` files are correct
+    treeherder:
+        symbol: misc(gecko-trace)
+    run:
+        mach: lint -l gecko-trace -f treeherder -f json:/builds/worker/mozlint.json .
+    when:
+        files-changed:
+            - '**/gecko-trace.yaml'
+            - '**/gecko-trace.yml'
