@@ -24,14 +24,14 @@ struct RTCStatsCollection;
 
 class RTCDataChannel final : public DOMEventTargetHelper {
  public:
-  RTCDataChannel(const nsACString& aLabel, bool aOrdered,
-                 Nullable<uint16_t> aMaxLifeTime,
+  RTCDataChannel(const nsACString& aLabel, const nsAString& aOrigin,
+                 bool aOrdered, Nullable<uint16_t> aMaxLifeTime,
                  Nullable<uint16_t> aMaxRetransmits,
                  const nsACString& aProtocol, bool aNegotiated,
                  already_AddRefed<DataChannel>& aDataChannel,
                  nsPIDOMWindowInner* aWindow);
 
-  nsresult Init(nsPIDOMWindowInner* aDOMWindow);
+  nsresult Init();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -112,6 +112,7 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   void ReleaseSelf();
 
   const nsID mUuid;  // Solely for stats. Probably overkill.
+  const nsString mOrigin;
   const nsCString mLabel;
   const bool mOrdered;
   const Nullable<uint16_t> mMaxPacketLifeTime;
@@ -123,7 +124,6 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   RefPtr<RTCDataChannel> mSelfRef;
   // Owning reference
   RefPtr<DataChannel> mDataChannel;
-  nsString mOrigin;
   bool mCheckMustKeepAlive = true;
   RTCDataChannelType mBinaryType = RTCDataChannelType::Arraybuffer;
 
