@@ -3325,6 +3325,15 @@ void nsIFrame::BuildDisplayListForStackingContext(
       HasAnyStateBits(NS_FRAME_CAPTURED_IN_VIEW_TRANSITION) &&
       !style.IsRootElementStyle();
 
+  if (capturedByViewTransition) {
+    // Captured view transition elements must have their frames built regardless
+    // of onscreen visibility so they can be snapshotted, since the snapshot can
+    // itself be in view. We set visibleRect and dirtyRect to ensure the frame
+    // and its descendants are painted.
+    visibleRect = InkOverflowRectRelativeToSelf();
+    dirtyRect = InkOverflowRectRelativeToSelf();
+  }
+
   const bool usingFilter = effects->HasFilters() && !style.IsRootElementStyle();
   const SVGUtils::MaskUsage maskUsage =
       SVGUtils::DetermineMaskUsage(this, false);
