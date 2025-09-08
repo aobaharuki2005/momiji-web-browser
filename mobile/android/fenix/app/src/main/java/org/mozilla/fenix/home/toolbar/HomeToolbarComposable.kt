@@ -120,7 +120,7 @@ internal class HomeToolbarComposable(
                     }
                     Box {
                         if (settings.enableHomepageSearchBar) {
-                            BrowserSimpleToolbar(toolbarStore)
+                            BrowserSimpleToolbar(toolbarStore, appStore)
                         }
                         this@Column.AnimatedVisibility(
                             visible = isAddressBarVisible.value || appStore.state.searchState.isSearchActive,
