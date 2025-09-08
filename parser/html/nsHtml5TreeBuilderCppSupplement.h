@@ -365,7 +365,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
             if (rel.LowerCaseEqualsASCII("stylesheet")) {
               nsHtml5String url =
                   aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
-              if (url) {
+              if (url &&
+                  !aAttributes->getValue(nsHtml5AttributeName::ATTR_DISABLED)) {
                 nsHtml5String charset =
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
                 nsHtml5String crossOrigin = aAttributes->getValue(
