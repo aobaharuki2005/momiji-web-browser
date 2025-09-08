@@ -1429,7 +1429,7 @@ abstract class BaseBrowserFragment :
         components = activity.components,
         browsingModeManager = activity.browsingModeManager,
         browserAnimator = browserAnimator,
-        thumbnailsFeature = thumbnailsFeature.get(),
+        thumbnailsFeature = { thumbnailsFeature.get() },
         readerModeController = readerModeController,
         settings = activity.settings(),
         customTabSession = customTabSessionId?.let { activity.components.core.store.state.findCustomTab(it) },

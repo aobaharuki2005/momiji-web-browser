@@ -2710,7 +2710,7 @@ class BrowserToolbarMiddlewareTest {
                     navController = navController,
                     browsingModeManager = browsingModeManager,
                     browserAnimator = browserAnimator,
-                    thumbnailsFeature = thumbnailsFeature,
+                    thumbnailsFeature = { thumbnailsFeature },
                     readerModeController = readerModeController,
                 ),
             ),

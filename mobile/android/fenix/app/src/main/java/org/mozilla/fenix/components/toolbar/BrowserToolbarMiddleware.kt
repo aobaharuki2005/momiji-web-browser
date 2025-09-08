@@ -293,7 +293,7 @@ class BrowserToolbarMiddleware(
 
             is TabCounterClicked -> {
                 runWithinEnvironment {
-                    thumbnailsFeature?.requestScreenshot()
+                    thumbnailsFeature()?.requestScreenshot()
 
                     if (settings.tabManagerEnhancementsEnabled) {
                         navController.nav(

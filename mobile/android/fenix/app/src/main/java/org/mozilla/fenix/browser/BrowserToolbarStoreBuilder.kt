@@ -69,7 +69,7 @@ object BrowserToolbarStoreBuilder {
         components: Components,
         browsingModeManager: BrowsingModeManager,
         browserAnimator: BrowserAnimator,
-        thumbnailsFeature: BrowserThumbnails?,
+        thumbnailsFeature: () -> BrowserThumbnails?,
         readerModeController: ReaderModeController,
         settings: Settings,
         customTabSession: CustomTabSessionState? = null,
