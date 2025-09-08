@@ -76,10 +76,6 @@ static uint32_t MutationBitForEventType(EventMessage aEventType) {
       return NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
     case eLegacyNodeRemoved:
       return NS_EVENT_BITS_MUTATION_NODEREMOVED;
-    case eLegacyNodeRemovedFromDocument:
-      return NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT;
-    case eLegacyNodeInsertedIntoDocument:
-      return NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT;
     default:
       break;
   }
@@ -92,10 +88,6 @@ static DeprecatedOperations DeprecatedMutationOperation(EventMessage aMessage) {
       return DeprecatedOperations::eDOMSubtreeModified;
     case eLegacyNodeRemoved:
       return DeprecatedOperations::eDOMNodeRemoved;
-    case eLegacyNodeRemovedFromDocument:
-      return DeprecatedOperations::eDOMNodeRemovedFromDocument;
-    case eLegacyNodeInsertedIntoDocument:
-      return DeprecatedOperations::eDOMNodeInsertedIntoDocument;
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
           "aMessage restricted by switch in AddEventListenerInternal");
@@ -379,9 +371,7 @@ void EventListenerManager::AddEventListenerInternal(
         }
         break;
       case eLegacySubtreeModified:
-      case eLegacyNodeRemoved:
-      case eLegacyNodeRemovedFromDocument:
-      case eLegacyNodeInsertedIntoDocument: {
+      case eLegacyNodeRemoved: {
         MOZ_ASSERT(!aFlags.mInSystemGroup,
                    "Legacy mutation events shouldn't be handled by ourselves");
         MOZ_ASSERT(listener->mListenerType != Listener::eNativeListener,

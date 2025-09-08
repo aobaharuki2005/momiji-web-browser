@@ -1157,8 +1157,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::Run(
           }
           if (aHTMLEditor.MayHaveMutationEventListeners(
                   NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
-                  NS_EVENT_BITS_MUTATION_NODEREMOVED |
-                  NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT)) {
+                  NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
             // Let's check whether there is new invisible `<br>` element
             // for avoiding infinite recursive calls.
             const WSRunScanner wsRunScannerAtCaret(
@@ -3139,7 +3138,6 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
       if (NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->IsPositioned()) ||
           (aHTMLEditor.MayHaveMutationEventListeners(
                NS_EVENT_BITS_MUTATION_NODEREMOVED |
-               NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
                NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED) &&
            NS_WARN_IF(!aRangesToDelete.IsFirstRangeEditable(aEditingHost)))) {
         NS_WARNING(

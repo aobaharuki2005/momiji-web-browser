@@ -185,9 +185,7 @@ const AVAILABLE_BREAKPOINTS = [
       nodeEvent("dom-mutation", "DOMFocusOut"),
 
       // Standard DOM mutation events.
-      nodeEvent("dom-mutation", "DOMNodeInsertedIntoDocument"),
       nodeEvent("dom-mutation", "DOMNodeRemoved"),
-      nodeEvent("dom-mutation", "DOMNodeRemovedFromDocument"),
       nodeEvent("dom-mutation", "DOMSubtreeModified"),
 
       // DOM load events.

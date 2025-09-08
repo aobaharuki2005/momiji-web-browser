@@ -193,10 +193,8 @@ NS_EVENT_MESSAGE(eScrollPortOverflow)
 
 NS_EVENT_MESSAGE(eLegacySubtreeModified)
 NS_EVENT_MESSAGE(eLegacyNodeRemoved)
-NS_EVENT_MESSAGE(eLegacyNodeRemovedFromDocument)
-NS_EVENT_MESSAGE(eLegacyNodeInsertedIntoDocument)
 NS_EVENT_MESSAGE_FIRST_LAST(eLegacyMutationEvent, eLegacySubtreeModified,
-                            eLegacyNodeInsertedIntoDocument)
+                            eLegacyNodeRemoved)
 
 NS_EVENT_MESSAGE(eUnidentifiedEvent)
 

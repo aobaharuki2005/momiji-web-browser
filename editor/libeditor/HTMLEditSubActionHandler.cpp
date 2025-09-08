@@ -2523,7 +2523,6 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
         }
         if (MayHaveMutationEventListeners(
                 NS_EVENT_BITS_MUTATION_NODEREMOVED |
-                NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
                 NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED) &&
             (NS_WARN_IF(!endToDeleteExceptReplaceRange.IsSetAndValid()) ||
              NS_WARN_IF(!endToDelete.IsSetAndValid()) ||

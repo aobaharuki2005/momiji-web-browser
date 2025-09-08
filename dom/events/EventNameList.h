@@ -376,10 +376,6 @@ NON_IDL_EVENT(MozMouseExploreByTouch, eMouseExploreByTouch, EventNameType_None,
 
 NON_IDL_EVENT(DOMNodeRemoved, eLegacyNodeRemoved, EventNameType_HTMLXUL,
               eMutationEventClass)
-NON_IDL_EVENT(DOMNodeInsertedIntoDocument, eLegacyNodeInsertedIntoDocument,
-              EventNameType_HTMLXUL, eMutationEventClass)
-NON_IDL_EVENT(DOMNodeRemovedFromDocument, eLegacyNodeRemovedFromDocument,
-              EventNameType_HTMLXUL, eMutationEventClass)
 NON_IDL_EVENT(DOMSubtreeModified, eLegacySubtreeModified, EventNameType_HTMLXUL,
               eMutationEventClass)
 
