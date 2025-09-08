@@ -26,6 +26,8 @@ class nsIFrame;
 
 class nsAttrValue;
 
+enum class AttrModType : uint8_t;  // Defined in nsIMutationObserver.h
+
 namespace mozilla::dom {
 class Element;
 }
@@ -794,7 +796,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    * relevant events.
    */
   virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                   int32_t aModType,
+                                   AttrModType aModType,
                                    const nsAttrValue* aOldValue,
                                    uint64_t aOldState);
 

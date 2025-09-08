@@ -15034,8 +15034,7 @@ void DevToolsMutationObserver::FireEvent(nsINode* aTarget,
 
 void DevToolsMutationObserver::AttributeChanged(Element* aElement,
                                                 int32_t aNamespaceID,
-                                                nsAtom* aAttribute,
-                                                int32_t aModType,
+                                                nsAtom* aAttribute, AttrModType,
                                                 const nsAttrValue* aOldValue) {
   FireEvent(aElement, u"devtoolsattrmodified"_ns);
 }

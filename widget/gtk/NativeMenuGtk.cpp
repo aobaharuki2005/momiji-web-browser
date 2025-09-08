@@ -256,9 +256,9 @@ void MenuModel::ContentAppended(nsIContent* aChild, const ContentAppendInfo&) {
   }
 }
 
-void MenuModel::AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
-                                 nsAtom* aAttribute, int32_t aModType,
-                                 const nsAttrValue* aOldValue) {
+void MenuModel::AttributeChanged(dom::Element* aElement, int32_t,
+                                 nsAtom* aAttribute, AttrModType,
+                                 const nsAttrValue*) {
   if (NodeIsRelevant(*aElement) &&
       (aAttribute == nsGkAtoms::label || aAttribute == nsGkAtoms::aria_label ||
        aAttribute == nsGkAtoms::disabled || aAttribute == nsGkAtoms::hidden)) {

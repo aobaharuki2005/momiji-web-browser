@@ -139,7 +139,7 @@ already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
 
 void HTMLTableCellAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
                                                   nsAtom* aAttribute,
-                                                  int32_t aModType,
+                                                  AttrModType aModType,
                                                   const nsAttrValue* aOldValue,
                                                   uint64_t aOldState) {
   HyperTextAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,
@@ -344,7 +344,7 @@ ENameValueFlag HTMLTableAccessible::NativeName(nsString& aName) const {
 
 void HTMLTableAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
                                               nsAtom* aAttribute,
-                                              int32_t aModType,
+                                              AttrModType aModType,
                                               const nsAttrValue* aOldValue,
                                               uint64_t aOldState) {
   HyperTextAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,

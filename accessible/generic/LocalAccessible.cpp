@@ -42,6 +42,7 @@
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIMutationObserver.h"
 #include "nsINodeList.h"
 
 #include "mozilla/dom/Document.h"
@@ -1329,7 +1330,8 @@ bool LocalAccessible::AttributeChangesState(nsAtom* aAttribute) {
 }
 
 void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
-                                          nsAtom* aAttribute, int32_t aModType,
+                                          nsAtom* aAttribute,
+                                          AttrModType aModType,
                                           const nsAttrValue* aOldValue,
                                           uint64_t aOldState) {
   // Fire accessible event after short timer, because we need to wait for
@@ -1462,8 +1464,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   if (aAttribute == nsGkAtoms::aria_describedby) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE, this);
-    if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
-        aModType == dom::MutationEvent_Binding::ADDITION) {
+    if (IsAdditionOrModification(aModType)) {
       // The subtrees of the new aria-describedby targets might be used to
       // compute the description for this. Therefore, we need to set
       // the eHasDescriptionDependent flag on all Accessibles in these subtrees.
@@ -1481,8 +1482,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     // document itself.
     mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
-    if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
-        aModType == dom::MutationEvent_Binding::ADDITION) {
+    if (IsAdditionOrModification(aModType)) {
       // The subtrees of the new aria-labelledby targets might be used to
       // compute the name for this. Therefore, we need to set
       // the eHasNameDependent flag on all Accessibles in these subtrees.
@@ -1496,8 +1496,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
   if ((aAttribute == nsGkAtoms::aria_expanded ||
        aAttribute == nsGkAtoms::href) &&
-      (aModType == dom::MutationEvent_Binding::ADDITION ||
-       aModType == dom::MutationEvent_Binding::REMOVAL)) {
+      IsAdditionOrRemoval(aModType)) {
     // The presence of aria-expanded adds an expand/collapse action.
     mDoc->QueueCacheUpdate(this, CacheDomain::Actions);
   }

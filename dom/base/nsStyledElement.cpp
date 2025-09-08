@@ -15,7 +15,6 @@
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ElementInlines.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/StylePropertyMap.h"
 #include "nsAttrValue.h"
@@ -24,6 +23,7 @@
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsGkAtoms.h"
+#include "nsIMutationObserver.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleUtil.h"
 #include "nsXULElement.h"
@@ -85,8 +85,7 @@ void nsStyledElement::InlineStyleDeclarationWillChange(
   }
 
   aData.mModType =
-      modification ? static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION)
-                   : static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
+      modification ? AttrModType::Modification : AttrModType::Addition;
   MutationObservers::NotifyAttributeWillChange(
       this, kNameSpaceID_None, nsGkAtoms::style, aData.mModType);
 

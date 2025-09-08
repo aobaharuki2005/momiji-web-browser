@@ -181,6 +181,7 @@
 #include "nsIIOService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMemoryReporter.h"
+#include "nsIMutationObserver.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsISpeculativeConnect.h"
@@ -2765,7 +2766,7 @@ bool Element::MaybeCheckSameAttrVal(int32_t aNamespaceID, const nsAtom* aName,
                                     const nsAtom* aPrefix,
                                     const nsAttrValueOrString& aValue,
                                     bool aNotify, nsAttrValue& aOldValue,
-                                    uint8_t* aModType, bool* aHasListeners,
+                                    AttrModType* aModType, bool* aHasListeners,
                                     bool* aOldValueSet) {
   bool modification = false;
   *aHasListeners =
@@ -2805,9 +2806,7 @@ bool Element::MaybeCheckSameAttrVal(int32_t aNamespaceID, const nsAtom* aName,
       modification = true;
     }
   }
-  *aModType = modification
-                  ? static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION)
-                  : static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
+  *aModType = modification ? AttrModType::Modification : AttrModType::Addition;
   return false;
 }
 
@@ -2815,7 +2814,7 @@ bool Element::OnlyNotifySameValueSet(int32_t aNamespaceID, nsAtom* aName,
                                      nsAtom* aPrefix,
                                      const nsAttrValueOrString& aValue,
                                      bool aNotify, nsAttrValue& aOldValue,
-                                     uint8_t* aModType, bool* aHasListeners,
+                                     AttrModType* aModType, bool* aHasListeners,
                                      bool* aOldValueSet) {
   if (!MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aValue, aNotify,
                              aOldValue, aModType, aHasListeners,
@@ -2846,8 +2845,7 @@ nsresult Element::SetClassAttrFromParser(nsAtom* aValue) {
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::_class,
                           nullptr,  // prefix
                           nullptr,  // old value
-                          value, nullptr,
-                          static_cast<uint8_t>(MutationEvent_Binding::ADDITION),
+                          value, nullptr, AttrModType::Addition,
                           false,  // hasListeners
                           false,  // notify
                           kCallAfterSetAttr, document, updateBatch);
@@ -2863,7 +2861,7 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
 
-  uint8_t modType;
+  AttrModType modType{0};  // NOTE: Initialized with invalid value.
   bool hasListeners;
   nsAttrValue oldValue;
   bool oldValueSet;
@@ -2913,7 +2911,7 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
 
-  uint8_t modType;
+  AttrModType modType{0};  // NOTE: Initialized with invalid value.
   bool hasListeners;
   nsAttrValue oldValue;
   bool oldValueSet;
@@ -2949,7 +2947,7 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
 nsresult Element::SetAttrAndNotify(
     int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
     const nsAttrValue* aOldValue, nsAttrValue& aParsedValue,
-    nsIPrincipal* aSubjectPrincipal, uint8_t aModType, bool aFireMutation,
+    nsIPrincipal* aSubjectPrincipal, AttrModType aModType, bool aFireMutation,
     bool aNotify, bool aCallAfterSetAttr, Document* aComposedDocument,
     const mozAutoDocUpdate& aGuard) {
   nsMutationGuard::DidMutate();
@@ -3022,7 +3020,7 @@ nsresult Element::SetAttrAndNotify(
 
       LifecycleCallbackArgs args;
       args.mName = aName;
-      if (aModType == MutationEvent_Binding::ADDITION) {
+      if (aModType == AttrModType::Addition) {
         args.mOldValue = VoidString();
       } else {
         if (oldValue) {
@@ -3078,7 +3076,7 @@ nsresult Element::SetAttrAndNotify(
     if (oldValue && !oldValue->IsEmptyString()) {
       mutation.mPrevAttrValue = oldValue->GetAsAtom();
     }
-    mutation.mAttrChange = aModType;
+    mutation.mAttrChange = static_cast<uint8_t>(aModType);
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
     AsyncEventDispatcher::RunDOMEventWhenSafe(*this, mutation);
@@ -3301,8 +3299,8 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
   mozAutoDocUpdate updateBatch(document, aNotify);
 
   if (aNotify) {
-    MutationObservers::NotifyAttributeWillChange(
-        this, aNameSpaceID, aName, MutationEvent_Binding::REMOVAL);
+    MutationObservers::NotifyAttributeWillChange(this, aNameSpaceID, aName,
+                                                 AttrModType::Removal);
   }
 
   BeforeSetAttr(aNameSpaceID, aName, nullptr, aNotify);
@@ -3374,8 +3372,8 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
   if (aNotify) {
     // We can always pass oldValue here since there is no new value which could
     // have corrupted it.
-    MutationObservers::NotifyAttributeChanged(
-        this, aNameSpaceID, aName, MutationEvent_Binding::REMOVAL, &oldValue);
+    MutationObservers::NotifyAttributeChanged(this, aNameSpaceID, aName,
+                                              AttrModType::Removal, &oldValue);
   }
 
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::dir) {

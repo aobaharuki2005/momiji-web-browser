@@ -3082,7 +3082,7 @@ void nsFrameLoader::ApplySandboxFlags(uint32_t sandboxFlags) {
 /* virtual */
 void nsFrameLoader::AttributeChanged(mozilla::dom::Element* aElement,
                                      int32_t aNameSpaceID, nsAtom* aAttribute,
-                                     int32_t aModType,
+                                     AttrModType,
                                      const nsAttrValue* aOldValue) {
   MOZ_ASSERT(mObservingOwnerContent);
 

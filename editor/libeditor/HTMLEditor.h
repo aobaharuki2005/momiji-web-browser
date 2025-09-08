@@ -2798,14 +2798,14 @@ class HTMLEditor final : public EditorBase,
       DOMMutationType aDOMMutationType) const;
   [[nodiscard]] LogLevel AttrMutationLogLevelOf(
       Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
-      int32_t aModType, const nsAttrValue* aOldValue) const;
+      AttrModType aModType, const nsAttrValue* aOldValue) const;
 
   void MaybeLogContentAppended(nsIContent*) const;
   void MaybeLogContentInserted(nsIContent*) const;
   void MaybeLogContentWillBeRemoved(nsIContent*) const;
   void MaybeLogCharacterDataChanged(nsIContent*,
                                     const CharacterDataChangeInfo&) const;
-  void MaybeLogAttributeChanged(Element*, int32_t, nsAtom*, int32_t,
+  void MaybeLogAttributeChanged(Element*, int32_t, nsAtom*, AttrModType,
                                 const nsAttrValue*) const;
 
   /**

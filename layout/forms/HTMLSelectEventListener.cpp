@@ -320,8 +320,7 @@ void HTMLSelectEventListener::OptionValueMightHaveChanged(
 
 void HTMLSelectEventListener::AttributeChanged(dom::Element* aElement,
                                                int32_t aNameSpaceID,
-                                               nsAtom* aAttribute,
-                                               int32_t aModType,
+                                               nsAtom* aAttribute, AttrModType,
                                                const nsAttrValue* aOldValue) {
   if (aElement->IsHTMLElement(nsGkAtoms::option) &&
       aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::label) {

@@ -31,6 +31,7 @@
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsImageFrame.h"
+#include "nsIMutationObserver.h"
 #include "nsViewManager.h"
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
@@ -52,7 +53,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLSelectElement.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/UserActivation.h"
 
 using namespace mozilla;
@@ -797,7 +797,7 @@ static bool sIsAttrElementChanging = false;
 
 void DocAccessible::AttributeWillChange(dom::Element* aElement,
                                         int32_t aNameSpaceID,
-                                        nsAtom* aAttribute, int32_t aModType) {
+                                        nsAtom* aAttribute, AttrModType) {
   if (sIsAttrElementChanging) {
     // See the comment above the definition of sIsAttrElementChanging.
     return;
@@ -846,7 +846,7 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
 
 void DocAccessible::AttributeChanged(dom::Element* aElement,
                                      int32_t aNameSpaceID, nsAtom* aAttribute,
-                                     int32_t aModType,
+                                     AttrModType aModType,
                                      const nsAttrValue* aOldValue) {
   if (sIsAttrElementChanging) {
     // See the comment above the definition of sIsAttrElementChanging.
@@ -884,7 +884,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
       // DocAccessible, so handle it as an attribute change on this.
       accessible = this;
     } else {
-      if (aModType == dom::MutationEvent_Binding::ADDITION &&
+      if (aModType == AttrModType::Addition &&
           aria::AttrCharacteristicsFor(aAttribute) & ATTR_GLOBAL) {
         // The element doesn't have an Accessible, but a global ARIA attribute
         // was just added, which means we should probably create an Accessible.
@@ -928,8 +928,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
   // Update dependent IDs cache. We handle elements with accessibles.
   // If the accessible or element with the ID doesn't exist yet the cache will
   // be updated when they are added.
-  if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
-      aModType == dom::MutationEvent_Binding::ADDITION) {
+  if (IsAdditionOrModification(aModType)) {
     AddDependentIDsFor(accessible, aAttribute);
     AddDependentElementsFor(accessible, aAttribute);
   }
@@ -937,7 +936,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
 
 void DocAccessible::ARIAAttributeDefaultWillChange(dom::Element* aElement,
                                                    nsAtom* aAttribute,
-                                                   int32_t aModType) {
+                                                   AttrModType aModType) {
   NS_ASSERTION(!IsDefunct(),
                "Attribute changed called on defunct document accessible!");
 
@@ -950,7 +949,7 @@ void DocAccessible::ARIAAttributeDefaultWillChange(dom::Element* aElement,
 
 void DocAccessible::ARIAAttributeDefaultChanged(dom::Element* aElement,
                                                 nsAtom* aAttribute,
-                                                int32_t aModType) {
+                                                AttrModType aModType) {
   NS_ASSERTION(!IsDefunct(),
                "Attribute changed called on defunct document accessible!");
 
@@ -3120,7 +3119,7 @@ void DocAccessible::AttrElementWillChange(dom::Element* aElement,
                                           nsAtom* aAttr) {
   MOZ_ASSERT(!sIsAttrElementChanging);
   AttributeWillChange(aElement, kNameSpaceID_None, aAttr,
-                      dom::MutationEvent_Binding::MODIFICATION);
+                      AttrModType::Modification);
   // We might get notified about a related content attribute change. Ignore
   // it.
   sIsAttrElementChanging = true;
@@ -3132,7 +3131,7 @@ void DocAccessible::AttrElementChanged(dom::Element* aElement, nsAtom* aAttr) {
   // (if any) have been sent.
   sIsAttrElementChanging = false;
   AttributeChanged(aElement, kNameSpaceID_None, aAttr,
-                   dom::MutationEvent_Binding::MODIFICATION, nullptr);
+                   AttrModType::Modification, nullptr);
 }
 
 bool DocAccessible::ProcessAnchorJump() {

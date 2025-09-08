@@ -138,7 +138,7 @@ ENameValueFlag HTMLSelectOptionAccessible::NativeName(nsString& aName) const {
 }
 
 void HTMLSelectOptionAccessible::DOMAttributeChanged(
-    int32_t aNameSpaceID, nsAtom* aAttribute, int32_t aModType,
+    int32_t aNameSpaceID, nsAtom* aAttribute, AttrModType aModType,
     const nsAttrValue* aOldValue, uint64_t aOldState) {
   HyperTextAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,
                                            aOldValue, aOldState);

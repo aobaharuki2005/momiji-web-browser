@@ -4750,7 +4750,7 @@ void PresShell::DocumentStatesChanged(DocumentState aStateMask) {
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::AttributeWillChange(
     Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
-    int32_t aModType) {
+    AttrModType aModType) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected AttributeWillChange");
   MOZ_ASSERT(aElement->OwnerDoc() == mDocument, "Unexpected document");
@@ -4760,14 +4760,14 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::AttributeWillChange(
   // squelch any other inappropriate notifications as well.
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mPresContext->RestyleManager()->AttributeWillChange(
-        aElement, aNameSpaceID, aAttribute, static_cast<AttrModType>(aModType));
+    mPresContext->RestyleManager()->AttributeWillChange(aElement, aNameSpaceID,
+                                                        aAttribute, aModType);
   }
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::AttributeChanged(
     Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
-    int32_t aModType, const nsAttrValue* aOldValue) {
+    AttrModType aModType, const nsAttrValue* aOldValue) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected AttributeChanged");
   MOZ_ASSERT(aElement->OwnerDoc() == mDocument, "Unexpected document");
@@ -4778,8 +4778,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::AttributeChanged(
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
     mPresContext->RestyleManager()->AttributeChanged(
-        aElement, aNameSpaceID, aAttribute, static_cast<AttrModType>(aModType),
-        aOldValue);
+        aElement, aNameSpaceID, aAttribute, aModType, aOldValue);
   }
 }
 

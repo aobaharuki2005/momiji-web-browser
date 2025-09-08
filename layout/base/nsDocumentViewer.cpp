@@ -240,7 +240,7 @@ void BFCachePreventionObserver::CharacterDataChanged(
 void BFCachePreventionObserver::AttributeChanged(Element* aElement,
                                                  int32_t aNameSpaceID,
                                                  nsAtom* aAttribute,
-                                                 int32_t aModType,
+                                                 AttrModType,
                                                  const nsAttrValue* aOldValue) {
   if (aElement->IsInNativeAnonymousSubtree()) {
     return;

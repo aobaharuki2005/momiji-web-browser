@@ -129,7 +129,7 @@ class MOZ_STACK_CLASS AutoDOMAPIWrapperBase {
   // This method is available only while a subclass is calling a DOM API.
   [[nodiscard]] virtual bool IsExpectedAttributeChanged(
       Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
-      int32_t aModType, const nsAttrValue* aOldValue) const {
+      AttrModType aModType, const nsAttrValue* aOldValue) const {
     return false;
   }
   // This method is available only while a subclass is calling a DOM API.
@@ -475,18 +475,15 @@ class MOZ_STACK_CLASS AutoElementAttrAPIWrapper : public AutoDOMAPIWrapperBase {
 
   [[nodiscard]] virtual bool IsExpectedAttributeChanged(
       Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
-      int32_t aModType, const nsAttrValue* aOldValue) const {
+      AttrModType aModType, const nsAttrValue* aOldValue) const {
     switch (Type()) {
       case DOMAPI::Element_SetAttr:
-        return (aModType == dom::MutationEvent_Binding::MODIFICATION ||
-                aModType == dom::MutationEvent_Binding::ADDITION) &&
-               aElement == &mElement && aNameSpaceID == kNameSpaceID_None &&
-               aAttribute == mAttr && mNewValuePtr &&
-               IsExpectedResult(*mNewValuePtr);
+        return IsAdditionOrModification(aModType) && aElement == &mElement &&
+               aNameSpaceID == kNameSpaceID_None && aAttribute == mAttr &&
+               mNewValuePtr && IsExpectedResult(*mNewValuePtr);
       case DOMAPI::Element_UnsetAttr:
-        return aModType == dom::MutationEvent_Binding::REMOVAL &&
-               aElement == &mElement && aNameSpaceID == kNameSpaceID_None &&
-               aAttribute == mAttr;
+        return aModType == AttrModType::Removal && aElement == &mElement &&
+               aNameSpaceID == kNameSpaceID_None && aAttribute == mAttr;
       default:
         return false;
     }
@@ -818,13 +815,12 @@ class MOZ_STACK_CLASS AutoCSSDeclarationAPIWrapper
 
   [[nodiscard]] virtual bool IsExpectedAttributeChanged(
       Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
-      int32_t aModType, const nsAttrValue* aOldValue) const {
+      AttrModType aModType, const nsAttrValue* aOldValue) const {
     // XXX We don't check the style value is expected one because it requires
     // to store the original value and compute the expected new value.
     return aAttribute == nsGkAtoms::style &&
            aNameSpaceID == kNameSpaceID_None && aElement == &mStyledElement &&
-           (aModType == dom::MutationEvent_Binding::ADDITION ||
-            aModType == dom::MutationEvent_Binding::REMOVAL);
+           IsAdditionOrRemoval(aModType);
   }
 
   friend std::ostream& operator<<(

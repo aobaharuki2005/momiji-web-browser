@@ -208,7 +208,7 @@ void nsAttributeTextNode::UnbindFromTree(UnbindContext& aContext) {
 
 void nsAttributeTextNode::AttributeChanged(Element* aElement,
                                            int32_t aNameSpaceID,
-                                           nsAtom* aAttribute, int32_t aModType,
+                                           nsAtom* aAttribute, AttrModType,
                                            const nsAttrValue* aOldValue) {
   if (aNameSpaceID == mNameSpaceID && aAttribute == mAttrName &&
       aElement == mGrandparent) {

@@ -301,8 +301,7 @@ void SVGRenderingObserver::NotifyEvictedFromRenderingObserverSet() {
 
 void SVGRenderingObserver::AttributeChanged(dom::Element* aElement,
                                             int32_t aNameSpaceID,
-                                            nsAtom* aAttribute,
-                                            int32_t aModType,
+                                            nsAtom* aAttribute, AttrModType,
                                             const nsAttrValue* aOldValue) {
   if (aElement->IsInNativeAnonymousSubtree()) {
     // Don't observe attribute changes in native-anonymous subtrees like

@@ -13,12 +13,12 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/TrustedTypeUtils.h"
 #include "mozilla/dom/TrustedTypesConstants.h"
 #include "nsContentSink.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
+#include "nsIMutationObserver.h"
 #include "nsIParser.h"
 #include "nsPresContext.h"
 #include "nsThreadUtils.h"
@@ -94,7 +94,7 @@ void ScriptElement::CharacterDataChanged(nsIContent* aContent,
 }
 
 void ScriptElement::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
-                                     nsAtom* aAttribute, int32_t aModType,
+                                     nsAtom* aAttribute, AttrModType aModType,
                                      const nsAttrValue* aOldValue) {
   // https://html.spec.whatwg.org/#script-processing-model
   // When a script element el that is not parser-inserted experiences one of the
@@ -111,8 +111,7 @@ void ScriptElement::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
       (aNameSpaceID != kNameSpaceID_None || aAttribute != nsGkAtoms::src)) {
     return;
   }
-  if (mParserCreated == NOT_FROM_PARSER &&
-      aModType == MutationEvent_Binding::ADDITION) {
+  if (mParserCreated == NOT_FROM_PARSER && aModType == AttrModType::Addition) {
     auto* cont = GetAsContent();
     if (cont->IsInComposedDoc()) {
       MaybeProcessScript();

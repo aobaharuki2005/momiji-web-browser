@@ -855,8 +855,8 @@ class Element : public FragmentOrElement {
    * @param aOldValue [out] Set to the old value of the attribute, but only if
    *   there are event listeners. If set, the type of aOldValue will be either
    *   nsAttrValue::eString or nsAttrValue::eAtom.
-   * @param aModType [out] Set to MutationEvent_Binding::MODIFICATION or to
-   *   MutationEvent_Binding::ADDITION, but only if this helper returns true
+   * @param aModType [out] Set to AttrModType::Modification or to
+   *   AttrModType::Addition, but only if this helper returns true
    * @param aHasListeners [out] Set to true if there are mutation event
    *   listeners listening for NS_EVENT_BITS_MUTATION_ATTRMODIFIED
    * @param aOldValueSet [out] Indicates whether an old attribute value has been
@@ -865,7 +865,7 @@ class Element : public FragmentOrElement {
   bool MaybeCheckSameAttrVal(int32_t aNamespaceID, const nsAtom* aName,
                              const nsAtom* aPrefix,
                              const nsAttrValueOrString& aValue, bool aNotify,
-                             nsAttrValue& aOldValue, uint8_t* aModType,
+                             nsAttrValue& aOldValue, AttrModType* aModType,
                              bool* aHasListeners, bool* aOldValueSet);
 
   /**
@@ -881,8 +881,8 @@ class Element : public FragmentOrElement {
    * @param aOldValue [out] Set to the old value of the attribute, but only if
    *   there are event listeners. If set, the type of aOldValue will be either
    *   nsAttrValue::eString or nsAttrValue::eAtom.
-   * @param aModType [out] Set to MutationEvent_Binding::MODIFICATION or to
-   *   MutationEvent_Binding::ADDITION, but only if this helper returns true
+   * @param aModType [out] Set to AttrModType::Modification or to
+   *   AttrModType::Addition, but only if this helper returns true
    * @param aHasListeners [out] Set to true if there are mutation event
    *   listeners listening for NS_EVENT_BITS_MUTATION_ATTRMODIFIED
    * @param aOldValueSet [out] Indicates whether an old attribute value has been
@@ -891,7 +891,7 @@ class Element : public FragmentOrElement {
   bool OnlyNotifySameValueSet(int32_t aNamespaceID, nsAtom* aName,
                               nsAtom* aPrefix,
                               const nsAttrValueOrString& aValue, bool aNotify,
-                              nsAttrValue& aOldValue, uint8_t* aModType,
+                              nsAttrValue& aOldValue, AttrModType* aModType,
                               bool* aHasListeners, bool* aOldValueSet);
 
   /**
@@ -2071,8 +2071,7 @@ class Element : public FragmentOrElement {
    *                      non-null value does guarantee that a scripted caller
    *                      with the given principal is directly responsible for
    *                      the attribute change.
-   * @param aModType      MutationEvent_Binding::MODIFICATION or ADDITION.  Only
-   *                      needed if aFireMutation or aNotify is true.
+   * @param aModType      AttrModType::Modification or AttrModType::Addition.
    * @param aFireMutation should mutation-events be fired?
    * @param aNotify       should we notify document-observers?
    * @param aCallAfterSetAttr should we call AfterSetAttr?
@@ -2084,9 +2083,10 @@ class Element : public FragmentOrElement {
   nsresult SetAttrAndNotify(int32_t aNamespaceID, nsAtom* aName,
                             nsAtom* aPrefix, const nsAttrValue* aOldValue,
                             nsAttrValue& aParsedValue,
-                            nsIPrincipal* aSubjectPrincipal, uint8_t aModType,
-                            bool aFireMutation, bool aNotify,
-                            bool aCallAfterSetAttr, Document* aComposedDocument,
+                            nsIPrincipal* aSubjectPrincipal,
+                            AttrModType aModType, bool aFireMutation,
+                            bool aNotify, bool aCallAfterSetAttr,
+                            Document* aComposedDocument,
                             const mozAutoDocUpdate& aGuard);
 
   /**

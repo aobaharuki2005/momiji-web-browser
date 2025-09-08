@@ -50,6 +50,14 @@ enum class AttrModType : uint8_t {
   Removal = 3,
 };
 
+[[nodiscard]] inline bool IsAdditionOrModification(AttrModType aModType) {
+  return aModType == AttrModType::Modification ||
+         aModType == AttrModType::Addition;
+}
+[[nodiscard]] inline bool IsAdditionOrRemoval(AttrModType aModType) {
+  return aModType == AttrModType::Addition || aModType == AttrModType::Removal;
+}
+
 /**
  * Information details about a characterdata change.  Basically, we
  * view all changes as replacements of a length of text at some offset
@@ -221,8 +229,7 @@ class nsIMutationObserver
    * @param aNameSpaceID The namespace id of the changing attribute
    * @param aAttribute   The name of the changing attribute
    * @param aModType     Whether or not the attribute will be added, changed, or
-   *                     removed. The constants are defined in
-   *                     MutationEvent.webidl.
+   *                     removed.
    *
    * @note Callers of this method might not hold a strong reference to the
    *       observer.  The observer is responsible for making sure it stays
@@ -232,7 +239,7 @@ class nsIMutationObserver
    */
   virtual void AttributeWillChange(mozilla::dom::Element* aElement,
                                    int32_t aNameSpaceID, nsAtom* aAttribute,
-                                   int32_t aModType) = 0;
+                                   AttrModType aModType) = 0;
 
   /**
    * Notification that an attribute of an element has changed.
@@ -241,8 +248,7 @@ class nsIMutationObserver
    * @param aNameSpaceID The namespace id of the changed attribute
    * @param aAttribute   The name of the changed attribute
    * @param aModType     Whether or not the attribute was added, changed, or
-   *                     removed. The constants are defined in
-   *                     MutationEvent.webidl.
+   *                     removed.
    * @param aOldValue    The old value, if either the old value or the new
    *                     value are StoresOwnData() (or absent); null otherwise.
    *
@@ -254,7 +260,7 @@ class nsIMutationObserver
    */
   virtual void AttributeChanged(mozilla::dom::Element* aElement,
                                 int32_t aNameSpaceID, nsAtom* aAttribute,
-                                int32_t aModType,
+                                AttrModType aModType,
                                 const nsAttrValue* aOldValue) = 0;
 
   /**
@@ -357,10 +363,10 @@ class nsIMutationObserver
 
   virtual void ARIAAttributeDefaultWillChange(mozilla::dom::Element* aElement,
                                               nsAtom* aAttribute,
-                                              int32_t aModType) = 0;
+                                              AttrModType aModType) = 0;
   virtual void ARIAAttributeDefaultChanged(mozilla::dom::Element* aElement,
                                            nsAtom* aAttribute,
-                                           int32_t aModType) = 0;
+                                           AttrModType aModType) = 0;
 
   enum : uint32_t {
     kNone = 0,
@@ -413,12 +419,12 @@ class nsIMutationObserver
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE                      \
   virtual void AttributeWillChange(mozilla::dom::Element* aElement,          \
                                    int32_t aNameSpaceID, nsAtom* aAttribute, \
-                                   int32_t aModType) override;
+                                   AttrModType aModType) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED                      \
   virtual void AttributeChanged(mozilla::dom::Element* aElement,          \
                                 int32_t aNameSpaceID, nsAtom* aAttribute, \
-                                int32_t aModType,                         \
+                                AttrModType aModType,                     \
                                 const nsAttrValue* aOldValue) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED          \
@@ -439,15 +445,15 @@ class nsIMutationObserver
 #define NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED \
   virtual void ParentChainChanged(nsIContent* aContent) override;
 
-#define NS_DECL_NSIMUTATIONOBSERVER_ARIAATTRIBUTEDEFAULTWILLCHANGE           \
-  virtual void ARIAAttributeDefaultWillChange(                               \
-      mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) \
-      override;
+#define NS_DECL_NSIMUTATIONOBSERVER_ARIAATTRIBUTEDEFAULTWILLCHANGE             \
+  virtual void ARIAAttributeDefaultWillChange(mozilla::dom::Element* aElement, \
+                                              nsAtom* aAttribute,              \
+                                              AttrModType aModType) override;
 
-#define NS_DECL_NSIMUTATIONOBSERVER_ARIAATTRIBUTEDEFAULTCHANGED              \
-  virtual void ARIAAttributeDefaultChanged(                                  \
-      mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) \
-      override;
+#define NS_DECL_NSIMUTATIONOBSERVER_ARIAATTRIBUTEDEFAULTCHANGED             \
+  virtual void ARIAAttributeDefaultChanged(mozilla::dom::Element* aElement, \
+                                           nsAtom* aAttribute,              \
+                                           AttrModType aModType) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER                          \
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE        \
@@ -472,10 +478,11 @@ class nsIMutationObserver
                                     const CharacterDataChangeInfo& aInfo) {}   \
   void _class::AttributeWillChange(mozilla::dom::Element* aElement,            \
                                    int32_t aNameSpaceID, nsAtom* aAttribute,   \
-                                   int32_t aModType) {}                        \
-  void _class::AttributeChanged(                                               \
-      mozilla::dom::Element* aElement, int32_t aNameSpaceID,                   \
-      nsAtom* aAttribute, int32_t aModType, const nsAttrValue* aOldValue) {}   \
+                                   AttrModType aModType) {}                    \
+  void _class::AttributeChanged(mozilla::dom::Element* aElement,               \
+                                int32_t aNameSpaceID, nsAtom* aAttribute,      \
+                                AttrModType aModType,                          \
+                                const nsAttrValue* aOldValue) {}               \
   void _class::ContentAppended(nsIContent* aFirstNewContent,                   \
                                const ContentAppendInfo&) {}                    \
   void _class::ContentInserted(nsIContent* aChild, const ContentInsertInfo&) { \
@@ -483,11 +490,11 @@ class nsIMutationObserver
   void _class::ContentWillBeRemoved(nsIContent* aChild,                        \
                                     const ContentRemoveInfo&) {}               \
   void _class::ParentChainChanged(nsIContent* aContent) {}                     \
-  void _class::ARIAAttributeDefaultWillChange(                                 \
-      mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) { \
-  }                                                                            \
-  void _class::ARIAAttributeDefaultChanged(                                    \
-      mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) { \
-  }
+  void _class::ARIAAttributeDefaultWillChange(mozilla::dom::Element* aElement, \
+                                              nsAtom* aAttribute,              \
+                                              AttrModType aModType) {}         \
+  void _class::ARIAAttributeDefaultChanged(mozilla::dom::Element* aElement,    \
+                                           nsAtom* aAttribute,                 \
+                                           AttrModType aModType) {}
 
 #endif /* nsIMutationObserver_h */

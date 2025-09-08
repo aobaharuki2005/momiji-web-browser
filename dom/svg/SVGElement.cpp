@@ -1483,9 +1483,8 @@ nsAttrValue SVGElement::WillChangeValue(
     emptyOrOldAttrValue.SetToSerialized(*attrValue);
   }
 
-  uint8_t modType =
-      attrValue ? static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION)
-                : static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
+  const AttrModType modType =
+      attrValue ? AttrModType::Modification : AttrModType::Addition;
   MutationObservers::NotifyAttributeWillChange(this, kNameSpaceID_None, aName,
                                                modType);
 
@@ -1518,14 +1517,13 @@ void SVGElement::DidChangeValue(nsAtom* aName,
                                 const mozAutoDocUpdate& aProofOfUpdate) {
   bool hasListeners = nsContentUtils::WantMutationEvents(
       this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED, this);
-  uint8_t modType =
-      HasAttr(aName) ? static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION)
-                     : static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
 
   // XXX Really, the fourth argument to SetAttrAndNotify should be null if
   // aEmptyOrOldValue does not represent the actual previous value of the
   // attribute, but currently SVG elements do not even use the old attribute
   // value in |AfterSetAttr|, so this should be ok.
+  const AttrModType modType =
+      aName ? AttrModType::Modification : AttrModType::Addition;
   SetAttrAndNotify(kNameSpaceID_None, aName, nullptr, &aEmptyOrOldValue,
                    aNewValue, nullptr, modType, hasListeners,
                    kNotifyDocumentObservers, kCallAfterSetAttr,
