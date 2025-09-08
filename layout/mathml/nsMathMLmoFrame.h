@@ -64,9 +64,9 @@ class nsMathMLmoFrame final : public nsMathMLTokenFrame {
           nsBoundingMetrics& aContainerSize,
           ReflowOutput& aDesiredStretchSize) override;
 
-  nsresult ChildListChanged(int32_t aModType) override {
+  nsresult ChildListChanged() override {
     ProcessTextData();
-    return nsMathMLContainerFrame::ChildListChanged(aModType);
+    return nsMathMLContainerFrame::ChildListChanged();
   }
 
  protected:

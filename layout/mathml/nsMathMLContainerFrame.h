@@ -193,7 +193,7 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   // helper to re-sync the automatic data in our children and notify our parent
   // to reflow us when changes (e.g., append/insert/remove) happen in our child
   // list
-  virtual nsresult ChildListChanged(int32_t aModType);
+  virtual nsresult ChildListChanged();
 
   // helper to get the preferred size that a container frame should use to fire
   // the stretch on its stretchy child frames.
