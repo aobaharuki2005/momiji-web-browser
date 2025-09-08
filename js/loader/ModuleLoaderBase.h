@@ -417,6 +417,10 @@ class ModuleLoaderBase : public nsISupports {
   // https://html.spec.whatwg.org/multipage/webappapis.html#disallow-further-import-maps
   void DisallowImportMaps() { mImportMapsAllowed = false; }
 
+  virtual bool IsModuleTypeAllowed(ModuleType aModuleType) {
+    return aModuleType != ModuleType::Unknown;
+  }
+
   // Returns whether there has been an entry in the import map
   // for the given aURI.
   bool GetImportMapSRI(nsIURI* aURI, nsIURI* aSourceURI,
