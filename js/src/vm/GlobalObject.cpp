@@ -849,6 +849,16 @@ RegExpStatics* GlobalObject::getRegExpStatics(JSContext* cx,
   return global->regExpRealm().regExpStatics.get();
 }
 
+gc::FinalizationRegistryGlobalData*
+GlobalObject::getOrCreateFinalizationRegistryData() {
+  if (!data().finalizationRegistryData) {
+    data().finalizationRegistryData =
+        MakeUnique<gc::FinalizationRegistryGlobalData>(zone());
+  }
+
+  return maybeFinalizationRegistryData();
+}
+
 /* static */
 bool GlobalObject::createIntrinsicsHolder(JSContext* cx,
                                           Handle<GlobalObject*> global) {
@@ -1068,6 +1078,10 @@ void GlobalObjectData::trace(JSTracer* trc, GlobalObject* global) {
 
   TraceNullableEdge(trc, &selfHostingScriptSource,
                     "self-hosting-script-source");
+
+  if (finalizationRegistryData) {
+    finalizationRegistryData->trace(trc);
+  }
 }
 
 void GlobalObjectData::addSizeOfIncludingThis(

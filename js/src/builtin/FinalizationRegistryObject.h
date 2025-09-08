@@ -15,29 +15,29 @@
  *   +---------------------------------------+-------------------------------+
  *   |   FinalizationRegistry compartment    |   Target zone / compartment   |
  *   |                                       |                               |
- *   |     +------------------------------+  |     +------------------+      |
- *   |  +--+    FinalizationRegistry      |  |     |       Zone       |      |
- *   |  |  +---+----------------+---------+  |     +---------+--------+      |
- *   |  |      |                |            |               |               |
- *   |  |      v                v            |               v               |
- *   |  |  +---+---+  +---------+---------+  |  +------------+------------+  |
- *   |  |  |Record |  |   Registrations   |  |  |  FinalizationObservers  |  |
- *   |  |  |Vector |  |     weak map      |  |  +------------+------------+  |
- *   |  |  +---+---+  +-------------------+  |               |               |
- *   |  |      |      | Unregister:Records|  |               v               |
- *   |  |      |      |   token   :object |  |  +------------+------------+  |
- *   |  |      |      +--------------+----+  |  |      RecordMap map      |  |
- *   |  |      |                     |       |  +-------------------------+  |
- *   |  |      |                     v       |  |  Target  : ObserverList |  |
- *   |  |      |      +--------------+----+  |  |  object  :              |  |
- *   |  |      |      |   Finalization    |  |  +----+-------------+------+  |
- *   |  |      |      |RegistrationsObject|  |       |             |         |
- *   |  |      |      +-------------------+  |       v             |         |
- *   |  |      |      |   RecordVector    |  |  +----+-----+       |         |
- *   |  |      |      +---------+---------+  |  |  Target  |       |         |
- *   |  |      |                |            |  | JSObject |       |         |
- *   |  |    * v              * v            |  +----------+       |         |
- *   |  |  +--------------------+------+ *   |                     |         |
+ *   |        +----------------------+       |     +------------------+      |
+ *   |  +-----+ FinalizationRegistry |       |     |       Zone       |      |
+ *   |  |     +----------+-----------+       |     +---------+--------+      |
+ *   |  |                |                   |               |               |
+ *   |  |                v                   |               v               |
+ *   |  |  +-------------+-------------+     | +-------------+------------+  |
+ *   |  |  |       Registrations       |     | |  FinalizationObservers   |  |
+ *   |  |  |         weak map          |     | +-------------+------------+  |
+ *   |  |  +---------------------------+     |               |               |
+ *   |  |  | Unregister  :   Records   |     |               v               |
+ *   |  |  |   token     :   object    |     |  +------------+------------+  |
+ *   |  |  +--------------------+------+     |  |      RecordMap map      |  |
+ *   |  |                       |            |  +-------------------------+  |
+ *   |  |                       v            |  |  Target  : ObserverList |  |
+ *   |  |  +--------------------+------+     |  |  object  :              |  |
+ *   |  |  |       Finalization        |     |  +----+-------------+------+  |
+ *   |  |  |    RegistrationsObject    |     |       |             |         |
+ *   |  |  +---------------------------+     |       v             |         |
+ *   |  |  |       RecordVector        |     |  +----+-----+       |         |
+ *   |  |  +-------------+-------------+     |  |  Target  |       |         |
+ *   |  |                |                   |  | JSObject |       |         |
+ *   |  |              * v                   |  +----------+       |         |
+ *   |  |  +-------------+-------------+ *   |                     |         |
  *   |  |  | FinalizationRecordObject  +<--------------------------+         |
  *   |  |  +---------------------------+     |                               |
  *   |  |  | Queue                     +--+  |                               |
@@ -54,31 +54,33 @@
  *   |                                       |                               |
  *   +---------------------------------------+-------------------------------+
  *
- * A FinalizationRegistry consists of several parts:
- *  - the FinalizationRegistry object that consumers see
- *  - zero or more FinalizationRecordObjects representing registered targets
- *  - a FinalizationQueue containing records for targets that have died, used to
- *    queue and call the cleanup callbacks
- *  - a weakmap tracking unregister tokens and their associated records
+ * A FinalizationRegistry consists of two parts: the FinalizationRegistry that
+ * consumers see and a FinalizationQueue used internally to queue and call the
+ * cleanup callbacks.
  *
  * Registering a target with a FinalizationRegistry creates a FinalizationRecord
- * containing a pointer to the queue and the heldValue. This is added to the
- * registry's vector of registered targets and also to a linked list of
- * finalization observers which is used to actually track the target.
+ * containing a pointer to the queue and the heldValue. This is added to a
+ * vector of records associated with the target, implemented as a map on the
+ * target's Zone. All finalization records are treated as GC roots.
  *
  * When a target is registered an unregister token may be supplied. If so, this
  * is also recorded by the registry and is stored in a weak map of
  * registrations. The values of this map are FinalizationRegistrationsObject
- * objects. (It's necessary to have another JSObject here because our weak map
- * implementation only supports JS types as values.)
+ * objects. It's necessary to have another JSObject here because our weak map
+ * implementation only supports JS types as values.
  *
  * When targets are unregistered, the registration is looked up in the weakmap
  * and the corresponding records are cleared.
 
- * The finalization observer lists are swept during GC to check for records
- * associated with dying targets. For such targets the associated record list is
- * processed and each record is added to the FinalizationQueueObject. At a later
- * time this causes the client's cleanup callback to be run.
+ * The finalization record maps are swept during GC to check for records that
+ * have been cleared by unregistration, for FinalizationRecords that are dead
+ * and for nuked CCWs. In all cases the record is removed and the cleanup
+ * callback is not run.
+ *
+ * Following this the targets are checked to see if they are dying. For such
+ * targets the associated record list is processed and for each record the
+ * heldValue is queued on the FinalizationQueue. At a later time this causes the
+ * client's cleanup callback to be run.
  */
 
 #ifndef builtin_FinalizationRegistryObject_h
@@ -197,7 +199,7 @@ using FinalizationRecordVector =
 
 // The JS FinalizationRegistry object itself.
 class FinalizationRegistryObject : public NativeObject {
-  enum { QueueSlot = 0, RecordsSlot, RegistrationsSlot, SlotCount };
+  enum { QueueSlot = 0, RegistrationsSlot, SlotCount };
 
  public:
   using RegistrationsWeakMap = WeakMap<Value, JSObject*>;
@@ -206,7 +208,6 @@ class FinalizationRegistryObject : public NativeObject {
   static const JSClass protoClass_;
 
   FinalizationQueueObject* queue() const;
-  FinalizationRecordVector* records() const;
   RegistrationsWeakMap* registrations() const;
 
   void traceWeak(JSTracer* trc);

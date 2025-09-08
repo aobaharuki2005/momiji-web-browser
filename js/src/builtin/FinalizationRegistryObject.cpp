@@ -316,12 +316,6 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
     return false;
   }
 
-  Rooted<UniquePtr<FinalizationRecordVector>> records(
-      cx, cx->make_unique<FinalizationRecordVector>(cx->zone()));
-  if (!records) {
-    return false;
-  }
-
   Rooted<UniquePtr<RegistrationsWeakMap>> registrations(
       cx, cx->make_unique<RegistrationsWeakMap>(cx));
   if (!registrations) {
@@ -341,8 +335,6 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
   }
 
   registry->initReservedSlot(QueueSlot, ObjectValue(*queue));
-  InitReservedSlot(registry, RecordsSlot, records.release(),
-                   MemoryUse::FinalizationRecordVector);
   InitReservedSlot(registry, RegistrationsSlot, registrations.release(),
                    MemoryUse::FinalizationRegistryRegistrations);
 
@@ -358,15 +350,11 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
 
 /* static */
 void FinalizationRegistryObject::trace(JSTracer* trc, JSObject* obj) {
-  // Trace finalization records.
-  auto* registry = &obj->as<FinalizationRegistryObject>();
-  if (FinalizationRecordVector* records = registry->records()) {
-    records->trace(trc);
-  }
-
   // Trace the registrations weak map. At most this traces the
   // FinalizationRegistrationsObject values of the map; the contents of those
   // objects are weakly held and are not traced by this method.
+
+  auto* registry = &obj->as<FinalizationRegistryObject>();
   if (RegistrationsWeakMap* registrations = registry->registrations()) {
     registrations->trace(trc);
   }
@@ -375,6 +363,7 @@ void FinalizationRegistryObject::trace(JSTracer* trc, JSObject* obj) {
 void FinalizationRegistryObject::traceWeak(JSTracer* trc) {
   // Trace and update the contents of the registrations weak map's values, which
   // are weakly held.
+
   MOZ_ASSERT(registrations());
   for (RegistrationsWeakMap::Enum e(*registrations()); !e.empty();
        e.popFront()) {
@@ -394,17 +383,8 @@ void FinalizationRegistryObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   // GCRuntime::sweepFinalizationRegistries.
   MOZ_ASSERT_IF(registry->queue(), !registry->queue()->hasRegistry());
 
-  gcx->delete_(obj, registry->records(), MemoryUse::FinalizationRecordVector);
   gcx->delete_(obj, registry->registrations(),
                MemoryUse::FinalizationRegistryRegistrations);
-}
-
-FinalizationRecordVector* FinalizationRegistryObject::records() const {
-  Value value = getReservedSlot(RecordsSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-  return static_cast<FinalizationRecordVector*>(value.toPrivate());
 }
 
 FinalizationQueueObject* FinalizationRegistryObject::queue() const {
@@ -480,19 +460,12 @@ bool FinalizationRegistryObject::register_(JSContext* cx, unsigned argc,
     return false;
   }
 
-  // Add the record to the records vector.
-  if (!registry->records()->append(record)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  auto recordsGuard =
-      mozilla::MakeScopeExit([&] { registry->records()->popBack(); });
-
   // Add the record to the registrations if an unregister token was supplied.
   if (!unregisterToken.isUndefined() &&
       !addRegistration(cx, registry, unregisterToken, record)) {
     return false;
   }
+
   auto registrationsGuard = mozilla::MakeScopeExit([&] {
     if (!unregisterToken.isUndefined()) {
       removeRegistrationOnError(registry, unregisterToken, record);
@@ -522,7 +495,6 @@ bool FinalizationRegistryObject::register_(JSContext* cx, unsigned argc,
   }
 
   // 8. Return undefined.
-  recordsGuard.release();
   registrationsGuard.release();
   args.rval().setUndefined();
   return true;
@@ -645,13 +617,6 @@ bool FinalizationRegistryObject::unregister(JSContext* cx, unsigned argc,
       }
     }
     registry->registrations()->remove(unregisterToken);
-
-    // Remove any unregistered records from the main records vector.
-    if (removed) {
-      registry->records()->eraseIf([](FinalizationRecordObject* record) {
-        return !record->isRegistered();
-      });
-    }
   }
 
   // 7. Return removed.
@@ -665,9 +630,6 @@ bool FinalizationRegistryObject::unregisterRecord(
   if (!record->isRegistered()) {
     return false;
   }
-
-  // Remove record from the target list if present.
-  record->unlink();
 
   // Clear the fields of this record, marking it as unregistered. It will be
   // removed from relevant data structures when they are next swept.
@@ -866,8 +828,6 @@ JSFunction* FinalizationQueueObject::doCleanupFunction() const {
 
 void FinalizationQueueObject::queueRecordToBeCleanedUp(
     FinalizationRecordObject* record) {
-  MOZ_ASSERT(hasRegistry());
-
   MOZ_ASSERT(!record->isInQueue());
   record->setInQueue(true);
 

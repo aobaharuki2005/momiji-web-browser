@@ -323,8 +323,15 @@ bool FinalizationObservers::addRecord(
   //  - the zone's recordMap (to observe the target)
   //  - the registry's global objects's recordSet (to trace the record)
 
+  GlobalObject* registryGlobal = &record->global();
+  auto* globalData = registryGlobal->getOrCreateFinalizationRegistryData();
+  if (!globalData || !globalData->addRecord(record)) {
+    return false;
+  }
+
   auto ptr = recordMap.lookupForAdd(target);
   if (!ptr && !recordMap.add(ptr, target, ObserverList())) {
+    globalData->removeRecord(record);
     return false;
   }
 
@@ -383,11 +390,9 @@ void FinalizationObservers::traceWeakFinalizationRegistryEdges(JSTracer* trc) {
       registry->traceWeak(trc);
 
       // Now we know the registry is alive we can queue any records for cleanup
-      // if this didn't happen already. See
-      // shouldQueueFinalizationRegistryForCleanup for details.
+      // if this didn't happen already.
       FinalizationQueueObject* queue = registry->queue();
       if (queue->hasRecordsToCleanUp()) {
-        MOZ_ASSERT(shouldQueueFinalizationRegistryForCleanup(queue));
         gc->queueFinalizationRegistryForCleanup(queue);
       }
     }
@@ -396,49 +401,71 @@ void FinalizationObservers::traceWeakFinalizationRegistryEdges(JSTracer* trc) {
   for (RecordMap::Enum e(recordMap); !e.empty(); e.popFront()) {
     ObserverList& records = e.front().value();
 
-    // Sweep finalization records, removing any dead ones.
+    // Sweep finalization records, removing any dead or unregistered ones.
     for (auto iter = records.iter(); !iter.done(); iter.next()) {
       auto* record = &iter->as<FinalizationRecordObject>();
       MOZ_ASSERT(record->isInRecordMap());
       auto result =
           TraceManuallyBarrieredWeakEdge(trc, &record, "FinalizationRecord");
-      if (result.isDead()) {
+      MOZ_ASSERT_IF(result.isLive(),
+                    result.finalTarget() == result.initialTarget());
+      bool shouldRemove = result.isDead() || shouldRemoveRecord(record);
+      if (shouldRemove) {
         record = result.initialTarget();
-        record->setInRecordMap(false);
+        removeRecord(record);
         record->unlink();
       }
     }
 
-    // Queue remaining finalization records if the target is dying.
+    // Queue remaining finalization records if the target dying.
     if (!TraceWeakEdge(trc, &e.front().mutableKey(),
                        "FinalizationRecord target")) {
       for (auto iter = records.iter(); !iter.done(); iter.next()) {
         auto* record = &iter->as<FinalizationRecordObject>();
-        record->setInRecordMap(false);
-        record->unlink();
+        removeRecord(record);
+
         FinalizationQueueObject* queue = record->queue();
+        MOZ_ASSERT(queue->hasRegistry());
         queue->queueRecordToBeCleanedUp(record);
-        if (shouldQueueFinalizationRegistryForCleanup(queue)) {
+
+        // The registry may be in another zone that is being collected and may
+        // die itself, so check whether to queue at this time.
+        Zone* zone = record->zone();
+        bool shouldQueue =
+            !zone->wasGCStarted() || zone->gcState() >= Zone::Sweep;
+        if (shouldQueue) {
           gc->queueFinalizationRegistryForCleanup(queue);
         }
+
+        record->unlink();
       }
       e.removeFront();
     }
   }
 }
 
-bool FinalizationObservers::shouldQueueFinalizationRegistryForCleanup(
-    FinalizationQueueObject* queue) {
-  // FinalizationRegistries and their targets may be in different zones and
-  // therefore swept at different times during GC. If a target is observed to
-  // die but the registry's zone has not yet been swept then we don't whether we
-  // need to queue the registry for cleanup callbacks, as the registry itself
-  // might be dead.
-  //
-  // In this case we defer queuing the registry and this happens when the
-  // registry is swept.
-  Zone* zone = queue->zone();
-  return !zone->wasGCStarted() || zone->gcState() >= Zone::Sweep;
+// static
+bool FinalizationObservers::shouldRemoveRecord(
+    FinalizationRecordObject* record) {
+  MOZ_ASSERT(record);
+  // Records are removed from the target's vector for the following reasons:
+  return !record->isRegistered() ||        // Unregistered record.
+         !record->queue()->hasRegistry();  // Dead finalization registry.
+}
+
+void FinalizationObservers::removeRecord(FinalizationRecordObject* record) {
+  // Remove other references to a record when it has been removed from the
+  // zone's record map. See addRecord().
+  MOZ_ASSERT(record->isInRecordMap());
+
+  GlobalObject* registryGlobal = &record->global();
+  auto* globalData = registryGlobal->maybeFinalizationRegistryData();
+  globalData->removeRecord(record);
+
+  // The removed record may be gray, and that's OK.
+  AutoTouchingGrayThings atgt;
+
+  record->setInRecordMap(false);
 }
 
 void GCRuntime::queueFinalizationRegistryForCleanup(
@@ -550,4 +577,23 @@ void FinalizationObservers::traceWeakWeakRefList(JSTracer* trc,
       weakRef->setTargetUnbarriered(target);
     }
   }
+}
+
+FinalizationRegistryGlobalData::FinalizationRegistryGlobalData(Zone* zone)
+    : recordSet(zone) {}
+
+bool FinalizationRegistryGlobalData::addRecord(
+    FinalizationRecordObject* record) {
+  return recordSet.putNew(record);
+}
+
+void FinalizationRegistryGlobalData::removeRecord(
+    FinalizationRecordObject* record) {
+  MOZ_ASSERT_IF(!record->runtimeFromMainThread()->gc.isShuttingDown(),
+                recordSet.has(record));
+  recordSet.remove(record);
+}
+
+void FinalizationRegistryGlobalData::trace(JSTracer* trc) {
+  recordSet.trace(trc);
 }
