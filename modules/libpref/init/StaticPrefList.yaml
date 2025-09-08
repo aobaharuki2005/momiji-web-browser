@@ -17685,6 +17685,12 @@
   mirror: always
 #endif
 
+# Enable the gecko trace system.
+- name: toolkit.gecko-trace.enable
+  type: bool
+  value: false
+  mirror: always
+
 # Returns true if BHR is disabled.
 - name: toolkit.content-background-hang-monitor.disabled
   type: bool
