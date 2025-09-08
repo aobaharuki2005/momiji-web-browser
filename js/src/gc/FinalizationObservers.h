@@ -19,6 +19,7 @@ namespace js {
 
 class FinalizationRegistryObject;
 class FinalizationRecordObject;
+class FinalizationQueueObject;
 class WeakRefObject;
 
 namespace gc {
@@ -176,8 +177,6 @@ class FinalizationObservers {
   bool addRecord(HandleValue target, Handle<FinalizationRecordObject*> record);
   void clearRecords();
 
-  void removeRecord(FinalizationRecordObject* record);
-
   // WeakRef support:
   bool addWeakRefTarget(Handle<Value> target, Handle<WeakRefObject*> weakRef);
   void removeWeakRefTarget(Handle<Value> target,
@@ -190,25 +189,7 @@ class FinalizationObservers {
   void traceWeakWeakRefEdges(JSTracer* trc);
   void traceWeakWeakRefList(JSTracer* trc, ObserverList& weakRefs,
                             Value target);
-  static bool shouldRemoveRecord(FinalizationRecordObject* record);
-};
-
-// Per-global data structures to support FinalizationRegistry.
-class FinalizationRegistryGlobalData {
-  // Set of finalization records for finalization registries in this
-  // realm. These are traced as part of the realm's global.
-  using RecordSet =
-      GCHashSet<HeapPtr<JSObject*>, StableCellHasher<HeapPtr<JSObject*>>,
-                ZoneAllocPolicy>;
-  RecordSet recordSet;
-
- public:
-  explicit FinalizationRegistryGlobalData(Zone* zone);
-
-  bool addRecord(FinalizationRecordObject* record);
-  void removeRecord(FinalizationRecordObject* record);
-
-  void trace(JSTracer* trc);
+  bool shouldQueueFinalizationRegistryForCleanup(FinalizationQueueObject*);
 };
 
 }  // namespace gc
