@@ -112,9 +112,19 @@ function fetchNetworkUpdatePacket(requestData, request, updateTypes) {
   const promises = [];
   if (request) {
     updateTypes.forEach(updateType => {
-      // Only stackTrace will be handled differently
+      // stackTrace needs to be handled specially as the property to lookup
+      // on the request object follows a slightly different convention.
+      // i.e `stacktrace` not `stackTrace`
       if (updateType === "stackTrace") {
         if (request.cause.stacktraceAvailable && !request.stacktrace) {
+          promises.push(requestData(request.id, updateType));
+        }
+        return;
+      }
+      // responseContent only checks the availiability flag as there can
+      // be multiple response content events
+      if (updateType === "responseContent") {
+        if (request.responseContentAvailable) {
           promises.push(requestData(request.id, updateType));
         }
         return;
