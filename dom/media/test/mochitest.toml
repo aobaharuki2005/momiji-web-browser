@@ -543,6 +543,9 @@ support-files = [
   "opus-sample.mp4^headers^",
   "opus-sample-cenc.mp4",
   "opus-sample-cenc.mp4^headers^",
+  "output_aac.mkv",
+  "output_avc.mkv",
+  "output_avc_hl41_1080p_aaclc_44100.mkv",
   "owl-funnier-id3.mp3",
   "owl-funnier-id3.mp3^headers^",
   "owl-funny-id3.mp3",
@@ -930,3 +933,5 @@ skip-if = ["true"] # Bug 1970241
 skip-if = ["os == 'android'"] # android(bug 1232305), bugs 1320418,1347953,1347954,1348140,1348386
 
 ["test_vp9_superframes.html"]
+
+["test_mkv_playback.html"]
