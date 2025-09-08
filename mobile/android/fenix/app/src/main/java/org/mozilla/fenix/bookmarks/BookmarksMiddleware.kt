@@ -294,6 +294,11 @@ internal class BookmarksMiddleware(
                         preReductionState.bookmarksSnackbarState.guidsToDelete.forEach {
                             bookmarksStorage.deleteNode(it)
                         }
+                        lastSavedFolderCache.getGuid()?.let {
+                            if (bookmarksStorage.getBookmark(it) == null) {
+                                lastSavedFolderCache.setGuid(null)
+                            }
+                        }
                     }
                 }
                 else -> {}
@@ -302,6 +307,11 @@ internal class BookmarksMiddleware(
                 scope.launch {
                     preReductionState.bookmarksDeletionDialogState.guidsToDelete.forEach {
                         bookmarksStorage.deleteNode(it)
+                    }
+                    lastSavedFolderCache.getGuid()?.let {
+                        if (bookmarksStorage.getBookmark(it) == null) {
+                            lastSavedFolderCache.setGuid(null)
+                        }
                     }
                 }
 
@@ -331,6 +341,11 @@ internal class BookmarksMiddleware(
                         scope.launch {
                             snackState.guidsToDelete.forEach {
                                 bookmarksStorage.deleteNode(it)
+                            }
+                            lastSavedFolderCache.getGuid()?.let {
+                                if (bookmarksStorage.getBookmark(it) == null) {
+                                    lastSavedFolderCache.setGuid(null)
+                                }
                             }
                         }
                     }

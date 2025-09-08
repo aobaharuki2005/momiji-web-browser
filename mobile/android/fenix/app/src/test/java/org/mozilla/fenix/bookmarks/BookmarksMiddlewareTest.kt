@@ -1511,6 +1511,41 @@ class BookmarksMiddlewareTest {
         assertEquals(newFolderTitle, store.state.bookmarksEditBookmarkState?.folder?.title)
     }
 
+    @Test
+    fun `GIVEN the last saved folder cache WHEN deleting the folder THEN the value in cache is reset`() =
+        runTestOnMain {
+            val tree = generateBookmarkTree()
+            val folder = tree.children!!.first { it.type == BookmarkNodeType.FOLDER }
+            val folderItem =
+                BookmarkItem.Folder(guid = folder.guid, title = "title", position = folder.position)
+            `when`(
+                bookmarksStorage.countBookmarksInTrees(
+                    listOf(
+                        BookmarkRoot.Menu.id,
+                        BookmarkRoot.Toolbar.id,
+                        BookmarkRoot.Unfiled.id,
+                    ),
+                ),
+            ).thenReturn(0u)
+            `when`(bookmarksStorage.countBookmarksInTrees(listOf(folderItem.guid))).thenReturn(19u)
+            `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(tree)
+            `when`(lastSavedFolderCache.getGuid()).thenReturn(folder.guid)
+
+            val middleware = buildMiddleware()
+            val store = middleware.makeStore()
+
+            store.dispatch(BookmarksListMenuAction.Folder.DeleteClicked(folderItem))
+            assertEquals(
+                DeletionDialogState.Presenting(listOf(folderItem.guid), 19),
+                store.state.bookmarksDeletionDialogState,
+            )
+
+            store.dispatch(DeletionDialogAction.DeleteTapped)
+            assertEquals(DeletionDialogState.None, store.state.bookmarksDeletionDialogState)
+            verify(bookmarksStorage).deleteNode(folder.guid)
+            verify(lastSavedFolderCache).setGuid(null)
+        }
+
     private fun buildMiddleware(
         useNewSearchUX: Boolean = false,
         openBookmarksInNewTab: Boolean = false,
