@@ -400,6 +400,8 @@ class AnchorPosReferencedAnchors {
       nsTHashMap<RefPtr<const nsAtom>, mozilla::Maybe<AnchorPosResolutionData>>;
 
  public:
+  using Value = mozilla::Maybe<AnchorPosResolutionData>;
+
   AnchorPosReferencedAnchors() = default;
   AnchorPosReferencedAnchors(const AnchorPosReferencedAnchors&) = delete;
   AnchorPosReferencedAnchors(AnchorPosReferencedAnchors&&) = default;
@@ -410,10 +412,11 @@ class AnchorPosReferencedAnchors {
 
   struct Result {
     bool mAlreadyResolved;
-    mozilla::Maybe<AnchorPosResolutionData>* mEntry;
+    Value* mEntry;
   };
 
   Result InsertOrModify(const nsAtom* aAnchorName, bool aNeedOffset);
+  const Value* Lookup(const nsAtom* aAnchorName) const;
 
   bool IsEmpty() const { return mMap.IsEmpty(); }
 

@@ -313,6 +313,11 @@ AnchorPosReferencedAnchors::Result AnchorPosReferencedAnchors::InsertOrModify(
   return {result->ref().mOrigin.isSome(), result};
 }
 
+const AnchorPosReferencedAnchors::Value* AnchorPosReferencedAnchors::Lookup(
+    const nsAtom* aAnchorName) const {
+  return mMap.Lookup(aAnchorName).DataPtrOrNull();
+}
+
 AnchorResolvedMargin AnchorResolvedMarginHelper::ResolveAnchor(
     const StyleMargin& aValue, StylePhysicalAxis aAxis,
     const AnchorPosResolutionParams& aParams) {

@@ -765,6 +765,7 @@ class PresShell final : public nsStubDocumentObserver,
     NeedReflow,
   };
   AnchorPosUpdateResult UpdateAnchorPosLayout();
+  void UpdateAnchorPosLayoutForScroll(ScrollContainerFrame* aScrollContainer);
 
   inline void AddAnchorPosPositioned(nsIFrame* aFrame) {
     if (!mAnchorPosPositioned.Contains(aFrame)) {
