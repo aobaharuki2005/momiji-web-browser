@@ -218,14 +218,22 @@ static bool GetModuleType(JSContext* cx,
                           JS::ModuleType& moduleType) {
   for (const ImportAttribute& importAttribute : maybeAttributes) {
     if (importAttribute.key() == cx->names().type) {
-      int32_t isJsonString;
+      int32_t result;
       if (!js::CompareStrings(cx, cx->names().json, importAttribute.value(),
-                              &isJsonString)) {
+                              &result)) {
         return false;
       }
-
-      if (isJsonString == 0) {
+      if (result == 0) {
         moduleType = JS::ModuleType::JSON;
+        return true;
+      }
+
+      if (!js::CompareStrings(cx, cx->names().css, importAttribute.value(),
+                              &result)) {
+        return false;
+      }
+      if (result == 0) {
+        moduleType = JS::ModuleType::CSS;
         return true;
       }
 
