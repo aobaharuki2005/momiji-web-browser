@@ -4358,7 +4358,7 @@ mozilla::ipc::IPCResult ContentChild::RecvDispatchBeforeUnloadToSubtree(
     const mozilla::Maybe<SessionHistoryInfo>& aInfo,
     DispatchBeforeUnloadToSubtreeResolver&& aResolver) {
   if (aStartingAt.IsNullOrDiscarded()) {
-    aResolver(nsIDocumentViewer::eAllowNavigation);
+    aResolver(nsIDocumentViewer::eContinue);
   } else {
     DispatchBeforeUnloadToSubtree(aStartingAt.get(), aInfo, aResolver);
   }
@@ -4376,7 +4376,6 @@ mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
     BrowsingContext* aStartingAt,
     const mozilla::Maybe<SessionHistoryInfo>& aInfo,
     const DispatchBeforeUnloadToSubtreeResolver& aResolver) {
-  bool block = false;
   bool resolved = false;
 
   aStartingAt->PreOrderWalk(
@@ -4385,10 +4384,14 @@ mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
             if (RefPtr docShell = nsDocShell::Cast(aBC->GetDocShell())) {
               nsCOMPtr<nsIDocumentViewer> viewer;
               docShell->GetDocViewer(getter_AddRefs(viewer));
-              if (viewer && viewer->DispatchBeforeUnload() ==
-                                nsIDocumentViewer::eRequestBlockNavigation) {
-                block = true;
-              } else if (aBC->IsTop() && aInfo) {
+              nsIDocumentViewer::PermitUnloadResult finalStatus =
+                  nsIDocumentViewer::eContinue;
+              if (viewer) {
+                finalStatus = viewer->DispatchBeforeUnload();
+              }
+
+              if (finalStatus == nsIDocumentViewer::eContinue && aBC->IsTop() &&
+                  aInfo) {
                 // https://html.spec.whatwg.org/#preventing-navigation:fire-a-traverse-navigate-event.
                 // If this is the top-level navigable and we've passed `aInfo`,
                 // we should perform #fire-a-traverse-navigate-event.
@@ -4397,21 +4400,22 @@ mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
                 // navigation object returns false.
                 // This should send the correct user involvment. See bug
                 // 1903552.
-                block = !docShell->MaybeFireTraversableTraverseHistory(
+                finalStatus = docShell->MaybeFireTraversableTraverseHistory(
                     *aInfo, Nothing());
               }
-              if (!resolved && block) {
+
+              if (!resolved && finalStatus != nsIDocumentViewer::eContinue) {
                 // Send our response as soon as we find any blocker, so that we
                 // can show the permit unload prompt as soon as possible,
                 // without giving subsequent handlers a chance to delay it.
-                aResolver(nsIDocumentViewer::eRequestBlockNavigation);
+                aResolver(finalStatus);
                 resolved = true;
               }
             }
           });
 
   if (!resolved) {
-    aResolver(nsIDocumentViewer::eAllowNavigation);
+    aResolver(nsIDocumentViewer::eContinue);
   }
 }
 
