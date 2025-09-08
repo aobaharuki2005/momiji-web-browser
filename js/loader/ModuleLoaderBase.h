@@ -422,7 +422,8 @@ class ModuleLoaderBase : public nsISupports {
       return false;
     }
 
-    if (aModuleType == ModuleType::CSS && !mozilla::StaticPrefs::layout_css_module_scripts_enabled()) {
+    if (aModuleType == ModuleType::CSS &&
+        !mozilla::StaticPrefs::layout_css_module_scripts_enabled()) {
       return false;
     }
 
