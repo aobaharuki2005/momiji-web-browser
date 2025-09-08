@@ -328,7 +328,7 @@ PACKAGE_FORMATS = {
             "--release-type",
             "{release_type}",
             "--input-xpi-dir",
-            "{fetch-dir}",
+            "{fetch-dir}/extensions",
         ],
         "inputs": {
             "input": "target{archive_format}",
@@ -551,7 +551,7 @@ def make_job_description(config, jobs):
                 package=config.kind.split("-")[1],
             )
 
-        elif config.kind == "repackage-flatpak":
+        if config.kind in ("repackage-flatpak", "repackage-rpm"):
             assert not locale
 
             if attributes.get("l10n_chunk") or attributes.get("chunk_locales"):
@@ -562,10 +562,17 @@ def make_job_description(config, jobs):
             # The keys are unique, like `shippable-l10n-signing-linux64-shippable-1/opt`, so we
             # can't ask for the tasks directly, we must filter for them.
             for t in config.kind_dependencies_tasks.values():
+                # Filter out tasks that are either not the wrong kind, not the
+                # right product or not the right platform to keep one langpack
+                # per locale
                 if attributes.get("shippable"):
-                    if (
-                        t.kind != "shippable-l10n-signing"
-                        or t.attributes["build_platform"] != "linux64-shippable"
+                    if t.kind != "shippable-l10n-signing":
+                        continue
+                    if t.attributes["shipping_product"] != job["shipping-product"]:
+                        continue
+                    if t.attributes["build_platform"] not in (
+                        "linux64-shippable",
+                        "linux64-devedition",
                     ):
                         continue
                 elif t.kind != "l10n" or t.attributes["build_platform"] != "linux64":
