@@ -270,15 +270,6 @@ HTMLEditor::~HTMLEditor() {
                glean::htmleditors::OverriddenByBeforeinputListenersLabel>(
           mHasBeforeInputBeenCanceled ? 1 : 0))
       .Add();
-  glean::htmleditors::with_mutation_listeners_without_beforeinput_listeners
-      .EnumGet(static_cast<
-               glean::htmleditors::
-                   WithMutationListenersWithoutBeforeinputListenersLabel>(
-          !MayHaveBeforeInputEventListenersForTelemetry() &&
-                  MayHaveMutationEventListeners()
-              ? 1
-              : 0))
-      .Add();
   glean::htmleditors::with_mutation_observers_without_beforeinput_listeners
       .EnumGet(static_cast<
                glean::htmleditors::
