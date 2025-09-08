@@ -44,6 +44,7 @@ exclude = [
   "media/mp4parse-rust/mp4parse",
   "media/mp4parse-rust/mp4parse_capi",
   "xpcom/rust/gkrust_utils",
+  "toolkit/components/protobuf/scripts",
   "toolkit/crashreporter/minidump-analyzer",
   "tools/lint/test/files/clippy",
   "tools/fuzzing/rust",

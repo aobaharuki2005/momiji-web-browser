@@ -12,10 +12,10 @@ small impact on every compilation unit that includes it.
 As an example, removing that header dependency in turns suppresses 33 global
 constructors from the firefox core library libxul.
 ---
-diff --git a/toolkit/components/protobuf/src/google/protobuf/message_lite.cc b/toolkit/components/protobuf/src/google/protobuf/message_lite.cc
-index da66c1965b4c4..a1790b167fdbd 100644
---- a/toolkit/components/protobuf/src/google/protobuf/message_lite.cc
-+++ b/toolkit/components/protobuf/src/google/protobuf/message_lite.cc
+diff --git a/src/google/protobuf/message_lite.cc b/src/google/protobuf/message_lite.cc
+index da66c1965b4c..a1790b167fdb 100644
+--- a/src/google/protobuf/message_lite.cc
++++ b/src/google/protobuf/message_lite.cc
 @@ -38,6 +38,7 @@
  #include <climits>
  #include <cstdint>
@@ -24,10 +24,10 @@ index da66c1965b4c4..a1790b167fdbd 100644
  
  #include <google/protobuf/stubs/logging.h>
  #include <google/protobuf/stubs/common.h>
-diff --git a/toolkit/components/protobuf/src/google/protobuf/stubs/common.h b/toolkit/components/protobuf/src/google/protobuf/stubs/common.h
-index ebb1ca0e677cc..58739784db804 100644
---- a/toolkit/components/protobuf/src/google/protobuf/stubs/common.h
-+++ b/toolkit/components/protobuf/src/google/protobuf/stubs/common.h
+diff --git a/src/google/protobuf/stubs/common.h b/src/google/protobuf/stubs/common.h
+index ebb1ca0e677c..58739784db80 100644
+--- a/src/google/protobuf/stubs/common.h
++++ b/src/google/protobuf/stubs/common.h
 @@ -36,7 +36,6 @@
  #define GOOGLE_PROTOBUF_COMMON_H__
  
