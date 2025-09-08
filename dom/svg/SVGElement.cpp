@@ -743,7 +743,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     for (uint32_t i = 0; i < lenInfo.mCount; i++) {
       if (aName == lenInfo.mInfos[i].mName) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         lenInfo.Reset(i);
         return;
       }
@@ -754,7 +753,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     for (uint32_t i = 0; i < lengthListInfo.mCount; i++) {
       if (aName == lengthListInfo.mInfos[i].mName) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         lengthListInfo.Reset(i);
         return;
       }
@@ -765,7 +763,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     for (uint32_t i = 0; i < numberListInfo.mCount; i++) {
       if (aName == numberListInfo.mInfos[i].mName) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         numberListInfo.Reset(i);
         return;
       }
@@ -775,7 +772,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
     if (GetPointListAttrName() == aName) {
       SVGAnimatedPointList* pointList = GetAnimatedPointList();
       if (pointList) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         pointList->ClearBaseValue();
         return;
       }
@@ -785,7 +781,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
     if (GetPathDataAttrName() == aName) {
       SVGAnimatedPathSegList* segList = GetAnimPathSegList();
       if (segList) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         segList->ClearBaseValue();
         return;
       }
@@ -806,7 +801,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     for (uint32_t i = 0; i < numPairInfo.mCount; i++) {
       if (aName == numPairInfo.mInfos[i].mName) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         numPairInfo.Reset(i);
         return;
       }
@@ -827,7 +821,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     for (uint32_t i = 0; i < intPairInfo.mCount; i++) {
       if (aName == intPairInfo.mInfos[i].mName) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         intPairInfo.Reset(i);
         return;
       }
@@ -857,7 +850,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
     if (aName == nsGkAtoms::orient) {
       SVGAnimatedOrient* orient = GetAnimatedOrient();
       if (orient) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         orient->Init();
         return;
       }
@@ -867,7 +859,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
     if (aName == nsGkAtoms::viewBox) {
       SVGAnimatedViewBox* viewBox = GetAnimatedViewBox();
       if (viewBox) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         viewBox->Init();
         return;
       }
@@ -878,7 +869,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
       SVGAnimatedPreserveAspectRatio* preserveAspectRatio =
           GetAnimatedPreserveAspectRatio();
       if (preserveAspectRatio) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         preserveAspectRatio->Init();
         return;
       }
@@ -888,7 +878,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
     if (GetTransformListAttrName() == aName) {
       SVGAnimatedTransformList* transformList = GetAnimatedTransformList();
       if (transformList) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         transformList->ClearBaseValue();
         return;
       }
@@ -897,7 +886,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
     // Check for conditional processing attributes
     nsCOMPtr<SVGTests> tests = do_QueryObject(this);
     if (tests && tests->IsConditionalProcessingAttribute(aName)) {
-      MaybeSerializeAttrBeforeRemoval(aName, aNotify);
       tests->UnsetAttr(aName);
       return;
     }
@@ -907,7 +895,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     for (uint32_t i = 0; i < stringListInfo.mCount; i++) {
       if (aName == stringListInfo.mInfos[i].mName) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         stringListInfo.Reset(i);
         return;
       }
@@ -1476,9 +1463,6 @@ void SVGElement::WillChangeValue(nsAtom* aName,
  */
 void SVGElement::DidChangeValue(nsAtom* aName, nsAttrValue& aNewValue,
                                 const mozAutoDocUpdate& aProofOfUpdate) {
-  bool hasListeners = nsContentUtils::WantMutationEvents(
-      this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED, this);
-
   // XXX Really, the fourth argument to SetAttrAndNotify should be null if
   // emptyValue does not represent the actual previous value of the attribute,
   // but currently SVG elements do not even use the old attribute value in
@@ -1487,24 +1471,8 @@ void SVGElement::DidChangeValue(nsAtom* aName, nsAttrValue& aNewValue,
       aName ? AttrModType::Modification : AttrModType::Addition;
   const nsAttrValue emptyValue;
   SetAttrAndNotify(kNameSpaceID_None, aName, nullptr, &emptyValue, aNewValue,
-                   nullptr, modType, hasListeners, kNotifyDocumentObservers,
+                   nullptr, modType, kNotifyDocumentObservers,
                    kCallAfterSetAttr, GetComposedDoc(), aProofOfUpdate);
-}
-
-void SVGElement::MaybeSerializeAttrBeforeRemoval(nsAtom* aName, bool aNotify) {
-  if (!aNotify || !nsContentUtils::WantMutationEvents(
-                      this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED, this)) {
-    return;
-  }
-
-  const nsAttrValue* attrValue = mAttrs.GetAttr(aName);
-  if (!attrValue) return;
-
-  nsAutoString serializedValue;
-  attrValue->ToString(serializedValue);
-  nsAttrValue oldAttrValue(serializedValue);
-  bool oldValueSet;
-  mAttrs.SetAndSwapAttr(aName, oldAttrValue, &oldValueSet);
 }
 
 nsAtom* SVGElement::GetEventNameForAttr(nsAtom* aAttr) {

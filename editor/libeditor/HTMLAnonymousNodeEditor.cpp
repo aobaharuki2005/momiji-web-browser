@@ -418,9 +418,8 @@ nsresult HTMLEditor::RefreshEditingUI() {
   //                cellElement   contains the element for InlineTableEditing
   //                absPosElement contains the element for Positioning
 
-  // Note: All the Hide/Show methods below may change attributes on real
-  // content which means a DOMAttrModified handler may cause arbitrary
-  // side effects while this code runs (bug 420439).
+  // TODO: Since we've already stopped supporting the DOM mutation events.
+  // So, we may not need to verity the result below.
 
   if (IsAbsolutePositionEditorEnabled() && mAbsolutelyPositionedObject &&
       absPosElement != mAbsolutelyPositionedObject) {

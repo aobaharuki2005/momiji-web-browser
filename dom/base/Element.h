@@ -846,19 +846,16 @@ class Element : public FragmentOrElement {
 
   /**
    * Helper for SetAttr/SetParsedAttr. This method will return true if aNotify
-   * is true or there are mutation listeners that must be triggered, the
-   * attribute is currently set, and the new value that is about to be set is
-   * different to the current value. As a perf optimization the new and old
-   * values will not actually be compared if we aren't notifying and we don't
-   * have mutation listeners (in which case it's cheap to just return false
-   * and let the caller go ahead and set the value).
+   * is true, this is a custom element, the attribute is currently set, and the
+   * new value that is about to be set is different to the current value. As a
+   * perf optimization the new and old values will not actually be compared if
+   * we aren't notifying (in which case it's cheap to just return false and let
+   * the caller go ahead and set the value).
    * @param aOldValue [out] Set to the old value of the attribute, but only if
    *   there are event listeners. If set, the type of aOldValue will be either
    *   nsAttrValue::eString or nsAttrValue::eAtom.
    * @param aModType [out] Set to AttrModType::Modification or to
    *   AttrModType::Addition, but only if this helper returns true
-   * @param aHasListeners [out] Set to true if there are mutation event
-   *   listeners listening for NS_EVENT_BITS_MUTATION_ATTRMODIFIED
    * @param aOldValueSet [out] Indicates whether an old attribute value has been
    *   stored in aOldValue. The bool will be set to true if a value was stored.
    */
@@ -866,11 +863,11 @@ class Element : public FragmentOrElement {
                              const nsAtom* aPrefix,
                              const nsAttrValueOrString& aValue, bool aNotify,
                              nsAttrValue& aOldValue, AttrModType* aModType,
-                             bool* aHasListeners, bool* aOldValueSet);
+                             bool* aOldValueSet);
 
   /**
-   * Notifies mutation listeners if aNotify is true, there are mutation
-   * listeners, and the attribute value is changing.
+   * Notifies mutation observers if aNotify is true, there are mutation
+   * observers, and the attribute value is changing.
    *
    * @param aNamespaceID The namespace of the attribute
    * @param aName The local name of the attribute
@@ -883,8 +880,6 @@ class Element : public FragmentOrElement {
    *   nsAttrValue::eString or nsAttrValue::eAtom.
    * @param aModType [out] Set to AttrModType::Modification or to
    *   AttrModType::Addition, but only if this helper returns true
-   * @param aHasListeners [out] Set to true if there are mutation event
-   *   listeners listening for NS_EVENT_BITS_MUTATION_ATTRMODIFIED
    * @param aOldValueSet [out] Indicates whether an old attribute value has been
    *   stored in aOldValue. The bool will be set to true if a value was stored.
    */
@@ -892,7 +887,7 @@ class Element : public FragmentOrElement {
                               nsAtom* aPrefix,
                               const nsAttrValueOrString& aValue, bool aNotify,
                               nsAttrValue& aOldValue, AttrModType* aModType,
-                              bool* aHasListeners, bool* aOldValueSet);
+                              bool* aOldValueSet);
 
   /**
    * Sets the class attribute.
@@ -2026,8 +2021,6 @@ class Element : public FragmentOrElement {
    * Named-bools for use with SetAttrAndNotify to make call sites easier to
    * read.
    */
-  static const bool kFireMutationEvent = true;
-  static const bool kDontFireMutationEvent = false;
   static const bool kNotifyDocumentObservers = true;
   static const bool kDontNotifyDocumentObservers = false;
   static const bool kCallAfterSetAttr = true;
@@ -2039,11 +2032,10 @@ class Element : public FragmentOrElement {
   static const DOMTokenListSupportedToken sSupportedBlockingValues[];
 
   /**
-   * Set attribute and (if needed) notify documentobservers and fire off
-   * mutation events.  This will send the AttributeChanged notification.
-   * Callers of this method are responsible for calling AttributeWillChange,
-   * since that needs to happen before the new attr value has been set, and
-   * in particular before it has been parsed.
+   * Set attribute and (if needed) notify documentobservers.  This will send the
+   * AttributeChanged notification. Callers of this method are responsible for
+   * calling AttributeWillChange, since that needs to happen before the new attr
+   * value has been set, and in particular before it has been parsed.
    *
    * For the boolean parameters, consider using the named bools above to aid
    * code readability.
@@ -2072,7 +2064,6 @@ class Element : public FragmentOrElement {
    *                      with the given principal is directly responsible for
    *                      the attribute change.
    * @param aModType      AttrModType::Modification or AttrModType::Addition.
-   * @param aFireMutation should mutation-events be fired?
    * @param aNotify       should we notify document-observers?
    * @param aCallAfterSetAttr should we call AfterSetAttr?
    * @param aComposedDocument The current composed document of the element.
@@ -2084,9 +2075,8 @@ class Element : public FragmentOrElement {
                             nsAtom* aPrefix, const nsAttrValue* aOldValue,
                             nsAttrValue& aParsedValue,
                             nsIPrincipal* aSubjectPrincipal,
-                            AttrModType aModType, bool aFireMutation,
-                            bool aNotify, bool aCallAfterSetAttr,
-                            Document* aComposedDocument,
+                            AttrModType aModType, bool aNotify,
+                            bool aCallAfterSetAttr, Document* aComposedDocument,
                             const mozAutoDocUpdate& aGuard);
 
   /**

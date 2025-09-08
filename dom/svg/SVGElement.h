@@ -367,7 +367,6 @@ class SVGElement : public SVGElementBase  // nsIContent
   // !StoresOwnData.
   void DidChangeValue(nsAtom* aName, nsAttrValue& aNewValue,
                       const mozAutoDocUpdate& aProofOfUpdate);
-  void MaybeSerializeAttrBeforeRemoval(nsAtom* aName, bool aNotify);
 
   nsAtom* GetEventNameForAttr(nsAtom* aAttr) override;
 

@@ -100,9 +100,6 @@ nsresult nsStyledElement::SetInlineStyleDeclaration(
   MOZ_ASSERT(OwnerDoc()->UpdateNestingLevel(),
              "Should be inside document update!");
 
-  // Avoid dispatching mutation events for style attribute changes from CSSOM
-  const bool hasMutationEventListeners = false;
-
   nsAttrValue attrValue(do_AddRef(&aDeclaration), nullptr);
   SetMayHaveStyle();
 
@@ -110,8 +107,8 @@ nsresult nsStyledElement::SetInlineStyleDeclaration(
   mozAutoDocUpdate updateBatch(document, true);
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nullptr,
                           aData.mOldValue.ptrOr(nullptr), attrValue, nullptr,
-                          aData.mModType, hasMutationEventListeners, true,
-                          kDontCallAfterSetAttr, document, updateBatch);
+                          aData.mModType, true, kDontCallAfterSetAttr, document,
+                          updateBatch);
 }
 
 // ---------------------------------------------------------------
