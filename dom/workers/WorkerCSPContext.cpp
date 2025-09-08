@@ -35,10 +35,9 @@ const nsTArray<UniquePtr<const nsCSPPolicy>>& WorkerCSPContext::Policies() {
 bool WorkerCSPContext::IsEvalAllowed(bool& aReportViolation) {
   MOZ_ASSERT(!aReportViolation);
 
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  const mozilla::ipc::CSPInfo& cspInfo = workerPrivate->GetCSPInfo();
-  bool trustedTypesRequired = (cspInfo.requireTrustedTypesForDirectiveState() ==
-                               RequireTrustedTypesForDirectiveState::ENFORCE);
+  bool trustedTypesRequired =
+      (mCSPInfo.requireTrustedTypesForDirectiveState() ==
+       RequireTrustedTypesForDirectiveState::ENFORCE);
 
   for (const UniquePtr<const nsCSPPolicy>& policy : Policies()) {
     if (!(trustedTypesRequired &&
