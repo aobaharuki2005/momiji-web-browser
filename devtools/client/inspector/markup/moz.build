@@ -18,5 +18,6 @@ DevToolsModules(
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser.toml",
+    "test/events/browser.toml",
     "test/shadowdom/browser.toml",
 ]

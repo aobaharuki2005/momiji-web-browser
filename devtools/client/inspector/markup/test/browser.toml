@@ -7,22 +7,6 @@ support-files = [
   "doc_markup_dragdrop_autoscroll_01.html",
   "doc_markup_dragdrop_autoscroll_02.html",
   "doc_markup_edit.html",
-  "doc_markup_events_01.html",
-  "doc_markup_events_02.html",
-  "doc_markup_events_03.html",
-  "doc_markup_events_04.html",
-  "doc_markup_events_chrome_listeners.html",
-  "doc_markup_events_jquery.html",
-  "doc_markup_events_object_listener.html",
-  "doc_markup_events-overflow.html",
-  "doc_markup_events_react_development_15.4.1.html",
-  "doc_markup_events_react_development_15.4.1_jsx.html",
-  "doc_markup_events_react_production_15.3.1.html",
-  "doc_markup_events_react_production_15.3.1_jsx.html",
-  "doc_markup_events_react_production_16.2.0.html",
-  "doc_markup_events_react_production_16.2.0_jsx.html",
-  "doc_markup_events-source_map.html",
-  "doc_markup_events_toggle.html",
   "doc_markup_flashing.html",
   "doc_markup_html_mixed_case.html",
   "doc_markup_image_and_canvas.html",
@@ -46,34 +30,12 @@ support-files = [
   "doc_markup_xul.xhtml",
   "doc_markup_update-on-navigtion_1.html",
   "doc_markup_update-on-navigtion_2.html",
-  "doc_markup_view-original-source.html",
-  "events_bundle.js",
-  "events_bundle.js.map",
-  "events_original.js",
   "head.js",
   "helper_attributes_test_runner.js",
-  "helper_diff.js",
-  "helper_events_test_runner.js",
   "helper_markup_accessibility_navigation.js",
   "helper_outerhtml_test_runner.js",
   "helper_style_attr_test_runner.js",
-  "lib_babel_6.21.0_min.js",
-  "lib_jquery_1.0.js",
-  "lib_jquery_1.1.js",
-  "lib_jquery_1.2_min.js",
-  "lib_jquery_1.3_min.js",
-  "lib_jquery_1.4_min.js",
-  "lib_jquery_1.6_min.js",
-  "lib_jquery_1.7_min.js",
-  "lib_jquery_1.11.1_min.js",
-  "lib_jquery_2.1.1_min.js",
-  "lib_react_16.2.0_min.js",
-  "lib_react_dom_15.3.1_min.js",
-  "lib_react_dom_15.4.1.js",
-  "lib_react_dom_16.2.0_min.js",
-  "lib_react_with_addons_15.3.1_min.js",
-  "lib_react_with_addons_15.4.1.js",
-  "react_external_listeners.js",
+  "events/lib_jquery_1.0.js",
   "resources/*",
   "!/devtools/client/debugger/test/mochitest/shared-head.js",
   "!/devtools/client/inspector/test/head.js",
@@ -141,90 +103,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_markup_dragdrop_reorder.js"]
 
 ["browser_markup_dragdrop_tooltip.js"]
-
-["browser_markup_events-overflow.js"]
-skip-if = [
-  "os == 'linux' && os_version == '18.04' && processor == 'x86_64'", # Bug 1177550
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11'", # Bug 1177550
-  "os == 'mac' && os_version == '14.70' && processor == 'x86_64'", # Bug 1177550
-  "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1177550
-]
-
-["browser_markup_events-windowed-host.js"]
-
-["browser_markup_events_01.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_02.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_03.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_04.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_chrome_blocked.js"]
-
-["browser_markup_events_chrome_not_blocked.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_click_to_close.js"]
-
-["browser_markup_events_jquery_1.0.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_jquery_1.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_jquery_1.11.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_jquery_1.2.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_jquery_1.3.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_jquery_1.4.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_jquery_1.6.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_jquery_1.7.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_jquery_2.1.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_keyboard_navigation.js"]
-
-["browser_markup_events_object_listener.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_react_development_15.4.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_react_development_15.4.1_jsx.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_react_production_15.3.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_react_production_15.3.1_jsx.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_react_production_16.2.0.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_react_production_16.2.0_jsx.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_source_map.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_markup_events_toggle.js"]
 
 ["browser_markup_flex_display_badge.js"]
 
@@ -387,10 +265,6 @@ skip-if = [
 ["browser_markup_toggle_closing_tag_line.js"]
 
 ["browser_markup_update-on-navigtion.js"]
-
-["browser_markup_view-original-source.js"]
-
-["browser_markup_view-source.js"]
 
 ["browser_markup_void_elements_html.js"]
 

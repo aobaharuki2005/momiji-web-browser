@@ -101,7 +101,7 @@ export default [
 
   // Ignore devtools files testing sourcemaps / code style
   "devtools/client/framework/test/code_*",
-  "devtools/client/inspector/markup/test/events_bundle.js",
+  "devtools/client/inspector/markup/test/events/events_bundle.js",
   "devtools/client/netmonitor/test/xhr_bundle.js",
   "devtools/client/webconsole/test/browser/code_bundle_nosource.js",
   "devtools/client/webconsole/test/browser/code_bundle_invalidmap.js",
