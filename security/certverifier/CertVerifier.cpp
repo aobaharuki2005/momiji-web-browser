@@ -569,8 +569,8 @@ Result CertVerifier::VerifyCert(
           mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
           mCertShortLifetimeInDays, MIN_RSA_BITS_WEAK, mCRLiteMode,
           originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
-          nullptr);
+          mThirdPartyIntermediateInputs, extraCertificates, sctsFromTLSInput,
+          builtChain, nullptr, nullptr);
       rv = BuildCertChain(
           trustDomain, certDER, time, EndEntityOrCA::MustBeEndEntity,
           KeyUsage::digitalSignature, KeyPurposeId::id_kp_clientAuth,
@@ -602,8 +602,8 @@ Result CertVerifier::VerifyCert(
             mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
             mCertShortLifetimeInDays, MIN_RSA_BITS, mCRLiteMode,
             originAttributes, mThirdPartyRootInputs,
-            mThirdPartyIntermediateInputs, extraCertificates, builtChain,
-            pinningTelemetryInfo, hostname);
+            mThirdPartyIntermediateInputs, extraCertificates, sctsFromTLSInput,
+            builtChain, pinningTelemetryInfo, hostname);
         rv = BuildCertChainForOneKeyUsage(
             trustDomain, certDER, time,
             KeyUsage::digitalSignature,  // (EC)DHE
@@ -664,8 +664,8 @@ Result CertVerifier::VerifyCert(
             mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
             mCertShortLifetimeInDays, keySizeOptions[i], mCRLiteMode,
             originAttributes, mThirdPartyRootInputs,
-            mThirdPartyIntermediateInputs, extraCertificates, builtChain,
-            pinningTelemetryInfo, hostname);
+            mThirdPartyIntermediateInputs, extraCertificates, sctsFromTLSInput,
+            builtChain, pinningTelemetryInfo, hostname);
         rv = BuildCertChainForOneKeyUsage(
             trustDomain, certDER, time,
             KeyUsage::digitalSignature,  //(EC)DHE
@@ -726,8 +726,8 @@ Result CertVerifier::VerifyCert(
           mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
           mCertShortLifetimeInDays, MIN_RSA_BITS_WEAK, mCRLiteMode,
           originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
-          nullptr);
+          mThirdPartyIntermediateInputs, extraCertificates, sctsFromTLSInput,
+          builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time, EndEntityOrCA::MustBeCA,
                           KeyUsage::keyCertSign, purpose,
                           CertPolicyId::anyPolicy, stapledOCSPResponse);
@@ -744,8 +744,8 @@ Result CertVerifier::VerifyCert(
           mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
           mCertShortLifetimeInDays, MIN_RSA_BITS_WEAK, mCRLiteMode,
           originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
-          nullptr);
+          mThirdPartyIntermediateInputs, extraCertificates, sctsFromTLSInput,
+          builtChain, nullptr, nullptr);
       rv = BuildCertChain(
           trustDomain, certDER, time, EndEntityOrCA::MustBeEndEntity,
           KeyUsage::digitalSignature, KeyPurposeId::id_kp_emailProtection,
@@ -772,8 +772,8 @@ Result CertVerifier::VerifyCert(
           mTrustCache.get(), pinArg, mOCSPTimeoutSoft, mOCSPTimeoutHard,
           mCertShortLifetimeInDays, MIN_RSA_BITS_WEAK, mCRLiteMode,
           originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
-          nullptr);
+          mThirdPartyIntermediateInputs, extraCertificates, sctsFromTLSInput,
+          builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::keyEncipherment,  // RSA
