@@ -267,18 +267,29 @@ export class MLEngineChild extends JSProcessActorChild {
     this.#engineDispatchers.delete(engineId);
     this.#engineStatuses.delete(engineId);
 
-    this.sendAsyncMessage("MLEngine:Removed", {
-      engineId,
-      shutdown: shutDownIfEmpty,
-      replacement,
-    });
+    try {
+      this.sendAsyncMessage("MLEngine:Removed", {
+        engineId,
+        shutdown: shutDownIfEmpty,
+        replacement,
+      });
+    } catch (error) {
+      lazy.console.error("Failed to send MLEngine:Removed", error);
+    }
 
     if (this.#engineDispatchers.size === 0 && shutDownIfEmpty) {
-      this.sendAsyncMessage("MLEngine:DestroyEngineProcess");
+      try {
+        this.sendAsyncMessage("MLEngine:DestroyEngineProcess");
+      } catch (error) {
+        lazy.console.error(
+          "Failed to send MLEngine:DestroyEngineProcess",
+          error
+        );
+      }
     }
   }
 
-  /**
+  /*
    * Collects information about the current status.
    */
   async getStatus() {

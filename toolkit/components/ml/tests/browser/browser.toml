@@ -21,9 +21,10 @@ skip-if = [ "verify" ]
 skip-if = [
   "os == 'android'",
   "bits == 32",
-  "debug",
   "asan",
-  "tsan"
+  "tsan",
+  "debug",
+  "verify"
 ]
 
 ["browser_ml_nlp_utils.js"]

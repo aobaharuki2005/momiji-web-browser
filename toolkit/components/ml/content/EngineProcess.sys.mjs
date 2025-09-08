@@ -1019,6 +1019,10 @@ export class EngineProcess {
 
     try {
       const actor = keepAlive.domProcess.getActor(actorName);
+
+      // keep track of the childID for the inference process, so we can observe its shutdowns.
+      actor.childID = keepAlive.domProcess.childID;
+
       if (actor && !actor.processKeepAlive) {
         ChromeUtils.addProfilerMarker(
           "EngineProcess",
