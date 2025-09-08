@@ -11,6 +11,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsID.h"
 
@@ -84,6 +85,8 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   void GracefulClose();
 
   void DecrementBufferedAmount(size_t aSize);
+
+  dom::RTCDataChannelStats GetStats(const DOMHighResTimeStamp aTimestamp) const;
 
   void AppendStatsToReport(const UniquePtr<RTCStatsCollection>& aReport,
                            const DOMHighResTimeStamp aTimestamp) const;
