@@ -8,12 +8,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.spyk
-import io.mockk.unmockkStatic
 import io.mockk.verify
-import mozilla.components.browser.state.selector.findTab
-import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -135,7 +131,9 @@ class NavigationInteractorTest {
             ),
         )
         val tab: TabSessionState = mockk { every { content.private } returns true }
-        every { mockedStore.state } returns mockk()
+        every { mockedStore.state } returns mockk {
+            every { tabs } returns listOf(tab)
+        }
         every { mockedStore.state.downloads } returns mapOf(
             "1" to DownloadState(
                 "https://mozilla.org/download",
@@ -144,17 +142,10 @@ class NavigationInteractorTest {
                 status = DownloadState.Status.DOWNLOADING,
             ),
         )
-        try {
-            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
-            every { mockedStore.state.findTab(any<String>()) } returns tab
-            every { mockedStore.state.getNormalOrPrivateTabs(any()) } returns listOf(tab)
 
-            controller.onCloseAllTabsClicked(true)
+        controller.onCloseAllTabsClicked(true)
 
-            assertTrue(showCancelledDownloadWarningInvoked)
-        } finally {
-            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
-        }
+        assertTrue(showCancelledDownloadWarningInvoked)
     }
 
     @Test
