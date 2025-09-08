@@ -617,7 +617,7 @@ bool FinalizationRegistryObject::unregister(JSContext* cx, unsigned argc,
       cx, &args.thisv().toObject().as<FinalizationRegistryObject>());
 
   // 4. If Type(unregisterToken) is not Object, throw a TypeError exception.
-  RootedValue unregisterToken(cx, args[0]);
+  RootedValue unregisterToken(cx, args.get(0));
   if (!CanBeHeldWeakly(unregisterToken)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BAD_UNREGISTER_TOKEN,
