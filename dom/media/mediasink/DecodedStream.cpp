@@ -104,9 +104,9 @@ class DecodedStreamGraphListener {
   void RegisterListeners() {
     if (mAudioTrack) {
       mOnAudioOutput = mAudioTrack->OnOutput().Connect(
-          mDecoderThread,
-          [self = RefPtr<DecodedStreamGraphListener>(this)](TrackTime aTime) {
-            self->NotifyOutput(MediaSegment::AUDIO, aTime);
+          mDecoderThread, [self = RefPtr<DecodedStreamGraphListener>(this)](
+                              TrackTime aTime, AwakeTimeStamp aSystemTime) {
+            self->NotifyOutput(MediaSegment::AUDIO, aTime, aSystemTime);
           });
       mOnAudioEnd = mAudioTrack->OnEnd().Connect(
           mDecoderThread, [self = RefPtr<DecodedStreamGraphListener>(this)]() {
@@ -147,7 +147,8 @@ class DecodedStreamGraphListener {
     mOnAudioEnd.DisconnectIfExists();
   }
 
-  void NotifyOutput(MediaSegment::Type aType, TrackTime aCurrentTrackTime) {
+  void NotifyOutput(MediaSegment::Type aType, TrackTime aCurrentTrackTime,
+                    AwakeTimeStamp aCurrentSystemTime) {
     AssertOnDecoderThread();
     if (aType == MediaSegment::AUDIO) {
       mAudioOutputFrames = aCurrentTrackTime;
@@ -181,7 +182,8 @@ class DecodedStreamGraphListener {
     const MediaTrack* track = aType == MediaSegment::VIDEO
                                   ? static_cast<MediaTrack*>(mVideoTrack)
                                   : static_cast<MediaTrack*>(mAudioTrack);
-    mOnOutput.Notify(track->TrackTimeToMicroseconds(aCurrentTrackTime));
+    mOnOutput.Notify(track->TrackTimeToMicroseconds(aCurrentTrackTime),
+                     aCurrentSystemTime);
   }
 
   void NotifyEnded(MediaSegment::Type aType) {
@@ -237,7 +239,7 @@ class DecodedStreamGraphListener {
     return mAudioOutputFrames;
   }
 
-  MediaEventSource<int64_t>& OnOutput() { return mOnOutput; }
+  MediaEventSource<int64_t, AwakeTimeStamp>& OnOutput() { return mOnOutput; }
 
  private:
   ~DecodedStreamGraphListener() {
@@ -252,7 +254,7 @@ class DecodedStreamGraphListener {
   const RefPtr<nsISerialEventTarget> mDecoderThread;
 
   // Accessible on any thread, but only notify on the decoder thread.
-  MediaEventProducer<int64_t> mOnOutput;
+  MediaEventProducer<int64_t, AwakeTimeStamp> mOnOutput;
 
   RefPtr<SourceVideoTrackListener> mVideoTrackListener;
 
@@ -299,9 +301,10 @@ void SourceVideoTrackListener::NotifyOutput(MediaTrackGraph* aGraph,
   mLastVideoOutputTime = aCurrentTrackTime;
   mDecoderThread->Dispatch(NS_NewRunnableFunction(
       "SourceVideoTrackListener::NotifyOutput",
-      [self = RefPtr<SourceVideoTrackListener>(this), aCurrentTrackTime]() {
-        self->mGraphListener->NotifyOutput(MediaSegment::VIDEO,
-                                           aCurrentTrackTime);
+      [self = RefPtr<SourceVideoTrackListener>(this), aCurrentTrackTime,
+       currentSystemTime = AwakeTimeStamp::Now()]() {
+        self->mGraphListener->NotifyOutput(
+            MediaSegment::VIDEO, aCurrentTrackTime, currentSystemTime);
       }));
 }
 
@@ -333,7 +336,7 @@ class DecodedStreamData final {
       float aPlaybackRate, float aVolume, bool aPreservesPitch,
       nsISerialEventTarget* aDecoderThread);
   ~DecodedStreamData();
-  MediaEventSource<int64_t>& OnOutput();
+  MediaEventSource<int64_t, AwakeTimeStamp>& OnOutput();
   // This is used to mark track as closed and should be called before Forget().
   // Decoder thread only.
   void Close();
@@ -443,7 +446,7 @@ DecodedStreamData::~DecodedStreamData() {
   }
 }
 
-MediaEventSource<int64_t>& DecodedStreamData::OnOutput() {
+MediaEventSource<int64_t, AwakeTimeStamp>& DecodedStreamData::OnOutput() {
   return mListener->OnOutput();
 }
 
@@ -508,6 +511,7 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
                               const MediaInfo& aInfo) {
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
+  MOZ_ASSERT(mLastReportedPosition.isNothing());
 
   AUTO_PROFILER_LABEL(FUNCTION_SIGNATURE, MEDIA_PLAYBACK);
   if (profiler_thread_is_being_profiled_for_markers()) {
@@ -520,6 +524,7 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
 
   mStartTime.emplace(aStartTime);
   mLastOutputTime = TimeUnit::Zero();
+  mLastOutputSystemTime = Nothing();
   mInfo = aInfo;
   mPlaying = true;
   mPrincipalHandle.Connect(mCanonicalOutputPrincipal);
@@ -635,6 +640,7 @@ void DecodedStream::Stop() {
   ResetVideo(mPrincipalHandle);
   ResetAudio();
   mStartTime.reset();
+  mLastReportedPosition = Nothing();
   mAudioEndedPromise = nullptr;
   mVideoEndedPromise = nullptr;
 
@@ -1103,13 +1109,28 @@ TimeUnit DecodedStream::GetPosition(TimeStamp* aTimeStamp) {
   // This is only called after MDSM starts playback. So mStartTime is
   // guaranteed to be something.
   MOZ_ASSERT(mStartTime.isSome());
+  TimeStamp now = TimeStamp::Now();
+  AwakeTimeStamp awakeNow = AwakeTimeStamp::Now();
   if (aTimeStamp) {
-    *aTimeStamp = TimeStamp::Now();
+    *aTimeStamp = now;
   }
-  return mStartTime.ref() + mLastOutputTime;
+  AwakeTimeDuration timeSinceLastOutput;
+  if (mLastOutputSystemTime) {
+    MOZ_ASSERT(awakeNow >= *mLastOutputSystemTime);
+    timeSinceLastOutput = awakeNow - *mLastOutputSystemTime;
+  }
+  TimeUnit position = mStartTime.ref() + mLastOutputTime +
+                      TimeUnit::FromSeconds(timeSinceLastOutput.ToSeconds());
+  if (mLastReportedPosition && position < *mLastReportedPosition) {
+    // There's a theoretical risk of time going backwards because of the
+    // interpolation based on mLastOutputSystemTime. Prevent that here.
+    position = *mLastReportedPosition;
+  }
+  mLastReportedPosition = Some(position);
+  return position;
 }
 
-void DecodedStream::NotifyOutput(int64_t aTime) {
+void DecodedStream::NotifyOutput(int64_t aTime, AwakeTimeStamp aSystemTime) {
   AssertOwnerThread();
   TimeUnit time = TimeUnit::FromMicroseconds(aTime);
   if (time == mLastOutputTime) {
@@ -1117,6 +1138,8 @@ void DecodedStream::NotifyOutput(int64_t aTime) {
   }
   MOZ_ASSERT(mLastOutputTime < time);
   mLastOutputTime = time;
+  MOZ_ASSERT_IF(mLastOutputSystemTime, *mLastOutputSystemTime < aSystemTime);
+  mLastOutputSystemTime = Some(aSystemTime);
   auto currentTime = GetPosition();
 
   if (profiler_thread_is_being_profiled_for_markers()) {
@@ -1179,6 +1202,10 @@ void DecodedStream::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
       NS_ConvertUTF8toUTF16(nsPrintfCString("%p", this));
   aInfo.mDecodedStream.mStartTime = startTime;
   aInfo.mDecodedStream.mLastOutputTime = mLastOutputTime.ToMicroseconds();
+  aInfo.mDecodedStream.mLastReportedPosition =
+      mLastReportedPosition
+          .map([](const auto& aT) { return aT.ToMicroseconds(); })
+          .valueOr(0);
   aInfo.mDecodedStream.mPlaying = mPlaying.Ref();
   auto lastAudio = mAudioQueue.PeekBack();
   aInfo.mDecodedStream.mLastAudio =
