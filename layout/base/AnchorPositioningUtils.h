@@ -11,6 +11,7 @@
 #include "nsRect.h"
 
 struct AnchorPosResolutionData;
+class nsAtom;
 class nsIFrame;
 
 template <class T>
@@ -37,7 +38,7 @@ struct AnchorPositioningUtils {
    * following https://drafts.csswg.org/css-anchor-position-1/#target
    */
   static nsIFrame* FindFirstAcceptableAnchor(
-      const nsIFrame* aPositionedFrame,
+      const nsAtom* aName, const nsIFrame* aPositionedFrame,
       const nsTArray<nsIFrame*>& aPossibleAnchorFrames);
 
   static Maybe<AnchorPosInfo> GetAnchorPosRect(

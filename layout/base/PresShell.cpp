@@ -12064,8 +12064,8 @@ nsIFrame* PresShell::GetAnchorPosAnchor(
   MOZ_ASSERT(aName);
   MOZ_ASSERT(mLazyAnchorPosAnchorChanges.IsEmpty());
   if (const auto& entry = mAnchorPosAnchors.Lookup(aName)) {
-    return AnchorPositioningUtils::FindFirstAcceptableAnchor(aPositionedFrame,
-                                                             entry.Data());
+    return AnchorPositioningUtils::FindFirstAcceptableAnchor(
+        aName, aPositionedFrame, entry.Data());
   }
 
   return nullptr;
