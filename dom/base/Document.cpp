@@ -1473,7 +1473,7 @@ Document::Document(const char* aContentType)
       mAllowDeclarativeShadowRoots(false),
       mSuspendDOMNotifications(false),
       mForceLoadAtTop(false),
-      mFireMutationEvents(true),
+      mSuppressNotifyingDevToolsOfNodeRemovals(false),
       mHasPolicyWithRequireTrustedTypesForDirective(false),
       mClipboardCopyTriggered(false),
       mXMLDeclarationBits(0),
@@ -10389,10 +10389,13 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
   }
 
   // Steps 11, 12, 13, 14 --
-  // remove all our DOM kids without firing any mutation events.
+  // remove all our DOM kids without notifying DevTools of the node removals.
   {
-    bool oldFlag = FireMutationEvents();
-    SetFireMutationEvents(false);
+    // XXX I don't know we should keep hiding the node removals from DevTools.
+    // If it's safe even if the user updates the DOM tree from Inspector or
+    // Console, we can stop suppressing this.
+    AutoSuppressNotifyingDevToolsOfNodeRemovals suppressNotifyingDevTools(
+        *this);
 
     // We want to ignore any recursive calls to Open() that happen while
     // disconnecting the node tree.  The spec doesn't say to do this, but the
@@ -10401,7 +10404,6 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
     // <https://github.com/whatwg/html/issues/4611>.
     IgnoreOpensDuringUnload ignoreOpenGuard(this);
     DisconnectNodeTree();
-    SetFireMutationEvents(oldFlag);
   }
 
   // Step 15 -- if we're the current document in our docshell, do the
@@ -10851,12 +10853,8 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv,
     return nullptr;
   }
 
-  // Scope firing mutation events so that we don't carry any state that
-  // might be stale
-  {
-    if (nsCOMPtr<nsINode> parent = adoptedNode->GetParentNode()) {
-      nsContentUtils::MaybeFireNodeRemoved(adoptedNode, parent);
-    }
+  if (adoptedNode->GetParentNode()) {
+    nsContentUtils::NotifyDevToolsOfNodeRemoval(*adoptedNode);
   }
 
   nsAutoScriptBlocker scriptBlocker;

@@ -2521,7 +2521,7 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
         if (normalizedWhiteSpacesInLastNode.IsEmpty()) {
           break;  // There is no more text which we need to delete.
         }
-        if (MayHaveMutationEventListeners(NS_EVENT_BITS_MUTATION_NODEREMOVED) &&
+        if (MaybeNodeRemovalsObservedByDevTools() &&
             (NS_WARN_IF(!endToDeleteExceptReplaceRange.IsSetAndValid()) ||
              NS_WARN_IF(!endToDelete.IsSetAndValid()) ||
              NS_WARN_IF(endToDelete.IsStartOfContainer()))) {

@@ -1092,11 +1092,6 @@ nsGlobalWindowInner::~nsGlobalWindowInner() {
   MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug,
           ("DOMWINDOW %p destroyed", this));
 
-  glean::dom::innerwindows_with_mutation_listeners
-      .EnumGet(static_cast<glean::dom::InnerwindowsWithMutationListenersLabel>(
-          mMutationBits ? 1 : 0))
-      .Add();
-
   // An inner window is destroyed, pull it out of the outer window's
   // list if inner windows.
 
@@ -1876,14 +1871,6 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
 #ifdef DEBUG
   mLastOpenedURI = mDoc->GetDocumentURI();
 #endif
-
-  glean::dom::innerwindows_with_mutation_listeners
-      .EnumGet(static_cast<glean::dom::InnerwindowsWithMutationListenersLabel>(
-          mMutationBits ? 1 : 0))
-      .Add();
-
-  // Clear our mutation bitfield.
-  mMutationBits = 0;
 }
 
 nsresult nsGlobalWindowInner::EnsureClientSource() {

@@ -145,32 +145,14 @@ class EditorBase : public nsIEditor,
   nsPIDOMWindowInner* GetInnerWindow() const;
 
   /**
-   * MayHaveMutationEventListeners() returns true when the window may have
-   * mutation event listeners.
+   * MaybeNodeRemovalsObservedByDevTools() returns true when the mutations in
+   * the document is observed by DevTools.
    *
-   * @param aMutationEventType  One or multiple of NS_EVENT_BITS_MUTATION_*.
-   * @return                    true if the editor is an HTMLEditor instance,
-   *                            and at least one of NS_EVENT_BITS_MUTATION_* is
-   *                            set to the window or in debug build.
+   * @return                    true if the editor is an HTMLEditor instance
+   *                            and the mutations in the document is observed by
+   *                            DevTools.
    */
-  bool MayHaveMutationEventListeners(
-      uint32_t aMutationEventType = 0xFFFFFFFF) const {
-    if (IsTextEditor()) {
-      // DOM mutation event listeners cannot catch the changes of
-      // <input type="text"> nor <textarea>.
-      return false;
-    }
-#ifdef DEBUG
-    // On debug build, this should always return true for testing complicated
-    // path without mutation event listeners because when mutation event
-    // listeners do not touch the DOM, editor needs to run as there is no
-    // mutation event listeners.
-    return true;
-#else   // #ifdef DEBUG
-    nsPIDOMWindowInner* window = GetInnerWindow();
-    return window ? window->HasMutationListeners(aMutationEventType) : false;
-#endif  // #ifdef DEBUG #else
-  }
+  [[nodiscard]] bool MaybeNodeRemovalsObservedByDevTools() const;
 
   /**
    * MayHaveBeforeInputEventListenersForTelemetry() returns true when the

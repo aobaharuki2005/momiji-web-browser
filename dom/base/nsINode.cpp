@@ -1040,7 +1040,7 @@ nsINode* nsINode::RemoveChildInternal(
   }
 
   if (aOldChild.GetParentNode() == this) {
-    nsContentUtils::MaybeFireNodeRemoved(&aOldChild, this);
+    nsContentUtils::NotifyDevToolsOfNodeRemoval(aOldChild);
   }
 
   // Check again, we may not be the child's parent anymore.
@@ -1089,16 +1089,16 @@ void nsINode::Normalize() {
 
   const RefPtr<Document> doc = OwnerDoc();
 
-  // Fire all DOMNodeRemoved events. Optimize the common case of there being
-  // no listeners
-  bool hasRemoveListeners = nsContentUtils::HasMutationListeners(
-      doc, NS_EVENT_BITS_MUTATION_NODEREMOVED);
-  if (hasRemoveListeners) {
-    for (nsCOMPtr<nsIContent>& node : nodes) {
+  // Let DevTools know the node removals if and only if DevTools is observing
+  // the mutations.
+  const bool notifyDevToolsOfNodeRemovals =
+      MaybeNeedsToNotifyDevToolsOfNodeRemovalsInOwnerDoc();
+  if (MOZ_UNLIKELY(notifyDevToolsOfNodeRemovals)) {
+    for (const nsCOMPtr<nsIContent>& node : nodes) {
       // Node may have already been removed.
-      if (nsCOMPtr<nsINode> parentNode = node->GetParentNode()) {
-        // TODO: Bug 1622253
-        nsContentUtils::MaybeFireNodeRemoved(MOZ_KnownLive(node), parentNode);
+      if (node->GetParentNode()) {
+        // TODO: MOZ_KnownLive because of Bug 1620312
+        nsContentUtils::NotifyDevToolsOfNodeRemoval(MOZ_KnownLive(*node));
       }
     }
   }
@@ -1114,11 +1114,12 @@ void nsINode::Normalize() {
         node->GetCharacterDataBuffer();
     if (characterDataBuffer->GetLength()) {
       nsIContent* target = node->GetPreviousSibling();
-      NS_ASSERTION(
-          (target && target->NodeType() == TEXT_NODE) || hasRemoveListeners,
-          "Should always have a previous text sibling unless "
-          "mutation events messed us up");
-      if (!hasRemoveListeners || (target && target->NodeType() == TEXT_NODE)) {
+      NS_ASSERTION((target && target->NodeType() == TEXT_NODE) ||
+                       notifyDevToolsOfNodeRemovals,
+                   "Should always have a previous text sibling unless "
+                   "mutation events messed us up");
+      if (MOZ_LIKELY(!notifyDevToolsOfNodeRemovals) ||
+          (target && target->NodeType() == TEXT_NODE)) {
         nsTextNode* t = static_cast<nsTextNode*>(target);
         if (characterDataBuffer->Is2b()) {
           t->AppendTextForNormalize(characterDataBuffer->Get2b(),
@@ -1134,7 +1135,7 @@ void nsINode::Normalize() {
 
     // Remove node
     nsCOMPtr<nsINode> parent = node->GetParentNode();
-    NS_ASSERTION(parent || hasRemoveListeners,
+    NS_ASSERTION(parent || notifyDevToolsOfNodeRemovals,
                  "Should always have a parent unless "
                  "mutation events messed us up");
     if (parent) {
@@ -2346,14 +2347,17 @@ void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv,
   nsCOMPtr<nsINode> node = aNode;
   const RefPtr<Document> doc = OwnerDoc();
 
-  if (nsContentUtils::HasMutationListeners(
-          doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-    FireNodeRemovedForChildren();
+  if (MOZ_UNLIKELY(MaybeNeedsToNotifyDevToolsOfNodeRemovalsInOwnerDoc())) {
+    NotifyDevToolsOfRemovalsOfChildren();
+    // FIXME: There is no guarantee that node->OwnerDoc() == OwnerDoc().
+    // Thus, we may not require to notify DevTools of any node removals
+    // in the same document, but the node or its children may be in different
+    // document and its removal may be observed by the DevTools.
     if (node) {
       if (node->NodeType() == DOCUMENT_FRAGMENT_NODE) {
-        node->FireNodeRemovedForChildren();
-      } else if (nsCOMPtr<nsINode> parent = node->GetParentNode()) {
-        nsContentUtils::MaybeFireNodeRemoved(node, parent);
+        node->NotifyDevToolsOfRemovalsOfChildren();
+      } else if (node->GetParentNode()) {
+        nsContentUtils::NotifyDevToolsOfNodeRemoval(*node);
       }
     }
   }
@@ -2449,16 +2453,22 @@ void nsINode::MoveBefore(nsINode& aNode, nsINode* aChild, ErrorResult& aRv) {
   // Step 13, and UnbindFromTree runs step 14 and step 15 and step 16,
   // and also Step 25..
   mozAutoDocUpdate updateBatch(GetComposedDoc(), true);
-  RefPtr<Document> doc = OwnerDoc();
-  bool oldMutationFlag = doc->FireMutationEvents();
-  doc->SetFireMutationEvents(false);
-  oldParent->RemoveChildNode(aNode.AsContent(), true, nullptr, &newParent);
+  {  // Scope for AutoSuppressNotifyingDevToolsOfNodeRemovals
+    // XXX Do we really need to suppress notifying DevTools of this node
+    // removal? If we stop suppressing that, we need to check whether
+    // `referenceChild` is still in `oldParent` after that because the user
+    // can change the DOM with Inspector or Console.
+    AutoSuppressNotifyingDevToolsOfNodeRemovals suppressNotifyingDevTools(
+        *OwnerDoc());
+    oldParent->RemoveChildNode(aNode.AsContent(), true, nullptr, &newParent);
 
-  // Steps 17-24 and Step 26.
-  InsertChildBefore(aNode.AsContent(),
-                    referenceChild ? referenceChild->AsContent() : nullptr,
-                    true, aRv, oldParent);
-  doc->SetFireMutationEvents(oldMutationFlag);
+    // Steps 17-24 and Step 26.
+    // FIXME: I think this InsertChildBefore() call can be moved outside the
+    // scope of AutoSuppressNotifyingDevToolsOfNodeRemovals.
+    InsertChildBefore(aNode.AsContent(),
+                      referenceChild ? referenceChild->AsContent() : nullptr,
+                      true, aRv, oldParent);
+  }
 }
 
 void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify,
@@ -2798,19 +2808,20 @@ nsINode* nsINode::ReplaceOrInsertBefore(
     // If we're replacing, fire for node-to-be-replaced.
     // If aRefChild == aNewChild then we'll fire for it in check below
     if (aReplace && aRefChild != aNewChild) {
-      nsContentUtils::MaybeFireNodeRemoved(aRefChild, this);
+      nsContentUtils::NotifyDevToolsOfNodeRemoval(*aRefChild);
     }
 
     // If the new node already has a parent, fire for removing from old
     // parent
-    if (nsCOMPtr<nsINode> oldParent = aNewChild->GetParentNode()) {
-      nsContentUtils::MaybeFireNodeRemoved(aNewChild, oldParent);
+    if (aNewChild->GetParentNode()) {
+      nsContentUtils::NotifyDevToolsOfNodeRemoval(*aNewChild);
     }
 
     // If we're inserting a fragment, fire for all the children of the
     // fragment
     if (nodeType == DOCUMENT_FRAGMENT_NODE) {
-      static_cast<FragmentOrElement*>(aNewChild)->FireNodeRemovedForChildren();
+      static_cast<FragmentOrElement*>(aNewChild)
+          ->NotifyDevToolsOfRemovalsOfChildren();
     }
 
     if (guard.Mutated(0)) {
@@ -3775,7 +3786,6 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
     if (nsPIDOMWindowInner* window = newDoc->GetInnerWindow()) {
       EventListenerManager* elm = aNode->GetExistingListenerManager();
       if (elm) {
-        window->SetMutationListeners(elm->MutationListenerBits());
         if (elm->MayHaveDOMActivateListeners()) {
           window->SetHasDOMActivateEventListeners();
         }
@@ -4086,18 +4096,30 @@ void nsINode::RemoveMutationObserver(
   }
 }
 
-void nsINode::FireNodeRemovedForChildren() {
-  Document* doc = OwnerDoc();
+bool nsINode::MaybeNeedsToNotifyDevToolsOfNodeRemovalsInOwnerDoc() const {
+  // XXX Should we check SuppressedNotifyingDevToolsOfNodeRemovals() here too?
+  // Then, we could skip to handle some node removals while we're handling some
+  // APIs.
+  return OwnerDoc()->DevToolsWatchingDOMMutations();
+}
+
+bool nsINode::DevToolsShouldBeNotifiedOfThisRemoval() const {
+  return MOZ_UNLIKELY(MaybeNeedsToNotifyDevToolsOfNodeRemovalsInOwnerDoc()) &&
+         IsInComposedDoc() &&
+         !OwnerDoc()->SuppressedNotifyingDevToolsOfNodeRemovals() &&
+         !ChromeOnlyAccess();
+}
+
+void nsINode::NotifyDevToolsOfRemovalsOfChildren() {
   // Optimize the common case
-  if (!nsContentUtils::HasMutationListeners(
-          doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+  if (MOZ_LIKELY(!MaybeNeedsToNotifyDevToolsOfNodeRemovalsInOwnerDoc())) {
     return;
   }
 
-  nsCOMPtr<nsINode> child;
-  for (child = GetFirstChild(); child && child->GetParentNode() == this;
+  for (nsCOMPtr<nsIContent> child = GetFirstChild();
+       child && child->GetParentNode() == this;
        child = child->GetNextSibling()) {
-    nsContentUtils::MaybeFireNodeRemoved(child, this);
+    nsContentUtils::NotifyDevToolsOfNodeRemoval(*child);
   }
 }
 

@@ -1937,10 +1937,22 @@ class nsINode : public mozilla::dom::EventTarget {
   bool UnoptimizableCCNode() const;
 
   /**
-   * Fire a DOMNodeRemoved mutation event for all children of this node
+   * Return true if the DevTools is observing the mutations in the owner
+   * document.
+   */
+  [[nodiscard]] bool MaybeNeedsToNotifyDevToolsOfNodeRemovalsInOwnerDoc() const;
+
+  /**
+   * Return true when the DevTools should be notified of the removal of this
+   * node.
+   */
+  [[nodiscard]] bool DevToolsShouldBeNotifiedOfThisRemoval() const;
+
+  /**
+   * Notify DevTools of the removals of all children of this node.
    * TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireNodeRemovedForChildren();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void NotifyDevToolsOfRemovalsOfChildren();
 
   void QueueDevtoolsAnonymousEvent(bool aIsRemove);
 

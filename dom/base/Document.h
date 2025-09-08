@@ -229,6 +229,7 @@ class Rule;
 namespace dom {
 class AnonymousContent;
 class Attr;
+class AutoSuppressNotifyingDevToolsOfNodeRemovals;
 class XULBroadcastManager;
 class XULPersist;
 class BrowserBridgeChild;
@@ -3766,9 +3767,14 @@ class Document : public nsINode,
   // If this is true, we're ignoring scrolling to a fragment.
   bool ForceLoadAtTop() const { return mForceLoadAtTop; }
 
-  // https://html.spec.whatwg.org/#concept-document-fire-mutation-events-flag
-  bool FireMutationEvents() const { return mFireMutationEvents; }
-  void SetFireMutationEvents(bool aFire) { mFireMutationEvents = aFire; }
+  /**
+   * Return false if it's allowed to notify DevTools of node removals in this
+   * document.
+   */
+  [[nodiscard]] bool SuppressedNotifyingDevToolsOfNodeRemovals() const {
+    return mSuppressNotifyingDevToolsOfNodeRemovals;
+  }
+  friend class AutoSuppressNotifyingDevToolsOfNodeRemovals;
 
   // https://w3c.github.io/trusted-types/dist/spec/#require-trusted-types-for-csp-directive
   bool HasPolicyWithRequireTrustedTypesForDirective() const {
@@ -5083,7 +5089,7 @@ class Document : public nsINode,
 
   bool mForceLoadAtTop : 1;
 
-  bool mFireMutationEvents : 1;
+  bool mSuppressNotifyingDevToolsOfNodeRemovals : 1;
 
   // Whether the document's CSP contains a require-trusted-types-for directive.
   bool mHasPolicyWithRequireTrustedTypesForDirective : 1;
@@ -5712,6 +5718,31 @@ class MOZ_RAII IgnoreOpensDuringUnload final {
 
  private:
   Document* mDoc;
+};
+
+/**
+ * Suppress notifying DevTools of node removals in the given document even if
+ * DevTools wants to know that.  This guarantees the lifetime of the given
+ * document while the instance is alive.
+ */
+class MOZ_RAII AutoSuppressNotifyingDevToolsOfNodeRemovals final {
+ public:
+  explicit AutoSuppressNotifyingDevToolsOfNodeRemovals(Document& aDoc)
+      : mDoc(aDoc),
+        mDidSuppress(
+            static_cast<bool>(aDoc.mSuppressNotifyingDevToolsOfNodeRemovals)) {
+    mDoc->mSuppressNotifyingDevToolsOfNodeRemovals = true;
+  }
+  ~AutoSuppressNotifyingDevToolsOfNodeRemovals() {
+    MOZ_ASSERT(mDoc->mSuppressNotifyingDevToolsOfNodeRemovals);
+    mDoc->mSuppressNotifyingDevToolsOfNodeRemovals = mDidSuppress;
+  }
+
+  Document& Doc() const { return mDoc; }
+
+ private:
+  const OwningNonNull<Document> mDoc;
+  bool mDidSuppress;
 };
 
 bool IsInFocusedTab(Document* aDoc);

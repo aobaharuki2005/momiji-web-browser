@@ -365,6 +365,24 @@ nsresult EditorBase::InitInternal(Document& aDocument, Element* aRootElement,
   return NS_OK;
 }
 
+bool EditorBase::MaybeNodeRemovalsObservedByDevTools() const {
+  if (IsTextEditor()) {
+    // DOM mutation event listeners cannot catch the changes of
+    // <input type="text"> nor <textarea>.
+    return false;
+  }
+#ifdef DEBUG
+  // On debug build, this should always return true for testing complicated
+  // path without mutation event listeners because when mutation event
+  // listeners do not touch the DOM, editor needs to run as there is no
+  // mutation event listeners.
+  return true;
+#else   // #ifdef DEBUG
+  Document* const doc = GetDocument();
+  return doc && doc->MaybeNeedsToNotifyDevToolsOfNodeRemovalsInOwnerDoc();
+#endif  // #ifdef DEBUG #else
+}
+
 nsresult EditorBase::EnsureEmptyTextFirstChild() {
   MOZ_ASSERT(IsTextEditor());
   RefPtr<Element> root = GetRoot();

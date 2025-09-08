@@ -374,9 +374,6 @@ NON_IDL_EVENT(MozMouseHittest, eMouseHitTest, EventNameType_None,
 NON_IDL_EVENT(MozMouseExploreByTouch, eMouseExploreByTouch, EventNameType_None,
               eMouseEventClass)
 
-NON_IDL_EVENT(DOMNodeRemoved, eLegacyNodeRemoved, EventNameType_HTMLXUL,
-              eMutationEventClass)
-
 NON_IDL_EVENT(DOMActivate, eLegacyDOMActivate, EventNameType_HTMLXUL,
               eUIEventClass)
 NON_IDL_EVENT(DOMFocusIn, eLegacyDOMFocusIn, EventNameType_HTMLXUL,

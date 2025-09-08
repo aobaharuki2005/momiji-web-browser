@@ -1513,51 +1513,15 @@ class nsContentUtils {
    */
   static bool IsPreloadType(nsContentPolicyType aType);
 
-  enum class IgnoreDevToolsMutationObserver : bool { No, Yes };
-
   /**
-   * Quick helper to determine whether mutation events are enabled and there are
-   * any mutation listeners of a given type that apply to this content or any of
-   * its ancestors.
+   * Synchronously fire a chrome only event to notify the DevTools of the
+   * removal of aRemovingNode. Only fires the event if
+   * aRemovingNode.ShouldNotifyDevToolsOfNodeRemovals() returns true.
    *
-   * @param aNode  The node to search for listeners
-   * @param aType  The type of listener (NS_EVENT_BITS_MUTATION_*)
-   *
-   * @return true if there are mutation listeners of the specified type
+   * @param aRemovingNode   The node which will be removed.
    */
-  static bool WantMutationEvents(
-      nsINode* aNode, uint32_t aType,
-      IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver =
-          IgnoreDevToolsMutationObserver::No);
-
-  /**
-   * Quick helper to determine whether there are any mutation listeners
-   * of a given type that apply to any content in this document. It is valid
-   * to pass null for aDocument here, in which case this function always
-   * returns true.
-   *
-   * @param aDocument The document to search for listeners
-   * @param aType     The type of listener (NS_EVENT_BITS_MUTATION_*)
-   *
-   * @return true if there are mutation listeners of the specified type
-   */
-  static bool HasMutationListeners(
-      Document* aDocument, uint32_t aType,
-      IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver =
-          IgnoreDevToolsMutationObserver::No);
-  /**
-   * Synchronously fire DOMNodeRemoved on aChild. Only fires the event if
-   * there really are listeners by checking using the HasMutationListeners
-   * function above. The function makes sure to hold the relevant objects alive
-   * for the duration of the event firing. However there are no guarantees
-   * that any of the objects are alive by the time the function returns.
-   * If you depend on that you need to hold references yourself.
-   *
-   * @param aChild    The node to fire DOMNodeRemoved at.
-   * @param aParent   The parent of aChild.
-   */
-  MOZ_CAN_RUN_SCRIPT static void MaybeFireNodeRemoved(nsINode* aChild,
-                                                      nsINode* aParent);
+  MOZ_CAN_RUN_SCRIPT static void NotifyDevToolsOfNodeRemoval(
+      nsINode& aRemovingNode);
 
   /**
    * These methods create and dispatch a trusted event.

@@ -1150,26 +1150,6 @@ dom:
     expires: never
     telemetry_mirror: GC_SLICE_DURING_IDLE
 
-  innerwindows_with_mutation_listeners:
-    type: labeled_counter
-    description: >
-      Deleted or to-be-reused innerwindow which has had mutation event
-      listeners.
-
-      This metric was generated to correspond to the Legacy Telemetry boolean
-      histogram INNERWINDOWS_WITH_MUTATION_LISTENERS.
-    labels:
-      - "false"
-      - "true"
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1956726
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1956726
-    notification_emails:
-      - dom-core@mozilla.com
-    expires: never
-    telemetry_mirror: h#INNERWINDOWS_WITH_MUTATION_LISTENERS
-
   xmlhttprequest_async_or_sync:
     type: labeled_counter
     description: >

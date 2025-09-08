@@ -1180,9 +1180,7 @@ void FragmentOrElement::SetTextContentInternal(
                  !GetAccService() &&
 #endif
                  !OwnerDoc()->MayHaveDOMMutationObservers() &&
-                 !OwnerDoc()->DevToolsWatchingDOMMutations() &&
-                 !nsContentUtils::HasMutationListeners(
-                     OwnerDoc(), NS_EVENT_BITS_MUTATION_ALL);
+                 !MaybeNeedsToNotifyDevToolsOfNodeRemovalsInOwnerDoc();
     }
   }
 
@@ -1972,7 +1970,7 @@ void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
 
   const RefPtr<Document> doc = target->OwnerDoc();
 
-  target->FireNodeRemovedForChildren();
+  target->NotifyDevToolsOfRemovalsOfChildren();
 
   // Needed when innerHTML is used in combination with contenteditable
   mozAutoDocUpdate updateBatch(doc, true);

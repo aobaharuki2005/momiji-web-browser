@@ -5750,98 +5750,16 @@ bool nsContentUtils::HasNonEmptyAttr(const nsIContent* aContent,
              AttrArray::ATTR_VALUE_NO_MATCH;
 }
 
-/* static */
-bool nsContentUtils::WantMutationEvents(
-    nsINode* aNode, uint32_t aType,
-    IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver /* = No */) {
-  Document* doc = aNode->OwnerDoc();
-  if (MOZ_LIKELY(!doc->MutationEventsEnabled() &&
-                 (static_cast<bool>(aIgnoreDevToolsMutationObserver) ||
-                  !doc->DevToolsWatchingDOMMutations()))) {
-    return false;
-  }
-
-  if (!doc->FireMutationEvents()) {
-    return false;
-  }
-
-  // This relies on EventListenerManager::AddEventListener.
-  if (!nsContentUtils::HasMutationListeners(doc, aType,
-                                            aIgnoreDevToolsMutationObserver)) {
-    return false;
-  }
-
-  if (aNode->ChromeOnlyAccess() || aNode->IsInShadowTree()) {
-    return false;
-  }
-
-  // If we have a window, we can check it for mutation listeners now.
-  if (aNode->IsInUncomposedDoc()) {
-    // global object will be null for documents that don't have windows.
-    if (const nsCOMPtr<EventTarget> piTarget =
-            do_QueryInterface(doc->GetInnerWindow())) {
-      EventListenerManager* manager = piTarget->GetExistingListenerManager();
-      if (manager && manager->HasMutationListeners()) {
-        return true;
-      }
-    }
-  }
-
-  // If we have a window, we know a mutation listener is registered, but it
-  // might not be in our chain.  If we don't have a window, we might have a
-  // mutation listener.  Check quickly to see.
-  while (aNode) {
-    EventListenerManager* manager = aNode->GetExistingListenerManager();
-    if (manager && manager->HasMutationListeners()) {
-      return true;
-    }
-
-    aNode = aNode->GetParentNode();
-  }
-
-  return false;
-}
-
-/* static */
-bool nsContentUtils::HasMutationListeners(
-    Document* aDocument, uint32_t aType,
-    IgnoreDevToolsMutationObserver aIgnoreDevToolsMutationObserver /* = No */) {
-  nsPIDOMWindowInner* window =
-      aDocument ? aDocument->GetInnerWindow() : nullptr;
-
-  // This relies on EventListenerManager::AddEventListener.
-  if (!window || window->HasMutationListeners(aType)) {
-    return true;
-  }
-
-  // If the DevTools' mutation observer is enabled, we dispatch
-  // "devtoolschildremoved" event immediately before "DOMNodeRemoved" in
-  // nsContentUtils::MaybeFireNodeRemoved().  For making it called even without
-  // a legacy DOM mutation event listener, we need to return true for
-  // NS_EVENT_BITS_MUTATION_NODEREMOVED.
-  // NOTE: For the other events, "devtoolschildinserted" and
-  // "devtoolsattrmodified" are fired by an nsIMutationObserver subclass,
-  // DevToolsMutationObserver. Therefore, we don't need to handle the other
-  // bits.
-  return !static_cast<bool>(aIgnoreDevToolsMutationObserver) &&
-         aDocument->DevToolsWatchingDOMMutations() &&
-         (aType & NS_EVENT_BITS_MUTATION_NODEREMOVED);
-}
-
-void nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent) {
-  MOZ_ASSERT(aChild, "Missing child");
-  MOZ_ASSERT(aChild->GetParentNode() == aParent, "Wrong parent");
-  MOZ_ASSERT(aChild->OwnerDoc() == aParent->OwnerDoc(), "Wrong owner-doc");
-
+void nsContentUtils::NotifyDevToolsOfNodeRemoval(nsINode& aRemovingNode) {
   // Having an explicit check here since it's an easy mistake to fall into,
   // and there might be existing code with problems. We'd rather be safe
-  // than fire DOMNodeRemoved in all corner cases. We also rely on it for
+  // than fire a chrome only event in all corner cases. We also rely on it for
   // nsAutoScriptBlockerSuppressNodeRemoved.
   if (!IsSafeToRunScript()) {
     // This checks that IsSafeToRunScript is true since we don't want to fire
     // events when that is false. We can't rely on EventDispatcher to assert
-    // this in this situation since most of the time there are no mutation
-    // event listeners, in which case we won't even attempt to dispatch events.
+    // this in this situation since most of the time DevTools is not observing
+    // the mutations, in which case we won't even attempt to dispatch events.
     // However this also allows for two exceptions. First off, we don't assert
     // if the mutation happens to native anonymous content since we never fire
     // mutation events on such content anyway.
@@ -5849,28 +5767,19 @@ void nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent) {
     // that is a know case when we'd normally fire a mutation event, but can't
     // make that safe and so we suppress it at this time. Ideally this should
     // go away eventually.
-    if (!aChild->IsInNativeAnonymousSubtree() &&
+    if (!aRemovingNode.IsInNativeAnonymousSubtree() &&
         !sDOMNodeRemovedSuppressCount) {
-      NS_ERROR("Want to fire DOMNodeRemoved event, but it's not safe");
-      WarnScriptWasIgnored(aChild->OwnerDoc());
+      NS_ERROR(
+          "Want to fire \"devtoolschildremoved\" event, but it's not safe");
+      WarnScriptWasIgnored(aRemovingNode.OwnerDoc());
     }
     return;
   }
 
-  {
-    Document* doc = aParent->OwnerDoc();
-    if (MOZ_UNLIKELY(doc->DevToolsWatchingDOMMutations()) &&
-        aChild->IsInComposedDoc() && !aChild->ChromeOnlyAccess()) {
-      DispatchChromeEvent(doc, aChild, u"devtoolschildremoved"_ns,
-                          CanBubble::eNo, Cancelable::eNo);
-    }
-  }
-
-  if (WantMutationEvents(aChild, NS_EVENT_BITS_MUTATION_NODEREMOVED,
-                         IgnoreDevToolsMutationObserver::Yes)) {
-    InternalMutationEvent mutation(true, eLegacyNodeRemoved);
-    mutation.mRelatedNode = aParent;
-    EventDispatcher::Dispatch(aChild, nullptr, &mutation);
+  if (MOZ_UNLIKELY(aRemovingNode.DevToolsShouldBeNotifiedOfThisRemoval())) {
+    const RefPtr<Document> doc = aRemovingNode.OwnerDoc();
+    DispatchChromeEvent(doc, &aRemovingNode, u"devtoolschildremoved"_ns,
+                        CanBubble::eNo, Cancelable::eNo);
   }
 }
 
@@ -6196,7 +6105,7 @@ static void SetAndFilterHTML(
     return;
   }
 
-  aTarget->FireNodeRemovedForChildren();
+  aTarget->NotifyDevToolsOfRemovalsOfChildren();
 
   // Needed when innerHTML is used in combination with contenteditable
   mozAutoDocUpdate updateBatch(doc, true);
@@ -6570,23 +6479,22 @@ already_AddRefed<Document> nsContentUtils::CreateInertHTMLDocument(
 nsresult nsContentUtils::SetNodeTextContent(
     nsIContent* aContent, const nsAString& aValue, bool aTryReuse,
     MutationEffectOnScript aMutationEffectOnScript) {
-  // Fire DOMNodeRemoved mutation events before we do anything else.
-  nsCOMPtr<nsIContent> owningContent;
-
   // Optimize the common case of there being no observers
-  if (HasMutationListeners(aContent->OwnerDoc(),
-                           NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-    owningContent = aContent;
-    nsCOMPtr<nsINode> child;
-    bool skipFirst = aTryReuse;
-    for (child = aContent->GetFirstChild();
-         child && child->GetParentNode() == aContent;
-         child = child->GetNextSibling()) {
-      if (skipFirst && child->IsText()) {
-        skipFirst = false;
-        continue;
+  if (MOZ_UNLIKELY(
+          aContent->MaybeNeedsToNotifyDevToolsOfNodeRemovalsInOwnerDoc())) {
+    if (aTryReuse) {
+      bool skipFirstText = true;
+      for (nsCOMPtr<nsINode> child = aContent->GetFirstChild();
+           child && child->GetParentNode() == aContent;
+           child = child->GetNextSibling()) {
+        if (skipFirstText && child->IsText()) {
+          skipFirstText = false;
+          continue;
+        }
+        nsContentUtils::NotifyDevToolsOfNodeRemoval(*child);
       }
-      nsContentUtils::MaybeFireNodeRemoved(child, aContent);
+    } else {
+      aContent->NotifyDevToolsOfRemovalsOfChildren();
     }
   }
 

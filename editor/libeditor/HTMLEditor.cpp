@@ -2465,7 +2465,7 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
-      if (MayHaveMutationEventListeners() &&
+      if (MaybeNodeRemovalsObservedByDevTools() &&
           NS_WARN_IF(nextBlockElement !=
                      HTMLEditUtils::GetAncestorElement(
                          *blockElement, HTMLEditUtils::ClosestBlockElement,
