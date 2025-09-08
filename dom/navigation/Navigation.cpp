@@ -565,6 +565,11 @@ void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
   apiMethodTracker->CreateResult(aResult);
 }
 
+// https://html.spec.whatwg.org/#performing-a-navigation-api-traversal
+void Navigation::PerformNavigationTraversal(JSContext* aCx, const nsID& aKey,
+                                            const NavigationOptions& aOptions,
+                                            NavigationResult& aResult) {}
+
 // https://html.spec.whatwg.org/#dom-navigation-reload
 void Navigation::Reload(JSContext* aCx, const NavigationReloadOptions& aOptions,
                         NavigationResult& aResult) {
@@ -626,6 +631,88 @@ void Navigation::Reload(JSContext* aCx, const NavigationReloadOptions& aOptions,
   // 10. Return a navigation API method tracker-derived result for
   //     apiMethodTracker.
   apiMethodTracker->CreateResult(aResult);
+}
+
+// https://html.spec.whatwg.org/#dom-navigation-traverseto
+void Navigation::TraverseTo(JSContext* aCx, const nsAString& aKey,
+                            const NavigationOptions& aOptions,
+                            NavigationResult& aResult) {
+  // 1. If this's current entry index is −1, then return an early error result
+  //    for an "InvalidStateError" DOMException.
+  if (mCurrentEntryIndex.isNothing()) {
+    ErrorResult rv;
+    rv.ThrowInvalidStateError("Current entry index is unexpectedly -1");
+    SetEarlyErrorResult(aCx, aResult, std::move(rv));
+    return;
+  }
+
+  // 2. If this's entry list does not contain a NavigationHistoryEntry whose
+  //    session history entry's navigation API key equals key, then return an
+  //    early error result for an "InvalidStateError" DOMException.
+  nsID key{};
+  const bool foundKey =
+      key.Parse(NS_ConvertUTF16toUTF8(aKey).Data()) &&
+      std::find_if(mEntries.begin(), mEntries.end(), [&](const auto& aEntry) {
+        return aEntry->Key() == key;
+      }) != mEntries.end();
+  if (!foundKey) {
+    ErrorResult rv;
+    rv.ThrowInvalidStateError("Session history entry key does not exist");
+    SetEarlyErrorResult(aCx, aResult, std::move(rv));
+    return;
+  }
+
+  // 3. Return the result of performing a navigation API traversal given this,
+  //    key, and options.
+  PerformNavigationTraversal(aCx, key, aOptions, aResult);
+}
+
+// https://html.spec.whatwg.org/#dom-navigation-back
+void Navigation::Back(JSContext* aCx, const NavigationOptions& aOptions,
+                      NavigationResult& aResult) {
+  // 1. If this's current entry index is −1 or 0, then return an early error
+  //    result for an "InvalidStateError" DOMException.
+  if (mCurrentEntryIndex.isNothing() || *mCurrentEntryIndex == 0 ||
+      *mCurrentEntryIndex > mEntries.Length() - 1) {
+    ErrorResult rv;
+    rv.ThrowInvalidStateError("Current entry index is unexpectedly -1 or 0");
+    SetEarlyErrorResult(aCx, aResult, std::move(rv));
+    return;
+  }
+
+  // 2. Let key be this's entry list[this's current entry index − 1]'s session
+  //    history entry's navigation API key.
+  MOZ_DIAGNOSTIC_ASSERT(mEntries[*mCurrentEntryIndex - 1]);
+  const nsID key = mEntries[*mCurrentEntryIndex - 1]->Key();
+
+  // 3. Return the result of performing a navigation API traversal given this,
+  //    key, and options.
+  PerformNavigationTraversal(aCx, key, aOptions, aResult);
+}
+
+// https://html.spec.whatwg.org/#dom-navigation-forward
+void Navigation::Forward(JSContext* aCx, const NavigationOptions& aOptions,
+                         NavigationResult& aResult) {
+  // 1. If this's current entry index is −1 or is equal to this's entry list's
+  //    size − 1, then return an early error result for an "InvalidStateError"
+  //    DOMException.
+  if (mCurrentEntryIndex.isNothing() ||
+      *mCurrentEntryIndex >= mEntries.Length() - 1) {
+    ErrorResult rv;
+    rv.ThrowInvalidStateError(
+        "Current entry index is unexpectedly -1 or entry list's size - 1");
+    SetEarlyErrorResult(aCx, aResult, std::move(rv));
+    return;
+  }
+
+  // 2. Let key be this's entry list[this's current entry index + 1]'s session
+  //    history entry's navigation API key.
+  MOZ_ASSERT(mEntries[*mCurrentEntryIndex + 1]);
+  const nsID& key = mEntries[*mCurrentEntryIndex + 1]->Key();
+
+  // 3. Return the result of performing a navigation API traversal given this,
+  //    key, and options.
+  PerformNavigationTraversal(aCx, key, aOptions, aResult);
 }
 
 namespace {
