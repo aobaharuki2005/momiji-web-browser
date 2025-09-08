@@ -1777,31 +1777,6 @@ class BrowsingContextModule extends RootBiDiModule {
         navigation: navigationId,
         url,
       };
-    } catch (e) {
-      // Get the current navigation object for the browsing context.
-      const navigation =
-        this.messageHandler.navigationManager.getNavigationForBrowsingContext(
-          webProgress.browsingContext
-        );
-
-      // NavigationError with isBindingAborted represent navigations aborted by
-      // another navigation. If the navigation was committed and matches the
-      // navigationId, consider the navigation as successful.
-      if (
-        e?.isNavigationError &&
-        e.isBindingAborted &&
-        navigation &&
-        navigation.committed &&
-        navigation.navigationId == navigationId
-      ) {
-        return {
-          navigation: navigationId,
-          url: navigation.url,
-        };
-      }
-
-      // Otherwise, bubble the error from the Navigation helper.
-      throw e;
     } finally {
       if (listener.isStarted) {
         listener.stop();

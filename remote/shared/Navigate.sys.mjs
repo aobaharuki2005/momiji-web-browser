@@ -17,7 +17,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NavigationListener:
     "chrome://remote/content/shared/listeners/NavigationListener.sys.mjs",
   truncate: "chrome://remote/content/shared/Format.sys.mjs",
-  NavigationError: "chrome://remote/content/shared/RemoteError.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>
@@ -351,7 +350,7 @@ export class ProgressListener {
             return;
           }
 
-          this.stop({ error: new lazy.NavigationError(errorName, status) });
+          this.stop({ error: new Error(errorName) });
           return;
         }
 

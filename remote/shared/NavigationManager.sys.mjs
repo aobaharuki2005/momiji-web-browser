@@ -68,10 +68,9 @@ export const NavigationState = {
 
 /**
  * @typedef {object} NavigationInfo
- * @property {boolean} committed - Whether the navigation was ever committed.
+ * @property {NavigationState} state - The navigation state.
  * @property {string} navigationId - The UUID for the navigation.
  * @property {string} navigable - The UUID for the navigable.
- * @property {NavigationState} state - The navigation state.
  * @property {string} url - The target url for the navigation.
  */
 
@@ -207,11 +206,7 @@ class NavigationRegistry extends EventEmitter {
     const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
 
     const navigationId = this.#getOrCreateNavigationId(navigableId);
-    const navigation = this.#createNavigationObject({
-      state: NavigationState.Finished,
-      navigationId,
-      url,
-    });
+    const navigation = { state: NavigationState.Finished, navigationId, url };
 
     // Update the current navigation for the navigable only if there is no
     // ongoing navigation for the navigable.
@@ -283,11 +278,7 @@ class NavigationRegistry extends EventEmitter {
     const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
 
     const navigationId = this.#getOrCreateNavigationId(navigableId);
-    const navigation = this.#createNavigationObject({
-      state: NavigationState.Finished,
-      navigationId,
-      url,
-    });
+    const navigation = { state: NavigationState.Finished, navigationId, url };
 
     // Update the current navigation for the navigable only if there is no
     // ongoing navigation for the navigable.
@@ -354,11 +345,6 @@ class NavigationRegistry extends EventEmitter {
       );
       return navigation;
     }
-
-    // Flag the navigation as committed. We don't set it as the state, because
-    // we need to know if at some point a navigation was committed, regardless
-    // of its current state (eg finished).
-    navigation.committed = true;
 
     lazy.logger.trace(
       lazy.truncate`[${navigableId}] Navigation committed for url: ${url} (${navigation.navigationId})`
@@ -523,11 +509,7 @@ class NavigationRegistry extends EventEmitter {
     }
 
     const navigationId = this.#getOrCreateNavigationId(navigableId);
-    navigation = this.#createNavigationObject({
-      state: NavigationState.Started,
-      navigationId,
-      url,
-    });
+    navigation = { state: NavigationState.Started, navigationId, url };
     this.#navigations.set(navigableId, navigation);
 
     lazy.logger.trace(
@@ -606,13 +588,10 @@ class NavigationRegistry extends EventEmitter {
     const context = this.#getContextFromContextDetails(contextDetails);
     const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
 
-    const existingNavigation = this.#navigations.get(navigableId);
-    if (
-      existingNavigation &&
-      existingNavigation.state === NavigationState.Started
-    ) {
+    let navigation = this.#navigations.get(navigableId);
+    if (navigation && navigation.state === NavigationState.Started) {
       lazy.logger.trace(
-        `[${navigableId}] We're going to fail the navigation for url: ${existingNavigation.url} (${existingNavigation.navigationId}), ` +
+        `[${navigableId}] We're going to fail the navigation for url: ${navigation.url} (${navigation.navigationId}), ` +
           "since it was interrupted by a new navigation."
       );
 
@@ -624,28 +603,17 @@ class NavigationRegistry extends EventEmitter {
       notifyNavigationFailed({
         contextDetails,
         errorName: "A new navigation interrupted an unfinished navigation",
-        url: existingNavigation.url,
+        url: navigation.url,
       });
     }
 
     const navigationId = lazy.generateUUID();
-    const navigation = this.#createNavigationObject({
+    this.#navigations.set(navigableId, {
       state: NavigationState.registered,
       navigationId,
     });
-    this.#navigations.set(navigableId, navigation);
 
     return navigationId;
-  }
-
-  #createNavigationObject(params) {
-    const { state, navigationId, url } = params;
-    return {
-      committed: false,
-      state,
-      navigationId,
-      url,
-    };
   }
 
   #getContextFromContextDetails(contextDetails) {
