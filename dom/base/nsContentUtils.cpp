@@ -11710,14 +11710,10 @@ static Result<Ok, nsresult> ExtractExceptionValuesImpl(
   RefPtr<T> exn;
   MOZ_TRY((UnwrapObject<PrototypeID, NativeType>(aObj, exn, nullptr)));
 
-  if (nsCOMPtr<nsIStackFrame> location = exn->GetLocation()) {
-    location->GetFilename(aCx, aFilename);
-    *aLineOut = location->GetLineNumber(aCx);
-    *aColumnOut = location->GetColumnNumber(aCx);
-  } else {
-    aFilename.Truncate();
-    *aLineOut = 0;
-    *aColumnOut = 0;
+  exn->GetFilename(aCx, aFilename);
+  if (!aFilename.IsEmpty()) {
+    *aLineOut = exn->LineNumber(aCx);
+    *aColumnOut = exn->ColumnNumber();
   }
 
   exn->GetName(aMessageOut);
