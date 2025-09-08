@@ -1206,8 +1206,8 @@ void CodeGenerator::visitModI(LModI* ins) {
 
   masm.ma_mod32(dest, lhs, rhs);
 
-  // If X%Y == 0 and X < 0, then we *actually* wanted to return -0, so bailing out.
-  // -0.0|0 == 0
+  // If X%Y == 0 and X < 0, then we *actually* wanted to return -0, so bailing
+  // out. -0.0|0 == 0
   if (mir->canBeNegativeDividend() && !mir->isTruncated()) {
     MOZ_ASSERT(mir->fallible());
     masm.ma_b(dest, Imm32(0), &done, Assembler::NotEqual, ShortJump);
