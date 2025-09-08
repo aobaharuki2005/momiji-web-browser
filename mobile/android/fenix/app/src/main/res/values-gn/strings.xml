@@ -52,6 +52,8 @@
   <string name="tab_tray_collection_button_multiselect_content_description">Eñongatu tendayke poravopyre mbyatyhápe</string>
   <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
   <string name="tab_manager_empty_synced_tabs_page_header">Ejapyhy tendayke oimeha mba’e’okágui</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Eike eñangareko tendaykeita mbojuehepyre ne mba’e’okaguáre.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Eñemboheraguapy</string>
   <!--
@@ -374,6 +376,18 @@
   -->
   <string name="browser_toolbar_translated_successfully">Kuatiarogue moñe’ẽasapyre %1$s-gui %2$s-pe.</string>
   <!--
+    Translation Toolbar
+
+    Translation toolbar label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">Oñemoñe’ẽasáva %1$s-gui %2$s-pe</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">Embojuruja togue ñe’ẽasárã</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">Emboyke ñe’ẽmondo</string>
+  <!--
     Locale Settings Fragment
 
     Content description for tick mark on selected language
@@ -503,6 +517,16 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Marandu’i jejavygua rupi roikuaa ha romyatyrõ apañuái kundahára ndive. Umi marandu’ípe oĩkuaa mba’ekuaarã nemba’ete ha ñemiguáva.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Kuaave</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s oñepyrũjeyva’erã</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">Ojavy embojurujávo %s.\n\nEmondo marandu’i jejavygua nepytyõta eik-uaa ha emoĩporãvo apañuái kundahára ndive. Umi marandu’i ogueroikekuaa mba’ekuaarãite térã ñemiguáva.</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">Emondo marandu javygua</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">Nahániri, aguyje</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">Embojurujajey %s</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Emondo mba’ekuaarã aporekogua ha ñomongeta Mozilla-pe</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Umi mba’ekuaarã mba’e’oka rehegua, hardware ñemboheko ha Firefox jeporu oipytyvõ tembiapoite porãverã, ijeporureko ha hekopyta opaite poruhárape g̃uarã.</string>
@@ -527,6 +551,37 @@
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">Oiko porãve hag̃ua pe kundahára, Firefox omondo techapy ha ñomongetakue Mozilla-pe. %1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">Ñangareko</string>
+  <!-- Terms of use (ToU) onboarding redesign title. -->
+  <string name="onboarding_redesign_tou_title">Emopñepyrũ kundahára Android oikóva</string>
+  <!-- Terms of use (ToU) first subheader. -->
+  <string name="onboarding_redesign_tou_subheader_one">Emyanyhẽ tenda pya’eterei</string>
+  <!-- Terms of use (ToU) second subheader. -->
+  <string name="onboarding_redesign_tou_subheader_two">Tapykuehoha ñemo’ã ijeheguíva</string>
+  <!-- Terms of use (ToU) third subheader. -->
+  <string name="onboarding_redesign_tou_subheader_three">Hetaiterei ñemboheraitepyre</string>
+  <!--
+    Terms of use (ToU) first body text. %1$s is replaced by an active link,
+    using onboarding_redesign_tou_body_one_link_text as text (“Firefox Terms of Use”).
+  -->
+  <string name="onboarding_redesign_tou_body_one">Eku’ejeývo, emoneĩma umi %1$s.</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
+  <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">Firefox jeporukuaa rape</string>
+  <!--
+    Terms of use (ToU) second body text. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link, using onboarding_redesign_tou_body_two_link_text as text (“Privacy Notice”).
+  -->
+  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox ojepy’apy nde rekoñemíre. Emoñe’ẽve ore %1$s rupi.</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
+  <string name="onboarding_redesign_tou_body_two_link_text">Marandu’i ñemigua</string>
+  <!--
+    Terms of use (ToU) third body text. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link using onboarding_redesign_tou_body_three_link_text as text (“Manage Settings”).
+  -->
+  <string name="onboarding_redesign_tou_body_three" tools:ignore="BrandUsage">Oiko porãve hag̃ua kundahára, Firefox omondo mba’ekuaarã techapy ha ñomongetakue Mozilla-pe. %1$s</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_three. -->
+  <string name="onboarding_redesign_tou_body_three_link_text">Eñangareko ñembohekóre</string>
+  <!-- Terms of use (ToU) onboarding page continue button label. -->
+  <string name="onboarding_redesign_tou_agree_and_continue_button_label">Eku’ejey</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Orepytyvõ Firefox oiko porãve hag̃ua</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -972,6 +1027,12 @@
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Omoheñóiva @heyheymomodraws</string>
+  <!-- Title for the "Cuddling" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
+  <string name="alternative_app_icon_option_cuddling">Guapyñeno</string>
+  <!-- Title for the "Flaming" themed alternative app icon variant in the icon picker screen. The app icon features a fiery design, with the Firefox logo surrounded by flames for a bold, energetic look. -->
+  <string name="alternative_app_icon_option_flaming">Tatarendýpe</string>
+  <!-- Title for the "Cool" themed alternative app icon variant in the icon picker screen. The app icon uses a warm orange-to-yellow gradient background with a sleek, modern twist on the Firefox logo, giving it a fresh and stylish appearance. -->
+  <string name="alternative_app_icon_option_cool">Ho’ysãvy</string>
   <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
   <string name="alternative_app_icon_group_solid_colors">Sa’y ipeteĩva</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
@@ -982,8 +1043,12 @@
   <string name="restart_warning_dialog_title">¿Emoambue tembiporu’i ra’ãnga’i?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Ta’ãnga’i moambue oikotevẽ tembiporu’i ñepyrũjeýre.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">Tembiporu’i oñembotykuaa. Epoko ta’ãnga’i vera embojurujajey hag̃ua %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Eñepyrũjey ko’ág̃a</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">Emoambue ta’ãnga’i</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Heja</string>
   <!--
@@ -1386,8 +1451,16 @@
   <string name="tab_tray_menu_item_close">Emboty opaite tendayke</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Techaukaha</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Emongurusu tendayke poravopyre</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Mboty</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Emboty tendayke poravopyre</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">Moherakuã</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">Embojuaju ñembyatyhápe</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">Emoherakuã tendayke mbosa’ypyre</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1606,6 +1679,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Eipytyvõ %1$s iporãve hag̃ua opavavépe g̃uarã. Mozilla mba’apoharakuéra oiporu marandu emondóva oñemyatyrõ hag̃ua apañuái ñanduti rendapegua.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Ne marandu’i orepytyvõ roikumby ha romyatyrõ hag̃ua apañuái %1$s-pegua jeiko porãve rekávo.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Ne marandu’i orepytyvõ roikumby ha romyatyrõvo apañuái %1$s-pegua jeiko porãve rekávo. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Eikuaave</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1624,6 +1699,8 @@
   <string name="webcompat_reporter_label_description">Emoha’ãnga apañuái (eipotárõ)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Emondove marandu</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">Embojuajuve marandu</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Heja</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1731,6 +1808,8 @@
   <string name="bookmark_menu_delete_button">Mboguete</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Ñongatu</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">Mohendapy jeporavorã</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Emoĩporã tapicha mba’etee rupive</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1801,6 +1880,8 @@
   <string name="bookmark_search_button_content_description">Eheka techaukahápe</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Poravoha ítem %s peg̃uarã</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">Emboty techaukaha</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Ndaipóri gueteri techaukaha</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -3299,6 +3380,8 @@
   <string name="protection_panel_num_trackers_blocked">Tapykuehoha jokopyre: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Ndojejuhúi tapykuehoha</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">Jehapykuehoita ndojejokói</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Ñemigua ha tekorosãrã ñemboheko</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
@@ -3331,6 +3414,8 @@
   <string name="connection_security_panel_secure">Jeikekatu</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Jeikekatu’ỹ</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">Ko kuatiarogue oñeñongatu ne mba’e’okápe</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.

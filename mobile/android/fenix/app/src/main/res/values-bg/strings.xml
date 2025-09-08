@@ -554,7 +554,7 @@
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">Управление</string>
   <!-- Terms of use (ToU) onboarding redesign title. -->
-  <string name="onboarding_redesign_tou_title">Стартирайте най-добрия браузър за Android</string>
+  <string name="onboarding_redesign_tou_title">Стартиране на най-добрия браузър за Android</string>
   <!-- Terms of use (ToU) first subheader. -->
   <string name="onboarding_redesign_tou_subheader_one">Зареждане на сайтове светкавично</string>
   <!-- Terms of use (ToU) second subheader. -->
@@ -581,7 +581,7 @@
   -->
   <string name="onboarding_redesign_tou_body_three" tools:ignore="BrandUsage">С цел подобряване на четеца, Firefox изпраща диагностични данни и данни за взаимодействието с потребителя към Mozilla. %1$s</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_three. -->
-  <string name="onboarding_redesign_tou_body_three_link_text">Настройки</string>
+  <string name="onboarding_redesign_tou_body_three_link_text">Управление на настройките</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Продължаване</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
