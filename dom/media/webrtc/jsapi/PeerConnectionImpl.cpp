@@ -3623,14 +3623,26 @@ void PeerConnectionImpl::UpdateDefaultCandidate(
 }
 
 RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetDataChannelStats(
-    const RefPtr<DataChannelConnection>& aDataChannelConnection,
     const DOMHighResTimeStamp aTimestamp) {
-  UniquePtr<dom::RTCStatsCollection> report(new dom::RTCStatsCollection);
-  if (aDataChannelConnection) {
-    aDataChannelConnection->AppendStatsToReport(report, aTimestamp);
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mDataConnection) {
+    return mDataConnection->GetStats(aTimestamp)
+        ->Then(GetMainThreadSerialEventTarget(), __func__,
+               [](DataChannelConnection::StatsPromise::ResolveOrRejectValue&&
+                      aResult) {
+                 UniquePtr<dom::RTCStatsCollection> report(
+                     new dom::RTCStatsCollection);
+                 if (aResult.IsResolve()) {
+                   if (!report->mDataChannelStats.AppendElements(
+                           aResult.ResolveValue(), fallible)) {
+                     mozalloc_handle_oom(0);
+                   }
+                 }
+                 return RTCStatsPromise::CreateAndResolve(std::move(report),
+                                                          __func__);
+               });
   }
-  return RTCStatsPromise::CreateAndResolve(std::move(report), __func__);
-  ;
+  return nullptr;
 }
 
 void PeerConnectionImpl::CollectConduitTelemetryData() {
@@ -3840,7 +3852,9 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
     promises.AppendElement(mTransportHandler->GetIceStats(transportId, now));
   }
 
-  promises.AppendElement(GetDataChannelStats(mDataConnection, now));
+  if (mDataConnection) {
+    promises.AppendElement(GetDataChannelStats(now));
+  }
 
   auto pcStatsCollection = MakeUnique<dom::RTCStatsCollection>();
   RTCPeerConnectionStats pcStats;

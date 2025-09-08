@@ -26,7 +26,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/RTCDataChannel.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
-#include "mozilla/dom/RTCStatsReportBinding.h"
 #ifdef MOZ_PEERCONNECTION
 #  include "transport/runnable_utils.h"
 #  include "jsapi/MediaTransportHandler.h"
@@ -188,27 +187,46 @@ double DataChannelConnection::GetMaxMessageSize() {
   return std::numeric_limits<double>::infinity();
 }
 
-void DataChannelConnection::AppendStatsToReport(
-    const UniquePtr<dom::RTCStatsCollection>& aReport,
+RefPtr<DataChannelConnection::StatsPromise> DataChannelConnection::GetStats(
     const DOMHighResTimeStamp aTimestamp) const {
   MOZ_ASSERT(NS_IsMainThread());
+  nsTArray<RefPtr<DataChannelStatsPromise>> statsPromises;
   for (const RefPtr<DataChannel>& chan : mChannels.GetAll()) {
-    // If channel is empty, ignore
-    if (!chan) {
-      continue;
+    if (chan) {
+      RefPtr<DataChannelStatsPromise> statsPromise(chan->GetStats(aTimestamp));
+      if (statsPromise) {
+        statsPromises.AppendElement(std::move(statsPromise));
+      }
     }
-    chan->AppendStatsToReport(aReport, aTimestamp);
   }
+
+  return DataChannelStatsPromise::All(GetMainThreadSerialEventTarget(),
+                                      statsPromises);
 }
 
-void DataChannel::AppendStatsToReport(
-    const UniquePtr<dom::RTCStatsCollection>& aReport,
-    const DOMHighResTimeStamp aTimestamp) const {
-  // TODO(bug 1209163): Once this can be on a worker, we'll need to dispatch
-  // here. There will be a MozPromise API here.
-  if (mDomDataChannel) {
-    mDomDataChannel->AppendStatsToReport(aReport, aTimestamp);
+RefPtr<DataChannelStatsPromise> DataChannel::GetStats(
+    const DOMHighResTimeStamp aTimestamp) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mDomEventTarget) {
+    // TODO: This probably should never happen. Maybe there could be a period
+    // between the start of a transfer, and the creation of the worker thread?
+    // In that case, we'd need to chain off of a promise that resolves when the
+    // event target becomes known.
+    return nullptr;
   }
+
+  return InvokeAsync(mDomEventTarget, __func__,
+                     [this, self = RefPtr<DataChannel>(this), aTimestamp] {
+                       if (!mDomDataChannel) {
+                         // Empty stats object, I guess... too late to
+                         // return a nullptr and rejecting will trash stats
+                         // promises for all other datachannels.
+                         return DataChannelStatsPromise::CreateAndResolve(
+                             dom::RTCDataChannelStats(), __func__);
+                       }
+                       return DataChannelStatsPromise::CreateAndResolve(
+                           mDomDataChannel->GetStats(aTimestamp), __func__);
+                     });
 }
 
 bool DataChannelConnection::ConnectToTransport(const std::string& aTransportId,
