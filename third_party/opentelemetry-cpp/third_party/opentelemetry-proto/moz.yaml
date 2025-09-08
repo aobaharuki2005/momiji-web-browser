@@ -1,0 +1,33 @@
+schema: 1
+
+bugzilla:
+  product: "Firefox"
+  component: "Toolkit: Gecko Trace"
+
+origin:
+  name: opentelemetry-proto
+  description: OpenTelemetry protocol (OTLP) specification and Protobuf definitions
+  url: https://opentelemetry.io/docs/specs/otlp/
+
+  release: identifier
+  revision: sha
+
+  license: Apache-2.0
+  license-file: LICENSE
+
+vendoring:
+  url: https://github.com/open-telemetry/opentelemetry-proto
+  source-hosting: github
+  tracking: tag
+
+  exclude:
+   - "**"
+
+  include:
+   - CHANGELOG.md
+   - LICENSE
+   - README.md
+   - opentelemetry/proto/collector/trace/v1/trace_service.proto
+   - opentelemetry/proto/common/v1/common.proto
+   - opentelemetry/proto/resource/v1/resource.proto
+   - opentelemetry/proto/trace/v1/trace.proto

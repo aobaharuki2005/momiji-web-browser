@@ -61,6 +61,7 @@ vendoring:
 
   keep:
    - opentelemetry-config.mozbuild
+   - third_party/
 
   patches:
    - patches/fix-ambiguous-holds_alternative.patch # Maybe we should upstream this
