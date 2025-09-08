@@ -346,7 +346,7 @@ void RTCDataChannel::GracefulClose() {
         if (mReadyState != RTCDataChannelState::Closing &&
             mReadyState != RTCDataChannelState::Closed) {
           SetReadyState(RTCDataChannelState::Closing);
-          // TODO(bug 1611953): Fire event
+          OnSimpleEvent(u"closing"_ns);
         }
 
         // Run the following steps in parallel:
