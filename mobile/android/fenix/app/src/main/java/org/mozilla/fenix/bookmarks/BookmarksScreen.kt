@@ -75,6 +75,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -598,6 +599,8 @@ private fun BookmarksListTopBar(
                     } else {
                         folderTitle
                     },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             },
             navigationIcon = {
@@ -1703,7 +1706,7 @@ private fun BookmarksScreenPreview() {
                 recursiveSelectedCount = null,
                 currentFolder = BookmarkItem.Folder(
                     guid = BookmarkRoot.Mobile.id,
-                    title = "Bookmarks",
+                    title = "Bookmarks with really really really really really really long name",
                     position = null,
                 ),
                 isSignedIntoSync = false,
