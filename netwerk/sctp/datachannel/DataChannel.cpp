@@ -815,7 +815,7 @@ void DataChannelConnection::OnStreamsReset(std::vector<uint16_t>&& aStreams) {
 
       DC_DEBUG(("Disconnected DataChannel %p from connection %p",
                 (void*)channel, this));
-      FinishClose_s(channel);
+      channel->GracefulClose();
     } else {
       DC_WARN(("Connection %p: Can't find incoming stream %u", this, stream));
     }
@@ -1423,6 +1423,20 @@ void DataChannel::AnnounceClosed() {
                   connection->mListener->NotifyDataChannelClosed(this);
                 }
               }));
+        }
+      }));
+}
+
+void DataChannel::GracefulClose() {
+  DC_INFO(
+      ("DataChannel transport is closing. Queueing GracefulClose call to "
+       "RTCDataChannel."));
+
+  mDomEventTarget->Dispatch(NS_NewRunnableFunction(
+      "DataChannel::GracefulClose", [this, self = RefPtr<DataChannel>(this)] {
+        if (mDomDataChannel) {
+          DC_INFO(("Calling GracefulClose on RTCDataChannel."));
+          mDomDataChannel->GracefulClose();
         }
       }));
 }

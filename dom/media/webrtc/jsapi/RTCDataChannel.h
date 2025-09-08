@@ -57,6 +57,7 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   void SetBufferedAmountLowThreshold(size_t aThreshold);
   IMPL_EVENT_HANDLER(open)
   IMPL_EVENT_HANDLER(error)
+  IMPL_EVENT_HANDLER(closing)
   IMPL_EVENT_HANDLER(close)
   void Close();
   IMPL_EVENT_HANDLER(message)
@@ -80,6 +81,7 @@ class RTCDataChannel final : public DOMEventTargetHelper {
 
   void AnnounceOpen();
   void AnnounceClosed();
+  void GracefulClose();
 
   void DecrementBufferedAmount(size_t aSize);
 
@@ -100,7 +102,6 @@ class RTCDataChannel final : public DOMEventTargetHelper {
   // (and possibly collected).
   void DontKeepAliveAnyMore();
 
-  void GracefulClose();
   void IncrementBufferedAmount(size_t aSize);
   bool CheckReadyState(ErrorResult& aRv);
   bool CheckSendSize(uint64_t aSize, ErrorResult& aRv) const;

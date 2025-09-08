@@ -412,6 +412,7 @@ class DataChannel {
   void DecrementBufferedAmount(size_t aSize);
   void AnnounceOpen();
   void AnnounceClosed();
+  void GracefulClose();
 
   Maybe<uint16_t> GetStream() const {
     MOZ_ASSERT(NS_IsMainThread());

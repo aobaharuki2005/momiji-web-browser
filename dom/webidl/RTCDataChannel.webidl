@@ -29,6 +29,7 @@ interface RTCDataChannel : EventTarget
   attribute unsigned long bufferedAmountLowThreshold;
   attribute EventHandler onopen;
   attribute EventHandler onerror;
+  attribute EventHandler onclosing;
   attribute EventHandler onclose;
   undefined close();
   attribute EventHandler onmessage;
