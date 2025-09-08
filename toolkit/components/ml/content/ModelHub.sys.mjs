@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Progress: "chrome://global/content/ml/Utils.sys.mjs",
   OPFS: "chrome://global/content/ml/OPFS.sys.mjs",
   URLChecker: "chrome://global/content/ml/Utils.sys.mjs",
+  RejectionType: "chrome://global/content/ml/Utils.sys.mjs",
   createFileUrl: "chrome://global/content/ml/Utils.sys.mjs",
   DEFAULT_ENGINE_ID: "chrome://global/content/ml/EngineProcess.sys.mjs",
   FILE_REGEX: "chrome://global/content/ml/EngineProcess.sys.mjs",
@@ -1387,6 +1388,13 @@ export class ModelHub {
     this.reset = reset;
   }
 
+  allowedURL(url) {
+    if (this.allowDenyList === null) {
+      return { allowed: true, rejectionType: lazy.RejectionType.NONE };
+    }
+    return this.allowDenyList.allowedURL(url);
+  }
+
   async #initCache() {
     if (this.cache) {
       return;
@@ -1395,7 +1403,7 @@ export class ModelHub {
   }
 
   async #fetch(url, options) {
-    const result = this.allowDenyList && this.allowDenyList.allowedURL(url);
+    const result = this.allowedURL(url);
     if (result && !result.allowed) {
       throw new ForbiddenURLError(url, result.rejectionType);
     }
@@ -1852,7 +1860,7 @@ export class ModelHub {
 
     let useCached;
     const chromeFile = url.startsWith("chrome://");
-    const fileAllowed = this.allowDenyList?.allowedURL(url);
+    const fileAllowed = this.allowedURL(url);
     let cachedHeaders = null;
 
     // If the revision is `main` we want to check the ETag in the hub
