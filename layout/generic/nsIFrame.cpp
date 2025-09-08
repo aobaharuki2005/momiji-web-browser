@@ -8733,14 +8733,6 @@ nsIFrame* nsIFrame::GetContainingBlock(
   return f;
 }
 
-nsIFrame* nsIFrame::FindAnchorPosAnchor(const nsAtom* aAnchorSpec) const {
-  if (!StyleDisplay()->IsAbsolutelyPositionedStyle()) {
-    return nullptr;
-  }
-
-  return PresShell()->GetAnchorPosAnchor(aAnchorSpec, this);
-}
-
 #ifdef DEBUG_FRAME_DUMP
 
 Maybe<uint32_t> nsIFrame::ContentIndexInContainer(const nsIFrame* aFrame) {
