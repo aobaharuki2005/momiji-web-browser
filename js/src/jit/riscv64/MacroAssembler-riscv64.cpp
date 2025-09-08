@@ -4820,14 +4820,14 @@ bool MacroAssemblerRiscv64::BranchShortCheck(int32_t offset, Label* L,
 
 void MacroAssemblerRiscv64::BranchShort(Label* L) { BranchShortHelper(0, L); }
 
-void MacroAssemblerRiscv64::BranchShort(int32_t offset, Condition cond,
+bool MacroAssemblerRiscv64::BranchShort(int32_t offset, Condition cond,
                                         Register rs, const Operand& rt) {
-  BranchShortCheck(offset, nullptr, cond, rs, rt);
+  return BranchShortCheck(offset, nullptr, cond, rs, rt);
 }
 
-void MacroAssemblerRiscv64::BranchShort(Label* L, Condition cond, Register rs,
+bool MacroAssemblerRiscv64::BranchShort(Label* L, Condition cond, Register rs,
                                         const Operand& rt) {
-  BranchShortCheck(0, L, cond, rs, rt);
+  return BranchShortCheck(0, L, cond, rs, rt);
 }
 
 void MacroAssemblerRiscv64::BranchLong(Label* L) {
@@ -4857,7 +4857,7 @@ void MacroAssemblerRiscv64::ma_branch(Label* L, Condition cond, Register rs,
     if (cond != Always) {
       Label skip;
       Condition neg_cond = InvertCondition(cond);
-      BranchShort(&skip, neg_cond, rs, rt);
+      (void)BranchShort(&skip, neg_cond, rs, rt);  // Guaranteed to be short.
       BranchLong(L);
       bind(&skip);
     } else {
@@ -4869,7 +4869,7 @@ void MacroAssemblerRiscv64::ma_branch(Label* L, Condition cond, Register rs,
       if (cond != Always) {
         Label skip;
         Condition neg_cond = InvertCondition(cond);
-        BranchShort(&skip, neg_cond, rs, rt);
+        (void)BranchShort(&skip, neg_cond, rs, rt);  // Guaranteed to be short.
         BranchLong(L);
         bind(&skip);
       } else {
@@ -4877,7 +4877,9 @@ void MacroAssemblerRiscv64::ma_branch(Label* L, Condition cond, Register rs,
         EmitConstPoolWithJumpIfNeeded();
       }
     } else {
-      BranchShort(L, cond, rs, rt);
+      if (!BranchShort(L, cond, rs, rt)) {
+        ma_branch(L, cond, rs, rt, LongJump);
+      }
     }
   }
 }

@@ -375,9 +375,10 @@ class MacroAssemblerRiscv64 : public Assembler {
 
   void BranchShort(Label* L);
 
-  void BranchShort(int32_t offset, Condition cond, Register rs,
-                   const Operand& rt);
-  void BranchShort(Label* L, Condition cond, Register rs, const Operand& rt);
+  [[nodiscard]] bool BranchShort(int32_t offset, Condition cond, Register rs,
+                                 const Operand& rt);
+  [[nodiscard]] bool BranchShort(Label* L, Condition cond, Register rs,
+                                 const Operand& rt);
   void BranchShortHelper(int32_t offset, Label* L);
   bool BranchShortHelper(int32_t offset, Label* L, Condition cond, Register rs,
                          const Operand& rt);
