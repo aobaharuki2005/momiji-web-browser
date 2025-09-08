@@ -2143,7 +2143,7 @@
     <!-- Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
     <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Are you sure you want to turn off fixes?</string>
     <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
-    <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">This setting helps fix the most common site problems. If you turn it off, some sites may not work, and %1$s won\'t be able to help troubleshoot those issues.</string>
+    <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">This setting helps fix the most common site problems. If you turn it off, some sites may not work, and %1$s won\’t be able to help troubleshoot those issues.</string>
     <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
     <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Turn fixes off</string>
     <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
