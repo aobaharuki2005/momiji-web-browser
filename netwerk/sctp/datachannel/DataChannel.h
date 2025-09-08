@@ -15,6 +15,7 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/StopGapEventTarget.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
@@ -395,12 +396,35 @@ class DataChannel {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannel)
 
-  // Complete dropping of the link between DataChannel and the connection.
-  // After this, except for a few methods below listed to be safe, you can't
-  // call into DataChannel.
-  void ReleaseConnection();
+  // The transfer dance here is somewhat complex because we can be dispatching
+  // events while the transfer is in progress, and even before we know whether a
+  // transfer might occur.
+  //
+  // Called when the mainthread RTCDataChannel is created
+  void SetMainthreadDomDataChannel(dom::RTCDataChannel* aChannel);
 
-  void SetDomDataChannel(dom::RTCDataChannel* aChannel);
+  // Called when the mainthread RTCDataChannel has started the transfer steps.
+  // This is important, because it means that certain updates (particularly
+  // things like stream id and max message size) that are ordinarily set
+  // synchronously should now be dispatched.
+  void OnWorkerTransferStarted();
+
+  // Called when the worker thread RTCDataChannel is created. This is where we
+  // learn about the worker thread, and we can start dispatching events to it.
+  void OnWorkerTransferComplete(dom::RTCDataChannel* aChannel);
+
+  // Called when the window of opportunity to start a transfer has closed. This
+  // is where we know that main is our event target, and we can start
+  // dispatching events to it.
+  void OnWorkerTransferDisabled();
+
+  // Unsets our (weak) ref to the mainthread RTCDataChannel. If we *also* have a
+  // worker-thread RTCDataChannel, we must notify it about this, because it
+  // means that there's one less reason for it to keep a self-ref.
+  void UnsetMainthreadDomDataChannel();
+
+  // Unsets our (weak) ref to a worker thread RTCDataChannel, if one exists.
+  void UnsetWorkerDomDataChannel();
 
   // Helper for send methods that converts POSIX error codes to an ErrorResult.
   static void SendErrnoToErrorResult(int error, size_t aMessageSize,
@@ -429,6 +453,8 @@ class DataChannel {
   }
 
   void SetStream(uint16_t aId);
+  void SetMaxMessageSize(double aMaxMessageSize);
+  double GetMaxMessageSize() const { return mConnection->GetMaxMessageSize(); }
 
   void OnMessageReceived(nsCString&& aMsg, bool aIsBinary);
 
@@ -436,6 +462,14 @@ class DataChannel {
       const DOMHighResTimeStamp aTimestamp);
 
   void FinishClose();
+
+  dom::RTCDataChannel* GetDomDataChannel() const {
+    MOZ_ASSERT(mDomEventTarget->IsOnCurrentThread());
+    if (NS_IsMainThread()) {
+      return mMainthreadDomDataChannel;
+    }
+    return mWorkerDomDataChannel;
+  }
 
  private:
   nsresult AddDataToBinaryMsg(const char* data, uint32_t size);
@@ -451,8 +485,8 @@ class DataChannel {
   // worker only instead; wherever the RTCDataChannel lives. Once this can be
   // on a worker thread, we'll need a ref to that thread for state updates and
   // such. This will be nulled out when the RTCDataChannel tears down.
-  // TODO(bug 1209163): Some of these will probably end up being DOM thread only
-  dom::RTCDataChannel* mDomDataChannel = nullptr;
+  dom::RTCDataChannel* mMainthreadDomDataChannel = nullptr;
+  bool mHasWorkerDomDataChannel = false;
   bool mEverOpened = false;
   uint16_t mStream;
   RefPtr<DataChannelConnection> mConnection;
@@ -464,8 +498,18 @@ class DataChannel {
   nsTArray<OutgoingMsg> mBufferedData;
   std::map<uint16_t, IncomingMsg> mRecvBuffers;
 
-  // Right now is always main, but will eventually allow for worker threads.
-  nsCOMPtr<nsISerialEventTarget> mDomEventTarget;
+  // At first, this is not hooked to any real event target, and just buffers
+  // events. Later on, when we know what event target we should use, we hook it
+  // in here, this dispatches the buffered events, and then acts as a
+  // passthrough.
+  const RefPtr<StopGapEventTarget> mDomEventTarget;
+
+  // Worker thread only. We keep this separately because the spec requires it to
+  // have a strong ref (from the worker global scope) as long as the *original*
+  // mainthread RTCDataChannel is still alive. When the mainthread
+  // RTCDataChannel goes away, we will notice, and then let the worker
+  // RTCDataChannel know about it.
+  dom::RTCDataChannel* mWorkerDomDataChannel = nullptr;
 };
 
 static constexpr const char* ToString(DataChannelConnectionState state) {
