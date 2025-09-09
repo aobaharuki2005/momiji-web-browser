@@ -3734,7 +3734,7 @@
   <!-- The title of the sign-in task for the setup checklist -->
   <string name="setup_checklist_task_account_sync">Влезте в профила си</string>
   <!-- The title of the theme selection task for the setup checklist -->
-  <string name="setup_checklist_task_theme_selection">Изберете тема</string>
+  <string name="setup_checklist_task_theme_selection">Избор на тема</string>
   <!-- The title of the toolbar selection task for the setup checklist -->
   <string name="setup_checklist_task_toolbar_selection">Изберете разположение на лентата с инструменти</string>
   <!-- The title of the explore extensions task for the setup checklist -->
