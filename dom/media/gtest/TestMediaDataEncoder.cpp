@@ -274,9 +274,33 @@ static Result<MediaDataEncoder::EncodedData, MediaResult> Encode(
   MediaDataEncoder::EncodedData output;
   for (size_t i = 0; i < aNumFrames; i++) {
     RefPtr<MediaData> frame = aSource.GetFrame(i);
-    output.AppendElements(MOZ_TRY(
-        WaitFor(aEncoder->Encode(frame))));
+    output.AppendElements(MOZ_TRY(WaitFor(aEncoder->Encode(frame))));
   }
+  output.AppendElements(std::move(MOZ_TRY(Drain(aEncoder))));
+  return output;
+}
+
+static Result<MediaDataEncoder::EncodedData, MediaResult> EncodeBatch(
+    const RefPtr<MediaDataEncoder>& aEncoder, const size_t aTotalNumFrames,
+    MediaDataEncoderTest::FrameSource& aSource, const size_t aBatchSize) {
+  if (aBatchSize == 0 || aTotalNumFrames == 0) {
+    return Err(MediaResult(
+        NS_ERROR_INVALID_ARG,
+        "Batch size and total number of frames must be greater than 0"));
+  }
+
+  MediaDataEncoder::EncodedData output;
+  nsTArray<RefPtr<MediaData>> frames;
+  for (size_t i = 0; i < aTotalNumFrames; i++) {
+    frames.AppendElement(aSource.GetFrame(i));
+    if (frames.Length() == aBatchSize || i == aTotalNumFrames - 1) {
+      nsTArray<RefPtr<MediaData>> batch = std::move(frames);
+      output.AppendElements(
+          MOZ_TRY(WaitFor(aEncoder->Encode(std::move(batch)))));
+    }
+  }
+  MOZ_RELEASE_ASSERT(frames.IsEmpty());
+
   output.AppendElements(std::move(MOZ_TRY(Drain(aEncoder))));
   return output;
 }
@@ -443,6 +467,90 @@ TEST_F(MediaDataEncoderTest, H264Encodes4KAVCCRecord) {
 TEST_F(MediaDataEncoderTest, H264Encodes4KAVCCRealtime) {
   SKIP_IF_ANDROID_SW();  // Android SW can't encode 4K.
   H264EncodesTest(Usage::Realtime, AsVariant(kH264SpecificAVCC), mData4K);
+}
+
+static void H264EncodeBatchTest(
+    Usage aUsage, const EncoderConfig::CodecSpecific& aSpecific,
+    MediaDataEncoderTest::FrameSource& aFrameSource) {
+  ASSERT_TRUE(aSpecific.is<H264Specific>());
+  ASSERT_TRUE(aSpecific.as<H264Specific>().mFormat ==
+                  H264BitStreamFormat::ANNEXB ||
+              aSpecific.as<H264Specific>().mFormat == H264BitStreamFormat::AVC);
+
+  RUN_IF_SUPPORTED(CodecType::H264, [&]() {
+    bool isAVCC =
+        aSpecific.as<H264Specific>().mFormat == H264BitStreamFormat::AVC;
+
+    RefPtr<MediaDataEncoder> e = CreateH264Encoder(
+        aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
+        aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
+    EnsureInit(e);
+
+    constexpr size_t batchSize = 6;
+    MediaDataEncoder::EncodedData output = GET_OR_RETURN_ON_ERROR(
+        EncodeBatch(e, NUM_FRAMES, aFrameSource, batchSize));
+    if (aUsage == Usage::Realtime && kImageSize4K <= aFrameSource.GetSize()) {
+      // Realtime encoding may drop frames for large frame sizes.
+      EXPECT_LE(output.Length(), NUM_FRAMES);
+    } else {
+      EXPECT_EQ(output.Length(), NUM_FRAMES);
+    }
+    if (isAVCC) {
+      uint8_t naluSize = GetNALUSize(output[0]).unwrapOr(0);
+      EXPECT_GT(naluSize, 0);
+      EXPECT_LE(naluSize, 4);
+      for (auto frame : output) {
+        if (frame->mExtraData && !frame->mExtraData->IsEmpty()) {
+          naluSize = GetNALUSize(frame).unwrapOr(0);
+          EXPECT_GT(naluSize, 0);
+          EXPECT_LE(naluSize, 4);
+        }
+        EXPECT_TRUE(IsValidAVCC(frame, naluSize).isOk());
+      }
+    } else {
+      for (auto frame : output) {
+        EXPECT_TRUE(AnnexB::IsAnnexB(frame));
+      }
+    }
+
+    WaitForShutdown(e);
+  });
+};
+
+TEST_F(MediaDataEncoderTest, H264EncodeBatchAnnexBRecord) {
+  H264EncodeBatchTest(Usage::Record, AsVariant(kH264SpecificAnnexB), mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeBatchAnnexBRealtime) {
+  H264EncodeBatchTest(Usage::Realtime, AsVariant(kH264SpecificAnnexB), mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeBatchAVCCRecord) {
+  H264EncodeBatchTest(Usage::Record, AsVariant(kH264SpecificAVCC), mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeBatchAVCCRealtime) {
+  H264EncodeBatchTest(Usage::Realtime, AsVariant(kH264SpecificAVCC), mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeBatch4KAnnexBRecord) {
+  SKIP_IF_ANDROID_SW();  // Android SW can't encode 4K.
+  H264EncodeBatchTest(Usage::Record, AsVariant(kH264SpecificAnnexB), mData4K);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeBatch4KAnnexBRealtime) {
+  SKIP_IF_ANDROID_SW();  // Android SW can't encode 4K.
+  H264EncodeBatchTest(Usage::Realtime, AsVariant(kH264SpecificAnnexB), mData4K);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeBatch4KAVCCRecord) {
+  SKIP_IF_ANDROID_SW();  // Android SW can't encode 4K.
+  H264EncodeBatchTest(Usage::Record, AsVariant(kH264SpecificAVCC), mData4K);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeBatch4KAVCCRealtime) {
+  SKIP_IF_ANDROID_SW();  // Android SW can't encode 4K.
+  H264EncodeBatchTest(Usage::Realtime, AsVariant(kH264SpecificAVCC), mData4K);
 }
 
 #if !defined(ANDROID)
