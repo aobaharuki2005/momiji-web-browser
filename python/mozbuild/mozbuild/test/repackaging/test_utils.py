@@ -386,7 +386,7 @@ ZH_TW_FTL = """\
 # The entry name is the label on the desktop icon, among other things.
 desktop-entry-name = { -brand-shortcut-name }
 # The comment usually appears as a tooltip when hovering over application menu entry.
-desktop-entry-comment = 瀏覽全球資訊網
+desktop-entry-comment-1 = 瀏覽全球資訊網
 desktop-entry-generic-name = 網頁瀏覽器
 # Keywords are search terms used to find this application.
 # The string is a list of keywords separated by semicolons:
@@ -416,14 +416,14 @@ StartupNotify=true
 Actions=new-window;new-private-window;open-profile-manager;
 Name=en-US-desktop-entry-name
 Name[zh_TW]=zh-TW-desktop-entry-name
-Comment=en-US-desktop-entry-comment
-Comment[zh_TW]=zh-TW-desktop-entry-comment
+Comment=en-US-desktop-entry-comment-1
+Comment[zh_TW]=zh-TW-desktop-entry-comment-1
 GenericName=en-US-desktop-entry-generic-name
 GenericName[zh_TW]=zh-TW-desktop-entry-generic-name
 Keywords=en-US-desktop-entry-keywords
 Keywords[zh_TW]=zh-TW-desktop-entry-keywords
-X-GNOME-FullName=en-US-desktop-entry-x-gnome-full-name
-X-GNOME-FullName[zh_TW]=zh-TW-desktop-entry-x-gnome-full-name
+X-GNOME-FullName=en-US-desktop-entry-x-gnome-full-name-1
+X-GNOME-FullName[zh_TW]=zh-TW-desktop-entry-x-gnome-full-name-1
 
 [Desktop Action new-window]
 Exec=firefox-nightly --new-window %u
@@ -456,14 +456,14 @@ StartupNotify=true
 Actions=new-window;new-private-window;open-profile-manager;
 Name=en-US-desktop-entry-name
 Name[zh_TW]=zh-TW-desktop-entry-name
-Comment=en-US-desktop-entry-comment
-Comment[zh_TW]=zh-TW-desktop-entry-comment
+Comment=en-US-desktop-entry-comment-1
+Comment[zh_TW]=zh-TW-desktop-entry-comment-1
 GenericName=en-US-desktop-entry-generic-name
 GenericName[zh_TW]=zh-TW-desktop-entry-generic-name
 Keywords=en-US-desktop-entry-keywords
 Keywords[zh_TW]=zh-TW-desktop-entry-keywords
-X-GNOME-FullName=en-US-desktop-entry-x-gnome-full-name
-X-GNOME-FullName[zh_TW]=zh-TW-desktop-entry-x-gnome-full-name
+X-GNOME-FullName=en-US-desktop-entry-x-gnome-full-name-1
+X-GNOME-FullName[zh_TW]=zh-TW-desktop-entry-x-gnome-full-name-1
 
 [Desktop Action new-window]
 Exec=firefox-devedition --new-window %u
