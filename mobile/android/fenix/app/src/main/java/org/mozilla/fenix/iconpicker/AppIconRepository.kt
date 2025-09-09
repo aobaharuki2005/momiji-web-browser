@@ -64,6 +64,7 @@ class DefaultAppIconRepository(
                 AppIcon.AppRetro2004,
                 AppIcon.AppPixelated,
                 AppIcon.AppPride,
+                AppIcon.AppFlaming,
                 AppIcon.AppMinimal,
                 AppIcon.AppMomo,
                 AppIcon.AppCool,

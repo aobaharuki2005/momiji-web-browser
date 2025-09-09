@@ -132,9 +132,6 @@ enum class AppIcon(
         iconForegroundId = R.drawable.ic_pride,
         titleId = R.string.alternative_app_icon_option_pride,
     ),
-
-    // This one needs some more UX team magic before it is ready to be enabled.
-    // Progress tracked in https://bugzilla.mozilla.org/show_bug.cgi?id=1986526
     AppFlaming(
         aliasSuffix = "AppFlaming",
         iconBackground = IconBackground.Color(colorResId = colorsR.color.photonBlack),
