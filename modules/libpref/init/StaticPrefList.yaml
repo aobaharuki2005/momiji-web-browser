@@ -2528,12 +2528,6 @@
   value: true
   mirror: always
 
-# Block sandboxed BrowsingContexts from navigating to external protocols.
-- name: dom.block_external_protocol_navigation_from_sandbox
-  type: bool
-  value: true
-  mirror: always
-
 # Block Insecure downloads from Secure Origins
 - name: dom.block_download_insecure
   type: bool
