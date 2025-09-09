@@ -734,8 +734,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
     EndEntityOrCA endEntityOrCA, const CertID& certID, Time time,
     Duration validityDuration,
     /*optional*/ const Input* stapledOCSPResponse,
-    /*optional*/ const Input* aiaExtension,
-    /*optional*/ const Input* sctExtension) {
+    /*optional*/ const Input* aiaExtension) {
   // Actively distrusted certificates will have already been blocked by
   // GetCertTrust.
 
@@ -767,8 +766,8 @@ Result NSSCertDBTrustDomain::CheckRevocation(
   bool crliteCoversCertificate = false;
   Result crliteResult = Success;
   if (mCRLiteMode != CRLiteMode::Disabled) {
-    crliteResult = CheckRevocationByCRLite(certID, time, sctExtension,
-                                           crliteCoversCertificate);
+    crliteResult =
+        CheckRevocationByCRLite(certID, time, crliteCoversCertificate);
 
     // If CheckCRLite returned an error other than "revoked certificate",
     // propagate that error.
@@ -823,8 +822,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
 }
 
 Result NSSCertDBTrustDomain::CheckRevocationByCRLite(
-    const CertID& certID, Time time, const Input* sctExtension,
-    /*out*/ bool& crliteCoversCertificate) {
+    const CertID& certID, Time time, /*out*/ bool& crliteCoversCertificate) {
   crliteCoversCertificate = false;
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("NSSCertDBTrustDomain::CheckRevocation: checking CRLite"));
@@ -845,20 +843,9 @@ Result NSSCertDBTrustDomain::CheckRevocationByCRLite(
       return rv;
     }
 
-    // Bug 1986802: use GetSCTListFromCertificate() instead of reprocessing
-    // the extension.
-    Input encodedSCTsFromExtension;
-    if (sctExtension) {
-      rv = ExtractSignedCertificateTimestampListFromExtension(
-          *sctExtension, encodedSCTsFromExtension);
-      if (rv != Success) {
-        return rv;
-      }
-    }
-
     Input encodedSCTsFromOCSP;  // empty since we haven't done OCSP yet.
     rv = mCTVerifier->Verify(leafCertificate, certID.issuerSubjectPublicKeyInfo,
-                             encodedSCTsFromExtension, encodedSCTsFromOCSP,
+                             GetSCTListFromCertificate(), encodedSCTsFromOCSP,
                              mEncodedSCTsFromTLS, time, GetDistrustAfterTime(),
                              ctVerifyResult);
     if (rv != Success) {
