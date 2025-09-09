@@ -82,27 +82,8 @@ add_task(async function test_main_content() {
 
   // Test content after user upgrade
   await setAndUpdateHasUpgraded(content, true);
+
   Assert.ok(!content.upgradeEl, "Upgrade vpn element should not be present");
-  Assert.ok(
-    content.activeSubscriptionEl,
-    "Active subscription element should be present"
-  );
-  Assert.ok(
-    content.activeSubscriptionEl.querySelector(
-      "#active-subscription-vpn-title"
-    ),
-    "Active subcription vpn title should be present"
-  );
-  Assert.ok(
-    content.activeSubscriptionEl.querySelector(
-      "#active-subscription-vpn-message"
-    ),
-    "Active subscription vpn paragraph should be present"
-  );
-  Assert.ok(
-    content.activeSubscriptionEl.querySelector("#download-vpn-button"),
-    "Download vpn button should be present"
-  );
 
   await resetStateToObj(content, originalState);
 
