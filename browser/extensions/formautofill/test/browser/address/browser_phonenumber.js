@@ -319,7 +319,7 @@ let forms = [
   // In this test, despite phone-country being in the expression list for
   // tel-country-code, the 'tel' expression overrides it, so we end up with
   // two 'tel' fields. We should probably match 'tel-country-code' before 'tel'.
-  // This issue will be fixed by bug 1914361.
+  // This issue was fixed by bug 1914361.
   {
     description:
       "input field for country and phone, no autocomplete attributes, variant 2",
@@ -330,16 +330,19 @@ let forms = [
                   <input id="phone">
                   </form>`,
     results: {
-      ADDRESS_US_LOCAL: { tel: "6172535702", tel2: "6172535702" },
-      ADDRESS_US_REMOTE: { tel: "030983333000", tel2: "030983333000" },
-      ADDRESS_DE_LOCAL: { tel: "030983333001", tel2: "030983333001" },
-      ADDRESS_DE_REMOTE: { tel: "03334564947391", tel2: "03334564947391" },
+      ADDRESS_US_LOCAL: { "tel-country-code": "+1", tel: "6172535702" },
+      ADDRESS_US_REMOTE: { "tel-country-code": "+49", tel: "030983333000" },
+      ADDRESS_DE_LOCAL: { "tel-country-code": "+49", tel: "030983333001" },
+      ADDRESS_DE_REMOTE: {
+        "tel-country-code": "+49",
+        tel: "03334564947391",
+      },
     },
   },
   // ISSUE 8:
   // In this test, the country-code matches country, and doesn't seem to match
   // tel-country-code at all.
-  // This issue will be fixed by bug 1914361.
+  // This issue was fixed by bug 1914361.
   {
     description:
       "input field for country and phone, no autocomplete attributes, variant 3",
@@ -348,15 +351,32 @@ let forms = [
                   <input id="lastname">
                   <input id="tel-country">
                   <input id="tel">
+                  <input id="country">
                   </form>`,
     results: {
       // ISSUE 9: Unrelated to phone numbers, but it would be expected that
       // "United States" and "Germany" would be filled in here for the country
       // instead of the country abbreviations.
-      ADDRESS_US_LOCAL: { country: "US", tel: "6172535702" },
-      ADDRESS_US_REMOTE: { country: "US", tel: "030983333000" },
-      ADDRESS_DE_LOCAL: { country: "DE", tel: "030983333001" },
-      ADDRESS_DE_REMOTE: { country: "DE", tel: "03334564947391" },
+      ADDRESS_US_LOCAL: {
+        "tel-country-code": "+1",
+        tel: "6172535702",
+        country: "US",
+      },
+      ADDRESS_US_REMOTE: {
+        "tel-country-code": "+49",
+        tel: "030983333000",
+        country: "US",
+      },
+      ADDRESS_DE_LOCAL: {
+        "tel-country-code": "+49",
+        tel: "030983333001",
+        country: "DE",
+      },
+      ADDRESS_DE_REMOTE: {
+        "tel-country-code": "+49",
+        tel: "03334564947391",
+        country: "DE",
+      },
     },
   },
 
@@ -421,25 +441,25 @@ let forms = [
       // The fields here are all matching as type 'tel' and then _parsePhoneFields is
       // modifying them to be specific telephone fields.
       ADDRESS_US_LOCAL: {
-        "tel-country-code": "@+1",
+        "tel-country-code": "+1",
         "tel-area-code": "@617",
         "tel-local-prefix": "@253",
         "tel-local-suffix": "@5702",
       },
       ADDRESS_US_REMOTE: {
-        "tel-country-code": "@+49",
+        "tel-country-code": "+49",
         "tel-area-code": "@",
         "tel-local-prefix": "@",
         "tel-local-suffix": "@",
       },
       ADDRESS_DE_LOCAL: {
-        "tel-country-code": "@+49",
+        "tel-country-code": "+49",
         "tel-area-code": "@",
         "tel-local-prefix": "@",
         "tel-local-suffix": "@",
       },
       ADDRESS_DE_REMOTE: {
-        "tel-country-code": "@+49",
+        "tel-country-code": "+49",
         "tel-area-code": "@",
         "tel-local-prefix": "@",
         "tel-local-suffix": "@",
@@ -461,11 +481,12 @@ let forms = [
     results: {
       // ISSUE 11:
       // Just changing the ids here to include 'tel' rather than 'phone' as in the previous test
-      // makes it so that they don't match any field. This actually applies to any tel field.
-      ADDRESS_US_LOCAL: { country: "US" },
-      ADDRESS_US_REMOTE: { country: "US" },
-      ADDRESS_DE_LOCAL: { country: "DE" },
-      ADDRESS_DE_REMOTE: { country: "DE" },
+      // makes it so that they don't match any field. This actually applies to any tel field, except
+      // tel-country-code which there is a rule to match.
+      ADDRESS_US_LOCAL: { "tel-country-code": "+1" },
+      ADDRESS_US_REMOTE: { "tel-country-code": "+49" },
+      ADDRESS_DE_LOCAL: { "tel-country-code": "+49" },
+      ADDRESS_DE_REMOTE: { "tel-country-code": "+49" },
     },
   },
   {
@@ -484,10 +505,30 @@ let forms = [
       // treated as 'tel' fields, but the values are cropped due to the maxlength
       // attributes.
       // ISSUE 12: why does tel3 have the value "617" and not "61725" as its maxlength is 5?
-      ADDRESS_US_LOCAL: { tel: "617", tel2: "617", tel3: "617", tel4: "617" },
-      ADDRESS_US_REMOTE: { tel: "030", tel2: "030", tel3: "030", tel4: "030" },
-      ADDRESS_DE_LOCAL: { tel: "030", tel2: "030", tel3: "030", tel4: "030" },
-      ADDRESS_DE_REMOTE: { tel: "033", tel2: "030", tel3: "030", tel4: "030" },
+      ADDRESS_US_LOCAL: {
+        "tel-country-code": "+1",
+        tel: "617",
+        tel2: "617",
+        tel3: "617",
+      },
+      ADDRESS_US_REMOTE: {
+        "tel-country-code": "+49",
+        tel: "030",
+        tel2: "030",
+        tel3: "030",
+      },
+      ADDRESS_DE_LOCAL: {
+        "tel-country-code": "+49",
+        tel: "030",
+        tel2: "030",
+        tel3: "030",
+      },
+      ADDRESS_DE_REMOTE: {
+        "tel-country-code": "+49",
+        tel: "033",
+        tel2: "033",
+        tel3: "033",
+      },
     },
   },
   {
@@ -571,10 +612,10 @@ let forms = [
                 </form>`,
     results: {
       // ISSUE 16: the telephone fields should be treated as tel-country-code and tel-national.
-      ADDRESS_US_LOCAL: { tel: "6172535702", tel2: "6172535702" },
-      ADDRESS_US_REMOTE: { tel: "030983333000", tel2: "030983333000" },
-      ADDRESS_DE_LOCAL: { tel: "030983333001", tel2: "030983333001" },
-      ADDRESS_DE_REMOTE: { tel: "03334564947391", tel2: "03334564947391" },
+      ADDRESS_US_LOCAL: { "tel-country-code": "+1", tel: "6172535702" },
+      ADDRESS_US_REMOTE: { "tel-country-code": "+49", tel: "030983333000" },
+      ADDRESS_DE_LOCAL: { "tel-country-code": "+49", tel: "030983333001" },
+      ADDRESS_DE_REMOTE: { "tel-country-code": "+49", tel: "03334564947391" },
     },
   },
   {
