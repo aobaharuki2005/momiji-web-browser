@@ -571,6 +571,9 @@ class TabGroupPanel extends Panel {
       );
       menuitem.setAttribute("tooltiptext", tab.label);
       menuitem.classList.add("menuitem-iconic", "menuitem-with-favicon");
+      if (tab == this.win.gBrowser.selectedTab) {
+        menuitem.classList.add("active-tab");
+      }
       menuitem.tab = tab;
       fragment.appendChild(menuitem);
     }
