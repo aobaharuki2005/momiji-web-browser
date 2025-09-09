@@ -339,58 +339,6 @@ class ScriptLoadRequest : public nsISupports,
   uint64_t mEarlyHintPreloaderId;
 };
 
-class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {
-  using super = mozilla::LinkedList<ScriptLoadRequest>;
-
- public:
-  ~ScriptLoadRequestList();
-
-  void CancelRequestsAndClear();
-
-#ifdef DEBUG
-  bool Contains(ScriptLoadRequest* aElem) const;
-#endif  // DEBUG
-
-  using super::getFirst;
-  using super::isEmpty;
-
-  void AppendElement(ScriptLoadRequest* aElem) {
-    MOZ_ASSERT(!aElem->isInList());
-    NS_ADDREF(aElem);
-    insertBack(aElem);
-  }
-
-  already_AddRefed<ScriptLoadRequest> Steal(ScriptLoadRequest* aElem) {
-    aElem->removeFrom(*this);
-    return dont_AddRef(aElem);
-  }
-
-  already_AddRefed<ScriptLoadRequest> StealFirst() {
-    MOZ_ASSERT(!isEmpty());
-    return Steal(getFirst());
-  }
-
-  void Remove(ScriptLoadRequest* aElem) {
-    aElem->removeFrom(*this);
-    NS_RELEASE(aElem);
-  }
-};
-
-inline void ImplCycleCollectionUnlink(ScriptLoadRequestList& aField) {
-  while (!aField.isEmpty()) {
-    RefPtr<ScriptLoadRequest> first = aField.StealFirst();
-  }
-}
-
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback,
-    ScriptLoadRequestList& aField, const char* aName, uint32_t aFlags) {
-  for (ScriptLoadRequest* request = aField.getFirst(); request;
-       request = request->getNext()) {
-    CycleCollectionNoteChild(aCallback, request, aName, aFlags);
-  }
-}
-
 }  // namespace JS::loader
 
 #endif  // js_loader_ScriptLoadRequest_h

@@ -272,30 +272,4 @@ void ScriptLoadRequest::SetBaseURLFromChannelAndOriginalURI(
   }
 }
 
-//////////////////////////////////////////////////////////////
-// ScriptLoadRequestList
-//////////////////////////////////////////////////////////////
-
-ScriptLoadRequestList::~ScriptLoadRequestList() { CancelRequestsAndClear(); }
-
-void ScriptLoadRequestList::CancelRequestsAndClear() {
-  while (!isEmpty()) {
-    RefPtr<ScriptLoadRequest> first = StealFirst();
-    first->Cancel();
-    // And just let it go out of scope and die.
-  }
-}
-
-#ifdef DEBUG
-bool ScriptLoadRequestList::Contains(ScriptLoadRequest* aElem) const {
-  for (const ScriptLoadRequest* req = getFirst(); req; req = req->getNext()) {
-    if (req == aElem) {
-      return true;
-    }
-  }
-
-  return false;
-}
-#endif  // DEBUG
-
 }  // namespace JS::loader

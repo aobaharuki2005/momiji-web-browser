@@ -8,7 +8,7 @@
 #define js_loader_ModuleLoaderBase_h
 
 #include "LoadedScript.h"
-#include "ScriptLoadRequest.h"
+#include "ScriptLoadRequestList.h"
 
 #include "ImportMap.h"
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
@@ -18,7 +18,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsILoadInfo.h"    // nsSecurityFlags
-#include "nsINode.h"        // nsIURI
 #include "nsThreadUtils.h"  // GetMainThreadSerialEventTarget
 #include "nsURIHashKey.h"
 #include "mozilla/Attributes.h"  // MOZ_RAII
@@ -28,12 +27,17 @@
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "ResolveResult.h"
 
+class nsIConsoleReportCollector;
 class nsIURI;
 
 namespace mozilla {
 
 class LazyLogModule;
 union Utf8Unit;
+
+namespace dom {
+class SRIMetadata;
+}  // namespace dom
 
 }  // namespace mozilla
 

@@ -12,8 +12,10 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"  // JS::FreePolicy
 #include "js/loader/LoadedScript.h"
+#include "js/loader/ModuleLoaderBase.h"
 #include "js/loader/ScriptKind.h"
 #include "js/loader/ScriptLoadRequest.h"
+#include "js/loader/ScriptLoadRequestList.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MozPromise.h"
@@ -51,11 +53,9 @@ class SourceText;
 namespace loader {
 
 class LoadedScript;
-class ScriptLoaderInterface;
 class ModuleLoadRequest;
 class ModuleScript;
 class ScriptLoadRequest;
-class ScriptLoadRequestList;
 
 enum class ParserMetadata;
 
@@ -473,7 +473,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   ~ScriptLoader();
 
   already_AddRefed<ScriptLoadRequest> CreateLoadRequest(
-      ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
+      JS::loader::ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
       const nsAString& aScriptContent, nsIPrincipal* aTriggeringPrincipal,
       mozilla::CORSMode aCORSMode, const nsAString& aNonce,
       RequestPriority aRequestPriority, const SRIMetadata& aIntegrity,
@@ -510,10 +510,12 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   void ContinueParserAsync(ScriptLoadRequest* aParserBlockingRequest);
 
-  bool ProcessExternalScript(nsIScriptElement* aElement, ScriptKind aScriptKind,
+  bool ProcessExternalScript(nsIScriptElement* aElement,
+                             JS::loader::ScriptKind aScriptKind,
                              nsIContent* aScriptContent);
 
-  bool ProcessInlineScript(nsIScriptElement* aElement, ScriptKind aScriptKind,
+  bool ProcessInlineScript(nsIScriptElement* aElement,
+                           JS::loader::ScriptKind aScriptKind,
                            const nsAString& aSourceText);
 
   enum class CacheBehavior : uint8_t {
@@ -528,7 +530,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                        RefPtr<JS::Stencil>& aStencil);
 
   JS::loader::ScriptLoadRequest* LookupPreloadRequest(
-      nsIScriptElement* aElement, ScriptKind aScriptKind,
+      nsIScriptElement* aElement, JS::loader::ScriptKind aScriptKind,
       const SRIMetadata& aSRIMetadata);
 
   void GetSRIMetadata(const nsAString& aIntegrityAttr,
@@ -849,41 +851,41 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   // Holds non-async, non-parser-created requests until it's evaluated or it
   // hits load error.
-  ScriptLoadRequestList mNonAsyncExternalScriptInsertedRequests;
+  JS::loader::ScriptLoadRequestList mNonAsyncExternalScriptInsertedRequests;
 
   // Holds async requests until it's loaded or it hits load error.
   // When they have been loaded they are moved to mLoadedAsyncRequests.
-  ScriptLoadRequestList mLoadingAsyncRequests;
+  JS::loader::ScriptLoadRequestList mLoadingAsyncRequests;
 
   // Holds async script requests and dynamic module import
   // requests, which are processed in the same way, until it's evaluated,
   // or it's passed to off-thread.
-  ScriptLoadRequestList mLoadedAsyncRequests;
+  JS::loader::ScriptLoadRequestList mLoadedAsyncRequests;
 
   // Holds non-async, parser-created, defer requests, until it's evaluated
   // or it hits load error.
-  ScriptLoadRequestList mDeferRequests;
+  JS::loader::ScriptLoadRequestList mDeferRequests;
 
   // Holds parser-created XSLT requests, until it's evaluated or it hits
   // load error.
-  ScriptLoadRequestList mXSLTRequests;
+  JS::loader::ScriptLoadRequestList mXSLTRequests;
 
   RefPtr<ScriptLoadRequest> mParserBlockingRequest;
 
   // Holds requests which is passed to off-thread compilation.
   // When the off-thread compilation finishes, the request is added back to
   // the original list if any.
-  ScriptLoadRequestList mOffThreadCompilingRequests;
+  JS::loader::ScriptLoadRequestList mOffThreadCompilingRequests;
 
   // Holds non-top-level module requests which passed caching conditions, until
   // it's queued to mCachingQueue.
   //
   // TODO: Remove this and per-ScriptLoader caching queue (bug 1902951).
-  ScriptLoadRequestList mCacheableDependencyModules;
+  JS::loader::ScriptLoadRequestList mCacheableDependencyModules;
 
   // Holds already-evaluted requests that are holding a buffer which has to be
   // saved on the cache, until it's cached or the caching is aborted.
-  ScriptLoadRequestList mCachingQueue;
+  JS::loader::ScriptLoadRequestList mCachingQueue;
 
   // In mRequests, the additional information here is stored by the element.
   struct PreloadInfo {

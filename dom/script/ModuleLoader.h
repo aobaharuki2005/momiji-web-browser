@@ -7,9 +7,8 @@
 #ifndef mozilla_dom_ModuleLoader_h
 #define mozilla_dom_ModuleLoader_h
 
+#include "ScriptLoader.h"
 #include "js/loader/ModuleLoaderBase.h"
-#include "js/loader/ScriptLoadRequest.h"
-#include "mozilla/dom/ScriptLoadContext.h"
 #include "mozilla/dom/ScriptLoadRequestType.h"
 
 class nsIURI;
@@ -28,6 +27,7 @@ class ModuleLoadRequest;
 namespace mozilla::dom {
 
 class ScriptLoader;
+class ScriptLoadContext;
 class SRIMetadata;
 
 //////////////////////////////////////////////////////////////

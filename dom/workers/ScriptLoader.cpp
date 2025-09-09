@@ -15,6 +15,7 @@
 #include "js/Exception.h"
 #include "js/SourceText.h"
 #include "js/TypeDecls.h"
+#include "js/loader/ModuleLoadRequest.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/AntiTrackingUtils.h"

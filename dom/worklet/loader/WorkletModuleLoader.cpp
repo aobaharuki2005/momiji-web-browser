@@ -34,6 +34,16 @@ NS_IMPL_CYCLE_COLLECTION(WorkletScriptLoader)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WorkletScriptLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WorkletScriptLoader)
 
+nsresult WorkletScriptLoader::FillCompileOptionsForRequest(
+    JSContext* cx, ScriptLoadRequest* aRequest, JS::CompileOptions* aOptions,
+    JS::MutableHandle<JSScript*> aIntroductionScript) {
+  aOptions->setIntroductionType("Worklet");
+  aOptions->setFileAndLine(aRequest->mURL.get(), 1);
+  aOptions->setIsRunOnce(true);
+  aOptions->setNoScriptRval(true);
+  return NS_OK;
+}
+
 //////////////////////////////////////////////////////////////
 // WorkletModuleLoader
 //////////////////////////////////////////////////////////////
