@@ -1,68 +1,22 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 10 Oct 2024 13:42:00 +0000
-Subject: Bug 1921707 - libwebrtc preprocessor, .json, .gni, and *.gn changes
- r=ng,webrtc-reviewers
+Date: Fri, 7 Feb 2025 16:26:00 -0600
+Subject: Bug 1942428 - (fix-e500d46600) upstream removed p2p:rtc_p2p
 
-Differential Revision: https://phabricator.services.mozilla.com/D224076
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7017edc7cfc880bb19f94115d4f48a8c58920a9b
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0155a8718d5d7f23b8391a1d04b1196e30127dad
 ---
- .gn                           | 2 +-
- media/BUILD.gn                | 2 +-
- modules/video_coding/BUILD.gn | 2 +-
- webrtc.gni                    | 4 ++--
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/.gn b/.gn
-index 060fa5af4f..fadb653f2f 100644
---- a/.gn
-+++ b/.gn
-@@ -18,7 +18,7 @@ script_executable = "python3"
- # The secondary source root is a parallel directory tree where
- # GN build files are placed when they can not be placed directly
- # in the source tree, e.g. for third party source trees.
--secondary_source = "//build/secondary/"
-+secondary_source = "//libwebrtc/"
- 
- # These are the targets to skip header checking by default. The files in targets
- # matching these patterns (see "gn help label_pattern" for format) will not have
-diff --git a/media/BUILD.gn b/media/BUILD.gn
-index efa3b0a00d..c6932b80e4 100644
---- a/media/BUILD.gn
-+++ b/media/BUILD.gn
-@@ -7,7 +7,7 @@
- # be found in the AUTHORS file in the root of the source tree.
- 
- import("//build/config/linux/pkg_config.gni")
--import("//third_party/libaom/options.gni")
-+import("//libwebrtc/third_party/libaom/options.gni")
- import("../webrtc.gni")
- 
- group("media") {
-diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index 52c391dc3f..c91b9a0b60 100644
---- a/modules/video_coding/BUILD.gn
-+++ b/modules/video_coding/BUILD.gn
-@@ -7,7 +7,7 @@
- # be found in the AUTHORS file in the root of the source tree.
- 
- import("//build/config/linux/pkg_config.gni")
--import("//third_party/libaom/options.gni")
-+import("//libwebrtc/third_party/libaom/options.gni")
- import("../../webrtc.gni")
- 
- rtc_library("encoded_frame") {
-diff --git a/webrtc.gni b/webrtc.gni
-index b77a0ce638..bb386f6e3f 100644
---- a/webrtc.gni
-+++ b/webrtc.gni
-@@ -502,8 +502,8 @@ all_poison_types = [
-   "software_video_codecs",
- ]
- 
--absl_include_config = "//third_party/abseil-cpp:absl_include_config"
--absl_define_config = "//third_party/abseil-cpp:absl_define_config"
-+absl_include_config = "//libwebrtc/third_party/abseil-cpp:absl_include_config"
-+absl_define_config = "//libwebrtc/third_party/abseil-cpp:absl_define_config"
- 
- # Abseil Flags are testonly, so this config will only be applied to WebRTC targets
- # that are testonly.
+diff --git a/BUILD.gn b/BUILD.gn
+index f9e571a1f2..4cefd5bb47 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -603,7 +603,7 @@ if (!build_with_chromium) {
+         "api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
+         "api/video_codecs:video_encoder_factory_template_open_h264_adapter",
+         "logging:rtc_event_log_api",
+-        "p2p:rtc_p2p",
++#        "p2p:rtc_p2p",
+         "pc:libjingle_peerconnection",
+         "pc:rtc_pc",
+         "sdk",

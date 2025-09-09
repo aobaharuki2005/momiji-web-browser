@@ -1,138 +1,171 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Mon, 4 Apr 2022 12:25:26 -0500
-Subject: Bug 1766646 - (fix) breakout Call::Stats and SharedModuleThread into
- seperate files
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 18 Jan 2021 11:07:00 +0100
+Subject: Bug 1766646 - (fix-ae0d117d51) ifdef our Csrc impl vs upstream's
+ impl, see Bug 1771332.
 
 ---
- call/BUILD.gn            |  6 ++++++
- call/call.cc             | 13 -------------
- call/call.h              | 11 ++---------
- call/call_basic_stats.cc | 20 ++++++++++++++++++++
- call/call_basic_stats.h  | 21 +++++++++++++++++++++
- 5 files changed, 49 insertions(+), 22 deletions(-)
- create mode 100644 call/call_basic_stats.cc
- create mode 100644 call/call_basic_stats.h
+ modules/rtp_rtcp/source/rtp_header_extensions.cc | 4 ++++
+ modules/rtp_rtcp/source/rtp_header_extensions.h  | 4 ++++
+ modules/rtp_rtcp/source/rtp_packet.cc            | 4 ++++
+ modules/rtp_rtcp/source/rtp_sender.cc            | 4 ++++
+ test/fuzzers/rtp_packet_fuzzer.cc                | 4 ++++
+ 5 files changed, 20 insertions(+)
 
-diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 0cf0e2fcf0..aaae7bb9a9 100644
---- a/call/BUILD.gn
-+++ b/call/BUILD.gn
-@@ -33,6 +33,12 @@ rtc_library("call_interfaces") {
-     "syncable.cc",
-     "syncable.h",
-   ]
-+  if (build_with_mozilla) {
-+    sources += [
-+      "call_basic_stats.cc",
-+      "call_basic_stats.h",
-+    ]
-+  }
+diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
+index 8bc0ab998c..79bba05899 100644
+--- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
++++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
+@@ -181,6 +181,7 @@ bool AudioLevelExtension::Write(ArrayView<uint8_t> data,
+   return true;
+ }
  
-   deps = [
-     ":audio_sender_interface",
-diff --git a/call/call.cc b/call/call.cc
-index d6d0e4b2d3..bd3efab30c 100644
---- a/call/call.cc
-+++ b/call/call.cc
-@@ -514,19 +514,6 @@ class Call final : public webrtc::Call,
++#if !defined(WEBRTC_MOZILLA_BUILD)
+ // An RTP Header Extension for Mixer-to-Client Audio Level Indication
+ //
+ // https://tools.ietf.org/html/rfc6465
+@@ -229,6 +230,7 @@ bool CsrcAudioLevel::Write(ArrayView<uint8_t> data,
+   }
+   return true;
+ }
++#endif
+ 
+ // From RFC 5450: Transmission Time Offsets in RTP Streams.
+ //
+@@ -420,6 +422,7 @@ bool PlayoutDelayLimits::Write(ArrayView<uint8_t> data,
+   return true;
+ }
+ 
++#if defined(WEBRTC_MOZILLA_BUILD)
+ // CSRCAudioLevel
+ //  Sample Audio Level Encoding Using the One-Byte Header Format
+ //  Note that the range of len is 1 to 15 which is encoded as 0 to 14
+@@ -458,6 +461,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
+   // This extension if used must have at least one audio level
+   return csrcAudioLevels.numAudioLevels;
+ }
++#endif
+ 
+ // Video Content Type.
+ //
+diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
+index 3416ce8cf3..cc811cae3a 100644
+--- a/modules/rtp_rtcp/source/rtp_header_extensions.h
++++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
+@@ -110,6 +110,7 @@ class AudioLevelExtension {
+   static bool Write(ArrayView<uint8_t> data, const AudioLevel& extension);
  };
- }  // namespace internal
  
--std::string Call::Stats::ToString(int64_t time_ms) const {
--  char buf[1024];
--  SimpleStringBuilder ss(buf);
--  ss << "Call stats: " << time_ms << ", {";
--  ss << "send_bw_bps: " << send_bandwidth_bps << ", ";
--  ss << "recv_bw_bps: " << recv_bandwidth_bps << ", ";
--  ss << "max_pad_bps: " << max_padding_bitrate_bps << ", ";
--  ss << "pacer_delay_ms: " << pacer_delay_ms << ", ";
--  ss << "rtt_ms: " << rtt_ms;
--  ss << '}';
--  return ss.str();
--}
--
- std::unique_ptr<Call> Call::Create(CallConfig config) {
-   std::unique_ptr<RtpTransportControllerSendInterface> transport_send;
-   if (config.rtp_transport_controller_send_factory != nullptr) {
-diff --git a/call/call.h b/call/call.h
-index 87e1884583..420a754edd 100644
---- a/call/call.h
-+++ b/call/call.h
-@@ -25,6 +25,7 @@
- #include "api/transport/bitrate_settings.h"
- #include "call/audio_receive_stream.h"
- #include "call/audio_send_stream.h"
-+#include "call/call_basic_stats.h"
- #include "call/call_config.h"
- #include "call/flexfec_receive_stream.h"
- #include "call/packet_receiver.h"
-@@ -50,15 +51,7 @@ namespace webrtc {
- 
- class Call {
++#if !defined(WEBRTC_MOZILLA_BUILD)
+ class CsrcAudioLevel {
   public:
--  struct Stats {
--    std::string ToString(int64_t time_ms) const;
--
--    int send_bandwidth_bps = 0;       // Estimated available send bandwidth.
--    int max_padding_bitrate_bps = 0;  // Cumulative configured max padding.
--    int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
--    int64_t pacer_delay_ms = 0;
--    int64_t rtt_ms = -1;
--  };
-+  using Stats = CallBasicStats;
+   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
+@@ -124,6 +125,7 @@ class CsrcAudioLevel {
+   static bool Write(ArrayView<uint8_t> data,
+                     ArrayView<const uint8_t> csrc_audio_levels);
+ };
++#endif
  
-   static std::unique_ptr<Call> Create(CallConfig config);
+ class TransmissionOffset {
+  public:
+@@ -309,6 +311,7 @@ class ColorSpaceExtension {
+   static size_t WriteLuminance(uint8_t* data, float f, int denominator);
+ };
  
-diff --git a/call/call_basic_stats.cc b/call/call_basic_stats.cc
-new file mode 100644
-index 0000000000..1882dfefea
---- /dev/null
-+++ b/call/call_basic_stats.cc
-@@ -0,0 +1,20 @@
-+#include "call/call_basic_stats.h"
-+
-+#include "rtc_base/strings/string_builder.h"
-+
-+namespace webrtc {
-+
-+std::string CallBasicStats::ToString(int64_t time_ms) const {
-+  char buf[1024];
-+  SimpleStringBuilder ss(buf);
-+  ss << "Call stats: " << time_ms << ", {";
-+  ss << "send_bw_bps: " << send_bandwidth_bps << ", ";
-+  ss << "recv_bw_bps: " << recv_bandwidth_bps << ", ";
-+  ss << "max_pad_bps: " << max_padding_bitrate_bps << ", ";
-+  ss << "pacer_delay_ms: " << pacer_delay_ms << ", ";
-+  ss << "rtt_ms: " << rtt_ms;
-+  ss << '}';
-+  return ss.str();
-+}
-+
-+}  // namespace webrtc
-diff --git a/call/call_basic_stats.h b/call/call_basic_stats.h
-new file mode 100644
-index 0000000000..98febe9405
---- /dev/null
-+++ b/call/call_basic_stats.h
-@@ -0,0 +1,21 @@
-+#ifndef CALL_CALL_BASIC_STATS_H_
-+#define CALL_CALL_BASIC_STATS_H_
-+
-+#include <string>
-+
-+namespace webrtc {
-+
-+// named to avoid conflicts with video/call_stats.h
-+struct CallBasicStats {
-+  std::string ToString(int64_t time_ms) const;
-+
-+  int send_bandwidth_bps = 0;       // Estimated available send bandwidth.
-+  int max_padding_bitrate_bps = 0;  // Cumulative configured max padding.
-+  int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
-+  int64_t pacer_delay_ms = 0;
-+  int64_t rtt_ms = -1;
-+};
-+
-+}  // namespace webrtc
-+
-+#endif  // CALL_CALL_BASIC_STATS_H_
++#if defined(WEBRTC_MOZILLA_BUILD)
+ class CsrcAudioLevel {
+  public:
+   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
+@@ -324,6 +327,7 @@ class CsrcAudioLevel {
+   static bool Write(rtc::ArrayView<uint8_t> data,
+                     const CsrcAudioLevelList& csrcAudioLevels);
+ };
++#endif
+ 
+ // Base extension class for RTP header extensions which are strings.
+ // Subclasses must defined kId and kUri static constexpr members.
+diff --git a/modules/rtp_rtcp/source/rtp_packet.cc b/modules/rtp_rtcp/source/rtp_packet.cc
+index 8879feb5ec..54341396b3 100644
+--- a/modules/rtp_rtcp/source/rtp_packet.cc
++++ b/modules/rtp_rtcp/source/rtp_packet.cc
+@@ -193,7 +193,9 @@ void RtpPacket::ZeroMutableExtensions() {
+         break;
+       }
+       case RTPExtensionType::kRtpExtensionAudioLevel:
++#if !defined(WEBRTC_MOZILLA_BUILD)
+       case RTPExtensionType::kRtpExtensionCsrcAudioLevel:
++#endif
+       case RTPExtensionType::kRtpExtensionAbsoluteCaptureTime:
+       case RTPExtensionType::kRtpExtensionColorSpace:
+       case RTPExtensionType::kRtpExtensionCorruptionDetection:
+@@ -212,10 +214,12 @@ void RtpPacket::ZeroMutableExtensions() {
+         // Non-mutable extension. Don't change it.
+         break;
+       }
++#if defined(WEBRTC_MOZILLA_BUILD)
+       case RTPExtensionType::kRtpExtensionCsrcAudioLevel: {
+         // TODO: This is a Mozilla addition, we need to add a handler for this.
+         RTC_CHECK(false);
+       }
++#endif
+     }
+   }
+ }
+diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
+index d59b67c090..88ebb163e4 100644
+--- a/modules/rtp_rtcp/source/rtp_sender.cc
++++ b/modules/rtp_rtcp/source/rtp_sender.cc
+@@ -115,7 +115,9 @@ bool IsNonVolatile(RTPExtensionType type) {
+   switch (type) {
+     case kRtpExtensionTransmissionTimeOffset:
+     case kRtpExtensionAudioLevel:
++#if !defined(WEBRTC_MOZILLA_BUILD)
+     case kRtpExtensionCsrcAudioLevel:
++#endif
+     case kRtpExtensionAbsoluteSendTime:
+     case kRtpExtensionTransportSequenceNumber:
+     case kRtpExtensionTransportSequenceNumber02:
+@@ -140,10 +142,12 @@ bool IsNonVolatile(RTPExtensionType type) {
+     case kRtpExtensionNumberOfExtensions:
+       RTC_DCHECK_NOTREACHED();
+       return false;
++#if defined(WEBRTC_MOZILLA_BUILD)
+     case kRtpExtensionCsrcAudioLevel:
+       // TODO: Mozilla implement for CsrcAudioLevel
+       RTC_CHECK(false);
+       return false;
++#endif
+   }
+   RTC_CHECK_NOTREACHED();
+ }
+diff --git a/test/fuzzers/rtp_packet_fuzzer.cc b/test/fuzzers/rtp_packet_fuzzer.cc
+index 0048dab074..edf3f82db6 100644
+--- a/test/fuzzers/rtp_packet_fuzzer.cc
++++ b/test/fuzzers/rtp_packet_fuzzer.cc
+@@ -89,11 +89,13 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
+         packet.GetExtension<AudioLevelExtension>(&audio_level);
+         break;
+       }
++#if !defined(WEBRTC_MOZILLA_BUILD)
+       case kRtpExtensionCsrcAudioLevel: {
+         std::vector<uint8_t> audio_levels;
+         packet.GetExtension<CsrcAudioLevel>(&audio_levels);
+         break;
+       }
++#endif
+       case kRtpExtensionAbsoluteSendTime:
+         uint32_t sendtime;
+         packet.GetExtension<AbsoluteSendTime>(&sendtime);
+@@ -183,11 +185,13 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
+         CorruptionDetectionMessage message;
+         packet.GetExtension<CorruptionDetectionExtension>(&message);
+         break;
++#if defined(WEBRTC_MOZILLA_BUILD)
+       case kRtpExtensionCsrcAudioLevel: {
+         CsrcAudioLevelList levels;
+         packet.GetExtension<CsrcAudioLevel>(&levels);
+         break;
+       }
++#endif
+     }
+   }
+ 

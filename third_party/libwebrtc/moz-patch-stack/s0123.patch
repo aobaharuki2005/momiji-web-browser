@@ -29,10 +29,10 @@ index cc811cae3a..46d80e424a 100644
  };
  #endif
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 05d5a3de32..48d9b6ed26 100644
+index a7c1764c51..8a91ca2f83 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
-@@ -124,7 +124,7 @@ class VideoCaptureModule : public RefCountInterface {
+@@ -123,7 +123,7 @@ class VideoCaptureModule : public RefCountInterface {
  
    //  Remove capture data callback
    virtual void DeRegisterCaptureDataCallback(

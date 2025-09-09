@@ -1,27 +1,25 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Thu, 29 Aug 2024 08:31:00 +0000
-Subject: Bug 1914837 - Always initialize DesktopCapturer::pid.
- r=webrtc-reviewers,ng
+From: Michael Froman <mfroman@mozilla.com>
+Date: Tue, 19 Nov 2024 16:05:00 -0600
+Subject: Bug 1928110 - (fix-b9c4c242d4) handle upstream last_arrival_timestamp
+ to last_arrival_ntp_timestamp
 
-This member is patched on top of libwebrtc. New backends could be added from
-under us. It needs to be initialized.
-
-Differential Revision: https://phabricator.services.mozilla.com/D220265
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fdf5b0a81b0c0e87d31c5963091681a0e5960678
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6918cf2d9126fa3e3676386349f6e383c298d8ab
 ---
- modules/desktop_capture/desktop_capturer.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/rtp_rtcp/source/rtcp_receiver.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 60c04723d6..fb3cc94f74 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -82,7 +82,7 @@ class RTC_EXPORT DesktopCapturer {
-   struct Source {
-     // The unique id to represent a Source of current DesktopCapturer.
-     SourceId id;
--    pid_t pid;
-+    pid_t pid = 0;
+diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
+index c17b3bf74c..01b47c6d27 100644
+--- a/modules/rtp_rtcp/source/rtcp_receiver.cc
++++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
+@@ -394,8 +394,8 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
+   MutexLock lock(&rtcp_receiver_lock_);
+   *packet_count = remote_sender_.packets_sent;
+   *octet_count = remote_sender_.bytes_sent;
+-  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
+-  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
++  *ntp_timestamp_ms = remote_sender_.last_arrival_ntp_timestamp.ToMs();
++  *remote_ntp_timestamp_ms = remote_sender_.last_remote_ntp_timestamp.ToMs();
+ }
  
-     // Title of the window or screen in UTF-8 encoding, maybe empty. This field
-     // should not be used to identify a source.
+ std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {

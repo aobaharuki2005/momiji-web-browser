@@ -1,30 +1,55 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Thu, 25 Jul 2024 10:07:00 -0500
-Subject: Bug 1909234 - (fix-4fec6f9c67dc) Hollow out the new ssl_adapter lib.
- r?mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 10 Oct 2024 13:42:00 +0000
+Subject: Bug 1921707 - add filtering for new build directory location in
+ third_party/libwebrtc/webrtc.gni r=ng,webrtc-reviewers
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ee2f06666bcc6d22c4d7c93b78fb52d28452d055
+Differential Revision: https://phabricator.services.mozilla.com/D224545
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f18c05287ce831369f44715a4174facff4f12652
 ---
- rtc_base/BUILD.gn | 2 ++
- 1 file changed, 2 insertions(+)
+ webrtc.gni | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 01d91c3615..24b90990c2 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -1633,6 +1633,7 @@ if (!build_with_mozilla) {
- }
- 
- rtc_library("ssl_adapter") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "openssl_adapter.cc",
-@@ -1681,6 +1682,7 @@ rtc_library("ssl_adapter") {
-     configs += [ "..:external_ssl_library" ]
+diff --git a/webrtc.gni b/webrtc.gni
+index 51de7fba13..a7ad4e2052 100644
+--- a/webrtc.gni
++++ b/webrtc.gni
+@@ -551,7 +551,7 @@ template("rtc_test") {
+       min_sdk_version = 21
+       target_sdk_version = 24
+       deps += [
+-        "//build/android/gtest_apk:native_test_instrumentation_test_runner_java",
++        "//chromium/build/android/gtest_apk:native_test_instrumentation_test_runner_java",
+         webrtc_root + "sdk/android:native_test_jni_onload",
+         webrtc_root + "sdk/android:base_java",
+         webrtc_root + "test:native_test_java",
+@@ -1006,11 +1006,21 @@ template("rtc_library") {
+       modified_deps = []
+       foreach (dep, deps) {
+         newdep = string_replace(dep, "//third_party/", "//libwebrtc/third_party/")
++        newdep = string_replace(newdep, "//build", "//chromium/build")
+         modified_deps += [ newdep ]
+       }
+       deps = []
+       deps = modified_deps
+     }
++    if (build_with_mozilla && defined(data_deps)) {
++      modified_deps = []
++      foreach (dep, data_deps) {
++        newdep = string_replace(dep, "//build/", "//chromium/build/")
++        modified_deps += [ newdep ]
++      }
++      data_deps = []
++      data_deps = modified_deps
++    }
    }
  }
-+}
  
- rtc_source_set("gtest_prod") {
-   sources = [ "gtest_prod_util.h" ]
+@@ -1048,7 +1058,7 @@ template("rtc_executable") {
+     if (is_win) {
+       deps += [
+         # Give executables the default manifest on Windows (a no-op elsewhere).
+-        "//build/win:default_exe_manifest",
++        "//chromium/build/win:default_exe_manifest",
+       ]
+     }
+ 

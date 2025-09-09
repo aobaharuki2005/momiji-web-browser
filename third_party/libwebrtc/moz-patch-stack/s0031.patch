@@ -1,27 +1,54 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 1 Dec 2020 09:36:00 -0500
-Subject: Bug 1654112 - Disable creating av1 encoder and decoder. r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 18 Feb 2021 17:23:00 -0800
+Subject: Bug 1654112 - fix device_info_ds pid and Windows constants includes;
+ r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D130089
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ef548d7758c7de6e78d38af299c2296bf9d20ec9
+Upstreaming bug 1697385
+
+Differential Revision: https://phabricator.services.mozilla.com/D107899
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/24809d566449907edea49ea47528065ad0f76910
 ---
- media/engine/internal_decoder_factory.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ modules/video_capture/windows/device_info_ds.cc | 3 ++-
+ modules/video_capture/windows/device_info_ds.h  | 6 +++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/media/engine/internal_decoder_factory.cc b/media/engine/internal_decoder_factory.cc
-index b87fe2f2c3..6e07b2f0f5 100644
---- a/media/engine/internal_decoder_factory.cc
-+++ b/media/engine/internal_decoder_factory.cc
-@@ -53,10 +53,12 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
-   for (const SdpVideoFormat& h264_format : SupportedH264DecoderCodecs())
-     formats.push_back(h264_format);
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index a63a7721cb..1904c3fac2 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -172,7 +172,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
+                                     char* deviceUniqueIdUTF8,
+                                     uint32_t deviceUniqueIdUTF8Length,
+                                     char* productUniqueIdUTF8,
+-                                    uint32_t productUniqueIdUTF8Length) {
++                                    uint32_t productUniqueIdUTF8Length,
++                                    pid_t* pid) {
+   MutexLock lock(&_apiLock);
+   const int32_t result = GetDeviceInfo(
+       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
+diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
+index ed2a726d6f..e6dfaed366 100644
+--- a/modules/video_capture/windows/device_info_ds.h
++++ b/modules/video_capture/windows/device_info_ds.h
+@@ -12,8 +12,11 @@
+ #define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
  
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-   if (kDav1dIsIncluded) {
-     formats.push_back(SdpVideoFormat::AV1Profile0());
-     formats.push_back(SdpVideoFormat::AV1Profile1());
-   }
-+#endif
+ #include <dshow.h>
++#include <Ks.h>
++#include <dbt.h>
  
-   return formats;
- }
+ #include "modules/video_capture/device_info_impl.h"
++#include "modules/video_capture/video_capture.h"
+ #include "modules/video_capture/video_capture_impl.h"
+ 
+ namespace webrtc {
+@@ -47,7 +50,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
+                         char* deviceUniqueIdUTF8,
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8,
+-                        uint32_t productUniqueIdUTF8Length) override;
++                        uint32_t productUniqueIdUTF8Length,
++                        pid_t* pid) override;
+ 
+   /*
+    * Display OS /capture device specific settings dialog

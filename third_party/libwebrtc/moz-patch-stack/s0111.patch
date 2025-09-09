@@ -1,190 +1,183 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Thu, 5 Sep 2024 16:04:00 +0000
-Subject: Bug 1830275 - Add missing support for device change notifications
- r=pehrsons,webrtc-reviewers
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Wed, 27 Nov 2024 03:41:00 +0000
+Subject: Bug 1921154 - libwebrtc build related changes for
+ AV1;r=mjf,webrtc-reviewers
 
-Registers each DeviceInfoPipeWire in PipeWireSession we use and calls
-DeviceChange() for each once there is a new camera added or removed to
-invoke OnDeviceChange() for every registered VideoInputFeedback.
+These are most of the changes needed to get a build with AV1.
+The crypto/openssl changes are later altered in the stack adding an NSPR based implementation of the functionality that was missing.
 
-Differential Revision: https://phabricator.services.mozilla.com/D219218
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60eb5ef11c8df7eb6e0d616cb76885d9109f114d
+Differential Revision: https://phabricator.services.mozilla.com/D228540
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4527c41ef71d7683c60d9c435991a0d93bc5ce4d
 ---
- .../linux/device_info_pipewire.cc             | 10 +++-
- .../video_capture/linux/pipewire_session.cc   | 47 ++++++++++++++++++-
- .../video_capture/linux/pipewire_session.h    | 26 +++++++++-
- 3 files changed, 79 insertions(+), 4 deletions(-)
+ BUILD.gn          |  4 ++++
+ media/BUILD.gn    | 24 ++++++++++++++----------
+ rtc_base/BUILD.gn | 16 ++++++++++------
+ webrtc.gni        |  4 ++--
+ 4 files changed, 30 insertions(+), 18 deletions(-)
 
-diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
-index db2a3c7099..a0607b4aba 100644
---- a/modules/video_capture/linux/device_info_pipewire.cc
-+++ b/modules/video_capture/linux/device_info_pipewire.cc
-@@ -29,13 +29,19 @@
- namespace webrtc {
- namespace videocapturemodule {
- DeviceInfoPipeWire::DeviceInfoPipeWire(VideoCaptureOptions* options)
--    : DeviceInfoImpl(), pipewire_session_(options->pipewire_session()) {}
-+    : DeviceInfoImpl(), pipewire_session_(options->pipewire_session()) {
-+  const bool ret = pipewire_session_->RegisterDeviceInfo(this);
-+  RTC_CHECK(ret);
-+}
- 
- int32_t DeviceInfoPipeWire::Init() {
-   return 0;
- }
- 
--DeviceInfoPipeWire::~DeviceInfoPipeWire() = default;
-+DeviceInfoPipeWire::~DeviceInfoPipeWire() {
-+  const bool ret = pipewire_session_->DeRegisterDeviceInfo(this);
-+  RTC_CHECK(ret);
-+}
- 
- uint32_t DeviceInfoPipeWire::NumberOfDevices() {
-   RTC_CHECK(pipewire_session_);
-diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
-index 990bfde912..25c4dfae4e 100644
---- a/modules/video_capture/linux/pipewire_session.cc
-+++ b/modules/video_capture/linux/pipewire_session.cc
-@@ -9,6 +9,7 @@
-  */
- 
- #include "modules/video_capture/linux/pipewire_session.h"
-+#include "modules/video_capture/linux/device_info_pipewire.h"
- 
- #include <spa/monitor/device.h>
- #include <spa/param/format-utils.h>
-@@ -286,6 +287,28 @@ void PipeWireSession::InitPipeWire(int fd) {
-     Finish(VideoCaptureOptions::Status::ERROR);
- }
- 
-+bool PipeWireSession::RegisterDeviceInfo(DeviceInfoPipeWire* device_info) {
-+  RTC_CHECK(device_info);
-+  MutexLock lock(&device_info_lock_);
-+  auto it = std::find(device_info_list_.begin(), device_info_list_.end(), device_info);
-+  if (it == device_info_list_.end()) {
-+    device_info_list_.push_back(device_info);
-+    return true;
-+  }
-+  return false;
-+}
-+
-+bool PipeWireSession::DeRegisterDeviceInfo(DeviceInfoPipeWire* device_info) {
-+  RTC_CHECK(device_info);
-+  MutexLock lock(&device_info_lock_);
-+  auto it = std::find(device_info_list_.begin(), device_info_list_.end(), device_info);
-+  if (it != device_info_list_.end()) {
-+    device_info_list_.erase(it);
-+    return true;
-+  }
-+  return false;
-+}
-+
- RTC_NO_SANITIZE("cfi-icall")
- bool PipeWireSession::StartPipeWire(int fd) {
-   pw_init(/*argc=*/nullptr, /*argv=*/nullptr);
-@@ -358,6 +381,21 @@ void PipeWireSession::PipeWireSync() {
-   sync_seq_ = pw_core_sync(pw_core_, PW_ID_CORE, sync_seq_);
- }
- 
-+void PipeWireSession::NotifyDeviceChange() {
-+  RTC_LOG(LS_INFO) << "Notify about device list changes";
-+  MutexLock lock(&device_info_lock_);
-+
-+  // It makes sense to notify about device changes only once we are
-+  // properly initialized.
-+  if (status_ != VideoCaptureOptions::Status::SUCCESS) {
-+    return;
-+  }
-+
-+  for (auto* deviceInfo : device_info_list_) {
-+    deviceInfo->DeviceChange();
-+  }
-+}
-+
- // static
- void PipeWireSession::OnCoreError(void* data,
-                                   uint32_t id,
-@@ -416,6 +454,8 @@ void PipeWireSession::OnRegistryGlobal(void* data,
- 
-   that->nodes_.push_back(PipeWireNode::Create(that, id, props));
-   that->PipeWireSync();
-+
-+  that->NotifyDeviceChange();
- }
- 
- // static
-@@ -427,10 +467,15 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
-                              return node->id() == id;
-                            });
-   that->nodes_.erase(it, that->nodes_.end());
-+
-+  that->NotifyDeviceChange();
- }
- 
- void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
--  status_ = status;
-+  {
-+    MutexLock lock(&device_info_lock_);
-+    status_ = status;
-+  }
- 
-   webrtc::MutexLock lock(&callback_lock_);
- 
-diff --git a/modules/video_capture/linux/pipewire_session.h b/modules/video_capture/linux/pipewire_session.h
-index aec268e008..7dbba23691 100644
---- a/modules/video_capture/linux/pipewire_session.h
-+++ b/modules/video_capture/linux/pipewire_session.h
-@@ -28,6 +28,7 @@
- namespace webrtc {
- namespace videocapturemodule {
- 
-+class DeviceInfoPipeWire;
- class PipeWireSession;
- class VideoCaptureModulePipeWire;
- 
-@@ -96,6 +97,21 @@ class PipeWireSession : public webrtc::RefCountedNonVirtual<PipeWireSession> {
- 
-   void Init(VideoCaptureOptions::Callback* callback,
-             int fd = kInvalidPipeWireFd);
-+
-+  // [De]Register DeviceInfo for device change updates
-+  // These methods will add or remove references to DeviceInfo
-+  // objects that we want to notify about device changes.
-+  // NOTE: We do not take ownership of these objects and
-+  // they should never be released by us. All the instances
-+  // of DeviceInfoPipeWire must outlive their registration.
-+
-+  // Returns true when DeviceInfo was successfuly registered
-+  // or false otherwise, when it was already registered before.
-+  bool RegisterDeviceInfo(DeviceInfoPipeWire* device_info);
-+  // Returns true when DeviceInfo was successfuly unregistered
-+  // or false otherwise, when it was not previously registered.
-+  bool DeRegisterDeviceInfo(DeviceInfoPipeWire* device_info);
-+
-   const std::deque<PipeWireNode::PipeWireNodePtr>& nodes() const {
-     return nodes_;
+diff --git a/BUILD.gn b/BUILD.gn
+index e1acb941cc..e9329d7cbe 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -524,6 +524,9 @@ if (!rtc_build_ssl) {
+       "crypto",
+       "ssl",
+     ]
++    if (build_with_mozilla) {
++      libs = []
++    }
    }
-@@ -110,6 +126,8 @@ class PipeWireSession : public webrtc::RefCountedNonVirtual<PipeWireSession> {
-   void StopPipeWire();
-   void PipeWireSync();
+ }
  
-+  void NotifyDeviceChange();
-+
-   static void OnCoreError(void* data,
-                           uint32_t id,
-                           int seq,
-@@ -132,7 +150,13 @@ class PipeWireSession : public webrtc::RefCountedNonVirtual<PipeWireSession> {
-   VideoCaptureOptions::Callback* callback_ RTC_GUARDED_BY(&callback_lock_) =
-       nullptr;
+@@ -619,6 +622,7 @@ if (!build_with_chromium) {
+         "api/environment:environment_factory",
+         "api/video:video_frame",
+         "api/video:video_rtp_headers",
++        "api/video_codecs:builtin_video_decoder_factory",
+         "test:rtp_test_utils",
+       ]
+       # Added when we removed deps in other places to avoid building
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index e327b5d404..a03ee244bb 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -12,12 +12,10 @@ import("../webrtc.gni")
  
--  VideoCaptureOptions::Status status_;
-+  webrtc::Mutex device_info_lock_;
-+  std::vector<DeviceInfoPipeWire*> device_info_list_
-+      RTC_GUARDED_BY(device_info_lock_);
-+  // Guard with device_info_lock, because currently it's the only place where
-+  // we use this status information.
-+  VideoCaptureOptions::Status status_
-+      RTC_GUARDED_BY(device_info_lock_);
+ group("media") {
+   deps = []
+-  if (!build_with_mozilla) {
+-    deps += [
+-      ":rtc_media",
+-      ":rtc_media_base",
+-    ]
+-  }
++  deps += [
++    ":rtc_media",
++    ":rtc_media_base",
++  ]
+ }
  
-   struct pw_thread_loop* pw_main_loop_ = nullptr;
-   struct pw_context* pw_context_ = nullptr;
+ config("rtc_media_defines_config") {
+@@ -280,6 +278,9 @@ rtc_library("media_engine") {
+       "base/media_engine.cc",
+       "base/media_engine.h",
+     ]
++    deps -= [
++      ":media_channel_impl",
++    ]
+   }
+ }
+ 
+@@ -429,6 +430,7 @@ rtc_library("codec_list") {
+   ]
+ }
+ 
++# MOZILLA Bug 1931241 - how much of this do we need?
+ rtc_library("rtp_utils") {
+ if (!build_with_mozilla) {
+   sources = [
+@@ -475,7 +477,6 @@ rtc_library("media_constants") {
+ }
+ 
+ rtc_library("turn_utils") {
+-if (!build_with_mozilla) {
+   sources = [
+     "base/turn_utils.cc",
+     "base/turn_utils.h",
+@@ -486,17 +487,14 @@ if (!build_with_mozilla) {
+     "../rtc_base/system:rtc_export",
+   ]
+ }
+-}
+ 
+ rtc_library("rid_description") {
+-if (!build_with_mozilla) {
+   sources = [
+     "base/rid_description.cc",
+     "base/rid_description.h",
+   ]
+   deps = [ ":codec" ]
+ }
+-}
+ 
+ rtc_library("rtc_simulcast_encoder_adapter") {
+   visibility = [ "*" ]
+@@ -714,6 +712,12 @@ rtc_library("rtc_audio_video") {
+     "engine/webrtc_voice_engine.cc",
+     "engine/webrtc_voice_engine.h",
+   ]
++  if (build_with_mozilla) {
++    sources -= [
++      "engine/webrtc_video_engine.cc",
++      "engine/webrtc_voice_engine.cc",
++    ]
++  }
+ 
+   public_configs = []
+   if (!build_with_chromium) {
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index aa65cccbab..b16bd955f8 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -1511,6 +1511,7 @@ rtc_source_set("ssl_header") {
+ }
+ 
+ rtc_library("digest") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "message_digest.cc",
+@@ -1525,15 +1526,17 @@ rtc_library("digest") {
+     "//third_party/abseil-cpp/absl/strings:string_view",
+   ]
+ 
+-  # If we are building the SSL library ourselves, we know it's BoringSSL.
+-  if (rtc_build_ssl) {
+-    deps += [ "//third_party/boringssl" ]
+-  } else {
+-    configs += [ "..:external_ssl_library" ]
+-  }
++   # If we are building the SSL library ourselves, we know it's BoringSSL.
++   if (rtc_build_ssl) {
++     deps += [ "//third_party/boringssl" ]
++   } else {
++     configs += [ "..:external_ssl_library" ]
++   }
++}
+ }
+ 
+ rtc_library("crypto_random") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "crypto_random.cc",
+@@ -1554,6 +1557,7 @@ rtc_library("crypto_random") {
+     configs += [ "..:external_ssl_library" ]
+   }
+ }
++}
+ 
+ rtc_library("ssl") {
+ if (!build_with_mozilla) {
+diff --git a/webrtc.gni b/webrtc.gni
+index a7ad4e2052..269a1611a6 100644
+--- a/webrtc.gni
++++ b/webrtc.gni
+@@ -125,7 +125,7 @@ declare_args() {
+ 
+   # Used to specify an external OpenSSL include path when not compiling the
+   # library that comes with WebRTC (i.e. rtc_build_ssl == 0).
+-  rtc_ssl_root = "unused"
++  rtc_ssl_root = ""
+ 
+   # Enable when an external authentication mechanism is used for performing
+   # packet authentication for RTP packets instead of libsrtp.
+@@ -355,7 +355,7 @@ declare_args() {
+ }
+ 
+ # Enable liboam only on non-mozilla builds.
+-enable_libaom = !build_with_mozilla
++enable_libaom = true
+ 
+ # Make it possible to provide custom locations for some libraries (move these
+ # up into declare_args should we need to actually use them for the GN build).

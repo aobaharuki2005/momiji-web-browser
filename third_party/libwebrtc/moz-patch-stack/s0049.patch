@@ -1,23 +1,29 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 2 Nov 2021 14:35:00 +0000
-Subject: Bug 1729455 - Ensure the libwebrtc system clock is not used. r=bwc
+From: Michael Froman <mjfroman@mac.com>
+Date: Fri, 8 Apr 2022 11:36:36 -0500
+Subject: Bug 1766646 - (fix-b556b08668) avoid InlinedVector method that can
+ throw exception
 
-Differential Revision: https://phabricator.services.mozilla.com/D128244
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3e8ac168ee3db089dd892bf140df53e15d6f0918
 ---
- rtc_base/system_time.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ api/video_codecs/video_encoder.cc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/rtc_base/system_time.cc b/rtc_base/system_time.cc
-index c6a9b7b766..c3513ba222 100644
---- a/rtc_base/system_time.cc
-+++ b/rtc_base/system_time.cc
-@@ -12,6 +12,8 @@
- // webrtc::SystemTimeNanos() must be provided externally.
- #ifndef WEBRTC_EXCLUDE_SYSTEM_TIME
- 
-+#error Mozilla: Must not use the built-in libwebrtc clock
-+
- #include <stdint.h>
- 
- #include <limits>
+diff --git a/api/video_codecs/video_encoder.cc b/api/video_codecs/video_encoder.cc
+index fcbb250584..691b51fab8 100644
+--- a/api/video_codecs/video_encoder.cc
++++ b/api/video_codecs/video_encoder.cc
+@@ -190,7 +190,15 @@ std::string VideoEncoder::EncoderInfo::ToString() const {
+   for (size_t i = 0; i < preferred_pixel_formats.size(); ++i) {
+     if (i > 0)
+       oss << ", ";
++#if defined(WEBRTC_MOZILLA_BUILD)
++    // This could assert, as opposed to throw using the form in the
++    // else, but since we're in a for loop that uses .size() we can
++    // be fairly sure that this is safe without doing a further
++    // check to make sure 'i' is in-range.
++    oss << VideoFrameBufferTypeToString(preferred_pixel_formats[i]);
++#else
+     oss << VideoFrameBufferTypeToString(preferred_pixel_formats.at(i));
++#endif
+   }
+   oss << "]";
+   if (is_qp_trusted.has_value()) {

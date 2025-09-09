@@ -1,38 +1,66 @@
-From: stransky <stransky@redhat.com>
-Date: Tue, 29 Aug 2023 12:43:00 +0000
-Subject: Bug 1821629 [DMABuf] Don't use DMABuf if it's disabled by Firefox gfx
- config r=ng,webrtc-reviewers
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Wed, 15 Nov 2023 22:33:00 +0000
+Subject: Bug 1863041 - P0 - add device filter control to
+ RTCCameraVideoCapturer;r=pehrsons,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D172224
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/158a888cad8869a2f0026fa7cfaaa13ecbfcf2ed
+I have filed this bug upstream: https://bugs.chromium.org/p/webrtc/issues/detail?id=15639
+
+Differential Revision: https://phabricator.services.mozilla.com/D193172
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91a763d768b74acc9cf4828f91a86df4a7b092ce
 ---
- .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ .../capturer/RTCCameraVideoCapturer.h         |  5 ++++-
+ .../capturer/RTCCameraVideoCapturer.m         | 19 +++++++++++++++----
+ 2 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index a022de6c6a..7a72f6c771 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -27,6 +27,13 @@
- #include "rtc_base/synchronization/mutex.h"
- #include "rtc_base/time_utils.h"
+diff --git a/sdk/objc/components/capturer/RTCCameraVideoCapturer.h b/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
+index 5185fa866e..6aeb577b13 100644
+--- a/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
++++ b/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
+@@ -26,7 +26,10 @@ RTC_OBJC_EXPORT
+ @property(readonly, nonatomic) AVCaptureSession *captureSession;
  
-+// Wrapper for gfxVars::UseDMABuf() as we can't include gfxVars here.
-+// We don't want to use dmabuf of known broken systems.
-+// See FEATURE_DMABUF for details.
-+namespace mozilla::gfx {
-+bool IsDMABufEnabled();
+ // Returns list of available capture devices that support video capture.
+-+ (NSArray<AVCaptureDevice *> *)captureDevices;
+++ (NSArray<AVCaptureDevice *> *)captureDevicesWithDeviceTypes:
++    (NSArray<AVCaptureDeviceType> *)deviceTypes;
++// Returns list of default capture devices types
+++ (NSArray<AVCaptureDeviceType> *)defaultCaptureDeviceTypes;
+ // Returns list of formats that are supported by this class for this device.
+ + (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:
+     (AVCaptureDevice *)device;
+diff --git a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
+index ff55bd7f19..60b1dbbfb5 100644
+--- a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
++++ b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
+@@ -124,16 +124,27 @@ - (void)dealloc {
+   [[NSNotificationCenter defaultCenter] removeObserver:self];
+ }
+ 
+-+ (NSArray<AVCaptureDevice *> *)captureDevices {
+++ (NSArray<AVCaptureDevice *> *)captureDevicesWithDeviceTypes:
++    (NSArray<AVCaptureDeviceType> *)deviceTypes {
+   AVCaptureDeviceDiscoverySession *session = [AVCaptureDeviceDiscoverySession
+-      discoverySessionWithDeviceTypes:@[
+-        AVCaptureDeviceTypeBuiltInWideAngleCamera
+-      ]
++      discoverySessionWithDeviceTypes:deviceTypes
+                             mediaType:AVMediaTypeVideo
+                              position:AVCaptureDevicePositionUnspecified];
+   return session.devices;
+ }
+ 
+++ (NSArray<AVCaptureDeviceType> *)defaultCaptureDeviceTypes {
++  NSArray *types = @[ AVCaptureDeviceTypeBuiltInWideAngleCamera ];
++#if !defined(WEBRTC_IOS)
++  if (@available(macOS 14.0, *)) {
++    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternal];
++  } else {
++    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternalUnknown];
++  }
++#endif
++  return types;
 +}
 +
- namespace webrtc {
- 
- const int kBytesPerPixel = 4;
-@@ -268,7 +275,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
-   that->modifier_ =
-       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
-   std::vector<const spa_pod*> params;
--  const int buffer_types = has_modifier
-+  const int buffer_types = has_modifier && mozilla::gfx::IsDMABufEnabled()
-                                ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
-                                : (1 << SPA_DATA_MemFd);
- 
+ + (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:
+     (AVCaptureDevice *)device {
+   // Support opening the device in any format. We make sure it's converted to a

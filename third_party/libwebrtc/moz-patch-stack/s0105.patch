@@ -1,48 +1,100 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 23 May 2024 17:28:00 +0000
-Subject: Bug 1897459 - P2 - for BSD reference null socket server
- instead;r=mjf,webrtc-reviewers
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 10 Oct 2024 13:42:00 +0000
+Subject: Bug 1921707 - webrtc.gni - filter out '//third_party/abseil-cpp/'
+ deps r=ng,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D211095
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0993ae41fb7db1624dedc5cf2278cd5a505f18f5
+Differential Revision: https://phabricator.services.mozilla.com/D224079
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/45b99d1ba95b46896506de1c7dd92f19e4dc9207
 ---
- rtc_base/internal/default_socket_server.cc | 4 ++--
- rtc_base/virtual_socket_server.cc          | 2 ++
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ webrtc.gni | 71 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 71 insertions(+)
 
-diff --git a/rtc_base/internal/default_socket_server.cc b/rtc_base/internal/default_socket_server.cc
-index 043c2ce850..18049906e9 100644
---- a/rtc_base/internal/default_socket_server.cc
-+++ b/rtc_base/internal/default_socket_server.cc
-@@ -14,7 +14,7 @@
+diff --git a/webrtc.gni b/webrtc.gni
+index bb386f6e3f..df16269eb4 100644
+--- a/webrtc.gni
++++ b/webrtc.gni
+@@ -706,6 +706,36 @@ template("rtc_source_set") {
+         deps += [ "//third_party/abseil-cpp:absl" ]
+       }
+     }
++
++    # Rather than widespread changes to most, if not all, BUILD.gn files
++    # we'll do some filtering on dependencies here.
++    if (build_with_mozilla && defined(deps)) {
++      # Now that abseil-cpp is moved to Mozilla's third_party directory
++      # we remove all the abseil-cpp dependency listings so moz.build
++      # generation succeed.
++      filtered_deps = []
++      foreach (dep, deps) {
++        newdep = string_replace(dep, "//third_party/abseil-cpp/", "")
++        if (newdep == dep) {
++          filtered_deps += [ dep ]
++        }
++      }
++      deps = []
++      deps = filtered_deps
++
++      # We don't build any of the test code, but many of the test
++      # targets list gtest/gmock as a dependency.  We can simply
++      # filter them out here.
++      filtered_deps = []
++      foreach (dep, deps) {
++        newdep = string_replace(dep, "//testing/g", "")
++        if (newdep == dep) {
++          filtered_deps += [ dep ]
++        }
++      }
++      deps = []
++      deps = filtered_deps
++    }
+   }
+ }
  
- #include "rtc_base/socket_server.h"
+@@ -940,6 +970,47 @@ template("rtc_library") {
+         deps += [ "//third_party/abseil-cpp:absl" ]
+       }
+     }
++
++    # Rather than widespread changes to most, if not all, BUILD.gn files
++    # we'll do some filtering on dependencies here.
++    if (build_with_mozilla && defined(deps)) {
++      # Now that abseil-cpp is moved to Mozilla's third_party directory
++      # we remove all the abseil-cpp dependency listings so moz.build
++      # generation succeed.
++      filtered_deps = []
++      foreach (dep, deps) {
++        newdep = string_replace(dep, "//third_party/abseil-cpp/", "")
++        if (newdep == dep) {
++          filtered_deps += [ dep ]
++        }
++      }
++      deps = []
++      deps = filtered_deps
++
++      # We don't build any of the test code, but many of the test
++      # targets list gtest/gmock as a dependency.  We can simply
++      # filter them out here.
++      filtered_deps = []
++      foreach (dep, deps) {
++        newdep = string_replace(dep, "//testing/g", "")
++        if (newdep == dep) {
++          filtered_deps += [ dep ]
++        }
++      }
++      deps = []
++      deps = filtered_deps
++
++      # Moving the google build directory requires looking for libwebrtc's
++      # third_party dependencies under libwebrtc/third_party instead of
++      # simply third_party.
++      modified_deps = []
++      foreach (dep, deps) {
++        newdep = string_replace(dep, "//third_party/", "//libwebrtc/third_party/")
++        modified_deps += [ newdep ]
++      }
++      deps = []
++      deps = modified_deps
++    }
+   }
+ }
  
--#if defined(__native_client__)
-+#if defined(__native_client__) || defined(WEBRTC_BSD)
- #include "rtc_base/null_socket_server.h"
- #else
- #include "rtc_base/physical_socket_server.h"
-@@ -23,7 +23,7 @@
- namespace webrtc {
- 
- std::unique_ptr<SocketServer> CreateDefaultSocketServer() {
--#if defined(__native_client__)
-+#if defined(__native_client__) || defined(WEBRTC_BSD)
-   return std::unique_ptr<SocketServer>(new webrtc::NullSocketServer);
- #else
-   return std::unique_ptr<SocketServer>(new PhysicalSocketServer);
-diff --git a/rtc_base/virtual_socket_server.cc b/rtc_base/virtual_socket_server.cc
-index 20ae7890c4..2448679337 100644
---- a/rtc_base/virtual_socket_server.cc
-+++ b/rtc_base/virtual_socket_server.cc
-@@ -24,7 +24,9 @@
- #include "rtc_base/event.h"
- #include "rtc_base/fake_clock.h"
- #include "rtc_base/logging.h"
-+#if !defined(WEBRTC_BSD)
- #include "rtc_base/physical_socket_server.h"
-+#endif
- #include "rtc_base/socket_address_pair.h"
- #include "rtc_base/thread.h"
- #include "rtc_base/time_utils.h"

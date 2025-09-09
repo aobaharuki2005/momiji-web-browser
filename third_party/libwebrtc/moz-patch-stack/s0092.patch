@@ -1,66 +1,31 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Wed, 15 Nov 2023 22:33:00 +0000
-Subject: Bug 1863041 - P0 - add device filter control to
- RTCCameraVideoCapturer;r=pehrsons,webrtc-reviewers
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 6 May 2024 07:28:00 +0000
+Subject: Bug 1892329 - Fix threading issues in VideoCaptureModuleV4L2 once and
+ for all. r=webrtc-reviewers,mjf
 
-I have filed this bug upstream: https://bugs.chromium.org/p/webrtc/issues/detail?id=15639
-
-Differential Revision: https://phabricator.services.mozilla.com/D193172
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91a763d768b74acc9cf4828f91a86df4a7b092ce
+Differential Revision: https://phabricator.services.mozilla.com/D208187
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/65e120a9c1dcb9c8f1c8930e808b03aa149eaf40
 ---
- .../capturer/RTCCameraVideoCapturer.h         |  5 ++++-
- .../capturer/RTCCameraVideoCapturer.m         | 19 +++++++++++++++----
- 2 files changed, 19 insertions(+), 5 deletions(-)
+ modules/video_capture/linux/video_capture_v4l2.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/sdk/objc/components/capturer/RTCCameraVideoCapturer.h b/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
-index 5185fa866e..6aeb577b13 100644
---- a/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
-+++ b/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
-@@ -26,7 +26,10 @@ RTC_OBJC_EXPORT
- @property(readonly, nonatomic) AVCaptureSession *captureSession;
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index 6b2ae72ce7..b40f17cc4d 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -298,7 +298,6 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   _requestedCapability = capability;
+   _captureStarted = true;
+   _streaming = true;
+-  }
  
- // Returns list of available capture devices that support video capture.
--+ (NSArray<AVCaptureDevice *> *)captureDevices;
-++ (NSArray<AVCaptureDevice *> *)captureDevicesWithDeviceTypes:
-+    (NSArray<AVCaptureDeviceType> *)deviceTypes;
-+// Returns list of default capture devices types
-++ (NSArray<AVCaptureDeviceType> *)defaultCaptureDeviceTypes;
- // Returns list of formats that are supported by this class for this device.
- + (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:
-     (AVCaptureDevice *)device;
-diff --git a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
-index ff55bd7f19..60b1dbbfb5 100644
---- a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
-+++ b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
-@@ -124,16 +124,27 @@ const int64_t kNanosecondsPerSecond = 1000000000;
-   [[NSNotificationCenter defaultCenter] removeObserver:self];
- }
+   // start capture thread;
+   if (!_captureThread.empty()) {
+@@ -306,6 +305,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   }
  
--+ (NSArray<AVCaptureDevice *> *)captureDevices {
-++ (NSArray<AVCaptureDevice *> *)captureDevicesWithDeviceTypes:
-+    (NSArray<AVCaptureDeviceType> *)deviceTypes {
-   AVCaptureDeviceDiscoverySession *session = [AVCaptureDeviceDiscoverySession
--      discoverySessionWithDeviceTypes:@[
--        AVCaptureDeviceTypeBuiltInWideAngleCamera
--      ]
-+      discoverySessionWithDeviceTypes:deviceTypes
-                             mediaType:AVMediaTypeVideo
-                              position:AVCaptureDevicePositionUnspecified];
-   return session.devices;
- }
- 
-++ (NSArray<AVCaptureDeviceType> *)defaultCaptureDeviceTypes {
-+  NSArray *types = @[ AVCaptureDeviceTypeBuiltInWideAngleCamera ];
-+#if !defined(WEBRTC_IOS)
-+  if (@available(macOS 14.0, *)) {
-+    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternal];
-+  } else {
-+    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternalUnknown];
+   quit_ = false;
 +  }
-+#endif
-+  return types;
-+}
-+
- + (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:
-     (AVCaptureDevice *)device {
-   // Support opening the device in any format. We make sure it's converted to a
+ 
+   _captureThread = PlatformThread::SpawnJoinable(
+       [self = scoped_refptr(this)] {

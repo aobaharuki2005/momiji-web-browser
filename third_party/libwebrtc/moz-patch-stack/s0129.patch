@@ -1,23 +1,22 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 13 Jan 2025 08:14:00 -0600
-Subject: Bug 1942428 - (fix-69cc695699) uncomment an arg that upstream thinks
- is unused
+Date: Fri, 8 Aug 2025 14:18:00 -0500
+Subject: Bug 1980479 - (fix-2f21adc141) turn off rtc_rusty_base64
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/73f9e0e64eb65e9f2579b0f3eb34b88e2b5e5d74
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6038962cc8531f7bac3a58170b052326f5fabf4a
 ---
- modules/rtp_rtcp/source/rtcp_sender.cc | 2 +-
+ webrtc.gni | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index ccb145412e..7bbd5ba0e7 100644
---- a/modules/rtp_rtcp/source/rtcp_sender.cc
-+++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -221,7 +221,7 @@ bool RTCPSender::Sending() const {
-   return sending_;
+diff --git a/webrtc.gni b/webrtc.gni
+index 785492fe49..1e87de20e5 100644
+--- a/webrtc.gni
++++ b/webrtc.gni
+@@ -343,7 +343,7 @@ declare_args() {
+   rtc_disable_metrics = false
+ 
+   # Enables an experimental rust version of base64 for building and testing.
+-  rtc_rusty_base64 = true
++  rtc_rusty_base64 = !build_with_mozilla
  }
  
--void RTCPSender::SetSendingStatus(const FeedbackState& /* feedback_state */,
-+void RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
-                                   bool sending) {
-   bool sendRTCPBye = false;
-   {
+ declare_args() {

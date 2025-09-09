@@ -1,39 +1,26 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 Apr 2024 21:54:00 +0000
-Subject: Bug 1888181 - (fix-52fec7d3) Limit scope of race checker in
- VideoCaptureModuleV4L2::StartCapture. r=mjf
+From: Byron Campen <docfaraday@gmail.com>
+Date: Fri, 26 Jul 2024 09:26:00 -0500
+Subject: Bug 1909234 - (fix-a0d1a51217) Move this errant include where it
+ belongs. r?mjf
 
-TSAN detects a race between destroying the scoped race checker in StartCapture
-and creating the scoped race checker in CaptureProcess, because once the capture
-thread has been created (and given its run function) there is no synchronization
-before the run function starts to run.
-
-This patch avoids the race by destroying the StartCapture scoped race checker
-before creating the capture thread.
-
-Differential Revision: https://phabricator.services.mozilla.com/D207203
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b046a1446cee5ab485d4868b3ca9784b16b2d02f
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6baf67202c67b27c6464cb8e4dbb419485aa6c4c
 ---
- modules/video_capture/linux/video_capture_v4l2.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ api/test/network_emulation/BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index 16efad9825..b56a06f14b 100644
---- a/modules/video_capture/linux/video_capture_v4l2.cc
-+++ b/modules/video_capture/linux/video_capture_v4l2.cc
-@@ -129,6 +129,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
-     }
-   }
+diff --git a/api/test/network_emulation/BUILD.gn b/api/test/network_emulation/BUILD.gn
+index d22cc09d00..3d7bc005f4 100644
+--- a/api/test/network_emulation/BUILD.gn
++++ b/api/test/network_emulation/BUILD.gn
+@@ -6,10 +6,10 @@
+ # in the file PATENTS.  All contributing project authors may
+ # be found in the AUTHORS file in the root of the source tree.
  
-+  {
-   // We don't want members above to be guarded by capture_checker_ as
-   // it's meant to be for members that are accessed on the API thread
-   // only when we are not capturing. The code above can be called many
-@@ -296,6 +297,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
-   _requestedCapability = capability;
-   _captureStarted = true;
-   _streaming = true;
-+  }
+-import("//third_party/protobuf/proto_library.gni")
+ import("../../../webrtc.gni")
  
-   // start capture thread;
-   if (_captureThread.empty()) {
+ if (rtc_enable_protobuf) {
++  import("//third_party/protobuf/proto_library.gni")
+   proto_library("network_config_schedule_proto") {
+     visibility = [ "*" ]
+     sources = [ "network_config_schedule.proto" ]
