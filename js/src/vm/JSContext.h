@@ -18,6 +18,7 @@
 #include "builtin/AtomicsObject.h"
 #include "ds/TraceableFifo.h"
 #include "frontend/NameCollections.h"
+#include "gc/Allocator.h"
 #include "gc/GCEnum.h"
 #include "gc/Memory.h"
 #include "irregexp/RegExpTypes.h"
@@ -28,6 +29,7 @@
 #include "js/Interrupt.h"
 #include "js/Promise.h"
 #include "js/Result.h"
+#include "js/RootingAPI.h"
 #include "js/Stack.h"  // JS::NativeStackBase, JS::NativeStackLimit
 #include "js/Utility.h"
 #include "js/Vector.h"
@@ -1174,6 +1176,10 @@ class MOZ_RAII AutoUnsafeCallWithABI {
       UnsafeABIStrictness unused_ = UnsafeABIStrictness::NoExceptions) {}
 #endif
 };
+
+template <typename T>
+inline BufferHolder<T>::BufferHolder(JSContext* cx, T* buffer)
+    : BufferHolder(cx->zone(), buffer) {}
 
 } /* namespace js */
 

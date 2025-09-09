@@ -227,6 +227,20 @@ inline void TraceRoot(JSTracer* trc, const HeapPtr<T>* thingp,
   TraceRoot(trc, thingp->unbarrieredAddress(), name);
 }
 
+// Buffers are typically owned by other GC things. Permit creation of 'tenured
+// owned' buffers as part of creating the owning GC thing.
+template <typename T>
+void TraceBufferRoot(JSTracer* trc, JS::Zone* zone, T** bufferp,
+                     const char* name) {
+  void** ptrp = reinterpret_cast<void**>(bufferp);
+  gc::TraceBufferEdgeInternal(trc, zone, ptrp, name);
+}
+
+template <typename T>
+void BufferHolder<T>::trace(JSTracer* trc) {
+  TraceBufferRoot(trc, zone, &buffer, "BufferHolder buffer");
+}
+
 // Idential to TraceRoot, except that this variant will not crash if |*thingp|
 // is null.
 
