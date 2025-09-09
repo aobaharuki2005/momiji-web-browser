@@ -12955,7 +12955,7 @@ function Lists({
     ref: reorderListRef,
     itemSelector: "fieldset .task-type-tasks",
     dragSelector: ".checkbox-wrapper"
-  }, /*#__PURE__*/external_React_default().createElement("fieldset", null, selectedList?.tasks.length >= 1 ? selectedList.tasks.map((task, index) => /*#__PURE__*/external_React_default().createElement(ListItem, {
+  }, /*#__PURE__*/external_React_default().createElement("fieldset", null, selectedList?.tasks.length >= 1 && selectedList.tasks.map((task, index) => /*#__PURE__*/external_React_default().createElement(ListItem, {
     type: TASK_TYPE.IN_PROGRESS,
     task: task,
     key: task.id,
@@ -12965,10 +12965,7 @@ function Lists({
     isValidUrl: isValidUrl,
     isFirst: index === 0,
     isLast: index === selectedList.tasks.length - 1
-  })) : /*#__PURE__*/external_React_default().createElement("p", {
-    className: "empty-list-text",
-    "data-l10n-id": "newtab-widget-lists-empty-cta"
-  }), selectedList?.completed.length >= 1 && /*#__PURE__*/external_React_default().createElement("details", {
+  })), selectedList?.completed.length >= 1 && /*#__PURE__*/external_React_default().createElement("details", {
     className: "completed-task-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("summary", null, /*#__PURE__*/external_React_default().createElement("span", {
     "data-l10n-id": "newtab-widget-lists-completed-list",
@@ -12982,7 +12979,22 @@ function Lists({
     task: completedTask,
     deleteTask: deleteTask,
     updateTask: updateTask
-  })))))), /*#__PURE__*/external_React_default().createElement("canvas", {
+  }))))), selectedList?.tasks.length < 1 && selectedList?.completed.length < 1 && /*#__PURE__*/external_React_default().createElement("div", {
+    className: "empty-list"
+  }, /*#__PURE__*/external_React_default().createElement("picture", null, /*#__PURE__*/external_React_default().createElement("source", {
+    srcSet: "chrome://newtab/content/data/content/assets/lists-empty-state-dark.svg",
+    media: "(prefers-color-scheme: dark)"
+  }), /*#__PURE__*/external_React_default().createElement("source", {
+    srcSet: "chrome://newtab/content/data/content/assets/lists-empty-state-light.svg",
+    media: "(prefers-color-scheme: light)"
+  }), /*#__PURE__*/external_React_default().createElement("img", {
+    width: "100",
+    height: "100",
+    alt: ""
+  })), /*#__PURE__*/external_React_default().createElement("p", {
+    className: "empty-list-text",
+    "data-l10n-id": "newtab-widget-lists-empty-cta"
+  }))), /*#__PURE__*/external_React_default().createElement("canvas", {
     className: "confetti-canvas",
     ref: canvasRef
   }));

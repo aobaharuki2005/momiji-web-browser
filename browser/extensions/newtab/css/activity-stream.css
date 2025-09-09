@@ -4345,10 +4345,12 @@ main section {
   width: var(--newtab-card-width-medium);
   background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
-  padding-block: var(--space-large);
+  padding-block-start: var(--space-large);
   height: var(--newtab-card-height);
   box-shadow: var(--box-shadow-card);
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 .lists .confetti-canvas {
   position: absolute;
@@ -4413,6 +4415,9 @@ main section {
   color: var(--text-color-disabled);
   outline: var(--border-width) solid var(--border-color-interactive-disabled);
 }
+.lists .task-list-wrapper {
+  height: 100%;
+}
 .lists fieldset {
   padding: 0 var(--space-medium);
   margin: 0 var(--space-xsmall);
@@ -4427,7 +4432,6 @@ main section {
   padding: var(--space-xsmall);
   display: flex;
   justify-content: space-between;
-  margin-block-end: var(--space-small);
   transition: opacity 300ms ease;
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -4486,8 +4490,24 @@ main section {
 .lists .task-item .edit-task:focus {
   outline: var(--focus-outline);
 }
-.lists .empty-list-text {
-  height: var(--space-xlarge);
+.lists .empty-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-small);
+  height: 100%;
+  padding-block: var(--space-large);
+}
+.lightWallpaper .lists .empty-list {
+  color-scheme: light;
+}
+.darkWallpaper .lists .empty-list {
+  color-scheme: dark;
+}
+.lists .empty-list .empty-list-text {
+  margin: 0;
+  text-align: center;
   color: var(--text-color-deemphasized);
   font-size: var(--font-size-small);
 }

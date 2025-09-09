@@ -663,7 +663,7 @@ function Lists({ dispatch, handleUserInteraction }) {
           dragSelector=".checkbox-wrapper"
         >
           <fieldset>
-            {selectedList?.tasks.length >= 1 ? (
+            {selectedList?.tasks.length >= 1 &&
               selectedList.tasks.map((task, index) => (
                 <ListItem
                   type={TASK_TYPE.IN_PROGRESS}
@@ -676,13 +676,7 @@ function Lists({ dispatch, handleUserInteraction }) {
                   isFirst={index === 0}
                   isLast={index === selectedList.tasks.length - 1}
                 />
-              ))
-            ) : (
-              <p
-                className="empty-list-text"
-                data-l10n-id="newtab-widget-lists-empty-cta"
-              ></p>
-            )}
+              ))}
             {selectedList?.completed.length >= 1 && (
               <details className="completed-task-wrapper">
                 <summary>
@@ -707,6 +701,27 @@ function Lists({ dispatch, handleUserInteraction }) {
             )}
           </fieldset>
         </moz-reorderable-list>
+        {/* Empty State */}
+        {selectedList?.tasks.length < 1 &&
+          selectedList?.completed.length < 1 && (
+            <div className="empty-list">
+              <picture>
+                <source
+                  srcSet="chrome://newtab/content/data/content/assets/lists-empty-state-dark.svg"
+                  media="(prefers-color-scheme: dark)"
+                />
+                <source
+                  srcSet="chrome://newtab/content/data/content/assets/lists-empty-state-light.svg"
+                  media="(prefers-color-scheme: light)"
+                />
+                <img width="100" height="100" alt="" />
+              </picture>
+              <p
+                className="empty-list-text"
+                data-l10n-id="newtab-widget-lists-empty-cta"
+              ></p>
+            </div>
+          )}
       </div>
       <canvas className="confetti-canvas" ref={canvasRef} />
     </article>
