@@ -158,13 +158,13 @@ fun SyncedTabsList(
                                     }
                                 }
                             } else {
-                                item(key = "no-tabs-${syncedTabItem.displayName}") { SyncedTabsNoTabsItem() }
+                                item(key = "no-tabs-${syncedTabItem.displayName}-$index") { SyncedTabsNoTabsItem() }
                             }
                         }
                     }
 
                     is SyncedTabsListItem.Error -> {
-                        item(key = "error-${syncedTabItem.errorText}") {
+                        item(key = "error-${syncedTabItem.errorText}-$index") {
                             SyncedTabsErrorItem(
                                 errorText = syncedTabItem.errorText,
                                 errorButton = syncedTabItem.errorButton,
