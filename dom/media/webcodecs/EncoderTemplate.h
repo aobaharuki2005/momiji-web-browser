@@ -123,9 +123,7 @@ class EncoderTemplate : public DOMEventTargetHelper {
       mKeyFrames += data->mKeyframe ? 1 : 0;
       mData.AppendElement(data.forget());
     }
-    nsTArray<RefPtr<MediaData>>&& TakeData() {
-      return std::move(mData);
-    }
+    nsTArray<RefPtr<MediaData>>&& TakeData() { return std::move(mData); }
     virtual void Cancel() override { Disconnect(); }
     virtual bool IsProcessing() override { return Exists(); };
     virtual RefPtr<EncodeMessage> AsEncodeMessage() override { return this; }

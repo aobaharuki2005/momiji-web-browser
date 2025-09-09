@@ -317,7 +317,8 @@ RefPtr<EncoderAgent::EncodePromise> EncoderAgent::Encode(
 
   RefPtr<EncodePromise> p = mEncodePromise.Ensure(__func__);
 
-  LOGV("EncoderAgent #%zu (%p) is encoding %zu samples", mId, this, aInputs.Length());
+  LOGV("EncoderAgent #%zu (%p) is encoding %zu samples", mId, this,
+       aInputs.Length());
   mEncoder->Encode(std::move(aInputs))
       ->Then(
           mOwnerThread, __func__,
