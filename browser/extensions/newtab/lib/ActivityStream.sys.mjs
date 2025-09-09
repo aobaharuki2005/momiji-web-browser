@@ -931,6 +931,20 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "widgets.lists.badge.enabled",
+    {
+      title: "Show badge on lists widget to indicate new/beta feature",
+      value: false,
+    },
+  ],
+  [
+    "widgets.lists.badge.label",
+    {
+      title: "Label type for lists widget badge (New or Beta)",
+      value: "",
+    },
+  ],
+  [
     "widgets.focusTimer.enabled",
     {
       title: "Enables the focus timer widget",

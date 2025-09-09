@@ -31,6 +31,8 @@ const USER_ACTION_TYPES = {
 
 const PREF_WIDGETS_LISTS_MAX_LISTS = "widgets.lists.maxLists";
 const PREF_WIDGETS_LISTS_MAX_LISTITEMS = "widgets.lists.maxListItems";
+const PREF_WIDGETS_LISTS_BADGE_ENABLED = "widgets.lists.badge.enabled";
+const PREF_WIDGETS_LISTS_BADGE_LABEL = "widgets.lists.badge.label";
 
 function Lists({ dispatch, handleUserInteraction }) {
   const prefs = useSelector(state => state.Prefs.values);
@@ -537,6 +539,23 @@ function Lists({ dispatch, handleUserInteraction }) {
       ? "newtab-widget-lists-name-placeholder-new"
       : "newtab-widget-lists-name-placeholder-default";
 
+  const nimbusBadgeEnabled = prefs.widgetsConfig?.listsBadgeEnabled;
+  const nimbusBadgeLabel = prefs.widgetsConfig?.listsBadgeLabel;
+  const nimbusBadgeTrainhopEnabled =
+    prefs.trainhopConfig?.widgets?.listsBadgeEnabled;
+  const nimbusBadgeTrainhopLabel =
+    prefs.trainhopConfig?.widgets?.listsBadgeLabel;
+
+  const badgeEnabled =
+    (nimbusBadgeEnabled || nimbusBadgeTrainhopEnabled) ??
+    prefs[PREF_WIDGETS_LISTS_BADGE_ENABLED] ??
+    false;
+
+  const badgeLabel =
+    (nimbusBadgeLabel || nimbusBadgeTrainhopLabel) ??
+    prefs[PREF_WIDGETS_LISTS_BADGE_LABEL] ??
+    "";
+
   return (
     <article
       className="lists"
@@ -570,8 +589,18 @@ function Lists({ dispatch, handleUserInteraction }) {
           </moz-select>
         </EditableText>
         {/* Hide the badge when user is editing task list title */}
-        {!isEditing && (
-          <moz-badge data-l10n-id="newtab-widget-lists-label-new"></moz-badge>
+        {!isEditing && badgeEnabled && badgeLabel && (
+          <moz-badge
+            data-l10n-id={(() => {
+              if (badgeLabel === "New") {
+                return "newtab-widget-lists-label-new";
+              }
+              if (badgeLabel === "Beta") {
+                return "newtab-widget-lists-label-beta";
+              }
+              return "";
+            })()}
+          ></moz-badge>
         )}
         <moz-button
           className="lists-panel-button"

@@ -12431,6 +12431,8 @@ const USER_ACTION_TYPES = {
 };
 const PREF_WIDGETS_LISTS_MAX_LISTS = "widgets.lists.maxLists";
 const PREF_WIDGETS_LISTS_MAX_LISTITEMS = "widgets.lists.maxListItems";
+const PREF_WIDGETS_LISTS_BADGE_ENABLED = "widgets.lists.badge.enabled";
+const PREF_WIDGETS_LISTS_BADGE_LABEL = "widgets.lists.badge.label";
 function Lists({
   dispatch,
   handleUserInteraction
@@ -12861,6 +12863,12 @@ function Lists({
   const listKeys = Object.keys(lists);
   const selectedIndex = Math.max(0, listKeys.indexOf(selected));
   const listNamePlaceholder = currentListsCount > 1 && selectedIndex !== 0 ? "newtab-widget-lists-name-placeholder-new" : "newtab-widget-lists-name-placeholder-default";
+  const nimbusBadgeEnabled = prefs.widgetsConfig?.listsBadgeEnabled;
+  const nimbusBadgeLabel = prefs.widgetsConfig?.listsBadgeLabel;
+  const nimbusBadgeTrainhopEnabled = prefs.trainhopConfig?.widgets?.listsBadgeEnabled;
+  const nimbusBadgeTrainhopLabel = prefs.trainhopConfig?.widgets?.listsBadgeLabel;
+  const badgeEnabled = (nimbusBadgeEnabled || nimbusBadgeTrainhopEnabled) ?? prefs[PREF_WIDGETS_LISTS_BADGE_ENABLED] ?? false;
+  const badgeLabel = (nimbusBadgeLabel || nimbusBadgeTrainhopLabel) ?? prefs[PREF_WIDGETS_LISTS_BADGE_LABEL] ?? "";
   return /*#__PURE__*/external_React_default().createElement("article", {
     className: "lists",
     ref: el => {
@@ -12887,8 +12895,16 @@ function Lists({
     label: list.label
   } : {
     "data-l10n-id": "newtab-widget-lists-name-label-default"
-  }))))), !isEditing && /*#__PURE__*/external_React_default().createElement("moz-badge", {
-    "data-l10n-id": "newtab-widget-lists-label-new"
+  }))))), !isEditing && badgeEnabled && badgeLabel && /*#__PURE__*/external_React_default().createElement("moz-badge", {
+    "data-l10n-id": (() => {
+      if (badgeLabel === "New") {
+        return "newtab-widget-lists-label-new";
+      }
+      if (badgeLabel === "Beta") {
+        return "newtab-widget-lists-label-beta";
+      }
+      return "";
+    })()
   }), /*#__PURE__*/external_React_default().createElement("moz-button", {
     className: "lists-panel-button",
     iconSrc: "chrome://global/skin/icons/more.svg",
