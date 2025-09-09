@@ -176,7 +176,6 @@ bool WeakMapObject::set(JSContext* cx, unsigned argc, Value* vp) {
                                                                           args);
 }
 
-#ifdef NIGHTLY_BUILD
 static bool GetOrAddWeakMapEntry(JSContext* cx, Handle<WeakMapObject*> mapObj,
                                  Handle<Value> key, Handle<Value> value,
                                  MutableHandleValue rval) {
@@ -217,7 +216,6 @@ bool WeakMapObject::getOrInsert(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<WeakMapObject::is,
                               WeakMapObject::getOrInsert_impl>(cx, args);
 }
-#endif  // #ifdef NIGHTLY_BUILD
 
 size_t WeakCollectionObject::sizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) {
@@ -460,10 +458,8 @@ const JSFunctionSpec WeakMapObject::methods[] = {
     JS_INLINABLE_FN("get", get, 1, 0, WeakMapGet),
     JS_FN("delete", delete_, 1, 0),
     JS_FN("set", set, 2, 0),
-#ifdef NIGHTLY_BUILD
     JS_FN("getOrInsert", getOrInsert, 2, 0),
     JS_SELF_HOSTED_FN("getOrInsertComputed", "WeakMapGetOrInsertComputed", 2,
                       0),
-#endif
     JS_FS_END,
 };

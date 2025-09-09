@@ -8862,6 +8862,13 @@
   mirror: always
   set_spidermonkey_pref: startup
 
+  # Experimental support for upsert in JavaScript.
+- name: javascript.options.experimental.upsert
+  type: bool
+  value: true
+  mirror: always
+  set_spidermonkey_pref: startup
+
 #ifdef NIGHTLY_BUILD
   # Experimental support for Async Iterator Helpers in JavaScript.
 -   name: javascript.options.experimental.async_iterator_helpers
@@ -8893,13 +8900,6 @@
 
   # Experimental support for Iterator Sequencing in JavaScript.
 -   name: javascript.options.experimental.iterator_sequencing
-    type: bool
-    value: false
-    mirror: always
-    set_spidermonkey_pref: startup
-
-  # Experimental support for upsert in JavaScript.
--   name: javascript.options.experimental.upsert
     type: bool
     value: false
     mirror: always

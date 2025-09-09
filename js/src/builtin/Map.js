@@ -197,7 +197,6 @@ function MapGroupBy(items, callbackfn) {
   return map;
 }
 
-#ifdef NIGHTLY_BUILD
 /**
  * Upsert proposal
  *
@@ -249,5 +248,3 @@ function MapGetOrInsertComputed(key, callbackfn) {
   // Step 7.a.ii, 10. Return value.
   return value;
 }
-#endif  // #ifdef NIGHTLY_BUILD
-
