@@ -506,6 +506,70 @@ var gMKVtests = [
   },
 ];
 
+// The following files should be added to gMKVtests once they are supported.
+var gUnsupportedMKVtests = [
+  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx output_vp8.mkv
+  {
+    name: "output_vp8.mkv",
+    type: "video/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx-vp9 output_vp9.mkv
+  {
+    name: "output_vp9.mkv",
+    type: "video/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libaom-av1 output_av1.mkv
+  {
+    name: "output_av1.mkv",
+    type: "video/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libaom-av1 output_av1.mkv
+  {
+    name: "output_av1.mkv",
+    type: "video/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libx265 output_hevc.mkv
+  {
+    name: "output_hevc.mkv",
+    type: "video/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a libvorbis output_vorbis.mkv
+  {
+    name: "output_vorbis.mkv",
+    type: "audio/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a libopus output_opus.mkv
+  {
+    name: "output_opus.mkv",
+    type: "audio/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a flac output_flac.mkv
+  {
+    name: "output_flac.mkv",
+    type: "audio/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a libmp3lame output_mp3.mkv
+  {
+    name: "output_mp3.mkv",
+    type: "audio/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a pcm_s16le output_pcm.mkv
+  {
+    name: "output_pcm.mkv",
+    type: "audio/matroska",
+    duration: 1.0,
+  },
+];
+
 // AAC files with different sample rates. We add these here as some are added
 // conditionally.
 gPlayTests.push(
