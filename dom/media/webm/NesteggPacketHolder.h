@@ -76,13 +76,6 @@ class NesteggPacketHolder {
     MOZ_ASSERT(IsInitialized());
     return mIsKeyframe;
   }
-  // Return the discard padding (if exists) in microseconds for the packet.
-  int64_t DiscardPaddingUs() const {
-    MOZ_ASSERT(IsInitialized());
-    int64_t paddingNs = 0;
-    nestegg_packet_discard_padding(mPacket, &paddingNs);
-    return paddingNs / 1000;
-  }
 
  private:
   ~NesteggPacketHolder() { nestegg_free_packet(mPacket); }

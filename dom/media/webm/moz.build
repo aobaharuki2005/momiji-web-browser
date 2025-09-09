@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "MatroskaDecoder.h",
-    "MatroskaDemuxer.h",
     "NesteggPacketHolder.h",
     "WebMBufferedParser.h",
     "WebMDecoder.h",
@@ -16,8 +14,6 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     "EbmlComposer.cpp",
-    "MatroskaDecoder.cpp",
-    "MatroskaDemuxer.cpp",
     "WebMBufferedParser.cpp",
     "WebMDecoder.cpp",
     "WebMDemuxer.cpp",
