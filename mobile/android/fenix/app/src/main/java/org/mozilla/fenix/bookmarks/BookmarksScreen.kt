@@ -71,6 +71,7 @@ import androidx.compose.ui.semantics.CollectionItemInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.collectionInfo
 import androidx.compose.ui.semantics.collectionItemInfo
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -382,6 +383,7 @@ private fun BookmarksList(
                 if (state.isGuidMarkedForDeletion(item.guid)) {
                     return@itemsIndexed
                 }
+                val isSelected = item in state.selectedItems
 
                 if (item.isDesktopFolder) {
                     SelectableIconListItem(
@@ -395,7 +397,8 @@ private fun BookmarksList(
                         onClick = { store.dispatch(FolderClicked(item)) },
                         beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                         modifier = Modifier
-                            .semantics {
+                            .semantics(mergeDescendants = true) {
+                                selected = isSelected
                                 collectionItemInfo = CollectionItemInfo(
                                     rowIndex = index,
                                     rowSpan = 1,
@@ -408,7 +411,7 @@ private fun BookmarksList(
                 } else {
                     SelectableIconListItem(
                         label = item.title,
-                        isSelected = item in state.selectedItems,
+                        isSelected = isSelected,
                         description = stringResource(
                             id = R.string.bookmarks_folder_description,
                             item.nestedItemCount.toString(),
@@ -417,7 +420,8 @@ private fun BookmarksList(
                         onLongClick = { store.dispatch(FolderLongClicked(item)) },
                         beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                         modifier = Modifier
-                            .semantics {
+                            .semantics(mergeDescendants = true) {
+                                selected = isSelected
                                 collectionItemInfo = CollectionItemInfo(
                                     rowIndex = index,
                                     rowSpan = 1,
@@ -464,16 +468,18 @@ private fun BookmarksList(
                 if (state.isGuidMarkedForDeletion(item.guid)) {
                     return@itemsIndexed
                 }
+                val isSelected = item in state.selectedItems
 
                 SelectableFaviconListItem(
                     label = item.title,
                     url = item.previewImageUrl,
-                    isSelected = item in state.selectedItems,
+                    isSelected = isSelected,
                     description = item.url,
                     onClick = { store.dispatch(BookmarkClicked(item)) },
                     onLongClick = { store.dispatch(BookmarkLongClicked(item)) },
                     modifier = Modifier
-                        .semantics {
+                        .semantics(mergeDescendants = true) {
+                            selected = isSelected
                             collectionItemInfo = CollectionItemInfo(
                                 rowIndex = index,
                                 rowSpan = 1,
