@@ -95,6 +95,86 @@ function createMatchPatternSet(patterns, flags) {
  */
 export const ASRouterTriggerListeners = new Map([
   [
+    "selectableProfilesUpdated",
+    {
+      id: "selectableProfilesUpdated",
+      _initialized: false,
+      _triggerHandler: null,
+      // Preferences that manage the "Data Collection and Use" section in
+      // about:preferences#privacy. Changes to these are shared across profiles
+      // in a profile group and should show an infobar in other profiles.
+      _trackedPrefs: [
+        "datareporting.healthreport.uploadEnabled",
+        "datareporting.usage.uploadEnabled",
+        "datareporting.policy.dataSubmissionEnabled",
+        "browser.urlbar.quicksuggest.dataCollection.enabled",
+        "app.shield.optoutstudies.enabled",
+        "browser.crashReports.unsubmittedCheck.autoSubmit2",
+        "browser.discovery.enabled",
+      ],
+      _lastValues: null,
+
+      init(triggerHandler) {
+        if (!this._initialized) {
+          Services.obs.addObserver(this, "sps-profiles-updated");
+          this._initialized = true;
+          this._lastValues = new Map();
+          for (const pref of this._trackedPrefs) {
+            const value = Services.prefs.getBoolPref(pref, false);
+            this._lastValues.set(pref, value);
+          }
+        }
+        this._triggerHandler = triggerHandler;
+      },
+
+      observe(_aSubject, aTopic, aData) {
+        if (aTopic !== "sps-profiles-updated") {
+          return;
+        }
+        // We only react to changes made by another running instance (other profiles open)
+        if (aData !== "remote") {
+          return;
+        }
+        // Diff the tracked prefs and if any changed, fire the trigger
+        let anyChanged = false;
+        for (const pref of this._trackedPrefs) {
+          const current = Services.prefs.getBoolPref(pref, false);
+          const previous = this._lastValues.get(pref);
+          if (current !== previous) {
+            anyChanged = true;
+            this._lastValues.set(pref, current);
+          }
+        }
+        if (!anyChanged) {
+          return;
+        }
+
+        const browser =
+          Services.wm.getMostRecentBrowserWindow()?.gBrowser?.selectedBrowser;
+        if (browser) {
+          this._triggerHandler(browser, {
+            id: this.id,
+            param: { type: aData },
+          });
+        }
+      },
+
+      uninit() {
+        if (this._initialized) {
+          Services.obs.removeObserver(this, "sps-profiles-updated");
+          this._initialized = false;
+          this._triggerHandler = null;
+          this._lastValues = null;
+        }
+      },
+
+      QueryInterface: ChromeUtils.generateQI([
+        "nsIObserver",
+        "nsISupportsWeakReference",
+      ]),
+    },
+  ],
+  [
     "openArticleURL",
     {
       id: "openArticleURL",
