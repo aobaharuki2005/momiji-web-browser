@@ -118,9 +118,6 @@ enum class AppIcon(
         iconForegroundId = R.drawable.ic_pixelated,
         titleId = R.string.alternative_app_icon_option_pixelated,
     ),
-
-    // This one needs some more UX team magic before it is ready to be enabled.
-    // Progress tracked in https://bugzilla.mozilla.org/show_bug.cgi?id=1986527
     AppCuddling(
         aliasSuffix = "AppCuddling",
         iconBackground = IconBackground.Drawable(drawableResId = R.drawable.ic_launcher_background_cuddling),
