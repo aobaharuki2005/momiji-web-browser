@@ -79,7 +79,7 @@ RefPtr<EncoderAgent::ConfigurePromise> EncoderAgent::Configure(
   SetState(State::Configuring);
 
   LOG("EncoderAgent #%zu (%p) is creating an encoder (%s)", mId, this,
-      GetCodecTypeString(aConfig.mCodec));
+      mozilla::EnumValueToString(aConfig.mCodec));
 
   RefPtr<ConfigurePromise> p = mConfigurePromise.Ensure(__func__);
 
@@ -224,7 +224,7 @@ RefPtr<ShutdownPromise> EncoderAgent::Shutdown() {
   MOZ_ASSERT(mOwnerThread->IsOnCurrentThread());
 
   LOG("EncoderAgent #%zu (%p) shutdown in %s state", mId, this,
-      EnumValueToString(mState));
+      EncoderAgent::EnumValueToString(mState));
 
   MOZ_ASSERT(mShutdownWhileCreationPromise.IsEmpty(),
              "Shutdown while shutting down is prohibited");
@@ -423,7 +423,8 @@ void EncoderAgent::SetState(State aState) {
 
   DebugOnly<bool> isValid = validateStateTransition(mState, aState);
   LOGV("EncoderAgent #%zu (%p) state change: %s -> %s", mId, this,
-       EnumValueToString(mState), EnumValueToString(aState));
+       EncoderAgent::EnumValueToString(mState),
+       EncoderAgent::EnumValueToString(aState));
   MOZ_ASSERT(isValid);
   mState = aState;
 }
