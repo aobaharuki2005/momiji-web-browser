@@ -24,7 +24,7 @@
 <script class="testbody" type="text/javascript">
 
 add_task(async () => {
-  await SpecialPowers.pushPrefEnv({ set: [["media.media.hls.enabled", true]] });
+  await SpecialPowers.pushPrefEnv({ set: [["media.hls.enabled", true]] });
 
   var v4x3 = document.getElementById('player4x3');
   var v16x9 = document.getElementById('player16x9');
