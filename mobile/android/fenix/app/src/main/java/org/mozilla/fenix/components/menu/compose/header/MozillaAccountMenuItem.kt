@@ -134,7 +134,7 @@ internal fun MozillaAccountMenuItem(
                         FirefoxTheme.colors.textSecondary
                     },
                     overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
+                    maxLines = 2,
                     style = FirefoxTheme.typography.body2
                         .merge(
                             textDirection = TextDirection.Content,

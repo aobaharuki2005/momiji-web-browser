@@ -348,6 +348,7 @@ private fun ExtensionsMenuItem(
         MenuItem(
             label = stringResource(id = R.string.browser_menu_extensions),
             description = extensionsMenuItemDescription,
+            maxDescriptionLines = 1,
             stateDescription = if (
                 isExtensionsProcessDisabled ||
                 allWebExtensionsDisabled ||

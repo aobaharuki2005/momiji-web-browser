@@ -95,7 +95,7 @@ internal fun MenuItem(
     labelModifier: Modifier = Modifier,
     beforeIconDescription: String? = null,
     description: String? = null,
-    maxDescriptionLines: Int = 1,
+    maxDescriptionLines: Int = 2,
     stateDescription: String = "",
     state: MenuItemState = MenuItemState.ENABLED,
     descriptionState: MenuItemState = MenuItemState.ENABLED,

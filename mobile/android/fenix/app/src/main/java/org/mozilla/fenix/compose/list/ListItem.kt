@@ -190,6 +190,7 @@ fun TextListItem(
  * @param faviconShape The shape used to clip the favicon. Defaults to a slightly rounded rectangle.
  * @param labelModifier [Modifier] to be applied to the label.
  * @param description An optional description text below the label.
+ * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param faviconPainter Optional painter to use when fetching a new favicon is unnecessary.
  * @param onClick Called when the user clicks on the item.
  * @param onLongClick Called when the user long clicks on the item.
@@ -209,6 +210,7 @@ fun FaviconListItem(
     faviconShape: Shape = RoundedCornerShape(2.dp),
     labelModifier: Modifier = Modifier,
     description: String? = null,
+    maxDescriptionLines: Int = 1,
     faviconPainter: Painter? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
@@ -224,6 +226,7 @@ fun FaviconListItem(
         modifier = modifier,
         labelModifier = labelModifier,
         description = description,
+        maxDescriptionLines = maxDescriptionLines,
         onClick = onClick,
         onLongClick = onLongClick,
         beforeListItemAction = {

@@ -154,7 +154,6 @@ internal fun ProtectionPanel(
                         id = R.string.connection_security_panel_verified_by,
                         websiteInfoState.certificateName,
                     ),
-                    maxDescriptionLines = 2,
                 )
             } else {
                 MenuItem(
