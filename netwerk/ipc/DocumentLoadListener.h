@@ -27,8 +27,6 @@
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIRedirectResultListener.h"
-#include "mozilla/intl/Localization.h"
-#include "nsDocLoader.h"  // for FormatStatusMessage
 
 #define DOCUMENT_LOAD_LISTENER_IID \
   {0x3b393c56, 0x9e01, 0x11e9, {0xa2, 0xa3, 0x2a, 0x2a, 0xe2, 0xdb, 0xcc, 0xe4}}
@@ -626,8 +624,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   const bool mIsDocumentLoad;
 
   RefPtr<HTTPSFirstDowngradeData> mHTTPSFirstDowngradeData;
-
-  RefPtr<mozilla::intl::Localization> mL10n;
 };
 
 inline nsISupports* ToSupports(DocumentLoadListener* aObj) {

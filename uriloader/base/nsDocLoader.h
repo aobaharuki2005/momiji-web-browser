@@ -129,13 +129,6 @@ class nsDocLoader : public nsIDocumentLoader,
     DocLoaderIsEmpty(true);
   }
 
-  // Formats aStatus using aHost and returns the result in aRetVal.
-  // aL10n will be initialized if initially null.
-  // See "netwerk/necko.ftl" for the localized strings.
-  static nsresult FormatStatusMessage(
-      nsresult aStatus, const nsAString& aHost, nsAString& aRetVal,
-      RefPtr<mozilla::intl::Localization>& aL10n);
-
  protected:
   explicit nsDocLoader(bool aNotifyAboutBackgroundRequests);
   virtual ~nsDocLoader();
@@ -379,6 +372,8 @@ class nsDocLoader : public nsIDocumentLoader,
 
   RefPtr<mozilla::intl::Localization> mL10n;
   static mozilla::Maybe<nsLiteralCString> StatusCodeToL10nId(nsresult aStatus);
+  nsresult FormatStatusMessage(nsresult aStatus, const nsAString& aHost,
+                               nsAString& aRetVal);
 };
 
 static inline nsISupports* ToSupports(nsDocLoader* aDocLoader) {

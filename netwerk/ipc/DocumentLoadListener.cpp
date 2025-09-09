@@ -3224,15 +3224,7 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
 
   RefPtr<BrowsingContextWebProgress> webProgress =
       GetLoadingBrowsingContext()->GetWebProgress();
-
-  nsAutoString host;
-  host.Append(aStatusArg);
-
-  nsAutoString message;
-  nsresult rv = nsDocLoader::FormatStatusMessage(aStatus, host, message, mL10n);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  const nsString message(aStatusArg);
 
   if (webProgress) {
     NS_DispatchToMainThread(
