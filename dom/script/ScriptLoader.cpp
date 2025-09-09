@@ -3535,7 +3535,14 @@ void ScriptLoader::UpdateCache() {
 
       // TODO: This should be performed also with mCache at some point.
       if (!mCache) {
-        EncodeBytecodeAndSave(aes.cx(), request, stencil);
+        MOZ_ASSERT(request->SRIAndBytecode().length() ==
+                   request->GetSRILength());
+
+        EncodeBytecodeAndSave(aes.cx(), request, request->mCacheInfo,
+                              BytecodeMimeTypeFor(request),
+                              request->SRIAndBytecode(), stencil);
+
+        request->DropBytecode();
       }
     }
     request->DropCacheReferences();
@@ -3565,25 +3572,26 @@ already_AddRefed<JS::Stencil> ScriptLoader::FinishCollectingDelazifications(
   return stencil.forget();
 }
 
-void ScriptLoader::EncodeBytecodeAndSave(JSContext* aCx,
-                                         ScriptLoadRequest* aRequest,
-                                         JS::Stencil* aStencil) {
+void ScriptLoader::EncodeBytecodeAndSave(
+    JSContext* aCx, ScriptLoadRequest* aRequest,
+    nsCOMPtr<nsICacheInfoChannel>& aCacheInfo, nsCString& aMimeType,
+    const JS::TranscodeBuffer& aSRI, JS::Stencil* aStencil) {
   MOZ_ASSERT(!mCache);
-  MOZ_ASSERT(aRequest->mCacheInfo);
-
-  JS::TranscodeBuffer SRIAndBytecode;
-  SRIAndBytecode.swap(aRequest->SRIAndBytecode());
-  // SRIAndBytecode should contain the SRI Hash, calculated by SaveSRIHash
-  // when received the  source text.
-  MOZ_ASSERT(!SRIAndBytecode.empty());
-  aRequest->DropBytecode();
-
-  size_t SRILength = aRequest->GetSRILength();
+  MOZ_ASSERT(aCacheInfo);
 
   using namespace mozilla::Telemetry;
   nsresult rv = NS_OK;
   auto bytecodeFailed = mozilla::MakeScopeExit(
       [&]() { TRACE_FOR_TEST_NONE(aRequest, "scriptloader_bytecode_failed"); });
+
+  size_t SRILength = aSRI.length();
+  MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(SRILength));
+
+  JS::TranscodeBuffer SRIAndBytecode;
+  if (!SRIAndBytecode.appendAll(aSRI)) {
+    LOG(("ScriptLoadRequest (%p): Cannot allocate buffer", aRequest));
+    return;
+  }
 
   JS::TranscodeResult result = JS::EncodeStencil(aCx, aStencil, SRIAndBytecode);
   if (result != JS::TranscodeResult::Ok) {
@@ -3614,9 +3622,8 @@ void ScriptLoader::EncodeBytecodeAndSave(JSContext* aCx,
   // might fail if the stream is already open by another request, in which
   // case, we just ignore the current one.
   nsCOMPtr<nsIAsyncOutputStream> output;
-  rv = aRequest->mCacheInfo->OpenAlternativeOutputStream(
-      BytecodeMimeTypeFor(aRequest),
-      static_cast<int64_t>(compressedBytecode.length()),
+  rv = aCacheInfo->OpenAlternativeOutputStream(
+      aMimeType, static_cast<int64_t>(compressedBytecode.length()),
       getter_AddRefs(output));
   if (NS_FAILED(rv)) {
     LOG(

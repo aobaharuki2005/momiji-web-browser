@@ -779,6 +779,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * Encode the stencils and save the bytecode to the necko cache.
    */
   void EncodeBytecodeAndSave(JSContext* aCx, ScriptLoadRequest* aRequest,
+                             nsCOMPtr<nsICacheInfoChannel>& aCacheInfo,
+                             nsCString& aMimeType,
+                             const JS::TranscodeBuffer& aSRI,
                              JS::Stencil* aStencil);
 
   /**
