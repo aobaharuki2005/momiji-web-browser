@@ -2277,6 +2277,7 @@ function MediaTestManager() {
         test.type &&
         !document.createElement("video").canPlayType(test.type)
       ) {
+        SimpleTest.info(`Skipping ${token} type=${test.type}`);
         continue;
       }
 
