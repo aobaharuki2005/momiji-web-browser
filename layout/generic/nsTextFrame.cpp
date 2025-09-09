@@ -3994,7 +3994,8 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
           // combining marks are not cluster starts. We still check in case a
           // stray mark appears at the start of a frame.
           if (currClass != CharClass::CombiningMark) {
-            if (mTextAutospace->ShouldApplySpacing(prevClass, currClass)) {
+            if (!atStart &&
+                mTextAutospace->ShouldApplySpacing(prevClass, currClass)) {
               aSpacing[runOffsetInSubstring + i].mBefore +=
                   mTextAutospace->InterScriptSpacing();
             }
