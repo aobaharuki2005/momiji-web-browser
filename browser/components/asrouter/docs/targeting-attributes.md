@@ -506,7 +506,8 @@ declare const region: string;
 
 ### `searchEngines`
 
-Information about the current and available search engines.
+Information about the current and available search engines. If the user's engine
+is a third party engine, then the value will be ``null``.
 
 #### Examples
 * Is the current default search engine set to google?
@@ -522,7 +523,7 @@ interface SearchEnginesResponse: {
   current: SearchEngineId;
   installed: Array<SearchEngineId>;
 }
-// This is an identifier for a search engine such as "google" or "amazondotcom"
+// This is an identifier for a search engine such as "google" or "ddg"
 type SearchEngineId = string;
 ```
 

@@ -720,13 +720,18 @@ const TargetingGetters = {
       return Promise.resolve(NONE);
     }
     return new Promise(resolve => {
-      // Note: calling init ensures this code is only executed after Search has been initialized
+      // Note: calling getAppProvidedEngines, calls Services.search.init which
+      // ensures this code is only executed after Search has been initialized.
       Services.search
         .getAppProvidedEngines()
         .then(engines => {
+          let { defaultEngine } = Services.search;
           resolve({
-            current: Services.search.defaultEngine.identifier,
-            installed: engines.map(engine => engine.identifier),
+            // Skip reporting the id for third party engines.
+            current: defaultEngine.isAppProvided ? defaultEngine.id : null,
+            // We don't need to filter the id here, as getAppProvidedEngines has
+            // already done that for us.
+            installed: engines.map(engine => engine.id),
           });
         })
         .catch(() => resolve(NONE));
