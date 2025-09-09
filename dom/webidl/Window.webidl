@@ -601,23 +601,13 @@ partial interface Window {
    * @param mouseEventData  A SynthesizeMouseEventData dictionary containing mouse event data.
    * @param options         A SynthesizeMouseEventOptions dictionary containing options
    *                        for the event dispatching.
-   * @param callback        A function to call when the synthesized mouse event
-   *                        has been dispatched.
-   *                        XXX: This is currently not supported in the content
-   *                        process, simply because we don't have a use case for
-   *                        it yet. The same applies when the synthesized event
-   *                        might be coalesced, such as when
-   *                        `isDOMEventSynthesized = false`.
-   *                        In such cases, passing callback will throw an
-   *                        exception.
    *
    * @return true if someone called prevent default on this event.
    */
   [ChromeOnly, Throws]
   boolean synthesizeMouseEvent(DOMString type, float offsetX, float offsetY,
                                optional SynthesizeMouseEventData mouseEventData = {},
-                               optional SynthesizeMouseEventOptions options = {},
-                               optional VoidFunction callback);
+                               optional SynthesizeMouseEventOptions options = {});
 
   [Pure, ChromeOnly]
   readonly attribute WindowGlobalChild? windowGlobalChild;

@@ -159,8 +159,6 @@ class RangeBoundaryBase;
 template <typename T>
 class NotNull;
 template <class T>
-class OwningNonNull;
-template <class T>
 class StaticRefPtr;
 
 namespace dom {
@@ -203,7 +201,6 @@ struct StructuredSerializeOptions;
 struct SynthesizeMouseEventData;
 struct SynthesizeMouseEventOptions;
 class TrustedHTMLOrString;
-class VoidFunction;
 class WorkerPrivate;
 enum class ElementCallbackType;
 enum class ReferrerPolicy : uint8_t;
@@ -3051,9 +3048,7 @@ class nsContentUtils {
       mozilla::PresShell* aPresShell, nsIWidget* aWidget,
       const nsAString& aType, mozilla::LayoutDeviceIntPoint& aRefPoint,
       const mozilla::dom::SynthesizeMouseEventData& aMouseEventData,
-      const mozilla::dom::SynthesizeMouseEventOptions& aOptions,
-      const mozilla::dom::Optional<
-          mozilla::OwningNonNull<mozilla::dom::VoidFunction>>& aCallback);
+      const mozilla::dom::SynthesizeMouseEventOptions& aOptions);
 
   static void FirePageShowEventForFrameLoaderSwap(
       nsIDocShellTreeItem* aItem,

@@ -2583,9 +2583,7 @@ nsIDOMWindowUtils* nsGlobalWindowInner::GetWindowUtils(ErrorResult& aRv) {
 bool nsGlobalWindowInner::SynthesizeMouseEvent(
     const nsAString& aType, float aOffsetX, float aOffsetY,
     const SynthesizeMouseEventData& aMouseEventData,
-    const SynthesizeMouseEventOptions& aOptions,
-    const Optional<OwningNonNull<VoidFunction>>& aCallback,
-    ErrorResult& aError) {
+    const SynthesizeMouseEventOptions& aOptions, ErrorResult& aError) {
   nsIDocShell* docShell = GetDocShell();
   RefPtr<PresShell> presShell = docShell ? docShell->GetPresShell() : nullptr;
   if (!presShell) {
@@ -2603,7 +2601,7 @@ bool nsGlobalWindowInner::SynthesizeMouseEvent(
   LayoutDeviceIntPoint refPoint = nsContentUtils::ToWidgetPoint(
       CSSPoint(aOffsetX, aOffsetY), offset, presShell->GetPresContext());
   auto result = nsContentUtils::SynthesizeMouseEvent(
-      presShell, widget, aType, refPoint, aMouseEventData, aOptions, aCallback);
+      presShell, widget, aType, refPoint, aMouseEventData, aOptions);
   if (result.isErr()) {
     aError.Throw(result.unwrapErr());
     return false;
