@@ -4346,7 +4346,7 @@ main section {
   background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
   padding-block: var(--space-large);
-  max-height: var(--newtab-card-height);
+  height: var(--newtab-card-height);
   box-shadow: var(--box-shadow-card);
   position: relative;
 }
@@ -4526,7 +4526,7 @@ main section {
   background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
   padding-block: var(--space-large);
-  max-height: var(--newtab-card-height);
+  height: var(--newtab-card-height);
   display: flex;
   flex-direction: column;
   align-items: center;
