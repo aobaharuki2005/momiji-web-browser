@@ -1817,6 +1817,13 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "disnative is not fuzzing-safe on ARM32");
     return false;
   }
+#elif defined(JS_CODEGEN_RISCV64)
+  // The riscv64 disassembler is currently not fuzzing-safe because it doesn't
+  // handle constant pools correctly (bug 1987559).
+  if (fuzzingSafe) {
+    JS_ReportErrorASCII(cx, "disnative is not fuzzing-safe on riscv64");
+    return false;
+  }
 #endif
 
   // Dump the raw code to a file before disassembling in case
@@ -1894,6 +1901,13 @@ static bool DisassembleBaselineICs(JSContext* cx, unsigned argc, Value* vp) {
   // handle constant pools correctly (bug 1875363).
   if (fuzzingSafe) {
     JS_ReportErrorASCII(cx, "disblic is not fuzzing-safe on ARM32");
+    return false;
+  }
+#elif defined(JS_CODEGEN_RISCV64)
+  // The riscv64 disassembler is currently not fuzzing-safe because it doesn't
+  // handle constant pools correctly (bug 1987559).
+  if (fuzzingSafe) {
+    JS_ReportErrorASCII(cx, "disblic is not fuzzing-safe on riscv64");
     return false;
   }
 #endif
