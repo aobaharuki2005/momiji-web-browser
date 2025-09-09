@@ -33,8 +33,15 @@ nsTArray<UniquePtr<TrackInfo>> MatroskaDecoder::GetTracksInfo(
   if (codecs.IsEmpty()) {
     return tracks;
   }
-  // TODO : add codec support.
+
+  // TODO : add more codec support.
   for (const auto& codec : codecs.Range()) {
+    if (IsAACCodecString(codec)) {
+      tracks.AppendElement(
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              "audio/mp4a-latm"_ns, aType));
+      continue;
+    }
     aError = MediaResult(
         NS_ERROR_DOM_MEDIA_FATAL_ERR,
         RESULT_DETAIL("Unknown codec:%s", NS_ConvertUTF16toUTF8(codec).get()));
@@ -68,6 +75,22 @@ bool MatroskaDecoder::IsSupportedType(const MediaContainerType& aContainerType,
     return true;
   }
 
+  // The container doesn't specify codecs, so we guess the content type.
+  // TODO : add more codec support.
+  if (aContainerType.Type() == MEDIAMIMETYPE(AUDIO_MATROSKA)) {
+    tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+            "audio/mp4a-latm"_ns, aContainerType));
+  }
+
+  // Check that something is supported at least.
+  RefPtr<PDMFactory> platform = new PDMFactory();
+  for (const auto& track : tracks) {
+    if (track && !platform->Supports(SupportDecoderParams(*track), aDiagnostics)
+                      .isEmpty()) {
+      return true;
+    }
+  }
   return false;
 }
 
