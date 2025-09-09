@@ -7,8 +7,8 @@
 export const HeuristicsRegExp = {
   RULES: {
     email: undefined,
-    tel: undefined,
     "tel-country-code" : undefined,
+    tel: undefined,
     "address-housenumber": undefined,
     "street-address": undefined,
     "address-line1": undefined,
@@ -105,7 +105,9 @@ export const HeuristicsRegExp = {
         "(\\bcvn\\b|\\bcvv\\b|\\bcvc\\b|\\bcsc\\b|\\bcvd\\b|\\bcid\\b|\\bccv\\b)",
       "tel-country-code":
         "phone.*country|country.*phone" +
-        "tel.*country|country.*tel",
+        "|tel.*country|country.*tel" +
+        "|phone(?!-local).*prefix|tel(?!-local).*prefix" +
+        "|prefix.*phone|prefix.*tel",
       "tel": "(numer|nr)?\\.?telefonu", //pl-PL
     },
 
