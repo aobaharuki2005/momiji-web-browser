@@ -12165,8 +12165,9 @@ void PresShell::MergeAnchorPosAnchorChanges() {
   mLazyAnchorPosAnchorChanges.Clear();
 }
 
-static bool NeedReflowForAnchorPos(const nsIFrame* aAnchor, const nsIFrame* aPositioned,
-                       const Maybe<AnchorPosResolutionData>& aData) {
+static bool NeedReflowForAnchorPos(
+    const nsIFrame* aAnchor, const nsIFrame* aPositioned,
+    const Maybe<AnchorPosResolutionData>& aData) {
   const bool validityChanged = (aAnchor && !aData) || (!aAnchor && aData);
   if (validityChanged) {
     return true;
@@ -12252,7 +12253,8 @@ static bool UnderScrollContainer(nsIFrame* aFrame,
                                  ScrollContainerFrame* aScrollContainer) {
   MOZ_ASSERT(aFrame);
   MOZ_ASSERT(aScrollContainer);
-  return aFrame == aScrollContainer || nsLayoutUtils::IsProperAncestorFrame(aScrollContainer, aFrame);
+  return aFrame == aScrollContainer ||
+         nsLayoutUtils::IsProperAncestorFrame(aScrollContainer, aFrame);
 }
 
 void PresShell::UpdateAnchorPosLayoutForScroll(
