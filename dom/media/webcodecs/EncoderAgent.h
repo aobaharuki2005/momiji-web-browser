@@ -68,11 +68,10 @@ class EncoderAgent final {
   // Push out all the data in the MediaDataEncoder's pipeline.
   // TODO: MediaDataEncoder should implement this, instead of asking call site
   // to run `Drain` multiple times.
-  RefPtr<EncodePromise> Dry();
-  void DryUntilDrain();
+  void Dry(MediaDataEncoder::EncodedData&& aPendingOutputs);
 
   MOZ_DEFINE_ENUM_CLASS_WITH_TOSTRING_AT_CLASS_SCOPE(
-      State, (Unconfigured, Configuring, Configured, Encoding, Flushing,
+      State, (Unconfigured, Configuring, Configured, Encoding, Draining,
               ShuttingDown, Error));
   void SetState(State aState);
 
@@ -103,7 +102,6 @@ class EncoderAgent final {
   // Drain
   MozPromiseRequestHolder<EncodePromise> mDrainRequest;
   MozPromiseHolder<EncodePromise> mDrainPromise;
-  MediaDataEncoder::EncodedData mDrainData;
 };
 
 }  // namespace mozilla

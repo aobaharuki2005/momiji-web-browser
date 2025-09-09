@@ -101,9 +101,9 @@ class EncoderTemplate : public DOMEventTargetHelper {
     nsCString ToString() const override {
       nsCString rv;
       bool isKeyFrame = mOptions.isSome() && mOptions.ref().mKeyFrame;
-      rv.AppendPrintf("EncodeMessage(#%zu,#%zu): %s (%s)", this->mConfigureId,
+      rv.AppendPrintf("EncodeMessage(#%zu, #%zu): %s%s", this->mConfigureId,
                       this->mMessageId, mData->ToString().get(),
-                      isKeyFrame ? "kf" : "");
+                      isKeyFrame ? " (kf)" : "");
       return rv;
     }
     virtual void Cancel() override { Disconnect(); }
@@ -124,7 +124,7 @@ class EncoderTemplate : public DOMEventTargetHelper {
 
     nsCString ToString() const override {
       nsCString rv;
-      rv.AppendPrintf("FlushMessage(#%zu,#%zu)", this->mConfigureId,
+      rv.AppendPrintf("FlushMessage(#%zu, #%zu)", this->mConfigureId,
                       this->mMessageId);
       return rv;
     }
