@@ -10,14 +10,13 @@
 #include "AudibilityMonitor.h"
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
+#include "MediaSegment.h"
 #include "MediaSink.h"
 #include "mozilla/AbstractThread.h"
-#include "mozilla/AwakeTimeStamp.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StateMirroring.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -29,19 +28,20 @@ class VideoData;
 struct PlaybackInfoInit;
 class ProcessedMediaTrack;
 struct SharedDummyTrack;
+class TimeStamp;
 
 template <class T>
 class MediaQueue;
 
 class DecodedStream : public MediaSink {
  public:
-  DecodedStream(AbstractThread* aOwnerThread,
+  DecodedStream(MediaDecoderStateMachine* aStateMachine,
                 nsMainThreadPtrHandle<SharedDummyTrack> aDummyTrack,
                 CopyableTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
-                AbstractCanonical<PrincipalHandle>* aCanonicalOutputPrincipal,
                 double aVolume, double aPlaybackRate, bool aPreservesPitch,
                 MediaQueue<AudioData>& aAudioQueue,
-                MediaQueue<VideoData>& aVideoQueue);
+                MediaQueue<VideoData>& aVideoQueue,
+                RefPtr<AudioDeviceInfo> aAudioDevice);
 
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
   media::TimeUnit GetEndTime(TrackType aType) const override;
@@ -78,12 +78,6 @@ class DecodedStream : public MediaSink {
  protected:
   virtual ~DecodedStream();
 
-  // A bit many clocks to sample, but what do you do...
-  media::TimeUnit GetPositionImpl(TimeStamp aNow, AwakeTimeStamp aAwakeNow,
-                                  TimeStamp* aTimeStamp = nullptr);
-  AwakeTimeStamp LastOutputSystemTime() const;
-  TimeStamp LastVideoTimeStamp() const;
-
  private:
   void DestroyData(UniquePtr<DecodedStreamData>&& aData);
   void SendAudio(const PrincipalHandle& aPrincipalHandle);
@@ -91,8 +85,7 @@ class DecodedStream : public MediaSink {
   void ResetAudio();
   void ResetVideo(const PrincipalHandle& aPrincipalHandle);
   void SendData();
-  void NotifyOutput(int64_t aTime, TimeStamp aSystemTime,
-                    AwakeTimeStamp aAwakeSystemTime);
+  void NotifyOutput(int64_t aTime);
   void CheckIsDataAudible(const AudioData* aData);
 
   void AssertOwnerThread() const {
@@ -135,8 +128,6 @@ class DecodedStream : public MediaSink {
 
   media::NullableTimeUnit mStartTime;
   media::TimeUnit mLastOutputTime;
-  Maybe<AwakeTimeStamp> mLastOutputSystemTime;
-  Maybe<media::TimeUnit> mLastReportedPosition;
   MediaInfo mInfo;
   // True when stream is producing audible sound, false when stream is silent.
   bool mIsAudioDataAudible = false;

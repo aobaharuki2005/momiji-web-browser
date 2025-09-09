@@ -117,7 +117,6 @@ dictionary DecodedStreamDebugInfo {
   DOMString instance = "";
   long long startTime = 0;
   long long lastOutputTime = 0;
-  long long lastReportedPosition = 0;
   long playing = 0;
   long long lastAudio = 0;
   boolean audioQueueFinished = false;

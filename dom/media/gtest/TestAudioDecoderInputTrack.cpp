@@ -67,6 +67,8 @@ class MockTestGraph : public MediaTrackGraphImpl {
    protected:
     ~MockDriver() = default;
   };
+
+  bool mEnableFakeAppend = false;
 };
 
 AudioData* CreateAudioDataFromInfo(uint32_t aFrames, const AudioInfo& aInfo) {
@@ -392,21 +394,30 @@ TEST_F(TestAudioDecoderInputTrack, OutputAndEndEvent) {
   // Append an audio and EOS, the output event should notify the amount of
   // frames that is equal to the amount of audio we appended.
   RefPtr<AudioData> audio = CreateAudioData(10);
-  auto outputPromise = TakeN(mTrack->OnOutput(), 1);
+  MozPromiseHolder<GenericPromise> holder;
+  RefPtr<GenericPromise> p = holder.Ensure(__func__);
+  MediaEventListener outputListener =
+      mTrack->OnOutput().Connect(NS_GetCurrentThread(), [&](TrackTime aFrame) {
+        EXPECT_EQ(aFrame, audio->Frames());
+        holder.Resolve(true, __func__);
+      });
   mTrack->AppendData(audio, nullptr);
   mTrack->NotifyEndOfStream();
   TrackTime start = 0;
   TrackTime end = 10;
   mTrack->ProcessInput(start, end, ProcessedMediaTrack::ALLOW_END);
-  auto output = WaitFor(outputPromise).unwrap()[0];
-  EXPECT_EQ(std::get<int64_t>(output), audio->Frames());
+  Unused << WaitFor(p);
 
   // Track should end in this iteration, so the end event should be notified.
-  auto endPromise = TakeN(mTrack->OnEnd(), 1);
+  p = holder.Ensure(__func__);
+  MediaEventListener endListener = mTrack->OnEnd().Connect(
+      NS_GetCurrentThread(), [&]() { holder.Resolve(true, __func__); });
   start = end;
   end += 10;
   mTrack->ProcessInput(start, end, ProcessedMediaTrack::ALLOW_END);
-  Unused << WaitFor(endPromise);
+  Unused << WaitFor(p);
+  outputListener.Disconnect();
+  endListener.Disconnect();
 }
 
 TEST_F(TestAudioDecoderInputTrack, PlaybackRateChange) {
@@ -434,13 +445,10 @@ TEST_F(TestAudioDecoderInputTrack, PlaybackRateChange) {
   mTrack->NotifyEndOfStream();
 
   // Playback rate is 2x, so we should only get 1/2x sample frames, another 1/2
-  // should be silence. Output should not be rate-aware.
-  auto outputPromise = TakeN(mTrack->OnOutput(), 1);
+  // should be silence.
   TrackTime start = 0;
   TrackTime end = audio->Frames();
   mTrack->ProcessInput(start, end, kNoFlags);
-  auto output = WaitFor(outputPromise).unwrap()[0];
-  EXPECT_EQ(std::get<int64_t>(output), audio->Frames());
   EXPECT_PRED_FORMAT2(ExpectSegmentNonSilence, start, audio->Frames() / 2);
   EXPECT_PRED_FORMAT2(ExpectSegmentSilence, start + audio->Frames() / 2, end);
 }
