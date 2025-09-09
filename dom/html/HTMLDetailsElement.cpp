@@ -202,26 +202,18 @@ void HTMLDetailsElement::CloseElementIfNeeded() {
     return;
   }
 
-  RefPtr<nsAtom> name = GetParsedAttr(nsGkAtoms::name)->GetAsAtom();
-
-  {  // Scope for AutoSuppressNotifyingDevToolsOfNodeRemovals
-     // FIXME: I think we don't need to suppress notifying DevTools here because
-     // any nodes won't be removed.
-    AutoSuppressNotifyingDevToolsOfNodeRemovals suppressNotifyingDevTools(
-        *OwnerDoc());
-
-    nsINode* root = SubtreeRoot();
-    for (nsINode* cur = root; cur; cur = cur->GetNextNode(root)) {
-      if (!cur->HasName()) {
-        continue;
-      }
-      if (auto* other = HTMLDetailsElement::FromNode(cur)) {
-        if (other != this && other->Open() &&
-            other->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, name,
-                               eCaseMatters)) {
-          SetOpen(false, IgnoreErrors());
-          break;
-        }
+  const RefPtr<nsAtom> name = GetParsedAttr(nsGkAtoms::name)->GetAsAtom();
+  nsINode* const root = SubtreeRoot();
+  for (nsINode* cur = root; cur; cur = cur->GetNextNode(root)) {
+    if (!cur->HasName()) {
+      continue;
+    }
+    if (auto* other = HTMLDetailsElement::FromNode(cur)) {
+      if (other != this && other->Open() &&
+          other->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, name,
+                             eCaseMatters)) {
+        SetOpen(false, IgnoreErrors());
+        break;
       }
     }
   }
@@ -238,27 +230,19 @@ void HTMLDetailsElement::CloseOtherElementsIfNeeded() {
     return;
   }
 
-  RefPtr<nsAtom> name = GetParsedAttr(nsGkAtoms::name)->GetAsAtom();
-
-  {  // Scope for AutoSuppressNotifyingDevToolsOfNodeRemovals
-     // FIXME: I think we don't need to suppress notifying DevTools here because
-     // any nodes won't be removed.
-    AutoSuppressNotifyingDevToolsOfNodeRemovals suppressNotifyingDevTools(
-        *OwnerDoc());
-
-    nsINode* root = SubtreeRoot();
-    for (nsINode* cur = root; cur; cur = cur->GetNextNode(root)) {
-      if (!cur->HasName()) {
-        continue;
-      }
-      if (auto* other = HTMLDetailsElement::FromNode(cur)) {
-        if (other != this && other->Open() &&
-            other->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, name,
-                               eCaseMatters)) {
-          RefPtr<HTMLDetailsElement> otherDetails = other;
-          otherDetails->SetOpen(false, IgnoreErrors());
-          break;
-        }
+  const RefPtr<nsAtom> name = GetParsedAttr(nsGkAtoms::name)->GetAsAtom();
+  nsINode* const root = SubtreeRoot();
+  for (nsINode* cur = root; cur; cur = cur->GetNextNode(root)) {
+    if (!cur->HasName()) {
+      continue;
+    }
+    if (auto* other = HTMLDetailsElement::FromNode(cur)) {
+      if (other != this && other->Open() &&
+          other->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, name,
+                             eCaseMatters)) {
+        RefPtr<HTMLDetailsElement> otherDetails = other;
+        otherDetails->SetOpen(false, IgnoreErrors());
+        break;
       }
     }
   }
