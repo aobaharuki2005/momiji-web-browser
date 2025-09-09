@@ -518,8 +518,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
     case JS::TraceKind::Scope: {
       Scope* scope = &cellptr.as<Scope>();
       zStats->scopesGCHeap += thingSize;
-      zStats->scopesMallocHeap +=
-          scope->sizeOfExcludingThis(rtStats->mallocSizeOf_);
+      zStats->scopesMallocHeap += scope->sizeOfExcludingThis();
       break;
     }
 
