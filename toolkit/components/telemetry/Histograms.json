@@ -10483,20 +10483,6 @@
     "n_values": 10,
     "description": "Media decoder backend (0=WMF Software, 1=DXVA2D3D9, 2=DXVA2D3D11)"
   },
-  "SANDBOX_HAS_USER_NAMESPACES": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": [
-      "gcp@mozilla.com",
-      "jld@mozilla.com",
-      "alissy@mozilla.com"
-    ],
-    "bug_numbers": [1098428, 1370578, 1461546, 1464220, 1885704],
-    "expires_in_version": "145",
-    "releaseChannelCollection": "opt-out",
-    "kind": "boolean",
-    "description": "Whether our process succedeed in creating a user namespace"
-  },
   "SANDBOX_REJECTED_SYSCALLS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
