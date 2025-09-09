@@ -9039,7 +9039,7 @@ double nsWindow::FractionalScaleFactor() {
     }
   }
 #endif
-  return GdkCeiledScaleFactor();
+  return ScreenHelperGTK::GetGTKMonitorFractionalScaleFactor();
 }
 
 gint nsWindow::DevicePixelsToGdkCoordRoundUp(int aPixels) {

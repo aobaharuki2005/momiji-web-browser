@@ -877,11 +877,7 @@ void WaylandSurface::ClearScaleLocked(const WaylandSurfaceLock& aProofOfLock) {
 void WaylandSurface::SetCeiledScaleLocked(
     const WaylandSurfaceLock& aProofOfLock, int aScreenCeiledScale) {
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
-
-  // Allow to set scale for unmapped surfaces unconditionally.
-  // It sets initial scale factor so we have something to work with.
-  if (!mIsMapped || IsCeiledScaleLocked(aProofOfLock)) {
-    // mScreenScale = (double)aScreenCeiledScale;
+  if (IsCeiledScaleLocked(aProofOfLock)) {
     mScreenScale = aScreenCeiledScale;
     LOGWAYLAND("WaylandSurface::SetCeiledScaleLocked() scale %f",
                (double)mScreenScale);
@@ -1313,8 +1309,7 @@ double WaylandSurface::GetScale() {
     return scale;
   }
 
-  LOGVERBOSE("WaylandSurface::GetScale() no scale available");
-  return sNoScale;
+  return ScreenHelperGTK::GetGTKMonitorFractionalScaleFactor();
 }
 
 double WaylandSurface::GetScaleSafe() {
