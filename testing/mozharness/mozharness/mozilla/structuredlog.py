@@ -103,9 +103,9 @@ class StructuredOutputParser(OutputParser):
 
         action = data["action"]
         if action == "test_start":
-            SystemResourceMonitor.begin_test(data)
+            SystemResourceMonitor.begin_marker("test", data["test"])
         elif action == "test_end":
-            SystemResourceMonitor.end_test(data)
+            SystemResourceMonitor.end_marker("test", data["test"])
         elif action == "suite_start":
             SystemResourceMonitor.begin_marker("suite", data["source"])
         elif action == "suite_end":

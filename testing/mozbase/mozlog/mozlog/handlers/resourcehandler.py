@@ -48,10 +48,10 @@ class ResourceHandler(LogHandler):
         SystemResourceMonitor.end_marker("test", data["name"])
 
     def test_start(self, data):
-        SystemResourceMonitor.begin_test(data)
+        SystemResourceMonitor.begin_marker("test", data["test"])
 
     def test_end(self, data):
-        SystemResourceMonitor.end_test(data)
+        SystemResourceMonitor.end_marker("test", data["test"])
 
     def log(self, data):
         level = data.get("level").upper()
