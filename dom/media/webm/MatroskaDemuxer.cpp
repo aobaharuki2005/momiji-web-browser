@@ -6,6 +6,8 @@
 
 #include "MatroskaDemuxer.h"
 
+#include "H264.h"
+
 namespace mozilla {
 
 extern LazyLogModule gMediaDemuxerLog;
@@ -17,8 +19,22 @@ MatroskaDemuxer::MatroskaDemuxer(MediaResource* aResource)
 
 nsresult MatroskaDemuxer::SetVideoCodecInfo(nestegg* aContext, int aTrackId) {
   mVideoCodec = nestegg_track_codec_id(aContext, aTrackId);
-  // TODO : implement codec support
+  // TODO : support more codecs
   switch (mVideoCodec) {
+    case NESTEGG_CODEC_AVC: {
+      mInfo.mVideo.mMimeType = "video/avc";
+      // Retrieve the extradata from the codec private.
+      nsTArray<const unsigned char*> headers;
+      nsTArray<size_t> headerLens;
+      nsresult rv =
+          GetCodecPrivateData(aContext, aTrackId, &headers, &headerLens);
+      if (NS_FAILED(rv)) {
+        MKV_DEBUG("GetCodecPrivateData error for AVC");
+        return rv;
+      }
+      mInfo.mVideo.mExtraData->AppendElements(headers[0], headerLens[0]);
+      break;
+    }
     default:
       NS_WARNING("Unknown Matroska video codec");
       return NS_ERROR_FAILURE;
@@ -109,8 +125,13 @@ nsresult MatroskaDemuxer::SetAudioCodecInfo(
 
 bool MatroskaDemuxer::CheckKeyFrameByExamineByteStream(
     const MediaRawData* aSample) {
-  // TODO : implement codec support
+  // TODO : support more codecs
   switch (mVideoCodec) {
+    case NESTEGG_CODEC_AVC: {
+      auto frameType = H264::GetFrameType(aSample);
+      return frameType == H264::FrameType::I_FRAME_IDR ||
+             frameType == H264::FrameType::I_FRAME_OTHER;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE(
           "Cannot detect keyframes in unknown Matroska video codec");
