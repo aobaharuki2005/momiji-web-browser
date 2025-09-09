@@ -156,8 +156,8 @@ class WebMDemuxer : public MediaDataDemuxer,
   virtual nsresult SetAudioCodecInfo(nestegg* aContext, int aTrackId,
                                      const nestegg_audio_params& aParams);
   virtual nsresult GetCodecPrivateData(nestegg* aContext, int aTrackId,
-                                      nsTArray<const unsigned char*>* aHeaders,
-                                      nsTArray<size_t>* aHeaderLens);
+                                       nsTArray<const unsigned char*>* aHeaders,
+                                       nsTArray<size_t>* aHeaderLens);
 
   virtual bool CheckKeyFrameByExamineByteStream(const MediaRawData* aSample);
 

@@ -816,7 +816,7 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
     } else {
       sample->mExtraData = mInfo.mVideo.mExtraData;
       if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED ||
-                packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED) {
+          packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED) {
         // Packet is encrypted, can't peek, use packet info
         sample->mKeyframe = nestegg_packet_has_keyframe(holder->Packet()) ==
                             NESTEGG_PACKET_HAS_KEYFRAME_TRUE;
