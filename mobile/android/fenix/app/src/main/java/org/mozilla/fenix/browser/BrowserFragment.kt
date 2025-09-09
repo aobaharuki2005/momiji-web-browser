@@ -762,9 +762,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
          */
         const val READER_MODE_WEIGHT = 1
         const val TRANSLATIONS_WEIGHT = 2
-        const val REVIEW_QUALITY_CHECK_WEIGHT = 3
         const val SHARE_WEIGHT = 4
-        const val RELOAD_WEIGHT = 5
         const val OPEN_IN_ACTION_WEIGHT = 6
     }
 }
