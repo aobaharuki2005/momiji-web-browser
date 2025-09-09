@@ -42,6 +42,22 @@ nsTArray<UniquePtr<TrackInfo>> MatroskaDecoder::GetTracksInfo(
               "audio/mp4a-latm"_ns, aType));
       continue;
     }
+    if (IsAllowedH264Codec(codec)) {
+      auto trackInfo =
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              "video/avc"_ns, aType);
+      uint8_t profile = 0, constraint = 0;
+      H264_LEVEL level;
+      MOZ_ALWAYS_TRUE(
+          ExtractH264CodecDetails(codec, profile, constraint, level,
+                                  H264CodecStringStrictness::Lenient));
+      uint32_t width = aType.ExtendedType().GetWidth().refOr(1280);
+      uint32_t height = aType.ExtendedType().GetHeight().refOr(720);
+      trackInfo->GetAsVideoInfo()->mExtraData =
+          H264::CreateExtraData(profile, constraint, level, {width, height});
+      tracks.AppendElement(std::move(trackInfo));
+      continue;
+    }
     aError = MediaResult(
         NS_ERROR_DOM_MEDIA_FATAL_ERR,
         RESULT_DETAIL("Unknown codec:%s", NS_ConvertUTF16toUTF8(codec).get()));
@@ -81,6 +97,10 @@ bool MatroskaDecoder::IsSupportedType(const MediaContainerType& aContainerType,
     tracks.AppendElement(
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
             "audio/mp4a-latm"_ns, aContainerType));
+  } else {
+    tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+            "video/avc"_ns, aContainerType));
   }
 
   // Check that something is supported at least.
