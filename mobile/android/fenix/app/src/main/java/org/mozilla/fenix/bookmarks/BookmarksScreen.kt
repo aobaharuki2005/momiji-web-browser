@@ -407,6 +407,7 @@ private fun BookmarksList(
                                 )
                             }
                             .width(FirefoxTheme.layout.size.containerMaxWidth),
+                        labelModifier = Modifier.fillMaxWidth(),
                     )
                 } else {
                     SelectableIconListItem(
@@ -430,6 +431,7 @@ private fun BookmarksList(
                                 )
                             }
                             .width(FirefoxTheme.layout.size.containerMaxWidth),
+                        labelModifier = Modifier.fillMaxWidth(),
                     ) {
                         Box {
                             IconButton(
