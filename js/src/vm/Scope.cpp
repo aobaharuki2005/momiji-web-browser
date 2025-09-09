@@ -232,10 +232,10 @@ static typename ConcreteScope::ParserData* NewEmptyParserScopeData(
   return new (raw) Data(length);
 }
 
-template <typename ConcreteScope, typename AtomT>
-static UniquePtr<AbstractScopeData<ConcreteScope, AtomT>> NewEmptyScopeData(
+template <typename ConcreteScope>
+static UniquePtr<AbstractScopeData<ConcreteScope, JSAtom>> NewEmptyScopeData(
     JSContext* cx, uint32_t length = 0) {
-  using Data = AbstractScopeData<ConcreteScope, AtomT>;
+  using Data = AbstractScopeData<ConcreteScope, JSAtom>;
 
   size_t dataSize = SizeOfScopeData<Data>(length);
   uint8_t* bytes = cx->pod_malloc<uint8_t>(dataSize);
@@ -272,7 +272,7 @@ static UniquePtr<typename ConcreteScope::RuntimeData> LiftParserScopeData(
 
   // Allocate a new scope-data of the right kind.
   UniquePtr<ConcreteData> scopeData(
-      NewEmptyScopeData<ConcreteScope, JSAtom>(cx, data->length));
+      NewEmptyScopeData<ConcreteScope>(cx, data->length));
   if (!scopeData) {
     return nullptr;
   }
@@ -619,8 +619,7 @@ void VarScope::prepareForScopeCreation(ScopeKind kind,
 }
 
 GlobalScope* GlobalScope::createEmpty(JSContext* cx, ScopeKind kind) {
-  Rooted<UniquePtr<RuntimeData>> data(
-      cx, NewEmptyScopeData<GlobalScope, JSAtom>(cx));
+  Rooted<UniquePtr<RuntimeData>> data(cx, NewEmptyScopeData<GlobalScope>(cx));
   if (!data) {
     return nullptr;
   }
@@ -745,7 +744,7 @@ WasmInstanceScope* WasmInstanceScope::create(
   }
 
   Rooted<UniquePtr<RuntimeData>> data(
-      cx, NewEmptyScopeData<WasmInstanceScope, JSAtom>(cx, namesCount));
+      cx, NewEmptyScopeData<WasmInstanceScope>(cx, namesCount));
   if (!data) {
     return nullptr;
   }
@@ -801,7 +800,7 @@ WasmFunctionScope* WasmFunctionScope::create(JSContext* cx,
   uint32_t namesCount = locals.length();
 
   Rooted<UniquePtr<RuntimeData>> data(
-      cx, NewEmptyScopeData<WasmFunctionScope, JSAtom>(cx, namesCount));
+      cx, NewEmptyScopeData<WasmFunctionScope>(cx, namesCount));
   if (!data) {
     return nullptr;
   }
