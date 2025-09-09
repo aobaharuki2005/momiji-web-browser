@@ -228,8 +228,6 @@ class EncoderConfig final {
     MOZ_ASSERT(IsAudio());
   }
 
-  static CodecType CodecTypeForMime(const nsACString& aMimeType);
-
   nsCString ToString() const;
 
   bool IsVideo() const { return mozilla::IsVideo(mCodec); }

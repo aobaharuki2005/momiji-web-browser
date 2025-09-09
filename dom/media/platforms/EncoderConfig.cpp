@@ -14,20 +14,6 @@
 
 namespace mozilla {
 
-CodecType EncoderConfig::CodecTypeForMime(const nsACString& aMimeType) {
-  if (MP4Decoder::IsH264(aMimeType)) {
-    return CodecType::H264;
-  }
-  if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8)) {
-    return CodecType::VP8;
-  }
-  if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9)) {
-    return CodecType::VP9;
-  }
-  MOZ_ASSERT_UNREACHABLE("Unsupported Mimetype");
-  return CodecType::Unknown;
-}
-
 nsCString EncoderConfig::ToString() const {
   nsCString rv(EnumValueToString(mCodec));
   rv.AppendLiteral(mBitrateMode == BitrateMode::Constant ? " (CBR)" : " (VBR)");
