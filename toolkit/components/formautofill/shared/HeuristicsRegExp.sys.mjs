@@ -609,7 +609,7 @@ export const HeuristicsRegExp = {
         "|月", // zh-CN
 
       "cc-exp-year":
-        "exp|^/|(add)?year" +
+        "exp(?![a-hj-z])|^/|(add)?year" +
         "|ablaufdatum|gueltig|gültig|jahr" + // de-DE
         "|fecha" + // es
         "|scadenza" + // it-IT
