@@ -3538,7 +3538,6 @@ void ScriptLoader::UpdateCache() {
         EncodeBytecodeAndSave(aes.cx(), request, stencil);
       }
     }
-    request->DropBytecode();
     request->DropCacheReferences();
   }
 }
@@ -3572,13 +3571,21 @@ void ScriptLoader::EncodeBytecodeAndSave(JSContext* aCx,
   MOZ_ASSERT(!mCache);
   MOZ_ASSERT(aRequest->mCacheInfo);
 
+  JS::TranscodeBuffer SRIAndBytecode;
+  SRIAndBytecode.swap(aRequest->SRIAndBytecode());
+  // SRIAndBytecode should contain the SRI Hash, calculated by SaveSRIHash
+  // when received the  source text.
+  MOZ_ASSERT(!SRIAndBytecode.empty());
+  aRequest->DropBytecode();
+
+  size_t SRILength = aRequest->GetSRILength();
+
   using namespace mozilla::Telemetry;
   nsresult rv = NS_OK;
   auto bytecodeFailed = mozilla::MakeScopeExit(
       [&]() { TRACE_FOR_TEST_NONE(aRequest, "scriptloader_bytecode_failed"); });
 
-  JS::TranscodeResult result =
-      JS::EncodeStencil(aCx, aStencil, aRequest->SRIAndBytecode());
+  JS::TranscodeResult result = JS::EncodeStencil(aCx, aStencil, SRIAndBytecode);
   if (result != JS::TranscodeResult::Ok) {
     // Encoding can be aborted for non-supported syntax (e.g. asm.js), or
     // any other internal error.
@@ -3591,8 +3598,7 @@ void ScriptLoader::EncodeBytecodeAndSave(JSContext* aCx,
 
   Vector<uint8_t> compressedBytecode;
   // TODO probably need to move this to a helper thread
-  if (!ScriptBytecodeCompress(aRequest->SRIAndBytecode(),
-                              aRequest->GetSRILength(), compressedBytecode)) {
+  if (!ScriptBytecodeCompress(SRIAndBytecode, SRILength, compressedBytecode)) {
     return;
   }
 
@@ -3681,7 +3687,6 @@ void ScriptLoader::GiveUpCaching() {
       }
     }
 
-    request->DropBytecode();
     request->DropCacheReferences();
   }
 
