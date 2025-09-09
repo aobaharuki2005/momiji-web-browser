@@ -744,10 +744,10 @@ index 8ac8bfcd0c..4f6922f22c 100644
        device_names->push_back(webrtc::ToUtf8(device.DeviceName));
      }
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index e1cbe26e24..0597ecdb86 100644
+index e06698e0db..2629fe0aab 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -211,7 +211,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
+@@ -206,7 +206,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
      next_time_to_send_rtcp_ = std::nullopt;
    } else if (method_ == RtcpMode::kOff) {
      // When switching on, reschedule the next packet
@@ -917,10 +917,10 @@ index 0b87d6d065..d69ae9420b 100644
  }  // namespace webrtc
  
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 888e601e7f..d59b67c090 100644
+index 45d5dbf686..c7e9a2a594 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
-@@ -140,6 +140,10 @@ bool IsNonVolatile(RTPExtensionType type) {
+@@ -139,6 +139,10 @@ bool IsNonVolatile(RTPExtensionType type) {
      case kRtpExtensionNumberOfExtensions:
        RTC_DCHECK_NOTREACHED();
        return false;
