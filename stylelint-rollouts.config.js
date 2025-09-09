@@ -40,7 +40,6 @@ module.exports = [
       "browser/components/urlbar/tests/browser/dynamicResult1.css",
       "browser/extensions/formautofill/content/manageDialog.css",
       "browser/extensions/newtab/content-src/components/DiscoveryStreamComponents/TopicSelection/_TopicSelection.scss",
-      "browser/extensions/webcompat/injections/css/**",
       "browser/fxr/content/fxrui.css",
       "browser/fxr/content/prefs.css",
       "browser/themes/linux/browser.css",
@@ -75,7 +74,6 @@ module.exports = [
       "browser/themes/shared/urlbarView.css",
       "browser/themes/shared/webRTC-indicator.css",
       "browser/themes/windows/downloads/allDownloadsView.css",
-      "devtools/**",
       "docs/_static/custom_theme.css",
       "layout/style/res/forms.css",
       "mobile/android/android-components/components/browser/errorpages/src/main/assets/error_style.css",
@@ -111,12 +109,5 @@ module.exports = [
       "toolkit/themes/shared/toolbarbutton.css",
       "toolkit/themes/shared/tree/tree.css",
     ],
-  },
-  {
-    name: "rollout-use-border-radius-tokens",
-    rules: {
-      "stylelint-plugin-mozilla/use-border-radius-tokens": true,
-    },
-    files: ["devtools/client/aboutdebugging/src/components/debugtarget/**"],
   },
 ];
