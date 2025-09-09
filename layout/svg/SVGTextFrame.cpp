@@ -2314,7 +2314,7 @@ bool CharIterator::IsOriginalCharTrimmed() const {
       (index >= mTrimmedOffset + mTrimmedLength &&
        mFrameForTrimCheck->StyleText()->NewlineIsSignificant(
            mFrameForTrimCheck) &&
-       mFrameForTrimCheck->CharacterDataBuffer()->CharAt(index) == '\n'));
+       mFrameForTrimCheck->CharacterDataBuffer().CharAt(index) == '\n'));
 }
 
 gfxFloat CharIterator::GetAdvance(nsPresContext* aContext) const {

@@ -58,7 +58,7 @@ class MOZ_STACK_CLASS TextAutospace final {
   // Returns true if inter-script spacing may be added at boundaries.
   static bool Enabled(const StyleTextAutospace& aStyleTextAutospace,
                       const StyleTextOrientation aStyleTextOrientation,
-                      const dom::CharacterDataBuffer* aBuffer);
+                      const dom::CharacterDataBuffer& aBuffer);
 
   TextAutospace(const StyleTextAutospace& aStyleTextAutospace,
                 nscoord aSpacing);
@@ -125,7 +125,7 @@ class nsTextFrame : public nsIFrame {
      * cannot be called, nor can GetOriginalLength().
      */
     PropertyProvider(gfxTextRun* aTextRun, const nsStyleText* aTextStyle,
-                     const mozilla::dom::CharacterDataBuffer* aBuffer,
+                     const mozilla::dom::CharacterDataBuffer& aBuffer,
                      nsTextFrame* aFrame, const gfxSkipCharsIterator& aStart,
                      int32_t aLength, nsIFrame* aLineContainer,
                      nscoord aOffsetFromBlockOriginForTabs,
@@ -190,7 +190,7 @@ class nsTextFrame : public nsIFrame {
       NS_ASSERTION(mLength != INT32_MAX, "Length not known");
       return mLength;
     }
-    const mozilla::dom::CharacterDataBuffer* GetCharacterDataBuffer() const {
+    const mozilla::dom::CharacterDataBuffer& GetCharacterDataBuffer() const {
       return mCharacterDataBuffer;
     }
 
@@ -232,7 +232,7 @@ class nsTextFrame : public nsIFrame {
     mutable gfxFontGroup* mFontGroup;
     mutable RefPtr<nsFontMetrics> mFontMetrics;
     const nsStyleText* mTextStyle;
-    const mozilla::dom::CharacterDataBuffer* mCharacterDataBuffer;
+    const mozilla::dom::CharacterDataBuffer& mCharacterDataBuffer;
     const nsIFrame* mLineContainer;
     nsTextFrame* mFrame;
 
@@ -374,8 +374,8 @@ class nsTextFrame : public nsIFrame {
   // Returns this text frame's content's text fragment.
   //
   // Assertions in Init() ensure we only ever get a Text node as content.
-  const mozilla::dom::CharacterDataBuffer* CharacterDataBuffer() const {
-    return &mContent->AsText()->DataBuffer();
+  const mozilla::dom::CharacterDataBuffer& CharacterDataBuffer() const {
+    return mContent->AsText()->DataBuffer();
   }
 
   /**
@@ -805,7 +805,7 @@ class nsTextFrame : public nsIFrame {
     NoTrimBefore = 1 << 2
   };
   TrimmedOffsets GetTrimmedOffsets(
-      const mozilla::dom::CharacterDataBuffer* aBuffer,
+      const mozilla::dom::CharacterDataBuffer& aBuffer,
       TrimmedOffsetFlags aFlags = TrimmedOffsetFlags::Default) const;
 
   // Similar to Reflow(), but for use from nsLineLayout
@@ -1176,8 +1176,7 @@ class nsTextFrame : public nsIFrame {
     const uint32_t mEndOffset;
     const TextOffsetType mOffsetType;
     const TrailingWhitespace mTrimTrailingWhitespace;
-    const mozilla::dom::CharacterDataBuffer* const mCharacterDataBuffer =
-        nullptr;
+    const mozilla::dom::CharacterDataBuffer& mCharacterDataBuffer;
     // Mutable state, updated as we loop over the continuations.
     nsBlockFrame* mLineContainer = nullptr;
     uint32_t mOffsetInRenderedString = 0;
