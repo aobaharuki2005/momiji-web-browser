@@ -42,6 +42,8 @@ EXPORTS.hwy.ops += [
     "/third_party/highway/hwy/ops/emu128-inl.h",
     "/third_party/highway/hwy/ops/generic_ops-inl.h",
     "/third_party/highway/hwy/ops/inside-inl.h",
+    "/third_party/highway/hwy/ops/loongarch_lasx-inl.h",
+    "/third_party/highway/hwy/ops/loongarch_lsx-inl.h",
     "/third_party/highway/hwy/ops/ppc_vsx-inl.h",
     "/third_party/highway/hwy/ops/rvv-inl.h",
     "/third_party/highway/hwy/ops/scalar-inl.h",
