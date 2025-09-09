@@ -55,6 +55,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -251,6 +252,7 @@ private fun BookmarksList(
     }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val saveableStateHolder = rememberSaveableStateHolder()
 
     val view = LocalView.current
     val focusManager = LocalFocusManager.current
@@ -366,60 +368,120 @@ private fun BookmarksList(
             EmptyList(state = emptyListState, dispatcher = store::dispatch)
             return@Scaffold
         }
+        saveableStateHolder.SaveableStateProvider(state.currentFolder.guid) {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .padding(vertical = 16.dp)
+                    .semantics {
+                        collectionInfo =
+                            CollectionInfo(rowCount = state.bookmarkItems.size, columnCount = 1)
+                    }
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                val folders = state.bookmarkItems.folders()
+                itemsIndexed(folders) { index, item ->
+                    var showMenu by remember { mutableStateOf(false) }
+                    if (state.isGuidMarkedForDeletion(item.guid)) {
+                        return@itemsIndexed
+                    }
+                    val isSelected = item in state.selectedItems
 
-        LazyColumn(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(vertical = 16.dp)
-                .semantics {
-                    collectionInfo = CollectionInfo(rowCount = state.bookmarkItems.size, columnCount = 1)
-                }
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            val folders = state.bookmarkItems.folders()
-            itemsIndexed(folders) { index, item ->
-                var showMenu by remember { mutableStateOf(false) }
-                if (state.isGuidMarkedForDeletion(item.guid)) {
-                    return@itemsIndexed
-                }
-                val isSelected = item in state.selectedItems
-
-                if (item.isDesktopFolder) {
-                    SelectableIconListItem(
-                        label = item.title,
-                        isSelected = item in state.selectedItems,
-                        description =
-                            stringResource(
-                                R.string.bookmarks_folder_description,
+                    if (item.isDesktopFolder) {
+                        SelectableIconListItem(
+                            label = item.title,
+                            isSelected = item in state.selectedItems,
+                            description =
+                                stringResource(
+                                    R.string.bookmarks_folder_description,
+                                    item.nestedItemCount.toString(),
+                                ),
+                            onClick = { store.dispatch(FolderClicked(item)) },
+                            beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+                            modifier = Modifier
+                                .semantics(mergeDescendants = true) {
+                                    selected = isSelected
+                                    collectionItemInfo = CollectionItemInfo(
+                                        rowIndex = index,
+                                        rowSpan = 1,
+                                        columnSpan = 1,
+                                        columnIndex = 0,
+                                    )
+                                }
+                                .width(FirefoxTheme.layout.size.containerMaxWidth),
+                            labelModifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        SelectableIconListItem(
+                            label = item.title,
+                            isSelected = isSelected,
+                            description = stringResource(
+                                id = R.string.bookmarks_folder_description,
                                 item.nestedItemCount.toString(),
                             ),
-                        onClick = { store.dispatch(FolderClicked(item)) },
-                        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
-                        modifier = Modifier
-                            .semantics(mergeDescendants = true) {
-                                selected = isSelected
-                                collectionItemInfo = CollectionItemInfo(
-                                    rowIndex = index,
-                                    rowSpan = 1,
-                                    columnSpan = 1,
-                                    columnIndex = 0,
+                            onClick = { store.dispatch(FolderClicked(item)) },
+                            onLongClick = { store.dispatch(FolderLongClicked(item)) },
+                            beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+                            modifier = Modifier
+                                .semantics(mergeDescendants = true) {
+                                    selected = isSelected
+                                    collectionItemInfo = CollectionItemInfo(
+                                        rowIndex = index,
+                                        rowSpan = 1,
+                                        columnSpan = 1,
+                                        columnIndex = 0,
+                                    )
+                                }
+                                .width(FirefoxTheme.layout.size.containerMaxWidth),
+                            labelModifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Box {
+                                IconButton(
+                                    onClick = { showMenu = true },
+                                    modifier = Modifier.size(24.dp),
+                                ) {
+                                    Icon(
+                                        painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
+                                        contentDescription = stringResource(
+                                            R.string.bookmark_item_menu_button_content_description,
+                                            item.title,
+                                        ),
+                                        tint = FirefoxTheme.colors.iconPrimary,
+                                    )
+                                }
+
+                                BookmarkListFolderMenu(
+                                    showMenu = showMenu,
+                                    onDismissRequest = { showMenu = false },
+                                    folder = item,
+                                    store = store,
                                 )
                             }
-                            .width(FirefoxTheme.layout.size.containerMaxWidth),
-                        labelModifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    SelectableIconListItem(
+                        }
+                    }
+                }
+
+                if (folders.isNotEmpty()) {
+                    item {
+                        Divider()
+                    }
+                }
+
+                itemsIndexed(state.bookmarkItems.bookmarks()) { index, item ->
+                    var showMenu by remember { mutableStateOf(false) }
+                    if (state.isGuidMarkedForDeletion(item.guid)) {
+                        return@itemsIndexed
+                    }
+                    val isSelected = item in state.selectedItems
+
+                    SelectableFaviconListItem(
                         label = item.title,
+                        url = item.previewImageUrl,
                         isSelected = isSelected,
-                        description = stringResource(
-                            id = R.string.bookmarks_folder_description,
-                            item.nestedItemCount.toString(),
-                        ),
-                        onClick = { store.dispatch(FolderClicked(item)) },
-                        onLongClick = { store.dispatch(FolderLongClicked(item)) },
-                        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+                        description = item.url,
+                        onClick = { store.dispatch(BookmarkClicked(item)) },
+                        onLongClick = { store.dispatch(BookmarkLongClicked(item)) },
                         modifier = Modifier
                             .semantics(mergeDescendants = true) {
                                 selected = isSelected
@@ -431,7 +493,6 @@ private fun BookmarksList(
                                 )
                             }
                             .width(FirefoxTheme.layout.size.containerMaxWidth),
-                        labelModifier = Modifier.fillMaxWidth(),
                     ) {
                         Box {
                             IconButton(
@@ -448,70 +509,13 @@ private fun BookmarksList(
                                 )
                             }
 
-                            BookmarkListFolderMenu(
+                            BookmarkListItemMenu(
                                 showMenu = showMenu,
                                 onDismissRequest = { showMenu = false },
-                                folder = item,
+                                bookmark = item,
                                 store = store,
                             )
                         }
-                    }
-                }
-            }
-
-            if (folders.isNotEmpty()) {
-                item {
-                    Divider()
-                }
-            }
-
-            itemsIndexed(state.bookmarkItems.bookmarks()) { index, item ->
-                var showMenu by remember { mutableStateOf(false) }
-                if (state.isGuidMarkedForDeletion(item.guid)) {
-                    return@itemsIndexed
-                }
-                val isSelected = item in state.selectedItems
-
-                SelectableFaviconListItem(
-                    label = item.title,
-                    url = item.previewImageUrl,
-                    isSelected = isSelected,
-                    description = item.url,
-                    onClick = { store.dispatch(BookmarkClicked(item)) },
-                    onLongClick = { store.dispatch(BookmarkLongClicked(item)) },
-                    modifier = Modifier
-                        .semantics(mergeDescendants = true) {
-                            selected = isSelected
-                            collectionItemInfo = CollectionItemInfo(
-                                rowIndex = index,
-                                rowSpan = 1,
-                                columnSpan = 1,
-                                columnIndex = 0,
-                            )
-                        }
-                        .width(FirefoxTheme.layout.size.containerMaxWidth),
-                ) {
-                    Box {
-                        IconButton(
-                            onClick = { showMenu = true },
-                            modifier = Modifier.size(24.dp),
-                        ) {
-                            Icon(
-                                painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                                contentDescription = stringResource(
-                                    R.string.bookmark_item_menu_button_content_description,
-                                    item.title,
-                                ),
-                                tint = FirefoxTheme.colors.iconPrimary,
-                            )
-                        }
-
-                        BookmarkListItemMenu(
-                            showMenu = showMenu,
-                            onDismissRequest = { showMenu = false },
-                            bookmark = item,
-                            store = store,
-                        )
                     }
                 }
             }
