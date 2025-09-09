@@ -472,7 +472,7 @@
     <string name="pref_key_desktop_browsing" translatable="false">pref_key_desktop_browsing</string>
 
     <!-- Crash reporting -->
-    <string name="pref_key_crash_reporting_cutoff_date" translatable="false">pref_key_crash_reporting_cutoff_date</string>
+    <string name="pref_key_crash_reporting_cutoff_date" translatable="false">pref_key_crash_reporting_cutoff_date_2025_09_08</string>
     <string name="pref_key_crash_reporting_deferred_until" translatable="false">pref_key_crash_reporting_deferred_until</string>
     <string name="pref_key_use_new_crash_reporter" translatable="false">pref_key_use_new_crash_reporter</string>
 
