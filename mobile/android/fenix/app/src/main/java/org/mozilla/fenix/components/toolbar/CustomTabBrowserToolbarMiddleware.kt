@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Intent
+import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toDrawable
@@ -26,6 +27,8 @@ import mozilla.components.compose.browser.toolbar.concept.Action
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButton
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
+import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.ContextualMenuOption
+import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.CopyToClipboardClicked
 import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAction.BrowserActionsEndUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAction.BrowserActionsStartUpdated
@@ -56,9 +59,14 @@ import mozilla.components.support.ktx.kotlin.isContentUrl
 import mozilla.components.support.ktx.kotlin.isIpv4OrIpv6
 import mozilla.components.support.ktx.kotlin.trimmed
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import mozilla.components.support.utils.ClipboardHandler
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction.URLCopiedToClipboard
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware.Companion.DisplayActions.MenuClicked
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware.Companion.DisplayActions.ShareClicked
@@ -84,23 +92,27 @@ private const val CUSTOM_BUTTON_CLICK_RETURN_CODE = 0
  *
  * @param customTabId [String] of the custom tab in which the toolbar is shown.
  * @param browserStore [BrowserStore] to sync from.
+ * @param appStore [AppStore] allowing to integrate with other features of the applications.
  * @param permissionsStorage [SitePermissionsStorage] to sync from.
  * @param cookieBannersStorage [CookieBannersStorage] to sync from.
  * @param useCases [CustomTabsUseCases] used for cleanup when closing the custom tab.
  * @param trackingProtectionUseCases [TrackingProtectionUseCases] allowing to query
  * tracking protection data of the current tab.
  * @param publicSuffixList [PublicSuffixList] used to obtain the base domain of the current site.
+ * @param clipboard [ClipboardHandler] to use for reading from device's clipboard.
  * @param settings [Settings] for accessing user preferences.
  */
 @Suppress("LongParameterList")
 class CustomTabBrowserToolbarMiddleware(
     private val customTabId: String,
     private val browserStore: BrowserStore,
+    private val appStore: AppStore,
     private val permissionsStorage: SitePermissionsStorage,
     private val cookieBannersStorage: CookieBannersStorage,
     private val useCases: CustomTabsUseCases,
     private val trackingProtectionUseCases: TrackingProtectionUseCases,
     private val publicSuffixList: PublicSuffixList,
+    private val clipboard: ClipboardHandler,
     private val settings: Settings,
 ) : Middleware<BrowserToolbarState, BrowserToolbarAction>, ViewModel() {
     @VisibleForTesting
@@ -245,6 +257,20 @@ class CustomTabBrowserToolbarMiddleware(
                 }
             }
 
+            is CopyToClipboardClicked -> {
+                Events.copyUrlTapped.record(NoExtras())
+
+                clipboard.text = customTab?.content?.url?.also {
+                    // Android 13+ shows by default a popup for copied text.
+                    // Avoid overlapping popups informing the user when the URL is copied to the clipboard.
+                    // and only show our snackbar when Android will not show an indication by default.
+                    // See https://developer.android.com/develop/ui/views/touch-and-input/copy-paste#duplicate-notifications).
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                        appStore.dispatch(URLCopiedToClipboard)
+                    }
+                }
+            }
+
             else -> next(action)
         }
     }
@@ -312,6 +338,7 @@ class CustomTabBrowserToolbarMiddleware(
                         hint = R.string.search_hint,
                         title = getTitleToShown(customTab),
                         url = getHostFromUrl()?.trimmed(),
+                        contextualMenuOptions = listOf(ContextualMenuOption.CopyURLToClipboard),
                         onClick = null,
                     ),
                 ),

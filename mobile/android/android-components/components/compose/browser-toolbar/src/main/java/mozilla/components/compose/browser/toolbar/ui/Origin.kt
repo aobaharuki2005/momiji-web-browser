@@ -135,8 +135,10 @@ internal fun Origin(
                     Modifier.combinedClickable(
                         role = Button,
                         onClick = {
-                            view.playSoundEffect(SoundEffectConstants.CLICK)
-                            onInteraction(requireNotNull(onClick))
+                            onClick?.let {
+                                view.playSoundEffect(SoundEffectConstants.CLICK)
+                                onInteraction(it)
+                            }
                         },
                         onLongClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -144,7 +146,7 @@ internal fun Origin(
                             onLongClick?.let { onInteraction(it) }
                         },
                     ),
-                ) { onClick != null && shouldReactToLongClicks },
+                ) { shouldReactToLongClicks },
         ) {
             Column(
                 verticalArrangement = Center,

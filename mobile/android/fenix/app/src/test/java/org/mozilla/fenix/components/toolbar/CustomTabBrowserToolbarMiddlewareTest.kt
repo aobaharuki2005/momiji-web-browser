@@ -16,6 +16,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
@@ -26,10 +27,13 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.createCustomTab
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButton
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
+import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.ContextualMenuOption
+import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.CopyToClipboardClicked
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
@@ -43,6 +47,7 @@ import mozilla.components.support.ktx.kotlin.getRegistrableDomainIndexRange
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainLooperTestRule
+import mozilla.components.support.utils.ClipboardHandler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -51,12 +56,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction.URLCopiedToClipboard
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware.Companion.DisplayActions.MenuClicked
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware.Companion.DisplayActions.ShareClicked
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware.Companion.EndPageActions.CustomButtonClicked
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware.Companion.StartBrowserActions.CloseClicked
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware.Companion.StartPageActions.SiteInfoClicked
+import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.helpers.lifecycle.TestLifecycleOwner
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
@@ -73,15 +82,22 @@ class CustomTabBrowserToolbarMiddlewareTest {
     @get:Rule
     val mainLooperRule = MainLooperTestRule()
 
+    @get:Rule
+    val gleanRule = FenixGleanTestRule(testContext)
+
     private val customTabId = "test"
     private val customTab: CustomTabSessionState = mockk(relaxed = true) {
         every { id } returns customTabId
     }
+    private val selectedTab = createTab("test.com")
     private val browserStore = BrowserStore(
         BrowserState(
+            tabs = listOf(selectedTab),
             customTabs = listOf(customTab),
+            selectedTabId = selectedTab.id,
         ),
     )
+    private val appStore: AppStore = mockk()
     private val permissionsStorage: SitePermissionsStorage = mockk()
     private val cookieBannersStorage: CookieBannersStorage = mockk()
     private val useCases: CustomTabsUseCases = mockk()
@@ -89,9 +105,10 @@ class CustomTabBrowserToolbarMiddlewareTest {
     private val publicSuffixList: PublicSuffixList = mockk {
         every { getPublicSuffixPlusOne(any()) } returns CompletableDeferred(null)
     }
+    private val clipboard: ClipboardHandler = mockk()
     private val lifecycleOwner = TestLifecycleOwner(Lifecycle.State.RESUMED)
     private val navController: NavController = mockk()
-    private val closeTabDelegate: () -> Unit = mockk()
+    private val closeTabDelegate: () -> Unit = {}
     private val settings: Settings = mockk {
         every { shouldUseBottomToolbar } returns true
     }
@@ -319,6 +336,46 @@ class CustomTabBrowserToolbarMiddlewareTest {
     }
 
     @Test
+    @Config(sdk = [31])
+    fun `GIVEN on Android 12 WHEN choosing to copy the current URL to clipboard THEN copy to clipboard and show a snackbar`() {
+        val appStore: AppStore = mockk(relaxed = true)
+        val navController: NavController = mockk(relaxed = true)
+        every { customTab.content.url } returns "https://mozilla.test"
+        val clipboard = ClipboardHandler(testContext)
+        val middleware = buildMiddleware(appStore = appStore, clipboard = clipboard)
+        val toolbarStore = buildStore(
+            middleware = middleware,
+            navController = navController,
+        )
+
+        toolbarStore.dispatch(CopyToClipboardClicked)
+
+        assertEquals(customTab.content.url, clipboard.text)
+        verify { appStore.dispatch(URLCopiedToClipboard) }
+        assertNotNull(Events.copyUrlTapped.testGetValue())
+    }
+
+    @Test
+    @Config(sdk = [33])
+    fun `GIVEN on Android 13 WHEN choosing to copy the current URL to clipboard THEN copy to clipboard and don't show a snackbar`() {
+        val appStore: AppStore = mockk(relaxed = true)
+        val navController: NavController = mockk(relaxed = true)
+        every { customTab.content.url } returns "https://mozilla.test"
+        val clipboard = ClipboardHandler(testContext)
+        val middleware = buildMiddleware(appStore = appStore, clipboard = clipboard)
+        val toolbarStore = buildStore(
+            middleware = middleware,
+            navController = navController,
+        )
+
+        toolbarStore.dispatch(CopyToClipboardClicked)
+
+        assertEquals(customTab.content.url, clipboard.text)
+        verify(exactly = 0) { appStore.dispatch(URLCopiedToClipboard) }
+        assertNotNull(Events.copyUrlTapped.testGetValue())
+    }
+
+    @Test
     fun `WHEN the website title changes THEN update the shown page origin`() = runTest {
         val customTab = createCustomTab(title = "Title", url = "URL", id = customTabId)
         val browserStore = BrowserStore(
@@ -329,6 +386,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
             hint = R.string.search_hint,
             title = "Title",
             url = "URL",
+            contextualMenuOptions = listOf(ContextualMenuOption.CopyURLToClipboard),
             onClick = null,
         )
 
@@ -354,6 +412,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
             hint = R.string.search_hint,
             title = null,
             url = "URL",
+            contextualMenuOptions = listOf(ContextualMenuOption.CopyURLToClipboard),
             onClick = null,
         )
 
@@ -379,6 +438,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
             hint = R.string.search_hint,
             title = "Title",
             url = "URL",
+            contextualMenuOptions = listOf(ContextualMenuOption.CopyURLToClipboard),
             onClick = null,
         )
 
@@ -411,6 +471,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
             hint = R.string.search_hint,
             title = "Title",
             url = "127.0.0.1",
+            contextualMenuOptions = listOf(ContextualMenuOption.CopyURLToClipboard),
             onClick = null,
         )
 
@@ -558,20 +619,24 @@ class CustomTabBrowserToolbarMiddlewareTest {
 
     private fun buildMiddleware(
         browserStore: BrowserStore = this.browserStore,
+        appStore: AppStore = this.appStore,
         permissionsStorage: SitePermissionsStorage = this.permissionsStorage,
         cookieBannersStorage: CookieBannersStorage = this.cookieBannersStorage,
         useCases: CustomTabsUseCases = this.useCases,
         trackingProtectionUseCases: TrackingProtectionUseCases = this.trackingProtectionUseCases,
         publicSuffixList: PublicSuffixList = this.publicSuffixList,
+        clipboard: ClipboardHandler = this.clipboard,
         settings: Settings = this.settings,
     ) = CustomTabBrowserToolbarMiddleware(
         customTabId = this.customTabId,
         browserStore = browserStore,
+        appStore = appStore,
         permissionsStorage = permissionsStorage,
         cookieBannersStorage = cookieBannersStorage,
         useCases = useCases,
         trackingProtectionUseCases = trackingProtectionUseCases,
         publicSuffixList = publicSuffixList,
+        clipboard = clipboard,
         settings = settings,
     )
 
