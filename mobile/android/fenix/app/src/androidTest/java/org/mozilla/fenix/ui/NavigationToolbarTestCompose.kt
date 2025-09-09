@@ -363,7 +363,7 @@ class NavigationToolbarTestCompose : TestSetup() {
         }
     }
 
-    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2154215
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135051
     @SmokeTest
     @Test
     fun verifyHistorySearchWithBrowsingHistoryTest() {
