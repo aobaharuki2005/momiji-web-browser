@@ -160,6 +160,9 @@
       "circle": {
         "value": "9999px"
       },
+      "xsmall": {
+        "value": "2px"
+      },
       "small": {
         "value": "4px"
       },
@@ -167,7 +170,7 @@
         "value": "8px"
       },
       "large": {
-        "value": "12px"
+        "value": "16px"
       }
     },
     "width": {

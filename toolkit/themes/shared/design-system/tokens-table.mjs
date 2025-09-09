@@ -563,9 +563,10 @@ export const tokensTable = {
   ],
   "border-radius": [
     { value: "9999px", name: "--border-radius-circle" },
+    { value: "2px", name: "--border-radius-xsmall" },
     { value: "4px", name: "--border-radius-small" },
     { value: "8px", name: "--border-radius-medium" },
-    { value: "12px", name: "--border-radius-large" },
+    { value: "16px", name: "--border-radius-large" },
     { value: "var(--border-radius-small)", name: "--button-border-radius" },
   ],
   "border-width": [{ value: "1px", name: "--border-width" }],
@@ -1129,9 +1130,10 @@ export const variableLookupTable = {
     forcedColors: "GrayText",
   },
   "border-radius-circle": "9999px",
+  "border-radius-xsmall": "2px",
   "border-radius-small": "4px",
   "border-radius-medium": "8px",
-  "border-radius-large": "12px",
+  "border-radius-large": "16px",
   "border-width": "1px",
   "button-background-color": {
     forcedColors: "ButtonFace",
