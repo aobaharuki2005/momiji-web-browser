@@ -11,9 +11,9 @@
 #include "nsThreadUtils.h"
 #include "Helpers.h"
 
+using mozilla::CancelableRunnable;
 using mozilla::MakeRefPtr;
 using mozilla::StopGapEventTarget;
-using mozilla::CancelableRunnable;
 
 namespace TestStopGapEventTarget {
 
