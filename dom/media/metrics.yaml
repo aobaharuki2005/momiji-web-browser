@@ -284,31 +284,6 @@ media:
       - media-alerts@mozilla.com
     expires: 150
 
-  mkv_codec_type:
-    type: labeled_counter
-    description: >
-      Count the amount of the real world codec usage inside Matroska.
-    labels:
-      - VideoAv1
-      - VideoAvc
-      - VideoHevc
-      - VideoVp8
-      - VideoVp9
-      - AudioAac
-      - AudioMp3
-      - AudioOpus
-      - AudioVorbis
-      - AudioFlac
-      - AudioPcm
-      - NoCodecSpecified
-    bugs:
-      - https://bugzil.la/1986058
-    data_reviews:
-      - https://bugzil.la/1986058
-    notification_emails:
-      - media-alerts@mozilla.com
-    expires: 150
-
   video_hardware_decoding_support:
     type: labeled_boolean
     description: >
