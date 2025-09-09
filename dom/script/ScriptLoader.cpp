@@ -430,32 +430,20 @@ nsContentPolicyType ScriptLoadRequestToContentPolicyType(
     ScriptLoadRequest* aRequest) {
   if (aRequest->GetScriptLoadContext()->IsPreload()) {
     if (aRequest->IsModuleRequest()) {
-      switch (aRequest->AsModuleRequest()->mModuleType) {
-        case JS::ModuleType::JavaScript:
-          return nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD;
-        case JS::ModuleType::JSON:
-          return nsIContentPolicy::TYPE_INTERNAL_JSON_PRELOAD;
-        case JS::ModuleType::CSS:
-          return nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD;
-        case JS::ModuleType::Unknown:
-          MOZ_ASSERT_UNREACHABLE("Unknown module type");
-      }
+      return aRequest->AsModuleRequest()->mModuleType ==
+                     JS::ModuleType::JavaScript
+                 ? nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD
+                 : nsIContentPolicy::TYPE_INTERNAL_JSON_PRELOAD;
     }
 
     return nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD;
   }
 
   if (aRequest->IsModuleRequest()) {
-    switch (aRequest->AsModuleRequest()->mModuleType) {
-      case JS::ModuleType::Unknown:
-        MOZ_CRASH("Unexpected module type");
-      case JS::ModuleType::JavaScript:
-        return nsIContentPolicy::TYPE_INTERNAL_MODULE;
-      case JS::ModuleType::JSON:
-        return nsIContentPolicy::TYPE_JSON;
-      case JS::ModuleType::CSS:
-        return nsIContentPolicy::TYPE_STYLESHEET;
-    }
+    return aRequest->AsModuleRequest()->mModuleType ==
+                   JS::ModuleType::JavaScript
+               ? nsIContentPolicy::TYPE_INTERNAL_MODULE
+               : nsIContentPolicy::TYPE_JSON;
   }
 
   return nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
@@ -1975,12 +1963,10 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
     return NS_OK;
   }
 
-  // Don't off-thread compile JSON or CSS modules.
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1912112 (JSON)
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1987143 (CSS)
+  // Don't off-thread compile JSON modules.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1912112
   if (aRequest->IsModuleRequest() &&
-      (aRequest->AsModuleRequest()->mModuleType == JS::ModuleType::JSON ||
-       aRequest->AsModuleRequest()->mModuleType == JS::ModuleType::CSS)) {
+      aRequest->AsModuleRequest()->mModuleType == JS::ModuleType::JSON) {
     return NS_OK;
   }
 
@@ -4430,11 +4416,6 @@ static bool MimeTypeMatchesExpectedModuleType(
 
   if (expectedModuleType == JS::ModuleType::JSON &&
       nsContentUtils::IsJsonMimeType(typeString)) {
-    return true;
-  }
-
-  if (expectedModuleType == JS::ModuleType::CSS &&
-      nsContentUtils::IsCssMimeType(typeString)) {
     return true;
   }
 

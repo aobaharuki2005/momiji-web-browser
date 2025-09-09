@@ -151,8 +151,6 @@ nsresult WorkerModuleLoader::CompileFetchedModule(
       return CompileJavaScriptModule(aCx, aOptions, aRequest, aModuleScript);
     case JS::ModuleType::JSON:
       return CompileJsonModule(aCx, aOptions, aRequest, aModuleScript);
-    case JS::ModuleType::CSS:
-      MOZ_CRASH("CSS modules are not supported in workers");
   }
 
   MOZ_CRASH("Unhandled module type");
