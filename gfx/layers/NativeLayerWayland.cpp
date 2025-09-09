@@ -491,7 +491,7 @@ bool NativeLayerRootWayland::CommitToScreen() {
     RequestUpdateOnMainThreadLocked(lock);
   }
 
-  const double scale = mRootSurface->GetScaleSafe();
+  const double scale = mRootSurface->GetScale();
   mRootAllLayersRendered = true;
   for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
     layer->RenderLayer(scale);
