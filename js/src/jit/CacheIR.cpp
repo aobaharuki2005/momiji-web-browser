@@ -2252,9 +2252,18 @@ bool IRGenerator::canOptimizeConstantDataProperty(NativeObject* holder,
 
   // Atomize strings to ensure the slot's value won't be mutated by the
   // LLoadFixedSlotAndAtomize or LLoadDynamicSlotAndAtomize instructions in Ion.
-  // This matters because we'll emit CacheIR instructions to assert the slot's
-  // Value matches the current Value in emitConstantDataPropertyResult.
+  // This matters because, for GC reasons, the Value that will be stored in the
+  // IC stub in a WeakValueField must match the Value stored in the object slot.
+  // In emitConstantDataPropertyResult we emit CacheIR instructions to assert
+  // this.
+  //
+  // We don't optimize the constant property if the string is very long because
+  // atomizing such strings can be slow.
   if (result.isString() && !result.toString()->isAtom()) {
+    static constexpr size_t MaxLengthForAtomize = 1000;
+    if (result.toString()->length() > MaxLengthForAtomize) {
+      return false;
+    }
     JSAtom* atom = AtomizeString(cx_, result.toString());
     if (!atom) {
       cx_->recoverFromOutOfMemory();
