@@ -123,6 +123,7 @@ void RemoteMediaDataEncoderChild::DoSendInit() {
 
         self->mIsHardwareAccelerated = initResponse.hardware();
         self->mHardwareAcceleratedReason = initResponse.hardwareReason();
+        // TODO: Get batch-encoding capability.
         self->mInitPromise.ResolveIfExists(true, __func__);
       },
       [self = RefPtr{this}](const mozilla::ipc::ResponseRejectReason& aReason) {

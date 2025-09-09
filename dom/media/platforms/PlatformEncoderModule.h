@@ -86,6 +86,17 @@ class MediaDataEncoder {
   // or empty when there is none available yet.
   virtual RefPtr<EncodePromise> Encode(const MediaData* aSample) = 0;
 
+  // Inserts a batch of samples into the encoder's encode pipeline. The
+  // EncodePromise it returns will be resolved with already encoded MediaRawData
+  // at the moment, or empty when there is none available yet.
+  virtual RefPtr<EncodePromise> Encode(nsTArray<RefPtr<MediaData>>&& aSamples) {
+    MOZ_ASSERT_UNREACHABLE("Encode samples in a batch is not implemented");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_NOT_IMPLEMENTED,
+                    "Encode samples in a batch is not implemented"),
+        __func__);
+  }
+
   // Attempt to reconfigure the encoder on the fly. This can fail if the
   // underlying PEM doesn't support this type of reconfiguration.
   virtual RefPtr<ReconfigurationPromise> Reconfigure(

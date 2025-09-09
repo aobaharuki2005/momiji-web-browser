@@ -72,6 +72,7 @@ IPCResult RemoteMediaDataEncoderParent::RecvInit(InitResolver&& aResolver) {
           return;
         }
 
+        // TODO: Pass batch-encoding capability.
         nsCString hardwareReason;
         bool hardware = encoder->IsHardwareAccelerated(hardwareReason);
         resolver(EncodeInitCompletionIPDL{encoder->GetDescriptionName(),

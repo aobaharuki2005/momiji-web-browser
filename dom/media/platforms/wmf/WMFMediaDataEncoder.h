@@ -26,6 +26,7 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
 
   RefPtr<InitPromise> Init() override;
   RefPtr<EncodePromise> Encode(const MediaData* aSample) override;
+  RefPtr<EncodePromise> Encode(nsTArray<RefPtr<MediaData>>&& aSamples) override;
   RefPtr<EncodePromise> Drain() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   RefPtr<GenericPromise> SetBitrate(uint32_t aBitsPerSec) override;
@@ -74,6 +75,8 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
   void SetConfigData(const nsTArray<UINT8>& aHeader);
 
   RefPtr<EncodePromise> ProcessEncode(RefPtr<const VideoData>&& aSample);
+  RefPtr<EncodePromise> ProcessEncodeBatch(
+      nsTArray<RefPtr<const VideoData>>&& aSamples);
   RefPtr<EncodePromise> ProcessDrain();
 
   already_AddRefed<IMFSample> ConvertToNV12InputSample(
@@ -101,6 +104,8 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
   // Can be accessed on any thread, but only written on during init.
   Atomic<bool> mIsHardwareAccelerated;
 
+  // Both Encode and EncodeBatch share mEncodePromise and mEncodeRequest, as
+  // concurrent calls are not allowed.
   MozPromiseHolder<EncodePromise> mEncodePromise;
   MozPromiseRequestHolder<MFTEncoder::EncodePromise> mEncodeRequest;
 
