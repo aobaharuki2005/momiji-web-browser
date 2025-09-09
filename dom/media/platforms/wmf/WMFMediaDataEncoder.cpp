@@ -139,8 +139,7 @@ RefPtr<InitPromise> WMFMediaDataEncoder::ProcessInit() {
   mIsHardwareAccelerated = mEncoder->IsHardwareAccelerated();
   WMF_ENC_LOGD("HW accelerated: %s", mIsHardwareAccelerated ? "yes" : "no");
   cleanup.release();
-  return InitPromise::CreateAndResolve(TrackInfo::TrackType::kVideoTrack,
-                                       __func__);
+  return InitPromise::CreateAndResolve(true, __func__);
 }
 
 HRESULT WMFMediaDataEncoder::InitMFTEncoder(RefPtr<MFTEncoder>& aEncoder) {

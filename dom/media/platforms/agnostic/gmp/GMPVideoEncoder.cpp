@@ -192,7 +192,7 @@ void GMPVideoEncoder::InitComplete(GMPVideoEncoderProxy* aGMP,
 
   GMP_LOG_DEBUG("[%p] GMPVideoEncoder::InitComplete -- encoder initialized",
                 this);
-  mInitPromise.Resolve(TrackInfo::TrackType::kVideoTrack, __func__);
+  mInitPromise.Resolve(true, __func__);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> GMPVideoEncoder::Encode(

@@ -145,7 +145,7 @@ RefPtr<MediaDataEncoder::InitPromise> AndroidDataEncoder::ProcessInit() {
   mIsHardwareAccelerated = mJavaEncoder->IsHardwareAccelerated();
   mDrainState = DrainState::DRAINABLE;
 
-  return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+  return InitPromise::CreateAndResolve(true, __func__);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::Encode(
