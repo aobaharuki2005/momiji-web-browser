@@ -428,6 +428,9 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   static uint32_t CollapseMaxTouchPoints(uint32_t aMaxTouchPoints);
 
+  static void CalculateFontLocaleAllowlist();
+  static bool FontIsAllowedByLocale(const nsACString& aName);
+
   static Maybe<RFPTarget> TextToRFPTarget(const nsAString& aText);
 
  private:
