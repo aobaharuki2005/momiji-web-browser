@@ -67,8 +67,7 @@ EncodeSupportSet CanCreateWMFEncoder(const EncoderConfig& aConfig) {
           supports += EncodeSupport::HardwareEncode;
         }
       } else {
-        WMF_ENC_LOG("HW encoder is disabled for %s",
-                    EnumValueToString(aConfig.mCodec));
+        WMF_ENC_LOG("HW encoder is disabled for %s", aConfig.CodecString());
       }
     }
     if (aConfig.mHardwarePreference != HardwarePreference::RequireHardware) {

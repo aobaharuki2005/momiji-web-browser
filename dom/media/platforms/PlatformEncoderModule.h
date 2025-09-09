@@ -65,6 +65,13 @@ class MediaDataEncoder {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
+  static bool IsVideo(const CodecType aCodec) {
+    return aCodec > CodecType::_BeginVideo_ && aCodec < CodecType::_EndVideo_;
+  }
+  static bool IsAudio(const CodecType aCodec) {
+    return aCodec > CodecType::_BeginAudio_ && aCodec < CodecType::_EndAudio_;
+  }
+
   using InitPromise = MozPromise<bool, MediaResult, /* IsExclusive = */ true>;
   using EncodedData = nsTArray<RefPtr<MediaRawData>>;
   using EncodePromise =
