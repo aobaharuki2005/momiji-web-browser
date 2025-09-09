@@ -32,9 +32,7 @@ class SecureTabsTrayBinding(
                 )
             }
             .collect { state ->
-                if (state.selectedPage == Page.PrivateTabs &&
-                    !settings.allowScreenshotsInPrivateMode
-                ) {
+                if (state.selectedPage == Page.PrivateTabs) {
                     fragment.secure()
                     dialog.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
                 } else if (!settings.lastKnownMode.isPrivate) {
