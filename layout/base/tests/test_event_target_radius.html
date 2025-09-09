@@ -3,8 +3,6 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=780847
 https://bugzilla.mozilla.org/show_bug.cgi?id=1733509
-https://bugzilla.mozilla.org/show_bug.cgi?id=1957321
-https://bugzilla.mozilla.org/show_bug.cgi?id=1983191
 -->
 <head>
   <title>Test radii for mouse events</title>
@@ -42,9 +40,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1983191
 
   <div class="target" style="transform:translate(-80px,0);" id="t4" onmousedown="x=1" hidden></div>
 
-  <div class="target" style="left:0; top:0; z-index:1" id="t5_left" onmousedown="x=1" hidden></div>
-  <div class="target" style="left:105px; top:0" id="t5_right" onmousedown="x=1" hidden></div>
-  <div class="target" style="left:0; top:105px" id="t5_below" onmousedown="x=1" hidden></div>
+  <div class="target" style="left:0; z-index:1" id="t5_left" onmousedown="x=1" hidden></div>
+  <div class="target" style="left:106px;" id="t5_right" onmousedown="x=1" hidden></div>
+  <div class="target" style="left:0; top:210px;" id="t5_below" onmousedown="x=1" hidden></div>
 
   <div class="target" id="t6" onmousedown="x=1" style="width: 300px" hidden>
     <div id="t6_inner" style="position:absolute; left:-40px; top:20px; width:60px; height:60px; background:yellow;"></div>
@@ -89,20 +87,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1983191
   </div>
   <div id="t16" class="target" ontouchend="x=1" style="padding: 50px" hidden>
     <div id="t16_mouseListener" onmousedown="x=1" style="width: 50px; height: 50px; background: lightcyan;"></div>
-  </div>
-  <div id="t17" class="target" style="width: 100px; position: absolute; padding: 0" hidden>
-    <div id="t17_container" style="height: 20px; margin: 0; padding: 0; overflow: hidden; white-space: nowrap">
-      <span id="t17_clickable_partially_overlapped" onclick="x=1">overlapped or clipped by t17_clickable_cover</span>
-    </div>
-    <!-- overlaps the right half of t17_container -->
-    <span id="t17_clickable_cover" onclick="x=1" style="width: 50px; height: 20px; position: absolute; right: 0; top: 1px">cover</span>
-  </div>
-  <!-- t18 is the counter case of t17, unrealistic use case, though -->
-  <div id="t18" class="target" style="width: 100px; position: absolute; padding: 0" hidden>
-    <div id="t18_container" style="height: 20px; margin: 0; padding: 0; overflow: hidden; white-space: nowrap">
-      <span id="t18_clickable_bigger_z_index_but_clipped" style="position:relative; z-index: 99" onclick="x=1">topmost frame, but clipped by t18_container due to its long text</span>
-    </div>
-    <span id="t18_clickable_partially_overlapped" onclick="x=1" style="width: 120px; height: 20px; position: absolute; right: 0; top: 1px">cover</span>
   </div>
 </div>
 <pre id="test">
@@ -152,25 +136,8 @@ function testTouch(idPosition, dx, dy, idTarget, msg, options) {
   touchTarget = null;
   synthesizeTouch(document.getElementById(idPosition), dx, dy, options || {});
   try {
-    if (Array.isArray(idTarget)) {
-      if (touchTarget === null) {
-        ok(
-          idTarget.includes(null),
-          `checking '${idPosition}' offset ${dx},${dy} [${msg}]: null is not allowed`
-        );
-      } else {
-        ok(
-          idTarget.includes(touchTarget.id),
-          `checking '${idPosition}' offset ${dx},${dy} [${msg}]: "${idTarget.id}" is not allowed`
-        );
-      }
-    } else {
-      is(
-        touchTarget.id,
-        idTarget,
-        `checking '${idPosition}' offset ${dx},${dy} [${msg}]`
-      );
-    }
+    is(touchTarget.id, idTarget,
+       "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]");
   } catch (ex) {
     ok(false, "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]; got " + touchTarget);
   }
@@ -282,17 +249,17 @@ function test3() {
 
   // Test the prioritization of multiple targets based on distance to
   // the target.
-  setShowing("t5_left", true);   // 0-99      - 0-99
-  setShowing("t5_right", true);  // 105 - 204 - 0-99
-  setShowing("t5_below", true);  // 0-99      - 105-204
-  testMouseClick("t5_left", 101, 10, "t5_left", "closest DIV is left");
-  testMouseClick("t5_left", 102, 10, "t5_left",
+  setShowing("t5_left", true);
+  setShowing("t5_right", true);
+  setShowing("t5_below", true);
+  testMouseClick("t5_left", 102, 10, "t5_left", "closest DIV is left");
+  testMouseClick("t5_left", 102.5, 10, "t5_left",
     "closest DIV to midpoint is left because of its higher z-index");
-  testMouseClick("t5_left", 103, 10, "t5_right", "closest DIV is right");
-  testMouseClick("t5_left", 10, 101, "t5_left", "closest DIV is left");
-  testMouseClick("t5_left", 10, 102, "t5_left",
+  testMouseClick("t5_left", 104, 10, "t5_right", "closest DIV is right");
+  testMouseClick("t5_left", 10, 104, "t5_left", "closest DIV is left");
+  testMouseClick("t5_left", 10, 105, "t5_left",
     "closest DIV to midpoint is left because of its higher z-index");
-  testMouseClick("t5_left", 10, 103, "t5_below", "closest DIV is below");
+  testMouseClick("t5_left", 10, 106, "t5_below", "closest DIV is below");
   setShowing("t5_left", false);
   setShowing("t5_right", false);
   setShowing("t5_below", false);
@@ -523,40 +490,6 @@ function testTouchable() {
   testTouch("t16", 10, 1, "t16", "touch inside t16 top edge");
   testTouch("t16", 10, -1, "t16", "touch outside t16 top edge");
   setShowing("t16", false);
-
-  // t17_clickable_cover is on top of t17_clickable_partially_overlapped except its left side.
-  // Therefore, when its right side space is tapped, t17_clickable_partially_overlapped should not
-  // be clicked because the web app tries to prevent to work it as clickable at least over
-  // t17_clickable_cover.  However, when t17_clickable_partially_overlapped is directly tapped,
-  // it should be clickable, of course.
-  setShowing("t17", true);
-  rect = document.getElementById("t17_clickable_cover").getBoundingClientRect();
-  testTouch("t17_clickable_cover", rect.width + 1, 10, "t17_clickable_cover",
-            "touch right side of the cover should cause a click on the cover");
-  testTouch("t17_clickable_cover", -1, 10, "t17_clickable_partially_overlapped",
-            "touch left side of the cover should cause a click on the overlapped content");
-  setShowing("t17", false);
-
-  // The counter testcase against t17.  This is not a realistic case at least this DOM structure and
-  // the styling.  However, let's check whether the basic strategy of GetClosest() in
-  // PositionedEventTargeting.cpp is not broken.  When the former frame,
-  // t18_clickable_bigger_z_index_but_clipped, has big `z-index` and clipped text frame, the text
-  // frame is checked before t18_clickable_partially_overlapped.  At this time, the text frame is
-  // ignored because the nearest point from the tapped position (right side of the container rect).
-  // However, the rect should not be subtracted from the region because the container element is
-  // still clickable, i.e., should be tested later.  With current logic, it won't be targeted later.
-  // However, t18_clickable_partially_overlapped should not be clicked because it's overlapped by
-  // t18_clickable_bigger_z_index_but_clipped.
-  setShowing("t18", true);
-  rect = document.getElementById("t18_clickable_bigger_z_index_but_clipped").getBoundingClientRect();
-  testTouch("t18_clickable_bigger_z_index_but_clipped", rect.width + 1, 10,
-            // We should not acceptable "t18_clickable_partially_overlapped" because the web app
-            // tries to hide it with "t18_clickable_bigger_z_index_but_clipped".
-            ["body", null],
-            "touch right side of the cover should cause a click on the cover");
-  testTouch("t18_clickable_bigger_z_index_but_clipped", -1, 10, "t18_clickable_partially_overlapped",
-            "touch left side of the cover should cause a click on the overlapped content");
-  setShowing("t18", false);
 
   test4();
 }

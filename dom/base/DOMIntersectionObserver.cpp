@@ -15,8 +15,6 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "nsCSSPropertyID.h"
@@ -382,7 +380,7 @@ enum class BrowsingContextOrigin { Similar, Different };
 
 // NOTE(emilio): Checking docgroup as per discussion in:
 // https://github.com/w3c/IntersectionObserver/issues/161
-static BrowsingContextOrigin SimilarOrigin(const nsIContent& aTarget,
+static BrowsingContextOrigin SimilarOrigin(const Element& aTarget,
                                            const nsINode* aRoot) {
   if (!aRoot) {
     return BrowsingContextOrigin::Different;
@@ -431,8 +429,8 @@ static Maybe<nsRect> ComputeTheIntersection(
     nsIFrame* aRoot, const nsRect& aRootBounds,
     const IntersectionObserverMargin& aScrollMargin,
     const Maybe<nsRect>& aRemoteDocumentVisibleRect,
-    DOMIntersectionObserver::IsForProximityToViewport aIsForProximityToViewport,
-    bool* aPreservesAxisAlignedRectangles) {
+    DOMIntersectionObserver::IsForProximityToViewport
+        aIsForProximityToViewport) {
   nsIFrame* target = aTarget;
   // 1. Let intersectionRect be the result of running the
   // getBoundingClientRect() algorithm on the target.
@@ -474,14 +472,9 @@ static Maybe<nsRect> ComputeTheIntersection(
       // CrossDocParentFrame.
 
       // 3.2 Map intersectionRect to the coordinate space of container.
-      bool preservesAxisAlignedRectangles = false;
       nsRect intersectionRectRelativeToContainer =
           nsLayoutUtils::TransformFrameRectToAncestor(
-              target, intersectionRect.value(), containerFrame,
-              &preservesAxisAlignedRectangles);
-      if (aPreservesAxisAlignedRectangles) {
-        *aPreservesAxisAlignedRectangles |= preservesAxisAlignedRectangles;
-      }
+              target, intersectionRect.value(), containerFrame);
 
       // 3.3 If container is a scroll container, apply the
       // IntersectionObserver’s [[scrollMargin]] to the container’s clip rect as
@@ -504,14 +497,9 @@ static Maybe<nsRect> ComputeTheIntersection(
       // 3.4 TODO: Apply clip-path.
       if (!clipAxes.isEmpty()) {
         // 3.2 Map intersectionRect to the coordinate space of container.
-        bool preservesAxisAlignedRectangles = false;
         const nsRect intersectionRectRelativeToContainer =
             nsLayoutUtils::TransformFrameRectToAncestor(
-                target, intersectionRect.value(), containerFrame,
-                &preservesAxisAlignedRectangles);
-        if (aPreservesAxisAlignedRectangles) {
-          *aPreservesAxisAlignedRectangles |= preservesAxisAlignedRectangles;
-        }
+                target, intersectionRect.value(), containerFrame);
         const nsRect clipRect = OverflowAreas::GetOverflowClipRect(
             intersectionRectRelativeToContainer,
             containerFrame->GetRectRelativeToSelf(), clipAxes,
@@ -534,15 +522,10 @@ static Maybe<nsRect> ComputeTheIntersection(
   MOZ_ASSERT(intersectionRect);
 
   // 4. Map intersectionRect to the coordinate space of the intersection root.
-  bool preservesAxisAlignedRectangles = false;
   nsRect intersectionRectRelativeToRoot =
       nsLayoutUtils::TransformFrameRectToAncestor(
           target, intersectionRect.value(),
-          nsLayoutUtils::GetContainingBlockForClientRect(aRoot),
-          &preservesAxisAlignedRectangles);
-  if (aPreservesAxisAlignedRectangles) {
-    *aPreservesAxisAlignedRectangles |= preservesAxisAlignedRectangles;
-  }
+          nsLayoutUtils::GetContainingBlockForClientRect(aRoot));
 
   // 5.Update intersectionRect by intersecting it with the root intersection
   // rectangle.
@@ -751,29 +734,15 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
           remoteDocumentVisibleRect};
 }
 
-IntersectionOutput DOMIntersectionObserver::Intersect(
-    const IntersectionInput& aInput, const Element& aTarget, BoxToUse aBoxToUse,
-    IsForProximityToViewport aIsForProximityToViewport) {
-  nsIFrame* targetFrame = aTarget.GetPrimaryFrame();
-  if (!targetFrame) {
-    return {SimilarOrigin(aTarget, aInput.mRootNode) ==
-            BrowsingContextOrigin::Similar};
-  }
-  return Intersect(aInput, targetFrame, aBoxToUse, aIsForProximityToViewport);
-}
-
 // https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo
 // (steps 2.1 - 2.5)
 IntersectionOutput DOMIntersectionObserver::Intersect(
-    const IntersectionInput& aInput, nsIFrame* aTargetFrame, BoxToUse aBoxToUse,
+    const IntersectionInput& aInput, const Element& aTarget, BoxToUse aBoxToUse,
     IsForProximityToViewport aIsForProximityToViewport) {
-  MOZ_ASSERT(aTargetFrame);
-
-  const nsIContent* target = aTargetFrame->GetContent();
-  const bool isSimilarOrigin =
-      target && SimilarOrigin(*target, aInput.mRootNode) ==
-                    BrowsingContextOrigin::Similar;
-  if (!aInput.mRootFrame) {
+  const bool isSimilarOrigin = SimilarOrigin(aTarget, aInput.mRootNode) ==
+                               BrowsingContextOrigin::Similar;
+  nsIFrame* targetFrame = aTarget.GetPrimaryFrame();
+  if (!targetFrame || !aInput.mRootFrame) {
     return {isSimilarOrigin};
   }
 
@@ -787,14 +756,14 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   // specifically to determine the proximity to the viewport for
   // `content-visibility: auto` elements.
   if (aIsForProximityToViewport == IsForProximityToViewport::No &&
-      aTargetFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
+      targetFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
     return {isSimilarOrigin};
   }
 
   // 2.2. If the intersection root is not the implicit root, and target is
   // not in the same Document as the intersection root, skip to step 11.
   if (!aInput.mIsImplicitRoot &&
-      aInput.mRootNode->OwnerDoc() != target->OwnerDoc()) {
+      aInput.mRootNode->OwnerDoc() != aTarget.OwnerDoc()) {
     return {isSimilarOrigin};
   }
 
@@ -804,9 +773,9 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   // NOTE(emilio): We also do this if target is the implicit root, pending
   // clarification in
   // https://github.com/w3c/IntersectionObserver/issues/456.
-  if (aInput.mRootFrame == aTargetFrame ||
+  if (aInput.mRootFrame == targetFrame ||
       !nsLayoutUtils::IsAncestorFrameCrossDocInProcess(aInput.mRootFrame,
-                                                       aTargetFrame)) {
+                                                       targetFrame)) {
     return {isSimilarOrigin};
   }
 
@@ -830,21 +799,21 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
     flags += nsLayoutUtils::GetAllInFlowRectsFlag::UseContentBox;
   }
   nsRect targetRectRelativeToTarget =
-      nsLayoutUtils::GetAllInFlowRectsUnion(aTargetFrame, aTargetFrame, flags);
+      nsLayoutUtils::GetAllInFlowRectsUnion(targetFrame, targetFrame, flags);
 
   if (aBoxToUse == BoxToUse::OverflowClip) {
-    const auto& disp = *aTargetFrame->StyleDisplay();
-    auto clipAxes = aTargetFrame->ShouldApplyOverflowClipping(&disp);
+    const auto& disp = *targetFrame->StyleDisplay();
+    auto clipAxes = targetFrame->ShouldApplyOverflowClipping(&disp);
     if (!clipAxes.isEmpty()) {
       targetRectRelativeToTarget = OverflowAreas::GetOverflowClipRect(
           targetRectRelativeToTarget, targetRectRelativeToTarget, clipAxes,
-          aTargetFrame->OverflowClipMargin(clipAxes));
+          targetFrame->OverflowClipMargin(clipAxes));
     }
   }
 
   auto targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
-      aTargetFrame, targetRectRelativeToTarget,
-      nsLayoutUtils::GetContainingBlockForClientRect(aTargetFrame));
+      targetFrame, targetRectRelativeToTarget,
+      nsLayoutUtils::GetContainingBlockForClientRect(targetFrame));
 
   // For content-visibility, we need to observe the overflow clip edge,
   // https://drafts.csswg.org/css-contain-2/#close-to-the-viewport
@@ -853,14 +822,12 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
 
   // 2.5. Let intersectionRect be the result of running the compute the
   // intersection algorithm on target and observer’s intersection root.
-  bool preservesAxisAlignedRectangles = false;
   Maybe<nsRect> intersectionRect = ComputeTheIntersection(
-      aTargetFrame, targetRectRelativeToTarget, aInput.mRootFrame, rootBounds,
+      targetFrame, targetRectRelativeToTarget, aInput.mRootFrame, rootBounds,
       aInput.mScrollMargin, aInput.mRemoteDocumentVisibleRect,
-      aIsForProximityToViewport, &preservesAxisAlignedRectangles);
+      aIsForProximityToViewport);
 
-  return {isSimilarOrigin, rootBounds, targetRect, intersectionRect,
-          preservesAxisAlignedRectangles};
+  return {isSimilarOrigin, rootBounds, targetRect, intersectionRect};
 }
 
 IntersectionOutput DOMIntersectionObserver::Intersect(
@@ -873,8 +840,7 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
     intersectionRect = intersectionRect->EdgeInclusiveIntersection(
         *aInput.mRemoteDocumentVisibleRect);
   }
-  return {true, rootBounds, aTargetRect, intersectionRect,
-          /* mPreserverAxisAlignedRectangles= */ false};
+  return {true, rootBounds, aTargetRect, intersectionRect};
 }
 
 // https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo
