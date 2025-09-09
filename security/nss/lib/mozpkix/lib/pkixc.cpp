@@ -79,7 +79,8 @@ class CodeSigningTrustDomain final : public TrustDomain {
       EndEntityOrCA endEntityOrCA, const CertID& certID, Time time,
       Duration validityDuration,
       /*optional*/ const Input* stapledOCSPresponse,
-      /*optional*/ const Input* aiaExtension) override {
+      /*optional*/ const Input* aiaExtension,
+      /*optional*/ const Input* sctExtension) override {
     return Success;
   }
 

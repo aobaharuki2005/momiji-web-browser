@@ -215,24 +215,6 @@ PathBuildingStep::Check(Input potentialIssuerDER,
     return RecordResult(rv, keepGoing);
   }
 
-  if (subject.endEntityOrCA == EndEntityOrCA::MustBeEndEntity) {
-    const Input* sctExtension = subject.GetSignedCertificateTimestamps();
-    if (sctExtension) {
-      Input sctList;
-      rv = ExtractSignedCertificateTimestampListFromExtension(*sctExtension,
-                                                              sctList);
-      if (rv != Success) {
-        // The problem is with this certificate, and all paths through it will
-        // fail.
-        Result savedRv = RecordResult(rv, keepGoing);
-        keepGoing = false;
-        return savedRv;
-      }
-      trustDomain.NoteAuxiliaryExtension(AuxiliaryExtension::EmbeddedSCTList,
-                                         sctList);
-    }
-  }
-
   // We avoid doing revocation checking for expired certificates because OCSP
   // responders are allowed to forget about expired certificates, and many OCSP
   // responders return an error when asked for the status of an expired
@@ -251,7 +233,8 @@ PathBuildingStep::Check(Input potentialIssuerDER,
     Duration validityDuration(notAfter, notBefore);
     rv = trustDomain.CheckRevocation(subject.endEntityOrCA, certID, time,
                                      validityDuration, stapledOCSPResponse,
-                                     subject.GetAuthorityInfoAccess());
+                                     subject.GetAuthorityInfoAccess(),
+                                     subject.GetSignedCertificateTimestamps());
     if (rv != Success) {
       // Since this is actually a problem with the current subject certificate
       // (rather than the issuer), it doesn't make sense to keep going; all
@@ -259,6 +242,24 @@ PathBuildingStep::Check(Input potentialIssuerDER,
       Result savedRv = RecordResult(rv, keepGoing);
       keepGoing = false;
       return savedRv;
+    }
+
+    if (subject.endEntityOrCA == EndEntityOrCA::MustBeEndEntity) {
+      const Input* sctExtension = subject.GetSignedCertificateTimestamps();
+      if (sctExtension) {
+        Input sctList;
+        rv = ExtractSignedCertificateTimestampListFromExtension(*sctExtension,
+                                                                sctList);
+        if (rv != Success) {
+          // Again, the problem is with this certificate, and all paths through
+          // it will fail.
+          Result savedRv = RecordResult(rv, keepGoing);
+          keepGoing = false;
+          return savedRv;
+        }
+        trustDomain.NoteAuxiliaryExtension(AuxiliaryExtension::EmbeddedSCTList,
+                                           sctList);
+      }
     }
   }
 

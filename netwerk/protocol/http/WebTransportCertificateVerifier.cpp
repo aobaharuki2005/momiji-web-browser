@@ -67,7 +67,8 @@ class ServerCertHashesTrustDomain : public mozilla::pkix::TrustDomain {
       const mozilla::pkix::CertID& certID, mozilla::pkix::Time time,
       mozilla::pkix::Duration validityDuration,
       /*optional*/ const mozilla::pkix::Input* stapledOCSPResponse,
-      /*optional*/ const mozilla::pkix::Input* aiaExtension) override;
+      /*optional*/ const mozilla::pkix::Input* aiaExtension,
+      /*optional*/ const mozilla::pkix::Input* sctExtension) override;
 
   virtual mozilla::pkix::Result IsChainValid(
       const mozilla::pkix::DERArray& certChain, mozilla::pkix::Time time,
@@ -168,7 +169,8 @@ mozilla::pkix::Result ServerCertHashesTrustDomain::CheckRevocation(
     const mozilla::pkix::CertID& certID, mozilla::pkix::Time time,
     mozilla::pkix::Duration validityDuration,
     /*optional*/ const mozilla::pkix::Input* stapledOCSPResponse,
-    /*optional*/ const mozilla::pkix::Input* aiaExtension) {
+    /*optional*/ const mozilla::pkix::Input* aiaExtension,
+    /*optional*/ const mozilla::pkix::Input* sctExtension) {
   MOZ_ASSERT_UNREACHABLE("not expecting this to be called");
 
   return mozilla::pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;

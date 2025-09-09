@@ -380,8 +380,7 @@ static const struct mechanismList mechanisms[] = {
     { CKM_SHA256_RSA_PKCS_PSS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
     { CKM_SHA384_RSA_PKCS_PSS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
     { CKM_SHA512_RSA_PKCS_PSS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
-/* ------------------------- DSA Operations --------------------------- */
-#ifndef NSS_DISABLE_DSA
+    /* ------------------------- DSA Operations --------------------------- */
     { CKM_DSA_KEY_PAIR_GEN, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_GENERATE_KEY_PAIR }, PR_TRUE },
     { CKM_DSA, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
     { CKM_DSA_PARAMETER_GEN, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_GENERATE }, PR_TRUE },
@@ -390,7 +389,6 @@ static const struct mechanismList mechanisms[] = {
     { CKM_DSA_SHA256, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
     { CKM_DSA_SHA384, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
     { CKM_DSA_SHA512, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
-#endif
     /* -------------------- Diffie Hellman Operations --------------------- */
     /* no diffie hellman yet */
     { CKM_DH_PKCS_KEY_PAIR_GEN, { DH_MIN_P_BITS, DH_MAX_P_BITS, CKF_GENERATE_KEY_PAIR }, PR_TRUE },
