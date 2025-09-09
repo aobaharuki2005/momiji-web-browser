@@ -684,6 +684,16 @@ gint ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitor) {
              : 1;
 }
 
+float ScreenHelperGTK::GetGTKMonitorFractionalScaleFactor(gint aMonitor) {
+  auto& screens = widget::ScreenManager::GetSingleton().CurrentScreenList();
+  auto scale = (size_t)aMonitor < screens.Length()
+                   ? screens[aMonitor]->GetContentsScaleFactor()
+                   : 1.0f;
+  LOG_SCREEN("ScreenHelperGTK::GetGTKMonitorFractionalScaleFactor(%d) scale %f",
+             aMonitor, scale);
+  return scale;
+}
+
 static void monitors_changed(GdkScreen* aScreen, gpointer unused) {
   LOG_SCREEN("Received monitors-changed event");
   ScreenHelperGTK::RequestRefreshScreens();
