@@ -669,26 +669,16 @@ function _maybeSynthesizeDragOver(left, top, aEvent, aWindow) {
  * @param {number} aOffsetY - Y offset in CSS pixels from the element’s top edge.
  * @param {MouseEventData} aEvent - Details of the mouse event to dispatch.
  * @param {DOMWindow} [aWindow=window] - DOM window used to dispatch the event.
- * @param {Function} [aCallback] - A callback function that is invoked when the
- *                                 mouse event is dispatched.
  *
  * @returns {boolean} Whether the event had preventDefault() called on it.
  */
-function synthesizeMouse(
-  aTarget,
-  aOffsetX,
-  aOffsetY,
-  aEvent,
-  aWindow,
-  aCallback
-) {
+function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow) {
   var rect = aTarget.getBoundingClientRect();
   return synthesizeMouseAtPoint(
     rect.left + aOffsetX,
     rect.top + aOffsetY,
     aEvent,
-    aWindow,
-    aCallback
+    aWindow
   );
 }
 
@@ -706,18 +696,10 @@ function synthesizeMouse(
  * @param {number} aTop - Floating-point value for the Y offset in CSS pixels.
  * @param {MouseEventData} aEvent - Details of the mouse event to dispatch.
  * @param {DOMWindow} [aWindow=window] - DOM window used to dispatch the event.
- * @param {Function} [aCallback] - A callback function that is invoked when the
- *                                 mouse event is dispatched.
  *
  * @returns {boolean} Whether the event had preventDefault() called on it.
  */
-function synthesizeMouseAtPoint(
-  aLeft,
-  aTop,
-  aEvent,
-  aWindow = window,
-  aCallback
-) {
+function synthesizeMouseAtPoint(aLeft, aTop, aEvent, aWindow = window) {
   if (aEvent.allowToHandleDragDrop) {
     if (aEvent.type == "mouseup" || !aEvent.type) {
       if (_maybeEndDragSession(aLeft, aTop, aEvent, aWindow)) {
@@ -798,8 +780,7 @@ function synthesizeMouseAtPoint(
             isDOMEventSynthesized,
             isWidgetEventSynthesized,
             isAsyncEnabled,
-          },
-          aCallback
+          }
         );
       } else {
         defaultPrevented = utils.sendMouseEvent(
@@ -836,8 +817,7 @@ function synthesizeMouseAtPoint(
           isDOMEventSynthesized,
           isWidgetEventSynthesized,
           isAsyncEnabled,
-        },
-        aCallback
+        }
       );
       _EU_maybeWrap(aWindow).synthesizeMouseEvent(
         "mouseup",
@@ -856,8 +836,7 @@ function synthesizeMouseAtPoint(
           isDOMEventSynthesized,
           isWidgetEventSynthesized,
           isAsyncEnabled,
-        },
-        aCallback
+        }
       );
     } else {
       utils.sendMouseEvent(
@@ -906,12 +885,10 @@ function synthesizeMouseAtPoint(
  * @param {Element} aTarget - DOM element to dispatch the event on.
  * @param {MouseEventData} aEvent - Details of the mouse event to dispatch.
  * @param {DOMWindow} [aWindow=window] - DOM window used to dispatch the event.
- * @param {Function} [aCallback] - A callback function that is invoked when the
- *                                 mouse event is dispatched.
  *
  * @returns {boolean} Whether the event had preventDefault() called on it.
  */
-function synthesizeMouseAtCenter(aTarget, aEvent, aWindow, aCallback) {
+function synthesizeMouseAtCenter(aTarget, aEvent, aWindow) {
   var rect = aTarget.getBoundingClientRect();
 
   return synthesizeMouse(
@@ -919,8 +896,7 @@ function synthesizeMouseAtCenter(aTarget, aEvent, aWindow, aCallback) {
     rect.width / 2,
     rect.height / 2,
     aEvent,
-    aWindow,
-    aCallback
+    aWindow
   );
 }
 

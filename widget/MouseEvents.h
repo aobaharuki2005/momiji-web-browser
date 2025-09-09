@@ -400,13 +400,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   // This will be available for popupshowing event only.
   RefPtr<dom::Event> mTriggerEvent;
 
-  /**
-   * An optional identifier for the callback associated with this wheel event.
-   * This ID is used to reference a specific callback for a synthesized event,
-   * if one is present. If no callback is associated, this value will be empty.
-   */
-  Maybe<uint64_t> mCallbackId;
-
   void AssignMouseEventData(const WidgetMouseEvent& aEvent, bool aCopyTargets) {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
     AssignPointerHelperData(aEvent, /* aCopyCoalescedEvents */ true);
@@ -419,8 +412,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
     mIgnoreCapturingContent = aEvent.mIgnoreCapturingContent;
     mClickEventPrevented = aEvent.mClickEventPrevented;
     mTriggerEvent = aEvent.mTriggerEvent;
-    // NOTE: Intentionally not copying mCallbackId, it should only be tracked by
-    //       the original event or propagated to the cross-process event.
   }
 
   /**
