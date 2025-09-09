@@ -132,9 +132,9 @@ jittest-all:
     suite: jittest
     treeherder-symbol: Jit
     run-on-projects:
-        by-test-platform:
-            android-hw-.*-arm7(?:-shippable)?(-qr)?/.*: ['mozilla-central', 'release']
-            default: []
+        by-variant:
+            inc-origin-init: []
+            default: ['mozilla-central', 'release']
     chunks:
         by-test-platform:
             android-.*/opt: 3
