@@ -4943,7 +4943,8 @@ nsDOMWindowUtils::SendMozMouseHitTestEvent(float aX, float aY,
 
   auto result = nsContentUtils::SynthesizeMouseEvent(
       presShell, widget, u"MozMouseHittest"_ns, refPoint,
-      SynthesizeMouseEventData{}, options);
+      SynthesizeMouseEventData{}, options,
+      Optional<OwningNonNull<VoidFunction>>{});
   return result.isOk() ? NS_OK : result.unwrapErr();
 }
 

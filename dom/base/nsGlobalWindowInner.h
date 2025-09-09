@@ -85,8 +85,10 @@ class PromiseDocumentFlushedResolver;
 
 namespace mozilla {
 class AbstractThread;
-class ScrollContainerFrame;
 class ErrorResult;
+template <class T>
+class OwningNonNull;
+class ScrollContainerFrame;
 
 namespace glean {
 class Glean;
@@ -133,6 +135,7 @@ class SpeechSynthesis;
 class Timeout;
 class TrustedTypePolicyFactory;
 class VisualViewport;
+class VoidFunction;
 class VRDisplay;
 enum class VRDisplayEventReason : uint8_t;
 class VREventObserver;
@@ -975,6 +978,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       const nsAString& aType, float aOffsetX, float aOffsetY,
       const mozilla::dom::SynthesizeMouseEventData& aMouseEventData,
       const mozilla::dom::SynthesizeMouseEventOptions& aOptions,
+      const mozilla::dom::Optional<
+          mozilla::OwningNonNull<mozilla::dom::VoidFunction>>& aCallback,
       mozilla::ErrorResult& aError);
 
  protected:
