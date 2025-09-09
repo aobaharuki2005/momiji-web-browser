@@ -3586,6 +3586,17 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# WebCodecs API - Batch encoding size
+- name: dom.media.webcodecs.batch-encoding-size
+  type: RelaxedAtomicUint32
+#if defined(XP_WIN)
+  value: 4294967295 # max value of uint32_t
+#else
+  # Bug 1984936: Batch encoding is not optimized on non-Windows platforms yet.
+  value: 1
+#endif
+  mirror: always
+
 # Number of seconds of very quiet or silent audio before considering the audio
 # inaudible.
 - name: dom.media.silence_duration_for_audibility

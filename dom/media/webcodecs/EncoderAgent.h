@@ -55,7 +55,7 @@ class EncoderAgent final {
       const RefPtr<const EncoderConfigurationChangeList>& aConfigChange);
   RefPtr<ShutdownPromise> Shutdown();
   using EncodePromise = MediaDataEncoder::EncodePromise;
-  RefPtr<EncodePromise> Encode(MediaData* aInput);
+  RefPtr<EncodePromise> Encode(nsTArray<RefPtr<MediaData>>&& aInputs);
   // WebCodecs's flush() flushes out all the pending encoded data in the
   // encoder. It's called Drain internally.
   RefPtr<EncodePromise> Drain();

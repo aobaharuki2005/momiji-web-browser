@@ -295,9 +295,10 @@ RefPtr<ShutdownPromise> EncoderAgent::Shutdown() {
   return encoder->Shutdown();
 }
 
-RefPtr<EncoderAgent::EncodePromise> EncoderAgent::Encode(MediaData* aInput) {
+RefPtr<EncoderAgent::EncodePromise> EncoderAgent::Encode(
+    nsTArray<RefPtr<MediaData>>&& aInputs) {
   MOZ_ASSERT(mOwnerThread->IsOnCurrentThread());
-  MOZ_ASSERT(aInput);
+  MOZ_ASSERT(!aInputs.IsEmpty());
   MOZ_ASSERT(mState == State::Configured || mState == State::Error);
   MOZ_ASSERT(mEncodePromise.IsEmpty());
   MOZ_ASSERT(!mEncodeRequest.Exists());
@@ -316,19 +317,20 @@ RefPtr<EncoderAgent::EncodePromise> EncoderAgent::Encode(MediaData* aInput) {
 
   RefPtr<EncodePromise> p = mEncodePromise.Ensure(__func__);
 
-  mEncoder->Encode(aInput)
+  LOGV("EncoderAgent #%zu (%p) is encoding %zu samples", mId, this, aInputs.Length());
+  mEncoder->Encode(std::move(aInputs))
       ->Then(
           mOwnerThread, __func__,
           [self = RefPtr{this}](MediaDataEncoder::EncodedData&& aData) {
             self->mEncodeRequest.Complete();
-            LOGV("EncoderAgent #%zu (%p) encode successful", self->mId,
+            LOGV("EncoderAgent #%zu (%p) encode a batch successful", self->mId,
                  self.get());
             self->SetState(State::Configured);
             self->mEncodePromise.Resolve(std::move(aData), __func__);
           },
           [self = RefPtr{this}](const MediaResult& aError) {
             self->mEncodeRequest.Complete();
-            LOGV("EncoderAgent #%zu (%p) failed to encode", self->mId,
+            LOGV("EncoderAgent #%zu (%p) failed to encode a batch", self->mId,
                  self.get());
             self->SetState(State::Error);
             self->mEncodePromise.Reject(aError, __func__);

@@ -240,7 +240,7 @@ class EncoderConfig final {
   uint32_t mBitrate{};
   uint32_t mMinBitrate{};
   uint32_t mMaxBitrate{};
-  Usage mUsage{};
+  Usage mUsage{Usage::Record};
   // Video-only
   HardwarePreference mHardwarePreference{HardwarePreference::None};
   SampleFormat mFormat{dom::ImageBitmapFormat::YUV420P};
