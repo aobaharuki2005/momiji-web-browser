@@ -158,17 +158,16 @@ book-avatar-alt =
     .alt = Book
 briefcase-avatar-alt =
     .alt = Briefcase
-# Canvas refers to an artist's painting canvas, not the general material
-canvas-avatar-alt =
-    .alt = Canvas
+picture-avatar-alt =
+    .alt = Picture
 # Craft refers to hobby arts and crafts, represented by a button/fastener commonly found on clothing like shirts
 craft-avatar-alt =
     .alt = Craft
 custom-avatar-alt =
     .alt = Custom avatar
-# Default favicon refers to the generic globe/world icon that appears in browser tabs when a website doesn't have its own favicon.
-default-favicon-avatar-alt =
-    .alt = Default favicon
+# Globe refers to the generic globe/world icon that appears in browser tabs when a website doesn't have its own favicon.
+globe-avatar-alt =
+    .alt = Globe
 # Diamond refers to the precious stone, not the geometric shape
 diamond-avatar-alt =
     .alt = Diamond
@@ -182,8 +181,8 @@ heart-avatar-alt =
     .alt = Heart
 heart-rate-avatar-alt =
     .alt = Heart rate
-history-avatar-alt =
-    .alt = History
+clock-avatar-alt =
+    .alt = Clock
 leaf-avatar-alt =
     .alt = Leaf
 lightbulb-avatar-alt =
@@ -206,8 +205,8 @@ present-avatar-alt =
     .alt = Present
 shopping-avatar-alt =
     .alt = Shopping cart
-soccer-avatar-alt =
-    .alt = Soccer
+soccer-ball-avatar-alt =
+    .alt = Soccer ball
 sparkle-single-avatar-alt =
     .alt = Sparkle
 star-avatar-alt =
