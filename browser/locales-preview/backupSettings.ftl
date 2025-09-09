@@ -128,7 +128,7 @@ restore-from-backup-restoring-button = Restoring…
 # the backup file is encrypted and the user provided a recovery password that
 # was different than the password the user configured for their backup file
 restore-from-backup-error-incorrect-password = Incorrect password. <a data-l10n-name="incorrect-password-support-link">Still having problems?</a>
-
+restore-from-backup-error-incorrect-password-v2 = The file isn’t working. Try picking a different file. <a data-l10n-name="incorrect-password-support-link">Still having problems?</a>
 # The backup file (or specific data files within the backup file) could not be
 # loaded and parsed correctly, most likely due to data corruption of the
 # backup file itself
@@ -232,6 +232,19 @@ backup-file-encryption-state-not-encrypted = Not encrypted
 # Variables:
 #   $machineName (String) - Name of the machine that the backup was created on.
 backup-file-creation-device = Created on { $machineName }
+
+# Variables:
+#   $date (Datetime) - The date the backup was created
+#   $machineName (String) - Name of the machine that the backup was created on.
+backup-file-creation-date-and-device = Created on { DATETIME($date, year: "numeric", month: "numeric", day: "numeric") } on { $machineName }
+
+# Variables:
+# $numberOfOtherBackupsFound (number) - The number of backups found other than the displayed default backup
+other-backup-files-founds =
+    { $numberOfOtherBackupsFound ->
+        [one] <b>Note:</b> { $numberOfOtherBackupsFound } other backup file found
+        *[other] <b>Note:</b> { $numberOfOtherBackupsFound } other backup files found
+    }
 
 backup-file-how-to-restore-header = How to restore your data:
 backup-file-moz-browser-restore-step-1 = Go to Settings > Backup
