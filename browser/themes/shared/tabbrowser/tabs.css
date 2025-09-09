@@ -1037,6 +1037,95 @@
   }
 }
 
+/* Split View */
+
+#tabbrowser-tabs .tab-split-view-container {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  margin-inline: var(--space-small);
+  width: 100%;
+  padding: var(--space-xsmall);
+
+  tab-split-view-wrapper[hasactivetab] > & {
+    background-color: var(--tab-hover-background-color);
+  }
+
+  > .tabbrowser-tab {
+    padding-block: 0 !important;
+
+    .tab-background {
+      margin-inline: var(--space-xxsmall);
+      margin-block: 0;
+    }
+
+    .tab-content {
+      padding-inline: var(--space-medium);
+    }
+
+    &:first-child {
+      .tab-background {
+        margin-inline-end: 0;
+      }
+
+      tab-split-view-wrapper:not([hasactivetab]) & {
+        border-block-end: transparent;
+      }
+    }
+
+    &:last-child {
+      .tab-background {
+        margin-inline-start: 0;
+      }
+
+      .tab-content {
+        padding-inline-start: var(--space-medium);
+      }
+    }
+  }
+
+  tab-split-view-wrapper:not([hasactivetab]) & {
+    &:hover {
+      background-color: var(--tab-hover-background-color);
+      outline-color: var(--tab-hover-outline-color);
+    }
+
+    .tabbrowser-tab {
+      &:hover .tab-background {
+        background-color: transparent;
+        outline-color: transparent;
+      }
+
+      &:last-child {
+        tab-split-view-wrapper:not([hasactivetab]) & {
+          border-inline-start: 1px solid var(--toolbarbutton-icon-fill);
+        }
+      }
+    }
+  }
+
+  #tabbrowser-tabs[orient="vertical"] & {
+    border-radius: var(--border-radius-large);
+    gap: var(--space-xsmall);
+
+    @container vertical-tabs-container (max-width: 210px) {
+      grid-template-columns: 1fr;
+
+      tab-split-view-wrapper:not([hasactivetab]) > & {
+        .tabbrowser-tab {
+          &:first-child {
+            border-block-end: 1px solid var(--toolbarbutton-icon-fill);
+            border-inline-end: transparent;
+          }
+
+          &:last-child {
+            border-inline-start: transparent !important;
+          }
+        }
+      }
+    }
+  }
+}
+
 /* Tab Groups */
 
 /*
@@ -1657,6 +1746,8 @@ tab-group[previewpanelactive] .tab-group-label-hover-highlight {
   &[visible] {
     display: flex;
     flex-grow: 1;
+    container-type: inline-size;
+    container-name: vertical-tabs-container;
   }
 }
 

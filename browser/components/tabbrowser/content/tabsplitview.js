@@ -14,13 +14,32 @@
       `;
 
     /** @type {MozXULElement} */
-    #wrapperElement;
+    #containerElement;
+
+    /** @type {MutationObserver} */
+    #tabChangeObserver;
+
+    /**
+     * @returns {boolean}
+     */
+    get hasActiveTab() {
+      return this.hasAttribute("hasactivetab");
+    }
+
+    /**
+     * @param {boolean} val
+     */
+    set hasActiveTab(val) {
+      this.toggleAttribute("hasactivetab", val);
+    }
 
     constructor() {
       super();
     }
 
     connectedCallback() {
+      this.#observeTabChanges();
+
       // Set up TabSelect listener, as this gets
       // removed in disconnectedCallback
       this.ownerGlobal.addEventListener("TabSelect", this);
@@ -34,15 +53,28 @@
       this.textContent = "";
       this.appendChild(this.constructor.fragment);
 
-      this.#wrapperElement = this.querySelector(".tab-split-view-container");
+      this.#containerElement = this.querySelector(".tab-split-view-container");
 
       // Mirroring MozTabbrowserTab
-      this.#wrapperElement.container = gBrowser.tabContainer;
-      this.wrapper = this.#wrapperElement;
+      this.#containerElement.container = gBrowser.tabContainer;
+      this.wrapper = this.#containerElement;
     }
 
     disconnectedCallback() {
+      this.#tabChangeObserver?.disconnect();
       this.ownerGlobal.removeEventListener("TabSelect", this);
+    }
+
+    #observeTabChanges() {
+      if (!this.#tabChangeObserver) {
+        this.#tabChangeObserver = new window.MutationObserver(() => {
+          if (this.tabs.length) {
+            let hasActiveTab = this.tabs.some(tab => tab.selected);
+            this.hasActiveTab = hasActiveTab;
+          }
+        });
+      }
+      this.#tabChangeObserver.observe(this, { childList: true });
     }
 
     get splitViewId() {
@@ -57,7 +89,7 @@
      * @returns {MozTabbrowserTab[]}
      */
     get tabs() {
-      return Array.from(this.#wrapperElement.children).filter(node =>
+      return Array.from(this.#containerElement.children).filter(node =>
         node.matches("tab")
       );
     }
@@ -68,7 +100,7 @@
      * @param {MozTabbrowserTab[]} tabs
      */
     addTabs(tabs) {
-      for (let [i, tab] of tabs.entries()) {
+      for (let [tab] of tabs.entries()) {
         if (tab.pinned) {
           return;
         }
@@ -80,10 +112,6 @@
                 selectTab: tab.selected,
               });
         gBrowser.moveTabToSplitView(tabToMove, this);
-        tabToMove.setAttribute(
-          i === 0 ? "split-view-first" : "split-view-second",
-          "true"
-        );
       }
     }
 
@@ -91,13 +119,12 @@
      * Remove all tabs from the split view wrapper and delete the split view.
      */
     unsplitTabs() {
-      for (const tab of this.tabs) {
-        tab.removeAttribute("split-view-first");
-        tab.removeAttribute("split-view-second");
-      }
       gBrowser.unsplitTabs(this);
     }
 
+    /**
+     * Close all tabs in the split view wrapper and delete the split view.
+     */
     close() {
       gBrowser.removeSplitView(this);
     }
@@ -106,7 +133,7 @@
      * @param {CustomEvent} event
      */
     on_TabSelect(event) {
-      this.hasActiveTab = event.target.group === this;
+      this.hasActiveTab = event.target.splitview === this;
     }
   }
 
