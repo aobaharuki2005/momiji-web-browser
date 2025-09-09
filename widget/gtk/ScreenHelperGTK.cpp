@@ -638,8 +638,9 @@ ScreenGetterGtk::ScreenGetterGtk(int aSerial, bool aHDRInfoOnly)
     : mSerial(aSerial),
       mMonitorNum(gdk_screen_get_n_monitors(gdk_screen_get_default())),
       mHDRInfoOnly(aHDRInfoOnly) {
-  LOG_SCREEN("ScreenGetterGtk()::ScreenGetterGtk() [%p] monitor num %d", this,
-             mMonitorNum);
+  LOG_SCREEN(
+      "ScreenGetterGtk()::ScreenGetterGtk() [%p] HDR only [%d] monitor num %d",
+      this, aHDRInfoOnly, mMonitorNum);
 #ifdef MOZ_WAYLAND
   LOG_SCREEN("HDR Protocol %s",
              GdkIsWaylandDisplay() && WaylandDisplayGet()->IsHDREnabled()
@@ -719,6 +720,14 @@ static GdkFilterReturn root_window_event_filter(GdkXEvent* aGdkXEvent,
   return GDK_FILTER_CONTINUE;
 }
 
+/* static */
+void ScreenHelperGTK::ScreensPrefChanged(const char* aPrefIgnored,
+                                         void* aDataIgnored) {
+  LOG_SCREEN("ScreenHelperGTK::ScreensPrefChanged()");
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  ScreenHelperGTK::RequestRefreshScreens();
+}
+
 ScreenHelperGTK::ScreenHelperGTK() {
   LOG_SCREEN("ScreenHelperGTK::ScreenHelperGTK() created");
   GdkScreen* defaultScreen = gdk_screen_get_default();
@@ -762,6 +771,10 @@ ScreenHelperGTK::ScreenHelperGTK() {
     RequestRefreshScreens(/* aInitialRefresh */ true);
   }
 #endif
+  Preferences::RegisterCallback(
+      ScreenHelperGTK::ScreensPrefChanged,
+      nsDependentCString(
+          StaticPrefs::GetPrefName_widget_wayland_fractional_scale_enabled()));
 }
 
 int ScreenHelperGTK::GetMonitorCount() {

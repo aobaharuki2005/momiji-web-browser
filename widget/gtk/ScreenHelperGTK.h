@@ -30,6 +30,8 @@ class ScreenHelperGTK final : public ScreenManager::Helper {
   static void RequestRefreshScreens(bool aInitialRefresh = false);
   static int GetLastSerial() { return gLastSerial; }
 
+  static void ScreensPrefChanged(const char* aPrefIgnored, void* aDataIgnored);
+
  private:
   static GdkWindow* sRootWindow;
   static StaticRefPtr<ScreenGetterGtk> gLastScreenGetter;
