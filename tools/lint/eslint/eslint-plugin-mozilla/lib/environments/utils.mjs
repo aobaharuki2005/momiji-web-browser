@@ -30,12 +30,9 @@ let savedGlobals = null;
 function getSavedEnvironmentItems(environment) {
   if (!savedGlobals) {
     savedGlobals = JSON.parse(
-      fs.readFileSync(
-        path.join(import.meta.dirname, "environments", "saved-globals.json"),
-        {
-          encoding: "utf-8",
-        }
-      )
+      fs.readFileSync(path.join(import.meta.dirname, "saved-globals.json"), {
+        encoding: "utf-8",
+      })
     );
   }
   return savedGlobals.environments[environment];
