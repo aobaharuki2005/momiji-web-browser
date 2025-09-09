@@ -402,12 +402,11 @@ void LIRGenerator::visitGetInlinedArgument(MGetInlinedArgument* ins) {
 }
 
 void LIRGenerator::visitGetInlinedArgumentHole(MGetInlinedArgumentHole* ins) {
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_MIPS64) || \
-    defined(JS_CODEGEN_RISCV64)
-  // On some 64-bit architectures, we don't support boxing a typed
-  // register in-place without using a scratch register, so the result
-  // register can't be the same as any of the inputs. Fortunately,
-  // those architectures have registers to spare.
+#if defined(JS_PUNBOX64)
+  // On 64-bit architectures, we don't support boxing a typed register
+  // in-place without using a scratch register, so the result register
+  // can't be the same as any of the inputs. Fortunately, those
+  // architectures have registers to spare.
   const bool useAtStart = false;
 #else
   const bool useAtStart = true;

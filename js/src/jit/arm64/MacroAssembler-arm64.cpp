@@ -46,6 +46,8 @@ static inline ARMRegister R(Register r, Width w) {
 
 void MacroAssemblerCompat::boxValue(JSValueType type, Register src,
                                     Register dest) {
+  MOZ_ASSERT(src != dest);
+
 #ifdef DEBUG
   if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
     Label upper32BitsZeroed;
