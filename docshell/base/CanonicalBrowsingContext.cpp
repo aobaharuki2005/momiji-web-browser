@@ -651,13 +651,21 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     bool sameOrigin =
         NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
             targetURI, uri, false, false));
-    MOZ_DIAGNOSTIC_ASSERT(mActiveEntry || !sameOrigin);
-    if (sameOrigin && mActiveEntry->isInList()) {
+    if (entry->isInList() || (mActiveEntry && mActiveEntry->isInList())) {
+      nsCOMPtr<nsIURI> sameOriginURI = entry->GetURI();
       nsSHistory::WalkContiguousEntriesInOrder(
-          mActiveEntry, [activeEntry = mActiveEntry,
-                         entries = &loadingInfo->mContiguousEntries,
-                         navigationType = *navigationType](auto* aEntry) {
+          entry->isInList() ? entry : mActiveEntry,
+          [sameOriginURI, activeEntry = mActiveEntry,
+           entries = &loadingInfo->mContiguousEntries,
+           navigationType = *navigationType](auto* aEntry) {
             if (nsCOMPtr<SessionHistoryEntry> entry = do_QueryObject(aEntry)) {
+              nsCOMPtr candidateURI = entry->GetURI();
+              if (NS_FAILED(
+                      nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
+                          candidateURI, sameOriginURI, false, false))) {
+                return false;
+              }
+
               if (navigationType == NavigationType::Replace &&
                   entry == activeEntry) {
                 // In the case of a replace navigation, we end up dropping the
@@ -671,8 +679,10 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
                 // current active entry but drop all following entries.
                 return false;
               }
+
+              return true;
             }
-            return true;
+            return false;
           });
     }
 
@@ -706,6 +716,15 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     loadingInfo->mTriggeringNavigationType = navigationType;
     MOZ_LOG_FMT(gNavigationLog, LogLevel::Verbose,
                 "Triggering navigation type was {}.", *navigationType);
+
+    [[maybe_unused]] auto pred = [&](auto& entry) {
+      return entry.NavigationKey() == loadingInfo->mInfo.NavigationKey();
+    };
+    MOZ_DIAGNOSTIC_ASSERT(
+        mozilla::AnyOf(loadingInfo->mContiguousEntries.begin(),
+                       loadingInfo->mContiguousEntries.end(), pred),
+        "The target entry now needs to be a part of the contiguous list of "
+        "entries.");
   }
 
   MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(loadingInfo->mLoadId)->mEntry ==
