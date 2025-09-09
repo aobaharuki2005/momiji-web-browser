@@ -47,6 +47,12 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+// If you are adding fields to a tree op and this static assert fails,
+// please consider reordering the fields to avoid excess padding or,
+// if that doesn't help, splitting a rare operation into multiple
+// tree ops before allowing the size of all operations to get larger.
+static_assert(sizeof(nsHtml5TreeOperation) <= 56);
+
 /**
  * Helper class that opens a notification batch if the current doc
  * is different from the executor doc.
