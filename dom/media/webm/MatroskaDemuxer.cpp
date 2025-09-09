@@ -7,6 +7,7 @@
 #include "MatroskaDemuxer.h"
 
 #include "H264.h"
+#include "mozilla/glean/DomMediaMetrics.h"
 
 namespace mozilla {
 
@@ -14,11 +15,78 @@ extern LazyLogModule gMediaDemuxerLog;
 #define MKV_DEBUG(msg, ...) \
   MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
+static void ReportCodecUsage(int aCodec) {
+  MKV_DEBUG("ReportCodecUsage, codec: %d", aCodec);
+  switch (aCodec) {
+    case NESTEGG_CODEC_AV1:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eVideoav1)
+          .Add();
+      break;
+    case NESTEGG_CODEC_AVC:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eVideoavc)
+          .Add();
+      break;
+    case NESTEGG_CODEC_HEVC:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eVideohevc)
+          .Add();
+      break;
+    case NESTEGG_CODEC_VP8:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eVideovp8)
+          .Add();
+      break;
+    case NESTEGG_CODEC_VP9:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eVideovp9)
+          .Add();
+      break;
+    case NESTEGG_CODEC_AAC:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eAudioaac)
+          .Add();
+      break;
+    case NESTEGG_CODEC_MP3:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eAudiomp3)
+          .Add();
+      break;
+    case NESTEGG_CODEC_OPUS:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eAudioopus)
+          .Add();
+      break;
+    case NESTEGG_CODEC_VORBIS:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eAudiovorbis)
+          .Add();
+      break;
+    case NESTEGG_CODEC_FLAC:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eAudioflac)
+          .Add();
+      break;
+    case NESTEGG_CODEC_PCM:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eAudiopcm)
+          .Add();
+      break;
+    default:
+      mozilla::glean::media::mkv_codec_type
+          .EnumGet(mozilla::glean::media::MkvCodecTypeLabel::eNocodecspecified)
+          .Add();
+      break;
+  }
+}
+
 MatroskaDemuxer::MatroskaDemuxer(MediaResource* aResource)
     : WebMDemuxer(aResource) {}
 
 nsresult MatroskaDemuxer::SetVideoCodecInfo(nestegg* aContext, int aTrackId) {
   mVideoCodec = nestegg_track_codec_id(aContext, aTrackId);
+  ReportCodecUsage(mVideoCodec);
   // TODO : support more codecs
   switch (mVideoCodec) {
     case NESTEGG_CODEC_AVC: {
@@ -45,6 +113,7 @@ nsresult MatroskaDemuxer::SetVideoCodecInfo(nestegg* aContext, int aTrackId) {
 nsresult MatroskaDemuxer::SetAudioCodecInfo(
     nestegg* aContext, int aTrackId, const nestegg_audio_params& aParams) {
   mAudioCodec = nestegg_track_codec_id(aContext, aTrackId);
+  ReportCodecUsage(mAudioCodec);
 
   static const uint64_t NSECS_PER_USEC = 1000;
   static const uint64_t USECS_PER_S = 1e6;
