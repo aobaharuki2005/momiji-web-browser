@@ -113,6 +113,20 @@
     justify-content: space-between;
     transition: opacity 300ms ease;
 
+    // Spacing between uncompleted task and "Completed" list
+    &.task-type-tasks {
+      &:last-of-type {
+        margin-block-end: var(--space-small);
+      }
+    }
+
+    // Spacing between "Completed" list title and first completed item
+    &.task-type-completed {
+      &:first-of-type {
+        margin-block-start: var(--space-small);
+      }
+    }
+
     @media (prefers-reduced-motion: no-preference) {
       &.exiting {
         opacity: 0;

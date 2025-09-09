@@ -12966,7 +12966,8 @@ function Lists({
     isFirst: index === 0,
     isLast: index === selectedList.tasks.length - 1
   })), selectedList?.completed.length >= 1 && /*#__PURE__*/external_React_default().createElement("details", {
-    className: "completed-task-wrapper"
+    className: "completed-task-wrapper",
+    open: selectedList?.tasks.length < 1
   }, /*#__PURE__*/external_React_default().createElement("summary", null, /*#__PURE__*/external_React_default().createElement("span", {
     "data-l10n-id": "newtab-widget-lists-completed-list",
     "data-l10n-args": JSON.stringify({

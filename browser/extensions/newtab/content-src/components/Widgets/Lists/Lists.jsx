@@ -663,6 +663,7 @@ function Lists({ dispatch, handleUserInteraction }) {
           dragSelector=".checkbox-wrapper"
         >
           <fieldset>
+            {/* Incomplete List  */}
             {selectedList?.tasks.length >= 1 &&
               selectedList.tasks.map((task, index) => (
                 <ListItem
@@ -677,8 +678,12 @@ function Lists({ dispatch, handleUserInteraction }) {
                   isLast={index === selectedList.tasks.length - 1}
                 />
               ))}
+            {/* Completed List */}
             {selectedList?.completed.length >= 1 && (
-              <details className="completed-task-wrapper">
+              <details
+                className="completed-task-wrapper"
+                open={selectedList?.tasks.length < 1}
+              >
                 <summary>
                   <span
                     data-l10n-id="newtab-widget-lists-completed-list"

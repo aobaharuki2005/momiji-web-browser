@@ -4434,6 +4434,12 @@ main section {
   justify-content: space-between;
   transition: opacity 300ms ease;
 }
+.lists .task-item.task-type-tasks:last-of-type {
+  margin-block-end: var(--space-small);
+}
+.lists .task-item.task-type-completed:first-of-type {
+  margin-block-start: var(--space-small);
+}
 @media (prefers-reduced-motion: no-preference) {
   .lists .task-item.exiting {
     opacity: 0;
