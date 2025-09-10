@@ -634,7 +634,10 @@ class PlacesSemanticHistoryManager {
               INSERT INTO vec_history (rowid, embedding, embedding_coarse)
               VALUES (:rowid, :vector, vec_quantize_binary(:vector))
               `,
-              { rowid, vector: this.tensorToBindable(tensor) }
+              {
+                rowid,
+                vector: lazy.PlacesUtils.tensorToSQLBindable(tensor),
+              }
             );
           } catch (error) {
             lazy.logger.trace(
@@ -654,7 +657,10 @@ class PlacesSemanticHistoryManager {
               INSERT INTO vec_history (rowid, embedding, embedding_coarse)
               VALUES (:rowid, :vector, vec_quantize_binary(:vector))
               `,
-              { rowid, vector: this.tensorToBindable(tensor) }
+              {
+                rowid,
+                vector: lazy.PlacesUtils.tensorToSQLBindable(tensor),
+              }
             );
           }
 
@@ -728,13 +734,6 @@ class PlacesSemanticHistoryManager {
     lazy.logger.info("PlacesSemanticHistoryManager shut down.");
   }
 
-  tensorToBindable(tensor) {
-    if (!tensor) {
-      throw new Error("tensorToBindable received an undefined tensor");
-    }
-    return new Uint8ClampedArray(new Float32Array(tensor).buffer);
-  }
-
   /**
    * Executes an inference operation using the ML engine.
    *
@@ -805,7 +804,7 @@ class PlacesSemanticHistoryManager {
       ORDER BY distance
       `,
       {
-        vector: this.tensorToBindable(tensor),
+        vector: lazy.PlacesUtils.tensorToSQLBindable(tensor),
         distanceThreshold: this.#distanceThreshold,
       }
     );
