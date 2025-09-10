@@ -2942,6 +2942,17 @@ void MacroAssemblerARMCompat::boxNonDouble(JSValueType type, Register src,
   ma_mov(ImmType(type), dest.typeReg());
 }
 
+void MacroAssemblerARMCompat::boxNonDouble(Register type, Register src,
+                                           const ValueOperand& dest) {
+  MOZ_ASSERT(type != dest.payloadReg() && src != dest.typeReg());
+
+  if (src != dest.payloadReg()) {
+    ma_mov(src, dest.payloadReg());
+  }
+  ScratchRegisterScope scratch(asMasm());
+  ma_orr(Imm32(JSVAL_TAG_CLEAR), type, dest.typeReg(), scratch);
+}
+
 void MacroAssemblerARMCompat::loadConstantFloat32(float f, FloatRegister dest) {
   ma_vimm_f32(f, dest);
 }

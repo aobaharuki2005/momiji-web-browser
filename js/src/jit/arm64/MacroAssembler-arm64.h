@@ -397,6 +397,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   }
 
   void boxValue(JSValueType type, Register src, Register dest);
+  void boxValue(Register type, Register src, Register dest);
 
   void splitSignExtTag(Register src, Register dest) {
     sbfx(ARMRegister(dest, 64), ARMRegister(src, 64), JSVAL_TAG_SHIFT,
@@ -1353,6 +1354,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     Fmov(ARMRegister(dest.valueReg(), 64), ARMFPRegister(src, 64));
   }
   void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest) {
+    boxValue(type, src, dest.valueReg());
+  }
+  void boxNonDouble(Register type, Register src, const ValueOperand& dest) {
     boxValue(type, src, dest.valueReg());
   }
 

@@ -716,6 +716,7 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
   // boxing code
   void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister);
   void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest);
+  void boxNonDouble(Register type, Register src, const ValueOperand& dest);
 
   // Extended unboxing API. If the payload is already in a register, returns
   // that register. Otherwise, provides a move to the given scratch register,
@@ -848,6 +849,7 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
       as_bstrins_d(dest, src, JSVAL_TAG_SHIFT - 1, 0);
     }
   }
+  void boxValue(Register type, Register src, Register dest);
 
   void storeValue(ValueOperand val, const Address& dest);
   void storeValue(ValueOperand val, const BaseIndex& dest);

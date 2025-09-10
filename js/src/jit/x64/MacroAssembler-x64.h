@@ -218,6 +218,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
 
   void boxValue(JSValueType type, Register src, Register dest);
+  void boxValue(Register type, Register src, Register dest);
 
   Condition testUndefined(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
@@ -764,6 +765,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     vmovq(src, dest.valueReg());
   }
   void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest) {
+    MOZ_ASSERT(src != dest.valueReg());
+    boxValue(type, src, dest.valueReg());
+  }
+  void boxNonDouble(Register type, Register src, const ValueOperand& dest) {
     MOZ_ASSERT(src != dest.valueReg());
     boxValue(type, src, dest.valueReg());
   }

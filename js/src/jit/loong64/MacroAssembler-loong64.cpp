@@ -5338,6 +5338,46 @@ void MacroAssemblerLOONG64Compat::boxNonDouble(JSValueType type, Register src,
   boxValue(type, src, dest.valueReg());
 }
 
+void MacroAssemblerLOONG64Compat::boxNonDouble(Register type, Register src,
+                                               const ValueOperand& dest) {
+  boxValue(type, src, dest.valueReg());
+}
+
+void MacroAssemblerLOONG64Compat::boxValue(Register type, Register src,
+                                           Register dest) {
+  MOZ_ASSERT(src != dest);
+
+#ifdef DEBUG
+  // Ensure |src| is sign-extended.
+  Label check, done;
+  ma_b(type, Imm32(JSVAL_TYPE_INT32), &check, Assembler::Equal, ShortJump);
+  ma_b(type, Imm32(JSVAL_TYPE_BOOLEAN), &check, Assembler::Equal, ShortJump);
+  ma_b(type, Imm32(JSVAL_TYPE_NULL), &check, Assembler::Equal, ShortJump);
+  ma_b(type, Imm32(JSVAL_TYPE_UNDEFINED), &done, Assembler::NotEqual,
+       ShortJump);
+  {
+    bind(&check);
+
+    ScratchRegisterScope scratch(asMasm());
+    as_slli_w(scratch, src, 0);
+    ma_b(src, scratch, &done, Assembler::Equal, ShortJump);
+    breakpoint();
+  }
+  bind(&done);
+
+  // GCThing types aren't currently supported, because as_bstrins_d truncates
+  // payloads above UINT32_MAX.
+  Label ok;
+  ma_b(type, Imm32(JSVAL_TYPE_NULL), &ok, Assembler::BelowOrEqual, ShortJump);
+  breakpoint();
+  bind(&ok);
+#endif
+
+  ma_or(dest, type, Imm32(JSVAL_TAG_MAX_DOUBLE));
+  as_slli_d(dest, dest, JSVAL_TAG_SHIFT);
+  as_bstrins_d(dest, src, 31, 0);
+}
+
 void MacroAssemblerLOONG64Compat::loadConstantFloat32(float f,
                                                       FloatRegister dest) {
   ma_lis(dest, f);

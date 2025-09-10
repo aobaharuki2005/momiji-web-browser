@@ -61,6 +61,32 @@ void MacroAssemblerCompat::boxValue(JSValueType type, Register src,
       Operand(ImmShiftedTag(type).value));
 }
 
+void MacroAssemblerCompat::boxValue(Register type, Register src,
+                                    Register dest) {
+  MOZ_ASSERT(src != dest);
+
+#ifdef DEBUG
+  Label check, done;
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_INT32), &check);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_BOOLEAN), &check);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_NULL), &check);
+  asMasm().branch32(Assembler::NotEqual, type, Imm32(JSVAL_TYPE_UNDEFINED),
+                    &done);
+  {
+    bind(&check);
+    asMasm().branchPtr(Assembler::BelowOrEqual, src, ImmWord(UINT32_MAX),
+                       &done);
+    breakpoint();
+  }
+  bind(&done);
+#endif
+
+  Orr(ARMRegister(dest, 64), ARMRegister(type, 64),
+      Operand(JSVAL_TAG_MAX_DOUBLE));
+  Orr(ARMRegister(dest, 64), ARMRegister(src, 64),
+      Operand(ARMRegister(dest, 64), vixl::LSL, JSVAL_TAG_SHIFT));
+}
+
 #ifdef ENABLE_WASM_SIMD
 bool MacroAssembler::MustMaskShiftCountSimd128(wasm::SimdOp op, int32_t* mask) {
   switch (op) {

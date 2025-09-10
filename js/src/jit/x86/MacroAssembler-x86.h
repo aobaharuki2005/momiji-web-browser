@@ -777,6 +777,19 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     }
     movl(ImmType(type), dest.typeReg());
   }
+  void boxNonDouble(Register type, Register src, const ValueOperand& dest) {
+    MOZ_ASSERT(type != dest.payloadReg() && src != dest.typeReg());
+
+    if (src != dest.payloadReg()) {
+      movl(src, dest.payloadReg());
+    }
+    if (type != dest.typeReg()) {
+      movl(Imm32(JSVAL_TAG_CLEAR), dest.typeReg());
+      orl(type, dest.typeReg());
+    } else {
+      orl(Imm32(JSVAL_TAG_CLEAR), dest.typeReg());
+    }
+  }
 
   void unboxNonDouble(const ValueOperand& src, Register dest, JSValueType type,
                       Register scratch = InvalidReg) {

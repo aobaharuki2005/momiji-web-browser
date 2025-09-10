@@ -380,6 +380,7 @@ class MacroAssemblerWasm32 : public Assembler {
 
   void boxDouble(FloatRegister, ValueOperand, FloatRegister) { MOZ_CRASH(); }
   void boxNonDouble(JSValueType, Register, ValueOperand) { MOZ_CRASH(); }
+  void boxNonDouble(Register, Register, ValueOperand) { MOZ_CRASH(); }
 
   template <typename T>
   void boxDouble(FloatRegister src, const T& dest) {
