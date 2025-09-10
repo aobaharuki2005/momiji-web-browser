@@ -11,6 +11,7 @@ DIRS += [
     "lgpllibs",
     "rlbox",
     "sqlite",
+    "mozinference",
 ]
 
 if CONFIG["MOZ_USING_WASM_SANDBOXING"]:

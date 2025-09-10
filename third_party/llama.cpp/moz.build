@@ -71,6 +71,14 @@ DEFINES["_GNU_SOURCE"] = 1
 DEFINES["GGML_USE_CPU"] = 1
 DEFINES["GGML_VERSION"] = "\"GGML_VERSION\""
 DEFINES["GGML_COMMIT"] = "\"GGML_COMMIT\""
+# Control symbol visibility
+DEFINES['GGML_SHARED'] = '1'
+DEFINES['LLAMA_SHARED'] = '1'
+DEFINES['GGML_BUILD'] = '1'
+DEFINES['LLAMA_BUILD'] = '1'
+DEFINES['GGML_BACKEND_SHARED'] = '1'
+DEFINES['GGML_BACKEND_BUILD'] = '1'
+
 
 CFLAGS += [
     '-Wno-sign-compare',
@@ -119,5 +127,13 @@ if CONFIG['OS_TARGET'] == 'Darwin':
       "-framework Accelerate"
   ]
 
+if CONFIG["OS_TARGET"] == "Linux":
+  OS_LIBS += [
+      "dl",
+  ]
+if CONFIG["OS_TARGET"] == "WINNT":
+  OS_LIBS += [
+    "advapi32",
+  ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = 'mozinference'
