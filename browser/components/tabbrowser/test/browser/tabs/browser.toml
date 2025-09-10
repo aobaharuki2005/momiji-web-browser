@@ -585,6 +585,8 @@ skip-if = [
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && vertical_tab", # Bug 1928146
 ]
 
+["browser_tab_splitview.js"]
+
 ["browser_tab_tooltips.js"]
 tags = "vertical-tabs"
 skip-if = [
