@@ -103,7 +103,7 @@ export default class IPProtectionContentElement extends MozLitElement {
       this.state &&
       this.state.isProtectionEnabled &&
       this.state.protectionEnabledSince &&
-      this.state.isSignedIn
+      !this.state.isSignedOut
     );
   }
 
@@ -190,7 +190,7 @@ export default class IPProtectionContentElement extends MozLitElement {
   }
 
   focus() {
-    if (!this.state.isSignedIn) {
+    if (this.state.isSignedOut) {
       this.signedOutEl?.focus();
     } else {
       this.connectionToggleEl?.focus();
@@ -373,7 +373,7 @@ export default class IPProtectionContentElement extends MozLitElement {
 
   mainContentTemplate() {
     // TODO: Update support-page with new SUMO link for Mozilla VPN - Bug 1975474
-    if (!this.state.isSignedIn) {
+    if (this.state.isSignedOut) {
       return html` <ipprotection-signedout></ipprotection-signedout> `;
     }
     return html`

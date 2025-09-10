@@ -44,7 +44,7 @@ add_task(async function test_upgrade_button() {
   let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
   let originalState = structuredClone(content.state);
   content.state.hasUpgraded = false;
-  content.state.isSignedIn = true;
+  content.state.isSignedOut = false;
   content.requestUpdate();
   await content.updateComplete;
 
