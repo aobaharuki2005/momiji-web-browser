@@ -499,8 +499,9 @@ bool FinalizationRegistryObject::register_(JSContext* cx, unsigned argc,
     }
   });
 
-  // Fully unwrap the target to pass it to the CG.
+  bool isPermanent = false;
   if (target.isObject()) {
+    // Fully unwrap the target to register it with the GC.
     RootedObject object(cx, CheckedUnwrapDynamic(&target.toObject(), cx));
     if (!object) {
       ReportAccessDenied(cx);
@@ -513,12 +514,18 @@ bool FinalizationRegistryObject::register_(JSContext* cx, unsigned argc,
     if (!preserveDOMWrapper(cx, object)) {
       return false;
     }
+  } else {
+    JS::Symbol* symbol = target.toSymbol();
+    isPermanent = symbol->isPermanentAndMayBeShared();
   }
 
-  // Register the record with the target.
-  gc::GCRuntime* gc = &cx->runtime()->gc;
-  if (!gc->registerWithFinalizationRegistry(cx, target, record)) {
-    return false;
+  // Register the record with the target, unless the target is permanent.
+  // (See the note following https://tc39.es/ecma262/#sec-canbeheldweakly)
+  if (!isPermanent) {
+    gc::GCRuntime* gc = &cx->runtime()->gc;
+    if (!gc->registerWithFinalizationRegistry(cx, target, record)) {
+      return false;
+    }
   }
 
   // 8. Return undefined.

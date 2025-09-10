@@ -56,7 +56,9 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedValue target(cx, args[0]);
+  bool isPermanent = false;
   if (target.isObject()) {
+    // Fully unwrap the target to register it with the GC.
     RootedObject object(cx, CheckedUnwrapDynamic(&target.toObject(), cx));
     if (!object) {
       ReportAccessDenied(cx);
@@ -69,21 +71,28 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     if (!preserveDOMWrapper(cx, object)) {
       return false;
     }
+  } else {
+    JS::Symbol* symbol = target.toSymbol();
+    isPermanent = symbol->isPermanentAndMayBeShared();
   }
 
-  // 4. Perform AddToKeptObjects(target).
-  if (!target.toGCThing()->zone()->addToKeptObjects(target)) {
-    ReportOutOfMemory(cx);
-    return false;
-  };
+  // Skip the following steps for permanent targets.
+  // (See the note following https://tc39.es/ecma262/#sec-canbeheldweakly)
+  if (!isPermanent) {
+    // 4. Perform AddToKeptObjects(target).
+    if (!target.toGCThing()->zone()->addToKeptObjects(target)) {
+      ReportOutOfMemory(cx);
+      return false;
+    };
 
-  // Add an entry to the per-zone maps from target JS object to a list of weak
-  // ref objects.
-  gc::GCRuntime* gc = &cx->runtime()->gc;
-  if (!gc->registerWeakRef(cx, target, weakRef)) {
-    ReportOutOfMemory(cx);
-    return false;
-  };
+    // Add an entry to the per-zone maps from target JS object to a list of weak
+    // ref objects.
+    gc::GCRuntime* gc = &cx->runtime()->gc;
+    if (!gc->registerWeakRef(cx, target, weakRef)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  }
 
   // 5. Set weakRef.[[Target]] to target.
   weakRef->setReservedSlotGCThingAsPrivate(TargetSlot, target.toGCThing());
