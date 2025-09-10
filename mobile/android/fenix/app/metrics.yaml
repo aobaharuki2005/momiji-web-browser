@@ -12436,6 +12436,19 @@ fx_suggest:
     expires: never
     send_in_pings:
       - fx-suggest
+  query_count:
+    type: quantity
+    description: |
+      The number of suggestions returned from query.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1984499
+    data_reviews: []
+    expires: never
+    notification_emails:
+      - rmalicdem@mozilla.com
+    send_in_pings:
+      - fx-suggest-api
+    unit: integer
 debug_drawer:
   debug_drawer_enabled:
     type: boolean
