@@ -1983,15 +1983,15 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     }
   }
   void writeDataRelocation(const Value& val, BufferOffset load) {
+    MOZ_ASSERT(val.isGCThing(), "only called for gc-things");
+
     // Raw GC pointer relocations and Value relocations both end up in
     // Assembler::TraceDataRelocations.
-    if (val.isGCThing()) {
-      gc::Cell* cell = val.toGCThing();
-      if (cell && gc::IsInsideNursery(cell)) {
-        embedsNurseryPointers_ = true;
-      }
-      dataRelocations_.writeUnsigned(load.getOffset());
+    gc::Cell* cell = val.toGCThing();
+    if (cell && gc::IsInsideNursery(cell)) {
+      embedsNurseryPointers_ = true;
     }
+    dataRelocations_.writeUnsigned(load.getOffset());
   }
 
   void computeEffectiveAddress(const Address& address, Register dest) {

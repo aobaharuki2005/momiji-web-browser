@@ -94,15 +94,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   // X64 helpers.
   /////////////////////////////////////////////////////////////////
   void writeDataRelocation(const Value& val) {
+    MOZ_ASSERT(val.isGCThing(), "only called for gc-things");
+
     // Raw GC pointer relocations and Value relocations both end up in
     // Assembler::TraceDataRelocations.
-    if (val.isGCThing()) {
-      gc::Cell* cell = val.toGCThing();
-      if (cell && gc::IsInsideNursery(cell)) {
-        embedsNurseryPointers_ = true;
-      }
-      dataRelocations_.writeUnsigned(masm.currentOffset());
+    gc::Cell* cell = val.toGCThing();
+    if (cell && gc::IsInsideNursery(cell)) {
+      embedsNurseryPointers_ = true;
     }
+    dataRelocations_.writeUnsigned(masm.currentOffset());
   }
 
   // Refers to the upper 32 bits of a 64-bit Value operand.

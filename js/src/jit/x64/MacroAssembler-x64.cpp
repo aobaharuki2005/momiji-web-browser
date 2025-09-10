@@ -941,6 +941,11 @@ void MacroAssembler::moveValue(const ValueOperand& src,
 }
 
 void MacroAssembler::moveValue(const Value& src, const ValueOperand& dest) {
+  if (!src.isGCThing()) {
+    movePtr(ImmWord(src.asRawBits()), dest.valueReg());
+    return;
+  }
+
   movWithPatch(ImmWord(src.asRawBits()), dest.valueReg());
   writeDataRelocation(src);
 }

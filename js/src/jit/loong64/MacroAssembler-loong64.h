@@ -487,15 +487,15 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
   void mov(Address src, Register dest) { MOZ_CRASH("NYI-IC"); }
 
   void writeDataRelocation(const Value& val) {
+    MOZ_ASSERT(val.isGCThing(), "only called for gc-things");
+
     // Raw GC pointer relocations and Value relocations both end up in
     // TraceOneDataRelocation.
-    if (val.isGCThing()) {
-      gc::Cell* cell = val.toGCThing();
-      if (cell && gc::IsInsideNursery(cell)) {
-        embedsNurseryPointers_ = true;
-      }
-      dataRelocations_.writeUnsigned(currentOffset());
+    gc::Cell* cell = val.toGCThing();
+    if (cell && gc::IsInsideNursery(cell)) {
+      embedsNurseryPointers_ = true;
     }
+    dataRelocations_.writeUnsigned(currentOffset());
   }
 
   void branch(JitCode* c) {
