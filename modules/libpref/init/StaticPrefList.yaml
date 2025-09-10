@@ -4609,6 +4609,12 @@
   value: 120000
   mirror: always
 
+# Restrict top-level navigations from cross-origin frames.
+- name: dom.security.framebusting_intervention.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether or not selection events on text controls are enabled.
 - name: dom.select_events.textcontrols.selectionchange.enabled
   type: bool
