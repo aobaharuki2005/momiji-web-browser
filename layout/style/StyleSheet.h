@@ -123,10 +123,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(StyleSheet)
 
-  static already_AddRefed<StyleSheet> CreateConstructedSheet(dom::Document& aConstructorDocument,
-                                                  nsIURI* aBaseURI,
-                                                  const dom::CSSStyleSheetInit& aOptions,
-                                                  ErrorResult& aError);
+  static already_AddRefed<StyleSheet> CreateConstructedSheet(
+      dom::Document& aConstructorDocument, nsIURI* aBaseURI,
+      const dom::CSSStyleSheetInit& aOptions, ErrorResult& aError);
 
   already_AddRefed<StyleSheet> CreateEmptyChildSheet(
       already_AddRefed<dom::MediaList> aMediaList) const;
