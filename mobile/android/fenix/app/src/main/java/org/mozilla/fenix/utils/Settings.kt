@@ -2291,9 +2291,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the Unified Trust Panel is enabled.
      */
-    var enableUnifiedTrustPanel by booleanPreference(
+    var enableUnifiedTrustPanel by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_unified_trust_panel),
-        default = FeatureFlags.UNIFIED_TRUST_PANEL,
+        default = { FxNimbus.features.unifiedTrustPanel.value().enabled },
+        featureFlag = true,
     )
 
     /**

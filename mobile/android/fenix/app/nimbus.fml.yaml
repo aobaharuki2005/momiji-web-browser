@@ -756,6 +756,15 @@ features:
         type: Boolean
         default: false
 
+  unified-trust-panel:
+    description: Enables the unified trust panel.
+    variables:
+      enabled:
+        description: >
+          Whether or not to enable the unified trust panel.
+        type: Boolean
+        default: true
+
   user-characteristics:
     description: A feature for control user characteristic data collection
     variables:

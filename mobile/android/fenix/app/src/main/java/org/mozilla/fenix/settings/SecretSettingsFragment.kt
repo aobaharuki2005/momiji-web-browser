@@ -198,7 +198,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_enable_unified_trust_panel).apply {
-            isVisible = Config.channel.isNightlyOrDebug
+            isVisible = true
             isChecked = context.settings().enableUnifiedTrustPanel
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
