@@ -35,6 +35,7 @@ import org.mozilla.fenix.components.QrScanFenixFeature
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.VoiceSearchFeature
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
@@ -175,9 +176,15 @@ class BookmarkFragment : Fragment() {
                                         lifecycleHolder.homeActivity.browsingModeManager.mode
                                     },
                                     saveBookmarkSortOrder = {
-                                        lifecycleHolder.context.settings().bookmarkListSortOrder = it.asString
+                                        lifecycleHolder.context.settings().bookmarkListSortOrder =
+                                            it.asString
                                     },
                                     lastSavedFolderCache = context.settings().lastSavedFolderCache,
+                                    reportResultGlobally = {
+                                        requireComponents.appStore.dispatch(
+                                            AppAction.BookmarkAction.BookmarkOperationResultReported(it),
+                                        )
+                                    },
                                 ),
                             ),
                             lifecycleHolder = lifecycleHolder,

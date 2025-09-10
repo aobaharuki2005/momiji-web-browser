@@ -49,6 +49,8 @@ private const val WARN_OPEN_ALL_SIZE = 15
  * @param getBrowsingMode Invoked when retrieving the app's current [BrowsingMode].
  * @param saveBookmarkSortOrder Invoked to persist the new sort order.
  * @param lastSavedFolderCache used to cache the last folder you edited a bookmark in.
+ * @param reportResultGlobally Invoked when an error occurs that needs to be reported even if the
+ * feature goes out of scope.
  * @param ioDispatcher Coroutine dispatcher for IO operations.
  */
 @Suppress("LongParameterList")
@@ -70,6 +72,7 @@ internal class BookmarksMiddleware(
     private val getBrowsingMode: () -> BrowsingMode,
     private val saveBookmarkSortOrder: suspend (BookmarksListSortOrder) -> Unit,
     private val lastSavedFolderCache: LastSavedFolderCache,
+    private val reportResultGlobally: (BookmarksGlobalResultReport) -> Unit,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Middleware<BookmarksState, BookmarksAction> {
 
@@ -165,7 +168,11 @@ internal class BookmarksMiddleware(
                                 val guid = bookmarksStorage.addFolder(
                                     parentGuid = preReductionState.bookmarksAddFolderState.parent.guid,
                                     title = newFolderTitle,
-                                ).getOrDefault("")
+                                ).getOrElse {
+                                    reportResultGlobally(BookmarksGlobalResultReport.AddFolderFailed)
+                                    return@launch
+                                }
+
                                 val position = bookmarksStorage.getBookmark(guid).getOrNull()?.position
                                 val folder = BookmarkItem.Folder(
                                     guid = guid,
@@ -202,7 +209,10 @@ internal class BookmarksMiddleware(
                             }
                             scope.launch {
                                 preReductionState.createMovePairs()?.forEach {
-                                    bookmarksStorage.updateNode(it.first, it.second)
+                                    val result = bookmarksStorage.updateNode(it.first, it.second)
+                                    if (result.isFailure) {
+                                        reportResultGlobally(BookmarksGlobalResultReport.SelectFolderFailed)
+                                    }
                                 }
                                 context.store.tryDispatchLoadFor(preReductionState.currentFolder.guid)
                             }
@@ -215,7 +225,10 @@ internal class BookmarksMiddleware(
                         scope.launch(ioDispatcher) {
                             if (editState.folder.title.isNotEmpty()) {
                                 preReductionState.createBookmarkInfo()?.also {
-                                    bookmarksStorage.updateNode(editState.folder.guid, it)
+                                    val result = bookmarksStorage.updateNode(editState.folder.guid, it)
+                                    if (result.isFailure) {
+                                        reportResultGlobally(BookmarksGlobalResultReport.EditFolderFailed)
+                                    }
                                 }
                             }
                             context.store.tryDispatchLoadFor(preReductionState.currentFolder.guid)
@@ -230,11 +243,15 @@ internal class BookmarksMiddleware(
                             val newBookmarkTitle = preReductionState.bookmarksEditBookmarkState.bookmark.title
                             if (newBookmarkTitle.isNotEmpty()) {
                                 preReductionState.createBookmarkInfo()?.also {
-                                    bookmarksStorage.updateNode(
+                                    val result = bookmarksStorage.updateNode(
                                         guid = preReductionState.bookmarksEditBookmarkState.bookmark.guid,
                                         info = it,
                                     )
-                                    lastSavedFolderCache.setGuid(it.parentGuid)
+                                    if (result.isFailure) {
+                                        reportResultGlobally(BookmarksGlobalResultReport.EditBookmarkFailed)
+                                    } else {
+                                        lastSavedFolderCache.setGuid(it.parentGuid)
+                                    }
                                 }
                                 context.store.tryDispatchLoadFor(preReductionState.currentFolder.guid)
                             }
@@ -310,7 +327,7 @@ internal class BookmarksMiddleware(
                         bookmarksStorage.deleteNode(it)
                     }
                     lastSavedFolderCache.getGuid()?.let {
-                        if (bookmarksStorage.getBookmark(it) == null) {
+                        if (bookmarksStorage.getBookmark(it).getOrNull() == null) {
                             lastSavedFolderCache.setGuid(null)
                         }
                     }
@@ -326,7 +343,12 @@ internal class BookmarksMiddleware(
                     bookmarksStorage.getTree(dialog.guidToOpen).getOrNull()?.also {
                         it.children
                             ?.mapNotNull { it.url }
-                            ?.forEach { url -> addNewTabUseCase(url = url, private = dialog.isPrivate) }
+                            ?.forEach { url ->
+                                addNewTabUseCase(
+                                    url = url,
+                                    private = dialog.isPrivate,
+                                )
+                            }
                         withContext(Dispatchers.Main) {
                             showTabsTray(dialog.isPrivate)
                         }
