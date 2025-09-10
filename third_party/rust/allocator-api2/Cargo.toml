@@ -16,6 +16,7 @@ name = "allocator-api2"
 version = "0.2.21"
 authors = ["Zakarum <zaq.dev@icloud.com>"]
 build = false
+autolib = false
 autobins = false
 autoexamples = false
 autotests = false
@@ -27,6 +28,13 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/zakarumych/allocator-api2"
 
+[features]
+alloc = []
+default = ["std"]
+fresh-rust = []
+nightly = []
+std = ["alloc"]
+
 [lib]
 name = "allocator_api2"
 path = "src/lib.rs"
@@ -35,14 +43,10 @@ path = "src/lib.rs"
 version = "1.0"
 optional = true
 
-[features]
-alloc = []
-default = ["std"]
-fresh-rust = []
-nightly = []
-std = ["alloc"]
-
 [lints.rust.unexpected_cfgs]
 level = "warn"
 priority = 0
 check-cfg = ["cfg(no_global_oom_handling)"]
+
+[workspace]
+members = ["tests"]

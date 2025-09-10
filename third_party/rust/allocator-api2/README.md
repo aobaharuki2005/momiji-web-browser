@@ -38,7 +38,7 @@ when some other crate enables "allocator-api2/nightly" feature.
 
 # Minimal Supported Rust Version (MSRV)
 
-This crate is guaranteed to compile on stable Rust 1.63 and up.
+This crate is guaranteed to compile on stable Rust 1.64 and up.
 A feature "fresh-rust" bumps the MSRV to unspecified higher version, but should be compatible with
 at least few latest stable releases. The feature enables some additional functionality:
 
