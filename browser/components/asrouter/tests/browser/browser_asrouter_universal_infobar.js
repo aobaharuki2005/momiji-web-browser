@@ -499,3 +499,72 @@ add_task(async function universal_inline_anchor_dismiss_multiple_windows() {
   sandbox.restore();
   cleanupInfobars();
 });
+
+add_task(async function universal_dismiss_on_pref_change_multiple_windows() {
+  const sandbox = sinon.createSandbox();
+  const PREF = "messaging-system-action.dismissOnChange.universal";
+
+  const win1 = BrowserWindowTracker.getTopWindow();
+  const browser1 = win1.gBrowser.selectedBrowser;
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  const browser2 = win2.gBrowser.selectedBrowser;
+
+  sandbox.stub(InfoBar, "maybeLoadCustomElement");
+  sandbox.stub(InfoBar, "maybeInsertFTL");
+
+  sandbox.stub(InfoBar, "showNotificationAllWindows").callsFake(async notif => {
+    await notif.showNotification(browser1);
+  });
+
+  const message = {
+    id: "TEST_UNIVERSAL_DISMISS_ON_PREF_MULTI",
+    content: {
+      type: "universal",
+      text: "universal pref change",
+      dismissable: true,
+      buttons: [],
+      dismissOnPrefChange: PREF,
+    },
+  };
+
+  const dispatch1 = sandbox.stub();
+  const dispatch2 = sandbox.stub();
+
+  await InfoBar.showInfoBarMessage(browser1, message, dispatch1);
+  await InfoBar.showInfoBarMessage(browser2, message, dispatch2, true);
+
+  const getInfobar1 = () =>
+    win1.gNotificationBox.getNotificationWithValue(message.id);
+  const getInfobart2 = () =>
+    win2.gNotificationBox.getNotificationWithValue(message.id);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getInfobar1(),
+    "Infobar present in window 1"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !!getInfobart2(),
+    "Infobar present in window 2"
+  );
+
+  // Ignore impression pings
+  dispatch1.resetHistory();
+  dispatch2.resetHistory();
+
+  Services.prefs.setBoolPref(PREF, true);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !getInfobar1(),
+    "Infobar removed in window 1"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getInfobart2(),
+    "Infobar removed in window 2"
+  );
+
+  // Cleanup
+  await BrowserTestUtils.closeWindow(win2);
+  sandbox.restore();
+  cleanupInfobars();
+  Services.prefs.clearUserPref(PREF);
+});

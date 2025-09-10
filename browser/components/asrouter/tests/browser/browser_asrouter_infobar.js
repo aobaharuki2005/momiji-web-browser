@@ -1151,3 +1151,86 @@ add_task(
     sandbox.restore();
   }
 );
+
+add_task(async function dismiss_on_pref_first_set() {
+  const PREF = "messaging-system-action.dismissOnChange.first";
+
+  const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+  const message = {
+    id: "TEST_DISMISS_ON_PREF_FIRST_SET",
+    content: {
+      type: "global",
+      text: "pref first-set",
+      dismissable: true,
+      buttons: [],
+      dismissOnPrefChange: PREF,
+    },
+  };
+
+  const dispatch = sinon.stub();
+  const infobar = await InfoBar.showInfoBarMessage(browser, message, dispatch);
+
+  // Ignore initial impression ping(s)
+  dispatch.resetHistory();
+
+  Services.prefs.setBoolPref(PREF, true);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !infobar.notification,
+    "Infobar dismissed by first time pref set"
+  );
+
+  Assert.ok(
+    dispatch.calledWith(
+      sinon.match({
+        type: "INFOBAR_TELEMETRY",
+        data: sinon.match.has("event", "DISMISSED"),
+      })
+    ),
+    "DISMISSED telemetry sent on first time pref set"
+  );
+
+  Services.prefs.clearUserPref(PREF);
+});
+
+add_task(async function dismiss_on_pref_value_change() {
+  const PREF = "messaging-system-action.dismissOnChange.flip";
+  Services.prefs.setBoolPref(PREF, false);
+
+  const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+  const message = {
+    id: "TEST_DISMISS_ON_PREF_CHANGE",
+    content: {
+      type: "global",
+      text: "pref change",
+      dismissable: true,
+      buttons: [],
+      dismissOnPrefChange: PREF,
+    },
+  };
+
+  const dispatch = sinon.stub();
+  const infobar = await InfoBar.showInfoBarMessage(browser, message, dispatch);
+
+  // Ignore initial impression ping(s)
+  dispatch.resetHistory();
+
+  Services.prefs.setBoolPref(PREF, true);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !infobar.notification,
+    "Infobar dismissed by subsequent pref change"
+  );
+
+  Assert.ok(
+    dispatch.calledWith(
+      sinon.match({
+        type: "INFOBAR_TELEMETRY",
+        data: sinon.match.has("event", "DISMISSED"),
+      })
+    ),
+    "DISMISSED telemetry sent on pref change"
+  );
+
+  Services.prefs.clearUserPref(PREF);
+});

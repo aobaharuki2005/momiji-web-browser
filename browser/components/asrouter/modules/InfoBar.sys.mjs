@@ -34,6 +34,9 @@ class InfoBarNotification {
     this.infobarCallback = this.infobarCallback.bind(this);
     this.message = message;
     this.notification = null;
+    // If set, this is the pref to watch for changes to auto-dismiss the infobar.
+    this._dismissPref = message?.content?.dismissOnPrefChange || null;
+    this._prefObserver = null;
   }
 
   /**
@@ -213,6 +216,9 @@ class InfoBarNotification {
         notification: this.notification,
       });
     }
+
+    // After the notification exists, attach a pref observer if applicable.
+    this._maybeAttachPrefObserver();
   }
 
   _createLinkNode(doc, browser, { href, where = "tab", string_id, args, raw }) {
@@ -365,6 +371,9 @@ class InfoBarNotification {
    * @param {string} eventType - The type of event (e.g., "removed").
    */
   infobarCallback(eventType) {
+    // Clean up the pref observer on any removal/dismissal path.
+    this._removePrefObserver();
+
     const wasUniversal =
       InfoBar._activeInfobar?.message.content.type === TYPES.UNIVERSAL;
     if (eventType === "removed") {
@@ -379,6 +388,54 @@ class InfoBarNotification {
     // the new window observer
     if (wasUniversal) {
       this.removeUniversalInfobars();
+    }
+  }
+
+  /**
+   * If content.dismissOnPrefChange is set, observe that pref and dismiss the
+   * infobar whenever it changes (including when it is set for the first time).
+   */
+  _maybeAttachPrefObserver() {
+    if (!this._dismissPref || this._prefObserver) {
+      return;
+    }
+    // Weak observer to avoid leaks.
+    this._prefObserver = {
+      QueryInterface: ChromeUtils.generateQI([
+        "nsIObserver",
+        "nsISupportsWeakReference",
+      ]),
+      observe: (subject, topic, data) => {
+        if (topic === "nsPref:changed" && data === this._dismissPref) {
+          try {
+            this.notification?.dismiss();
+          } catch (e) {
+            console.error("Failed to dismiss infobar on pref change:", e);
+          }
+        }
+      },
+    };
+    try {
+      // Hold weak so we don't retain the infobar if something goes wrong.
+      Services.prefs.addObserver(this._dismissPref, this._prefObserver, true);
+    } catch (e) {
+      console.error(
+        `Failed to add prefs observer for ${this._dismissPref}:`,
+        e
+      );
+    }
+  }
+
+  _removePrefObserver() {
+    if (!this._dismissPref || !this._prefObserver) {
+      return;
+    }
+    try {
+      Services.prefs.removeObserver(this._dismissPref, this._prefObserver);
+    } catch (e) {
+      // Ignore remove errors as observer might already be gone during shutdown.
+    } finally {
+      this._prefObserver = null;
     }
   }
 
