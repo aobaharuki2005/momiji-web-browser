@@ -17,14 +17,6 @@ $timer-tabs-button-height: 24px;
   box-shadow: var(--box-shadow-card);
 }
 
-h3 {
-  font-size: var(--font-size-large);
-  font-weight: var(--font-weight-bold);
-  margin-block: 0 var(--space-small);
-  margin-inline-start: var(--space-large);
-  align-self: flex-start;
-}
-
 .focus-timer-tabs {
   display: flex;
   margin-block-end: var(--space-medium);
@@ -63,6 +55,22 @@ h3 {
   }
 }
 
+.newtab-widget-timer-notification-title-wrapper {
+  display: flex;
+  justify-content: space-between;
+  // Alignment note: This matches alignment with the Lists widget "List name" select
+  align-items: center;
+  width: 100%;
+  padding-inline: var(--space-large);
+  margin-block-end: var(--space-medium);
+
+  h3 {
+    font-size: var(--button-font-size);
+    font-weight: var(--font-weight-bold);
+    margin-block: 0;
+  }
+}
+
 // Make sure context menu is only visible as you hover over the Timer widget
 .focus-timer-context-menu-wrapper {
   opacity: 0;
@@ -88,10 +96,21 @@ h3 {
   /* Complete timer */
   --timer-green: var(--color-green-20);
 
-  min-height: 138px;
+  &.is-small {
+    min-height: 114px;
+    width: 114px;
+
+    .progress-circle-label {
+      font-size: var(--font-size-xxlarge); // 32px
+    }
+
+  }
+
+  min-height: 120px;
   position: relative;
-  width: 138px;
+  width: 120px;
   overflow: hidden;
+  margin-block-end: var(--space-small);
 
   .progress-circle-background,
   .progress-circle-background-break,
@@ -186,7 +205,6 @@ h3 {
 }
 
 .focus-timer-controls {
-  margin-block-start: var(--space-medium);
   display: flex;
   flex-direction: row;
   align-items: center;

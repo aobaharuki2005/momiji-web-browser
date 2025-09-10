@@ -13598,21 +13598,11 @@ const FocusTimer = ({
     ref: el => {
       timerRef.current = [el];
     }
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "newtab-widget-timer-notification-title-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("h3", {
     "data-l10n-id": "newtab-widget-timer-notification-title"
   }), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "focus-timer-tabs"
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "focus-timer-tabs-buttons"
-  }, /*#__PURE__*/external_React_default().createElement("moz-button", {
-    type: timerType === "focus" ? "default" : "ghost",
-    "data-l10n-id": "newtab-widget-timer-mode-focus",
-    onClick: () => toggleType("focus")
-  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
-    type: timerType === "break" ? "default" : "ghost",
-    "data-l10n-id": "newtab-widget-timer-mode-break",
-    onClick: () => toggleType("break")
-  })), /*#__PURE__*/external_React_default().createElement("div", {
     className: "focus-timer-context-menu-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("moz-button", {
     className: "focus-timer-context-menu-button",
@@ -13635,8 +13625,20 @@ const FocusTimer = ({
     "data-l10n-id": "newtab-widget-timer-menu-learn-more",
     onClick: handleLearnMore
   })))), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "focus-timer-tabs"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "focus-timer-tabs-buttons"
+  }, /*#__PURE__*/external_React_default().createElement("moz-button", {
+    type: timerType === "focus" ? "default" : "ghost",
+    "data-l10n-id": "newtab-widget-timer-mode-focus",
+    onClick: () => toggleType("focus")
+  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
+    type: timerType === "break" ? "default" : "ghost",
+    "data-l10n-id": "newtab-widget-timer-mode-break",
+    onClick: () => toggleType("break")
+  }))), /*#__PURE__*/external_React_default().createElement("div", {
     role: "progress",
-    className: "progress-circle-wrapper"
+    className: `progress-circle-wrapper ${!showSystemNotifications && !timerData[timerType].isRunning ? "is-small" : ""}`
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: `progress-circle-background${timerType === "break" ? "-break" : ""}`
   }), /*#__PURE__*/external_React_default().createElement("div", {

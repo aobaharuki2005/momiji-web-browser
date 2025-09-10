@@ -4560,14 +4560,6 @@ main section {
   box-shadow: var(--box-shadow-card);
 }
 
-h3 {
-  font-size: var(--font-size-large);
-  font-weight: var(--font-weight-bold);
-  margin-block: 0 var(--space-small);
-  margin-inline-start: var(--space-large);
-  align-self: flex-start;
-}
-
 .focus-timer-tabs {
   display: flex;
   margin-block-end: var(--space-medium);
@@ -4597,6 +4589,20 @@ h3 {
   border-end-start-radius: 0;
 }
 
+.newtab-widget-timer-notification-title-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-inline: var(--space-large);
+  margin-block-end: var(--space-medium);
+}
+.newtab-widget-timer-notification-title-wrapper h3 {
+  font-size: var(--button-font-size);
+  font-weight: var(--font-weight-bold);
+  margin-block: 0;
+}
+
 .focus-timer-context-menu-wrapper {
   opacity: 0;
   pointer-events: none;
@@ -4616,13 +4622,21 @@ h3 {
   --timer-violet: var(--color-violet-20);
   /* Complete timer */
   --timer-green: var(--color-green-20);
-  min-height: 138px;
+  min-height: 120px;
   position: relative;
-  width: 138px;
+  width: 120px;
   overflow: hidden;
+  margin-block-end: var(--space-small);
   /* main timer colours */
   /* break timer colours */
   /* timer turns green when complete */
+}
+.progress-circle-wrapper.is-small {
+  min-height: 114px;
+  width: 114px;
+}
+.progress-circle-wrapper.is-small .progress-circle-label {
+  font-size: var(--font-size-xxlarge);
 }
 .progress-circle-wrapper .progress-circle-background,
 .progress-circle-wrapper .progress-circle-background-break,
@@ -4691,7 +4705,6 @@ h3 {
 }
 
 .focus-timer-controls {
-  margin-block-start: var(--space-medium);
   display: flex;
   flex-direction: row;
   align-items: center;

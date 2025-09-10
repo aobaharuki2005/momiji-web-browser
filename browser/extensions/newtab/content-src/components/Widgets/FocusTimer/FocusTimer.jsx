@@ -498,20 +498,8 @@ export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
         timerRef.current = [el];
       }}
     >
-      <h3 data-l10n-id="newtab-widget-timer-notification-title"></h3>
-      <div className="focus-timer-tabs">
-        <div className="focus-timer-tabs-buttons">
-          <moz-button
-            type={timerType === "focus" ? "default" : "ghost"}
-            data-l10n-id="newtab-widget-timer-mode-focus"
-            onClick={() => toggleType("focus")}
-          />
-          <moz-button
-            type={timerType === "break" ? "default" : "ghost"}
-            data-l10n-id="newtab-widget-timer-mode-break"
-            onClick={() => toggleType("break")}
-          />
-        </div>
+      <div className="newtab-widget-timer-notification-title-wrapper">
+        <h3 data-l10n-id="newtab-widget-timer-notification-title"></h3>
         <div className="focus-timer-context-menu-wrapper">
           <moz-button
             className="focus-timer-context-menu-button"
@@ -546,8 +534,28 @@ export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
           </panel-list>
         </div>
       </div>
-
-      <div role="progress" className="progress-circle-wrapper">
+      <div className="focus-timer-tabs">
+        <div className="focus-timer-tabs-buttons">
+          <moz-button
+            type={timerType === "focus" ? "default" : "ghost"}
+            data-l10n-id="newtab-widget-timer-mode-focus"
+            onClick={() => toggleType("focus")}
+          />
+          <moz-button
+            type={timerType === "break" ? "default" : "ghost"}
+            data-l10n-id="newtab-widget-timer-mode-break"
+            onClick={() => toggleType("break")}
+          />
+        </div>
+      </div>
+      <div
+        role="progress"
+        className={`progress-circle-wrapper ${
+          !showSystemNotifications && !timerData[timerType].isRunning
+            ? "is-small"
+            : ""
+        }`}
+      >
         <div
           className={`progress-circle-background${timerType === "break" ? "-break" : ""}`}
         />
