@@ -21,7 +21,9 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -91,6 +93,7 @@ fun DownloadsScreen(
     val uiState by downloadsStore.observeAsState(initialValue = downloadsStore.state) { it }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
     val context = LocalContext.current
     val toolbarConfig = getToolbarConfig(mode = uiState.mode)
 
@@ -213,8 +216,12 @@ fun DownloadsScreen(
         DownloadsScreenContent(
             uiState = uiState,
             paddingValues = paddingValues,
+            listState = listState,
             onContentTypeSelected = {
                 downloadsStore.dispatch(DownloadUIAction.ContentTypeSelected(it))
+                coroutineScope.launch {
+                    listState.scrollToItem(0)
+                }
             },
             onItemClick = onItemClick,
             onSelectionChange = { item, isSelected ->
@@ -326,6 +333,7 @@ private fun ToolbarEditActions(
  * Content of the screen below the toolbar.
  * @param uiState The UI state of the screen.
  * @param paddingValues The padding values of the screen.
+ * @param listState The state controlling and observing the scroll position of the downloads list.
  * @param onContentTypeSelected Callback invoked when a content type filter is selected.
  * @param onItemClick Invoked when a download item is clicked.
  * @param onSelectionChange Invoked when selection state of an item changed.
@@ -341,6 +349,7 @@ private fun ToolbarEditActions(
 private fun DownloadsScreenContent(
     uiState: DownloadUIState,
     paddingValues: PaddingValues,
+    listState: LazyListState,
     onContentTypeSelected: (FileItem.ContentTypeFilter) -> Unit,
     onItemClick: (FileItem) -> Unit,
     onSelectionChange: (FileItem, Boolean) -> Unit,
@@ -377,6 +386,7 @@ private fun DownloadsScreenContent(
             is DownloadUIState.ItemsState.Items -> DownloadsContent(
                 items = uiState.itemsState.items,
                 mode = uiState.mode,
+                listState = listState,
                 onClick = onItemClick,
                 onSelectionChange = onSelectionChange,
                 onPauseClick = onPauseClick,
@@ -396,6 +406,7 @@ private fun DownloadsScreenContent(
 private fun DownloadsContent(
     items: List<DownloadListItem>,
     mode: Mode,
+    listState: LazyListState,
     modifier: Modifier = Modifier,
     onClick: (FileItem) -> Unit,
     onSelectionChange: (FileItem, Boolean) -> Unit,
@@ -409,6 +420,7 @@ private fun DownloadsContent(
     val haptics = LocalHapticFeedback.current
 
     LazyColumn(
+        state = listState,
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
