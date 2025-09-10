@@ -400,8 +400,18 @@ export class RemoteSettingsExperimentLoader {
         await SCHEMAS.NimbusExperiment
       );
     }
-    const { recipes: allRecipes, loadingError } =
-      await this.getRecipesFromAllCollections({ forceSync, trigger });
+
+    let allRecipes;
+    let loadingError = false;
+    try {
+      allRecipes = await this.getRecipesFromAllCollections({
+        forceSync,
+        trigger,
+      });
+    } catch (e) {
+      loadingError = true;
+      lazy.log.error("Failed to update from Remote Settings", e);
+    }
 
     if (!loadingError) {
       const unenrolledExperimentSlugs = lazy.NimbusEnrollments
@@ -448,7 +458,10 @@ export class RemoteSettingsExperimentLoader {
       Services.prefs.setIntPref(TIMER_LAST_UPDATE_PREF, lastUpdateTime);
     }
 
-    Services.obs.notifyObservers(null, "nimbus:enrollments-updated");
+    if (!loadingError) {
+      // Enrollments have not changed, so we don't need to notify.
+      Services.obs.notifyObservers(null, "nimbus:enrollments-updated");
+    }
   }
 
   /**
@@ -465,45 +478,35 @@ export class RemoteSettingsExperimentLoader {
    * @param {string} options.trigger The name of the event that triggered the
    * update.
    *
-   * @returns {Promise<{ recipes: object[]; loadingError: boolean; }>} The
-   * recipes from Remote Settings.
+   * @returns {Promise<object[]>} The recipes from Remote Settings.
+   * @throws {Error} If we fail to retrieve recipes from any collection.
    */
   async getRecipesFromAllCollections({ forceSync = false, trigger } = {}) {
-    const recipes = [];
-    let loadingError = false;
+    let experiments = null;
+    let secureExperiments = null;
 
-    const experiments = await this.getRecipesFromCollection({
-      forceSync,
-      client: this.remoteSettingsClients[EXPERIMENTS_COLLECTION],
-      ...RS_COLLECTION_OPTIONS[EXPERIMENTS_COLLECTION],
-    });
+    try {
+      experiments = await this.getRecipesFromCollection({
+        forceSync,
+        client: this.remoteSettingsClients[EXPERIMENTS_COLLECTION],
+        ...RS_COLLECTION_OPTIONS[EXPERIMENTS_COLLECTION],
+      });
 
-    if (experiments !== null) {
-      recipes.push(...experiments);
-    } else {
-      loadingError = true;
+      secureExperiments = await this.getRecipesFromCollection({
+        forceSync,
+        client: this.remoteSettingsClients[SECURE_EXPERIMENTS_COLLECTION],
+        ...RS_COLLECTION_OPTIONS[SECURE_EXPERIMENTS_COLLECTION],
+      });
+    } finally {
+      lazy.NimbusTelemetry.recordRemoteSettingsSync(
+        forceSync,
+        experiments,
+        secureExperiments,
+        trigger
+      );
     }
 
-    const secureExperiments = await this.getRecipesFromCollection({
-      forceSync,
-      client: this.remoteSettingsClients[SECURE_EXPERIMENTS_COLLECTION],
-      ...RS_COLLECTION_OPTIONS[SECURE_EXPERIMENTS_COLLECTION],
-    });
-
-    if (secureExperiments !== null) {
-      recipes.push(...secureExperiments);
-    } else {
-      loadingError = true;
-    }
-
-    lazy.NimbusTelemetry.recordRemoteSettingsSync(
-      forceSync,
-      experiments,
-      secureExperiments,
-      trigger
-    );
-
-    return { recipes, loadingError };
+    return [...experiments, ...secureExperiments];
   }
 
   /**
@@ -520,10 +523,13 @@ export class RemoteSettingsExperimentLoader {
    * @param {Set<string> | undefined} options.disallowedFeatureIds
    *        If a recipe uses any features in this list, it will be rejected.
    *
-   * @returns {object[] | null}
+   * @returns {object[]}
    *          Recipes from the collection, filtered to match the allowed and
    *          disallowed feature IDs, or null if there was an error syncing the
    *          collection.
+   *
+   * @throws {Error} If we fail to get the recipes from the Remote Settings
+   * client.
    */
   async getRecipesFromCollection({
     client,
@@ -531,33 +537,24 @@ export class RemoteSettingsExperimentLoader {
     requiredFeatureIds = undefined,
     disallowedFeatureIds = undefined,
   } = {}) {
-    let recipes;
-    try {
-      recipes = await client.get({
-        forceSync,
-        emptyListFallback: false, // Throw instead of returning an empty list.
-      });
-      if (!Array.isArray(recipes)) {
-        throw new Error("Remote Settings did not return an array");
-      }
-      if (
-        recipes.length === 0 &&
-        (await client.db.getLastModified()) === null
-      ) {
-        throw new Error(
-          "Remote Settings returned an empty list but should have thrown (no last modified)"
-        );
-      }
-      lazy.log.debug(
-        `Got ${recipes.length} recipes from ${client.collectionName}`
-      );
-    } catch (e) {
-      lazy.log.debug(
-        `Error getting recipes from Remote Settings collection ${client.collectionName}: ${e}`
-      );
+    const recipes = await client.get({
+      forceSync,
+      emptyListFallback: false, // Throw instead of returning an empty list.
+    });
 
-      return null;
+    if (!Array.isArray(recipes)) {
+      throw new Error("Remote Settings did not return an array");
     }
+
+    if (recipes.length === 0 && (await client.db.getLastModified()) === null) {
+      throw new Error(
+        "Remote Settings returned an empty list but should have thrown (no last modified)"
+      );
+    }
+
+    lazy.log.debug(
+      `Got ${recipes.length} recipes from ${client.collectionName}`
+    );
 
     return recipes.filter(recipe => {
       if (
