@@ -464,10 +464,9 @@ static void LoadUint16Operand(MacroAssembler& masm, Register dest) {
 static void LoadConstantCompareOperand(MacroAssembler& masm,
                                        Register constantType,
                                        Register payload) {
-  // Note: In baseline interpreter on 32-bit we dont
-  // have a separate pc register see HasInterpreterPCReg()
-  // so we use the payload reg as scratch first and then rewrite the
-  // actual payload on to it after loading the type
+  // Note: Baseline interpreter on x86 doesn't have a separate pc register,
+  // see HasInterpreterPCReg(), so we use |payload| as a scratch register first
+  // and then write the actual payload into it after loading the type.
   Register pc = LoadBytecodePC(masm, payload);
   masm.load8ZeroExtend(Address(pc, ConstantCompareOperand::OFFSET_OF_TYPE),
                        constantType);
@@ -3112,81 +3111,52 @@ bool BaselineInterpreterCodeGen::emitConstantStrictEq(JSOp op) {
   frame.popRegsAndSync(1);
 
   ValueOperand value = R0;
+
+#if defined(JS_NUNBOX32)
+  Register constantType = R1.typeReg();
+  Register payload = R1.payloadReg();
+#else
   Register constantType = R1.scratchReg();
   Register payload = R2.scratchReg();
+#endif
 
   LoadConstantCompareOperand(masm, constantType, payload);
-  Label isInt32, isBool, isNull, isUndefined;
+
   Label pass, fail, done;
 
-  masm.branch32(Assembler::Equal, constantType,
+  // Int32 constants need to check for double-valued inputs.
+  Label compareValueBitwise;
+  masm.branch32(Assembler::NotEqual, constantType,
                 Imm32(int32_t(ConstantCompareOperand::EncodedType::Int32)),
-                &isInt32);
-  masm.branch32(Assembler::Equal, constantType,
-                Imm32(int32_t(ConstantCompareOperand::EncodedType::Boolean)),
-                &isBool);
-  masm.branch32(Assembler::Equal, constantType,
-                Imm32(int32_t(ConstantCompareOperand::EncodedType::Null)),
-                &isNull);
-  masm.branch32(Assembler::Equal, constantType,
-                Imm32(int32_t(ConstantCompareOperand::EncodedType::Undefined)),
-                &isUndefined);
-  masm.assumeUnreachable("Unexpected constant compare type");
-
-  masm.bind(&isInt32);
+                &compareValueBitwise);
+  masm.branchTestDouble(Assembler::NotEqual, value, &compareValueBitwise);
   {
-    Label maybeDouble;
-    masm.branchTestInt32(Assembler::NotEqual, value, &maybeDouble);
-    masm.branch32(JSOpToCondition(op, true), value.payloadOrValueReg(), payload,
-                  &pass, MacroAssembler::LhsHighBitsAreClean::No);
-    masm.jump(&fail);
-
-    masm.bind(&maybeDouble);
-    {
-      FloatRegister unboxedValue = FloatReg0;
-      FloatRegister floatPayload = FloatReg1;
-      masm.branchTestDouble(Assembler::NotEqual, value,
-                            op == JSOp::StrictEq ? &fail : &pass);
-      masm.unboxDouble(value, unboxedValue);
-      masm.convertInt32ToDouble(payload, floatPayload);
-      masm.branchDouble(JSOpToDoubleCondition(op), unboxedValue, floatPayload,
-                        &pass);
-      masm.jump(&fail);
-    }
-  }
-
-  masm.bind(&isBool);
-  {
-    Register boolUnboxed = R1.scratchReg();
-    masm.fallibleUnboxBoolean(value, boolUnboxed,
-                              op == JSOp::StrictEq ? &fail : &pass);
-    masm.branch32(JSOpToCondition(op, true), boolUnboxed, payload, &pass);
+    FloatRegister unboxedValue = FloatReg0;
+    FloatRegister floatPayload = FloatReg1;
+    masm.unboxDouble(value, unboxedValue);
+    masm.convertInt32ToDouble(payload, floatPayload);
+    masm.branchDouble(JSOpToDoubleCondition(op), unboxedValue, floatPayload,
+                      &pass);
     masm.jump(&fail);
   }
+  masm.bind(&compareValueBitwise);
 
-  masm.bind(&isNull);
-  {
-    masm.branchTestNull(Assembler::NotEqual, value,
-                        op == JSOp::StrictEq ? &fail : &pass);
-    masm.jump(op == JSOp::StrictEq ? &pass : &fail);
-  }
+  // Box constant value into R1.
+  masm.boxNonDouble(constantType, payload, R1);
 
-  masm.bind(&isUndefined);
+  // Bitwise comparison for int32, boolean, null, and undefined values.
+  masm.branch64(JSOpToCondition(op, false), value.toRegister64(),
+                R1.toRegister64(), &pass);
+
+  masm.bind(&fail);
   {
-    masm.branchTestUndefined(Assembler::NotEqual, value,
-                             op == JSOp::StrictEq ? &fail : &pass);
-    masm.jump(op == JSOp::StrictEq ? &pass : &fail);
+    masm.moveValue(BooleanValue(false), R0);
+    masm.jump(&done);
   }
 
   masm.bind(&pass);
   {
-    masm.moveValue(BooleanValue(true), value);
-    masm.jump(&done);
-  }
-
-  masm.bind(&fail);
-  {
-    masm.moveValue(BooleanValue(false), value);
+    masm.moveValue(BooleanValue(true), R0);
   }
 
   masm.bind(&done);
