@@ -178,6 +178,8 @@ android {
         }
         benchmark releaseTemplate >> {
             initWith buildTypes.nightly
+            shrinkResources = false
+            minifyEnabled = false
             applicationIdSuffix ".fenix"
             signingConfig = signingConfigs.debug
             debuggable false
