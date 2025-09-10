@@ -340,6 +340,10 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
 
     case NavigationType::Replace:
       MOZ_LOG(gNavigationLog, LogLevel::Debug, ("Replace navigation"));
+      if (!oldCurrentEntry) {
+        MOZ_ASSERT(false, "FIXME");
+        return;
+      }
       disposedEntries.AppendElement(oldCurrentEntry);
       aDestinationSHE->NavigationKey() = oldCurrentEntry->Key();
       mEntries[*mCurrentEntryIndex] = MakeRefPtr<NavigationHistoryEntry>(
