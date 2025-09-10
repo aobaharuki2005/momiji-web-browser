@@ -574,4 +574,85 @@ class LoginsReducerTest {
             result.biometricAuthenticationDialogState,
         )
     }
+
+    @Test
+    fun `WHEN on logins list screen, biometric auth is not authorized and the pin verification starts THEN this will be reflected in the state`() {
+        val state = LoginsState.default.copy(
+            biometricAuthenticationDialogState = BiometricAuthenticationDialogState(shouldShow = true),
+            pinVerificationState = PinVerificationState.Inert,
+        )
+
+        val result = loginsReducer(
+            state,
+            action = PinVerificationAction.Start,
+        )
+        assertEquals(
+            PinVerificationState.Started,
+            result.pinVerificationState,
+        )
+        assertEquals(
+            BiometricAuthenticationDialogState(true),
+            result.biometricAuthenticationDialogState,
+        )
+    }
+
+    @Test
+    fun `WHEN on logins list screen, the pin verification starts after already being started THEN this will be reflected in the state`() {
+        val state = LoginsState.default.copy(
+            pinVerificationState = PinVerificationState.Started,
+        )
+
+        val result = loginsReducer(
+            state,
+            action = PinVerificationAction.Duplicate,
+        )
+        assertEquals(
+            PinVerificationState.Duplicated,
+            result.pinVerificationState,
+        )
+    }
+
+    @Test
+    fun `WHEN on logins list screen and the pin verification succeeded THEN this will be reflected in the state`() {
+        val state = LoginsState.default.copy(
+            biometricAuthenticationState = BiometricAuthenticationState.InProgress,
+            biometricAuthenticationDialogState = BiometricAuthenticationDialogState(true),
+            pinVerificationState = PinVerificationState.Started,
+        )
+
+        val result = loginsReducer(
+            state,
+            action = PinVerificationAction.Succeeded,
+        )
+
+        val expected = state.copy(
+            biometricAuthenticationState = BiometricAuthenticationState.Authorized,
+            biometricAuthenticationDialogState = BiometricAuthenticationDialogState(false),
+            pinVerificationState = PinVerificationState.Inert,
+        )
+
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `WHEN on logins list screen and the pin verification failed THEN this will be reflected in the state`() {
+        val state = LoginsState.default.copy(
+            biometricAuthenticationState = BiometricAuthenticationState.InProgress,
+            biometricAuthenticationDialogState = BiometricAuthenticationDialogState(true),
+            pinVerificationState = PinVerificationState.Started,
+        )
+
+        val result = loginsReducer(
+            state,
+            action = PinVerificationAction.Failed,
+        )
+
+        val expected = state.copy(
+            biometricAuthenticationState = BiometricAuthenticationState.NonAuthorized,
+            biometricAuthenticationDialogState = BiometricAuthenticationDialogState(true),
+            pinVerificationState = PinVerificationState.Inert,
+        )
+
+        assertEquals(expected, result)
+    }
 }

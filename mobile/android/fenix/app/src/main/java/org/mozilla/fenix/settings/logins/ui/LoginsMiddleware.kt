@@ -125,6 +125,7 @@ internal class LoginsMiddleware(
             is BiometricAuthenticationAction.AuthenticationSucceeded,
             is BiometricAuthenticationAction.AuthenticationInProgress,
             is BiometricAuthenticationAction.AuthenticationFailed,
+            is PinVerificationAction,
             is LoginsLoaded,
             is EditLoginAction.UsernameChanged,
             is EditLoginAction.PasswordChanged,

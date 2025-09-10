@@ -66,6 +66,7 @@ internal fun loginsReducer(state: LoginsState, action: LoginsAction) = when (act
             action.shouldShowDialog,
         ),
     )
+    is PinVerificationAction -> state.handlePinVerificationAction(action)
     ViewDisposed,
     is Init, LearnMoreAboutSync,
     -> state
@@ -110,6 +111,24 @@ private fun LoginsState.respondToLoginsListBackClick(): LoginsState = when {
     loginsListState != null -> copy(loginsListState = null)
     else -> this
 }
+
+private fun LoginsState.handlePinVerificationAction(action: PinVerificationAction): LoginsState =
+    when (action) {
+        is PinVerificationAction.None -> copy(pinVerificationState = PinVerificationState.Inert)
+        is PinVerificationAction.Start -> copy(pinVerificationState = PinVerificationState.Started)
+        is PinVerificationAction.Duplicate -> copy(pinVerificationState = PinVerificationState.Duplicated)
+        is PinVerificationAction.Succeeded -> copy(
+            biometricAuthenticationState = BiometricAuthenticationState.Authorized,
+            biometricAuthenticationDialogState = BiometricAuthenticationDialogState(false),
+            pinVerificationState = PinVerificationState.Inert,
+        )
+
+        is PinVerificationAction.Failed -> copy(
+            biometricAuthenticationState = BiometricAuthenticationState.NonAuthorized,
+            biometricAuthenticationDialogState = BiometricAuthenticationDialogState(true),
+            pinVerificationState = PinVerificationState.Inert,
+        )
+    }
 
 private fun LoginsState.handleSortMenuAction(action: LoginsListSortMenuAction): LoginsState =
     when (action) {

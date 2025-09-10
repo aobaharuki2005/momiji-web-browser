@@ -48,6 +48,14 @@ internal sealed class BiometricAuthenticationAction : LoginsAction {
 internal data class BiometricAuthenticationDialogAction(val shouldShowDialog: Boolean) :
     LoginsAction
 
+internal sealed class PinVerificationAction : LoginsAction {
+    data object None : PinVerificationAction()
+    data object Start : PinVerificationAction()
+    data object Duplicate : PinVerificationAction()
+    data object Succeeded : PinVerificationAction()
+    data object Failed : PinVerificationAction()
+}
+
 internal sealed class DetailLoginMenuAction : LoginsAction {
     data class EditLoginMenuItemClicked(val item: LoginItem) : DetailLoginMenuAction()
     data class DeleteLoginMenuItemClicked(val item: LoginItem) : DetailLoginMenuAction()

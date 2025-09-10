@@ -88,12 +88,25 @@ internal fun SavedLoginsScreen(
         val observer = object : DefaultLifecycleObserver {
             override fun onPause(owner: LifecycleOwner) {
                 super.onPause(owner)
-                store.dispatch(BiometricAuthenticationAction.AuthenticationFailed)
+                if (store.state.pinVerificationState != PinVerificationState.Started) {
+                    store.dispatch(BiometricAuthenticationAction.AuthenticationFailed)
+                    store.dispatch(BiometricAuthenticationDialogAction(false))
+                } else {
+                    store.dispatch(PinVerificationAction.Duplicate)
+                }
             }
 
             override fun onResume(owner: LifecycleOwner) {
                 super.onResume(owner)
-                store.dispatch(BiometricAuthenticationDialogAction(true))
+                val noPinVerification =
+                    store.state.pinVerificationState == PinVerificationState.Inert
+                val pinVerificationDuplicated =
+                    store.state.pinVerificationState == PinVerificationState.Duplicated
+                if (noPinVerification || pinVerificationDuplicated) {
+                    store.dispatch(BiometricAuthenticationDialogAction(true))
+                } else {
+                    store.dispatch(PinVerificationAction.None)
+                }
             }
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
