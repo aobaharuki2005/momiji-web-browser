@@ -12,6 +12,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusTelemetry: "resource://nimbus/lib/Telemetry.sys.mjs",
   ProfilesDatastoreService:
     "moz-src:///toolkit/profile/ProfilesDatastoreService.sys.mjs",
+  RemoteSettingsSyncError:
+    "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -125,10 +127,18 @@ async function migrateEnrollmentsToSql() {
   );
 
   // Likewise, the set of all recipes is
-  const recipes =
-    await lazy.ExperimentAPI._rsLoader.getRecipesFromAllCollections({
+  let recipes;
+  try {
+    recipes = await lazy.ExperimentAPI._rsLoader.getRecipesFromAllCollections({
       trigger: "migration",
     });
+  } catch (e) {
+    if (e instanceof lazy.RemoteSettingsSyncError) {
+      throw new MigrationError(e.reason);
+    }
+
+    throw e;
+  }
 
   const recipesBySlug = new Map(recipes.map(r => [r.slug, r]));
 
@@ -316,6 +326,7 @@ async function migrateFirefoxLabsEnrollments() {
     { mode: "shared" }
   );
 }
+
 export class MigrationError extends Error {
   static Reason = Object.freeze({
     UNKNOWN: "unknown",
