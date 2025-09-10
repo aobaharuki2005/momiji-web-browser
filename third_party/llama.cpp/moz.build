@@ -14,24 +14,24 @@ SOURCES += files["COMMON_SOURCES"]
 if CONFIG['TARGET_CPU'] == 'x86_64':
     SOURCES += files['X64_SOURCES']
 
-    # # unconditionaly enabled avx2 on x86_64 -- the code isn't reached if the
-    # # CPU doesn't support it
-    # CXXFLAGS += [
-    #     "-mavx",
-    #     "-mavx2",
-    #     "-mbmi2",
-    #     "-mf16c",
-    #     "-mfma",
-    #     "-msse4.2",
-    # ]
-    # CFLAGS += [
-    #     "-mavx",
-    #     "-mavx2",
-    #     "-mbmi2",
-    #     "-mf16c",
-    #     "-mfma",
-    #     "-msse4.2",
-    # ]
+    # unconditionaly enabled avx2 on x86_64 -- the library is only loaded if
+    # AVX2 is supported
+    CXXFLAGS += [
+        "-mavx",
+        "-mavx2",
+        "-mbmi2",
+        "-mf16c",
+        "-mfma",
+        "-msse4.2",
+    ]
+    CFLAGS += [
+        "-mavx",
+        "-mavx2",
+        "-mbmi2",
+        "-mf16c",
+        "-mfma",
+        "-msse4.2",
+    ]
     # DEFINES["GGML_SSE42"] = 1
     # DEFINES["GGML_F16C"] = 1
     # DEFINES["GGML_FMA"] = 1
