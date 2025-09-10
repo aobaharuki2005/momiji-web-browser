@@ -484,11 +484,21 @@ const TEST_GLOBAL = {
     },
   },
   XPCOMUtils: {
+    declareLazy: declaration => {
+      Object.entries(declaration).forEach(([key, value]) => {
+        if (typeof value === "function") {
+          updateGlobalOrObject(global)[key] = value();
+        } else if (typeof value === "object" && value.pref) {
+          updateGlobalOrObject(global)[key] = value.default;
+        }
+      });
+      return global;
+    },
     defineLazyGlobalGetters: updateGlobalOrObject,
     defineLazyServiceGetter: updateGlobalOrObject,
     defineLazyServiceGetters: updateGlobalOrObject,
-    defineLazyPreferenceGetter(object, name) {
-      updateGlobalOrObject(object)[name] = "";
+    defineLazyPreferenceGetter(object, name, _pref, defaultValue = "") {
+      updateGlobalOrObject(object)[name] = defaultValue;
     },
     generateQI() {
       return {};
