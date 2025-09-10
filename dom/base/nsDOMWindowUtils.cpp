@@ -43,6 +43,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileBinding.h"
+#include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
@@ -4943,7 +4944,8 @@ nsDOMWindowUtils::SendMozMouseHitTestEvent(float aX, float aY,
 
   auto result = nsContentUtils::SynthesizeMouseEvent(
       presShell, widget, u"MozMouseHittest"_ns, refPoint,
-      SynthesizeMouseEventData{}, options);
+      SynthesizeMouseEventData{}, options,
+      Optional<OwningNonNull<VoidFunction>>{});
   return result.isOk() ? NS_OK : result.unwrapErr();
 }
 

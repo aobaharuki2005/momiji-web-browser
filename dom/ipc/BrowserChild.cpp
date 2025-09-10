@@ -153,6 +153,73 @@ using BrowserChildMap = nsTHashMap<nsUint64HashKey, BrowserChild*>;
 static BrowserChildMap* sBrowserChildren;
 StaticMutex sBrowserChildrenMutex;
 
+namespace {
+
+class SynthesizedEventChildCallback final : public nsISynthesizedEventCallback {
+  NS_DECL_ISUPPORTS
+
+ public:
+  SynthesizedEventChildCallback(BrowserChild* aBrowserChild,
+                                const uint64_t& aCallbackId)
+      : mBrowserChild(aBrowserChild), mCallbackId(aCallbackId) {
+    MOZ_ASSERT(mBrowserChild);
+    MOZ_ASSERT(mCallbackId > 0, "Invalid callback ID");
+  }
+
+  NS_IMETHOD OnCompleteDispatch() override {
+    MOZ_ASSERT(mCallbackId > 0, "Invalid callback ID");
+
+    if (!mBrowserChild) {
+      // We already sent the notification, or we don't actually need to
+      // send any notification at all.
+      MOZ_ASSERT_UNREACHABLE("OnCompleteDispatch called multiple times");
+      return NS_OK;
+    }
+
+    if (mBrowserChild->IsDestroyed()) {
+      // If this happens it's probably a bug in the test that's triggering this.
+      NS_WARNING(
+          "BrowserChild was unexpectedly destroyed during event "
+          "synthesization response!");
+    } else if (!mBrowserChild->SendSynthesizedEventResponse(mCallbackId)) {
+      NS_WARNING("Unable to send event synthesization response!");
+    }
+    // Null out browserChild to indicate we already sent the response
+    mBrowserChild = nullptr;
+    return NS_OK;
+  }
+
+ private:
+  virtual ~SynthesizedEventChildCallback() = default;
+
+  RefPtr<BrowserChild> mBrowserChild;
+  uint64_t mCallbackId;
+};
+
+NS_IMPL_ISUPPORTS(SynthesizedEventChildCallback, nsISynthesizedEventCallback)
+
+template <class T>
+class MOZ_RAII AutoSynthesizedEventResponder final {
+ public:
+  AutoSynthesizedEventResponder(BrowserChild* aBrowserChild, const T& aEvent) {
+    if (aEvent.mCallbackId.isSome()) {
+      mCallback = MakeAndAddRef<SynthesizedEventChildCallback>(
+          aBrowserChild, aEvent.mCallbackId.ref());
+    }
+  }
+
+  ~AutoSynthesizedEventResponder() {
+    if (mCallback) {
+      mCallback->OnCompleteDispatch();
+    }
+  }
+
+ private:
+  nsCOMPtr<nsISynthesizedEventCallback> mCallback;
+};
+
+}  // namespace
+
 already_AddRefed<Document> BrowserChild::GetTopLevelDocument() const {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   nsCOMPtr<Document> doc = docShell ? docShell->GetExtantDocument() : nullptr;
@@ -1537,6 +1604,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealMouseMoveEvent(
     MOZ_ASSERT(data);
     if (data->CanCoalesce(aEvent, aGuid, aInputBlockId,
                           mCoalescedMouseEventFlusher->GetRefreshDriver())) {
+      // Callback doesn't support if the event is coalesced.
+      MOZ_ASSERT_IF(!data->IsEmpty(), aEvent.mCallbackId.isNothing());
+
       // We don't need to dispatch aEvent immediately.  However, we need to
       // dispatch eMouseRawUpdate immediately if there is a `pointerrawupdate`
       // event listener.  Therefore, the cloned event in the queue shouldn't
@@ -1689,6 +1759,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealPointerButtonEvent(
 void BrowserChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
                                               const ScrollableLayerGuid& aGuid,
                                               const uint64_t& aInputBlockId) {
+  AutoSynthesizedEventResponder<WidgetMouseEvent> responder(this, aEvent);
+
   Maybe<WidgetPointerEvent> pointerEvent;
   Maybe<WidgetMouseEvent> mouseEvent;
   if (aEvent.mClass == ePointerEventClass) {
@@ -1810,77 +1882,10 @@ void BrowserChild::DispatchWheelEvent(const WidgetWheelEvent& aEvent,
   }
 }
 
-namespace {
-
-class SynthesizedEventChildCallback final : public nsISynthesizedEventCallback {
-  NS_DECL_ISUPPORTS
-
- public:
-  SynthesizedEventChildCallback(BrowserChild* aBrowserChild,
-                                const uint64_t& aCallbackId)
-      : mBrowserChild(aBrowserChild), mCallbackId(aCallbackId) {
-    MOZ_ASSERT(mBrowserChild);
-    MOZ_ASSERT(mCallbackId > 0, "Invalid callback ID");
-  }
-
-  NS_IMETHOD OnCompleteDispatch() override {
-    MOZ_ASSERT(mCallbackId > 0, "Invalid callback ID");
-
-    if (!mBrowserChild) {
-      // We already sent the notification, or we don't actually need to
-      // send any notification at all.
-      MOZ_ASSERT_UNREACHABLE("OnCompleteDispatch called multiple times");
-      return NS_OK;
-    }
-
-    if (mBrowserChild->IsDestroyed()) {
-      // If this happens it's probably a bug in the test that's triggering this.
-      NS_WARNING(
-          "BrowserChild was unexpectedly destroyed during event "
-          "synthesization response!");
-    } else if (!mBrowserChild->SendSynthesizedEventResponse(mCallbackId)) {
-      NS_WARNING("Unable to send event synthesization response!");
-    }
-    // Null out browserChild to indicate we already sent the response
-    mBrowserChild = nullptr;
-    return NS_OK;
-  }
-
- private:
-  virtual ~SynthesizedEventChildCallback() = default;
-
-  RefPtr<BrowserChild> mBrowserChild;
-  uint64_t mCallbackId;
-};
-
-NS_IMPL_ISUPPORTS(SynthesizedEventChildCallback, nsISynthesizedEventCallback)
-
-class MOZ_RAII AutoSynthesizedWheelEventResponder final {
- public:
-  AutoSynthesizedWheelEventResponder(BrowserChild* aBrowserChild,
-                                     const WidgetWheelEvent& aEvent) {
-    if (aEvent.mCallbackId.isSome()) {
-      mCallback = MakeAndAddRef<SynthesizedEventChildCallback>(
-          aBrowserChild, aEvent.mCallbackId.ref());
-    }
-  }
-
-  ~AutoSynthesizedWheelEventResponder() {
-    if (mCallback) {
-      mCallback->OnCompleteDispatch();
-    }
-  }
-
- private:
-  nsCOMPtr<nsISynthesizedEventCallback> mCallback;
-};
-
-}  // namespace
-
 mozilla::ipc::IPCResult BrowserChild::RecvMouseWheelEvent(
     const WidgetWheelEvent& aEvent, const ScrollableLayerGuid& aGuid,
     const uint64_t& aInputBlockId) {
-  AutoSynthesizedWheelEventResponder responder(this, aEvent);
+  AutoSynthesizedEventResponder<WidgetWheelEvent> responder(this, aEvent);
 
   bool isNextWheelEvent = false;
   // We only coalesce the current event when
