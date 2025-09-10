@@ -913,6 +913,9 @@ features:
       - channel: nightly
         value:
           enabled: true
+      - channel: beta
+        value:
+          enabled: true
 
   toolbar-redesign-option:
     description: Control the visibility of toolbar redesign option in settings.
