@@ -5,7 +5,7 @@
 import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
-const CLICK_HANDLERS = ["moz-box-link", "moz-box-item", "moz-button"];
+const CLICK_HANDLERS = ["moz-box-link"];
 
 export class SettingGroup extends MozLitElement {
   static properties = {
