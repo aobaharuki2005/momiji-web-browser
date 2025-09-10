@@ -38,12 +38,23 @@
 
   --bookmark-block-padding: 4px;
 
+  /*** Button size adjustments for small windows and uidensity modes. ***/
+
+  @media (width <= 900px) {
+    --toolbarbutton-inner-padding: 7px;
+  }
+  @media (width <= 800px) {
+    --toolbarbutton-inner-padding: 6px;
+  }
+  /* 700px is just above half of the popular 1366px screen width, so two browser
+     windows put next to each other will be below this threshold. */
+  @media (width <= 700px) {
+    --toolbarbutton-outer-padding: 1px;
+  }
   &[uidensity="compact"] {
-    --toolbarbutton-outer-padding: 3px;
     --toolbarbutton-inner-padding: 6px;
     --bookmark-block-padding: 1px;
   }
-
   &[uidensity="touch"] {
     --toolbarbutton-inner-padding: 9px;
     --bookmark-block-padding: 7px;
