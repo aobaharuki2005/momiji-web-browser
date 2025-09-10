@@ -3712,7 +3712,9 @@ class AddPreferencesMemoryReporterRunnable : public Runnable {
 static StaticAutoPtr<nsTArray<dom::Pref>> gChangedDomPrefs;
 
 static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
+#if !(defined(MOZ_WIDGET_ANDROID) && defined(MOZ_TELEMETRY_ON_BY_DEFAULT))
 static const char kChannelPref[] = "app.update.channel";
+#endif
 
 #ifdef MOZ_WIDGET_ANDROID
 
