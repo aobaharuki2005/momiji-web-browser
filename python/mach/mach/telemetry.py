@@ -181,21 +181,58 @@ def resolve_is_employee_by_vcs(topsrcdir: Path):
     return "@mozilla.com" in email
 
 
-def resolve_is_employee(topsrcdir: Path):
-    """Detect whether or not the current user is a Mozilla employee.
+def resolve_is_employee(topsrcdir: Path, state_dir: Path, settings):
+    """Detect whether the current user is a Mozilla employee.
 
-    Checks using Bugzilla authentication, if possible. Otherwise falls back to checking
-    if email configured in VCS is "@mozilla.com".
+    Checks using Bugzilla authentication, if possible. Otherwise, falls back to checking
+    if email configured in VCS is "@mozilla.com". The result is cached after the first
+    check to avoid repeated API calls.
 
     Returns True if the user could be identified as an employee, False if the user
-    is confirmed as not being an employee, or None if the user couldn't be
-    identified.
+    is confirmed as not being an employee, or None if the user couldn't be identified.
     """
-    is_employee = resolve_is_employee_by_credentials(topsrcdir)
-    if is_employee is not None:
-        return is_employee
+    if os.environ.get("MOZ_AUTOMATION"):
+        return False
 
-    return resolve_is_employee_by_vcs(topsrcdir) or False
+    if settings.mach_telemetry.is_employee is not None:
+        return settings.mach_telemetry.is_employee
+
+    is_employee_by_creds = resolve_is_employee_by_credentials(topsrcdir)
+    if is_employee_by_creds is not None:
+        record_is_employee_telemetry_setting(settings, state_dir, is_employee_by_creds)
+        return is_employee_by_creds
+
+    is_employee_by_vcs = resolve_is_employee_by_vcs(topsrcdir)
+    if is_employee_by_vcs is not None:
+        record_is_employee_telemetry_setting(settings, state_dir, is_employee_by_vcs)
+        return is_employee_by_vcs
+
+    return None
+
+
+def record_is_employee_telemetry_setting(settings, state_dir, is_employee):
+    """Records the is_employee field in the settings file."""
+    settings_path = Path(state_dir) / "machrc"
+    file_settings = ConfigSettings()
+    file_settings.register_provider(MachSettings)
+
+    try:
+        file_settings.load_file(settings_path)
+    except FileNotFoundError:
+        # File doesn't exist yet, we'll create it
+        pass
+    except configparser.Error as error:
+        print(
+            f"mach configuration file at `{settings_path}` cannot be parsed:\n{error}"
+        )
+        raise
+
+    file_settings.mach_telemetry.is_employee = is_employee
+
+    with settings_path.open("w") as f:
+        file_settings.write(f)
+
+    settings.mach_telemetry.is_employee = is_employee
 
 
 def record_telemetry_settings(
@@ -289,7 +326,7 @@ def initialize_telemetry_setting(settings, topsrcdir: str, state_dir: str):
     if os.environ.get("DISABLE_TELEMETRY") == "1":
         return
 
-    is_employee = resolve_is_employee(topsrcdir)
+    is_employee = resolve_is_employee(topsrcdir, state_dir, settings)
 
     if is_employee:
         is_enabled = True

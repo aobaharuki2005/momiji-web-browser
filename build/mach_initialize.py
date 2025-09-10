@@ -269,7 +269,12 @@ def initialize(topsrcdir, args=()):
             return
 
         _finalize_telemetry_glean(
-            context.telemetry, handler.name == "bootstrap", success, Path(topsrcdir)
+            context.telemetry,
+            handler.name == "bootstrap",
+            success,
+            Path(topsrcdir),
+            Path(state_dir),
+            driver.settings,
         )
 
     def populate_context(key=None):
@@ -415,7 +420,9 @@ def initialize(topsrcdir, args=()):
     return driver
 
 
-def _finalize_telemetry_glean(telemetry, is_bootstrap, success, topsrcdir):
+def _finalize_telemetry_glean(
+    telemetry, is_bootstrap, success, topsrcdir, state_dir, settings
+):
     """Submit telemetry collected by Glean.
 
     Finalizes some metrics (command success state and duration, system information) and
@@ -454,7 +461,7 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success, topsrcdir):
     system_metrics.vscode_running.set(get_vscode_running())
 
     # Only collect Fleet and CrowdStrike metrics for Mozilla employees
-    if resolve_is_employee(topsrcdir):
+    if resolve_is_employee(topsrcdir, state_dir, settings):
         system_metrics.fleet_running.set(get_fleet_running())
         system_metrics.crowdstrike_running.set(get_crowdstrike_running())
 
