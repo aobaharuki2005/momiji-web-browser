@@ -730,6 +730,7 @@ static GdkFilterReturn root_window_event_filter(GdkXEvent* aGdkXEvent,
   return GDK_FILTER_CONTINUE;
 }
 
+#ifdef MOZ_WAYLAND
 /* static */
 void ScreenHelperGTK::ScreensPrefChanged(const char* aPrefIgnored,
                                          void* aDataIgnored) {
@@ -737,6 +738,7 @@ void ScreenHelperGTK::ScreensPrefChanged(const char* aPrefIgnored,
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   ScreenHelperGTK::RequestRefreshScreens();
 }
+#endif
 
 ScreenHelperGTK::ScreenHelperGTK() {
   LOG_SCREEN("ScreenHelperGTK::ScreenHelperGTK() created");
@@ -780,11 +782,11 @@ ScreenHelperGTK::ScreenHelperGTK() {
     LOG_SCREEN("ScreenHelperGTK() query HDR Wayland display");
     RequestRefreshScreens(/* aInitialRefresh */ true);
   }
-#endif
   Preferences::RegisterCallback(
       ScreenHelperGTK::ScreensPrefChanged,
       nsDependentCString(
           StaticPrefs::GetPrefName_widget_wayland_fractional_scale_enabled()));
+#endif
 }
 
 int ScreenHelperGTK::GetMonitorCount() {
