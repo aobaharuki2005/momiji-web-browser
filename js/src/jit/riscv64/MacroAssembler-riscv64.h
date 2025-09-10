@@ -784,7 +784,7 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
   void unboxNonDouble(Register src, Register dest, JSValueType type) {
     MOZ_ASSERT(type != JSVAL_TYPE_DOUBLE);
     if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
-      slliw(dest, src, 0);
+      SignExtendWord(dest, src);
       return;
     }
     UseScratchRegisterScope temps(this);

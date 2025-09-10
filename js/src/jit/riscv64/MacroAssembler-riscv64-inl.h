@@ -1683,10 +1683,10 @@ void MacroAssembler::move16SignExtendToPtr(Register src, Register dest) {
   move16To64SignExtend(src, Register64(dest));
 }
 void MacroAssembler::move32SignExtendToPtr(Register src, Register dest) {
-  slliw(dest, src, 0);
+  SignExtendWord(dest, src);
 }
 void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
-  slliw(dest.reg, src, 0);
+  SignExtendWord(dest.reg, src);
 }
 void MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest) {
   slli(dest.reg, src, 32);
@@ -1705,7 +1705,7 @@ void MacroAssembler::move64(Imm64 imm, Register64 dest) {
 }
 
 void MacroAssembler::move64To32(Register64 src, Register dest) {
-  slliw(dest, src.reg, 0);
+  SignExtendWord(dest, src.reg);
 }
 
 void MacroAssembler::move8ZeroExtend(Register src, Register dest) {
