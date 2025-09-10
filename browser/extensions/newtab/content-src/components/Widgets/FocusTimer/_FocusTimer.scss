@@ -80,12 +80,10 @@ h3 {
   /* Colours for the main timer */
   --timer-red: var(--color-red-50);
   --timer-orange: var(--color-orange-30);
-  --timer-yellow: var(--color-yellow-20);
 
   /* Colours for the break timer */
   --timer-blue: var(--color-blue-20);
   --timer-violet: var(--color-violet-20);
-  --timer-violet-light: var(--color-violet-0);
 
   /* Complete timer */
   --timer-green: var(--color-green-20);
@@ -96,6 +94,7 @@ h3 {
   overflow: hidden;
 
   .progress-circle-background,
+  .progress-circle-background-break,
   .progress-circle,
   .progress-circle-complete {
     --thickness: var(--space-small);
@@ -105,52 +104,29 @@ h3 {
     mask: radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), black calc(100% - var(--thickness)));  position: absolute;
   }
 
-  .progress-circle-background {
+  .progress-circle,
+  .progress-circle-complete {
     background-color: var(--border-color-interactive);
   }
 
   /* main timer colours */
-  .progress-circle,
-  .progress-circle-complete {
+  .progress-circle-background {
     background: conic-gradient(
-      rgba(232, 57, 92, 0%) 0deg,  // fade-in the progress bar
-      rgba(232, 57, 92, 100%) 30deg, // closest to the red below
-      var(--timer-red) 60deg,
-      var(--timer-orange) 180deg,
-      var(--timer-yellow) 360deg
+      var(--timer-orange) 0deg,
+      var(--timer-red) 150deg,
+      var(--timer-red) 210deg,
+      var(--timer-orange) 360deg
     );
-  }
-
-  .focus-hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .focus-visible {
-    opacity: 1;
-    transition: opacity 0.3s ease;
   }
 
   /* break timer colours */
-  .progress-circle-break {
-    clip-path: polygon(50% 50%);
+  .progress-circle-background-break {
     background: conic-gradient(
-      rgba(159, 201, 255, 0%) 0deg, // fade-in the progress bar
-      rgba(159, 201, 255, 100%) 30deg, // closest to the blue below
-      var(--timer-blue) 60deg,
-      var(--timer-violet) 180deg,
-      var(--timer-violet-light) 360deg
+      var(--timer-violet) 0deg,
+      var(--timer-blue) 150deg,
+      var(--timer-blue) 210deg,
+      var(--timer-violet) 360deg
     );
-  }
-
-  .break-hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .break-visible {
-    opacity: 1;
-    transition: opacity 0.3s ease;
   }
 
   /* timer turns green when complete */
@@ -165,11 +141,31 @@ h3 {
     }
   }
 
+  .focus-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .focus-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  .break-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .break-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
   .progress-circle-label {
     align-items: center;
     color: var(--text-color);
     display: flex;
-    font-size: calc(2 * var(--font-size-xlarge));
+    font-size: var(--size-item-large); // 32px
     font-weight: var(--font-weight-bold);
     font-variant-numeric: tabular-nums;
     height: 100%;

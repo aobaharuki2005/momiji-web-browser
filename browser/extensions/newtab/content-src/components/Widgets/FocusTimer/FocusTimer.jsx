@@ -548,7 +548,9 @@ export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
       </div>
 
       <div role="progress" className="progress-circle-wrapper">
-        <div className="progress-circle-background" />
+        <div
+          className={`progress-circle-background${timerType === "break" ? "-break" : ""}`}
+        />
 
         <div
           className={`progress-circle ${timerType === "focus" ? "focus-visible" : "focus-hidden"}`}
@@ -556,7 +558,7 @@ export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
         />
 
         <div
-          className={`progress-circle ${timerType === "break" ? "progress-circle-break break-visible" : "break-hidden"}`}
+          className={`progress-circle ${timerType === "break" ? "break-visible" : "break-hidden"}`}
           ref={timerType === "break" ? arcRef : null}
         />
 

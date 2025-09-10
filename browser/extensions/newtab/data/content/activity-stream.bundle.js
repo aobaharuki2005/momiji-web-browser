@@ -13638,12 +13638,12 @@ const FocusTimer = ({
     role: "progress",
     className: "progress-circle-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "progress-circle-background"
+    className: `progress-circle-background${timerType === "break" ? "-break" : ""}`
   }), /*#__PURE__*/external_React_default().createElement("div", {
     className: `progress-circle ${timerType === "focus" ? "focus-visible" : "focus-hidden"}`,
     ref: timerType === "focus" ? arcRef : null
   }), /*#__PURE__*/external_React_default().createElement("div", {
-    className: `progress-circle ${timerType === "break" ? "progress-circle-break break-visible" : "break-hidden"}`,
+    className: `progress-circle ${timerType === "break" ? "break-visible" : "break-hidden"}`,
     ref: timerType === "break" ? arcRef : null
   }), /*#__PURE__*/external_React_default().createElement("div", {
     className: `progress-circle-complete${progress === 1 ? " visible" : ""}`

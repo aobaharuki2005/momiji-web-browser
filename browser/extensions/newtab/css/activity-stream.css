@@ -4611,11 +4611,9 @@ h3 {
   /* Colours for the main timer */
   --timer-red: var(--color-red-50);
   --timer-orange: var(--color-orange-30);
-  --timer-yellow: var(--color-yellow-20);
   /* Colours for the break timer */
   --timer-blue: var(--color-blue-20);
   --timer-violet: var(--color-violet-20);
-  --timer-violet-light: var(--color-violet-0);
   /* Complete timer */
   --timer-green: var(--color-green-20);
   min-height: 138px;
@@ -4627,6 +4625,7 @@ h3 {
   /* timer turns green when complete */
 }
 .progress-circle-wrapper .progress-circle-background,
+.progress-circle-wrapper .progress-circle-background-break,
 .progress-circle-wrapper .progress-circle,
 .progress-circle-wrapper .progress-circle-complete {
   --thickness: var(--space-small);
@@ -4635,32 +4634,15 @@ h3 {
   mask: radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), black calc(100% - var(--thickness)));
   position: absolute;
 }
-.progress-circle-wrapper .progress-circle-background {
-  background-color: var(--border-color-interactive);
-}
 .progress-circle-wrapper .progress-circle,
 .progress-circle-wrapper .progress-circle-complete {
-  background: conic-gradient(rgba(232, 57, 92, 0) 0deg, #e8395c 30deg, var(--timer-red) 60deg, var(--timer-orange) 180deg, var(--timer-yellow) 360deg);
+  background-color: var(--border-color-interactive);
 }
-.progress-circle-wrapper .focus-hidden {
-  opacity: 0;
-  pointer-events: none;
+.progress-circle-wrapper .progress-circle-background {
+  background: conic-gradient(var(--timer-orange) 0deg, var(--timer-red) 150deg, var(--timer-red) 210deg, var(--timer-orange) 360deg);
 }
-.progress-circle-wrapper .focus-visible {
-  opacity: 1;
-  transition: opacity 0.3s ease;
-}
-.progress-circle-wrapper .progress-circle-break {
-  clip-path: polygon(50% 50%);
-  background: conic-gradient(rgba(159, 201, 255, 0) 0deg, #9fc9ff 30deg, var(--timer-blue) 60deg, var(--timer-violet) 180deg, var(--timer-violet-light) 360deg);
-}
-.progress-circle-wrapper .break-hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-.progress-circle-wrapper .break-visible {
-  opacity: 1;
-  transition: opacity 0.3s ease;
+.progress-circle-wrapper .progress-circle-background-break {
+  background: conic-gradient(var(--timer-violet) 0deg, var(--timer-blue) 150deg, var(--timer-blue) 210deg, var(--timer-violet) 360deg);
 }
 .progress-circle-wrapper .progress-circle-complete {
   background: var(--timer-green);
@@ -4671,11 +4653,27 @@ h3 {
 .progress-circle-wrapper .progress-circle-complete.visible {
   opacity: 1;
 }
+.progress-circle-wrapper .focus-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.progress-circle-wrapper .focus-visible {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+.progress-circle-wrapper .break-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.progress-circle-wrapper .break-visible {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
 .progress-circle-wrapper .progress-circle-label {
   align-items: center;
   color: var(--text-color);
   display: flex;
-  font-size: calc(2 * var(--font-size-xlarge));
+  font-size: var(--size-item-large);
   font-weight: var(--font-weight-bold);
   font-variant-numeric: tabular-nums;
   height: 100%;
