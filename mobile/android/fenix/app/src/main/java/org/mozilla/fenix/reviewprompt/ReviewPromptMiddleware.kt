@@ -51,14 +51,14 @@ class ReviewPromptMiddleware(
             sequence {
                 yield(isReviewPromptEnabled())
                 yield(hasNotBeenPromptedLastFourMonths(jexlHelper))
-                yield(usedAppOnAtLeastFourOfLastSevenDaysTrigger(jexlHelper))
+                yield(usedAppOnAtLeastFourOfLastSevenDays(jexlHelper))
             }
         }
 
         fun subCriteria(jexlHelper: NimbusMessagingHelperInterface): Sequence<Boolean> {
             return sequence {
                 yield(createdAtLeastOneBookmark(jexlHelper))
-                yield(isDefaultBrowserTrigger(jexlHelper))
+                yield(isDefaultBrowser(jexlHelper))
             }
         }
     }
@@ -143,7 +143,7 @@ internal fun createdAtLeastOneBookmark(jexlHelper: NimbusMessagingHelperInterfac
  * [CustomAttributeProvider.getCustomAttributes].
  */
 @VisibleForTesting
-internal fun isDefaultBrowserTrigger(jexlHelper: NimbusMessagingHelperInterface) =
+internal fun isDefaultBrowser(jexlHelper: NimbusMessagingHelperInterface) =
     jexlHelper.evalJexlSafe("is_default_browser")
 
 /**
@@ -153,7 +153,7 @@ internal fun isDefaultBrowserTrigger(jexlHelper: NimbusMessagingHelperInterface)
  * @return true if the user has opened the app on 4 or more days in the last 7, false otherwise
  */
 @VisibleForTesting
-internal fun usedAppOnAtLeastFourOfLastSevenDaysTrigger(
+internal fun usedAppOnAtLeastFourOfLastSevenDays(
     jexlHelper: NimbusMessagingHelperInterface,
 ): Boolean {
     return jexlHelper.evalJexlSafe("'app_opened'|eventCountNonZero('Days', 7) >= 4")

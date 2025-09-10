@@ -224,37 +224,37 @@ class ReviewPromptMiddlewareTest {
     }
 
     @Test
-    fun `WHEN evalJexl returns false THEN isDefaultBrowserTrigger returns false`() {
+    fun `WHEN evalJexl returns false THEN isDefaultBrowser returns false`() {
         val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = false)
 
-        val result = isDefaultBrowserTrigger(jexlHelper)
+        val result = isDefaultBrowser(jexlHelper)
 
         assertFalse(result)
     }
 
     @Test
-    fun `WHEN evalJexl returns true THEN isDefaultBrowserTrigger returns true`() {
+    fun `WHEN evalJexl returns true THEN isDefaultBrowser returns true`() {
         val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = true)
 
-        val result = isDefaultBrowserTrigger(jexlHelper)
+        val result = isDefaultBrowser(jexlHelper)
 
         assertTrue(result)
     }
 
     @Test
-    fun `WHEN evalJexl returns false THEN usedAppOnAtLeastFourOfLastSevenDaysTrigger returns false`() {
+    fun `WHEN evalJexl returns false THEN usedAppOnAtLeastFourOfLastSevenDays returns false`() {
         val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = false)
 
-        val result = usedAppOnAtLeastFourOfLastSevenDaysTrigger(jexlHelper)
+        val result = usedAppOnAtLeastFourOfLastSevenDays(jexlHelper)
 
         assertFalse(result)
     }
 
     @Test
-    fun `WHEN evalJexl returns true THEN usedAppOnAtLeastFourOfLastSevenDaysTrigger returns true`() {
+    fun `WHEN evalJexl returns true THEN usedAppOnAtLeastFourOfLastSevenDays returns true`() {
         val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = true)
 
-        val result = usedAppOnAtLeastFourOfLastSevenDaysTrigger(jexlHelper)
+        val result = usedAppOnAtLeastFourOfLastSevenDays(jexlHelper)
 
         assertTrue(result)
     }
