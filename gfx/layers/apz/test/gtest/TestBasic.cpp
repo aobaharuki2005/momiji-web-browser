@@ -9,8 +9,6 @@
 
 #include "InputUtils.h"
 
-static ScrollGenerationCounter sGenerationCounter;
-
 TEST_F(APZCBasicTester, Overzoom) {
   // the visible area of the document in CSS pixels is x=10 y=0 w=100 h=100
   FrameMetrics fm;
@@ -208,6 +206,8 @@ TEST_F(APZCBasicTester, Fling) {
 }
 
 #ifndef MOZ_WIDGET_ANDROID  // Maybe fails on Android
+static ScrollGenerationCounter sGenerationCounter;
+
 TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
   // Start a touch-drag and scroll some amount, not lifting the finger.
   SCOPED_GFX_PREF_FLOAT("apz.touch_start_tolerance", 1.0f / 1000.0f);
