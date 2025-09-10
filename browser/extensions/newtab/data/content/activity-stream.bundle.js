@@ -13070,9 +13070,10 @@ function ListItem({
     target: "_blank",
     className: "task-label",
     title: task.value
-  }, task.value) : /*#__PURE__*/external_React_default().createElement("span", {
+  }, task.value) : /*#__PURE__*/external_React_default().createElement("label", {
     className: "task-label",
     title: task.value,
+    htmlFor: `task-${task.id}`,
     onClick: () => setIsEditing(true)
   }, task.value);
   return /*#__PURE__*/external_React_default().createElement("div", {
@@ -13085,7 +13086,8 @@ function ListItem({
   }, /*#__PURE__*/external_React_default().createElement("input", {
     type: "checkbox",
     onChange: handleCheckboxChange,
-    checked: task.completed || exiting
+    checked: task.completed || exiting,
+    id: `task-${task.id}`
   }), isCompleted ? taskLabel : /*#__PURE__*/external_React_default().createElement(EditableText, {
     isEditing: isEditing,
     setIsEditing: setIsEditing,

@@ -806,13 +806,14 @@ function ListItem({
       {task.value}
     </a>
   ) : (
-    <span
+    <label
       className="task-label"
       title={task.value}
+      htmlFor={`task-${task.id}`}
       onClick={() => setIsEditing(true)}
     >
       {task.value}
-    </span>
+    </label>
   );
 
   return (
@@ -827,6 +828,7 @@ function ListItem({
           type="checkbox"
           onChange={handleCheckboxChange}
           checked={task.completed || exiting}
+          id={`task-${task.id}`}
         />
         {isCompleted ? (
           taskLabel
