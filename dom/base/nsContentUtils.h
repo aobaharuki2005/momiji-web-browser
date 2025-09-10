@@ -2740,6 +2740,12 @@ class nsContentUtils {
    */
   static bool IsJsonMimeType(const nsAString& aMimeType);
 
+  /**
+   * Returns true if the given MIME type string is a valid CSS MIME type,
+   * otherwise false.
+   */
+  static bool IsCssMimeType(const nsAString& aMimeType);
+
   static void SplitMimeType(const nsAString& aValue, nsString& aType,
                             nsString& aParams);
 
