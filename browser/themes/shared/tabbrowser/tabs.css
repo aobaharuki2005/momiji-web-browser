@@ -942,7 +942,7 @@
 }
 
 #pinned-tabs-container[orient="horizontal"] {
-  max-width: 60vw;
+  max-width: 33vw;
 
   &:empty {
     display: none;
