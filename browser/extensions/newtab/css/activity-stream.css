@@ -2261,7 +2261,7 @@ main section {
   border-radius: var(--border-radius-small);
   color: var(--link-color);
   cursor: pointer;
-  fill: var(--newtab-text-primary-color);
+  fill: var(--link-color);
   font-size: var(--font-size-small);
   margin-block-end: var(--space-large);
   padding-inline-start: var(--space-xlarge);
