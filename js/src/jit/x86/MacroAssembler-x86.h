@@ -1158,21 +1158,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   template <typename T>
   inline void loadUnboxedValue(const T& src, MIRType type, AnyRegister dest);
 
-  template <typename T>
-  void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes,
-                           JSValueType) {
-    switch (nbytes) {
-      case 4:
-        storePtr(value.payloadReg(), address);
-        return;
-      case 1:
-        store8(value.payloadReg(), address);
-        return;
-      default:
-        MOZ_CRASH("Bad payload width");
-    }
-  }
-
   // Note: this function clobbers the source register.
   inline void convertUInt32ToDouble(Register src, FloatRegister dest);
 

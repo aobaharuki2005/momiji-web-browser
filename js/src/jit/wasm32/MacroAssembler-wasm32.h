@@ -504,11 +504,6 @@ class MacroAssemblerWasm32 : public Assembler {
     MOZ_CRASH();
   }
 
-  template <typename T>
-  void storeUnboxedPayload(ValueOperand value, T, size_t, JSValueType) {
-    MOZ_CRASH();
-  }
-
   void convertUInt32ToDouble(Register, FloatRegister) { MOZ_CRASH(); }
   void convertUInt32ToFloat32(Register, FloatRegister) { MOZ_CRASH(); }
   void incrementInt32Value(Address) { MOZ_CRASH(); }

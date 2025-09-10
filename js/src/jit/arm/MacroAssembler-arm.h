@@ -974,21 +974,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
     }
   }
 
-  template <typename T>
-  void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes,
-                           JSValueType) {
-    switch (nbytes) {
-      case 4:
-        storePtr(value.payloadReg(), address);
-        return;
-      case 1:
-        store8(value.payloadReg(), address);
-        return;
-      default:
-        MOZ_CRASH("Bad payload width");
-    }
-  }
-
   void storeValue(ValueOperand val, const Address& dst);
   void storeValue(ValueOperand val, const BaseIndex& dest);
   void storeValue(JSValueType type, Register reg, BaseIndex dest) {

@@ -584,51 +584,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     }
   }
 
-  void storeUnboxedPayload(ValueOperand value, BaseIndex address, size_t nbytes,
-                           JSValueType type) {
-    switch (nbytes) {
-      case 8:
-        if (type == JSVAL_TYPE_OBJECT) {
-          unboxObjectOrNull(value, SecondScratchReg);
-        } else {
-          unboxNonDouble(value, SecondScratchReg, type);
-        }
-        computeEffectiveAddress(address, ScratchRegister);
-        as_sd(SecondScratchReg, ScratchRegister, 0);
-        return;
-      case 4:
-        store32(value.valueReg(), address);
-        return;
-      case 1:
-        store8(value.valueReg(), address);
-        return;
-      default:
-        MOZ_CRASH("Bad payload width");
-    }
-  }
-
-  void storeUnboxedPayload(ValueOperand value, Address address, size_t nbytes,
-                           JSValueType type) {
-    switch (nbytes) {
-      case 8:
-        if (type == JSVAL_TYPE_OBJECT) {
-          unboxObjectOrNull(value, SecondScratchReg);
-        } else {
-          unboxNonDouble(value, SecondScratchReg, type);
-        }
-        storePtr(SecondScratchReg, address);
-        return;
-      case 4:
-        store32(value.valueReg(), address);
-        return;
-      case 1:
-        store8(value.valueReg(), address);
-        return;
-      default:
-        MOZ_CRASH("Bad payload width");
-    }
-  }
-
   void boxValue(JSValueType type, Register src, Register dest) {
     MOZ_ASSERT(src != dest);
 

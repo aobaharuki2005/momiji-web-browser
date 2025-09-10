@@ -1165,34 +1165,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     }
   }
 
-  template <typename T>
-  void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes,
-                           JSValueType type) {
-    switch (nbytes) {
-      case 8: {
-        ScratchRegisterScope scratch(asMasm());
-        unboxNonDouble(value, scratch, type);
-        storePtr(scratch, address);
-        if (type == JSVAL_TYPE_OBJECT) {
-          // Ideally we would call unboxObjectOrNull, but we need an extra
-          // scratch register for that. So unbox as object, then clear the
-          // object-or-null bit.
-          mov(ImmWord(~JS::detail::ValueObjectOrNullBit), scratch);
-          andq(scratch, Operand(address));
-        }
-        return;
-      }
-      case 4:
-        store32(value.valueReg(), address);
-        return;
-      case 1:
-        store8(value.valueReg(), address);
-        return;
-      default:
-        MOZ_CRASH("Bad payload width");
-    }
-  }
-
   // Checks whether a double is representable as a 64-bit integer. If so, the
   // integer is written to the output register. Otherwise, a bailout is taken to
   // the given snapshot. This function overwrites the scratch float register.
