@@ -864,6 +864,7 @@ system_headers = [
     "sys/shm.h",
     "sys/siginfo.h",
     "sys/signal.h",
+    "sys/single_threaded.h",
     "sys/socket.h",
     "sys/sockio.h",
     "sys/sparc/frame.h",
