@@ -439,7 +439,7 @@ function CardSections({
   const { messageData } = useSelector(state => state.Messages);
   const weatherPlacement = useSelector(selectWeatherPlacement);
   const dailyBriefSectionId =
-    prefs.trainhopConfig?.dailyBriefing.sectionId ||
+    prefs.trainhopConfig?.dailyBriefing?.sectionId ||
     prefs[PREF_DAILY_BRIEF_SECTIONID];
   const weatherEnabled = prefs.showWeather;
   const personalizationEnabled = prefs[PREF_SECTIONS_PERSONALIZATION_ENABLED];
