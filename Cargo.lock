@@ -419,7 +419,7 @@ name = "bench-collections-gtest"
 version = "0.1.0"
 dependencies = [
  "fnv",
- "fxhash",
+ "rustc-hash 2.1.1",
 ]
 
 [[package]]
@@ -2369,15 +2369,6 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "slab",
-]
-
-[[package]]
-name = "fxhash"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
-dependencies = [
- "byteorder",
 ]
 
 [[package]]
@@ -5992,12 +5983,12 @@ dependencies = [
  "bitflags 2.9.0",
  "cssparser",
  "derive_more",
- "fxhash",
  "log",
  "new_debug_unreachable",
  "phf",
  "phf_codegen",
  "precomputed-hash",
+ "rustc-hash 2.1.1",
  "servo_arc",
  "smallvec",
  "to_shmem",
@@ -6370,7 +6361,6 @@ dependencies = [
  "derive_more",
  "dom",
  "euclid",
- "fxhash",
  "gecko-profiler",
  "icu_segmenter",
  "indexmap",
@@ -6393,6 +6383,7 @@ dependencies = [
  "rayon",
  "rayon-core",
  "regex",
+ "rustc-hash 2.1.1",
  "selectors",
  "serde",
  "servo_arc",
@@ -7574,7 +7565,6 @@ dependencies = [
  "etagere",
  "euclid",
  "firefox-on-glean",
- "fxhash",
  "gleam",
  "glean",
  "glslopt",
@@ -7586,6 +7576,7 @@ dependencies = [
  "plane-split",
  "rayon",
  "ron",
+ "rustc-hash 2.1.1",
  "serde",
  "smallvec",
  "svg_fmt",
@@ -7629,7 +7620,6 @@ dependencies = [
  "dwrote",
  "euclid",
  "foreign-types",
- "fxhash",
  "gecko-profiler",
  "gleam",
  "log",
@@ -7638,6 +7628,7 @@ dependencies = [
  "objc",
  "rayon",
  "remove_dir_all",
+ "rustc-hash 2.1.1",
  "static_prefs",
  "swgl",
  "thin-vec",
@@ -7989,7 +7980,6 @@ dependencies = [
  "euclid",
  "firefox-on-glean",
  "freetype",
- "fxhash",
  "glean",
  "lazy_static",
  "libc",
@@ -7997,6 +7987,7 @@ dependencies = [
  "malloc_size_of_derive",
  "objc",
  "rayon",
+ "rustc-hash 2.1.1",
  "serde",
  "smallvec",
  "tracy-rs",
