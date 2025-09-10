@@ -112,7 +112,7 @@ describe("<FocusTimer>", () => {
       .props()
       .onClick();
     wrapper.update();
-    assert.ok(wrapper.find(".progress-circle-wrapper.visible").exists());
+    assert.ok(wrapper.find(".progress-circle-wrapper").exists());
     assert.equal(dispatch.getCall(0).args[0].type, at.WIDGETS_TIMER_PLAY);
   });
 

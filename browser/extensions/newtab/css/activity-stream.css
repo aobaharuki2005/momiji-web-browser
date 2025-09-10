@@ -4601,19 +4601,13 @@ main section {
   --timer-violet-light: var(--color-violet-0);
   /* Complete timer */
   --timer-green: var(--color-green-20);
-  min-height: 0;
-  opacity: 0;
+  min-height: 138px;
   position: relative;
-  width: 162px;
+  width: 138px;
   overflow: hidden;
-  transition: min-height 0.8s ease, opacity 0.8s ease;
   /* main timer colours */
   /* break timer colours */
   /* timer turns green when complete */
-}
-.progress-circle-wrapper.visible {
-  opacity: 1;
-  min-height: 162px;
 }
 .progress-circle-wrapper .progress-circle-background,
 .progress-circle-wrapper .progress-circle,
@@ -4683,21 +4677,6 @@ main section {
 
 .set-timer-controls-wrapper {
   display: flex;
-}
-.set-timer-controls-wrapper .set-timer-countdown {
-  font-size: calc(2 * var(--font-size-xlarge));
-  font-weight: var(--font-weight-bold);
-  font-variant-numeric: tabular-nums;
-  height: 100%;
-  margin-inline-end: var(--space-xlarge);
-  opacity: 1;
-  width: 125px;
-  transition: opacity 0.8s ease, width 0.8s ease;
-}
-.set-timer-controls-wrapper .set-timer-countdown.hidden {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
 }
 .set-timer-controls-wrapper .focus-timer-controls {
   display: flex;

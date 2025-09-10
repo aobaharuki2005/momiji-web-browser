@@ -63,17 +63,10 @@
   /* Complete timer */
   --timer-green: var(--color-green-20);
 
-  min-height: 0;
-  opacity: 0;
+  min-height: 138px;
   position: relative;
-  width: 162px;
+  width: 138px;
   overflow: hidden;
-  transition: min-height 0.8s ease, opacity 0.8s ease;
-
-  &.visible {
-    opacity: 1;
-    min-height: 162px;
-  }
 
   .progress-circle-background,
   .progress-circle,
@@ -171,23 +164,6 @@
 
 .set-timer-controls-wrapper {
   display: flex;
-
-  .set-timer-countdown {
-    font-size: calc(2 * var(--font-size-xlarge));
-    font-weight: var(--font-weight-bold);
-    font-variant-numeric: tabular-nums;
-    height: 100%;
-    margin-inline-end: var(--space-xlarge);
-    opacity: 1;
-    width: 125px;
-    transition: opacity 0.8s ease, width 0.8s ease;
-
-    &.hidden {
-      opacity: 0;
-      width: 0;
-      overflow: hidden;
-    }
-  }
 
   .focus-timer-controls {
     display: flex;

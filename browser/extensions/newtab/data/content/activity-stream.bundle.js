@@ -13264,11 +13264,8 @@ const FocusTimer = ({
   const [timeLeft, setTimeLeft] = (0,external_React_namespaceObject.useState)(0);
   // calculated value for the progress circle; 1 = 100%
   const [progress, setProgress] = (0,external_React_namespaceObject.useState)(0);
-  const [progressVisible, setProgressVisible] = (0,external_React_namespaceObject.useState)(false);
   const activeMinutesRef = (0,external_React_namespaceObject.useRef)(null);
   const activeSecondsRef = (0,external_React_namespaceObject.useRef)(null);
-  const idleMinutesRef = (0,external_React_namespaceObject.useRef)(null);
-  const idleSecondsRef = (0,external_React_namespaceObject.useRef)(null);
   const arcRef = (0,external_React_namespaceObject.useRef)(null);
   const timerType = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget.timerType);
   const timerData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget);
@@ -13296,14 +13293,6 @@ const FocusTimer = ({
   }, [arcRef, handleTimerInteraction]);
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const showSystemNotifications = prefs["widgets.focusTimer.showSystemNotifications"];
-
-  // If the timer is running, set the progress visibility to true
-  // This helps persist progressbar visibility on refresh/opening a new tab
-  (0,external_React_namespaceObject.useEffect)(() => {
-    if (isRunning) {
-      setProgressVisible(true);
-    }
-  }, [isRunning]);
   (0,external_React_namespaceObject.useEffect)(() => {
     // resets default values after timer ends
     let interval;
@@ -13339,9 +13328,6 @@ const FocusTimer = ({
 
             // There's more to see!
             setTimeout(() => {
-              // progress circle rolls up to show timer in the default state
-              setProgressVisible(false);
-
               // switch over to the other timer type
               // eslint-disable-next-line max-nested-callbacks
               (0,external_ReactRedux_namespaceObject.batch)(() => {
@@ -13383,8 +13369,8 @@ const FocusTimer = ({
 
   // set timer function
   const setTimerDuration = () => {
-    const minutesEl = progressVisible ? activeMinutesRef.current : idleMinutesRef.current;
-    const secondsEl = progressVisible ? activeSecondsRef.current : idleSecondsRef.current;
+    const minutesEl = activeMinutesRef.current;
+    const secondsEl = activeSecondsRef.current;
     const minutesValue = minutesEl.innerText.trim() || "0";
     const secondsValue = secondsEl.innerText.trim() || "0";
     let minutes = parseInt(minutesValue || "0", 10);
@@ -13418,7 +13404,6 @@ const FocusTimer = ({
   // Pause timer function
   const toggleTimer = () => {
     if (!isRunning && duration > 0) {
-      setProgressVisible(true);
       (0,external_ReactRedux_namespaceObject.batch)(() => {
         dispatch(actionCreators.AlsoToMain({
           type: actionTypes.WIDGETS_TIMER_PLAY,
@@ -13476,11 +13461,6 @@ const FocusTimer = ({
 
     // Reset progress value and gradient arc on the progress circle
     resetProgressCircle();
-
-    // Transition the timer back to the default state if it was expanded
-    if (progressVisible) {
-      setProgressVisible(false);
-    }
     handleTimerInteraction();
   };
 
@@ -13653,7 +13633,7 @@ const FocusTimer = ({
     onClick: handleLearnMore
   })))), /*#__PURE__*/external_React_default().createElement("div", {
     role: "progress",
-    className: `progress-circle-wrapper${progressVisible ? " visible" : ""}`
+    className: "progress-circle-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "progress-circle-background"
   }), /*#__PURE__*/external_React_default().createElement("div", {
@@ -13664,7 +13644,7 @@ const FocusTimer = ({
     ref: timerType === "break" ? arcRef : null
   }), /*#__PURE__*/external_React_default().createElement("div", {
     className: `progress-circle-complete${progress === 1 ? " visible" : ""}`
-  }), progressVisible && /*#__PURE__*/external_React_default().createElement("div", {
+  }), /*#__PURE__*/external_React_default().createElement("div", {
     role: "timer",
     className: "progress-circle-label"
   }, /*#__PURE__*/external_React_default().createElement(EditableTimerFields, {
@@ -13678,20 +13658,7 @@ const FocusTimer = ({
   }))), /*#__PURE__*/external_React_default().createElement("div", {
     className: "set-timer-controls-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("div", {
-    role: "timer",
-    className: `set-timer-countdown progress-circle-label${progressVisible ? " hidden" : ""}`,
-    "aria-hidden": progressVisible
-  }, /*#__PURE__*/external_React_default().createElement(EditableTimerFields, {
-    minutesRef: idleMinutesRef,
-    secondsRef: idleSecondsRef,
-    onKeyDown: handleKeyDown,
-    onBeforeInput: handleBeforeInput,
-    onFocus: handleFocus,
-    timeLeft: timeLeft,
-    tabIndex: progressVisible ? -1 : 0,
-    onBlur: () => setTimerDuration()
-  })), /*#__PURE__*/external_React_default().createElement("div", {
-    className: `focus-timer-controls ${progressVisible ? "timer-running" : " "}`
+    className: `focus-timer-controls timer-running`
   }, /*#__PURE__*/external_React_default().createElement("moz-button", {
     type: "primary",
     iconsrc: `chrome://global/skin/media/${isRunning ? "pause" : "play"}-fill.svg`,
@@ -13702,7 +13669,7 @@ const FocusTimer = ({
     iconsrc: "chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg",
     "data-l10n-id": "newtab-widget-timer-reset",
     onClick: resetTimer
-  }))), !showSystemNotifications && !timerData[timerType].isRunning && !progressVisible && /*#__PURE__*/external_React_default().createElement("p", {
+  }))), !showSystemNotifications && !timerData[timerType].isRunning && /*#__PURE__*/external_React_default().createElement("p", {
     className: "timer-notification-status",
     "data-l10n-id": "newtab-widget-timer-notification-warning"
   })) : null;
