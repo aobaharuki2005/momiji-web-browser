@@ -236,17 +236,26 @@ RangeBasedTextDirectiveCreator::CollectContextTerms() {
             dom_text_fragments_create_text_fragment_exact_match_max_length());
     const auto [wordStart, wordEnd] =
         intl::WordBreaker::FindWord(mStartContent, mStartContent.Length() / 2);
+    // This check is fine because the range content strings have compressed
+    // whitespace, therefore first and last character cannot be whitespace.
     if (wordStart == 0 && wordEnd == mStartContent.Length()) {
-      // This check is fine because the range content strings have compressed
-      // whitespace.
       TEXT_FRAGMENT_LOG(
           "Target range only contains one word, which is longer than the "
           "maximum length. Aborting.");
       return false;
     }
 
-    mEndContent = Substring(mStartContent, wordEnd);
-    mStartContent = Substring(mStartContent, 0, wordEnd);
+    // These cases are hit when `mStartContent` contains a very large (>50% of
+    // the total length) word. Then the wordbreaker would return wordEnd=length
+    // if the long word is at the end of the string. In that case, use the
+    // wordStart position to break, so that mEndContent is not empty.
+    if (wordEnd == mStartContent.Length()) {
+      mEndContent = Substring(mStartContent, wordStart);
+      mStartContent = Substring(mStartContent, 0, wordStart);
+    } else {
+      mEndContent = Substring(mStartContent, wordEnd);
+      mStartContent = Substring(mStartContent, 0, wordEnd);
+    }
   }
   if (mStartContent.Length() > kMaxContextTermLength) {
     TEXT_FRAGMENT_LOG(
@@ -255,6 +264,7 @@ RangeBasedTextDirectiveCreator::CollectContextTerms() {
         mStartContent.Length(), kMaxContextTermLength);
     mStartContent = Substring(mStartContent, 0, kMaxContextTermLength);
   }
+  mStartContent.CompressWhitespace();
   mStartFoldCaseContent = mStartContent;
   ToFoldedCase(mStartFoldCaseContent);
   TEXT_FRAGMENT_LOG("Maximum possible start term:\n{}",
@@ -267,6 +277,7 @@ RangeBasedTextDirectiveCreator::CollectContextTerms() {
     mEndContent =
         Substring(mEndContent, mEndContent.Length() - kMaxContextTermLength);
   }
+  mEndContent.CompressWhitespace();
   mEndFoldCaseContent = mEndContent;
   ToFoldedCase(mEndFoldCaseContent);
   TEXT_FRAGMENT_LOG("Maximum possible end term:\n{}",
