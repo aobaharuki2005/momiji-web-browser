@@ -15,6 +15,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.Runs
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -91,6 +92,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -212,7 +214,12 @@ class BrowserToolbarMiddlewareTest {
     private val cookieBannersStorage: CookieBannersStorage = mockk()
     private val trackingProtectionUseCases: TrackingProtectionUseCases = mockk()
     private val publicSuffixList = PublicSuffixList(testContext)
-    private val bookmarksStorage: BookmarksStorage = mockk(relaxed = true)
+    private val bookmarksStorage: BookmarksStorage = mockk()
+
+    @Before
+    fun setup() {
+        coEvery { bookmarksStorage.getBookmarksWithUrl(any()) } returns Result.success(listOf(mockk()))
+    }
 
     @Test
     fun `WHEN initializing the toolbar THEN add browser start actions`() = runTest {

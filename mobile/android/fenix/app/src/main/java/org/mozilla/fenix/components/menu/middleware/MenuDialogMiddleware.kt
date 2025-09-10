@@ -148,7 +148,9 @@ class MenuDialogMiddleware(
         store: Store<MenuState, MenuAction>,
     ) {
         val url = store.state.browserMenuState?.selectedTab?.content?.url ?: return
-        val bookmark = bookmarksStorage.getBookmarksWithUrl(url)
+        val bookmark = bookmarksStorage
+            .getBookmarksWithUrl(url)
+            .getOrDefault(listOf())
             .firstOrNull { it.url == url } ?: return
 
         store.dispatch(
@@ -221,7 +223,7 @@ class MenuDialogMiddleware(
 
         val parentGuid = lastSavedFolderCache.getGuid() ?: BookmarkRoot.Mobile.id
 
-        val parentNode = bookmarksStorage.getBookmark(parentGuid)
+        val parentNode = bookmarksStorage.getBookmark(parentGuid).getOrNull()
 
         val guidToEdit = addBookmarkUseCase(
             url = url,
