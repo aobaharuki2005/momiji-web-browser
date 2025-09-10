@@ -128,22 +128,4 @@ async function test_engine(inPrivateBrowsing) {
   Assert.equal(result.remote.length, 0, "Should have no remote suggestions");
   Assert.equal(await countCacheEntries(), 0, "The cache should be empty");
   Assert.equal(await countCookieEntries(), 0, "Should not find any cookie");
-
-  let firstPartyDomain1 = controller.firstPartyDomains.get(engines[0].name);
-  Assert.ok(
-    /^[\.a-z0-9-]+\.search\.suggestions\.mozilla/.test(firstPartyDomain1),
-    "Check firstPartyDomain1"
-  );
-
-  let firstPartyDomain2 = controller.firstPartyDomains.get(engines[1].name);
-  Assert.ok(
-    /^[\.a-z0-9-]+\.search\.suggestions\.mozilla/.test(firstPartyDomain2),
-    "Check firstPartyDomain2"
-  );
-
-  Assert.notEqual(
-    firstPartyDomain1,
-    firstPartyDomain2,
-    "Check firstPartyDomain id unique per engine"
-  );
 }

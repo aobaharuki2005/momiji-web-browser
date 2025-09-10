@@ -87,19 +87,6 @@ const lazy = XPCOMUtils.declareLazy({
  */
 
 /**
- * Generates an UUID.
- *
- * @returns {string}
- *   An UUID string, without leading or trailing braces.
- */
-function uuid() {
-  return Services.uuid
-    .generateUUID()
-    .toString()
-    .slice(1, uuid.length - 1);
-}
-
-/**
  * Represents a search suggestion.
  * TODO: Support other Google tail fields: `a`, `dc`, `i`, `q`, `ansa`,
  * `ansb`, `ansc`, `du`. See bug 1626897 comment 2.
@@ -201,11 +188,6 @@ class SearchSuggestionEntry {
   #description;
 }
 
-// Maps each engine name to a unique firstPartyDomain, so that requests to
-// different engines are isolated from each other and from normal browsing.
-// This is the same for all the controllers.
-var gFirstPartyDomains = new Map();
-
 /**
  *
  * The SearchSuggestionController class fetches search suggestions from two
@@ -291,15 +273,6 @@ export class SearchSuggestionController {
    * @type {object|null}
    */
   formHistoryResult = null;
-
-  /**
-   * Gets the firstPartyDomains Map, useful for tests.
-   *
-   * @returns {Map} firstPartyDomains mapped by engine names.
-   */
-  get firstPartyDomains() {
-    return gFirstPartyDomains;
-  }
 
   /**
    * @typedef {object} FetchResult
@@ -510,30 +483,15 @@ export class SearchSuggestionController {
     // Don't set or store cookies or on-disk cache.
     request.channel.loadFlags =
       Ci.nsIChannel.LOAD_ANONYMOUS | Ci.nsIChannel.INHIBIT_PERSISTENT_CACHING;
-    // Use a unique first-party domain for each engine, to isolate the
-    // suggestions requests.
-    if (!gFirstPartyDomains.has(context.engine.name)) {
-      // Use the engine identifier, or an uuid when not available, because the
-      // domain cannot contain invalid chars and the engine name may not be
-      // suitable. When using an uuid the firstPartyDomain of the same engine
-      // will differ across restarts, but that's acceptable for now.
-      // TODO (Bug 1511339): use a persistent unique identifier per engine.
-      gFirstPartyDomains.set(
-        context.engine.name,
-        `${context.engine.identifier || uuid()}.search.suggestions.mozilla`
-      );
-    }
 
     lazy.logConsole.debug(
       `HTTP request started for ${submission.uri.spec} by method ${method}`
     );
 
-    let firstPartyDomain = gFirstPartyDomains.get(context.engine.name);
-
     request.setOriginAttributes({
       userContextId: context.userContextId,
       privateBrowsingId: context.inPrivateBrowsing ? 1 : 0,
-      firstPartyDomain,
+      firstPartyDomain: `${context.engine.id}.search.suggestions.mozilla`,
     });
 
     request.mozBackgroundRequest = true; // suppress dialogs and fail silently
