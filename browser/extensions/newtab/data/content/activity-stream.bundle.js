@@ -13597,7 +13597,9 @@ const FocusTimer = ({
     ref: el => {
       timerRef.current = [el];
     }
-  }, /*#__PURE__*/external_React_default().createElement("div", {
+  }, /*#__PURE__*/external_React_default().createElement("h3", {
+    "data-l10n-id": "newtab-widget-timer-notification-title"
+  }), /*#__PURE__*/external_React_default().createElement("div", {
     className: "focus-timer-tabs"
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "focus-timer-tabs-buttons"

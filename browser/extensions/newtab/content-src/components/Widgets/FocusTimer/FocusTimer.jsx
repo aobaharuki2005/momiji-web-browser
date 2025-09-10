@@ -498,6 +498,7 @@ export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
         timerRef.current = [el];
       }}
     >
+      <h3 data-l10n-id="newtab-widget-timer-notification-title"></h3>
       <div className="focus-timer-tabs">
         <div className="focus-timer-tabs-buttons">
           <moz-button

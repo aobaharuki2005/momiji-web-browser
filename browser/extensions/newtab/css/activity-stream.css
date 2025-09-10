@@ -4560,6 +4560,14 @@ main section {
   box-shadow: var(--box-shadow-card);
 }
 
+h3 {
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-bold);
+  margin-block: 0 var(--space-small);
+  margin-inline-start: var(--space-large);
+  align-self: flex-start;
+}
+
 .focus-timer-tabs {
   display: flex;
   margin-block-end: var(--space-medium);
