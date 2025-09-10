@@ -1634,6 +1634,44 @@ void CodeGenerator::visitStrictConstantCompareInt32(
   }
 }
 
+void CodeGenerator::visitStrictConstantCompareInt32AndBranch(
+    LStrictConstantCompareInt32AndBranch* comp) {
+  ValueOperand value = ToValue(comp->value());
+  int32_t constantVal = comp->cmpMir()->constant();
+  JSOp op = comp->cmpMir()->jsop();
+  Assembler::Condition cond = JSOpToCondition(op, false);
+
+  MBasicBlock* ifTrue = comp->ifTrue();
+  MBasicBlock* ifFalse = comp->ifFalse();
+
+  Label* trueLabel = getJumpLabelForBranch(ifTrue);
+  Label* falseLabel = getJumpLabelForBranch(ifFalse);
+
+  Label* onEqual = op == JSOp::StrictEq ? trueLabel : falseLabel;
+
+  // If the next block is the true case, invert the condition to fall through.
+  if (isNextBlock(ifTrue->lir())) {
+    cond = Assembler::InvertCondition(cond);
+    trueLabel = falseLabel;
+    falseLabel = nullptr;
+  } else if (isNextBlock(ifFalse->lir())) {
+    falseLabel = nullptr;
+  }
+
+  masm.branch64(Assembler::Equal, value.toRegister64(),
+                Imm64(Int32Value(constantVal).asRawBits()), onEqual);
+  if (constantVal == 0) {
+    masm.branch64(Assembler::Equal, value.toRegister64(),
+                  Imm64(DoubleValue(0.0).asRawBits()), onEqual);
+    masm.branch64(cond, value.toRegister64(),
+                  Imm64(DoubleValue(-0.0).asRawBits()), trueLabel, falseLabel);
+  } else {
+    masm.branch64(cond, value.toRegister64(),
+                  Imm64(DoubleValue(constantVal).asRawBits()), trueLabel,
+                  falseLabel);
+  }
+}
+
 void CodeGenerator::visitStrictConstantCompareBoolean(
     LStrictConstantCompareBoolean* comp) {
   ValueOperand value = ToValue(comp->value());
@@ -1643,6 +1681,32 @@ void CodeGenerator::visitStrictConstantCompareBoolean(
 
   masm.cmp64Set(JSOpToCondition(op, false), value.toRegister64(),
                 Imm64(BooleanValue(constantVal).asRawBits()), output);
+}
+
+void CodeGenerator::visitStrictConstantCompareBooleanAndBranch(
+    LStrictConstantCompareBooleanAndBranch* comp) {
+  ValueOperand value = ToValue(comp->value());
+  bool constantVal = comp->cmpMir()->constant();
+  Assembler::Condition cond = JSOpToCondition(comp->cmpMir()->jsop(), false);
+
+  MBasicBlock* ifTrue = comp->ifTrue();
+  MBasicBlock* ifFalse = comp->ifFalse();
+
+  Label* trueLabel = getJumpLabelForBranch(ifTrue);
+  Label* falseLabel = getJumpLabelForBranch(ifFalse);
+
+  // If the next block is the true case, invert the condition to fall through.
+  if (isNextBlock(ifTrue->lir())) {
+    cond = Assembler::InvertCondition(cond);
+    trueLabel = falseLabel;
+    falseLabel = nullptr;
+  } else if (isNextBlock(ifFalse->lir())) {
+    falseLabel = nullptr;
+  }
+
+  masm.branch64(cond, value.toRegister64(),
+                Imm64(BooleanValue(constantVal).asRawBits()), trueLabel,
+                falseLabel);
 }
 
 void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {

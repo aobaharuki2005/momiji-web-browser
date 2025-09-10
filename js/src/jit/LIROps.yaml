@@ -807,6 +807,26 @@
     cmpMir: MCompare*
   num_temps: 2
 
+# Fused Test and StrictConstantCompareInt32.
+- name: StrictConstantCompareInt32AndBranch
+  successors: [ifTrue, ifFalse]
+  operands:
+    value: BoxedValue
+  arguments:
+    cmpMir: MStrictConstantCompareInt32*
+  mir_op: Test
+  extra_name: true
+
+# Fused Test and StrictConstantCompareBoolean.
+- name: StrictConstantCompareBooleanAndBranch
+  successors: [ifTrue, ifFalse]
+  operands:
+    value: BoxedValue
+  arguments:
+    cmpMir: MStrictConstantCompareBoolean*
+  mir_op: Test
+  extra_name: true
+
 - name: BitAndAndBranch
   successors: [ifTrue, ifFalse]
   operands:
