@@ -9229,12 +9229,6 @@ main section {
   inset-inline-start: calc(-6.25 * var(--size-item-small));
 }
 
-.lightWallpaper .inline-selection-wrapper.ds-section {
-  color-scheme: light;
-}
-.darkWallpaper .inline-selection-wrapper.ds-section {
-  color-scheme: dark;
-}
 .inline-selection-wrapper.ds-section .section-heading {
   margin-block: var(--space-medium);
 }
@@ -9243,6 +9237,16 @@ main section {
 }
 .inline-selection-wrapper.ds-section .learn-more-copy {
   margin-block-end: 0;
+}
+.lightWallpaper .inline-selection-wrapper.ds-section .learn-more-copy {
+  color-scheme: light;
+}
+.darkWallpaper .inline-selection-wrapper.ds-section .learn-more-copy {
+  color-scheme: dark;
+}
+.inline-selection-wrapper.ds-section .learn-more-copy a:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 .inline-selection-wrapper.ds-section .topic-list {
   list-style: none;
@@ -9263,10 +9267,10 @@ main section {
   position: relative;
 }
 .inline-selection-wrapper.ds-section .topic-list li > label {
-  background-color: var(--background-color-canvas);
+  background-color: var(--newtab-background-card);
   border: var(--border-width) solid var(--border-color-interactive);
   border-radius: var(--border-radius-circle);
-  color: var(--newtab-contextual-text-primary-color);
+  color: var(--newtab-text-primary-color);
   padding: var(--space-small) calc(1.25 * var(--space-small)) var(--space-small) var(--space-xsmall);
 }
 .inline-selection-wrapper.ds-section .topic-list li > label input[type=checkbox] {
@@ -9275,6 +9279,7 @@ main section {
 }
 .inline-selection-wrapper.ds-section .topic-list li > label .topic-item-icon {
   -moz-context-properties: fill;
+  color: var(--newtab-text-primary-color);
   fill: currentColor;
   margin-inline-start: var(--space-small);
   margin-block-start: calc(-0.75 * var(--space-xsmall));
@@ -9294,7 +9299,7 @@ main section {
 .inline-selection-wrapper.ds-section .topic-list li > label:has(input:checked) .topic-item-icon {
   color: var(--button-text-color-primary);
 }
-.inline-selection-wrapper.ds-section .topic-list li > label:focus-within {
+.inline-selection-wrapper.ds-section .topic-list li > label:has(input:focus-visible) {
   outline-offset: var(--focus-outline-offset);
   outline: var(--focus-outline);
 }
