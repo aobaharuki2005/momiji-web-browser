@@ -446,10 +446,8 @@ class TabPreview @JvmOverloads constructor(
     }
 
     private suspend fun buildNavigationActions(tab: TabSessionState): List<Action> {
-        val isBookmarked = context.components.core.bookmarksStorage
-            .getBookmarksWithUrl(tab.content.url)
-            .getOrDefault(listOf())
-            .isNotEmpty()
+        val isBookmarked =
+            context.components.core.bookmarksStorage.getBookmarksWithUrl(tab.content.url).isNotEmpty()
 
         val isExpandedAndPortrait = context.settings().shouldUseExpandedToolbar &&
                 context.components.appStore.state.orientation == OrientationMode.Portrait

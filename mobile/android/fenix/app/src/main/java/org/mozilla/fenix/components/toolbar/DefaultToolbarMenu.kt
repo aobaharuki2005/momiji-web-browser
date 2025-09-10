@@ -523,7 +523,6 @@ open class DefaultToolbarMenu(
         isBookmarkedJob = lifecycleOwner.lifecycleScope.launch {
             isCurrentUrlBookmarked = bookmarksStorage
                 .getBookmarksWithUrl(newUrl)
-                .getOrDefault(listOf())
                 .any { it.url == newUrl }
         }
     }

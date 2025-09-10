@@ -17,30 +17,28 @@ class FakeBookmarksStorage() : BookmarksStorage {
         throw NotImplementedError()
     }
 
-    override suspend fun getTree(guid: String, recursive: Boolean): Result<BookmarkNode?> {
+    override suspend fun getTree(guid: String, recursive: Boolean): BookmarkNode? {
         throw NotImplementedError()
     }
 
-    override suspend fun getBookmark(guid: String): Result<BookmarkNode?> =
-        Result.runCatching { bookmarkMap[guid] }
+    override suspend fun getBookmark(guid: String): BookmarkNode? =
+        Result.runCatching { bookmarkMap[guid] }.getOrNull()
 
-    override suspend fun getBookmarksWithUrl(url: String): Result<List<BookmarkNode>> {
-        return Result.runCatching { bookmarkMap.values.filter { it.url == url } }
+    override suspend fun getBookmarksWithUrl(url: String): List<BookmarkNode> {
+        return bookmarkMap.values.filter { it.url == url }
     }
 
     override suspend fun getRecentBookmarks(
         limit: Int,
         maxAge: Long?,
         currentTime: Long,
-    ): Result<List<BookmarkNode>> {
-        return Result.runCatching {
-            bookmarkMap.values.toList()
-                .sortedByDescending { it.position }
-                .take(limit)
-        }
+    ): List<BookmarkNode> {
+        return bookmarkMap.values.toList()
+            .sortedByDescending { it.position }
+            .take(limit)
     }
 
-    override suspend fun searchBookmarks(query: String, limit: Int): Result<List<BookmarkNode>> {
+    override suspend fun searchBookmarks(query: String, limit: Int): List<BookmarkNode> {
         throw NotImplementedError()
     }
 
@@ -53,7 +51,7 @@ class FakeBookmarksStorage() : BookmarksStorage {
         url: String,
         title: String,
         position: UInt?,
-    ): Result<String> {
+    ): String {
         val id = UUID.randomUUID().toString()
         bookmarkMap[id] =
             BookmarkNode(
@@ -67,10 +65,10 @@ class FakeBookmarksStorage() : BookmarksStorage {
                 lastModified = 0,
                 children = null,
             )
-        return Result.success(id)
+        return id
     }
 
-    override suspend fun addFolder(parentGuid: String, title: String, position: UInt?): Result<String> {
+    override suspend fun addFolder(parentGuid: String, title: String, position: UInt?): String {
         val id = UUID.randomUUID().toString()
         bookmarkMap[id] =
             BookmarkNode(
@@ -84,18 +82,18 @@ class FakeBookmarksStorage() : BookmarksStorage {
                 lastModified = 0,
                 children = null,
             )
-        return Result.success(id)
+        return id
     }
 
-    override suspend fun addSeparator(parentGuid: String, position: UInt?): Result<String> {
+    override suspend fun addSeparator(parentGuid: String, position: UInt?): String {
         throw NotImplementedError()
     }
 
-    override suspend fun updateNode(guid: String, info: BookmarkInfo): Result<Unit> {
+    override suspend fun updateNode(guid: String, info: BookmarkInfo) {
         throw NotImplementedError()
     }
 
-    override suspend fun deleteNode(guid: String): Result<Boolean> {
+    override suspend fun deleteNode(guid: String): Boolean {
         throw NotImplementedError()
     }
 

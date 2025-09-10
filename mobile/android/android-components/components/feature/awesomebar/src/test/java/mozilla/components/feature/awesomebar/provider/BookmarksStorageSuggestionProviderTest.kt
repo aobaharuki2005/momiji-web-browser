@@ -85,7 +85,7 @@ class BookmarksStorageSuggestionProviderTest {
     fun `Provider returns suggestions from configured bookmarks storage`() = runTest {
         val provider = BookmarksStorageSuggestionProvider(bookmarks, mock())
 
-        val id = bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null).getOrNull()!!
+        val id = bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null)
 
         var suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
@@ -136,7 +136,7 @@ class BookmarksStorageSuggestionProviderTest {
         assertTrue(suggestions.isEmpty())
         verify(engine, never()).speculativeConnect(anyString())
 
-        val id = bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null).getOrNull()!!
+        val id = bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null)
         suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
         assertEquals(id, suggestions[0].id)
@@ -153,7 +153,7 @@ class BookmarksStorageSuggestionProviderTest {
         assertTrue(suggestions.isEmpty())
         verify(engine, never()).speculativeConnect(anyString())
 
-        val id = bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null).getOrNull()!!
+        val id = bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null)
         suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
         assertEquals(id, suggestions[0].id)
@@ -224,27 +224,27 @@ class BookmarksStorageSuggestionProviderTest {
             throw NotImplementedError()
         }
 
-        override suspend fun getTree(guid: String, recursive: Boolean): Result<BookmarkNode?> {
+        override suspend fun getTree(guid: String, recursive: Boolean): BookmarkNode? {
             // "Not needed for the test"
             throw NotImplementedError()
         }
 
-        override suspend fun getBookmark(guid: String): Result<BookmarkNode?> {
+        override suspend fun getBookmark(guid: String): BookmarkNode? {
             // "Not needed for the test"
             throw NotImplementedError()
         }
 
-        override suspend fun getBookmarksWithUrl(url: String): Result<List<BookmarkNode>> {
+        override suspend fun getBookmarksWithUrl(url: String): List<BookmarkNode> {
             // "Not needed for the test"
             throw NotImplementedError()
         }
 
-        override suspend fun getRecentBookmarks(limit: Int, maxAge: Long?, currentTime: Long): Result<List<BookmarkNode>> {
+        override suspend fun getRecentBookmarks(limit: Int, maxAge: Long?, currentTime: Long): List<BookmarkNode> {
             // "Not needed for the test"
             throw NotImplementedError()
         }
 
-        override suspend fun searchBookmarks(query: String, limit: Int): Result<List<BookmarkNode>> =
+        override suspend fun searchBookmarks(query: String, limit: Int): List<BookmarkNode> =
             synchronized(bookmarkMap) {
                 data class Hit(val key: String, val score: Int)
 
@@ -265,14 +265,12 @@ class BookmarksStorageSuggestionProviderTest {
                 // Calculate maxScore so that we can invert our scoring.
                 // Lower Levenshtein distance should produce a higher score.
                 urlMatches.maxByOrNull { it.score }?.score
-                    ?: return@synchronized Result.success(listOf())
+                    ?: return@synchronized listOf()
 
                 // TODO exclude non-matching results entirely? Score that implies complete mismatch.
-                Result.success(
-                    matchedUrls.asSequence().sortedBy { it.value }.map {
+                matchedUrls.asSequence().sortedBy { it.value }.map {
                     bookmarkMap[it.key]!!
-                }.take(limit).toList(),
-                )
+                }.take(limit).toList()
             }
 
         override suspend fun countBookmarksInTrees(guids: List<String>): UInt {
@@ -285,29 +283,29 @@ class BookmarksStorageSuggestionProviderTest {
             url: String,
             title: String,
             position: UInt?,
-        ): Result<String> {
+        ): String {
             val id = UUID.randomUUID().toString()
             bookmarkMap[id] =
                 BookmarkNode(BookmarkNodeType.ITEM, id, parentGuid, position, title, url, 0, 0, null)
-            return Result.success(id)
+            return id
         }
 
-        override suspend fun addFolder(parentGuid: String, title: String, position: UInt?): Result<String> {
+        override suspend fun addFolder(parentGuid: String, title: String, position: UInt?): String {
             // "Not needed for the test"
             throw NotImplementedError()
         }
 
-        override suspend fun addSeparator(parentGuid: String, position: UInt?): Result<String> {
+        override suspend fun addSeparator(parentGuid: String, position: UInt?): String {
             // "Not needed for the test"
             throw NotImplementedError()
         }
 
-        override suspend fun updateNode(guid: String, info: BookmarkInfo): Result<Unit> {
+        override suspend fun updateNode(guid: String, info: BookmarkInfo) {
             // "Not needed for the test"
             throw NotImplementedError()
         }
 
-        override suspend fun deleteNode(guid: String): Result<Boolean> {
+        override suspend fun deleteNode(guid: String): Boolean {
             // "Not needed for the test"
             throw NotImplementedError()
         }
