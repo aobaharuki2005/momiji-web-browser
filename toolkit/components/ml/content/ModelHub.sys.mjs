@@ -14,6 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   Progress: "chrome://global/content/ml/Utils.sys.mjs",
+  MLUtils: "chrome://global/content/ml/Utils.sys.mjs",
   OPFS: "chrome://global/content/ml/OPFS.sys.mjs",
   URLChecker: "chrome://global/content/ml/Utils.sys.mjs",
   RejectionType: "chrome://global/content/ml/Utils.sys.mjs",
@@ -1407,15 +1408,8 @@ export class ModelHub {
     if (result && !result.allowed) {
       throw new ForbiddenURLError(url, result.rejectionType);
     }
-    const response = await fetch(url, options);
 
-    if (!response.ok) {
-      throw new Error(
-        `HTTP error! Status: ${response.status} ${response.statusText}`
-      );
-    }
-
-    return response;
+    return lazy.MLUtils.fetchUrl(url, options);
   }
 
   /**
@@ -1823,6 +1817,7 @@ export class ModelHub {
    * @param {string} config.featureId - feature id for the model
    * @param {string} config.sessionId - shared across the same session
    * @param {object} config.telemetryData - Additional telemetry data.
+   * @param {?AbortSignal} config.abortSignal - AbortSignal to cancel the download.
    * @returns {Promise<[string, headers]>} The local path to the file content and headers.
    */
   async getModelDataAsFile({
@@ -1834,6 +1829,7 @@ export class ModelHub {
     modelHubRootUrl,
     modelHubUrlTemplate,
     progressCallback,
+    abortSignal,
     featureId,
     sessionId,
     telemetryData = {},
@@ -1999,12 +1995,13 @@ export class ModelHub {
     let caughtError;
     try {
       let isFirstCall = true;
-      const response = await this.#fetch(url);
+      const response = await this.#fetch(url, { signal: abortSignal });
       const fileObject = await lazy.OPFS.download({
         savePath: localFilePath,
         deletePreviousVersions: false,
         skipIfExists: false,
         source: response,
+        abortSignal,
         progressCallback: progressData => {
           progressCallback?.(
             new lazy.Progress.ProgressAndStatusCallbackParams({
@@ -2089,12 +2086,15 @@ export class ModelHub {
       })
     );
 
-    throw new Error(
-      `Failed to fetch the model file: ${url}. Reason: ${caughtError.message} ${caughtError.stack}`,
-      {
+    let enrichedErrMessage = `Failed to fetch the model file: ${url}. Reason: ${caughtError.message} ${caughtError.stack}`;
+
+    if (DOMException.isInstance(caughtError)) {
+      throw new DOMException(enrichedErrMessage, caughtError.name, {
         cause: caughtError,
-      }
-    );
+      });
+    }
+
+    throw new Error(enrichedErrMessage, { cause: caughtError });
   }
 
   /**

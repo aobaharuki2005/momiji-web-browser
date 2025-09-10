@@ -350,10 +350,7 @@ async function initializeEngine(pipelineOptions, prefs = null) {
   });
   info("Get the engine process");
   const startTime = performance.now();
-  const mlEngineParent = await EngineProcess.getMLEngineParent();
-  const engine = await mlEngineParent.getEngine(
-    new PipelineOptions(pipelineOptions)
-  );
+  const engine = await createEngine(new PipelineOptions(pipelineOptions));
   const e2eInitTime = performance.now() - startTime;
 
   info("Get Pipeline Options");

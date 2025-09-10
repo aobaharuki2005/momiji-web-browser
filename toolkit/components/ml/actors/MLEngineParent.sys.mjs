@@ -124,6 +124,13 @@ export class MLEngineParent extends JSProcessActorParent {
   static engineLocks = new Map();
 
   /**
+   * AbortSignal to potentially cancel the engine creation.
+   *
+   * @type {Map<string, ?AbortSignal>}
+   */
+  static engineCreationAbortSignal = new Map();
+
+  /**
    * The following constant controls the major and minor version for onnx wasm downloaded from
    * Remote Settings.
    *
@@ -220,11 +227,17 @@ export class MLEngineParent extends JSProcessActorParent {
    *
    * If there's an existing engine with the same pipelineOptions, it will be reused.
    *
-   * @param {PipelineOptions} pipelineOptions
-   * @param {?function(ProgressAndStatusCallbackParams):void} notificationsCallback A function to call to indicate progress status.
+   * @param {object} params Parameters object.
+   * @param {PipelineOptions} params.pipelineOptions
+   * @param {?function(ProgressAndStatusCallbackParams):void} params.notificationsCallback A function to call to indicate progress status.
+   * @param {?AbortSignal} params.abortSignal - AbortSignal to cancel the download.
    * @returns {Promise<MLEngine>}
    */
-  async getEngine(pipelineOptions, notificationsCallback = null) {
+  async getEngine({
+    pipelineOptions,
+    notificationsCallback,
+    abortSignal,
+  } = {}) {
     if (
       lazy.CHECK_FOR_MEMORY &&
       lazy.mlUtils.totalPhysicalMemory < lazy.MINIMUM_PHYSICAL_MEMORY * ONE_GiB
@@ -249,6 +262,7 @@ export class MLEngineParent extends JSProcessActorParent {
       resolveLock = resolve;
     });
     MLEngineParent.engineLocks.set(engineId, lockPromise);
+    MLEngineParent.engineCreationAbortSignal.set(engineId, abortSignal);
     try {
       const currentEngine = MLEngine.getInstance(engineId);
       if (currentEngine) {
@@ -296,6 +310,7 @@ export class MLEngineParent extends JSProcessActorParent {
       return engine;
     } finally {
       MLEngineParent.engineLocks.delete(engineId);
+      MLEngineParent.engineCreationAbortSignal.delete(engineId);
       resolveLock();
     }
   }
@@ -456,6 +471,7 @@ export class MLEngineParent extends JSProcessActorParent {
       modelHubRootUrl: rootUrl,
       modelHubUrlTemplate: urlTemplate,
       progressCallback: this.notificationsCallback?.bind(this),
+      abortSignal: MLEngineParent.engineCreationAbortSignal.get(engineId),
       featureId,
       sessionId,
     });
@@ -1514,7 +1530,11 @@ class MLEngine {
 
       // If there was no timeout we can yield the chunk and move to the next
       if (!chunk.timeout) {
-        lazy.console.debug(`Chunk received ${JSON.stringify(chunk.metadata)}`);
+        lazy.console.debug(
+          `Chunk received ${JSON.stringify(chunk.metadata, (_, v) =>
+            typeof v === "bigint" ? v.toString() : v
+          )}`
+        );
         yield {
           text: chunk.metadata.text,
           tokens: chunk.metadata.tokens,

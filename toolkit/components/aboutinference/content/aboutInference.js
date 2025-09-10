@@ -19,7 +19,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BACKENDS: "chrome://global/content/ml/EngineProcess.sys.mjs",
 });
 
-const { ExecutionPriority, EngineProcess, PipelineOptions } =
+const { ExecutionPriority, EngineProcess, PipelineOptions, createEngine } =
   ChromeUtils.importESModule(
     "chrome://global/content/ml/EngineProcess.sys.mjs"
   );
@@ -809,8 +809,7 @@ async function runInference() {
   try {
     const pipelineOptions = new PipelineOptions(initData);
     startTime = performance.now();
-    const engineParent = await getEngineParent();
-    engine = await engineParent.getEngine(pipelineOptions, progressData => {
+    engine = await createEngine(pipelineOptions, progressData => {
       engineNotification(progressData).catch(err => {
         console.error("Error in engineNotification:", err);
       });
@@ -1241,7 +1240,7 @@ async function runBenchmark() {
 
         bench.initDuration = await measure(async () => {
           const pipelineOptions = new PipelineOptions(workload.pipelineOptions);
-          engine = await engineParent.getEngine(pipelineOptions);
+          engine = await engineParent.getEngine({ pipelineOptions });
         });
 
         benchmarkConsole.addText("\nRunning 25 iterations ");
