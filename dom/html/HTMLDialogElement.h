@@ -68,7 +68,7 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Close(
       const mozilla::dom::Optional<nsAString>& aReturnValue);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void RequestClose(
+  MOZ_CAN_RUN_SCRIPT void RequestClose(
       const mozilla::dom::Optional<nsAString>& aReturnValue);
   MOZ_CAN_RUN_SCRIPT void Show(ErrorResult& aError);
   MOZ_CAN_RUN_SCRIPT void ShowModal(ErrorResult& aError);
