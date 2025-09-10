@@ -294,35 +294,6 @@ JS_PUBLIC_API JSObject* JS::CompileJsonModule(
   return moduleObject;
 }
 
-JS_PUBLIC_API JSObject* JS::CreateCssModule(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    const Value& cssValue) {
-  Rooted<ExportNameVector> exportNames(cx);
-  if (!exportNames.append(cx->names().default_)) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  Rooted<ModuleObject*> moduleObject(
-      cx, ModuleObject::createSynthetic(cx, &exportNames));
-  if (!moduleObject) {
-    return nullptr;
-  }
-
-  RootedVector<Value> exportValues(cx);
-  if (!exportValues.append(cssValue)) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  if (!ModuleObject::createSyntheticEnvironment(cx, moduleObject,
-                                                exportValues)) {
-    return nullptr;
-  }
-
-  return moduleObject;
-}
-
 JS_PUBLIC_API void JS::SetModulePrivate(JSObject* module, const Value& value) {
   JSRuntime* rt = module->zone()->runtimeFromMainThread();
   module->as<ModuleObject>().scriptSourceObject()->setPrivate(rt, value);
