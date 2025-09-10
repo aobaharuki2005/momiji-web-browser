@@ -4422,11 +4422,13 @@ void Element::InsertAdjacentHTML(
   nsAutoScriptLoaderDisabler sld(doc);
 
   // Parse directly into destination if possible
+  nsIContent* oldLastChild = destination->GetLastChild();
+  bool oldLastChildIsText = oldLastChild && oldLastChild->IsText();
   if (doc->IsHTMLDocument() && !OwnerDoc()->MayHaveDOMMutationObservers() &&
-      (position == eBeforeEnd || (position == eAfterEnd && !GetNextSibling()) ||
+      ((position == eBeforeEnd && !oldLastChildIsText) ||
+       (position == eAfterEnd && !GetNextSibling()) ||
        (position == eAfterBegin && !GetFirstChild()))) {
     doc->SuspendDOMNotifications();
-    nsIContent* oldLastChild = destination->GetLastChild();
     int32_t contextNs = destination->GetNameSpaceID();
     nsAtom* contextLocal = destination->NodeInfo()->NameAtom();
     if (contextLocal == nsGkAtoms::html && contextNs == kNameSpaceID_XHTML) {
@@ -4441,9 +4443,6 @@ void Element::InsertAdjacentHTML(
     doc->ResumeDOMNotifications();
     nsIContent* firstNewChild = oldLastChild ? oldLastChild->GetNextSibling()
                                              : destination->GetFirstChild();
-    if (!firstNewChild) {
-      firstNewChild = oldLastChild;
-    }
     if (firstNewChild) {
       MutationObservers::NotifyContentAppended(destination, firstNewChild, {});
     }
