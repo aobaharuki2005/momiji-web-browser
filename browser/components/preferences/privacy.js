@@ -62,6 +62,13 @@ ChromeUtils.defineLazyGetter(lazy, "gParentalControlsService", () =>
     : null
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "TrackingDBService",
+  "@mozilla.org/tracking-db-service;1",
+  "nsITrackingDBService"
+);
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gIsFirstPartyIsolated",
@@ -77,6 +84,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  AppUpdater: "resource://gre/modules/AppUpdater.sys.mjs",
   DoHConfigController: "moz-src:///toolkit/components/doh/DoHConfig.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   SelectableProfileService:
@@ -282,7 +290,241 @@ Preferences.addAll([
 
   // Local Network Access
   { id: "network.lna.blocking", type: "bool" },
+
+  // Security and Privacy Warnings
+  { id: "privacy.ui.status_card.testing.show_issue", type: "bool" },
+  {
+    id: "browser.preferences.config_warning.warningTest.dismissed",
+    type: "bool",
+  },
 ]);
+
+Preferences.addSetting({
+  id: "etpStrictEnabled",
+  pref: "browser.contentblocking.category",
+  get: prefValue => prefValue == "strict",
+});
+
+Preferences.addSetting({
+  id: "trackerCount",
+  cachedValue: null,
+  async setup(emitChange) {
+    const now = Date.now();
+    const aMonthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+    const events = await lazy.TrackingDBService.getEventsByDateRange(
+      now,
+      aMonthAgo
+    );
+    const total = events.reduce((acc, day) => {
+      return acc + day.getResultByName("count");
+    }, 0);
+    this.cachedValue = total;
+    emitChange();
+  },
+  get() {
+    return this.cachedValue;
+  },
+});
+
+Preferences.addSetting({
+  id: "appUpdateStatus",
+  cachedValue: AppUpdater.STATUS.NO_UPDATER,
+  async setup(emitChange) {
+    if (AppConstants.MOZ_UPDATER && !gIsPackagedApp) {
+      let appUpdater = new AppUpdater();
+      let listener = (status, ..._args) => {
+        this.cachedValue = status;
+        emitChange();
+      };
+      appUpdater.addListener(listener);
+      await appUpdater.check();
+      return () => {
+        appUpdater.removeListener(listener);
+        appUpdater.stop();
+      };
+    }
+    return () => {};
+  },
+  get() {
+    return this.cachedValue;
+  },
+  set(value) {
+    this.cachedValue = value;
+  },
+});
+
+/**
+ * This class is used to create Settings that are used to warn the user about
+ * potential misconfigurations. It should be passed into Preferences.addSetting
+ * to create the Preference for a <moz-box-item> because it creates
+ * separate members on pref.config
+ */
+class WarningSettingConfig {
+  /**
+   * This callback type specifies the most important part of a WarningSettingConfig: how to know
+   * when to warn.
+   *
+   * @callback problematicCallback
+   * @param {WarningSettingConfig} self - this is a Setting config created by the constructor below,
+   * that has been `setup` and not yet cleaned up. Its prefMapping is setup into its properties.
+   * @returns {boolean} Should this Setting show a warning to the user if not yet dismissed?
+   */
+
+  /**
+   *
+   * @param {string} id - The unique setting ID for the setting created by this config
+   * @param {Object.<string,string>} prefMapping - A map from member name (to be used in the
+   * `problematic` arg's arg) to pref string, containing all of the preferences this Setting
+   * relies upon. On setup, this object will create properties for each entry here, where the
+   * value is the result of Preferences.get(key).
+   * @param {problematicCallback} problematic - How we determine whether or not to show this
+   * setting initially
+   * @param {boolean} isDismissable - A boolean indicating whether or not we should support dismissing
+   * this setting
+   */
+  constructor(id, prefMapping, problematic, isDismissable) {
+    this.id = id;
+    this.prefMapping = prefMapping;
+    if (isDismissable) {
+      this.dismissedPrefId = `browser.preferences.config_warning.${this.id}.dismissed`;
+      this.prefMapping.dismissed = this.dismissedPrefId;
+    }
+    this.problematic = problematic;
+  }
+
+  /**
+   * This item in a warning moz-box-group should be visible if the `problematic` argument
+   * from the constructor says we should, and it isn't hidden.
+   *
+   * @returns {boolean} Whether or not to show this configuration as a warning to the user
+   */
+  visible() {
+    return !this.dismissed?.value && this.problematic(this);
+  }
+
+  /**
+   * This resets all of the preferernces in the `prefMapping` from the constructor that have
+   * user-specified values. This includes the dismiss pref as well.
+   */
+  reset() {
+    for (let getter of Object.keys(this.prefMapping)) {
+      if (this[getter].hasUserValue) {
+        this[getter].reset();
+      }
+    }
+  }
+
+  /**
+   * When invoked, this sets a pref that persistently hides this setting. See visible().
+   */
+  dismiss() {
+    if (this.dismissed) {
+      this.dismissed.value = true;
+    }
+  }
+
+  /**
+   * This initializes the Setting created with this config, starting listeners for all dependent
+   * Preferences and providing a cleanup callback to remove them
+   *
+   * @param {Function} emitChange - a callback to be invoked any time that the Setting created
+   * with this config is changed
+   * @returns {Function} a function that cleans up the state from this Setting, namely pref change listeners.
+   */
+  setup(emitChange) {
+    for (let [getter, prefId] of Object.entries(this.prefMapping)) {
+      this[getter] = Preferences.get(prefId);
+      this[getter].on("change", emitChange);
+    }
+    return () => {
+      for (let getter of Object.keys(this.prefMapping)) {
+        this[getter].off(emitChange);
+      }
+    };
+  }
+
+  /**
+   * Setting helper to handle clicks of our warning. They may be a "reset" or
+   * "dismiss" action depending on the target, and those callbacks are defined
+   * in this class.
+   *
+   * @param {Event} event - The event for the user click
+   */
+  onUserClick(event) {
+    switch (event.target.id) {
+      case "reset": {
+        this.reset();
+        break;
+      }
+      case "dismiss": {
+        this.dismiss();
+        break;
+      }
+    }
+  }
+}
+
+Preferences.addSetting(
+  new WarningSettingConfig(
+    "warningTest",
+    {
+      showIssue: "privacy.ui.status_card.testing.show_issue",
+    },
+    ({ showIssue }) => showIssue.hasUserValue && !showIssue.locked,
+    true
+  )
+);
+
+const SECURITY_WARNINGS = [
+  {
+    l10nId: "security-privacy-issue-warning-test",
+    id: "warningTest",
+  },
+];
+
+Preferences.addSetting({
+  id: "securityWarningsGroup",
+  makeSecurityWarningItems() {
+    return SECURITY_WARNINGS.map(({ id, l10nId }) => ({
+      id,
+      l10nId,
+      control: "moz-box-item",
+      options: [
+        {
+          control: "moz-button",
+          l10nId: "issue-card-reset-button",
+          controlAttrs: { slot: "actions", size: "small", id: "reset" },
+        },
+        {
+          control: "moz-button",
+          l10nId: "issue-card-dismiss-button",
+          controlAttrs: {
+            slot: "actions",
+            size: "small",
+            iconsrc: "chrome://global/skin/icons/close.svg",
+            id: "dismiss",
+          },
+        },
+      ],
+    }));
+  },
+  getControlConfig(config) {
+    if (!config.items) {
+      return { ...config, items: this.makeSecurityWarningItems() };
+    }
+    return config;
+  },
+});
+
+Preferences.addSetting({
+  id: "privacyCard",
+  deps: [
+    "appUpdateStatus",
+    "trackerCount",
+    "etpStrictEnabled",
+    ...SECURITY_WARNINGS.map(warning => warning.id),
+  ],
+});
 
 // Study opt out
 if (AppConstants.MOZ_DATA_REPORTING) {
@@ -1007,6 +1249,9 @@ var gPrivacyPane = {
    */
   init() {
     initSettingGroup("nonTechnicalPrivacy");
+    if (Services.prefs.getBoolPref("privacy.ui.status_card", false)) {
+      initSettingGroup("securityPrivacyStatus");
+    }
 
     this.initNonTechnicalPrivacySection();
 
