@@ -7,6 +7,7 @@ package org.mozilla.fenix.snackbar
 import android.content.Context
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavController
+import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_INDEFINITE
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -279,8 +280,9 @@ class SnackbarBinding(
                             text = context.getString(R.string.download_item_status_failed),
                             subText = state.fileName,
                             subTextOverflow = TextOverflow.MiddleEllipsis,
-                            duration = context.getSnackbarTimeout(hasAction = true).value.toInt(),
+                            duration = LENGTH_INDEFINITE,
                             action = context.getString(R.string.download_failed_snackbar_action_details),
+                            withDismissAction = true,
                         ) {
                             navController.navigate(
                                 BrowserFragmentDirections.actionGlobalDownloadsFragment(),

@@ -55,6 +55,7 @@ class FenixSnackbarDelegateTest {
             duration = LENGTH_LONG,
             isError = false,
             actionText = EDIT_PASSWORD,
+            withDismissAction = false,
             listener = null,
         )
 
@@ -69,6 +70,7 @@ class FenixSnackbarDelegateTest {
             duration = LENGTH_LONG,
             isError = false,
             actionText = null,
+            withDismissAction = false,
             listener = {},
         )
 
@@ -83,6 +85,7 @@ class FenixSnackbarDelegateTest {
             duration = LENGTH_LONG,
             isError = false,
             actionText = null,
+            withDismissAction = false,
             listener = null,
         )
 
@@ -97,6 +100,7 @@ class FenixSnackbarDelegateTest {
             duration = LENGTH_LONG,
             isError = true,
             actionText = null,
+            withDismissAction = false,
             listener = null,
         )
 
@@ -113,6 +117,7 @@ class FenixSnackbarDelegateTest {
             duration = LENGTH_LONG,
             isError = true,
             actionText = null,
+            withDismissAction = false,
             listener = null,
         )
 
@@ -127,6 +132,7 @@ class FenixSnackbarDelegateTest {
             duration = LENGTH_LONG,
             isError = false,
             actionText = null,
+            withDismissAction = false,
             listener = null,
         )
 

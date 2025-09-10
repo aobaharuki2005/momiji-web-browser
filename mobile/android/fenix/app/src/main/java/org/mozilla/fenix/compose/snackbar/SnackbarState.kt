@@ -27,6 +27,7 @@ private val defaultOnDismiss: () -> Unit = {}
  * @property duration The duration of the Snackbar.
  * @property type The [Type] used to apply styling.
  * @property action Optional action within the Snackbar.
+ * @property withDismissAction Whether to display a dismiss button.
  * @property onDismiss Invoked when the Snackbar is dismissed.
  */
 data class SnackbarState(
@@ -35,6 +36,7 @@ data class SnackbarState(
     val duration: Duration = defaultDuration,
     val type: Type = defaultType,
     val action: Action? = defaultAction,
+    val withDismissAction: Boolean = false,
     val onDismiss: () -> Unit = defaultOnDismiss,
 ) {
 
@@ -109,6 +111,7 @@ data class SnackbarState(
                 message = message,
                 subMessage = subMessage?.text,
                 actionLabel = action?.label,
+                withDismissAction = withDismissAction,
                 duration = toSnackbarDuration(),
             ),
             dismiss = onDismiss,

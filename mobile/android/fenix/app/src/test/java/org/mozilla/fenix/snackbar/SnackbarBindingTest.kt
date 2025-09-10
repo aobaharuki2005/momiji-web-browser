@@ -189,6 +189,7 @@ class SnackbarBindingTest {
             duration = eq(LENGTH_LONG),
             isError = eq(false),
             action = eq("EDIT"),
+            withDismissAction = eq(false),
             listener = any(),
         )
     }
@@ -222,6 +223,7 @@ class SnackbarBindingTest {
             duration = eq(LENGTH_LONG),
             isError = eq(false),
             action = eq(testContext.getString(R.string.edit_bookmark_snackbar_action)),
+            withDismissAction = eq(false),
             listener = any(),
         )
     }
@@ -391,6 +393,7 @@ class SnackbarBindingTest {
             duration = eq(LENGTH_LONG),
             isError = eq(true),
             action = eq(R.string.sync_sent_tab_error_snackbar_action),
+            withDismissAction = eq(false),
             listener = any(),
         )
 
@@ -421,6 +424,7 @@ class SnackbarBindingTest {
             duration = eq(LENGTH_LONG),
             isError = eq(true),
             action = eq(R.string.sync_sent_tab_error_snackbar_action),
+            withDismissAction = eq(false),
             listener = retryActionCaptor.capture(),
         )
 
@@ -460,6 +464,7 @@ class SnackbarBindingTest {
             duration = eq(LENGTH_LONG),
             isError = eq(true),
             action = eq(R.string.sync_sent_tab_error_snackbar_action),
+            withDismissAction = eq(false),
             listener = retryActionCaptor.capture(),
         )
 
@@ -471,6 +476,7 @@ class SnackbarBindingTest {
             duration = eq(LENGTH_LONG),
             isError = eq(true),
             action = eq(R.string.sync_sent_tab_error_snackbar_action),
+            withDismissAction = eq(false),
             listener = any(),
         )
 
@@ -511,6 +517,7 @@ class SnackbarBindingTest {
             duration = eq(LENGTH_LONG),
             isError = eq(false),
             action = eq(testContext.getString(R.string.snackbar_deleted_undo)),
+            withDismissAction = eq(false),
             listener = snackbarAction.capture(),
         )
         snackbarAction.value.invoke(mock())
@@ -532,9 +539,10 @@ class SnackbarBindingTest {
             text = eq(testContext.getString(R.string.download_item_status_failed)),
             subText = eq("fileName"),
             subTextOverflow = eq(TextOverflow.MiddleEllipsis),
-            duration = eq(testContext.getSnackbarTimeout(hasAction = true).value.toInt()),
+            duration = eq(LENGTH_INDEFINITE),
             isError = eq(false),
             action = eq(testContext.getString(R.string.download_failed_snackbar_action_details)),
+            withDismissAction = eq(true),
             listener = snackbarAction.capture(),
         )
         snackbarAction.value.invoke(mock())
@@ -576,6 +584,7 @@ class SnackbarBindingTest {
             duration = eq(testContext.getSnackbarTimeout(hasAction = true).value.toInt()),
             isError = eq(false),
             action = eq(testContext.getString(R.string.download_completed_snackbar_action_open)),
+            withDismissAction = eq(false),
             listener = snackbarAction.capture(),
         )
     }
@@ -634,6 +643,7 @@ class SnackbarBindingTest {
             duration = eq(testContext.getSnackbarTimeout(hasAction = true).value.toInt()),
             isError = eq(false),
             action = eq(testContext.getString(R.string.download_in_progress_snackbar_action_details)),
+            withDismissAction = eq(false),
             listener = snackbarAction.capture(),
         )
         snackbarAction.value.invoke(mock())
@@ -661,6 +671,7 @@ class SnackbarBindingTest {
             duration = eq(testContext.getSnackbarTimeout().value.toInt()),
             isError = eq(false),
             action = eq(null),
+            withDismissAction = eq(false),
             listener = snackbarAction.capture(),
         )
 

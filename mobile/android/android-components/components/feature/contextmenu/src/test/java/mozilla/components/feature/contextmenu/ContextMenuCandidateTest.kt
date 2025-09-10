@@ -2178,6 +2178,7 @@ private class TestSnackbarDelegate : SnackbarDelegate {
         duration: Int,
         isError: Boolean,
         action: Int,
+        withDismissAction: Boolean,
         listener: ((v: View) -> Unit)?,
     ) {
         hasShownSnackbar = true
@@ -2192,6 +2193,7 @@ private class TestSnackbarDelegate : SnackbarDelegate {
         duration: Int,
         isError: Boolean,
         action: String?,
+        withDismissAction: Boolean,
         listener: ((v: View) -> Unit)?,
-    ) = show(snackBarParentView, 0, "", null, duration, isError, 0, listener)
+    ) = show(snackBarParentView, 0, "", null, duration, isError, 0, false, listener)
 }
