@@ -1112,10 +1112,15 @@ class XPCShellTests:
     def normalizeTest(self, root, test_object):
         path = test_object.get("file_relpath", test_object["relpath"])
         if "dupe-manifest" in test_object and "ancestor_manifest" in test_object:
-            test_object["id"] = "%s:%s" % (
-                os.path.basename(test_object["ancestor_manifest"]),
-                path,
+            # Use same logic as get_full_group_name() to determine which manifest to use
+            ancestor_manifest = normsep(test_object["ancestor_manifest"])
+            # If ancestor is not the generated root (has path separator), use it
+            manifest_for_id = (
+                test_object["ancestor_manifest"]
+                if "/" in ancestor_manifest
+                else test_object["manifest"]
             )
+            test_object["id"] = "%s:%s" % (os.path.basename(manifest_for_id), path)
         else:
             test_object["id"] = path
 
