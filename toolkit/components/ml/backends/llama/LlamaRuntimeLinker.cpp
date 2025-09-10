@@ -65,11 +65,11 @@ LlamaLibWrapper::LinkResult LlamaLibWrapper::Link() {
   LOG(LogLevel::Debug, "Linking llama library symbols");
 
   // Use X-macros to bind all functions
-#define BIND_FUNCTION(ret, name, params)                                    \
-  if (!((name) = (decltype(name))PR_FindSymbol(mLlamaLib, #name))) {        \
-    LOG(LogLevel::Error, "Couldn't load function " #name);                  \
-    Unlink();                                                                \
-    return LinkResult::MissingFunction;                                      \
+#define BIND_FUNCTION(ret, name, params)                             \
+  if (!((name) = (decltype(name))PR_FindSymbol(mLlamaLib, #name))) { \
+    LOG(LogLevel::Error, "Couldn't load function " #name);           \
+    Unlink();                                                        \
+    return LinkResult::MissingFunction;                              \
   }
 
   MOZINFERENCE_FUNCTION_LIST(BIND_FUNCTION)
