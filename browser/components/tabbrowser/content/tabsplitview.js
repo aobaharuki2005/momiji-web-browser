@@ -100,7 +100,7 @@
      * @param {MozTabbrowserTab[]} tabs
      */
     addTabs(tabs) {
-      for (let tab of tabs) {
+      for (let [tab] of tabs.entries()) {
         if (tab.pinned) {
           return;
         }
