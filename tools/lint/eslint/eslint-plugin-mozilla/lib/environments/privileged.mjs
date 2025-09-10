@@ -504,6 +504,7 @@ export default {
     ReadableStream: "readonly",
     ReadableStreamDefaultController: "readonly",
     ReadableStreamDefaultReader: "readonly",
+    RedirectBlockedEvent: "readonly",
     Report: "readonly",
     ReportBody: "readonly",
     ReportingObserver: "readonly",
