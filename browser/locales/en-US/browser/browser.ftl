@@ -1052,10 +1052,6 @@ popups-infobar-allow2 =
     .label = Allow pop-ups and third-party redirects for { $uriHost }
     .accesskey = p
 
-popups-infobar-block2 =
-    .label = Block pop-ups and third-party redirects for { $uriHost }
-    .accesskey = p
-
 ##
 
 popups-infobar-dont-show-message2 =
@@ -1264,6 +1260,16 @@ popup-warning-message =
         [1] { -brand-short-name } prevented this site from opening a pop-up window.
        *[other] { -brand-short-name } prevented this site from opening { $popupCount } pop-up windows.
     }
+
+# Variables:
+#   $popupCount (Number): the number of pop-ups blocked.
+redirect-warning-with-popup-message =
+    { $popupCount ->
+        [0] { -brand-short-name } prevented this site from redirecting.
+        [1] { -brand-short-name } prevented this site from opening a pop-up window and redirecting.
+       *[other] { -brand-short-name } prevented this site from opening { $popupCount } pop-up windows and redirecting.
+    }
+
 # The singular form is left out for English, since the number of blocked pop-ups is always greater than 1.
 # Variables:
 #   $popupCount (Number): the number of pop-ups blocked.
@@ -1271,6 +1277,14 @@ popup-warning-exceeded-message =
     { $popupCount ->
        *[other] { -brand-short-name } prevented this site from opening more than { $popupCount } pop-up windows.
     }
+
+# Variables:
+#   $popupCount (Number): the number of pop-ups blocked.
+popup-warning-exceeded-with-redirect-message =
+    { $popupCount ->
+       *[other] { -brand-short-name } prevented this site from opening more than { $popupCount } pop-up windows and redirecting.
+    }
+
 popup-warning-button =
     .label =
         { PLATFORM() ->
@@ -1287,6 +1301,11 @@ popup-warning-button =
 #   $popupURI (String): the URI for the pop-up window
 popup-show-popup-menuitem =
     .label = Show “{ $popupURI }”
+
+# Variables:
+#   $redirectURI (String): the URI for the redirect
+popup-trigger-redirect-menuitem =
+    .label = Show “{ $redirectURI }”
 
 ## File-picker crash notification ("FilePickerCrashed.sys.mjs")
 

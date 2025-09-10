@@ -3758,7 +3758,7 @@ class Document : public nsINode,
   // (https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation)
   // more and also support fission nicer.
   void SetUserHasInteracted();
-  bool UserHasInteracted() { return mUserHasInteracted; }
+  bool UserHasInteracted() const { return mUserHasInteracted; }
   void ResetUserInteractionTimer();
 
   // Whether we're cloning the contents of an SVG use element.

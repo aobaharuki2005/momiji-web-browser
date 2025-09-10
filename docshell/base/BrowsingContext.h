@@ -468,6 +468,23 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // sandbox.
   nsresult CheckSandboxFlags(nsDocShellLoadState* aLoadState);
 
+  // If the current BrowsingContext is top-level, we run checks to see if
+  // the source BrowsingContext is allowed to perform the navigation.
+  nsresult CheckFramebusting(nsDocShellLoadState* aLoadState);
+
+  // Determines if the current BrowsingContext is allowed to navigate the
+  // target BrowsingContext (which should be top-level).
+  bool IsFramebustingAllowed(BrowsingContext* aTarget);
+
+  // A BrowsingContext is allowed to perform a top-level navigation if one
+  // of the following conditions is met:
+  // 1. It is top-level (implied by same-origin).
+  // 2. It is same-origin with the top-level.
+  // 3. Its associated document has been interacted with by the user.
+  // 4. Its associated document has explicit `allow-top-navigation`
+  //    sandbox flags.
+  bool IsFramebustingAllowedInner();
+
   void DisplayLoadError(const nsAString& aURI);
 
   // Check that this browsing context is targetable for navigations (i.e. that

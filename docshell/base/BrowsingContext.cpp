@@ -2015,6 +2015,87 @@ nsresult BrowsingContext::CheckSandboxFlags(nsDocShellLoadState* aLoadState) {
   return NS_OK;
 }
 
+nsresult BrowsingContext::CheckFramebusting(nsDocShellLoadState* aLoadState) {
+  if (!StaticPrefs::dom_security_framebusting_intervention_enabled()) {
+    return NS_OK;
+  }
+
+  // Only applies to top-level navigations.
+  if (!IsTop()) {
+    return NS_OK;
+  }
+
+  if (aLoadState->HasValidUserGestureActivation()) {
+    return NS_OK;
+  }
+
+  const auto& sourceBC = aLoadState->SourceBrowsingContext();
+  if (sourceBC.IsNull()) {
+    return NS_OK;
+  }
+
+  if (BrowsingContext* bc = sourceBC.GetMaybeDiscarded()) {
+    if (bc->IsFramebustingAllowed(this)) {
+      return NS_OK;
+    }
+
+    if (bc->GetDOMWindow()) {
+      nsGlobalWindowOuter::Cast(bc->GetDOMWindow())
+          ->FireRedirectBlockedEvent(aLoadState->URI());
+    }
+
+    nsAutoCString frameURL;
+    if (bc->GetDocument() &&
+        NS_SUCCEEDED(
+            bc->GetDocument()->GetPrincipal()->GetAsciiSpec(frameURL))) {
+      nsContentUtils::ReportToConsoleNonLocalized(
+          NS_ConvertUTF8toUTF16(nsPrintfCString(
+              R"(Attempting to navigate the top-level browsing context from )"
+              R"(frame with url "%s" which is neither same-origin nor has )"
+              R"(the required user interaction.)",
+              frameURL.get())),
+          nsIScriptError::errorFlag, "DOM"_ns, bc->GetDocument());
+    }
+  }
+
+  return NS_ERROR_DOM_SECURITY_ERR;
+}
+
+bool BrowsingContext::IsFramebustingAllowed(BrowsingContext* aTarget) {
+  MOZ_ASSERT(aTarget->IsTop());
+
+  if (aTarget->BrowserId() == BrowserId()) {
+    return IsFramebustingAllowedInner() || IsPopupAllowed();
+  }
+
+  // We should be able to safely assume that the SOP has our back here
+  // already. How else would this BrowsingContext have a reference?
+  return true;
+}
+
+bool BrowsingContext::IsFramebustingAllowedInner() {
+  if (IsInProcess() && SameOriginWithTop()) {
+    return true;
+  }
+
+  // We get the sandbox flags from the load info since the CSP header
+  // hasn't yet been processed at that time. The CSP sandbox directive makes
+  // it possible for a document to grant itself "allow-top-navigation"
+  // permissions by sending the appropiate header and we don't like that.
+  Document* doc;
+  nsIChannel* channel;
+  if ((doc = GetExtantDocument()) && (channel = doc->GetChannel())) {
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+    uint32_t sandboxFlags = loadInfo->GetSandboxFlags();
+    if (sandboxFlags && !(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION)) {
+      BrowsingContext* parent = GetParent();
+      return !parent || parent->IsFramebustingAllowedInner();
+    }
+  }
+
+  return false;
+}
+
 nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
                                   bool aSetNavigating) {
   // Per spec, most load attempts are silently ignored when a BrowsingContext is
@@ -2068,6 +2149,10 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
                           "Should never see a cross-process javascript: load "
                           "triggered from content");
   }
+
+  // Note: We do this check both here and in `nsDocShell::InternalLoad`.
+  // Same reason as for the sandbox flags.
+  MOZ_TRY(CheckFramebusting(aLoadState));
 
   MOZ_DIAGNOSTIC_ASSERT(!sourceBC || sourceBC->Group() == Group());
   if (sourceBC && sourceBC->IsInProcess()) {
@@ -2163,6 +2248,10 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
                           "Should never see a cross-process javascript: load "
                           "triggered from content");
   }
+
+  // Note: We do this check both here and in `nsDocShell::InternalLoad`.
+  // Same reason as for the sandbox flags.
+  MOZ_TRY(CheckFramebusting(aLoadState));
 
   if (XRE_IsParentProcess()) {
     ContentParent* cp = Canonical()->GetContentParent();

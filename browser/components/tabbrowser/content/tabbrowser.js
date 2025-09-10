@@ -1279,11 +1279,19 @@
       this._updateVisibleNotificationBox(newBrowser);
 
       let oldBrowserPopupsBlocked =
-        oldBrowser.popupBlocker.getBlockedPopupCount();
+        oldBrowser.popupAndRedirectBlocker.getBlockedPopupCount();
       let newBrowserPopupsBlocked =
-        newBrowser.popupBlocker.getBlockedPopupCount();
+        newBrowser.popupAndRedirectBlocker.getBlockedPopupCount();
       if (oldBrowserPopupsBlocked != newBrowserPopupsBlocked) {
-        newBrowser.popupBlocker.updateBlockedPopupsUI();
+        newBrowser.popupAndRedirectBlocker.sendObserverUpdateBlockedPopupsEvent();
+      }
+
+      let oldBrowserRedirectBlocked =
+        oldBrowser.popupAndRedirectBlocker.isRedirectBlocked();
+      let newBrowserRedirectBlocked =
+        newBrowser.popupAndRedirectBlocker.isRedirectBlocked();
+      if (oldBrowserRedirectBlocked != newBrowserRedirectBlocked) {
+        newBrowser.popupAndRedirectBlocker.sendObserverUpdateBlockedRedirectEvent();
       }
 
       // Update the URL bar.

@@ -24,7 +24,7 @@
   "gClickAndHoldListenersOnElement",
   "gSessionHistoryObserver",
   "gStoragePressureObserver",
-  "PopupBlockerObserver",
+  "PopupAndRedirectBlockerObserver",
   "gKeywordURIFixup",
   "HandleAppCommandEvent",
   "BrowserCommands",

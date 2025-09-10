@@ -1052,11 +1052,16 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
                                   mozilla::dom::BrowsingContext** _retval) = 0;
 
   /**
-   * Fire a popup blocked event on the document.
+   * Fire a popup blocked event.
    */
-  virtual void FirePopupBlockedEvent(Document* aDoc, nsIURI* aPopupURI,
+  virtual void FirePopupBlockedEvent(nsIURI* aPopupURI,
                                      const nsAString& aPopupWindowName,
                                      const nsAString& aPopupWindowFeatures) = 0;
+
+  /**
+   * Fire a redirect blocked event.
+   */
+  virtual void FireRedirectBlockedEvent(nsIURI* aRedirectURI) = 0;
 
   // WebIDL-ish APIs
   void MarkUncollectableForCCGeneration(uint32_t aGeneration) {

@@ -199,7 +199,10 @@ var gBrowserInit = {
 
   onLoad() {
     gBrowser.addEventListener("DOMUpdateBlockedPopups", e =>
-      PopupBlockerObserver.handleEvent(e)
+      PopupAndRedirectBlockerObserver.handleEvent(e)
+    );
+    gBrowser.addEventListener("DOMUpdateBlockedRedirect", e =>
+      PopupAndRedirectBlockerObserver.handleEvent(e)
     );
     gBrowser.addEventListener(
       "TranslationsParent:LanguageState",

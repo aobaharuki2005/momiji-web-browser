@@ -64,7 +64,8 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  PopupBlockerObserver: "resource:///modules/PopupBlockerObserver.sys.mjs",
+  PopupAndRedirectBlockerObserver:
+    "resource:///modules/PopupAndRedirectBlockerObserver.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   PrivateBrowsingUI: "moz-src:///browser/modules/PrivateBrowsingUI.sys.mjs",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.sys.mjs",

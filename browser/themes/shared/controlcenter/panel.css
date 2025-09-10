@@ -695,6 +695,11 @@
   margin-inline-start: 16px;
 }
 
+#blocked-popup-indicator-item,
+#blocked-popup-indicator-item > label {
+  display: block;
+}
+
 #geo-access-indicator-item {
   font-size: 0.8em;
   color: var(--text-color-deemphasized);
