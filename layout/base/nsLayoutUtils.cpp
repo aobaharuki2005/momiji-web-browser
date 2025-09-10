@@ -679,11 +679,11 @@ ViewID nsLayoutUtils::FindIDForScrollContainerFrame(
 
 bool nsLayoutUtils::UsesAsyncScrolling(nsIFrame* aFrame) {
 #ifdef MOZ_WIDGET_ANDROID
-  // We always have async scrolling for android
+  // We always have async scrolling for Android.
   return true;
-#endif
-
+#else
   return AsyncPanZoomEnabled(aFrame);
+#endif
 }
 
 bool nsLayoutUtils::AsyncPanZoomEnabled(const nsIFrame* aFrame) {
