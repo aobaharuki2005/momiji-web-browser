@@ -479,7 +479,7 @@
   folds_to: custom
   result_type: Boolean
   generate_lir: true
-  lir_temps: 2
+  lir_temps: 1
 
 - name: StrictConstantCompareBoolean
   operands:

@@ -1608,37 +1608,30 @@ void CodeGenerator::visitStrictConstantCompareInt32(
   ValueOperand value = ToValue(comp->value());
   int32_t constantVal = comp->mir()->constant();
   JSOp op = comp->mir()->jsop();
+  Register temp = ToRegister(comp->temp0());
   Register output = ToRegister(comp->output());
 
-  Label fail, pass, done, maybeDouble;
-  masm.branchTestInt32(Assembler::NotEqual, value, &maybeDouble);
-  masm.branch32(JSOpToCondition(op, true), value.payloadOrValueReg(),
-                Imm32(constantVal), &pass,
-                MacroAssembler::LhsHighBitsAreClean::No);
-  masm.jump(&fail);
+  masm.cmp64Set(JSOpToCondition(op, false), value.toRegister64(),
+                Imm64(Int32Value(constantVal).asRawBits()), output);
+  masm.cmp64Set(JSOpToCondition(op, false), value.toRegister64(),
+                Imm64(DoubleValue(constantVal).asRawBits()), temp);
 
-  masm.bind(&maybeDouble);
-  {
-    FloatRegister unboxedValue = ToFloatRegister(comp->temp0());
-    FloatRegister floatPayload = ToFloatRegister(comp->temp1());
-
-    masm.branchTestDouble(Assembler::NotEqual, value,
-                          op == JSOp::StrictEq ? &fail : &pass);
-
-    masm.unboxDouble(value, unboxedValue);
-    masm.loadConstantDouble(double(constantVal), floatPayload);
-    masm.branchDouble(JSOpToDoubleCondition(op), unboxedValue, floatPayload,
-                      &pass);
+  if (op == JSOp::StrictEq) {
+    masm.or32(temp, output);
+  } else {
+    masm.and32(temp, output);
   }
 
-  masm.bind(&fail);
-  masm.move32(Imm32(0), output);
-  masm.jump(&done);
+  if (constantVal == 0) {
+    masm.cmp64Set(JSOpToCondition(op, false), value.toRegister64(),
+                  Imm64(DoubleValue(-0.0).asRawBits()), temp);
 
-  masm.bind(&pass);
-  masm.move32(Imm32(1), output);
-
-  masm.bind(&done);
+    if (op == JSOp::StrictEq) {
+      masm.or32(temp, output);
+    } else {
+      masm.and32(temp, output);
+    }
+  }
 }
 
 void CodeGenerator::visitStrictConstantCompareBoolean(
@@ -1648,19 +1641,8 @@ void CodeGenerator::visitStrictConstantCompareBoolean(
   JSOp op = comp->mir()->jsop();
   Register output = ToRegister(comp->output());
 
-  masm.move32(Imm32(op == JSOp::StrictNe), output);
-
-  Label done;
-  masm.fallibleUnboxBoolean(value, output, &done);
-  {
-    // Prefer comparison against zero because most architectures can optimize
-    // this case more efficiently.
-    if (constantVal) {
-      op = NegateCompareOp(op);
-    }
-    masm.cmp32Set(JSOpToCondition(op, true), output, Imm32(0), output);
-  }
-  masm.bind(&done);
+  masm.cmp64Set(JSOpToCondition(op, false), value.toRegister64(),
+                Imm64(BooleanValue(constantVal).asRawBits()), output);
 }
 
 void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
