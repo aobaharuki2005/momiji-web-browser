@@ -793,7 +793,6 @@ void MacroAssembler::preserveWrapper(Register wrapper, Register scratchSuccess,
   addPtr(Imm32(1), scratchSuccess);
   storePtr(scratchSuccess,
            AbsoluteAddress(zone->zone()->addressOfPreservedWrappersCount()));
-  move32(Imm32(1), scratchSuccess);
 
   jump(&done);
   bind(&abiCall);
