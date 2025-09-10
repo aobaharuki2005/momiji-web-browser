@@ -1230,11 +1230,11 @@
   -->
   <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">mi weka e kulupu poki ni</string>
   <!-- Text shown in snackbar when user closes a tab -->
-  <string name="snackbar_tab_closed">poki li pini</string>
+  <string name="snackbar_tab_closed">mi pini e poki</string>
   <!-- Text shown in snackbar when user closes all tabs -->
-  <string name="snackbar_tabs_closed">poki li pini</string>
+  <string name="snackbar_tabs_closed">mi pini e poki</string>
   <!-- Text shown in snackbar when user closes multiple inactive tabs. %1$s will be replaced with the number of tabs closed. -->
-  <string name="snackbar_num_tabs_closed">poki %1$s li pini</string>
+  <string name="snackbar_num_tabs_closed">mi pini e poki %1$s</string>
   <!-- Text shown in snackbar when user bookmarks a list of tabs. %s is the name of the folder the bookmark was saved into. -->
   <string name="snackbar_message_bookmarks_saved_in">mi pana e lipu tawa kulupu “%s”!</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
