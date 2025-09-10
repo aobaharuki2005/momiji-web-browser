@@ -32,7 +32,9 @@
 #include "gfxUserFontSet.h"
 #include "gfxFontUtils.h"
 #include "SharedFontList-impl.h"
+#define StandardFonts
 #include "StandardFonts-android.inc"
+#undef StandardFonts
 #include "harfbuzz/hb-ot.h"  // for name ID constants
 
 #include "nsServiceManagerUtils.h"
