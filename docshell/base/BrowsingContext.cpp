@@ -3236,27 +3236,29 @@ void BrowsingContext::DidSet(FieldIndex<IDX_LanguageOverride>,
   const nsCString& languageOverride = GetLanguageOverride();
 
   PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
-    RefPtr<WindowContext> windowContext =
-        aBrowsingContext->GetCurrentWindowContext();
+    if (RefPtr<WindowContext> windowContext =
+            aBrowsingContext->GetCurrentWindowContext()) {
+      if (nsCOMPtr<nsPIDOMWindowInner> window =
+              windowContext->GetInnerWindow()) {
+        JSObject* global =
+            nsGlobalWindowInner::Cast(window)->GetGlobalJSObject();
+        JS::Realm* realm = JS::GetObjectRealmOrNull(global);
 
-    if (nsCOMPtr<nsPIDOMWindowInner> window = windowContext->GetInnerWindow()) {
-      JSObject* global = nsGlobalWindowInner::Cast(window)->GetGlobalJSObject();
-      JS::Realm* realm = JS::GetObjectRealmOrNull(global);
-
-      if (mDefaultLocale == nullptr) {
-        AutoJSAPI jsapi;
-        if (jsapi.Init(window)) {
-          JSContext* context = jsapi.cx();
-          mDefaultLocale = JS_GetDefaultLocale(context);
+        if (mDefaultLocale == nullptr) {
+          AutoJSAPI jsapi;
+          if (jsapi.Init(window)) {
+            JSContext* context = jsapi.cx();
+            mDefaultLocale = JS_GetDefaultLocale(context);
+          }
         }
-      }
 
-      if (languageOverride.IsEmpty()) {
-        JS::SetRealmLocaleOverride(realm, mDefaultLocale.get());
-        mDefaultLocale = nullptr;
-      } else {
-        JS::SetRealmLocaleOverride(realm,
-                                   PromiseFlatCString(languageOverride).get());
+        if (languageOverride.IsEmpty()) {
+          JS::SetRealmLocaleOverride(realm, mDefaultLocale.get());
+          mDefaultLocale = nullptr;
+        } else {
+          JS::SetRealmLocaleOverride(
+              realm, PromiseFlatCString(languageOverride).get());
+        }
       }
     }
   });
@@ -3619,18 +3621,20 @@ void BrowsingContext::DidSet(FieldIndex<IDX_TimezoneOverride>,
   MOZ_ASSERT(IsTop());
 
   PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
-    RefPtr<WindowContext> windowContext =
-        aBrowsingContext->GetCurrentWindowContext();
+    if (RefPtr<WindowContext> windowContext =
+            aBrowsingContext->GetCurrentWindowContext()) {
+      if (nsCOMPtr<nsPIDOMWindowInner> window =
+              windowContext->GetInnerWindow()) {
+        JSObject* global =
+            nsGlobalWindowInner::Cast(window)->GetGlobalJSObject();
+        JS::Realm* realm = JS::GetObjectRealmOrNull(global);
 
-    if (nsCOMPtr<nsPIDOMWindowInner> window = windowContext->GetInnerWindow()) {
-      JSObject* global = nsGlobalWindowInner::Cast(window)->GetGlobalJSObject();
-      JS::Realm* realm = JS::GetObjectRealmOrNull(global);
-
-      if (GetTimezoneOverride().IsEmpty()) {
-        JS::SetRealmTimezoneOverride(realm, nullptr);
-      } else {
-        JS::SetRealmTimezoneOverride(
-            realm, NS_ConvertUTF16toUTF8(GetTimezoneOverride()).get());
+        if (GetTimezoneOverride().IsEmpty()) {
+          JS::SetRealmTimezoneOverride(realm, nullptr);
+        } else {
+          JS::SetRealmTimezoneOverride(
+              realm, NS_ConvertUTF16toUTF8(GetTimezoneOverride()).get());
+        }
       }
     }
   });
