@@ -4130,9 +4130,7 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
     return FALSE;
   }
 
-  // FIXME(emilio): This sync bounds computation should ideally not be needed
-  // but it causes timeouts on automation. See bug 1946184 comment 14.
-  RecomputeBounds(MayChangeCsdMargin::No);
+  SchedulePendingBounds(MayChangeCsdMargin::No);
   return FALSE;
 }
 
