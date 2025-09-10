@@ -1781,6 +1781,55 @@ void MacroAssemblerRiscv64Compat::boxNonDouble(Register type, Register src,
   boxValue(type, src, dest.valueReg());
 }
 
+void MacroAssemblerRiscv64Compat::boxValue(JSValueType type, Register src,
+                                           Register dest) {
+  MOZ_ASSERT(src != dest);
+
+  switch (type) {
+    case JSVAL_TYPE_INT32:
+    case JSVAL_TYPE_BOOLEAN:
+    case JSVAL_TYPE_MAGIC: {
+      // Loading the shifted tag requires only two instructions.
+      ma_li(dest, ImmShiftedTag(type));
+
+      UseScratchRegisterScope temps(this);
+      Register scratch = temps.Acquire();
+
+      // Insert low 32 bits as payload, removing all high bits from |src|.
+      ZeroExtendWord(scratch, src);
+      or_(dest, dest, scratch);
+      return;
+    }
+    case JSVAL_TYPE_STRING:
+    case JSVAL_TYPE_SYMBOL:
+    case JSVAL_TYPE_PRIVATE_GCTHING:
+    case JSVAL_TYPE_BIGINT:
+    case JSVAL_TYPE_OBJECT: {
+#ifdef DEBUG
+      // High bits of pointer-valued types must be zero.
+      Label done;
+      srli(dest, src, JSVAL_TAG_SHIFT);
+      ma_b(dest, Imm32(0), &done, Assembler::Equal, ShortJump);
+      breakpoint();
+      bind(&done);
+#endif
+
+      // Loading the shifted tag requires only two instructions.
+      ma_li(dest, ImmShiftedTag(type));
+
+      // Insert 47-bit payload.
+      or_(dest, dest, src);
+      return;
+    }
+    case JSVAL_TYPE_DOUBLE:
+    case JSVAL_TYPE_UNDEFINED:
+    case JSVAL_TYPE_NULL:
+    case JSVAL_TYPE_UNKNOWN:
+      break;
+  }
+  MOZ_CRASH("bad value type");
+}
+
 void MacroAssemblerRiscv64Compat::boxValue(Register type, Register src,
                                            Register dest) {
   MOZ_ASSERT(src != dest);
@@ -1822,9 +1871,9 @@ void MacroAssemblerRiscv64Compat::boxValue(Register type, Register src,
   ori(dest, type, tag);
   slli(dest, dest, JSVAL_TAG_SHIFT);
 
+  // Insert low 32 bits as payload, removing all high bits from |src|.
   ScratchRegisterScope scratch(asMasm());
-  slli(scratch, src, 32);
-  srli(scratch, scratch, 32);
+  ZeroExtendWord(scratch, src);
 
   ma_or(dest, dest, scratch);
 }
@@ -1948,14 +1997,13 @@ void MacroAssemblerRiscv64Compat::storeValue(JSValueType type, Register reg,
   if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
     store32(reg, dest);
     JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
-    store32(((Imm64(tag)).hi()), Address(dest.base, dest.offset + 4));
+    store32(Imm64(tag).hi(), Address(dest.base, dest.offset + 4));
   } else {
-    ScratchRegisterScope SecondScratchReg(asMasm());
-    MOZ_ASSERT(dest.base != SecondScratchReg);
-    ma_li(SecondScratchReg, ImmTag(JSVAL_TYPE_TO_TAG(type)));
-    slli(SecondScratchReg, SecondScratchReg, JSVAL_TAG_SHIFT);
-    InsertBits(SecondScratchReg, reg, 0, JSVAL_TAG_SHIFT);
-    storePtr(SecondScratchReg, Address(dest.base, dest.offset));
+    UseScratchRegisterScope temps(this);
+    Register scratch = temps.Acquire();
+    MOZ_ASSERT(dest.base != scratch);
+    boxValue(type, reg, scratch);
+    storePtr(scratch, Address(dest.base, dest.offset));
   }
 }
 
@@ -2000,19 +2048,56 @@ void MacroAssemblerRiscv64Compat::loadValue(Address src, ValueOperand val) {
 
 void MacroAssemblerRiscv64Compat::tagValue(JSValueType type, Register payload,
                                            ValueOperand dest) {
-  UseScratchRegisterScope temps(this);
-  Register ScratchRegister = temps.Acquire();
-  MOZ_ASSERT(dest.valueReg() != ScratchRegister);
   JitSpew(JitSpew_Codegen, "[ tagValue");
-  if (payload != dest.valueReg()) {
-    mv(dest.valueReg(), payload);
+
+  if (payload == dest.valueReg()) {
+    UseScratchRegisterScope temps(this);
+    Register scratch = temps.Acquire();
+    MOZ_ASSERT(dest.valueReg() != scratch);
+
+    switch (type) {
+      case JSVAL_TYPE_INT32:
+      case JSVAL_TYPE_BOOLEAN:
+      case JSVAL_TYPE_MAGIC: {
+        // Loading the shifted tag requires only two instructions.
+        ma_li(scratch, ImmShiftedTag(type));
+
+        // Insert low 32 bits as payload, removing all high bits from |payload|.
+        ZeroExtendWord(payload, payload);
+        or_(dest.valueReg(), payload, scratch);
+        break;
+      }
+      case JSVAL_TYPE_STRING:
+      case JSVAL_TYPE_SYMBOL:
+      case JSVAL_TYPE_PRIVATE_GCTHING:
+      case JSVAL_TYPE_BIGINT:
+      case JSVAL_TYPE_OBJECT: {
+#ifdef DEBUG
+        // High bits of pointer-valued types must be zero.
+        Label done;
+        srli(scratch, payload, JSVAL_TAG_SHIFT);
+        ma_b(scratch, Imm32(0), &done, Assembler::Equal, ShortJump);
+        breakpoint();
+        bind(&done);
+#endif
+
+        // Loading the shifted tag requires only two instructions.
+        ma_li(scratch, ImmShiftedTag(type));
+
+        // Insert 47-bit payload.
+        or_(dest.valueReg(), payload, scratch);
+        break;
+      }
+      case JSVAL_TYPE_DOUBLE:
+      case JSVAL_TYPE_UNDEFINED:
+      case JSVAL_TYPE_NULL:
+      case JSVAL_TYPE_UNKNOWN:
+        MOZ_CRASH("bad value type");
+    }
+  } else {
+    boxNonDouble(type, payload, dest);
   }
-  ma_li(ScratchRegister, ImmTag(JSVAL_TYPE_TO_TAG(type)));
-  InsertBits(dest.valueReg(), ScratchRegister, JSVAL_TAG_SHIFT,
-             64 - JSVAL_TAG_SHIFT);
-  if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
-    InsertBits(dest.valueReg(), zero, 32, JSVAL_TAG_SHIFT - 32);
-  }
+
   JitSpew(JitSpew_Codegen, "]");
 }
 

@@ -990,18 +990,7 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
     }
   }
 
-  void boxValue(JSValueType type, Register src, Register dest) {
-    MOZ_ASSERT(src != dest);
-
-    JSValueTag tag = (JSValueTag)JSVAL_TYPE_TO_TAG(type);
-    ma_li(dest, Imm32(tag));
-    slli(dest, dest, JSVAL_TAG_SHIFT);
-    if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
-      InsertBits(dest, src, 0, 32);
-    } else {
-      InsertBits(dest, src, 0, JSVAL_TAG_SHIFT);
-    }
-  }
+  void boxValue(JSValueType type, Register src, Register dest);
   void boxValue(Register type, Register src, Register dest);
 
   void storeValue(ValueOperand val, const Address& dest);
