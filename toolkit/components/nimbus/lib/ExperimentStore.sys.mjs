@@ -214,28 +214,12 @@ ChromeUtils.defineLazyGetter(lazy, "syncDataStore", () => {
 
 const DEFAULT_STORE_ID = "ExperimentStoreData";
 
-const IS_MAIN_PROCESS =
-  Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
-
 export class ExperimentStore extends SharedDataMap {
   static SYNC_DATA_PREF_BRANCH = SYNC_DATA_PREF_BRANCH;
   static SYNC_DEFAULTS_PREF_BRANCH = SYNC_DEFAULTS_PREF_BRANCH;
 
   constructor(sharedDataKey, options) {
     super(sharedDataKey ?? DEFAULT_STORE_ID, options);
-
-    this._db = null;
-
-    if (IS_MAIN_PROCESS) {
-      if (lazy.NimbusEnrollments.databaseEnabled) {
-        // We may be in an xpcshell test that has not initialized the
-        // ProfilesDatastoreService.
-        //
-        // TODO(bug 1967779): require the ProfilesDatastoreService to be initialized
-        // and remove this check.
-        this._db = new lazy.NimbusEnrollments(this);
-      }
-    }
   }
 
   /**
