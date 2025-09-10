@@ -181,7 +181,7 @@ class SnackbarBinding(
                     is SnackbarState.SharedTabsSuccessfully -> {
                         snackbarDelegate.show(
                             text = when (state.tabs.size) {
-                                1 -> R.string.sync_sent_tab_snackbar
+                                1 -> R.string.sync_sent_tab_snackbar_2
                                 else -> R.string.sync_sent_tabs_snackbar
                             },
                             duration = Snackbar.LENGTH_SHORT,
