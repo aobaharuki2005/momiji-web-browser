@@ -794,14 +794,6 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
     xor_(dest, src, scratch);
   }
 
-  template <typename T>
-  void unboxObjectOrNull(const T& src, Register dest) {
-    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
-    static_assert(JS::detail::ValueObjectOrNullBit ==
-                  (uint64_t(0x8) << JSVAL_TAG_SHIFT));
-    InsertBits(dest, zero, JSVAL_TAG_SHIFT + 3, 1);
-  }
-
   void unboxGCThingForGCBarrier(const Address& src, Register dest) {
     loadPtr(src, dest);
     ExtractBits(dest, dest, 0, JSVAL_TAG_SHIFT - 1);

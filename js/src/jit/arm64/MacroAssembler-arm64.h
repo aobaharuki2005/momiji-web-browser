@@ -1412,13 +1412,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     unboxNonDouble(dest, dest, JSVAL_TYPE_OBJECT);
   }
 
-  template <typename T>
-  void unboxObjectOrNull(const T& src, Register dest) {
-    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
-    And(ARMRegister(dest, 64), ARMRegister(dest, 64),
-        Operand(~JS::detail::ValueObjectOrNullBit));
-  }
-
   // See comment in MacroAssembler-x64.h.
   void unboxGCThingForGCBarrier(const Address& src, Register dest) {
     loadPtr(src, dest);

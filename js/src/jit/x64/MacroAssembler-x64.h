@@ -906,14 +906,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     unboxNonDouble(Operand(src), dest, JSVAL_TYPE_OBJECT);
   }
 
-  template <typename T>
-  void unboxObjectOrNull(const T& src, Register dest) {
-    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
-    ScratchRegisterScope scratch(asMasm());
-    mov(ImmWord(~JS::detail::ValueObjectOrNullBit), scratch);
-    andq(scratch, dest);
-  }
-
   // This should only be used for GC barrier code, to unbox a GC thing Value.
   // It's fine there because we don't depend on the actual Value type (all Cells
   // are treated the same way). In almost all other cases this would be

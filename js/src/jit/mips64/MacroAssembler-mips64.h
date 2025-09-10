@@ -442,14 +442,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     as_xor(dest, src, ScratchRegister);
   }
 
-  template <typename T>
-  void unboxObjectOrNull(const T& src, Register dest) {
-    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
-    static_assert(JS::detail::ValueObjectOrNullBit ==
-                  (uint64_t(0x8) << JSVAL_TAG_SHIFT));
-    ma_dins(dest, zero, Imm32(JSVAL_TAG_SHIFT + 3), Imm32(1));
-  }
-
   void unboxGCThingForGCBarrier(const Address& src, Register dest) {
     loadPtr(src, dest);
     ma_dext(dest, dest, Imm32(0), Imm32(JSVAL_TAG_SHIFT));

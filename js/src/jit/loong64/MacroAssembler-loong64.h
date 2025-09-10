@@ -636,14 +636,6 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
     as_xor(dest, src, scratch);
   }
 
-  template <typename T>
-  void unboxObjectOrNull(const T& src, Register dest) {
-    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
-    static_assert(JS::detail::ValueObjectOrNullBit ==
-                  (uint64_t(0x8) << JSVAL_TAG_SHIFT));
-    as_bstrins_d(dest, zero, JSVAL_TAG_SHIFT + 3, JSVAL_TAG_SHIFT + 3);
-  }
-
   void unboxGCThingForGCBarrier(const Address& src, Register dest) {
     loadPtr(src, dest);
     as_bstrpick_d(dest, dest, JSVAL_TAG_SHIFT - 1, 0);
