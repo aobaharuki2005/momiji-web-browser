@@ -32,7 +32,9 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsXULAppAPI.h"
 #include "SharedFontList-impl.h"
+#define StandardFonts
 #include "StandardFonts-linux.inc"
+#undef StandardFonts
 #include "mozilla/intl/Locale.h"
 
 #include "mozilla/gfx/HelpersCairo.h"
