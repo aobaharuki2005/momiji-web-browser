@@ -4,6 +4,7 @@
 
 // We don't have an easy way to serve update manifests from a secure URL.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
+Services.prefs.setBoolPref(PREF_DATA_COLLECTION_PERMISSIONS_ENABLED, true);
 
 const server = AddonTestUtils.createHttpServer();
 
