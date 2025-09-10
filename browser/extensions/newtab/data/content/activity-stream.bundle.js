@@ -12734,6 +12734,15 @@ function Lists({
     setPendingNewList(id);
     handleListInteraction();
   }
+  function handleCancelNewList() {
+    // If current list is new and has no label/tasks, remove it
+    if (!selectedList?.label && selectedList?.tasks?.length === 0) {
+      const updatedLists = {
+        ...lists
+      };
+      delete updatedLists[selected];
+    }
+  }
   function handleDeleteList() {
     let updatedLists = {
       ...lists
@@ -12881,6 +12890,7 @@ function Lists({
     onSave: handleListNameSave,
     isEditing: isEditing,
     setIsEditing: setIsEditing,
+    onCancel: handleCancelNewList,
     type: "list",
     maxLength: 30,
     dataL10nId: listNamePlaceholder
@@ -13116,6 +13126,7 @@ function EditableText({
   isEditing,
   setIsEditing,
   onSave,
+  onCancel,
   children,
   type,
   dataL10nId = null,
@@ -13140,6 +13151,7 @@ function EditableText({
     } else if (e.key === "Escape") {
       setIsEditing(false);
       setTempValue(value);
+      onCancel?.();
     }
   }
   function handleOnBlur() {
