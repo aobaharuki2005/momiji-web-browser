@@ -721,7 +721,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         val displayFolderTitle = parentFolderTitle ?: getString(R.string.library_bookmarks)
         val displayResId = when {
             tabSize > 1 -> {
-                R.string.snackbar_message_bookmarks_saved_in
+                R.string.snackbar_message_bookmarks_saved_in_2
             }
             else -> {
                 R.string.bookmark_saved_in_folder_snackbar
