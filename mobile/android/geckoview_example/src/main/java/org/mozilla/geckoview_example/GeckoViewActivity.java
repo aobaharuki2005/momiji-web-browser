@@ -173,7 +173,10 @@ class WebExtensionManager
   @Nullable
   @Override
   public GeckoResult<AllowOrDeny> onOptionalPrompt(
-      final @NonNull WebExtension extension, final String[] permissions, final String[] origins) {
+      final @NonNull WebExtension extension,
+      final String[] permissions,
+      final String[] origins,
+      final String[] dataCollectionPermissions) {
     return GeckoResult.allow();
   }
 
