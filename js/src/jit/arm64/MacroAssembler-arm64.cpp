@@ -1938,11 +1938,16 @@ void MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
                                      const Value& rhs, Label* label) {
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
   MOZ_ASSERT(!rhs.isNaN());
-  vixl::UseScratchRegisterScope temps(this);
-  const ARMRegister scratch64 = temps.AcquireX();
-  MOZ_ASSERT(scratch64.asUnsized() != lhs.valueReg());
-  moveValue(rhs, ValueOperand(scratch64.asUnsized()));
-  Cmp(ARMRegister(lhs.valueReg(), 64), scratch64);
+
+  if (!rhs.isGCThing()) {
+    Cmp(ARMRegister(lhs.valueReg(), 64), Operand(rhs.asRawBits()));
+  } else {
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+    MOZ_ASSERT(scratch64.asUnsized() != lhs.valueReg());
+    moveValue(rhs, ValueOperand(scratch64.asUnsized()));
+    Cmp(ARMRegister(lhs.valueReg(), 64), scratch64);
+  }
   B(label, cond);
 }
 

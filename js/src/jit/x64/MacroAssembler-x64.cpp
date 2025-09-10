@@ -1024,10 +1024,15 @@ void MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
                                      const Value& rhs, Label* label) {
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
   MOZ_ASSERT(!rhs.isNaN());
-  ScratchRegisterScope scratch(*this);
-  MOZ_ASSERT(lhs.valueReg() != scratch);
-  moveValue(rhs, ValueOperand(scratch));
-  cmpPtr(lhs.valueReg(), scratch);
+
+  if (!rhs.isGCThing()) {
+    cmpPtr(lhs.valueReg(), ImmWord(rhs.asRawBits()));
+  } else {
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(lhs.valueReg() != scratch);
+    moveValue(rhs, ValueOperand(scratch));
+    cmpPtr(lhs.valueReg(), scratch);
+  }
   j(cond, label);
 }
 
