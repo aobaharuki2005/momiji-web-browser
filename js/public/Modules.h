@@ -42,8 +42,9 @@ enum class ModuleType : uint32_t {
   Unknown = 0,
   JavaScript,
   JSON,
+  CSS,
 
-  Limit = JSON,
+  Limit = CSS,
 };
 
 /**
