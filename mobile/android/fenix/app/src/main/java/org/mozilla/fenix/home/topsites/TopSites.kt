@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -32,9 +33,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -68,6 +71,10 @@ private const val TOP_SITES_PER_ROW = 4
 private const val TOP_SITES_ROW_WIDTH = TOP_SITES_PER_ROW * TOP_SITES_ITEM_SIZE
 private const val TOP_SITES_FAVICON_CARD_SIZE = 60
 private const val TOP_SITES_FAVICON_SIZE = 36
+
+// These intentionally do not reference the design system because they should always be the same colors
+private const val PIN_BACKGROUND_COLOR = 0xFFF0F0F4
+private const val PIN_COLOR = 0xFF15141A
 
 /**
  * A list of top sites.
@@ -317,10 +324,29 @@ fun TopSiteItem(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            TopSiteFaviconCard(
-                topSite = topSite,
-                backgroundColor = topSiteColors.faviconCardBackgroundColor,
-            )
+            Box(
+                modifier = Modifier.wrapContentSize(),
+                contentAlignment = AbsoluteAlignment.TopLeft,
+            ) {
+                TopSiteFaviconCard(
+                    topSite = topSite,
+                    backgroundColor = topSiteColors.faviconCardBackgroundColor,
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .background(color = Color(PIN_BACKGROUND_COLOR), shape = CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        modifier = Modifier.size(10.dp),
+                        painter = painterResource(id = R.drawable.ic_new_pin),
+                        colorFilter = ColorFilter.tint(Color(PIN_COLOR)),
+                        contentDescription = null,
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -329,15 +355,6 @@ fun TopSiteItem(
                 horizontalArrangement = Arrangement.Absolute.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (topSite is TopSite.Pinned || topSite is TopSite.Default) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_new_pin),
-                        contentDescription = null,
-                    )
-
-                    Spacer(modifier = Modifier.width(2.dp))
-                }
-
                 Text(
                     modifier = Modifier
                         .semantics {
