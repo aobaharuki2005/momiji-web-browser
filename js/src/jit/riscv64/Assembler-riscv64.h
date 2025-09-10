@@ -591,7 +591,7 @@ class UseScratchRegisterScope {
   Register Acquire();
   bool hasAvailable() const;
   void Include(const GeneralRegisterSet& list) {
-    *available_ = GeneralRegisterSet::Intersect(*available_, list);
+    *available_ = GeneralRegisterSet::Union(*available_, list);
   }
   void Exclude(const GeneralRegisterSet& list) {
     *available_ = GeneralRegisterSet::Subtract(*available_, list);
