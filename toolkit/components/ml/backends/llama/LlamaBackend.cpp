@@ -10,10 +10,13 @@
 #include <cstddef>
 
 #include <functional>
+#include "llama.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/HashTable.h"
 #include "nsIFileStreams.h"
 #include "nsTArray.h"
+
+#include "llama/llama.h"
 
 #include "mozilla/Logging.h"
 #include "nsFmtString.h"
@@ -21,39 +24,6 @@
 mozilla::LazyLogModule gLlamaBackendLog("GeckoMLLlamaBackendNative");
 
 namespace mozilla::llama {
-
-void LlamaBackend::GgmlThreadpoolDeleter::operator()(
-    struct ggml_threadpool* aTp) const {
-  if (auto* lib = LlamaRuntimeLinker::Get()) {
-    if (lib->ggml_threadpool_free) {
-      lib->ggml_threadpool_free(aTp);
-    }
-  }
-}
-
-void LlamaBackend::LlamaModelDeleter::operator()(llama_model* aModel) const {
-  if (auto* lib = LlamaRuntimeLinker::Get()) {
-    if (lib->llama_model_free) {
-      lib->llama_model_free(aModel);
-    }
-  }
-}
-
-void LlamaBackend::LlamaContextDeleter::operator()(llama_context* aCtx) const {
-  if (auto* lib = LlamaRuntimeLinker::Get()) {
-    if (lib->llama_free) {
-      lib->llama_free(aCtx);
-    }
-  }
-}
-
-void LlamaBackend::LlamaSamplerDeleter::operator()(llama_sampler* aSmpl) const {
-  if (auto* lib = LlamaRuntimeLinker::Get()) {
-    if (lib->llama_sampler_free) {
-      lib->llama_sampler_free(aSmpl);
-    }
-  }
-}
 
 #define LOGD(fmt, ...) \
   MOZ_LOG_FMT(gLlamaBackendLog, LogLevel::Debug, fmt, ##__VA_ARGS__)
@@ -90,30 +60,13 @@ ggml_type GgmlTypeFromKVCacheDtype(LlamaKVCacheDtype aDtype) {
   return GGML_TYPE_F16;
 }
 
-LlamaBackend::~LlamaBackend() {
-  LOGD("Entered {}", __PRETTY_FUNCTION__);
-  // Note: mLib is not freed here because LlamaRuntimeLinker manages
-  // the library lifetime as a singleton
-}
+LlamaBackend::~LlamaBackend() { LOGD("Entered {}", __PRETTY_FUNCTION__); }
 
 ResultStatus LlamaBackend::Reinitialize(const LlamaModelOptions& aOptions,
                                         FILE* aFp) {
   LOGV("Entered {}", __PRETTY_FUNCTION__);
-
-  if (!mLib) {
-    mLib = LlamaRuntimeLinker::Get();
-  }
-
-  if (!mLib) {
-    auto msg =
-        nsFmtCString(FMT_STRING("{}: Failed to get llama runtime linker"),
-                     __PRETTY_FUNCTION__);
-    LOGE("{}", msg);
-    return mozilla::Err(Error{msg});
-  }
-
   mModelOptions = aOptions;
-  mLib->llama_log_set(
+  llama_log_set(
       [](ggml_log_level level, const char* text, void* /* user_data */) {
         switch (level) {
           case GGML_LOG_LEVEL_NONE:
@@ -142,13 +95,13 @@ ResultStatus LlamaBackend::Reinitialize(const LlamaModelOptions& aOptions,
   LOGV("{}: Initializing the model", __PRETTY_FUNCTION__);
 
   // initialize the model
-  llama_model_params modelParams = mLib->llama_model_default_params();
+  llama_model_params modelParams = llama_model_default_params();
   modelParams.n_gpu_layers = aOptions.mNGpuLayers;
   modelParams.use_mmap = aOptions.mUseMmap;
   modelParams.use_mlock = aOptions.mUseMlock;
   modelParams.check_tensors = aOptions.mCheckTensors;
 
-  mModel.reset(mLib->llama_model_load_from_file_handle(aFp, modelParams));
+  mModel.reset(llama_model_load_from_file_handle(aFp, modelParams));
 
   if (!mModel) {
     auto msg = nsFmtCString(
@@ -160,9 +113,9 @@ ResultStatus LlamaBackend::Reinitialize(const LlamaModelOptions& aOptions,
 
   // Preallocate buffer based on rough estimate of the size of the name
   mModelGeneralName.SetLength(256);
-  auto numWritten = mLib->llama_model_meta_val_str(
-      mModel.get(), "general.name", mModelGeneralName.BeginWriting(),
-      mModelGeneralName.Length());
+  auto numWritten = llama_model_meta_val_str(mModel.get(), "general.name",
+                                             mModelGeneralName.BeginWriting(),
+                                             mModelGeneralName.Length());
   if (numWritten >= 0) {
     // Reset the length to the number of actual bytes written
     mModelGeneralName.SetLength(numWritten);
@@ -183,11 +136,7 @@ ResultStatus LlamaBackend::Reinitialize(const LlamaModelOptions& aOptions,
 ResultStatus LlamaBackend::ReinitializeContext(
     const LlamaContextOptions& aOptions, int aNumContext) {
   LOGV("Entered {}", __PRETTY_FUNCTION__);
-
-  MOZ_ASSERT(mLib,
-             "No shared library pointer in ReinitializeContext, fix this");
-
-  llama_context_params ctxParams = mLib->llama_context_default_params();
+  llama_context_params ctxParams = llama_context_default_params();
 
   ctxParams.n_ctx = aNumContext;
 
@@ -208,7 +157,7 @@ ResultStatus LlamaBackend::ReinitializeContext(
   // llama_init_from_model does not take ownership of the model or context
   // parameters. We retain ownership of all objects passed in and must keep them
   // alive for the entire lifetime of mCtx.
-  mCtx.reset(mLib->llama_init_from_model(mModel.get(), ctxParams));
+  mCtx.reset(llama_init_from_model(mModel.get(), ctxParams));
   if (!mCtx) {
     auto msg =
         nsFmtCString(FMT_STRING("{}: failed to create the llama_context {}"),
@@ -221,13 +170,13 @@ ResultStatus LlamaBackend::ReinitializeContext(
   // to the params structs. We own those stack-allocated structs, but they can
   // safely go out of scope after threadpool creation.
   ggml_threadpool_params tpp;
-  mLib->ggml_threadpool_params_init(&tpp, ctxParams.n_threads);
+  ggml_threadpool_params_init(&tpp, ctxParams.n_threads);
   ggml_threadpool_params tppBatch;
-  mLib->ggml_threadpool_params_init(&tppBatch, ctxParams.n_threads_batch);
+  ggml_threadpool_params_init(&tppBatch, ctxParams.n_threads_batch);
 
   mThreadpoolBatch.reset();
-  if (!mLib->ggml_threadpool_params_match(&tpp, &tppBatch)) {
-    mThreadpoolBatch.reset(mLib->ggml_threadpool_new(&tppBatch));
+  if (!ggml_threadpool_params_match(&tpp, &tppBatch)) {
+    mThreadpoolBatch.reset(ggml_threadpool_new(&tppBatch));
     if (!mThreadpoolBatch) {
       auto msg = nsFmtCString(
           FMT_STRING(
@@ -240,7 +189,7 @@ ResultStatus LlamaBackend::ReinitializeContext(
     tpp.paused = true;
   }
 
-  mThreadpool.reset(mLib->ggml_threadpool_new(&tpp));
+  mThreadpool.reset(ggml_threadpool_new(&tpp));
   if (!mThreadpool) {
     auto msg = nsFmtCString(
         FMT_STRING("{}: Failed to create threadpool: n_threads: {} {}"),
@@ -252,8 +201,8 @@ ResultStatus LlamaBackend::ReinitializeContext(
   // llama_attach_threadpool does not take ownership of the threadpools.
   // We must keep mThreadpool and mThreadpoolBatch alive for as long as
   // mCtx is used, since they are accessed internally by the context.
-  mLib->llama_attach_threadpool(mCtx.get(), mThreadpool.get(),
-                                mThreadpoolBatch.get());
+  llama_attach_threadpool(mCtx.get(), mThreadpool.get(),
+                          mThreadpoolBatch.get());
 
   LOGV("{}: Successfully Initialized context for model {}", __PRETTY_FUNCTION__,
        mModelGeneralName);
@@ -264,9 +213,6 @@ ResultStatus LlamaBackend::ReinitializeContext(
 ChatMessageResult LlamaBackend::FormatChat(
     const mozilla::dom::LlamaFormatChatOptions& aOptions) {
   LOGV("Entered {}", __PRETTY_FUNCTION__);
-
-  MOZ_ASSERT(mLib, "No shared library pointer in FormatChat, fix this");
-
   if (!mModel) {
     auto msg = nsFmtCString(
         FMT_STRING("{}: Model not loaded when trying to format chat"),
@@ -290,7 +236,7 @@ ChatMessageResult LlamaBackend::FormatChat(
   // This returns a pointer to a template string stored inside mModel.
   // Since we own mModel, the pointer remains valid throughout this function.
   const char* tmpl =
-      mLib->llama_model_chat_template(mModel.get(), /* name */ nullptr);
+      llama_model_chat_template(mModel.get(), /* name */ nullptr);
 
   int32_t numCharInMessages = 0;
   for (const auto& msg : aOptions.mMessages) {
@@ -306,7 +252,7 @@ ChatMessageResult LlamaBackend::FormatChat(
 
   // llama_chat_apply_template does not retain any of the pointers passed to it.
   // All data must remain valid only during the call.
-  int32_t chatTemplateLength = mLib->llama_chat_apply_template(
+  int32_t chatTemplateLength = llama_chat_apply_template(
       tmpl, chatMessages.Elements(), chatMessages.Length(),
       aOptions.mAddAssistant, formatted.BeginWriting(), formatted.Length());
 
@@ -325,7 +271,7 @@ ChatMessageResult LlamaBackend::FormatChat(
         __PRETTY_FUNCTION__, chatTemplateLength, mModelGeneralName);
 
     formatted.SetLength(chatTemplateLength);
-    chatTemplateLength = mLib->llama_chat_apply_template(
+    chatTemplateLength = llama_chat_apply_template(
         tmpl, chatMessages.Elements(), chatMessages.Length(),
         aOptions.mAddAssistant, formatted.BeginWriting(), formatted.Length());
   }
@@ -341,23 +287,19 @@ ChatMessageResult LlamaBackend::FormatChat(
 LlamaBackend::SamplerResult LlamaBackend::InitializeSampler(
     const mozilla::dom::Sequence<LlamaSamplerConfig>& aSamplers) {
   LOGV("Entered {}", __PRETTY_FUNCTION__);
-
-  MOZ_ASSERT(mLib, "No shared library pointer in InitializeSampler, fix this");
-
   // initialize the sampler. We own the pointer returned by
   // llama_sampler_chain_init. sampler_element pointer are added to sampler by
   // llama_sampler_chain_add and we need to delete them
 
-  LlamaSamplerUPtr sampler(mLib->llama_sampler_chain_init(
-      mLib->llama_sampler_chain_default_params()));
+  LlamaSamplerUPtr sampler(
+      llama_sampler_chain_init(llama_sampler_chain_default_params()));
 
   // Default to greedy decoding when no samplers are specified.
   // This is a standard inference strategy that requires no tuning
   // and produces deterministic outputs. Often use for Summarization, QA and
   // RAG.
   if (aSamplers.IsEmpty()) {
-    mLib->llama_sampler_chain_add(sampler.get(),
-                                  mLib->llama_sampler_init_greedy());
+    llama_sampler_chain_add(sampler.get(), llama_sampler_init_greedy());
   }
 
   for (const auto& samplerConfig : aSamplers) {
@@ -365,14 +307,14 @@ LlamaBackend::SamplerResult LlamaBackend::InitializeSampler(
 
     switch (samplerConfig.mType) {
       case LlamaSamplerType::Temperature:
-        samplerElement = mLib->llama_sampler_init_temp(samplerConfig.mTemp);
+        samplerElement = llama_sampler_init_temp(samplerConfig.mTemp);
         break;
 
       case LlamaSamplerType::Dist: {
         auto seed = samplerConfig.mSeed.WasPassed()
                         ? samplerConfig.mSeed.Value()
                         : LLAMA_DEFAULT_SEED;
-        samplerElement = mLib->llama_sampler_init_dist(seed);
+        samplerElement = llama_sampler_init_dist(seed);
         break;
       }
 
@@ -385,7 +327,7 @@ LlamaBackend::SamplerResult LlamaBackend::InitializeSampler(
     }
 
     if (samplerElement) {
-      mLib->llama_sampler_chain_add(sampler.get(), samplerElement);
+      llama_sampler_chain_add(sampler.get(), samplerElement);
     }
   }
 
@@ -399,15 +341,12 @@ ResultStatus LlamaBackend::Generate(
     std::function<bool()> aCancelCallback) {
   LOGV("Entered {}", __PRETTY_FUNCTION__, mModelGeneralName);
 
-  MOZ_ASSERT(mLib, "No shared library pointer in Generate, fix this");
-
-  auto cleanup = mozilla::MakeScopeExit([&ctx = mCtx, lib = mLib] {
+  auto cleanup = mozilla::MakeScopeExit([&ctx = mCtx] {
     // clear the memory used by this generation session to make it ready for the
     // next session
     bool clearDataBuffers = true;
     if (ctx) {
-      lib->llama_memory_clear(lib->llama_get_memory(ctx.get()),
-                              clearDataBuffers);
+      llama_memory_clear(llama_get_memory(ctx.get()), clearDataBuffers);
     }
   });
 
@@ -428,7 +367,7 @@ ResultStatus LlamaBackend::Generate(
   }
 
   // Just a non-owned pointer to existing data, so fast to get each time
-  const llama_vocab* vocab = mLib->llama_model_get_vocab(mModel.get());
+  const llama_vocab* vocab = llama_model_get_vocab(mModel.get());
 
   const size_t estimatedNumPromptTokens = aOptions.mPrompt.Length() + 1;
   LOGD("{} Estimated tokenization size is {} {}", __PRETTY_FUNCTION__,
@@ -436,11 +375,11 @@ ResultStatus LlamaBackend::Generate(
   nsTArray<llama_token> promptTokens;
   promptTokens.SetLength(estimatedNumPromptTokens);
   // attempt to tokenize the prompt using the estimated number of prompts
-  int32_t nPromptTokens = mLib->llama_tokenize(
-      vocab, aOptions.mPrompt.get(), aOptions.mPrompt.Length(),
-      promptTokens.Elements(), promptTokens.Length(),
-      aOptions.mTokenizationOptions.mAddBosAndEos,
-      aOptions.mTokenizationOptions.mParseSpecilControlTokens);
+  int32_t nPromptTokens =
+      llama_tokenize(vocab, aOptions.mPrompt.get(), aOptions.mPrompt.Length(),
+                     promptTokens.Elements(), promptTokens.Length(),
+                     aOptions.mTokenizationOptions.mAddBosAndEos,
+                     aOptions.mTokenizationOptions.mParseSpecilControlTokens);
 
   if (nPromptTokens < 0) {
     auto msg = nsFmtCString(FMT_STRING("{}: failed to tokenize the prompt {}"),
@@ -457,18 +396,18 @@ ResultStatus LlamaBackend::Generate(
         __PRETTY_FUNCTION__, nPromptTokens, mModelGeneralName);
     promptTokens.SetLength(nPromptTokens);
 
-    nPromptTokens = mLib->llama_tokenize(
-        vocab, aOptions.mPrompt.get(), aOptions.mPrompt.Length(),
-        promptTokens.Elements(), promptTokens.Length(),
-        aOptions.mTokenizationOptions.mAddBosAndEos,
-        aOptions.mTokenizationOptions.mParseSpecilControlTokens);
+    nPromptTokens =
+        llama_tokenize(vocab, aOptions.mPrompt.get(), aOptions.mPrompt.Length(),
+                       promptTokens.Elements(), promptTokens.Length(),
+                       aOptions.mTokenizationOptions.mAddBosAndEos,
+                       aOptions.mTokenizationOptions.mParseSpecilControlTokens);
   }
 
   promptTokens.SetLength(nPromptTokens);
 
   auto seqLen = aOptions.mMaxGeneratedTokens;
 
-  int nCtx = mLib->llama_n_ctx(mCtx.get());
+  int nCtx = llama_n_ctx(mCtx.get());
 
   int estimatedCtx = nPromptTokens + seqLen;
 
@@ -486,7 +425,7 @@ ResultStatus LlamaBackend::Generate(
       return initContextResult;
     }
 
-    nCtx = mLib->llama_n_ctx(mCtx.get());
+    nCtx = llama_n_ctx(mCtx.get());
 
     mModelOptions.mContext.mNCtx = estimatedCtx;
   }
@@ -494,7 +433,7 @@ ResultStatus LlamaBackend::Generate(
   LOGD("{} Creating llama.cpp batch from prompt tokens for {}",
        __PRETTY_FUNCTION__, mModelGeneralName);
   llama_batch batch =
-      mLib->llama_batch_get_one(promptTokens.Elements(), promptTokens.Length());
+      llama_batch_get_one(promptTokens.Elements(), promptTokens.Length());
   // To keep track of the id of the currently generated token
   llama_token token;
 
@@ -539,8 +478,7 @@ ResultStatus LlamaBackend::Generate(
     }
 
     // check if we have enough space in the context to evaluate this batch
-    int nCtxUsed =
-        mLib->llama_memory_seq_pos_max(mLib->llama_get_memory(mCtx.get()), 0);
+    int nCtxUsed = llama_memory_seq_pos_max(llama_get_memory(mCtx.get()), 0);
     if (nCtxUsed + batch.n_tokens > nCtx) {
       auto msg = nsFmtCString(
           FMT_STRING("{}: context size exceeded. Size is: {} Needed: {} {}"),
@@ -553,7 +491,7 @@ ResultStatus LlamaBackend::Generate(
     LOGV("{}: Decoding to generate next token probabilities {}",
          __PRETTY_FUNCTION__, mModelGeneralName);
 
-    if (mLib->llama_decode(mCtx.get(), batch) != 0) {
+    if (llama_decode(mCtx.get(), batch) != 0) {
       auto msg = nsFmtCString(FMT_STRING("{}: failed to decode {}"),
                               __PRETTY_FUNCTION__, mModelGeneralName);
       LOGE("{}", msg);
@@ -562,8 +500,8 @@ ResultStatus LlamaBackend::Generate(
 
     LOGV("{}: Sampling the generated probabilities to generate next token {}",
          __PRETTY_FUNCTION__, mModelGeneralName);
-    token = mLib->llama_sampler_sample(sampler.get(), mCtx.get(),
-                                       lastTokenLogitIndex);
+    token =
+        llama_sampler_sample(sampler.get(), mCtx.get(), lastTokenLogitIndex);
 
     // Sending the end of prompt once we get the first token to ensure
     // all operations are indeed completed.
@@ -590,7 +528,7 @@ ResultStatus LlamaBackend::Generate(
     // If either condition is true, stop generation early.
     LOGV("{}: Checking if end of generation reached {}", __PRETTY_FUNCTION__,
          mModelGeneralName);
-    if ((mLib->llama_vocab_is_eog(vocab, token) &&
+    if ((llama_vocab_is_eog(vocab, token) &&
          aOptions.mStopOnEndOfGenerationTokens) ||
         stopTokens.has(token)) {
       LOGD("{}: Early stopping {}", __PRETTY_FUNCTION__, mModelGeneralName);
@@ -603,7 +541,7 @@ ResultStatus LlamaBackend::Generate(
     buffer.SetLength(aOptions.mDeTokenizationOptions.mMaxCharsPerToken);
     // write in the buffer from index 0
     int32_t lstrip = 0;
-    auto n = mLib->llama_token_to_piece(
+    auto n = llama_token_to_piece(
         vocab, token, buffer.BeginWriting(), buffer.Length(), lstrip,
         aOptions.mDeTokenizationOptions.mRenderSpecialTokens);
 
@@ -638,7 +576,7 @@ ResultStatus LlamaBackend::Generate(
 
     LOGV("{}: Preparing the next batch with the sampled token {}",
          __PRETTY_FUNCTION__, mModelGeneralName);
-    batch = mLib->llama_batch_get_one(&token, 1);
+    batch = llama_batch_get_one(&token, 1);
   }
 
   LOGV("{}: Sending end of generation to callback {}", __PRETTY_FUNCTION__,
