@@ -291,7 +291,9 @@ class Components(private val context: Context) {
                     isTelemetryEnabled = { settings.isTelemetryEnabled },
                     createJexlHelper = nimbus::createJexlHelper,
                     nimbusEventStore = nimbus.events,
-                ),
+                ).also {
+                    settings.migrateLastReviewPromptTimePrefIfNeeded(nimbus.events)
+                },
                 AppVisualCompletenessMiddleware(performance.visualCompletenessQueue),
             ),
         ).also {

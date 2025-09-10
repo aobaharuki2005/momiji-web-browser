@@ -23,6 +23,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.lib.crash.store.CrashReportOption
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
 import mozilla.components.support.ktx.android.content.doesDeviceHaveHinge
@@ -33,6 +34,7 @@ import mozilla.components.support.ktx.android.content.stringPreference
 import mozilla.components.support.ktx.android.content.stringSetPreference
 import mozilla.components.support.locale.LocaleManager
 import mozilla.components.support.utils.BrowsersCache
+import org.mozilla.experiments.nimbus.NimbusEventStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -69,6 +71,7 @@ import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.security.InvalidParameterException
 import java.util.UUID
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
 
@@ -171,6 +174,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
          */
         private const val CLOUDFLARE_URI = "https://mozilla.cloudflare-dns.com/dns-query"
     }
+
+    private val logger = Logger("Settings")
 
     @VisibleForTesting
     internal val isCrashReportEnabledInBuild: Boolean =
@@ -321,10 +326,36 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = 0,
     )
 
-    var lastReviewPromptTimeInMillis by longPreference(
-        appContext.getPreferenceKey(R.string.pref_key_last_review_prompt_shown_time),
-        default = 0L,
-    )
+    /**
+     * In bug 1979885 we switched from manually tracking displaying review prompt
+     * to recording it as an event in Nimbus which let's us check if later
+     * with a JEXL expression.
+     *
+     * If a previously tracked value exists then this migrates it to an event.
+     */
+    fun migrateLastReviewPromptTimePrefIfNeeded(nimbusEventStore: NimbusEventStore) {
+        val oldKey = "pref_key_last_review_prompt_shown_time"
+
+        if (!preferences.contains(oldKey)) return
+
+        val lastReviewPromptTimeInMillis = try {
+            preferences.getLong(oldKey, 0L)
+        } catch (e: ClassCastException) {
+            logger.warn("Unexpected pref type when trying to migrate last review prompt time", e)
+            0
+        }
+
+        preferences.edit { remove(oldKey) }
+
+        if (lastReviewPromptTimeInMillis != 0L) {
+            val millisAgo = timeNowInMillis() - lastReviewPromptTimeInMillis
+            nimbusEventStore.recordPastEvent(
+                eventId = "review_prompt_shown",
+                timeAgo = millisAgo,
+                timeUnit = MILLISECONDS,
+            )
+        }
+    }
 
     /**
      * Indicates if the custom review prompt feature should be enabled. `True` if the feature is
