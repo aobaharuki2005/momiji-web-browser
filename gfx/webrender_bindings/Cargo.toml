@@ -16,7 +16,7 @@ log = "0.4"
 nsstring = { path = "../../xpcom/rust/nsstring" }
 bincode = "1.0"
 uuid = { version = "1.0", features = ["v4"] }
-rustc-hash = "2.1.1"
+fxhash = "0.2.1"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 swgl = { path = "../wr/swgl" }
 wr_malloc_size_of = { path = "../wr/wr_malloc_size_of" }
