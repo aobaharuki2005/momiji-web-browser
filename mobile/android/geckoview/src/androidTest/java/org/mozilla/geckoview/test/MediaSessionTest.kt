@@ -244,6 +244,13 @@ class MediaSessionTest : BaseSessionTest() {
                 mediaSession: MediaSession,
                 meta: MediaSession.Metadata,
             ) {
+                if (sessionRule.currentCall.counter == 7) {
+                    // Occasionally, a 7th call occurs from onStop with blank metadata.
+                    onMetadataCalled[sessionRule.currentCall.counter - 1]
+                        .complete(null)
+                    return
+                }
+
                 assertThat(
                     "Title should match",
                     meta.title,
