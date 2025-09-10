@@ -393,7 +393,7 @@ class Assembler : public AssemblerShared,
   virtual BufferOffset emit(Instr x) {
     MOZ_ASSERT(hasCreator());
     BufferOffset offset = m_buffer.putInt(x);
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     if (!oom()) {
       DEBUG_PRINTF(
           "0x%" PRIx64 "(%" PRIxPTR "):",
