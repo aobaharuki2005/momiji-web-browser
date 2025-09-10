@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -18,6 +19,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.store.BrowserScreenState
 import org.mozilla.fenix.browser.store.BrowserScreenStore
 import org.mozilla.fenix.databinding.FragmentBrowserBinding
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.translations.TranslationToolbar
 
@@ -37,8 +39,13 @@ class TranslationsBannerIntegration(
         flow.distinctUntilChangedBy { it.pageTranslationStatus.isTranslated }
             .collect {
                 if (it.pageTranslationStatus.isTranslated) {
-                    getViewOrInflate().apply {
-                        isVisible = true
+                    getViewOrInflate().let { banner ->
+                        banner.isVisible = true
+                        banner.behavior = TranslationsBannerBehavior<View>(
+                            context = banner.context,
+                            isAddressBarAtBottom = banner.settings().shouldUseBottomToolbar,
+                            isNavBarShown = banner.context.settings().shouldUseExpandedToolbar,
+                        )
                     }
                 } else {
                     // Ensure we're not inflating the stub just to hide it.
@@ -50,6 +57,7 @@ class TranslationsBannerIntegration(
     private fun dismissBanner() {
         (binding.root.findViewById<View>(R.id.translationsBanner) as? ComposeView)?.apply {
             isVisible = false
+            behavior = null
             disposeComposition()
         }
     }
@@ -82,5 +90,11 @@ class TranslationsBannerIntegration(
                 setContent { TranslationsBannerHost() }
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             }
+        }
+
+    private var View.behavior: CoordinatorLayout.Behavior<View>?
+        get() = (layoutParams as? CoordinatorLayout.LayoutParams)?.behavior
+        set(value) {
+            (layoutParams as? CoordinatorLayout.LayoutParams)?.behavior = value
         }
 }
