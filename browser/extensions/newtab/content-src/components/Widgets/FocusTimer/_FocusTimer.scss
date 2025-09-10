@@ -40,10 +40,6 @@ h3 {
   margin-inline-start: calc(var(--space-xlarge) + var(--space-small));
 }
 
-.focus-timer-context-menu {
-  margin-inline-end: auto;
-}
-
 // Make sure context menu is only visible as you hover over the Timer widget
 .focus-timer-context-menu-wrapper {
   opacity: 0;
@@ -170,27 +166,12 @@ h3 {
   }
 }
 
-.set-timer-controls-wrapper {
+.focus-timer-controls {
+  margin-block-start: var(--space-medium);
   display: flex;
-
-  .focus-timer-controls {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    &.timer-running {
-      margin-block-start: var(--space-medium);
-    }
-  }
-
-  .focus-timer-controls>moz-button:last-child {
-    margin-inline-start: var(--space-medium);
-  }
-
-  .focus-timer-controls>moz-button::part(button) {
-    border-radius: var(--border-radius-circle);
-    padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall)); // 17px
-  }
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-medium);
 }
 
 .timer-notification-status {

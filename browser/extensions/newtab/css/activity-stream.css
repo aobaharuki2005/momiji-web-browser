@@ -4584,10 +4584,6 @@ h3 {
   margin-inline-start: calc(var(--space-xlarge) + var(--space-small));
 }
 
-.focus-timer-context-menu {
-  margin-inline-end: auto;
-}
-
 .focus-timer-context-menu-wrapper {
   opacity: 0;
   pointer-events: none;
@@ -4683,23 +4679,12 @@ h3 {
   outline: var(--focus-outline);
 }
 
-.set-timer-controls-wrapper {
-  display: flex;
-}
-.set-timer-controls-wrapper .focus-timer-controls {
+.focus-timer-controls {
+  margin-block-start: var(--space-medium);
   display: flex;
   flex-direction: row;
   align-items: center;
-}
-.set-timer-controls-wrapper .focus-timer-controls.timer-running {
-  margin-block-start: var(--space-medium);
-}
-.set-timer-controls-wrapper .focus-timer-controls > moz-button:last-child {
-  margin-inline-start: var(--space-medium);
-}
-.set-timer-controls-wrapper .focus-timer-controls > moz-button::part(button) {
-  border-radius: var(--border-radius-circle);
-  padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall));
+  gap: var(--space-medium);
 }
 
 .timer-notification-status {

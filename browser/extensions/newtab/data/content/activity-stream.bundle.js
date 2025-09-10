@@ -13178,6 +13178,7 @@ function EditableText({
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/FocusTimer/FocusTimer.jsx
+function FocusTimer_extends() { return FocusTimer_extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, FocusTimer_extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -13661,12 +13662,13 @@ const FocusTimer = ({
     className: "set-timer-controls-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: `focus-timer-controls timer-running`
-  }, /*#__PURE__*/external_React_default().createElement("moz-button", {
-    type: "primary",
+  }, /*#__PURE__*/external_React_default().createElement("moz-button", FocusTimer_extends({}, !isRunning ? {
+    type: "primary"
+  } : {}, {
     iconsrc: `chrome://global/skin/media/${isRunning ? "pause" : "play"}-fill.svg`,
-    "data-l10n-id": isRunning ? "newtab-widget-timer-pause" : "newtab-widget-timer-play",
+    "data-l10n-id": isRunning ? "newtab-widget-timer-label-pause" : "newtab-widget-timer-label-play",
     onClick: toggleTimer
-  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
+  })), /*#__PURE__*/external_React_default().createElement("moz-button", {
     type: "icon ghost",
     iconsrc: "chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg",
     "data-l10n-id": "newtab-widget-timer-reset",

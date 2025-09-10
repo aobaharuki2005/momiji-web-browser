@@ -579,12 +579,12 @@ export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
       <div className="set-timer-controls-wrapper">
         <div className={`focus-timer-controls timer-running`}>
           <moz-button
-            type="primary"
+            {...(!isRunning ? { type: "primary" } : {})}
             iconsrc={`chrome://global/skin/media/${isRunning ? "pause" : "play"}-fill.svg`}
             data-l10n-id={
               isRunning
-                ? "newtab-widget-timer-pause"
-                : "newtab-widget-timer-play"
+                ? "newtab-widget-timer-label-pause"
+                : "newtab-widget-timer-label-play"
             }
             onClick={toggleTimer}
           />
