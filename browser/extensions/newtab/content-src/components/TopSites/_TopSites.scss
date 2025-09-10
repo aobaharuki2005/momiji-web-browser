@@ -52,15 +52,16 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
   margin: 0 calc(var(--space-large) * -1);
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, auto);
+  justify-content: center; // Center shortcuts when fewer than max number of sites per row
   row-gap: var(--space-small);
 
   @media (min-width: $break-point-layout-variant) {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(6, auto);
   }
 
   @media (min-width: $break-point-widest) {
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(8, auto);
   }
 
   a {

@@ -721,7 +721,8 @@ main section {
   margin: 0 calc(var(--space-large) * -1);
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, auto);
+  justify-content: center;
   row-gap: var(--space-small);
 }
 .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
@@ -749,12 +750,12 @@ main section {
 }
 @media (min-width: 724px) {
   .top-sites-list {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(6, auto);
   }
 }
 @media (min-width: 1122px) {
   .top-sites-list {
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(8, auto);
   }
 }
 .top-sites-list a {
