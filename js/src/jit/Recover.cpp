@@ -1261,8 +1261,11 @@ bool RStrictConstantCompareInt32::recover(JSContext* cx,
                                           SnapshotIterator& iter) const {
   JS::Value lhs = iter.read();
 
-  iter.storeInstructionResult(
-      BooleanValue(lhs.isNumber() && lhs.toNumber() == constant_));
+  bool result = lhs.isNumber() && lhs.toNumber() == constant_;
+  if (jsop_ == JSOp::StrictNe) {
+    result = !result;
+  }
+  iter.storeInstructionResult(BooleanValue(result));
   return true;
 }
 
@@ -1288,8 +1291,11 @@ bool RStrictConstantCompareBoolean::recover(JSContext* cx,
                                             SnapshotIterator& iter) const {
   JS::Value lhs = iter.read();
 
-  iter.storeInstructionResult(
-      BooleanValue(lhs.isBoolean() && lhs.toBoolean() == constant_));
+  bool result = lhs == BooleanValue(constant_);
+  if (jsop_ == JSOp::StrictNe) {
+    result = !result;
+  }
+  iter.storeInstructionResult(BooleanValue(result));
   return true;
 }
 
