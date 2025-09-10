@@ -174,7 +174,7 @@ export var PopupBlockerObserver = {
         // already for it.
         document.l10n.setAttributes(
           blockedPopupAllowSite,
-          "popups-infobar-block",
+          "popups-infobar-block2",
           { uriHost }
         );
         blockedPopupAllowSite.setAttribute("block", "true");
@@ -182,7 +182,7 @@ export var PopupBlockerObserver = {
         // Offer an item to allow popups for this site
         document.l10n.setAttributes(
           blockedPopupAllowSite,
-          "popups-infobar-allow",
+          "popups-infobar-allow2",
           { uriHost }
         );
         blockedPopupAllowSite.removeAttribute("block");

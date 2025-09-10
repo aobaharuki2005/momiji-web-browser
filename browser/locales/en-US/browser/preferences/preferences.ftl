@@ -1483,8 +1483,8 @@ permissions-autoplay-settings =
     .label = Settings…
     .accesskey = t
 
-permissions-block-popups =
-    .label = Block pop-up windows
+permissions-block-popups2 =
+    .label = Block pop-ups and third-party redirects
     .accesskey = B
 
 # "popup" is a misspelling that is more popular than the correct spelling of
