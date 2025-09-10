@@ -1273,7 +1273,7 @@ void CodeGenerator::visitBitNotI(LBitNotI* ins) {
   const LDefinition* dest = ins->output();
   MOZ_ASSERT(!input->isConstant());
 
-  masm.nor(ToRegister(dest), ToRegister(input), zero);
+  masm.not_(ToRegister(dest), ToRegister(input));
 }
 
 void CodeGenerator::visitBitNotI64(LBitNotI64* ins) {
@@ -1281,7 +1281,7 @@ void CodeGenerator::visitBitNotI64(LBitNotI64* ins) {
   MOZ_ASSERT(!IsConstant(input));
   Register64 inputReg = ToRegister64(input);
   MOZ_ASSERT(inputReg == ToOutRegister64(ins));
-  masm.nor(inputReg.reg, inputReg.reg, zero);
+  masm.not_(inputReg.reg, inputReg.reg);
 }
 
 void CodeGenerator::visitBitOpI(LBitOpI* ins) {

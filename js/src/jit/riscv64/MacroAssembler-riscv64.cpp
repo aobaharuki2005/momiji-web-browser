@@ -2424,7 +2424,7 @@ static void AtomicExchange(MacroAssembler& masm,
   masm.slliw(offsetTemp, offsetTemp, 3);
   masm.ma_li(maskTemp, Imm32(UINT32_MAX >> ((4 - nbytes) * 8)));
   masm.sllw(maskTemp, maskTemp, offsetTemp);
-  masm.nor(maskTemp, zero, maskTemp);
+  masm.not_(maskTemp, maskTemp);
   switch (nbytes) {
     case 1:
       masm.andi(valueTemp, value, 0xff);
@@ -2629,7 +2629,7 @@ static void AtomicEffectOp(MacroAssembler& masm,
   masm.slliw(offsetTemp, offsetTemp, 3);
   masm.ma_li(maskTemp, Imm32(UINT32_MAX >> ((4 - nbytes) * 8)));
   masm.sllw(maskTemp, maskTemp, offsetTemp);
-  masm.nor(maskTemp, zero, maskTemp);
+  masm.not_(maskTemp, maskTemp);
 
   masm.memoryBarrierBefore(sync);
 
@@ -2760,7 +2760,7 @@ static void AtomicFetchOp(MacroAssembler& masm,
   masm.slliw(offsetTemp, offsetTemp, 3);
   masm.ma_li(maskTemp, Imm32(UINT32_MAX >> ((4 - nbytes) * 8)));
   masm.sllw(maskTemp, maskTemp, offsetTemp);
-  masm.nor(maskTemp, zero, maskTemp);
+  masm.not_(maskTemp, maskTemp);
 
   masm.memoryBarrierBefore(sync);
 

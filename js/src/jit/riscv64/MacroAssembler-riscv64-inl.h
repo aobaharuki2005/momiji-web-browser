@@ -1823,9 +1823,9 @@ void MacroAssembler::neg64(Register64 reg) { sub(reg.reg, zero, reg.reg); }
 void MacroAssembler::negPtr(Register reg) { sub(reg, zero, reg); }
 
 void MacroAssembler::neg32(Register reg) { subw(reg, zero, reg); }
-void MacroAssembler::not32(Register reg) { nor(reg, reg, zero); }
+void MacroAssembler::not32(Register reg) { not_(reg, reg); }
 
-void MacroAssembler::notPtr(Register reg) { nor(reg, reg, zero); }
+void MacroAssembler::notPtr(Register reg) { not_(reg, reg); }
 
 void MacroAssembler::or32(Register src, Register dest) {
   ma_or(dest, dest, src);
