@@ -8727,7 +8727,7 @@ BytecodeEmitter::parseNodeToConstantCompareOperand(ParseNode* constant) {
       int32_t ival;
       if (NumberEqualsInt32(d, &ival)) {
         if (ConstantCompareOperand::CanEncodeInt32ValueAsOperand(ival)) {
-          return Some(ConstantCompareOperand((int8_t)ival));
+          return Some(ConstantCompareOperand(int8_t(ival)));
         }
       }
       return Nothing();
