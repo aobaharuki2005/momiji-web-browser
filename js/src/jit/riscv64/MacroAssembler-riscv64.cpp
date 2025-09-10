@@ -4274,9 +4274,8 @@ static void CompareExchange(MacroAssembler& masm,
     }
 
     masm.lr_w(true, true, output, scratch2);
-    masm.ma_li(scratch1, Imm64(UINT32_MAX));
-    masm.and_(oldval, oldval, scratch1);
-    masm.ma_b(output, oldval, &end, Assembler::NotEqual, ShortJump);
+    masm.SignExtendWord(scratch1, oldval);
+    masm.ma_b(output, scratch1, &end, Assembler::NotEqual, ShortJump);
     masm.mv(scratch1, newval);
     masm.sc_w(true, true, scratch1, scratch2, scratch1);
     masm.ma_b(scratch1, scratch1, &again, Assembler::NonZero, ShortJump);
