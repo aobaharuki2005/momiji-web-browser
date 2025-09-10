@@ -179,8 +179,8 @@ pref("dom.ipc.keepProcessesAlive.extension", 1);
 // Keep empty content process alive on Android (bug 1447393)
 pref("dom.ipc.keepProcessesAlive.web", 1);
 
-// Disable the preallocated process on Android
-pref("dom.ipc.processPrelaunch.enabled", false);
+// Enable the preallocated process on Android
+pref("dom.ipc.processPrelaunch.enabled", true);
 
 // Increase script timeouts (bug 485610)
 pref("dom.max_script_run_time", 20);
