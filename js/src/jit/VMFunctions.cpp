@@ -2647,7 +2647,13 @@ bool DoStringToInt64(JSContext* cx, HandleString str, uint64_t* res) {
 
 bool PreserveWrapper(JSContext* cx, JSObject* obj) {
   AutoUnsafeCallWithABI unsafe;
-  return cx->zone()->preserveWrapper(obj);
+  if (!cx->zone()->preserveWrapper(obj)) {
+    cx->runtime()->commitPendingWrapperPreservations(obj->zone());
+    Rooted<JSObject*> rooted(cx, obj);
+    bool success = cx->runtime()->preserveWrapperCallback(cx, rooted);
+    MOZ_RELEASE_ASSERT(success);
+  }
+  return true;
 }
 
 template <EqualityKind Kind>
