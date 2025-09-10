@@ -767,14 +767,6 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
     if (mSession != null) {
       final GeckoRuntime runtime = mSession.getRuntime();
       if (runtime != null) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-          // If API is 31+, DisplayManager API may report previous information.
-          // So we have to report it again. But since Configuration.orientation may still have
-          // previous information even if onConfigurationChanged is called, we have to calculate it
-          // from display data.
-          runtime.orientationChanged();
-        }
-
         runtime.configurationChanged(newConfig);
       }
     }
