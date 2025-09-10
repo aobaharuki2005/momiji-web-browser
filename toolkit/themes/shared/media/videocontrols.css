@@ -250,7 +250,7 @@
   height: var(--thumb-size);
   width: var(--thumb-size);
   border: none;
-  border-radius: var(--border-radius-circle);
+  border-radius: 50%;
   /* this is a foreground element even though it is implemented as a background */
   background-color: currentColor;
   filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.65));
@@ -506,7 +506,7 @@
   border: none;
   min-width: var(--clickToPlay-size);
   min-height: var(--clickToPlay-size);
-  border-radius: var(--border-radius-circle);
+  border-radius: 50%;
   background-image: url(chrome://global/skin/media/play-fill.svg);
   background-repeat: no-repeat;
   background-position: 54% 50%;
