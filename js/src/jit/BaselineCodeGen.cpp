@@ -3041,65 +3041,47 @@ bool BaselineCompilerCodeGen::emitConstantStrictEq(JSOp op) {
   frame.popRegsAndSync(1);
 
   ValueOperand value = R0;
-  Label fail, pass, done;
+  Label pass, done;
 
   switch (data.type()) {
     case ConstantCompareOperand::EncodedType::Int32: {
       int32_t constantVal = data.toInt32();
 
-      Label maybeDouble;
-      masm.branchTestInt32(Assembler::NotEqual, value, &maybeDouble);
-      masm.branch32(JSOpToCondition(op, true), value.payloadOrValueReg(),
-                    Imm32(constantVal), &pass,
-                    MacroAssembler::LhsHighBitsAreClean::No);
-      masm.jump(&fail);
-
-      masm.bind(&maybeDouble);
-      {
-        FloatRegister unboxedValue = FloatReg0;
-        FloatRegister floatPayload = FloatReg1;
-
-        masm.branchTestDouble(Assembler::NotEqual, value,
-                              op == JSOp::StrictEq ? &fail : &pass);
-
-        masm.unboxDouble(value, unboxedValue);
-        masm.loadConstantDouble(double(constantVal), floatPayload);
-        masm.branchDouble(JSOpToDoubleCondition(op), unboxedValue, floatPayload,
-                          &pass);
+      Label fail;
+      masm.branchTestValue(Assembler::Equal, value, Int32Value(constantVal),
+                           op == JSOp::StrictEq ? &pass : &fail);
+      if (constantVal != 0) {
+        masm.branchTestValue(JSOpToCondition(op, false), value,
+                             DoubleValue(constantVal), &pass);
+      } else {
+        masm.branchTestValue(Assembler::Equal, value, DoubleValue(0.0),
+                             op == JSOp::StrictEq ? &pass : &fail);
+        masm.branchTestValue(JSOpToCondition(op, false), value,
+                             DoubleValue(-0.0), &pass);
       }
+      masm.bind(&fail);
       break;
     }
 
     case ConstantCompareOperand::EncodedType::Boolean: {
       bool constantVal = data.toBoolean();
-      Register boolUnboxed = R1.scratchReg();
-      masm.fallibleUnboxBoolean(value, boolUnboxed,
-                                op == JSOp::StrictEq ? &fail : &pass);
-      masm.branch32(JSOpToCondition(op, true), boolUnboxed, Imm32(constantVal),
-                    &pass);
+
+      masm.branchTestValue(JSOpToCondition(op, false), value,
+                           BooleanValue(constantVal), &pass);
       break;
     }
 
     case ConstantCompareOperand::EncodedType::Null: {
-      masm.branchTestNull(Assembler::NotEqual, value,
-                          op == JSOp::StrictEq ? &fail : &pass);
-      if (op == JSOp::StrictEq) {
-        masm.jump(&pass);
-      }
+      masm.branchTestNull(JSOpToCondition(op, false), value, &pass);
       break;
     }
 
     case ConstantCompareOperand::EncodedType::Undefined: {
-      masm.branchTestUndefined(Assembler::NotEqual, value,
-                               op == JSOp::StrictEq ? &fail : &pass);
-      if (op == JSOp::StrictEq) {
-        masm.jump(&pass);
-      }
+      masm.branchTestUndefined(JSOpToCondition(op, false), value, &pass);
       break;
     }
   }
 
-  masm.bind(&fail);
   {
     masm.moveValue(BooleanValue(false), R0);
     masm.jump(&done);
