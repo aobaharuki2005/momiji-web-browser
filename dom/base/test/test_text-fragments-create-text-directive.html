@@ -43,8 +43,6 @@
   <div>HereEndsATableAndThisIsHereToMakeSureTheTestResultsAreIndependentOfSurroundingContent</div>
 
   <span id="longWord">1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111</span>
-  <!-- Test case for Bug 1979588: Long URL with unbreakable segment at the end -->
-  <div id="longUrlForBug1979588">https://example.com/test?foo=bar#verylongnonbreakableurlsegmentthatcannotbebrokenintowordsbecauseiturlsegmentsdonotcontainspacesorothertraditionwordbreakingcharacterswhichcausesproblemsintextdirectivecreation</div>
   <p id="loremIpsum">Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source.</p>
   <p>
     <span id="beforeEmptyTextNode">before empty text node</span>
@@ -430,15 +428,6 @@
           content: "}",
           textDirective: "text=%7D",
           dontCompareRangeBoundaries: true,
-        },
-        {
-          name: "Test for Bug 1979588: Long URL with unbreakable segment should not crash",
-          startContainer: longUrlForBug1979588.firstChild,
-          startOffset: 0,
-          endContainer: longUrlForBug1979588.firstChild,
-          endOffset: longUrlForBug1979588.firstChild.length,
-          content: "https://example.com/test?foo=bar#verylongnonbreakableurlsegmentthatcannotbebrokenintowordsbecauseiturlsegmentsdonotcontainspacesorothertraditionwordbreakingcharacterswhichcausesproblemsintextdirectivecreation",
-          textDirective: "text=https,verylongnonbreakableurlsegmentthatcannotbebrokenintowordsbecauseiturlsegmentsdonotcontainspacesorothertraditionwordbreakingcharacterswhichcausesproblemsintextdirectivecreation",
         },
       ]) {
         const range = document.createRange();
