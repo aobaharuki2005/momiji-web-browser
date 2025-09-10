@@ -13605,11 +13605,11 @@ const FocusTimer = ({
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "focus-timer-tabs-buttons"
   }, /*#__PURE__*/external_React_default().createElement("moz-button", {
-    type: timerType === "focus" ? "primary" : "ghost",
+    type: timerType === "focus" ? "default" : "ghost",
     "data-l10n-id": "newtab-widget-timer-mode-focus",
     onClick: () => toggleType("focus")
   }), /*#__PURE__*/external_React_default().createElement("moz-button", {
-    type: timerType === "break" ? "primary" : "ghost",
+    type: timerType === "break" ? "default" : "ghost",
     "data-l10n-id": "newtab-widget-timer-mode-break",
     onClick: () => toggleType("break")
   })), /*#__PURE__*/external_React_default().createElement("div", {

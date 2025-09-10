@@ -4578,10 +4578,23 @@ h3 {
 
 .focus-timer-tabs-buttons {
   display: flex;
-  gap: var(--space-small);
+  gap: var(--space-xxsmall);
   justify-content: center;
   flex-grow: 1;
-  margin-inline-start: calc(var(--space-xlarge) + var(--space-small));
+}
+.focus-timer-tabs-buttons moz-button {
+  flex-grow: 1;
+}
+.focus-timer-tabs-buttons moz-button::part(button) {
+  min-height: 24px;
+}
+.focus-timer-tabs-buttons moz-button:first-of-type::part(button) {
+  border-end-end-radius: 0;
+  border-start-end-radius: 0;
+}
+.focus-timer-tabs-buttons moz-button:last-of-type::part(button) {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
 }
 
 .focus-timer-context-menu-wrapper {

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+$timer-tabs-button-height: 24px;
+
 .focus-timer {
   grid-column: span 1;
   width: var(--newtab-card-width-medium);
@@ -34,10 +36,31 @@ h3 {
 // Align the context menu button to the right while keeping the Focus/Break button centered
 .focus-timer-tabs-buttons {
   display: flex;
-  gap: var(--space-small);
+  gap: var(--space-xxsmall);
   justify-content: center;
   flex-grow: 1;
-  margin-inline-start: calc(var(--space-xlarge) + var(--space-small));
+
+  moz-button {
+    flex-grow: 1;
+  }
+
+  moz-button::part(button) {
+    min-height: $timer-tabs-button-height;
+  }
+
+  moz-button:first-of-type {
+    &::part(button) {
+      border-end-end-radius: 0;
+      border-start-end-radius: 0;
+    }
+  }
+
+  moz-button:last-of-type {
+    &::part(button) {
+      border-start-start-radius: 0;
+      border-end-start-radius: 0;
+    }
+  }
 }
 
 // Make sure context menu is only visible as you hover over the Timer widget
