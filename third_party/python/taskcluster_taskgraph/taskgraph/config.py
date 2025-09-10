@@ -155,7 +155,7 @@ class GraphConfig:
     @property
     def vcs_root(self):
         try:
-            repo = get_repository(os.getcwd())
+            repo = get_repository(self.root_dir)
             return Path(repo.path)
         except RuntimeError:
             root = Path(self.root_dir)

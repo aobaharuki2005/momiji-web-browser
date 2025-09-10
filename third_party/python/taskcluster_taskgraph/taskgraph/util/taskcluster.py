@@ -363,8 +363,8 @@ def status_task_batched(task_ids, use_proxy=False):
         if (len(statuses) + len(response_tasks)) > len(task_ids):
             raise ValueError("more task statuses were returned than were asked for")
         statuses.update((t["taskId"], t["status"]) for t in response_tasks)
-        continuationToken = response_data.get("continuationToken")
-        if continuationToken is None:
+        continuation_token = response_data.get("continuationToken")
+        if continuation_token is None:
             break
     return statuses
 
