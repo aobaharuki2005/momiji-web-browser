@@ -349,6 +349,12 @@ dependencies {
     testImplementation libs.mozilla.glean.forUnitTests
     testImplementation libs.robolectric
 
+    // We need a version constraint due to AGP silently trying to downgrade the version otherwise.
+    // https://issuetracker.google.com/issues/349628366
+    constraints {
+        implementation(libs.androidx.concurrent)
+    }
+    androidTestImplementation libs.androidx.concurrent
     androidTestImplementation libs.androidx.test.core
     androidTestImplementation libs.androidx.test.espresso.core
     androidTestImplementation libs.androidx.test.espresso.idling.resource

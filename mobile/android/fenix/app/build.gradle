@@ -715,6 +715,12 @@ dependencies {
     testImplementation libs.robolectric
 
     androidTestImplementation libs.androidx.benchmark.junit4
+    // We need a version constraint due to AGP silently trying to downgrade the version otherwise.
+    // https://issuetracker.google.com/issues/349628366
+    constraints {
+        implementation(libs.androidx.concurrent)
+    }
+    androidTestImplementation libs.androidx.concurrent
     androidTestImplementation platform(libs.androidx.compose.bom)
     androidTestImplementation libs.androidx.compose.ui.test
     androidTestImplementation libs.androidx.test.core
