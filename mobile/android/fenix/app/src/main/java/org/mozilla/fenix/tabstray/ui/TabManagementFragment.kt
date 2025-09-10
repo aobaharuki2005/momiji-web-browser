@@ -582,7 +582,7 @@ class TabManagementFragment : Fragment() {
         isNewCollection: Boolean = false,
     ) {
         val messageResId = when {
-            isNewCollection -> R.string.create_collection_tabs_saved_new_collection
+            isNewCollection -> R.string.create_collection_tabs_saved_new_collection_2
             tabSize == 1 -> R.string.create_collection_tab_saved
             else -> return // Don't show snackbar for multiple tabs
         }
