@@ -55,6 +55,16 @@ TASK_CONFIG_TESTS = {
             },
         ),
         (
+            ["dom/indexedDB/test/test_add_put.html", "--allow-testfile-path"],
+            {
+                "try_task_config": {
+                    "env": {
+                        "MOZHARNESS_TEST_PATHS": '{"xpcshell": ["dom/indexedDB/test/test_add_put.html"]}'
+                    }
+                }
+            },
+        ),
+        (
             ["dom/indexedDB", "testing"],
             {
                 "try_task_config": {
@@ -116,7 +126,7 @@ TASK_CONFIG_TESTS = {
 
 @pytest.fixture
 def config_patch_resolver(patch_resolver):
-    def inner(paths):
+    def inner(paths, allow_testfile_path):
         patch_resolver(
             [], [{"flavor": "xpcshell", "srcdir_relpath": path} for path in paths]
         )
