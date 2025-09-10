@@ -267,13 +267,13 @@ export class SettingControl extends MozLitElement {
   }
 
   async disableExtension() {
-    this.setting.disableControllingExtension();
+    await this.setting.disableControllingExtension();
   }
 
   isControlledByExtension() {
     return (
-      this.setting.controllingExtensionInfo.id &&
-      this.setting.controllingExtensionInfo.name
+      this.setting.controllingExtensionInfo?.id &&
+      this.setting.controllingExtensionInfo?.name
     );
   }
 
@@ -333,6 +333,11 @@ export class SettingControl extends MozLitElement {
         .messageL10nId=${this.extensionMessageId}
         .messageL10nArgs=${args}
       >
+        <moz-button
+          slot="actions"
+          @click=${this.disableExtension}
+          data-l10n-id="disable-extension"
+        ></moz-button>
       </moz-message-bar>`;
     }
     return staticHtml`

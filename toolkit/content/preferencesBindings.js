@@ -25,6 +25,7 @@ const Preferences = (window.Preferences = (function () {
     ExtensionSettingsStore:
       "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
     AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+    Management: "resource://gre/modules/Extension.sys.mjs",
   });
 
   function getElementsByAttribute(name, value) {
@@ -912,8 +913,23 @@ const Preferences = (window.Preferences = (function () {
      */
     _deps;
 
+    _observeExtensionSettingChanged = (_, setting) => {
+      if (
+        setting.key == this.config.controllingExtensionInfo.storeId &&
+        setting.type == "prefs"
+      ) {
+        this._checkForControllingExtension();
+      }
+    };
+
     async _checkForControllingExtension() {
+      // Make sure all settings API modules are loaded
+      // and the extension controlling settings metadata
+      // loaded from the ExtensionSettingsStore backend.
+      await lazy.Management.asyncLoadSettingsModules();
       await lazy.ExtensionSettingsStore.initialize();
+      // Retrieve the extension controlled settings info
+      // for the given setting storeId.
       let info = lazy.ExtensionSettingsStore.getSetting(
         "prefs",
         this.config.controllingExtensionInfo?.storeId
@@ -932,7 +948,17 @@ const Preferences = (window.Preferences = (function () {
     _clearControllingExtensionInfo() {
       delete this.controllingExtensionInfo.id;
       delete this.controllingExtensionInfo.name;
+      // Request an update to the setting control so the UI is in the correct state
+      this.onChange();
     }
+
+    watchExtensionPrefChange() {
+      lazy.Management.on(
+        "extension-setting-changed",
+        this._observeExtensionSettingChanged
+      );
+    }
+
     constructor(id, config) {
       super();
 
@@ -956,6 +982,7 @@ const Preferences = (window.Preferences = (function () {
       }
       if (this.config.controllingExtensionInfo?.storeId) {
         this._checkForControllingExtension();
+        this.watchExtensionPrefChange();
       }
       if (typeof this.config.setup === "function") {
         this._teardown = this.config.setup(this.onChange, this.deps, this);
@@ -1042,10 +1069,34 @@ const Preferences = (window.Preferences = (function () {
       }
     }
 
+    async disableControllingExtension() {
+      if (
+        this.controllingExtensionInfo.name &&
+        this.controllingExtensionInfo.id
+      ) {
+        await lazy.ExtensionSettingsStore.initialize();
+        let { id } = await lazy.ExtensionSettingsStore.getSetting(
+          "prefs",
+          this.controllingExtensionInfo.storeId
+        );
+        if (id) {
+          let addon = await lazy.AddonManager.getAddonByID(id);
+          await addon.disable();
+        }
+      }
+    }
+
     destroy() {
       if (typeof this._teardown === "function") {
         this._teardown();
         this._teardown = null;
+      }
+
+      if (this.config.controllingExtensionInfo?.storeId) {
+        lazy.Management.off(
+          "extension-setting-changed",
+          this._observeExtensionSettingChanged
+        );
       }
     }
   }
