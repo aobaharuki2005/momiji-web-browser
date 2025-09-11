@@ -49,12 +49,16 @@ add_task(async function () {
     "jsdebugger"
   );
   const dbg = createDebuggerContext(toolbox);
-  const onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
 
+  // Select a source so that the source editor gets initialized
+  await selectSource(dbg, "doc-scripts.html");
+
+  const onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
   // Pending breakpoints are installed asynchronously, keep invoking the entry
   // function until the debugger pauses.
-  await waitUntil(() => {
+  await waitUntil(async () => {
     invokeInTab("main");
+    await waitForPaused(dbg);
     return isPaused(dbg);
   });
   await onBreakpoint;
