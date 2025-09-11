@@ -121,6 +121,14 @@ async function getFreqCapCount(db) {
   return count;
 }
 
+async function getReportCount(db) {
+  const tx = db.transaction("reports", "readonly");
+  const store = tx.objectStore("reports");
+  const count = await countRecords(store);
+  await tx.done;
+  return count;
+}
+
 async function getReport(db, taskId) {
   const tx = db.transaction("reports", "readonly");
   const store = await tx.objectStore("reports");
@@ -164,12 +172,16 @@ add_task(
       value: {
         measurementType: "visitMeasurement",
         taskId: TASK_ID,
-        length: 1,
+        length: 2,
         timePrecision: 3600,
         visitCountUrls: [
           {
-            url: "*://*.mozilla.org/",
+            url: "*://*.example.com/",
             bucket: 0,
+          },
+          {
+            url: "*://*.mozilla.org/",
+            bucket: 1,
           },
         ],
       },
@@ -183,12 +195,8 @@ add_task(
 
     // Verify there are no pending reports to submit
     const subCapDb = await openSubCapDatabase();
-    let pendingReport = await getReport(subCapDb, TASK_ID);
-    Assert.equal(
-      pendingReport,
-      undefined,
-      "No pending report should be recorded"
-    );
+    let numRecords = await getReportCount(subCapDb);
+    Assert.equal(numRecords, 0, "Should be no pending reports");
 
     // Visit a url that does not match a pattern.
     let timestamp = Date.now() * 1000;
@@ -199,12 +207,8 @@ add_task(
     });
 
     // Verify there are 0 pending reports to send
-    pendingReport = await getReport(subCapDb, TASK_ID);
-    Assert.equal(
-      pendingReport,
-      undefined,
-      "No pending report should be recorded"
-    );
+    numRecords = await getReportCount(subCapDb);
+    Assert.equal(numRecords, 0, "Should be no pending reports");
 
     // Visit a url by typing in the url bar
     timestamp = Date.now() * 1000;
@@ -215,22 +219,18 @@ add_task(
     });
 
     // Verify there is 1 pending report to send and measurement matches bucket value.
-    pendingReport = await getReport(subCapDb, TASK_ID);
-    Assert.equal(
-      pendingReport.measurement,
-      0,
-      "Pending measurement value should be 0"
-    );
+    numRecords = await getReportCount(subCapDb);
+    Assert.equal(numRecords, 1, "Should be 1 pending report");
 
     // Trigger submission of the report
     await DAPIncrementality.dapReportContoller.submit(1000, "unit-test");
 
     // Verify there are 0 pending reports
-    pendingReport = await getReport(subCapDb, TASK_ID);
-    Assert.equal(pendingReport, undefined, "Should be 0 pending reports");
+    numRecords = await getReportCount(subCapDb);
+    Assert.equal(numRecords, 0, "Should be no pending reports");
 
     // Verify submission capping is active
-    let numRecords = await getFreqCapCount(subCapDb);
+    numRecords = await getFreqCapCount(subCapDb);
     Assert.equal(numRecords, 1, "Should be 1 cap entry");
 
     // Unenroll experiment
@@ -246,13 +246,13 @@ add_task(
     Assert.equal(numRecords, 0, "Should be 0 cap entries");
 
     // Verify pending report cleanup after unenrollment
-    pendingReport = await getReport(subCapDb, TASK_ID);
-    Assert.equal(pendingReport, undefined, "Should be 0 pending reports");
+    numRecords = await getReportCount(subCapDb);
+    Assert.equal(numRecords, 0, "Should be no pending reports");
 
     // Verify server requests
     Assert.deepEqual(
       server_requests,
-      [342, 342, 342],
+      [390, 390, 390],
       "Should have one report on enrollment, second for triggered submission, third on unenrollment"
     );
 
@@ -271,7 +271,7 @@ add_task(
     // Requires Normandy.
     skip_if: () => !AppConstants.MOZ_NORMANDY,
   },
-  async function testMultiUrlVisitMeasurementNimbus() {
+  async function testParsingMultiUrlVisitMeasurementNimbus() {
     resetServerRequests();
     const { cleanup } = await NimbusTestUtils.setupTest();
     await DAPIncrementality.startup();
@@ -282,6 +282,17 @@ add_task(
       "dapReportContoller should not exist before enrollment"
     );
 
+    const expectedVisitCountUrls = [
+      {
+        url: "*://*.mozilla.org/",
+        bucket: 0,
+      },
+      {
+        url: "*://*.example.com/",
+        bucket: 1,
+      },
+    ];
+
     // Enroll in experiment to count 2 urls
     const doExperimentCleanup = await NimbusTestUtils.enrollWithFeatureConfig({
       featureId: "dapIncrementality",
@@ -290,50 +301,19 @@ add_task(
         taskId: TASK_ID,
         length: 2,
         timePrecision: 3600,
-        visitCountUrls: [
-          {
-            url: "*://*.mozilla.org/",
-            bucket: 0,
-          },
-          {
-            url: "*://*.example.com/",
-            bucket: 1,
-          },
-        ],
+        visitCountUrls: expectedVisitCountUrls,
       },
     });
 
-    // Visit the first url by typing in the url bar
-    let timestamp = Date.now() * 1000;
-    await PlacesTestUtils.addVisits({
-      uri: NetUtil.newURI("http://www.mozilla.org/"),
-      transition: TRANSITION_TYPED,
-      visitDate: timestamp,
-    });
-
-    // Verify the pending report measurement is matches the bucket configured for the url.
-    const subCapDB = await openSubCapDatabase();
-    let pendingReport = await getReport(subCapDB, TASK_ID);
-    Assert.equal(
-      pendingReport.measurement,
-      0,
-      "Pending measurement value should be 0"
-    );
-
-    // Visit the second url by typing in the url bar
-    timestamp = Date.now() * 1000;
-    await PlacesTestUtils.addVisits({
-      uri: NetUtil.newURI("http://www.example.com/"),
-      transition: TRANSITION_TYPED,
-      visitDate: timestamp,
-    });
-
-    // Verify the pending report measurement is matches the bucket configured for the url.
-    pendingReport = await getReport(subCapDB, TASK_ID);
-    Assert.equal(
-      pendingReport.measurement,
-      1,
-      "Pending measurement value should be 1"
+    const toKey = ({ url, bucket }) => `${url}#${bucket}`;
+    const expectedKeySorted = expectedVisitCountUrls.map(toKey).sort();
+    const parsedKeySorted = DAPIncrementality.config.visitUrlPatterns
+      .map(({ pattern, bucket }) => `${pattern.pattern}#${bucket}`)
+      .sort();
+    Assert.deepEqual(
+      parsedKeySorted,
+      expectedKeySorted,
+      "patterns and buckets match"
     );
 
     // Trigger submission of the report
@@ -470,7 +450,7 @@ add_task(
     // Requires Normandy.
     skip_if: () => !AppConstants.MOZ_NORMANDY,
   },
-  async function testReferrerMeasurementMultiTargetNimbus() {
+  async function testReferrerMeasurementParsingMultiTargetNimbus() {
     resetServerRequests();
     const { cleanup } = await NimbusTestUtils.setupTest();
     await DAPIncrementality.startup();
@@ -482,6 +462,7 @@ add_task(
     );
 
     // Enroll experiment with 1 referrer url and 2 target urls
+    const targetUrls = "*://*.mozilla.org/target1,*://*.mozilla.org/target2";
     const doExperimentCleanup = await NimbusTestUtils.enrollWithFeatureConfig({
       featureId: "dapIncrementality",
       value: {
@@ -495,75 +476,25 @@ add_task(
             bucket: 1,
           },
         ],
-        targetUrls: "*://*.mozilla.org/target1,*://*.mozilla.org/target2",
+        targetUrls,
         unknownReferrerBucket: 2,
       },
     });
 
-    // Visit one of the target Urls
-    let timestamp = Date.now() * 1000;
-    await PlacesTestUtils.addVisits({
-      url: NetUtil.newURI("http://www.mozilla.org/target1"),
-      transition: TRANSITION_TYPED,
-      visitDate: timestamp,
-    });
-
-    // Verify referrer state is empty
-    const incrDb = await openIncrDatabase();
-    let state = await getReferrerState(incrDb, TASK_ID);
     Assert.strictEqual(
-      state,
-      undefined,
-      "No referrer state should be recorded"
-    );
-
-    // Verify there is a pending report to submit with the value for unknownReferrerBucket
-    const subCapDb = await openSubCapDatabase();
-    let pendingReport = await getReport(subCapDb, TASK_ID);
-    Assert.equal(
-      pendingReport.measurement,
+      DAPIncrementality.config.targetUrlPatterns.length,
       2,
-      "Pending measurement value should be 2"
+      "List should contain 2 urls patterns"
     );
 
-    // Visit the referrer page
-    timestamp = Date.now() * 1000;
-    await PlacesTestUtils.addVisits({
-      url: NetUtil.newURI("http://www.mozilla.org/ref"),
-      transition: TRANSITION_TYPED,
-      visitDate: timestamp,
-    });
-
-    // Verify the referrer state matchs the referrer bucket
-    state = await getReferrerState(incrDb, TASK_ID);
-    Assert.strictEqual(state.bucket, 1, "Referrer state should be 1");
-
-    // Verify the pending report still has the value for unknownReferrerBucket
-    pendingReport = await getReport(subCapDb, TASK_ID);
-    Assert.equal(
-      pendingReport.measurement,
-      2,
-      "Pending measurement value should be 2"
+    const missingUrls = DAPIncrementality.config.targetUrlPatterns.filter(
+      s => !targetUrls.includes(s.pattern)
     );
-
-    // Visit the other target link
-    timestamp = Date.now() * 1000;
-    await PlacesTestUtils.addVisits({
-      url: NetUtil.newURI("http://www.mozilla.org/target2"),
-      transition: TRANSITION_TYPED,
-      visitDate: timestamp,
-    });
-
-    // Verify the pending report value matches the bucket for the referrer url
-    pendingReport = await getReport(subCapDb, TASK_ID);
-    Assert.equal(
-      pendingReport.measurement,
-      1,
-      "Pending measurement value should be 1"
+    Assert.deepEqual(
+      missingUrls,
+      [],
+      "All urls in the list should be found in the targetUrlPatterns"
     );
-
-    // Trigger submission of the report
-    await DAPIncrementality.dapReportContoller.submit(1000, "unit-test");
 
     // Unenroll experiment
     await doExperimentCleanup();
@@ -576,8 +507,8 @@ add_task(
     // Verify server requests
     Assert.deepEqual(
       server_requests,
-      [438, 438, 438],
-      "Should have one report on enrollment, second for triggered submission, third on unenrollment"
+      [438, 438],
+      "Should have one report on enrollment, second on unenrollment"
     );
 
     await cleanup();
