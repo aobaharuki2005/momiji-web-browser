@@ -16,6 +16,9 @@ const { ObliviousHTTP } = ChromeUtils.importESModule(
 
 const ENGINE_ID = "suggestions-engine-test";
 
+let server = useHttpServer();
+server.registerContentType("sjs", "sjs");
+
 const CONFIG = [
   {
     identifier: ENGINE_ID,
@@ -23,14 +26,14 @@ const CONFIG = [
       name: "other",
       urls: {
         suggestions: {
-          base: "https://example.com",
+          base: `${gHttpURL}/sjs/searchSuggestions.sjs`,
           params: [
             {
               name: "parameter",
               value: "14235",
             },
           ],
-          searchTermParamName: "suggest",
+          searchTermParamName: "q",
         },
       },
     },
@@ -91,7 +94,7 @@ add_task(async function simple_remote_results_merino() {
     providers: "google_suggest",
     google_suggest_params: new URLSearchParams([
       ["parameter", 14235],
-      ["suggest", "mo"],
+      ["q", "mo"],
     ]),
   };
 
@@ -176,7 +179,7 @@ add_task(async function simple_merino_empty_result() {
     providers: "google_suggest",
     google_suggest_params: new URLSearchParams([
       ["parameter", 14235],
-      ["suggest", "mo"],
+      ["q", "mo"],
     ]),
   };
 
@@ -233,4 +236,35 @@ add_task(async function simple_merino_empty_result() {
       );
     }
   }
+});
+
+add_task(async function test_merino_not_used_when_ohttp_prefs_not_set() {
+  // Clear the preferences, so that OHTTP isn't enabled.
+  Services.prefs.setCharPref("browser.urlbar.merino.ohttpConfigURL", "");
+  Services.prefs.setCharPref("browser.urlbar.merino.ohttpRelayURL", "");
+
+  ObliviousHTTP.ohttpRequest.resetHistory();
+
+  // Now do the actual request
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: Services.search.defaultEngine,
+  });
+  Assert.equal(result.term, "mo", "Should have the term matching the query");
+  Assert.equal(result.local.length, 0, "Should have no local suggestions");
+  Assert.deepEqual(
+    result.remote.map(r => r.value),
+    ["Mozilla", "modern", "mom"],
+    "Should have no remote suggestions"
+  );
+
+  Assert.equal(
+    ObliviousHTTP.ohttpRequest.callCount,
+    0,
+    "Should not have requested via OHTTP"
+  );
+
+  Services.search.defaultEngine.wrappedJSObject.Submission;
 });
