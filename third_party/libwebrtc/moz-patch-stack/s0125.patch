@@ -142,10 +142,10 @@ index f6ff7f218f..0000000000
 -  #endif
 -#endif
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 5ad73cf7ae..33e2e435da 100644
+index d6ce6ca352..0f5c4cd0d2 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
-@@ -390,6 +390,11 @@ rtc_library("desktop_capture") {
+@@ -391,6 +391,11 @@ rtc_library("desktop_capture") {
      ]
      if (build_with_mozilla) {
        libs -= [ "Xtst" ]

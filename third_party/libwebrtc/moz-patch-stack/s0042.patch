@@ -11,10 +11,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/72a83cb2e571023cd
  1 file changed, 4 insertions(+)
 
 diff --git a/modules/desktop_capture/win/window_capture_utils.cc b/modules/desktop_capture/win/window_capture_utils.cc
-index 263b2c3780..e6d990d7b3 100644
+index 58930f01a7..5d8fdb36f1 100644
 --- a/modules/desktop_capture/win/window_capture_utils.cc
 +++ b/modules/desktop_capture/win/window_capture_utils.cc
-@@ -79,6 +79,10 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
+@@ -78,6 +78,10 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
    DesktopCapturer::Source window;
    window.id = reinterpret_cast<WindowId>(hwnd);
  
