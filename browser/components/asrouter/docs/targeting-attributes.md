@@ -555,9 +555,9 @@ Information about the browser's top 25 frecent sites.
 
 
 #### Examples
-* Is mozilla.com in the user's top frecent sites with a frececy greater than 400?
+* Is `mozilla.com` in the user's top frecent sites and with a last visit date greater than April 4th, 2018(UNIX Epoch timestamp 1522843725924)?
 ```java
-"mozilla.com" in topFrecentSites[.frecency >= 400]|mapToProperty("host")
+"mozilla.com" in topFrecentSites[.lastVisitDate > 1522843725924]|mapToProperty("host")
 ```
 
 #### Definition
@@ -568,6 +568,7 @@ interface TopSite {
   url: string;
   // e.g. foo.mozilla.com
   host: string;
+  // Deprecated property unsupported in Firefox 145+, refer to bug 1987415 for guidance on future options.
   frecency: number;
   lastVisitDate: UnixEpochNumber;
 }
