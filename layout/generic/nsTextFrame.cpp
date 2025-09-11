@@ -108,7 +108,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 
 bool TextAutospace::Enabled(const StyleTextAutospace& aStyleTextAutospace,
-                            const StyleTextOrientation aStyleTextOrientation,
+                            const nsIFrame* aFrame,
                             const CharacterDataBuffer& aBuffer) {
   if (aStyleTextAutospace == StyleTextAutospace::NO_AUTOSPACE) {
     return false;
@@ -121,10 +121,13 @@ bool TextAutospace::Enabled(const StyleTextAutospace& aStyleTextAutospace,
     return false;
   }
 
-  if (aStyleTextOrientation == StyleTextOrientation::Upright) {
-    // If 'text-orientation: upright', a character cannot be a non-ideographic
-    // letter nor a non-ideographic numeral, so ideograph-alpha or
-    // ideograph-numeric boundaries cannot occur.
+  WritingMode wm = aFrame->GetWritingMode();
+  if (wm.IsVertical() && !wm.IsVerticalSideways() &&
+      aFrame->StyleVisibility()->mTextOrientation ==
+          StyleTextOrientation::Upright) {
+    // If writing-mode is vertical-* and 'text-orientation: upright',
+    // a character cannot be a non-ideographic letter or numeral,
+    // so ideograph-alpha or ideograph-numeric boundaries cannot occur.
     //
     // Note: 'text-combine-upright' is checked in
     // PropertyProvider::GetSpacingInternal(), so we do not check it here.
@@ -1984,8 +1987,7 @@ gfx::ShapedTextFlags nsTextFrame::GetSpacingFlags() const {
   // to be rare, and avoiding TEXT_ENABLE_SPACING is just an optimization.
   bool nonStandardSpacing =
       !ls.IsDefinitelyZero() || !ws.IsDefinitelyZero() ||
-      TextAutospace::Enabled(styleText->EffectiveTextAutospace(),
-                             StyleVisibility()->mTextOrientation,
+      TextAutospace::Enabled(styleText->EffectiveTextAutospace(), this,
                              CharacterDataBuffer());
   return nonStandardSpacing ? gfx::ShapedTextFlags::TEXT_ENABLE_SPACING
                             : gfx::ShapedTextFlags();
@@ -4317,8 +4319,7 @@ void nsTextFrame::PropertyProvider::InitFontGroupAndFontMetrics() const {
 
 void nsTextFrame::PropertyProvider::InitTextAutospace() {
   const auto styleTextAutospace = mTextStyle->EffectiveTextAutospace();
-  if (TextAutospace::Enabled(styleTextAutospace,
-                             mFrame->StyleVisibility()->mTextOrientation,
+  if (TextAutospace::Enabled(styleTextAutospace, mFrame,
                              mCharacterDataBuffer)) {
     mTextAutospace.emplace(styleTextAutospace,
                            GetFontMetrics()->InterScriptSpacingWidth());

@@ -57,7 +57,7 @@ class MOZ_STACK_CLASS TextAutospace final {
 
   // Returns true if inter-script spacing may be added at boundaries.
   static bool Enabled(const StyleTextAutospace& aStyleTextAutospace,
-                      const StyleTextOrientation aStyleTextOrientation,
+                      const nsIFrame* aFrame,
                       const dom::CharacterDataBuffer& aBuffer);
 
   TextAutospace(const StyleTextAutospace& aStyleTextAutospace,
