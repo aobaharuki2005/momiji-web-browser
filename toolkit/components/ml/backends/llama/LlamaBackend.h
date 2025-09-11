@@ -8,7 +8,9 @@
 #define mozilla_llama_backend_h
 
 #include <functional>
-#include "llama/llama.h"
+#include "LlamaRuntimeLinker.h"
+#include "ggml.h"
+#include "ggml-cpu.h"
 #include "mozilla/dom/LlamaRunnerBinding.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
@@ -88,24 +90,24 @@ class LlamaBackend {
 
   // Custom deleters for managing llama.cpp and ggml resources
   struct GgmlThreadpoolDeleter {
-    void operator()(ggml_threadpool* aTp) const { ggml_threadpool_free(aTp); }
+    void operator()(struct ggml_threadpool* aTp) const;
   };
 
   struct LlamaModelDeleter {
-    void operator()(llama_model* aModel) const { llama_model_free(aModel); }
+    void operator()(llama_model* aModel) const;
   };
 
   struct LlamaContextDeleter {
-    void operator()(llama_context* aCtx) const { llama_free(aCtx); }
+    void operator()(llama_context* aCtx) const;
   };
 
   struct LlamaSamplerDeleter {
-    void operator()(llama_sampler* aSmpl) const { llama_sampler_free(aSmpl); }
+    void operator()(llama_sampler* aSmpl) const;
   };
 
   // Smart pointer types for safe resource cleanup
   using GgmlThreadpoolUPtr =
-      mozilla::UniquePtr<ggml_threadpool, GgmlThreadpoolDeleter>;
+      mozilla::UniquePtr<struct ggml_threadpool, GgmlThreadpoolDeleter>;
   using LlamaModelUPtr = mozilla::UniquePtr<llama_model, LlamaModelDeleter>;
   using LlamaContextUPtr =
       mozilla::UniquePtr<llama_context, LlamaContextDeleter>;
@@ -122,6 +124,10 @@ class LlamaBackend {
  private:
   SamplerResult InitializeSampler(
       const mozilla::dom::Sequence<LlamaSamplerConfig>& aSamplers);
+
+  // Pointer to the dynamically loaded llama library
+  LlamaLibWrapper* mLib = nullptr;
+
   // Holds the model data. Initialized once & reused across generation sessions.
   LlamaModelUPtr mModel;
 

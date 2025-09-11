@@ -13,13 +13,17 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     UNIFIED_SOURCES += [
         "LlamaBackend.cpp",
         "LlamaRunner.cpp",
+        "LlamaRuntimeLinker.cpp",
     ]
 
     EXPORTS.mozilla.dom += [
         "LlamaRunner.h",
     ]
 
-    EXPORTS.mozilla.llama += ["LlamaBackend.h"]
+    EXPORTS.mozilla.llama += [
+        "LlamaBackend.h",
+        "LlamaRuntimeLinker.h",
+    ]
 
     LOCAL_INCLUDES += [
         "/dom/base",
