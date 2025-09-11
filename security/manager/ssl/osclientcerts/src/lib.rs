@@ -29,7 +29,7 @@ extern crate xpcom;
 
 use nserror::{nsresult, NS_OK};
 use pkcs11_bindings::*;
-use rsclientcerts::manager::Manager;
+use rsclientcerts::manager::{IsSearchingForClientCerts, Manager};
 use std::convert::TryInto;
 use std::os::raw::c_char;
 use std::sync::Mutex;
@@ -54,7 +54,7 @@ use crate::backend_windows::Backend;
 /// at a time, but there is no restriction on which threads may use it. Note that the underlying OS
 /// APIs may not necessarily be thread safe. For platforms where this is the case, the `Backend`
 /// will synchronously run the relevant code on a background thread.
-static MANAGER: Mutex<Option<Manager<Backend>>> = Mutex::new(None);
+static MANAGER: Mutex<Option<Manager<Backend, IsGeckoSearchingForClientCerts>>> = Mutex::new(None);
 
 // Obtaining a handle on the manager proxy is a two-step process. First the mutex must be locked,
 // which (if successful), results in a mutex guard object. We must then get a mutable refence to the
@@ -117,6 +117,18 @@ impl ShutdownObserver {
             let _ = unsafe { service.RemoveObserver(self.coerce(), topic) };
         }
         Ok(())
+    }
+}
+
+extern "C" {
+    fn IsGeckoSearchingForClientAuthCertificates() -> bool;
+}
+
+struct IsGeckoSearchingForClientCerts;
+
+impl IsSearchingForClientCerts for IsGeckoSearchingForClientCerts {
+    fn is_searching_for_client_certs() -> bool {
+        unsafe { IsGeckoSearchingForClientAuthCertificates() }
     }
 }
 

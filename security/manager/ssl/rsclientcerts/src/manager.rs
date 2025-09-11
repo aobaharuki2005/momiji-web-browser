@@ -6,14 +6,11 @@
 use pkcs11_bindings::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::convert::TryInto;
+use std::marker::PhantomData;
 
 use crate::error::{Error, ErrorType};
 use crate::error_here;
 use crate::util::CryptokiCert;
-
-extern "C" {
-    fn IsGeckoSearchingForClientAuthCertificates() -> bool;
-}
 
 pub trait CryptokiObject {
     fn matches(&self, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool;
@@ -46,6 +43,10 @@ pub trait ClientCertsBackend {
     fn is_logged_in(&self) -> bool {
         false
     }
+}
+
+pub trait IsSearchingForClientCerts {
+    fn is_searching_for_client_certs() -> bool;
 }
 
 const SUPPORTED_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
@@ -172,7 +173,7 @@ impl<B: ClientCertsBackend> Slot<B> {
 /// The `Manager` keeps track of the state of this module with respect to the PKCS #11
 /// specification. This includes what sessions are open, which search and sign operations are
 /// ongoing, and what objects are known and by what handle.
-pub struct Manager<B: ClientCertsBackend> {
+pub struct Manager<B: ClientCertsBackend, S: IsSearchingForClientCerts> {
     /// A map of open session handle to slot ID. Sessions can be created (opened) on a particular
     /// slot and later closed.
     sessions: BTreeMap<CK_SESSION_HANDLE, CK_SLOT_ID>,
@@ -185,16 +186,18 @@ pub struct Manager<B: ClientCertsBackend> {
     next_session: CK_SESSION_HANDLE,
     /// The list of slots managed by this Manager. The slot at index n has slot ID n + 1.
     slots: Vec<Slot<B>>,
+    phantom: PhantomData<S>,
 }
 
-impl<B: ClientCertsBackend> Manager<B> {
-    pub fn new(slots: Vec<B>) -> Manager<B> {
+impl<B: ClientCertsBackend, S: IsSearchingForClientCerts> Manager<B, S> {
+    pub fn new(slots: Vec<B>) -> Manager<B, S> {
         Manager {
             sessions: BTreeMap::new(),
             searches: BTreeMap::new(),
             signs: BTreeMap::new(),
             next_session: 1,
             slots: slots.into_iter().map(Slot::new).collect(),
+            phantom: PhantomData,
         }
     }
 
@@ -331,7 +334,7 @@ impl<B: ClientCertsBackend> Manager<B> {
         // authentication certificates (or all certificates).
         // Since these searches are relatively rare, this minimizes the impact of doing these
         // re-scans.
-        if unsafe { IsGeckoSearchingForClientAuthCertificates() } {
+        if S::is_searching_for_client_certs() {
             slot.maybe_find_new_objects()?;
         }
         let mut handles = Vec::new();

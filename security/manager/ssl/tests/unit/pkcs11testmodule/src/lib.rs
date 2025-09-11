@@ -8,14 +8,14 @@
 extern crate pkcs11_bindings;
 
 use pkcs11_bindings::*;
-use rsclientcerts::manager::Manager;
+use rsclientcerts::manager::{IsSearchingForClientCerts, Manager};
 use std::sync::Mutex;
 
 mod backend;
 
 use backend::Backend;
 
-static MANAGER: Mutex<Option<Manager<Backend>>> = Mutex::new(None);
+static MANAGER: Mutex<Option<Manager<Backend, AlwaysSearchingForClientCerts>>> = Mutex::new(None);
 
 macro_rules! try_to_get_manager_guard {
     () => {
@@ -33,6 +33,14 @@ macro_rules! manager_guard_to_manager {
             None => return CKR_DEVICE_ERROR,
         }
     };
+}
+
+struct AlwaysSearchingForClientCerts;
+
+impl IsSearchingForClientCerts for AlwaysSearchingForClientCerts {
+    fn is_searching_for_client_certs() -> bool {
+        true
+    }
 }
 
 extern "C" fn C_Initialize(_pInitArgs: CK_VOID_PTR) -> CK_RV {
@@ -375,29 +383,90 @@ extern "C" fn C_SetAttributeValue(
     CKR_FUNCTION_NOT_SUPPORTED
 }
 
+const RELEVANT_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
+    CKA_CLASS,
+    CKA_EC_PARAMS,
+    CKA_ID,
+    CKA_ISSUER,
+    CKA_KEY_TYPE,
+    CKA_LABEL,
+    CKA_MODULUS,
+    CKA_PRIVATE,
+    CKA_SERIAL_NUMBER,
+    CKA_SUBJECT,
+    CKA_TOKEN,
+    CKA_VALUE,
+];
+
 extern "C" fn C_FindObjectsInit(
-    _hSession: CK_SESSION_HANDLE,
-    _pTemplate: CK_ATTRIBUTE_PTR,
-    _ulCount: CK_ULONG,
+    hSession: CK_SESSION_HANDLE,
+    pTemplate: CK_ATTRIBUTE_PTR,
+    ulCount: CK_ULONG,
 ) -> CK_RV {
+    if pTemplate.is_null() {
+        return CKR_ARGUMENTS_BAD;
+    }
+    let mut attrs = Vec::new();
+    for i in 0..ulCount {
+        let attr = unsafe { &*pTemplate.offset(i as isize) };
+        // Copy out the attribute type to avoid making a reference to an unaligned field.
+        let attr_type = attr.type_;
+        if !RELEVANT_ATTRIBUTES.contains(&attr_type) {
+            return CKR_ATTRIBUTE_TYPE_INVALID;
+        }
+        let slice = unsafe {
+            std::slice::from_raw_parts(attr.pValue as *const u8, attr.ulValueLen as usize)
+        };
+        attrs.push((attr_type, slice.to_owned()));
+    }
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
+    match manager.start_search(hSession, attrs) {
+        Ok(()) => {}
+        Err(_) => return CKR_ARGUMENTS_BAD,
+    }
     CKR_OK
 }
 
 extern "C" fn C_FindObjects(
-    _hSession: CK_SESSION_HANDLE,
-    _phObject: CK_OBJECT_HANDLE_PTR,
-    _ulMaxObjectCount: CK_ULONG,
+    hSession: CK_SESSION_HANDLE,
+    phObject: CK_OBJECT_HANDLE_PTR,
+    ulMaxObjectCount: CK_ULONG,
     pulObjectCount: CK_ULONG_PTR,
 ) -> CK_RV {
-    if pulObjectCount.is_null() {
+    if phObject.is_null() || pulObjectCount.is_null() || ulMaxObjectCount == 0 {
         return CKR_ARGUMENTS_BAD;
     }
-    unsafe { *pulObjectCount = 0 };
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
+    let handles = match manager.search(hSession, ulMaxObjectCount as usize) {
+        Ok(handles) => handles,
+        Err(_) => return CKR_ARGUMENTS_BAD,
+    };
+    if handles.len() > ulMaxObjectCount as usize {
+        return CKR_DEVICE_ERROR;
+    }
+    unsafe {
+        *pulObjectCount = handles.len() as CK_ULONG;
+    }
+    for (index, handle) in handles.iter().enumerate() {
+        if index < ulMaxObjectCount as usize {
+            unsafe {
+                *(phObject.add(index)) = *handle;
+            }
+        }
+    }
     CKR_OK
 }
 
-extern "C" fn C_FindObjectsFinal(_hSession: CK_SESSION_HANDLE) -> CK_RV {
-    CKR_OK
+extern "C" fn C_FindObjectsFinal(hSession: CK_SESSION_HANDLE) -> CK_RV {
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
+    // It would be an error if there were no search for this session, but we can be permissive here.
+    match manager.clear_search(hSession) {
+        Ok(()) => CKR_OK,
+        Err(_) => CKR_DEVICE_ERROR,
+    }
 }
 
 extern "C" fn C_EncryptInit(
