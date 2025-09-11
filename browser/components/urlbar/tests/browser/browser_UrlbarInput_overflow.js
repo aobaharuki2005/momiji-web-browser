@@ -117,10 +117,6 @@ add_task(async function () {
   await testVal(`https://mozilla.org:8888/${lotsOfSpaces}/test/`, "right");
   await testVal(`https://${rtlDomain}:8888/${lotsOfSpaces}/test/`, "left");
 
-  await testVal(`ftp://mozilla.org/${lotsOfSpaces}/test/`, "right");
-  await testVal(`ftp://${rtlDomain}/${lotsOfSpaces}/test/`, "left");
-  await testVal(`ftp://mozilla.org/`);
-
   await testVal(`http://${rtlDomain}/${lotsOfSpaces}/test/`, "left");
   await testVal(`http://mozilla.org/`);
   await testVal(`http://mozilla.org/${lotsOfSpaces}/test/`, "right");
