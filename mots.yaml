@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-09-04T07:56:04.643807+00:00'
+updated_at: '2025-09-11T08:39:34.268334+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -614,6 +614,10 @@ people:
     bmo_id: 701257
     name: James Teow
     nick: jteow
+  - &jthomas
+    bmo_id: 421957
+    name: Jason Thomas
+    nick: jthomas
   - &jules
     bmo_id: 699161
     name: Jules Simplicio
@@ -1160,6 +1164,7 @@ modules:
     owners:
       - *bholley
       - *overholt
+      - *jthomas
       - *mossop
       - *nalexander
       - *nika
@@ -4610,5 +4615,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 01a5eb8ee7eaa08d89b512f8123f968e3cbae50c
-  export: e79e1e74782f808d38ea6309a0ed40f983ae793e
+  config: f795fa874f67eaa09d668f2b0498edcc46704e76
+  export: d8f845ae53106b196977988edaddd0882bd76e84
