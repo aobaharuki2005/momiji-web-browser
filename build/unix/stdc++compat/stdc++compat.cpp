@@ -182,6 +182,10 @@ template basic_ostringstream<char, char_traits<char>,
 
 template char*
 basic_string<char, char_traits<char>, allocator<char>>::data() noexcept;
+
+template basic_stringbuf<char, char_traits<char>,
+                         allocator<char>>::basic_stringbuf();
+
 #endif
 
 #if _GLIBCXX_RELEASE >= 11
