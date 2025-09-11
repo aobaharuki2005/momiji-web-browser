@@ -1964,7 +1964,8 @@ bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
   }();
 
   nscoord result = [&]() {
-    // Offset to the desired anchor edge, from the containing block's start edge.
+    // Offset to the desired anchor edge, from the containing block's start
+    // edge.
     const auto anchorOffsetFromStartEdge =
         anchorEdge == LogicalEdge::Start ? logicalAnchorRect.Start(propAxis, wm)
                                          : logicalAnchorRect.End(propAxis, wm);
