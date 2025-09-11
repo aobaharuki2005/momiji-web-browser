@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.process;
 
-import android.annotation.TargetApi;
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -13,7 +13,9 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import androidx.annotation.ChecksSdkIntAtLeast;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import java.security.SecureRandom;
 import java.util.BitSet;
 import java.util.EnumMap;
@@ -30,6 +32,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
   private static final int MAX_NUM_ISOLATED_CONTENT_SERVICES =
       GeckoChildProcessServices.MAX_NUM_ISOLATED_CONTENT_SERVICES;
 
+  @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.Q)
   private static boolean hasQApis() {
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;
   }
@@ -115,6 +118,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
       }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private class IsolatedBindDelegate implements BindServiceDelegate {
       @Override
       public boolean bindService(
@@ -307,7 +311,6 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
      * priority levels whose ordinals are greater than or equal to the current priority level
      * ordinal must be bound.
      */
-    @TargetApi(29)
     private boolean updateBindings() {
       XPCOMEventTarget.assertOnLauncherThread();
       int numBindSuccesses = 0;
@@ -480,6 +483,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
    * processes that may be started. We simply use a monotonically-increasing counter to generate
    * unique instance IDs in this case.
    */
+  @RequiresApi(Build.VERSION_CODES.Q)
   private static final class IsolatedContentPolicy implements ContentAllocationPolicy {
     private final Set<String> mRunningServiceIds = new HashSet<>();
 
@@ -523,6 +527,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
    * @param type The type of service.
    * @return Integer encapsulating the service ID, or null if no ID is necessary.
    */
+  @SuppressLint("NewApi") // Linter cannot follow our hasQApis() checks
   private String allocate(@NonNull final GeckoProcessType type) {
     XPCOMEventTarget.assertOnLauncherThread();
     if (type != GeckoProcessType.CONTENT && type != GeckoProcessType.CONTENT_ISOLATED) {
@@ -589,7 +594,6 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
    * Wrapper for bindService() that utilizes the Context.bindService() overload that accepts an
    * Executor argument, when available. Otherwise it falls back to the legacy overload.
    */
-  @TargetApi(29)
   private static boolean bindServiceDefault(
       @NonNull final Context context,
       @NonNull final Intent intent,
@@ -603,7 +607,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
     return context.bindService(intent, conn, flags);
   }
 
-  @TargetApi(29)
+  @RequiresApi(Build.VERSION_CODES.Q)
   private static boolean bindServiceIsolated(
       @NonNull final Context context,
       @NonNull final Intent intent,

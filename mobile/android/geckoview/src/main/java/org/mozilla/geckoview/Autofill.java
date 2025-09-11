@@ -6,7 +6,6 @@
 
 package org.mozilla.geckoview;
 
-import android.annotation.TargetApi;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
@@ -19,6 +18,7 @@ import androidx.annotation.AnyThread;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.UiThread;
 import androidx.collection.ArrayMap;
 import java.lang.annotation.Retention;
@@ -466,7 +466,7 @@ public class Autofill {
      * @param structure The view structure to fill
      * @param flags The autofill flags
      */
-    @TargetApi(23)
+    @RequiresApi(Build.VERSION_CODES.M)
     @UiThread
     public void fillViewStructure(
         @NonNull final View view, @NonNull final ViewStructure structure, final int flags) {
@@ -482,7 +482,7 @@ public class Autofill {
      * @param structure The view structure to fill
      * @param flags The autofill flags
      */
-    @TargetApi(23)
+    @RequiresApi(Build.VERSION_CODES.M)
     @UiThread
     public void fillViewStructure(
         final @NonNull Node node,

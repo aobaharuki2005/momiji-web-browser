@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.app.Service;
 import android.content.ComponentCallbacks;
@@ -58,6 +57,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.InputMethodSubtype;
 import android.webkit.MimeTypeMap;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.collection.SimpleArrayMap;
 import androidx.core.content.res.ResourcesCompat;
 import java.net.InetSocketAddress;
@@ -1561,7 +1561,7 @@ public class GeckoAppShell {
     }
   }
 
-  @TargetApi(Build.VERSION_CODES.S)
+  @RequiresApi(Build.VERSION_CODES.S)
   private static class AndroidSScreenCompat implements ScreenCompat {
     @SuppressLint("StaticFieldLeak")
     private static Context sWindowContext;

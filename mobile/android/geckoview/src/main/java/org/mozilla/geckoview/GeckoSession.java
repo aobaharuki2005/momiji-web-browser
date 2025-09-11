@@ -10,7 +10,6 @@ import static org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_NO_PR
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
@@ -43,6 +42,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.StringDef;
 import androidx.annotation.UiThread;
 import java.io.ByteArrayInputStream;
@@ -190,7 +190,7 @@ public class GeckoSession {
     default void dismiss() {}
   }
 
-  @TargetApi(Build.VERSION_CODES.P)
+  @RequiresApi(Build.VERSION_CODES.P)
   private class SessionMagnifierP implements GeckoSession.SessionMagnifier {
     private @Nullable View mView;
     private @Nullable Magnifier mMagnifier;
@@ -4023,7 +4023,7 @@ public class GeckoSession {
      * @param session The GeckoSession that initiated the callback.
      * @param icon The pointer icon sent from the content.
      */
-    @TargetApi(Build.VERSION_CODES.N)
+    @RequiresApi(Build.VERSION_CODES.N)
     @UiThread
     default void onPointerIconChange(
         @NonNull final GeckoSession session, @NonNull final PointerIcon icon) {

@@ -6,7 +6,6 @@
 
 package org.mozilla.geckoview;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -27,6 +26,7 @@ import android.view.MenuItem;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.UiThread;
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +93,7 @@ public class BasicSelectionActionDelegate
 
   private @Nullable ActionMode mActionModeForClipboardPermission;
 
-  @TargetApi(Build.VERSION_CODES.M)
+  @RequiresApi(Build.VERSION_CODES.M)
   private class Callback2Wrapper extends ActionMode.Callback2 {
     @Override
     public boolean onCreateActionMode(final ActionMode actionMode, final Menu menu) {
@@ -498,7 +498,7 @@ public class BasicSelectionActionDelegate
     transformedRect.roundOut(outRect);
   }
 
-  @TargetApi(Build.VERSION_CODES.M)
+  @RequiresApi(Build.VERSION_CODES.M)
   @Override
   public void onShowActionRequest(final GeckoSession session, final Selection selection) {
     ThreadUtils.assertOnUiThread();
@@ -586,7 +586,7 @@ public class BasicSelectionActionDelegate
   }
 
   /** Callback class of clipboard permission for Android M+ */
-  @TargetApi(Build.VERSION_CODES.M)
+  @RequiresApi(Build.VERSION_CODES.M)
   private class ClipboardPermissionCallbackM extends ActionMode.Callback2 {
     private @Nullable GeckoResult<AllowOrDeny> mResult;
     private final @NonNull GeckoSession mSession;
@@ -648,7 +648,7 @@ public class BasicSelectionActionDelegate
    * @return A {@link GeckoResult} with {@link AllowOrDeny}, determining the response to the
    *     permission request for this site.
    */
-  @TargetApi(Build.VERSION_CODES.M)
+  @RequiresApi(Build.VERSION_CODES.M)
   @Override
   public GeckoResult<AllowOrDeny> onShowClipboardPermissionRequest(
       final GeckoSession session, final ClipboardPermission permission) {
