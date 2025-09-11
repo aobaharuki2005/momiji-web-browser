@@ -8,6 +8,7 @@
 #include "APZTestCommon.h"
 
 #include "InputUtils.h"
+#include "mozilla/ScrollPositionUpdate.h"
 
 TEST_F(APZCBasicTester, Overzoom) {
   // the visible area of the document in CSS pixels is x=10 y=0 w=100 h=100
@@ -888,4 +889,66 @@ TEST_F(APZCBasicTester, StartTolerance) {
   // Clean up by ending the touch gesture.
   mcc->AdvanceByMillis(1);
   TouchUp(apzc, {50, 90}, mcc->Time());
+}
+
+// A helper class for the ImmediatelyInterruptedSmoothScroll_Bug1984589
+// test below, which overrides APZCTreeManager::GetFrameTime() to
+// advance the time by 1ms every time GetFrameTime() is queried. This
+// is needed to reproduce the bug (specifically to ensure that in the
+// NotifyLayersUpdated call with two scroll updates, some time has
+// elapsed between the two updates).
+class APZCFrameTimeTester : public APZCBasicTester {
+  class FrameTimeAPZCTreeManager : public TestAPZCTreeManager {
+   public:
+    explicit FrameTimeAPZCTreeManager(MockContentControllerDelayed* aMcc)
+        : TestAPZCTreeManager(aMcc) {}
+
+   protected:
+    SampleTime GetFrameTime() override {
+      SampleTime result = mcc->GetSampleTime();
+      mcc->AdvanceByMillis(1);
+      return result;
+    }
+  };
+
+ protected:
+  TestAPZCTreeManager* CreateTreeManager() override {
+    return new FrameTimeAPZCTreeManager(mcc);
+  }
+};
+
+TEST_F(APZCFrameTimeTester, ImmediatelyInterruptedSmoothScroll_Bug1984589) {
+  // Set up a vertically scrollable scroll frame, with the starting scroll
+  // position at the bottom.
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetScrollableRect(CSSRect(0, 0, 100, 1000));
+  metrics.SetLayoutViewport(CSSRect(0, 900, 100, 100));
+  metrics.SetZoom(CSSToParentLayerScale(1.0));
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetVisualScrollOffset(CSSPoint(0, 900));
+  metrics.SetIsRootContent(true);
+  apzc->SetFrameMetrics(metrics);
+
+  // Simulate a main-thread transaction with two absolute scroll updates with
+  // SmoothMsd scroll mode: one that scrolls back to the top, and one that
+  // "interrupts" it by scrolling back to the bottom.
+  nsTArray<ScrollPositionUpdate> scrollUpdates;
+  scrollUpdates.AppendElement(ScrollPositionUpdate::NewSmoothScroll(
+      ScrollMode::SmoothMsd, ScrollOrigin::Other,
+      CSSPoint::ToAppUnits(CSSPoint(0, 0)), ScrollTriggeredByScript::Yes,
+      nullptr, ViewportType::Layout));
+  scrollUpdates.AppendElement(ScrollPositionUpdate::NewSmoothScroll(
+      ScrollMode::SmoothMsd, ScrollOrigin::Other,
+      CSSPoint::ToAppUnits(CSSPoint(0, 900)), ScrollTriggeredByScript::Yes,
+      nullptr, ViewportType::Layout));
+  metadata.SetScrollUpdates(scrollUpdates);
+  metrics.SetScrollGeneration(scrollUpdates.LastElement().GetGeneration());
+  apzc->NotifyLayersUpdated(metadata, false, true);
+
+  // Sample smooth scroll animations until they complete,
+  // and assert that at no point does the scroll position leave (0, 900).
+  do {
+    ASSERT_EQ(apzc->GetFrameMetrics().GetVisualScrollOffset().y, 900);
+  } while (SampleAnimationOneFrame());
 }

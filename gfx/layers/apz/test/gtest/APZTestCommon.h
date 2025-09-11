@@ -280,7 +280,6 @@ class TestAPZCTreeManager : public APZCTreeManager {
 
   SampleTime GetFrameTime() override { return mcc->GetSampleTime(); }
 
- private:
   RefPtr<MockContentControllerDelayed> mcc;
 };
 
