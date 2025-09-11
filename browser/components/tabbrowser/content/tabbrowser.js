@@ -114,12 +114,19 @@
           "moz-src:///browser/components/tabbrowser/TabMetrics.sys.mjs",
         TabStateFlusher:
           "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
+        TaskbarTabsUtils:
+          "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
+        TaskbarTabs: "resource:///modules/taskbartabs/TaskbarTabs.sys.mjs",
         UrlbarProviderOpenTabs:
           "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
       });
       ChromeUtils.defineLazyGetter(this, "tabLocalization", () => {
         return new Localization(
-          ["browser/tabbrowser.ftl", "branding/brand.ftl"],
+          [
+            "browser/tabbrowser.ftl",
+            "browser/taskbartabs.ftl",
+            "branding/brand.ftl",
+          ],
           true
         );
       });
@@ -1130,6 +1137,95 @@
       }
     }
 
+    /**
+     * The current Taskbar Tab associated with this window. This cannot
+     * change after it is first set.
+     *
+     * @type {TaskbarTab|null}
+     */
+    #taskbarTab = null;
+
+    /**
+     * The last title associated with this window, avoiding re-lookup
+     * of the container name and localizations.
+     *
+     * @type {string|null}
+     */
+    #taskbarTabTitle = null;
+
+    /**
+     * The last profile used when determining the Taskbar Tab title. (This
+     * can change, for example if the first profile is made after opening
+     * the Taskbar Tab.)
+     *
+     * @type {string|null}
+     */
+    #taskbarTabTitleLastProfile = null;
+
+    /**
+     * Determines the content of the window title that relates to the Taskbar
+     * Tab. This includes the name of the Taskbar Tab, of the container, and
+     * of the profile.
+     *
+     * If no Taskbar Tab is in use, the profile is added by
+     * getWindowTitleForBrowser and this returns null.
+     *
+     * @returns {string|null} The part of the title that was determined from
+     * the Taskbar Tab, or null if nothing is needed.
+     */
+    #determineTaskbarTabTitle(aProfile) {
+      if (!this._shouldExposeContentTitle) {
+        // The Taskbar Tab and container info expose what site the user's on.
+        return null;
+      }
+
+      if (
+        this.#taskbarTabTitle &&
+        this.#taskbarTabTitleLastProfile == aProfile
+      ) {
+        return this.#taskbarTabTitle;
+      }
+
+      let id = this.TaskbarTabsUtils.getTaskbarTabIdFromWindow(window);
+      if (!id) {
+        return null;
+      }
+
+      if (!this.#taskbarTab) {
+        this.TaskbarTabs.getTaskbarTab(id)
+          .then(tt => {
+            this.#taskbarTab = tt;
+            this.updateTitlebar();
+          })
+          .catch(() => {
+            // The taskbar tab doesn't exist; leave it as-is.
+          });
+        return null;
+      }
+
+      let containerLabel = this.#taskbarTab.userContextId
+        ? ContextualIdentityService.getUserContextLabel(
+            this.#taskbarTab.userContextId
+          )
+        : "";
+
+      let stringName = "taskbar-tab-title-default";
+      if (containerLabel && aProfile) {
+        stringName = "taskbar-tab-title-container-profile";
+      } else if (containerLabel && !aProfile) {
+        stringName = "taskbar-tab-title-container";
+      } else if (!containerLabel && aProfile) {
+        stringName = "taskbar-tab-title-profile";
+      }
+
+      this.#taskbarTabTitle = this.tabLocalization.formatValueSync(stringName, {
+        name: this.#taskbarTab.name,
+        container: containerLabel,
+        profile: aProfile,
+      });
+      return this.#taskbarTabTitle;
+    }
+
     #determineContentTitle(browser) {
       let title = "";
       if (
@@ -1192,7 +1288,9 @@
         SelectableProfileService?.isEnabled &&
         SelectableProfileService.currentProfile?.name.replace(/\0/g, "");
       // Note that empty/falsy bits get filtered below.
-      let parts = [contentTitle, profileIdentifier];
+
+      let taskbarTabTitle = this.#determineTaskbarTabTitle(profileIdentifier);
+      let parts = [contentTitle, taskbarTabTitle ?? profileIdentifier];
 
       // On macOS PB windows, add the private window suffix if we have a content
       // title. We'll add the brand name and private window suffix for all other
@@ -1205,9 +1303,13 @@
         parts.push(this.#cachedTitleInfo.privateWindowSuffixForContent);
       }
 
-      // Show the brand name if we don't have a content title, or suffix
-      // it everywhere except on macOS.
-      if (!contentTitle || AppConstants.platform != "macosx") {
+      // Show the brand name if we aren't a Taskbar Tab, since that is done in
+      // #determineTaskbarTabTitle. On macOS we only do this if we don't have a
+      // content title; elsewhere, the brand becomes a suffix in the title bar.
+      if (
+        !taskbarTabTitle &&
+        (!contentTitle || AppConstants.platform != "macosx")
+      ) {
         parts.push(
           this.#cachedTitleInfo[
             isTemporaryPrivateWindow ? "privateWindowTitle" : "mainWindowTitle"
