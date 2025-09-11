@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/** @import { RemoteSettingsSyncErrorReason } from "./Telemetry.sys.mjs" */
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
@@ -170,6 +172,13 @@ export const CheckRecipeResult = {
     };
   },
 };
+
+/**
+ * @typedef {object} RecipeCollection
+ * @property {string} collectionName
+ * @property {object[]} recipes
+ * @property {number} lastModified
+ */
 
 export class RemoteSettingsExperimentLoader {
   /**
@@ -401,19 +410,17 @@ export class RemoteSettingsExperimentLoader {
       );
     }
 
-    let allRecipes;
-    let loadingError = false;
+    let allRecipes = null;
     try {
       allRecipes = await this.getRecipesFromAllCollections({
         forceSync,
         trigger,
       });
     } catch (e) {
-      loadingError = true;
-      lazy.log.error("Failed to update from Remote Settings", e);
+      lazy.log.debug("Failed to update", e);
     }
 
-    if (!loadingError) {
+    if (allRecipes !== null) {
       const unenrolledExperimentSlugs = lazy.NimbusEnrollments
         .syncEnrollmentsEnabled
         ? await lazy.NimbusEnrollments.loadUnenrolledExperimentSlugsFromOtherProfiles()
@@ -458,7 +465,7 @@ export class RemoteSettingsExperimentLoader {
       Services.prefs.setIntPref(TIMER_LAST_UPDATE_PREF, lastUpdateTime);
     }
 
-    if (!loadingError) {
+    if (allRecipes !== null) {
       // Enrollments have not changed, so we don't need to notify.
       Services.obs.notifyObservers(null, "nimbus:enrollments-updated");
     }
@@ -479,34 +486,78 @@ export class RemoteSettingsExperimentLoader {
    * update.
    *
    * @returns {Promise<object[]>} The recipes from Remote Settings.
-   * @throws {Error} If we fail to retrieve recipes from any collection.
+   *
+   * @throws {RemoteSettingsSyncError}
+   * @throws {BackwardsSyncError}
+   * @throws {InvalidLastModifiedError}
    */
   async getRecipesFromAllCollections({ forceSync = false, trigger } = {}) {
-    let experiments = null;
-    let secureExperiments = null;
-
     try {
-      experiments = await this.getRecipesFromCollection({
-        forceSync,
-        client: this.remoteSettingsClients[EXPERIMENTS_COLLECTION],
-        ...RS_COLLECTION_OPTIONS[EXPERIMENTS_COLLECTION],
-      });
+      const recipes = [];
 
-      secureExperiments = await this.getRecipesFromCollection({
-        forceSync,
-        client: this.remoteSettingsClients[SECURE_EXPERIMENTS_COLLECTION],
-        ...RS_COLLECTION_OPTIONS[SECURE_EXPERIMENTS_COLLECTION],
-      });
-    } finally {
-      lazy.NimbusTelemetry.recordRemoteSettingsSync(
-        forceSync,
-        experiments,
-        secureExperiments,
-        trigger
-      );
+      // We may be in an xpcshell test that has not initialized the
+      // ProfilesDatastoreService.
+      //
+      // TODO(bug 1967779): require the ProfilesDatastoreService to be initialized
+      // and remove this check.
+      const timestamps = lazy.NimbusEnrollments.databaseEnabled
+        ? new Map()
+        : null;
+
+      for (const collectionKind of [
+        EXPERIMENTS_COLLECTION,
+        SECURE_EXPERIMENTS_COLLECTION,
+      ]) {
+        const client = this.remoteSettingsClients[collectionKind];
+        const collectionOptions = RS_COLLECTION_OPTIONS[collectionKind];
+
+        const collection = await this.getRecipesFromCollection({
+          forceSync,
+          client,
+          ...collectionOptions,
+        });
+
+        // It is much more likely for the secure experiments collection to be
+        // empty, so we do not emit telemetry when that is the case.
+        if (
+          collection.recipes.length === 0 &&
+          collectionKind !== SECURE_EXPERIMENTS_COLLECTION
+        ) {
+          lazy.NimbusTelemetry.recordRemoteSettingsSyncError(
+            client.collectionName,
+            lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.EMPTY,
+            { forceSync, trigger }
+          );
+        }
+
+        timestamps?.set(client.collectionName, collection.lastModified);
+
+        recipes.push(...collection.recipes);
+      }
+
+      if (timestamps) {
+        // We may be in an xpcshell test that has not initialized the
+        // ProfilesDatastoreService.
+        //
+        // TODO(bug 1967779): require the ProfilesDatastoreService to be initialized
+        // and remove this check.
+        await this.manager.store._db.updateSyncTimestamps(timestamps);
+      }
+
+      return recipes;
+    } catch (e) {
+      lazy.log.error("Failed to retrieve recipes from Remote Settings", e);
+
+      if (e instanceof RemoteSettingsSyncError) {
+        lazy.NimbusTelemetry.recordRemoteSettingsSyncError(
+          e.collectionName,
+          e.reason,
+          { forceSync, trigger }
+        );
+      }
+
+      throw e;
     }
-
-    return [...experiments, ...secureExperiments];
   }
 
   /**
@@ -523,13 +574,12 @@ export class RemoteSettingsExperimentLoader {
    * @param {Set<string> | undefined} options.disallowedFeatureIds
    *        If a recipe uses any features in this list, it will be rejected.
    *
-   * @returns {object[]}
-   *          Recipes from the collection, filtered to match the allowed and
-   *          disallowed feature IDs, or null if there was an error syncing the
-   *          collection.
+   * @returns {Promise<RecipeCollection>} The recipes and last modified
+   * timestamp from the collection, filtered based on `requiredFeatureIds` and
+   * `disallowedFeatureIds`.
    *
-   * @throws {Error} If we fail to get the recipes from the Remote Settings
-   * client.
+   * @throws {RemoteSettingsSyncError} If we fail to get the recipes from the
+   * Remote Settings client.
    */
   async getRecipesFromCollection({
     client,
@@ -537,18 +587,42 @@ export class RemoteSettingsExperimentLoader {
     requiredFeatureIds = undefined,
     disallowedFeatureIds = undefined,
   } = {}) {
-    const recipes = await client.get({
-      forceSync,
-      emptyListFallback: false, // Throw instead of returning an empty list.
-    });
-
-    if (!Array.isArray(recipes)) {
-      throw new Error("Remote Settings did not return an array");
+    let recipes;
+    try {
+      recipes = await client.get({
+        forceSync,
+        emptyListFallback: false, // Throw instead of returning an empty list.
+      });
+    } catch (e) {
+      throw new RemoteSettingsSyncError(
+        client.collectionName,
+        lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.GET_EXCEPTION,
+        { cause: e }
+      );
     }
 
-    if (recipes.length === 0 && (await client.db.getLastModified()) === null) {
-      throw new Error(
-        "Remote Settings returned an empty list but should have thrown (no last modified)"
+    if (!Array.isArray(recipes)) {
+      throw new RemoteSettingsSyncError(
+        client.collectionName,
+        lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.INVALID_DATA
+      );
+    }
+
+    let lastModified;
+    try {
+      lastModified = await client.db.getLastModified();
+    } catch (e) {
+      throw new RemoteSettingsSyncError(
+        client.collectionName,
+        lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.LAST_MODIFIED_EXCEPTION,
+        { cause: e }
+      );
+    }
+
+    if (recipes.length === 0 && lastModified === null) {
+      throw new RemoteSettingsSyncError(
+        client.collectionName,
+        lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.NULL_LAST_MODIFIED
       );
     }
 
@@ -556,7 +630,7 @@ export class RemoteSettingsExperimentLoader {
       `Got ${recipes.length} recipes from ${client.collectionName}`
     );
 
-    return recipes.filter(recipe => {
+    const filteredRecipes = recipes.filter(recipe => {
       if (
         requiredFeatureIds &&
         !recipe.featureIds.some(featureId => requiredFeatureIds.has(featureId))
@@ -580,6 +654,12 @@ export class RemoteSettingsExperimentLoader {
 
       return true;
     });
+
+    return {
+      collectionName: client.collectionName,
+      recipes: filteredRecipes,
+      lastModified,
+    };
   }
 
   async _optInToExperiment({
@@ -1181,5 +1261,46 @@ export class EnrollmentsContext {
     }
 
     return schema;
+  }
+}
+
+export class RemoteSettingsSyncError extends Error {
+  static getMessage(reason) {
+    const { RemoteSettingsSyncErrorReason } = lazy.NimbusTelemetry;
+
+    switch (reason) {
+      case RemoteSettingsSyncErrorReason.BACKWARDS_SYNC:
+        return "would sync backwards";
+
+      case RemoteSettingsSyncErrorReason.GET_EXCEPTION:
+        return "RemoteSettings client threw an error";
+
+      case RemoteSettingsSyncErrorReason.INVALID_DATA:
+        return "did not return an array";
+
+      case RemoteSettingsSyncErrorReason.INVALID_LAST_MODIFIED:
+        return "invalid lastModified";
+
+      case RemoteSettingsSyncErrorReason.LAST_MODIFIED_EXCEPTION:
+        return "client threw when retrieving lastModified";
+
+      case RemoteSettingsSyncErrorReason.NULL_LAST_MODIFIED:
+        return "returned an empty list but lastModified was null";
+
+      default:
+        return "unknown error";
+    }
+  }
+
+  /**
+   * @param {string} collectionName The name of the collection.
+   * @param {RemoteSettingsSyncErrorReason} reason The reason for the error.
+   * @param {ErrorOptions | undefined} options Arguments to pass to the Error constructor.
+   */
+  constructor(collectionName, reason, options) {
+    super(`Could not sync ${collectionName}: ${reason}`, options);
+
+    this.collectionName = collectionName;
+    this.reason = reason;
   }
 }
