@@ -871,6 +871,9 @@ pref("browser.search.totalSearches", 0);
 // Feature gate for visual search.
 pref("browser.search.visualSearch.featureGate", false);
 
+// Feature gate for ohttp based suggestions.
+pref("browser.search.suggest.ohttp.featureGate", false);
+
 // Spin the cursor while the page is loading
 pref("browser.spin_cursor_while_busy", false);
 
