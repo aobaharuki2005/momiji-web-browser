@@ -380,10 +380,20 @@ void RangeBasedTextDirectiveCreator::CollectContextTermWordBoundaryDistances() {
     mStartWordEndDistances.Clear();
     TEXT_FRAGMENT_LOG("Start term cannot be extended.");
   } else {
-    mStartFirstWordLengthIncludingWhitespace =
-        TextDirectiveUtil::RemoveFirstWordFromStringAndDistanceArray<
-            TextScanDirection::Right>(mStartFoldCaseContent,
-                                      mStartWordEndDistances);
+    // Find the start position for the second word, which is used as the base
+    // for the word end distance.
+    auto [firstWordEndPos, secondWordBeginPos] =
+        intl::WordBreaker::FindWord(mStartContent, mStartWordEndDistances[0]);
+    MOZ_DIAGNOSTIC_ASSERT(firstWordEndPos == mStartWordEndDistances[0]);
+    mStartFirstWordLengthIncludingWhitespace = secondWordBeginPos;
+    mStartFoldCaseContent = Substring(mStartFoldCaseContent,
+                                      mStartFirstWordLengthIncludingWhitespace);
+    mStartWordEndDistances.RemoveElementAt(0);
+    for (auto& distance : mStartWordEndDistances) {
+      MOZ_DIAGNOSTIC_ASSERT(distance >=
+                            mStartFirstWordLengthIncludingWhitespace);
+      distance = distance - mStartFirstWordLengthIncludingWhitespace;
+    }
     TEXT_FRAGMENT_LOG(
         "Word end distances for start term, starting at the beginning of the "
         "second word: {}",
@@ -413,9 +423,15 @@ void RangeBasedTextDirectiveCreator::CollectContextTermWordBoundaryDistances() {
     MOZ_DIAGNOSTIC_ASSERT(lastWordBeginPos ==
                           mEndContent.Length() - mEndWordBeginDistances[0]);
     mEndLastWordLengthIncludingWhitespace =
-        TextDirectiveUtil::RemoveFirstWordFromStringAndDistanceArray<
-            TextScanDirection::Left>(mEndFoldCaseContent,
-                                     mEndWordBeginDistances);
+        mEndContent.Length() - secondLastWordEndPos;
+
+    mEndFoldCaseContent =
+        Substring(mEndFoldCaseContent, 0, secondLastWordEndPos);
+    mEndWordBeginDistances.RemoveElementAt(0);
+    for (auto& distance : mEndWordBeginDistances) {
+      MOZ_DIAGNOSTIC_ASSERT(distance >= mEndLastWordLengthIncludingWhitespace);
+      distance = distance - mEndLastWordLengthIncludingWhitespace;
+    }
     TEXT_FRAGMENT_LOG(
         "Word begin distances for end term, starting at the end of the second "
         "last word: {}",
