@@ -4274,7 +4274,6 @@ main section {
   color: var(--newtab-text-primary-color);
   position: absolute;
   bottom: 0;
-  animation: fade-in 0.25s ease-out 0.7s both;
   border-radius: var(--button-border-radius);
   background: var(--button-background-color);
   padding: var(--space-small) var(--space-large);
@@ -4288,6 +4287,11 @@ main section {
 .widgets-wrapper .widgets-scroll-message p {
   margin: 0;
   font-weight: var(--font-weight-bold);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .widgets-wrapper .widgets-scroll-message {
+    animation: fade-in 0.25s ease-out 0.7s both;
+  }
 }
 
 .widgets-container:has(.lists), .widgets-container:has(.focus-timer) {

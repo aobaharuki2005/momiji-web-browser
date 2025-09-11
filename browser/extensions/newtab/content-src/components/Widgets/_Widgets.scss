@@ -33,7 +33,6 @@
     color: var(--newtab-text-primary-color);
     position: absolute;
     bottom: 0;
-    animation: fade-in 0.25s ease-out 0.7s both;
     border-radius: var(--button-border-radius);
     background: var(--button-background-color);
     padding: var(--space-small) var(--space-large);
@@ -42,6 +41,11 @@
       margin: 0;
       font-weight: var(--font-weight-bold);
     }
+
+    @media (prefers-reduced-motion: no-preference) {
+      animation: fade-in 0.25s ease-out 0.7s both;
+    }
+
   }
 }
 
