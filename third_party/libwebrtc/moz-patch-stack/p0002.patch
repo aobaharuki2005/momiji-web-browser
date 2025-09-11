@@ -1,0 +1,56 @@
+From: Michael Froman <mjfroman@mac.com>
+Date: Mon, 8 Sep 2025 20:36:55 -0500
+Subject: (tmp-cherry-pick) Revert "Set use_siso=true by default in .gn"
+ (b785aa0e59)
+
+This reverts commit 0d98c5f245a09fad152da51f9a6846393ceae056.
+
+Reason for revert: The CL disabled remote execution on non-corp
+builds unexpectedly.
+
+Bug: chromium:412968361
+Original change's description:
+> Set use_siso=true by default in .gn
+>
+> This CL enables use_siso=true by default.
+> Googlers builds will switch to Siso, or get suggestion to run
+> `gn clean` to switch.
+> External developers will keep using Ninja for now. But, they will
+> also use Siso soon.
+>
+> Bug: chromium:412968361
+> Change-Id: I064ea6147135c76a1d1eb7b8ee733b5d9b04f1dd
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/393680
+> Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+> Reviewed-by: Christoffer Dewerin <jansson@webrtc.org>
+> Commit-Queue: Christoffer Dewerin <jansson@webrtc.org>
+> Auto-Submit: Junji Watanabe <jwata@google.com>
+> Cr-Commit-Position: refs/heads/main@{#44765}
+
+Bug: chromium:412968361
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Change-Id: I5eb173a28e8418c27372c2b0e14230ac3d3a5e49
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/393880
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Reviewed-by: Christoffer Dewerin <jansson@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Junji Watanabe <jwata@google.com>
+Cr-Commit-Position: refs/heads/main@{#44781}
+---
+ .gn | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/.gn b/.gn
+index 1b112b34c0..fbd2c38721 100644
+--- a/.gn
++++ b/.gn
+@@ -91,7 +91,4 @@ default_args = {
+ 
+   # See context on https://issues.chromium.org/issues/415076048.
+   enable_js_protobuf = false
+-
+-  # Use Siso instead of Ninja.
+-  use_siso = true
+ }
