@@ -95,7 +95,7 @@ extern "C" fn C_GetInfo(pInfo: CK_INFO_PTR) -> CK_RV {
 /// This gets called twice: once with a null `pSlotList` to get the number of slots (returned via
 /// `pulCount`) and a second time to get the ID for each slot.
 extern "C" fn C_GetSlotList(
-    _tokenPresent: CK_BBOOL,
+    tokenPresent: CK_BBOOL,
     pSlotList: CK_SLOT_ID_PTR,
     pulCount: CK_ULONG_PTR,
 ) -> CK_RV {
@@ -104,7 +104,7 @@ extern "C" fn C_GetSlotList(
     }
     let mut manager_guard = try_to_get_manager_guard!();
     let manager = manager_guard_to_manager!(manager_guard);
-    let slot_ids = manager.get_slot_ids();
+    let slot_ids = manager.get_slot_ids(if tokenPresent == CK_TRUE { true } else { false });
     let slot_count: CK_ULONG = slot_ids.len().try_into().unwrap();
     if !pSlotList.is_null() {
         if unsafe { *pulCount } < slot_count {
