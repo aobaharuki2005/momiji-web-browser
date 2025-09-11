@@ -1963,25 +1963,29 @@ bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
     return LogicalEdge::Start;
   }();
 
-  // Do we need to flip the computed offset by containing block's size?
-  const auto opposite =
-      propEdge != anchorEdge && propEdge != LogicalEdge::Start;
-  const auto size = logicalCBSize.Size(propAxis, wm);
-  const auto offset = anchorEdge == LogicalEdge::Start
-                          ? logicalAnchorRect.Start(propAxis, wm)
-                          : logicalAnchorRect.End(propAxis, wm);
-  const auto side = opposite ? size - offset : offset;
-  nscoord result = side;
+  nscoord result = [&]() {
+    // Offset to the desired anchor edge, from the containing block's start edge.
+    const auto anchorOffsetFromStartEdge =
+        anchorEdge == LogicalEdge::Start ? logicalAnchorRect.Start(propAxis, wm)
+                                         : logicalAnchorRect.End(propAxis, wm);
+    if (propEdge == LogicalEdge::Start) {
+      return anchorOffsetFromStartEdge;
+    }
+    // Need the offset from the end edge of the containing block.
+    const auto anchorOffsetFromEndEdge =
+        logicalCBSize.Size(propAxis, wm) - anchorOffsetFromStartEdge;
+    return anchorOffsetFromEndEdge;
+  }();
 
   // Apply the percentage value, with the percentage basis as the anchor
   // element's size in the relevant axis.
   if (aPercentage != 0.f) {
     const nscoord anchorSize = LogicalSize{wm, rect.Size()}.Size(propAxis, wm);
-    result = side + (opposite ? -1 : 1) *
-                        ((aPercentage != 1.f)
-                             ? NSToCoordRoundWithClamp(
-                                   aPercentage * static_cast<float>(anchorSize))
-                             : anchorSize);
+    result += (propEdge == LogicalEdge::End ? -1 : 1) *
+              ((aPercentage != 1.f)
+                   ? NSToCoordRoundWithClamp(aPercentage *
+                                             static_cast<float>(anchorSize))
+                   : anchorSize);
   }
   *aOut = Length::FromPixels(CSSPixel::FromAppUnits(result));
   return true;
