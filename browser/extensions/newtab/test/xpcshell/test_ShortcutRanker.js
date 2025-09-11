@@ -34,7 +34,22 @@ add_task(async function test_weightedSampleTopSites_no_guid_last() {
     { guid: "b", url: "b.com" },
   ];
 
-  const result = await provider.rankTopSites(input, {}, { isStartup: false });
+  const prefValues = {
+    trainhopConfig: {
+      smartShortcuts: {
+        // fset: "custom", // uncomment iff your build defines a "custom" fset you want to use
+        eta: 0,
+        click_bonus: 10,
+        positive_prior: 1,
+        negative_prior: 1,
+        fset: 1,
+      },
+    },
+  };
+
+  const result = await provider.rankTopSites(input, prefValues, {
+    isStartup: false,
+  });
 
   Assert.ok(Array.isArray(result), "returns an array");
   Assert.equal(
@@ -914,12 +929,15 @@ add_task(async function test_rankTopSites_sql_pipeline_happy_path() {
   // If your build's default fset already includes ["bmark","rece","freq","refre","hour","daily","bias","frec"],
   // this test will exercise all the SQL above. If not, it still passes the core assertions.
   const prefValues = {
-    smartShortcutsConfig: {
-      // fset: "custom", // uncomment iff your build defines a "custom" fset you want to use
-      eta: 0,
-      click_bonus: 10,
-      positive_prior: 1,
-      negative_prior: 1,
+    trainhopConfig: {
+      smartShortcuts: {
+        // fset: "custom", // uncomment iff your build defines a "custom" fset you want to use
+        eta: 0,
+        click_bonus: 10,
+        positive_prior: 1,
+        negative_prior: 1,
+        fset: 8,
+      },
     },
   };
 
@@ -958,4 +976,243 @@ add_task(async function test_rankTopSites_sql_pipeline_happy_path() {
   // cleanup
   clock.restore();
   sandbox.restore();
+});
+
+//
+// 2) weightedSampleTopSites: "open" feature sets per-guid scores and norms
+//
+add_task(async function test_weightedSampleTopSites_open_feature_basic() {
+  const Worker = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/RankShortcutsWorkerClass.mjs"
+  );
+
+  // Three guids; g1 and g3 are open, g2 is closed.
+  const guid = ["g1", "g2", "g3"];
+  const input = {
+    features: ["open", "bias"],
+    guid,
+    // keep only "open" contributing to final; set bias to 0 for clarity
+    weights: { open: 1, bias: 0 },
+    // no prior norms → normUpdate will initialize from first value
+    norms: { open: null },
+    // provide the open_scores dict in the format rankTopSites will pass
+    open_scores: { g1: 1, g2: 0, g3: 1 },
+  };
+
+  const out = await Worker.weightedSampleTopSites(input);
+
+  // shape
+  Assert.ok(out && out.score_map && out.norms, "returns {score_map, norms}");
+  Assert.ok(out.norms.open, "norms include 'open'");
+
+  // The normalized values are opaque, but ordering should reflect inputs:
+  const s1 = out.score_map.g1.open;
+  const s2 = out.score_map.g2.open;
+  const s3 = out.score_map.g3.open;
+
+  Assert.greater(s1, s2, "an open guid should score higher than a closed one");
+  Assert.greater(s3, s2, "another open guid should score higher than closed");
+  Assert.equal(
+    Math.abs(s1 - s3) < 1e-12, // normalization treats identical inputs identically
+    true,
+    "two open guids with identical inputs get identical normalized scores"
+  );
+
+  // final should reflect the 'open' score since bias has weight 0
+  Assert.equal(out.score_map.g1.final, s1, "final = open (g1)");
+  Assert.equal(out.score_map.g2.final, s2, "final = open (g2)");
+  Assert.equal(out.score_map.g3.final, s3, "final = open (g3)");
+});
+
+//
+// 3) weightedSampleTopSites: "open" feature honors existing running-norm state
+//
+add_task(async function test_weightedSampleTopSites_open_with_existing_norms() {
+  const Worker = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/RankShortcutsWorkerClass.mjs"
+  );
+
+  const guid = ["A", "B", "C", "D"];
+  const open_scores = { A: 0, B: 1, C: 0, D: 1 };
+
+  // Seed a prior norm object to ensure running mean/var is updated & used.
+  const prior = { beta: 1e-3, mean: 0.5, var: 1.0 };
+  const input = {
+    features: ["open", "bias"],
+    guid,
+    weights: { open: 1, bias: 0 },
+    norms: { open: prior },
+    open_scores,
+  };
+
+  const out = await Worker.weightedSampleTopSites(input);
+
+  // Norm object should be updated (mean or var shifts minutely due to beta)
+  Assert.ok(out.norms.open, "open norm returned");
+  Assert.notEqual(out.norms.open.mean, prior.mean, "running mean updated");
+  Assert.greater(out.norms.open.var, 0, "variance stays positive");
+
+  // Basic ordering still holds
+  const finals = guid.map(g => out.score_map[g].final);
+  // open (1) items should outrank closed (0) items after normalization
+  const maxClosed = Math.max(finals[0], finals[2]); // A,C
+  const minOpen = Math.min(finals[1], finals[3]); // B,D
+  Assert.greater(minOpen, maxClosed, "open > closed after normalization");
+});
+
+add_task(async function test_buildFrecencyFeatures_unid_counts_unique_days() {
+  const Ranker = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/RankShortcutsWorkerClass.mjs"
+  );
+  const sandbox = sinon.createSandbox();
+
+  // Fix the clock so "now" is deterministic
+  const nowMs = Date.UTC(2025, 0, 10); // Jan 10, 2025
+  const clock = sandbox.useFakeTimers({ now: nowMs });
+  const us = ms => Math.round(ms * 1000);
+  const dayMs = 864e5;
+
+  const visitsByGuid = {
+    g1: [
+      { visit_date_us: us(nowMs), visit_type: 1 }, // today
+      { visit_date_us: us(nowMs - 2 * dayMs), visit_type: 1 }, // 2 days ago
+      { visit_date_us: us(nowMs - 2 * dayMs), visit_type: 1 }, // same day as above
+    ],
+    g2: [
+      { visit_date_us: us(nowMs - 7 * dayMs), visit_type: 1 }, // 7 days ago
+    ],
+  };
+  const visitCounts = { g1: 3, g2: 1 };
+
+  const out = await Ranker.buildFrecencyFeatures(visitsByGuid, visitCounts);
+
+  Assert.equal(out.unid.g1, 2, "g1 has visits on 2 unique days");
+  Assert.equal(out.unid.g2, 1, "g2 has visits on 1 unique day");
+
+  clock.restore();
+  sandbox.restore();
+});
+
+add_task(async function test_weightedSampleTopSites_unid_feature() {
+  const Worker = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/RankShortcutsWorkerClass.mjs"
+  );
+
+  const guids = ["a", "b"];
+  const input = {
+    features: ["unid", "bias"],
+    guid: guids,
+    // explicit scores: a=5 unique days, b=1
+    unid_scores: { a: 5, b: 1 },
+    norms: { unid: null },
+    weights: { unid: 1, bias: 0 },
+  };
+
+  const result = await Worker.weightedSampleTopSites(input);
+
+  Assert.ok(result.norms.unid, "norms include 'unid'");
+  const ua = result.score_map.a.unid;
+  const ub = result.score_map.b.unid;
+  Assert.greater(ua, ub, "site with more unique days visited scores higher");
+  Assert.equal(result.score_map.a.final, ua, "final equals unid score (a)");
+  Assert.equal(result.score_map.b.final, ub, "final equals unid score (b)");
+});
+
+//
+// 1) CTR feature: ordering + final uses normalized CTR when weighted
+//
+add_task(async function test_weightedSampleTopSites_ctr_basic() {
+  const Worker = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/RankShortcutsWorkerClass.mjs"
+  );
+
+  // g1: 9/10 → .909; g2: 1/10 → .1; g3: 0/0 → smoothed to (0+1)/(0+1)=1
+  // After normalization, g3 should be highest, then g1, then g2.
+  const input = {
+    features: ["ctr", "bias"],
+    guid: ["g1", "g2", "g3"],
+    clicks: [9, 1, 0],
+    impressions: [10, 10, 0],
+    norms: { ctr: null },
+    weights: { ctr: 1, bias: 0 },
+  };
+
+  const out = await Worker.weightedSampleTopSites(input);
+
+  // shape
+  Assert.ok(out && out.score_map && out.norms, "returns {score_map, norms}");
+  Assert.ok(out.norms.ctr, "returns ctr norms");
+
+  // ordering by normalized ctr (highest to lowest): g3 > g1 > g2
+  const s1 = out.score_map.g1.ctr;
+  const s2 = out.score_map.g2.ctr;
+  const s3 = out.score_map.g3.ctr;
+
+  Assert.greater(s3, s1, "g3 (1.0 smoothed) > g1 (~0.909)");
+  Assert.greater(s1, s2, "g1 (~0.909) > g2 (0.1)");
+
+  // finals reflect ctr weight only
+  Assert.equal(out.score_map.g1.final, s1, "final equals ctr (g1)");
+  Assert.equal(out.score_map.g2.final, s2, "final equals ctr (g2)");
+  Assert.equal(out.score_map.g3.final, s3, "final equals ctr (g3)");
+});
+
+//
+// 2) CTR smoothing edge cases: zero impressions produce finite values
+//
+add_task(async function test_weightedSampleTopSites_ctr_smoothing_zero_imps() {
+  const Worker = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/RankShortcutsWorkerClass.mjs"
+  );
+
+  // gA: clicks=0, imps=0 → (0+1)/(0+1)=1.0
+  // gB: clicks=5, imps=0 → (5+1)/(0+1)=6.0  (still finite, larger than 1.0)
+  const input = {
+    features: ["ctr"],
+    guid: ["gA", "gB"],
+    clicks: [0, 5],
+    impressions: [0, 0],
+    norms: { ctr: null },
+    weights: { ctr: 1 },
+  };
+
+  const out = await Worker.weightedSampleTopSites(input);
+
+  const a = out.score_map.gA.ctr;
+  const b = out.score_map.gB.ctr;
+
+  // normalized values are opaque, but ordering must follow raw_ctr (B > A)
+  Assert.greater(b, a, "higher smoothed CTR should score higher");
+
+  // finiteness check
+  Assert.ok(Number.isFinite(a) && Number.isFinite(b), "scores are finite");
+});
+
+//
+// 3) CTR running norm: prior norm influences (mean,var) and persists
+//
+add_task(async function test_weightedSampleTopSites_ctr_with_prior_norm() {
+  const Worker = ChromeUtils.importESModule(
+    "resource://newtab/lib/SmartShortcutsRanker/RankShortcutsWorkerClass.mjs"
+  );
+
+  const prior = { beta: 1e-3, mean: 0.3, var: 1.0 }; // seeded running stats
+  const input = {
+    features: ["ctr"],
+    guid: ["x", "y"],
+    clicks: [3, 0],
+    impressions: [10, 10], // raw ctr: x=.364, y=.091 → with +1 smoothing: (.3~) but ordering same
+    norms: { ctr: prior },
+    weights: { ctr: 1 },
+  };
+
+  const out = await Worker.weightedSampleTopSites(input);
+
+  Assert.ok(out.norms.ctr, "ctr norm returned");
+  Assert.notEqual(out.norms.ctr.mean, prior.mean, "running mean updated");
+  Assert.greater(out.norms.ctr.var, 0, "variance positive");
+
+  const x = out.score_map.x.ctr;
+  const y = out.score_map.y.ctr;
+  Assert.greater(x, y, "higher ctr ranks higher under prior normalization");
 });

@@ -268,7 +268,7 @@ export async function buildFrecencyFeatures(
   const tauDays = halfLifeDays / Math.log(2);
 
   // Transposed output: { refre: {guid:...}, rece: {guid:...}, freq: {guid:...} }
-  const byFeature = { refre: {}, rece: {}, freq: {} };
+  const byFeature = { refre: {}, rece: {}, freq: {}, unid: {} };
 
   for (const [guid, visits] of Object.entries(visitsByGuid)) {
     // take the log here, original frecency grows linearly with visits
@@ -278,9 +278,12 @@ export async function buildFrecencyFeatures(
     const time_scores = [];
     const type_scores = [];
 
+    const days_visited = new Set([]);
+
     for (let i = 0; i < visits.length; i++) {
       const { visit_date_us, visit_type } = visits[i];
       const ageDays = (nowMs - visit_date_us / 1000) / dayMs;
+      days_visited.add(Math.floor(ageDays));
       const t = Math.exp(-ageDays / tauDays); // exponential decay
       const b = TYPE_SCORE[visit_type] ?? 0;
       time_scores.push(t);
@@ -299,29 +302,79 @@ export async function buildFrecencyFeatures(
     byFeature.refre[guid] = total * dot; // interaction (≈ frecency-like)
     byFeature.rece[guid] = time_score; // recency-only
     byFeature.freq[guid] = total * type_score; // frequency-only (lifetime-weighted)
+    byFeature.unid[guid] = days_visited.size;
   }
 
   return byFeature;
 }
 
-/**
- * Apply thompson sampling to topsites array, considers frecency weights
- *
- * @param {object[]} topsites Array of topsites objects
- * @param {object} prefValues Store user prefs, controls how this ranking behaves
- * @returns {combined: object[]} Array of topsites in reranked order
- */
+// small helpers used only here
+const _projectByGuid = (guids, dict) => guids.map(g => dict[g]);
+
+const _applyVectorFeature = (
+  namei,
+  rawVec,
+  norms,
+  score_map,
+  guids,
+  updated_norms
+) => {
+  const [vals, n] = normUpdate(rawVec, norms[namei]);
+  updated_norms[namei] = n;
+  guids.forEach((g, i) => {
+    score_map[g][namei] = vals[i];
+  });
+};
+
 export async function weightedSampleTopSites(input) {
-  let updated_norms = {};
-  let score_map = Object.fromEntries(
+  const updated_norms = {};
+  const score_map = Object.fromEntries(
     input.guid.map(guid => [
       guid,
-      Object.fromEntries(input.features.map(feature => [feature, 0])),
+      Object.fromEntries(input.features.map(f => [f, 0])),
     ])
   );
 
-  // THOMPSON FEATURES
-  // sample scores for the topsites
+  // Table-driven vector features that already exist as per-guid dictionaries
+  const dictFeatures = {
+    bmark: () => _projectByGuid(input.guid, input.bmark_scores),
+    open: () => _projectByGuid(input.guid, input.open_scores),
+    rece: () => _projectByGuid(input.guid, input.rece_scores),
+    freq: () => _projectByGuid(input.guid, input.freq_scores),
+    refre: () => _projectByGuid(input.guid, input.refre_scores),
+    unid: () => _projectByGuid(input.guid, input.unid_scores),
+  };
+
+  // 1) Simple vector features
+  for (const namei of Object.keys(dictFeatures)) {
+    if (input.features.includes(namei)) {
+      _applyVectorFeature(
+        namei,
+        dictFeatures[namei](),
+        input.norms,
+        score_map,
+        input.guid,
+        updated_norms
+      );
+    }
+  }
+
+  // 2) CTR feature (derived vector)
+  if (input.features.includes("ctr")) {
+    const raw_ctr = input.impressions.map(
+      (imp, i) => (input.clicks[i] + 1) / (imp + 1)
+    );
+    _applyVectorFeature(
+      "ctr",
+      raw_ctr,
+      input.norms,
+      score_map,
+      input.guid,
+      updated_norms
+    );
+  }
+
+  // 3) Thompson feature (special case)
   if (input.features.includes("thom")) {
     const ranked_thetas = await thompsonSampleSort({
       key_array: input.guid,
@@ -333,124 +386,69 @@ export async function weightedSampleTopSites(input) {
       prior_negative: input.impressions.map(() => input.beta),
       do_sort: false,
     });
-    const [thom_scores, thom_norm] = normUpdate(
-      ranked_thetas[1],
-      input.norms.thom
-    );
-    updated_norms.thom = thom_norm;
-    input.guid.forEach((guid, i) => {
-      score_map[guid].thom = thom_scores[i];
-    });
-  }
-  // FRECENCY FEATURES
-  // get frecency from withGUID
-  if (input.features.includes("frec")) {
-    const [frec_scores, frec_norm] = normUpdate(
-      input.frecency,
-      input.norms.frec
-    );
-    updated_norms.frec = frec_norm;
-    input.guid.forEach((guid, i) => {
-      score_map[guid].frec = frec_scores[i];
+    const [vals, n] = normUpdate(ranked_thetas[1], input.norms.thom);
+    updated_norms.thom = n;
+    input.guid.forEach((g, i) => {
+      score_map[g].thom = vals[i];
     });
   }
 
-  // HOURLY SEASONALITY FEATURES
+  // 4) Frecency vector (already an array)
+  if (input.features.includes("frec")) {
+    const [vals, n] = normUpdate(input.frecency, input.norms.frec);
+    updated_norms.frec = n;
+    input.guid.forEach((g, i) => {
+      score_map[g].frec = vals[i];
+    });
+  }
+
+  // 5) Seasonality features
   if (input.features.includes("hour")) {
-    const raw_hour_scores = processSeasonality(
+    const raw = processSeasonality(
       input.guid,
       input.hourly_seasonality,
       input.tau,
       getCurrentHourOfDay()
     );
-    const [hour_scores, hour_norm] = normUpdate(
-      raw_hour_scores,
-      input.norms.hour
+    _applyVectorFeature(
+      "hour",
+      raw,
+      input.norms,
+      score_map,
+      input.guid,
+      updated_norms
     );
-    updated_norms.hour = hour_norm;
-    input.guid.forEach((guid, i) => {
-      score_map[guid].hour = hour_scores[i];
-    });
   }
-
-  // DAILY SEASONALITY FEATURES
   if (input.features.includes("daily")) {
-    const raw_daily_scores = processSeasonality(
+    const raw = processSeasonality(
       input.guid,
       input.daily_seasonality,
       input.tau,
       getCurrentDayOfWeek()
     );
-    const [daily_scores, daily_norm] = normUpdate(
-      raw_daily_scores,
-      input.norms.daily
+    _applyVectorFeature(
+      "daily",
+      raw,
+      input.norms,
+      score_map,
+      input.guid,
+      updated_norms
     );
-    updated_norms.daily = daily_norm;
-    input.guid.forEach((guid, i) => {
-      score_map[guid].daily = daily_scores[i];
-    });
   }
 
-  // IS_BOOKMARK FEATURES
-  if (input.features.includes("bmark")) {
-    const [bmark_scores, bmark_norm] = normUpdate(
-      input.guid.map(guid => input.bmark_scores[guid]),
-      input.norms.bmark
-    );
-    updated_norms.bmark = bmark_norm;
-    input.guid.forEach((guid, i) => {
-      score_map[guid].bmark = bmark_scores[i];
-    });
-  }
-
-  // REINVENT FRECENCY
-  if (input.features.includes("rece")) {
-    const [rece_scores, rece_norm] = normUpdate(
-      input.guid.map(guid => input.rece_scores[guid]),
-      input.norms.rece
-    );
-    updated_norms.rece = rece_norm;
-    input.guid.forEach((guid, i) => {
-      score_map[guid].rece = rece_scores[i];
-    });
-  }
-  if (input.features.includes("freq")) {
-    const [freq_scores, freq_norm] = normUpdate(
-      input.guid.map(guid => input.freq_scores[guid]),
-      input.norms.freq
-    );
-    updated_norms.freq = freq_norm;
-    input.guid.forEach((guid, i) => {
-      score_map[guid].freq = freq_scores[i];
-    });
-  }
-  if (input.features.includes("refre")) {
-    const [refre_scores, refre_norm] = normUpdate(
-      input.guid.map(guid => input.refre_scores[guid]),
-      input.norms.refre
-    );
-    updated_norms.refre = refre_norm;
-    input.guid.forEach((guid, i) => {
-      score_map[guid].refre = refre_scores[i];
-    });
-  }
-
-  // BIAS
+  // 6) Bias
   if (input.features.includes("bias")) {
-    input.guid.forEach(guid => {
-      score_map[guid].bias = 1;
+    input.guid.forEach(g => {
+      score_map[g].bias = 1;
     });
   }
-  // FINAL SCORE, track other scores
-  for (const guid of Object.keys(score_map)) {
-    score_map[guid].final = computeLinearScore(score_map[guid], input.weights);
+
+  // 7) Final score
+  for (const g of input.guid) {
+    score_map[g].final = computeLinearScore(score_map[g], input.weights);
   }
 
-  const output = {
-    score_map,
-    norms: updated_norms,
-  };
-  return output;
+  return { score_map, norms: updated_norms };
 }
 
 export function clampWeights(weights, maxNorm = 100) {

@@ -7,45 +7,27 @@ const PLACES_TABLE = "moz_places";
 const VISITS_TABLE = "moz_historyvisits";
 const BOOKMARK_TABLE = "moz_bookmarks";
 const BASE_SEASONALITY_CACHE_EXPIRATION = 1e3 * 60 * 60 * 24 * 7; // 7 day in miliseconds
-const ETA = 100;
+const ETA = 0;
 const CLICK_BONUS = 10;
 
 const FEATURE_META = {
-  thom: { pref: "thom_weight", def: 20 },
-  frec: { pref: "frec_weight", def: 70 },
-  hour: { pref: "hour_weight", def: 5 },
-  daily: { pref: "daily_weight", def: 5 },
-  bmark: { pref: "bmark_weight", def: 5 },
-  rece: { pref: "rece_weight", def: 5 },
-  freq: { pref: "freq_weight", def: 5 },
-  refre: { pref: "refre_weight", def: 5 },
+  thom: { pref: "thom_weight", def: 5 },
+  frec: { pref: "frec_weight", def: 95 },
+  hour: { pref: "hour_weight", def: 0 },
+  daily: { pref: "daily_weight", def: 0 },
+  bmark: { pref: "bmark_weight", def: 0 },
+  rece: { pref: "rece_weight", def: 0 },
+  freq: { pref: "freq_weight", def: 0 },
+  refre: { pref: "refre_weight", def: 0 },
+  open: { pref: "open_weight", def: 0 },
+  unid: { pref: "unid_weight", def: 0 },
+  ctr: { pref: "ctr_weight", def: 0 },
   bias: { pref: "bias_weight", def: 1 },
 };
 
-const SHORTCUT_FSET = 8;
-const SHORTCUT_FSETS = {
-  0: ["frec"],
-  1: ["frec", "thom", "bias"],
-  2: ["frec", "thom", "hour", "bias"],
-  3: ["frec", "thom", "daily", "bias"],
-  4: ["frec", "hour", "daily", "bias"],
-  5: ["thom", "hour", "daily", "bias"],
-  6: ["frec", "thom", "hour", "daily", "bias"],
-  7: ["frec", "thom", "hour", "daily", "bmark", "bias"],
-  8: [
-    "frec",
-    "thom",
-    "hour",
-    "daily",
-    "bmark",
-    "rece",
-    "freq",
-    "refre",
-    "bias",
-  ],
-};
+const FEATURES = ["frec", "thom", "bias"];
 const SHORTCUT_POSITIVE_PRIOR = 1;
-const SHORTCUT_NEGATIVE_PRIOR = 100;
+const SHORTCUT_NEGATIVE_PRIOR = 1000;
 
 const lazy = {};
 
@@ -53,9 +35,82 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PersistentCache: "resource://newtab/lib/PersistentCache.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
 import { sortKeysValues } from "resource://newtab/lib/SmartShortcutsRanker/ThomSample.mjs";
+
+export async function getOpenTabURLsFromSessionLive() {
+  // Ensure SessionStore is ready (important at early startup)
+  if (lazy.SessionStore.promiseInitialized) {
+    await lazy.SessionStore.promiseInitialized;
+  }
+  const stateJSON = lazy.SessionStore.getBrowserState(); // sync string
+  const state = JSON.parse(stateJSON); // { windows: [...] }
+
+  const urls = [];
+  for (const win of state?.windows ?? []) {
+    for (const tab of win?.tabs ?? []) {
+      const i = Math.max(0, (tab.index ?? 1) - 1); // current entry is 1-based
+      const entry = tab.entries?.[i] ?? tab.entries?.[tab.entries.length - 1];
+      const url = entry?.url;
+      if (url) {
+        urls.push(url);
+      }
+    }
+  }
+  return urls;
+}
+
+export async function getOpenTabsWithPlacesFromSessionLive() {
+  const urls = await getOpenTabURLsFromSessionLive();
+  const out = [];
+  for (const url of urls) {
+    let guid = null;
+    if (url.startsWith("http")) {
+      try {
+        guid = (await lazy.PlacesUtils.history.fetch(url))?.guid ?? null;
+      } catch {}
+    }
+    out.push({ url, guid });
+  }
+  return out;
+}
+
+/**
+ * For each input places GUID, report if it is currently open
+ * note there is a < 30 second delay between a guid opening and this function
+ * registering that change
+ *
+ * @param {string[]} guids Array of guid stirngs
+ * @returns {Promise<object>} Map of guid -> is open
+ */
+export async function getIsOpen(guids, isStartup) {
+  if (!isStartup?.isStartup) {
+    // Grab all currently open tabs with GUIDs
+    const openTabs = await getOpenTabsWithPlacesFromSessionLive();
+
+    // Build a Set of GUIDs for fast lookup
+    const openGuids = new Set(
+      openTabs.map(t => t.guid).filter(Boolean) // skip nulls
+    );
+
+    // Map each input guid to 1/0
+    const result = {};
+    for (const g of guids) {
+      result[g] = openGuids.has(g) ? 1 : 0;
+    }
+    return result;
+  }
+
+  // During startup: just return all 0s
+  const result = {};
+  for (const g of guids) {
+    result[g] = 0;
+  }
+  return result;
+}
 
 /**
  * For each input places GUID, report the total visits
@@ -384,11 +439,11 @@ export async function fetchHourlyVisitsAll(table) {
 
 /**
  * Build weights object only for the requested features.
- * @param {object} prefValues - contains smartShortcutsConfig
+ * @param {object} prefValues - contains trainhopConfig.smartShortcuts
  * @param {string[]} features - e.g. ["thom","frec"] (bias optional)
  */
 function initShortcutWeights(prefValues, features) {
-  const cfg = prefValues?.smartShortcutsConfig ?? {};
+  const cfg = prefValues?.trainhopConfig?.smartShortcuts ?? {}; // remove second config
   const out = {};
 
   for (const f of features) {
@@ -676,9 +731,13 @@ export class RankShortcutsProvider {
    * @returns {Promise<{}>} topsites reordered
    */
   async rankTopSites(topsites, prefValues, isStartup) {
+    if (!prefValues?.trainhopConfig?.smartShortcuts) {
+      return topsites;
+    }
     // get our feature set
-    const fset = prefValues.smartShortcutsConfig?.fset ?? SHORTCUT_FSET;
-    const features = SHORTCUT_FSETS[fset] ?? ["frec"];
+    const features =
+      prefValues.trainhopConfig?.smartShortcuts?.features ?? FEATURES;
+
     // split topsites into two arrays, we only rank those with guid
     const [withGuid, withoutGuid] = topsites.reduce(
       ([withG, withoutG], site) => {
@@ -693,6 +752,7 @@ export class RankShortcutsProvider {
     );
 
     // query for interactions, sql cant be on promise
+    // always do this but only used for thompson and ctr
     const [clicks, impressions] = await fetchShortcutInteractions(
       withGuid,
       SHORTCUT_TABLE,
@@ -724,9 +784,10 @@ export class RankShortcutsProvider {
         scores: sc_cache.score_map,
         features,
         weights,
-        eta: (prefValues.smartShortcutsConfig?.eta ?? ETA) / 10000,
+        eta: (prefValues.trainhopConfig?.smartShortcuts?.eta ?? ETA) / 10000,
         click_bonus:
-          (prefValues.smartShortcutsConfig?.click_bonus ?? CLICK_BONUS) / 10,
+          (prefValues.trainhopConfig?.smartShortcuts?.click_bonus ??
+            CLICK_BONUS) / 10,
       },
     ]);
 
@@ -744,12 +805,17 @@ export class RankShortcutsProvider {
     const bmark_scores = features?.includes?.("bmark")
       ? await fetchBookmarkedFlags(withGuid, BOOKMARK_TABLE, PLACES_TABLE)
       : null;
-    const refrec_scores = ["rece", "freq", "refre"].some(f =>
+    const refrec_scores = ["rece", "freq", "refre", "unid"].some(f =>
       features.includes(f)
     )
       ? await this.fetchRefreFeatures(withGuid, features)
       : null;
-
+    const open_scores = features?.includes?.("open")
+      ? await getIsOpen(
+          withGuid.map(t => t.guid),
+          isStartup
+        )
+      : null;
     // call to the promise worker to do the ranking
     const frecency_scores = withGuid.map(t => t.frecency);
     const output = await this.rankShortcutsWorker.post(
@@ -758,10 +824,10 @@ export class RankShortcutsProvider {
         {
           features,
           alpha:
-            prefValues.smartShortcutsConfig?.positive_prior ??
+            prefValues.trainhopConfig?.smartShortcuts?.positive_prior ??
             SHORTCUT_POSITIVE_PRIOR,
           beta:
-            prefValues.smartShortcutsConfig?.negative_prior ??
+            prefValues.trainhopConfig?.smartShortcuts?.negative_prior ??
             SHORTCUT_NEGATIVE_PRIOR,
           tau: 100,
           guid: withGuid.map(t => t.guid),
@@ -775,9 +841,11 @@ export class RankShortcutsProvider {
           hourly_seasonality,
           daily_seasonality,
           bmark_scores,
-          rece_scores: refrec_scores.rece,
-          freq_scores: refrec_scores.freq,
-          refre_scores: refrec_scores.refre,
+          open_scores,
+          rece_scores: refrec_scores?.rece,
+          freq_scores: refrec_scores?.freq,
+          refre_scores: refrec_scores?.refre,
+          unid_scores: refrec_scores?.unid,
         },
       ]
     );
