@@ -139,7 +139,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 initBrowserToolbarComposableUpdates(view)
             }
         }
-        initTranslationsUpdates(view)
+        initTranslationsUpdates(context = context, rootView = view)
 
         thumbnailsFeature.set(
             feature = BrowserThumbnails(context, binding.engineView, components.core.store),
@@ -284,10 +284,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         )
     }
 
-    private fun initTranslationsUpdates(rootView: View) {
+    private fun initTranslationsUpdates(context: Context, rootView: View) {
         if (Config.channel.isDebug) {
             translationsBannerIntegration.set(
                 feature = TranslationsBannerIntegration(
+                    browserStore = context.components.core.store,
                     browserScreenStore = browserScreenStore,
                     binding = binding,
                     onExpand = {

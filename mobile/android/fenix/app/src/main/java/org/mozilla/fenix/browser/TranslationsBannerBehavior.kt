@@ -193,7 +193,6 @@ class TranslationsBannerBehavior<V : View>(
         return super.layoutDependsOn(parent, child, dependency)
     }
 
-    @VisibleForTesting()
     internal fun forceExpand(view: View) {
         animateSnap(view, SnapDirection.UP)
     }
