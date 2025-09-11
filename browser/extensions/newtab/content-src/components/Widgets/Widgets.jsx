@@ -73,6 +73,7 @@ function Widgets() {
           <p data-l10n-id="newtab-widget-keep-scrolling"></p>
         </div>
       )}
+
       {messageData?.content?.messageType === "WidgetMessage" && (
         <MessageWrapper dispatch={dispatch}>
           <WidgetsFeatureHighlight dispatch={dispatch} />

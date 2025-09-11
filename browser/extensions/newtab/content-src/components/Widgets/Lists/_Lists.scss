@@ -7,7 +7,7 @@
   width: var(--newtab-card-width-medium);
   background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
-  padding-block-start: var(--space-large);
+  padding-block-start: var(--space-medium);
   height: var(--newtab-card-height);
   box-shadow: var(--box-shadow-card);
   position: relative;
@@ -25,7 +25,7 @@
   }
 
   .select-wrapper {
-    padding-inline: var(--space-large);
+    padding-inline: var(--space-medium);
     display: flex;
     justify-content: flex-start;
     position: relative;
@@ -52,7 +52,7 @@
 
   .add-task-container {
     margin-block: var(--space-small);
-    padding-inline: var(--space-large);
+    padding-inline: var(--space-medium);
     position: relative;
 
     .icon.icon-add {

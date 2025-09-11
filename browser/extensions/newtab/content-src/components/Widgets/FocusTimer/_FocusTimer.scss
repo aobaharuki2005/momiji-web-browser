@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-$timer-tabs-button-height: 24px;
-
 .focus-timer {
   grid-column: span 1;
   width: var(--newtab-card-width-medium);
   background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
-  padding-block: var(--space-large);
+  padding-block: var(--space-medium);
   height: var(--newtab-card-height);
   display: flex;
   flex-direction: column;
@@ -22,7 +20,7 @@ $timer-tabs-button-height: 24px;
   margin-block-end: var(--space-medium);
   position: relative;
   width: 100%;
-  padding-inline: var(--space-large);
+  padding-inline: var(--space-medium);
 }
 
 // Align the context menu button to the right while keeping the Focus/Break button centered
@@ -34,10 +32,6 @@ $timer-tabs-button-height: 24px;
 
   moz-button {
     flex-grow: 1;
-  }
-
-  moz-button::part(button) {
-    min-height: $timer-tabs-button-height;
   }
 
   moz-button:first-of-type {
@@ -61,7 +55,7 @@ $timer-tabs-button-height: 24px;
   // Alignment note: This matches alignment with the Lists widget "List name" select
   align-items: center;
   width: 100%;
-  padding-inline: var(--space-large);
+  padding-inline: var(--space-medium);
   margin-block-end: var(--space-medium);
 
   h3 {
@@ -101,14 +95,13 @@ $timer-tabs-button-height: 24px;
     width: 114px;
 
     .progress-circle-label {
-      font-size: var(--font-size-xxlarge); // 32px
+      font-size: var(--font-size-xxlarge);
     }
-
   }
 
-  min-height: 120px;
+  min-height: 138px;
   position: relative;
-  width: 120px;
+  width: 138px;
   overflow: hidden;
   margin-block-end: var(--space-small);
 
@@ -184,7 +177,8 @@ $timer-tabs-button-height: 24px;
     align-items: center;
     color: var(--text-color);
     display: flex;
-    font-size: var(--size-item-large); // 32px
+    // Bug 1880518 - Large font-size number (32px)
+    font-size: calc(var(--font-size-large) * 2);
     font-weight: var(--font-weight-bold);
     font-variant-numeric: tabular-nums;
     height: 100%;
@@ -214,5 +208,5 @@ $timer-tabs-button-height: 24px;
 .timer-notification-status {
   color: var(--text-color-deemphasized);
   font-size: var(--font-size-small);
-  margin-block: var(--space-xsmall) 0;
+  margin-block-start: var(--space-small);
 }

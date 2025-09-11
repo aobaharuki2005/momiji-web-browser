@@ -4260,7 +4260,6 @@ main section {
 }
 .discovery-stream.ds-layout.ds-layout-widgets {
   margin-inline: 0;
-  margin-block-end: var(--space-xlarge);
 }
 
 .widgets-wrapper {
@@ -4269,15 +4268,16 @@ main section {
   align-items: center;
   justify-content: center;
   position: relative;
+  padding-block-end: calc(var(--space-xlarge) * 2);
 }
 .widgets-wrapper .widgets-scroll-message {
   color: var(--newtab-text-primary-color);
   position: absolute;
-  bottom: calc(var(--space-xxlarge) * -2);
+  bottom: 0;
   animation: fade-in 0.25s ease-out 0.7s both;
   border-radius: var(--button-border-radius);
   background: var(--button-background-color);
-  padding: var(--space-small) var(--space-xlarge);
+  padding: var(--space-small) var(--space-large);
 }
 .lightWallpaper .widgets-wrapper .widgets-scroll-message {
   color-scheme: light;
@@ -4346,7 +4346,7 @@ main section {
   width: var(--newtab-card-width-medium);
   background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
-  padding-block-start: var(--space-large);
+  padding-block-start: var(--space-medium);
   height: var(--newtab-card-height);
   box-shadow: var(--box-shadow-card);
   position: relative;
@@ -4364,7 +4364,7 @@ main section {
   /* adjust as needed to sit above background but below UI */
 }
 .lists .select-wrapper {
-  padding-inline: var(--space-large);
+  padding-inline: var(--space-medium);
   display: flex;
   justify-content: flex-start;
   position: relative;
@@ -4384,7 +4384,7 @@ main section {
 }
 .lists .add-task-container {
   margin-block: var(--space-small);
-  padding-inline: var(--space-large);
+  padding-inline: var(--space-medium);
   position: relative;
 }
 .lists .add-task-container .icon.icon-add {
@@ -4552,7 +4552,7 @@ main section {
   width: var(--newtab-card-width-medium);
   background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
-  padding-block: var(--space-large);
+  padding-block: var(--space-medium);
   height: var(--newtab-card-height);
   display: flex;
   flex-direction: column;
@@ -4565,7 +4565,7 @@ main section {
   margin-block-end: var(--space-medium);
   position: relative;
   width: 100%;
-  padding-inline: var(--space-large);
+  padding-inline: var(--space-medium);
 }
 
 .focus-timer-tabs-buttons {
@@ -4576,9 +4576,6 @@ main section {
 }
 .focus-timer-tabs-buttons moz-button {
   flex-grow: 1;
-}
-.focus-timer-tabs-buttons moz-button::part(button) {
-  min-height: 24px;
 }
 .focus-timer-tabs-buttons moz-button:first-of-type::part(button) {
   border-end-end-radius: 0;
@@ -4594,7 +4591,7 @@ main section {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding-inline: var(--space-large);
+  padding-inline: var(--space-medium);
   margin-block-end: var(--space-medium);
 }
 .newtab-widget-timer-notification-title-wrapper h3 {
@@ -4622,9 +4619,9 @@ main section {
   --timer-violet: var(--color-violet-20);
   /* Complete timer */
   --timer-green: var(--color-green-20);
-  min-height: 120px;
+  min-height: 138px;
   position: relative;
-  width: 120px;
+  width: 138px;
   overflow: hidden;
   margin-block-end: var(--space-small);
   /* main timer colours */
@@ -4687,7 +4684,7 @@ main section {
   align-items: center;
   color: var(--text-color);
   display: flex;
-  font-size: var(--size-item-large);
+  font-size: calc(var(--font-size-large) * 2);
   font-weight: var(--font-weight-bold);
   font-variant-numeric: tabular-nums;
   height: 100%;
@@ -4714,7 +4711,7 @@ main section {
 .timer-notification-status {
   color: var(--text-color-deemphasized);
   font-size: var(--font-size-small);
-  margin-block: var(--space-xsmall) 0;
+  margin-block-start: var(--space-small);
 }
 
 .ds-card-grid .ds-card {

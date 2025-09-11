@@ -13631,10 +13631,12 @@ const FocusTimer = ({
   }, /*#__PURE__*/external_React_default().createElement("moz-button", {
     type: timerType === "focus" ? "default" : "ghost",
     "data-l10n-id": "newtab-widget-timer-mode-focus",
+    size: "small",
     onClick: () => toggleType("focus")
   }), /*#__PURE__*/external_React_default().createElement("moz-button", {
     type: timerType === "break" ? "default" : "ghost",
     "data-l10n-id": "newtab-widget-timer-mode-break",
+    size: "small",
     onClick: () => toggleType("break")
   }))), /*#__PURE__*/external_React_default().createElement("div", {
     role: "progress",
@@ -13670,7 +13672,7 @@ const FocusTimer = ({
     iconsrc: `chrome://global/skin/media/${isRunning ? "pause" : "play"}-fill.svg`,
     "data-l10n-id": isRunning ? "newtab-widget-timer-label-pause" : "newtab-widget-timer-label-play",
     onClick: toggleTimer
-  })), /*#__PURE__*/external_React_default().createElement("moz-button", {
+  })), isRunning && /*#__PURE__*/external_React_default().createElement("moz-button", {
     type: "icon ghost",
     iconsrc: "chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg",
     "data-l10n-id": "newtab-widget-timer-reset",

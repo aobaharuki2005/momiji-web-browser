@@ -539,11 +539,13 @@ export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
           <moz-button
             type={timerType === "focus" ? "default" : "ghost"}
             data-l10n-id="newtab-widget-timer-mode-focus"
+            size="small"
             onClick={() => toggleType("focus")}
           />
           <moz-button
             type={timerType === "break" ? "default" : "ghost"}
             data-l10n-id="newtab-widget-timer-mode-break"
+            size="small"
             onClick={() => toggleType("break")}
           />
         </div>
@@ -598,12 +600,14 @@ export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
             }
             onClick={toggleTimer}
           />
-          <moz-button
-            type="icon ghost"
-            iconsrc="chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg"
-            data-l10n-id="newtab-widget-timer-reset"
-            onClick={resetTimer}
-          />
+          {isRunning && (
+            <moz-button
+              type="icon ghost"
+              iconsrc="chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg"
+              data-l10n-id="newtab-widget-timer-reset"
+              onClick={resetTimer}
+            />
+          )}
         </div>
       </div>
       {!showSystemNotifications && !timerData[timerType].isRunning && (
