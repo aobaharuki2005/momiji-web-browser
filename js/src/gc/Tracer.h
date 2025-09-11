@@ -238,7 +238,9 @@ void TraceBufferRoot(JSTracer* trc, JS::Zone* zone, T** bufferp,
 
 template <typename T>
 void BufferHolder<T>::trace(JSTracer* trc) {
-  TraceBufferRoot(trc, zone, &buffer, "BufferHolder buffer");
+  if (buffer) {
+    TraceBufferRoot(trc, zone, &buffer, "BufferHolder buffer");
+  }
 }
 
 // Idential to TraceRoot, except that this variant will not crash if |*thingp|

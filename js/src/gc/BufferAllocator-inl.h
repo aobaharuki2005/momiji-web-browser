@@ -113,6 +113,12 @@ inline bool IsBufferAlloc(void* alloc) {
   return BufferAllocator::IsBufferAlloc(alloc);
 }
 
+#ifdef DEBUG
+inline bool IsBufferAllocInZone(void* alloc, JS::Zone* zone) {
+  return zone->bufferAllocator.hasAlloc(alloc);
+}
+#endif
+
 inline size_t GetAllocSize(JS::Zone* zone, const void* alloc) {
   return zone->bufferAllocator.getAllocSize(const_cast<void*>(alloc));
 }

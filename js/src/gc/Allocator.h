@@ -143,6 +143,11 @@ T* NewBuffer(JS::Zone* zone, size_t bytes, bool nurseryOwned, Args&&... args) {
 // cell. Does not work for malloced memory.
 bool IsBufferAlloc(void* alloc);
 
+#ifdef DEBUG
+// Check whether a buffer allocation is part of the specified zone.
+bool IsBufferAllocInZone(void* alloc, JS::Zone* zone);
+#endif
+
 bool IsNurseryOwned(JS::Zone* zone, void* alloc);
 
 size_t GetAllocSize(JS::Zone* zone, const void* alloc);
@@ -160,13 +165,21 @@ void MarkTenuredBuffer(JS::Zone* zone, void* alloc);
 }  // namespace gc
 
 // Allow rooting buffers.
+
+template <typename T>
+class MutableHandleBuffer;
+
 template <typename T>
 class BufferHolder {
   JS::Zone* zone;
   T* buffer;
 
+  friend class MutableHandleBuffer<T>;
+
  public:
-  BufferHolder(JS::Zone* zone, T* buffer) : zone(zone), buffer(buffer) {}
+  BufferHolder(JS::Zone* zone, T* buffer) : zone(zone), buffer(buffer) {
+    MOZ_ASSERT_IF(buffer, IsBufferAllocInZone(buffer, zone));
+  }
   inline BufferHolder(JSContext* cx, T* buffer);
 
   inline void trace(JSTracer* trc);
@@ -214,6 +227,11 @@ class MutableHandleBuffer : public JS::MutableHandle<BufferHolder<T>> {
   MutableHandleBuffer(const MutableHandleBuffer& other) : Base(other) {}
   MOZ_IMPLICIT MutableHandleBuffer(RootedBuffer<T>* root) : Base(root) {}
 
+  void set(T* buffer) {
+    BufferHolder<T>& holder = Base::get();
+    MOZ_ASSERT_IF(buffer, IsBufferAllocInZone(buffer, holder.zone));
+    holder.buffer = buffer;
+  }
   T* get() const { return Base::get().get(); }
   operator T*() const { return get(); }
   T* operator->() const { return get(); }

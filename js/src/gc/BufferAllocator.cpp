@@ -723,6 +723,24 @@ bool BufferAllocator::IsBufferAlloc(void* alloc) {
   return chunk->getKind() == ChunkKind::Buffers;
 }
 
+#ifdef DEBUG
+bool BufferAllocator::hasAlloc(void* alloc) {
+  MOZ_ASSERT(IsBufferAlloc(alloc));
+
+  if (IsLargeAlloc(alloc)) {
+    MaybeLock lock;
+    if (needLockToAccessBufferMap()) {
+      lock.emplace(this);
+    }
+    auto ptr = largeAllocMap.ref().readonlyThreadsafeLookup(alloc);
+    return ptr.found();
+  }
+
+  BufferChunk* chunk = BufferChunk::from(alloc);
+  return chunk->zone == zone;
+}
+#endif
+
 size_t BufferAllocator::getAllocSize(void* alloc) {
   if (IsLargeAlloc(alloc)) {
     LargeBuffer* buffer = lookupLargeBuffer(alloc);
