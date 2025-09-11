@@ -520,6 +520,7 @@ export class SearchSuggestionController {
     // the capability for POST submissions handled.
     if (
       lazy.ohttpEnabled &&
+      lazy.MerinoClient.hasOHTTPPrefs &&
       context.engine.id == SearchSuggestionController.oHTTPEngineId
     ) {
       return this.#fetchRemoteObliviousHTTP(context, submission);
@@ -662,6 +663,8 @@ export class SearchSuggestionController {
     }
 
     let submissionURL = URL.fromURI(submission.uri);
+
+    lazy.logConsole.debug(`OHTTP request started for ${submission.uri.spec}`);
 
     context.gleanTimerId =
       Glean.search.suggestionsLatency[context.engineId].start();
