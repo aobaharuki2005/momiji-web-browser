@@ -5,6 +5,8 @@ edition = "2021"
 license = "MPL-2.0"
 
 [dependencies]
+base64 = "0.22"
+num-bigint = "0.4"
 mozilla-central-workspace-hack = { version = "0.1", features = ["pkcs11testmodule-static"], optional = true }
 pkcs11-bindings = "0.1.1"
 rsclientcerts = { path = "../../../rsclientcerts" }

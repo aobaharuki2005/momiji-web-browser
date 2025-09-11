@@ -50,6 +50,8 @@ extern "C" fn C_Initialize(_pInitArgs: CK_VOID_PTR) -> CK_RV {
             TOKEN_LABELS_BYTES[0],
             CKF_REMOVABLE_DEVICE,
             CKF_TOKEN_INITIALIZED,
+            Vec::new(),
+            Vec::new(),
         ),
         Backend::new(
             SLOT_DESCRIPTIONS_BYTES[1],
@@ -59,12 +61,16 @@ extern "C" fn C_Initialize(_pInitArgs: CK_VOID_PTR) -> CK_RV {
                 | CKF_USER_PIN_INITIALIZED
                 | CKF_LOGIN_REQUIRED
                 | CKF_TOKEN_INITIALIZED,
+            vec![include_str!("client-cert-rsa.pem")],
+            vec![include_str!("client-cert-rsa.key")],
         ),
         Backend::new(
             SLOT_DESCRIPTIONS_BYTES[2],
             TOKEN_LABELS_BYTES[2],
             CKF_REMOVABLE_DEVICE,
             CKF_TOKEN_INITIALIZED,
+            Vec::new(),
+            Vec::new(),
         ),
     ];
     let mut manager_guard = try_to_get_manager_guard!();
@@ -366,12 +372,49 @@ extern "C" fn C_GetObjectSize(
 }
 
 extern "C" fn C_GetAttributeValue(
-    _hSession: CK_SESSION_HANDLE,
-    _hObject: CK_OBJECT_HANDLE,
-    _pTemplate: CK_ATTRIBUTE_PTR,
-    _ulCount: CK_ULONG,
+    hSession: CK_SESSION_HANDLE,
+    hObject: CK_OBJECT_HANDLE,
+    pTemplate: CK_ATTRIBUTE_PTR,
+    ulCount: CK_ULONG,
 ) -> CK_RV {
-    CKR_FUNCTION_NOT_SUPPORTED
+    if pTemplate.is_null() {
+        return CKR_ARGUMENTS_BAD;
+    }
+    let mut attr_types = Vec::with_capacity(ulCount as usize);
+    for i in 0..ulCount as usize {
+        let attr = unsafe { &*pTemplate.add(i) };
+        attr_types.push(attr.type_);
+    }
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
+    let values = match manager.get_attributes(hSession, hObject, attr_types) {
+        Ok(values) => values,
+        Err(_) => {
+            return CKR_ARGUMENTS_BAD;
+        }
+    };
+    if values.len() != ulCount as usize {
+        return CKR_DEVICE_ERROR;
+    }
+    for (i, value) in values.iter().enumerate().take(ulCount as usize) {
+        let attr = unsafe { &mut *pTemplate.add(i) };
+        if let Some(attr_value) = value {
+            if attr.pValue.is_null() {
+                attr.ulValueLen = attr_value.len() as CK_ULONG;
+            } else {
+                let ptr: *mut u8 = attr.pValue as *mut u8;
+                if attr_value.len() > attr.ulValueLen as usize {
+                    return CKR_ARGUMENTS_BAD;
+                }
+                unsafe {
+                    std::ptr::copy_nonoverlapping(attr_value.as_ptr(), ptr, attr_value.len());
+                }
+            }
+        } else {
+            attr.ulValueLen = CK_UNAVAILABLE_INFORMATION;
+        }
+    }
+    CKR_OK
 }
 
 extern "C" fn C_SetAttributeValue(
@@ -576,21 +619,78 @@ extern "C" fn C_DigestFinal(
 }
 
 extern "C" fn C_SignInit(
-    _hSession: CK_SESSION_HANDLE,
-    _pMechanism: CK_MECHANISM_PTR,
-    _hKey: CK_OBJECT_HANDLE,
+    hSession: CK_SESSION_HANDLE,
+    pMechanism: CK_MECHANISM_PTR,
+    hKey: CK_OBJECT_HANDLE,
 ) -> CK_RV {
-    CKR_FUNCTION_NOT_SUPPORTED
+    if pMechanism.is_null() {
+        return CKR_ARGUMENTS_BAD;
+    }
+    // Presumably we should validate the mechanism against hKey, but the specification doesn't
+    // actually seem to require this.
+    let mechanism = unsafe { *pMechanism };
+    let mechanism_params = if mechanism.mechanism == CKM_RSA_PKCS_PSS {
+        if mechanism.ulParameterLen as usize != std::mem::size_of::<CK_RSA_PKCS_PSS_PARAMS>() {
+            return CKR_ARGUMENTS_BAD;
+        }
+        Some(unsafe { *(mechanism.pParameter as *const CK_RSA_PKCS_PSS_PARAMS) })
+    } else {
+        None
+    };
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
+    match manager.start_sign(hSession, hKey, mechanism_params) {
+        Ok(()) => {}
+        Err(_) => {
+            return CKR_GENERAL_ERROR;
+        }
+    };
+    CKR_OK
 }
 
 extern "C" fn C_Sign(
-    _hSession: CK_SESSION_HANDLE,
-    _pData: CK_BYTE_PTR,
-    _ulDataLen: CK_ULONG,
-    _pSignature: CK_BYTE_PTR,
-    _pulSignatureLen: CK_ULONG_PTR,
+    hSession: CK_SESSION_HANDLE,
+    pData: CK_BYTE_PTR,
+    ulDataLen: CK_ULONG,
+    pSignature: CK_BYTE_PTR,
+    pulSignatureLen: CK_ULONG_PTR,
 ) -> CK_RV {
-    CKR_FUNCTION_NOT_SUPPORTED
+    if pData.is_null() || pulSignatureLen.is_null() {
+        return CKR_ARGUMENTS_BAD;
+    }
+    let data = unsafe { std::slice::from_raw_parts(pData, ulDataLen as usize) };
+    if pSignature.is_null() {
+        let mut manager_guard = try_to_get_manager_guard!();
+        let manager = manager_guard_to_manager!(manager_guard);
+        match manager.get_signature_length(hSession, data.to_vec()) {
+            Ok(signature_length) => unsafe {
+                *pulSignatureLen = signature_length as CK_ULONG;
+            },
+            Err(_) => {
+                return CKR_GENERAL_ERROR;
+            }
+        }
+    } else {
+        let mut manager_guard = try_to_get_manager_guard!();
+        let manager = manager_guard_to_manager!(manager_guard);
+        match manager.sign(hSession, data.to_vec()) {
+            Ok(signature) => {
+                let signature_capacity = unsafe { *pulSignatureLen } as usize;
+                if signature_capacity < signature.len() {
+                    return CKR_ARGUMENTS_BAD;
+                }
+                let ptr: *mut u8 = pSignature as *mut u8;
+                unsafe {
+                    std::ptr::copy_nonoverlapping(signature.as_ptr(), ptr, signature.len());
+                    *pulSignatureLen = signature.len() as CK_ULONG;
+                }
+            }
+            Err(_) => {
+                return CKR_GENERAL_ERROR;
+            }
+        }
+    }
+    CKR_OK
 }
 
 extern "C" fn C_SignUpdate(

@@ -5258,7 +5258,9 @@ dependencies = [
 name = "pkcs11testmodule-static"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "mozilla-central-workspace-hack",
+ "num-bigint",
  "pkcs11-bindings",
  "rsclientcerts",
 ]
