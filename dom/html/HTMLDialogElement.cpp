@@ -134,132 +134,83 @@ bool HTMLDialogElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-// https://html.spec.whatwg.org/#dom-dialog-close
-// https://html.spec.whatwg.org/#close-the-dialog
 void HTMLDialogElement::Close(
     const mozilla::dom::Optional<nsAString>& aReturnValue) {
-  // 1. If subject does not have an open attribute, then return.
   if (!Open()) {
     return;
   }
 
-  // 2. Fire an event named beforetoggle, using ToggleEvent, with the oldState
-  // attribute initialized to "open", the newState attribute initialized to
-  // "closed", and the source attribute initialized to source at subject.
   FireToggleEvent(u"open"_ns, u"closed"_ns, u"beforetoggle"_ns);
-
-  // 3. If subject does not have an open attribute, then return.
   if (!Open()) {
     return;
   }
-
-  // 4. Queue a dialog toggle event task given subject, "open", "closed", and
-  // source.
   QueueToggleEventTask();
 
-  // 5. Remove subject's open attribute.
-  SetOpen(false, IgnoreErrors());
-
-  // 6. If is modal of subject is true, then request an element to be removed
-  // from the top layer given subject.
-  // 7. Let wasModal be the value of subject's is modal flag.
-  // 8. Set is modal of subject to false.
-  RemoveFromTopLayerIfNeeded();
-
-  // 9. If result is not null, then set subject's returnValue attribute to
-  // result.
   if (aReturnValue.WasPassed()) {
     SetReturnValue(aReturnValue.Value());
   }
 
-  // 10. Set subject's request close return value to null.
-  // 11. Set subject's request close source element to null.
-  // TODO(keithamus) Source element?
+  SetOpen(false, IgnoreErrors());
+
+  RemoveFromTopLayerIfNeeded();
 
   MOZ_ASSERT(!OwnerDoc()->DialogIsInOpenDialogsList(*this),
              "Dialog should not being in Open Dialog List");
 
-  // 12. If subject's previously focused element is not null, then:
-  // 12.1. Let element be subject's previously focused element.
   RefPtr<Element> previouslyFocusedElement =
       do_QueryReferent(mPreviouslyFocusedElement);
 
   if (previouslyFocusedElement) {
-    // 12.2. Set subject's previously focused element to null.
     mPreviouslyFocusedElement = nullptr;
 
-    // 12.3. If subject's node document's focused area of the document's DOM
-    // anchor is a shadow-including inclusive descendant of subject, or wasModal
-    // is true, then run the focusing steps for element; the viewport should not
-    // be scrolled by doing this step.
     FocusOptions options;
     options.mPreventScroll = true;
     previouslyFocusedElement->Focus(options, CallerType::NonSystem,
                                     IgnoredErrorResult());
   }
 
-  // 13. Queue an element task on the user interaction task source given the
-  // subject element to fire an event named close at subject.
   RefPtr<AsyncEventDispatcher> eventDispatcher =
       new AsyncEventDispatcher(this, u"close"_ns, CanBubble::eNo);
   eventDispatcher->PostDOMEvent();
+
+  if (mCloseWatcher) {
+    mCloseWatcher->Destroy();
+    mCloseWatcher = nullptr;
+  }
 }
 
 // https://html.spec.whatwg.org/#dom-dialog-requestclose
-// https://html.spec.whatwg.org/#dialog-request-close
 void HTMLDialogElement::RequestClose(
     const mozilla::dom::Optional<nsAString>& aReturnValue) {
-  RefPtr closeWatcher = mCloseWatcher;
-
-  // 1. If subject does not have an open attribute, then return.
+  // 1. If this does not have an open attribute, then return.
   if (!Open()) {
     return;
   }
 
-  // 2. If subject is not connected or subject's node document is not fully
-  // active, then return.
-  if (!IsInComposedDoc() || !OwnerDoc()->IsFullyActive()) {
-    return;
-  }
+  // 2. Assert: this's close watcher is not null.
+  // TODO(keithamus): RequestClose uses CloseWatcher's requestClose to dispatch
+  // cancel & close events, but there are also several issues with the spec
+  // which make it untenable to implement until they're resolved. Instead, we
+  // can use `RunCancelDialogSteps` to cause the same behaviour, but when
+  // https://github.com/whatwg/html/issues/11230 is resolved we will need to
+  // revisit this.
 
-  // 3. Assert: subject's close watcher is not null.
-  if (StaticPrefs::dom_closewatcher_enabled()) {
-    MOZ_ASSERT(closeWatcher, "RequestClose needs mCloseWatcher");
-  }
+  // 3. Set dialog's enable close watcher for requestClose() to true.
+  // TODO(keithamus): CloseWatcher does not have this flag yet.
 
-  // 4. Set subject's enable close watcher for request close to true.
-  if (StaticPrefs::dom_closewatcher_enabled()) {
-    // XXX: Rather than store a "enable close watcher for request close" state,
-    // we set the CloseWatcher Enabled state to true manually here, and revert
-    // it lower down...
-    closeWatcher->SetEnabled(true);
-  }
-
-  // 5. Set subject's request close return value to returnValue.
+  // 4. If returnValue is not given, then set it to null.
+  // 5. Set this's request close return value to returnValue.
   if (aReturnValue.WasPassed()) {
     mRequestCloseReturnValue = aReturnValue.Value();
   } else {
     mRequestCloseReturnValue.SetIsVoid(true);
   }
 
-  // 6. Set subject's request close source element to source.
-  // TODO(keithamus): Source Element?
+  // 6. Request to close dialog's close watcher with false.
+  RunCancelDialogSteps();
 
-  // 7. Request to close subject's close watcher with false.
-  if (StaticPrefs::dom_closewatcher_enabled()) {
-    closeWatcher->RequestToClose(false);
-  } else {
-    RunCancelDialogSteps();
-  }
-
-  // 8. Set subject's enable close watcher for request close to false.
-  if (closeWatcher) {
-    // XXX: Rather than store a "enable close watcher for request close" state,
-    // we can simply set the close watcher enabled state to whatever it was
-    // before we set it to true (above). SetCloseWatcherEnabledState() will do
-    // this:
-    SetCloseWatcherEnabledState();
-  }
+  // 7. Set dialog's enable close watcher for requestClose() to false.
+  // TODO(keithamus): CloseWatcher does not have this flag yet.
 }
 
 // https://html.spec.whatwg.org/#dom-dialog-show
@@ -296,29 +247,40 @@ void HTMLDialogElement::Show(ErrorResult& aError) {
   // 6. Add an open attribute to this, whose value is the empty string.
   SetOpen(true, IgnoreErrors());
 
-  // 7. Set this's previously focused element to the focused element.
+  // 7. Assert: this's node document's open dialogs list does not contain this.
+  // 8. Add this to this's node document's open dialogs list.
+  // XXX: Step 7 & 8 don't really belong here; following the spec precisely
+  // would cause issues. See for example:
+  // https://github.com/whatwg/html/issues/11259 Instead we implement parts of
+  // https://github.com/whatwg/html/pull/10954 which adds AttributeChanged steps
+  // for Dialogs, to ensure dialogs with the open attribute get added to the
+  // open dialogs list. See also https://github.com/whatwg/html/issues/10982
+
+  // 9. Set the dialog close watcher with this.
+  if (StaticPrefs::dom_closewatcher_enabled()) {
+    SetDialogCloseWatcherIfNeeded();
+  }
+
+  // 10. Set this's previously focused element to the focused element.
   StorePreviouslyFocusedElement();
 
-  // 8. Let document be this's node document.
+  // 11. Let document be this's node document.
 
-  // 9. Let hideUntil be the result of running topmost popover ancestor given
+  // 12. Let hideUntil be the result of running topmost popover ancestor given
   // this, document's showing hint popover list, null, and false.
   RefPtr<nsINode> hideUntil = GetTopmostPopoverAncestor(nullptr, false);
 
-  // 10. If hideUntil is null, then set hideUntil to the result of running
+  // 13. If hideUntil is null, then set hideUntil to the result of running
   // topmost popover ancestor given this, document's showing auto popover list,
   // null, and false.
-  // TODO(keithamus): Popover hint
-
-  // 11. If hideUntil is null, then set hideUntil to document.
   if (!hideUntil) {
     hideUntil = OwnerDoc();
   }
 
-  // 12. Run hide all popovers until given hideUntil, false, and true.
+  // 14. If hideUntil is null, then set hideUntil to document.
   OwnerDoc()->HideAllPopoversUntil(*hideUntil, false, true);
 
-  // 13. Run the dialog focusing steps given this.
+  // 15. Run the dialog focusing steps given this.
   FocusDialog();
 }
 
@@ -333,17 +295,12 @@ bool HTMLDialogElement::IsInTopLayer() const {
 }
 
 void HTMLDialogElement::AddToTopLayerIfNeeded() {
-  MOZ_ASSERT(IsInComposedDoc(), "AddToTopLayerIfNeeded needs IsInComposedDoc");
+  MOZ_ASSERT(IsInComposedDoc());
   if (IsInTopLayer()) {
     return;
   }
 
   OwnerDoc()->AddModalDialog(*this);
-
-  // A change to the modal state may cause the CloseWatcher enabled state to
-  // change, if the `closedby` attribute is missing and therefore in the Auto
-  // (computed) state.
-  SetCloseWatcherEnabledState();
 }
 
 void HTMLDialogElement::RemoveFromTopLayerIfNeeded() {
@@ -351,11 +308,6 @@ void HTMLDialogElement::RemoveFromTopLayerIfNeeded() {
     return;
   }
   OwnerDoc()->RemoveModalDialog(*this);
-
-  // A change to the modal state may cause the CloseWatcher enabled state to
-  // change, if the `closedby` attribute is missing and therefore in the Auto
-  // (computed) state.
-  SetCloseWatcherEnabledState();
 }
 
 void HTMLDialogElement::StorePreviouslyFocusedElement() {
@@ -376,24 +328,22 @@ nsresult HTMLDialogElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
   MOZ_TRY(nsGenericHTMLElement::BindToTree(aContext, aParent));
 
-  // https://html.spec.whatwg.org/#the-dialog-element:html-element-insertion-steps
-  // 1. If insertedNode's node document is not fully active, then return.
-  // 2. If insertedNode is connected, then run the
-  // dialog setup steps given insertedNode.
-  if (Open() && IsInComposedDoc() && OwnerDoc()->IsFullyActive() &&
-      !aContext.IsMove()) {
+  // https://whatpr.org/html/10954/interactive-elements.html#the-dialog-element:html-element-insertion-steps
+  // 1. If insertedNode has an open attribute:
+  if (Open() && !aContext.IsMove()) {
+    // 1.1 Run the dialog setup steps given insertedNode.
     SetupSteps();
   }
 
   return NS_OK;
 }
 
-// https://html.spec.whatwg.org/interactive-elements.html#the-dialog-element:html-element-removing-steps
 void HTMLDialogElement::UnbindFromTree(UnbindContext& aContext) {
   if (!aContext.IsMove()) {
-    // 1. If removedNode has an open attribute, then run the dialog cleanup
-    // steps given removedNode.
+    // https://whatpr.org/html/10954/interactive-elements.html#the-dialog-element:html-element-removing-steps
+    // 1. If removedNode has an open attribute:
     if (Open()) {
+      // 2. Run the dialog cleanup steps given removedNode.
       CleanupSteps();
     }
 
@@ -463,46 +413,54 @@ void HTMLDialogElement::ShowModal(ErrorResult& aError) {
   // 11. Add an open attribute to subject, whose value is the empty string.
   SetOpen(true, aError);
 
-  // 12. Assert: subject's close watcher is not null.
-  if (StaticPrefs::dom_closewatcher_enabled()) {
-    MOZ_ASSERT(mCloseWatcher, "ShowModal needs mCloseWatcher");
-  }
+  // 12. Set is modal of subject to true.
 
-  // 13. Set is modal of subject to true.
-  // 14. Set subject's node document to be blocked by the modal dialog subject.
-  // 15. If subject's node document's top layer does not already contain
+  // 13. Assert: subject's node document's open dialogs list does not contain
+  // subject.
+  // 14. Add subject to subject's node document's open dialogs list.
+  // XXX: Step 7 & 8 don't really belong here; following the spec precisely
+  // would cause issues. See for example:
+  // https://github.com/whatwg/html/issues/11259 Instead we implement parts of
+  // https://github.com/whatwg/html/pull/10954 which adds AttributeChanged steps
+  // for Dialogs, to ensure dialogs with the open attribute get added to the
+  // open dialogs list. See also https://github.com/whatwg/html/issues/10982
+
+  // 15. Let subject's node document be blocked by the modal dialog subject.
+
+  // 16. If subject's node document's top layer does not already contain
   // subject, then add an element to the top layer given subject.
   AddToTopLayerIfNeeded();
 
-  // 16. Set subject's previously focused element to the focused element.
+  if (StaticPrefs::dom_closewatcher_enabled()) {
+    // 17. Set the dialog close watcher with subject.
+    SetDialogCloseWatcherIfNeeded();
+  }
+
+  // 18. Set subject's previously focused element to the focused element.
   StorePreviouslyFocusedElement();
 
-  // 17. Let document be subject's node document.
-
-  // 18. Let hideUntil be the result of running topmost popover ancestor given
+  // 19. Let document be subject's node document.
+  // 20. Let hideUntil be the result of running topmost popover ancestor given
   // subject, document's showing hint popover list, null, and false.
-  RefPtr<nsINode> hideUntil = GetTopmostPopoverAncestor(nullptr, false);
-
-  // 19. If hideUntil is null, then set hideUntil to the result of running
+  // 21. If hideUntil is null, then set hideUntil to the result of running
   // topmost popover ancestor given subject, document's showing auto popover
   // list, null, and false.
-  // TODO(keithamus): Popover hint
+  RefPtr<nsINode> hideUntil = GetTopmostPopoverAncestor(nullptr, false);
 
-  // 20. If hideUntil is null, then set hideUntil to document.
+  // 22. If hideUntil is null, then set hideUntil to document.
   if (!hideUntil) {
     hideUntil = OwnerDoc();
   }
 
-  // 21. Run hide all popovers until given hideUntil, false, and true.
+  // 23. Run hide all popovers until given hideUntil, false, and true.
   OwnerDoc()->HideAllPopoversUntil(*hideUntil, false, true);
 
-  // 22. Run the dialog focusing steps given subject.
+  // 24. Run the dialog focusing steps given subject.
   FocusDialog();
 
   aError.SuppressException();
 }
 
-// https://html.spec.whatwg.org/#the-dialog-element:concept-element-attributes-change-ext
 void HTMLDialogElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                      const nsAttrValue* aValue,
                                      const nsAttrValue* aOldValue,
@@ -510,6 +468,8 @@ void HTMLDialogElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                      bool aNotify) {
   nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue, aOldValue,
                                      aMaybeScriptedPrincipal, aNotify);
+  // XXX: https://github.com/whatwg/html/pull/10954
+  // Attribute change Steps for HTMLDialogElement
   // 1. If namespace is not null, then return.
   if (aNameSpaceID != kNameSpaceID_None) {
     return;
@@ -519,11 +479,14 @@ void HTMLDialogElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   // https://github.com/whatwg/html/issues/11267
   // XXX: CloseWatcher currently uses a `getEnabledState` algorithm to set a
   // boolean, but this is quite a lot of additional infrastructure which could
-  // be simplified by CloseWatcher having an "Enabled" state.
-  // If the closedby attribute changes, it may or may not toggle the
-  // CloseWatcher enabled state.
+  // be simplified by CloseWatcher having an "Enabled" state, which is what we
+  // do. Here if closedby is added, we need to setup the close watcher if
+  // it isn't set up, which in turn will also call SetCloseWatcherEnabledState.
   if (aName == nsGkAtoms::closedby) {
-    SetCloseWatcherEnabledState();
+    if (StaticPrefs::dom_closewatcher_enabled() && IsInComposedDoc() &&
+        Open()) {
+      SetDialogCloseWatcherIfNeeded();
+    }
   }
 
   // 2. If localName is not open, then return.
@@ -537,24 +500,14 @@ void HTMLDialogElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   MOZ_ASSERT(GetBoolAttr(nsGkAtoms::open) == isOpen);
   SetStates(ElementState::OPEN, isOpen);
 
-  // 3. If element's node document is not fully active, then return.
-  if (!OwnerDoc()->IsFullyActive()) {
-    return;
-  }
-
-  // 4. If value is null and oldValue is not null, then run the dialog cleanup
-  // steps given element.
+  // 3. If value is null, and oldValue is not null, then run the dialog
+  // cleanup steps given element.
   if (!isOpen && wasOpen) {
     CleanupSteps();
   }
 
-  // 5. If element is not connected, then return.
-  if (!IsInComposedDoc()) {
-    return;
-  }
-
-  // 6. If value is not null and oldValue is null, then run the dialog setup
-  // steps given element.
+  // 4. If value is not null, and oldValue is null, then run the dialog
+  // setup steps given element.
   if (isOpen && !wasOpen) {
     SetupSteps();
   }
@@ -684,16 +637,21 @@ void HTMLDialogElement::QueueToggleEventTask() {
 // https://html.spec.whatwg.org/#set-the-dialog-close-watcher
 void HTMLDialogElement::SetDialogCloseWatcherIfNeeded() {
   MOZ_ASSERT(StaticPrefs::dom_closewatcher_enabled(), "CloseWatcher enabled");
-  // 1. Assert: dialog's close watcher is null.
-  MOZ_ASSERT(!mCloseWatcher);
+  if (mCloseWatcher) {
+    SetCloseWatcherEnabledState();
+    return;
+  }
 
-  // 2. Assert: dialog has an open attribute and dialog's node document is fully
-  // active.
   RefPtr<Document> doc = OwnerDoc();
   RefPtr window = doc->GetInnerWindow();
-  MOZ_ASSERT(Open() && window && window->IsFullyActive());
+  // XXX: Spec does not assert that the dialog is connected to a window.
+  // There are cases (document.implementation) where `window` might be
+  // null. These cases should not establish a CloseWatcher.
+  if (!window) {
+    return;
+  }
 
-  // 3. Set dialog's close watcher to the result of establishing a close watcher
+  // 1. Set dialog's close watcher to the result of establishing a close watcher
   // given dialog's relevant global object, with:
   mCloseWatcher = new CloseWatcher(window);
   RefPtr<DialogCloseWatcherListener> eventListener =
@@ -715,45 +673,47 @@ void HTMLDialogElement::SetDialogCloseWatcherIfNeeded() {
   // - getEnabledState being to return true if dialog's enable close watcher for
   // requestClose() is true or dialog's computed closed-by state is not None;
   // otherwise false.
-  //
-  // XXX: Rather than creating a function pointer to manage the state of two
-  // boolean conditions, we set the enabled state of the close watcher
-  // explicitly whenever the state of those two conditions change. The first
-  // condition "enable close watcher for requestclose" is managed in
-  // RequestClose(), the other condition is managed by this function:
   SetCloseWatcherEnabledState();
 
   mCloseWatcher->AddToWindowsCloseWatcherManager();
 }
 
-// https://html.spec.whatwg.org/multipage#dialog-setup-steps
+// https://whatpr.org/html/10954/interactive-elements.html#dialog-setup-steps
+// TODO(keithamus): revisit once https://github.com/whatwg/html/pull/10954 is
+// merged.
 void HTMLDialogElement::SetupSteps() {
-  // 1. Assert: subject has an open attribute.
-  MOZ_ASSERT(Open());
-
-  // 2. Assert: subject is connected.
-  MOZ_ASSERT(IsInComposedDoc(), "Dialog SetupSteps needs IsInComposedDoc");
-
-  // 3. Assert: subject's node document's open dialogs list does not contain
-  // subject.
-  MOZ_ASSERT(!OwnerDoc()->DialogIsInOpenDialogsList(*this));
-
-  // 4. Add subject to subject's node document's open dialogs list.
-  OwnerDoc()->AddOpenDialog(*this);
-
-  // 5. Set the dialog close watcher with subject.
+  // 1. Set the dialog close watcher with subject.
   if (StaticPrefs::dom_closewatcher_enabled()) {
     SetDialogCloseWatcherIfNeeded();
   }
+
+  // 2. If subject is not connected, return.
+  if (!IsInComposedDoc()) {
+    return;
+  }
+
+  // 3. Assert: subject's node document's open dialogs list does not contain
+  // subject.
+  // XXX: This is the same as https://html.spec.whatwg.org/#dom-dialog-show step
+  // 7, but moved here.
+  MOZ_ASSERT(!OwnerDoc()->DialogIsInOpenDialogsList(*this));
+
+  // 4. Add subject to subject's node document's open dialogs list.
+  // XXX: This is the same as https://html.spec.whatwg.org/#dom-dialog-show step
+  // 8, but moved here.
+  OwnerDoc()->AddOpenDialog(*this);
 }
 
 void HTMLDialogElement::SetCloseWatcherEnabledState() {
-  if (StaticPrefs::dom_closewatcher_enabled() && mCloseWatcher) {
+  if (StaticPrefs::dom_closewatcher_enabled()) {
+    MOZ_ASSERT(mCloseWatcher);
     mCloseWatcher->SetEnabled(GetClosedBy() != ClosedBy::None);
   }
 }
 
-// https://html.spec.whatwg.org/#dialog-cleanup-steps
+// https://whatpr.org/html/10954/interactive-elements.html#dialog-setup-steps
+// TODO(keithamus): revisit once https://github.com/whatwg/html/pull/10954 is
+// merged.
 void HTMLDialogElement::CleanupSteps() {
   // 1. Remove subject from subject's node document's open dialogs list.
   OwnerDoc()->RemoveOpenDialog(*this);
