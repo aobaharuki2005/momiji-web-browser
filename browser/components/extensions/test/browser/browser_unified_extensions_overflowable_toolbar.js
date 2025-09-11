@@ -19,7 +19,7 @@ const DEFAULT_WIDGET_IDS = [
   "library-button",
   "zoom-controls",
   "search-container",
-  "sidebar-button",
+  "print-button",
 ];
 // Since bug 1960002, not all the default widgets overflow at the min-width (and
 // the following is the number of elements from the DEFAULT_WIDGET_IDS array
