@@ -224,7 +224,7 @@ export const FocusTimer = ({ dispatch, handleUserInteraction }) => {
     if (arcRef?.current) {
       arcRef.current.style.clipPath = getClipPath(progress);
     }
-  }, [progress]);
+  }, [progress, timerType]);
 
   // set timer function
   const setTimerDuration = () => {
