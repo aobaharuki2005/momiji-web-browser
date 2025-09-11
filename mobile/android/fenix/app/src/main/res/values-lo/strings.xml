@@ -557,6 +557,24 @@
   <string name="onboarding_redesign_tou_title">ເປີດຕົວຕົວທ່ອງເວັບ Android ສຸດທ້າຍ</string>
   <!-- Terms of use (ToU) first subheader. -->
   <string name="onboarding_redesign_tou_subheader_one">ໂຫຼດເວັບໄຊໄວ</string>
+  <!-- Terms of use (ToU) second subheader. -->
+  <string name="onboarding_redesign_tou_subheader_two">ການປ້ອງກັນການຕິດຕາມອັດຕະໂນມັດ</string>
+  <!-- Terms of use (ToU) third subheader. -->
+  <string name="onboarding_redesign_tou_subheader_three">ຫລາຍພັນການປັບແຕ່ງ</string>
+  <!--
+    Terms of use (ToU) first body text. %1$s is replaced by an active link,
+    using onboarding_redesign_tou_body_one_link_text as text (“Firefox Terms of Use”).
+  -->
+  <string name="onboarding_redesign_tou_body_one">ໂດຍການດຳເນີນການຕໍ່, ທ່ານເຫັນດີນຳ %1$s.</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
+  <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">ເງື່ອນໄຂການນໍາໃຊ້ Firefox</string>
+  <!--
+    Terms of use (ToU) second body text. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link, using onboarding_redesign_tou_body_two_link_text as text (“Privacy Notice”).
+  -->
+  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox ເປັນຫ່ວງກ່ຽວກັບຄວາມເປັນສ່ວນຕົວຂອງທ່ານ. ສຶກສາເພີ່ມເຕີມໃນ %1$s ຂອງພວກເຮົາ.</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
+  <string name="onboarding_redesign_tou_body_two_link_text">ປະກາດຄວາມເປັນສ່ວນຕົວ</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">ຊ່ວຍພວກເຮົາພັດທະນາ Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->

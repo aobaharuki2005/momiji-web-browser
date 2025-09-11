@@ -554,18 +554,18 @@
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">Rheoli</string>
   <!-- Terms of use (ToU) onboarding redesign title. -->
-  <string name="onboarding_redesign_tou_title">Lansio\'r porwr Android eithaf</string>
+  <string name="onboarding_redesign_tou_title">Agorwch y porwr Android gorau eto</string>
   <!-- Terms of use (ToU) first subheader. -->
-  <string name="onboarding_redesign_tou_subheader_one">Llwytho mellt safleoedd yn gyflym</string>
+  <string name="onboarding_redesign_tou_subheader_one">Yn llwytho gwefannau\'n chwim</string>
   <!-- Terms of use (ToU) second subheader. -->
-  <string name="onboarding_redesign_tou_subheader_two">Diogelu olrhain awtomatig</string>
+  <string name="onboarding_redesign_tou_subheader_two">Diogelu rhag tracio awtomatig</string>
   <!-- Terms of use (ToU) third subheader. -->
   <string name="onboarding_redesign_tou_subheader_three">Miloedd o addasiadau</string>
   <!--
     Terms of use (ToU) first body text. %1$s is replaced by an active link,
     using onboarding_redesign_tou_body_one_link_text as text (“Firefox Terms of Use”).
   -->
-  <string name="onboarding_redesign_tou_body_one">Drwy barhau, rydych yn cytuno i %1$s.</string>
+  <string name="onboarding_redesign_tou_body_one">Drwy barhau, rydych yn cytuno i\'r %1$s.</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
   <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">Amodau Defnyddio Firefox</string>
   <!--
@@ -1030,11 +1030,11 @@
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Crëwyd gan @heyheymomodraws</string>
   <!-- Title for the "Cuddling" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
-  <string name="alternative_app_icon_option_cuddling">Cuddling</string>
+  <string name="alternative_app_icon_option_cuddling">Cwtsio</string>
   <!-- Title for the "Flaming" themed alternative app icon variant in the icon picker screen. The app icon features a fiery design, with the Firefox logo surrounded by flames for a bold, energetic look. -->
   <string name="alternative_app_icon_option_flaming">Fflamio</string>
   <!-- Title for the "Cool" themed alternative app icon variant in the icon picker screen. The app icon uses a warm orange-to-yellow gradient background with a sleek, modern twist on the Firefox logo, giving it a fresh and stylish appearance. -->
-  <string name="alternative_app_icon_option_cool">Cwl</string>
+  <string name="alternative_app_icon_option_cool">Cŵl</string>
   <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
   <string name="alternative_app_icon_group_solid_colors">Lliwiau solet</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
