@@ -11,6 +11,10 @@
   }
 }
 
+[hidden] {
+  display: none !important;
+}
+
 :host {
   width: 100%;
 }

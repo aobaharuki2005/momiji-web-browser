@@ -86,7 +86,7 @@ add_task(async function test_resize_of_tools() {
   await resetToolsHeight();
   let overflowButton = SidebarController.sidebarMain.moreToolsButton;
   Assert.ok(
-    !overflowButton,
+    !overflowButton.checkVisibility(),
     "The overflow button is not visible before resize"
   );
 
@@ -135,7 +135,7 @@ add_task(async function test_overflow_menu() {
   await resetToolsHeight();
   let overflowButton = SidebarController.sidebarMain.moreToolsButton;
   Assert.ok(
-    !overflowButton,
+    !overflowButton.checkVisibility(),
     "The overflow button is not visible before resize"
   );
 
@@ -207,7 +207,7 @@ add_task(async function test_overflow_menu_with_keyboard() {
   await resetToolsHeight();
   let overflowButton = SidebarController.sidebarMain.moreToolsButton;
   Assert.ok(
-    !overflowButton,
+    !overflowButton.checkVisibility(),
     "The overflow button is not visible before resize"
   );
 

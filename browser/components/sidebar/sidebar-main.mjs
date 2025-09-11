@@ -40,7 +40,9 @@ export default class SidebarMain extends MozLitElement {
   static queries = {
     allButtons: { all: "moz-button" },
     extensionButtons: { all: ".tools-and-extensions > moz-button[extension]" },
-    toolButtons: { all: ".tools-and-extensions > moz-button:not([extension])" },
+    toolButtons: {
+      all: ".tools-and-extensions > moz-button[view]:not([extension])",
+    },
     customizeButton: ".bottom-actions > moz-button[view=viewCustomizeSidebar]",
     buttonGroup: ".actions-list:not(.bottom-actions):not(.overflow-button)",
     moreToolsButton: ".more-tools-button",
@@ -837,28 +839,25 @@ export default class SidebarMain extends MozLitElement {
                 )}
               </div>`
           )}
-          ${when(
-            this.shouldShowOverflowButton,
-            () =>
-              html` <button-group
-                class="tools-and-extensions actions-list overflow-button"
-                orientation="vertical"
-                part="overflow-button"
-              >
-                <moz-button
-                  class="more-tools-button"
-                  type=${this.isOverflowMenuOpen ? "icon" : "icon ghost"}
-                  aria-pressed=${this.isOverflowMenuOpen}
-                  @click=${window.SidebarController.sidebarRevampVisibility ===
-                  "expand-on-hover"
-                    ? nothing
-                    : this.showOverflowMenu}
-                  title=${moreToolsTooltip}
-                  .iconSrc=${"chrome://global/skin/icons/chevron.svg"}
-                >
-                </moz-button>
-              </button-group>`
-          )}
+          <button-group
+            class="tools-and-extensions actions-list overflow-button"
+            orientation="vertical"
+            part="overflow-button"
+            ?hidden=${!this.shouldShowOverflowButton}
+          >
+            <moz-button
+              class="more-tools-button"
+              type=${this.isOverflowMenuOpen ? "icon" : "icon ghost"}
+              aria-pressed=${this.isOverflowMenuOpen}
+              @click=${window.SidebarController.sidebarRevampVisibility ===
+              "expand-on-hover"
+                ? nothing
+                : this.showOverflowMenu}
+              title=${moreToolsTooltip}
+              .iconSrc=${"chrome://global/skin/icons/chevron.svg"}
+            >
+            </moz-button>
+          </button-group>
         </div>
       </div>
     `;
