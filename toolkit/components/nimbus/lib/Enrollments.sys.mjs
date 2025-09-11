@@ -13,7 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ProfilesDatastoreService:
     "moz-src:///toolkit/profile/ProfilesDatastoreService.sys.mjs",
-  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -70,7 +69,8 @@ export class NimbusEnrollments {
   #flushTask;
 
   /**
-   * Our shutdown blocker that will
+   * Our shutdown blocker that will ensure we flush pending writes before the
+   * ProfilesDatastoreService closes its database connection.
    *
    * @type {(function(): void) | null}
    */
@@ -415,7 +415,7 @@ export class NimbusEnrollments {
     this.#finalized = true;
     await this.#flushTask.finalize();
 
-    lazy.Sqlite.shutdown.removeBlocker(this.#shutdownBlocker);
+    lazy.ProfilesDatastoreService.shutdown.removeBlocker(this.#shutdownBlocker);
     this.#shutdownBlocker = null;
   }
 
