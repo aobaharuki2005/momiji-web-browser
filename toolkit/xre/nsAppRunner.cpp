@@ -6367,9 +6367,7 @@ void SetupErrorHandling(const char* progname) {
   SetProcessDEPPolicyFunc _SetProcessDEPPolicy =
       (SetProcessDEPPolicyFunc)GetProcAddress(kernel32, "SetProcessDEPPolicy");
   if (_SetProcessDEPPolicy) _SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
-#endif
 
-#ifdef XP_WIN
   // Suppress the "DLL Foo could not be found" dialog, such that if dependent
   // libraries (such as GDI+) are not preset, we gracefully fail to load those
   // XPCOM components, instead of being ungraceful.
