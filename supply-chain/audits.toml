@@ -3543,6 +3543,31 @@ who = "Alex Franchuk <afranchuk@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.2.154 -> 0.2.158"
 
+[[audits.libcrux-hacl-rs]]
+who = "Dana Keeler <dkeeler@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.0.3"
+
+[[audits.libcrux-macros]]
+who = "Dana Keeler <dkeeler@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.0.3"
+
+[[audits.libcrux-p256]]
+who = "Dana Keeler <dkeeler@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.0.3"
+
+[[audits.libcrux-sha2]]
+who = "Dana Keeler <dkeeler@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.0.3"
+
+[[audits.libcrux-traits]]
+who = "Dana Keeler <dkeeler@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.0.3"
+
 [[audits.libloading]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

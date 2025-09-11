@@ -50,6 +50,8 @@ pub const OID_BYTES_SHA_512: &[u8] = &[0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04,
 pub const OID_BYTES_SHA_1: &[u8] = &[0x2b, 0x0e, 0x03, 0x02, 0x1a];
 
 const OID_BYTES_RSA_ENCRYPTION: &[u8] = &[0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01];
+const OID_BYTES_EC_PUBLIC_KEY: &[u8] = &[0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01];
+const OID_BYTES_SECP256R1: &[u8] = &[0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07];
 
 // This is a helper function to take a value and lay it out in memory how
 // PKCS#11 is expecting it.
@@ -216,6 +218,15 @@ pub struct RSAPrivateKey {
     pub private_exponent: Vec<u8>,
 }
 
+pub struct ECPrivateKey {
+    pub private_key: Vec<u8>,
+}
+
+pub enum PrivateKeyInfo {
+    RSA(RSAPrivateKey),
+    EC(ECPrivateKey),
+}
+
 /// PrivateKeyInfo ::= SEQUENCE {
 ///  version                   Version,
 ///  privateKeyAlgorithm       PrivateKeyAlgorithmIdentifier,
@@ -242,24 +253,43 @@ pub struct RSAPrivateKey {
 ///     coefficient       INTEGER,  -- (inverse of q) mod p
 ///     otherPrimeInfos   OtherPrimeInfos OPTIONAL
 /// }
-pub fn read_private_key_info(private_key_info: &[u8]) -> Result<RSAPrivateKey, Error> {
+///
+///  ECPrivateKey ::= SEQUENCE {
+///    version        INTEGER { ecPrivkeyVer1(1) } (ecPrivkeyVer1),
+///    privateKey     OCTET STRING,
+///    parameters [0] ECParameters {{ NamedCurve }} OPTIONAL,
+///    publicKey  [1] BIT STRING OPTIONAL
+/// }
+pub fn read_private_key_info(private_key_info: &[u8]) -> Result<PrivateKeyInfo, Error> {
     let mut private_key_info = Sequence::new(private_key_info)?;
     let _version = private_key_info.read_unsigned_integer()?;
     let mut algorithm_identifier = private_key_info.read_sequence()?;
     let algorithm = algorithm_identifier.read_oid()?;
-    if algorithm != OID_BYTES_RSA_ENCRYPTION {
-        return Err(error_here!(ErrorType::InvalidInput));
-    }
     let private_key_bytes = private_key_info.read_octet_string()?;
     let mut private_key = Sequence::new(private_key_bytes)?;
-    let _version = private_key.read_unsigned_integer()?;
-    let modulus = private_key.read_unsigned_integer()?;
-    let _public_exponent = private_key.read_unsigned_integer()?;
-    let private_exponent = private_key.read_unsigned_integer()?;
-    Ok(RSAPrivateKey {
-        modulus: modulus.to_vec(),
-        private_exponent: private_exponent.to_vec(),
-    })
+    if algorithm == OID_BYTES_RSA_ENCRYPTION {
+        let _version = private_key.read_unsigned_integer()?;
+        let modulus = private_key.read_unsigned_integer()?;
+        let _public_exponent = private_key.read_unsigned_integer()?;
+        let private_exponent = private_key.read_unsigned_integer()?;
+        return Ok(PrivateKeyInfo::RSA(RSAPrivateKey {
+            modulus: modulus.to_vec(),
+            private_exponent: private_exponent.to_vec(),
+        }));
+    }
+    if algorithm == OID_BYTES_EC_PUBLIC_KEY {
+        let algorithm_parameters = algorithm_identifier.read_oid()?;
+        // Currently, only secp256r1 is supported.
+        if algorithm_parameters != OID_BYTES_SECP256R1 {
+            return Err(error_here!(ErrorType::UnsupportedInput));
+        }
+        let _version = private_key.read_unsigned_integer()?;
+        let private_key_bytes = private_key.read_octet_string()?;
+        return Ok(PrivateKeyInfo::EC(ECPrivateKey {
+            private_key: private_key_bytes.to_vec(),
+        }));
+    }
+    Err(error_here!(ErrorType::UnsupportedInput))
 }
 
 /// Helper macro for reading some bytes from a slice while checking the slice is long enough.
@@ -1111,11 +1141,15 @@ mod tests {
     }
 
     #[test]
-    fn test_read_private_key_info() {
+    fn test_read_private_key_info_rsa() {
         let private_key_info_rsa = include_bytes!("../test/private-key-info-rsa.bin");
         let result = read_private_key_info(private_key_info_rsa);
         assert!(result.is_ok());
         let private_key = result.unwrap();
+        assert!(matches!(private_key, PrivateKeyInfo::RSA(_)));
+        let PrivateKeyInfo::RSA(private_key_rsa) = private_key else {
+            unreachable!()
+        };
         let expected_modulus = [
             0xba, 0x88, 0x51, 0xa8, 0x44, 0x8e, 0x16, 0xd6, 0x41, 0xfd, 0x6e, 0xb6, 0x88, 0x06,
             0x36, 0x10, 0x3d, 0x3c, 0x13, 0xd9, 0xea, 0xe4, 0x35, 0x4a, 0xb4, 0xec, 0xf5, 0x68,
@@ -1137,7 +1171,7 @@ mod tests {
             0xb3, 0xfe, 0x49, 0x23, 0xfa, 0x72, 0x51, 0xc4, 0x31, 0xd5, 0x03, 0xac, 0xda, 0x18,
             0x0a, 0x35, 0xed, 0x8d,
         ];
-        assert_eq!(private_key.modulus, expected_modulus);
+        assert_eq!(private_key_rsa.modulus, expected_modulus);
         let expected_private_exponent = [
             0x9e, 0xcb, 0xce, 0x38, 0x61, 0xa4, 0x54, 0xec, 0xb1, 0xe0, 0xfe, 0x8f, 0x85, 0xdd,
             0x43, 0xc9, 0x2f, 0x58, 0x25, 0xce, 0x2e, 0x99, 0x78, 0x84, 0xd0, 0xe1, 0xa9, 0x49,
@@ -1159,6 +1193,24 @@ mod tests {
             0x31, 0x5b, 0x62, 0xb3, 0x0e, 0x60, 0x11, 0xf2, 0x24, 0x72, 0x59, 0x46, 0xee, 0xc5,
             0x7c, 0x6d, 0x94, 0x41,
         ];
-        assert_eq!(private_key.private_exponent, expected_private_exponent);
+        assert_eq!(private_key_rsa.private_exponent, expected_private_exponent);
+    }
+
+    #[test]
+    fn test_read_private_key_info_ecdsa() {
+        let private_key_info_ecdsa = include_bytes!("../test/private-key-info-ecdsa.bin");
+        let result = read_private_key_info(private_key_info_ecdsa);
+        assert!(result.is_ok());
+        let private_key = result.unwrap();
+        assert!(matches!(private_key, PrivateKeyInfo::EC(_)));
+        let PrivateKeyInfo::EC(private_key_ec) = private_key else {
+            unreachable!()
+        };
+        let expected_private_key = [
+            0x21, 0x91, 0x40, 0x3d, 0x57, 0x10, 0xbf, 0x15, 0xa2, 0x65, 0x81, 0x8c, 0xd4, 0x2e,
+            0xd6, 0xfe, 0xdf, 0x09, 0xad, 0xd9, 0x2d, 0x78, 0xb1, 0x8e, 0x7a, 0x1e, 0x9f, 0xeb,
+            0x95, 0x52, 0x47, 0x02,
+        ];
+        assert_eq!(private_key_ec.private_key, expected_private_key);
     }
 }

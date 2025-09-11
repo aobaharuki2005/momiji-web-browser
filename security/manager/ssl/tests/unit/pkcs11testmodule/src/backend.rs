@@ -9,29 +9,56 @@ use rsclientcerts::manager::{ClientCertsBackend, CryptokiObject, Sign};
 use rsclientcerts::util::*;
 
 use base64::prelude::*;
+use libcrux_p256::{ecdsa_sign_p256_without_hash, validate_private_key};
 use num_bigint::BigUint;
+use rand::{thread_rng, RngCore};
 
 #[derive(Clone)]
-pub struct Key {
-    cryptoki_key: CryptokiKey,
+struct RSAKey {
     modulus: BigUint,
     private_exponent: BigUint,
 }
 
+#[derive(Clone)]
+struct ECKey {
+    private_key: Vec<u8>,
+}
+
+#[derive(Clone)]
+enum PrivateKey {
+    RSA(RSAKey),
+    EC(ECKey),
+}
+
+#[derive(Clone)]
+pub struct Key {
+    cryptoki_key: CryptokiKey,
+    private_key: PrivateKey,
+}
+
 impl Key {
     fn new(private_key_info: Vec<u8>, cert: Vec<u8>) -> Result<Key, Error> {
-        let rsa_private_key_bytes = read_private_key_info(&private_key_info).unwrap();
-        Ok(Key {
-            cryptoki_key: CryptokiKey::new(
-                Some(rsa_private_key_bytes.modulus.clone()),
-                None,
-                &cert,
-            )
-            .unwrap(),
-            modulus: BigUint::from_bytes_be(rsa_private_key_bytes.modulus.as_ref()),
-            private_exponent: BigUint::from_bytes_be(
-                rsa_private_key_bytes.private_exponent.as_ref(),
+        let private_key_info = read_private_key_info(&private_key_info).unwrap();
+        let (cryptoki_key, private_key) = match private_key_info {
+            PrivateKeyInfo::RSA(rsa_private_key) => (
+                CryptokiKey::new(Some(rsa_private_key.modulus.clone()), None, &cert).unwrap(),
+                PrivateKey::RSA(RSAKey {
+                    modulus: BigUint::from_bytes_be(rsa_private_key.modulus.as_ref()),
+                    private_exponent: BigUint::from_bytes_be(
+                        rsa_private_key.private_exponent.as_ref(),
+                    ),
+                }),
             ),
+            PrivateKeyInfo::EC(ec_private_key) => (
+                CryptokiKey::new(None, Some(ENCODED_OID_BYTES_SECP256R1.to_vec()), &cert).unwrap(),
+                PrivateKey::EC(ECKey {
+                    private_key: ec_private_key.private_key,
+                }),
+            ),
+        };
+        Ok(Key {
+            cryptoki_key,
+            private_key,
         })
     }
 }
@@ -64,7 +91,12 @@ impl Sign for Key {
         _data: &[u8],
         _params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
     ) -> Result<usize, Error> {
-        Ok(((self.modulus.bits() + 7) / 8).try_into().unwrap())
+        match &self.private_key {
+            PrivateKey::RSA(rsa_private_key) => Ok(((rsa_private_key.modulus.bits() + 7) / 8)
+                .try_into()
+                .unwrap()),
+            PrivateKey::EC(_) => Ok(64), // currently, only secp256r1 is supported
+        }
     }
 
     fn sign(
@@ -72,20 +104,53 @@ impl Sign for Key {
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
     ) -> Result<Vec<u8>, Error> {
-        let encoded = if let Some(params) = params.as_ref() {
-            let em_bits = self.modulus.bits() - 1;
-            emsa_pss_encode(data, em_bits.try_into().unwrap(), params).unwrap()
-        } else {
-            emsa_pkcs1v1_5_encode(data, self.get_signature_length(data, params).unwrap())
-        };
-        let message = BigUint::from_bytes_be(&encoded);
-        // NB: Do not use this implementation where maintaining the secrecy of the private key is
-        // important. In particular, the underlying exponentiation implementation may not be
-        // constant-time and could leak information. This is intended to only be used in tests.
-        // Additionally, the "private" key in use is already not at all a secret.
-        let signature = message.modpow(&self.private_exponent, &self.modulus);
-        Ok(signature.to_bytes_be())
+        match &self.private_key {
+            PrivateKey::RSA(rsa_private_key) => {
+                let encoded = if let Some(params) = params.as_ref() {
+                    let em_bits = rsa_private_key.modulus.bits() - 1;
+                    emsa_pss_encode(data, em_bits.try_into().unwrap(), params).unwrap()
+                } else {
+                    let em_len = ((rsa_private_key.modulus.bits() + 7) / 8)
+                        .try_into()
+                        .unwrap();
+                    emsa_pkcs1v1_5_encode(data, em_len)
+                };
+                let message = BigUint::from_bytes_be(&encoded);
+                // NB: Do not use this implementation where maintaining the secrecy of the private key is
+                // important. In particular, the underlying exponentiation implementation may not be
+                // constant-time and could leak information. This is intended to only be used in tests.
+                // Additionally, the "private" key in use is already not at all a secret.
+                let signature =
+                    message.modpow(&rsa_private_key.private_exponent, &rsa_private_key.modulus);
+                Ok(signature.to_bytes_be())
+            }
+            PrivateKey::EC(ec_private_key) => {
+                Ok(ecdsa(data, ec_private_key.private_key.as_slice()))
+            }
+        }
     }
+}
+
+fn ecdsa(hash: &[u8], private_key: &[u8]) -> Vec<u8> {
+    assert_eq!(hash.len(), 32);
+    assert_eq!(private_key.len(), 32);
+    assert!(validate_private_key(private_key));
+    let mut signature = vec![0; 64];
+    let nonce = loop {
+        let mut nonce = [0u8; 32];
+        thread_rng().fill_bytes(&mut nonce);
+        if validate_private_key(&nonce) {
+            break nonce;
+        }
+    };
+    assert!(ecdsa_sign_p256_without_hash(
+        signature.as_mut_slice(),
+        hash.len().try_into().unwrap(),
+        hash,
+        private_key,
+        nonce.as_slice(),
+    ));
+    signature
 }
 
 pub struct Backend {
@@ -177,7 +242,7 @@ impl ClientCertsBackend for Backend {
     }
 
     fn get_mechanism_list(&self) -> Vec<CK_MECHANISM_TYPE> {
-        vec![CKM_RSA_PKCS, CKM_RSA_PKCS_PSS]
+        vec![CKM_ECDSA, CKM_RSA_PKCS, CKM_RSA_PKCS_PSS]
     }
 
     fn login(&mut self) {

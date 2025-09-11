@@ -61,8 +61,14 @@ extern "C" fn C_Initialize(_pInitArgs: CK_VOID_PTR) -> CK_RV {
                 | CKF_USER_PIN_INITIALIZED
                 | CKF_LOGIN_REQUIRED
                 | CKF_TOKEN_INITIALIZED,
-            vec![include_str!("client-cert-rsa.pem")],
-            vec![include_str!("client-cert-rsa.key")],
+            vec![
+                include_str!("client-cert-rsa.pem"),
+                include_str!("client-cert-ecdsa.pem"),
+            ],
+            vec![
+                include_str!("client-cert-rsa.key"),
+                include_str!("client-cert-ecdsa.key"),
+            ],
         ),
         Backend::new(
             SLOT_DESCRIPTIONS_BYTES[2],

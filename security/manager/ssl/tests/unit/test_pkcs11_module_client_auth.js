@@ -38,9 +38,13 @@ MockRegistrar.register("@mozilla.org/prompter;1", gPromptFactory);
 
 // Replace the UI dialog that prompts the user to pick a client certificate.
 const gClientAuthDialogService = {
+  set certificateNameToUse(name) {
+    this._certificateNameToUse = name;
+  },
+
   chooseCertificate(hostname, certArray, loadContext, caNames, callback) {
     for (let cert of certArray) {
-      if (cert.subjectName == "CN=client cert rsa") {
+      if (cert.subjectName == this._certificateNameToUse) {
         callback.certificateChosen(cert, false);
         return;
       }
@@ -68,6 +72,15 @@ function run_test() {
   );
 
   add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
+  add_test(function set_up_rsa_client_certificate() {
+    gClientAuthDialogService.certificateNameToUse = "CN=client cert rsa";
+    run_next_test();
+  });
+  add_connection_test("requireclientauth.example.com", PRErrorCodeSuccess);
+  add_test(function set_up_ecdsa_client_certificate() {
+    gClientAuthDialogService.certificateNameToUse = "CN=client cert ecdsa";
+    run_next_test();
+  });
   add_connection_test("requireclientauth.example.com", PRErrorCodeSuccess);
 
   // The test module currently has a slot that uses a protected authentication

@@ -92,6 +92,10 @@ notes = "Patched version of upstream"
 dependency-criteria = { fluent-testing = "safe-to-run", tokio = "safe-to-run" }
 notes = "This crate has two testing-only dependencies which are specified as regular-but-optional rather than a dev-dependencies, because they need to be available to both benchmarks and integration tests."
 
+[policy.libcrux-traits]
+audit-as-crates-io = true
+notes = "Patched version of upstream to avoid unnecessary unused dependencies and conflicts."
+
 [policy.libudev-sys]
 audit-as-crates-io = false
 notes = "This override is an api-compatible fork with an orthogonal implementation."
