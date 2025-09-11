@@ -561,6 +561,12 @@ support-files = [
   "searchSuggestionEngine.sjs",
 ]
 
+["browser_searchSuggestions_ohttpSessions.js"]
+support-files = [
+  "searchSuggestionEngine.xml",
+  "searchSuggestionEngine.sjs",
+]
+
 ["browser_searchTelemetry.js"]
 support-files = [
   "searchSuggestionEngine.xml",

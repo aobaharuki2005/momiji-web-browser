@@ -421,6 +421,14 @@ export class SearchSuggestionController {
   }
 
   /**
+   * Should be called at the end of a search engagement (e.g. on blur / search
+   * complete), to reset the Merino session.
+   */
+  resetSession() {
+    this.#merino?.resetSession();
+  }
+
+  /**
    * @type {SuggestionRequestContext}
    */
   #context;
