@@ -155,6 +155,7 @@ class DragAndDropTest : BaseSessionTest() {
         assertThat("input event is fired correctly", promiseSetValue.value as String, equalTo("foo"))
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @WithDisplay(width = 300, height = 300)
     @Test
     fun dragStartXOriginTest() {

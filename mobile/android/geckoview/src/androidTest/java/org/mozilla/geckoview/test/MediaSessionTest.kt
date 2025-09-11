@@ -14,6 +14,7 @@ import org.hamcrest.Matchers.notNullValue
 import org.junit.After
 import org.junit.Assume.assumeThat
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
@@ -80,6 +81,7 @@ class MediaSessionTest : BaseSessionTest() {
     fun teardown() {
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @Test
     fun domMetadataPlayback() {
         val onActivatedCalled = arrayOf(GeckoResult<Void>())
@@ -822,6 +824,7 @@ class MediaSessionTest : BaseSessionTest() {
         sessionRule.waitForResult(completedStep8)
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @Test
     fun fullscreenVideoElementMetadata() {
         // Bug 1981579
