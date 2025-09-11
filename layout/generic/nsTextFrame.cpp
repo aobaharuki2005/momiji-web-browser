@@ -1910,18 +1910,6 @@ static gfxFont::Metrics GetFirstFontMetrics(gfxFontGroup* aFontGroup,
                                            : nsFontMetrics::eHorizontal);
 }
 
-static nscoord GetSpaceWidthAppUnits(const gfxTextRun* aTextRun) {
-  // Round the space width when converting to appunits the same way textruns
-  // do.
-  gfxFloat spaceWidthAppUnits =
-      NS_round(GetFirstFontMetrics(aTextRun->GetFontGroup(),
-                                   aTextRun->UseCenterBaseline())
-                   .spaceWidth *
-               aTextRun->GetAppUnitsPerDevUnit());
-
-  return spaceWidthAppUnits;
-}
-
 static gfxFloat GetMinTabAdvanceAppUnits(const gfxTextRun* aTextRun) {
   gfxFloat chWidthAppUnits = NS_round(
       GetFirstFontMetrics(aTextRun->GetFontGroup(), aTextRun->IsVertical())
@@ -1945,9 +1933,7 @@ static nscoord LetterSpacing(nsIFrame* aFrame, const nsStyleText& aStyleText) {
     // SVG text can have a scaling factor applied so that very small or very
     // large font-sizes don't suffer from poor glyph placement due to app unit
     // rounding. The used letter-spacing value must be scaled by the same
-    // factor. Unlike word-spacing (below), this applies to both lengths and
-    // percentages, as the percentage basis is 1em, not an already-scaled glyph
-    // dimension.
+    // factor.
     return GetSVGFontSizeScaleFactor(aFrame) *
            aStyleText.mLetterSpacing.Resolve(
                [&] { return aFrame->StyleFont()->mSize.ToAppUnits(); });
@@ -1958,22 +1944,19 @@ static nscoord LetterSpacing(nsIFrame* aFrame, const nsStyleText& aStyleText) {
 }
 
 // This function converts non-coord values (e.g. percentages) to nscoord.
-static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
-                           const nsStyleText& aStyleText) {
+static nscoord WordSpacing(nsIFrame* aFrame, const nsStyleText& aStyleText) {
   if (aFrame->IsInSVGTextSubtree()) {
     // SVG text can have a scaling factor applied so that very small or very
     // large font-sizes don't suffer from poor glyph placement due to app unit
     // rounding. The used word-spacing value must be scaled by the same
-    // factor, although any percentage basis has already effectively been
-    // scaled, since it's the space glyph width, which is based on the already-
-    // scaled font-size.
-    auto spacing = aStyleText.mWordSpacing;
-    spacing.ScaleLengthsBy(GetSVGFontSizeScaleFactor(aFrame));
-    return spacing.Resolve([&] { return GetSpaceWidthAppUnits(aTextRun); });
+    // factor.
+    return GetSVGFontSizeScaleFactor(aFrame) *
+           aStyleText.mWordSpacing.Resolve(
+               [&] { return aFrame->StyleFont()->mSize.ToAppUnits(); });
   }
 
   return aStyleText.mWordSpacing.Resolve(
-      [&] { return GetSpaceWidthAppUnits(aTextRun); });
+      [&] { return aFrame->StyleFont()->mSize.ToAppUnits(); });
 }
 
 gfx::ShapedTextFlags nsTextFrame::GetSpacingFlags() const {
@@ -3461,7 +3444,7 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mTabWidths(nullptr),
       mTabWidthsAnalyzedLimit(0),
       mLength(aLength),
-      mWordSpacing(WordSpacing(aFrame, mTextRun, *aTextStyle)),
+      mWordSpacing(WordSpacing(aFrame, *aTextStyle)),
       mLetterSpacing(LetterSpacing(aFrame, *aTextStyle)),
       mMinTabAdvance(-1.0),
       mHyphenWidth(-1),
@@ -3491,7 +3474,7 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mTabWidths(nullptr),
       mTabWidthsAnalyzedLimit(0),
       mLength(aFrame->GetContentLength()),
-      mWordSpacing(WordSpacing(aFrame, mTextRun, *mTextStyle)),
+      mWordSpacing(WordSpacing(aFrame, *mTextStyle)),
       mLetterSpacing(LetterSpacing(aFrame, *mTextStyle)),
       mMinTabAdvance(-1.0),
       mHyphenWidth(-1),
