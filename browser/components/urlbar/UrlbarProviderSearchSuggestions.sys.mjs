@@ -25,6 +25,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
 
+/**
+ * @import {SearchSuggestionController} from "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs"
+ */
+
 const RESULT_MENU_COMMANDS = {
   TRENDING_BLOCK: "trendingblock",
   TRENDING_HELP: "help",
@@ -215,7 +219,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
   /**
    * Starts querying.
    *
-   * @param {object} queryContext The query context object
+   * @param {UrlbarQueryContext} queryContext The query context object
    * @param {Function} addCallback Callback invoked by the provider to add a new
    *        result.
    * @returns {Promise} resolved when the query stops.
@@ -278,7 +282,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
     }
 
     let alias = (aliasEngine && aliasEngine.alias) || "";
-    let results = await this._fetchSearchSuggestions(
+    let results = await this.#fetchSearchSuggestions(
       queryContext,
       engine,
       query,
@@ -292,6 +296,20 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
     for (let result of results) {
       addCallback(this, result);
     }
+  }
+
+  /**
+   * Called when a search session concludes regardless of how it ends -
+   * whether through engagement or abandonment or otherwise. This is
+   * called for all providers who have implemented this method.
+   *
+   * @param {UrlbarQueryContext} _queryContext
+   *    The current query context.
+   * @param {UrlbarController} _controller
+   *    The associated controller.
+   */
+  onSearchSessionEnd(_queryContext, _controller) {
+    this.#suggestionsController?.resetSession();
   }
 
   /**
@@ -311,9 +329,8 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
    * Cancels a running query.
    */
   cancelQuery() {
-    if (this._suggestionsController) {
-      this._suggestionsController.stop();
-      this._suggestionsController = null;
+    if (this.#suggestionsController) {
+      this.#suggestionsController.stop();
     }
   }
 
@@ -368,14 +385,26 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
     }
   }
 
-  async _fetchSearchSuggestions(queryContext, engine, searchString, alias) {
+  /**
+   * @type {?SearchSuggestionController}
+   */
+  #suggestionsController;
+
+  async #fetchSearchSuggestions(queryContext, engine, searchString, alias) {
     if (!engine) {
       return null;
     }
 
-    this._suggestionsController = new lazy.SearchSuggestionController(
-      queryContext.formHistoryName
-    );
+    if (!this.#suggestionsController) {
+      this.#suggestionsController = new lazy.SearchSuggestionController();
+    }
+
+    // TODO (Bug 1987895): Change Search Suggestions Controller to allow passing
+    // formHistoryParam and other fields as options on the fetch() call.
+    if (queryContext.formHistoryName) {
+      this.#suggestionsController.formHistoryParam =
+        queryContext.formHistoryName;
+    }
 
     // If there's a form history entry that equals the search string, the search
     // suggestions controller will include it, and we'll make a result for it.
@@ -384,12 +413,12 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
     // final list of results would be left with `count` - 1 form history results
     // instead of `count`.  Therefore we request `count` + 1 entries.  The muxer
     // will dedupe and limit the final form history count as appropriate.
-    this._suggestionsController.maxLocalResults = queryContext.maxResults + 1;
+    this.#suggestionsController.maxLocalResults = queryContext.maxResults + 1;
 
     // Request maxResults + 1 remote suggestions for the same reason we request
     // maxResults + 1 form history entries.
     let allowRemote = this._allowRemoteSuggestions(queryContext, searchString);
-    this._suggestionsController.maxRemoteResults = allowRemote
+    this.#suggestionsController.maxRemoteResults = allowRemote
       ? queryContext.maxResults + 1
       : 0;
 
@@ -398,14 +427,14 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
         queryContext.searchMode &&
         lazy.UrlbarPrefs.get("trending.maxResultsSearchMode") != -1
       ) {
-        this._suggestionsController.maxRemoteResults = lazy.UrlbarPrefs.get(
+        this.#suggestionsController.maxRemoteResults = lazy.UrlbarPrefs.get(
           "trending.maxResultsSearchMode"
         );
       } else if (
         !queryContext.searchMode &&
         lazy.UrlbarPrefs.get("trending.maxResultsNoSearchMode") != -1
       ) {
-        this._suggestionsController.maxRemoteResults = lazy.UrlbarPrefs.get(
+        this.#suggestionsController.maxRemoteResults = lazy.UrlbarPrefs.get(
           "trending.maxResultsNoSearchMode"
         );
       }
@@ -413,7 +442,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
 
     // See `SearchSuggestionsController.fetch` documentation for a description
     // of `fetchData`.
-    let fetchData = await this._suggestionsController.fetch({
+    let fetchData = await this.#suggestionsController.fetch({
       searchString,
       inPrivateBrowsing: queryContext.isPrivate,
       engine,
