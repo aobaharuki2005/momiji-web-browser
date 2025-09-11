@@ -550,7 +550,7 @@ android14-x86_64-tests:
     - cppunittest
     - crashtest
     # - geckoview-junit # Bug 1973794
-    # - gtest # Bug 1983881
+    - gtest
     - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu
