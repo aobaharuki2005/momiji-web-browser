@@ -10553,14 +10553,6 @@ JS_FN_HELP("createUserArrayBuffer", CreateUserArrayBuffer, 1, 0,
 "isValidJSON(source)",
 " Returns true if the given source is valid JSON."),
 
-    JS_FN_HELP("compressLZ4", CompressLZ4, 1, 0,
-"compressLZ4(bytes)",
-" Return a compressed copy of bytes using LZ4."),
-
-    JS_FN_HELP("decompressLZ4", DecompressLZ4, 1, 0,
-"decompressLZ4(bytes)",
-" Return a decompressed copy of bytes using LZ4."),
-
     JS_FN_HELP("createSideEffectfulResolveObject", CreateSideEffectfulResolveObject, 0, 0,
 "createSideEffectfulResolveObject()",
 " Return an object with a property 'obj.test == 42', backed by a resolve hook "
@@ -10706,6 +10698,16 @@ TestAssertRecoveredOnBailout,
     JS_FN_HELP("getTelemetrySamples", GetTelemetrySamples, 1, 0,
 "getTelemetry(probeName)",
 "  Return an array of recorded telemetry samples for the specified probe."),
+
+    // compressLZ4 and decompressLZ4 are fuzzing unsafe because of unfixed
+    // integer overflow issues. See bug 1900525.
+    JS_FN_HELP("compressLZ4", CompressLZ4, 1, 0,
+"compressLZ4(bytes)",
+" Return a compressed copy of bytes using LZ4."),
+
+    JS_FN_HELP("decompressLZ4", DecompressLZ4, 1, 0,
+"decompressLZ4(bytes)",
+" Return a decompressed copy of bytes using LZ4."),
 
     JS_FS_HELP_END
 };
