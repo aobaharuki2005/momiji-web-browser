@@ -3225,11 +3225,11 @@ bool SharedContextWebgl::BlurRectPass(
     // Disable any AA clipping.
     clipRect = xformRect;
   } else {
-    // Offset the clip AA bounds by 0.5 to ensure AA falls to 0 at pixel
-    // boundary.
     clipRect = mClipAARect;
-    clipRect.Inflate(0.5f);
   }
+  // Offset the clip AA bounds by 0.5 to ensure AA falls to 0 at pixel
+  // boundary.
+  clipRect.Inflate(0.5f);
   Array<float, 4> clipData = {clipRect.x, clipRect.y, clipRect.XMost(),
                               clipRect.YMost()};
   MaybeUniformData(LOCAL_GL_FLOAT_VEC4, mBlurProgramClipBounds, clipData,
@@ -3596,7 +3596,7 @@ already_AddRefed<TextureHandle> SharedContextWebgl::ResolveFilterInputAccel(
   SkRect skiaRect = SkRect::MakeEmpty();
   // Draw the path as a simple rectangle with a supported pattern when
   // possible.
-  if (skiaPath.isRect(&skiaRect)) {
+  if (!aStrokeOptions && skiaPath.isRect(&skiaRect)) {
     RectDouble rect = SkRectToRectDouble(skiaRect);
     RectDouble xformRect = aDT->TransformDouble(rect);
     if (aPattern.GetType() == PatternType::COLOR) {
