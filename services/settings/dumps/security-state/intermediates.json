@@ -13834,24 +13834,6 @@
       "last_modified": 1666727874713
     },
     {
-      "schema": 1666727340433,
-      "derHash": "ykOJyJ3fwxvsJsdLRKhJjFiy2DhRb6AbFPE5NinlikA=",
-      "subject": "CN=AffirmTrust Certificate Authority - DV1,OU=See www.affirmtrust.com/repository,O=AffirmTrust,C=CA",
-      "subjectDN": "MIGCMQswCQYDVQQGEwJDQTEUMBIGA1UEChMLQWZmaXJtVHJ1c3QxKzApBgNVBAsTIlNlZSB3d3cuYWZmaXJtdHJ1c3QuY29tL3JlcG9zaXRvcnkxMDAuBgNVBAMTJ0FmZmlybVRydXN0IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIERWMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "24062c77649490466b59b727862356b7b091396ef80b8d336e7a301146304ddf",
-        "size": 1662,
-        "filename": "68BRY3XqvlKubfNnBJ64F_17BHUniDemUwxZNNvfdaA=.pem",
-        "location": "security-state-staging/intermediates/4683bd6d-bd49-4e42-b154-69a18d94d8c8.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "68BRY3XqvlKubfNnBJ64F/17BHUniDemUwxZNNvfdaA=",
-      "crlite_enrolled": false,
-      "id": "dcda7a02-af57-41d8-9206-72360ea3f7c1",
-      "last_modified": 1666727874684
-    },
-    {
       "schema": 1666727381008,
       "derHash": "D2ctkqCwbO6UjwOyclAmAsbjfSoq1pSjHV3jExlukoI=",
       "subject": "CN=Certum Digital Identification CA SHA2,OU=Certum Certification Authority,O=Unizeto Technologies S.A.,C=PL",
@@ -14012,24 +13994,6 @@
       "crlite_enrolled": false,
       "id": "2a556f13-fd00-4e58-82e2-6de75321c936",
       "last_modified": 1666727874404
-    },
-    {
-      "schema": 1666727441777,
-      "derHash": "RWO5NuNauXV29a7xk12bx+mXeEHwVzvS4WvKyVNKavk=",
-      "subject": "CN=AffirmTrust Certificate Authority - DV1,OU=See www.affirmtrust.com/repository,O=AffirmTrust,C=CA",
-      "subjectDN": "MIGCMQswCQYDVQQGEwJDQTEUMBIGA1UEChMLQWZmaXJtVHJ1c3QxKzApBgNVBAsTIlNlZSB3d3cuYWZmaXJtdHJ1c3QuY29tL3JlcG9zaXRvcnkxMDAuBgNVBAMTJ0FmZmlybVRydXN0IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIERWMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f469b6a26ab18f58e6fd0cfbda5e03e69cf3d3264a9c4790878f903d60151468",
-        "size": 1674,
-        "filename": "68BRY3XqvlKubfNnBJ64F_17BHUniDemUwxZNNvfdaA=.pem",
-        "location": "security-state-staging/intermediates/62e47fee-8839-40c8-9719-edf4a5d2615c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "68BRY3XqvlKubfNnBJ64F/17BHUniDemUwxZNNvfdaA=",
-      "crlite_enrolled": false,
-      "id": "dd1c7414-0b47-4e26-8b61-6e686bc90126",
-      "last_modified": 1666727874346
     },
     {
       "schema": 1666727380667,
@@ -29584,24 +29548,6 @@
       "last_modified": 1562025358063
     },
     {
-      "schema": 1562025337064,
-      "derHash": "qlNFLViQaevZFCODT+woinisxqe51NDxQ9jJLguD2Ok=",
-      "subject": "CN=CERTSIGN FOR BANKING QUALIFIED DS PRODUCTION CA V3,OU=Certificat de productie Production certificate,O=certSIGN,C=RO",
-      "subjectDN": "MIGWMQswCQYDVQQGEwJSTzERMA8GA1UECgwIY2VydFNJR04xNzA1BgNVBAsMLkNlcnRpZmljYXQgZGUgcHJvZHVjdGllIFByb2R1Y3Rpb24gY2VydGlmaWNhdGUxOzA5BgNVBAMMMkNFUlRTSUdOIEZPUiBCQU5LSU5HIFFVQUxJRklFRCBEUyBQUk9EVUNUSU9OIENBIFYz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "eaa0de7b4753356246d652e36cc56d60e8a923001719aa842e83a1fbfb036ca1",
-        "size": 1683,
-        "filename": "lgaybEWhquJ9CUpEl0ci8n7TT_mQu7ls6VLD9gC0u2g=.pem",
-        "location": "security-state-staging/intermediates/b16e7431-1a00-4dad-9c47-46be383bcfe4.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "lgaybEWhquJ9CUpEl0ci8n7TT/mQu7ls6VLD9gC0u2g=",
-      "crlite_enrolled": false,
-      "id": "515bc65f-fec1-4f6b-98db-30c867438ca2",
-      "last_modified": 1562025337821
-    },
-    {
       "schema": 1562025318342,
       "derHash": "GJWNA6+0CWh6G8Jjhg0Nc1oloASrYODw5F1jM1h0N64=",
       "subject": "CN=GoGetSSL Business Validation CA SHA2,OU=GoGetSSL Certification Authority,O=EnVers Group SIA,C=LV",
@@ -29672,24 +29618,6 @@
       "crlite_enrolled": false,
       "id": "e0a7a8fd-452f-48c1-a2d9-8dc311bf2cf1",
       "last_modified": 1562025250818
-    },
-    {
-      "schema": 1562025247064,
-      "derHash": "yucvZtYa+5ppczjo9TWNgHG6+krk0nF8fmNftepD02U=",
-      "subject": "CN=CERTSIGN FOR BANKING SIMPLE SSL PRODUCTION CA V3,OU=Certificat de productie Production certificate,O=certSIGN,C=RO",
-      "subjectDN": "MIGUMQswCQYDVQQGEwJSTzERMA8GA1UECgwIY2VydFNJR04xNzA1BgNVBAsMLkNlcnRpZmljYXQgZGUgcHJvZHVjdGllIFByb2R1Y3Rpb24gY2VydGlmaWNhdGUxOTA3BgNVBAMMMENFUlRTSUdOIEZPUiBCQU5LSU5HIFNJTVBMRSBTU0wgUFJPRFVDVElPTiBDQSBWMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9c05002f5f1bd3a2e682040ad3ca45aa65b80fbea14f287d0b612d125aae2b87",
-        "size": 1678,
-        "filename": "dSEYX-UXMMv7WVy6VlLFnfcCjxt0nH-xwgRrYqDvmpA=.pem",
-        "location": "security-state-staging/intermediates/86434fba-a8fc-495a-9af1-290826501bfc.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "dSEYX+UXMMv7WVy6VlLFnfcCjxt0nH+xwgRrYqDvmpA=",
-      "crlite_enrolled": false,
-      "id": "9a546d40-8e30-4cfa-b711-298337b46008",
-      "last_modified": 1562025247802
     },
     {
       "schema": 1562025170804,
@@ -30268,5 +30196,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1757041022475
+  "timestamp": 1757516222864
 }
