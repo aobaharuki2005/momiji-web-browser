@@ -1121,15 +1121,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fed34cd105917e91daa4da6b3728c47b068749d6a62c59811f06ed2ac71d9da7"
 
 [[package]]
-name = "fxhash"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
-dependencies = [
- "byteorder",
-]
-
-[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3517,7 +3508,6 @@ dependencies = [
  "etagere",
  "euclid",
  "firefox-on-glean",
- "fxhash",
  "gleam",
  "glean",
  "glslopt",
@@ -3532,6 +3522,7 @@ dependencies = [
  "rand 0.4.6",
  "rayon",
  "ron",
+ "rustc-hash 2.1.1",
  "serde",
  "serde_json",
  "sha1",
@@ -3880,7 +3871,6 @@ dependencies = [
  "euclid",
  "firefox-on-glean",
  "freetype",
- "fxhash",
  "gleam",
  "glean",
  "glutin",
@@ -3890,6 +3880,7 @@ dependencies = [
  "malloc_size_of_derive",
  "objc",
  "rayon",
+ "rustc-hash 2.1.1",
  "serde",
  "smallvec",
  "tracy-rs",
