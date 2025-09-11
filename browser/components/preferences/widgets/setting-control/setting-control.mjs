@@ -247,6 +247,8 @@ export class SettingControl extends MozLitElement {
   controlValue(el) {
     if (el.constructor.activatedProperty && el.localName != "moz-radio") {
       return el[el.constructor.activatedProperty];
+    } else if (el.localName == "moz-input-folder") {
+      return el.folder;
     }
     return el.value;
   }

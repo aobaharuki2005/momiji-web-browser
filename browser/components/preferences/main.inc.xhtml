@@ -475,27 +475,7 @@
 
 <!--Downloads-->
 <groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
-  <label><html:h2 data-l10n-id="download-header"/></label>
-
-  <hbox id="saveWhere">
-    <label id="saveTo"
-           control="downloadFolder"
-           data-l10n-id="download-save-where"/>
-    <html:input id="downloadFolder"
-                type="text"
-                readonly="readonly"
-                aria-labelledby="saveTo"/>
-    <button id="chooseFolder"
-            is="highlightable-button"
-            class="accessory-button"
-            data-l10n-id="download-choose-folder"/>
-  </hbox>
-  <checkbox id="alwaysAsk"
-            data-l10n-id="download-always-ask-where"
-            preference="browser.download.useDownloadDir"/>
-            <checkbox id="deletePrivate"
-            data-l10n-id="download-private-browsing-delete"
-            preference="browser.download.deletePrivate"/>
+  <html:setting-group groupid="downloads"/>
 </groupbox>
 
 <groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">
