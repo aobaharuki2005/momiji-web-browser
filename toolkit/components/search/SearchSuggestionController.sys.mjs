@@ -11,6 +11,9 @@ const REMOTE_TIMEOUT_DEFAULT = 500;
 const lazy = XPCOMUtils.declareLazy({
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
+  // This is currently only used within experiment code.
+  // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+  MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   logConsole: () =>
     console.createInstance({
       prefix: "SearchSuggestionController",
@@ -33,6 +36,10 @@ const lazy = XPCOMUtils.declareLazy({
     pref: "browser.search.suggest.timeout",
     default: REMOTE_TIMEOUT_DEFAULT,
   },
+  ohttpEnabled: {
+    pref: "browser.search.suggest.ohttp.featureGate",
+    default: false,
+  },
 });
 
 /**
@@ -43,6 +50,10 @@ const lazy = XPCOMUtils.declareLazy({
  * @typedef {[
  *   suggestions: string[], descriptions:string[], richResultInformation: object[]
  * ]} SuggestionRemoteResult
+ */
+
+/**
+ * @import {MerinoClient} from "resource:///modules/MerinoClient.sys.mjs"
  */
 
 /**
@@ -259,6 +270,12 @@ export class SearchSuggestionController {
   maxRemoteResults = 10;
 
   /**
+   * The identifier of the search engine that can currently be enabled for
+   * OHTTP. May be overridden for tests.
+   */
+  static oHTTPEngineId = "google";
+
+  /**
    * The additional parameter used when searching form history.
    *
    * @type {string}
@@ -361,8 +378,20 @@ export class SearchSuggestionController {
       promises.push(this.#fetchRemote(this.#context));
     }
 
+    /**
+     * Handles rejection of the promises, to log the result and ensure nothing
+     * is returned.
+     *
+     * @param {string|Error} reason
+     *   The reason for the rejection. May be an `Error` if a code error
+     *   occurred.
+     * @returns {null}
+     */
     function handleRejection(reason) {
-      if (reason.startsWith("HTTP request aborted")) {
+      if (
+        typeof reason == "string" &&
+        reason.startsWith("HTTP request aborted")
+      ) {
         lazy.logConsole.debug(reason);
         // Do nothing since this is normal.
         return null;
@@ -395,6 +424,12 @@ export class SearchSuggestionController {
    * @type {SuggestionRequestContext}
    */
   #context;
+
+  /**
+   * @type {MerinoClient}
+   *   The MerinoClient associated with any ObliviousHTTP requests.
+   */
+  #merino;
 
   /**
    * Fetches search suggestions from the form history.
@@ -456,7 +491,8 @@ export class SearchSuggestionController {
   }
 
   /**
-   * Fetch suggestions from the search engine over the network.
+   * Fetch suggestions from the search engine over the network, using Oblivious
+   * HTTP or normal HTTP(s) as available.
    *
    * @param {SuggestionRequestContext} context
    *   The search context.
@@ -465,6 +501,37 @@ export class SearchSuggestionController {
    *   rejected if there is an error.
    */
   #fetchRemote(context) {
+    let submission = context.engine.getSubmission(
+      context.searchString,
+      context.searchString
+        ? lazy.SearchUtils.URL_TYPE.SUGGEST_JSON
+        : lazy.SearchUtils.URL_TYPE.TRENDING_JSON
+    );
+
+    // Note: when we enable this for all engines, we need to make sure we have
+    // the capability for POST submissions handled.
+    if (
+      lazy.ohttpEnabled &&
+      context.engine.id == SearchSuggestionController.oHTTPEngineId
+    ) {
+      return this.#fetchRemoteObliviousHTTP(context, submission);
+    }
+    return this.#fetchRemoteNormalHTTP(context, submission);
+  }
+
+  /**
+   * Fetch suggestions from the search engine over the network using normal
+   * HTTP(s).
+   *
+   * @param {SuggestionRequestContext} context
+   *   The search context.
+   * @param {nsISearchSubmission} submission
+   *   The submission URL and data for the search suggestion.
+   * @returns {Promise}
+   *   Returns a promise that is resolved when the response is received, or
+   *   rejected if there is an error.
+   */
+  #fetchRemoteNormalHTTP(context, submission) {
     let deferredResponse = Promise.withResolvers();
     let request = (context.request = new XMLHttpRequest());
     // Expect the response type to be JSON, so that the network layer will
@@ -472,12 +539,6 @@ export class SearchSuggestionController {
     // dictating how we process it.
     request.responseType = "json";
 
-    let submission = context.engine.getSubmission(
-      context.searchString,
-      context.searchString
-        ? lazy.SearchUtils.URL_TYPE.SUGGEST_JSON
-        : lazy.SearchUtils.URL_TYPE.TRENDING_JSON
-    );
     let method = submission.postData ? "POST" : "GET";
     request.open(method, submission.uri.spec, true);
     // Don't set or store cookies or on-disk cache.
@@ -519,7 +580,28 @@ export class SearchSuggestionController {
         );
         return;
       }
-      this.#onRemoteLoaded(context, deferredResponse);
+
+      let status;
+      try {
+        status = context.request.status;
+      } catch (e) {
+        // The XMLHttpRequest can throw NS_ERROR_NOT_AVAILABLE.
+        deferredResponse.resolve("Unknown HTTP status: " + e);
+        return;
+      }
+
+      if (status != HTTP_OK) {
+        deferredResponse.resolve(
+          "Non-200 status or empty HTTP response: " + status
+        );
+        return;
+      }
+
+      this.#onRemoteLoaded(
+        context,
+        context.request.response,
+        deferredResponse.resolve
+      );
     });
 
     request.addEventListener("error", () => {
@@ -551,33 +633,70 @@ export class SearchSuggestionController {
   }
 
   /**
-   * Called when the request completed successfully (thought the HTTP status
-   * could be anything) so we can handle the response data.
+   * Fetch suggestions from the search engine over the network using Oblivious
+   * HTTP.
+   *
+   * POST submissions are not currently supported.
    *
    * @param {SuggestionRequestContext} context
    *   The search context.
-   * @param {PromiseWithResolvers} deferredResponse
-   *   The promise to resolve when a response is received.
+   * @param {nsISearchSubmission} submission
+   *   The submission URL and data for the search suggestion.
+   * @returns {Promise}
+   *   Returns a promise that is resolved when the response is received, or
+   *   rejected if there is an error.
    */
-  #onRemoteLoaded(context, deferredResponse) {
-    let status;
-    try {
-      status = context.request.status;
-    } catch (e) {
-      // The XMLHttpRequest can throw NS_ERROR_NOT_AVAILABLE.
-      deferredResponse.resolve("Unknown HTTP status: " + e);
-      return;
+  async #fetchRemoteObliviousHTTP(context, submission) {
+    if (!this.#merino) {
+      this.#merino = new lazy.MerinoClient("SearchSuggestions", {
+        allowOhttp: true,
+      });
     }
 
-    if (status != HTTP_OK) {
-      deferredResponse.resolve(
-        "Non-200 status or empty HTTP response: " + status
+    let submissionURL = URL.fromURI(submission.uri);
+
+    context.gleanTimerId =
+      Glean.search.suggestionsLatency[context.engineId].start();
+
+    let merinoSuggestions = await this.#merino.fetch({
+      query: context.searchString,
+      providers: ["google_suggest"],
+      timeoutMs: lazy.remoteTimeout,
+      otherParams: {
+        google_suggest_params: submissionURL.searchParams.toString(),
+      },
+    });
+
+    this.#reportTelemetryForEngine(context);
+    if (!this.#context || context != this.#context || context.aborted) {
+      return "Got OHTTP response after the request was cancelled";
+    }
+
+    if (!merinoSuggestions) {
+      return "An error occurred see the MerinoClient for details.";
+    }
+
+    return new Promise(resolve => {
+      this.#onRemoteLoaded(
+        context,
+        merinoSuggestions[0]?.custom_details?.google_suggest?.suggestions || [],
+        resolve
       );
-      return;
-    }
+    });
+  }
 
-    let serverResults = context.request.response;
-
+  /**
+   * Called when the request completed successfully so we can handle the
+   * response data.
+   *
+   * @param {SuggestionRequestContext} context
+   *   The search context.
+   * @param {object[]} serverResults
+   *   The results received from the server.
+   * @param {(value: any | PromiseLike<any>) => void} resolve
+   *   A promise resolver to resolve when a response is received.
+   */
+  #onRemoteLoaded(context, serverResults, resolve) {
     lazy.logConsole.debug("Remote results:", serverResults);
 
     try {
@@ -601,22 +720,20 @@ export class SearchSuggestionController {
           ))
       ) {
         // something is wrong here so drop remote results
-        deferredResponse.resolve(
+        resolve(
           "Unexpected response, searchString does not match remote response"
         );
         return;
       }
     } catch (ex) {
-      deferredResponse.resolve(
-        `Failed to parse the remote response string: ${ex}`
-      );
+      resolve(`Failed to parse the remote response string: ${ex}`);
       return;
     }
 
     // Remove the search string from the server results since it is no longer
     // needed.
     let results = serverResults.slice(1) || [];
-    deferredResponse.resolve({ result: results });
+    resolve({ result: results });
   }
 
   /**
