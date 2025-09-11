@@ -7378,7 +7378,7 @@ main section {
 }
 .ds-card-grid .sections-card-ui .card-stp-button-hover-background {
   border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-  background-color: transparent;
+  background-color: var(--button-background-color-ghost);
 }
 .ds-card-grid .sections-card-ui .ds-card-link:focus {
   border-radius: var(--border-radius-large);
@@ -7525,24 +7525,24 @@ main section {
 .ds-card-grid .refined-cards .card-stp-button-hover-background {
   height: 100%;
   padding-block-start: 0;
-  background: transparent;
+  background: var(--button-background-color-ghost);
 }
 .ds-card-grid .refined-cards .card-stp-button-hover-background .card-stp-button-position-wrapper {
   inset-block-start: unset;
   inset-block-end: var(--space-medium);
   inset-inline-end: var(--space-large);
 }
+.ds-card-grid .refined-cards .context-menu-button {
+  background-color: var(--button-background-color-ghost);
+}
 .ds-card-grid .refined-cards:hover h3, .ds-card-grid .refined-cards.active h3 {
   color: var(--color-accent-primary);
 }
-.ds-card-grid .refined-cards:hover .context-menu-button, .ds-card-grid .refined-cards.active .context-menu-button {
-  background-color: transparent;
-}
 .ds-card-grid .refined-cards:hover .context-menu-button:hover, .ds-card-grid .refined-cards.active .context-menu-button:hover {
-  background-color: var(--newtab-button-static-hover-background);
+  background-color: var(--button-background-color-ghost-hover);
 }
 .ds-card-grid .refined-cards:hover .context-menu-button:hover:active, .ds-card-grid .refined-cards.active .context-menu-button:hover:active {
-  background-color: var(--newtab-button-static-active-background);
+  background-color: var(--button-background-color-ghost-active);
 }
 .ds-card-grid .refined-cards:hover .context-menu-button:focus-visible, .ds-card-grid .refined-cards.active .context-menu-button:focus-visible {
   outline: 2px solid var(--newtab-button-focus-border);
