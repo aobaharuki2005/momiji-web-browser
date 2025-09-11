@@ -766,6 +766,25 @@ HRESULT MFTEncoder::SetModes(const EncoderConfig& aConfig) {
     MFT_RETURN_IF_FAILED(mConfig->SetValue(&CODECAPI_AVLowLatencyMode, &var));
   }
 
+  uint32_t interval = SaturatingCast<uint32_t>(aConfig.mKeyframeInterval);
+  if (interval != 0) {
+    var.vt = VT_UI4;
+    var.ulVal = interval;
+    if (SUCCEEDED(mConfig->IsModifiable(&CODECAPI_AVEncMPVGOPSize))) {
+      MFT_RETURN_IF_FAILED(mConfig->SetValue(&CODECAPI_AVEncMPVGOPSize, &var));
+      MFT_ENC_LOGD("Set GOPSize to %lu", var.ulVal);
+    }
+    // Set keyframe distance through both media type and codec API for better
+    // compatibility. Some encoders may only support one of these methods.
+    // `MF_MT_MAX_KEYFRAME_SPACING` is set in `CreateOutputType`.
+    if (SUCCEEDED(
+            mConfig->IsModifiable(&CODECAPI_AVEncVideoMaxKeyframeDistance))) {
+      MFT_RETURN_IF_FAILED(
+          mConfig->SetValue(&CODECAPI_AVEncVideoMaxKeyframeDistance, &var));
+      MFT_ENC_LOGD("Set MaxKeyframeDistance to %lu", var.ulVal);
+    }
+  }
+
   mIsRealtime = aConfig.mUsage == Usage::Realtime;
 
   return S_OK;

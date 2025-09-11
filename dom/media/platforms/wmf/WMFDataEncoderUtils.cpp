@@ -245,6 +245,19 @@ already_AddRefed<IMFMediaType> CreateOutputType(EncoderConfig& aConfig) {
     }
   }
 
+  // Set keyframe distance through both media type and codec API for better
+  // compatibility. Some encoders may only support one of these methods.
+  // `AVEncVideoMaxKeyframeDistance` is set in `MFTEncoder::SetModes`.
+  uint32_t interval = SaturatingCast<uint32_t>(aConfig.mKeyframeInterval);
+  if (interval > 0) {
+    hr = type->SetUINT32(MF_MT_MAX_KEYFRAME_SPACING, interval);
+    if (FAILED(hr)) {
+      WMF_ENC_LOG("Create output type set keyframe interval error: %lx", hr);
+      return nullptr;
+    }
+    WMF_ENC_LOG("Set MAX_KEYFRAME_SPACING to %u", interval);
+  }
+
   return type.forget();
 }
 
