@@ -2831,6 +2831,12 @@ export var Policies = {
     },
   },
 
+  VisualSearchEnabled: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("browser.search.visualSearch.featureGate", param);
+    },
+  },
+
   WebsiteFilter: {
     onBeforeUIStartup(manager, param) {
       lazy.WebsiteFilter.init(param.Block || [], param.Exceptions || []);

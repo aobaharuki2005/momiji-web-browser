@@ -1175,6 +1175,16 @@ const POLICIES_TESTS = [
       // the timestamp at which the policy was set
     },
   },
+
+  // POLICY: VisualSearchEnabled
+  {
+    policies: {
+      VisualSearchEnabled: false,
+    },
+    lockedPrefs: {
+      "browser.search.visualSearch.featureGate": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {

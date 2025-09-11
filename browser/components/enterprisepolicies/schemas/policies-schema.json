@@ -1645,6 +1645,10 @@
       "type": "boolean"
     },
 
+    "VisualSearchEnabled": {
+      "type": "boolean"
+    },
+
     "WebsiteFilter": {
       "type": ["object", "JSON"],
       "properties": {
