@@ -139,49 +139,4 @@ class ExceptionHandlerTest {
         verify(defaultExceptionHandler).uncaughtException(Thread.currentThread(), reporterException)
         assertArrayEquals(arrayOf(exception), reporterException.suppressed)
     }
-
-    @Ignore("bug 1979088: the exception handler kills the process before services can run")
-    @Test
-    fun `exceptions in continuation scopes invoke default exception handler`() {
-        val defaultExceptionHandler: Thread.UncaughtExceptionHandler = mock()
-
-        val reporterException = RuntimeException("CrashReporterException")
-
-        val crashReporter = spy(
-            CrashReporter(
-            context = testContext,
-            shouldPrompt = CrashReporter.Prompt.NEVER,
-            services = listOf(
-                object : CrashReporterService {
-                    override val id: String = "test"
-
-                    override val name: String = "TestReporter"
-
-                    override fun createCrashReportUrl(identifier: String): String? = null
-
-                    override fun report(crash: Crash.UncaughtExceptionCrash): String? = throw reporterException
-
-                    override fun report(crash: Crash.NativeCodeCrash): String? = null
-
-                    override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
-                },
-            ),
-            scope = scope,
-        ),
-        )
-        crashReporter.install(testContext)
-
-        val handler = ExceptionHandler(
-            testContext,
-            crashReporter,
-            defaultExceptionHandler,
-        )
-
-        verify(defaultExceptionHandler, never()).uncaughtException(any(), any())
-
-        val exception = RuntimeException()
-        handler.uncaughtException(Thread.currentThread(), exception)
-
-        verify(defaultExceptionHandler).uncaughtException(Thread.currentThread(), reporterException)
-    }
 }
