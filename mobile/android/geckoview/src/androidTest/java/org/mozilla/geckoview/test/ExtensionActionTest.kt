@@ -582,6 +582,7 @@ class ExtensionActionTest : BaseSessionTest() {
         testSetPopup("/relative-url-02.html", true)
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @Test
     @GeckoSessionTestRule.WithDisplay(width = 100, height = 100)
     fun testOpenPopup() {

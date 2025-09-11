@@ -122,6 +122,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @Test
     fun multipleLoads() {
         mainSession.loadUri(UNKNOWN_HOST_URI)

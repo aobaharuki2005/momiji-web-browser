@@ -482,6 +482,7 @@ class MediaSessionTest : BaseSessionTest() {
         sessionRule.waitForResult(completedStep5)
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @Test
     fun domMultiSessions() {
         val onActivatedCalled = arrayOf(
@@ -1036,6 +1037,7 @@ class MediaSessionTest : BaseSessionTest() {
         sessionRule.waitForResult(resultFullscreen)
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @Test
     fun switchingProcess() {
         // Bug 1981579

@@ -259,6 +259,7 @@ class PrintDelegateTest : BaseSessionTest() {
         }
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun staticContextWindowDotPrintTest() {
@@ -300,6 +301,7 @@ class PrintDelegateTest : BaseSessionTest() {
         }
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun contentIframeWindowDotPrintTest() {
