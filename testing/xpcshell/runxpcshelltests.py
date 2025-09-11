@@ -1758,11 +1758,22 @@ class XPCShellTests:
         old_info = dict(mozinfo.info)
         try:
             suite = unittest.TestLoader().loadTestsFromTestCase(XPCShellTestsTests)
+            test_cases = list(suite)
+            group = "xpcshell-selftest"
+            tests_by_manifest = {
+                "xpcshell-selftest": [tc._testMethodName for tc in test_cases]
+            }
+            self.log.suite_start(tests_by_manifest, name=group)
+            self.log.group_start(name="selftests")
+
             return unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful()
         finally:
             # The self tests modify mozinfo, so we need to reset it.
             mozinfo.info.clear()
             mozinfo.update(old_info)
+
+            self.log.group_end(name="selftests")
+            self.log.suite_end()
 
     def runTests(self, options, testClass=XPCShellTestThread, mobileArgs=None):
         """
@@ -2244,6 +2255,12 @@ class XPCShellTests:
 
         self.log.suite_start(tests_by_manifest, name="xpcshell")
 
+        # Start group for parallel test execution
+        parallel_group_started = False
+        if tests_queue:
+            self.log.group_start(name="parallel")
+            parallel_group_started = True
+
         while tests_queue or running_tests:
             # if we're not supposed to continue and all of the running tests
             # are done, stop
@@ -2294,11 +2311,17 @@ class XPCShellTests:
             # make room for new tests to run
             running_tests.difference_update(done_tests)
 
+        # End group for parallel test execution
+        if parallel_group_started:
+            self.log.group_end(name="parallel")
+
         if infra_abort:
             return TBPL_RETRY  # terminate early
 
         if keep_going:
             # run the other tests sequentially
+            if sequential_tests:
+                self.log.group_start(name="sequential")
             for test in sequential_tests:
                 if not keep_going:
                     self.log.error(
@@ -2321,9 +2344,13 @@ class XPCShellTests:
                     break
                 keep_going = test.keep_going
 
+            if sequential_tests:
+                self.log.group_end(name="sequential")
+
         # retry tests that failed when run in parallel
         if self.try_again_list:
             self.log.info("Retrying tests that failed when run in parallel.")
+            self.log.group_start(name="retry")
         for test_object in self.try_again_list:
             test = testClass(
                 test_object,
@@ -2342,6 +2369,9 @@ class XPCShellTests:
                 tracebacks.append(test.traceback)
                 break
             keep_going = test.keep_going
+
+        if self.try_again_list:
+            self.log.group_end(name="retry")
 
         # restore default SIGINT behaviour
         signal.signal(signal.SIGINT, signal.SIG_DFL)
