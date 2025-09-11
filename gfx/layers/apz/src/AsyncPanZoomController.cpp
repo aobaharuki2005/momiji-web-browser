@@ -5658,6 +5658,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(
                this);
       needContentRepaint = true;
     }
+
+    APZC_LOG("%p first-paint at scroll position %s\n", this,
+             ToString(Metrics().GetVisualScrollOffset()).c_str());
+
   } else {
     // If we're not taking the aLayerMetrics wholesale we still need to pull
     // in some things into our local Metrics() because these things are
