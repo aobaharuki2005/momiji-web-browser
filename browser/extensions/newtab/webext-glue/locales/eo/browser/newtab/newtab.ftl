@@ -315,6 +315,9 @@ newtab-custom-pocket-subtitle = Eksterordinara  enhavo reviziita de  { -pocket-b
 newtab-custom-stories-toggle =
     .label = Rekomenditaj artikoloj
     .description = Eksterordinara enhavo elekita de la familio de { -brand-product-name }
+newtab-custom-stories-personalized-toggle =
+    .label = Artikoloj
+newtab-custom-stories-personalized-checkbox-label = Personecigitaj artikoloj laŭ via retumo
 newtab-custom-pocket-sponsored = Patronitaj artikoloj
 newtab-custom-pocket-show-recent-saves = Montri ĵusajn konservojn
 newtab-custom-recent-title = Ĵusa agado
@@ -333,6 +336,7 @@ newtab-custom-widget-lists-toggle =
     .label = Listoj
 newtab-custom-widget-timer-toggle =
     .label = Tempumilo
+newtab-custom-widget-section-title = Komponantoj
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Fermi
@@ -349,6 +353,7 @@ newtab-wallpaper-custom-color = Elekti koloron
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = La grando de la bildo superas la maksimuman grandon de dosiero, kiu estas { $file_size }MO. Bonvolu provi alŝuti pli etan dosieron.
+newtab-wallpaper-error-upload-file-type = Ni ne povis alŝuti vian dosieron. Bonvolu provi denove per bilda dosiero.
 newtab-wallpaper-error-file-type = Ni ne povis alŝuti vian dosieron. Bonvolu provi denove per alia tipo de dosiero.
 newtab-wallpaper-light-red-panda = Ruĝa pando
 newtab-wallpaper-light-mountain = Blanka monto
@@ -611,10 +616,73 @@ newtab-trending-searches-title = Popularaj serĉoj
 
 ## Strings for task / to-do list productivity widget
 
+# "Add one" means adding a new task to the list (e.g., "Walk the dog")
+newtab-widget-lists-empty-cta = Estas senfinaj ebloj. Aldonu taskon.
 # A simple label next to the default list name letting users know this is a new / beta feature
 newtab-widget-lists-label-new =
     .label = Nova
 newtab-widget-lists-label-beta =
     .label = Beta
+# When tasks have been previous marked as complete, they will appear in their own separate list beneath incomplete items
+# Variables:
+#   $number (number) - Amount of list items marked complete
+newtab-widget-lists-completed-list = Plenumitaj ({ $number })
 newtab-widget-task-list-menu-copy = Kopii
+newtab-widget-lists-menu-edit = Modifi nomon de listo
+newtab-widget-lists-menu-create = Krei novan liston
+newtab-widget-lists-menu-delete = Forigi tiun ĉi liston
+newtab-widget-lists-menu-copy = Kopii liston al tondujo
+newtab-widget-lists-menu-hide = Kaŝi ĉiujn listojn
 newtab-widget-lists-menu-learn-more = Pli da informo
+newtab-widget-lists-input-add-an-item =
+    .placeholder = Aldoni elementon
+newtab-widget-lists-input-error = Bonvolu enigi tekston por aldoni elementon.
+newtab-widget-lists-input-menu-open-link = Malfermi ligilon
+newtab-widget-lists-input-menu-move-up = Movi supren
+newtab-widget-lists-input-menu-move-down = Movi malsupren
+newtab-widget-lists-input-menu-delete = Forigi
+newtab-widget-lists-input-menu-edit = Modifi
+newtab-widget-lists-name-label-default =
+    .label = Listo de taskoj
+newtab-widget-lists-name-placeholder-default =
+    .placeholder = Listo de taskoj
+# The placeholder value of the name field for a newly created list
+newtab-widget-lists-name-placeholder-new =
+    .placeholder = Nova listo
+
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+
+newtab-widget-timer-notification-title = Tempumilo
+newtab-widget-timer-notification-focus = La koncentriĝa periodo finiĝis. Bone farita. Ĉu fari paŭzon?
+newtab-widget-timer-notification-break = Via paŭzo estas finita. Ĉu preta rekoncentriĝi?
+newtab-widget-timer-notification-warning = Sciigoj malŝaltitaj
+newtab-widget-timer-mode-focus =
+    .label = Koncentriĝo
+newtab-widget-timer-mode-break =
+    .label = Paŭzo
+newtab-widget-timer-play =
+    .title = Komenci
+newtab-widget-timer-pause =
+    .title = Paŭzigi
+newtab-widget-timer-label-play =
+    .label = Komenci
+newtab-widget-timer-label-pause =
+    .label = Paŭzigi
+newtab-widget-timer-reset =
+    .title = Rekomenci
+newtab-widget-timer-menu-notifications = Malŝalti sciigojn
+newtab-widget-timer-menu-notifications-on = Ŝalti sciigojn
+newtab-widget-timer-menu-hide = Kaŝi tempumilon
+newtab-widget-timer-menu-learn-more = Pli da informo
+# Message that appears when widgets are full-height. This reminds users that there is more New Tab content to see if they scroll
+newtab-widget-keep-scrolling = Rulumu por vidi pli
+newtab-widget-message-title = Resti koncentrita danke al listoj kaj integrita tempumilo
+# to-dos stands for "things to do".
+newtab-widget-message-copy = Rapidaj memorigaĵoj, ĉiutagaj farendaĵoj, koncentriĝaj seancoj kaj ripozaj paŭzoj — akurate plenumu taskojn.
+newtab-promo-card-title = Subtenu { -brand-product-name }
+newtab-promo-card-body = Niaj patronoj subtenas nian mision: krei pli bonan interreton.
+newtab-promo-card-cta = Pli da informo
+newtab-promo-card-dismiss-button =
+    .title = Ignori
+    .aria-label = Ignori

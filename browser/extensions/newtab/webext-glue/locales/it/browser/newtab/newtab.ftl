@@ -671,6 +671,10 @@ newtab-widget-timer-play =
     .title = Avvia
 newtab-widget-timer-pause =
     .title = Metti in pausa
+newtab-widget-timer-label-play =
+    .label = Avvia
+newtab-widget-timer-label-pause =
+    .label = Metti in pausa
 newtab-widget-timer-reset =
     .title = Ripristina
 newtab-widget-timer-menu-notifications = Disattiva notifiche
@@ -688,3 +692,4 @@ newtab-promo-card-cta = Ulteriori informazioni
 newtab-promo-card-dismiss-button =
     .title = Chiudi
     .aria-label = Chiudi
+

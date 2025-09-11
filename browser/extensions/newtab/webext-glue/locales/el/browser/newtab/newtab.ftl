@@ -247,14 +247,14 @@ newtab-empty-section-highlights = Ξεκινήστε την περιήγηση �
 # Ex. When there are no more Pocket story recommendations, in the space where there would have been stories, this is shown instead.
 # Variables:
 #   $provider (string) - Name of the content provider for this section, e.g "Pocket".
-newtab-empty-section-topstories = Δεν υπάρχει κάτι νεότερο. Ελέγξτε αργότερα για περισσότερες ιστορίες από τον πάροχο { $provider }. Δεν μπορείτε να περιμένετε; Διαλέξτε κάποιο από τα δημοφιλή θέματα και ανακαλύψτε ενδιαφέρουσες ιστορίες από όλο τον Ιστό.
+newtab-empty-section-topstories = Δεν υπάρχει κάτι νεότερο. Ελέγξτε αργότερα για περισσότερα άρθρα από το { $provider }. Δεν μπορείτε να περιμένετε; Διαλέξτε κάποιο από τα δημοφιλή θέματα και ανακαλύψτε ενδιαφέροντα άρθρα από όλο το διαδίκτυο.
 # Ex. When there are no more story recommendations, in the space where there would have been stories, this is shown instead.
 newtab-empty-section-topstories-generic = Δεν υπάρχει κάτι νεότερο. Ελέγξτε αργότερα για περισσότερα άρθρα. Δεν μπορείτε να περιμένετε; Επιλέξτε κάποιο δημοφιλές θέμα και βρείτε ακόμα περισσότερα ενδιαφέροντα άρθρα από όλο το διαδίκτυο.
 
 ## Empty Section (Content Discovery Experience). These show when there are no more stories or when some stories fail to load.
 
 newtab-discovery-empty-section-topstories-header = Τελειώσατε!
-newtab-discovery-empty-section-topstories-content = Ελέγξτε ξανά αργότερα για περισσότερες ιστορίες.
+newtab-discovery-empty-section-topstories-content = Ελέγξτε ξανά αργότερα για περισσότερα άρθρα.
 newtab-discovery-empty-section-topstories-try-again-button = Δοκιμή ξανά
 newtab-discovery-empty-section-topstories-loading = Φόρτωση…
 # Displays when a layout in a section took too long to fetch articles.
@@ -268,7 +268,7 @@ newtab-pocket-new-topics-title = Θέλετε περισσότερα άρθρα;
 newtab-pocket-more-recommendations = Περισσότερες προτάσεις
 newtab-pocket-learn-more = Μάθετε περισσότερα
 newtab-pocket-cta-button = Αποκτήστε το { -pocket-brand-name }
-newtab-pocket-cta-text = Αποθηκεύστε τις ιστορίες που αγαπάτε στο { -pocket-brand-name } και τροφοδοτήστε το μυαλό σας με εκπληκτικά κείμενα.
+newtab-pocket-cta-text = Αποθηκεύστε τα άρθρα που σας αρέσουν στο { -pocket-brand-name } και τροφοδοτήστε το μυαλό σας με εκπληκτικά κείμενα.
 newtab-pocket-pocket-firefox-family = Το { -pocket-brand-name } ανήκει στην οικογένεια του { -brand-product-name }
 newtab-pocket-save = Αποθήκευση
 newtab-pocket-saved = Αποθηκεύτηκε
@@ -319,6 +319,9 @@ newtab-custom-pocket-subtitle = Εξαιρετικό περιεχόμενο απ
 newtab-custom-stories-toggle =
     .label = Προτεινόμενα άρθρα
     .description = Εξαιρετικό περιεχόμενο από την οικογένεια του { -brand-product-name }
+newtab-custom-stories-personalized-toggle =
+    .label = Άρθρα
+newtab-custom-stories-personalized-checkbox-label = Εξατομικευμένα άρθρα με βάση τη δραστηριότητά σας
 newtab-custom-pocket-sponsored = Χορηγούμενα άρθρα
 newtab-custom-pocket-show-recent-saves = Εμφάνιση πρόσφατων αποθηκεύσεων
 newtab-custom-recent-title = Πρόσφατη δραστηριότητα
@@ -354,6 +357,7 @@ newtab-wallpaper-custom-color = Επιλογή χρώματος
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Η εικόνα υπερέβη το όριο μεγέθους των { $file_size }MB. Δοκιμάστε να μεταφορτώσετε ένα μικρότερο αρχείο.
+newtab-wallpaper-error-upload-file-type = Δεν ήταν δυνατή η μεταφόρτωση του αρχείου σας. Δοκιμάστε ξανά με ένα άλλο αρχείο εικόνας.
 newtab-wallpaper-error-file-type = Δεν ήταν δυνατή η μεταφόρτωση του αρχείου σας. Δοκιμάστε ξανά με έναν άλλο τύπο αρχείου.
 newtab-wallpaper-light-red-panda = Κόκκινο πάντα
 newtab-wallpaper-light-mountain = Λευκό βουνό
@@ -665,6 +669,10 @@ newtab-widget-timer-play =
     .title = Αναπαραγωγή
 newtab-widget-timer-pause =
     .title = Παύση
+newtab-widget-timer-label-play =
+    .label = Αναπαραγωγή
+newtab-widget-timer-label-pause =
+    .label = Παύση
 newtab-widget-timer-reset =
     .title = Επαναφορά
 newtab-widget-timer-menu-notifications = Απενεργοποίηση ειδοποιήσεων

@@ -319,6 +319,9 @@ newtab-custom-pocket-subtitle = Poikkeuksellista, valikoitua sisältöä { -pock
 newtab-custom-stories-toggle =
     .label = Suositellut tarinat
     .description = Poikkeuksellista { -brand-product-name }-perheen kuratoimaa sisältöä
+newtab-custom-stories-personalized-toggle =
+    .label = Tarinat
+newtab-custom-stories-personalized-checkbox-label = Personoituja tarinoita aktiivisuuteesi pohjautuen
 newtab-custom-pocket-sponsored = Sponsoroidut tarinat
 newtab-custom-pocket-show-recent-saves = Näytä viimeisimmät tallennukset
 newtab-custom-recent-title = Viimeisin toiminta
@@ -333,8 +336,11 @@ newtab-custom-widget-weather-toggle =
     .label = Sää
 newtab-custom-widget-trending-search-toggle =
     .label = Nousussa olevat haut
+newtab-custom-widget-lists-toggle =
+    .label = Listat
 newtab-custom-widget-timer-toggle =
     .label = Ajastin
+newtab-custom-widget-section-title = Widgetit
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Sulje
@@ -351,6 +357,7 @@ newtab-wallpaper-custom-color = Valitse väri
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Kuvan koko ylitti tiedostokokorajan { $file_size } Mt. Yritä ladata pienempi tiedosto.
+newtab-wallpaper-error-upload-file-type = Tiedostosi lataaminen epäonnistui. Yritä uudelleen kuvatiedostolla.
 newtab-wallpaper-error-file-type = Tiedostoa ei voitu lähettää. Yritä uudelleen toisella tiedostotyypillä.
 newtab-wallpaper-light-red-panda = Kultapanda
 newtab-wallpaper-light-mountain = Valkoinen vuori
@@ -613,18 +620,72 @@ newtab-trending-searches-title = Nousussa olevat haut
 
 ## Strings for task / to-do list productivity widget
 
+# "Add one" means adding a new task to the list (e.g., "Walk the dog")
+newtab-widget-lists-empty-cta = Mahdollisuudet ovat rajattomat. Lisää yksi sellainen.
+# A simple label next to the default list name letting users know this is a new / beta feature
+newtab-widget-lists-label-new =
+    .label = Uusi
+newtab-widget-lists-label-beta =
+    .label = Beeta
+# When tasks have been previous marked as complete, they will appear in their own separate list beneath incomplete items
+# Variables:
+#   $number (number) - Amount of list items marked complete
+newtab-widget-lists-completed-list = Valmis ({ $number })
+newtab-widget-task-list-menu-copy = Kopioi
+newtab-widget-lists-menu-edit = Muokkaa listan nimeä
+newtab-widget-lists-menu-create = Luo uusi lista
+newtab-widget-lists-menu-delete = Poista tämä lista
+newtab-widget-lists-menu-copy = Kopioi lista leikepöydälle
+newtab-widget-lists-menu-hide = Piilota kaikki listat
 newtab-widget-lists-menu-learn-more = Lue lisää
+newtab-widget-lists-input-add-an-item =
+    .placeholder = Lisää kohde
+newtab-widget-lists-input-error = Sisällytä tekstiä lisätäksesi kohteen.
 newtab-widget-lists-input-menu-open-link = Avaa linkki
+newtab-widget-lists-input-menu-move-up = Siirrä ylös
+newtab-widget-lists-input-menu-move-down = Siirrä alas
 newtab-widget-lists-input-menu-delete = Poista
 newtab-widget-lists-input-menu-edit = Muokkaa
+newtab-widget-lists-name-label-default =
+    .label = Tehtävälista
+newtab-widget-lists-name-placeholder-default =
+    .placeholder = Tehtävälista
+# The placeholder value of the name field for a newly created list
+newtab-widget-lists-name-placeholder-new =
+    .placeholder = Uusi lista
 
 ## Strings for timer productivity widget
 ## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
 
 newtab-widget-timer-notification-title = Ajastin
+newtab-widget-timer-notification-focus = Keskittymisaika on ohi. Hyvää työtä. Tarvitsetko tauon?
+newtab-widget-timer-notification-break = Taukosi on ohi. Oletko valmis keskittymään?
+newtab-widget-timer-notification-warning = Ilmoitukset ovat pois päältä
+newtab-widget-timer-mode-focus =
+    .label = Keskity
+newtab-widget-timer-mode-break =
+    .label = Tauko
+newtab-widget-timer-play =
+    .title = Toista
+newtab-widget-timer-pause =
+    .title = Keskeytä
+newtab-widget-timer-label-play =
+    .label = Toista
+newtab-widget-timer-label-pause =
+    .label = Keskeytä
+newtab-widget-timer-reset =
+    .title = Nollaa
+newtab-widget-timer-menu-notifications = Poista ilmoitukset käytöstä
+newtab-widget-timer-menu-notifications-on = Ota ilmoitukset käyttöön
 newtab-widget-timer-menu-hide = Piilota ajastin
 newtab-widget-timer-menu-learn-more = Lue lisää
+# Message that appears when widgets are full-height. This reminds users that there is more New Tab content to see if they scroll
+newtab-widget-keep-scrolling = Vieritä nähdäksesi lisää
+newtab-widget-message-title = Pysy keskittyneenä listojen ja sisäänrakennetun ajastimen avulla
+# to-dos stands for "things to do".
+newtab-widget-message-copy = Nopeista muistutuksista päivittäisiin tehtäviin, keskittymisharjoituksista venyttelytaukoihin – pysy tehtävässäsi ja aikataulussa.
 newtab-promo-card-title = Tue { -brand-product-name }ia
+newtab-promo-card-body = Sponsorimme tukevat tehtäväämme rakentaa parempaa Internetiä
 newtab-promo-card-cta = Lue lisää
 newtab-promo-card-dismiss-button =
     .title = Hylkää

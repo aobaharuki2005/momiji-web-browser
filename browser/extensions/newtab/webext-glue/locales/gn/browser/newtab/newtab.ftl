@@ -318,6 +318,9 @@ newtab-custom-pocket-subtitle = Tetepy iporãva { -pocket-brand-name } oiporavop
 newtab-custom-stories-toggle =
     .label = Tembiasakue momba’epyre
     .description = Tetepy iporãva oiporavóva { -brand-product-name } reheguáva
+newtab-custom-stories-personalized-toggle =
+    .label = Tembiasakue
+newtab-custom-stories-personalized-checkbox-label = Tembiasakueita teéva ipyendáva ne rembiapóre
 newtab-custom-pocket-sponsored = Tembiasakue jehepyme’ẽguáva
 newtab-custom-pocket-show-recent-saves = Ehechauka eñongaturamóva
 newtab-custom-recent-title = Tembiapo ramovegua
@@ -353,6 +356,7 @@ newtab-wallpaper-custom-color = Eiporavo peteĩ sa’y
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Ta’ãnga ohasáma tuichakuépe { $file_size } MB rehegua. Eñeha’ã ehupi marandurenda michĩvéva.
+newtab-wallpaper-error-upload-file-type = Ndaikatúi rohupi marandurenda. Eha’ã jey marandurenda ambuéva reheve.
 newtab-wallpaper-error-file-type = Ndaikatúi rohupi marandurenda. Eha’ã jey marandurenda ambuéva reheve.
 newtab-wallpaper-light-red-panda = Panda pytã
 newtab-wallpaper-light-mountain = Yvyty morotĩ
@@ -560,6 +564,7 @@ newtab-custom-wallpaper-cta = Eha’ãjey
 
 ## Strings for new user activation custom wallpaper highlight
 
+newtab-new-user-custom-wallpaper-title = Eiporavo mba’erechaha rugua ejapo hag̃ua { -brand-product-name } nemba’erã.
 newtab-new-user-custom-wallpaper-cta = Eiporu ko’ág̃a
 
 ## Strings for download mobile highlight
@@ -662,6 +667,10 @@ newtab-widget-timer-play =
     .title = Mbopu
 newtab-widget-timer-pause =
     .title = Mombyta
+newtab-widget-timer-label-play =
+    .label = Mbopu
+newtab-widget-timer-label-pause =
+    .label = Mombyta
 newtab-widget-timer-reset =
     .title = Mbojevyjey
 newtab-widget-timer-menu-notifications = Eipe’a ñemomarandu

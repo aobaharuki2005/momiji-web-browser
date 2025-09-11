@@ -315,6 +315,9 @@ newtab-custom-pocket-subtitle = Contento exceptional a cura de { -pocket-brand-n
 newtab-custom-stories-toggle =
     .label = Historias recommendate
     .description = Exceptional contento curate per le familia de { -brand-product-name }
+newtab-custom-stories-personalized-toggle =
+    .label = Historias
+newtab-custom-stories-personalized-checkbox-label = Historias personalisate basate sur tu activitate
 newtab-custom-pocket-sponsored = Articulos sponsorisate
 newtab-custom-pocket-show-recent-saves = Monstrar salvamentos recente
 newtab-custom-recent-title = Activitate recente
@@ -350,6 +353,7 @@ newtab-wallpaper-custom-color = Eliger un color
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Le dimension del imagine excede le limite de { $file_size }MB. Tenta incargar un file minus grande.
+newtab-wallpaper-error-upload-file-type = Impossibile incargar tu file. Retenta con un file de imagine.
 newtab-wallpaper-error-file-type = Impossibile incargar tu file. Retenta con un altere typo de file.
 newtab-wallpaper-light-red-panda = Panda rubie
 newtab-wallpaper-light-mountain = Montania blanc
@@ -622,9 +626,9 @@ newtab-widget-lists-label-beta =
 # When tasks have been previous marked as complete, they will appear in their own separate list beneath incomplete items
 # Variables:
 #   $number (number) - Amount of list items marked complete
-newtab-widget-lists-completed-list = ({ $number }) completate
+newtab-widget-lists-completed-list = Completate ({ $number })
 newtab-widget-task-list-menu-copy = Copiar
-newtab-widget-lists-menu-edit = Rediger nomine del lista
+newtab-widget-lists-menu-edit = Modificar le nomine del lista
 newtab-widget-lists-menu-create = Crear un nove lista
 newtab-widget-lists-menu-delete = Deler iste lista
 newtab-widget-lists-menu-copy = Copiar lista al area de transferentia
@@ -637,7 +641,7 @@ newtab-widget-lists-input-menu-open-link = Aperir ligamine
 newtab-widget-lists-input-menu-move-up = Mover in alto
 newtab-widget-lists-input-menu-move-down = Mover in basso
 newtab-widget-lists-input-menu-delete = Deler
-newtab-widget-lists-input-menu-edit = Rediger
+newtab-widget-lists-input-menu-edit = Modificar
 newtab-widget-lists-name-label-default =
     .label = Agenda
 newtab-widget-lists-name-placeholder-default =
@@ -650,31 +654,35 @@ newtab-widget-lists-name-placeholder-new =
 ## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
 
 newtab-widget-timer-notification-title = Temporisator
-newtab-widget-timer-notification-focus = Le tempore del concentration es expirate. Belle labor. Besonia tu un pausa?
-newtab-widget-timer-notification-break = Tu pausa ha terminate, Preste a concentrar te?
+newtab-widget-timer-notification-focus = Le periodo de concentration ha terminate. Belle labor. Besonio de un pausa?
+newtab-widget-timer-notification-break = Tu pausa ha terminate. Preste a concentrar te?
 newtab-widget-timer-notification-warning = Notificationes disactivate
 newtab-widget-timer-mode-focus =
     .label = Concentration
 newtab-widget-timer-mode-break =
     .label = Pausa
 newtab-widget-timer-play =
-    .title = Reproduction
+    .title = Reproducer
 newtab-widget-timer-pause =
-    .title = Pausa
+    .title = Pausar
+newtab-widget-timer-label-play =
+    .label = Reproducer
+newtab-widget-timer-label-pause =
+    .label = Pausar
 newtab-widget-timer-reset =
-    .title = Reinitialisation
-newtab-widget-timer-menu-notifications = Notificationes de extinction
+    .title = Reinitialisar
+newtab-widget-timer-menu-notifications = Disactivar notificationes
 newtab-widget-timer-menu-notifications-on = Activar notificationes
 newtab-widget-timer-menu-hide = Celar temporisator
 newtab-widget-timer-menu-learn-more = Pro saper plus
 # Message that appears when widgets are full-height. This reminds users that there is more New Tab content to see if they scroll
-newtab-widget-keep-scrolling = Rolar pro altero
+newtab-widget-keep-scrolling = Rola pro vider plus
 newtab-widget-message-title = Remane concentrate con le listas e un temporisator integrate
 # to-dos stands for "things to do".
-newtab-widget-message-copy = Ab le rapide mementos al agendas quotidian, ab le sessiones de concentration al pausas de relaxamento: remane attente a activitate e juste tempore.
+newtab-widget-message-copy = De rememorationes a travalios, de concentration a relaxation – resta attente e a tempore.
 newtab-promo-card-title = Supporta { -brand-product-name }
 newtab-promo-card-body = Nostre patrocinatores supporta nostre mission pro construer un web melior
 newtab-promo-card-cta = Pro saper plus
 newtab-promo-card-dismiss-button =
-    .title = Ignorar
-    .aria-label = Ignorar
+    .title = Clauder
+    .aria-label = Clauder

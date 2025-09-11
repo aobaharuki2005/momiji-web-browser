@@ -80,7 +80,7 @@ newtab-topsites-add-button = Pridať
 
 ## Top Sites - Delete history confirmation dialog.
 
-newtab-confirm-delete-history-p1 = Ste si istí, že chcete odstrániť všetky výskyty tejto stránky zo svojej histórie prehliadania?
+newtab-confirm-delete-history-p1 = Naozaj chcete odstrániť všetky výskyty tejto stránky z histórie prehliadania?
 # "This action" refers to deleting a page from history.
 newtab-confirm-delete-history-p2 = Túto akciu nie je možné vrátiť späť.
 
@@ -316,6 +316,9 @@ newtab-custom-pocket-subtitle = Výnimočný obsah vybraný službou { -pocket-b
 newtab-custom-stories-toggle =
     .label = Odporúčané príbehy
     .description = Výnimočný obsah spravovaný rodinou { -brand-product-name }
+newtab-custom-stories-personalized-toggle =
+    .label = Príbehy
+newtab-custom-stories-personalized-checkbox-label = Prispôsobené príbehy na základe vašej aktivity
 newtab-custom-pocket-sponsored = Sponzorované príbehy
 newtab-custom-pocket-show-recent-saves = Zobraziť nedávno uložené položky
 newtab-custom-recent-title = Nedávna aktivita
@@ -351,6 +354,7 @@ newtab-wallpaper-custom-color = Zvoľte farbu
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Obrázok prekročil limit veľkosti súboru { $file_size } MB. Skúste nahrať menší súbor.
+newtab-wallpaper-error-upload-file-type = Nepodarilo sa nám nahrať váš súbor. Skúste to znova so súborom obrázka.
 newtab-wallpaper-error-file-type = Nepodarilo sa nám nahrať váš súbor. Skúste to znova s iným typom súboru.
 newtab-wallpaper-light-red-panda = Červená panda
 newtab-wallpaper-light-mountain = Biela hora
@@ -662,6 +666,10 @@ newtab-widget-timer-play =
     .title = Spustiť
 newtab-widget-timer-pause =
     .title = Pozastaviť
+newtab-widget-timer-label-play =
+    .label = Spustiť
+newtab-widget-timer-label-pause =
+    .label = Pozastaviť
 newtab-widget-timer-reset =
     .title = Vynulovať
 newtab-widget-timer-menu-notifications = Vypnúť upozornenia

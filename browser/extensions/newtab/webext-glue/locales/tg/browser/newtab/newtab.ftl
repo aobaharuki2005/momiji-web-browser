@@ -317,6 +317,9 @@ newtab-custom-pocket-subtitle = Муҳтавои мустасно аз тара�
 newtab-custom-stories-toggle =
     .label = Ҳикояҳои тавсияшуда
     .description = Маводҳои истисноӣ, ки аз ҷониби оилаи «{ -brand-product-name }» таҳия шудааст
+newtab-custom-stories-personalized-toggle =
+    .label = Ҳикояҳо
+newtab-custom-stories-personalized-checkbox-label = Ҳикояҳои фардӣ дар асоси фаъолияти шумо
 newtab-custom-pocket-sponsored = Мақолаҳои сарпарастӣ
 newtab-custom-pocket-show-recent-saves = Намоиш додани маводҳои охирин
 newtab-custom-recent-title = Фаъолияти охирин
@@ -352,6 +355,7 @@ newtab-wallpaper-custom-color = Рангеро интихоб кунед
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Андозаи тасвир зиёда аз маҳдудияти андозаи файли { $file_size } МБ мебошад. Лутфан, кӯшиш кунед, ки файлеро бо андозаи хурдтар бор намоед.
+newtab-wallpaper-error-upload-file-type = Мо файли шуморо бор карда натавонистем. Лутфан, бо файли тасвирӣ аз нав кӯшиш намоед.
 newtab-wallpaper-error-file-type = Мо файли шуморо бор карда натавонистем. Лутфан, бо навъи дигари файл аз нав кӯшиш намоед.
 newtab-wallpaper-light-red-panda = Пандаи сурх
 newtab-wallpaper-light-mountain = Кӯҳи сафед
@@ -559,6 +563,8 @@ newtab-custom-wallpaper-cta = Озмоед
 
 ## Strings for new user activation custom wallpaper highlight
 
+newtab-new-user-custom-wallpaper-title = Тасвири заминаеро интихоб карда, соҳиби браузери «{ -brand-product-name }» шавед
+newtab-new-user-custom-wallpaper-subtitle = Ҳар як варақаи навро ба як саҳифаи шахсии зебо табдил диҳед — бо тасвирҳои замина ва рангҳое, ки услуби шуморо инъикос мекунанд.
 newtab-new-user-custom-wallpaper-cta = Ҳозир онро кӯшиш кунед
 
 ## Strings for download mobile highlight
@@ -650,6 +656,7 @@ newtab-widget-lists-name-placeholder-new =
 ## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
 
 newtab-widget-timer-notification-title = Вақтсанҷ
+newtab-widget-timer-notification-focus = Вақти мутолиа ба анҷом расид. Кори хуб. Танаффус лозим аст?
 newtab-widget-timer-notification-break = Танаффус ба анҷом расид. Омода ҳастед, ки боз диққат кунед?
 newtab-widget-timer-notification-warning = Огоҳномаҳо хомӯш мебошанд
 newtab-widget-timer-mode-focus =
@@ -660,6 +667,10 @@ newtab-widget-timer-play =
     .title = Пахш кардан
 newtab-widget-timer-pause =
     .title = Таваққуф кардан
+newtab-widget-timer-label-play =
+    .label = Пахш кардан
+newtab-widget-timer-label-pause =
+    .label = Таваққуф кардан
 newtab-widget-timer-reset =
     .title = Аз нав танзим кардан
 newtab-widget-timer-menu-notifications = Хомӯш кардани огоҳномаҳо
@@ -669,6 +680,8 @@ newtab-widget-timer-menu-learn-more = Маълумоти бештар
 # Message that appears when widgets are full-height. This reminds users that there is more New Tab content to see if they scroll
 newtab-widget-keep-scrolling = Барои дидани маълумоти бештар, ҳаракат кунед
 newtab-widget-message-title = Бо истифода аз рӯйхатҳо ва вақтсанҷи дарунсохт диққати худро нигоҳ доред
+# to-dos stands for "things to do".
+newtab-widget-message-copy = Аз ёдовариҳои фаврӣ то вазифаҳои ҳаррӯза ва аз ҷаласаҳои бодиққат то танаффусҳои бардавом — ҳар гуна вазифаҳоро дар сари вақт иҷро намоед.
 newtab-promo-card-title = Дастгирӣ кардани «{ -brand-product-name }»
 newtab-promo-card-body = Сарпарастони мо рисолати моро барои ташкили таҷрибаи беҳтарини Интернет дастгирӣ менамоянд
 newtab-promo-card-cta = Маълумоти бештар

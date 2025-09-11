@@ -319,6 +319,9 @@ newtab-custom-pocket-subtitle = Utsûnderlike ynhâld, gearstald troch { -pocket
 newtab-custom-stories-toggle =
     .label = Oanrekommandearre ferhalen
     .description = Utsûnderlike ynhâld, sammele troch de { -brand-product-name }-famylje
+newtab-custom-stories-personalized-toggle =
+    .label = Ferhalen
+newtab-custom-stories-personalized-checkbox-label = Personalisearre ferhalen op basis fan jo aktiviteit
 newtab-custom-pocket-sponsored = Sponsore ferhalen
 newtab-custom-pocket-show-recent-saves = Koartlyn bewarre items toane
 newtab-custom-recent-title = Resinte aktiviteit
@@ -354,6 +357,7 @@ newtab-wallpaper-custom-color = Kies in kleur
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = De ôfbylding giet oer de limyt fan { $file_size } MB. Probearje in lytser bestân op te laden.
+newtab-wallpaper-error-upload-file-type = Wy koene jo bestân net oplade. Probearje it opnij mei in ôfbyldingsbestân.
 newtab-wallpaper-error-file-type = Wy koene jo bestân net oplade. Probearje it nochris mei in oar bestânstype.
 newtab-wallpaper-light-red-panda = Reade panda
 newtab-wallpaper-light-mountain = Wite berch
@@ -634,6 +638,8 @@ newtab-widget-lists-menu-delete = Dizze list fuortsmite?
 newtab-widget-lists-menu-copy = List nei klamboerd kopiearje
 newtab-widget-lists-menu-hide = Alle listen ferstopje
 newtab-widget-lists-menu-learn-more = Mear ynfo
+newtab-widget-lists-input-add-an-item =
+    .placeholder = In item tafoegje
 newtab-widget-lists-input-error = Foegje tekst ta om in item ta te foegjen.
 newtab-widget-lists-input-menu-open-link = Keppeling iepenje
 newtab-widget-lists-input-menu-move-up = Omheech ferpleatse
@@ -663,6 +669,10 @@ newtab-widget-timer-play =
     .title = Ofspylje
 newtab-widget-timer-pause =
     .title = Pauzearje
+newtab-widget-timer-label-play =
+    .label = Ofspylje
+newtab-widget-timer-label-pause =
+    .label = Pauzearje
 newtab-widget-timer-reset =
     .title = Opnij inisjalisearje
 newtab-widget-timer-menu-notifications = Notifikaasjes útskeakelje
@@ -671,6 +681,9 @@ newtab-widget-timer-menu-hide = Timer ferstopje
 newtab-widget-timer-menu-learn-more = Mear ynfo
 # Message that appears when widgets are full-height. This reminds users that there is more New Tab content to see if they scroll
 newtab-widget-keep-scrolling = Scrol foar mear
+newtab-widget-message-title = Bliuw fokust mei listen en in ynboude timer
+# to-dos stands for "things to do".
+newtab-widget-message-copy = Fan rappe yn ’t sin bringers oant deistige taken, fokussesjes oant stretchskoft – bliuw by de taak en op tiid.
 newtab-promo-card-title = { -brand-product-name } stypje
 newtab-promo-card-body = Us sponsors stypje ús misje om in better web te bouwen
 newtab-promo-card-cta = Mear ynfo

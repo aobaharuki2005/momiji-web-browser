@@ -249,6 +249,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -259,8 +261,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -508,6 +508,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -518,8 +520,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -811,6 +811,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -821,8 +823,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -1067,6 +1067,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -1077,8 +1079,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -1204,6 +1204,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -1214,8 +1216,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -1455,6 +1455,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -1465,8 +1467,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -1718,6 +1718,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -1728,8 +1730,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -1984,6 +1984,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -1994,8 +1996,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -2003,13 +2003,7 @@
     },
     "be": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "bg": {
       "errors": null,
@@ -2133,6 +2127,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -2143,8 +2139,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset"
         ]
       }
@@ -2374,6 +2368,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -2384,8 +2380,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -2640,6 +2634,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -2650,8 +2646,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -2906,6 +2900,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -2916,8 +2912,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -3046,6 +3040,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -3056,8 +3052,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -3318,6 +3312,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -3328,8 +3324,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -3379,6 +3373,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -3389,8 +3385,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -3420,7 +3414,6 @@
           "newtab-report-ads-reason-inappropriate",
           "newtab-report-ads-reason-not-interested",
           "newtab-report-ads-reason-seen-it-too-many-times",
-          "newtab-report-cancel",
           "newtab-report-content-inappropriate-offensive",
           "newtab-report-content-outdated",
           "newtab-report-content-spam-misleading",
@@ -3494,6 +3487,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -3504,8 +3499,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset"
         ]
       }
@@ -3735,6 +3728,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -3745,8 +3740,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -3977,6 +3970,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -3987,8 +3982,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -4231,6 +4224,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -4241,8 +4236,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -4505,6 +4498,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -4515,8 +4510,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -4524,64 +4517,27 @@
     },
     "cs": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-lists-input-error"
-        ]
-      }
+      "missing": null
     },
     "cy": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "da": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "de": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "dsb": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "el": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "en-CA": {
       "errors": null,
@@ -4624,6 +4580,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -4634,21 +4592,13 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset"
         ]
       }
     },
     "en-GB": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "en-US": {
       "errors": null,
@@ -4656,133 +4606,33 @@
     },
     "eo": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-custom-widget-section-title",
-          "newtab-promo-card-body",
-          "newtab-promo-card-cta",
-          "newtab-promo-card-dismiss-button",
-          "newtab-promo-card-title",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-keep-scrolling",
-          "newtab-widget-lists-completed-list",
-          "newtab-widget-lists-empty-cta",
-          "newtab-widget-lists-input-add-an-item",
-          "newtab-widget-lists-input-error",
-          "newtab-widget-lists-input-menu-delete",
-          "newtab-widget-lists-input-menu-edit",
-          "newtab-widget-lists-input-menu-move-down",
-          "newtab-widget-lists-input-menu-move-up",
-          "newtab-widget-lists-input-menu-open-link",
-          "newtab-widget-lists-menu-copy",
-          "newtab-widget-lists-menu-create",
-          "newtab-widget-lists-menu-delete",
-          "newtab-widget-lists-menu-edit",
-          "newtab-widget-lists-menu-hide",
-          "newtab-widget-lists-name-label-default",
-          "newtab-widget-lists-name-placeholder-default",
-          "newtab-widget-lists-name-placeholder-new",
-          "newtab-widget-message-copy",
-          "newtab-widget-message-title",
-          "newtab-widget-timer-menu-hide",
-          "newtab-widget-timer-menu-learn-more",
-          "newtab-widget-timer-menu-notifications",
-          "newtab-widget-timer-menu-notifications-on",
-          "newtab-widget-timer-mode-break",
-          "newtab-widget-timer-mode-focus",
-          "newtab-widget-timer-notification-break",
-          "newtab-widget-timer-notification-focus",
-          "newtab-widget-timer-notification-title",
-          "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
-          "newtab-widget-timer-reset"
-        ]
-      }
+      "missing": null
     },
     "es-AR": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-timer-mode-focus",
-          "newtab-widget-timer-play"
-        ]
-      }
+      "missing": null
     },
     "es-CL": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "es-ES": {
       "errors": null,
       "missing": {
         "browser/newtab/newtab.ftl": [
-          "newtab-custom-close-menu-button",
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-custom-widget-lists-toggle",
-          "newtab-custom-widget-section-title",
-          "newtab-custom-widget-timer-toggle",
-          "newtab-custom-widget-trending-search-toggle",
-          "newtab-custom-widget-weather-toggle",
           "newtab-new-user-custom-wallpaper-cta",
           "newtab-new-user-custom-wallpaper-subtitle",
           "newtab-new-user-custom-wallpaper-title",
-          "newtab-promo-card-body",
-          "newtab-promo-card-cta",
           "newtab-promo-card-dismiss-button",
-          "newtab-promo-card-title",
           "newtab-shortcuts-highlight-subtitle",
           "newtab-shortcuts-highlight-title",
           "newtab-wallpaper-error-upload-file-type",
           "newtab-widget-keep-scrolling",
-          "newtab-widget-lists-completed-list",
           "newtab-widget-lists-empty-cta",
-          "newtab-widget-lists-input-add-an-item",
-          "newtab-widget-lists-input-error",
-          "newtab-widget-lists-input-menu-delete",
-          "newtab-widget-lists-input-menu-edit",
-          "newtab-widget-lists-input-menu-move-down",
-          "newtab-widget-lists-input-menu-move-up",
-          "newtab-widget-lists-input-menu-open-link",
-          "newtab-widget-lists-label-beta",
-          "newtab-widget-lists-label-new",
-          "newtab-widget-lists-menu-copy",
-          "newtab-widget-lists-menu-create",
-          "newtab-widget-lists-menu-delete",
-          "newtab-widget-lists-menu-edit",
-          "newtab-widget-lists-menu-hide",
-          "newtab-widget-lists-menu-learn-more",
-          "newtab-widget-lists-name-label-default",
-          "newtab-widget-lists-name-placeholder-default",
-          "newtab-widget-lists-name-placeholder-new",
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
-          "newtab-widget-task-list-menu-copy",
-          "newtab-widget-timer-menu-hide",
-          "newtab-widget-timer-menu-learn-more",
-          "newtab-widget-timer-menu-notifications",
-          "newtab-widget-timer-menu-notifications-on",
-          "newtab-widget-timer-mode-break",
-          "newtab-widget-timer-mode-focus",
-          "newtab-widget-timer-notification-break",
-          "newtab-widget-timer-notification-focus",
-          "newtab-widget-timer-notification-title",
-          "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
-          "newtab-widget-timer-reset",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "topsite-label-pinned"
         ]
       }
@@ -4868,6 +4718,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -4878,8 +4730,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -5110,6 +4960,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -5120,8 +4972,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -5220,6 +5070,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -5230,8 +5082,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -5430,6 +5280,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -5440,8 +5292,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -5685,6 +5535,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -5695,8 +5547,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -5704,56 +5554,11 @@
     },
     "fi": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-custom-widget-lists-toggle",
-          "newtab-custom-widget-section-title",
-          "newtab-promo-card-body",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-keep-scrolling",
-          "newtab-widget-lists-completed-list",
-          "newtab-widget-lists-empty-cta",
-          "newtab-widget-lists-input-add-an-item",
-          "newtab-widget-lists-input-error",
-          "newtab-widget-lists-input-menu-move-down",
-          "newtab-widget-lists-input-menu-move-up",
-          "newtab-widget-lists-label-beta",
-          "newtab-widget-lists-label-new",
-          "newtab-widget-lists-menu-copy",
-          "newtab-widget-lists-menu-create",
-          "newtab-widget-lists-menu-delete",
-          "newtab-widget-lists-menu-edit",
-          "newtab-widget-lists-menu-hide",
-          "newtab-widget-lists-name-label-default",
-          "newtab-widget-lists-name-placeholder-default",
-          "newtab-widget-lists-name-placeholder-new",
-          "newtab-widget-message-copy",
-          "newtab-widget-message-title",
-          "newtab-widget-task-list-menu-copy",
-          "newtab-widget-timer-menu-notifications",
-          "newtab-widget-timer-menu-notifications-on",
-          "newtab-widget-timer-mode-break",
-          "newtab-widget-timer-mode-focus",
-          "newtab-widget-timer-notification-break",
-          "newtab-widget-timer-notification-focus",
-          "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
-          "newtab-widget-timer-reset"
-        ]
-      }
+      "missing": null
     },
     "fr": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "frp": {
       "errors": null,
@@ -6047,6 +5852,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -6057,8 +5864,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -6108,6 +5913,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -6118,8 +5925,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -6127,16 +5932,7 @@
     },
     "fy-NL": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-lists-input-add-an-item",
-          "newtab-widget-message-copy",
-          "newtab-widget-message-title"
-        ]
-      }
+      "missing": null
     },
     "ga-IE": {
       "errors": null,
@@ -6395,6 +6191,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -6405,8 +6203,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -6637,6 +6433,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -6647,8 +6445,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -6695,6 +6491,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -6705,8 +6503,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset"
         ]
       }
@@ -6715,11 +6511,7 @@
       "errors": null,
       "missing": {
         "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
           "newtab-new-user-custom-wallpaper-subtitle",
-          "newtab-new-user-custom-wallpaper-title",
-          "newtab-wallpaper-error-upload-file-type",
           "newtab-widget-message-copy"
         ]
       }
@@ -6968,6 +6760,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -6978,8 +6772,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -7277,6 +7069,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -7287,8 +7081,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -7298,13 +7090,10 @@
       "errors": null,
       "missing": {
         "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
           "newtab-discovery-empty-section-topstories-content",
           "newtab-discovery-empty-section-topstories-header",
           "newtab-discovery-empty-section-topstories-timed-out",
-          "newtab-menu-show-privacy-info",
-          "newtab-wallpaper-error-upload-file-type"
+          "newtab-menu-show-privacy-info"
         ]
       }
     },
@@ -7533,6 +7322,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -7543,8 +7334,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -7562,13 +7351,7 @@
     },
     "hsb": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "hu": {
       "errors": null,
@@ -7871,6 +7654,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -7881,8 +7666,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -7890,13 +7673,7 @@
     },
     "ia": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "id": {
       "errors": null,
@@ -7967,6 +7744,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -7977,8 +7756,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -7988,8 +7765,6 @@
       "errors": null,
       "missing": {
         "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
           "newtab-custom-trending-search-toggle",
           "newtab-custom-wallpaper-subtitle",
           "newtab-download-mobile-highlight-body-variant-a",
@@ -8000,13 +7775,7 @@
           "newtab-wallpaper-error-upload-file-type",
           "newtab-widget-lists-completed-list",
           "newtab-widget-lists-empty-cta",
-          "newtab-widget-lists-input-add-an-item",
           "newtab-widget-lists-input-error",
-          "newtab-widget-lists-input-menu-delete",
-          "newtab-widget-lists-input-menu-move-down",
-          "newtab-widget-lists-input-menu-move-up",
-          "newtab-widget-lists-input-menu-open-link",
-          "newtab-widget-lists-menu-learn-more",
           "newtab-widget-lists-name-label-default"
         ]
       }
@@ -8257,6 +8026,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -8267,8 +8038,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -8300,13 +8069,7 @@
     },
     "ka": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "kab": {
       "errors": null,
@@ -8422,6 +8185,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -8432,8 +8197,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -8443,24 +8206,14 @@
       "errors": null,
       "missing": {
         "browser/newtab/newtab.ftl": [
-          "newtab-custom-close-menu-button",
           "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
           "newtab-custom-trending-search-toggle",
           "newtab-custom-wallpaper-subtitle",
           "newtab-custom-wallpaper-title",
-          "newtab-custom-widget-lists-toggle",
-          "newtab-custom-widget-section-title",
-          "newtab-custom-widget-timer-toggle",
-          "newtab-custom-widget-trending-search-toggle",
-          "newtab-custom-widget-weather-toggle",
           "newtab-download-mobile-highlight-body-variant-a",
           "newtab-new-user-custom-wallpaper-subtitle",
           "newtab-new-user-custom-wallpaper-title",
           "newtab-promo-card-body",
-          "newtab-promo-card-cta",
-          "newtab-promo-card-dismiss-button",
-          "newtab-promo-card-title",
           "newtab-report-content-why-reporting-this",
           "newtab-section-confirm-block-topic-p1",
           "newtab-section-confirm-block-topic-p2",
@@ -8471,47 +8224,7 @@
           "newtab-section-mangage-topics-followed-topics-empty-state",
           "newtab-shortcuts-highlight-subtitle",
           "newtab-shortcuts-highlight-title",
-          "newtab-trending-searches-dismiss",
-          "newtab-trending-searches-hide-trending",
-          "newtab-trending-searches-show-trending",
-          "newtab-trending-searches-title",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-keep-scrolling",
-          "newtab-widget-lists-completed-list",
-          "newtab-widget-lists-empty-cta",
-          "newtab-widget-lists-input-add-an-item",
-          "newtab-widget-lists-input-error",
-          "newtab-widget-lists-input-menu-delete",
-          "newtab-widget-lists-input-menu-edit",
-          "newtab-widget-lists-input-menu-move-down",
-          "newtab-widget-lists-input-menu-move-up",
-          "newtab-widget-lists-input-menu-open-link",
-          "newtab-widget-lists-label-beta",
-          "newtab-widget-lists-menu-copy",
-          "newtab-widget-lists-menu-create",
-          "newtab-widget-lists-menu-delete",
-          "newtab-widget-lists-menu-edit",
-          "newtab-widget-lists-menu-hide",
-          "newtab-widget-lists-menu-learn-more",
-          "newtab-widget-lists-name-label-default",
-          "newtab-widget-lists-name-placeholder-default",
-          "newtab-widget-lists-name-placeholder-new",
-          "newtab-widget-message-copy",
-          "newtab-widget-message-title",
-          "newtab-widget-timer-menu-hide",
-          "newtab-widget-timer-menu-learn-more",
-          "newtab-widget-timer-menu-notifications",
-          "newtab-widget-timer-menu-notifications-on",
-          "newtab-widget-timer-mode-break",
-          "newtab-widget-timer-mode-focus",
-          "newtab-widget-timer-notification-break",
-          "newtab-widget-timer-notification-focus",
-          "newtab-widget-timer-notification-title",
-          "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
-          "newtab-widget-timer-reset",
-          "topsite-label-pinned"
+          "newtab-widget-message-copy"
         ]
       }
     },
@@ -8764,6 +8477,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -8774,8 +8489,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -9039,6 +8752,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -9049,8 +8764,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -9058,13 +8771,7 @@
     },
     "ko": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "ks": {
       "errors": null,
@@ -9359,6 +9066,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -9369,8 +9078,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -9669,6 +9376,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -9679,8 +9388,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -9930,6 +9637,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -9940,8 +9649,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -10172,6 +9879,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -10182,8 +9891,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -10414,6 +10121,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -10424,8 +10133,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -10674,6 +10381,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -10684,8 +10393,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -10803,6 +10510,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -10813,8 +10522,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -11072,6 +10779,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -11082,8 +10791,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -11316,6 +11023,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -11326,8 +11035,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -11590,6 +11297,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -11600,8 +11309,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -11853,6 +11560,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -11863,8 +11572,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -11985,6 +11692,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -11995,8 +11704,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -12245,6 +11952,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -12255,8 +11964,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -12511,6 +12218,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -12521,8 +12230,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -12780,6 +12487,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -12790,8 +12499,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -12799,13 +12506,7 @@
     },
     "nb-NO": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "ne-NP": {
       "errors": null,
@@ -13059,6 +12760,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -13069,8 +12772,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -13078,23 +12779,11 @@
     },
     "nl": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "nn-NO": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "oc": {
       "errors": null,
@@ -13241,6 +12930,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -13251,8 +12942,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -13504,6 +13193,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -13514,8 +13205,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -13525,56 +13214,7 @@
       "errors": null,
       "missing": {
         "browser/newtab/newtab.ftl": [
-          "newtab-custom-close-menu-button",
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-custom-widget-lists-toggle",
-          "newtab-custom-widget-section-title",
-          "newtab-custom-widget-timer-toggle",
-          "newtab-custom-widget-trending-search-toggle",
-          "newtab-custom-widget-weather-toggle",
-          "newtab-promo-card-body",
-          "newtab-promo-card-cta",
-          "newtab-promo-card-dismiss-button",
-          "newtab-promo-card-title",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-keep-scrolling",
-          "newtab-widget-lists-completed-list",
-          "newtab-widget-lists-empty-cta",
-          "newtab-widget-lists-input-add-an-item",
-          "newtab-widget-lists-input-error",
-          "newtab-widget-lists-input-menu-delete",
-          "newtab-widget-lists-input-menu-edit",
-          "newtab-widget-lists-input-menu-move-down",
-          "newtab-widget-lists-input-menu-move-up",
-          "newtab-widget-lists-input-menu-open-link",
-          "newtab-widget-lists-label-beta",
-          "newtab-widget-lists-label-new",
-          "newtab-widget-lists-menu-copy",
-          "newtab-widget-lists-menu-create",
-          "newtab-widget-lists-menu-delete",
-          "newtab-widget-lists-menu-edit",
-          "newtab-widget-lists-menu-hide",
-          "newtab-widget-lists-menu-learn-more",
-          "newtab-widget-lists-name-label-default",
-          "newtab-widget-lists-name-placeholder-default",
-          "newtab-widget-lists-name-placeholder-new",
-          "newtab-widget-message-copy",
-          "newtab-widget-message-title",
-          "newtab-widget-task-list-menu-copy",
-          "newtab-widget-timer-menu-hide",
-          "newtab-widget-timer-menu-learn-more",
-          "newtab-widget-timer-menu-notifications",
-          "newtab-widget-timer-menu-notifications-on",
-          "newtab-widget-timer-mode-break",
-          "newtab-widget-timer-mode-focus",
-          "newtab-widget-timer-notification-break",
-          "newtab-widget-timer-notification-focus",
-          "newtab-widget-timer-notification-title",
-          "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
-          "newtab-widget-timer-reset"
+          "newtab-widget-message-copy"
         ]
       }
     },
@@ -13868,6 +13508,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -13878,8 +13520,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -13887,70 +13527,11 @@
     },
     "pl": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-close-menu-button",
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-custom-widget-lists-toggle",
-          "newtab-custom-widget-section-title",
-          "newtab-custom-widget-timer-toggle",
-          "newtab-custom-widget-trending-search-toggle",
-          "newtab-custom-widget-weather-toggle",
-          "newtab-promo-card-body",
-          "newtab-promo-card-cta",
-          "newtab-promo-card-dismiss-button",
-          "newtab-promo-card-title",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-keep-scrolling",
-          "newtab-widget-lists-completed-list",
-          "newtab-widget-lists-empty-cta",
-          "newtab-widget-lists-input-add-an-item",
-          "newtab-widget-lists-input-error",
-          "newtab-widget-lists-input-menu-delete",
-          "newtab-widget-lists-input-menu-edit",
-          "newtab-widget-lists-input-menu-move-down",
-          "newtab-widget-lists-input-menu-move-up",
-          "newtab-widget-lists-input-menu-open-link",
-          "newtab-widget-lists-label-beta",
-          "newtab-widget-lists-label-new",
-          "newtab-widget-lists-menu-copy",
-          "newtab-widget-lists-menu-create",
-          "newtab-widget-lists-menu-delete",
-          "newtab-widget-lists-menu-edit",
-          "newtab-widget-lists-menu-hide",
-          "newtab-widget-lists-menu-learn-more",
-          "newtab-widget-lists-name-label-default",
-          "newtab-widget-lists-name-placeholder-default",
-          "newtab-widget-lists-name-placeholder-new",
-          "newtab-widget-message-copy",
-          "newtab-widget-message-title",
-          "newtab-widget-task-list-menu-copy",
-          "newtab-widget-timer-menu-hide",
-          "newtab-widget-timer-menu-learn-more",
-          "newtab-widget-timer-menu-notifications",
-          "newtab-widget-timer-menu-notifications-on",
-          "newtab-widget-timer-mode-break",
-          "newtab-widget-timer-mode-focus",
-          "newtab-widget-timer-notification-break",
-          "newtab-widget-timer-notification-focus",
-          "newtab-widget-timer-notification-title",
-          "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
-          "newtab-widget-timer-reset"
-        ]
-      }
+      "missing": null
     },
     "pt-BR": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "pt-PT": {
       "errors": null,
@@ -13996,6 +13577,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -14006,8 +13589,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -14015,91 +13596,15 @@
     },
     "rm": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-close-menu-button",
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-custom-widget-lists-toggle",
-          "newtab-custom-widget-section-title",
-          "newtab-custom-widget-timer-toggle",
-          "newtab-custom-widget-trending-search-toggle",
-          "newtab-custom-widget-weather-toggle",
-          "newtab-new-user-custom-wallpaper-cta",
-          "newtab-new-user-custom-wallpaper-subtitle",
-          "newtab-new-user-custom-wallpaper-title",
-          "newtab-promo-card-body",
-          "newtab-promo-card-cta",
-          "newtab-promo-card-dismiss-button",
-          "newtab-promo-card-title",
-          "newtab-shortcuts-highlight-subtitle",
-          "newtab-toast-thanks-for-reporting",
-          "newtab-trending-searches-dismiss",
-          "newtab-trending-searches-hide-trending",
-          "newtab-trending-searches-learn-more",
-          "newtab-trending-searches-show-trending",
-          "newtab-trending-searches-title",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-keep-scrolling",
-          "newtab-widget-lists-completed-list",
-          "newtab-widget-lists-empty-cta",
-          "newtab-widget-lists-input-add-an-item",
-          "newtab-widget-lists-input-error",
-          "newtab-widget-lists-input-menu-delete",
-          "newtab-widget-lists-input-menu-edit",
-          "newtab-widget-lists-input-menu-move-down",
-          "newtab-widget-lists-input-menu-move-up",
-          "newtab-widget-lists-input-menu-open-link",
-          "newtab-widget-lists-label-beta",
-          "newtab-widget-lists-label-new",
-          "newtab-widget-lists-menu-copy",
-          "newtab-widget-lists-menu-create",
-          "newtab-widget-lists-menu-delete",
-          "newtab-widget-lists-menu-edit",
-          "newtab-widget-lists-menu-hide",
-          "newtab-widget-lists-menu-learn-more",
-          "newtab-widget-lists-name-label-default",
-          "newtab-widget-lists-name-placeholder-default",
-          "newtab-widget-lists-name-placeholder-new",
-          "newtab-widget-message-copy",
-          "newtab-widget-message-title",
-          "newtab-widget-task-list-menu-copy",
-          "newtab-widget-timer-menu-hide",
-          "newtab-widget-timer-menu-learn-more",
-          "newtab-widget-timer-menu-notifications",
-          "newtab-widget-timer-menu-notifications-on",
-          "newtab-widget-timer-mode-break",
-          "newtab-widget-timer-mode-focus",
-          "newtab-widget-timer-notification-break",
-          "newtab-widget-timer-notification-focus",
-          "newtab-widget-timer-notification-title",
-          "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
-          "newtab-widget-timer-reset",
-          "topsite-label-pinned"
-        ]
-      }
+      "missing": null
     },
     "ro": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "ru": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "sat": {
       "errors": null,
@@ -14219,6 +13724,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -14229,8 +13736,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -14238,31 +13743,7 @@
     },
     "sc": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-download-mobile-highlight-body-variant-b",
-          "newtab-download-mobile-highlight-body-variant-c",
-          "newtab-section-follow-highlight-subtitle",
-          "newtab-section-follow-highlight-title",
-          "newtab-shortcuts-highlight-title",
-          "newtab-topic-label-society-parenting",
-          "newtab-topic-selection-subtitle",
-          "newtab-wallpaper-blue-flowers",
-          "newtab-wallpaper-category-title-celestial",
-          "newtab-wallpaper-celestial-black-hole",
-          "newtab-wallpaper-celestial-earth-night",
-          "newtab-wallpaper-celestial-eclipse-time-lapse",
-          "newtab-wallpaper-celestial-lunar-eclipse",
-          "newtab-wallpaper-celestial-river",
-          "newtab-wallpaper-celestial-starry-sky",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-wallpaper-palm-trees",
-          "newtab-wallpaper-suspension-bridge",
-          "newtab-widget-message-copy"
-        ]
-      }
+      "missing": null
     },
     "scn": {
       "errors": null,
@@ -14504,6 +13985,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -14514,8 +13997,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -14746,6 +14227,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -14756,8 +14239,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -14959,6 +14440,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -14969,8 +14452,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -14978,13 +14459,7 @@
     },
     "sk": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "skr": {
       "errors": null,
@@ -15107,6 +14582,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -15117,8 +14594,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -15130,7 +14605,6 @@
         "browser/newtab/newtab.ftl": [
           "newtab-custom-stories-personalized-checkbox-label",
           "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type",
           "newtab-widget-message-copy",
           "newtab-widget-message-title"
         ]
@@ -15429,6 +14903,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -15439,8 +14915,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -15505,6 +14979,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -15515,8 +14991,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -15641,6 +15115,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -15651,8 +15127,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -15660,13 +15134,7 @@
     },
     "sv-SE": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "sw": {
       "errors": null,
@@ -15961,6 +15429,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -15971,8 +15441,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -16203,6 +15671,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -16213,8 +15683,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -16464,6 +15932,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -16474,8 +15944,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -16672,6 +16140,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -16682,8 +16152,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -16691,24 +16159,13 @@
     },
     "tg": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-new-user-custom-wallpaper-subtitle",
-          "newtab-new-user-custom-wallpaper-title",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-message-copy",
-          "newtab-widget-timer-notification-focus"
-        ]
-      }
+      "missing": null
     },
     "th": {
       "errors": null,
       "missing": {
         "browser/newtab/newtab.ftl": [
           "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
           "newtab-wallpaper-error-upload-file-type"
         ]
       }
@@ -16942,6 +16399,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -16952,8 +16411,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -16961,13 +16418,7 @@
     },
     "tr": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "trs": {
       "errors": null,
@@ -17211,6 +16662,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -17221,8 +16674,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -17272,6 +16723,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -17282,8 +16735,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -17518,6 +16969,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -17528,8 +16981,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -17762,6 +17213,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -17772,8 +17225,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -17781,13 +17232,7 @@
     },
     "vi": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     },
     "wo": {
       "errors": null,
@@ -18082,6 +17527,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -18092,8 +17539,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -18392,6 +17837,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -18402,8 +17849,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -18702,6 +18147,8 @@
           "newtab-widget-message-copy",
           "newtab-widget-message-title",
           "newtab-widget-task-list-menu-copy",
+          "newtab-widget-timer-label-pause",
+          "newtab-widget-timer-label-play",
           "newtab-widget-timer-menu-hide",
           "newtab-widget-timer-menu-learn-more",
           "newtab-widget-timer-menu-notifications",
@@ -18712,8 +18159,6 @@
           "newtab-widget-timer-notification-focus",
           "newtab-widget-timer-notification-title",
           "newtab-widget-timer-notification-warning",
-          "newtab-widget-timer-pause",
-          "newtab-widget-timer-play",
           "newtab-widget-timer-reset",
           "topsite-label-pinned"
         ]
@@ -18721,25 +18166,11 @@
     },
     "zh-CN": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type",
-          "newtab-widget-message-copy",
-          "newtab-widget-message-title"
-        ]
-      }
+      "missing": null
     },
     "zh-TW": {
       "errors": null,
-      "missing": {
-        "browser/newtab/newtab.ftl": [
-          "newtab-custom-stories-personalized-checkbox-label",
-          "newtab-custom-stories-personalized-toggle",
-          "newtab-wallpaper-error-upload-file-type"
-        ]
-      }
+      "missing": null
     }
   },
   "message_dates": {
@@ -19032,6 +18463,8 @@
     "newtab-widget-message-copy": "2025-08-19T13:14:31",
     "newtab-widget-message-title": "2025-08-19T13:14:31",
     "newtab-widget-task-list-menu-copy": "2025-08-06T14:12:52",
+    "newtab-widget-timer-label-pause": "2025-09-05T15:35:44",
+    "newtab-widget-timer-label-play": "2025-09-05T15:35:44",
     "newtab-widget-timer-menu-hide": "2025-08-06T14:12:52",
     "newtab-widget-timer-menu-learn-more": "2025-08-06T14:12:52",
     "newtab-widget-timer-menu-notifications": "2025-08-06T14:12:52",
@@ -19042,14 +18475,12 @@
     "newtab-widget-timer-notification-focus": "2025-08-06T14:12:52",
     "newtab-widget-timer-notification-title": "2025-08-06T14:12:52",
     "newtab-widget-timer-notification-warning": "2025-08-06T14:12:52",
-    "newtab-widget-timer-pause": "2025-08-06T14:12:52",
-    "newtab-widget-timer-play": "2025-08-06T14:12:52",
     "newtab-widget-timer-reset": "2025-08-06T14:12:52",
     "topsite-label-pinned": "2025-07-23T22:47:20"
   },
   "meta": {
     "repository": "https://github.com/mozilla-l10n/firefox-l10n.git",
-    "revision": "468bb10a3f2ed954930dc7d084070d923d6d9214",
-    "updated": "2025-09-01T21:09:31.054027"
+    "revision": "09b87b51a71b00f59a2c38b4887f564a3cb3b508",
+    "updated": "2025-09-11T14:52:32.347328"
   }
 }
