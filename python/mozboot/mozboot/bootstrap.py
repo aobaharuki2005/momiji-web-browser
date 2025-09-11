@@ -342,11 +342,6 @@ class Bootstrapper:
         if self.instance.no_interactive or which("moz-phab"):
             return
 
-        # Skip moz-phab install until bug 1696357 is fixed and makes it to a moz-phab
-        # release.
-        if sys.platform.startswith("darwin") and platform.machine() == "arm64":
-            return
-
         if not self.instance.prompt_yesno("Will you be submitting commits to Mozilla?"):
             return
 
