@@ -117,10 +117,6 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // away via browser chrome, then send a bounce event.
   ["events.bounce.maxSecondsFromLastSearch", 10],
 
-  // Whether we expand the font size when when the urlbar is
-  // focused.
-  ["experimental.expandTextOnFocus", false],
-
   // Whether the heuristic result is hidden.
   ["experimental.hideHeuristic", false],
 
