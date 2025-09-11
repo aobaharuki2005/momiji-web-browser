@@ -10,8 +10,13 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -171,11 +176,23 @@ class NavigationToolbarRobot {
         assertItemTextEquals(homeUrlBar(), expectedText = text)
     }
 
+    fun verifySearchBarPlaceholderWithComposableToolbar(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifySearchBarPlaceholderWithComposableToolbar: Trying to verify that the search bar place holder is \"Search or enter address\"")
+        composeTestRule.onNodeWithTag(ADDRESSBAR_URL_BOX).assert(hasContentDescription(" Search or enter address. Search or enter address"))
+        Log.i(TAG, "verifySearchBarPlaceholderWithComposableToolbar: Verified that the search bar place holder is \"Search or enter address\"")
+    }
+
     // New unified search UI selector
     fun verifyDefaultSearchEngine(engineName: String) =
         assertUIObjectExists(
             searchSelectorButton().getChild(UiSelector().descriptionStartsWith(engineName)),
         )
+
+    fun verifyDefaultSearchEngineWithComposableToolbar(composeTestRule: ComposeTestRule, engineName: String) {
+        Log.i(TAG, "verifyDefaultSearchEngineWithComposableToolbar: Trying to verify that default search engine is: $engineName is displayed")
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.search_engine_selector_content_description, engineName)).assertIsDisplayed()
+        Log.i(TAG, "verifyDefaultSearchEngineWithComposableToolbar: Verified that default search engine is: $engineName is displayed")
+    }
 
     fun verifyTextSelectionOptions(vararg textSelectionOptions: String) {
         for (textSelectionOption in textSelectionOptions) {
@@ -322,7 +339,7 @@ class NavigationToolbarRobot {
             interact: BrowserRobot.() -> Unit,
         ): BrowserRobot.Transition {
             Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Trying to click navigation toolbar")
-            composeTestRule.onNodeWithTag(ADDRESSBAR_URL_BOX).performClick()
+            composeTestRule.onAllNodesWithTag(ADDRESSBAR_URL_BOX).onLast().performClick()
             Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Clicked navigation toolbar")
             Log.i(TAG, "enterURLAndEnterToBrowserWithComposableToolbar: Trying to set toolbar text to: $url")
             onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(replaceText(url.toString()))
@@ -561,6 +578,20 @@ class NavigationToolbarRobot {
                 UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"),
             ).waitForExists(waitingTime)
             Log.i(TAG, "clickUrlbar: Waited for $waitingTime ms for the edit mode toolbar to exist")
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
+        }
+
+        @OptIn(ExperimentalTestApi::class)
+        fun clickURLBarWithComposableToolbar(composeTestRule: ComposeTestRule, interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            Log.i(TAG, "clickURLBarWithComposableToolbar: Waiting for $waitingTime until the URL bar to exist")
+            composeTestRule.waitUntilAtLeastOneExists(hasTestTag(ADDRESSBAR_URL_BOX), waitingTime)
+            Log.i(TAG, "clickURLBarWithComposableToolbar: Waited for $waitingTime until the URL bar to exist")
+            Log.i(TAG, "clickURLBarWithComposableToolbar: Trying to click navigation toolbar")
+            composeTestRule.onNodeWithTag(ADDRESSBAR_URL_BOX).performClick()
+            Log.i(TAG, "clickURLBarWithComposableToolbar: Clicked navigation toolbar")
+            composeTestRule.waitForIdle()
 
             SearchRobot().interact()
             return SearchRobot.Transition()

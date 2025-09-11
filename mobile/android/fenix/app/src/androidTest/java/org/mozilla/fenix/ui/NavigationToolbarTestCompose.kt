@@ -7,10 +7,12 @@
 package org.mozilla.fenix.ui
 
 import android.content.Context
+import android.content.res.Configuration
 import android.hardware.camera2.CameraManager
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso
+import androidx.test.filters.SdkSuppress
 import androidx.test.rule.ActivityTestRule
 import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import okhttp3.mockwebserver.MockWebServer
@@ -29,12 +31,13 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AppAndSystemHelper.enableOrDisableBackGestureNavigationOnDevice
 import org.mozilla.fenix.helpers.AppAndSystemHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithCondition
+import org.mozilla.fenix.helpers.AppAndSystemHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.helpers.DataGenerationHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
-import org.mozilla.fenix.helpers.MockBrowserDataHelper
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createBookmarkItem
+import org.mozilla.fenix.helpers.MockBrowserDataHelper.createHistoryItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.generateBookmarkFolder
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.setCustomSearchEngine
 import org.mozilla.fenix.helpers.SearchDispatcher
@@ -45,8 +48,11 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.verifyDarkThemeApplied
+import org.mozilla.fenix.helpers.TestHelper.verifyLightThemeApplied
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.ui.robots.checkTextSizeOnWebsite
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.customTabScreen
@@ -74,10 +80,21 @@ class NavigationToolbarTestCompose : TestSetup() {
 
     private val firefoxSuggestHeader = getStringResource(R.string.firefox_suggest_header)
 
+    private fun getUiTheme(): Boolean {
+        val mode =
+            composeTestRule.activity.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+
+        return when (mode) {
+            Configuration.UI_MODE_NIGHT_YES -> true // dark theme is set
+            Configuration.UI_MODE_NIGHT_NO -> false // dark theme is not set, using light theme
+            else -> false // default option is light theme
+        }
+    }
+
     @get:Rule
     val composeTestRule =
         AndroidComposeTestRule(
-            HomeActivityTestRule(
+            HomeActivityIntentTestRule(
                 isComposableToolbarEnabled = true,
                 isMenuRedesignEnabled = true,
                 isPWAsPromptEnabled = false,
@@ -374,8 +391,8 @@ class NavigationToolbarTestCompose : TestSetup() {
             val firstPageUrl = getGenericAsset(searchMockServer, 1)
             val secondPageUrl = getGenericAsset(searchMockServer, 2)
 
-            MockBrowserDataHelper.createHistoryItem(firstPageUrl.url.toString())
-            MockBrowserDataHelper.createHistoryItem(secondPageUrl.url.toString())
+            createHistoryItem(firstPageUrl.url.toString())
+            createHistoryItem(secondPageUrl.url.toString())
 
             homeScreen {
             }.openSearchWithComposableToolbar(composeTestRule) {
@@ -581,6 +598,312 @@ class NavigationToolbarTestCompose : TestSetup() {
                 verifyUrlWithComposableToolbar(composeTestRule, firstWebPage.url.toString())
                 swipeNavBarLeftWithComposableToolbar(composeTestRule, firstWebPage.url.toString())
                 verifyUrlWithComposableToolbar(composeTestRule, secondWebPage.url.toString())
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135000
+    @Test
+    fun changeThemeOfTheAppTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            homeScreen {
+            }.openThreeDotMenuWithComposableToolbar(composeTestRule) {
+            }.openSettings {
+            }.openCustomizeSubMenu {
+                verifyThemes()
+                selectDarkMode()
+                verifyDarkThemeApplied(getUiTheme())
+                selectLightMode()
+                verifyLightThemeApplied(getUiTheme())
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135001
+    @Test
+    fun setToolbarPositionTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            homeScreen {
+            }.openThreeDotMenuWithComposableToolbar(composeTestRule) {
+            }.openSettings {
+            }.openCustomizeSubMenu {
+                verifyAddressBarPositionPreference("Top")
+                clickBottomToolbarToggle()
+                verifyAddressBarPositionPreference("Bottom")
+            }.goBack {
+            }.goBack {
+                verifyComposableToolbarPosition(bottomPosition = true)
+            }.openThreeDotMenuWithComposableToolbar(composeTestRule) {
+            }.openSettings {
+            }.openCustomizeSubMenu {
+                clickTopToolbarToggle()
+                verifyAddressBarPositionPreference("Top")
+                exitMenu()
+            }
+            homeScreen {
+                verifyComposableToolbarPosition(bottomPosition = false)
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135099
+    @Test
+    fun verifyEnabledUrlAutocompleteToggleTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            // Currently part of an experiment https://bugzilla.mozilla.org/show_bug.cgi?id=1842106
+            // Check if "Top domain" suggestions for the address bar's autocomplete are enabled
+            if (FxNimbus.features.suggestShippedDomains.value().enabled) {
+                // If true it will use the hardcoded list of "top domain" suggestions for the address bar's autocomplete suggestions
+                homeScreen {
+                }.openSearchWithComposableToolbar(composeTestRule) {
+                    typeSearchWithComposableToolbar("mo")
+                    verifyTypedToolbarTextWithComposableToolbar("monster.com", exists = true)
+                    typeSearchWithComposableToolbar("moz")
+                    verifyTypedToolbarTextWithComposableToolbar("mozilla.org", exists = true)
+                }
+            } else {
+                // The suggestions for the address bar's autocomplete will take use of the user's local browsing history and bookmarks
+                createHistoryItem("https://github.com/mozilla-mobile/fenix")
+                createBookmarkItem(
+                    "https://github.com/mozilla-mobile/focus-android",
+                    "focus-android",
+                    1u,
+                )
+
+                homeScreen {
+                }.openSearchWithComposableToolbar(composeTestRule) {
+                    typeSearchWithComposableToolbar("moz")
+                    // "Top domain" suggestions from the address bar's autocomplete are disabled, "moz" shouldn't autocomplete to mozilla.org
+                    verifyTypedToolbarTextWithComposableToolbar("mozilla.org", exists = false)
+                    // The address bar's autocomplete should take use of the browsing history
+                    // Autocomplete with the history items url
+                    typeSearchWithComposableToolbar("github.com/mozilla-mobile/f")
+                    verifyTypedToolbarTextWithComposableToolbar(
+                        "github.com/mozilla-mobile/fenix",
+                        exists = true,
+                    )
+                    // The address bar's autocomplete should also take use of the saved bookmarks
+                    // Autocomplete with the bookmarked items url
+                    typeSearchWithComposableToolbar("github.com/mozilla-mobile/fo")
+                    verifyTypedToolbarTextWithComposableToolbar(
+                        "github.com/mozilla-mobile/focus-android",
+                        exists = true,
+                    )
+                    // It should not autocomplete with links that are not part of browsing history or bookmarks
+                    typeSearchWithComposableToolbar("github.com/mozilla-mobile/fi")
+                    verifyTypedToolbarTextWithComposableToolbar(
+                        "github.com/mozilla-mobile/firefox-android",
+                        exists = false,
+                    )
+                }
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135102
+    @Test
+    fun disableSearchBrowsingHistorySuggestionsToggleTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            val websiteURL = getGenericAsset(mockWebServer, 1).url.toString()
+
+            createHistoryItem(websiteURL)
+
+            homeScreen {
+            }.openThreeDotMenuWithComposableToolbar(composeTestRule) {
+            }.openSettings {
+            }.openSearchSubMenu {
+                switchSearchHistoryToggle()
+                exitMenu()
+            }
+
+            homeScreen {
+            }.openSearchWithComposableToolbar(composeTestRule) {
+                typeSearchWithComposableToolbar("test")
+                verifySuggestionsAreNotDisplayed(
+                    composeTestRule,
+                    "Firefox Suggest",
+                    websiteURL,
+                )
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135103
+    @Test
+    fun disableSearchBookmarksToggleTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            val website = getGenericAsset(mockWebServer, 1)
+
+            createBookmarkItem(website.url.toString(), website.title, 1u)
+
+            homeScreen {
+            }.openThreeDotMenuWithComposableToolbar(composeTestRule) {
+            }.openSettings {
+            }.openSearchSubMenu {
+                switchSearchBookmarksToggle()
+                // We want to avoid confusion between history and bookmarks searches,
+                // so we'll disable this too.
+                switchSearchHistoryToggle()
+                exitMenu()
+            }
+
+            homeScreen {
+            }.openSearchWithComposableToolbar(composeTestRule) {
+                typeSearchWithComposableToolbar("test")
+                verifySuggestionsAreNotDisplayed(
+                    composeTestRule,
+                    "Firefox Suggest",
+                    website.title,
+                )
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135105
+    @SdkSuppress(minSdkVersion = 34)
+    @Test
+    fun verifyShowVoiceSearchToggleTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            homeScreen {
+            }.openSearchWithComposableToolbar(composeTestRule) {
+                verifyVoiceSearchButtonWithComposableToolbar(composeTestRule, isDisplayed = true)
+                startVoiceSearchWithComposableToolbar(composeTestRule)
+                closeVoiceSearchDialog()
+            }.dismissSearchBar {
+            }.openThreeDotMenuWithComposableToolbar(composeTestRule) {
+            }.openSettings {
+            }.openSearchSubMenu {
+                toggleVoiceSearch()
+                exitMenu()
+            }
+            homeScreen {
+            }.openSearchWithComposableToolbar(composeTestRule) {
+                verifyVoiceSearchButtonWithComposableToolbar(composeTestRule, isDisplayed = false)
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135107
+    @Test
+    fun doNotAllowSearchSuggestionsInPrivateBrowsingTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            homeScreen {
+                togglePrivateBrowsingModeOnOff(composeTestRule = composeTestRule)
+            }.openSearchWithComposableToolbar(composeTestRule) {
+                typeSearchWithComposableToolbar("mozilla")
+                verifyAllowSuggestionsInPrivateModeDialogWithComposableToolbar(composeTestRule)
+                denySuggestionsInPrivateMode()
+                verifySuggestionsAreNotDisplayed(composeTestRule, "mozilla firefox")
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135006
+    @Test
+    fun verifyClearSearchButtonTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            homeScreen {
+            }.openSearchWithComposableToolbar(composeTestRule) {
+                typeSearchWithComposableToolbar(queryString)
+                clickClearButtonWithComposableToolbar(composeTestRule)
+                verifySearchBarPlaceholderWithComposableToolbar("Search or enter address")
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135044
+    @Test
+    fun verifySearchForHistoryItemsTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            val firstWebPage = getGenericAsset(mockWebServer, 1)
+            val secondWebPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+
+            navigationToolbar {
+            }.enterURLAndEnterToBrowserWithComposableToolbar(composeTestRule, firstWebPage.url) {
+            }
+            navigationToolbar {
+            }.enterURLAndEnterToBrowserWithComposableToolbar(composeTestRule, secondWebPage.url) {
+            }.openThreeDotMenuWithComposableToolbar(composeTestRule) {
+            }.openHistory {
+            }.clickSearchButton {
+                // Search for a valid term
+                typeSearchWithComposableToolbar(firstWebPage.title)
+                verifySearchSuggestionsAreDisplayed(composeTestRule, firstWebPage.url.toString())
+                verifySuggestionsAreNotDisplayed(composeTestRule, secondWebPage.url.toString())
+                clickClearButtonWithComposableToolbar(composeTestRule)
+                // Search for invalid term
+                typeSearchWithComposableToolbar("Android")
+                verifySuggestionsAreNotDisplayed(composeTestRule, firstWebPage.url.toString())
+                verifySuggestionsAreNotDisplayed(composeTestRule, secondWebPage.url.toString())
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135049
+    @Test
+    fun verifyHistorySearchWithoutBrowsingHistoryTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            homeScreen {
+            }.openSearchWithComposableToolbar(composeTestRule) {
+                clickSearchSelectorButtonWithComposableToolbar(composeTestRule)
+                selectTemporarySearchMethodWithComposableToolbar(composeTestRule, "History")
+                typeSearchWithComposableToolbar(searchTerm = "Mozilla")
+                verifySuggestionsAreNotDisplayed(rule = composeTestRule, "Mozilla")
+                clickClearButtonWithComposableToolbar(composeTestRule)
+                verifySearchBarPlaceholderWithComposableToolbar("Search history")
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135015
+    @SdkSuppress(minSdkVersion = 34)
+    @Test
+    fun verifySearchBarItemsTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            navigationToolbar {
+                verifyDefaultSearchEngineWithComposableToolbar(composeTestRule, "Google")
+                verifySearchBarPlaceholderWithComposableToolbar(composeTestRule)
+            }.clickURLBarWithComposableToolbar(composeTestRule) {
+                verifyKeyboardVisibility(isExpectedToBeVisible = true)
+                verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = true)
+                verifyVoiceSearchButtonVisibility(enabled = true)
+                verifySearchBarPlaceholderWithComposableToolbar("Search or enter address")
+                typeSearchWithComposableToolbar("mozilla ")
+                verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = false)
+                verifyVoiceSearchButtonVisibility(enabled = true)
             }
         }
     }

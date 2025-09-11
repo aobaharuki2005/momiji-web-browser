@@ -35,6 +35,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.PositionAssertions.isCompletelyAbove
+import androidx.test.espresso.assertion.PositionAssertions.isPartiallyAbove
 import androidx.test.espresso.assertion.PositionAssertions.isPartiallyBelow
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
@@ -479,6 +480,19 @@ class HomeScreenRobot {
                 },
             )
         Log.i(TAG, "verifyAddressBarPosition: Verified toolbar position is set to top: $bottomPosition")
+    }
+
+    fun verifyComposableToolbarPosition(bottomPosition: Boolean) {
+        Log.i(TAG, "verifyComposableToolbarPosition: Trying to verify toolbar is set to top: $bottomPosition")
+        onView(withId(R.id.composable_toolbar))
+            .check(
+                if (bottomPosition) {
+                    isPartiallyBelow(withId(R.id.homepageView))
+                } else {
+                    isPartiallyAbove(withId(R.id.homepageView))
+                },
+            )
+        Log.i(TAG, "verifyComposableToolbarPosition: Verified toolbar position is set to top: $bottomPosition")
     }
 
     fun verifyNavigationToolbarIsSetToTheBottomOfTheHomeScreen() {
