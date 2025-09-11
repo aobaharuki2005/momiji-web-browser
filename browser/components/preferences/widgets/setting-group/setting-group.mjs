@@ -64,7 +64,6 @@ export class SettingGroup extends MozLitElement {
     }
     return html`<moz-fieldset
       data-l10n-id=${ifDefined(this.config.l10nId)}
-      .headingLevel=${this.config.headingLevel}
       @change=${this.onChange}
       @click=${this.onClick}
       >${this.config.items.map(item => this.itemTemplate(item))}</moz-fieldset

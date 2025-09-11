@@ -392,12 +392,22 @@ check-user-spelling =
 
 files-and-applications-title = Files and Applications
 
-downloads-header-2 =
-    .label = Downloads
+download-header = Downloads
 
-download-save-where-2 =
-    .label = Save files to
+download-save-where = Save files to
     .accesskey = v
+
+download-choose-folder =
+    .label =
+        { PLATFORM() ->
+            [macos] Choose…
+           *[other] Browse…
+        }
+    .accesskey =
+        { PLATFORM() ->
+            [macos] e
+           *[other] o
+        }
 
 download-always-ask-where =
     .label = Always ask you where to save files
@@ -1680,3 +1690,4 @@ preferences-doh-manage-exceptions =
 
 desktop-folder-name = Desktop
 downloads-folder-name = Downloads
+choose-download-folder-title = Choose Download Folder:

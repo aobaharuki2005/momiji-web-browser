@@ -116,7 +116,7 @@ export default class MozInputFolder extends MozInputText {
     folderPicker.init(window.browsingContext, this.dialogTitle, mode);
     folderPicker.appendFilters(Ci.nsIFilePicker.filterAll);
 
-    if (this.#folder && this.#folder.exists()) {
+    if (this.#folder) {
       folderPicker.displayDirectory = this.#folder;
     }
 

@@ -331,6 +331,28 @@ radio {
   padding: 0.3em;
 }
 
+#saveWhere {
+  align-items: center;
+}
+
+#saveTo {
+  margin-inline-end: 1em;
+}
+
+#downloadFolder {
+  flex: 1;
+  margin-block: 4px;
+  margin-inline-start: 0;
+  padding-inline-start: 30px;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  background-position: center left 8px;
+}
+
+#downloadFolder:-moz-locale-dir(rtl) {
+  background-position-x: right 8px;
+}
+
 #updateBox {
   margin-block: 4px 32px;
 }

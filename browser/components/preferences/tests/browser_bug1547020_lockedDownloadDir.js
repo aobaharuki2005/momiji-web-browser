@@ -9,12 +9,14 @@ add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
   let doc = gBrowser.selectedBrowser.contentDocument;
 
+  var downloadFolder = doc.getElementById("downloadFolder");
   var chooseFolder = doc.getElementById("chooseFolder");
   is(
-    chooseFolder.disabled,
+    downloadFolder.disabled,
     false,
-    "Choose download folder element should not be disabled."
+    "Download folder field should not be disabled."
   );
+  is(chooseFolder.disabled, false, "Choose folder should not be disabled.");
 
   gBrowser.removeCurrentTab();
 
