@@ -482,7 +482,6 @@ restore-from-backup-secondary-top-button = Restore from Backup
 restore-from-backup-title = Let’s get { -brand-short-name } back how you like it
 restore-from-backup-subtitle = Recover all your bookmarks, history, and other data to get back to browsing.
 restore-from-backup-secondary-button = Don’t restore
-restore-from-backup-find-backup-guidance = <a data-l10n-name="find-backup"> Having problems finding your backup? </a>
 
 ## Restored from Backup spotlight
 
