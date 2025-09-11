@@ -1107,8 +1107,8 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
 /* static */
 nsresult nsContentSecurityManager::CheckAllowLoadInPrivilegedAboutContext(
     nsIChannel* aChannel) {
-  // bail out if check is disabled
-  if (StaticPrefs::security_disallow_privilegedabout_remote_script_loads()) {
+  // If remote scripts aren't disallowed, then bail out.
+  if (!StaticPrefs::security_disallow_privilegedabout_remote_script_loads()) {
     return NS_OK;
   }
 

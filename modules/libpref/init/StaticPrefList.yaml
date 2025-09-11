@@ -16982,8 +16982,8 @@
 # Cancel outgoing requests from privileged about pages:
 # but only with scheme http(s) and contentpolicytype script
 - name: security.disallow_privilegedabout_remote_script_loads
-  type: bool
-  value: true
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # Enable preloaded static key pins by default.
