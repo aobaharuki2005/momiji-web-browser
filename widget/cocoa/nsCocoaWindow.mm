@@ -880,12 +880,40 @@ void nsCocoaWindow::HandleMainThreadCATransaction() {
 void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
   MOZ_ASSERT(!mNativeLayerRootRemoteMacParent);
 
-  // Create NativeLayerRemoteMac endpoints, if there's a GPU process.
-  // The actual call to Bind will happen later, on the compositor thread.
+  // Ensure we are on the parent process.
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  // We have some early exit cases. Create an exit scope so we call
+  // our superclass implemenation in all code paths.
+  auto completionScope =
+      MakeScopeExit([&] { nsBaseWidget::CreateCompositor(aWidth, aHeight); });
+
+  // It's possible we might reach this before the GPU process has even
+  // been started. That makes it hard to reason about the different
+  // scenarios, which are:
+  // 1) GPU process started successfully, and we're creating a compositor
+  //    that should run on that process.
+  // 2) GPU process startup failed, and we're creating an in-process
+  //    compositor.
+  // To clarify, we'll attempt to start the gpu process ourself, and
+  // handle the error cases here.
+
   auto* pm = mozilla::gfx::GPUProcessManager::Get();
-  mozilla::ipc::EndpointProcInfo gpuProcessInfo =
-      (pm ? pm->GPUEndpointProcInfo()
-          : mozilla::ipc::EndpointProcInfo::Invalid());
+  if (!pm) {
+    return;
+  }
+
+  // Ensure the GPU process has had a chance to start. The logic below
+  // will handle both success and error cases correctly, so we don't check an
+  // error code.
+  pm->EnsureGPUReady();
+
+  // Create NativeLayerRemoteMac endpoints. The "parent" endpoint will
+  // always connect to the parent process. The "child" endpoint will
+  // connect to the gpu process, if it exists, otherwise the parent
+  // process. Either way, the remaining code will bind the parent endpoint
+  // on the parent process compositor thread.
+  mozilla::ipc::EndpointProcInfo gpuProcessInfo = pm->GPUEndpointProcInfo();
 
   mozilla::ipc::EndpointProcInfo childProcessInfo =
       gpuProcessInfo != mozilla::ipc::EndpointProcInfo::Invalid()
@@ -895,26 +923,36 @@ void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
   mozilla::ipc::Endpoint<PNativeLayerRemoteParent> parentEndpoint;
   auto rv = PNativeLayerRemote::CreateEndpoints(
       mozilla::ipc::EndpointProcInfo::Current(), childProcessInfo,
-      &mParentEndpoint, &mChildEndpoint);
+      &parentEndpoint, &mChildEndpoint);
+  MOZ_ASSERT(parentEndpoint.IsValid());
+  MOZ_ASSERT(mChildEndpoint.IsValid());
 
   if (NS_SUCCEEDED(rv)) {
     // Create our mNativeLayerRootRemoteMacParent.
     mNativeLayerRootRemoteMacParent =
         new NativeLayerRootRemoteMacParent(mNativeLayerRoot);
 
+    // Prepare the paramters to call FinishCreateCompositor.
+    RefPtr<NativeLayerRootRemoteMacParent> nativeLayerRemoteParent(
+        mNativeLayerRootRemoteMacParent);
+
     // We want the rest to run on the compositor thread.
     MOZ_ASSERT(CompositorThread());
-    CompositorThread()->Dispatch(NewRunnableMethod<int, int>(
-        "nsCocoaWindow::FinishCreateCompositor", this,
-        &nsCocoaWindow::FinishCreateCompositor, aWidth, aHeight));
+    CompositorThread()->Dispatch(NewRunnableFunction(
+        "nsCocoaWindow::FinishCreateCompositor",
+        &nsCocoaWindow::FinishCreateCompositor, aWidth, aHeight,
+        std::move(parentEndpoint), nativeLayerRemoteParent));
   }
-
-  nsBaseWidget::CreateCompositor(aWidth, aHeight);
 }
 
-void nsCocoaWindow::FinishCreateCompositor(int aWidth, int aHeight) {
-  MOZ_ASSERT(mNativeLayerRootRemoteMacParent);
-  MOZ_ALWAYS_TRUE(mParentEndpoint.Bind(mNativeLayerRootRemoteMacParent));
+/* static */
+void nsCocoaWindow::FinishCreateCompositor(
+    int aWidth, int aHeight,
+    mozilla::ipc::Endpoint<mozilla::layers::PNativeLayerRemoteParent>&&
+        aParentEndpoint,
+    RefPtr<NativeLayerRootRemoteMacParent> aNativeLayerRootRemoteMacParent) {
+  MOZ_ASSERT(aNativeLayerRootRemoteMacParent);
+  MOZ_ALWAYS_TRUE(aParentEndpoint.Bind(aNativeLayerRootRemoteMacParent));
   // If this Bind fails, there's not much we can do, except signal somehow
   // that we want to retry with an in-process compositor.
 
