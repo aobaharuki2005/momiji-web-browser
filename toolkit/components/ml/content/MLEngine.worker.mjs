@@ -55,6 +55,7 @@ class MLEngineWorker {
   }
 
   async getModelFile(args) {
+    console.log("Receiving ...", args);
     let result = await self.callMainThread("getModelFile", [
       { sessionId: this.#sessionId, ...args },
     ]);

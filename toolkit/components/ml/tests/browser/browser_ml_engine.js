@@ -1208,8 +1208,6 @@ add_task(async function test_ml_engine_get_status() {
         modelFile: null,
         backend: null,
         modelHub: null,
-        baseURL: null,
-        apiKey: null,
       },
       engineId: "default-engine",
     },
@@ -1922,60 +1920,4 @@ add_task(async function test_hub_by_default() {
 
   await EngineProcess.destroyMLEngine();
   await cleanup();
-});
-
-add_task(async function test_openai_client() {
-  const records = [
-    {
-      featureId: "about-inference",
-      taskName: "text-generation",
-      modelId: "qwen3:0.6b",
-      modelRevision: "main",
-      id: "74a71cfd-1734-44e6-85c0-69cf3e874138",
-    },
-  ];
-  const { cleanup } = await setup({ records });
-  const { server: mockServer, port } = startMockOpenAI({
-    echo: "This gets echoed.",
-  });
-
-  const engineInstance = await createEngine({
-    featureId: "about-inference",
-    task: "text-generation",
-    modelId: "qwen3:0.6b",
-    modelRevision: "main",
-    apiKey: "ollama",
-    baseURL: `http://localhost:${port}/v1`,
-    backend: "openai",
-  });
-
-  const request = {
-    args: [
-      {
-        role: "system",
-        content:
-          "You are a helpful assistant that summarizes text clearly and concisely.",
-      },
-      {
-        role: "user",
-        content: `Please summarize the following text:\n\n blah bla`,
-      },
-    ],
-  };
-
-  try {
-    info("Run the inference");
-    const inferencePromise = engineInstance.run(request);
-
-    const result = await inferencePromise;
-
-    Assert.equal(
-      result.finalOutput,
-      "This is a mock summary for testing end-to-end flow."
-    );
-  } finally {
-    await EngineProcess.destroyMLEngine();
-    await cleanup();
-    await stopMockOpenAI(mockServer);
-  }
 });

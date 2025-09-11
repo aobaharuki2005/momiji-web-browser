@@ -6,12 +6,7 @@
   <head>
     <meta
       http-equiv="Content-Security-Policy"
-      content="
-    default-src chrome:;
-    img-src data: blob:;
-    object-src 'none';
-    connect-src * blob: data:;
-  "
+      content="default-src chrome:;img-src data: blob:; object-src 'none'"
     />
     <meta name="color-scheme" content="light dark" />
     <title data-l10n-id="about-inference-title"></title>
@@ -213,7 +208,7 @@
                   <input
                     id="http.endpoint"
                     type="text"
-                    value="http://localhost:11434/v1"
+                    value="http://localhost:8080/v1/chat/completions"
                   />
                 </div>
                 <div>
@@ -224,7 +219,7 @@
                       Some endpoints require a specific model.
                     </span>
                   </span>
-                  <input id="http.model" type="text" value="qwen3:0.6b" />
+                  <input id="http.model" type="text" />
                 </div>
                 <div>
                   <label for="http.bearer">Bearer token:</label>
@@ -234,7 +229,7 @@
                       Some endpoints require a token for access.
                     </span>
                   </span>
-                  <input id="http.bearer" type="text" value="ollama" />
+                  <input id="http.bearer" type="text" />
                 </div>
                 <div>
                   <label for="http.prompt">Prompt:</label>

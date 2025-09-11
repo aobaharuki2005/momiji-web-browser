@@ -12,6 +12,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
+  HttpInference: "chrome://global/content/ml/HttpInference.sys.mjs",
   ModelHub: "chrome://global/content/ml/ModelHub.sys.mjs",
   getInferenceProcessInfo: "chrome://global/content/ml/Utils.sys.mjs",
   getOptimalCPUConcurrency: "chrome://global/content/ml/Utils.sys.mjs",
@@ -310,6 +311,7 @@ const INFERENCE_PAD_PRESETS = {
     device: "cpu",
     backend: "onnx",
   },
+
   "link-preview": {
     inputArgs: `Summarize this: ${TINY_ARTICLE}`,
     runOptions: {
@@ -325,26 +327,6 @@ const INFERENCE_PAD_PRESETS = {
     dtype: "q8",
     device: "cpu",
     backend: "onnx",
-  },
-  openai: {
-    inputArgs: [
-      {
-        role: "system",
-        content:
-          "You are a helpful assistant that summarizes text clearly and concisely.",
-      },
-      {
-        role: "user",
-        content: `Please summarize the following text:\n\n ${TINY_ARTICLE} /no_think`,
-      },
-    ],
-    runOptions: {},
-    task: "text-generation",
-    modelId: "qwen3:0.6b",
-    modelRevision: "main",
-    apiKey: "ollama",
-    baseURL: "http://localhost:11434/v1",
-    backend: "openai",
   },
 };
 
@@ -1043,36 +1025,18 @@ class TextareaConsole {
 }
 
 async function runHttpInference() {
-  const OpenAILib = await import("chrome://global/content/ml/openai-dev.js");
-  const baseURL = document.getElementById("http.endpoint").value;
-  const apiKey = document.getElementById("http.bearer").value;
-  const modelId = document.getElementById("http.model").value;
   const output = document.getElementById("http.output");
-
-  const prompt = document.getElementById("http.prompt").value;
-  const messages = [
-    {
-      role: "system",
-      content: "You are a helpful assistant",
-    },
-    {
-      role: "user",
-      content: prompt,
-    },
-  ];
-
-  const client = new OpenAILib.OpenAI({
-    baseURL,
-    apiKey,
-    dangerouslyAllowBrowser: true,
-  });
-
-  const completion = await client.chat.completions.create({
-    model: modelId,
-    messages,
-  });
-
-  output.value = completion.choices[0].message.content;
+  output.value = "…";
+  output.value = await lazy.HttpInference.completion(
+    ["bearer", "endpoint", "model", "prompt"].reduce(
+      (config, key) => {
+        config[key] = document.getElementById("http." + key).value;
+        return config;
+      },
+      { onStream: val => (output.value = val) }
+    ),
+    await updateHttpContext()
+  );
 }
 
 async function updateHttpContext() {
