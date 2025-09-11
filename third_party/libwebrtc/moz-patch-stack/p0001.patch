@@ -43,10 +43,10 @@ Cr-Commit-Position: refs/heads/main@{#44781}
  1 file changed, 3 deletions(-)
 
 diff --git a/.gn b/.gn
-index e783f7a6df..d29e7e3ced 100644
+index 1b112b34c0..fbd2c38721 100644
 --- a/.gn
 +++ b/.gn
-@@ -92,7 +92,4 @@ default_args = {
+@@ -91,7 +91,4 @@ default_args = {
  
    # See context on https://issues.chromium.org/issues/415076048.
    enable_js_protobuf = false
