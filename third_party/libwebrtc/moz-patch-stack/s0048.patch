@@ -14,7 +14,7 @@ Subject: Bug 1766646 - (fix) breakout Call::Stats and SharedModuleThread into
  create mode 100644 call/call_basic_stats.h
 
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 0cf0e2fcf0..aaae7bb9a9 100644
+index 40433fc13f..2bc4a880de 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -33,6 +33,12 @@ rtc_library("call_interfaces") {

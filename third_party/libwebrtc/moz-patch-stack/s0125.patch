@@ -58,7 +58,7 @@ index 876e8b4c7f..0000000000
 -
 -#endif // _XRANDR_H_WRAPPER_HACK_
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index aaae7bb9a9..0cf0e2fcf0 100644
+index 2bc4a880de..40433fc13f 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -33,12 +33,6 @@ rtc_library("call_interfaces") {
