@@ -291,7 +291,7 @@ index 0492dd24e5..be9eac131d 100644
  
  rtc_library("audio") {
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index f2a950efdf..43e14dc847 100644
+index 901da25ecb..bb8a56ec06 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
 @@ -292,7 +292,7 @@ if (rtc_build_with_neon) {
@@ -313,7 +313,7 @@ index f2a950efdf..43e14dc847 100644
      }
  
 diff --git a/common_audio/third_party/ooura/BUILD.gn b/common_audio/third_party/ooura/BUILD.gn
-index a0ddf777db..cf15513e18 100644
+index 589142b014..2ee80ded55 100644
 --- a/common_audio/third_party/ooura/BUILD.gn
 +++ b/common_audio/third_party/ooura/BUILD.gn
 @@ -40,7 +40,7 @@ rtc_library("fft_size_128") {
@@ -455,7 +455,7 @@ index 782bd7c99f..313e5c82de 100644
  
  config("audio_device_warnings_config") {
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index afd80a29cf..2d7a333c9e 100644
+index 1f269294e2..34e13381e0 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
 @@ -124,7 +124,7 @@ rtc_library("aec3") {
@@ -468,10 +468,10 @@ index afd80a29cf..2d7a333c9e 100644
    }
  
 diff --git a/modules/audio_processing/aecm/BUILD.gn b/modules/audio_processing/aecm/BUILD.gn
-index a77f04aba5..b0e089d378 100644
+index f01637f2da..d5bdc070be 100644
 --- a/modules/audio_processing/aecm/BUILD.gn
 +++ b/modules/audio_processing/aecm/BUILD.gn
-@@ -31,7 +31,7 @@ rtc_library("aecm_core") {
+@@ -30,7 +30,7 @@ rtc_library("aecm_core") {
  
      if (target_cpu != "arm64") {
        # Enable compilation for the NEON instruction set.
@@ -494,7 +494,7 @@ index f794b07bcb..a6d5cfb73b 100644
      }
    }
 diff --git a/modules/audio_processing/agc2/BUILD.gn b/modules/audio_processing/agc2/BUILD.gn
-index e9d1743f4e..f321431410 100644
+index 93d5d6c0b9..d1fb75b405 100644
 --- a/modules/audio_processing/agc2/BUILD.gn
 +++ b/modules/audio_processing/agc2/BUILD.gn
 @@ -255,7 +255,7 @@ rtc_library("vad_wrapper") {
@@ -560,7 +560,7 @@ index 0e96125f40..c72b3714c4 100644
    }
  
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 4b6345f0e6..e8620acf9b 100644
+index c009daa0e4..983b4374fb 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
 @@ -6,8 +6,8 @@
@@ -616,7 +616,7 @@ index 704aa2ad87..1147706e87 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 24b90990c2..aa65cccbab 100644
+index 3835958e46..0dca916996 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -741,7 +741,7 @@ index 8be2817955..8b83c1bac5 100644
            ]
          }
 diff --git a/system_wrappers/BUILD.gn b/system_wrappers/BUILD.gn
-index a1fab28ad8..bf043a60da 100644
+index abbb93f439..6f6bc18200 100644
 --- a/system_wrappers/BUILD.gn
 +++ b/system_wrappers/BUILD.gn
 @@ -7,8 +7,8 @@

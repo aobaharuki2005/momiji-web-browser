@@ -48,7 +48,7 @@ index 0e27d825e6..c0ebead069 100644
      if (mips_float_abi == "hard") {
        defines += [ "MIPS_FPU_LE" ]
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index 0dd84213a9..f2a950efdf 100644
+index 9b35bbcbde..901da25ecb 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
 @@ -66,7 +66,7 @@ rtc_library("common_audio") {
@@ -88,8 +88,8 @@ index 0dd84213a9..f2a950efdf 100644
        "signal_processing/complex_bit_reverse.c",
        "signal_processing/filter_ar_fast_q12.c",
 @@ -232,7 +232,7 @@ rtc_library("fir_filter_factory") {
+     "../rtc_base:cpu_info",
      "../rtc_base/system:arch",
-     "../system_wrappers",
    ]
 -  if (current_cpu == "x86" || current_cpu == "x64") {
 +  if (target_cpu == "x86" || target_cpu == "x64") {
@@ -124,7 +124,7 @@ index 0dd84213a9..f2a950efdf 100644
        suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
        cflags = [ "-mfpu=neon" ]
 diff --git a/common_audio/third_party/ooura/BUILD.gn b/common_audio/third_party/ooura/BUILD.gn
-index 0cdf98e591..a0ddf777db 100644
+index a12adb2c0b..589142b014 100644
 --- a/common_audio/third_party/ooura/BUILD.gn
 +++ b/common_audio/third_party/ooura/BUILD.gn
 @@ -20,7 +20,7 @@ rtc_library("fft_size_128") {
@@ -172,7 +172,7 @@ index ac862c65a8..e66ed2796e 100644
    } else {
      sources += [ "spl_sqrt_floor.c" ]
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index 65aa6a9542..afd80a29cf 100644
+index 7a4662cf0d..1f269294e2 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
 @@ -123,7 +123,7 @@ rtc_library("aec3") {
@@ -203,10 +203,10 @@ index 65aa6a9542..afd80a29cf 100644
      configs += [ "..:apm_debug_dump" ]
      sources = [
 diff --git a/modules/audio_processing/aecm/BUILD.gn b/modules/audio_processing/aecm/BUILD.gn
-index 80f2901049..a77f04aba5 100644
+index a945d0c58d..f01637f2da 100644
 --- a/modules/audio_processing/aecm/BUILD.gn
 +++ b/modules/audio_processing/aecm/BUILD.gn
-@@ -29,14 +29,14 @@ rtc_library("aecm_core") {
+@@ -28,14 +28,14 @@ rtc_library("aecm_core") {
    if (rtc_build_with_neon) {
      sources += [ "aecm_core_neon.cc" ]
  
@@ -263,7 +263,7 @@ index e90ef0e06a..0e96125f40 100644
      cflags = [ "-mfpu=neon" ]
    }
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 9b1b39ac3e..bf4a5ebdb1 100644
+index 73be0ce250..ae24059d3b 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
 @@ -10,7 +10,7 @@ import("//build/config/linux/gtk/gtk.gni")

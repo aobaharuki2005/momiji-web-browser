@@ -1,938 +1,279 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 11 Sep 2025 13:20:00 -0500
-Subject: Bug 1988042 - Cherry-pick upstream libwebrtc commit 203aa90741 r?me
+Date: Thu, 11 Sep 2025 13:23:00 -0500
+Subject: Bug 1988042 - Cherry-pick upstream libwebrtc commit 5bed8aa1d1 r?me
 
-Upstream commit: https://webrtc.googlesource.com/src/+/203aa90741b51424ce51a7efdd304f3dc4bedb2a
-       Remove system_wrappers/ GetCPUInfo() function.
+Upstream commit: https://webrtc.googlesource.com/src/+/5bed8aa1d12410f58babde9c6ee8abbd490ac9bf
+       Remove GetCPUFeaturesARM()
 
-       Functionality moved to rtc_base/ cpu_info::Supports().
+       Fold GetCPUFeaturesARM() functionality into webrtc::cpu_info::Supports(), since it was only used to test for Neon support.
 
        Bug: webrtc:42228262
-       Change-Id: I0ef2fc645447779aac2339580884ea042bdd315b
-       No-Iwyu: Avoid unrelated changes
-       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/393561
-       Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
-       Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+       Change-Id: If72a90e4d4edd695256cb36f8e074e7c15f43f75
+       No-iwyu: Avoid unrelated changes
+       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/393783
        Auto-Submit: Fredrik Solenberg <solenberg@webrtc.org>
-       Cr-Commit-Position: refs/heads/main@{#44768}
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b42bd961a89eeb40c6676e0c096d942a359489e4
+       Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+       Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+       Cr-Commit-Position: refs/heads/main@{#44783}
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d601e431acab50f2a35d4e3e337d5d840eb8192c
 ---
- common_audio/BUILD.gn                         |   7 +-
- common_audio/fir_filter_factory.cc            |   6 +-
- common_audio/resampler/sinc_resampler.cc      |   7 +-
- .../resampler/sinc_resampler_unittest.cc      |   5 +-
- common_audio/third_party/ooura/BUILD.gn       |   2 +-
- .../ooura/fft_size_128/ooura_fft.cc           |   4 +-
- modules/audio_processing/BUILD.gn             |   2 +-
- modules/audio_processing/aec3/BUILD.gn        |   4 +-
- .../aec3/adaptive_fir_filter_erl_unittest.cc  |   6 +-
- .../aec3/adaptive_fir_filter_unittest.cc      |  10 +-
- modules/audio_processing/aec3/aec3_common.cc  |   6 +-
- modules/audio_processing/aec3/aec3_fft.cc     |   4 +-
- .../aec3/comfort_noise_generator_unittest.cc  |   3 -
- .../aec3/fft_data_unittest.cc                 |   6 +-
- .../aec3/matched_filter_unittest.cc           |   6 +-
- .../aec3/suppression_gain_unittest.cc         |   1 -
- .../aec3/vector_math_unittest.cc              |  14 +--
- modules/audio_processing/aecm/BUILD.gn        |   1 -
- modules/audio_processing/aecm/aecm_core_c.cc  |   4 -
- modules/audio_processing/agc2/BUILD.gn        |   2 +-
- modules/audio_processing/agc2/cpu_features.cc |   6 +-
- .../audio_processing_unittest.cc              |   4 +-
- modules/desktop_capture/BUILD.gn              |   3 +-
- ...esktop_capturer_differ_wrapper_unittest.cc |   1 -
- modules/desktop_capture/differ_block.cc       |   4 +-
- rtc_base/BUILD.gn                             |   2 +
- rtc_base/cpu_info.cc                          |  93 +++++++++++++++
- rtc_base/cpu_info.h                           |   5 +
- system_wrappers/BUILD.gn                      |   1 -
- .../include/cpu_features_wrapper.h            |   6 -
- system_wrappers/source/cpu_features.cc        | 111 ------------------
- 31 files changed, 155 insertions(+), 181 deletions(-)
- delete mode 100644 system_wrappers/source/cpu_features.cc
+ common_audio/BUILD.gn                         |  7 +-
+ .../resampler/sinc_resampler_unittest.cc      |  5 +-
+ rtc_base/BUILD.gn                             |  3 +
+ rtc_base/cpu_info.cc                          | 68 ++++++++++++-
+ system_wrappers/BUILD.gn                      | 30 +-----
+ .../include/cpu_features_wrapper.h            | 33 -------
+ .../source/cpu_features_android.cc            | 19 ----
+ system_wrappers/source/cpu_features_linux.cc  | 97 -------------------
+ 8 files changed, 71 insertions(+), 191 deletions(-)
+ delete mode 100644 system_wrappers/include/cpu_features_wrapper.h
+ delete mode 100644 system_wrappers/source/cpu_features_android.cc
+ delete mode 100644 system_wrappers/source/cpu_features_linux.cc
 
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index 43e14dc847..bb8a56ec06 100644
+index bb8a56ec06..0d14961968 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
-@@ -48,6 +48,7 @@ rtc_library("common_audio") {
-     "../api:array_view",
-     "../api/audio:audio_frame_api",
-     "../rtc_base:checks",
-+    "../rtc_base:cpu_info",
-     "../rtc_base:gtest_prod",
-     "../rtc_base:logging",
-     "../rtc_base:safe_conversions",
-@@ -56,7 +57,6 @@ rtc_library("common_audio") {
-     "../rtc_base/memory:aligned_malloc",
+@@ -184,7 +184,6 @@ rtc_library("common_audio_c") {
+     "../rtc_base:compile_assert_c",
+     "../rtc_base:sanitizer",
      "../rtc_base/system:arch",
-     "../rtc_base/system:file_wrapper",
 -    "../system_wrappers",
      "third_party/ooura:fft_size_256",
+     "third_party/spl_sqrt_floor",
+   ]
+@@ -197,10 +196,7 @@ rtc_library("common_audio_cc") {
+     "signal_processing/dot_product_with_scale.h",
    ]
  
-@@ -206,10 +206,10 @@ rtc_library("common_audio_cc") {
- rtc_source_set("sinc_resampler") {
-   sources = [ "resampler/sinc_resampler.h" ]
-   deps = [
-+    "../rtc_base:cpu_info",
-     "../rtc_base:gtest_prod",
-     "../rtc_base/memory:aligned_malloc",
-     "../rtc_base/system:arch",
+-  deps = [
+-    "../rtc_base:safe_conversions",
 -    "../system_wrappers",
-   ]
+-  ]
++  deps = [ "../rtc_base:safe_conversions" ]
  }
  
-@@ -229,8 +229,8 @@ rtc_library("fir_filter_factory") {
-   deps = [
-     ":fir_filter",
-     "../rtc_base:checks",
-+    "../rtc_base:cpu_info",
-     "../rtc_base/system:arch",
--    "../system_wrappers",
-   ]
-   if (target_cpu == "x86" || target_cpu == "x64") {
-     deps += [ ":common_audio_sse2" ]
-@@ -373,6 +373,7 @@ if (rtc_include_tests && !build_with_chromium) {
-       ":fir_filter_factory",
-       ":sinc_resampler",
-       "../rtc_base:checks",
-+      "../rtc_base:cpu_info",
-       "../rtc_base:logging",
-       "../rtc_base:macromagic",
-       "../rtc_base:rtc_base_tests_utils",
-diff --git a/common_audio/fir_filter_factory.cc b/common_audio/fir_filter_factory.cc
-index 2ecef6501f..fdf758ee79 100644
---- a/common_audio/fir_filter_factory.cc
-+++ b/common_audio/fir_filter_factory.cc
-@@ -12,6 +12,7 @@
- 
- #include "common_audio/fir_filter_c.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
- 
- #if defined(WEBRTC_HAS_NEON)
-@@ -19,7 +20,6 @@
- #elif defined(WEBRTC_ARCH_X86_FAMILY)
- #include "common_audio/fir_filter_avx2.h"
- #include "common_audio/fir_filter_sse.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"  // kSSE2, WebRtc_G...
- #endif
- 
- namespace webrtc {
-@@ -36,10 +36,10 @@ FIRFilter* CreateFirFilter(const float* coefficients,
- // If we know the minimum architecture at compile time, avoid CPU detection.
- #if defined(WEBRTC_ARCH_X86_FAMILY)
-   // x86 CPU detection required.
--  if (GetCPUInfo(kAVX2)) {
-+  if (cpu_info::Supports(cpu_info::ISA::kAVX2)) {
-     filter =
-         new FIRFilterAVX2(coefficients, coefficients_length, max_input_length);
--  } else if (GetCPUInfo(kSSE2)) {
-+  } else if (cpu_info::Supports(cpu_info::ISA::kSSE2)) {
-     filter =
-         new FIRFilterSSE2(coefficients, coefficients_length, max_input_length);
-   } else {
-diff --git a/common_audio/resampler/sinc_resampler.cc b/common_audio/resampler/sinc_resampler.cc
-index 66a99b6190..f0c380494b 100644
---- a/common_audio/resampler/sinc_resampler.cc
-+++ b/common_audio/resampler/sinc_resampler.cc
-@@ -94,8 +94,8 @@
- #include <limits>
- 
- #include "rtc_base/checks.h"
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"  // kSSE2, WebRtc_G...
- 
- namespace webrtc {
- 
-@@ -127,9 +127,10 @@ void SincResampler::InitializeCPUSpecificFeatures() {
-   convolve_proc_ = Convolve_NEON;
- #elif defined(WEBRTC_ARCH_X86_FAMILY)
-   // Using AVX2 instead of SSE2 when AVX2/FMA3 supported.
--  if (GetCPUInfo(kAVX2) && GetCPUInfo(kFMA3))
-+  if (cpu_info::Supports(cpu_info::ISA::kAVX2) &&
-+      cpu_info::Supports(cpu_info::ISA::kFMA3))
-     convolve_proc_ = Convolve_AVX2;
--  else if (GetCPUInfo(kSSE2))
-+  else if (cpu_info::Supports(cpu_info::ISA::kSSE2))
-     convolve_proc_ = Convolve_SSE;
-   else
-     convolve_proc_ = Convolve_C;
+ rtc_source_set("sinc_resampler") {
+@@ -380,7 +376,6 @@ if (rtc_include_tests && !build_with_chromium) {
+       "../rtc_base:stringutils",
+       "../rtc_base:timeutils",
+       "../rtc_base/system:arch",
+-      "../system_wrappers",
+       "../test:fileutils",
+       "../test:rtc_expect_death",
+       "../test:test_main",
 diff --git a/common_audio/resampler/sinc_resampler_unittest.cc b/common_audio/resampler/sinc_resampler_unittest.cc
-index 483d3d0374..a6eb34d6b9 100644
+index a6eb34d6b9..a35bd6dcf9 100644
 --- a/common_audio/resampler/sinc_resampler_unittest.cc
 +++ b/common_audio/resampler/sinc_resampler_unittest.cc
-@@ -23,6 +23,7 @@
- #include <tuple>
- 
- #include "common_audio/resampler/sinusoidal_linear_chirp_source.h"
-+#include "rtc_base/cpu_info.h"
+@@ -26,7 +26,6 @@
+ #include "rtc_base/cpu_info.h"
  #include "rtc_base/system/arch.h"
  #include "rtc_base/time_utils.h"
- #include "system_wrappers/include/cpu_features_wrapper.h"
-@@ -119,7 +120,7 @@ TEST(SincResamplerTest, DISABLED_SetRatioBench) {
- // will be tested by the parameterized SincResampler tests below.
- TEST(SincResamplerTest, Convolve) {
- #if defined(WEBRTC_ARCH_X86_FAMILY)
--  ASSERT_TRUE(GetCPUInfo(kSSE2));
-+  ASSERT_TRUE(cpu_info::Supports(cpu_info::ISA::kSSE2));
- #elif defined(WEBRTC_ARCH_ARM_V7)
-   ASSERT_TRUE(GetCPUFeaturesARM() & kCPUFeatureNEON);
- #endif
-@@ -179,7 +180,7 @@ TEST(SincResamplerTest, ConvolveBenchmark) {
-   printf("Convolve_C took %.2fms.\n", total_time_c_us / 1000);
- 
- #if defined(WEBRTC_ARCH_X86_FAMILY)
--  ASSERT_TRUE(GetCPUInfo(kSSE2));
-+  ASSERT_TRUE(cpu_info::Supports(cpu_info::ISA::kSSE2));
- #elif defined(WEBRTC_ARCH_ARM_V7)
-   ASSERT_TRUE(GetCPUFeaturesARM() & kCPUFeatureNEON);
- #endif
-diff --git a/common_audio/third_party/ooura/BUILD.gn b/common_audio/third_party/ooura/BUILD.gn
-index cf15513e18..2ee80ded55 100644
---- a/common_audio/third_party/ooura/BUILD.gn
-+++ b/common_audio/third_party/ooura/BUILD.gn
-@@ -15,8 +15,8 @@ rtc_library("fft_size_128") {
-     "fft_size_128/ooura_fft_tables_common.h",
-   ]
-   deps = [
-+    "../../../rtc_base:cpu_info",
-     "../../../rtc_base/system:arch",
--    "../../../system_wrappers",
-   ]
-   cflags = []
- 
-diff --git a/common_audio/third_party/ooura/fft_size_128/ooura_fft.cc b/common_audio/third_party/ooura/fft_size_128/ooura_fft.cc
-index b7a529d1b1..9edbbd9d06 100644
---- a/common_audio/third_party/ooura/fft_size_128/ooura_fft.cc
-+++ b/common_audio/third_party/ooura/fft_size_128/ooura_fft.cc
-@@ -24,8 +24,8 @@
- #include "common_audio/third_party/ooura/fft_size_128/ooura_fft.h"
- 
- #include "common_audio/third_party/ooura/fft_size_128/ooura_fft_tables_common.h"
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- 
- namespace webrtc {
- 
-@@ -323,7 +323,7 @@ OouraFft::OouraFft([[maybe_unused]] bool sse2_available) {
- 
- OouraFft::OouraFft() {
- #if defined(WEBRTC_ARCH_X86_FAMILY)
--  use_sse2_ = (GetCPUInfo(kSSE2) != 0);
-+  use_sse2_ = cpu_info::Supports(cpu_info::ISA::kSSE2);
- #else
-   use_sse2_ = false;
- #endif
-diff --git a/modules/audio_processing/BUILD.gn b/modules/audio_processing/BUILD.gn
-index 2d92bc5178..e22914e66a 100644
---- a/modules/audio_processing/BUILD.gn
-+++ b/modules/audio_processing/BUILD.gn
-@@ -376,6 +376,7 @@ if (rtc_include_tests) {
-         "../../common_audio",
-         "../../common_audio:common_audio_c",
-         "../../rtc_base:checks",
-+        "../../rtc_base:cpu_info",
-         "../../rtc_base:denormal_disabler",
-         "../../rtc_base:gtest_prod",
-         "../../rtc_base:macromagic",
-@@ -393,7 +394,6 @@ if (rtc_include_tests) {
-         "../../rtc_base/synchronization:mutex",
-         "../../rtc_base/system:arch",
-         "../../rtc_base/system:file_wrapper",
--        "../../system_wrappers",
-         "../../test:field_trial",
-         "../../test:fileutils",
-         "../../test:rtc_expect_death",
-diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index 2d7a333c9e..34e13381e0 100644
---- a/modules/audio_processing/aec3/BUILD.gn
-+++ b/modules/audio_processing/aec3/BUILD.gn
-@@ -147,6 +147,7 @@ rtc_library("aec3") {
-     "../../../api/environment",
-     "../../../common_audio:common_audio_c",
-     "../../../rtc_base:checks",
-+    "../../../rtc_base:cpu_info",
-     "../../../rtc_base:logging",
-     "../../../rtc_base:macromagic",
-     "../../../rtc_base:race_checker",
-@@ -154,7 +155,6 @@ rtc_library("aec3") {
-     "../../../rtc_base:swap_queue",
-     "../../../rtc_base/experiments:field_trial_parser",
-     "../../../rtc_base/system:arch",
--    "../../../system_wrappers",
-     "../../../system_wrappers:metrics",
-     "../utility:cascaded_biquad_filter",
-     "//third_party/abseil-cpp/absl/strings:string_view",
-@@ -314,12 +314,12 @@ if (rtc_include_tests) {
-       "../../../api/environment",
-       "../../../api/environment:environment_factory",
-       "../../../rtc_base:checks",
-+      "../../../rtc_base:cpu_info",
-       "../../../rtc_base:macromagic",
-       "../../../rtc_base:random",
-       "../../../rtc_base:safe_minmax",
-       "../../../rtc_base:stringutils",
-       "../../../rtc_base/system:arch",
--      "../../../system_wrappers",
-       "../../../system_wrappers:metrics",
-       "../../../test:explicit_key_value_config",
-       "../../../test:field_trial",
-diff --git a/modules/audio_processing/aec3/adaptive_fir_filter_erl_unittest.cc b/modules/audio_processing/aec3/adaptive_fir_filter_erl_unittest.cc
-index d2af70a9f2..e3a3d453c4 100644
---- a/modules/audio_processing/aec3/adaptive_fir_filter_erl_unittest.cc
-+++ b/modules/audio_processing/aec3/adaptive_fir_filter_erl_unittest.cc
-@@ -13,12 +13,12 @@
- #include <array>
- #include <vector>
- 
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
- #if defined(WEBRTC_ARCH_X86_FAMILY)
- #include <emmintrin.h>
- #endif
- 
--#include "system_wrappers/include/cpu_features_wrapper.h"
- #include "test/gtest.h"
- 
- namespace webrtc {
-@@ -53,7 +53,7 @@ TEST(AdaptiveFirFilter, UpdateErlNeonOptimization) {
- // Verifies that the optimized method for echo return loss computation is
- // bitexact to the reference counterpart.
- TEST(AdaptiveFirFilter, UpdateErlSse2Optimization) {
--  bool use_sse2 = (GetCPUInfo(kSSE2) != 0);
-+  bool use_sse2 = cpu_info::Supports(cpu_info::ISA::kSSE2);
-   if (use_sse2) {
-     const size_t kNumPartitions = 12;
-     std::vector<std::array<float, kFftLengthBy2Plus1>> H2(kNumPartitions);
-@@ -78,7 +78,7 @@ TEST(AdaptiveFirFilter, UpdateErlSse2Optimization) {
- // Verifies that the optimized method for echo return loss computation is
- // bitexact to the reference counterpart.
- TEST(AdaptiveFirFilter, UpdateErlAvx2Optimization) {
--  bool use_avx2 = (GetCPUInfo(kAVX2) != 0);
-+  bool use_avx2 = cpu_info::Supports(cpu_info::ISA::kAVX2);
-   if (use_avx2) {
-     const size_t kNumPartitions = 12;
-     std::vector<std::array<float, kFftLengthBy2Plus1>> H2(kNumPartitions);
-diff --git a/modules/audio_processing/aec3/adaptive_fir_filter_unittest.cc b/modules/audio_processing/aec3/adaptive_fir_filter_unittest.cc
-index d229abea32..bffc5b7aa9 100644
---- a/modules/audio_processing/aec3/adaptive_fir_filter_unittest.cc
-+++ b/modules/audio_processing/aec3/adaptive_fir_filter_unittest.cc
-@@ -32,6 +32,7 @@
- #include "modules/audio_processing/aec3/fft_data.h"
- #include "modules/audio_processing/aec3/subtractor_output.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
- #if defined(WEBRTC_ARCH_X86_FAMILY)
- #include <emmintrin.h>
-@@ -50,7 +51,6 @@
- #include "rtc_base/numerics/safe_minmax.h"
- #include "rtc_base/random.h"
- #include "rtc_base/strings/string_builder.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- #include "test/gtest.h"
- 
- namespace webrtc {
-@@ -191,7 +191,7 @@ TEST_P(AdaptiveFirFilterOneTwoFourEightRenderChannels,
-   constexpr int kSampleRateHz = 48000;
-   constexpr size_t kNumBands = NumBandsForRate(kSampleRateHz);
- 
--  bool use_sse2 = (GetCPUInfo(kSSE2) != 0);
-+  bool use_sse2 = cpu_info::Supports(cpu_info::ISA::kSSE2);
-   if (use_sse2) {
-     for (size_t num_partitions : {2, 5, 12, 30, 50}) {
-       std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
-@@ -263,7 +263,7 @@ TEST_P(AdaptiveFirFilterOneTwoFourEightRenderChannels,
-   constexpr int kSampleRateHz = 48000;
-   constexpr size_t kNumBands = NumBandsForRate(kSampleRateHz);
- 
--  bool use_avx2 = (GetCPUInfo(kAVX2) != 0);
-+  bool use_avx2 = cpu_info::Supports(cpu_info::ISA::kAVX2);
-   if (use_avx2) {
-     for (size_t num_partitions : {2, 5, 12, 30, 50}) {
-       std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
-@@ -332,7 +332,7 @@ TEST_P(AdaptiveFirFilterOneTwoFourEightRenderChannels,
- TEST_P(AdaptiveFirFilterOneTwoFourEightRenderChannels,
-        ComputeFrequencyResponseSse2Optimization) {
-   const size_t num_render_channels = GetParam();
--  bool use_sse2 = (GetCPUInfo(kSSE2) != 0);
-+  bool use_sse2 = cpu_info::Supports(cpu_info::ISA::kSSE2);
-   if (use_sse2) {
-     for (size_t num_partitions : {2, 5, 12, 30, 50}) {
-       std::vector<std::vector<FftData>> H(
-@@ -367,7 +367,7 @@ TEST_P(AdaptiveFirFilterOneTwoFourEightRenderChannels,
- TEST_P(AdaptiveFirFilterOneTwoFourEightRenderChannels,
-        ComputeFrequencyResponseAvx2Optimization) {
-   const size_t num_render_channels = GetParam();
--  bool use_avx2 = (GetCPUInfo(kAVX2) != 0);
-+  bool use_avx2 = cpu_info::Supports(cpu_info::ISA::kAVX2);
-   if (use_avx2) {
-     for (size_t num_partitions : {2, 5, 12, 30, 50}) {
-       std::vector<std::vector<FftData>> H(
-diff --git a/modules/audio_processing/aec3/aec3_common.cc b/modules/audio_processing/aec3/aec3_common.cc
-index 3ba10d5baf..4fb1f547c2 100644
---- a/modules/audio_processing/aec3/aec3_common.cc
-+++ b/modules/audio_processing/aec3/aec3_common.cc
-@@ -13,16 +13,16 @@
- #include <stdint.h>
- 
- #include "rtc_base/checks.h"
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- 
- namespace webrtc {
- 
- Aec3Optimization DetectOptimization() {
- #if defined(WEBRTC_ARCH_X86_FAMILY)
--  if (GetCPUInfo(kAVX2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kAVX2)) {
-     return Aec3Optimization::kAvx2;
--  } else if (GetCPUInfo(kSSE2) != 0) {
-+  } else if (cpu_info::Supports(cpu_info::ISA::kSSE2)) {
-     return Aec3Optimization::kSse2;
-   }
- #endif
-diff --git a/modules/audio_processing/aec3/aec3_fft.cc b/modules/audio_processing/aec3/aec3_fft.cc
-index 1c4cf33c3b..341a8fd4cb 100644
---- a/modules/audio_processing/aec3/aec3_fft.cc
-+++ b/modules/audio_processing/aec3/aec3_fft.cc
-@@ -15,7 +15,7 @@
- #include <iterator>
- 
- #include "rtc_base/checks.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
-+#include "rtc_base/cpu_info.h"
- 
- namespace webrtc {
- 
-@@ -73,7 +73,7 @@ const float kSqrtHanning128[kFftLength] = {
- 
- bool IsSse2Available() {
- #if defined(WEBRTC_ARCH_X86_FAMILY)
--  return GetCPUInfo(kSSE2) != 0;
-+  return cpu_info::Supports(cpu_info::ISA::kSSE2);
- #else
-   return false;
- #endif
-diff --git a/modules/audio_processing/aec3/comfort_noise_generator_unittest.cc b/modules/audio_processing/aec3/comfort_noise_generator_unittest.cc
-index b74e2afdff..0d4be0e864 100644
---- a/modules/audio_processing/aec3/comfort_noise_generator_unittest.cc
-+++ b/modules/audio_processing/aec3/comfort_noise_generator_unittest.cc
-@@ -16,9 +16,6 @@
- #include "api/audio/echo_canceller3_config.h"
- #include "api/environment/environment_factory.h"
- #include "modules/audio_processing/aec3/aec_state.h"
--#include "rtc_base/random.h"
--#include "rtc_base/system/arch.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- #include "test/gtest.h"
- 
- namespace webrtc {
-diff --git a/modules/audio_processing/aec3/fft_data_unittest.cc b/modules/audio_processing/aec3/fft_data_unittest.cc
-index d76fabdbd6..315873a861 100644
---- a/modules/audio_processing/aec3/fft_data_unittest.cc
-+++ b/modules/audio_processing/aec3/fft_data_unittest.cc
-@@ -10,8 +10,8 @@
- 
- #include "modules/audio_processing/aec3/fft_data.h"
- 
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- #include "test/gtest.h"
- 
- namespace webrtc {
-@@ -20,7 +20,7 @@ namespace webrtc {
- // Verifies that the optimized methods are bitexact to their reference
- // counterparts.
- TEST(FftData, TestSse2Optimizations) {
--  if (GetCPUInfo(kSSE2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kSSE2)) {
-     FftData x;
- 
-     for (size_t k = 0; k < x.re.size(); ++k) {
-@@ -43,7 +43,7 @@ TEST(FftData, TestSse2Optimizations) {
- // Verifies that the optimized methods are bitexact to their reference
- // counterparts.
- TEST(FftData, TestAvx2Optimizations) {
--  if (GetCPUInfo(kAVX2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kAVX2)) {
-     FftData x;
- 
-     for (size_t k = 0; k < x.re.size(); ++k) {
-diff --git a/modules/audio_processing/aec3/matched_filter_unittest.cc b/modules/audio_processing/aec3/matched_filter_unittest.cc
-index 691bca4b48..9b39b1c557 100644
---- a/modules/audio_processing/aec3/matched_filter_unittest.cc
-+++ b/modules/audio_processing/aec3/matched_filter_unittest.cc
-@@ -22,6 +22,7 @@
- #include "api/audio/echo_canceller3_config.h"
- #include "modules/audio_processing/aec3/block.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
- 
- #if defined(WEBRTC_ARCH_X86_FAMILY)
-@@ -37,7 +38,6 @@
- #include "modules/audio_processing/test/echo_canceller_test_tools.h"
- #include "rtc_base/random.h"
- #include "rtc_base/strings/string_builder.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- #include "test/gtest.h"
- 
- namespace webrtc {
-@@ -126,7 +126,7 @@ TEST_P(MatchedFilterTest, TestNeonOptimizations) {
- // counterparts.
- TEST_P(MatchedFilterTest, TestSse2Optimizations) {
-   const bool kComputeAccumulatederror = GetParam();
--  bool use_sse2 = (GetCPUInfo(kSSE2) != 0);
-+  bool use_sse2 = cpu_info::Supports(cpu_info::ISA::kSSE2);
-   if (use_sse2) {
-     Random random_generator(42U);
-     constexpr float kSmoothing = 0.7f;
-@@ -181,7 +181,7 @@ TEST_P(MatchedFilterTest, TestSse2Optimizations) {
- }
- 
- TEST_P(MatchedFilterTest, TestAvx2Optimizations) {
--  bool use_avx2 = (GetCPUInfo(kAVX2) != 0);
-+  bool use_avx2 = cpu_info::Supports(cpu_info::ISA::kAVX2);
-   const bool kComputeAccumulatederror = GetParam();
-   if (use_avx2) {
-     Random random_generator(42U);
-diff --git a/modules/audio_processing/aec3/suppression_gain_unittest.cc b/modules/audio_processing/aec3/suppression_gain_unittest.cc
-index b079186e92..dcaa993e28 100644
---- a/modules/audio_processing/aec3/suppression_gain_unittest.cc
-+++ b/modules/audio_processing/aec3/suppression_gain_unittest.cc
-@@ -18,7 +18,6 @@
- #include "modules/audio_processing/aec3/subtractor_output.h"
- #include "modules/audio_processing/logging/apm_data_dumper.h"
- #include "rtc_base/checks.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- #include "test/gtest.h"
- 
- namespace webrtc {
-diff --git a/modules/audio_processing/aec3/vector_math_unittest.cc b/modules/audio_processing/aec3/vector_math_unittest.cc
-index a9c37e33cf..b162c772bc 100644
---- a/modules/audio_processing/aec3/vector_math_unittest.cc
-+++ b/modules/audio_processing/aec3/vector_math_unittest.cc
-@@ -12,8 +12,8 @@
- 
- #include <math.h>
- 
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- #include "test/gtest.h"
- 
- namespace webrtc {
-@@ -80,7 +80,7 @@ TEST(VectorMath, Accumulate) {
- #if defined(WEBRTC_ARCH_X86_FAMILY)
- 
- TEST(VectorMath, Sse2Sqrt) {
--  if (GetCPUInfo(kSSE2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kSSE2)) {
-     std::array<float, kFftLengthBy2Plus1> x;
-     std::array<float, kFftLengthBy2Plus1> z;
-     std::array<float, kFftLengthBy2Plus1> z_sse2;
-@@ -102,7 +102,7 @@ TEST(VectorMath, Sse2Sqrt) {
- }
- 
- TEST(VectorMath, Avx2Sqrt) {
--  if (GetCPUInfo(kAVX2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kAVX2)) {
-     std::array<float, kFftLengthBy2Plus1> x;
-     std::array<float, kFftLengthBy2Plus1> z;
-     std::array<float, kFftLengthBy2Plus1> z_avx2;
-@@ -124,7 +124,7 @@ TEST(VectorMath, Avx2Sqrt) {
- }
- 
- TEST(VectorMath, Sse2Multiply) {
--  if (GetCPUInfo(kSSE2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kSSE2)) {
-     std::array<float, kFftLengthBy2Plus1> x;
-     std::array<float, kFftLengthBy2Plus1> y;
-     std::array<float, kFftLengthBy2Plus1> z;
-@@ -145,7 +145,7 @@ TEST(VectorMath, Sse2Multiply) {
- }
- 
- TEST(VectorMath, Avx2Multiply) {
--  if (GetCPUInfo(kAVX2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kAVX2)) {
-     std::array<float, kFftLengthBy2Plus1> x;
-     std::array<float, kFftLengthBy2Plus1> y;
-     std::array<float, kFftLengthBy2Plus1> z;
-@@ -166,7 +166,7 @@ TEST(VectorMath, Avx2Multiply) {
- }
- 
- TEST(VectorMath, Sse2Accumulate) {
--  if (GetCPUInfo(kSSE2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kSSE2)) {
-     std::array<float, kFftLengthBy2Plus1> x;
-     std::array<float, kFftLengthBy2Plus1> z;
-     std::array<float, kFftLengthBy2Plus1> z_sse2;
-@@ -186,7 +186,7 @@ TEST(VectorMath, Sse2Accumulate) {
- }
- 
- TEST(VectorMath, Avx2Accumulate) {
--  if (GetCPUInfo(kAVX2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kAVX2)) {
-     std::array<float, kFftLengthBy2Plus1> x;
-     std::array<float, kFftLengthBy2Plus1> z;
-     std::array<float, kFftLengthBy2Plus1> z_avx2;
-diff --git a/modules/audio_processing/aecm/BUILD.gn b/modules/audio_processing/aecm/BUILD.gn
-index b0e089d378..d5bdc070be 100644
---- a/modules/audio_processing/aecm/BUILD.gn
-+++ b/modules/audio_processing/aecm/BUILD.gn
-@@ -21,7 +21,6 @@ rtc_library("aecm_core") {
-     "../../../rtc_base:checks",
-     "../../../rtc_base:safe_conversions",
-     "../../../rtc_base:sanitizer",
--    "../../../system_wrappers",
-     "../utility:legacy_delay_estimator",
-   ]
-   cflags = []
-diff --git a/modules/audio_processing/aecm/aecm_core_c.cc b/modules/audio_processing/aecm/aecm_core_c.cc
-index 1a975d2adc..bb73493f85 100644
---- a/modules/audio_processing/aecm/aecm_core_c.cc
-+++ b/modules/audio_processing/aecm/aecm_core_c.cc
-@@ -19,10 +19,6 @@ extern "C" {
- }
- #include "modules/audio_processing/aecm/echo_control_mobile.h"
- #include "modules/audio_processing/utility/delay_estimator_wrapper.h"
--extern "C" {
--#include "system_wrappers/include/cpu_features_wrapper.h"
--}
--
- #include "rtc_base/checks.h"
- #include "rtc_base/numerics/safe_conversions.h"
- #include "rtc_base/sanitizer.h"
-diff --git a/modules/audio_processing/agc2/BUILD.gn b/modules/audio_processing/agc2/BUILD.gn
-index f321431410..d1fb75b405 100644
---- a/modules/audio_processing/agc2/BUILD.gn
-+++ b/modules/audio_processing/agc2/BUILD.gn
-@@ -282,9 +282,9 @@ rtc_library("cpu_features") {
-   ]
- 
-   deps = [
-+    "../../../rtc_base:cpu_info",
-     "../../../rtc_base:stringutils",
-     "../../../rtc_base/system:arch",
--    "../../../system_wrappers",
-   ]
- }
- 
-diff --git a/modules/audio_processing/agc2/cpu_features.cc b/modules/audio_processing/agc2/cpu_features.cc
-index aa5a57834f..7a8f4a9cbd 100644
---- a/modules/audio_processing/agc2/cpu_features.cc
-+++ b/modules/audio_processing/agc2/cpu_features.cc
-@@ -10,9 +10,9 @@
- 
- #include "modules/audio_processing/agc2/cpu_features.h"
- 
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/strings/string_builder.h"
- #include "rtc_base/system/arch.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- 
- namespace webrtc {
- 
-@@ -41,8 +41,8 @@ std::string AvailableCpuFeatures::ToString() const {
- // Detects available CPU features.
- AvailableCpuFeatures GetAvailableCpuFeatures() {
- #if defined(WEBRTC_ARCH_X86_FAMILY)
--  return {/*sse2=*/GetCPUInfo(kSSE2) != 0,
--          /*avx2=*/GetCPUInfo(kAVX2) != 0,
-+  return {/*sse2=*/cpu_info::Supports(cpu_info::ISA::kSSE2),
-+          /*avx2=*/cpu_info::Supports(cpu_info::ISA::kAVX2),
-           /*neon=*/false};
- #elif defined(WEBRTC_HAS_NEON)
-   return {/*sse2=*/false,
-diff --git a/modules/audio_processing/audio_processing_unittest.cc b/modules/audio_processing/audio_processing_unittest.cc
-index 1f4a9eda1a..aad2c3673c 100644
---- a/modules/audio_processing/audio_processing_unittest.cc
-+++ b/modules/audio_processing/audio_processing_unittest.cc
-@@ -51,6 +51,7 @@
- #include "modules/audio_processing/test/test_utils.h"
- #include "rtc_base/arraysize.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/fake_clock.h"
- #include "rtc_base/numerics/safe_conversions.h"
- #include "rtc_base/numerics/safe_minmax.h"
-@@ -59,7 +60,6 @@
- #include "rtc_base/swap_queue.h"
- #include "rtc_base/system/file_wrapper.h"
- #include "rtc_base/task_queue_for_test.h"
 -#include "system_wrappers/include/cpu_features_wrapper.h"
  #include "test/gmock.h"
  #include "test/gtest.h"
- #include "test/testsupport/file_utils.h"
-@@ -295,7 +295,7 @@ std::string GetReferenceFilename() {
- #if defined(WEBRTC_AUDIOPROC_FIXED_PROFILE)
-   return test::ResourcePath("audio_processing/output_data_fixed", "pb");
- #elif defined(WEBRTC_AUDIOPROC_FLOAT_PROFILE)
--  if (GetCPUInfo(kAVX2) != 0) {
-+  if (cpu_info::Supports(cpu_info::ISA::kAVX2)) {
-     return test::ResourcePath("audio_processing/output_data_float_avx2", "pb");
-   }
-   return test::ResourcePath("audio_processing/output_data_float", "pb");
-diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index e7047abc53..33e2e435da 100644
---- a/modules/desktop_capture/BUILD.gn
-+++ b/modules/desktop_capture/BUILD.gn
-@@ -161,7 +161,6 @@ if (rtc_include_tests) {
-       "../../rtc_base:task_queue_for_test",
-       "../../rtc_base:threading",
-       "../../rtc_base:timeutils",
--      "../../system_wrappers",
-       "../../test:test_support",
-     ]
  
-@@ -416,6 +415,7 @@ rtc_library("desktop_capture") {
-     "../../api:scoped_refptr",
-     "../../api:sequence_checker",
-     "../../rtc_base:checks",
-+    "../../rtc_base:cpu_info",
-     "../../rtc_base:event_tracer",
-     "../../rtc_base:logging",
-     "../../rtc_base:macromagic",
-@@ -426,7 +426,6 @@ rtc_library("desktop_capture") {
-     "../../rtc_base/system:arch",
-     "../../rtc_base/system:no_unique_address",
-     "../../rtc_base/system:rtc_export",
--    "../../system_wrappers",
-     "../../system_wrappers:metrics",
-   ]
- 
-diff --git a/modules/desktop_capture/desktop_capturer_differ_wrapper_unittest.cc b/modules/desktop_capture/desktop_capturer_differ_wrapper_unittest.cc
-index dba6c3041f..4223146bd6 100644
---- a/modules/desktop_capture/desktop_capturer_differ_wrapper_unittest.cc
-+++ b/modules/desktop_capture/desktop_capturer_differ_wrapper_unittest.cc
-@@ -22,7 +22,6 @@
- #include "modules/desktop_capture/mock_desktop_capturer_callback.h"
- #include "rtc_base/random.h"
- #include "rtc_base/time_utils.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- #include "test/gtest.h"
- 
- namespace webrtc {
-diff --git a/modules/desktop_capture/differ_block.cc b/modules/desktop_capture/differ_block.cc
-index c51d33e41e..01ad5f050b 100644
---- a/modules/desktop_capture/differ_block.cc
-+++ b/modules/desktop_capture/differ_block.cc
-@@ -12,8 +12,8 @@
- 
- #include <string.h>
- 
-+#include "rtc_base/cpu_info.h"
- #include "rtc_base/system/arch.h"
--#include "system_wrappers/include/cpu_features_wrapper.h"
- 
- // This needs to be after rtc_base/system/arch.h which defines
- // architecture macros.
-@@ -36,7 +36,7 @@ bool VectorDifference(const uint8_t* image1, const uint8_t* image2) {
- 
-   if (!diff_proc) {
+@@ -122,7 +121,7 @@ TEST(SincResamplerTest, Convolve) {
  #if defined(WEBRTC_ARCH_X86_FAMILY)
--    bool have_sse2 = GetCPUInfo(kSSE2) != 0;
-+    bool have_sse2 = cpu_info::Supports(cpu_info::ISA::kSSE2);
-     // For x86 processors, check if SSE2 is supported.
-     if (have_sse2 && kBlockSize == 32) {
-       diff_proc = &VectorDifference_SSE2_W32;
+   ASSERT_TRUE(cpu_info::Supports(cpu_info::ISA::kSSE2));
+ #elif defined(WEBRTC_ARCH_ARM_V7)
+-  ASSERT_TRUE(GetCPUFeaturesARM() & kCPUFeatureNEON);
++  ASSERT_TRUE(cpu_info::Supports(cpu_info::ISA::kNeon));
+ #endif
+ 
+   // Initialize a dummy resampler.
+@@ -182,7 +181,7 @@ TEST(SincResamplerTest, ConvolveBenchmark) {
+ #if defined(WEBRTC_ARCH_X86_FAMILY)
+   ASSERT_TRUE(cpu_info::Supports(cpu_info::ISA::kSSE2));
+ #elif defined(WEBRTC_ARCH_ARM_V7)
+-  ASSERT_TRUE(GetCPUFeaturesARM() & kCPUFeatureNEON);
++  ASSERT_TRUE(cpu_info::Supports(cpu_info::ISA::kNeon));
+ #endif
+ 
+   // Benchmark with unaligned input pointer.
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index b16bd955f8..430318dc27 100644
+index 430318dc27..32d76a8bc8 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -1938,6 +1938,8 @@ rtc_library("cpu_info") {
-   deps = [
-     ":checks",
-     ":logging",
-+    "system:arch",
-+    "system:unused",
+@@ -1941,6 +1941,9 @@ rtc_library("cpu_info") {
+     "system:arch",
+     "system:unused",
    ]
++  if (is_android) {
++    deps += [ "//third_party/cpu_features:ndk_compat" ]
++  }
  }
  
+ if (rtc_include_tests) {
 diff --git a/rtc_base/cpu_info.cc b/rtc_base/cpu_info.cc
-index 53be490dc1..b8a1040704 100644
+index b8a1040704..a35b19042d 100644
 --- a/rtc_base/cpu_info.cc
 +++ b/rtc_base/cpu_info.cc
-@@ -24,6 +24,14 @@
+@@ -14,14 +14,34 @@
  
+ #if defined(WEBRTC_WIN)
+ #include <windows.h>
+-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+-#include <unistd.h>
+ #elif defined(WEBRTC_MAC)
+ #include <sys/sysctl.h>
++#elif defined(WEBRTC_ANDROID)
++#include <cpu-features.h>
++#include <unistd.h>
+ #elif defined(WEBRTC_FUCHSIA)
+ #include <zircon/syscalls.h>
++#elif defined(WEBRTC_LINUX)
++#include <features.h>
++#include <stdlib.h>
++#include <string.h>  // IWYU pragma: keep
++#include <unistd.h>
++
++#ifdef __GLIBC_PREREQ
++#define WEBRTC_GLIBC_PREREQ(a, b) __GLIBC_PREREQ(a, b)
++#else
++#define WEBRTC_GLIBC_PREREQ(a, b) 0
+ #endif
+ 
++#if WEBRTC_GLIBC_PREREQ(2, 16)
++#include <sys/auxv.h>  // IWYU pragma: keep
++#else
++#include <errno.h>
++#include <fcntl.h>
++#include <link.h>
++#endif
++#endif  // WEBRTC_LINUX
++
  #include "rtc_base/checks.h"
  #include "rtc_base/logging.h"
-+#include "rtc_base/system/arch.h"
-+#include "rtc_base/system/unused.h"  // IWYU pragma: keep
-+
-+#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(_MSC_VER)
-+#include <intrin.h>
+ #include "rtc_base/system/arch.h"
+@@ -30,6 +50,9 @@
+ #if defined(WEBRTC_ARCH_X86_FAMILY) && defined(_MSC_VER)
+ #include <intrin.h>
+ #endif
++#if defined(WEBRTC_ARCH_ARM_FAMILY) && defined(WEBRTC_LINUX)
++#include <asm/hwcap.h>
 +#endif
-+
-+// Parts of this file derived from Chromium's base/cpu.cc.
  
- namespace {
+ // Parts of this file derived from Chromium's base/cpu.cc.
  
-@@ -60,6 +68,47 @@ uint32_t DetectNumberOfCores() {
-   return static_cast<uint32_t>(number_of_cores);
- }
- 
-+#if defined(WEBRTC_ARCH_X86_FAMILY)
-+
-+#if defined(WEBRTC_ENABLE_AVX2)
-+// xgetbv returns the value of an Intel Extended Control Register (XCR).
-+// Currently only XCR0 is defined by Intel so `xcr` should always be zero.
-+uint64_t xgetbv(uint32_t xcr) {
-+#if defined(_MSC_VER)
-+  return _xgetbv(xcr);
+@@ -162,9 +185,46 @@ bool Supports(ISA instruction_set_architecture) {
+   if (instruction_set_architecture == ISA::kFMA3) {
+     return 0 != (cpu_info[2] & 0x00001000);
+   }
+-#else  // WEBRTC_ARCH_X86_FAMILY
+-  RTC_UNUSED(instruction_set_architecture);
++#elif defined(WEBRTC_ARCH_ARM_FAMILY)
++  if (instruction_set_architecture == ISA::kNeon) {
++#if defined(WEBRTC_ANDROID)
++    return 0 != (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON);
++#elif defined(WEBRTC_LINUX)
++    uint64_t hwcap = 0;
++#if WEBRTC_GLIBC_PREREQ(2, 16)
++    hwcap = getauxval(AT_HWCAP);
 +#else
-+  uint32_t eax, edx;
-+
-+  __asm__ volatile("xgetbv" : "=a"(eax), "=d"(edx) : "c"(xcr));
-+  return (static_cast<uint64_t>(edx) << 32) | eax;
-+#endif  // _MSC_VER
-+}
-+#endif  // WEBRTC_ENABLE_AVX2
-+
-+#ifndef _MSC_VER
-+// Intrinsic for "cpuid".
-+#if defined(__pic__) && defined(__i386__)
-+static inline void __cpuid(int cpu_info[4], int info_type) {
-+  __asm__ volatile(
-+      "mov %%ebx, %%edi\n"
-+      "cpuid\n"
-+      "xchg %%edi, %%ebx\n"
-+      : "=a"(cpu_info[0]), "=D"(cpu_info[1]), "=c"(cpu_info[2]),
-+        "=d"(cpu_info[3])
-+      : "a"(info_type));
-+}
-+#else
-+static inline void __cpuid(int cpu_info[4], int info_type) {
-+  __asm__ volatile("cpuid\n"
-+                   : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]),
-+                     "=d"(cpu_info[3])
-+                   : "a"(info_type), "c"(0));
-+}
-+#endif
-+#endif  // _MSC_VER
-+
-+#endif  // WEBRTC_ARCH_X86_FAMILY
-+
- }  // namespace
- 
- namespace webrtc {
-@@ -75,6 +124,50 @@ uint32_t DetectNumberOfCores() {
-   return logical_cpus;
- }
- 
-+bool Supports(ISA instruction_set_architecture) {
-+#if defined(WEBRTC_ARCH_X86_FAMILY)
-+  int cpu_info[4];
-+  __cpuid(cpu_info, 1);
-+  if (instruction_set_architecture == ISA::kSSE2) {
-+    return 0 != (cpu_info[3] & 0x04000000);
-+  }
-+  if (instruction_set_architecture == ISA::kSSE3) {
-+    return 0 != (cpu_info[2] & 0x00000001);
-+  }
-+#if defined(WEBRTC_ENABLE_AVX2)
-+  if (instruction_set_architecture == ISA::kAVX2) {
-+    int cpu_info7[4];
-+    __cpuid(cpu_info7, 0);
-+    int num_ids = cpu_info7[0];
-+    if (num_ids < 7) {
-+      return false;
++    ElfW(auxv_t) auxv;
++    int fd = open("/proc/self/auxv", O_RDONLY);
++    if (fd >= 0) {
++      while (hwcap == 0) {
++        if (read(fd, &auxv, sizeof(auxv)) < (ssize_t)sizeof(auxv)) {
++          if (errno == EINTR) {
++            continue;
++          }
++          break;
++        }
++        if (AT_HWCAP == auxv.a_type) {
++          hwcap = auxv.a_un.a_val;
++        }
++      }
++      close(fd);
 +    }
-+    // Interpret CPU feature information.
-+    __cpuid(cpu_info7, 7);
-+
-+    // AVX instructions can be used when
-+    //     a) AVX are supported by the CPU,
-+    //     b) XSAVE is supported by the CPU,
-+    //     c) XSAVE is enabled by the kernel.
-+    // Compiling with MSVC and /arch:AVX2 surprisingly generates BMI2
-+    // instructions (see crbug.com/1315519).
-+    return (cpu_info[2] & 0x10000000) != 0 /* AVX */ &&
-+           (cpu_info[2] & 0x04000000) != 0 /* XSAVE */ &&
-+           (cpu_info[2] & 0x08000000) != 0 /* OSXSAVE */ &&
-+           (xgetbv(0) & 0x00000006) == 6 /* XSAVE enabled by kernel */ &&
-+           (cpu_info7[1] & 0x00000020) != 0 /* AVX2 */ &&
-+           (cpu_info7[1] & 0x00000100) != 0 /* BMI2 */;
++#endif  // WEBRTC_GLIBC_PREREQ(2, 16)
++#if defined(__aarch64__)
++    if ((hwcap & HWCAP_ASIMD) != 0) {
++      return true;
++    }
++#else
++    if ((hwcap & HWCAP_NEON) != 0) {
++      return true;
++    }
+ #endif
++#endif  // WEBRTC_LINUX
 +  }
-+#endif  // WEBRTC_ENABLE_AVX2
-+  if (instruction_set_architecture == ISA::kFMA3) {
-+    return 0 != (cpu_info[2] & 0x00001000);
-+  }
-+#else  // WEBRTC_ARCH_X86_FAMILY
++#else
 +  RTC_UNUSED(instruction_set_architecture);
-+#endif
-+  return false;
-+}
-+
- }  // namespace cpu_info
++#endif  // WEBRTC_ARCH_ARM_FAMILY
+   return false;
+ }
  
- }  // namespace webrtc
-diff --git a/rtc_base/cpu_info.h b/rtc_base/cpu_info.h
-index 9a4f569f3f..9a49c12d15 100644
---- a/rtc_base/cpu_info.h
-+++ b/rtc_base/cpu_info.h
-@@ -20,6 +20,11 @@ namespace cpu_info {
- // Returned number of cores is always >= 1.
- uint32_t DetectNumberOfCores();
- 
-+enum class ISA { kSSE2 = 0, kSSE3, kAVX2, kFMA3, kNeon };
-+
-+// Returns true if the CPU supports the given instruction set.
-+bool Supports(ISA instruction_set_architecture);
-+
- }  // namespace cpu_info
- 
- }  // namespace webrtc
 diff --git a/system_wrappers/BUILD.gn b/system_wrappers/BUILD.gn
-index bf043a60da..6f6bc18200 100644
+index 6f6bc18200..913382709e 100644
 --- a/system_wrappers/BUILD.gn
 +++ b/system_wrappers/BUILD.gn
-@@ -19,7 +19,6 @@ rtc_library("system_wrappers") {
-     "include/cpu_features_wrapper.h",
+@@ -16,7 +16,6 @@ rtc_library("system_wrappers") {
+   visibility = [ "*" ]
+   sources = [
+     "include/clock.h",
+-    "include/cpu_features_wrapper.h",
      "include/ntp_time.h",
      "source/clock.cc",
--    "source/cpu_features.cc",
    ]
+@@ -26,39 +25,14 @@ rtc_library("system_wrappers") {
+   deps = [
+     "../api:array_view",
+     "../api/units:timestamp",
+-    "../modules:module_api_public",
+     "../rtc_base:checks",
+     "../rtc_base:logging",
++    "../rtc_base:rtc_numerics",
+     "../rtc_base:safe_conversions",
+     "../rtc_base:timeutils",
+     "../rtc_base/synchronization:mutex",
+-    "../rtc_base/system:arch",
+     "../rtc_base/system:rtc_export",
+   ]
+-
+-  if (is_android) {
+-    if (build_with_mozilla) {
+-      include_dirs = [
+-        "/config/external/nspr",
+-        "/nsprpub/lib/ds",
+-        "/nsprpub/pr/include",
+-      ]
+-    } else {
+-      sources += [ "source/cpu_features_android.cc" ]
+-      deps += [ "//third_party/cpu_features:ndk_compat" ]
+-    }
+-
+-    libs += [ "log" ]
+-  }
+-
+-  if (is_linux || is_chromeos) {
+-    if (!build_with_chromium) {
+-      sources += [ "source/cpu_features_linux.cc" ]
+-    }
+-
+-    libs += [ "rt" ]
+-  }
+-
+   if (is_win) {
+     libs += [ "winmm.lib" ]
  
-   defines = []
+@@ -66,8 +40,6 @@ rtc_library("system_wrappers") {
+     # webrtc/rtc_base/win32.h in source/clock.cc.
+     deps += [ "../rtc_base:win32" ]
+   }
+-
+-  deps += [ "../rtc_base:rtc_numerics" ]
+ }
+ 
+ rtc_library("field_trial") {
 diff --git a/system_wrappers/include/cpu_features_wrapper.h b/system_wrappers/include/cpu_features_wrapper.h
-index d73b12abe8..8e0ba1ab88 100644
---- a/system_wrappers/include/cpu_features_wrapper.h
-+++ b/system_wrappers/include/cpu_features_wrapper.h
-@@ -15,9 +15,6 @@
- 
- namespace webrtc {
- 
--// List of features in x86.
--typedef enum { kSSE2, kSSE3, kAVX2, kFMA3 } CPUFeature;
--
- // List of features in ARM.
- enum {
-   kCPUFeatureARMv7 = (1 << 0),
-@@ -26,9 +23,6 @@ enum {
-   kCPUFeatureLDREXSTREX = (1 << 3)
- };
- 
--// Returns true if the CPU supports the feature.
--int GetCPUInfo(CPUFeature feature);
--
- // Return the features in an ARM device.
- // It detects the features in the hardware platform, and returns supported
- // values in the above enum definition as a bitmask.
-diff --git a/system_wrappers/source/cpu_features.cc b/system_wrappers/source/cpu_features.cc
 deleted file mode 100644
-index 3050ad8f09..0000000000
---- a/system_wrappers/source/cpu_features.cc
+index 8e0ba1ab88..0000000000
+--- a/system_wrappers/include/cpu_features_wrapper.h
 +++ /dev/null
-@@ -1,111 +0,0 @@
+@@ -1,33 +0,0 @@
 -/*
 - *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
 - *
@@ -943,104 +284,154 @@ index 3050ad8f09..0000000000
 - *  be found in the AUTHORS file in the root of the source tree.
 - */
 -
--// Parts of this file derived from Chromium's base/cpu.cc.
+-#ifndef SYSTEM_WRAPPERS_INCLUDE_CPU_FEATURES_WRAPPER_H_
+-#define SYSTEM_WRAPPERS_INCLUDE_CPU_FEATURES_WRAPPER_H_
+-
+-#include <cstdint>
+-
+-namespace webrtc {
+-
+-// List of features in ARM.
+-enum {
+-  kCPUFeatureARMv7 = (1 << 0),
+-  kCPUFeatureVFPv3 = (1 << 1),
+-  kCPUFeatureNEON = (1 << 2),
+-  kCPUFeatureLDREXSTREX = (1 << 3)
+-};
+-
+-// Return the features in an ARM device.
+-// It detects the features in the hardware platform, and returns supported
+-// values in the above enum definition as a bitmask.
+-uint64_t GetCPUFeaturesARM(void);
+-
+-}  // namespace webrtc
+-
+-#endif  // SYSTEM_WRAPPERS_INCLUDE_CPU_FEATURES_WRAPPER_H_
+diff --git a/system_wrappers/source/cpu_features_android.cc b/system_wrappers/source/cpu_features_android.cc
+deleted file mode 100644
+index 95cc609b09..0000000000
+--- a/system_wrappers/source/cpu_features_android.cc
++++ /dev/null
+@@ -1,19 +0,0 @@
+-/*
+- *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
+-
+-#include <cpu-features.h>
+-
+-namespace webrtc {
+-
+-uint64_t GetCPUFeaturesARM(void) {
+-  return android_getCpuFeatures();
+-}
+-
+-}  // namespace webrtc
+diff --git a/system_wrappers/source/cpu_features_linux.cc b/system_wrappers/source/cpu_features_linux.cc
+deleted file mode 100644
+index 2d79dde111..0000000000
+--- a/system_wrappers/source/cpu_features_linux.cc
++++ /dev/null
+@@ -1,97 +0,0 @@
+-/*
+- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
+-
+-#include <features.h>
+-#include <stdlib.h>
+-#include <string.h>
+-
+-#ifdef __GLIBC_PREREQ
+-#define WEBRTC_GLIBC_PREREQ(a, b) __GLIBC_PREREQ(a, b)
+-#else
+-#define WEBRTC_GLIBC_PREREQ(a, b) 0
+-#endif
+-
+-#if WEBRTC_GLIBC_PREREQ(2, 16)
+-#include <sys/auxv.h>
+-#else
+-#include <errno.h>
+-#include <fcntl.h>
+-#include <link.h>
+-#include <unistd.h>
+-#endif
 -
 -#include "rtc_base/system/arch.h"
 -#include "system_wrappers/include/cpu_features_wrapper.h"
 -
--#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(_MSC_VER)
--#include <intrin.h>
--#endif
+-#if defined(WEBRTC_ARCH_ARM_FAMILY)
+-#include <asm/hwcap.h>
 -
 -namespace webrtc {
 -
--#if defined(WEBRTC_ARCH_X86_FAMILY)
--
--#if defined(WEBRTC_ENABLE_AVX2)
--// xgetbv returns the value of an Intel Extended Control Register (XCR).
--// Currently only XCR0 is defined by Intel so `xcr` should always be zero.
--static uint64_t xgetbv(uint32_t xcr) {
--#if defined(_MSC_VER)
--  return _xgetbv(xcr);
+-uint64_t GetCPUFeaturesARM(void) {
+-  uint64_t result = 0;
+-  int architecture = 0;
+-  uint64_t hwcap = 0;
+-  const char* platform = NULL;
+-#if WEBRTC_GLIBC_PREREQ(2, 16)
+-  hwcap = getauxval(AT_HWCAP);
+-  platform = (const char*)getauxval(AT_PLATFORM);
 -#else
--  uint32_t eax, edx;
--
--  __asm__ volatile("xgetbv" : "=a"(eax), "=d"(edx) : "c"(xcr));
--  return (static_cast<uint64_t>(edx) << 32) | eax;
--#endif  // _MSC_VER
--}
--#endif  // WEBRTC_ENABLE_AVX2
--
--#ifndef _MSC_VER
--// Intrinsic for "cpuid".
--#if defined(__pic__) && defined(__i386__)
--static inline void __cpuid(int cpu_info[4], int info_type) {
--  __asm__ volatile(
--      "mov %%ebx, %%edi\n"
--      "cpuid\n"
--      "xchg %%edi, %%ebx\n"
--      : "=a"(cpu_info[0]), "=D"(cpu_info[1]), "=c"(cpu_info[2]),
--        "=d"(cpu_info[3])
--      : "a"(info_type));
--}
--#else
--static inline void __cpuid(int cpu_info[4], int info_type) {
--  __asm__ volatile("cpuid\n"
--                   : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]),
--                     "=d"(cpu_info[3])
--                   : "a"(info_type), "c"(0));
--}
--#endif
--#endif  // _MSC_VER
--#endif  // WEBRTC_ARCH_X86_FAMILY
--
--#if defined(WEBRTC_ARCH_X86_FAMILY)
--// Actual feature detection for x86.
--int GetCPUInfo(CPUFeature feature) {
--  int cpu_info[4];
--  __cpuid(cpu_info, 1);
--  if (feature == kSSE2) {
--    return 0 != (cpu_info[3] & 0x04000000);
--  }
--  if (feature == kSSE3) {
--    return 0 != (cpu_info[2] & 0x00000001);
--  }
--#if defined(WEBRTC_ENABLE_AVX2)
--  if (feature == kAVX2) {
--    int cpu_info7[4];
--    __cpuid(cpu_info7, 0);
--    int num_ids = cpu_info7[0];
--    if (num_ids < 7) {
--      return 0;
+-  ElfW(auxv_t) auxv;
+-  int fd = open("/proc/self/auxv", O_RDONLY);
+-  if (fd >= 0) {
+-    while (hwcap == 0 || platform == NULL) {
+-      if (read(fd, &auxv, sizeof(auxv)) < (ssize_t)sizeof(auxv)) {
+-        if (errno == EINTR)
+-          continue;
+-        break;
+-      }
+-      switch (auxv.a_type) {
+-        case AT_HWCAP:
+-          hwcap = auxv.a_un.a_val;
+-          break;
+-        case AT_PLATFORM:
+-          platform = (const char*)auxv.a_un.a_val;
+-          break;
+-      }
 -    }
--    // Interpret CPU feature information.
--    __cpuid(cpu_info7, 7);
--
--    // AVX instructions can be used when
--    //     a) AVX are supported by the CPU,
--    //     b) XSAVE is supported by the CPU,
--    //     c) XSAVE is enabled by the kernel.
--    // Compiling with MSVC and /arch:AVX2 surprisingly generates BMI2
--    // instructions (see crbug.com/1315519).
--    return (cpu_info[2] & 0x10000000) != 0 /* AVX */ &&
--           (cpu_info[2] & 0x04000000) != 0 /* XSAVE */ &&
--           (cpu_info[2] & 0x08000000) != 0 /* OSXSAVE */ &&
--           (xgetbv(0) & 0x00000006) == 6 /* XSAVE enabled by kernel */ &&
--           (cpu_info7[1] & 0x00000020) != 0 /* AVX2 */ &&
--           (cpu_info7[1] & 0x00000100) != 0 /* BMI2 */;
+-    close(fd);
 -  }
--#endif  // WEBRTC_ENABLE_AVX2
--  if (feature == kFMA3) {
--    return 0 != (cpu_info[2] & 0x00001000);
--  }
--  return 0;
--}
+-#endif  // WEBRTC_GLIBC_PREREQ(2, 16)
+-#if defined(__aarch64__)
+-  (void)platform;
+-  architecture = 8;
+-  if ((hwcap & HWCAP_FP) != 0)
+-    result |= kCPUFeatureVFPv3;
+-  if ((hwcap & HWCAP_ASIMD) != 0)
+-    result |= kCPUFeatureNEON;
 -#else
--// Default to straight C for other platforms.
--int GetCPUInfo(CPUFeature feature) {
--  (void)feature;
--  return 0;
--}
+-  if (platform != NULL) {
+-    /* expect a string in the form "v6l" or "v7l", etc.
+-     */
+-    if (platform[0] == 'v' && '0' <= platform[1] && platform[1] <= '9' &&
+-        (platform[2] == 'l' || platform[2] == 'b')) {
+-      architecture = platform[1] - '0';
+-    }
+-  }
+-  if ((hwcap & HWCAP_VFPv3) != 0)
+-    result |= kCPUFeatureVFPv3;
+-  if ((hwcap & HWCAP_NEON) != 0)
+-    result |= kCPUFeatureNEON;
 -#endif
+-  if (architecture >= 7)
+-    result |= kCPUFeatureARMv7;
+-  if (architecture >= 6)
+-    result |= kCPUFeatureLDREXSTREX;
+-  return result;
+-}
 -
 -}  // namespace webrtc
+-#endif  // WEBRTC_ARCH_ARM_FAMILY

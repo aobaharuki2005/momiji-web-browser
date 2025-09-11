@@ -515,7 +515,7 @@ index 906d79598b..2c46bb4641 100644
  #include "api/units/data_rate.h"
  #include "api/video/video_content_type.h"
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index d40cf4e2b5..0dd84213a9 100644
+index a2c0edfc54..9b35bbcbde 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
 @@ -268,14 +268,10 @@ if (current_cpu == "x86" || current_cpu == "x64") {
@@ -833,7 +833,7 @@ index 9bf81c315f..782bd7c99f 100644
      testonly = true
  
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index a0bda5f494..65aa6a9542 100644
+index 93c3ae4abb..7a4662cf0d 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
 @@ -261,14 +261,11 @@ if (current_cpu == "x86" || current_cpu == "x64") {
@@ -883,10 +883,10 @@ index ddec89972d..154ac79205 100644
      } else {
        cflags = [
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index a49c24fe46..9b1b39ac3e 100644
+index 1d4dc14baa..73be0ce250 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
-@@ -345,37 +345,12 @@ rtc_library("desktop_capture") {
+@@ -344,37 +344,12 @@ rtc_library("desktop_capture") {
      ]
      deps += [ ":desktop_capture_objc" ]
    }
@@ -924,7 +924,7 @@ index a49c24fe46..9b1b39ac3e 100644
    }
  
    if (rtc_use_x11_extensions) {
-@@ -538,9 +513,7 @@ rtc_library("desktop_capture") {
+@@ -537,9 +512,7 @@ rtc_library("desktop_capture") {
      deps += [ "../../rtc_base:sanitizer" ]
    }
  
@@ -1025,7 +1025,7 @@ index 058b86bce4..2f7b5b5333 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 794e8c2725..848ff98f20 100644
+index f024610358..d973aabead 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -325,6 +325,7 @@ rtc_library("sample_counter") {
@@ -1188,7 +1188,7 @@ index 794e8c2725..848ff98f20 100644
  
  rtc_library("ssl_adapter") {
    visibility = [ "*" ]
-@@ -2340,7 +2364,7 @@ if (rtc_include_tests) {
+@@ -2342,7 +2366,7 @@ if (rtc_include_tests) {
    }
  }
  
