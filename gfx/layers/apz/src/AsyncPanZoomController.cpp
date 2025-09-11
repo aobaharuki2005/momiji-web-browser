@@ -2405,6 +2405,11 @@ bool AsyncPanZoomController::CanScroll(const InputData& aEvent) const {
   return CanScroll(delta);
 }
 
+bool AsyncPanZoomController::BlocksPullToRefreshForOverflowHidden() const {
+  return IsRootContent() &&
+         GetScrollMetadata().GetOverflow().mOverflowY == StyleOverflow::Hidden;
+}
+
 ScrollDirections AsyncPanZoomController::GetAllowedHandoffDirections(
     HandoffConsumer aConsumer) const {
   ScrollDirections result;
@@ -2423,8 +2428,8 @@ ScrollDirections AsyncPanZoomController::GetAllowedHandoffDirections(
     // Bug 1902313: Block pull-to-refresh on pages with overflow-y:hidden
     // to match Chrome behaviour.
     bool blockPullToRefreshForOverflowHidden =
-        isRoot && aConsumer == HandoffConsumer::PullToRefresh &&
-        GetScrollMetadata().GetOverflow().mOverflowY == StyleOverflow::Hidden;
+        aConsumer == HandoffConsumer::PullToRefresh &&
+        BlocksPullToRefreshForOverflowHidden();
     if (!blockPullToRefreshForOverflowHidden) {
       result += ScrollDirection::eVertical;
     }
@@ -2479,9 +2484,13 @@ bool AsyncPanZoomController::CanVerticalScrollWithDynamicToolbar() const {
   return mY.CanVerticalScrollWithDynamicToolbar();
 }
 
-bool AsyncPanZoomController::CanOverscrollUpwards() const {
+bool AsyncPanZoomController::CanOverscrollUpwards(
+    HandoffConsumer aConsumer) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  return !mY.CanScrollTo(eSideTop) && mY.OverscrollBehaviorAllowsHandoff();
+
+  return !(aConsumer == HandoffConsumer::PullToRefresh &&
+           BlocksPullToRefreshForOverflowHidden()) &&
+         !mY.CanScrollTo(eSideTop) && mY.OverscrollBehaviorAllowsHandoff();
 }
 
 bool AsyncPanZoomController::CanScrollDownwards() const {

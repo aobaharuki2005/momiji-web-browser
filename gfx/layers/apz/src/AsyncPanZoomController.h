@@ -582,7 +582,8 @@ class AsyncPanZoomController {
   bool CanScrollDownwards() const;
 
   // Return true if there is room to scroll upwards.
-  bool CanOverscrollUpwards() const;
+  bool CanOverscrollUpwards(
+      HandoffConsumer aConsumer = HandoffConsumer::Scrolling) const;
 
   /**
    * Convert a point on the scrollbar from this APZC's ParentLayer coordinates
@@ -891,6 +892,9 @@ class AsyncPanZoomController {
   // Internal version of GetOverscrollAmount() which does not set
   // the test async properties.
   ParentLayerPoint GetOverscrollAmountInternal() const;
+
+  // Return whether this APZC blocks pull-to-refresh.
+  bool BlocksPullToRefreshForOverflowHidden() const;
 
  protected:
   /**
