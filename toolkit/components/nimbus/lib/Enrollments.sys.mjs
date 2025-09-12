@@ -11,11 +11,9 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
-  NimbusTelemetry: "resource://nimbus/lib/Telemetry.sys.mjs",
   ProfilesDatastoreService:
     "moz-src:///toolkit/profile/ProfilesDatastoreService.sys.mjs",
-  RemoteSettingsSyncError:
-    "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -52,100 +50,11 @@ let SYNC_ENROLLMENTS_ENABLED = Services.prefs.getBoolPref(
   false
 );
 
-export class PendingWrites {
-  /**
-   * Create a new `PendingWrites` object.
-   *
-   * @param {PendingWrites} other A `PendingWrites` object to clone.
-   */
-  constructor(other = undefined) {
-    /**
-     * Enrollment changes to flush to the database.
-     *
-     * The keys are enrollment slugs and the values are optional recipes. If the
-     * recipe is present, a new enrollment will be created in the database.
-     * Otherwise, an existing enrollment will be updated to be inactive (or
-     * deleted if it cannot be found in the `ExperimentStore`).
-     *
-     * @type {Map<string, object | null>}
-     */
-    this.enrollments = new Map(other?.enrollments.entries() ?? []);
-
-    /**
-     * Sync timestamps to flush to the database.
-     *
-     * @type {Map<string, object | null>}
-     */
-    this.syncTimestamps = new Map(other?.syncTimestamps.entries() ?? []);
-  }
-
-  /**
-   * Whether or not there are pending writes.
-   *
-   * @returns {boolean}
-   */
-  get hasPendingWrites() {
-    return this.enrollments.size > 0 || this.syncTimestamps.size > 0;
-  }
-
-  /**
-   * Register an enrollment update.
-   *
-   * @param {string} slug The slug of the enrollment that is changing.
-   * @param {object | undefined} recipe If this update is for an enrollment event,
-   * the recipe that resulted in the enrollment.
-   */
-  updateEnrollment(slug, recipe) {
-    // Don't overwrite a pending entry that has a recipe with one that has none
-    // or we will try to do the wrong query (UPDATE instead of INSERT).
-    //
-    // We explicitly check for the presence of the value, not the key, in case
-    // this is a re-enrollment following an unenrollment.
-    if (!this.enrollments.get(slug)) {
-      this.enrollments.set(slug, recipe);
-    }
-  }
-
-  /**
-   * Merge the two collections of pending writes together.
-   *
-   * @param {PendingWrites} first The first set of pending writes to apply.
-   * @param {PendingWrites} second The second set of pending writes to apply.
-   * Pending syncTimestamps in this set will override those set in `first`.
-   *
-   * @returns {PendingWrites}
-   */
-  static merge(first, second) {
-    if (!first.hasPendingWrites) {
-      return second;
-    } else if (!second.hasPendingWrites) {
-      return first;
-    }
-
-    const merged = new PendingWrites(first);
-    for (const [slug, recipe] of second.enrollments.entries()) {
-      merged.updateEnrollment(slug, recipe);
-    }
-    for (const [collection, lastModified] of second.syncTimestamps.entries()) {
-      merged.syncTimestamps.set(collection, lastModified);
-    }
-
-    return merged;
-  }
-}
-
 /**
  * Handles queueing changes to the NimbusEnrollments database table in the
  * shared profiles database.
  */
 export class NimbusEnrollments {
-  /**
-   * Whether the NimbusEvents instance is initialized or not.
-   *
-   * @type {boolean}
-   */
-  #initialized;
-
   /**
    * The ExperimentStore.
    *
@@ -161,8 +70,7 @@ export class NimbusEnrollments {
   #flushTask;
 
   /**
-   * Our shutdown blocker that will ensure we flush pending writes before the
-   * ProfilesDatastoreService closes its database connection.
+   * Our shutdown blocker that will
    *
    * @type {(function(): void) | null}
    */
@@ -178,22 +86,16 @@ export class NimbusEnrollments {
   /**
    * Pending writes that will be flushed in `#flush()`.
    *
-   * @type {PendingWrites}
-   */
-  #pendingWrites;
-
-  /**
-   * The lastModified times of the Nimbus Remote Settings collections.
+   * The keys are enrollment slugs and the values are optional recipes. If the
+   * recipe is present, a new enrollment will be created in the database.
+   * Otherwise, an existing enrollment will be updated to be inactive (or
+   * deleted if it cannot be found in the `ExperimentStore`).
    *
-   * This will always contain the most up to date set of timestamps, even if
-   * they are not flushed to the database.
-   *
-   * @type {Map<string, number> | null}
+   * @type {Map<string, object | null>}
    */
-  #syncTimestamps;
+  #pending;
 
   constructor(store) {
-    this.#initialized = false;
     this.#store = store;
 
     this.#flushTask = new lazy.DeferredTask(
@@ -208,34 +110,14 @@ export class NimbusEnrollments {
     );
     this.#finalized = false;
 
-    this.#pendingWrites = new PendingWrites();
-    this.#syncTimestamps = null;
-  }
-
-  async init() {
-    if (this.#initialized) {
-      throw new Error("Already initialized");
-    }
-
-    this.#initialized = true;
-
-    const conn = await lazy.ProfilesDatastoreService.getConnection();
-    return conn.executeTransaction(async txn => {
-      // Only load enrollments if the database is the source-of-truth for reads.
-      const enrollments = NimbusEnrollments.readFromDatabaseEnabled
-        ? await NimbusEnrollments.loadEnrollments(txn)
-        : null;
-      this.#syncTimestamps = await NimbusEnrollments.loadSyncTimestamps(txn);
-
-      return enrollments;
-    });
+    this.#pending = new Map();
   }
 
   /**
    * The number of pending writes.
    */
   get pendingWrites() {
-    return this.#pendingWrites.enrollments.size;
+    return this.#pending.size;
   }
 
   /**
@@ -255,57 +137,14 @@ export class NimbusEnrollments {
 
     lazy.log.debug(`Queued update for enrollment ${slug}`);
 
-    this.#pendingWrites.updateEnrollment(slug, recipe);
-    this.#flushSoon();
-  }
-
-  /**
-   * Update the known lastModified timestamps for the given collections.
-   *
-   * Omitted timestamps will not change.
-   *
-   * @param {Map<string, number>} timestamps The timestamps to update.
-   *
-   * @throws {RemoteSettingsSyncError} If any timestamps are behind currently known
-   * timestamps or if any timestamps are invalid.
-   */
-  updateSyncTimestamps(timestamps) {
-    if (!this.#initialized) {
-      throw new Error("Not initialized");
-    }
-
-    const mergedTimestamps = new Map(this.#syncTimestamps.entries());
-    let timestampsChanged = false;
-
-    for (const [collection, timestamp] of timestamps) {
-      const lastTimestamp = this.#syncTimestamps.get(collection);
-
-      if (typeof timestamp !== "number" || isNaN(timestamp) || timestamp < 0) {
-        throw new lazy.RemoteSettingsSyncError(
-          collection,
-          lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.INVALID_LAST_MODIFIED
-        );
-      } else if (
-        typeof lastTimestamp === "undefined" ||
-        timestamp > lastTimestamp
-      ) {
-        mergedTimestamps.set(collection, timestamp);
-        this.#pendingWrites.syncTimestamps.set(collection, timestamp);
-
-        timestampsChanged = true;
-      } else if (timestamp < lastTimestamp) {
-        throw new lazy.RemoteSettingsSyncError(
-          collection,
-          lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.BACKWARDS_SYNC
-        );
-      }
-    }
-
-    if (timestampsChanged) {
-      this.#syncTimestamps = mergedTimestamps;
+    // Don't overwrite a pending entry that has a recipe with one that has none
+    // or we will try to do the wrong query (UPDATE instead of INSERT).
+    //
+    // We explicitly check for the presence of the value, not the key, in case
+    // this is a re-enrollment following an unenrollment.
+    if (!this.#pending.get(slug)) {
+      this.#pending.set(slug, recipe);
       this.#flushSoon();
-
-      lazy.log.debug("Timestamps updated");
     }
   }
 
@@ -339,8 +178,7 @@ export class NimbusEnrollments {
   }
 
   /**
-   * Flush all pending updates to the NimbusEnrollments and NimbusSyncTimestamps
-   * tables.
+   * Flush all pending updates to the NimbusEnrollments table.
    *
    * The updates are done as a single transaction to ensure the database stays
    * in a consistent state.
@@ -355,21 +193,15 @@ export class NimbusEnrollments {
    * we've started shutting down.
    */
   async #flush({ retryOnFailure = true } = {}) {
-    if (!this.#pendingWrites.hasPendingWrites) {
+    if (!this.#pending.size) {
       lazy.log.debug(`Not flushing: no changes`);
       return;
     }
 
-    // Swap the set of pending writes, if there are any, with default values.
-    // While we are waiting for the writes to the database complete we may
-    // receive more pending writes. If our write to the database fails, we need
-    // to reconcile those changes by merging them.
-    const pendingWrites = this.#pendingWrites;
-    this.#pendingWrites = new PendingWrites();
+    const pending = this.#pending;
+    this.#pending = new Map();
 
-    lazy.log.debug(
-      `Flushing ${pendingWrites.enrollments.size} enrollments, ${pendingWrites.syncTimestamps.size} timestamps to database`
-    );
+    lazy.log.debug(`Flushing ${pending.size} changes to database`);
 
     let success = true;
     try {
@@ -387,35 +219,35 @@ export class NimbusEnrollments {
         return;
       }
 
-      await conn.executeTransaction(async txn => {
-        for (const [slug, recipe] of pendingWrites.enrollments.entries()) {
+      await conn.executeTransaction(async () => {
+        for (const [slug, recipe] of pending.entries()) {
           const enrollment = this.#store.get(slug);
           if (enrollment) {
-            await NimbusEnrollments.#insertOrUpdateEnrollment(
-              txn,
-              enrollment,
-              recipe
-            );
+            await this.#insertOrUpdateEnrollment(conn, enrollment, recipe);
           } else {
-            await NimbusEnrollments.#deleteEnrollment(txn, slug);
+            await this.#deleteEnrollment(conn, slug);
           }
         }
-
-        await NimbusEnrollments.#flushSyncTimestamps(
-          txn,
-          pendingWrites.syncTimestamps
-        );
       });
     } catch (e) {
       success = false;
 
       if (retryOnFailure) {
-        // Re-queue all the pending writes that failed and merge any new changes
-        // that happened while we attempted to save.
-        this.#pendingWrites = PendingWrites.merge(
-          pendingWrites,
-          this.#pendingWrites
-        );
+        // Re-queue all the pending writes that failed.
+        if (this.#pending.size) {
+          // If there have been store changes since the call to flush, we need to
+          // include all of those and the failed writes.
+          const newPending = this.#pending;
+          this.#pending = pending;
+
+          for (const [slug, recipe] of newPending.entries()) {
+            this.updateEnrollment(slug, recipe);
+          }
+        } else {
+          // If there have been no pending changes, we can just replace the set of
+          // pending writes.
+          this.#pending = pending;
+        }
 
         if (!this.#finalized) {
           lazy.log.error(
@@ -455,7 +287,7 @@ export class NimbusEnrollments {
    * @param {object | null} recipe The recipe for the enrollment. Only non-null
    * when the initial enrollment has not already been flushed.
    */
-  static async #insertOrUpdateEnrollment(conn, enrollment, recipe) {
+  async #insertOrUpdateEnrollment(conn, enrollment, recipe) {
     if (recipe) {
       // This was a new enrollment at the time. It may have since unenrolled.
       await conn.executeCached(
@@ -548,7 +380,7 @@ export class NimbusEnrollments {
    * @param {OpenedConnection} conn The connection to the database.
    * @param {string} slug The slug of the enrollment to delete.
    */
-  static async #deleteEnrollment(conn, slug) {
+  async #deleteEnrollment(conn, slug) {
     await conn.execute(
       `
         DELETE FROM NimbusEnrollments
@@ -583,35 +415,8 @@ export class NimbusEnrollments {
     this.#finalized = true;
     await this.#flushTask.finalize();
 
-    lazy.ProfilesDatastoreService.shutdown.removeBlocker(this.#shutdownBlocker);
+    lazy.Sqlite.shutdown.removeBlocker(this.#shutdownBlocker);
     this.#shutdownBlocker = null;
-  }
-
-  static async #flushSyncTimestamps(conn, timestamps) {
-    for (const [collection, lastModified] of timestamps) {
-      await conn.executeCached(
-        `
-          INSERT INTO NimbusSyncTimestamps(
-            profileId,
-            collection,
-            lastModified
-          )
-          VALUES(
-            :profileId,
-            :collection,
-            :lastModified
-          )
-          ON CONFLICT(profileId, collection)
-          DO UPDATE SET
-            lastModified = excluded.lastModified;
-        `,
-        {
-          profileId: lazy.ExperimentAPI.profileId,
-          collection,
-          lastModified,
-        }
-      );
-    }
   }
 
   /**
@@ -644,14 +449,11 @@ export class NimbusEnrollments {
 
   /**
    * Load the enrollments from the NimbusEnrollments table.
-
-   * @param {OpenedConnection} txn An optional connection, used when this is
-   * called within a transaction.
    *
    * @returns {Promise<Record<string, object>>} The enrollments from the
    * NimbusEnrollments table.
    */
-  static async loadEnrollments(txn) {
+  static async loadEnrollments() {
     function copyProperties(target, src, properties) {
       for (const property of properties) {
         target[property] = src[property];
@@ -709,7 +511,7 @@ export class NimbusEnrollments {
       return [enrollment.slug, enrollment];
     }
 
-    const conn = txn ?? (await lazy.ProfilesDatastoreService.getConnection());
+    const conn = await lazy.ProfilesDatastoreService.getConnection();
     const rows = await conn.execute(
       `
       SELECT
@@ -736,40 +538,6 @@ export class NimbusEnrollments {
     lazy.log.debug(`Loaded ${enrollments.length} enrollments`);
 
     return Object.fromEntries(enrollments);
-  }
-
-  /**
-   * Load the last known lastModified timestamps of Nimbus collections from the
-   * NimbusSyncTimestamps table.
-   *
-   * @param {OpenedConnection} txn An option connection, used when this is
-   * called within a transaction.
-   *
-   * @returns {Promise<Map<string, number>>} The lastModified timestamps of the
-   * Nimbus collections.
-   */
-  static async loadSyncTimestamps(txn) {
-    const conn = txn ?? (await lazy.ProfilesDatastoreService.getConnection());
-    const rows = await conn.execute(
-      `
-        SELECT
-          collection,
-          lastModified
-        FROM NimbusSyncTimestamps
-        WHERE
-          profileId = :profileId;
-      `,
-      {
-        profileId: lazy.ExperimentAPI.profileId,
-      }
-    );
-
-    return new Map(
-      rows.map(row => [
-        row.getResultByName("collection"),
-        row.getResultByName("lastModified"),
-      ])
-    );
   }
 
   /**
