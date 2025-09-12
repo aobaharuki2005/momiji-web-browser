@@ -1178,7 +1178,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
 
           if (!addEntry) {
             shistory->ReplaceEntry(index, newActiveEntry);
-            if (Navigation::IsAPIEnabled() && mActiveEntry->isInList()) {
+            if (Navigation::IsAPIEnabled() && mActiveEntry &&
+                mActiveEntry->isInList()) {
               RefPtr entry = mActiveEntry;
               while (entry) {
                 entry = entry->removeAndGetNext();
