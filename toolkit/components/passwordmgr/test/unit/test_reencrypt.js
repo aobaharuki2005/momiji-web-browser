@@ -12,7 +12,6 @@ function assertMigrationCount() {
   if (!migrationValue) {
     return;
   }
-  console.log(migrationValue);
   const migrationStartedEvents = migrationValue.filter(
     ({ extra }) => extra.value === "started"
   );
@@ -103,7 +102,7 @@ add_task(async function test_reencrypt_mixed_mechanism() {
 });
 
 add_task(async function test_reencrypt_race() {
-  const reencryptionPromise = Services.logins.reencryptAllLogins();
+  const reencryptionPromise = reencryptAllLogins();
 
   const newLogins = EXPECTED_LOGINS.slice();
 
@@ -119,5 +118,16 @@ add_task(async function test_reencrypt_race() {
   await LoginTestUtils.checkLogins(
     newLogins,
     "In case of other racing login modifications, they should prevail"
+  );
+});
+
+add_task(async function test_reencrypt_no_logins_present() {
+  Services.logins.removeAllLogins();
+
+  await reencryptAllLogins();
+
+  await LoginTestUtils.checkLogins(
+    [],
+    "The reencryption should go through without problems if no logins are present at all"
   );
 });

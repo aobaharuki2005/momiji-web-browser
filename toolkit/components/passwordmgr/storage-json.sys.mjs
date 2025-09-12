@@ -1106,22 +1106,29 @@ export class LoginManagerStorage_json {
         encryptedUnknownFields,
       ]
     );
-    const decrypted = await this._crypto.decryptMany(encrypted).catch(error => {
-      Glean.pwmgr.migration.record({
-        value: "decryptionError",
-        error: error.name,
+
+    // Calling decryptMany / encryptMany with an empty array would throw an
+    // error, so just don't do it if there are no logins.
+    if (encryptedLogins.length) {
+      const decrypted = await this._crypto
+        .decryptMany(encrypted)
+        .catch(error => {
+          Glean.pwmgr.migration.record({
+            value: "decryptionError",
+            error: error.name,
+          });
+          this.reencryptionInProgress = false;
+          throw error;
+        });
+      encrypted = await this._crypto.encryptMany(decrypted).catch(error => {
+        Glean.pwmgr.migration.record({
+          value: "encryptionError",
+          error: error.name,
+        });
+        this.reencryptionInProgress = false;
+        throw error;
       });
-      this.reencryptionInProgress = false;
-      throw error;
-    });
-    encrypted = await this._crypto.encryptMany(decrypted).catch(error => {
-      Glean.pwmgr.migration.record({
-        value: "encryptionError",
-        error: error.name,
-      });
-      this.reencryptionInProgress = false;
-      throw error;
-    });
+    }
 
     for (let oldIndex = 0; oldIndex < encryptedLogins.length; oldIndex++) {
       const oldLogin = encryptedLogins[oldIndex];
@@ -1151,11 +1158,14 @@ export class LoginManagerStorage_json {
       newLogin.encryptedUnknownFields = encrypted[oldIndex * 3 + 2];
     }
 
-    // This could throw if we are in shutdown phase and the store is already
-    // finalized. Thus, it is important we call this before clearing
-    // signon.reencryptionNeeded below, to make sure we will retry the
-    // reencryption on the next restart in case this fails.
-    this._store.saveSoon();
+    // Save the logins changed by us to disk if there are any
+    if (encryptedLogins.length) {
+      // This could throw if we are in shutdown phase and the store is already
+      // finalized. Thus, it is important we call this before clearing
+      // signon.reencryptionNeeded below, to make sure we will retry the
+      // reencryption on the next restart in case this fails.
+      this._store.saveSoon();
+    }
 
     Services.prefs.clearUserPref("signon.reencryptionNeeded");
     this.reencryptionInProgress = false;
