@@ -55,6 +55,7 @@
   <string name="menu_settings">Taq wiqitajem</string>
   <string name="menu_about">Chi rij</string>
   <string name="menu_help">Tob\'anem</string>
+  <string name="menu_terms_of_use">Taqanem rech ukojik</string>
   <!--
     Menu item: This is the label for a menu entry that shows how many trackers have been blocked
     for the currently loaded website. The number of blocked trackers is shown below this label.
@@ -149,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s kuya´ rilawachixik chi awech.</p> <p>Chakojo´ pacha´ nik´ob´al rech echeb´alil: <ul> <li>Chatzukuj chi´l chanik´oj pa le kojkemchak:</li> <li>Che´aq´atej taq tzukub´al (on chak´ak´arisaj taq wiqitajem chech uya´ik b´e chi kech taq tzukub´al)</li> <li>Chayuju´ chech kichupik cookies chi´l utzukuxik chi´l unik´oxik b´antal kanoq</li> </ul> </p> <p>%1$s are b´anowinaq le Mozilla. Le qachak are uya´ik jun utzalaj, ujaqik kemk´atz.<br/> <a href=\"%2$s\">Chaweta´maj nik´aj chik</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">Chaweta\'maj nik\'aj chik</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Echeb\'alil chi\'l chajinem</string>
   <!-- Preference summary for settings related to privacy and security -->
@@ -319,12 +322,18 @@
   <string name="preference_mozilla_telemetry_summary">Chaweta\'maj nik\'aj chik</string>
   <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
   <string name="preference_mozilla_telemetry_summary2">Le Mozilla kukoj uchuq\'ab\' chech umulixik xew le rajawaxik kya\'ik chi\'l uk\'exsuk\'umaxik %1$s chi kech konojel.</string>
+  <!-- Preference switch for daily usage ping data collection -->
+  <string name="preference_daily_usage_ping_title">Chakub\'al qas kkojik</string>
+  <string name="preference_daily_usage_ping_description">Wa\' ktob\'an chech Mozilla chech uyakik kik\'u\'x taq e k\'ask\'atel kojonelab\'.</string>
+  <string name="preference_daily_usage_ping_learn_more">Chaweta\'maj nik\'aj chik</string>
   <!-- In-app link (in settings) to Focus privacy notice. -->
   <string name="preference_privacy_notice">Ub\'ixikil rech echeb\'alil</string>
   <!-- In-app link (in settings) to Focus licensing information. -->
   <string name="preference_licensing_info">Q‘alajisanem rech wujil</string>
   <!-- Link to Focus licensing information from other libraries that we use. -->
   <string name="preference_libraries_we_use">Taq k‘olwuj le kqakojo</string>
+  <!-- Link to Focus Crash reports list. -->
+  <string name="preference_crashes">Uk\'axk\'olil</string>
   <!-- Open Source Licenses page title. %s is the name of the app (for example "Firefox Focus" or "Firefox Klar"). -->
   <string name="open_source_licenses_title">%s OSS taq k‘olwuj</string>
   <!-- Item in Preferences that shows the about page. %1$s is the name of the app (for example "Firefox Focus" or "Firefox Klar"). -->
@@ -334,7 +343,7 @@
   <!-- Header for the list of installed search engines -->
   <string name="preference_choose_search_engine">Chacha\' ch\'ich\' rech tzukub\'al</string>
   <!-- Action for restoring the default list of search engines -->
-  <string name="preference_search_restore">Utzalijisaxik taq ch\'ich\' rech tzukunem ya\'om chi uloq\n</string>
+  <string name="preference_search_restore">Utzalijisaxik taq ch\'ich\' rech tzukunem ya\'om chi uloq\u0020</string>
   <!--
     Action for adding an additional search engine to the list.
     The "+" is used to emphasize that this is an "add" action
@@ -450,6 +459,30 @@
   <string name="onboarding_first_screen_title">Utz apetem pa %1$s</string>
   <!-- New Onboarding flow first screen subtitle the one that appears under title -->
   <string name="onboarding_first_screen_subtitle">Aninaq. Echeb‘alil. Man k‘o ta kyujuw uwach.</string>
+  <!--
+    New Onboarding flow first screen 'terms of use' text
+
+    %1$s will be replaced by a link using onboarding_first_screen_terms_of_use_link as text
+  -->
+  <string name="onboarding_first_screen_terms_of_use_text_2" tools:ignore="UnusedResources">Chech ub\'anik na, kak\'am raqan uq\'ab\' le %1$s.</string>
+  <!--
+    New Onboarding flow first screen 'terms of use link'
+
+    Text for the link used in onboarding_first_screen_terms_of_use_text
+  -->
+  <string name="onboarding_first_screen_terms_of_use_link_2" tools:ignore="BrandUsage">Taqanem rech ukojik Firefox</string>
+  <!--
+    New Onboarding flow first screen 'privacy notice' text
+
+    %1$s will be replaced by a link using onboarding_first_screen_privacy_notice_link as text
+  -->
+  <string name="onboarding_first_screen_privacy_notice_text_2" tools:ignore="BrandUsage">Le Firefox kel uk\'u\'x chech le acheb\'alil. Chaweta\'maj nik\'aj chik pa le qa %1$s.</string>
+  <!-- Text for the link used in onboarding_first_screen_privacy_notice_text -->
+  <string name="onboarding_first_screen_privacy_notice_link_2">Ub\'ixikil rech echeb\'alil</string>
+  <!-- New Onboarding flow first screen button label -->
+  <string name="onboarding_first_screen_button_agree_and_continue_2">Ub\'anik na</string>
+  <!-- In the first screen of new onboarding flow, additional accessibility description for content that contain urls. -->
+  <string name="a11y_link_available">K\'o kemwiqb\'al</string>
   <!--
     Onboarding second screen: Title
 
@@ -889,5 +922,29 @@
     This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. "Focus")
   -->
-  <string name="promote_search_widget_dialog_subtitle">Katqaya\' kanoq ruk\' le a nik\'onem pa echeb\'alil, xa k\'ut qas aninaq chamaj pa le jun chik ruk\' le \u0020%1$s kojkemchak \u0020pa le kemwach rech majib\'al.</string>
+  <string name="promote_search_widget_dialog_subtitle">Katqaya\' kanoq ruk\' le a nik\'onem pa echeb\'alil, xa k\'ut qas aninaq chamaj pa le jun chik ruk\' le \u0020%1$s kojkemchak \u0020pa le umajib\'al kemwach.</string>
+  <!--
+    This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog.
+  -->
+  <string name="promote_search_widget_button_text">Chaya\' kojkemchak pa le umajib\'al kemwach</string>
+  <!--
+    This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen.
+  -->
+  <string name="promote_search_widget_snackbar_message">Xya\'ataj le kojkemchak pa le umajib\'al kemwach</string>
+  <!--
+    Messages explaining how to exit fullscreen mode
+
+    Message shown to explain how to exit fullscreen mode when gesture navigation is enabled.
+
+    This text should be as short as possible, max 68 chars
+  -->
+  <string name="exit_fullscreen_with_gesture_short">Chachararej k\'a pa uwi\' loq xuquje\' chakojo\' le etal rech tzalijem che elem b\'ik</string>
+  <!--
+    Message shown to explain how to exit fullscreen mode when using back button navigation.
+
+    This text should be as short as possible, max 68 chars
+  -->
+  <string name="exit_fullscreen_with_back_button_short">Chachararej loq chi uxe\' xuquje\' chapitz\'a\' pa tzalijem chech elem b\'ik</string>
 </resources>
