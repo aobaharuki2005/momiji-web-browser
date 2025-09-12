@@ -370,7 +370,7 @@ class SnackbarBindingTest {
         waitForStoreToSettle()
 
         verify(snackbarDelegate).show(
-            text = R.string.sync_sent_tabs_snackbar_2,
+            text = R.string.sync_sent_tabs_snackbar,
             duration = LENGTH_SHORT,
             isError = false,
         )
