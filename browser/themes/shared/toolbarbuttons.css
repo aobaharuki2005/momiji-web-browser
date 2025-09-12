@@ -67,7 +67,9 @@
 #TabsToolbar {
   /* Override the inner padding to ensure the dimensions match the tabs, but also making sure
      different types of buttons (combined-buttons-dropmarker or text) still look correct. */
-  --toolbarbutton-inner-padding: calc((var(--tab-min-height) - 16px) / 2);
+  @media (width > 900px) {
+    --toolbarbutton-inner-padding: calc((var(--tab-min-height) - 16px) / 2);
+  }
 }
 
 /* Primary toolbar buttons */
