@@ -41,14 +41,14 @@ body {
      drag space, and the sidebar button.
      FIXME: Only the window controls' size should be platform-specific, we
             should be able to share the rest. */
-  --window-min-width-increase-for-vertical-tabs: 197px;
+  --window-min-width-increase-for-vertical-tabs: 161px;
   @media (-moz-platform: macos) {
-    --window-min-width-increase-for-vertical-tabs: 135px;
+    --window-min-width-increase-for-vertical-tabs: 99px;
   }
   @media (-moz-platform: linux) {
     /* FIXME: Use --titlebar-button-* variables to calculate the window
               controls' size. */
-    --window-min-width-increase-for-vertical-tabs: 174px;
+    --window-min-width-increase-for-vertical-tabs: 138px;
   }
 
   user-select: none;
