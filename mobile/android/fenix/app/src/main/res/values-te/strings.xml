@@ -258,9 +258,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">లంకెలను అంతరంగిక ట్యాబులో తెరువు</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">అంతరంగిక విహరణలో తెరపట్లను అనుమతించు</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">అంతరంగిక విహరణలో తెరపట్లను అనుమతించు</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">అనుమతిస్తే, పలు అనువర్తనాలు తెరిచివున్నప్పుడు అంతరంగిక ట్యాబులు కూడా కనిపిస్తాయి</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">అనుమతిస్తే, పలు అనువర్తనాలు తెరిచివున్నప్పుడు అంతరంగిక ట్యాబులు కూడా కనిపిస్తాయి</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">అంతరంగిక విహరణ సత్వరమార్గాన్ని చేర్చు</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->

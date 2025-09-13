@@ -487,9 +487,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">افتح الروابط في ألسنة خاصة</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">اسمح بلقطات الشاشة في التصفّح الخاص</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">اسمح بلقطات الشاشة في التصفّح الخاص</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">إن سمحت فستظهر الألسنة الخاصة حين فتح أكثر من تطبيق</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">إن سمحت فستظهر الألسنة الخاصة حين فتح أكثر من تطبيق</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">أضِف اختصارًا للتصفح الخاص</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->

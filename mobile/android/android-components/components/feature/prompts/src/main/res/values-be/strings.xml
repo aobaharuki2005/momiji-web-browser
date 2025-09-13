@@ -125,6 +125,8 @@
   <string name="mozac_feature_prompt_repost_negative_button_text">Адмяніць</string>
   <!-- Strings show in a dialog that appear when user confirm folder upload -->
   <string name="mozac_feature_prompt_folder_upload_confirm_title">Зацягнуць файлы?</string>
+  <!-- Prompt message displayed when user selects a specific folder. %1$s is a folder / directory name. -->
+  <string name="mozac_feature_prompt_folder_upload_confirm_message">Перад загрузкай з “%1$s” пераканайцеся, што вы давяраеце гэтаму сайту.</string>
   <!-- Pressing this will dismiss the dialog and allow to upload folder -->
   <string name="mozac_feature_prompt_folder_upload_confirm_positive_button_text">Зацягнуць</string>
   <!-- Pressing this will dismiss the dialog and disallow to upload folder -->
