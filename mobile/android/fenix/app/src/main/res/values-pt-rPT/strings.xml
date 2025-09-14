@@ -37,7 +37,7 @@
   <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
   <string name="tab_manager_empty_private_tabs_page_description">O %1$s não irá memorizar qualquer histórico ou cookies, mas os novos marcadores serão guardados.</string>
   <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
-  <string name="tab_manager_empty_normal_tabs_page_header">Crie um novo separador para iniciar a pesquisa</string>
+  <string name="tab_manager_empty_normal_tabs_page_header">Criar um novo separador para iniciar a pesquisa</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d selecionados</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -528,7 +528,7 @@
   <!-- Button text to continue and not send a startup crash report -->
   <string name="startup_crash_negative">Não, obrigado</string>
   <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
-  <string name="startup_crash_restart">Reabrir o %s</string>
+  <string name="startup_crash_restart">Reabrir %s</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">Enviar dados técnicos e de interação para a Mozilla</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">Os dados sobre o seu dispositivo, configuração de hardware e como utiliza o Firefox ajudam a melhorar as funcionalidades, o desempenho e a estabilidade para todos.</string>
@@ -554,9 +554,9 @@
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">Gerir</string>
   <!-- Terms of use (ToU) onboarding redesign title. -->
-  <string name="onboarding_redesign_tou_title">Executar o derradeiro navegador para Android</string>
+  <string name="onboarding_redesign_tou_title">Executar o melhor navegador para Android</string>
   <!-- Terms of use (ToU) first subheader. -->
-  <string name="onboarding_redesign_tou_subheader_one">Carregue sites com uma velocidade ultra-rápida</string>
+  <string name="onboarding_redesign_tou_subheader_one">Carregue sites a uma velocidade alucinante</string>
   <!-- Terms of use (ToU) second subheader. -->
   <string name="onboarding_redesign_tou_subheader_two">Proteção automática contra a monitorização</string>
   <!-- Terms of use (ToU) third subheader. -->
@@ -572,9 +572,9 @@
     Terms of use (ToU) second body text. 'Firefox' is intentionally hardcoded.
     %1$s is replaced by an active link, using onboarding_redesign_tou_body_two_link_text as text (“Privacy Notice”).
   -->
-  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">O Firefox preocupa-se com a sua privacidade. Saiba mais no nosso %1$s.</string>
+  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">O Firefox preocupa-se com a sua privacidade. Saiba mais na nossa %1$s.</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
-  <string name="onboarding_redesign_tou_body_two_link_text">Aviso de privacidade</string>
+  <string name="onboarding_redesign_tou_body_two_link_text">Informação de privacidade</string>
   <!--
     Terms of use (ToU) third body text. 'Firefox' and 'Mozilla' are intentionally hardcoded.
     %1$s is replaced by an active link using onboarding_redesign_tou_body_three_link_text as text (“Manage Settings”).
@@ -591,7 +591,7 @@
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Partilhe dados mínimos com os parceiros de tecnologia de marketing da Mozilla. Estes dados nunca são vendidos ou utilizados para lhe apresentar anúncios.</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_out_checkbox">Partilhe dados com os parceiros de tecnologia de marketing da Mozilla. Estes dados nunca são vendidos ou utilizados para lhe mostrar anúncios.</string>
+  <string name="onboarding_marketing_opt_out_checkbox">Partilhar dados com os parceiros de tecnologia de marketing da Mozilla. Estes dados nunca são vendidos ou utilizados para lhe mostrar anúncios.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Como utilizamos os dados</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -791,7 +791,7 @@
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Ícone da aplicação</string>
   <!-- Preference for showing the tab strip -->
-  <string name="preferences_tab_strip">Ecrã barra de separadores</string>
+  <string name="preferences_tab_strip">Visualização da barra de separadores</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gestos</string>
   <!-- Preference for settings related to visual options -->
@@ -1030,7 +1030,7 @@
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Criado por @heyheymoshots</string>
   <!-- Title for the "Cuddling" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
-  <string name="alternative_app_icon_option_cuddling">Acariciar</string>
+  <string name="alternative_app_icon_option_cuddling">Carinhoso</string>
   <!-- Title for the "Flaming" themed alternative app icon variant in the icon picker screen. The app icon features a fiery design, with the Firefox logo surrounded by flames for a bold, energetic look. -->
   <string name="alternative_app_icon_option_flaming">Flamejante</string>
   <!-- Title for the "Cool" themed alternative app icon variant in the icon picker screen. The app icon uses a warm orange-to-yellow gradient background with a sleek, modern twist on the Firefox logo, giving it a fresh and stylish appearance. -->
@@ -1044,7 +1044,7 @@
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Alterar ícone da aplicação?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
-  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Alterar o ícone requer que a aplicação reinicie.</string>
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Alterar o ícone requer que a aplicação seja reiniciada.</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">A aplicação pode ser fechada. Basta tocar no seu novo ícone brilhante para reabrir o %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
@@ -1162,7 +1162,7 @@
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">Enviar dados técnicos e de interação</string>
   <!-- Preference switch for usage and technical learn more link in new compose -->
-  <string name="preference_usage_data_learn_more_2">Saber mais acerca de dados técnicos</string>
+  <string name="preference_usage_data_learn_more_2">Saber mais sobre os dados técnicos</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
   <string name="preferences_usage_data_description_1" tools:ignore="BrandUsage">Os dados sobre o seu dispositivo, configuração de hardware e utilização ajudam-nos a melhorar as funcionalidades, desempenho e estabilidade do Firefox.</string>
   <!-- Preference switch for daily usage ping data collection -->
@@ -1420,17 +1420,17 @@
   -->
   <string name="tabs_header_synced_tabs_counter_title">Abrir separadores sincronizados: %1$s. Toque para mudar de separadores.</string>
   <!-- Text for the tabs header private tabs -->
-  <string name="tabs_header_private_tabs_title">Privado</string>
+  <string name="tabs_header_private_tabs_title">Privados</string>
   <!-- Text for the tabs header normal tabs -->
   <string name="tabs_header_normal_tabs_title">Separadores</string>
   <!-- Text for the tabs header synced tabs -->
-  <string name="tabs_header_synced_tabs_title">Sync</string>
+  <string name="tabs_header_synced_tabs_title">Sincronizados</string>
   <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
   <string name="tab_manager_floating_action_button_new_normal_tab">Novo separador</string>
   <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
   <string name="tab_manager_floating_action_button_new_private_tab">Novo separador privado</string>
   <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
-  <string name="tab_manager_floating_action_button_sync_tabs">Sincronize separadores</string>
+  <string name="tab_manager_floating_action_button_sync_tabs">Sincronizar separadores</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Adicionar separador</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1694,7 +1694,7 @@
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Escolha o motivo</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason_2">Escolha um motivo</string>
+  <string name="webcompat_reporter_choose_reason_2">Escolher um motivo</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Escolha um motivo</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1762,11 +1762,11 @@
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Fechar</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
-  <string name="unsubmitted_crash_dialog_negative_button_2">ENCERRAMENTO</string>
+  <string name="unsubmitted_crash_dialog_negative_button_2">FECHAR</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Não mostrar novamente</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
-  <string name="unsubmitted_crash_dialog_positive_button_2">SEND</string>
+  <string name="unsubmitted_crash_dialog_positive_button_2">ENVIAR</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Enviar relatório de falha</string>
   <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
@@ -1935,7 +1935,7 @@
   <!-- Preference for local device access for all websites -->
   <string name="preference_browser_feature_local_device_access">Aplicações e serviços do dispositivo</string>
   <!-- Preference for local network access for all websites -->
-  <string name="preference_browser_feature_local_network_access">Dispositivos de rede local</string>
+  <string name="preference_browser_feature_local_network_access">Dispositivos da rede local</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Câmara</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2215,7 +2215,7 @@
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Tamanho do tipo de letra</string>
   <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
-  <string name="a11y_preference_accessibility_font_size_percentage">%d %%</string>
+  <string name="a11y_preference_accessibility_font_size_percentage">%d\u00a0%%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Dimensionamento automático do tipo de letra</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2350,7 +2350,7 @@
   <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
   <string name="preference_enhanced_tracking_protection_allow_list_baseline">Permitir que o %1$s aplique automaticamente as exceções necessárias para evitar falhas importantes no site.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
-  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Aplique também exceções automaticamente, necessárias para corrigir problemas menores e disponibilizar funcionalidades de conveniência.</string>
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Aplica também exceções automaticamente, necessárias para corrigir problemas menores e disponibilizar funcionalidades de conveniência.</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
@@ -2672,7 +2672,7 @@
   <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
   <string name="edit_login_navigate_back_button_content_description">Navegar de volta</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
-  <string name="edit_login_button_content_description">Editar credenciais</string>
+  <string name="edit_login_button_content_description">Editar credencial</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Abrir site no navegador</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2732,7 +2732,7 @@
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Inclui números de telefone e endereços de e-mail</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
-  <string name="preferences_addresses_sync_addresses_across_devices">Sincronize endereços entre dispositivos</string>
+  <string name="preferences_addresses_sync_addresses_across_devices">Sincronizar endereços entre dispositivos</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Sincronizar endereços</string>
   <!-- Title of the "Add card" screen -->
@@ -3078,7 +3078,7 @@
     Context description text for the "Discover more" button in the stories home screen section
     which navigates the user to a screen displaying more stories.
   -->
-  <string name="stories_discover_more_content_description">Descubra mais histórias</string>
+  <string name="stories_discover_more_content_description">Descobrir mais histórias</string>
   <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
   <string name="stories_back_button_content_description">Navegar de volta</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
@@ -3386,9 +3386,9 @@
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Proteção melhorada contra a monitorização</string>
   <!-- Toggle if Enhanced Tracking Protection is turned on -->
-  <string name="protection_panel_etp_toggle_on">Ligado</string>
+  <string name="protection_panel_etp_toggle_on">Ligada</string>
   <!-- Toggle if Enhanced Tracking Protection is turned off -->
-  <string name="protection_panel_etp_toggle_off">Desligado</string>
+  <string name="protection_panel_etp_toggle_off">Desligada</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Se parecer que algo não está a funcionar neste site, experimente desativar as proteções.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
@@ -3396,7 +3396,7 @@
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">As proteções estão DESATIVADAS. Sugerimos que a sua reativação.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description_2">Ativar a proteção contra monitorização é recomendado.</string>
+  <string name="protection_panel_etp_toggle_disabled_description_2">Recomenda-se a ativação da proteção contra a monitorização.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3626,9 +3626,9 @@
 
     The description of the Add-ons Tools in the Debug Drawer
   -->
-  <string name="debug_drawer_addons_tools_title">Ferramentas de Extras</string>
+  <string name="debug_drawer_addons_tools_title">Ferramentas de extras</string>
   <!-- The title of the button used to check for add-on updates. -->
-  <string name="addons_debug_tools_check_for_updates_button">Procurar atualizações</string>
+  <string name="addons_debug_tools_check_for_updates_button">Procurar por atualizações</string>
   <!--
     Messages explaining how to exit fullscreen mode
 
@@ -3835,7 +3835,7 @@
     %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
     %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
   -->
-  <string name="terms_of_use_prompt_message_1">Introduzimos o %1$s, às %2$s, e atualizamos o nosso %3$s.</string>
+  <string name="terms_of_use_prompt_message_1">Introduzimos o %1$s, aos %2$s e atualizámos a nossa %3$s.</string>
   <!--
     Second part of the terms of use pop up prompt
     %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
@@ -3844,7 +3844,7 @@
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Termos de utilização</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
-  <string name="terms_of_use_prompt_link_privacy_notice">Aviso de privacidade</string>
+  <string name="terms_of_use_prompt_link_privacy_notice">Informação de privacidade</string>
   <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
   <string name="terms_of_use_prompt_link_learn_more">Saber mais</string>
   <!-- Label for a button to accept the terms of use -->
