@@ -275,9 +275,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Havolalarni maxfiy varaqda ochish</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">Maxfiy koʻrish rejimida skrinshot olishga ruxsat berish</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Maxfiy koʻrish rejimida skrinshot olishga ruxsat berish</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">Ruxsat berilsa, bir nechta ilovalar ochiqligida ham maxfiy varaqlar koʻrinadi</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Ruxsat berilsa, bir nechta ilovalar ochiqligida ham maxfiy varaqlar koʻrinadi</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Maxfiy koʻrish tezkor buyrugʻini qoʻshish</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->

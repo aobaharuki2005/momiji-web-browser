@@ -182,9 +182,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">निजी ट्याबमा लिङ्कहरु खोल्नुहोस्</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">निजी ब्राउजिङ्गमा स्क्रिनसटहरूलाई अनुमति दिनुहोस्</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">निजी ब्राउजिङ्गमा स्क्रिनसटहरूलाई अनुमति दिनुहोस्</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">अनुमति दिइयो भने, बहु एपहरू खुला हुँदा निजी ट्याबहरू पनि देखिने छन्</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">अनुमति दिइयो भने, बहु एपहरू खुला हुँदा निजी ट्याबहरू पनि देखिने छन्</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">निजी ब्राउजिङ्ग सर्टकटहरु थप्नुहोस्</string>
   <!-- Preference for accessibility -->

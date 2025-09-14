@@ -265,9 +265,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Ṣí àwọn líǹkì nínú táàbù tuntun</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">Fàyègba àwọn sikirinṣọ́ọ̀tì nínú bíráwúsìnnì ìkọ̀kọ̀</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Fàyègba àwọn sikirinṣọ́ọ̀tì nínú bíráwúsìnnì ìkọ̀kọ̀</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">Tí ìgbàláàyè bá wà, àwọn táàbù ìkọ̀kọ̀ náà ma hàn nígbà tí ọ̀pọ̀ áàpù bá wà ní ṣíṣí</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Tí ìgbàláàyè bá wà, àwọn táàbù ìkọ̀kọ̀ náà ma hàn nígbà tí ọ̀pọ̀ áàpù bá wà ní ṣíṣí</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Ṣàfikún ọ̀nà-àbùjá bíráwúsìnnì ìkọ̀kọ̀</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->

@@ -293,9 +293,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Siltemelerdi jeke bette ashıw</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">Jeke bette skrinshot alıwǵa ruqsat beriw</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Jeke bette skrinshot alıwǵa ruqsat beriw</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">Eger ruqsat berilse, bir neshe baǵdarlamalar ashıq waqıtta da qupıya betler kórinedi</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Eger ruqsat berilse, bir neshe baǵdarlamalar ashıq waqıtta da qupıya betler kórinedi</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Qupıya kóriw operativ buyrıǵın qosıw</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->

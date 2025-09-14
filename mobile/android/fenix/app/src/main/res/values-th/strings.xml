@@ -680,9 +680,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">เปิดลิงก์ในแท็บส่วนตัว</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">อนุญาตภาพหน้าจอในการเรียกดูแบบส่วนตัว</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">อนุญาตภาพหน้าจอในการเรียกดูแบบส่วนตัว</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">ถ้าอนุญาต แท็บส่วนตัวจะปรากฏให้เห็นเมื่อมีหลายแอปที่เปิดอยู่</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">ถ้าอนุญาต แท็บส่วนตัวจะปรากฏให้เห็นเมื่อมีหลายแอปที่เปิดอยู่</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">เพิ่มทางลัดการเรียกดูแบบส่วนตัว</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -1677,9 +1677,9 @@
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">ส่ง</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
-  <string name="webcompat_reporter_success_snackbar_text">รายงานของคุณถูกส่งไปแล้ว</string>
+  <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">รายงานของคุณถูกส่งไปแล้ว</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
-  <string name="webcompat_reporter_dismiss_success_snackbar_text">ปิด</string>
+  <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ปิด</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">เกิดอะไรขึ้น? แล้วควรจะเป็นอย่างไร?</string>
   <!--
