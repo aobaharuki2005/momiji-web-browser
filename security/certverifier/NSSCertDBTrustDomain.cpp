@@ -63,7 +63,7 @@ namespace mozilla {
 namespace psm {
 
 NSSCertDBTrustDomain::NSSCertDBTrustDomain(
-    SECTrustType certDBTrustType, OCSPFetching ocspFetching,
+    SECTrustType certDBTrustType, RevocationCheckMode ocspFetching,
     OCSPCache& ocspCache, SignatureCache* signatureCache,
     TrustCache* trustCache, /*optional but shouldn't be*/ void* pinArg,
     TimeDuration ocspTimeoutSoft, TimeDuration ocspTimeoutHard,
@@ -600,20 +600,19 @@ Result NSSCertDBTrustDomain::DigestBuf(Input item, DigestAlgorithm digestAlg,
 
 TimeDuration NSSCertDBTrustDomain::GetOCSPTimeout() const {
   switch (mOCSPFetching) {
-    case NSSCertDBTrustDomain::FetchOCSPForDVSoftFail:
+    case NSSCertDBTrustDomain::RevocationCheckMayFetch:
       return mOCSPTimeoutSoft;
-    case NSSCertDBTrustDomain::FetchOCSPForEV:
-    case NSSCertDBTrustDomain::FetchOCSPForDVHardFail:
+    case NSSCertDBTrustDomain::RevocationCheckRequired:
       return mOCSPTimeoutHard;
-    // The rest of these are error cases. Assert in debug builds, but return
-    // the soft timeout value in release builds.
-    case NSSCertDBTrustDomain::NeverFetchOCSP:
-    case NSSCertDBTrustDomain::LocalOnlyOCSPForEV:
-      MOZ_ASSERT_UNREACHABLE("we should never see this OCSPFetching type here");
+    // Reaching this case is an error. Assert in debug builds, but return the
+    // soft timeout value in release builds.
+    case NSSCertDBTrustDomain::RevocationCheckLocalOnly:
+      MOZ_ASSERT_UNREACHABLE(
+          "we should never see this RevocationCheckMode type here");
       break;
   }
 
-  MOZ_ASSERT_UNREACHABLE("we're not handling every OCSPFetching type");
+  MOZ_ASSERT_UNREACHABLE("we're not handling every RevocationCheckMode type");
   return mOCSPTimeoutSoft;
 }
 
@@ -971,7 +970,8 @@ Result NSSCertDBTrustDomain::CheckRevocationByOCSP(
         .Get("ShortValidity"_ns)
         .Add(1);
   }
-  if ((mOCSPFetching == NeverFetchOCSP) || (validityDuration < shortLifetime)) {
+  if ((mOCSPFetching == RevocationCheckLocalOnly) ||
+      (validityDuration < shortLifetime)) {
     // We're not going to be doing any fetching, so if there was a cached
     // "unknown" response, say so.
     if (cachedResponseResult == Result::ERROR_OCSP_UNKNOWN_CERT) {
@@ -979,7 +979,7 @@ Result NSSCertDBTrustDomain::CheckRevocationByOCSP(
     }
     // If we're doing hard-fail, we want to know if we have a cached response
     // that has expired.
-    if (mOCSPFetching == FetchOCSPForDVHardFail &&
+    if (mOCSPFetching == RevocationCheckRequired &&
         cachedResponseResult == Result::ERROR_OCSP_OLD_RESPONSE) {
       return Result::ERROR_OCSP_OLD_RESPONSE;
     }
@@ -997,21 +997,13 @@ Result NSSCertDBTrustDomain::CheckRevocationByOCSP(
   // here. In effect, we're choosing to preserve the privacy of the user at the
   // risk of potentially allowing them to navigate to a site that is serving a
   // revoked certificate.
-  if (mCRLiteMode == CRLiteMode::Enforce &&
-      mOCSPFetching == FetchOCSPForDVSoftFail && mIsBuiltChainRootBuiltInRoot) {
+  if (mOCSPFetching == RevocationCheckMayFetch &&
+      mCRLiteMode == CRLiteMode::Enforce && mIsBuiltChainRootBuiltInRoot) {
     return Success;
   }
 
-  if (mOCSPFetching == LocalOnlyOCSPForEV) {
-    if (cachedResponseResult != Success) {
-      return cachedResponseResult;
-    }
-    return Result::ERROR_OCSP_UNKNOWN_CERT;
-  }
-
   if (aiaLocation.IsVoid()) {
-    if (mOCSPFetching == FetchOCSPForEV ||
-        cachedResponseResult == Result::ERROR_OCSP_UNKNOWN_CERT) {
+    if (cachedResponseResult == Result::ERROR_OCSP_UNKNOWN_CERT) {
       return Result::ERROR_OCSP_UNKNOWN_CERT;
     }
     if (cachedResponseResult == Result::ERROR_OCSP_OLD_RESPONSE) {
@@ -1131,7 +1123,7 @@ Result NSSCertDBTrustDomain::SynchronousCheckRevocationWithServer(
     }
   }
 
-  if (rv == Success || mOCSPFetching != FetchOCSPForDVSoftFail) {
+  if (rv == Success || mOCSPFetching == RevocationCheckRequired) {
     MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
             ("NSSCertDBTrustDomain: returning after "
              "VerifyEncodedOCSPResponse"));
@@ -1156,7 +1148,7 @@ Result NSSCertDBTrustDomain::SynchronousCheckRevocationWithServer(
 Result NSSCertDBTrustDomain::HandleOCSPFailure(
     const Result cachedResponseResult, const Result stapledOCSPResponseResult,
     const Result error) {
-  if (mOCSPFetching != FetchOCSPForDVSoftFail) {
+  if (mOCSPFetching == RevocationCheckRequired) {
     MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
             ("NSSCertDBTrustDomain: returning SECFailure after OCSP request "
              "failure"));
