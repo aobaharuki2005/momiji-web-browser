@@ -67,17 +67,27 @@ class WebExtensionsMenuBinding(
                     }
                     .sortedBy { it.name }
 
-                val browserWebExtensionMenuItems = eligibleExtensions.mapNotNull { extension ->
-                    extension.browserAction?.let { browserAction ->
-                        getWebExtensionMenuItem(
-                            extension = extension,
-                            webExtensionsFlowState = webExtensionsFlowState,
-                            globalAction = browserAction,
-                        )
-                    }
+                val webExtensionMenuItems = eligibleExtensions.flatMap { extension ->
+                    listOfNotNull(
+                        extension.browserAction?.let { browserAction ->
+                            getWebExtensionMenuItem(
+                                extension = extension,
+                                webExtensionsFlowState = webExtensionsFlowState,
+                                globalAction = browserAction,
+                            )
+                        },
+                        extension.pageAction?.let { pageAction ->
+                            getWebExtensionMenuItem(
+                                extension = extension,
+                                webExtensionsFlowState = webExtensionsFlowState,
+                                globalAction = pageAction,
+                                isPageAction = true,
+                            )
+                        },
+                    )
                 }
 
-                if (browserWebExtensionMenuItems.isEmpty() && eligibleExtensions.filter { !it.isBuiltIn }
+                if (webExtensionMenuItems.isEmpty() && eligibleExtensions.filter { !it.isBuiltIn }
                         .all { !it.enabled }
                 ) {
                     menuStore.dispatch(MenuAction.UpdateShowDisabledExtensionsOnboarding(true))
@@ -86,7 +96,7 @@ class WebExtensionsMenuBinding(
                 }
 
                 menuStore.dispatch(
-                    MenuAction.UpdateWebExtensionBrowserMenuItems(browserWebExtensionMenuItems),
+                    MenuAction.UpdateWebExtensionBrowserMenuItems(webExtensionMenuItems),
                 )
             }
     }
@@ -96,12 +106,17 @@ class WebExtensionsMenuBinding(
         extension: WebExtensionState,
         webExtensionsFlowState: WebExtensionsFlowState,
         globalAction: Action,
+        isPageAction: Boolean = false,
     ): WebExtensionMenuItem? {
         if (!extension.enabled) {
             return null
         }
 
-        val tabAction = webExtensionsFlowState.sessionState.extensionState[extension.id]?.browserAction
+        val tabAction = if (isPageAction) {
+            webExtensionsFlowState.sessionState.extensionState[extension.id]?.pageAction
+        } else {
+            webExtensionsFlowState.sessionState.extensionState[extension.id]?.browserAction
+        }
 
         // Apply tab-specific override of browser/page action
         val action = tabAction?.let {

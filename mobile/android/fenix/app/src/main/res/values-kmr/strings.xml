@@ -566,9 +566,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Girêdanan di hilpekîna veşartî de veke</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">Di gerîna veşartî de, bihêle bila wêneyê ekranê bê kişandin</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Di gerîna veşartî de, bihêle bila wêneyê ekranê bê kişandin</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">Heke destûr bê dayîn, dema ku gelek sepan vekirî bin jî ew ê hilpekînên veşartî xuya bibin</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Heke destûr bê dayîn, dema ku gelek sepan vekirî bin jî ew ê hilpekînên veşartî xuya bibin</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Kurterêya gerîna veşartî tevlî bike</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -1220,9 +1220,9 @@
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">Bişîne</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
-  <string name="webcompat_reporter_success_snackbar_text">Rapora te hat şandin</string>
+  <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Rapora te hat şandin</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
-  <string name="webcompat_reporter_dismiss_success_snackbar_text">Bigire</string>
+  <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Bigire</string>
   <!--
     Crashes
 

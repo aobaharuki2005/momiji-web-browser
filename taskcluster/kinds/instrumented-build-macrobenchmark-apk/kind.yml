@@ -22,6 +22,7 @@ task-defaults:
             - linux64-android-sdk-linux-repack
             - linux64-jdk-repack
             - linux64-node
+    run-on-projects: []
     run:
         using: gradlew
     treeherder:

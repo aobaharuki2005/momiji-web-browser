@@ -81,6 +81,7 @@
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/glean/XpcomMetrics.h"
 #include "mozilla/Unused.h"
+#include "mozilla/UseCounter.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/JSExecutionManager.h"
@@ -1206,7 +1207,8 @@ struct GCMajorMarker : public BaseMarkerType<GCMajorMarker> {
 
   using MS = MarkerSchema;
   static constexpr MS::PayloadField PayloadFields[] = {
-      {"timings", MS::InputType::CString, "GC timings"}};
+      {"timings", MS::InputType::CString, "GC timings", MS::Format::String,
+       MS::PayloadFlags::Hidden}};
 
   static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
                                                MS::Location::MarkerTable,

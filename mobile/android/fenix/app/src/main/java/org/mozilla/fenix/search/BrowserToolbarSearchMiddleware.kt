@@ -89,6 +89,7 @@ import org.mozilla.fenix.search.SearchSelectorEvents.SearchSettingsItemClicked
 import org.mozilla.fenix.search.ext.searchEngineShortcuts
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
+import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.ContentDescription.StringContentDescription as SearchSelectorDescription
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.Icon.DrawableIcon as SearchSelectorIcon
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.ContentDescription.StringContentDescription as MenuItemStringDescription
@@ -97,6 +98,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.B
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Icon.DrawableResIcon as MenuItemIconRes
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Text.StringResText as MenuItemStringResText
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Text.StringText as MenuItemStringText
+import mozilla.components.feature.qr.R as qrR
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
 
@@ -473,8 +475,8 @@ class BrowserToolbarSearchMiddleware(
         if (queryText.isNotEmpty()) {
             add(
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_cross_circle_fill_24,
-                    contentDescription = R.string.mozac_clear_button_description,
+                    drawableResId = iconsR.drawable.mozac_ic_cross_circle_fill_24,
+                    contentDescription = toolbarR.string.mozac_clear_button_description,
                     state = ActionButton.State.DEFAULT,
                     onClick = ClearSearchClicked,
                 ),
@@ -482,8 +484,8 @@ class BrowserToolbarSearchMiddleware(
         } else if (isValidSearchEngine) {
             add(
                 ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_qr_code_24,
-                    contentDescription = R.string.mozac_feature_qr_scanner,
+                    drawableResId = iconsR.drawable.mozac_ic_qr_code_24,
+                    contentDescription = qrR.string.mozac_feature_qr_scanner,
                     state = ActionButton.State.DEFAULT,
                     onClick = QrScannerClicked,
                 ),
@@ -594,7 +596,7 @@ class BrowserToolbarSearchMiddleware(
                 addAll(searchEngineShortcuts.toToolbarMenuItems(resources))
                 add(
                     BrowserToolbarMenuButton(
-                        icon = MenuItemIconRes(R.drawable.mozac_ic_settings_24),
+                        icon = MenuItemIconRes(iconsR.drawable.mozac_ic_settings_24),
                         text = MenuItemStringResText(R.string.search_settings_menu_item),
                         contentDescription = MenuItemDescriptionRes(R.string.search_settings_menu_item),
                         onClick = SearchSettingsItemClicked,

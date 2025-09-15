@@ -243,3 +243,8 @@ windows-10-eos-sync-tour-title-1 = Too many tabs? Tidy up with tab groups.
 windows-10-eos-sync-tour-subtitle-1 = Drag one tab on top of another to create a group and keep things organized.
 windows-10-eos-sync-tour-title-2 = Get organized for Windows 11.
 windows-10-eos-sync-tour-subtitle-2 = Sync your bookmarks, passwords, and settings to back them up before you switch.
+
+windows-10-eos-sync-split-dismiss-button-show-fewer-option =
+    .label = Show fewer recommendations
+windows-10-eos-sync-dismiss-button-label = Dismiss
+windows-10-eos-sync-callout-primary-advance-button-label = Next

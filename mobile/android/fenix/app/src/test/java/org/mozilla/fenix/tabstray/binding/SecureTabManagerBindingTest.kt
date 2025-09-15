@@ -10,7 +10,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
@@ -52,23 +51,6 @@ class SecureTabManagerBindingTest {
         tabsTrayStore.waitUntilIdle()
 
         verify { fragment.secure() }
-    }
-
-    @Test
-    fun `WHEN tab selected page switches to private  and allowScreenshotsInPrivateMode true THEN set fragment to un-secure`() {
-        val tabsTrayStore = TabsTrayStore(TabsTrayState())
-        val secureTabManagerBinding = SecureTabManagerBinding(
-            store = tabsTrayStore,
-            settings = settings,
-            fragment = fragment,
-        )
-        every { settings.allowScreenshotsInPrivateMode } returns true
-
-        secureTabManagerBinding.start()
-        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.PrivateTabs))
-        tabsTrayStore.waitUntilIdle()
-
-        verify { fragment.removeSecure() }
     }
 
     @Test

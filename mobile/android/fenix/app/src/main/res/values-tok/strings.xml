@@ -965,7 +965,7 @@
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">o pana</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
-  <string name="webcompat_reporter_success_snackbar_text">mi pana e toki pakala sina</string>
+  <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">mi pana e toki pakala sina</string>
   <!-- Broken site reason text for site asked to turn off ad blocker -->
   <string name="webcompat_reporter_reason_turn_off_adblocker">lipu ni li wile e ni: sina weka ala e sitelen esun</string>
   <!-- Broken site reason text for something else -->
@@ -1230,11 +1230,11 @@
   -->
   <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">mi weka e kulupu poki ni</string>
   <!-- Text shown in snackbar when user closes a tab -->
-  <string name="snackbar_tab_closed">poki li pini</string>
+  <string name="snackbar_tab_closed">mi pini e poki</string>
   <!-- Text shown in snackbar when user closes all tabs -->
-  <string name="snackbar_tabs_closed">poki li pini</string>
+  <string name="snackbar_tabs_closed">mi pini e poki</string>
   <!-- Text shown in snackbar when user closes multiple inactive tabs. %1$s will be replaced with the number of tabs closed. -->
-  <string name="snackbar_num_tabs_closed">poki %1$s li pini</string>
+  <string name="snackbar_num_tabs_closed">mi pini e poki %1$s</string>
   <!-- Text shown in snackbar when user bookmarks a list of tabs. %s is the name of the folder the bookmark was saved into. -->
   <string name="snackbar_message_bookmarks_saved_in">mi pana e lipu tawa kulupu “%s”!</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->

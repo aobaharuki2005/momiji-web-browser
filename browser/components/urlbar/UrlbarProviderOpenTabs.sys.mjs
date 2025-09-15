@@ -16,7 +16,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  ProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
@@ -39,15 +39,6 @@ var gOpenTabUrls = new Map();
 export class UrlbarProviderOpenTabs extends UrlbarProvider {
   constructor() {
     super();
-  }
-
-  /**
-   * Returns the name of this provider.
-   *
-   * @returns {string} the name of this provider.
-   */
-  get name() {
-    return "OpenTabs";
   }
 
   /**
@@ -377,7 +368,7 @@ async function addToMemoryTable(url, userContextId, groupId, count = 1) {
   if (!UrlbarProviderOpenTabs.memoryTableInitialized) {
     return;
   }
-  await lazy.UrlbarProvidersManager.runInCriticalSection(async () => {
+  await lazy.ProvidersManager.runInCriticalSection(async () => {
     let conn = await lazy.PlacesUtils.promiseLargeCacheDBConnection();
     await conn.executeCached(
       `
@@ -411,7 +402,7 @@ async function removeFromMemoryTable(url, userContextId, groupId) {
   if (!UrlbarProviderOpenTabs.memoryTableInitialized) {
     return;
   }
-  await lazy.UrlbarProvidersManager.runInCriticalSection(async () => {
+  await lazy.ProvidersManager.runInCriticalSection(async () => {
     let conn = await lazy.PlacesUtils.promiseLargeCacheDBConnection();
     await conn.executeCached(
       `

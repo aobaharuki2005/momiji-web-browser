@@ -258,6 +258,7 @@ FunctionEnd
 Function TestUninstallRegKey
     Call CommonOnInit
 
+    Push $R0
     Push $INSTDIR ; back up the original contents for later
 
     ; Ensure that the getDefaultInstallDir function does not modify the
@@ -321,7 +322,7 @@ Function TestUninstallRegKey
     ; settings), which under Windows 10 is a special case and the Uninstall
     ; key should be rewritten, leaving the Version number out of it.
     Call getDefaultInstallDir ; pushes the default directory on the stack
-        Pop $INSTDIR
+    Pop $INSTDIR
     Push ${buildNumWin10}
     Call getUninstallKey
     Pop $INSTDIR ; reuse INSTDIR for the return value
@@ -406,16 +407,18 @@ Function TestUninstallRegKey
 
     ; ----
     ; Make sure that after all the testing the common working registers still
-    ; have their original values...
-    Pop $INSTDIR
-    ${If} "$INSTDIR" != "(0 $0, 1 $1, 2 $2, 3 $3, 4 $4, 5 $5, 6 $6, 7 $7, 8 $8, 9 $9)"
+    ; have their original values. We are using $R0, because INSTDIR can have
+    ; `Function .onVerifyInstDir` attached to it and that can modify registers.
+    Pop $R0
+    ${If} "$R0" != "(0 $0, 1 $1, 2 $2, 3 $3, 4 $4, 5 $5, 6 $6, 7 $7, 8 $8, 9 $9)"
       StrCpy $FailureMessage "At Line ${__LINE__}  Registers were changed, we expected $\n"
-      StrCpy $FailureMessage "$FailureMessage    '$INSTDIR' but received $\n"
+      StrCpy $FailureMessage "$FailureMessage    '$R0' but received $\n"
       StrCpy $FailureMessage "$FailureMessage    '(0 $0, 1 $1, 2 $2, 3 $3, 4 $4, 5 $5, 6 $6, 7 $7, 8 $8, 9 $9)'"
       SetErrors
       Return
     ${EndIf}
     Pop $INSTDIR
+    Pop $R0
 FunctionEnd
 
 Section

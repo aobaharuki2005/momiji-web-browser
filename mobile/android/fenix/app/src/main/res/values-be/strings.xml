@@ -300,6 +300,11 @@
     %1$s is the name of the app (for example "Firefox").
   -->
   <string name="browser_menu_delete_browsing_data_on_quit">Выйсці з %1$s</string>
+  <!--
+    Content description for a banner within the menu which prompt the user to make this app their default browser.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="browser_menu_default_banner_title">Зрабіць %1$s прыладай па змаўчанні</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Адхіліць</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
@@ -443,6 +448,12 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Справаздачы аб збоях дазваляюць нам дыягнаставаць і выпраўляць праблемы з браўзерам. Справаздачы могуць уключаць асабістыя або канфідэнцыяльныя звесткі.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Падрабязней</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s трэба перазапусціць</string>
+  <!-- Button text to submit a startup crash report -->
+  <string name="startup_crash_positive">Даслаць справаздачу пра крах</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">Не, дзякуй</string>
   <string name="onboarding_preferences_dialog_usage_data_learn_more_2">Падрабязней</string>
   <!-- Positive button label for the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_positive_button">Гатова</string>
@@ -542,9 +553,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Адкрываць спасылкі ў прыватнай картцы</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">Дазволіць здымкі экрана ў прыватным рэжыме</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Дазволіць здымкі экрана ў прыватным рэжыме</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">Калі гэта дазволена, прыватныя карткі таксама будуць бачныя, калі адкрыта некалькі праграм</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Калі гэта дазволена, прыватныя карткі таксама будуць бачныя, калі адкрыта некалькі праграм</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Дадаць ярлык прыватнага аглядання</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -1293,7 +1304,7 @@
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">Даслаць</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
-  <string name="webcompat_reporter_dismiss_success_snackbar_text">Закрыць</string>
+  <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Закрыць</string>
   <!-- Broken site reason text for site is slow -->
   <string name="webcompat_reporter_reason_slow2">Сайт марудны</string>
   <!-- Broken site reason text for something else -->
@@ -1498,6 +1509,10 @@
   <string name="studies_on">Уключаны</string>
   <!-- Summary of studies data on quit preference if it is set to off -->
   <string name="studies_off">Выключаны</string>
+  <!-- Toggle if desktop site is turned on -->
+  <string name="browser_feature_desktop_site_on">Уключана</string>
+  <!-- Toggle if desktop site is turned off -->
+  <string name="browser_feature_desktop_site_off">Выключана</string>
   <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
   <string name="preferences_category_permissions">Дазволы</string>
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
@@ -2345,6 +2360,17 @@
   <string name="synced_tabs_expand_group">Разгарнуць групу сінхранізаваных картак</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Згарнуць групу сінхранізаваных картак</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Цэтлікі</string>
+  <!--
+    Context description text for the "Show all" button in the shortcuts home screen section
+    which navigates the user to a screen displaying all the shortcuts.
+  -->
+  <string name="homepage_shortcuts_show_all_content_description">Паказаць усе цэтлікі</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Дасягнуты ліміт цэтлікаў</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

@@ -20,7 +20,7 @@ const PROFILES_CREATED_PREF_NAME = "browser.profiles.created";
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
-  CryptoUtils: "resource://services-crypto/utils.sys.mjs",
+  CryptoUtils: "moz-src:///services/crypto/modules/utils.sys.mjs",
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
   EveryWindow: "resource:///modules/EveryWindow.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -182,6 +182,7 @@ class SelectableProfileServiceClass extends EventEmitter {
     "app.shield.optoutstudies.enabled",
     "browser.crashReports.unsubmittedCheck.autoSubmit2",
     "browser.discovery.enabled",
+    "browser.shell.checkDefaultBrowser",
     "browser.urlbar.quicksuggest.dataCollection.enabled",
     "datareporting.healthreport.uploadEnabled",
     "datareporting.policy.currentPolicyVersion",
@@ -1321,7 +1322,7 @@ class SelectableProfileServiceClass extends EventEmitter {
    * @param {SelectableProfile} aSelectableProfile The SelectableProfile to be updated
    */
   async updateProfile(aSelectableProfile) {
-    let profileObj = await aSelectableProfile.toDbObject();
+    let profileObj = aSelectableProfile.toDbObject();
 
     await this.#connection.execute(
       `UPDATE Profiles

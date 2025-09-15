@@ -2431,7 +2431,7 @@ var DownloadAddonInstall = class extends AddonInstall {
    * Starts downloading the add-on's XPI file.
    */
   startDownload() {
-    this.downloadStartedAt = Cu.now();
+    this.downloadStartedAt = ChromeUtils.now();
 
     this.state = AddonManager.STATE_DOWNLOADING;
     if (!this._callInstallListeners("onDownloadStarted")) {
@@ -2656,9 +2656,8 @@ var DownloadAddonInstall = class extends AddonInstall {
       return;
     }
 
-    logger.debug("Download of " + this.sourceURI.spec + " completed.");
-
     if (Components.isSuccessCode(aStatus)) {
+      logger.debug(`Download of ${this.sourceURI.spec} completed.`);
       if (
         !(aRequest instanceof Ci.nsIHttpChannel) ||
         aRequest.requestSucceeded

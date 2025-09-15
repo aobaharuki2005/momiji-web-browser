@@ -2145,6 +2145,19 @@ export var PlacesUtils = {
   },
 
   /**
+   * Converts an array of Float32 into a SQL bindable blob format.
+   *
+   * @param {Array<Number>} tensor
+   * @returns {Uint8ClampedArray} SQL bindable blob.
+   */
+  tensorToSQLBindable(tensor) {
+    if (!tensor || !Array.isArray(tensor)) {
+      throw new Error("tensorToSQLBindable received an invalid tensor");
+    }
+    return new Uint8ClampedArray(new Float32Array(tensor).buffer);
+  },
+
+  /**
    * The metadata API allows consumers to store simple key-value metadata in
    * Places. Keys are strings, values can be any type that SQLite supports:
    * numbers (integers and doubles), Booleans, strings, and blobs. Values are

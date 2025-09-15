@@ -707,9 +707,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">링크를 사생활 보호 탭에서 열기</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">사생활 보호 모드에서 스크린샷 허용</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">사생활 보호 모드에서 스크린샷 허용</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">허용되는 경우, 여러 앱이 열려있을 때 사생활 보호 탭도 표시됨</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">허용되는 경우, 여러 앱이 열려있을 때 사생활 보호 탭도 표시됨</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">사생활 보호 모드 바로 가기 추가</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -1708,9 +1708,11 @@
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">보내기</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
-  <string name="webcompat_reporter_success_snackbar_text">신고가 전송됨</string>
+  <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">신고가 전송됨</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">신고가 전송됨</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
-  <string name="webcompat_reporter_dismiss_success_snackbar_text">닫기</string>
+  <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">닫기</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">무슨 일이 있었나요? 무슨 일이 일어났어야 했나요?</string>
   <!--
@@ -1888,6 +1890,8 @@
   <string name="bookmark_close_button_content_description">북마크 닫기</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">북마크 없음</string>
+  <!-- Bookmark screen folder description. %s is the count of bookmark folder children -->
+  <string name="bookmarks_folder_description">폴더 내 북마크: %s개</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
   <string name="bookmark_empty_list_guest_description">탐색하는 동안 사이트를 저장하세요. 다른 동기화된 기기에서 북마크를 가져오려면 로그인하세요.</string>
   <!-- Text for the button to navigate to sync authentication -->
@@ -2347,6 +2351,18 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline">%1$s가 주요 웹 사이트 손상을 방지하는 데 필요한 예외를 자동으로 적용하도록 허용합니다.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience">또한 사소한 문제를 고치고 편의 기능을 사용할 수 있도록 하는 데에만 필요한 예외를 자동으로 적용합니다.</string>
+  <!--
+    Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
+
+    Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
+  -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">정말로 사이트 문제 해결을 끄시겠습니까?</string>
+  <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">이 설정은 가장 일반적인 사이트 문제를 해결하는 데 도움이 됩니다. 이 기능을 끄면 일부 사이트가 작동하지 않을 수 있으며 %1$s가 이러한 문제 해결을 돕지 못할 수 있습니다.</string>
+  <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">문제 해결 기능 끄기</string>
+  <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">문제 해결 기능 계속 켜기</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">엄격 추적 방지 기능에 의해 차단된 것</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->

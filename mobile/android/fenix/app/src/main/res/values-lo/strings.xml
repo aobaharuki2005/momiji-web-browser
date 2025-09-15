@@ -525,6 +525,10 @@
   <string name="startup_crash_body">ເກີດບັນຫາໃນການເປີດ %s.\n\nການສົ່ງລາຍງານການຂັດຂ້ອງຊ່ວຍພວກເຮົາວິນິດໄສ ແລະ ແກ້ໄຂບັນຫາກັບຕົວທ່ອງເວັບ. ບົດລາຍງານອາດຈະປະກອບມີຂໍ້ມູນສ່ວນຕົວ ຫຼື ຂໍ້ມູນທີ່ລະອຽດອ່ອນ.</string>
   <!-- Button text to submit a startup crash report -->
   <string name="startup_crash_positive">ສົ່ງລາຍງານຂໍ້ຜິດພາດ</string>
+  <!-- Button text to continue and not send a startup crash report -->
+  <string name="startup_crash_negative">ບໍ່, ຂອບໃຈ</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">ເປີດ %s ຄືນໃໝ່</string>
   <!-- Title for the usage data option in the privacy preferences dialog shown during onboarding. Note: The word "Mozilla" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_usage_data_title">ສົ່ງຂໍ້ມູນດ້ານເຕັກນິກ ແລະ ການໂຕ້ຕອບກັບ Mozilla</string>
   <string name="onboarding_preferences_dialog_usage_data_description_2" tools:ignore="BrandUsage">ຂໍ້​ມູນ​ກ່ຽວ​ກັບ​ອຸ​ປະ​ກອນ​ຂອງ​ທ່ານ, ການ​ຕັ້ງ​ຄ່າ​ຮາດ​ແວ, ແລະ​ ວິ​ທີ​ທີ່​ທ່ານ​ນໍາ​ໃຊ້ Firefox ຊ່ວຍ​ປັບ​ປຸງ​ຄຸນ​ສົມ​ບັດ, ປະ​ສິດ​ທິ​ພາບ, ແລະ ​ຄວາມ​ສະຖຽນສໍາ​ລັບ​ທຸກ​ຄົນ.</string>
@@ -549,12 +553,45 @@
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">ເພື່ອຊ່ວຍປັບປຸງຕົວທ່ອງເວັບ, Firefox ສົ່ງຂໍ້ມູນການວິເຄາະ ແລະ ການໂຕ້ຕອບກັບ Mozilla. %1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">ຈັດການ</string>
+  <!-- Terms of use (ToU) onboarding redesign title. -->
+  <string name="onboarding_redesign_tou_title">ເປີດຕົວຕົວທ່ອງເວັບ Android ສຸດທ້າຍ</string>
+  <!-- Terms of use (ToU) first subheader. -->
+  <string name="onboarding_redesign_tou_subheader_one">ໂຫຼດເວັບໄຊໄວ</string>
+  <!-- Terms of use (ToU) second subheader. -->
+  <string name="onboarding_redesign_tou_subheader_two">ການປ້ອງກັນການຕິດຕາມອັດຕະໂນມັດ</string>
+  <!-- Terms of use (ToU) third subheader. -->
+  <string name="onboarding_redesign_tou_subheader_three">ຫລາຍພັນການປັບແຕ່ງ</string>
+  <!--
+    Terms of use (ToU) first body text. %1$s is replaced by an active link,
+    using onboarding_redesign_tou_body_one_link_text as text (“Firefox Terms of Use”).
+  -->
+  <string name="onboarding_redesign_tou_body_one">ໂດຍການດຳເນີນການຕໍ່, ທ່ານເຫັນດີນຳ %1$s.</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
+  <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">ເງື່ອນໄຂການນໍາໃຊ້ Firefox</string>
+  <!--
+    Terms of use (ToU) second body text. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link, using onboarding_redesign_tou_body_two_link_text as text (“Privacy Notice”).
+  -->
+  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox ເປັນຫ່ວງກ່ຽວກັບຄວາມເປັນສ່ວນຕົວຂອງທ່ານ. ສຶກສາເພີ່ມເຕີມໃນ %1$s ຂອງພວກເຮົາ.</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
+  <string name="onboarding_redesign_tou_body_two_link_text">ປະກາດຄວາມເປັນສ່ວນຕົວ</string>
+  <!--
+    Terms of use (ToU) third body text. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link using onboarding_redesign_tou_body_three_link_text as text (“Manage Settings”).
+  -->
+  <string name="onboarding_redesign_tou_body_three" tools:ignore="BrandUsage">ເພື່ອຊ່ວຍປັບປຸງຕົວທ່ອງເວັບ, Firefox ສົ່ງຂໍ້ມູນການວິເຄາະ ແລະ ການໂຕ້ຕອບກັບ Mozilla. %1$s</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_three. -->
+  <string name="onboarding_redesign_tou_body_three_link_text">ຈັດການການຕັ້ງຄ່າ</string>
+  <!-- Terms of use (ToU) onboarding page continue button label. -->
+  <string name="onboarding_redesign_tou_agree_and_continue_button_label">ສືບຕໍ່</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">ຊ່ວຍພວກເຮົາພັດທະນາ Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">ເມື່ອທ່ານແບ່ງປັນວິທີທີ່ທ່ານຄົ້ນພົບ Firefox ແລະ ທີ່ທ່ານໃຊ້ມັນ, ທ່ານຊ່ວຍພວກເຮົາແນະນໍາຕົວທ່ອງເວັບຂອງພວກເຮົາໃຫ້ກັບຄົນຫຼາຍຂຶ້ນ.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">ແບ່ງປັນຂໍ້ມູນໜ້ອຍທີ່ສຸດກັບຄູ່ຮ່ວມງານດ້ານເທັກໂນໂລຍີການຕະຫຼາດຂອງ Mozilla. ຂໍ້ມູນນີ້ບໍ່ເຄີຍຖືກຂາຍ ຫຼື ໃຊ້ເພື່ອສະແດງໂຄສະນາໃຫ້ທ່ານເຫັນ.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">ແບ່ງປັນຂໍ້ມູນກັບຄູ່ຮ່ວມງານດ້ານເຕັກໂນໂລຢີການຕະຫຼາດຂອງ Mozilla. ຂໍ້ມູນນີ້ບໍ່ເຄີຍຖືກຂາຍ ຫຼືໃຊ້ເພື່ອສະແດງໂຄສະນາໃຫ້ທ່ານເຫັນ.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">ພວກເຮົາໃຊ້ຂໍ້ມູນແນວໃດ</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -670,15 +707,17 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">ເປີດລີ້ງໃນແທັບສ່ວນຕົວ</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">ອະນຸຍາດໃຫ້ຖ່າຍຫນ້າຈໍໃນໂຫມດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">ອະນຸຍາດໃຫ້ຖ່າຍຫນ້າຈໍໃນໂຫມດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">ຖ້າຫາກວ່າໄດ້ອະນຸຍາດແລ້ວ, ແທັບສ່ວນໂຕຈະສະແດງໃຫ້ເຫັນເມື່ອເປີດຫລາຍແອັບ</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">ຖ້າຫາກວ່າໄດ້ອະນຸຍາດແລ້ວ, ແທັບສ່ວນໂຕຈະສະແດງໃຫ້ເຫັນເມື່ອເປີດຫລາຍແອັບ</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">ເພີ່ມທາງລັດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">ໂໝດ HTTPS ເທົ່ານັ້ນ</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">ໃຊ້ການລັອກໜ້າຈໍເພື່ອເຊື່ອງແຖບໃນຜົນການຄົ້ນຫາສ່ວນຕົວ</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_2">ເບິ່ງແຖບທີ່ມີລາຍນິ້ວມື, PIN ຫຼື ການປົດລັອກດ້ວຍໜ້າຂອງທ່ານ.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">ໂຕປິດກັ້ນ Cookie banner</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -743,10 +782,16 @@
   <string name="preferences_category_account">ບັນຊີ</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">ທີ່ຢູ່ແຖບທີ່ຢູ່</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">ຮູບແບບແຖບເຄື່ອງມື</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">ຊຸດປັບແຕ່ງ</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">ຫນ້າທຳອິດ</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">ໄອຄອນແອັບ</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">ແຖບສະແດງແຖບ</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">ທ່າທາງ</string>
   <!-- Preference for settings related to visual options -->
@@ -821,6 +866,14 @@
   <string name="preferences_open_links_in_apps_ask">ຖາມກ່ອນເປີດ</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">ບໍ່ເຄີຍ</string>
+  <!-- Preference title for choosing an app to handle downloads -->
+  <string name="preferences_choose_app_for_downloads">ຈັດການການດາວໂຫຼດດ້ວຍແອັບອື່ນ</string>
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_downloads_settings_clean_up_files_title">ລຶບອອກຈາກ %s ແລະ ອຸປະກອນ</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">ການລຶບໄຟລ໌ອອກຈາກຕົວຈັດການການດາວໂຫຼດຂອງທ່ານຈະເປັນການລຶບພວກມັນອອກຈາກອຸປະກອນຂອງທ່ານນຳ</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">ດາວໂຫຼດ</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">ເປີດໃຊ້ບັນທຶກ Gecko</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
@@ -874,6 +927,8 @@
     a section where users see a list of tabs that they have visited in the past few days
   -->
   <string name="customize_toggle_recently_visited">ຫາກໍ່ເຂົ້າໄປເບິງມື້ກີ້ນີ້</string>
+  <!-- Title for the customize home screen section with Pocket. -->
+  <string name="customize_toggle_pocket_3">ເລື່ອງລາວ</string>
   <!-- Title for the customize home screen section with sponsored Pocket stories. -->
   <string name="customize_toggle_pocket_sponsored">ເລື່ອງລາວທີ່ໄດ້ຮັບການສະຫນັບສະຫນູນ</string>
   <!-- Title for the opening wallpaper settings screen -->
@@ -1453,9 +1508,9 @@
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">ສົ່ງ</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
-  <string name="webcompat_reporter_success_snackbar_text">ລາຍງານຂອງທ່ານຖືກສົ່ງໄປແລ້ວ</string>
+  <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ລາຍງານຂອງທ່ານຖືກສົ່ງໄປແລ້ວ</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
-  <string name="webcompat_reporter_dismiss_success_snackbar_text">ປິດ</string>
+  <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ປິດ</string>
   <!-- Broken site reason text for something else -->
   <string name="webcompat_reporter_reason_other">ບາງສິ່ງບາງຢ່າງອື່ນ</string>
   <!--

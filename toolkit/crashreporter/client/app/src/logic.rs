@@ -22,7 +22,6 @@ use crate::{
     ui::{ReportCrashUI, ReportCrashUIState, SubmitState},
 };
 use anyhow::Context;
-use uuid::Uuid;
 
 pub mod annotations;
 
@@ -79,8 +78,8 @@ impl ReportCrash {
             log::warn!("failed to compute minidump hash: {e:#}");
             None
         });
-        let ping_uuid = self.send_crash_ping(hash.as_deref());
-        if let Err(e) = self.update_events_file(hash.as_deref(), ping_uuid) {
+        self.send_crash_ping(hash.as_deref());
+        if let Err(e) = self.update_events_file(hash.as_deref()) {
             log::warn!("failed to update events file: {e:#}");
         }
         self.check_eol_version()?;
@@ -124,26 +123,17 @@ impl ReportCrash {
     }
 
     /// Send crash pings to legacy telemetry and Glean.
-    ///
-    /// Returns the crash ping uuid used in legacy telemetry.
-    fn send_crash_ping(&self, minidump_hash: Option<&str>) -> Option<Uuid> {
+    fn send_crash_ping(&self, minidump_hash: Option<&str>) {
         net::ping::CrashPing {
-            crash_id: self.config.local_dump_id().as_ref(),
             extra: &self.extra,
-            ping_dir: self.config.ping_dir.as_deref(),
             minidump_hash,
-            pingsender_path: crate::config::installation_program_path("pingsender").as_ref(),
         }
         .send()
     }
 
     /// Update the events file with information about the crash ping, minidump hash, and
     /// stacktraces.
-    fn update_events_file(
-        &self,
-        minidump_hash: Option<&str>,
-        ping_uuid: Option<Uuid>,
-    ) -> anyhow::Result<()> {
+    fn update_events_file(&self, minidump_hash: Option<&str>) -> anyhow::Result<()> {
         use crate::std::io::{BufRead, Error, ErrorKind, Write};
         struct EventsFile {
             event_version: String,
@@ -205,9 +195,6 @@ impl ReportCrash {
         // Update events file fields.
         if let Some(hash) = minidump_hash {
             events_file.data["MinidumpSha256Hash"] = hash.into();
-        }
-        if let Some(uuid) = ping_uuid {
-            events_file.data["CrashPingUUID"] = uuid.to_string().into();
         }
         events_file.data["StackTraces"] = self.extra["StackTraces"].clone();
 

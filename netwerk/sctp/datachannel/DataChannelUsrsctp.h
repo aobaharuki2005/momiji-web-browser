@@ -90,6 +90,7 @@ class DataChannelConnectionUsrsctp : public DataChannelConnection {
                               uint16_t stream, uint16_t messageId, int flags);
   void HandleDCEPMessageChunk(const void* buffer, size_t length, uint32_t ppid,
                               uint16_t stream, int flags);
+  bool HasQueuedData(uint16_t aStream) const;
 
   // All STS only
   bool mSendInterleaved = false;

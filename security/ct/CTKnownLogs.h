@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 
-static const PRTime kCTExpirationTime = INT64_C(1763031555000000);
+static const PRTime kCTExpirationTime = INT64_C(1763636492000000);
 
 namespace mozilla::ct {
 
@@ -127,6 +127,16 @@ const CTLogInfo kCTLogList[] = {
      "\xbf\x91\x64\x46\x6e\x0e\x27\x13\xea\xbb\x6f\x46\x27\x58\x86\xef\x40\x21"
      "\xa3",
      91},
+    {"Cloudflare 'Nimbus2027'", CTLogState::Admissible, CTLogFormat::RFC6962,
+     1757030400000,  // 2025-09-05T00:00:00Z
+     1,              // operated by Cloudflare
+     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
+     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x62\x37\x7f\x8c\x4d\x04\xa0\x08\x4d"
+     "\x05\xb7\xdc\x36\x1a\xd3\x6f\xb1\x74\xc7\x5d\x0a\x64\xaf\x2b\xd9\x20\xe3"
+     "\xc7\x51\x9d\x8c\x9e\xf9\x84\x9a\xc7\xc7\x63\x82\x43\xe0\x57\x46\x35\xe2"
+     "\xf9\xcc\xe8\x44\x43\x75\xbb\x48\xfd\x71\x69\x7c\x77\xa3\xa8\x3c\xc3\xe8"
+     "\x81",
+     91},
     {"DigiCert Yeti2025 Log", CTLogState::Retired, CTLogFormat::RFC6962,
      1753315200000,  // 2025-07-24T00:00:00Z
      2,              // operated by DigiCert
@@ -147,7 +157,8 @@ const CTLogInfo kCTLogList[] = {
      "\x75\x80\xb7\x53\xa7\x85\xd5\xbc\xab\x47\x06\x55\xdb\xb5\xdf\x88\xa1\x6f"
      "\x38",
      91},
-    {"DigiCert 'Wyvern2025h2' Log", CTLogState::Admissible, CTLogFormat::RFC6962,
+    {"DigiCert 'Wyvern2025h2' Log", CTLogState::Admissible,
+     CTLogFormat::RFC6962,
      1724900983000,  // 2024-08-29T03:09:43Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -177,7 +188,8 @@ const CTLogInfo kCTLogList[] = {
      "\xde\x9b\x8c\x13\x92\xb7\xad\x3d\x0f\xa1\x9c\x8f\x48\xce\x74\x27\x18\x23"
      "\x99",
      91},
-    {"DigiCert 'Sphinx2025h2' Log", CTLogState::Admissible, CTLogFormat::RFC6962,
+    {"DigiCert 'Sphinx2025h2' Log", CTLogState::Admissible,
+     CTLogFormat::RFC6962,
      1724900983000,  // 2024-08-29T03:09:43Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -437,7 +449,8 @@ const CTLogInfo kCTLogList[] = {
      "\x9d\x7d\x05\x53\xc7\x9e\x94\xea\x9b\x57\x46\xbf\x4f\xa4\x7e\xfb\xdf\xfa"
      "\x85",
      91},
-    {"Bogus placeholder log to unbreak misbehaving CT libraries", CTLogState::Retired, CTLogFormat::RFC6962,
+    {"Bogus placeholder log to unbreak misbehaving CT libraries",
+     CTLogState::Retired, CTLogFormat::RFC6962,
      1750489200000,  // 2025-06-21T07:00:00Z
      6,              // operated by Geomys
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -497,7 +510,8 @@ const CTLogInfo kCTLogList[] = {
      "\x66\x8c\x31\x22\x44\x8a\xa5\x96\x06\x96\xa2\xed\x74\xb5\x5c\x2d\x60\xd2"
      "\xe7",
      91},
-    {"Bogus RFC6962 log to avoid breaking misbehaving CT libraries", CTLogState::Retired, CTLogFormat::RFC6962,
+    {"Bogus RFC6962 log to avoid breaking misbehaving CT libraries",
+     CTLogState::Retired, CTLogFormat::RFC6962,
      1750489200000,  // 2025-06-21T07:00:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"

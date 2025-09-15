@@ -3231,7 +3231,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     // This might post new restyles, so need to do it here. Don't do it if we're
     // already going to restyle tho, so that we don't potentially reflow with
     // dirty styling.
-    presContext->UpdateContainerQueryStyles();
+    presContext->UpdateContainerQueryStylesAndAnchorPosLayout();
     presContext->FinishedContainerQueryUpdate();
   }
 
@@ -3342,7 +3342,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     presContext->PresShell()->MergeAnchorPosAnchorChanges();
 
     mInStyleRefresh = false;
-    presContext->UpdateContainerQueryStyles();
+    presContext->UpdateContainerQueryStylesAndAnchorPosLayout();
     mInStyleRefresh = true;
   }
 
@@ -3417,13 +3417,13 @@ void RestyleManager::ElementStateChanged(Element* aElement,
                                          ElementState aChangedBits) {
   AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("ElementStateChanged",
                                       LAYOUT_StyleComputation);
-#ifdef EARLY_BETA_OR_EARLIER
+#ifdef NIGHTLY_BUILD
   if (MOZ_UNLIKELY(mInStyleRefresh)) {
     MOZ_CRASH_UNSAFE_PRINTF(
         "Element state change during style refresh (%" PRIu64 ")",
         aChangedBits.GetInternalValue());
   }
-#endif
+#endif  // NIGHTLY_BUILD
 
   const ElementState kVisitedAndUnvisited =
       ElementState::VISITED | ElementState::UNVISITED;
@@ -3589,7 +3589,8 @@ static inline bool NeedToRecordAttrChange(
 
 void RestyleManager::AttributeWillChange(Element* aElement,
                                          int32_t aNameSpaceID,
-                                         nsAtom* aAttribute, int32_t aModType) {
+                                         nsAtom* aAttribute,
+                                         AttrModType aModType) {
   TakeSnapshotForAttributeChange(*aElement, aNameSpaceID, aAttribute);
 }
 
@@ -3651,7 +3652,7 @@ static inline bool AttributeChangeRequiresSubtreeRestyle(
 }
 
 void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
-                                      nsAtom* aAttribute, int32_t aModType,
+                                      nsAtom* aAttribute, AttrModType aModType,
                                       const nsAttrValue* aOldValue) {
   MOZ_ASSERT(!mInStyleRefresh);
 

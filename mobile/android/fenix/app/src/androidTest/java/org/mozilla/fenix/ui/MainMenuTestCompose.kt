@@ -374,7 +374,7 @@ class MainMenuTestCompose : TestSetup() {
         }.openThreeDotMenu(composeTestRule) {
             openMoreMenu()
         }.clickRemoveFromShortcutsButton {
-            verifySnackBarText(getStringResource(R.string.snackbar_top_site_removed))
+            composeTestRule.waitForIdle()
         }.goToHomescreen(composeTestRule) {
             verifyNotExistingTopSiteItem(composeTestRule, testPage.title)
         }
@@ -570,7 +570,9 @@ class MainMenuTestCompose : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            verifyPageContent(genericURL.content)
         }.openThreeDotMenu(composeTestRule) {
+            verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
             recommendedExtensionTitle = getRecommendedExtensionTitle(composeTestRule)
             installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
@@ -774,7 +776,9 @@ class MainMenuTestCompose : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            verifyPageContent(genericURL.content)
         }.openThreeDotMenu(composeTestRule) {
+            verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
             recommendedExtensionTitle = getRecommendedExtensionTitle(composeTestRule)
             installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
@@ -787,6 +791,7 @@ class MainMenuTestCompose : TestSetup() {
         }
         browserScreen {
         }.openThreeDotMenu(composeTestRule) {
+            verifyExtensionsButtonWithInstalledExtension(recommendedExtensionTitle)
         }.openExtensionsFromMainMenu {
             clickManageExtensionsButtonFromRedesignedMainMenu(composeTestRule)
         }.openDetailedMenuForAddon(recommendedExtensionTitle) {
@@ -806,7 +811,9 @@ class MainMenuTestCompose : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            verifyPageContent(genericURL.content)
         }.openThreeDotMenu(composeTestRule) {
+            verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
         }.clickDiscoverMoreExtensionsButton(composeTestRule) {
             verifyUrl("addons.mozilla.org/en-US/android")
@@ -893,7 +900,7 @@ class MainMenuTestCompose : TestSetup() {
             clickBrokenSiteFormSendButton(composeTestRule)
         }
         browserScreen {
-            verifySnackBarText("Your report was sent")
+            verifySnackBarText("Report sent")
         }.openThreeDotMenu(composeTestRule) {
             openToolsMenu()
         }.openReportBrokenSite {
@@ -1186,6 +1193,7 @@ class MainMenuTestCompose : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.url) {
         }.openThreeDotMenu(composeTestRule) {
+            verifyTryRecommendedExtensionButton()
         }.clickExtensionsChevronFromMainMenu {
             verifyRecommendedAddonsViewFromRedesignedMainMenu(composeTestRule)
             clickCollapseExtensionsChevronFromMainMenu(composeTestRule)
@@ -1203,8 +1211,6 @@ class MainMenuTestCompose : TestSetup() {
         }.openThreeDotMenu(composeTestRule) {
             clickMoreOptionChevron()
             verifyMoreMainMenuItems()
-            clickLessOptionChevron()
-            verifyPageMainMenuItems()
         }
     }
 
@@ -1378,6 +1384,20 @@ class MainMenuTestCompose : TestSetup() {
         }.openMainMenuFromRedesignedToolbar {
             verifySwitchToDesktopSiteButton(composeTestRule)
             verifyDesktopSiteButtonState(composeTestRule, isEnabled = false)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080110
+    @SmokeTest
+    @Test
+    fun verifyTheMoreMainMenuSubListTest() {
+        val firstTestPage = TestAssetHelper.getFirstForeignWebPageAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstTestPage.url) {
+        }.openThreeDotMenu(composeTestRule) {
+            openMoreMenu()
+            verifyMoreMainMenuItems()
         }
     }
 }

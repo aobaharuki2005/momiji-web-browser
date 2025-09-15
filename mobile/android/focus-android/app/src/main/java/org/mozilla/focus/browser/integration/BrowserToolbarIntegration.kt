@@ -7,6 +7,7 @@ package org.mozilla.focus.browser.integration
 import android.graphics.Color
 import android.widget.LinearLayout
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.compose.material3.Text
@@ -19,10 +20,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.children
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -30,6 +33,7 @@ import mozilla.components.browser.toolbar.display.DisplayToolbar.Indicators
 import mozilla.components.compose.cfr.CFRPopup
 import mozilla.components.compose.cfr.CFRPopupProperties
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
+import mozilla.components.feature.customtabs.getConfiguredColorSchemeParams
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton
@@ -39,6 +43,8 @@ import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.utils.ColorUtils.getReadableTextColor
+import mozilla.components.support.utils.ColorUtils.getSecondaryReadableTextColor
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
@@ -55,6 +61,9 @@ import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.ui.theme.focusTypography
 import org.mozilla.focus.utils.ClickableSubstringLink
+import androidx.cardview.R as cardViewR
+import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.ui.icons.R as iconsR
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 class BrowserToolbarIntegration(
@@ -70,15 +79,32 @@ class BrowserToolbarIntegration(
     private val customTabId: String? = null,
     isOnboardingTab: Boolean = false,
     renderStyle: ToolbarFeature.RenderStyle = ToolbarFeature.RenderStyle.ColoredUrl,
+    private val coroutineScope: CoroutineScope = MainScope(),
 ) : LifecycleAwareFeature {
+    val backgroundColor = customTabId
+        ?.let { store.state.findCustomTab(it)?.config }
+        ?.getConfiguredColorSchemeParams(
+            currentNightMode = toolbar.context.resources.configuration.uiMode,
+            preferredNightMode = MODE_NIGHT_FOLLOW_SYSTEM,
+        )
+        ?.toolbarColor
+
     private val presenter = ToolbarPresenter(
         toolbar,
         store,
         customTabId,
         urlRenderConfiguration = ToolbarFeature.UrlRenderConfiguration(
             toolbar.context.components.publicSuffixList,
-            ContextCompat.getColor(toolbar.context, R.color.primaryText),
-            ContextCompat.getColor(toolbar.context, R.color.secondaryText),
+            if (backgroundColor != null) {
+                getReadableTextColor(backgroundColor)
+            } else {
+                ContextCompat.getColor(toolbar.context, R.color.primaryText)
+            },
+            if (backgroundColor != null) {
+                getSecondaryReadableTextColor(backgroundColor)
+            } else {
+                ContextCompat.getColor(toolbar.context, R.color.secondaryText)
+            },
             renderStyle,
         ),
     )
@@ -101,7 +127,7 @@ class BrowserToolbarIntegration(
     private val eraseAction = BrowserToolbar.Button(
         imageDrawable = AppCompatResources.getDrawable(
             toolbar.context,
-            R.drawable.mozac_ic_delete_24,
+            iconsR.drawable.mozac_ic_delete_24,
         )!!,
         contentDescription = toolbar.context.getString(R.string.content_description_erase),
         iconTintColorResource = R.color.primaryText,
@@ -156,15 +182,15 @@ class BrowserToolbarIntegration(
             icons = icons.copy(
                 trackingProtectionTrackersBlocked = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield_checkmark_24,
+                    iconsR.drawable.mozac_ic_shield_checkmark_24,
                 )!!,
                 trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield_checkmark_24,
+                    iconsR.drawable.mozac_ic_shield_checkmark_24,
                 )!!,
                 trackingProtectionException = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield_slash_24,
+                    iconsR.drawable.mozac_ic_shield_slash_24,
                 )!!,
             )
         }
@@ -225,7 +251,7 @@ class BrowserToolbarIntegration(
     }
 
     private fun setBrowserActionButtons() {
-        tabsCounterScope = store.flowScoped { flow ->
+        tabsCounterScope = store.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.distinctUntilChangedBy { state -> state.tabs.size > 1 }
                 .collect { state ->
                     if (state.tabs.size > 1) {
@@ -261,13 +287,13 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal fun observeEraseCfr() {
-        eraseTabsCfrScope = fragment.components?.appStore?.flowScoped { flow ->
+        eraseTabsCfrScope = fragment.components?.appStore?.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.mapNotNull { state -> state.showEraseTabsCfr }
                 .distinctUntilChanged()
                 .collect { showEraseCfr ->
                     if (showEraseCfr) {
                         val eraseActionView =
-                            toolbar.findViewById<LinearLayout>(R.id.mozac_browser_toolbar_navigation_actions)
+                            toolbar.findViewById<LinearLayout>(toolbarR.id.mozac_browser_toolbar_navigation_actions)
                                 .children
                                 .last()
                         CFRPopup(
@@ -287,7 +313,7 @@ class BrowserToolbarIntegration(
                                 ),
                                 dismissButtonColor = ContextCompat.getColor(
                                     fragment.requireContext(),
-                                    R.color.cardview_light_background,
+                                    cardViewR.color.cardview_light_background,
                                 ),
                                 popupVerticalOffset = 0.dp,
                             ),
@@ -313,13 +339,16 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal fun observeCookieBannerCfr() {
-        cookieBannerCfrScope = fragment.components?.appStore?.flowScoped { flow ->
+        cookieBannerCfrScope =
+            fragment.components?.appStore?.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.mapNotNull { state -> state.showCookieBannerCfr }
                 .distinctUntilChanged()
                 .collect { showCookieBannerCfr ->
                     if (showCookieBannerCfr) {
                         CFRPopup(
-                            anchor = toolbar.findViewById<AppCompatEditText>(R.id.mozac_browser_toolbar_background),
+                            anchor = toolbar.findViewById<AppCompatEditText>(
+                                toolbarR.id.mozac_browser_toolbar_background,
+                            ),
                             properties = CFRPopupProperties(
                                 popupWidth = 256.dp,
                                 popupAlignment = CFRPopup.PopupAlignment.BODY_TO_ANCHOR_START,
@@ -335,7 +364,7 @@ class BrowserToolbarIntegration(
                                 ),
                                 dismissButtonColor = ContextCompat.getColor(
                                     fragment.requireContext(),
-                                    R.color.cardview_light_background,
+                                    cardViewR.color.cardview_light_background,
                                 ),
                                 popupVerticalOffset = 0.dp,
                                 indicatorArrowStartOffset = 10.dp,
@@ -376,14 +405,15 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal fun observeTrackingProtectionCfr() {
-        trackingProtectionCfrScope = fragment.components?.appStore?.flowScoped { flow ->
+        trackingProtectionCfrScope =
+            fragment.components?.appStore?.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.mapNotNull { state -> state.showTrackingProtectionCfrForTab }
                 .distinctUntilChanged()
                 .collect { showTrackingProtectionCfrForTab ->
                     if (showTrackingProtectionCfrForTab[store.state.selectedTabId] == true) {
                         CFRPopup(
                             anchor = toolbar.findViewById(
-                                R.id.mozac_browser_toolbar_tracking_protection_indicator,
+                                toolbarR.id.mozac_browser_toolbar_tracking_protection_indicator,
                             ),
                             properties = CFRPopupProperties(
                                 popupWidth = 256.dp,
@@ -400,7 +430,7 @@ class BrowserToolbarIntegration(
                                 ),
                                 dismissButtonColor = ContextCompat.getColor(
                                     fragment.requireContext(),
-                                    R.color.cardview_light_background,
+                                    cardViewR.color.cardview_light_background,
                                 ),
                                 popupVerticalOffset = 0.dp,
                             ),
@@ -446,7 +476,7 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal fun observerSecurityIndicatorChanges() {
-        securityIndicatorScope = store.flowScoped { flow ->
+        securityIndicatorScope = store.flowScoped(coroutineScope = coroutineScope) { flow ->
             flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabId) }
                 .distinctUntilChangedBy { tab -> tab.content.securityInfo }
                 .collect {

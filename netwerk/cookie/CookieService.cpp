@@ -1339,17 +1339,11 @@ CookieService::GetCookieNative(const nsACString& aHost, const nsACString& aPath,
       CookieCommons::GetBaseDomainFromHost(mTLDService, aHost, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CookieListIter iter{};
   CookieStorage* storage = PickStorage(*aOriginAttributes);
-  bool foundCookie = storage->FindCookie(baseDomain, *aOriginAttributes, aHost,
-                                         aName, aPath, iter);
 
-  if (foundCookie) {
-    RefPtr<Cookie> cookie = iter.Cookie();
-    NS_ENSURE_TRUE(cookie, NS_ERROR_NULL_POINTER);
-
-    cookie.forget(aCookie);
-  }
+  RefPtr<Cookie> cookie =
+      storage->FindCookie(baseDomain, *aOriginAttributes, aHost, aName, aPath);
+  cookie.forget(aCookie);
 
   return NS_OK;
 }

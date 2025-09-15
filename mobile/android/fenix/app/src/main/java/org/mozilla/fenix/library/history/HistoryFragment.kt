@@ -87,16 +87,15 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.QrScanFenixFeature
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.VoiceSearchFeature
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
@@ -129,7 +128,6 @@ import org.mozilla.fenix.search.SearchFragmentStore
 import org.mozilla.fenix.search.createInitialSearchFragmentState
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.theme.FirefoxTheme
-import kotlin.getValue
 import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 
 private const val MATERIAL_DESIGN_SCRIM = "#52000000"
@@ -164,6 +162,14 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
 
     private var verificationResultLauncher: ActivityResultLauncher<Intent> =
         registerForVerification(onVerified = ::openHistoryInPrivate)
+
+    private val qrScanFenixFeature by lazy(LazyThreadSafetyMode.NONE) {
+        ViewBoundFeatureWrapper<QrScanFenixFeature>()
+    }
+    private val qrScannerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            qrScanFenixFeature.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
+        }
 
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
@@ -256,7 +262,15 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
 
         if (requireContext().settings().shouldUseComposableToolbar) {
             toolbarStore = buildToolbarStore()
-            QrScannerBinding.register(this)
+            qrScanFenixFeature.set(
+                feature = QrScanFenixFeature(
+                    context = requireContext(),
+                    appStore = requireContext().components.appStore,
+                    qrScanActivityLauncher = qrScannerLauncher,
+                ),
+                owner = viewLifecycleOwner,
+                view = view,
+            )
             voiceSearchFeature.set(
                 feature = VoiceSearchFeature(
                     context = requireContext(),
@@ -629,11 +643,12 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     }
 
     private fun openRegularItem(item: History.Regular) = runIfFragmentIsAttached {
-        (activity as HomeActivity).openToBrowserAndLoad(
+        requireComponents.useCases.fenixBrowserUseCases.loadUrlOrSearch(
             searchTermOrURL = item.url,
-            newTab = true,
-            from = BrowserDirection.FromHistory,
+            newTab = requireComponents.settings.enableHomepageAsNewTab.not(),
+            private = (requireActivity() as HomeActivity).browsingModeManager.mode.isPrivate,
         )
+        findNavController().navigate(R.id.browserFragment)
     }
 
     private fun onDeleteInitiated(items: Set<History>) {

@@ -27,10 +27,9 @@ function WeakMapConstructorInit(iterable) {
   }
 }
 
-#ifdef NIGHTLY_BUILD
 /**
  * Upsert proposal
- * 
+ *
  * WeakMap.prototype.getOrInsertComputed ( key, callbackfn )
  *
  * https://tc39.es/proposal-upsert/
@@ -75,4 +74,3 @@ function WeakMapGetOrInsertComputed(key, callbackfn) {
   // Step 7.a.ii, 10. Return value.
   return value;
 }
-#endif  // #ifdef NIGHTLY_BUILD

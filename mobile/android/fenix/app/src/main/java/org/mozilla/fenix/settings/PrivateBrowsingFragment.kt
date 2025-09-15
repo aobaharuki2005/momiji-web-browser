@@ -7,7 +7,6 @@ package org.mozilla.fenix.settings
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
-import android.view.WindowManager
 import androidx.activity.result.ActivityResultLauncher
 import androidx.biometric.BiometricManager
 import androidx.preference.Preference
@@ -15,8 +14,9 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingLocked
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.DefaultPendingIntentFactory
+import org.mozilla.fenix.components.DefaultShortcutManagerCompatWrapper
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.settings
@@ -53,7 +53,11 @@ class PrivateBrowsingFragment : PreferenceFragmentCompat() {
     private fun updatePreferences() {
         requirePreference<Preference>(R.string.pref_key_add_private_browsing_shortcut).apply {
             setOnPreferenceClickListener {
-                PrivateShortcutCreateManager.createPrivateShortcut(requireContext())
+                val privateShortcutCreateManager = PrivateShortcutCreateManager(
+                    shortcutManagerWrapper = DefaultShortcutManagerCompatWrapper(),
+                    pendingIntentFactory = DefaultPendingIntentFactory(),
+                )
+                privateShortcutCreateManager.createPrivateShortcut(requireContext())
                 true
             }
         }
@@ -61,21 +65,6 @@ class PrivateBrowsingFragment : PreferenceFragmentCompat() {
         requirePreference<SwitchPreference>(R.string.pref_key_open_links_in_a_private_tab).apply {
             onPreferenceChangeListener = SharedPreferenceUpdater()
             isChecked = context.settings().openLinksInAPrivateTab
-        }
-
-        requirePreference<SwitchPreference>(R.string.pref_key_allow_screenshots_in_private_mode).apply {
-            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
-                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                    if ((activity as? HomeActivity)?.browsingModeManager?.mode?.isPrivate == true &&
-                        newValue == false
-                    ) {
-                        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                    } else {
-                        activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                    }
-                    return super.onPreferenceChange(preference, newValue)
-                }
-            }
         }
 
         val biometricManager = BiometricManager.from(requireContext())

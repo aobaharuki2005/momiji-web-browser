@@ -466,9 +466,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Сылтаманы xосусый биттә ачу</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">Хосусый гизү режимында скриншотларны рөхсәт итү</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Хосусый гизү режимында скриншотларны рөхсәт итү</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">Рөхсәт ителсә, берничә кушымта ачык булганда хосусый таблар да күренәчәк</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Рөхсәт ителсә, берничә кушымта ачык булганда хосусый таблар да күренәчәк</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Хосусый гизү ярлыгын өстәү</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->

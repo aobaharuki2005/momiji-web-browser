@@ -907,7 +907,9 @@ var ActivityStreamProvider = {
   _addFavicons(aLinks) {
     let win;
     if (BrowserWindowTracker) {
-      win = BrowserWindowTracker.getTopWindow();
+      win = BrowserWindowTracker.getTopWindow({
+        allowFromInactiveWorkspace: true,
+      });
     }
     // We fetch two copies of a page's favicon: the largest available, for
     // Activity Stream; and a smaller size appropriate for the Urlbar.

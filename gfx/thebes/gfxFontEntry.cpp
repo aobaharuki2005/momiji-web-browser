@@ -854,7 +854,8 @@ bool gfxFontEntry::SupportsOpenTypeFeature(Script aScript,
                    aFeatureTag == HB_TAG('c', '2', 'p', 'c') ||
                    aFeatureTag == HB_TAG('s', 'u', 'p', 's') ||
                    aFeatureTag == HB_TAG('s', 'u', 'b', 's') ||
-                   aFeatureTag == HB_TAG('v', 'e', 'r', 't'),
+                   aFeatureTag == HB_TAG('v', 'e', 'r', 't') ||
+                   aFeatureTag == HB_TAG('r', 't', 'l', 'm'),
                "use of unknown feature tag");
 
   // note: graphite feature support uses the last script index
@@ -909,7 +910,8 @@ const hb_set_t* gfxFontEntry::InputsForOpenTypeFeature(Script aScript,
 
   NS_ASSERTION(aFeatureTag == HB_TAG('s', 'u', 'p', 's') ||
                    aFeatureTag == HB_TAG('s', 'u', 'b', 's') ||
-                   aFeatureTag == HB_TAG('v', 'e', 'r', 't'),
+                   aFeatureTag == HB_TAG('v', 'e', 'r', 't') ||
+                   aFeatureTag == HB_TAG('r', 't', 'l', 'm'),
                "use of unknown feature tag");
 
   uint32_t scriptFeature = SCRIPT_FEATURE(aScript, aFeatureTag);

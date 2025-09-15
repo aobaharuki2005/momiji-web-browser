@@ -5,11 +5,9 @@
 package org.mozilla.focus.browser.integration
 
 import android.view.View
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SecurityInfoState
@@ -22,7 +20,6 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -36,10 +33,11 @@ import org.mockito.MockitoAnnotations
 import org.mozilla.focus.fragment.BrowserFragment
 import org.robolectric.RobolectricTestRunner
 
-@ExperimentalCoroutinesApi // resetMain, setMain, UnconfinedTestDispatcher
 @RunWith(RobolectricTestRunner::class)
 class BrowserToolbarIntegrationTest {
-    private val testDispatcher = UnconfinedTestDispatcher()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val scope = TestScope(UnconfinedTestDispatcher())
+
     private val selectedTab = createSecureTab()
 
     private lateinit var toolbar: BrowserToolbar
@@ -57,7 +55,6 @@ class BrowserToolbarIntegrationTest {
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        Dispatchers.setMain(testDispatcher)
         store = spy(
             BrowserStore(
                 initialState = BrowserState(
@@ -85,13 +82,9 @@ class BrowserToolbarIntegrationTest {
                 onUrlLongClicked = { false },
                 eraseActionListener = {},
                 tabCounterListener = {},
+                coroutineScope = scope,
             ),
         )
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     @Test
@@ -212,7 +205,7 @@ class BrowserToolbarIntegrationTest {
             ),
         ).joinBlocking()
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        scope.testScheduler.advanceUntilIdle()
     }
 
     private fun updateTabUrl(url: String) {
@@ -220,7 +213,7 @@ class BrowserToolbarIntegrationTest {
             ContentAction.UpdateUrlAction(selectedTab.id, url),
         ).joinBlocking()
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        scope.testScheduler.advanceUntilIdle()
     }
 
     private fun createSecureTab(): TabSessionState {

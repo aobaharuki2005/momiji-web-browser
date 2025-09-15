@@ -69,7 +69,11 @@ add_setup(async function () {
 add_task(async function test_success() {
   for (let i = 0; i < 5; i++) {
     let controller = new SearchSuggestionController();
-    let result = await controller.fetch("mo", false, workingAppEngine);
+    let result = await controller.fetch({
+      searchString: "mo",
+      inPrivateBrowsing: false,
+      engine: workingAppEngine,
+    });
     Assert.equal(result.remote.length, 3);
   }
 
@@ -84,11 +88,31 @@ add_task(async function test_abort() {
   let controller = new SearchSuggestionController();
 
   // Don't await the result to trigger the abort handler.
-  controller.fetch("mo", false, workingAppEngine);
-  controller.fetch("mo", false, workingAppEngine);
-  controller.fetch("mo", false, workingAppEngine);
-  controller.fetch("mo", false, workingAppEngine);
-  await controller.fetch("mo", false, workingAppEngine);
+  controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: workingAppEngine,
+  });
+  controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: workingAppEngine,
+  });
+  controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: workingAppEngine,
+  });
+  controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: workingAppEngine,
+  });
+  await controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: workingAppEngine,
+  });
 
   Assert.equal(
     Glean.searchSuggestions.successfulRequests.workingAppEngine.testGetValue(),
@@ -104,9 +128,21 @@ add_task(async function test_abort() {
 
 add_task(async function test_error() {
   let controller = new SearchSuggestionController();
-  await controller.fetch("mo", false, failingAppEngine);
-  await controller.fetch("mo", false, failingAppEngine);
-  await controller.fetch("mo", false, failingAppEngine);
+  await controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: failingAppEngine,
+  });
+  await controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: failingAppEngine,
+  });
+  await controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: failingAppEngine,
+  });
 
   Assert.equal(
     Glean.searchSuggestions.failedRequests.failingAppEngine.testGetValue(),
@@ -117,7 +153,11 @@ add_task(async function test_error() {
 
 add_task(async function test_nonConfig() {
   let controller = new SearchSuggestionController();
-  let result = await controller.fetch("mo", false, openSearchEngine);
+  let result = await controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: openSearchEngine,
+  });
   Assert.equal(result.remote.length, 3);
 
   Assert.equal(

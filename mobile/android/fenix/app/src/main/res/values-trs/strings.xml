@@ -303,9 +303,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Gāna\'nin riña a\'ngô rakïj ñanj nakàa</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">Ga\'nīn nārij ñadu\'ua pantaya riña gāchē nu huìt</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Ga\'nīn nārij ñadu\'ua pantaya riña gāchē nu huìt</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">Sisī gā’nïnt, gūruguì’ nej rakïj ñanj huìi gīni’hiājt ngà hua ni’nïnj a’ngô nej aplikasiûn</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Sisī gā’nïnt, gūruguì’ nej rakïj ñanj huìi gīni’hiājt ngà hua ni’nïnj a’ngô nej aplikasiûn</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Gāchrūn aksêso direkto riña aché nu huìt</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->

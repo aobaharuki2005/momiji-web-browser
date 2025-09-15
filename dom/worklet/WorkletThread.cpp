@@ -300,30 +300,6 @@ nsresult WorkletThread::DispatchRunnable(
   return nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 }
 
-NS_IMETHODIMP
-WorkletThread::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  return Dispatch(runnable.forget(), aFlags);
-}
-
-NS_IMETHODIMP
-WorkletThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                        uint32_t aFlags) {
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-
-  // Worklet only supports asynchronous dispatch.
-  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-}
-
-NS_IMETHODIMP
-WorkletThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t aFlags) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 static bool DispatchToEventLoop(
     void* aClosure, js::UniquePtr<JS::Dispatchable>&& aDispatchable) {
   // This callback may execute either on the worklet thread or a random

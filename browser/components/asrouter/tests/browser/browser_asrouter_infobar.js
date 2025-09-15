@@ -15,6 +15,9 @@ const { ASRouter } = ChromeUtils.importESModule(
 const { SpecialMessageActions } = ChromeUtils.importESModule(
   "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
 );
+const { RemoteL10n } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/RemoteL10n.sys.mjs"
+);
 
 // Helper to record impressions in ASRouter state when dispatching an IMPRESSION
 // action
@@ -588,10 +591,6 @@ add_task(async function test_buildMessageFragment_withInlineAnchors() {
   const browser = win.gBrowser.selectedBrowser;
   const doc = browser.ownerGlobal.document;
 
-  // Stub out the Fluent call to return a string with an inline anchor
-  const { RemoteL10n } = ChromeUtils.importESModule(
-    "resource:///modules/asrouter/RemoteL10n.sys.mjs"
-  );
   sinon
     .stub(RemoteL10n, "formatLocalizableText")
     .resolves('<a data-l10n-name="foo">Click Here</a>');
@@ -659,9 +658,6 @@ add_task(async function test_buildMessageFragment_withoutInlineAnchors() {
   const doc = browser.ownerGlobal.document;
 
   // Stub Fluent to return plain text (no <a data-l10n-name>)
-  const { RemoteL10n } = ChromeUtils.importESModule(
-    "resource:///modules/asrouter/RemoteL10n.sys.mjs"
-  );
   sinon.stub(RemoteL10n, "formatLocalizableText").resolves("Just plain text");
 
   let { infobar } = await showInfobar(
@@ -701,9 +697,6 @@ add_task(
     const win = BrowserWindowTracker.getTopWindow();
     const browser = win.gBrowser.selectedBrowser;
 
-    const { RemoteL10n } = ChromeUtils.importESModule(
-      "resource:///modules/asrouter/RemoteL10n.sys.mjs"
-    );
     sinon
       .stub(RemoteL10n, "formatLocalizableText")
       .resolves('<a data-l10n-name="foo">Click Me</a>');
@@ -1092,4 +1085,152 @@ add_task(async function test_impression_action_multi_action_once_and_every() {
   );
 
   handleStub.restore();
+});
+
+add_task(
+  async function inline_anchor_with_dismiss_closes_and_sends_telemetry() {
+    const sandbox = sinon.createSandbox();
+
+    sandbox
+      .stub(RemoteL10n, "formatLocalizableText")
+      .resolves('<a data-l10n-name="test">Open</a>');
+    const handle = sandbox.stub(SpecialMessageActions, "handleAction");
+
+    const browser =
+      BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+    const message = {
+      id: "TEST_INLINE_DISMISS",
+      content: {
+        type: "global",
+        text: { string_id: "test" },
+        linkUrls: { test: "https://example.com" },
+        linkActions: {
+          test: {
+            type: "SET_PREF",
+            data: { pref: { name: "embedded-link-sma", value: true } },
+            dismiss: true,
+          },
+        },
+        buttons: [],
+      },
+    };
+
+    const dispatch = sandbox.stub();
+    const infobar = await InfoBar.showInfoBarMessage(
+      browser,
+      message,
+      dispatch
+    );
+
+    // Ignore impression ping.
+    dispatch.resetHistory();
+
+    infobar.notification.messageText
+      .querySelector('a[data-l10n-name="test"]')
+      .click();
+
+    await BrowserTestUtils.waitForCondition(
+      () => !infobar.notification,
+      "Infobar dismissed by inline anchor configured to dismiss"
+    );
+    Assert.equal(
+      handle.callCount,
+      2,
+      "Two SMAs handled (OPEN_URL and SET_PREF)"
+    );
+    Assert.ok(
+      dispatch.calledWith(
+        sinon.match({
+          type: "INFOBAR_TELEMETRY",
+          data: sinon.match.has("event", "DISMISSED"),
+        })
+      ),
+      "DISMISSED telemetry sent"
+    );
+
+    sandbox.restore();
+  }
+);
+
+add_task(async function dismiss_on_pref_first_set() {
+  const PREF = "messaging-system-action.dismissOnChange.first";
+
+  const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+  const message = {
+    id: "TEST_DISMISS_ON_PREF_FIRST_SET",
+    content: {
+      type: "global",
+      text: "pref first-set",
+      dismissable: true,
+      buttons: [],
+      dismissOnPrefChange: PREF,
+    },
+  };
+
+  const dispatch = sinon.stub();
+  const infobar = await InfoBar.showInfoBarMessage(browser, message, dispatch);
+
+  // Ignore initial impression ping(s)
+  dispatch.resetHistory();
+
+  Services.prefs.setBoolPref(PREF, true);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !infobar.notification,
+    "Infobar dismissed by first time pref set"
+  );
+
+  Assert.ok(
+    dispatch.calledWith(
+      sinon.match({
+        type: "INFOBAR_TELEMETRY",
+        data: sinon.match.has("event", "DISMISSED"),
+      })
+    ),
+    "DISMISSED telemetry sent on first time pref set"
+  );
+
+  Services.prefs.clearUserPref(PREF);
+});
+
+add_task(async function dismiss_on_pref_value_change() {
+  const PREF = "messaging-system-action.dismissOnChange.flip";
+  Services.prefs.setBoolPref(PREF, false);
+
+  const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+  const message = {
+    id: "TEST_DISMISS_ON_PREF_CHANGE",
+    content: {
+      type: "global",
+      text: "pref change",
+      dismissable: true,
+      buttons: [],
+      dismissOnPrefChange: PREF,
+    },
+  };
+
+  const dispatch = sinon.stub();
+  const infobar = await InfoBar.showInfoBarMessage(browser, message, dispatch);
+
+  // Ignore initial impression ping(s)
+  dispatch.resetHistory();
+
+  Services.prefs.setBoolPref(PREF, true);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !infobar.notification,
+    "Infobar dismissed by subsequent pref change"
+  );
+
+  Assert.ok(
+    dispatch.calledWith(
+      sinon.match({
+        type: "INFOBAR_TELEMETRY",
+        data: sinon.match.has("event", "DISMISSED"),
+      })
+    ),
+    "DISMISSED telemetry sent on pref change"
+  );
+
+  Services.prefs.clearUserPref(PREF);
 });

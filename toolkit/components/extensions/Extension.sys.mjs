@@ -850,7 +850,7 @@ export var ExtensionProcessCrashObserver = {
 
         this.lastCrashedProcessChildID = childID;
 
-        const now = Cu.now();
+        const now = ChromeUtils.now();
         // Filter crash timestamps older than processCrashTimeframe.
         this.lastCrashTimestamps = this.lastCrashTimestamps.filter(
           timestamp => now - timestamp < lazy.processCrashTimeframe
@@ -1458,7 +1458,7 @@ export class ExtensionData {
       ),
       data_collection: newPermissions.data_collection.filter(
         perm =>
-          !oldPermissions.data_collection.includes(perm) && perm !== "none"
+          !oldPermissions.data_collection?.includes(perm) && perm !== "none"
       ),
     };
   }
@@ -2163,6 +2163,7 @@ export class ExtensionData {
 
           jsPaths: options.js || [],
           cssPaths: options.css || [],
+          cssOrigin: options.css_origin,
         });
       }
 

@@ -145,7 +145,7 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">दुवा खाजगी टॅबमध्ये उघडा</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">खाजगी ब्राउझिंग मध्ये स्क्रीनशॉटची अनुमती द्या</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">खाजगी ब्राउझिंग मध्ये स्क्रीनशॉटची अनुमती द्या</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">खाजगी ब्राउझिंग शॉर्टकट जोडा</string>
   <!-- Preference for accessibility -->

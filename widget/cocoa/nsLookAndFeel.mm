@@ -64,17 +64,6 @@ void nsLookAndFeel::EnsureInit() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK
 
   mInitialized = true;
-  NSWindow* window =
-      [[NSWindow alloc] initWithContentRect:NSZeroRect
-                                  styleMask:NSWindowStyleMaskTitled
-                                    backing:NSBackingStoreBuffered
-                                      defer:NO];
-  auto release = MakeScopeExit([&] { [window release]; });
-
-  if(@available(macOS 10.12, *)) 
-  mRtl = window.windowTitlebarLayoutDirection ==
-         NSUserInterfaceLayoutDirectionRightToLeft;
-  mTitlebarHeight = std::ceil(window.frame.size.height);
 
   RecordTelemetry();
 
@@ -524,14 +513,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     case IntID::MacBigSurTheme:
       aResult = nsCocoaFeatures::OnBigSurOrLater();
-      break;
-    case IntID::MacRTL:
-      EnsureInit();
-      aResult = mRtl;
-      break;
-    case IntID::MacTitlebarHeight:
-      EnsureInit();
-      aResult = mTitlebarHeight;
       break;
     case IntID::AlertNotificationOrigin:
       aResult = NS_ALERT_TOP;

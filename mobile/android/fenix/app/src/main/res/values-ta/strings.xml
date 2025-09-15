@@ -173,7 +173,7 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">இணைப்பைக் கமுக்கக் கீற்றில் திறக்க</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">கமுக்க உலாவலில் திரைப்பிடிப்பை அனுமதி</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">கமுக்க உலாவலில் திரைப்பிடிப்பை அனுமதி</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">கமுக்க உலாவல் குறுக்குவழியைச் சேர்க்கவும்</string>
   <!-- Preference for accessibility -->

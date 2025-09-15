@@ -81,7 +81,8 @@ Function getUninstallKey
   ; $0 is used as the return value for this function. It is initially set to
   ; the Uninstall key, which has been standard for decades.
   StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} ${AppVersion}"
-  ${If} ${AppVersion} == "esr"
+  ${WordFind} "${UpdateChannel}" "esr" "E#" $1
+  ${IfNot} ${Errors}
     StrCpy $0 "$0 ESR"
   ${EndIf}
   StrCpy $0 "$0 (${ARCH} ${AB_CD})"

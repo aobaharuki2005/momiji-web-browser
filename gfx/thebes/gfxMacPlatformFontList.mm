@@ -47,7 +47,9 @@
 #include <time.h>
 #include <dlfcn.h>
 
+#define StandardFonts
 #include "StandardFonts-macos.inc"
+#undef StandardFonts
 
 // Building with newer macOS SDKs can cause a bunch of font-family names to be
 // hidden from the Core Text API we use to enumerate available fonts. Because

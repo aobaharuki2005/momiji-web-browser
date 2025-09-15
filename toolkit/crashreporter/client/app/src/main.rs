@@ -146,7 +146,6 @@ fn report_main() {
     // Actual content doesn't matter, aside from the hash that is generated.
     const MOCK_MINIDUMP_FILE: &[u8] = &[1, 2, 3, 4];
     const MOCK_CURRENT_TIME: &str = "2004-11-09T12:34:56Z";
-    const MOCK_PING_UUID: uuid::Uuid = uuid::Uuid::nil();
     const MOCK_REMOTE_CRASH_ID: &str = "8cbb847c-def2-4f68-be9e-000000000000";
 
     // Initialize logging but don't set it in the configuration, so that it won't be redirected to
@@ -190,14 +189,12 @@ fn report_main() {
         .unwrap()
         .into(),
     )
-    .set(mock::MockHook::new("ping_uuid"), MOCK_PING_UUID)
     .set(mock::MockHook::new("enable_glean_pings"), false);
 
     let result = mock.run(|| {
         let mut cfg = Config::new();
         cfg.data_dir = Some("data_dir".into());
         cfg.events_dir = Some("events_dir".into());
-        cfg.ping_dir = Some("ping_dir".into());
         cfg.dump_file = Some("minidump.dmp".into());
         cfg.restart_command = Some("mockfox".into());
         cfg.strings = Some(lang::load());

@@ -630,9 +630,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Fosgail na ceanglaichean ann an taba prìobhaideach</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode">Ceadaich glacaidhean-sgrìn sa bhrabhsadh phrìobhaideach</string>
+  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Ceadaich glacaidhean-sgrìn sa bhrabhsadh phrìobhaideach</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer">Ma cheadaicheas tu seo, chithear na tabaichean prìobhaideach cuideachd nuair a bhios iomadh aplacaid fosgailte</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Ma cheadaicheas tu seo, chithear na tabaichean prìobhaideach cuideachd nuair a bhios iomadh aplacaid fosgailte</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Cuir ath-ghoirid brabhsaidh prìobhaideach ris</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->

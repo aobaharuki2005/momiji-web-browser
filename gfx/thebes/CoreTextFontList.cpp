@@ -1026,8 +1026,9 @@ void CoreTextFontList::RegisteredFontsChangedNotificationCallback(
 }
 
 gfxFontEntry* CoreTextFontList::PlatformGlobalFontFallback(
-    nsPresContext* aPresContext, const uint32_t aCh, Script aRunScript,
-    const gfxFontStyle* aMatchStyle, FontFamily& aMatchedFamily) {
+    FontVisibilityProvider* aFontVisibilityProvider, const uint32_t aCh,
+    Script aRunScript, const gfxFontStyle* aMatchStyle,
+    FontFamily& aMatchedFamily) {
   CFStringRef str;
   UniChar ch[2];
   CFIndex length = 1;
@@ -1078,7 +1079,7 @@ gfxFontEntry* CoreTextFontList::PlatformGlobalFontFallback(
 
       if (SharedFontList()) {
         fontlist::Family* family =
-            FindSharedFamily(aPresContext, familyNameString);
+            FindSharedFamily(aFontVisibilityProvider, familyNameString);
         if (family) {
           fontlist::Face* face =
               family->FindFaceForStyle(SharedFontList(), *aMatchStyle);
@@ -1129,9 +1130,9 @@ gfxFontEntry* CoreTextFontList::PlatformGlobalFontFallback(
 }
 
 gfxFontEntry* CoreTextFontList::LookupLocalFont(
-    nsPresContext* aPresContext, const nsACString& aFontName,
-    WeightRange aWeightForEntry, StretchRange aStretchForEntry,
-    SlantStyleRange aStyleForEntry) {
+    FontVisibilityProvider* aFontVisibilityProvider,
+    const nsACString& aFontName, WeightRange aWeightForEntry,
+    StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry) {
   if (aFontName.IsEmpty() || aFontName[0] == '.') {
     return nullptr;
   }
@@ -1187,7 +1188,7 @@ gfxFontEntry* CoreTextFontList::LookupLocalFont(
   key.Truncate(strlen(key.get()));
   ToLowerCase(key);
   // If the family can't be looked up, this font is not available for use.
-  FontFamily family = FindFamily(aPresContext, key);
+  FontFamily family = FindFamily(aFontVisibilityProvider, key);
   if (family.IsNull()) {
     return nullptr;
   }
@@ -1245,10 +1246,10 @@ static const char kSystemFont_system[] = "-apple-system";
 const CGFloat kTextDisplayCrossover = 20.0;  // use text family below this size
                                               //
 bool CoreTextFontList::FindAndAddFamiliesLocked(
-    nsPresContext* aPresContext, StyleGenericFontFamily aGeneric,
-    const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
-    FindFamiliesFlags aFlags, gfxFontStyle* aStyle, nsAtom* aLanguage,
-    gfxFloat aDevToCssSize) {
+    FontVisibilityProvider* aFontVisibilityProvider,
+    StyleGenericFontFamily aGeneric, const nsACString& aFamily,
+    nsTArray<FamilyAndGeneric>* aOutput, FindFamiliesFlags aFlags,
+    gfxFontStyle* aStyle, nsAtom* aLanguage, gfxFloat aDevToCssSize) {
   if (aFamily.EqualsLiteral(kSystemFont_system)) {
     // Search for special system font name, -apple-system. This is not done via
     // the shared fontlist because the hidden system font may not be included
@@ -1262,7 +1263,7 @@ bool CoreTextFontList::FindAndAddFamiliesLocked(
       FindFamiliesFlags flags =
           aFlags | FindFamiliesFlags::eSearchHiddenFamilies;
       return gfxPlatformFontList::FindAndAddFamiliesLocked(
-          aPresContext, aGeneric, systemFontFamilyName, aOutput, flags, aStyle,
+          aFontVisibilityProvider, aGeneric, systemFontFamilyName, aOutput, flags, aStyle,
           aLanguage, aDevToCssSize);
     } else {
       if (auto* fam = FindSystemFontFamily(systemFontFamilyName)) {
@@ -1274,8 +1275,8 @@ bool CoreTextFontList::FindAndAddFamiliesLocked(
   }
 
   return gfxPlatformFontList::FindAndAddFamiliesLocked(
-      aPresContext, aGeneric, aFamily, aOutput, aFlags, aStyle, aLanguage,
-      aDevToCssSize);
+      aFontVisibilityProvider, aGeneric, aFamily, aOutput, aFlags, aStyle,
+      aLanguage, aDevToCssSize);
 }
 
 // used to load system-wide font info on off-main thread
@@ -1599,7 +1600,7 @@ void CoreTextFontList::ReadFaceNamesForFamily(
 }
 
 FontFamily CoreTextFontList::GetDefaultFontForPlatform(
-    nsPresContext* aPresContext, const gfxFontStyle* aStyle,
+    FontVisibilityProvider* aFontVisibilityProvider, const gfxFontStyle* aStyle,
     nsAtom* aLanguage) {
   AutoCFTypeRef<CTFontRef> font(CTFontCreateUIFontForLanguage(
       kCTFontUIFontUser, 0.0, nullptr));  // TODO: language
@@ -1608,7 +1609,7 @@ FontFamily CoreTextFontList::GetDefaultFontForPlatform(
   nsAutoString familyName;
   GetStringForCFString(name, familyName);
 
-  return FindFamily(aPresContext, NS_ConvertUTF16toUTF8(familyName));
+  return FindFamily(aFontVisibilityProvider, NS_ConvertUTF16toUTF8(familyName));
 }
 
 #ifdef MOZ_BUNDLED_FONTS

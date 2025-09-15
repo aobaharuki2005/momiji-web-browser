@@ -40,8 +40,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static bool UseOverlayScrollbars();
  protected:
   bool mInitialized = false;
-  bool mRtl = false;
-  int32_t mTitlebarHeight = 0;
 
   static bool SystemWantsOverlayScrollbars();
   static bool AllowOverlayScrollbarsOverlap();
