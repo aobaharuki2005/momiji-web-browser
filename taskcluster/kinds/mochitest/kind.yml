@@ -55,13 +55,6 @@ task-defaults:
                 macosx.*-aarch64.*:
                     - macosx64-aarch64-minidump-stackwalk
                     - macosx64-aarch64-fix-stacks
-                android-em-7.*:
-                    - android-system-image-x86_64-linux
-                    - android-avd-x86_64-linux
-                    - android-emulator-linux
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
-                    - linux64-hostutils
                 android-em-14.*:
                     - android34-system-image-x86_64-linux
                     - android34-avd-x86_64-linux
@@ -112,9 +105,6 @@ task-defaults:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-7.*:
-                    - android/android_common.py
-                    - android/android-x86_64.py
                 android-em-14.*:
                     - android/android_common.py
                     - android/android14-x86_64.py
@@ -287,13 +277,6 @@ tasks:
                         - win32-node
                         - win32-minidump-stackwalk
                         - win32-fix-stacks
-                    android-em-7.*:
-                        - android-system-image-x86_64-linux
-                        - android-avd-x86_64-linux
-                        - android-emulator-linux
-                        - linux64-node
-                        - linux64-minidump-stackwalk
-                        - linux64-hostutils
                     android-em-14.*:
                         - android34-system-image-x86_64-linux
                         - android34-avd-x86_64-linux
@@ -720,13 +703,6 @@ tasks:
                         - win32-node
                         - win32-minidump-stackwalk
                         - win32-fix-stacks
-                    android-em-7.*:
-                        - android-system-image-x86_64-linux
-                        - android-avd-x86_64-linux
-                        - android-emulator-linux
-                        - linux64-node
-                        - linux64-minidump-stackwalk
-                        - linux64-hostutils
                     android-em-14.*:
                         - android34-system-image-x86_64-linux
                         - android34-avd-x86_64-linux

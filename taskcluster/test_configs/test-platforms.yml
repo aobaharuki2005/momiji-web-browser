@@ -392,42 +392,6 @@ macosx1015-64-qr/debug:
 # Android platforms (matching /android-em.*/)
 #
 # android-em test platforms execute on android emulators.
-
-android-em-7.0-x86_64-qr/opt:
-    build-platform: android-x86_64/opt
-    test-sets:
-        - android-x86_64-tests
-        - web-platform-tests-backlog
-
-android-em-7.0-x86_64-lite-qr/opt:
-    build-platform: android-x86_64-lite/opt
-    test-sets:
-        - android-x86_64-tests
-        - web-platform-tests-backlog
-
-android-em-7.0-x86_64-shippable-qr/opt:
-    build-platform: android-x86_64-shippable/opt
-    test-sets:
-        - android-x86_64-tests
-        - web-platform-tests-backlog
-
-android-em-7.0-x86_64-shippable-lite-qr/opt:
-    build-platform: android-x86_64-shippable-lite/opt
-    test-sets:
-        - android-x86_64-tests
-        - web-platform-tests-backlog
-
-android-em-7.0-x86_64-qr/debug:
-    build-platform: android-x86_64/debug
-    test-sets:
-        - android-x86_64-tests
-
-android-em-7.0-x86_64-qr/debug-isolated-process:
-    build-platform: android-x86_64/debug-isolated-process
-    test-sets:
-        - android-x86_64-tests
-
-# new android 14 emulator- will run in parallel for a few weeks
 android-em-14-x86_64/opt:
     build-platform: android-x86_64/opt
     test-sets:

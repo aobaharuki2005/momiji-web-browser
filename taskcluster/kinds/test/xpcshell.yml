@@ -21,9 +21,6 @@ task-defaults:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-7.*:
-                    - android/android_common.py
-                    - android/android-x86_64.py
                 android-em-14.*:
                     - android/android_common.py
                     - android/android14-x86_64.py
@@ -184,13 +181,6 @@ xpcshell:
                     - win32-node
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
-                android-em-7.*:
-                    - android-system-image-x86_64-linux
-                    - android-avd-x86_64-linux
-                    - android-emulator-linux
-                    - linux64-node
-                    - linux64-minidump-stackwalk
-                    - linux64-hostutils
                 android-em-14.*:
                     - android34-system-image-x86_64-linux
                     - android34-avd-x86_64-linux

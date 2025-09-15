@@ -18,9 +18,6 @@ task-defaults:
                     - web_platform_tests/prod_config_windows_taskcluster.py
                 macosx.*:
                     - web_platform_tests/prod_config_mac.py
-                android-em-7.*:
-                    - android/android-x86_64.py
-                    - web_platform_tests/prod_config_android.py
                 android-em-14.*:
                     - android/android14-x86_64.py
                     - web_platform_tests/prod_config_android.py
@@ -595,14 +592,6 @@ web-platform-tests-wdspec:
     fetches:
         toolchain:
             by-test-platform:
-                android-em-7.*:
-                    - android-system-image-x86_64-linux
-                    - android-avd-x86_64-linux
-                    - android-emulator-linux
-                    - linux64-geckodriver
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
-                    - linux64-hostutils
                 android-em-14.*:
                     - android34-system-image-x86_64-linux
                     - android34-avd-x86_64-linux

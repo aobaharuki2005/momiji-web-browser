@@ -28,7 +28,7 @@ transforms:
 # used in these files.
 
 # Adding a new test type or running tests on a new platform? Be sure to review
-# https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy
+# https://wiki.mozilla.org/Sherifemfing/Job_Visibility_Policy
 
 tasks-from:
     - awsy.yml
@@ -82,13 +82,6 @@ task-defaults:
                 macosx.*-aarch64.*:
                     - macosx64-aarch64-minidump-stackwalk
                     - macosx64-aarch64-fix-stacks
-                android-em-7.*:
-                    - android-system-image-x86_64-linux
-                    - android-avd-x86_64-linux
-                    - android-emulator-linux
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
-                    - linux64-hostutils
                 android-em-14.*:
                     - android34-system-image-x86_64-linux
                     - android34-avd-x86_64-linux

@@ -19,9 +19,6 @@ task-defaults:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-7.*:
-                    - android/android_common.py
-                    - android/android-x86_64.py
                 android-em-14.*:
                     - android/android_common.py
                     - android/android14-x86_64.py

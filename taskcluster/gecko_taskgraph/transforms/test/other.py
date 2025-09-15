@@ -203,10 +203,8 @@ def set_treeherder_machine_platform(config, tasks):
         if "android" in task["test-platform"] and "pgo/opt" in task["test-platform"]:
             platform_new = task["test-platform"].replace("-pgo/opt", "/pgo")
             task["treeherder-machine-platform"] = platform_new
-        elif "android-em-7.0-x86" in task["test-platform"]:
-            task["treeherder-machine-platform"] = task["test-platform"].replace(
-                ".", "-"
-            )
+        elif "android-em-" in task["test-platform"]:
+            task["treeherder-machine-platform"] = task["test-platform"]
         elif "android-hw" in task["test-platform"]:
             task["treeherder-machine-platform"] = task["test-platform"]
 
@@ -732,21 +730,6 @@ def handle_tier(config, tasks):
                 "macosx1400-64-qr/debug",
                 "macosx1500-64-shippable/opt",
                 "macosx1500-64/debug",
-                "android-em-7.0-x86_64-shippable/opt",
-                "android-em-7.0-x86_64-shippable-lite/opt",
-                "android-em-7.0-x86_64/debug",
-                "android-em-7.0-x86_64/debug-isolated-process",
-                "android-em-7.0-x86_64/opt",
-                "android-em-7.0-x86_64-lite/opt",
-                "android-em-7.0-x86-shippable/opt",
-                "android-em-7.0-x86-shippable-lite/opt",
-                "android-em-7.0-x86_64-shippable-qr/opt",
-                "android-em-7.0-x86_64-qr/debug",
-                "android-em-7.0-x86_64-qr/debug-isolated-process",
-                "android-em-7.0-x86_64-qr/opt",
-                "android-em-7.0-x86_64-shippable-lite-qr/opt",
-                "android-em-7.0-x86_64-lite-qr/debug",
-                "android-em-7.0-x86_64-lite-qr/opt",
                 "android-em-14-x86_64-shippable/opt",
                 "android-em-14-x86_64/opt",
                 "android-em-14-x86_64-shippable-lite/opt",
