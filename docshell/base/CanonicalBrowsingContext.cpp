@@ -651,6 +651,28 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       return loadingInfo;
     }
 
+    if (*navigationType == NavigationType::Traverse && !mActiveEntry) {
+      // We must have just been recreated from a session restore, so we need
+      // to reconstruct the list of contiguous entries.
+      auto* shistory = static_cast<nsSHistory*>(GetSessionHistory());
+      MOZ_ASSERT(mActiveEntryList.isEmpty());
+      mActiveEntryList.insertFront(entry);
+
+      SessionHistoryEntry* currEntry = entry;
+      while (auto* prevEntry =
+                 shistory->FindAdjacentContiguousEntryFor(currEntry, -1)) {
+        currEntry->setPrevious(prevEntry);
+        currEntry = prevEntry;
+      }
+
+      currEntry = entry;
+      while (auto* nextEntry =
+                 shistory->FindAdjacentContiguousEntryFor(currEntry, 1)) {
+        currEntry->setNext(nextEntry);
+        currEntry = nextEntry;
+      }
+    }
+
     nsCOMPtr<nsIURI> uri = mActiveEntry ? mActiveEntry->GetURI() : nullptr;
     bool sameOrigin =
         NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
@@ -1215,7 +1237,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
         } else if (!mActiveEntry) {
           MOZ_LOG_FMT(gSHLog, LogLevel::Verbose,
                       "IsTop: No active entry, adding new entry");
-          if (Navigation::IsAPIEnabled()) {
+          if (Navigation::IsAPIEnabled() && !newActiveEntry->isInList()) {
             mActiveEntryList.insertBack(newActiveEntry);
           }
           mActiveEntry = newActiveEntry;
@@ -1298,7 +1320,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
               MOZ_LOG_FMT(gSHLog, LogLevel::Verbose,
                           "NotTop: Adding entry without an active entry");
               mActiveEntry = newActiveEntry;
-              if (Navigation::IsAPIEnabled()) {
+              if (Navigation::IsAPIEnabled() && !mActiveEntry->isInList()) {
                 mActiveEntryList.insertBack(mActiveEntry);
               }
               // FIXME Using IsInProcess for aUseRemoteSubframes isn't quite
