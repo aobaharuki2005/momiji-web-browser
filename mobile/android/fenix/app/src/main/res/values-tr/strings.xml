@@ -1705,6 +1705,8 @@
   <string name="webcompat_reporter_send">Gönder</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Raporunuz gönderildi</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">Rapor gönderildi</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Kapat</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
@@ -2343,6 +2345,18 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline">Bazı sitelerin ciddi şekilde bozulmasını önlemek için %1$s gerekli istisnaları otomatik olarak uygulasın.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience">Yalnızca küçük sorunları düzeltmek ve kullanışlı özellikleri çalışır halde tutmak için gereken istisnalar da otomatik olarak uygulansın.</string>
+  <!--
+    Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
+
+    Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
+  -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Düzeltmeleri kapatmak istediğinizden emin misiniz?</string>
+  <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Bu ayar en yaygın site sorunlarını giderir. Bu ayarı kapatırsanız bazı siteler çalışmayabilir ve %1$s bu sorunları gidermenize yardımcı olamaz.</string>
+  <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Düzeltmeleri kapat</string>
+  <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">Düzeltmeleri açık tut</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Sıkı izlenme korumasında neler engellenir?</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->

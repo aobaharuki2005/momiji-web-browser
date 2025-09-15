@@ -39,6 +39,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar.LENGTH_LONG
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers.IO
@@ -794,7 +795,7 @@ abstract class BaseBrowserFragment :
                             getString(downloadsR.string.mozac_feature_downloads_dialog_title_with_unknown_size)
                         }
 
-                        downloadDialog = AlertDialog.Builder(requireContext())
+                        downloadDialog = MaterialAlertDialogBuilder(requireContext())
                             .setTitle(title)
                             .setMessage(filename.value)
                             .setPositiveButton(downloadsR.string.mozac_feature_downloads_dialog_download) { dialog, _ ->
@@ -835,7 +836,7 @@ abstract class BaseBrowserFragment :
                 }
             },
             fileHasNotEnoughStorageDialog = { filename ->
-                AlertDialog.Builder(requireContext())
+                MaterialAlertDialogBuilder(requireContext())
                     .setTitle(R.string.download_file_has_not_enough_storage_dialog_title)
                     .setMessage(
                         HtmlCompat.fromHtml(
@@ -1511,7 +1512,7 @@ abstract class BaseBrowserFragment :
      * Shows a dialog warning about setting up a device lock PIN.
      */
     private fun showPinDialogWarning(context: Context) {
-        AlertDialog.Builder(context).apply {
+        MaterialAlertDialogBuilder(context).apply {
             setTitle(getString(R.string.credit_cards_warning_dialog_title_2))
             setMessage(getString(R.string.credit_cards_warning_dialog_message_3))
 

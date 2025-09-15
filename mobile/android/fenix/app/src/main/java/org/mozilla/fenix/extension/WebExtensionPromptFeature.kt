@@ -14,6 +14,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -501,7 +502,7 @@ class WebExtensionPromptFeature(
                 }
             }
 
-            dialog = AlertDialog.Builder(it)
+            dialog = MaterialAlertDialogBuilder(it)
                 .setTitle(title)
                 .setPositiveButton(android.R.string.ok) { _, _ -> }
                 .setCancelable(false)

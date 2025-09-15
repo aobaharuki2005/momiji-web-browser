@@ -13,7 +13,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import androidx.fragment.app.activityViewModels
@@ -28,6 +27,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -424,7 +424,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     .inflate(R.layout.amo_collection_override_dialog, null)
 
                 val binding = AmoCollectionOverrideDialogBinding.bind(dialogView)
-                AlertDialog.Builder(context).apply {
+                MaterialAlertDialogBuilder(context).apply {
                     setTitle(context.getString(R.string.preferences_customize_extension_collection))
                     setView(dialogView)
                     setNegativeButton(R.string.customize_addon_collection_cancel) { dialog: DialogInterface, _ ->

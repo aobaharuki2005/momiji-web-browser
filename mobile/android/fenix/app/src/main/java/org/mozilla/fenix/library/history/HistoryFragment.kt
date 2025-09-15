@@ -18,7 +18,6 @@ import android.view.ViewGroup
 import android.widget.RadioGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -58,6 +57,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -708,7 +708,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         private val onDeleteTimeRange: (selectedTimeFrame: RemoveTimeFrame?) -> Unit,
     ) : DialogFragment() {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
-            AlertDialog.Builder(requireContext()).apply {
+            MaterialAlertDialogBuilder(requireContext()).apply {
                 val layout = getLayoutInflater().inflate(R.layout.delete_history_time_range_dialog, null)
                 val radioGroup = layout.findViewById<RadioGroup>(R.id.radio_group)
                 radioGroup.check(R.id.last_hour_button)

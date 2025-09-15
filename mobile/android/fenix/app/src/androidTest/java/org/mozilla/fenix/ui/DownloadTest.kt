@@ -359,7 +359,7 @@ class DownloadTest : TestSetup() {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(itemWithText("PDF form file"))
             waitForPageToLoad()
-            clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
+            clickPageObject(itemWithResIdAndText("android:id/button2", "Cancel"))
             fillPdfForm("Firefox")
         }.openThreeDotMenu {
         }.clickShareButton {

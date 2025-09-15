@@ -179,7 +179,7 @@ class TextSelectionTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(itemWithText("PDF form file"))
-            clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
+            clickPageObject(itemWithResIdAndText("android:id/button2", "Cancel"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Copy")
         }.openNavigationToolbar {
@@ -202,7 +202,7 @@ class TextSelectionTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(itemWithText("PDF form file"))
-            clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
+            clickPageObject(itemWithResIdAndText("android:id/button2", "Cancel"))
             longClickPageObject(itemContainingText("Crossing"))
         }.clickShareSelectedText {
             verifyAndroidShareLayout()
@@ -219,7 +219,7 @@ class TextSelectionTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(itemWithText("PDF form file"))
-            clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
+            clickPageObject(itemWithResIdAndText("android:id/button2", "Cancel"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Search")
             verifyUrl("Crossing")
@@ -239,7 +239,7 @@ class TextSelectionTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(itemWithText("PDF form file"))
-            clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
+            clickPageObject(itemWithResIdAndText("android:id/button2", "Cancel"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Private Search")
             verifyUrl("Crossing")

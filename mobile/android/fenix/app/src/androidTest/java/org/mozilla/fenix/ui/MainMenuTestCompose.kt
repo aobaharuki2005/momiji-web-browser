@@ -629,7 +629,7 @@ class MainMenuTestCompose : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.url) {
             clickPageObject(MatcherHelper.itemWithText("PDF form file"))
-            clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
+            clickPageObject(itemWithResIdAndText("android:id/button2", "Cancel"))
         }.openThreeDotMenu(composeTestRule) {
         }.clickFindInPageButton {
             verifyFindInPageNextButton()

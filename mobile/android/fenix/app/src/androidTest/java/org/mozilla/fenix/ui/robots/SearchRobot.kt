@@ -660,10 +660,10 @@ private fun browserToolbarEditView() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
 
 private fun dismissPermissionButton() =
-    mDevice.findObject(UiSelector().text("DISMISS"))
+    mDevice.findObject(UiSelector().text("Dismiss"))
 
 private fun goToPermissionsSettingsButton() =
-    mDevice.findObject(UiSelector().text("GO TO SETTINGS"))
+    mDevice.findObject(UiSelector().text("Go to settings"))
 
 private fun scanButton() = itemWithDescription("Scan")
 

@@ -61,6 +61,7 @@ dependencies {
     implementation libs.androidx.core.ktx
     implementation libs.androidx.recyclerview
     implementation libs.androidx.room.runtime
+    implementation libs.google.material
     ksp libs.androidx.room.compiler
     implementation libs.androidx.work.runtime
     implementation libs.kotlinx.coroutines

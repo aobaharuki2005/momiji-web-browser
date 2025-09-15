@@ -1709,6 +1709,8 @@
   <string name="webcompat_reporter_send">Enviar</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Tu reporte fue enviado</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">Reporte enviado</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Cerrar</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
@@ -1888,6 +1890,8 @@
   <string name="bookmark_close_button_content_description">Cerrar marcadores</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Todavía no hay marcadores</string>
+  <!-- Bookmark screen folder description. %s is the count of bookmark folder children -->
+  <string name="bookmarks_folder_description">Marcadores en la carpeta: %s</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
   <string name="bookmark_empty_list_guest_description">Guarda sitios mientras navegas. Conéctate para rescatar los marcadores de tus otros dispositivos sincronizados.</string>
   <!-- Text for the button to navigate to sync authentication -->
@@ -2347,6 +2351,18 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline">Permitir que %1$s aplique automáticamente las excepciones necesarias para evitar fallas importantes del sitio web.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience">También se aplican automáticamente excepciones que solo son necesarias para solucionar problemas menores y hacer que estén disponibles funciones convenientes.</string>
+  <!--
+    Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
+
+    Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
+  -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">¿Estás seguro de que deseas desactivar las correcciones?</string>
+  <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Esta configuración ayuda a solucionar los problemas más comunes del sitio. Si la desactivas, es posible que algunos sitios no funcionen y %1$s no podrá ayudarte a solucionarlo.</string>
+  <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Desactivar correcciones</string>
+  <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">Mantener correcciones activadas</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Qué bloquea la protección de seguimiento estricta</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->

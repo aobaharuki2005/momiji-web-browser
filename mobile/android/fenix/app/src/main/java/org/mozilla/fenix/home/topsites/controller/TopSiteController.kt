@@ -12,6 +12,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.addTextChangedListener
 import androidx.navigation.NavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CoroutineScope
@@ -156,7 +157,7 @@ class DefaultTopSiteController(
             titleEditText.setText(topSite.title)
             urlEditText.setText(topSite.url)
 
-            AlertDialog.Builder(it).apply {
+            MaterialAlertDialogBuilder(it).apply {
                 setTitle(R.string.top_sites_edit_dialog_title)
                 setView(customLayout)
                 setPositiveButton(R.string.top_sites_edit_dialog_save) { _, _ -> }

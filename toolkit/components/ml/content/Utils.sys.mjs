@@ -1218,3 +1218,247 @@ export async function computeHash(
 // Utils operations
 export var MLUtils = MLUtils || {};
 MLUtils.fetchUrl = fetchUrl;
+
+/**
+ * Safely stringify any value for logging/debugging.
+ *
+ * This function guarantees a string is returned and will never throw,
+ * even for values that JSON.stringify cannot handle (BigInt, Symbols,
+ * circular references, proxies with throwing getters, etc).
+ *
+ * It tries JSON.stringify first with a safe replacer, then falls back to
+ * a bounded inspection that handles depth, length, and property limits.
+ *
+ * @param {*} value - The value to stringify for logging (any type).
+ * @param {object} [options] - Optional limits to control output.
+ * @param {number} [options.maxDepth=3] - Maximum recursion depth for nested objects.
+ * @param {number} [options.maxKeysPerLevel=50] - Maximum number of keys per object or items per array to include.
+ * @param {number} [options.maxOutputLength=20000] - Maximum number of characters in the final output string.
+ *
+ * @returns {string} A safe string representation of the input, never throwing.
+ *
+ * @example
+ * lazy.console.debug(`Chunk received ${stringifyForLog(chunk.metadata)}`);
+ *
+ * @example
+ * const txt = stringifyForLog({ a: 1n, b: new Map([["x", 42]]) });
+ * // → '{"a":"1","b":{"x":42}}'
+ */
+export function stringifyForLog(
+  value,
+  { maxDepth = 3, maxKeysPerLevel = 50, maxOutputLength = 20_000 } = {}
+) {
+  // 1) Fast path: JSON with a safe replacer
+  try {
+    const seen = new WeakSet();
+
+    // Small type-aware helper that keeps output concise and stable
+    const toStringish = v => {
+      if (typeof v === "bigint" || typeof v === "symbol") {
+        return String(v);
+      }
+      if (v instanceof Date) {
+        return v.toISOString();
+      } // stable
+      if (v instanceof RegExp) {
+        return v.toString();
+      } // /re/flags
+      return undefined; // signal "no change"
+    };
+
+    const txt = JSON.stringify(value, (_, v) => {
+      // cheap string-ification for a few tricky primitives/objects
+      const s = toStringish(v);
+      if (s !== undefined) {
+        return s;
+      }
+
+      if (typeof v === "function") {
+        // Avoid dumping source
+        return `[Function ${v.name || "anonymous"}]`;
+      }
+
+      if (v instanceof Error) {
+        // Keep the useful fields
+        return { name: v.name, message: v.message, stack: v.stack };
+      }
+
+      if (v instanceof Map) {
+        return Object.fromEntries([...v.entries()].slice(0, maxKeysPerLevel));
+      }
+
+      if (v instanceof Set) {
+        return [...v.values()].slice(0, maxKeysPerLevel);
+      }
+
+      if (ArrayBuffer.isView(v)) {
+        return `${v.constructor.name}(${v.byteLength} bytes)`;
+      }
+
+      if (v instanceof ArrayBuffer) {
+        return `ArrayBuffer(${v.byteLength} bytes)`;
+      }
+
+      if (v && typeof v === "object") {
+        if (seen.has(v)) {
+          return "[Circular]";
+        }
+        seen.add(v);
+      }
+
+      return v;
+    });
+
+    if (typeof txt === "string") {
+      return txt.length > maxOutputLength
+        ? txt.slice(0, maxOutputLength) + "…[truncated]"
+        : txt;
+    }
+  } catch (_) {
+    // fall through to slow path
+  }
+
+  // 2) Slow path: guarded, shallow-ish serializer
+  //
+  // Why we need this:
+  // - JSON.stringify can still fail or be unhelpful even with a replacer,
+  //   for example top-level BigInt, exotic proxies with throwing getters,
+  //   or values that JSON reduces to "{}" while a human-readable preview
+  //   would be more useful.
+  // - We also want bounded, readable output when JSON would be massive.
+  //
+  // How it works and why it is safe:
+  // - Never throws: every property access is try/catch protected so getters
+  //   that throw or proxy traps cannot break logging.
+  // - Bounded traversal: depth is capped by maxDepth and the number of
+  //   keys or items per level is capped by maxKeysPerLevel.
+  // - Cycle safe: a WeakSet tracks seen objects and prints "[Circular]".
+  // - Type-aware summaries: Dates use ISO, RegExp uses "/re/flags",
+  //   Errors are "Name: message", TypedArrays and ArrayBuffer show sizes,
+  //   Arrays show a preview with a possible "…" tail.
+  // - Constructor tag: for non-plain objects we prefix with the class name
+  //   to keep helpful context without full expansion.
+  // - Final guard: the final string is truncated to maxOutputLength.
+
+  const seen2 = new WeakSet();
+
+  function safeDescribe(x, depth = 0) {
+    if (x === null) {
+      return "null";
+    }
+
+    const t = typeof x;
+    if (t === "bigint" || t === "symbol") {
+      return String(x);
+    }
+    if (t === "function") {
+      return `[Function ${x.name || "anonymous"}]`;
+    }
+    if (t !== "object") {
+      // Handles number, string, boolean, undefined
+      try {
+        return JSON.stringify(x);
+      } catch {
+        // Fallback for weird host objects
+        return String(x);
+      }
+    }
+
+    if (seen2.has(x)) {
+      return "[Circular]";
+    }
+    seen2.add(x);
+
+    if (x instanceof Date) {
+      return `Date(${isNaN(x.getTime()) ? "Invalid" : x.toISOString()})`;
+    }
+    if (x instanceof RegExp) {
+      return x.toString();
+    }
+    if (x instanceof Error) {
+      return `${x.name}: ${x.message}`;
+    }
+
+    if (Array.isArray(x)) {
+      if (depth >= maxDepth) {
+        return `[Array(${x.length})]`;
+      }
+      const items = [];
+      for (let i = 0; i < Math.min(x.length, maxKeysPerLevel); i++) {
+        try {
+          items.push(safeDescribe(x[i], depth + 1));
+        } catch (e) {
+          items.push(`[Thrown: ${(e && e.message) || e}]`);
+        }
+      }
+      if (x.length > maxKeysPerLevel) {
+        items.push("…");
+      }
+      return `[${items.join(", ")}]`;
+    }
+
+    if (ArrayBuffer.isView(x)) {
+      return `${x.constructor.name}(${x.byteLength} bytes)`;
+    }
+    if (x instanceof ArrayBuffer) {
+      return `ArrayBuffer(${x.byteLength} bytes)`;
+    }
+    if (x instanceof Map) {
+      return `Map(${x.size})`;
+    }
+    if (x instanceof Set) {
+      return `Set(${x.size})`;
+    }
+
+    if (depth >= maxDepth) {
+      return `[Object ${(x && x.constructor && x.constructor.name) || "Object"}]`;
+    }
+
+    const out = [];
+    let names = [];
+    try {
+      names = [
+        ...new Set([
+          ...Object.keys(x),
+          ...Object.getOwnPropertyNames(x).filter(k => !k.startsWith("#")),
+        ]),
+      ];
+    } catch (e) {
+      return `[Uninspectable: ${(e && e.message) || e}]`;
+    }
+
+    for (const key of names.slice(0, maxKeysPerLevel)) {
+      try {
+        const val = x[key];
+        out.push(`${JSON.stringify(key)}: ${safeDescribe(val, depth + 1)}`);
+      } catch (e) {
+        out.push(`${JSON.stringify(key)}: [Thrown: ${(e && e.message) || e}]`);
+      }
+    }
+    if (names.length > maxKeysPerLevel) {
+      out.push(`"…": "more properties omitted"`);
+    }
+
+    const tag =
+      x &&
+      x.constructor &&
+      x.constructor.name &&
+      x.constructor.name !== "Object"
+        ? x.constructor.name
+        : "";
+    return tag ? `${tag} { ${out.join(", ")} }` : `{ ${out.join(", ")} }`;
+  }
+
+  let s = safeDescribe(value);
+  if (typeof s !== "string") {
+    try {
+      s = JSON.stringify(s);
+    } catch {
+      s = String(s);
+    }
+  }
+  if (s.length > maxOutputLength) {
+    s = s.slice(0, maxOutputLength) + "…[truncated]";
+  }
+  return s;
+}

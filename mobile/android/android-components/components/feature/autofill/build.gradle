@@ -42,6 +42,7 @@ dependencies {
     implementation libs.androidx.preferences
     implementation libs.androidx.recyclerview
     implementation libs.kotlinx.coroutines
+    implementation libs.google.material
 
     testImplementation project(':components:lib-fetch-okhttp')
     testImplementation project(':components:support-test')

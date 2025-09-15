@@ -1933,6 +1933,7 @@ nsresult WorkerPrivate::DispatchControlRunnable(
   LOG(WorkerLog(), ("WorkerPrivate::DispatchControlRunnable [%p] runnable %p",
                     this, runnable.get()));
 
+  JSContext* cx = nullptr;
   {
     MutexAutoLock lock(mMutex);
 
@@ -1940,15 +1941,27 @@ nsresult WorkerPrivate::DispatchControlRunnable(
       return NS_ERROR_UNEXPECTED;
     }
 
+    // Unfortunately we can not distinguish if we are on WorkerThread or not.
+    // mThread is set in WorkerPrivate::SetWorkerPrivateInWorkerThread(), but
+    // ControlRunnable can be dispatching before setting mThread.
+    MOZ_ASSERT(mDispatchingControlRunnables < UINT32_MAX);
+    mDispatchingControlRunnables++;
+
     // Transfer ownership to the control queue.
     mControlQueue.Push(runnable.forget().take());
+    cx = mJSContext;
+    MOZ_ASSERT_IF(cx, mThread);
+  }
 
-    if (JSContext* cx = mJSContext) {
-      MOZ_ASSERT(mThread);
-      JS_RequestInterruptCallback(cx);
+  if (cx) {
+    JS_RequestInterruptCallback(cx);
+  }
+
+  {
+    MutexAutoLock lock(mMutex);
+    if (!--mDispatchingControlRunnables) {
+      mCondVar.Notify();
     }
-
-    mCondVar.Notify();
   }
 
   return NS_OK;
@@ -2774,6 +2787,7 @@ WorkerPrivate::WorkerPrivate(
       mTerminationCallback(std::move(aTerminationCallback)),
       mLoadInfo(std::move(aLoadInfo)),
       mDebugger(nullptr),
+      mDispatchingControlRunnables(0),
       mJSContext(nullptr),
       mPRThread(nullptr),
       mWorkerControlEventTarget(new WorkerEventTarget(
@@ -3899,8 +3913,11 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
         nsCOMPtr<nsITimer> timer;
         {
           MutexAutoLock lock(mMutex);
-
           mStatus = Dead;
+          // Wait for the dispatching ControlRunnables complete.
+          while (mDispatchingControlRunnables) {
+            mCondVar.Wait();
+          }
           mJSContext = nullptr;
           mDebuggerInterruptTimer.swap(timer);
         }
