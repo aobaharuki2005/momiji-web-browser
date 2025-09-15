@@ -955,17 +955,14 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
   buffer.AppendASCII(mChildIDString);
 }
 
-// Windows needs a single dedicated thread for process launching,
-// because of thread-safety restrictions/assertions in the sandbox
-// code.
+// We use a single dedicated thread for process launching. This is required on
+// Windows (due to sandboxing code), Android (due to the java code) and Linux
+// (due to ForkServerChild). Using a single thread is not required on macOS or
+// iOS, but we use one to keep the implementation consistent.
 //
-// Android also needs a single dedicated thread to simplify thread
-// safety in java.
-//
-// Fork server needs a dedicated thread for accessing
-// |ForkServiceChild|.
-#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || \
-    defined(MOZ_ENABLE_FORKSERVER)
+// The only tier-1 platform where we do not need a dedicated thread is macOS,
+// however we use a dedicated thread there as well for consistency and
+// simplicity of implementation.
 
 static mozilla::StaticMutex gIPCLaunchThreadMutex;
 static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread
@@ -1018,20 +1015,6 @@ nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   MOZ_DIAGNOSTIC_ASSERT(thread);
   return thread;
 }
-
-#else  // defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) ||
-       // defined(MOZ_ENABLE_FORKSERVER)
-
-// Other platforms use an on-demand thread pool.
-
-nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
-  nsCOMPtr<nsIEventTarget> pool =
-      mozilla::SharedThreadPool::Get("IPC Launch"_ns);
-  MOZ_DIAGNOSTIC_ASSERT(pool);
-  return pool;
-}
-
-#endif  // XP_WIN || MOZ_WIDGET_ANDROID || MOZ_ENABLE_FORKSERVER
 
 void
 #if defined(XP_WIN)
