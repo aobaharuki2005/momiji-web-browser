@@ -3467,9 +3467,7 @@ export class BackupService extends EventTarget {
       try {
         this.createBackup();
       } catch (e) {
-        lazy.logConsole.error(
-          "There was an error creating backup: ", e
-        );
+        lazy.logConsole.error("There was an error creating backup: ", e);
       }
     });
   }
