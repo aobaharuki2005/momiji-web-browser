@@ -34,6 +34,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   isAddonEngineId: "chrome://global/content/ml/Utils.sys.mjs",
   OPFS: "chrome://global/content/ml/OPFS.sys.mjs",
   BACKENDS: "chrome://global/content/ml/EngineProcess.sys.mjs",
+  stringifyForLog: "chrome://global/content/ml/Utils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -1531,9 +1532,7 @@ class MLEngine {
       // If there was no timeout we can yield the chunk and move to the next
       if (!chunk.timeout) {
         lazy.console.debug(
-          `Chunk received ${JSON.stringify(chunk.metadata, (_, v) =>
-            typeof v === "bigint" ? v.toString() : v
-          )}`
+          `Chunk received ${lazy.stringifyForLog(chunk.metadata)}`
         );
         yield {
           text: chunk.metadata.text,
@@ -1547,7 +1546,7 @@ class MLEngine {
         if (this.engineStatus === "crashed") {
           throw new Error(
             "The inference process has crashed, the port is null. This was for the following request: " +
-              JSON.stringify(request)
+              lazy.stringifyForLog(request)
           );
         }
         break;

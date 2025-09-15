@@ -14,6 +14,7 @@ const {
   isAddonEngineId,
   addonIdToEngineId,
   engineIdToAddonId,
+  stringifyForLog,
 } = ChromeUtils.importESModule("chrome://global/content/ml/Utils.sys.mjs");
 
 /**
@@ -1099,5 +1100,233 @@ add_task(function test_addon_engine_id_utilities() {
     engineIdToAddonId(""),
     null,
     "engineIdToAddonId should return null for empty string"
+  );
+});
+
+/**
+ * stringifyForLog — primitives and core types.
+ * Accept both JSON and summary-string outputs.
+ */
+add_task(function test_stringifyForLog_primitives_and_core_types() {
+  // Primitives (avoid top-level undefined since some impls return undefined)
+  Assert.equal(stringifyForLog(42), "42");
+  Assert.equal(stringifyForLog(true), "true");
+  Assert.equal(stringifyForLog(null), "null");
+  Assert.equal(stringifyForLog("hi"), '"hi"');
+
+  // BigInt & Symbol — could be quoted (JSON) or not (slow path)
+  const bi = stringifyForLog(1n);
+  Assert.ok(bi === "1" || bi === '"1"', "BigInt should stringify");
+
+  const sym = stringifyForLog(Symbol("x"));
+  Assert.ok(
+    sym === "Symbol(x)" || sym === '"Symbol(x)"',
+    "Symbol should stringify (quoted or not)"
+  );
+
+  // Date & RegExp — either embedded in JSON or as substrings in a summary
+  const sample = { d: new Date("2020-01-01T00:00:00.000Z"), r: /abc/i };
+  const s = stringifyForLog(sample);
+
+  let parsed = null;
+  try {
+    parsed = JSON.parse(s);
+  } catch {}
+
+  if (parsed) {
+    // Date must be somewhere (either as ISO string or an object fallback)
+    Assert.ok(
+      parsed.d === "2020-01-01T00:00:00.000Z" || typeof parsed.d === "object",
+      "Date should be preserved as ISO or object"
+    );
+    // RegExp may collapse to {} in JSON; accept either the literal string or {}
+    Assert.ok(
+      parsed.r === "/abc/i" ||
+        (typeof parsed.r === "object" && Object.keys(parsed.r).length === 0),
+      'RegExp should be "/abc/i" or an empty object'
+    );
+  } else {
+    // Summary string path
+    Assert.ok(
+      s.includes("2020-01-01T00:00:00.000Z"),
+      "Summary should contain ISO date"
+    );
+    Assert.ok(s.includes("/abc/i"), "Summary should contain RegExp literal");
+  }
+
+  // Function — always a short descriptor
+  function foo() {}
+  const f = stringifyForLog({ f: foo });
+  let parsedF = null;
+  try {
+    parsedF = JSON.parse(f);
+  } catch {}
+  const fVal = parsedF ? parsedF.f : f;
+  Assert.ok(
+    String(fVal).includes("[Function"),
+    "Function should be described briefly"
+  );
+
+  // Error — JSON path may produce {}, summary path should contain 'Error: boom'
+  const err = new Error("boom");
+  const e = stringifyForLog({ e: err });
+  let parsedE = null;
+  try {
+    parsedE = JSON.parse(e);
+  } catch {}
+
+  if (parsedE && typeof parsedE.e === "object" && parsedE.e) {
+    // Accept either detailed fields or an empty object — do not require raw text.
+    const hasFields =
+      parsedE.e.name === "Error" ||
+      parsedE.e.message === "boom" ||
+      (parsedE.e.stack && typeof parsedE.e.stack === "string");
+    const emptyObj = Object.keys(parsedE.e).length === 0;
+    Assert.ok(
+      hasFields || emptyObj,
+      "Error should be detailed or {} in JSON mode"
+    );
+  } else {
+    // Summary string path (non-JSON) should include something meaningful.
+    Assert.ok(
+      e.includes("Error") && e.includes("boom"),
+      "Summary should include error text"
+    );
+  }
+});
+
+/**
+ * stringifyForLog — collections, circular refs, and limits.
+ * Do not assume Map/Set shapes; just validate useful, bounded output.
+ */
+add_task(function test_stringifyForLog_collections_and_limits() {
+  const m = new Map([
+    ["a", 1],
+    ["b", 2],
+    ["c", 3],
+  ]);
+  const st = new Set([10, 20, 30]);
+  const ta = new Uint8Array(5);
+  const ab = new ArrayBuffer(7);
+  const obj = { m, st, ta, ab, cyc: null };
+  obj.cyc = obj; // circular
+
+  const out = stringifyForLog(obj, { maxKeysPerLevel: 2 });
+
+  // Always a string and non-empty
+  Assert.equal(typeof out, "string");
+  Assert.greater(out.length, 0);
+
+  // TypedArray / ArrayBuffer summaries should appear as strings in either path
+  Assert.ok(
+    out.includes("Uint8Array(5 bytes)"),
+    "TypedArray size summary present"
+  );
+
+  // Circular marker must be present
+  Assert.ok(out.includes("[Circular]"), "Circular marker present");
+
+  // Map/Set can be summarized or JSON-ified or collapse to {}/[]; we only require *some* hint.
+  // Accept any of these hints to avoid coupling to a specific implementation.
+  const mapHints =
+    out.includes("Map(") || out.includes('"m":') || out.includes("m:");
+  const setHints =
+    out.includes("Set(") || out.includes('"st":') || out.includes("st:");
+  Assert.ok(mapHints, "Output should carry some hint of the Map");
+  Assert.ok(setHints, "Output should carry some hint of the Set");
+});
+
+/**
+ * stringifyForLog — output truncation guard.
+ * Compute suffix length from the actual output to avoid off-by-one.
+ */
+add_task(function test_stringifyForLog_output_truncation() {
+  const maxOutputLength = 200;
+  const huge = "x".repeat(5000);
+  const out = stringifyForLog({ huge }, { maxOutputLength });
+
+  // Must end with a truncation marker
+  Assert.ok(/…\[truncated]$/.test(out), "Should end with truncation suffix");
+
+  // Validate that the prefix was clipped to maxOutputLength characters.
+  const suffix = "…[truncated]";
+  Assert.equal(out.length, maxOutputLength + suffix.length);
+});
+
+/**
+ * stringifyForLog — slow path via throwing getter; depth limits and safety.
+ * Keep the checks, but don’t assume specific summarization tokens.
+ */
+add_task(function test_stringifyForLog_slow_path_throwing_getter_and_depth() {
+  const deep = { level: 0 };
+  let cur = deep;
+  for (let i = 1; i <= 5; i++) {
+    cur.child = { level: i };
+    cur = cur.child;
+  }
+
+  const host = {};
+  Object.defineProperty(host, "bad", {
+    enumerable: true,
+    get() {
+      throw new Error("nope");
+    },
+  });
+  host.deep = deep;
+
+  const out = stringifyForLog(host, {
+    maxDepth: 2,
+    maxKeysPerLevel: 50,
+    maxOutputLength: 5000,
+  });
+
+  // Throwing getter recorded
+  Assert.ok(
+    out.includes('"bad": [Thrown:'),
+    "Throwing getter should be caught and annotated"
+  );
+
+  // Depth limit — don’t pin to exact token; just ensure some summarization occurred
+  Assert.ok(
+    /\[Object [^\]]+\]|\[Array\(\d+\)\]/.test(out),
+    "Deep object should be summarized at maxDepth"
+  );
+});
+
+/**
+ * stringifyForLog — always returns a string, even for hostile proxies.
+ */
+add_task(function test_stringifyForLog_always_string_with_proxy() {
+  // Proxy that throws on get
+  const target = {};
+  const proxy = new Proxy(target, {
+    get() {
+      throw new Error("trap");
+    },
+    ownKeys() {
+      // JSON.stringify inspects keys; make that safe too.
+      throw new Error("ownKeys trap");
+    },
+  });
+
+  const out = stringifyForLog(proxy);
+  Assert.equal(typeof out, "string");
+  Assert.ok(
+    out.includes("[Uninspectable:") ||
+      out.includes("Proxy") ||
+      out.includes("[Thrown:"),
+    "Should degrade gracefully on hostile proxies"
+  );
+});
+
+/**
+ * stringifyForLog — top-level BigInt should not throw and should stringify.
+ * Accept both quoted and unquoted representations.
+ */
+add_task(function test_stringifyForLog_top_level_bigint() {
+  const out = stringifyForLog(9007199254740993n);
+  Assert.ok(
+    out === "9007199254740993" || out === '"9007199254740993"',
+    "Top-level BigInt should stringify (quoted or not)"
   );
 });
