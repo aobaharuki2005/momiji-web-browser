@@ -105,8 +105,10 @@ ITEM_VALUE(WebCodecs,                   71)
 ITEM_VALUE(MaxTouchPoints,              72)
 ITEM_VALUE(MaxTouchPointsCollapse,      73)
 ITEM_VALUE(NavigatorHWConcurrencyTiered,74)
-ITEM_VALUE(WebGLRandomization,          75)
 
+
+// !!! Don't forget to update kDefaultFingerprintingProtections in nsRFPService.cpp
+// if necessary.
 
 /*
  * In certain cases, we precompute the value of ShouldRFP for e.g. a Document.

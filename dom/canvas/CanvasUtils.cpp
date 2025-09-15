@@ -383,8 +383,7 @@ ImageExtraction ImageExtractionResult(dom::HTMLCanvasElement* aCanvasElement,
     return ImageExtraction::Placeholder;
   }
 
-  if (ownerDoc->ShouldResistFingerprinting(RFPTarget::CanvasRandomization) ||
-      ownerDoc->ShouldResistFingerprinting(RFPTarget::WebGLRandomization)) {
+  if (ownerDoc->ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
     return ImageExtraction::Randomize;
   }
 
@@ -538,9 +537,7 @@ ImageExtraction ImageExtractionResult(dom::OffscreenCanvas* aOffscreenCanvas,
   }
 
   if (aOffscreenCanvas->ShouldResistFingerprinting(
-          RFPTarget::CanvasRandomization) ||
-      aOffscreenCanvas->ShouldResistFingerprinting(
-          RFPTarget::WebGLRandomization)) {
+          RFPTarget::CanvasRandomization)) {
     if (GetCanvasExtractDataPermission(aPrincipal) ==
         nsIPermissionManager::ALLOW_ACTION) {
       return ImageExtraction::Unrestricted;
