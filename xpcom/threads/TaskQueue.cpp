@@ -116,8 +116,10 @@ nsresult TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
     return currentThread->TailDispatcher().AddTask(this, aRunnable.forget());
   }
 
-  PROFILER_MARKER("TaskQueue::DispatchLocked", OTHER, {}, FlowMarker,
-                  Flow::FromPointer(aRunnable.get()));
+  PROFILER_MARKER("TaskQueue::DispatchLocked", OTHER,
+                  {MarkerStack::MaybeCapture(
+                      profiler_feature_active(ProfilerFeature::Flows))},
+                  FlowMarker, Flow::FromPointer(aRunnable.get()));
   LogRunnable::LogDispatch(aRunnable);
   mTasks.Push({std::move(aRunnable), aFlags});
 
