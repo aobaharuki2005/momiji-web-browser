@@ -35,8 +35,8 @@ import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingStatu
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.GleanMetrics.AddressToolbar
 import org.mozilla.fenix.GleanMetrics.CookieBanners
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -222,7 +222,7 @@ class BrowserToolbarCFRPresenter(
                 indicatorArrowStartOffset = TAB_SWIPE_CFR_ARROW_OFFSET.dp,
             ),
             onDismiss = {
-                AddressToolbar.swipeCfrDismissed.record(NoExtras())
+                Events.toolbarTabSwipeCfrDismissed.record(NoExtras())
                 popup = null
             },
             text = {
@@ -238,7 +238,7 @@ class BrowserToolbarCFRPresenter(
                 }
             },
         ).run {
-            AddressToolbar.swipeCfrShown.record(NoExtras())
+            Events.toolbarTabSwipeCfrShown.record(NoExtras())
             popup = this
             show()
         }

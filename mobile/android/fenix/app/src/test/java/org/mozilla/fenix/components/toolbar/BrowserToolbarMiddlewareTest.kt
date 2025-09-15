@@ -95,7 +95,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.experiments.nimbus.NimbusEventStore
-import org.mozilla.fenix.GleanMetrics.AddressToolbar
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.Translations
@@ -1496,7 +1495,6 @@ class BrowserToolbarMiddlewareTest {
 
         toolbarStore.dispatch(shareButton.onClick as BrowserToolbarEvent)
         mainLooperRule.idle()
-        assertNotNull(AddressToolbar.shareTapped.testGetValue())
         captureMiddleware.assertLastAction(ShareResourceAction.AddShareAction::class) {
             assertEquals(currentTab.id, it.tabId)
             assertEquals(ShareResourceState.LocalResource(currentTab.content.url), it.resource)
@@ -1529,7 +1527,6 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(expectedShareButton(), shareButton)
 
         toolbarStore.dispatch(shareButton.onClick as BrowserToolbarEvent)
-        assertNotNull(AddressToolbar.shareTapped.testGetValue())
         verify {
             navController.navigate(
                 directions = directionsEq(
@@ -1840,7 +1837,6 @@ class BrowserToolbarMiddlewareTest {
             mainLooperRule.idle()
             verify { reloadUseCases(currentTab.id, capture(loadUrlFlagsUsed)) }
             assertEquals(LoadUrlFlags.BYPASS_CACHE, loadUrlFlagsUsed.last().value)
-            assertNotNull(AddressToolbar.reloadTapped.testGetValue())
         }
     }
 
@@ -1894,7 +1890,6 @@ class BrowserToolbarMiddlewareTest {
         mainLooperRule.idle()
         verify { reloadUseCases(currentTab.id, capture(loadUrlFlagsUsed)) }
         assertEquals(LoadUrlFlags.BYPASS_CACHE, loadUrlFlagsUsed.last().value)
-        assertNotNull(AddressToolbar.reloadTapped.testGetValue())
     }
 
     @Test

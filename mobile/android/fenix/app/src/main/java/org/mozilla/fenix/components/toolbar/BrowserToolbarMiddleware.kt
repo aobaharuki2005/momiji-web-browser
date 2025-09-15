@@ -79,7 +79,6 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.util.URLStringUtils
 import mozilla.components.support.utils.ClipboardHandler
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.GleanMetrics.AddressToolbar
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.Translations
@@ -482,6 +481,8 @@ class BrowserToolbarMiddleware(
                         readerModeController?.showReaderView()
                     }
                 }
+
+                next(action)
             }
 
             is TranslateClicked -> {
@@ -497,8 +498,6 @@ class BrowserToolbarMiddleware(
             }
 
             is RefreshClicked -> {
-                AddressToolbar.reloadTapped.record((NoExtras()))
-
                 val tabId = browserStore.state.selectedTabId
                 if (action.bypassCache) {
                     sessionUseCases.reload.invoke(
@@ -570,8 +569,6 @@ class BrowserToolbarMiddleware(
             }
 
             is ShareClicked -> runWithinEnvironment {
-                AddressToolbar.shareTapped.record((NoExtras()))
-
                 val selectedTab = browserStore.state.selectedTab ?: return
                 if (selectedTab.content.url.isContentUrl()) {
                     browserStore.dispatch(

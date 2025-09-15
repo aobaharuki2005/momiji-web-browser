@@ -57,10 +57,8 @@ import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.ktx.kotlin.isUrl
-import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.GleanMetrics.UnifiedSearch
-import org.mozilla.fenix.GleanMetrics.VoiceSearch
+import org.mozilla.fenix.GleanMetrics.Toolbar
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -88,6 +86,11 @@ import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorItemClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSettingsItemClicked
 import org.mozilla.fenix.search.ext.searchEngineShortcuts
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.telemetry.ACTION_CLEAR_CLICKED
+import org.mozilla.fenix.telemetry.ACTION_MICROPHONE_CLICKED
+import org.mozilla.fenix.telemetry.ACTION_QR_CLICKED
+import org.mozilla.fenix.telemetry.ACTION_SEARCH_ENGINE_SELECTOR_CLICKED
+import org.mozilla.fenix.telemetry.SOURCE_ADDRESS_BAR
 import org.mozilla.fenix.utils.Settings
 import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.ContentDescription.StringContentDescription as SearchSelectorDescription
@@ -201,7 +204,12 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is SearchSelectorClicked -> {
-                UnifiedSearch.searchMenuTapped.record(NoExtras())
+                Toolbar.buttonTapped.record(
+                    Toolbar.ButtonTappedExtra(
+                        source = SOURCE_ADDRESS_BAR,
+                        item = ACTION_SEARCH_ENGINE_SELECTOR_CLICKED,
+                    ),
+                )
             }
 
             is SearchSettingsItemClicked -> {
@@ -268,7 +276,9 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is ClearSearchClicked -> {
-                Events.browserToolbarInputCleared.record(NoExtras())
+                Toolbar.buttonTapped.record(
+                    Toolbar.ButtonTappedExtra(source = SOURCE_ADDRESS_BAR, item = ACTION_CLEAR_CLICKED),
+                )
                 context.dispatch(SearchQueryUpdated(""))
             }
 
@@ -277,13 +287,17 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is QrScannerClicked -> {
-                Events.browserToolbarQrScanTapped.record(NoExtras())
+                Toolbar.buttonTapped.record(
+                    Toolbar.ButtonTappedExtra(source = SOURCE_ADDRESS_BAR, item = ACTION_QR_CLICKED),
+                )
                 observeQrScannerInput(context)
                 appStore.dispatch(QrScannerRequested)
             }
 
             is VoiceSearchButtonClicked -> {
-                VoiceSearch.tapped.record(NoExtras())
+                Toolbar.buttonTapped.record(
+                    Toolbar.ButtonTappedExtra(source = SOURCE_ADDRESS_BAR, item = ACTION_MICROPHONE_CLICKED),
+                )
                 appStore.dispatch(VoiceInputRequested)
             }
 

@@ -25,6 +25,7 @@ import mozilla.components.concept.menu.Orientation
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -32,7 +33,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.GleanMetrics.UnifiedSearch
+import org.mozilla.fenix.GleanMetrics.Toolbar
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MetricsUtils
@@ -42,6 +43,8 @@ import org.mozilla.fenix.search.SearchDialogFragmentStore
 import org.mozilla.fenix.search.SearchFragmentAction.SearchDefaultEngineSelected
 import org.mozilla.fenix.search.SearchFragmentAction.SearchHistoryEngineSelected
 import org.mozilla.fenix.search.fixtures.EMPTY_SEARCH_FRAGMENT_STATE
+import org.mozilla.fenix.telemetry.ACTION_SEARCH_ENGINE_SELECTOR_CLICKED
+import org.mozilla.fenix.telemetry.SOURCE_ADDRESS_BAR
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 import java.util.UUID
@@ -82,12 +85,12 @@ class SearchSelectorToolbarActionTest {
         )
         val view = action.createView(LinearLayout(testContext) as ViewGroup) as SearchSelector
         val selectorIcon = view.findViewById<MaterialCardView>(R.id.search_selector)
-        assertNull(UnifiedSearch.searchMenuTapped.testGetValue())
+        assertNull(Toolbar.buttonTapped.testGetValue())
 
         every { settings.shouldUseBottomToolbar } returns false
         view.performClick()
 
-        assertNotNull(UnifiedSearch.searchMenuTapped.testGetValue())
+        assertTelemetryRecorded(ACTION_SEARCH_ENGINE_SELECTOR_CLICKED)
         verify {
             menu.menuController.show(anchor = selectorIcon, Orientation.DOWN)
         }
@@ -95,7 +98,7 @@ class SearchSelectorToolbarActionTest {
         every { settings.shouldUseBottomToolbar } returns true
         view.performClick()
 
-        assertNotNull(UnifiedSearch.searchMenuTapped.testGetValue())
+        assertTelemetryRecorded(ACTION_SEARCH_ENGINE_SELECTOR_CLICKED)
         verify {
             menu.menuController.show(anchor = selectorIcon, Orientation.UP)
         }
@@ -268,6 +271,17 @@ class SearchSelectorToolbarActionTest {
 
         // Check dimensions, config and pixel data
         assertTrue(expectedScaledIcon.sameAs(result.bitmap))
+    }
+
+    private fun assertTelemetryRecorded(
+        item: String,
+    ) {
+        assertNotNull(Toolbar.buttonTapped.testGetValue())
+        val snapshot = Toolbar.buttonTapped.testGetValue()!!
+        val last = snapshot.last()
+        val expectedSource = SOURCE_ADDRESS_BAR
+        assertEquals(item, last.extra?.getValue("item"))
+        assertEquals(expectedSource, last.extra?.getValue("source"))
     }
 }
 
