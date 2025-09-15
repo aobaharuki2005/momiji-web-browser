@@ -21,7 +21,6 @@ import mozilla.components.support.utils.ext.getParcelableExtraCompat
 import org.mozilla.samples.browser.BrowserActivity
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
-import mozilla.components.feature.addons.R as addonsR
 
 /**
  * An activity to show the details of a installed add-on.
@@ -53,7 +52,7 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
                 scope.launch(Dispatchers.Main) {
                     Toast.makeText(
                         baseContext,
-                        addonsR.string.mozac_feature_addons_failed_to_query_extensions,
+                        R.string.mozac_feature_addons_failed_to_query_extensions,
                         Toast.LENGTH_SHORT,
                     ).show()
                 }
@@ -87,13 +86,13 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
                     onSuccess = {
                         switch.isChecked = true
                         showAddonToast(
-                            addonsR.string.mozac_feature_addons_successfully_enabled,
+                            R.string.mozac_feature_addons_successfully_enabled,
                             addon,
                         )
                     },
                     onError = {
                         showAddonToast(
-                            addonsR.string.mozac_feature_addons_failed_to_enable,
+                            R.string.mozac_feature_addons_failed_to_enable,
                             addon,
                         )
                     },
@@ -104,13 +103,13 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
                     onSuccess = {
                         switch.isChecked = false
                         showAddonToast(
-                            addonsR.string.mozac_feature_addons_successfully_disabled,
+                            R.string.mozac_feature_addons_successfully_disabled,
                             addon,
                         )
                     },
                     onError = {
                         showAddonToast(
-                            addonsR.string.mozac_feature_addons_failed_to_disable,
+                            R.string.mozac_feature_addons_failed_to_disable,
                             addon,
                         )
                     },
@@ -173,14 +172,14 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
                 addon,
                 onSuccess = {
                     showAddonToast(
-                        addonsR.string.mozac_feature_addons_successfully_uninstalled,
+                        R.string.mozac_feature_addons_successfully_uninstalled,
                         addon,
                     )
                     finish()
                 },
                 onError = { _, _ ->
                     showAddonToast(
-                        addonsR.string.mozac_feature_addons_failed_to_uninstall,
+                        R.string.mozac_feature_addons_failed_to_uninstall,
                         addon,
                     )
                 },

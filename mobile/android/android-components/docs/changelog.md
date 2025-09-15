@@ -4,7 +4,9 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 144.0 (In Development)
+# 145.0 (In Development)
+
+# 144.0
 * **feature-customtabs**
   * 🚒 Bug fixed [Bug 1983103](https://bugzilla.mozilla.org/show_bug.cgi?id=1983103). Fixed issues with system status bars not being correctly themed for custom tabs and PWAs when used on devices with edge-to-edge enabled.
 * **support-ktx**
