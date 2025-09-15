@@ -1,6 +1,69 @@
 {
   "data": [
     {
+      "name": "Opera",
+      "schema": 1757721902746,
+      "status": "nightly",
+      "version": "124",
+      "browserid": "opera",
+      "id": "b74063d3-65d7-45b2-afc1-d30123fc2999",
+      "last_modified": 1757918638116
+    },
+    {
+      "name": "Edge",
+      "schema": 1757462703345,
+      "status": "planned",
+      "version": "143",
+      "browserid": "edge",
+      "id": "5fbdfe94-de4c-4bfe-b789-246f64a7f4b6",
+      "last_modified": 1757918638113
+    },
+    {
+      "name": "Opera",
+      "schema": 1757721902692,
+      "status": "beta",
+      "version": "123",
+      "browserid": "opera",
+      "id": "847fc43b-579e-4b26-a1fa-cb978ec0438b",
+      "last_modified": 1757918638110
+    },
+    {
+      "name": "Edge",
+      "schema": 1757462703290,
+      "status": "nightly",
+      "version": "142",
+      "browserid": "edge",
+      "id": "7d644a9d-4167-44d0-b58a-165beedf43e5",
+      "last_modified": 1757918638106
+    },
+    {
+      "name": "Edge",
+      "schema": 1757462703232,
+      "status": "beta",
+      "version": "141",
+      "browserid": "edge",
+      "id": "1276177b-8e2c-4677-9839-c39cdb272d9f",
+      "last_modified": 1757918638104
+    },
+    {
+      "name": "Opera",
+      "schema": 1757721902630,
+      "status": "current",
+      "version": "122",
+      "browserid": "opera",
+      "id": "25658331-55b6-4129-8e2d-c59ca95df3f7",
+      "last_modified": 1757918638101
+    },
+    {
+      "name": "Edge",
+      "schema": 1757462703179,
+      "status": "current",
+      "version": "140",
+      "browserid": "edge",
+      "id": "2f6ded78-f30e-4477-9175-c32d040041c7",
+      "last_modified": 1757918638095
+    },
+    {
       "name": "WebView Android",
       "schema": 1756944305136,
       "status": "planned",
@@ -109,15 +172,6 @@
       "last_modified": 1756978460910
     },
     {
-      "name": "Opera",
-      "schema": 1756512305771,
-      "status": "nightly",
-      "version": "123",
-      "browserid": "opera",
-      "id": "847fc43b-579e-4b26-a1fa-cb978ec0438b",
-      "last_modified": 1756731463819
-    },
-    {
       "name": "Bun",
       "schema": 1756512305536,
       "status": "current",
@@ -125,24 +179,6 @@
       "browserid": "bun",
       "id": "299a9948-9b52-4c99-b40c-26f0be0353dd",
       "last_modified": 1756731463816
-    },
-    {
-      "name": "Opera",
-      "schema": 1756512305715,
-      "status": "beta",
-      "version": "122",
-      "browserid": "opera",
-      "id": "25658331-55b6-4129-8e2d-c59ca95df3f7",
-      "last_modified": 1756731463810
-    },
-    {
-      "name": "Opera",
-      "schema": 1756512305662,
-      "status": "current",
-      "version": "121",
-      "browserid": "opera",
-      "id": "f6db5e03-957c-4d2b-a74b-d537ea26be3f",
-      "last_modified": 1756731463807
     },
     {
       "name": "Opera Android",
@@ -253,42 +289,6 @@
       "last_modified": 1755841814976
     },
     {
-      "name": "Edge",
-      "schema": 1754784303244,
-      "status": "planned",
-      "version": "142",
-      "browserid": "edge",
-      "id": "7d644a9d-4167-44d0-b58a-165beedf43e5",
-      "last_modified": 1754902587193
-    },
-    {
-      "name": "Edge",
-      "schema": 1754784303188,
-      "status": "nightly",
-      "version": "141",
-      "browserid": "edge",
-      "id": "1276177b-8e2c-4677-9839-c39cdb272d9f",
-      "last_modified": 1754902587190
-    },
-    {
-      "name": "Edge",
-      "schema": 1754784303129,
-      "status": "beta",
-      "version": "140",
-      "browserid": "edge",
-      "id": "2f6ded78-f30e-4477-9175-c32d040041c7",
-      "last_modified": 1754902587186
-    },
-    {
-      "name": "Edge",
-      "schema": 1754784303073,
-      "status": "current",
-      "version": "139",
-      "browserid": "edge",
-      "id": "c652a9a5-3a1c-4272-8a52-68dd4e9ae1b4",
-      "last_modified": 1754902587183
-    },
-    {
       "name": "Firefox for Android",
       "schema": 1753574703338,
       "status": "esr",
@@ -379,5 +379,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1756978460941
+  "timestamp": 1757918638116
 }
