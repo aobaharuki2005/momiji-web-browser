@@ -208,23 +208,6 @@ For now, you can't associate other types of menu with `moz-button` using `menuId
 </div>
 ```
 
-#### Toggle button
-
-Adding `aria-pressed` to the `moz-button` turns it into a toggle button. The `aria-pressed` attribute represents the button's current "pressed" state.
-
-Refer to [the W3C ARIA documentation](https://w3c.github.io/aria/#aria-pressed) for more information on using `aria-pressed` attribute.
-
-```html
-<moz-button label="Could be pressed" aria-pressed="false"></moz-button>
-<moz-button label="Is already pressed" aria-pressed="true"></moz-button>
-```
-```html story
-<div style={{ display: 'flex', gap: '1rem' }}>
-  <moz-button label="Could be pressed" aria-pressed="false"></moz-button>
-  <moz-button label="Is already pressed" aria-pressed="true"></moz-button>
-</div>
-```
-
 ### Setting the `size`
 
 There are 2 options for the `moz-button` size: `default` and `small`. Small buttons are only used for smaller UI surfaces. (e.g., Infobar).
