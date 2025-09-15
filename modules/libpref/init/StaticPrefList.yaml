@@ -17122,9 +17122,6 @@
 #    security.OCSP.require is true. Firefox will, however, fetch OCSP for EV
 #    certificates that chain to the Mozilla root store (unless
 #    security.OCSP.enable is 0).
-# 3: Enable CRLite but only enforce "Not Revoked" results. Firefox will fetch
-#    OCSP for certificates that are not covered by CRLite. Firefox will also
-#    fetch OCSP to confirm CRLite "Revoked" responses.
 - name: security.pki.crlite_mode
   type: RelaxedAtomicUint32
   value: 2
