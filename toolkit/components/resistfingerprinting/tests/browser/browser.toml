@@ -75,3 +75,5 @@ support-files = ["file_pdf.pdf"]
 ["browser_resistfingerprinting_readpixels.js"]
 
 ["browser_resistfingerprinting_getbuffersubdata.js"]
+
+["browser_resistfingerprinting_readpixels_placeholder.js"]
