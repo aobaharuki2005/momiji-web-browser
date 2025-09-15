@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,7 +32,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.CustomTabMenuItem
-import mozilla.components.compose.base.Divider
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_OFF
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_ON
@@ -108,14 +108,14 @@ internal fun CustomTabMenu(
                     isMoreMenuExpanded = false,
                 )
                 if (scrollState.value != 0) {
-                    Divider(color = FirefoxTheme.colors.borderPrimary)
+                    HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
             }
         },
         footer = {
             if (isBottomToolbar) {
                 if (scrollState.value != 0) {
-                    Divider(color = FirefoxTheme.colors.borderPrimary)
+                    HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
                 MenuNavigation(
                     isSiteLoading = isSiteLoading,

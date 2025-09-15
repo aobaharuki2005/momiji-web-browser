@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -45,7 +46,6 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.modifier.optionalClickable
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.WEB_EXTENSION_ITEM
@@ -270,7 +270,7 @@ internal fun WebExtensionMenuItem(
                     )
                 }
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .padding(vertical = 6.dp)
                         .fillMaxHeight()
@@ -480,7 +480,7 @@ private fun MenuItemPreview() {
                         onClick = {},
                     )
 
-                    Divider(color = FirefoxTheme.colors.borderSecondary)
+                    HorizontalDivider(color = FirefoxTheme.colors.borderSecondary)
                 }
 
                 for (state in MenuItemState.entries) {
@@ -492,7 +492,7 @@ private fun MenuItemPreview() {
                         afterIconPainter = painterResource(id = iconsR.drawable.mozac_ic_chevron_right_24),
                     )
 
-                    Divider(color = FirefoxTheme.colors.borderSecondary)
+                    HorizontalDivider(color = FirefoxTheme.colors.borderSecondary)
                 }
 
                 for (state in MenuItemState.entries) {
@@ -506,7 +506,7 @@ private fun MenuItemPreview() {
                         onAfterIconClick = {},
                     )
 
-                    Divider(color = FirefoxTheme.colors.borderSecondary)
+                    HorizontalDivider(color = FirefoxTheme.colors.borderSecondary)
                 }
             }
         }

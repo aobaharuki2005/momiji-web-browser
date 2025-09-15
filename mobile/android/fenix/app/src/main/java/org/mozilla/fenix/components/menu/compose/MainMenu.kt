@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,7 +59,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.Divider
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.displayName
 import mozilla.components.feature.addons.ui.summary
@@ -218,14 +218,14 @@ fun MainMenu(
                     isMoreMenuExpanded = isMoreMenuExpanded,
                 )
                 if (scrollState.value != 0) {
-                    Divider(color = FirefoxTheme.colors.borderPrimary)
+                    HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
             }
         },
         footer = {
             if (accessPoint != MenuAccessPoint.Home && (isBottomToolbar || isExpandedToolbarEnabled)) {
                 if (scrollState.value != 0) {
-                    Divider(color = FirefoxTheme.colors.borderPrimary)
+                    HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
                 MenuNavigation(
                     state = MenuItemState.ENABLED,
